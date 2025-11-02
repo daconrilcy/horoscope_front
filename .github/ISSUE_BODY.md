@@ -11,8 +11,9 @@ Créer le squelette frontend avec toutes les fondations nécessaires : structure
 **Objectif :** créer le squelette frontend/ avec arborescence proposée.
 
 **Tâches :**
-- ✅ npm create vite@latest (React + TS), config TS strict, alias @/*.
-- ✅ Créer dossiers src/app, shared/*, entities, features/*, pages/*, widgets, stores, styles.
+
+- ✅ npm create vite@latest (React + TS), config TS strict, alias @/\*.
+- ✅ Créer dossiers src/app, shared/_, entities, features/_, pages/\*, widgets, stores, styles.
 - ✅ App démarre (npm run dev), page / rendue.
 - ✅ Aliases et import paths OK.
 
@@ -25,6 +26,7 @@ Créer le squelette frontend avec toutes les fondations nécessaires : structure
 **Objectif :** qualité dev homogène.
 
 **Tâches :**
+
 - ✅ ESLint TS strict, Prettier, hooks pre-commit (lint + test).
 - ✅ Vitest + @testing-library/react configurés.
 - ✅ npm run lint et npm run test passent.
@@ -39,6 +41,7 @@ Créer le squelette frontend avec toutes les fondations nécessaires : structure
 **Objectif :** variables d'env.
 
 **Tâches :**
+
 - ✅ .env.example avec VITE_API_BASE_URL.
 - ✅ shared/config/env.ts (validation Zod).
 - ✅ Base URL lue depuis env, fallback interdit (erreur claire).
@@ -68,5 +71,4 @@ Créer le squelette frontend avec toutes les fondations nécessaires : structure
 
 ## PR liée
 
-#1
-
+#2

@@ -1,4 +1,4 @@
-export function App() {
+export function App(): JSX.Element {
   return (
     <div>
       <h1>Horoscope</h1>
@@ -6,4 +6,3 @@ export function App() {
     </div>
   );
 }
-

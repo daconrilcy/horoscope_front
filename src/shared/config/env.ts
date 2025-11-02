@@ -9,8 +9,10 @@ const envSchema = z.object({
 type Env = z.infer<typeof envSchema>;
 
 function getEnv(): Env {
+  const viteApiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
   const raw = {
-    VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+    VITE_API_BASE_URL: viteApiBaseUrl,
   };
 
   const result = envSchema.safeParse(raw);
@@ -30,4 +32,3 @@ function getEnv(): Env {
 }
 
 export const env = getEnv();
-
