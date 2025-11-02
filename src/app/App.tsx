@@ -1,5 +1,8 @@
-import { Router } from './router';
-
 export function App(): JSX.Element {
-  return <Router />;
+  return (
+    <div>
+      <h1>Horoscope</h1>
+      <p>Page d'accueil</p>
+    </div>
+  );
 }
