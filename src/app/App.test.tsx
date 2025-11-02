@@ -9,3 +9,4 @@ describe('App', () => {
     expect(screen.getByText(/Page d'accueil/i)).toBeInTheDocument();
   });
 });
+
