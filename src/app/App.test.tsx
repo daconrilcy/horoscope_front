@@ -5,7 +5,8 @@ import { App } from './App';
 describe('App', () => {
   it('should render the app', () => {
     render(<App />);
-    expect(screen.getByText(/Horoscope/i)).toBeInTheDocument();
-    expect(screen.getByText(/Page d'accueil/i)).toBeInTheDocument();
+    // Vérifier que la page d'accueil est rendue avec son titre
+    expect(screen.getByText('Bienvenue sur Horoscope')).toBeInTheDocument();
+    expect(screen.getByText("Découvrez votre horoscope personnalisé")).toBeInTheDocument();
   });
 });

@@ -10,7 +10,10 @@ export function ScrollRestoration(): null {
 
   useEffect(() => {
     // Remonter en haut de la page à chaque changement de route
-    window.scrollTo(0, 0);
+    // Vérifier que window.scrollTo existe (peut être absent dans certains environnements de test)
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+      window.scrollTo(0, 0);
+    }
   }, [pathname]);
 
   return null;

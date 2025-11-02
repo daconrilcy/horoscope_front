@@ -5,12 +5,15 @@ import { PrivateLayout } from './PrivateLayout';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuthStore } from '@/stores/authStore';
 
-// Mock pour Outlet
+const mockNavigate = vi.fn();
+
+// Mock pour Outlet et useNavigate
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return {
     ...actual,
-    Outlet: () => <div data-testid="outlet">Outlet Content</div>,
+    Outlet: (): JSX.Element => <div data-testid="outlet">Outlet Content</div>,
+    useNavigate: (): ReturnType<typeof vi.fn> => mockNavigate,
   };
 });
 
@@ -19,6 +22,7 @@ describe('PrivateLayout', () => {
     // Reset store
     useAuthStore.setState({ token: 'test-token', _hasHydrated: true });
     vi.clearAllMocks();
+    mockNavigate.mockClear();
   });
 
   it('devrait afficher la navigation avec Dashboard', () => {
@@ -53,7 +57,7 @@ describe('PrivateLayout', () => {
     expect(dashboardLink).toHaveAttribute('href', ROUTES.APP.DASHBOARD);
   });
 
-  it('devrait appeler clearToken au clic sur Déconnexion', () => {
+  it('devrait appeler clearToken et navigate au clic sur Déconnexion', () => {
     const clearToken = vi.fn();
     useAuthStore.setState({ clearToken });
 
@@ -67,6 +71,7 @@ describe('PrivateLayout', () => {
     logoutButton.click();
 
     expect(clearToken).toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.LOGIN, { replace: true });
   });
 });
 

@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -8,12 +8,13 @@ import { useAuthStore } from '@/stores/authStore';
  */
 export function PrivateLayout(): JSX.Element {
   const location = useLocation();
+  const navigate = useNavigate();
   const clearToken = useAuthStore((state) => state.clearToken);
   const isDashboard = location.pathname === ROUTES.APP.DASHBOARD;
 
   const handleLogout = (): void => {
     clearToken();
-    window.location.href = ROUTES.LOGIN;
+    void navigate(ROUTES.LOGIN, { replace: true });
   };
 
   return (

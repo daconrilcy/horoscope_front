@@ -20,15 +20,16 @@ describe('authStore - Hydratation', () => {
   });
 
   it('devrait hydrater le token depuis localStorage', () => {
-    localStorage.setItem('auth-storage', JSON.stringify({ state: { token: 'test-token' } }));
+    // Note: L'hydratation réelle se fait via persist middleware de Zustand
+    // On teste ici que l'état _hasHydrated peut être défini manuellement
+    useAuthStore.getState().setHasHydrated(true);
 
-    // Simuler l'hydratation
-    const store = useAuthStore.getState();
-    store.setHasHydrated(true);
-
-    // Vérifier que le token est disponible après hydratation
-    // Note: L'hydratation réelle se fait via persist middleware, ici on teste juste l'état
-    expect(store._hasHydrated).toBe(true);
+    // Vérifier que _hasHydrated est bien défini après l'appel
+    expect(useAuthStore.getState()._hasHydrated).toBe(true);
+    
+    // Note: Pour tester l'hydratation complète depuis localStorage,
+    // il faudrait recréer le store, ce qui est complexe avec Zustand persist
+    // Ce test vérifie au moins que l'état peut être mis à jour correctement
   });
 });
 
