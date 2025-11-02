@@ -7,6 +7,8 @@ describe('App', () => {
     render(<App />);
     // Vérifier que la page d'accueil est rendue avec son titre
     expect(screen.getByText('Bienvenue sur Horoscope')).toBeInTheDocument();
-    expect(screen.getByText("Découvrez votre horoscope personnalisé")).toBeInTheDocument();
+    expect(
+      screen.getByText('Découvrez votre horoscope personnalisé')
+    ).toBeInTheDocument();
   });
 });
