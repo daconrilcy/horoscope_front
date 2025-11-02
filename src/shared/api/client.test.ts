@@ -5,7 +5,8 @@ import { eventBus } from './eventBus';
 import { ApiError, NetworkError } from './errors';
 
 // Mock fetch
-global.fetch = vi.fn();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(globalThis as any).fetch = vi.fn();
 
 describe('HTTP Client', () => {
   beforeEach(() => {
@@ -38,7 +39,8 @@ describe('HTTP Client', () => {
 
       await http.get('/test');
 
-      expect(global.fetch).toHaveBeenCalledWith(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((globalThis as any).fetch).toHaveBeenCalledWith(
         'http://api.example.com/test',
         expect.any(Object)
       );
@@ -59,7 +61,8 @@ describe('HTTP Client', () => {
 
       await http.get('/test', { auth: true });
 
-      const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       const headers = callArgs[1]?.headers as Headers;
       expect(headers.get('Authorization')).toBe(`Bearer ${token}`);
     });
@@ -77,7 +80,8 @@ describe('HTTP Client', () => {
 
       await http.get('/test', { auth: false });
 
-      const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       const headers = callArgs[1]?.headers as Headers;
       expect(headers.get('Authorization')).toBeNull();
     });
@@ -92,7 +96,8 @@ describe('HTTP Client', () => {
 
       await http.get('/test', { auth: true });
 
-      const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       const headers = callArgs[1]?.headers as Headers;
       expect(headers.get('Authorization')).toBeNull();
     });
@@ -109,7 +114,8 @@ describe('HTTP Client', () => {
 
       await http.post('/v1/billing/checkout', {}, { idempotency: true });
 
-      const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       const headers = callArgs[1]?.headers as Headers;
       expect(headers.get('Idempotency-Key')).toBeTruthy();
       expect(headers.get('Idempotency-Key')).toMatch(
@@ -127,7 +133,8 @@ describe('HTTP Client', () => {
 
       await http.post('/v1/auth/login', {}, { idempotency: true });
 
-      const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       const headers = callArgs[1]?.headers as Headers;
       expect(headers.get('Idempotency-Key')).toBeNull();
     });
@@ -142,7 +149,8 @@ describe('HTTP Client', () => {
 
       await http.post('/v1/billing/checkout', {}, { idempotency: false });
 
-      const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       const headers = callArgs[1]?.headers as Headers;
       expect(headers.get('Idempotency-Key')).toBeNull();
     });
@@ -354,7 +362,8 @@ describe('HTTP Client', () => {
     });
 
     it('should handle offline errors', async () => {
-      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new TypeError('Failed to fetch'));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
       await expect(http.get('/test')).rejects.toThrow(NetworkError);
     });
@@ -363,7 +372,8 @@ describe('HTTP Client', () => {
   describe('Retry Logic', () => {
     it('should retry GET requests on NetworkError', async () => {
       let callCount = 0;
-      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mockImplementation(() => {
         callCount++;
         if (callCount < 2) {
           return Promise.reject(new TypeError('Failed to fetch'));
@@ -382,26 +392,32 @@ describe('HTTP Client', () => {
     });
 
     it('should not retry POST requests', async () => {
-      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new TypeError('Failed to fetch'));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
       await expect(http.post('/test', {})).rejects.toThrow(NetworkError);
-      expect(global.fetch).toHaveBeenCalledTimes(1);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((globalThis as any).fetch).toHaveBeenCalledTimes(1);
     });
 
     it('should not retry when noRetry is true', async () => {
-      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new TypeError('Failed to fetch'));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
       await expect(http.get('/test', { noRetry: true })).rejects.toThrow(NetworkError);
-      expect(global.fetch).toHaveBeenCalledTimes(1);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((globalThis as any).fetch).toHaveBeenCalledTimes(1);
     });
 
     it('should not retry /v1/billing/checkout even for GET', async () => {
-      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new TypeError('Failed to fetch'));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
       await expect(http.get('/v1/billing/checkout', { idempotency: true })).rejects.toThrow(
         NetworkError
       );
-      expect(global.fetch).toHaveBeenCalledTimes(1);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((globalThis as any).fetch).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -415,7 +431,8 @@ describe('HTTP Client', () => {
       });
 
       const result = await http.get('/test');
-      const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       expect(callArgs[1]?.method).toBe('GET');
       expect(result).toEqual({ method: 'GET' });
     });
@@ -430,7 +447,8 @@ describe('HTTP Client', () => {
       });
 
       await http.post('/test', body);
-      const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       expect(callArgs[1]?.method).toBe('POST');
       expect(callArgs[1]?.body).toBe(JSON.stringify(body));
     });
@@ -445,7 +463,8 @@ describe('HTTP Client', () => {
       });
 
       await http.put('/test', body);
-      const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       expect(callArgs[1]?.method).toBe('PUT');
     });
 
@@ -457,7 +476,8 @@ describe('HTTP Client', () => {
       });
 
       await http.del('/test');
-      const callArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = ((globalThis as any).fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       expect(callArgs[1]?.method).toBe('DELETE');
     });
   });

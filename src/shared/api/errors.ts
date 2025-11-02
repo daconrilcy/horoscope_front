@@ -52,7 +52,7 @@ export class NetworkError extends Error {
  * Cherche dans les headers : x-request-id, x-trace-id, x-correlation-id
  * Puis dans le body : request_id, trace_id
  */
-export function extractRequestId(responseOrBody: Response | Record<string, unknown> | unknown): string | undefined {
+export function extractRequestId(responseOrBody: Response | Record<string, unknown>): string | undefined {
   // Si c'est une Response (ou un objet avec headers pour les mocks de tests)
   if (responseOrBody instanceof Response || (typeof responseOrBody === 'object' && responseOrBody !== null && 'headers' in responseOrBody)) {
     const headers = (responseOrBody as { headers: Headers | { get: (key: string) => string | null } }).headers;
