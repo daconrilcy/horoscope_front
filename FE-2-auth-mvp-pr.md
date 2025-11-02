@@ -107,7 +107,7 @@ Implémentation complète du système d'authentification (MVP) avec sécurité r
 
 ## Références
 
-- Closes #[NUMERO_ISSUE] (à remplacer)
+- Closes #8
 
 ## Instructions de test
 
@@ -152,4 +152,3 @@ npm run test
 - Les pages utilisent des styles inline pour l'instant (MVP)
 - Les tests des pages avec Testing Library seront ajoutés dans une PR suivante si nécessaire
 - Les tests d'intégration e2e complets seront ajoutés dans une PR suivante si nécessaire
-
