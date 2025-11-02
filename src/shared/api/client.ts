@@ -143,7 +143,7 @@ async function parseResponse<T>(
 function toApiError(response: Response, body: unknown): ApiError {
   // Extraire request_id depuis les headers AVANT le parsing du body
   const headerRequestId = extractRequestId(response);
-  const bodyRequestId = extractRequestId(body);
+  const bodyRequestId = typeof body === 'object' && body !== null ? extractRequestId(body as Record<string, unknown>) : undefined;
   const requestId = headerRequestId || bodyRequestId;
   const status = response.status;
 

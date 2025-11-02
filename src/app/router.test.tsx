@@ -5,25 +5,25 @@ import { useAuthStore } from '@/stores/authStore';
 describe('Router - RouteGuard', () => {
   beforeEach(() => {
     // Reset store et sessionStorage
-    useAuthStore.setState({ token: null, _hasHydrated: false });
+    useAuthStore.setState({ token: null, hasHydrated: false });
     sessionStorage.clear();
     vi.clearAllMocks();
   });
 
   describe('RouteGuard - Hydratation', () => {
-    it('devrait initialiser _hasHydrated à false', () => {
+    it('devrait initialiser hasHydrated à false', () => {
       const state = useAuthStore.getState();
-      expect(state._hasHydrated).toBe(false);
+      expect(state.hasHydrated).toBe(false);
     });
 
-    it('devrait permettre de définir _hasHydrated', () => {
-      useAuthStore.getState().setHasHydrated(true);
-      expect(useAuthStore.getState()._hasHydrated).toBe(true);
+    it('devrait permettre de définir hasHydrated via hydrateFromStorage', () => {
+      useAuthStore.getState().hydrateFromStorage();
+      expect(useAuthStore.getState().hasHydrated).toBe(true);
     });
 
     it('devrait lire le token depuis le store (mémoire)', () => {
-      // Définir un token
-      useAuthStore.getState().setToken('test-token');
+      // Définir un token directement
+      useAuthStore.setState({ token: 'test-token' });
       
       // Vérifier que le token est bien dans le store
       expect(useAuthStore.getState().token).toBe('test-token');
@@ -58,11 +58,11 @@ describe('Router - RouteGuard', () => {
   describe('RouteGuard - Redirection', () => {
     it('devrait rediriger si pas de token après hydratation', () => {
       // Simuler état : hydraté mais pas de token
-      useAuthStore.setState({ token: null, _hasHydrated: true });
+      useAuthStore.setState({ token: null, hasHydrated: true });
       
       // Vérifier la logique de redirection
       const token = useAuthStore.getState().token;
-      const hasHydrated = useAuthStore.getState()._hasHydrated;
+      const hasHydrated = useAuthStore.getState().hasHydrated;
       
       // Devrait rediriger si pas de token et hydraté
       const shouldRedirect = hasHydrated && (token === null || token === '');
@@ -71,11 +71,11 @@ describe('Router - RouteGuard', () => {
 
     it('devrait ne pas rediriger si token présent après hydratation', () => {
       // Simuler état : hydraté avec token
-      useAuthStore.setState({ token: 'valid-token', _hasHydrated: true });
+      useAuthStore.setState({ token: 'valid-token', hasHydrated: true });
       
       // Vérifier la logique de redirection
       const token = useAuthStore.getState().token;
-      const hasHydrated = useAuthStore.getState()._hasHydrated;
+      const hasHydrated = useAuthStore.getState().hasHydrated;
       
       // Ne devrait pas rediriger si token présent et hydraté
       const shouldRedirect = hasHydrated && (token === null || token === '');
@@ -84,10 +84,10 @@ describe('Router - RouteGuard', () => {
 
     it('devrait ne pas rediriger si pas encore hydraté', () => {
       // Simuler état : pas encore hydraté (même avec token null)
-      useAuthStore.setState({ token: null, _hasHydrated: false });
+      useAuthStore.setState({ token: null, hasHydrated: false });
       
       // Vérifier la logique : ne pas rediriger tant que pas hydraté
-      const hasHydrated = useAuthStore.getState()._hasHydrated;
+      const hasHydrated = useAuthStore.getState().hasHydrated;
       expect(hasHydrated).toBe(false);
       // RouteGuard devrait attendre hydratation
     });

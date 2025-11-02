@@ -1,4 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -9,11 +10,12 @@ import { useAuthStore } from '@/stores/authStore';
 export function PrivateLayout(): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
-  const clearToken = useAuthStore((state) => state.clearToken);
+  const queryClient = useQueryClient();
+  const logout = useAuthStore((state) => state.logout);
   const isDashboard = location.pathname === ROUTES.APP.DASHBOARD;
 
   const handleLogout = (): void => {
-    clearToken();
+    logout(queryClient);
     void navigate(ROUTES.LOGIN, { replace: true });
   };
 

@@ -1,56 +1,61 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import type { QueryClient } from '@tanstack/react-query';
+import { readPersistedToken, writePersistedToken, clearPersistedToken } from '@/shared/auth/token';
+
+export type UserRef = { id: string; email: string };
 
 interface AuthState {
   token: string | null;
-  _hasHydrated: boolean;
-  setToken: (token: string) => void;
+  userRef?: UserRef;
+  hasHydrated: boolean;
+  redirectAfterLogin?: string;
+  hydrateFromStorage: () => void;
+  login: (token: string, userRef?: UserRef) => void;
+  logout: (queryClient?: QueryClient) => void;
+  setRedirectAfterLogin: (path?: string) => void;
   getToken: () => string | null;
-  clearToken: () => void;
-  setHasHydrated: (hasHydrated: boolean) => void;
 }
 
 /**
  * Store Zustand pour la gestion du token JWT
- * Mémoire = source de vérité, localStorage sync en arrière-plan
- * _hasHydrated permet de savoir si l'hydratation depuis localStorage est terminée
+ * Mémoire = source de vérité, localStorage sert uniquement d'appoint pour rehydrate au boot
+ * hasHydrated permet de savoir si l'hydratation depuis localStorage est terminée
  */
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      token: null,
-      _hasHydrated: false,
+export const useAuthStore = create<AuthState>()((set, get) => ({
+  token: null,
+  userRef: undefined,
+  hasHydrated: false,
+  redirectAfterLogin: undefined,
 
-      setToken: (token: string) => {
-        set({ token });
-        // Sync localStorage en arrière-plan (via persist middleware)
-      },
-
-      getToken: () => {
-        return get().token;
-      },
-
-      clearToken: () => {
-        set({ token: null });
-        // Purge localStorage (via persist middleware)
-        // Pour forcer un rechargement complet, on peut ajouter window.location.reload()
-        // mais on le laisse au composant qui appelle clearToken() pour éviter de l'imposer ici
-      },
-
-      setHasHydrated: (hasHydrated: boolean) => {
-        set({ _hasHydrated: hasHydrated });
-      },
-    }),
-    {
-      name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage),
-      // Stocke uniquement le token, pas d'autres données sensibles
-      partialize: (state) => ({ token: state.token }),
-      onRehydrateStorage: () => (state) => {
-        // Appelé après l'hydratation
-        state?.setHasHydrated(true);
-      },
+  hydrateFromStorage: (): void => {
+    const token = readPersistedToken();
+    if (token != null && token !== '') {
+      set({ token, hasHydrated: true });
+    } else {
+      set({ hasHydrated: true });
     }
-  )
-);
+  },
+
+  login: (token: string, userRef?: UserRef): void => {
+    writePersistedToken(token);
+    set({ token, userRef });
+  },
+
+  logout: (queryClient?: QueryClient): void => {
+    clearPersistedToken();
+    set({ token: null, userRef: undefined, redirectAfterLogin: undefined });
+    // Purge React Query cache si queryClient fourni
+    if (queryClient != null) {
+      queryClient.clear();
+    }
+  },
+
+  setRedirectAfterLogin: (path?: string): void => {
+    set({ redirectAfterLogin: path });
+  },
+
+  getToken: (): string | null => {
+    return get().token;
+  },
+}));
 

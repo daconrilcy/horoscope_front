@@ -12,6 +12,8 @@ import { ROUTES } from '@/shared/config/routes';
 import { HomePage } from '@/pages/home';
 import { LoginPage } from '@/pages/login';
 import { SignupPage } from '@/pages/signup';
+import { ResetRequestPage } from '@/pages/reset/request';
+import { ResetConfirmPage } from '@/pages/reset/confirm';
 import { TermsOfServicePage } from '@/pages/legal/tos';
 import { PrivacyPolicyPage } from '@/pages/legal/privacy';
 import { NotFoundPage } from '@/pages/NotFound';
@@ -38,7 +40,7 @@ function PageLoader(): JSX.Element {
  */
 function RouteGuard(): JSX.Element {
   const token = useAuthStore((state) => state.token);
-  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
   const location = useLocation();
 
   // Attendre l'hydratation avant de décider
@@ -94,6 +96,14 @@ const router = createBrowserRouter([
           {
             path: ROUTES.SIGNUP,
             element: <SignupPage />,
+          },
+          {
+            path: ROUTES.RESET.REQUEST,
+            element: <ResetRequestPage />,
+          },
+          {
+            path: ROUTES.RESET.CONFIRM,
+            element: <ResetConfirmPage />,
           },
           {
             path: ROUTES.LEGAL.TOS,
