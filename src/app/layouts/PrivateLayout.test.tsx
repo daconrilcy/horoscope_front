@@ -13,7 +13,8 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     Outlet: (): JSX.Element => <div data-testid="outlet">Outlet Content</div>,
-    useNavigate: (): ReturnType<typeof vi.fn> => mockNavigate,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    useNavigate: () => mockNavigate,
   };
 });
 
