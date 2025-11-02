@@ -1,92 +1,144 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
+import { createBrowserRouter, RouterProvider, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { AppProviders } from './AppProviders';
 import { UpgradeBanner } from '@/widgets/UpgradeBanner/UpgradeBanner';
+import { PublicLayout } from './layouts/PublicLayout';
+import { PrivateLayout } from './layouts/PrivateLayout';
+import { ScrollRestoration } from './ScrollRestoration';
+import { ROUTES } from '@/shared/config/routes';
+
+// Pages publiques
+import { HomePage } from '@/pages/home';
+import { LoginPage } from '@/pages/login';
+import { SignupPage } from '@/pages/signup';
+import { TermsOfServicePage } from '@/pages/legal/tos';
+import { PrivacyPolicyPage } from '@/pages/legal/privacy';
+import { NotFoundPage } from '@/pages/NotFound';
+
+// Pages privées - lazy loading pour code splitting
+const DashboardPage = lazy(() =>
+  import('@/pages/app/dashboard').then((module) => ({ default: module.DashboardPage }))
+);
+
+/**
+ * Loader simple pour Suspense
+ */
+function PageLoader(): JSX.Element {
+  return (
+    <div style={{ padding: '2rem', textAlign: 'center' }}>
+      <p>Chargement...</p>
+    </div>
+  );
+}
 
 /**
  * RouteGuard : protège les routes privées en vérifiant la présence du token
+ * Attend l'hydratation du store avant de décider pour éviter les redirections intempestives
  */
-function RouteGuard({ children }: { children: React.ReactNode }): JSX.Element {
+function RouteGuard(): JSX.Element {
   const token = useAuthStore((state) => state.token);
+  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+  const location = useLocation();
 
-  if (token === null || token === '') {
-    return <Navigate to="/login" replace />;
+  // Attendre l'hydratation avant de décider
+  if (!hasHydrated) {
+    // Afficher un loader pendant l'hydratation
+    return <PageLoader />;
   }
 
-  return <>{children}</>;
+  // Rediriger si pas de token après hydratation
+  if (token === null || token === '') {
+    // Stocker la route d'origine pour redirectAfterLogin
+    const currentPath = location.pathname + location.search;
+    if (currentPath !== ROUTES.LOGIN) {
+      sessionStorage.setItem('redirectAfterLogin', currentPath);
+    }
+    return <Navigate to={ROUTES.LOGIN} replace />;
+  }
+
+  return <Outlet />;
 }
 
 /**
- * Placeholder pour les pages (à créer plus tard)
+ * Composant pour envelopper l'app avec providers et bannière
  */
-function LoginPage(): JSX.Element {
+function AppShell(): JSX.Element {
   return (
-    <div>
-      <h1>Login</h1>
-      <p>Page de connexion</p>
-    </div>
-  );
-}
-
-function SignupPage(): JSX.Element {
-  return (
-    <div>
-      <h1>Signup</h1>
-      <p>Page d'inscription</p>
-    </div>
-  );
-}
-
-function HomePage(): JSX.Element {
-  return (
-    <div>
-      <h1>Horoscope</h1>
-      <p>Page d'accueil</p>
-    </div>
-  );
-}
-
-function DashboardPage(): JSX.Element {
-  return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>Tableau de bord</p>
-    </div>
+    <AppProviders>
+      <UpgradeBanner />
+      <ScrollRestoration />
+      <Outlet />
+    </AppProviders>
   );
 }
 
 /**
- * Router principal avec React Router v6
+ * Configuration des routes avec Data Router
+ */
+const router = createBrowserRouter([
+  {
+    element: <AppShell />,
+    children: [
+      {
+        element: <PublicLayout />,
+        children: [
+          {
+            path: ROUTES.HOME,
+            element: <HomePage />,
+          },
+          {
+            path: ROUTES.LOGIN,
+            element: <LoginPage />,
+          },
+          {
+            path: ROUTES.SIGNUP,
+            element: <SignupPage />,
+          },
+          {
+            path: ROUTES.LEGAL.TOS,
+            element: <TermsOfServicePage />,
+          },
+          {
+            path: ROUTES.LEGAL.PRIVACY,
+            element: <PrivacyPolicyPage />,
+          },
+        ],
+      },
+      {
+        path: ROUTES.APP.BASE,
+        element: <RouteGuard />,
+        children: [
+          {
+            element: <PrivateLayout />,
+            children: [
+              {
+                path: 'dashboard',
+                element: (
+                  <Suspense fallback={<PageLoader />}>
+                    <DashboardPage />
+                  </Suspense>
+                ),
+              },
+              {
+                path: '*',
+                element: <Navigate to={ROUTES.APP.DASHBOARD} replace />,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        path: ROUTES.NOT_FOUND,
+        element: <NotFoundPage />,
+      },
+    ],
+  },
+]);
+
+/**
+ * Router principal avec Data Router (createBrowserRouter + RouterProvider)
  */
 export function Router(): JSX.Element {
-  return (
-    <BrowserRouter>
-      <AppProviders>
-        <UpgradeBanner />
-        <Routes>
-          {/* Routes publiques */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          
-          {/* Routes privées */}
-          <Route
-            path="/app/*"
-            element={
-              <RouteGuard>
-                <Routes>
-                  <Route path="dashboard" element={<DashboardPage />} />
-                  <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
-                </Routes>
-              </RouteGuard>
-            }
-          />
-          
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AppProviders>
-    </BrowserRouter>
-  );
+  return <RouterProvider router={router} />;
 }

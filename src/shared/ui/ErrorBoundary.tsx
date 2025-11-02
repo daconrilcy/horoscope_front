@@ -10,11 +10,13 @@ interface ErrorBoundaryState {
 interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: (error: Error | null, requestId?: string) => ReactNode;
+  resetKeys?: readonly unknown[]; // Clés qui déclenchent un reset automatique
 }
 
 /**
  * ErrorBoundary pour capturer les erreurs 5xx et autres erreurs non gérées
  * Affiche le request_id si disponible dans l'erreur ApiError
+ * Supporte resetKeys pour réinitialiser automatiquement lors d'un changement de route
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
@@ -33,6 +35,23 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       error,
       requestId,
     };
+  }
+
+  componentDidUpdate(prevProps: ErrorBoundaryProps): void {
+    const { resetKeys } = this.props;
+    const { hasError } = this.state;
+
+    // Si resetKeys a changé et qu'il y a une erreur, réinitialiser
+    if (hasError && resetKeys !== undefined && prevProps.resetKeys !== undefined) {
+      const hasResetKeyChanged = resetKeys.some((key, index) => key !== prevProps.resetKeys?.[index]);
+      if (hasResetKeyChanged) {
+        this.setState({
+          hasError: false,
+          error: null,
+          requestId: undefined,
+        });
+      }
+    }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
