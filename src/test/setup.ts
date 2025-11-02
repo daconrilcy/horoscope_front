@@ -15,9 +15,12 @@ Object.defineProperty(window, 'scrollTo', {
 });
 
 // Mock env pour les tests
+// @ts-expect-error - process.env est disponible dans l'environnement de test
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-const env = process.env;
-if (!env.VITE_API_BASE_URL) {
+const processEnv = typeof globalThis.process !== 'undefined' ? globalThis.process.env : null;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+const env = processEnv as Record<string, string | undefined> | null;
+if (env != null && (env.VITE_API_BASE_URL == null || env.VITE_API_BASE_URL === '')) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   env.VITE_API_BASE_URL = 'http://localhost:8000';
 }

@@ -8,6 +8,10 @@ export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   SIGNUP: '/signup',
+  RESET: {
+    REQUEST: '/reset/request',
+    CONFIRM: '/reset/confirm',
+  },
   LEGAL: {
     BASE: '/legal',
     TOS: '/legal/tos',

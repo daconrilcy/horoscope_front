@@ -7,6 +7,7 @@ import { configureHttp } from '@/shared/api/client';
 import { env } from '@/shared/config/env';
 import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
 import { NetworkError } from '@/shared/api/errors';
+import { useAuthStore } from '@/stores/authStore';
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -67,9 +68,15 @@ export const toast = {
 export function AppProviders({ children }: AppProvidersProps): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
+  const hydrateFromStorage = useAuthStore((state) => state.hydrateFromStorage);
 
   // Créer QueryClient une seule fois (singleton)
   const queryClient = useMemo(() => createQueryClient(), []);
+
+  // Hydratation unique au boot (une seule fois)
+  React.useEffect(() => {
+    hydrateFromStorage();
+  }, [hydrateFromStorage]);
 
   // Configuration du client HTTP avec callback onUnauthorized
   React.useEffect(() => {

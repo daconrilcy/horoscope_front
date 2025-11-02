@@ -4,8 +4,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { PrivateLayout } from './PrivateLayout';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuthStore } from '@/stores/authStore';
+import { QueryClient } from '@tanstack/react-query';
 
 const mockNavigate = vi.fn();
+const mockQueryClient = new QueryClient();
 
 // Mock pour Outlet et useNavigate
 vi.mock('react-router-dom', async () => {
@@ -13,14 +15,23 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     Outlet: (): JSX.Element => <div data-testid="outlet">Outlet Content</div>,
-    useNavigate: (): ReturnType<typeof vi.fn> => mockNavigate,
+    useNavigate: (): typeof mockNavigate => mockNavigate,
+  };
+});
+
+// Mock pour useQueryClient
+vi.mock('@tanstack/react-query', async () => {
+  const actual = await vi.importActual<typeof import('@tanstack/react-query')>('@tanstack/react-query');
+  return {
+    ...actual,
+    useQueryClient: () => mockQueryClient,
   };
 });
 
 describe('PrivateLayout', () => {
   beforeEach(() => {
     // Reset store
-    useAuthStore.setState({ token: 'test-token', _hasHydrated: true });
+    useAuthStore.setState({ token: 'test-token', hasHydrated: true });
     vi.clearAllMocks();
     mockNavigate.mockClear();
   });
@@ -57,9 +68,9 @@ describe('PrivateLayout', () => {
     expect(dashboardLink).toHaveAttribute('href', ROUTES.APP.DASHBOARD);
   });
 
-  it('devrait appeler clearToken et navigate au clic sur Déconnexion', () => {
-    const clearToken = vi.fn();
-    useAuthStore.setState({ clearToken });
+  it('devrait appeler logout et navigate au clic sur Déconnexion', () => {
+    const logout = vi.fn();
+    useAuthStore.setState({ logout });
 
     render(
       <MemoryRouter>
@@ -70,7 +81,7 @@ describe('PrivateLayout', () => {
     const logoutButton = screen.getByText('Déconnexion');
     logoutButton.click();
 
-    expect(clearToken).toHaveBeenCalled();
+    expect(logout).toHaveBeenCalledWith(mockQueryClient);
     expect(mockNavigate).toHaveBeenCalledWith(ROUTES.LOGIN, { replace: true });
   });
 });
