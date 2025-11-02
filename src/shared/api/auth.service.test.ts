@@ -27,10 +27,15 @@ describe('authService', () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockResolvedValue(mockResponse);
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse
+      );
 
-      const result = await authService.signup('test@example.com', 'password123');
+      const result = await authService.signup(
+        'test@example.com',
+        'password123'
+      );
 
       expect(result).toEqual(mockResponse);
       expect(mockHttpPost).toHaveBeenCalledWith(
@@ -50,23 +55,36 @@ describe('authService', () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockResolvedValue(mockResponse);
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse
+      );
 
-      await expect(authService.signup('test@example.com', 'password123')).rejects.toThrow();
+      await expect(
+        authService.signup('test@example.com', 'password123')
+      ).rejects.toThrow();
     });
 
     it('devrait exposer details dans ApiError pour 422', async () => {
-      const mockError = new ApiError('Validation failed', 422, undefined, undefined, {
-        email: ['Email déjà utilisé'],
-        password: ['Mot de passe trop faible'],
-      });
+      const mockError = new ApiError(
+        'Validation failed',
+        422,
+        undefined,
+        undefined,
+        {
+          email: ['Email déjà utilisé'],
+          password: ['Mot de passe trop faible'],
+        }
+      );
 
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockRejectedValue(mockError);
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
-      await expect(authService.signup('test@example.com', 'password123')).rejects.toThrow(ApiError);
-      
+      await expect(
+        authService.signup('test@example.com', 'password123')
+      ).rejects.toThrow(ApiError);
+
       try {
         await authService.signup('test@example.com', 'password123');
       } catch (error) {
@@ -84,10 +102,13 @@ describe('authService', () => {
     it('devrait propager ApiError 400', async () => {
       const mockError = new ApiError('Bad request', 400);
 
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockRejectedValue(mockError);
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
-      await expect(authService.signup('test@example.com', 'password123')).rejects.toThrow(ApiError);
+      await expect(
+        authService.signup('test@example.com', 'password123')
+      ).rejects.toThrow(ApiError);
     });
   });
 
@@ -102,8 +123,10 @@ describe('authService', () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockResolvedValue(mockResponse);
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse
+      );
 
       const result = await authService.login('test@example.com', 'password123');
 
@@ -125,29 +148,43 @@ describe('authService', () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockResolvedValue(mockResponse);
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse
+      );
 
-      await expect(authService.login('test@example.com', 'password123')).rejects.toThrow();
+      await expect(
+        authService.login('test@example.com', 'password123')
+      ).rejects.toThrow();
     });
 
     it('devrait propager ApiError 401', async () => {
       const mockError = new ApiError('Unauthorized', 401);
 
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockRejectedValue(mockError);
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
-      await expect(authService.login('test@example.com', 'password123')).rejects.toThrow(ApiError);
+      await expect(
+        authService.login('test@example.com', 'password123')
+      ).rejects.toThrow(ApiError);
     });
 
     it('devrait exposer details dans ApiError pour 422', async () => {
-      const mockError = new ApiError('Validation failed', 422, undefined, undefined, {
-        email: ['Email invalide'],
-        password: ['Mot de passe requis'],
-      });
+      const mockError = new ApiError(
+        'Validation failed',
+        422,
+        undefined,
+        undefined,
+        {
+          email: ['Email invalide'],
+          password: ['Mot de passe requis'],
+        }
+      );
 
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockRejectedValue(mockError);
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       try {
         await authService.login('test@example.com', 'password123');
@@ -171,8 +208,10 @@ describe('authService', () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockResolvedValue(mockResponse);
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse
+      );
 
       const result = await authService.requestReset('test@example.com');
 
@@ -190,19 +229,26 @@ describe('authService', () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockResolvedValue(mockResponse);
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse
+      );
 
-      await expect(authService.requestReset('test@example.com')).rejects.toThrow();
+      await expect(
+        authService.requestReset('test@example.com')
+      ).rejects.toThrow();
     });
 
     it('devrait propager ApiError 400', async () => {
       const mockError = new ApiError('Bad request', 400);
 
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockRejectedValue(mockError);
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
-      await expect(authService.requestReset('test@example.com')).rejects.toThrow(ApiError);
+      await expect(
+        authService.requestReset('test@example.com')
+      ).rejects.toThrow(ApiError);
     });
   });
 
@@ -213,10 +259,15 @@ describe('authService', () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockResolvedValue(mockResponse);
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse
+      );
 
-      const result = await authService.confirmReset('token-123', 'newpassword123');
+      const result = await authService.confirmReset(
+        'token-123',
+        'newpassword123'
+      );
 
       expect(result).toEqual(mockResponse);
       expect(mockHttpPost).toHaveBeenCalledWith(
@@ -232,20 +283,31 @@ describe('authService', () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockResolvedValue(mockResponse);
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockResponse
+      );
 
-      await expect(authService.confirmReset('token-123', 'newpassword123')).rejects.toThrow();
+      await expect(
+        authService.confirmReset('token-123', 'newpassword123')
+      ).rejects.toThrow();
     });
 
     it('devrait exposer details dans ApiError pour 422', async () => {
-      const mockError = new ApiError('Validation failed', 422, undefined, undefined, {
-        token: ['Token invalide ou expiré'],
-        password: ['Mot de passe trop faible'],
-      });
+      const mockError = new ApiError(
+        'Validation failed',
+        422,
+        undefined,
+        undefined,
+        {
+          token: ['Token invalide ou expiré'],
+          password: ['Mot de passe trop faible'],
+        }
+      );
 
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockRejectedValue(mockError);
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       try {
         await authService.confirmReset('token-123', 'newpassword123');
@@ -264,10 +326,13 @@ describe('authService', () => {
     it('devrait propager ApiError 400', async () => {
       const mockError = new ApiError('Bad request', 400);
 
-      const mockHttpPost = vi.mocked(http.post) as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue: (value: unknown) => void; mockRejectedValue: (value: unknown) => void };
-      mockHttpPost.mockRejectedValue(mockError);
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpPost = vi.mocked(http.post);
+      (mockHttpPost as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
-      await expect(authService.confirmReset('token-123', 'newpassword123')).rejects.toThrow(ApiError);
+      await expect(
+        authService.confirmReset('token-123', 'newpassword123')
+      ).rejects.toThrow(ApiError);
     });
   });
 });
