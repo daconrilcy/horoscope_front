@@ -24,11 +24,12 @@ describe('accountService', () => {
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const mockHttpGet = vi.mocked(http.get);
-       
+
       (mockHttpGet as ReturnType<typeof vi.fn>).mockResolvedValue(
         mockBlob as unknown
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const result = await accountService.exportZip();
 
       expect(result.blob).toBe(mockBlob);
@@ -36,6 +37,7 @@ describe('accountService', () => {
       expect(mockHttpGet).toHaveBeenCalledWith('/v1/account/export', {
         parseAs: 'blob',
         timeoutMs: 60000,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         signal: expect.any(AbortSignal),
       });
     });
@@ -183,7 +185,9 @@ describe('accountService', () => {
           expect(error.status).toBe(409);
           expect(error.code).toBe('conflict');
           // Le message devrait être enrichi avec le message métier
-          expect(error.message).toBe('Suppression impossible pour le moment (opérations en cours)');
+          expect(error.message).toBe(
+            'Suppression impossible pour le moment (opérations en cours)'
+          );
           expect(error.requestId).toBe('req-123');
         }
       }
@@ -222,7 +226,9 @@ describe('accountService', () => {
       const mockHttpDel = vi.mocked(http.del);
       (mockHttpDel as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
-      await expect(accountService.deleteAccount()).rejects.toThrow(NetworkError);
+      await expect(accountService.deleteAccount()).rejects.toThrow(
+        NetworkError
+      );
     });
   });
 });

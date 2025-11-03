@@ -117,13 +117,13 @@ describe('useDeleteAccount', () => {
     ).mockResolvedValue(undefined);
 
     const mockLogout = vi.fn();
-     
+
     (useAuthStore.getState as ReturnType<typeof vi.fn>).mockReturnValue({
       logout: mockLogout,
     });
 
     const mockClearCharts = vi.fn();
-     
+
     (useHoroscopeStore.getState as ReturnType<typeof vi.fn>).mockReturnValue({
       clearCharts: mockClearCharts,
     });
@@ -142,15 +142,13 @@ describe('useDeleteAccount', () => {
       expect(accountService.deleteAccount).toHaveBeenCalled();
       expect(mockLogout).toHaveBeenCalledWith(queryClient);
       // Vérifier que le cache est vidé
-       
+
       const queryCache = queryClient.getQueryCache();
-       
+
       expect(queryCache.getAll().length).toBe(0); // Cache cleared
       expect(mockClearCharts).toHaveBeenCalled();
       expect(mockHidePaywall).toHaveBeenCalled();
-      expect(toast.success).toHaveBeenCalledWith(
-        'Compte supprimé avec succès'
-      );
+      expect(toast.success).toHaveBeenCalledWith('Compte supprimé avec succès');
       expect(mockAssign).toHaveBeenCalledWith('/');
     });
   });
@@ -161,9 +159,9 @@ describe('useDeleteAccount', () => {
       resolvePromise = resolve;
     });
 
-    (
-      accountService.deleteAccount as ReturnType<typeof vi.fn>
-    ).mockReturnValue(promise);
+    (accountService.deleteAccount as ReturnType<typeof vi.fn>).mockReturnValue(
+      promise
+    );
 
     const { result } = renderHook(() => useDeleteAccount(), { wrapper });
 

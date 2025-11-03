@@ -53,7 +53,13 @@ export function AccountPage(): JSX.Element {
           Téléchargez une copie de toutes vos données au format ZIP. Ce fichier
           contient :
         </p>
-        <ul style={{ marginBottom: '1.5rem', paddingLeft: '1.5rem', color: '#666' }}>
+        <ul
+          style={{
+            marginBottom: '1.5rem',
+            paddingLeft: '1.5rem',
+            color: '#666',
+          }}
+        >
           <li>Vos informations de compte</li>
           <li>Vos thèmes natals</li>
           <li>Votre historique de chat</li>
@@ -96,7 +102,13 @@ export function AccountPage(): JSX.Element {
           irréversible. Toutes vos données seront définitivement supprimées, y
           compris :
         </p>
-        <ul style={{ marginBottom: '1.5rem', paddingLeft: '1.5rem', color: '#856404' }}>
+        <ul
+          style={{
+            marginBottom: '1.5rem',
+            paddingLeft: '1.5rem',
+            color: '#856404',
+          }}
+        >
           <li>Vos informations de compte</li>
           <li>Vos thèmes natals</li>
           <li>Votre historique de chat</li>

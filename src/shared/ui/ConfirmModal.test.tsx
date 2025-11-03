@@ -17,16 +17,18 @@ describe('ConfirmModal', () => {
     vi.clearAllMocks();
   });
 
-  it('ne devrait pas s\'afficher si isOpen est false', () => {
+  it("ne devrait pas s'afficher si isOpen est false", () => {
     render(<ConfirmModal {...defaultProps} isOpen={false} />);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('devrait s\'afficher avec le titre et le message', () => {
+  it("devrait s'afficher avec le titre et le message", () => {
     render(<ConfirmModal {...defaultProps} />);
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('Confirmer la suppression')).toBeInTheDocument();
-    expect(screen.getByText('Cette action est irréversible.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Cette action est irréversible.')
+    ).toBeInTheDocument();
   });
 
   it('devrait avoir les attributs aria corrects', () => {
@@ -112,14 +114,23 @@ describe('ConfirmModal', () => {
     await userEvent.type(input, '  SUPPRIMER  '); // avec espaces
 
     // Le bouton devrait rester désactivé car trim('  SUPPRIMER  ') !== 'SUPPRIMER'
-    await waitFor(() => {
-      expect(confirmButton).toBeDisabled();
-    }, { timeout: 2000 });
+    await waitFor(
+      () => {
+        expect(confirmButton).toBeDisabled();
+      },
+      { timeout: 2000 }
+    );
   });
 
   it('devrait appeler onConfirm quand le formulaire est soumis avec texte valide', async () => {
     const onConfirm = vi.fn();
-    render(<ConfirmModal {...defaultProps} onConfirm={onConfirm} confirmText="SUPPRIMER" />);
+    render(
+      <ConfirmModal
+        {...defaultProps}
+        onConfirm={onConfirm}
+        confirmText="SUPPRIMER"
+      />
+    );
 
     const input = screen.getByPlaceholderText('SUPPRIMER');
     const confirmButton = screen.getByRole('button', { name: 'Confirmer' });
@@ -146,7 +157,7 @@ describe('ConfirmModal', () => {
     // Vérifier que DELETE est dans le label
     expect(screen.getByText('DELETE')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('DELETE')).toBeInTheDocument();
-    
+
     // Vérifier que le texte de confirmation est présent
     const label = screen.getByText(/Tapez/);
     expect(label).toBeInTheDocument();
@@ -154,12 +165,19 @@ describe('ConfirmModal', () => {
   });
 
   it('devrait utiliser confirmButtonLabel personnalisé', () => {
-    render(<ConfirmModal {...defaultProps} confirmButtonLabel="Supprimer définitivement" />);
+    render(
+      <ConfirmModal
+        {...defaultProps}
+        confirmButtonLabel="Supprimer définitivement"
+      />
+    );
 
-    expect(screen.getByRole('button', { name: 'Supprimer définitivement' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Supprimer définitivement' })
+    ).toBeInTheDocument();
   });
 
-  it('devrait avoir le focus sur l\'input au montage', async () => {
+  it("devrait avoir le focus sur l'input au montage", async () => {
     render(<ConfirmModal {...defaultProps} />);
 
     const input = screen.getByPlaceholderText('SUPPRIMER');
@@ -216,9 +234,15 @@ describe('ConfirmModal', () => {
     });
   });
 
-  it('devrait réinitialiser l\'input après confirmation', async () => {
+  it("devrait réinitialiser l'input après confirmation", async () => {
     const onConfirm = vi.fn();
-    render(<ConfirmModal {...defaultProps} onConfirm={onConfirm} confirmText="SUPPRIMER" />);
+    render(
+      <ConfirmModal
+        {...defaultProps}
+        onConfirm={onConfirm}
+        confirmText="SUPPRIMER"
+      />
+    );
 
     const input = screen.getByPlaceholderText('SUPPRIMER');
 

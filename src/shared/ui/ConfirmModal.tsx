@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from 'react';
 
 export interface ConfirmModalProps {
   /** Indique si le modal est ouvert */
@@ -216,9 +222,10 @@ export function ConfirmModal({
             style={{
               width: '100%',
               padding: '0.75rem',
-              border: isValid && inputValue.length > 0
-                ? '1px solid #28a745'
-                : '1px solid #ccc',
+              border:
+                isValid && inputValue.length > 0
+                  ? '1px solid #28a745'
+                  : '1px solid #ccc',
               borderRadius: '4px',
               boxSizing: 'border-box',
               fontSize: '1rem',
