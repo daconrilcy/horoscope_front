@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import type { QueryClient } from '@tanstack/react-query';
-import { readPersistedToken, writePersistedToken, clearPersistedToken } from '@/shared/auth/token';
+import {
+  readPersistedToken,
+  writePersistedToken,
+  clearPersistedToken,
+} from '@/shared/auth/token';
 
 export type UserRef = { id: string; email: string };
 
@@ -58,4 +62,3 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     return get().token;
   },
 }));
-

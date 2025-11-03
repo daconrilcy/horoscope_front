@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { readPersistedToken, writePersistedToken, clearPersistedToken } from './token';
+import {
+  readPersistedToken,
+  writePersistedToken,
+  clearPersistedToken,
+} from './token';
 
 const STORAGE_KEY = 'APP_AUTH_TOKEN';
 
@@ -17,20 +21,20 @@ describe('token helpers', () => {
     it('devrait lire le token depuis localStorage (format JSON)', () => {
       const token = 'test-token-123';
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ token }));
-      
+
       expect(readPersistedToken()).toBe(token);
     });
 
     it('devrait lire le token depuis localStorage (format string directe)', () => {
       const token = 'test-token-123';
       localStorage.setItem(STORAGE_KEY, JSON.stringify(token));
-      
+
       expect(readPersistedToken()).toBe(token);
     });
 
     it('devrait retourner null si JSON invalide (fallback)', () => {
       localStorage.setItem(STORAGE_KEY, 'invalid-json{');
-      
+
       // La fonction essaie de parser JSON, puis retourne null si invalide
       // ou retourne la string si elle ne commence pas par { ou [
       const result = readPersistedToken();
@@ -54,7 +58,7 @@ describe('token helpers', () => {
     it('devrait utiliser la clé namespacée APP_AUTH_TOKEN', () => {
       const token = 'test-token';
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ token }));
-      
+
       expect(localStorage.getItem(STORAGE_KEY)).toBeTruthy();
       expect(readPersistedToken()).toBe(token);
     });
@@ -63,9 +67,9 @@ describe('token helpers', () => {
   describe('writePersistedToken', () => {
     it('devrait stocker le token dans localStorage (format JSON)', () => {
       const token = 'test-token-123';
-      
+
       writePersistedToken(token);
-      
+
       const stored = localStorage.getItem(STORAGE_KEY);
       expect(stored).toBeTruthy();
       const parsed = JSON.parse(stored!) as { token: string };
@@ -88,10 +92,13 @@ describe('token helpers', () => {
 
   describe('clearPersistedToken', () => {
     it('devrait supprimer le token de localStorage', () => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: 'test-token' }));
-      
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ token: 'test-token' })
+      );
+
       clearPersistedToken();
-      
+
       expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
     });
 
@@ -110,11 +117,10 @@ describe('token helpers', () => {
 
     it('devrait ne rien faire si token absent', () => {
       expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
-      
+
       clearPersistedToken();
-      
+
       expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
     });
   });
 });
-

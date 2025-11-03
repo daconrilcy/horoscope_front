@@ -124,4 +124,3 @@ export function useRedirectAfterLogin(): string | null {
   }, [redirectPath]);
   return redirectPath;
 }
-

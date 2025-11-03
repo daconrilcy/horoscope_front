@@ -19,7 +19,9 @@ vi.mock('@/shared/config/env', () => ({
 }));
 
 vi.mock('@/shared/ui/ErrorBoundary', () => ({
-  ErrorBoundary: ({ children }: { children: React.ReactNode }) => <div data-testid="error-boundary">{children}</div>,
+  ErrorBoundary: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="error-boundary">{children}</div>
+  ),
 }));
 
 // Mock pour React Query
@@ -32,7 +34,9 @@ vi.mock('@tanstack/react-query', () => ({
 
 // Mock pour React Query Devtools
 vi.mock('@tanstack/react-query-devtools', () => ({
-  ReactQueryDevtools: () => <div data-testid="react-query-devtools">Devtools</div>,
+  ReactQueryDevtools: () => (
+    <div data-testid="react-query-devtools">Devtools</div>
+  ),
 }));
 
 // Mock pour sonner
@@ -43,7 +47,7 @@ vi.mock('sonner', () => {
     info: vi.fn(),
     warning: vi.fn(),
   };
-  
+
   return {
     Toaster: (): JSX.Element => <div data-testid="sonner-toaster">Toaster</div>,
     toast: mockSonnerToast,
@@ -150,43 +154,46 @@ describe('toast helpers', () => {
   });
 
   it('devrait appeler sonner toast.success', async () => {
-    const sonnerModule = await vi.importActual<typeof import('sonner')>('sonner');
-    
+    const sonnerModule =
+      await vi.importActual<typeof import('sonner')>('sonner');
+
     toast.success('Test message');
-    
+
     // Vérifier que toast.success est une fonction et a été appelée
     expect(typeof toast.success).toBe('function');
     expect(sonnerModule.toast.success).toBeDefined();
   });
 
   it('devrait appeler sonner toast.error', async () => {
-    const sonnerModule = await vi.importActual<typeof import('sonner')>('sonner');
-    
+    const sonnerModule =
+      await vi.importActual<typeof import('sonner')>('sonner');
+
     toast.error('Test error');
-    
+
     // Vérifier que toast.error est une fonction
     expect(typeof toast.error).toBe('function');
     expect(sonnerModule.toast.error).toBeDefined();
   });
 
   it('devrait appeler sonner toast.info', async () => {
-    const sonnerModule = await vi.importActual<typeof import('sonner')>('sonner');
-    
+    const sonnerModule =
+      await vi.importActual<typeof import('sonner')>('sonner');
+
     toast.info('Test info');
-    
+
     // Vérifier que toast.info est une fonction
     expect(typeof toast.info).toBe('function');
     expect(sonnerModule.toast.info).toBeDefined();
   });
 
   it('devrait appeler sonner toast.warning', async () => {
-    const sonnerModule = await vi.importActual<typeof import('sonner')>('sonner');
-    
+    const sonnerModule =
+      await vi.importActual<typeof import('sonner')>('sonner');
+
     toast.warning('Test warning');
-    
+
     // Vérifier que toast.warning est une fonction
     expect(typeof toast.warning).toBe('function');
     expect(sonnerModule.toast.warning).toBeDefined();
   });
 });
-

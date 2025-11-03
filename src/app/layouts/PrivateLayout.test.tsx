@@ -11,7 +11,10 @@ const mockQueryClient = new QueryClient();
 
 // Mock pour Outlet et useNavigate
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom'
+    );
   return {
     ...actual,
     Outlet: (): JSX.Element => <div data-testid="outlet">Outlet Content</div>,
@@ -21,7 +24,9 @@ vi.mock('react-router-dom', async () => {
 
 // Mock pour useQueryClient
 vi.mock('@tanstack/react-query', async () => {
-  const actual = await vi.importActual<typeof import('@tanstack/react-query')>('@tanstack/react-query');
+  const actual = await vi.importActual<typeof import('@tanstack/react-query')>(
+    '@tanstack/react-query'
+  );
   return {
     ...actual,
     useQueryClient: () => mockQueryClient,
@@ -85,4 +90,3 @@ describe('PrivateLayout', () => {
     expect(mockNavigate).toHaveBeenCalledWith(ROUTES.LOGIN, { replace: true });
   });
 });
-

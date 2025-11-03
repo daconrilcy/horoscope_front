@@ -23,7 +23,9 @@ describe('safeInternalRedirect', () => {
 
   it('devrait bloquer les routes externes (https://)', () => {
     expect(safeInternalRedirect('https://evil.com')).toBe('/app/dashboard');
-    expect(safeInternalRedirect('https://evil.com/path')).toBe('/app/dashboard');
+    expect(safeInternalRedirect('https://evil.com/path')).toBe(
+      '/app/dashboard'
+    );
   });
 
   it('devrait bloquer les routes externes (//)', () => {
@@ -37,18 +39,25 @@ describe('safeInternalRedirect', () => {
   });
 
   it('devrait permettre les routes avec query params', () => {
-    expect(safeInternalRedirect('/app/dashboard?tab=settings')).toBe('/app/dashboard?tab=settings');
-    expect(safeInternalRedirect('/reset/confirm?token=abc123')).toBe('/reset/confirm?token=abc123');
+    expect(safeInternalRedirect('/app/dashboard?tab=settings')).toBe(
+      '/app/dashboard?tab=settings'
+    );
+    expect(safeInternalRedirect('/reset/confirm?token=abc123')).toBe(
+      '/reset/confirm?token=abc123'
+    );
   });
 
   it('devrait permettre les routes avec hash', () => {
-    expect(safeInternalRedirect('/app/dashboard#section')).toBe('/app/dashboard#section');
+    expect(safeInternalRedirect('/app/dashboard#section')).toBe(
+      '/app/dashboard#section'
+    );
   });
 
   it('devrait bloquer javascript: (test edge case)', () => {
-    expect(safeInternalRedirect('/javascript:alert(1)')).toBe('/javascript:alert(1)');
+    expect(safeInternalRedirect('/javascript:alert(1)')).toBe(
+      '/javascript:alert(1)'
+    );
     // Note: Ceci est accepté car ça commence par /, mais dans une vraie app on pourrait
     // vouloir une whitelist plus stricte. Pour l'instant, on bloque uniquement les URLs externes.
   });
 });
-

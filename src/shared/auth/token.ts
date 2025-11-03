@@ -64,4 +64,3 @@ export function clearPersistedToken(): void {
     // Ignorer les erreurs
   }
 }
-

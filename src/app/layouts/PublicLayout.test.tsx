@@ -6,7 +6,10 @@ import { ROUTES } from '@/shared/config/routes';
 
 // Mock pour Outlet
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom'
+    );
   return {
     ...actual,
     Outlet: () => <div data-testid="outlet">Outlet Content</div>,
@@ -52,4 +55,3 @@ describe('PublicLayout', () => {
     expect(signupLink).toHaveAttribute('href', ROUTES.SIGNUP);
   });
 });
-

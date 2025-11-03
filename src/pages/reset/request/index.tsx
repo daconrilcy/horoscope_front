@@ -14,7 +14,9 @@ export function ResetRequestPage(): JSX.Element {
 
   const [email, setEmail] = useState('');
   const [pending, setPending] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; general?: string }>(
+    {}
+  );
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
@@ -62,7 +64,11 @@ export function ResetRequestPage(): JSX.Element {
               fieldErrors.email = details.email[0];
             }
             // Erreur générale si pas de champ spécifique
-            if (error.message != null && error.message !== '' && Object.keys(fieldErrors).length === 0) {
+            if (
+              error.message != null &&
+              error.message !== '' &&
+              Object.keys(fieldErrors).length === 0
+            ) {
               fieldErrors.general = error.message;
             }
           } else {
@@ -72,11 +78,18 @@ export function ResetRequestPage(): JSX.Element {
         } else if (error.status != null && error.status >= 500) {
           // Erreur serveur : toast générique
           toast.error('Erreur serveur. Veuillez réessayer plus tard.');
-          setErrors({ general: 'Une erreur est survenue. Veuillez réessayer.' });
+          setErrors({
+            general: 'Une erreur est survenue. Veuillez réessayer.',
+          });
         } else {
           // Autres erreurs API
-          toast.error(error.message || 'Erreur lors de la demande de réinitialisation');
-          setErrors({ general: error.message || 'Erreur lors de la demande de réinitialisation' });
+          toast.error(
+            error.message || 'Erreur lors de la demande de réinitialisation'
+          );
+          setErrors({
+            general:
+              error.message || 'Erreur lors de la demande de réinitialisation',
+          });
         }
       } else if (error instanceof NetworkError) {
         // Erreur réseau : toast générique
@@ -118,7 +131,8 @@ export function ResetRequestPage(): JSX.Element {
             borderRadius: '4px',
           }}
         >
-          Un email de réinitialisation a été envoyé. Vérifiez votre boîte mail et suivez les instructions.
+          Un email de réinitialisation a été envoyé. Vérifiez votre boîte mail
+          et suivez les instructions.
         </div>
         <div style={{ marginTop: '1rem', textAlign: 'center' }}>
           <Link
@@ -161,7 +175,10 @@ export function ResetRequestPage(): JSX.Element {
         noValidate
       >
         <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem' }}>
+          <label
+            htmlFor="email"
+            style={{ display: 'block', marginBottom: '0.5rem' }}
+          >
             Email
           </label>
           <input
@@ -186,7 +203,11 @@ export function ResetRequestPage(): JSX.Element {
             <div
               id="email-error"
               role="alert"
-              style={{ marginTop: '0.25rem', color: '#c33', fontSize: '0.875rem' }}
+              style={{
+                marginTop: '0.25rem',
+                color: '#c33',
+                fontSize: '0.875rem',
+              }}
             >
               {errors.email}
             </div>
@@ -207,11 +228,13 @@ export function ResetRequestPage(): JSX.Element {
             marginBottom: '1rem',
           }}
         >
-          {pending ? 'Envoi...' : 'Envoyer l\'email de réinitialisation'}
+          {pending ? 'Envoi...' : "Envoyer l'email de réinitialisation"}
         </button>
       </form>
 
-      <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem' }}>
+      <div
+        style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem' }}
+      >
         <Link
           to={ROUTES.LOGIN}
           style={{ color: '#007bff', textDecoration: 'none' }}
@@ -222,4 +245,3 @@ export function ResetRequestPage(): JSX.Element {
     </div>
   );
 }
-

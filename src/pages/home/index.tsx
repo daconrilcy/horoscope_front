@@ -41,4 +41,3 @@ export function HomePage(): JSX.Element {
     </div>
   );
 }
-

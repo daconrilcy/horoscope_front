@@ -29,4 +29,3 @@ describe('useTitle', () => {
     expect(document.title).toBe('Second Title');
   });
 });
-

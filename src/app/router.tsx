@@ -1,5 +1,11 @@
 import { Suspense, lazy } from 'react';
-import { createBrowserRouter, RouterProvider, Navigate, Outlet, useLocation } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+  Outlet,
+  useLocation,
+} from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { AppProviders } from './AppProviders';
 import { UpgradeBanner } from '@/widgets/UpgradeBanner/UpgradeBanner';
@@ -20,7 +26,9 @@ import { NotFoundPage } from '@/pages/NotFound';
 
 // Pages privées - lazy loading pour code splitting
 const DashboardPage = lazy(() =>
-  import('@/pages/app/dashboard').then((module) => ({ default: module.DashboardPage }))
+  import('@/pages/app/dashboard').then((module) => ({
+    default: module.DashboardPage,
+  }))
 );
 
 /**
