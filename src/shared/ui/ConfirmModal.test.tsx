@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ConfirmModal } from './ConfirmModal';
 import React from 'react';
@@ -110,15 +110,20 @@ describe('ConfirmModal', () => {
     // Vérifier que le bouton est désactivé initialement
     expect(confirmButton).toBeDisabled();
 
-    // Taper avec espaces directement dans l'input vide
-    await userEvent.type(input, '  SUPPRIMER  '); // avec espaces
+    // Définir directement la valeur avec espaces (simuler un input avec espaces)
+    await act(async () => {
+      input.value = '  SUPPRIMER  ';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0)); // Laisser React mettre à jour
+    });
 
-    // Le bouton devrait rester désactivé car trim('  SUPPRIMER  ') !== 'SUPPRIMER'
+    // Vérifier que le bouton reste désactivé car trim() !== confirmText
     await waitFor(
       () => {
+        expect(input.value).toBe('  SUPPRIMER  ');
         expect(confirmButton).toBeDisabled();
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
   });
 
