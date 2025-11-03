@@ -1,6 +1,6 @@
 # PR: FE-6 — Chat RAG Feature
 
-Closes #XX
+Closes #18
 
 ## Description
 
