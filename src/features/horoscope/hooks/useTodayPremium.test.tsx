@@ -58,9 +58,7 @@ describe('useTodayPremium', () => {
     expect(result.current.isError).toBe(false);
     expect(result.current.error).toBeNull();
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(
-      horoscopeService.getTodayPremium as ReturnType<typeof vi.fn>
-    ).toHaveBeenCalledWith(chartId);
+    expect(horoscopeService.getTodayPremium).toHaveBeenCalledWith(chartId);
   });
 
   it('devrait ne pas faire de requête si chartId est null', () => {
@@ -69,9 +67,7 @@ describe('useTodayPremium', () => {
     expect(result.current.isLoading).toBe(false);
     expect(result.current.data).toBeUndefined();
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(
-      horoscopeService.getTodayPremium as ReturnType<typeof vi.fn>
-    ).not.toHaveBeenCalled();
+    expect(horoscopeService.getTodayPremium).not.toHaveBeenCalled();
   });
 
   it('devrait gérer les erreurs 402 (plan insuffisant)', async () => {

@@ -77,8 +77,9 @@ describe('useDownloadPdf', () => {
       expect(result.current.isPending).toBe(false);
     });
 
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(horoscopeService.getNatalPdfStream).toHaveBeenCalledWith(chartId);
+    expect(
+      horoscopeService.getNatalPdfStream as ReturnType<typeof vi.fn>
+    ).toHaveBeenCalledWith(chartId);
     expect(downloadBlob).toHaveBeenCalledWith(mockBlob, `natal-${chartId}.pdf`);
     expect(toast.success).toHaveBeenCalledWith('PDF téléchargé avec succès');
   });

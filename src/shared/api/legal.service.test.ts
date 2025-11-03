@@ -1,6 +1,15 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  vi,
+  beforeAll,
+  afterAll,
+} from 'vitest';
 import { legalService } from './legal.service';
 import { ApiError, NetworkError } from './errors';
+import { server } from '@/test/setup/msw.server';
 
 // Mock le module env
 vi.mock('../config/env', () => ({
@@ -14,6 +23,15 @@ const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
 
 describe('legalService', () => {
+  // Désactiver MSW pour ce test car nous utilisons mockFetch directement
+  beforeAll(() => {
+    server.close();
+  });
+
+  afterAll(() => {
+    server.listen({ onUnhandledRequest: 'warn' });
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });

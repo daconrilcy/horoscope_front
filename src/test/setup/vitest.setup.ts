@@ -4,6 +4,7 @@ import { cleanup } from '@testing-library/react';
 import { server } from './msw.server';
 
 // Force TZ à Europe/Paris pour tests déterministes
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 process.env.TZ = 'Europe/Paris';
 
 // Mock global.fetch si non défini (fallback)
@@ -62,6 +63,7 @@ try {
 vi.spyOn(window, 'print').mockImplementation(() => {});
 
 // Mock matchMedia pour les tests
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query) => ({
@@ -77,8 +79,8 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock Clipboard API
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-Object.assign(navigator, {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+Object.assign(navigator as any, {
   clipboard: {
     writeText: vi.fn().mockResolvedValue(undefined),
     readText: vi.fn().mockResolvedValue(''),
@@ -100,19 +102,20 @@ const processEnv: unknown =
         }
       ).env
     : null;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-const env =
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+const env: Record<string, string | undefined> =
   (processEnv as Record<string, string | undefined>) ??
   ({} as Record<string, string | undefined>);
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-if (env.VITE_API_BASE_URL == null || env.VITE_API_BASE_URL === '') {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+if (!env.VITE_API_BASE_URL || env.VITE_API_BASE_URL === '') {
   env.VITE_API_BASE_URL = 'http://localhost:8000';
 }
 
 // Setup MSW server
+// Utiliser 'warn' au lieu de 'error' pour permettre aux tests existants
+// qui utilisent mockFetch directement de continuer à fonctionner
 beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({ onUnhandledRequest: 'warn' });
 });
 
 // Reset handlers après chaque test

@@ -18,6 +18,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup/vitest.setup.ts',
     css: true,
+    exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
     coverage: {
       provider: 'v8',
       reportsDirectory: './coverage',
@@ -28,6 +29,7 @@ export default defineConfig({
         '**/*.spec.{ts,tsx}',
         '**/node_modules/**',
         '**/dist/**',
+        '**/e2e/**',
       ],
     },
   },

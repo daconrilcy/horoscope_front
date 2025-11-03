@@ -57,9 +57,7 @@ describe('useToday', () => {
     expect(result.current.isError).toBe(false);
     expect(result.current.error).toBeNull();
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(
-      horoscopeService.getToday as ReturnType<typeof vi.fn>
-    ).toHaveBeenCalledWith(chartId);
+    expect(horoscopeService.getToday).toHaveBeenCalledWith(chartId);
   });
 
   it('devrait ne pas faire de requête si chartId est null', () => {
@@ -68,9 +66,7 @@ describe('useToday', () => {
     expect(result.current.isLoading).toBe(false);
     expect(result.current.data).toBeUndefined();
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(
-      horoscopeService.getToday as ReturnType<typeof vi.fn>
-    ).not.toHaveBeenCalled();
+    expect(horoscopeService.getToday).not.toHaveBeenCalled();
   });
 
   it('devrait ne pas faire de requête si chartId est vide', () => {
@@ -79,9 +75,7 @@ describe('useToday', () => {
     expect(result.current.isLoading).toBe(false);
     expect(result.current.data).toBeUndefined();
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(
-      horoscopeService.getToday as ReturnType<typeof vi.fn>
-    ).not.toHaveBeenCalled();
+    expect(horoscopeService.getToday).not.toHaveBeenCalled();
   });
 
   it('devrait gérer les erreurs 404', async () => {
@@ -203,9 +197,7 @@ describe('useToday', () => {
 
     await waitFor(() => {
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(
-        horoscopeService.getToday as ReturnType<typeof vi.fn>
-      ).toHaveBeenCalled();
+      expect(horoscopeService.getToday).toHaveBeenCalled();
     });
   });
 });

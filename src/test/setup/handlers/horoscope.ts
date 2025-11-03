@@ -5,6 +5,7 @@ const API_BASE_URL = 'http://localhost:8000';
 export const handlers = [
   // POST /v1/horoscope/natal
   http.post(`${API_BASE_URL}/v1/horoscope/natal`, async ({ request }) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const body = (await request.json()) as {
       date?: string;
       time?: string;
