@@ -1,14 +1,44 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppProviders, toast } from './AppProviders';
+import { eventBus } from '@/shared/api/eventBus';
 
 const mockConfigureHttp = vi.fn();
+const mockNavigate = vi.fn();
+
+// Mock pour useNavigate et useLocation
+const mockLocation = { pathname: '/test', search: '' };
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+    useLocation: () => mockLocation,
+  };
+});
 
 // Mock pour les dépendances externes
 vi.mock('@/shared/api/client', () => ({
   configureHttp: (): void => {
     mockConfigureHttp();
+  },
+}));
+
+// Mock eventBus
+vi.mock('@/shared/api/eventBus', () => ({
+  eventBus: {
+    on: vi.fn((event, callback) => {
+      // Stocker le callback pour pouvoir l'appeler dans les tests
+      (eventBus as { listeners?: Map<string, Set<() => void>> }).listeners =
+        new Map([[event, new Set([callback])]]);
+      return () => {
+        // Fonction de désabonnement
+      };
+    }),
+    emit: vi.fn(),
+    off: vi.fn(),
+    clear: vi.fn(),
   },
 }));
 
@@ -57,6 +87,12 @@ vi.mock('sonner', () => {
 describe('AppProviders', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockNavigate.mockClear();
+    sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    sessionStorage.clear();
   });
 
   it('devrait rendre QueryClientProvider', () => {
@@ -129,6 +165,122 @@ describe('AppProviders', () => {
 
     // Vérifier que configureHttp a été appelé
     expect(mockConfigureHttp).toHaveBeenCalled();
+  });
+
+  it('devrait écouter auth:unauthorized et afficher toast + rediriger + stocker post_login_redirect', async () => {
+    const mockToastWarning = vi.fn();
+    const toastWarningSpy = vi.spyOn(toast, 'warning');
+    toastWarningSpy.mockImplementation(mockToastWarning);
+
+    // Modifier mockLocation pour simuler /app/dashboard
+    mockLocation.pathname = '/app/dashboard';
+    mockLocation.search = '';
+
+    let authCallback: (() => void) | undefined;
+
+    // Intercepter eventBus.on pour capturer le callback
+    const onMockFn = vi.mocked(eventBus.on);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    onMockFn.mockImplementation((event, callback): (() => void) => {
+      if (event === 'auth:unauthorized') {
+        authCallback = callback as () => void;
+      }
+      return () => {
+        // Fonction de désabonnement
+      };
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/app/dashboard']}>
+        <AppProviders>
+          <div>Test</div>
+        </AppProviders>
+      </MemoryRouter>
+    );
+
+      // Attendre que le listener soit enregistré
+      await waitFor(() => {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        expect(eventBus.on).toHaveBeenCalledWith(
+          'auth:unauthorized',
+          expect.any(Function)
+        );
+      });
+
+    // Simuler l'événement auth:unauthorized
+    if (authCallback) {
+      authCallback();
+
+      // Vérifier que toast.warning a été appelé
+      await waitFor(() => {
+        expect(mockToastWarning).toHaveBeenCalledWith('Session expirée');
+      }, { timeout: 2000 });
+
+      // Vérifier que post_login_redirect a été stocké
+      expect(sessionStorage.getItem('post_login_redirect')).toBe(
+        '/app/dashboard'
+      );
+
+      // Vérifier que navigate a été appelé
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
+      }, { timeout: 2000 });
+    }
+  });
+
+  it('ne devrait pas afficher toast si déjà sur /login', async () => {
+    const mockToastWarning = vi.fn();
+    const toastWarningSpy = vi.spyOn(toast, 'warning');
+    toastWarningSpy.mockImplementation(mockToastWarning);
+
+    // Modifier mockLocation pour simuler /login
+    mockLocation.pathname = '/login';
+    mockLocation.search = '';
+
+    let authCallback: (() => void) | undefined;
+
+    // Intercepter eventBus.on pour capturer le callback
+    const onMockFn = vi.mocked(eventBus.on);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    onMockFn.mockImplementation((event, callback): (() => void) => {
+      if (event === 'auth:unauthorized') {
+        authCallback = callback as () => void;
+      }
+      return () => {
+        // Fonction de désabonnement
+      };
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <AppProviders>
+          <div>Test</div>
+        </AppProviders>
+      </MemoryRouter>
+    );
+
+      // Attendre que le listener soit enregistré
+      await waitFor(() => {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        expect(eventBus.on).toHaveBeenCalledWith(
+          'auth:unauthorized',
+          expect.any(Function)
+        );
+      });
+
+    // Simuler l'événement auth:unauthorized
+    if (authCallback) {
+      authCallback();
+
+      // Attendre un peu pour voir si le toast est appelé
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Vérifier que toast.warning n'a PAS été appelé
+      expect(mockToastWarning).not.toHaveBeenCalled();
+
+      // Vérifier que post_login_redirect n'a PAS été stocké
+      expect(sessionStorage.getItem('post_login_redirect')).toBeNull();
+    }
   });
 });
 

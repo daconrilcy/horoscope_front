@@ -8,7 +8,7 @@ import {
   beforeAll,
   afterAll,
 } from 'vitest';
-import { http, configureHttp } from './client';
+import { http, configureHttp, resetUnauthorizedDebounce } from './client';
 import { ApiError, NetworkError } from './errors';
 import { eventBus } from './eventBus';
 import { server } from '@/test/setup/msw.server';
@@ -68,12 +68,18 @@ describe('HTTP Client', () => {
 
       await http.get('/test', { auth: true });
 
-      const fetchCall = mockFetch.mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const fetchCall = mockFetch.mock.calls[0] as unknown[];
+      if (!Array.isArray(fetchCall) || fetchCall.length < 2) {
+        throw new Error('Mock fetch not called correctly');
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const requestInit = fetchCall[1] as RequestInit | undefined;
+      const headerInput = requestInit?.headers;
       const headers =
-        requestInit?.headers instanceof Headers
-          ? requestInit.headers
-          : new Headers(requestInit?.headers);
+        headerInput instanceof Headers
+          ? headerInput
+          : new Headers(headerInput as HeadersInit | undefined);
 
       expect(headers.get('Authorization')).toBe('Bearer mock-token');
     });
@@ -234,7 +240,7 @@ describe('HTTP Client', () => {
   });
 
   describe('Error mapping', () => {
-    it('devrait mapper 401 → événement unauthorized', async () => {
+    it('devrait mapper 401 → événement auth:unauthorized', async () => {
       const mockResponse = new Response(
         JSON.stringify({ message: 'Unauthorized' }),
         {
@@ -247,13 +253,40 @@ describe('HTTP Client', () => {
 
       await expect(http.get('/test')).rejects.toThrow(ApiError);
 
-      expect(emitSpy).toHaveBeenCalledWith('unauthorized');
+      expect(emitSpy).toHaveBeenCalledWith('auth:unauthorized');
     });
 
-    it('devrait mapper 402 → événement paywall avec payload', async () => {
+    it('devrait debounce 401 : plusieurs requêtes simultanées ⇒ 1 seul auth:unauthorized', async () => {
+      resetUnauthorizedDebounce();
+      vi.clearAllMocks();
+
+      // Créer une nouvelle réponse pour chaque appel
+      mockFetch.mockImplementation(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ message: 'Unauthorized' }), {
+            status: 401,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        )
+      );
+
+      // Faire plusieurs requêtes simultanées
+      await Promise.all([
+        expect(http.get('/test1')).rejects.toThrow(ApiError),
+        expect(http.get('/test2')).rejects.toThrow(ApiError),
+        expect(http.get('/test3')).rejects.toThrow(ApiError),
+      ]);
+
+      // Un seul événement devrait être émis (debounce 60s)
+      expect(emitSpy).toHaveBeenCalledTimes(1);
+      expect(emitSpy).toHaveBeenCalledWith('auth:unauthorized');
+    });
+
+    it('devrait mapper 402 → événement paywall:plan avec payload', async () => {
       const mockResponse = new Response(
         JSON.stringify({
           message: 'Payment required',
+          feature: 'chat',
           upgrade_url: 'https://example.com/upgrade',
         }),
         {
@@ -266,21 +299,27 @@ describe('HTTP Client', () => {
 
       await expect(http.get('/test')).rejects.toThrow(ApiError);
 
-      expect(emitSpy).toHaveBeenCalledWith('paywall', {
+      expect(emitSpy).toHaveBeenCalledWith('paywall:plan', {
         reason: 'plan',
         upgradeUrl: 'https://example.com/upgrade',
+        feature: 'chat',
       });
     });
 
-    it('devrait mapper 429 → événement quota avec payload', async () => {
+    it('devrait mapper 429 → événement paywall:rate avec payload et retry_after', async () => {
       const mockResponse = new Response(
         JSON.stringify({
           message: 'Too many requests',
+          feature: 'chat',
           upgrade_url: 'https://example.com/upgrade',
+          retry_after: 60,
         }),
         {
           status: 429,
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': '60',
+          },
         }
       );
 
@@ -288,13 +327,18 @@ describe('HTTP Client', () => {
 
       await expect(http.get('/test')).rejects.toThrow(ApiError);
 
-      expect(emitSpy).toHaveBeenCalledWith('quota', {
+      expect(emitSpy).toHaveBeenCalledWith('paywall:rate', {
         reason: 'rate',
         upgradeUrl: 'https://example.com/upgrade',
+        feature: 'chat',
+        retry_after: 60,
       });
     });
 
     it('ne devrait pas rediriger sur 401 si URL contient /login', async () => {
+      resetUnauthorizedDebounce();
+      vi.clearAllMocks();
+
       const onUnauthorizedSpy = vi.fn();
       configureHttp({
         baseURL: 'https://api.example.com',
@@ -313,8 +357,8 @@ describe('HTTP Client', () => {
 
       await expect(http.get('/login')).rejects.toThrow(ApiError);
 
-      // L'événement est émis, mais le callback n'est pas appelé
-      expect(emitSpy).toHaveBeenCalledWith('unauthorized');
+      // L'événement est émis (même avec debounce), mais le callback n'est pas appelé
+      expect(emitSpy).toHaveBeenCalledWith('auth:unauthorized');
       expect(onUnauthorizedSpy).not.toHaveBeenCalled();
     });
   });

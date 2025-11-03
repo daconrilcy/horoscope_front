@@ -37,6 +37,30 @@ interface HttpClientConfig {
 let baseURL = '';
 let onUnauthorized: (() => void) | null = null;
 
+// Debounce global 401 (60s par défaut)
+let unauthorizedFiredAt = 0;
+const UNAUTHORIZED_DEBOUNCE_MS = 60_000; // 60 secondes
+
+/**
+ * Émet un événement auth:unauthorized seulement si >60s depuis le dernier
+ * Anti-spam pour éviter les avalanches de toasts
+ */
+function fireUnauthorizedOnce(): void {
+  const now = Date.now();
+  if (now - unauthorizedFiredAt > UNAUTHORIZED_DEBOUNCE_MS) {
+    unauthorizedFiredAt = now;
+    eventBus.emit('auth:unauthorized');
+  }
+}
+
+/**
+ * Réinitialise le debounce 401 (utile pour les tests)
+ * @internal
+ */
+export function resetUnauthorizedDebounce(): void {
+  unauthorizedFiredAt = 0;
+}
+
 /**
  * Configure le client HTTP
  */
@@ -138,7 +162,29 @@ async function parseResponse<T>(
 
   // Parsing explicite
   if (parseAs === 'blob') {
-    return (await response.blob()) as T;
+    const blob = await response.blob();
+    // Cas blob JSON : si content-type annonce JSON, reparser JSON et lever ApiError avec request_id
+    if (contentType.includes('application/json')) {
+      try {
+        const text = await blob.text();
+        const json: unknown = JSON.parse(text);
+        // Si c'est une erreur (status >= 400), lever ApiError avec request_id
+        if (response.status >= 400) {
+          const requestId = extractRequestId(response);
+          const errorBody = json as { message?: string };
+          const message =
+            errorBody.message ?? response.statusText ?? 'Unknown error';
+          throw new ApiError(message, response.status, undefined, requestId);
+        }
+      } catch (error) {
+        // Si c'est déjà une ApiError, la relancer
+        if (error instanceof ApiError) {
+          throw error;
+        }
+        // Sinon, c'est une erreur de parsing JSON → utiliser le blob
+      }
+    }
+    return blob as T;
   }
   if (parseAs === 'text') {
     return (await response.text()) as T;
@@ -195,10 +241,30 @@ function toApiError(response: Response, body: unknown, url: string): ApiError {
   const requestId = headerRequestId || bodyRequestId;
   const status = response.status;
 
-  const message =
+  // Message brut du serveur (non exposé en clair)
+  const rawMessage =
     (body as { message?: string })?.message ??
     response.statusText ??
     'Unknown error';
+
+  // Message UX générique sécurisé
+  let userMessage: string;
+  if (status >= 500) {
+    userMessage = requestId
+      ? `Une erreur est survenue. Request ID: ${requestId}`
+      : 'Une erreur est survenue. Veuillez réessayer plus tard.';
+  } else if (status === 401) {
+    userMessage = 'Session expirée';
+  } else if (status === 402) {
+    userMessage = 'Plan insuffisant';
+  } else if (status === 429) {
+    userMessage = 'Quota atteint';
+  } else {
+    // Pour les autres erreurs (400, 422, etc.), utiliser le message brut
+    // mais le stocker aussi dans meta pour sécurité
+    userMessage = rawMessage;
+  }
+
   let code: string | undefined;
   let details: unknown;
 
@@ -210,28 +276,56 @@ function toApiError(response: Response, body: unknown, url: string): ApiError {
       body;
   }
 
-  // Création de l'erreur
-  const error = new ApiError(message, status, code, requestId, details);
+  // Création de l'erreur avec message UX générique et meta.debugMessage
+  const error = new ApiError(
+    userMessage,
+    status,
+    code,
+    requestId,
+    details,
+    { debugMessage: rawMessage }
+  );
+
+  // Extraction Retry-After depuis headers (seconds)
+  const retryAfterHeader = response.headers.get('Retry-After');
+  const retryAfterSeconds = retryAfterHeader
+    ? parseInt(retryAfterHeader, 10)
+    : undefined;
 
   // Mapping des événements selon le status
   if (status === 401) {
-    eventBus.emit('unauthorized');
+    // Debounce global 401 (60s)
+    fireUnauthorizedOnce();
     // Ne pas rediriger si déjà sur /login (éviter les boucles)
     if (onUnauthorized && !url.includes('/login')) {
       onUnauthorized();
     }
   } else if (status === 402) {
+    const bodyObj = body as {
+      feature?: string;
+      upgrade_url?: string;
+    };
     const payload: PaywallPayload = {
       reason: 'plan',
-      upgradeUrl: (body as { upgrade_url?: string })?.upgrade_url,
+      upgradeUrl: bodyObj.upgrade_url,
+      feature: bodyObj.feature,
     };
-    eventBus.emit('paywall', payload);
+    eventBus.emit('paywall:plan', payload);
   } else if (status === 429) {
+    const bodyObj = body as {
+      feature?: string;
+      upgrade_url?: string;
+      retry_after?: number;
+    };
+    const retryAfter =
+      retryAfterSeconds ?? bodyObj.retry_after ?? undefined;
     const payload: PaywallPayload = {
       reason: 'rate',
-      upgradeUrl: (body as { upgrade_url?: string })?.upgrade_url,
+      upgradeUrl: bodyObj.upgrade_url,
+      feature: bodyObj.feature,
+      retry_after: retryAfter,
     };
-    eventBus.emit('quota', payload);
+    eventBus.emit('paywall:rate', payload);
   }
 
   return error;

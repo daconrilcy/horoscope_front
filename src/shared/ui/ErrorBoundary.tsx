@@ -88,6 +88,12 @@ export class ErrorBoundary extends Component<
         return this.props.fallback(this.state.error, this.state.requestId);
       }
 
+      // Message UX générique (ApiError.message contient déjà le message sécurisé)
+      const displayMessage =
+        this.state.error instanceof ApiError
+          ? this.state.error.message
+          : this.state.error?.message ?? "Une erreur inattendue s'est produite.";
+
       return (
         <div
           role="alert"
@@ -95,10 +101,7 @@ export class ErrorBoundary extends Component<
           style={{ padding: '2rem', textAlign: 'center' }}
         >
           <h2>Une erreur est survenue</h2>
-          <p>
-            {this.state.error?.message ??
-              "Une erreur inattendue s'est produite."}
-          </p>
+          <p>{displayMessage}</p>
           {this.state.requestId !== undefined &&
             this.state.requestId !== '' && (
               <p style={{ fontSize: '0.875rem', color: '#666' }}>

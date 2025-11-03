@@ -11,13 +11,15 @@ export class ApiError extends Error {
   public readonly code?: string;
   public readonly requestId?: string;
   public readonly details?: unknown;
+  public readonly meta?: { debugMessage?: string };
 
   constructor(
     message: string,
     status?: number,
     code?: string,
     requestId?: string,
-    details?: unknown
+    details?: unknown,
+    meta?: { debugMessage?: string }
   ) {
     super(message);
     this.name = 'ApiError';
@@ -25,6 +27,7 @@ export class ApiError extends Error {
     this.code = code;
     this.requestId = requestId;
     this.details = details;
+    this.meta = meta;
 
     // Maintenir le prototype pour instanceof
     Object.setPrototypeOf(this, ApiError.prototype);

@@ -32,8 +32,10 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText('Test error')).toBeInTheDocument();
   });
 
-  it('devrait afficher requestId si erreur est ApiError', () => {
+  it('devrait afficher requestId si erreur est ApiError 5xx', () => {
     function ThrowApiError(): JSX.Element {
+      // ApiError créée directement (sans passer par client.ts)
+      // Le message UX générique est créé dans client.ts.toApiError()
       throw new ApiError('API Error', 500, undefined, 'req-123');
     }
 
@@ -43,6 +45,9 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
+    // Vérifier que le message de l'erreur est affiché
+    expect(screen.getByText('API Error')).toBeInTheDocument();
+    // Vérifier que request_id est affiché séparément
     expect(
       screen.getByText((content, element) => {
         return element?.textContent === 'ID de requête : req-123';
@@ -130,6 +135,41 @@ describe('ErrorBoundary', () => {
     // L'erreur devrait être réinitialisée mais va re-lancer
     // On vérifie que le fallback est toujours affiché
     expect(screen.getByText(/Une erreur est survenue/)).toBeInTheDocument();
+  });
+
+  it('devrait afficher message UX générique pour erreur 5xx avec request_id', () => {
+    function ThrowApiError500(): JSX.Element {
+      // ApiError avec status 500 - message UX générique devrait être affiché
+      throw new ApiError(
+        'Une erreur est survenue. Request ID: req-456',
+        500,
+        undefined,
+        'req-456',
+        undefined,
+        { debugMessage: 'Internal Server Error: Database connection failed' }
+      );
+    }
+
+    render(
+      <ErrorBoundary>
+        <ThrowApiError500 />
+      </ErrorBoundary>
+    );
+
+    // Vérifier que le message UX générique est affiché (pas le message debug)
+    expect(
+      screen.getByText('Une erreur est survenue. Request ID: req-456')
+    ).toBeInTheDocument();
+    // Vérifier que le message debug n'est PAS affiché
+    expect(
+      screen.queryByText('Database connection failed')
+    ).not.toBeInTheDocument();
+    // Vérifier que request_id est affiché séparément
+    expect(
+      screen.getByText((content, element) => {
+        return element?.textContent === 'ID de requête : req-456';
+      })
+    ).toBeInTheDocument();
   });
 
   it('devrait utiliser fallback custom si fourni', () => {

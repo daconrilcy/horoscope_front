@@ -4,7 +4,7 @@ import { cleanup } from '@testing-library/react';
 import { server } from './msw.server';
 
 // Force TZ à Europe/Paris pour tests déterministes
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 process.env.TZ = 'Europe/Paris';
 
 // Mock global.fetch si non défini (fallback)
@@ -19,9 +19,9 @@ Object.defineProperty(window, 'scrollTo', {
 });
 
 // Polyfill crypto.randomUUID
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/strict-boolean-expressions
+// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
 if (!globalThis.crypto?.randomUUID) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (globalThis.crypto as any) = {
     ...globalThis.crypto,
     randomUUID: (): string => '00000000-0000-4000-8000-000000000000',
@@ -32,12 +32,12 @@ if (!globalThis.crypto?.randomUUID) {
 if (typeof URL.createObjectURL !== 'undefined') {
   vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
 }
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+ 
 if (typeof URL.revokeObjectURL !== 'undefined') {
   vi.spyOn(URL, 'revokeObjectURL').mockReturnValue();
 } else {
   // Polyfill si non défini
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
   (URL as any).revokeObjectURL = vi.fn();
 }
 
@@ -50,7 +50,7 @@ try {
 }
 try {
   Object.defineProperty(window.location, 'assign', {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+     
     value: vi.fn(),
     writable: true,
     configurable: true,
@@ -63,10 +63,10 @@ try {
 vi.spyOn(window, 'print').mockImplementation(() => {});
 
 // Mock matchMedia pour les tests
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+ 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation((query) => ({
+  value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -79,7 +79,7 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock Clipboard API
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 Object.assign(navigator as any, {
   clipboard: {
     writeText: vi.fn().mockResolvedValue(undefined),
@@ -102,7 +102,7 @@ const processEnv: unknown =
         }
       ).env
     : null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+ 
 const env: Record<string, string | undefined> =
   (processEnv as Record<string, string | undefined>) ??
   ({} as Record<string, string | undefined>);
