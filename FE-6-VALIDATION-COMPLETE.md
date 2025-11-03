@@ -4,7 +4,7 @@
 
 **Date** : 2025-01-14  
 **Branche** : `feat/FE-6-chat`  
-**Commit** : `8850d0bd96831f985b9f1c08fe79c8df14de99b3`
+**Commit** : `b7832d96074b0452868067b75b9f7db62aa699cb`
 
 ---
 
