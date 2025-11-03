@@ -19,7 +19,12 @@ export function ResetConfirmPage(): JSX.Element {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [pending, setPending] = useState(false);
-  const [errors, setErrors] = useState<{ token?: string; password?: string; confirmPassword?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{
+    token?: string;
+    password?: string;
+    confirmPassword?: string;
+    general?: string;
+  }>({});
 
   useEffect(() => {
     // Extraire token depuis URL params
@@ -44,7 +49,8 @@ export function ResetConfirmPage(): JSX.Element {
     if (!password) {
       clientErrors.password = 'Mot de passe requis';
     } else if (password.length < 8) {
-      clientErrors.password = 'Le mot de passe doit contenir au moins 8 caractères';
+      clientErrors.password =
+        'Le mot de passe doit contenir au moins 8 caractères';
     }
     if (!confirmPassword) {
       clientErrors.confirmPassword = 'Confirmation du mot de passe requise';
@@ -70,7 +76,12 @@ export function ResetConfirmPage(): JSX.Element {
       if (error instanceof ApiError) {
         if (error.status === 422 || error.status === 400) {
           // Erreurs de validation : afficher details par champ
-          const fieldErrors: { password?: string; confirmPassword?: string; token?: string; general?: string } = {};
+          const fieldErrors: {
+            password?: string;
+            confirmPassword?: string;
+            token?: string;
+            general?: string;
+          } = {};
           if (error.details != null) {
             const details = error.details as Record<string, string[]>;
             if (details.password && details.password.length > 0) {
@@ -80,7 +91,11 @@ export function ResetConfirmPage(): JSX.Element {
               fieldErrors.token = details.token[0];
             }
             // Erreur générale si pas de champ spécifique
-            if (error.message != null && error.message !== '' && Object.keys(fieldErrors).length === 0) {
+            if (
+              error.message != null &&
+              error.message !== '' &&
+              Object.keys(fieldErrors).length === 0
+            ) {
               fieldErrors.general = error.message;
             }
           } else {
@@ -90,7 +105,9 @@ export function ResetConfirmPage(): JSX.Element {
         } else if (error.status != null && error.status >= 500) {
           // Erreur serveur : toast générique
           toast.error('Erreur serveur. Veuillez réessayer plus tard.');
-          setErrors({ general: 'Une erreur est survenue. Veuillez réessayer.' });
+          setErrors({
+            general: 'Une erreur est survenue. Veuillez réessayer.',
+          });
         } else {
           // Token invalide/expiré ou autres erreurs API
           const errorMessage = error.message || 'Token invalide ou expiré';
@@ -112,7 +129,13 @@ export function ResetConfirmPage(): JSX.Element {
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLFormElement>): void => {
-    if (e.key === 'Enter' && !e.shiftKey && !pending && token != null && token !== '') {
+    if (
+      e.key === 'Enter' &&
+      !e.shiftKey &&
+      !pending &&
+      token != null &&
+      token !== ''
+    ) {
       e.preventDefault();
       handleSubmit(e as unknown as FormEvent<HTMLFormElement>).catch(() => {
         // Erreur déjà gérée dans handleSubmit
@@ -180,7 +203,10 @@ export function ResetConfirmPage(): JSX.Element {
           <input type="hidden" value={token || ''} readOnly />
 
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem' }}>
+            <label
+              htmlFor="password"
+              style={{ display: 'block', marginBottom: '0.5rem' }}
+            >
               Nouveau mot de passe
             </label>
             <input
@@ -205,7 +231,11 @@ export function ResetConfirmPage(): JSX.Element {
               <div
                 id="password-error"
                 role="alert"
-                style={{ marginTop: '0.25rem', color: '#c33', fontSize: '0.875rem' }}
+                style={{
+                  marginTop: '0.25rem',
+                  color: '#c33',
+                  fontSize: '0.875rem',
+                }}
               >
                 {errors.password}
               </div>
@@ -213,7 +243,10 @@ export function ResetConfirmPage(): JSX.Element {
           </div>
 
           <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="confirmPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>
+            <label
+              htmlFor="confirmPassword"
+              style={{ display: 'block', marginBottom: '0.5rem' }}
+            >
               Confirmer le mot de passe
             </label>
             <input
@@ -223,11 +256,15 @@ export function ResetConfirmPage(): JSX.Element {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               aria-invalid={confirmPasswordHasError}
-              aria-describedby={confirmPasswordHasError ? 'confirmPassword-error' : ''}
+              aria-describedby={
+                confirmPasswordHasError ? 'confirmPassword-error' : ''
+              }
               style={{
                 width: '100%',
                 padding: '0.5rem',
-                border: confirmPasswordHasError ? '1px solid #c33' : '1px solid #ccc',
+                border: confirmPasswordHasError
+                  ? '1px solid #c33'
+                  : '1px solid #ccc',
                 borderRadius: '4px',
                 boxSizing: 'border-box',
               }}
@@ -238,7 +275,11 @@ export function ResetConfirmPage(): JSX.Element {
               <div
                 id="confirmPassword-error"
                 role="alert"
-                style={{ marginTop: '0.25rem', color: '#c33', fontSize: '0.875rem' }}
+                style={{
+                  marginTop: '0.25rem',
+                  color: '#c33',
+                  fontSize: '0.875rem',
+                }}
               >
                 {errors.confirmPassword}
               </div>
@@ -251,11 +292,15 @@ export function ResetConfirmPage(): JSX.Element {
             style={{
               width: '100%',
               padding: '0.75rem 1.5rem',
-              backgroundColor: pending || token == null || token === '' ? '#ccc' : '#007bff',
+              backgroundColor:
+                pending || token == null || token === '' ? '#ccc' : '#007bff',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
-              cursor: pending || token == null || token === '' ? 'not-allowed' : 'pointer',
+              cursor:
+                pending || token == null || token === ''
+                  ? 'not-allowed'
+                  : 'pointer',
               marginBottom: '1rem',
             }}
           >
@@ -264,7 +309,9 @@ export function ResetConfirmPage(): JSX.Element {
         </form>
       )}
 
-      <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem' }}>
+      <div
+        style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem' }}
+      >
         <Link
           to={ROUTES.LOGIN}
           style={{ color: '#007bff', textDecoration: 'none' }}
@@ -275,4 +322,3 @@ export function ResetConfirmPage(): JSX.Element {
     </div>
   );
 }
-

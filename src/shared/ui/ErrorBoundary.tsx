@@ -18,7 +18,10 @@ interface ErrorBoundaryProps {
  * Affiche le request_id si disponible dans l'erreur ApiError
  * Supporte resetKeys pour réinitialiser automatiquement lors d'un changement de route
  */
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
@@ -42,8 +45,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     const { hasError } = this.state;
 
     // Si resetKeys a changé et qu'il y a une erreur, réinitialiser
-    if (hasError && resetKeys !== undefined && prevProps.resetKeys !== undefined) {
-      const hasResetKeyChanged = resetKeys.some((key, index) => key !== prevProps.resetKeys?.[index]);
+    if (
+      hasError &&
+      resetKeys !== undefined &&
+      prevProps.resetKeys !== undefined
+    ) {
+      const hasResetKeyChanged = resetKeys.some(
+        (key, index) => key !== prevProps.resetKeys?.[index]
+      );
       if (hasResetKeyChanged) {
         this.setState({
           hasError: false,
@@ -76,7 +85,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         <div style={{ padding: '2rem', textAlign: 'center' }}>
           <h2>Une erreur est survenue</h2>
           <p>
-            {this.state.error?.message || 'Une erreur inattendue s\'est produite.'}
+            {this.state.error?.message ||
+              "Une erreur inattendue s'est produite."}
           </p>
           {this.state.requestId && (
             <p style={{ fontSize: '0.875rem', color: '#666' }}>
@@ -101,4 +111,3 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return this.props.children;
   }
 }
-

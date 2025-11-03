@@ -16,12 +16,18 @@ export function LoginPage(): JSX.Element {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
   const redirectAfterLogin = useAuthStore((state) => state.redirectAfterLogin);
-  const setRedirectAfterLogin = useAuthStore((state) => state.setRedirectAfterLogin);
+  const setRedirectAfterLogin = useAuthStore(
+    (state) => state.setRedirectAfterLogin
+  );
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+    general?: string;
+  }>({});
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -69,7 +75,11 @@ export function LoginPage(): JSX.Element {
       if (error instanceof ApiError) {
         if (error.status === 422 || error.status === 400) {
           // Erreurs de validation : afficher details par champ
-          const fieldErrors: { email?: string; password?: string; general?: string } = {};
+          const fieldErrors: {
+            email?: string;
+            password?: string;
+            general?: string;
+          } = {};
           if (error.details != null) {
             const details = error.details as Record<string, string[]>;
             if (details.email && details.email.length > 0) {
@@ -79,7 +89,11 @@ export function LoginPage(): JSX.Element {
               fieldErrors.password = details.password[0];
             }
             // Erreur générale si pas de champ spécifique
-            if (error.message != null && error.message !== '' && Object.keys(fieldErrors).length === 0) {
+            if (
+              error.message != null &&
+              error.message !== '' &&
+              Object.keys(fieldErrors).length === 0
+            ) {
               fieldErrors.general = error.message;
             }
           } else {
@@ -89,14 +103,18 @@ export function LoginPage(): JSX.Element {
         } else if (error.status != null && error.status >= 500) {
           // Erreur serveur : toast générique
           toast.error('Erreur serveur. Veuillez réessayer plus tard.');
-          setErrors({ general: 'Une erreur est survenue. Veuillez réessayer.' });
+          setErrors({
+            general: 'Une erreur est survenue. Veuillez réessayer.',
+          });
         } else if (error.status === 401) {
           // Non autorisé (mauvais identifiants)
           setErrors({ general: 'Email ou mot de passe incorrect' });
         } else {
           // Autres erreurs API
           toast.error(error.message || 'Erreur lors de la connexion');
-          setErrors({ general: error.message || 'Erreur lors de la connexion' });
+          setErrors({
+            general: error.message || 'Erreur lors de la connexion',
+          });
         }
       } else if (error instanceof NetworkError) {
         // Erreur réseau : toast générique
@@ -153,7 +171,10 @@ export function LoginPage(): JSX.Element {
         noValidate
       >
         <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem' }}>
+          <label
+            htmlFor="email"
+            style={{ display: 'block', marginBottom: '0.5rem' }}
+          >
             Email
           </label>
           <input
@@ -178,7 +199,11 @@ export function LoginPage(): JSX.Element {
             <div
               id="email-error"
               role="alert"
-              style={{ marginTop: '0.25rem', color: '#c33', fontSize: '0.875rem' }}
+              style={{
+                marginTop: '0.25rem',
+                color: '#c33',
+                fontSize: '0.875rem',
+              }}
             >
               {errors.email}
             </div>
@@ -186,7 +211,10 @@ export function LoginPage(): JSX.Element {
         </div>
 
         <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem' }}>
+          <label
+            htmlFor="password"
+            style={{ display: 'block', marginBottom: '0.5rem' }}
+          >
             Mot de passe
           </label>
           <input
@@ -211,7 +239,11 @@ export function LoginPage(): JSX.Element {
             <div
               id="password-error"
               role="alert"
-              style={{ marginTop: '0.25rem', color: '#c33', fontSize: '0.875rem' }}
+              style={{
+                marginTop: '0.25rem',
+                color: '#c33',
+                fontSize: '0.875rem',
+              }}
             >
               {errors.password}
             </div>
@@ -236,7 +268,9 @@ export function LoginPage(): JSX.Element {
         </button>
       </form>
 
-      <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem' }}>
+      <div
+        style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem' }}
+      >
         <Link
           to={ROUTES.RESET.REQUEST}
           style={{ color: '#007bff', textDecoration: 'none' }}
@@ -245,7 +279,9 @@ export function LoginPage(): JSX.Element {
         </Link>
       </div>
 
-      <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem' }}>
+      <div
+        style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem' }}
+      >
         Pas encore de compte ?{' '}
         <Link
           to={ROUTES.SIGNUP}

@@ -61,4 +61,3 @@ class EventBus {
 }
 
 export const eventBus = new EventBus();
-

@@ -15,7 +15,11 @@ export function safeInternalRedirect(path?: string): string {
   }
 
   // Bloquer les routes externes (commençant par // ou http:// ou https://)
-  if (path.startsWith('//') || path.startsWith('http://') || path.startsWith('https://')) {
+  if (
+    path.startsWith('//') ||
+    path.startsWith('http://') ||
+    path.startsWith('https://')
+  ) {
     return '/app/dashboard';
   }
 
@@ -27,4 +31,3 @@ export function safeInternalRedirect(path?: string): string {
   // Route valide interne
   return path;
 }
-

@@ -1,13 +1,46 @@
 import { usePaywallStore } from '@/stores/paywallStore';
+import type { PaywallReason } from '@/shared/api/types';
 
 /**
- * Bannière d'upgrade affichée en cas de 402 (plan insuffisant) ou 429 (quota dépassé)
- * CTA vers checkout pour upgrade
+ * Props pour le composant UpgradeBanner
  */
-export function UpgradeBanner(): JSX.Element | null {
-  const { visible, reason, upgradeUrl, hidePaywall } = usePaywallStore();
+export interface UpgradeBannerProps {
+  /** Callback appelé lors du clic sur le bouton upgrade */
+  onUpgrade?: () => void;
+  /** URL d'upgrade (si disponible) */
+  upgradeUrl?: string;
+  /** Raison du blocage (si pas fourni, utilise le store) */
+  reason?: PaywallReason;
+  /** Callback pour masquer la bannière (si pas fourni, utilise le store) */
+  onHide?: () => void;
+}
 
-  if (!visible) {
+/**
+ * Bannière d'upgrade affichée en cas de 402 (plan insuffisant)
+ * CTA vers checkout pour upgrade
+ * Peut être utilisée directement avec le store ou avec des props
+ */
+export function UpgradeBanner({
+  onUpgrade,
+  upgradeUrl: propsUpgradeUrl,
+  reason: propsReason,
+  onHide,
+}: UpgradeBannerProps = {}): JSX.Element | null {
+  const store = usePaywallStore();
+  const {
+    visible,
+    reason: storeReason,
+    upgradeUrl: storeUpgradeUrl,
+    hidePaywall,
+  } = store;
+
+  // Utiliser props ou store selon ce qui est fourni
+  const reason = propsReason ?? storeReason;
+  const upgradeUrl = propsUpgradeUrl ?? storeUpgradeUrl;
+
+  // Si utilisé avec props uniquement, toujours visible
+  // Sinon, vérifier le store
+  if (!propsReason && !visible) {
     return null;
   }
 
@@ -22,13 +55,22 @@ export function UpgradeBanner(): JSX.Element | null {
   };
 
   const handleUpgrade = (): void => {
-    // TODO: Intégrer avec le hook useCheckout ou fonction similaire
-    if (upgradeUrl) {
+    if (onUpgrade) {
+      onUpgrade();
+    } else if (upgradeUrl) {
       window.location.href = upgradeUrl;
     } else {
       // Fallback vers la page de checkout
       // TODO: Utiliser react-router quand disponible
       window.location.href = '/checkout';
+    }
+  };
+
+  const handleHide = (): void => {
+    if (onHide) {
+      onHide();
+    } else {
+      hidePaywall();
     }
   };
 
@@ -67,7 +109,7 @@ export function UpgradeBanner(): JSX.Element | null {
         </button>
         <button
           type="button"
-          onClick={hidePaywall}
+          onClick={handleHide}
           style={{
             padding: '0.5rem 1rem',
             backgroundColor: 'transparent',
@@ -82,4 +124,3 @@ export function UpgradeBanner(): JSX.Element | null {
     </div>
   );
 }
-

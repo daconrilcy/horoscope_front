@@ -9,7 +9,9 @@ import { ApiError } from './errors';
 /**
  * Schéma pour les erreurs de champ (field errors)
  */
-export const FieldErrorsSchema = z.record(z.string(), z.array(z.string()).nonempty()).optional();
+export const FieldErrorsSchema = z
+  .record(z.string(), z.array(z.string()).nonempty())
+  .optional();
 
 /**
  * Schéma pour la structure d'erreur API
@@ -81,10 +83,14 @@ export const authService = {
    */
   async signup(email: string, password: string): Promise<SignupResponse> {
     try {
-      const response = await http.post<unknown>('/v1/auth/signup', {
-        email,
-        password,
-      }, { auth: false });
+      const response = await http.post<unknown>(
+        '/v1/auth/signup',
+        {
+          email,
+          password,
+        },
+        { auth: false }
+      );
 
       // Validation Zod stricte (fail-fast)
       const validated = SignupResponseSchema.parse(response);
@@ -109,10 +115,14 @@ export const authService = {
    */
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
-      const response = await http.post<unknown>('/v1/auth/login', {
-        email,
-        password,
-      }, { auth: false });
+      const response = await http.post<unknown>(
+        '/v1/auth/login',
+        {
+          email,
+          password,
+        },
+        { auth: false }
+      );
 
       // Validation Zod stricte (fail-fast)
       const validated = LoginResponseSchema.parse(response);
@@ -136,9 +146,13 @@ export const authService = {
    */
   async requestReset(email: string): Promise<RequestResetResponse> {
     try {
-      const response = await http.post<unknown>('/v1/auth/reset/request', {
-        email,
-      }, { auth: false });
+      const response = await http.post<unknown>(
+        '/v1/auth/reset/request',
+        {
+          email,
+        },
+        { auth: false }
+      );
 
       // Validation Zod stricte (fail-fast)
       const validated = RequestResetResponseSchema.parse(response);
@@ -159,12 +173,19 @@ export const authService = {
    * @throws ApiError si erreur API (400, 422, etc.)
    * @throws NetworkError si erreur réseau
    */
-  async confirmReset(token: string, password: string): Promise<ConfirmResetResponse> {
+  async confirmReset(
+    token: string,
+    password: string
+  ): Promise<ConfirmResetResponse> {
     try {
-      const response = await http.post<unknown>('/v1/auth/reset/confirm', {
-        token,
-        password,
-      }, { auth: false });
+      const response = await http.post<unknown>(
+        '/v1/auth/reset/confirm',
+        {
+          token,
+          password,
+        },
+        { auth: false }
+      );
 
       // Validation Zod stricte (fail-fast)
       const validated = ConfirmResetResponseSchema.parse(response);
@@ -177,4 +198,3 @@ export const authService = {
     }
   },
 };
-

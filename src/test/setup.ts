@@ -15,13 +15,20 @@ Object.defineProperty(window, 'scrollTo', {
 });
 
 // Mock env pour les tests
-// @ts-expect-error - process.env est disponible dans l'environnement de test
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+interface ProcessLike {
+  process?: {
+    env?: Record<string, string | undefined>;
+  };
+}
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 const processEnv: unknown =
-  typeof globalThis.process !== 'undefined'
-    ? (globalThis.process as { env?: Record<string, string | undefined> }).env
+  typeof (globalThis as ProcessLike).process !== 'undefined'
+    ? (
+        (globalThis as ProcessLike).process as {
+          env?: Record<string, string | undefined>;
+        }
+      ).env
     : null;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const env =
   (processEnv as Record<string, string | undefined>) ??
   ({} as Record<string, string | undefined>);

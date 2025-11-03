@@ -17,7 +17,7 @@ export const ROUTES = {
     TOS: '/legal/tos',
     PRIVACY: '/legal/privacy',
   },
-  
+
   // Routes privées
   APP: {
     BASE: '/app',
@@ -26,7 +26,7 @@ export const ROUTES = {
     CHAT: '/app/chat',
     ACCOUNT: '/app/account',
   },
-  
+
   // Route 404
   NOT_FOUND: '*',
 } as const;
@@ -34,7 +34,7 @@ export const ROUTES = {
 /**
  * Type pour les routes publiques
  */
-export type PublicRoute = 
+export type PublicRoute =
   | typeof ROUTES.HOME
   | typeof ROUTES.LOGIN
   | typeof ROUTES.SIGNUP
@@ -44,9 +44,8 @@ export type PublicRoute =
 /**
  * Type pour les routes privées
  */
-export type PrivateRoute = 
+export type PrivateRoute =
   | typeof ROUTES.APP.DASHBOARD
   | typeof ROUTES.APP.HOROSCOPE
   | typeof ROUTES.APP.CHAT
   | typeof ROUTES.APP.ACCOUNT;
-

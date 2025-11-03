@@ -4,7 +4,7 @@ import { useTitle } from '@/shared/hooks/useTitle';
  * Page Conditions d'utilisation (placeholder)
  */
 export function TermsOfServicePage(): JSX.Element {
-  useTitle('Horoscope - Conditions d\'utilisation');
+  useTitle("Horoscope - Conditions d'utilisation");
 
   return (
     <div>
@@ -16,4 +16,3 @@ export function TermsOfServicePage(): JSX.Element {
     </div>
   );
 }
-

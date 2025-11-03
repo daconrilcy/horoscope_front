@@ -58,4 +58,3 @@ export const usePaywallStore = create<PaywallState>((set) => {
     },
   };
 });
-

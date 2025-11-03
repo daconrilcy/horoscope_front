@@ -8,4 +8,3 @@ export interface PaywallPayload {
   reason?: PaywallReason;
   upgradeUrl?: string;
 }
-

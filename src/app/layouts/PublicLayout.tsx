@@ -12,7 +12,9 @@ export function PublicLayout(): JSX.Element {
   const isSignup = location.pathname === ROUTES.SIGNUP;
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div
+      style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
+    >
       {/* Navigation */}
       <nav
         style={{
@@ -21,7 +23,14 @@ export function PublicLayout(): JSX.Element {
           backgroundColor: '#f9f9f9',
         }}
       >
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '1rem' }}>
+        <div
+          style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            display: 'flex',
+            gap: '1rem',
+          }}
+        >
           <Link
             to={ROUTES.HOME}
             style={{
@@ -60,10 +69,17 @@ export function PublicLayout(): JSX.Element {
       </nav>
 
       {/* Contenu */}
-      <main style={{ flex: 1, padding: '2rem', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
+      <main
+        style={{
+          flex: 1,
+          padding: '2rem',
+          maxWidth: '1200px',
+          margin: '0 auto',
+          width: '100%',
+        }}
+      >
         <Outlet />
       </main>
     </div>
   );
 }
-
