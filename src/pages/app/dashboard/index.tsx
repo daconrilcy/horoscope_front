@@ -3,6 +3,8 @@ import { useTitle } from '@/shared/hooks/useTitle';
 import { useQueryClient } from '@tanstack/react-query';
 import { UpgradeButton } from '@/widgets/UpgradeButton/UpgradeButton';
 import { PortalButton } from '@/widgets/PortalButton/PortalButton';
+import { QuotaBadge } from '@/widgets/QuotaBadge/QuotaBadge';
+import { PlanBanner } from '@/widgets/PlanBanner/PlanBanner';
 import { PLANS } from '@/shared/config/plans';
 
 /**
@@ -39,10 +41,29 @@ export function DashboardPage(): JSX.Element {
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '1rem',
+            gap: '1.5rem',
           }}
         >
+          {/* PlanBanner : affiche le plan actuel avec CTAs */}
+          <PlanBanner />
+
+          {/* QuotaBadge : affiche l'état des quotas */}
           <div>
+            <h3
+              style={{
+                marginTop: 0,
+                marginBottom: '0.75rem',
+                fontSize: '1rem',
+                fontWeight: 600,
+              }}
+            >
+              État des quotas
+            </h3>
+            <QuotaBadge showRetryAfter={true} />
+          </div>
+
+          {/* Section upgrade pour utilisateurs free */}
+          <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: '1rem' }}>
             <p style={{ marginBottom: '0.5rem' }}>
               Passez à un plan supérieur pour accéder à plus de fonctionnalités
             </p>
@@ -56,12 +77,6 @@ export function DashboardPage(): JSX.Element {
               <UpgradeButton plan={PLANS.PLUS} />
               <UpgradeButton plan={PLANS.PRO} />
             </div>
-          </div>
-          <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: '1rem' }}>
-            <p style={{ marginBottom: '0.5rem' }}>
-              Gérer votre abonnement existant
-            </p>
-            <PortalButton />
           </div>
         </div>
       </div>

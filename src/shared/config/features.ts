@@ -9,6 +9,9 @@ export const FEATURES = {
   HORO_NATAL: 'horoscope.natal',
   HORO_PDF_NATAL: 'horoscope.pdf.natal',
   ACCOUNT_EXPORT: 'account.export',
+  // Sentinelles pour détection de plan
+  PRO_SENTINEL: 'chat.plus', // Feature qui nécessite PRO
+  PLUS_SENTINEL: 'horoscope.today/premium', // Feature qui nécessite PLUS
 } as const;
 
 /**

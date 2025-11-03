@@ -29,7 +29,6 @@ describe('accountService', () => {
         mockBlob as unknown
       );
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const result = await accountService.exportZip();
 
       expect(result.blob).toBe(mockBlob);
