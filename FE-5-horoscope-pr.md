@@ -1,5 +1,7 @@
 # PR: FE-5 — Horoscope Feature
 
+Closes #14
+
 ## Description
 
 Implémentation du système complet d'horoscope avec HoroscopeService (validation Zod stricte), store LRU pour charts récents, pages avec formulaire natal/today/premium protégé par PaywallGate, export PDF sécurisé, et tests complets.
