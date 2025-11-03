@@ -4,7 +4,7 @@
 
 **Date** : 2025-01-14  
 **Branche** : `feat/FE-6-chat`  
-**Dernier commit** : `e5ceeb7`  
+**Dernier commit** : `bbafc9f4de76065dee178c9c9c9edd01019d271e`  
 **Issue** : [#18](https://github.com/daconrilcy/horoscope_front/issues/18) ✅  
 **Pull Request** : [#19](https://github.com/daconrilcy/horoscope_front/pull/19) ✅
 
