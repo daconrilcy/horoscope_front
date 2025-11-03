@@ -86,9 +86,8 @@ describe('useCreateNatal', () => {
     const chartId = await result.current.createNatal(validInput);
 
     expect(chartId).toBe('chart-123');
-    expect(
-      horoscopeService.createNatal as ReturnType<typeof vi.fn>
-    ).toHaveBeenCalledWith(validInput);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(horoscopeService.createNatal).toHaveBeenCalledWith(validInput);
     expect(mockAddChart).toHaveBeenCalledWith('chart-123', 'Test Chart');
   });
 
