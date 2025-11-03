@@ -23,9 +23,18 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment files
+# Environment
 .env
 .env.local
+.env.production.local
+.env.development.local
 
-# Cursor
-.cursor/
+# Testing
+coverage
+.nyc_output
+test-results
+playwright-report
+playwright/.cache
+
+# E2E auth state
+e2e/.auth

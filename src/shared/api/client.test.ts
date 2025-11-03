@@ -1,10 +1,21 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  vi,
+  afterEach,
+  beforeAll,
+  afterAll,
+} from 'vitest';
 import { http, configureHttp } from './client';
 import { ApiError, NetworkError } from './errors';
 import { eventBus } from './eventBus';
+import { server } from '@/test/setup/msw.server';
 
 // Mock fetch global
-globalThis.fetch = vi.fn();
+const mockFetch = vi.fn();
+globalThis.fetch = mockFetch;
 
 // Mock useAuthStore
 vi.mock('@/stores/authStore', () => ({
@@ -24,13 +35,22 @@ vi.mock('./eventBus', () => ({
 }));
 
 describe('HTTP Client', () => {
+  // Désactiver MSW pour ce test car nous utilisons mockFetch directement
+  beforeAll(() => {
+    server.close();
+  });
+
+  afterAll(() => {
+    server.listen({ onUnhandledRequest: 'warn' });
+  });
+
   let emitSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     emitSpy = vi.spyOn(eventBus, 'emit');
     configureHttp({ baseURL: 'https://api.example.com' });
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockClear();
+    mockFetch.mockClear();
   });
 
   afterEach(() => {
@@ -44,14 +64,11 @@ describe('HTTP Client', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       await http.get('/test', { auth: true });
 
-      const fetchCall = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
-        .calls[0];
+      const fetchCall = mockFetch.mock.calls[0];
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers
@@ -67,14 +84,11 @@ describe('HTTP Client', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       await http.get('/test', { auth: false });
 
-      const fetchCall = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
-        .calls[0];
+      const fetchCall = mockFetch.mock.calls[0];
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers
@@ -90,14 +104,11 @@ describe('HTTP Client', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       await http.post('/test', { data: 'test' }, { idempotency: true });
 
-      const fetchCall = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
-        .calls[0];
+      const fetchCall = mockFetch.mock.calls[0];
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers
@@ -118,14 +129,11 @@ describe('HTTP Client', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       await http.put('/test', { data: 'test' }, { idempotency: true });
 
-      const fetchCall = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
-        .calls[0];
+      const fetchCall = mockFetch.mock.calls[0];
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers
@@ -140,14 +148,11 @@ describe('HTTP Client', () => {
         status: 204,
       });
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       await http.del('/test', { idempotency: true });
 
-      const fetchCall = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
-        .calls[0];
+      const fetchCall = mockFetch.mock.calls[0];
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers
@@ -163,9 +168,7 @@ describe('HTTP Client', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       const consoleWarnSpy = vi
         .spyOn(console, 'warn')
@@ -175,8 +178,7 @@ describe('HTTP Client', () => {
 
       await http.get('/test', { idempotency: true });
 
-      const fetchCall = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
-        .calls[0];
+      const fetchCall = mockFetch.mock.calls[0];
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers
@@ -196,14 +198,11 @@ describe('HTTP Client', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       await http.post('/test', { data: 'test' }, { idempotency: false });
 
-      const fetchCall = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
-        .calls[0];
+      const fetchCall = mockFetch.mock.calls[0];
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers
@@ -219,14 +218,11 @@ describe('HTTP Client', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       await http.post('/test', { data: 'test' });
 
-      const fetchCall = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
-        .calls[0];
+      const fetchCall = mockFetch.mock.calls[0];
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers
@@ -247,9 +243,7 @@ describe('HTTP Client', () => {
         }
       );
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       await expect(http.get('/test')).rejects.toThrow(ApiError);
 
@@ -268,9 +262,7 @@ describe('HTTP Client', () => {
         }
       );
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       await expect(http.get('/test')).rejects.toThrow(ApiError);
 
@@ -292,9 +284,7 @@ describe('HTTP Client', () => {
         }
       );
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       await expect(http.get('/test')).rejects.toThrow(ApiError);
 
@@ -319,9 +309,7 @@ describe('HTTP Client', () => {
         }
       );
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       await expect(http.get('/login')).rejects.toThrow(ApiError);
 
@@ -334,7 +322,7 @@ describe('HTTP Client', () => {
   describe('Timeout', () => {
     it('devrait retourner NetworkError timeout', async () => {
       // Simuler un fetch qui ne répond jamais (timeout)
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(
+      mockFetch.mockImplementation(
         () =>
           new Promise((_resolve, reject) => {
             // Ne jamais résoudre, le timeout du client va l'abort
@@ -364,9 +352,7 @@ describe('HTTP Client', () => {
         status: 204,
       });
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       const result = await http.del('/test');
 
@@ -380,9 +366,7 @@ describe('HTTP Client', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       const result = await http.get<typeof mockData>('/test');
 
@@ -396,9 +380,7 @@ describe('HTTP Client', () => {
         headers: { 'Content-Type': 'application/pdf' },
       });
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       const result = await http.get<Blob>('/test');
 
@@ -415,9 +397,7 @@ describe('HTTP Client', () => {
         headers: { 'Content-Type': 'text/html' },
       });
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       const result = await http.get<string>('/test');
 
@@ -434,9 +414,7 @@ describe('HTTP Client', () => {
         blob: vi.fn(),
       };
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse as unknown as Response
-      );
+      mockFetch.mockResolvedValue(mockResponse as unknown as Response);
 
       try {
         await http.get('/test');
@@ -460,9 +438,7 @@ describe('HTTP Client', () => {
         },
       });
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       try {
         await http.get('/test');
@@ -483,9 +459,7 @@ describe('HTTP Client', () => {
         }
       );
 
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockResponse
-      );
+      mockFetch.mockResolvedValue(mockResponse);
 
       try {
         await http.get('/test');
@@ -501,7 +475,7 @@ describe('HTTP Client', () => {
   describe('Retry policy', () => {
     it('ne devrait pas retry sur POST (mutation)', async () => {
       let attemptCount = 0;
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      mockFetch.mockImplementation(() => {
         attemptCount++;
         return Promise.reject(new TypeError('Network error'));
       });
@@ -514,7 +488,7 @@ describe('HTTP Client', () => {
 
     it('devrait retry sur GET si NetworkError (max 2 retries)', async () => {
       let attemptCount = 0;
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      mockFetch.mockImplementation(() => {
         attemptCount++;
         if (attemptCount < 3) {
           return Promise.reject(new TypeError('Network error'));

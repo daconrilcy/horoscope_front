@@ -1,0 +1,182 @@
+```markdown
+---
+alwaysApply: true
+---
+name: Quality Gates – Frontend (React + TS + Vite)
+description: Règles BLOQUANTES pour le front. Respect strict des contrats backend et exécution locale contre http://localhost:8000/ (Docker).
+scopes:
+  - project
+languages:
+  - typescript
+  - javascript
+priority: highest
+---
+
+# Contexte & Cible
+- **Backend** : disponible en local via Docker sur **http://localhost:8000/**.
+- **Base URL front** : **obligatoirement** fournie via env `VITE_API_BASE_URL` (ex. `http://localhost:8000`).
+- **Aucune CI**. Tous les tests se lancent **en local**.
+
+# Versions & Outils — BLOQUANT
+- **Node** ≥ 20 LTS.
+- **Vite** 5.x, **React** 18.x, **TypeScript** 5.x.
+- **ESLint** 9.x + **Prettier** (unique formateur).
+- **Vitest** + **@testing-library/react** + **MSW** pour unit/int.
+- **Playwright** pour E2E local.
+- Vérifier versions avant toute action ; si non conformes → **échouer** et demander la mise à jour.
+
+# Comportement attendu de l’IA (Cursor)
+1. **Toujours corriger/standardiser avant de coder** :
+   - `npm run lint:fix` (ou séquence équivalente) puis `npm run format`.
+   - Reboucler jusqu’à **0 erreur** ESLint et **aucun** conflit Prettier.
+2. **Zéro tolérance** : pas de désactivation globale ESLint/TS. Exception **documentée** et ciblée (`// eslint-disable-next-line` sur une ligne unique, justification en commentaire).
+3. **Respect du repo** : si un ESLint config existe → **respect strict**. Sinon, **créer** un `.eslintrc` minimal (TS strict, import/order) et **documenter**.
+4. **Sortie de code interdite** si `npm run lint`/`npm run typecheck` ne sont pas **verts**.
+
+# Contrats API — BLOQUANT
+- **N’utiliser que** ces endpoints (contrats stables v1) :  
+  - Auth : `/v1/auth/*` (signup, login, reset request/confirm)
+  - Account : `/v1/account/export` (GET binaire), `/v1/account` (DELETE)
+  - Horoscope : `/v1/horoscope/natal` (POST), `/v1/horoscope/today/{chart_id}` (GET), `/v1/horoscope/pdf/natal/{chart_id}` (GET binaire)
+  - Chat : `/v1/chat/advise` (POST, **JWT + “plus”**)
+  - Billing : `/v1/billing/checkout` (POST), `/v1/billing/portal` (POST)
+  - Paywall : `/v1/paywall/decision` (POST)
+  - Legal : `/legal/tos`, `/legal/privacy` (GET HTML)
+- **Interdits** : inventer des routes (ex. `GET /entitlements/snapshot` public), extrapoler des quotas/plan côté front.
+- **Headers** :
+  - `Authorization: Bearer <jwt>` sur toutes routes protégées.
+  - `Idempotency-Key: <uuid-v4>` **obligatoire** pour `/v1/billing/checkout`.
+- **Billing** : le backend renvoie des **URLs** (`checkout_url`/`portal_url`) → le front redirige. **Aucun SDK Stripe** côté front.
+- **PDF** : télécharger via `blob` + `URL.createObjectURL`. **Ne jamais** parser le PDF.
+- **Legal** : rendre l’**HTML** servi par le backend.
+
+# Routage & Garde — BLOQUANT
+- **React Router v6** avec :
+  - **RouteGuard** : `/app/*` inaccessible sans JWT (redir `/login` + toast “Session expirée”).
+  - **PaywallGate/FeatureGuard** : avant toute action premium, appeler `POST /v1/paywall/decision` avec `feature` explicite :
+    - `200 allowed` → autoriser l’UI.
+    - `402` (plan insuffisant) → **UpgradeBanner** + CTA Checkout.
+    - `429` (quota dépassé) → message quota + lien upgrade.
+- **Aucune duplication** de cette logique en dehors d’un **wrapper HTTP** et d’un **composant gate** partagé.
+
+# Validation Runtime — BLOQUANT
+- **Zod** valide **toutes** les réponses réseau avant usage UI. Toute non-conformité → **throw** (fail-fast).
+- Schémas précis (optionnels correctement marqués), alignés sur les réponses réelles.
+
+# State & Data-Fetching
+- **React Query** pour tout **server-state** (cache, retry, staleTime). **Pas** de server-state dans Zustand.
+- **Zustand** réservé au **state UI** (token, modals, flags éphémères).
+- Hooks dédiés : `usePaywall`, `useCheckout`, `useChat`, `useNatal` — **aucune logique backend implicite** (extrapolation interdite).
+
+# Sécurité & Conformité
+- **JWT storage** : mémoire + `localStorage` (persist), purge totale au logout.
+- **Aucun secret** (Stripe/clé API) dans le front ; tout passe par le backend.
+- **CORS/CSP** : pas d’inline scripts ; imports modules. **Ne pas contourner** la CSP.
+- Entrées utilisateur : tailles max raisonnables ; aucune collecte de PII non nécessaire.
+
+# Arborescence & Nommage
+- Dossiers : `app/`, `shared/` (`api/`, `auth/`, `hooks/`, `ui/`, `config/`, `types/`), `entities/`, `features/` (`auth/`, `billing/`, `horoscope/`, `chat/`, `account/`, `legal/`), `pages/`, `widgets/`, `stores/`, `styles/`.
+- Nommage : services `*.service.ts`, hooks `use*.ts`, composants `PascalCase.tsx`, modules utilitaires `camelCase.ts`.
+- `VITE_API_BASE_URL` **obligatoire** et validé via Zod au démarrage (erreur claire si absent).
+
+# Tests — BLOQUANT (local uniquement)
+- **Unit/Int** : Vitest + Testing Library + MSW sur services & hooks critiques (auth, billing, paywall, horoscope, chat, account).
+- **E2E Playwright** (contre **http://localhost:8000/**) : parcours minimaux
+  1) signup → login → dashboard,
+  2) upgrade Plus (Checkout test) → retour → chat débloqué,
+  3) créer natal → today → export PDF,
+  4) reset password (manuel via Mailpit accepté si non scriptable).
+- Les commandes de test local sont documentées dans chaque PR (aucune GitHub Action).
+
+# Séquence d’exécution IMPÉRATIVE (avant toute sortie de code)
+1) **Linter & Format**
+   - `npm run lint:fix`
+   - `npm run format`
+   - `npm run lint` → **0 erreur / 0 avertissement**.
+2) **Type-check**
+   - `npm run typecheck` (TS strict) → **vert**.
+3) **Tests unit/int**
+   - `npm run test` (Vitest) → **verts**.
+4) **E2E local**
+   - `npx playwright test` (ou `npm run test:e2e`) contre **http://localhost:8000/** → scénarios verts.
+5) **Rapport PR**
+   - Lister endpoints utilisés, contrats Zod, cas d’erreurs (401/402/429/5xx) et captures/gifs.
+
+# Interdits
+- Créer des endpoints non listés ci-dessus.
+- Stocker des secrets ou intégrer SDK Stripe côté front.
+- Bypasser la gestion d’erreurs centralisée (401/402/429/5xx).
+- Ajouter une CI sans demande explicite.
+- Introduire du server-state dans Zustand.
+
+# ESLint minimal (si absent)
+Créer `.eslintrc.json` (strict) :
+```json
+{
+  "root": true,
+  "env": { "browser": true, "es2023": true },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": { "project": ["./tsconfig.json"], "sourceType": "module" },
+  "plugins": ["@typescript-eslint", "import", "react", "react-hooks"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended-type-checked",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:import/recommended",
+    "plugin:import/typescript",
+    "prettier"
+  ],
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "import/order": ["error", { "alphabetize": { "order": "asc", "caseInsensitive": true }, "newlines-between": "always", "groups": [["builtin","external","internal"],["parent","sibling","index"]], "pathGroupsExcludedImportTypes": ["builtin"] }],
+    "@typescript-eslint/consistent-type-imports": ["error", { "prefer": "type-imports" }],
+    "@typescript-eslint/no-misused-promises": ["error", { "checksVoidReturn": { "attributes": false } }]
+  },
+  "settings": { "react": { "version": "detect" } }
+}
+```
+Ajouter scripts dans `package.json` :
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:ui": "vitest",
+    "test:e2e": "playwright test"
+  }
+}
+```
+
+# Template de description PR (copier-coller)
+**Titre**: FE-[scope] — [feature]
+
+**Portée & Alignement**  
+- Implémente **[feature]** côté front, alignée sur **http://localhost:8000/** et les contrats v1. Aucune route inventée.
+
+**Endpoints utilisés**  
+- [liste exacte : `/v1/...`]
+
+**Contraintes respectées**  
+- Wrapper HTTP unique (Bearer + Idempotency sur checkout ; mapping 401/402/429/5xx).  
+- Paywall via `POST /v1/paywall/decision` (200/402/429).  
+- Zod pour toutes réponses ; React Query pour server-state ; Zustand pour UI only.  
+- PDF via `blob` ; legal HTML ; pas de SDK Stripe.
+
+**Tests (local-only)**  
+- Unit/int : [fichiers] → verts.  
+- E2E : [scénarios] contre **http://localhost:8000/** → verts.  
+- Commandes : `npm run dev`, `npm run test`, `npx playwright test`.
+
+**Vérifications**  
+- [ ] Check-list **Quality Gates Frontend** entièrement cochée.  
+- [ ] Captures/gifs du parcours principal.
+
+---
+```markdown
