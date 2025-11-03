@@ -35,6 +35,11 @@ const HoroscopePage = lazy(() =>
     default: module.HoroscopePage,
   }))
 );
+const ChatPage = lazy(() =>
+  import('@/pages/app/chat').then((module) => ({
+    default: module.ChatPage,
+  }))
+);
 
 /**
  * Loader simple pour Suspense
@@ -148,6 +153,14 @@ const router = createBrowserRouter([
                 element: (
                   <Suspense fallback={<PageLoader />}>
                     <HoroscopePage />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'chat',
+                element: (
+                  <Suspense fallback={<PageLoader />}>
+                    <ChatPage />
                   </Suspense>
                 ),
               },
