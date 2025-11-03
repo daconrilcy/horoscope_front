@@ -1,4 +1,8 @@
-import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 import { accountService } from '@/shared/api/account.service';
 import { ApiError, NetworkError } from '@/shared/api/errors';
 import { toast } from '@/app/AppProviders';

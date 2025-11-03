@@ -57,11 +57,14 @@ describe('useExportZip', () => {
 
   it('devrait appeler exportZip et télécharger le fichier', async () => {
     const mockBlob = new Blob(['zip content'], { type: 'application/zip' });
-    const mockResult = { blob: mockBlob, filename: 'account-export-20241201.zip' };
+    const mockResult = {
+      blob: mockBlob,
+      filename: 'account-export-20241201.zip',
+    };
 
-    (
-      accountService.exportZip as ReturnType<typeof vi.fn>
-    ).mockResolvedValue(mockResult);
+    (accountService.exportZip as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockResult
+    );
 
     const { result } = renderHook(() => useExportZip(), { wrapper });
 
@@ -69,22 +72,27 @@ describe('useExportZip', () => {
 
     await waitFor(() => {
       expect(downloadBlob).toHaveBeenCalledWith(mockBlob, mockResult.filename);
-      expect(toast.success).toHaveBeenCalledWith('Données exportées avec succès');
+      expect(toast.success).toHaveBeenCalledWith(
+        'Données exportées avec succès'
+      );
     });
   });
 
   it('devrait bloquer double-clic pendant la mutation', async () => {
     const mockBlob = new Blob(['zip content'], { type: 'application/zip' });
-    const mockResult = { blob: mockBlob, filename: 'account-export-20241201.zip' };
+    const mockResult = {
+      blob: mockBlob,
+      filename: 'account-export-20241201.zip',
+    };
 
     let resolvePromise: (value: typeof mockResult) => void;
     const promise = new Promise<typeof mockResult>((resolve) => {
       resolvePromise = resolve;
     });
 
-    (
-      accountService.exportZip as ReturnType<typeof vi.fn>
-    ).mockReturnValue(promise);
+    (accountService.exportZip as ReturnType<typeof vi.fn>).mockReturnValue(
+      promise
+    );
 
     const { result } = renderHook(() => useExportZip(), { wrapper });
 
@@ -114,9 +122,9 @@ describe('useExportZip', () => {
   it('devrait gérer ApiError 401 (pas de toast, laisser wrapper gérer)', async () => {
     const mockError = new ApiError('Unauthorized', 401, undefined, undefined);
 
-    (
-      accountService.exportZip as ReturnType<typeof vi.fn>
-    ).mockRejectedValue(mockError);
+    (accountService.exportZip as ReturnType<typeof vi.fn>).mockRejectedValue(
+      mockError
+    );
 
     const { result } = renderHook(() => useExportZip(), { wrapper });
 
@@ -141,9 +149,9 @@ describe('useExportZip', () => {
       'req-123'
     );
 
-    (
-      accountService.exportZip as ReturnType<typeof vi.fn>
-    ).mockRejectedValue(mockError);
+    (accountService.exportZip as ReturnType<typeof vi.fn>).mockRejectedValue(
+      mockError
+    );
 
     const { result } = renderHook(() => useExportZip(), { wrapper });
 
@@ -155,7 +163,7 @@ describe('useExportZip', () => {
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
-        'Erreur serveur lors de l\'export'
+        "Erreur serveur lors de l'export"
       );
       expect(result.current.error).toBeInstanceOf(ApiError);
     });
@@ -164,9 +172,9 @@ describe('useExportZip', () => {
   it('devrait gérer NetworkError timeout avec toast spécifique', async () => {
     const mockError = new NetworkError('timeout', 'Request timeout');
 
-    (
-      accountService.exportZip as ReturnType<typeof vi.fn>
-    ).mockRejectedValue(mockError);
+    (accountService.exportZip as ReturnType<typeof vi.fn>).mockRejectedValue(
+      mockError
+    );
 
     const { result } = renderHook(() => useExportZip(), { wrapper });
 
@@ -187,9 +195,9 @@ describe('useExportZip', () => {
   it('devrait gérer NetworkError offline avec toast spécifique', async () => {
     const mockError = new NetworkError('offline', 'Network error: offline');
 
-    (
-      accountService.exportZip as ReturnType<typeof vi.fn>
-    ).mockRejectedValue(mockError);
+    (accountService.exportZip as ReturnType<typeof vi.fn>).mockRejectedValue(
+      mockError
+    );
 
     const { result } = renderHook(() => useExportZip(), { wrapper });
 
@@ -210,9 +218,9 @@ describe('useExportZip', () => {
   it('devrait gérer NetworkError autre avec toast générique', async () => {
     const mockError = new NetworkError('aborted', 'Request aborted');
 
-    (
-      accountService.exportZip as ReturnType<typeof vi.fn>
-    ).mockRejectedValue(mockError);
+    (accountService.exportZip as ReturnType<typeof vi.fn>).mockRejectedValue(
+      mockError
+    );
 
     const { result } = renderHook(() => useExportZip(), { wrapper });
 
@@ -224,7 +232,7 @@ describe('useExportZip', () => {
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
-        'Erreur réseau lors de l\'export.'
+        "Erreur réseau lors de l'export."
       );
       expect(result.current.error).toBeInstanceOf(NetworkError);
     });
@@ -232,11 +240,14 @@ describe('useExportZip', () => {
 
   it('devrait nettoyer AbortController au démontage', async () => {
     const mockBlob = new Blob(['zip content'], { type: 'application/zip' });
-    const mockResult = { blob: mockBlob, filename: 'account-export-20241201.zip' };
+    const mockResult = {
+      blob: mockBlob,
+      filename: 'account-export-20241201.zip',
+    };
 
-    (
-      accountService.exportZip as ReturnType<typeof vi.fn>
-    ).mockResolvedValue(mockResult);
+    (accountService.exportZip as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockResult
+    );
 
     const { result, unmount } = renderHook(() => useExportZip(), { wrapper });
 

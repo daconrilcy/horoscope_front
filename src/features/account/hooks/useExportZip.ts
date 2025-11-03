@@ -67,20 +67,20 @@ export function useExportZip(): UseExportZipResult {
 
         // 500 → toast spécifique
         if (err.status === 500) {
-          toast.error('Erreur serveur lors de l\'export');
+          toast.error("Erreur serveur lors de l'export");
           return;
         }
 
         // Autres erreurs API
         const message =
-          err.message || 'Une erreur est survenue lors de l\'export.';
+          err.message || "Une erreur est survenue lors de l'export.";
         toast.error(message);
       } else if (err instanceof NetworkError) {
         // NetworkError/timeout/offline → toast clair
         const message =
           err.reason === 'timeout' || err.reason === 'offline'
             ? 'Export indisponible, réessayez.'
-            : 'Erreur réseau lors de l\'export.';
+            : "Erreur réseau lors de l'export.";
         toast.error(message);
       } else {
         // Erreur inconnue

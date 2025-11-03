@@ -58,9 +58,7 @@ export const accountService = {
    * @throws ApiError si erreur API (401, 500, Content-Type invalide)
    * @throws NetworkError si erreur réseau
    */
-  async exportZip(
-    signal?: AbortSignal
-  ): Promise<ZipExportResult> {
+  async exportZip(signal?: AbortSignal): Promise<ZipExportResult> {
     try {
       // Utiliser le signal fourni ou créer un nouveau AbortController
       const abortSignal = signal ?? new AbortController().signal;
@@ -112,7 +110,7 @@ export const accountService = {
       // Si c'est une ApiError avec status 500, enrichir le message
       if (error instanceof ApiError && error.status === 500) {
         throw new ApiError(
-          'Erreur serveur lors de l\'export',
+          "Erreur serveur lors de l'export",
           error.status,
           error.code,
           error.requestId
@@ -144,7 +142,8 @@ export const accountService = {
       if (error instanceof ApiError && error.status === 409) {
         // Toujours enrichir le message pour 409 avec un message métier spécifique
         const enrichedMessage =
-          error.message != null && error.message.includes('Suppression impossible')
+          error.message != null &&
+          error.message.includes('Suppression impossible')
             ? error.message
             : 'Suppression impossible pour le moment (opérations en cours)';
         throw new ApiError(
