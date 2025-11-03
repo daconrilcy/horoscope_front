@@ -3,8 +3,6 @@ import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PlanBanner } from './PlanBanner';
 import { usePlan } from '@/features/billing/hooks/usePlan';
-import { PortalButton } from '@/widgets/PortalButton/PortalButton';
-import { UpgradeButton } from '@/widgets/UpgradeButton/UpgradeButton';
 import React from 'react';
 
 // Mock usePlan
@@ -14,14 +12,14 @@ vi.mock('@/features/billing/hooks/usePlan', () => ({
 
 // Mock PortalButton
 vi.mock('@/widgets/PortalButton/PortalButton', () => ({
-  PortalButton: ({ label }: { label?: string }) => (
+  PortalButton: ({ label }: { label?: string }): JSX.Element => (
     <button data-testid="portal-button">{label}</button>
   ),
 }));
 
 // Mock UpgradeButton
 vi.mock('@/widgets/UpgradeButton/UpgradeButton', () => ({
-  UpgradeButton: ({ plan }: { plan: string }) => (
+  UpgradeButton: ({ plan }: { plan: string }): JSX.Element => (
     <button data-testid={`upgrade-button-${plan}`}>Upgrade {plan}</button>
   ),
 }));
@@ -39,7 +37,7 @@ describe('PlanBanner', () => {
       },
     });
 
-    wrapper = ({ children }: { children: React.ReactNode }) => (
+    wrapper = ({ children }: { children: React.ReactNode }): JSX.Element => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
 

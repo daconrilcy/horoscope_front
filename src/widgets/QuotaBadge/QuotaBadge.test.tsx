@@ -1,9 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { QuotaBadge } from './QuotaBadge';
 import { useMultiPaywall } from '@/features/billing/hooks/useMultiPaywall';
-import { FEATURES } from '@/shared/config/features';
 import React from 'react';
 import type { UsePaywallResult } from '@/features/billing/hooks/usePaywall';
 
@@ -14,7 +13,7 @@ vi.mock('@/features/billing/hooks/useMultiPaywall', () => ({
 
 // Mock InlineError
 vi.mock('@/shared/ui/InlineError', () => ({
-  InlineError: ({ error }: { error: Error }) => (
+  InlineError: ({ error }: { error: Error }): JSX.Element => (
     <div data-testid="inline-error">{error.message}</div>
   ),
 }));
@@ -32,7 +31,7 @@ describe('QuotaBadge', () => {
       },
     });
 
-    wrapper = ({ children }: { children: React.ReactNode }) => (
+    wrapper = ({ children }: { children: React.ReactNode }): JSX.Element => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { usePlan } from './usePlan';
@@ -24,14 +24,14 @@ describe('usePlan', () => {
       },
     });
 
-    wrapper = ({ children }: { children: React.ReactNode }) => (
+    wrapper = ({ children }: { children: React.ReactNode }): JSX.Element => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
 
     vi.clearAllMocks();
   });
 
-  it('devrait retourner "pro" si PRO_SENTINEL est allowed', async () => {
+  it('devrait retourner "pro" si PRO_SENTINEL est allowed', () => {
     const mockResults: UsePaywallResult[] = [
       {
         data: { allowed: true },
@@ -62,7 +62,7 @@ describe('usePlan', () => {
     expect(result.current.isLoading).toBe(false);
   });
 
-  it('devrait retourner "plus" si PLUS_SENTINEL est allowed (mais pas PRO)', async () => {
+  it('devrait retourner "plus" si PLUS_SENTINEL est allowed (mais pas PRO)', () => {
     const mockResults: UsePaywallResult[] = [
       {
         data: { allowed: false, reason: 'plan' },
@@ -93,7 +93,7 @@ describe('usePlan', () => {
     expect(result.current.isLoading).toBe(false);
   });
 
-  it('devrait retourner "free" si aucune sentinelle n\'est allowed', async () => {
+  it('devrait retourner "free" si aucune sentinelle n\'est allowed', () => {
     const mockResults: UsePaywallResult[] = [
       {
         data: { allowed: false, reason: 'plan' },

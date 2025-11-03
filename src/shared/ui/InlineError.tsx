@@ -83,7 +83,7 @@ export function InlineError({
           <p style={{ margin: 0, color: '#991b1b', fontWeight: 500 }}>
             {message}
           </p>
-          {requestId && (
+          {requestId !== undefined && (
             <small
               style={{
                 display: 'block',

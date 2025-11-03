@@ -36,7 +36,8 @@ export function CopyButton({
       }
 
       // Essayer Clipboard API d'abord
-      if (navigator.clipboard && navigator.clipboard.writeText) {
+      // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+      if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(textToCopy);
       } else {
         // Fallback : document.execCommand
@@ -75,7 +76,9 @@ export function CopyButton({
     <div style={{ position: 'relative', display: 'inline-block' }}>
       <button
         type="button"
-        onClick={handleCopy}
+        onClick={() => {
+          void handleCopy();
+        }}
         aria-label={copied ? 'Copié !' : label}
         aria-live="polite"
         style={{
@@ -101,7 +104,7 @@ export function CopyButton({
           <span>{label}</span>
         )}
       </button>
-      {error && (
+      {error !== null && (
         <div
           role="alert"
           style={{

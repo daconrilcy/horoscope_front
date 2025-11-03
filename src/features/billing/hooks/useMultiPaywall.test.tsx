@@ -26,7 +26,7 @@ describe('useMultiPaywall', () => {
       },
     });
 
-    wrapper = ({ children }: { children: React.ReactNode }) => (
+    wrapper = ({ children }: { children: React.ReactNode }): JSX.Element => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
 
@@ -37,9 +37,10 @@ describe('useMultiPaywall', () => {
     const mockDecision1: PaywallDecision = { allowed: true };
     const mockDecision2: PaywallDecision = { allowed: false, reason: 'plan' };
 
-    vi.mocked(paywallService.decision)
-      .mockResolvedValueOnce(mockDecision1)
-      .mockResolvedValueOnce(mockDecision2);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const mockDecision = vi.mocked(paywallService.decision);
+    mockDecision.mockResolvedValueOnce(mockDecision1);
+    mockDecision.mockResolvedValueOnce(mockDecision2);
 
     const { result } = renderHook(
       () => useMultiPaywall(['feature1', 'feature2']),
@@ -50,9 +51,9 @@ describe('useMultiPaywall', () => {
       expect(result.current.isLoadingAny).toBe(false);
     });
 
-    expect(paywallService.decision).toHaveBeenCalledTimes(2);
-    expect(paywallService.decision).toHaveBeenCalledWith('feature1');
-    expect(paywallService.decision).toHaveBeenCalledWith('feature2');
+    expect(mockDecision).toHaveBeenCalledTimes(2);
+    expect(mockDecision).toHaveBeenCalledWith('feature1');
+    expect(mockDecision).toHaveBeenCalledWith('feature2');
     expect(result.current.results).toHaveLength(2);
     expect(result.current.results[0].isAllowed).toBe(true);
     expect(result.current.results[1].isAllowed).toBe(false);
@@ -70,9 +71,10 @@ describe('useMultiPaywall', () => {
       resolve2 = resolve;
     });
 
-    vi.mocked(paywallService.decision)
-      .mockReturnValueOnce(promise1)
-      .mockReturnValueOnce(promise2);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const mockDecisionFn = vi.mocked(paywallService.decision);
+    mockDecisionFn.mockReturnValueOnce(promise1);
+    mockDecisionFn.mockReturnValueOnce(promise2);
 
     const { result } = renderHook(
       () => useMultiPaywall(['feature1', 'feature2']),
@@ -94,9 +96,12 @@ describe('useMultiPaywall', () => {
   it('devrait calculer isErrorAny correctement', async () => {
     const mockError = new Error('Network error');
 
-    vi.mocked(paywallService.decision)
-      .mockResolvedValueOnce({ allowed: true })
-      .mockRejectedValueOnce(mockError);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const mockDecisionFn = vi.mocked(paywallService.decision);
+
+    mockDecisionFn.mockResolvedValueOnce({ allowed: true });
+
+    mockDecisionFn.mockRejectedValueOnce(mockError);
 
     const { result } = renderHook(
       () => useMultiPaywall(['feature1', 'feature2']),
@@ -118,7 +123,9 @@ describe('useMultiPaywall', () => {
       retry_after: 60,
     };
 
-    vi.mocked(paywallService.decision).mockResolvedValue(mockDecision);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const mockDecisionFn = vi.mocked(paywallService.decision);
+    mockDecisionFn.mockResolvedValue(mockDecision);
 
     const { result } = renderHook(() => useMultiPaywall(['feature1']), {
       wrapper,

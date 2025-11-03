@@ -96,14 +96,15 @@ export class ErrorBoundary extends Component<
         >
           <h2>Une erreur est survenue</h2>
           <p>
-            {this.state.error?.message ||
+            {this.state.error?.message ??
               "Une erreur inattendue s'est produite."}
           </p>
-          {this.state.requestId && (
-            <p style={{ fontSize: '0.875rem', color: '#666' }}>
-              ID de requête : <code>{this.state.requestId}</code>
-            </p>
-          )}
+          {this.state.requestId !== undefined &&
+            this.state.requestId !== '' && (
+              <p style={{ fontSize: '0.875rem', color: '#666' }}>
+                ID de requête : <code>{this.state.requestId}</code>
+              </p>
+            )}
           <button
             type="button"
             onClick={this.handleRetry}

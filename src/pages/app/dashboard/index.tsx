@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useTitle } from '@/shared/hooks/useTitle';
 import { useQueryClient } from '@tanstack/react-query';
 import { UpgradeButton } from '@/widgets/UpgradeButton/UpgradeButton';
-import { PortalButton } from '@/widgets/PortalButton/PortalButton';
 import { QuotaBadge } from '@/widgets/QuotaBadge/QuotaBadge';
 import { PlanBanner } from '@/widgets/PlanBanner/PlanBanner';
 import { PLANS } from '@/shared/config/plans';

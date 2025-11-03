@@ -20,9 +20,9 @@ describe('CopyButton', () => {
     const button = screen.getByRole('button', { name: 'Copier' });
     await userEvent.click(button);
 
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      'Texte à copier'
-    );
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const mockWriteText = vi.mocked(navigator.clipboard.writeText);
+    expect(mockWriteText).toHaveBeenCalledWith('Texte à copier');
   });
 
   it('devrait copier du texte depuis une fonction', async () => {
@@ -33,9 +33,9 @@ describe('CopyButton', () => {
     await userEvent.click(button);
 
     expect(getText).toHaveBeenCalled();
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      'Texte depuis fonction'
-    );
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const mockWriteText = vi.mocked(navigator.clipboard.writeText);
+    expect(mockWriteText).toHaveBeenCalledWith('Texte depuis fonction');
   });
 
   it('devrait copier du texte depuis une fonction async', async () => {
@@ -45,8 +45,10 @@ describe('CopyButton', () => {
     const button = screen.getByRole('button', { name: 'Copier' });
     await userEvent.click(button);
 
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const mockWriteText = vi.mocked(navigator.clipboard.writeText);
     await waitFor(() => {
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Texte async');
+      expect(mockWriteText).toHaveBeenCalledWith('Texte async');
     });
   });
 
@@ -84,7 +86,8 @@ describe('CopyButton', () => {
     });
 
     const execCommand = vi.fn().mockReturnValue(true);
-    document.execCommand = execCommand;
+
+    document.execCommand = execCommand as typeof document.execCommand;
 
     render(<CopyButton text="Texte" />);
 
@@ -98,7 +101,11 @@ describe('CopyButton', () => {
 
   it('devrait afficher une erreur si copie échoue', async () => {
     const error = new Error('Permission denied');
-    vi.mocked(navigator.clipboard.writeText).mockRejectedValue(error);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const mockWriteText = vi.mocked(navigator.clipboard?.writeText);
+    if (mockWriteText !== undefined) {
+      mockWriteText.mockRejectedValue(error);
+    }
 
     render(<CopyButton text="Texte" />);
 

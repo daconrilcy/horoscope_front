@@ -94,12 +94,17 @@ describe('ErrorBoundary', () => {
     );
 
     expect(onError).toHaveBeenCalled();
-    expect(onError).toHaveBeenCalledWith(
-      expect.any(Error),
-      expect.objectContaining({
-        componentStack: expect.any(String),
-      })
-    );
+
+    const calls = vi.mocked(onError).mock.calls as Array<
+      [Error, React.ErrorInfo]
+    >;
+    expect(calls.length).toBeGreaterThan(0);
+    if (calls.length > 0 && calls[0] !== undefined) {
+      const firstCall = calls[0];
+      expect(firstCall[0]).toBeInstanceOf(Error);
+      expect(firstCall[1]).toHaveProperty('componentStack');
+      expect(typeof firstCall[1].componentStack).toBe('string');
+    }
   });
 
   it('devrait réinitialiser avec resetKeys', () => {
@@ -128,7 +133,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('devrait utiliser fallback custom si fourni', () => {
-    const customFallback = (error: Error | null) => (
+    const customFallback = (error: Error | null): JSX.Element => (
       <div data-testid="custom-fallback">Custom: {error?.message}</div>
     );
 

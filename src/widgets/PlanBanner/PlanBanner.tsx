@@ -80,11 +80,25 @@ export function PlanBanner({
           <>
             <UpgradeButton
               plan={PLANS.PLUS}
-              onBeforeCheckout={onUpgrade ? () => !!onUpgrade() : undefined}
+              onBeforeCheckout={
+                onUpgrade !== undefined
+                  ? (): boolean => {
+                      onUpgrade();
+                      return true;
+                    }
+                  : undefined
+              }
             />
             <UpgradeButton
               plan={PLANS.PRO}
-              onBeforeCheckout={onUpgrade ? () => !!onUpgrade() : undefined}
+              onBeforeCheckout={
+                onUpgrade !== undefined
+                  ? (): boolean => {
+                      onUpgrade();
+                      return true;
+                    }
+                  : undefined
+              }
             />
           </>
         )}
