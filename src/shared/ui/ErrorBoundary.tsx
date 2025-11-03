@@ -11,12 +11,14 @@ interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: (error: Error | null, requestId?: string) => ReactNode;
   resetKeys?: readonly unknown[]; // Clés qui déclenchent un reset automatique
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void; // Callback pour journalisation
 }
 
 /**
  * ErrorBoundary pour capturer les erreurs 5xx et autres erreurs non gérées
  * Affiche le request_id si disponible dans l'erreur ApiError
  * Supporte resetKeys pour réinitialiser automatiquement lors d'un changement de route
+ * Supporte onError callback pour journalisation (ex. Sentry)
  */
 export class ErrorBoundary extends Component<
   ErrorBoundaryProps,
@@ -65,6 +67,11 @@ export class ErrorBoundary extends Component<
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+
+    // Appeler onError si fourni pour journalisation
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
   }
 
   handleRetry = (): void => {
@@ -82,17 +89,22 @@ export class ErrorBoundary extends Component<
       }
 
       return (
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <div
+          role="alert"
+          aria-live="assertive"
+          style={{ padding: '2rem', textAlign: 'center' }}
+        >
           <h2>Une erreur est survenue</h2>
           <p>
-            {this.state.error?.message ||
+            {this.state.error?.message ??
               "Une erreur inattendue s'est produite."}
           </p>
-          {this.state.requestId && (
-            <p style={{ fontSize: '0.875rem', color: '#666' }}>
-              ID de requête : <code>{this.state.requestId}</code>
-            </p>
-          )}
+          {this.state.requestId !== undefined &&
+            this.state.requestId !== '' && (
+              <p style={{ fontSize: '0.875rem', color: '#666' }}>
+                ID de requête : <code>{this.state.requestId}</code>
+              </p>
+            )}
           <button
             type="button"
             onClick={this.handleRetry}
