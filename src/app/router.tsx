@@ -40,6 +40,11 @@ const ChatPage = lazy(() =>
     default: module.ChatPage,
   }))
 );
+const AccountPage = lazy(() =>
+  import('@/pages/app/account').then((module) => ({
+    default: module.AccountPage,
+  }))
+);
 
 /**
  * Loader simple pour Suspense
@@ -161,6 +166,14 @@ const router = createBrowserRouter([
                 element: (
                   <Suspense fallback={<PageLoader />}>
                     <ChatPage />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'account',
+                element: (
+                  <Suspense fallback={<PageLoader />}>
+                    <AccountPage />
                   </Suspense>
                 ),
               },
