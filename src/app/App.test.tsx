@@ -6,9 +6,13 @@ describe('App', () => {
   it('should render the app', () => {
     render(<App />);
     // Vérifier que la page d'accueil est rendue avec son titre
-    expect(screen.getByText('Bienvenue sur Horoscope')).toBeInTheDocument();
     expect(
-      screen.getByText('Découvrez votre horoscope personnalisé')
+      screen.getByText('Horoscope & Conseils Personnalisés')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Découvrez votre horoscope personnalisé et recevez des conseils adaptés à votre profil astrologique/i
+      )
     ).toBeInTheDocument();
   });
 });
