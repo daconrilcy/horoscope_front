@@ -30,6 +30,11 @@ const DashboardPage = lazy(() =>
     default: module.DashboardPage,
   }))
 );
+const HoroscopePage = lazy(() =>
+  import('@/pages/app/horoscope').then((module) => ({
+    default: module.HoroscopePage,
+  }))
+);
 
 /**
  * Loader simple pour Suspense
@@ -135,6 +140,14 @@ const router = createBrowserRouter([
                 element: (
                   <Suspense fallback={<PageLoader />}>
                     <DashboardPage />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'horoscope',
+                element: (
+                  <Suspense fallback={<PageLoader />}>
+                    <HoroscopePage />
                   </Suspense>
                 ),
               },
