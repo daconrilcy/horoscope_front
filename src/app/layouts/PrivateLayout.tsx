@@ -2,6 +2,9 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuthStore } from '@/stores/authStore';
+import { UpgradeButton } from '@/widgets/UpgradeButton/UpgradeButton';
+import { PortalButton } from '@/widgets/PortalButton/PortalButton';
+import { PLANS } from '@/shared/config/plans';
 
 /**
  * Layout pour les routes privées (/app/*)
@@ -50,7 +53,16 @@ export function PrivateLayout(): JSX.Element {
           >
             Dashboard
           </Link>
-          <div style={{ marginLeft: 'auto' }}>
+          <div
+            style={{
+              marginLeft: 'auto',
+              display: 'flex',
+              gap: '0.5rem',
+              alignItems: 'center',
+            }}
+          >
+            <PortalButton />
+            <UpgradeButton plan={PLANS.PLUS} />
             <button
               type="button"
               onClick={handleLogout}

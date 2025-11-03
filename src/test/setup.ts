@@ -20,7 +20,7 @@ interface ProcessLike {
     env?: Record<string, string | undefined>;
   };
 }
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
 const processEnv: unknown =
   typeof (globalThis as ProcessLike).process !== 'undefined'
     ? (
