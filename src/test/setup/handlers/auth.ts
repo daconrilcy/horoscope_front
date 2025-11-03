@@ -5,7 +5,7 @@ const API_BASE_URL = 'http://localhost:8000';
 export const handlers = [
   // POST /v1/auth/signup
   http.post(`${API_BASE_URL}/v1/auth/signup`, async ({ request }) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+     
     const body = (await request.json()) as {
       email?: string;
       password?: string;

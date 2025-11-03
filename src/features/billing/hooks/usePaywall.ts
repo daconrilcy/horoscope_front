@@ -44,20 +44,11 @@ export function usePaywall(feature: string): UsePaywallResult {
   const data = query.data;
   const error = query.error;
 
-  // Extraire retryAfter depuis les headers ou le body si 429
+  // Extraire retryAfter depuis le body si 429
+  // Note: Retry-After depuis headers est déjà extrait dans client.ts et propagé
+  // via l'événement paywall:rate, mais React Query ne donne pas accès direct aux headers
+  // Donc on utilise retry_after depuis le body (déjà fusionné avec header Retry-After dans client.ts)
   let retryAfter: number | undefined;
-  if (
-    error !== null &&
-    typeof error === 'object' &&
-    'status' in error &&
-    (error as { status?: number }).status === 429
-  ) {
-    // TODO: extraire depuis headers Retry-After si disponible
-    // Pour l'instant, on utilise retry_after depuis le body
-    // Cette logique sera améliorée quand on aura besoin de Retry-After
-  }
-
-  // Si data contient retry_after (depuis body)
   if (data && !data.allowed && 'retry_after' in data) {
     retryAfter = (data as { retry_after?: number }).retry_after;
   }

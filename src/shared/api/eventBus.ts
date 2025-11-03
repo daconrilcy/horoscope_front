@@ -5,7 +5,7 @@
 
 type EventCallback = (payload?: unknown) => void;
 
-type EventType = 'unauthorized' | 'paywall' | 'quota';
+type EventType = 'auth:unauthorized' | 'paywall:plan' | 'paywall:rate';
 
 class EventBus {
   private listeners: Map<EventType, Set<EventCallback>> = new Map();

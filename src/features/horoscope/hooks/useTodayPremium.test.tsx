@@ -166,9 +166,7 @@ describe('useTodayPremium', () => {
 
     await waitFor(() => {
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(
-        horoscopeService.getTodayPremium as ReturnType<typeof vi.fn>
-      ).toHaveBeenCalled();
+      expect(horoscopeService.getTodayPremium).toHaveBeenCalled();
     });
   });
 });

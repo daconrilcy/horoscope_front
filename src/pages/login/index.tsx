@@ -66,8 +66,14 @@ export function LoginPage(): JSX.Element {
       // Toast success
       toast.success('Connexion réussie');
 
-      // Redirection sécurisée
-      const redirectPath = safeInternalRedirect(redirectAfterLogin);
+      // Redirection : lire post_login_redirect d'abord (priorité), sinon redirectAfterLogin
+      const postLoginRedirect = sessionStorage.getItem('post_login_redirect');
+      if (postLoginRedirect) {
+        sessionStorage.removeItem('post_login_redirect');
+      }
+      const redirectPath = safeInternalRedirect(
+        postLoginRedirect ?? redirectAfterLogin
+      );
       setRedirectAfterLogin(undefined); // Clear après utilisation
       void navigate(redirectPath, { replace: true });
     } catch (error) {

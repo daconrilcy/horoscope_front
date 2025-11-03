@@ -7,4 +7,6 @@ export type PaywallReason = 'plan' | 'rate';
 export interface PaywallPayload {
   reason?: PaywallReason;
   upgradeUrl?: string;
+  feature?: string;
+  retry_after?: number;
 }

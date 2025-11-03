@@ -1,4 +1,4 @@
-import React, { type ReactNode, useMemo } from 'react';
+import React, { type ReactNode, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -8,6 +8,7 @@ import { env } from '@/shared/config/env';
 import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
 import { NetworkError } from '@/shared/api/errors';
 import { useAuthStore } from '@/stores/authStore';
+import { eventBus } from '@/shared/api/eventBus';
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -30,11 +31,11 @@ function createQueryClient(): QueryClient {
     defaultOptions: {
       queries: {
         retry: (failureCount, error) => {
-          // Retry uniquement sur NetworkError, max 2 fois
-          return isNetworkError(error) && failureCount < 2;
+          // Retry uniquement sur NetworkError, max 1 fois (background errors)
+          return isNetworkError(error) && failureCount < 1;
         },
         staleTime: 30_000, // 30 secondes
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: false, // Évite de spammer l'API
       },
       mutations: {
         retry: false, // Pas de retry par défaut sur les mutations
@@ -99,6 +100,24 @@ export function AppProviders({ children }: AppProvidersProps): JSX.Element {
       baseURL: env.VITE_API_BASE_URL,
       onUnauthorized: handleUnauthorized,
     });
+  }, [navigate, location]);
+
+  // Écouter auth:unauthorized pour toast et post_login_redirect
+  useEffect(() => {
+    const unsubscribe = eventBus.on('auth:unauthorized', () => {
+      // Ne pas toaster si déjà sur /login
+      if (location.pathname !== '/login') {
+        // Stocker post_login_redirect avant redirection
+        const currentPath = location.pathname + location.search;
+        sessionStorage.setItem('post_login_redirect', currentPath);
+        // Afficher toast unique
+        toast.warning('Session expirée');
+        // Rediriger vers /login
+        void navigate('/login', { replace: true });
+      }
+    });
+
+    return unsubscribe;
   }, [navigate, location]);
 
   return (
