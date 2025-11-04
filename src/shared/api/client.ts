@@ -3,6 +3,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { eventBus } from './eventBus';
 import { ApiError, NetworkError, extractRequestId } from './errors';
 import type { PaywallPayload } from './types';
+import { CLIENT_VERSION, REQUEST_SOURCE } from '@/shared/config/version';
 
 /**
  * Options de requête HTTP
@@ -113,6 +114,10 @@ function buildHeaders(
   existingHeaders?: HeadersInit
 ): HeadersInit {
   const headers = new Headers(existingHeaders);
+
+  // Headers standard pour corrélation backend (toutes requêtes)
+  headers.set('X-Client-Version', CLIENT_VERSION);
+  headers.set('X-Request-Source', REQUEST_SOURCE);
 
   // Content-Type par défaut pour JSON (sauf si blob/text explicite)
   if (
@@ -277,14 +282,9 @@ function toApiError(response: Response, body: unknown, url: string): ApiError {
   }
 
   // Création de l'erreur avec message UX générique et meta.debugMessage
-  const error = new ApiError(
-    userMessage,
-    status,
-    code,
-    requestId,
-    details,
-    { debugMessage: rawMessage }
-  );
+  const error = new ApiError(userMessage, status, code, requestId, details, {
+    debugMessage: rawMessage,
+  });
 
   // Extraction Retry-After depuis headers (seconds)
   const retryAfterHeader = response.headers.get('Retry-After');
@@ -317,8 +317,7 @@ function toApiError(response: Response, body: unknown, url: string): ApiError {
       upgrade_url?: string;
       retry_after?: number;
     };
-    const retryAfter =
-      retryAfterSeconds ?? bodyObj.retry_after ?? undefined;
+    const retryAfter = retryAfterSeconds ?? bodyObj.retry_after ?? undefined;
     const payload: PaywallPayload = {
       reason: 'rate',
       upgradeUrl: bodyObj.upgrade_url,

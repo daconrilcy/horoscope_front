@@ -75,10 +75,10 @@ describe('useCheckout', () => {
       expect(mockAssign).toHaveBeenCalledWith(checkoutUrl);
     });
 
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(billingService.createCheckoutSession).toHaveBeenCalledWith(
       PLANS.PLUS,
-      expect.any(String)
+      expect.any(String),
+      undefined
     );
   });
 
@@ -86,7 +86,6 @@ describe('useCheckout', () => {
     const checkoutUrl = 'https://checkout.stripe.com/pay/cs_test_123';
 
     const mockCreateCheckoutSession = vi.mocked(
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       billingService.createCheckoutSession
     );
     mockCreateCheckoutSession.mockResolvedValue(checkoutUrl);
@@ -119,7 +118,6 @@ describe('useCheckout', () => {
     const checkoutUrl = 'https://checkout.stripe.com/pay/cs_test_123';
 
     const mockCreateCheckoutSession = vi.mocked(
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       billingService.createCheckoutSession
     );
     mockCreateCheckoutSession.mockImplementation(

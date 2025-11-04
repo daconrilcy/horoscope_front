@@ -1,6 +1,9 @@
 import { useMutation } from '@tanstack/react-query';
 import { v4 as uuidv4 } from 'uuid';
-import { billingService } from '@/shared/api/billing.service';
+import {
+  billingService,
+  type CheckoutSessionPayload,
+} from '@/shared/api/billing.service';
 import { assertValidPlan, type BillingPlan } from '@/shared/config/plans';
 import { ApiError, NetworkError } from '@/shared/api/errors';
 import { toast } from '@/app/AppProviders';
@@ -10,7 +13,10 @@ import { toast } from '@/app/AppProviders';
  */
 export interface UseCheckoutResult {
   /** Fonction pour démarrer le checkout */
-  startCheckout: (plan: BillingPlan) => Promise<void>;
+  startCheckout: (
+    plan: BillingPlan,
+    options?: Partial<CheckoutSessionPayload>
+  ) => Promise<void>;
   /** Indique si une mutation est en cours */
   isPending: boolean;
   /** Erreur de la dernière mutation */
@@ -26,10 +32,14 @@ export function useCheckout(): UseCheckoutResult {
   const { mutateAsync, isPending, error } = useMutation<
     string,
     Error,
-    { plan: BillingPlan; idemKey: string }
+    {
+      plan: BillingPlan;
+      idemKey: string;
+      options?: Partial<CheckoutSessionPayload>;
+    }
   >({
-    mutationFn: async ({ plan, idemKey }) => {
-      return await billingService.createCheckoutSession(plan, idemKey);
+    mutationFn: async ({ plan, idemKey, options }) => {
+      return await billingService.createCheckoutSession(plan, idemKey, options);
     },
     onSuccess: (checkoutUrl) => {
       // Redirection via window.location.assign (meilleur pour l'historique)
@@ -85,7 +95,10 @@ export function useCheckout(): UseCheckoutResult {
   /**
    * Fonction pour démarrer le checkout avec protection double-clic
    */
-  const startCheckout = async (plan: BillingPlan): Promise<void> => {
+  const startCheckout = async (
+    plan: BillingPlan,
+    options?: Partial<CheckoutSessionPayload>
+  ): Promise<void> => {
     // Protection double-clic : bloquer un second appel tant que isPending est true
     if (isPending) {
       return;
@@ -98,7 +111,7 @@ export function useCheckout(): UseCheckoutResult {
     const idemKey = uuidv4();
 
     // Les erreurs sont déjà gérées dans onError
-    await mutateAsync({ plan, idemKey });
+    await mutateAsync({ plan, idemKey, options });
   };
 
   return {
