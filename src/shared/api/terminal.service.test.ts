@@ -201,3 +201,9 @@ describe('terminalService', () => {
   });
 });
 
+/**
+ * Note : Pour des tests plus complets conformes à la documentation Stripe Terminal,
+ * voir terminal.service.stripe-tests.test.ts qui inclut les scénarios de test
+ * pour les montants avec décimales spécifiques et les cartes de test Stripe.
+ */
+

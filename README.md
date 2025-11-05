@@ -197,6 +197,8 @@ Le système de billing utilise Stripe pour les sessions checkout et portal. La c
 
 Le simulateur Stripe Terminal est disponible uniquement en mode développement pour tester les flows Terminal.
 
+> 📚 **Guide de test complet** : Consultez [docs/STRIPE_TERMINAL_TESTING.md](docs/STRIPE_TERMINAL_TESTING.md) pour la documentation complète des cartes de test Stripe, des montants de test avec décimales spécifiques, et des scénarios de test recommandés.
+
 #### Accès au simulateur
 
 1. **Activer le mode dev** :
