@@ -47,6 +47,11 @@ const AccountPage = lazy(() =>
     default: module.AccountPage,
   }))
 );
+const DevTerminalPage = lazy(() =>
+  import('@/pages/dev/terminal').then((module) => ({
+    default: module.DevTerminalPage,
+  }))
+);
 
 /**
  * Loader simple pour Suspense
@@ -184,6 +189,14 @@ const router = createBrowserRouter([
                 element: (
                   <Suspense fallback={<PageLoader />}>
                     <AccountPage />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'dev/terminal',
+                element: (
+                  <Suspense fallback={<PageLoader />}>
+                    <DevTerminalPage />
                   </Suspense>
                 ),
               },
