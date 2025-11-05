@@ -407,6 +407,8 @@ async function performRequest<T>(
     });
   }
 
+  const startTime = Date.now();
+
   try {
     const headers = buildHeaders(method, fullUrl, options, options.headers);
 
@@ -421,9 +423,24 @@ async function performRequest<T>(
     }
 
     const response = await fetch(fullUrl, requestInit);
+    const duration = Date.now() - startTime;
 
     // Parsing de la réponse
     const data = await parseResponse<T>(response, options.parseAs);
+
+    // Extraire request_id pour l'observabilité
+    const requestId = extractRequestId(response);
+
+    // Émettre un événement pour l'observabilité (toutes les requêtes)
+    eventBus.emit('api:request', {
+      method,
+      endpoint: url,
+      fullUrl,
+      status: response.status,
+      requestId,
+      timestamp: startTime,
+      duration,
+    });
 
     // Vérification du status
     if (!response.ok) {
@@ -432,8 +449,20 @@ async function performRequest<T>(
 
     return data;
   } catch (error) {
+    const duration = Date.now() - startTime;
+
     // Gestion des erreurs réseau
     if (error instanceof ApiError) {
+      // Émettre un événement même pour les erreurs API
+      eventBus.emit('api:request', {
+        method,
+        endpoint: url,
+        fullUrl,
+        status: error.status,
+        requestId: error.requestId,
+        timestamp: startTime,
+        duration,
+      });
       throw error;
     }
 
@@ -444,6 +473,16 @@ async function performRequest<T>(
       const abortedSignal = options.signal?.aborted;
       // Si c'est le timeout controller qui a aborté, c'est un timeout
       const isTimeout = controller.signal.aborted && !abortedSignal;
+      // Émettre un événement pour les erreurs réseau
+      eventBus.emit('api:request', {
+        method,
+        endpoint: url,
+        fullUrl,
+        status: 0, // Pas de status pour les erreurs réseau
+        requestId: undefined,
+        timestamp: startTime,
+        duration,
+      });
       throw new NetworkError(
         isTimeout ? 'timeout' : 'aborted',
         isTimeout ? 'Request timeout' : 'Request aborted'
@@ -451,8 +490,29 @@ async function performRequest<T>(
     }
 
     if (error instanceof TypeError) {
+      // Émettre un événement pour les erreurs réseau
+      eventBus.emit('api:request', {
+        method,
+        endpoint: url,
+        fullUrl,
+        status: 0, // Pas de status pour les erreurs réseau
+        requestId: undefined,
+        timestamp: startTime,
+        duration,
+      });
       throw new NetworkError('offline', 'Network error: offline');
     }
+
+    // Émettre un événement pour les autres erreurs
+    eventBus.emit('api:request', {
+      method,
+      endpoint: url,
+      fullUrl,
+      status: 0,
+      requestId: undefined,
+      timestamp: startTime,
+      duration,
+    });
 
     throw error;
   } finally {
