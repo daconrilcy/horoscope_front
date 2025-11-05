@@ -1,0 +1,59 @@
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mC:/dev/horoscope_front[39m
+
+ [32mÔ£ô[39m src/shared/api/account.service.test.ts [2m ([22m[2m11 tests[22m[2m)[22m[90m 10[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/api/horoscope.service.test.ts [2m ([22m[2m13 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32mÔ£ô[39m src/stores/horoscopeStore.test.ts [2m ([22m[2m10 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32mÔ£ô[39m src/stores/chatStore.test.ts [2m ([22m[2m16 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/api/chat.service.test.ts [2m ([22m[2m11 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/utils/sanitizeLegalHtml.test.ts [2m ([22m[2m26 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/api/legal.service.test.ts [2m ([22m[2m14 tests[22m[2m)[22m[90m 21[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/api/auth.service.test.ts [2m ([22m[2m15 tests[22m[2m)[22m[90m 19[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/api/billing.service.test.ts [2m ([22m[2m15 tests[22m[2m)[22m[90m 20[2mms[22m[39m
+ [32mÔ£ô[39m src/features/horoscope/hooks/useDownloadPdf.test.tsx [2m ([22m[2m5 tests[22m[2m)[22m[90m 185[2mms[22m[39m
+ [32mÔ£ô[39m src/features/billing/hooks/usePortal.test.tsx [2m ([22m[2m7 tests[22m[2m)[22m[33m 413[2mms[22m[39m
+ [32mÔ£ô[39m src/features/billing/PaywallGate.test.tsx [2m ([22m[2m7 tests[22m[2m)[22m[90m 165[2mms[22m[39m
+ [32mÔ£ô[39m src/pages/legal/tos/index.test.tsx [2m ([22m[2m11 tests[22m[2m)[22m[33m 338[2mms[22m[39m
+ [32mÔ£ô[39m src/pages/legal/privacy/index.test.tsx [2m ([22m[2m11 tests[22m[2m)[22m[33m 338[2mms[22m[39m
+ [32mÔ£ô[39m src/app/AppProviders.test.tsx [2m ([22m[2m15 tests[22m[2m)[22m[90m 221[2mms[22m[39m
+ [32mÔ£ô[39m src/features/chat/hooks/useChat.test.tsx [2m ([22m[2m13 tests[22m[2m)[22m[33m 327[2mms[22m[39m
+ [32mÔ£ô[39m src/features/horoscope/hooks/useCreateNatal.test.tsx [2m ([22m[2m7 tests[22m[2m)[22m[33m 442[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/ui/ErrorBoundary.test.tsx [2m ([22m[2m8 tests[22m[2m)[22m[90m 268[2mms[22m[39m
+ [32mÔ£ô[39m src/widgets/PortalButton/PortalButton.test.tsx [2m ([22m[2m10 tests[22m[2m)[22m[90m 290[2mms[22m[39m
+ [32mÔ£ô[39m src/widgets/UpgradeButton/UpgradeButton.test.tsx [2m ([22m[2m11 tests[22m[2m)[22m[33m 334[2mms[22m[39m
+ [32mÔ£ô[39m src/features/billing/hooks/useCheckout.test.tsx [2m ([22m[2m9 tests[22m[2m)[22m[33m 457[2mms[22m[39m
+ [32mÔ£ô[39m src/features/billing/hooks/usePaywall.test.tsx [2m ([22m[2m7 tests[22m[2m)[22m[33m 475[2mms[22m[39m
+ [32mÔ£ô[39m src/features/account/hooks/useDeleteAccount.test.tsx [2m ([22m[2m7 tests[22m[2m)[22m[33m 501[2mms[22m[39m
+ [32mÔ£ô[39m src/features/account/hooks/useExportZip.test.tsx [2m ([22m[2m8 tests[22m[2m)[22m[33m 574[2mms[22m[39m
+ [32mÔ£ô[39m src/pages/app/dashboard/index.test.tsx [2m ([22m[2m15 tests[22m[2m)[22m[33m 700[2mms[22m[39m
+ [32mÔ£ô[39m src/features/horoscope/hooks/useTodayPremium.test.tsx [2m ([22m[2m6 tests[22m[2m)[22m[33m 1403[2mms[22m[39m
+ [32mÔ£ô[39m src/features/legal/hooks/usePrivacy.test.tsx [2m ([22m[2m7 tests[22m[2m)[22m[33m 1491[2mms[22m[39m
+ [32mÔ£ô[39m src/features/legal/hooks/useTos.test.tsx [2m ([22m[2m8 tests[22m[2m)[22m[33m 1575[2mms[22m[39m
+ [32mÔ£ô[39m src/features/horoscope/hooks/useToday.test.tsx [2m ([22m[2m8 tests[22m[2m)[22m[33m 1507[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/api/paywall.service.test.ts [2m ([22m[2m6 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32mÔ£ô[39m src/widgets/QuotaBadge/QuotaBadge.test.tsx [2m ([22m[2m6 tests[22m[2m)[22m[90m 73[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/auth/token.test.ts [2m ([22m[2m11 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32mÔ£ô[39m src/stores/authStore.test.ts [2m ([22m[2m9 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32mÔ£ô[39m src/features/billing/hooks/usePlan.test.tsx [2m ([22m[2m4 tests[22m[2m)[22m[90m 18[2mms[22m[39m
+ [32mÔ£ô[39m src/app/layouts/PrivateLayout.test.tsx [2m ([22m[2m4 tests[22m[2m)[22m[90m 71[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/ui/ConfirmModal.test.tsx [2m ([22m[2m17 tests[22m[2m)[22m[33m 2042[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/config/features.test.ts [2m ([22m[2m5 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/auth/redirect.test.ts [2m ([22m[2m10 tests[22m[2m)[22m[90m 3[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/config/plans.test.ts [2m ([22m[2m8 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/hooks/useTitle.test.ts [2m ([22m[2m2 tests[22m[2m)[22m[90m 17[2mms[22m[39m
+ [32mÔ£ô[39m src/app/router.test.tsx [2m ([22m[2m9 tests[22m[2m)[22m[90m 71[2mms[22m[39m
+ [32mÔ£ô[39m src/pages/home/index.test.tsx [2m ([22m[2m7 tests[22m[2m)[22m[90m 266[2mms[22m[39m
+ [32mÔ£ô[39m src/widgets/PlanBanner/PlanBanner.test.tsx [2m ([22m[2m4 tests[22m[2m)[22m[90m 51[2mms[22m[39m
+ [32mÔ£ô[39m src/features/billing/hooks/useMultiPaywall.test.tsx [2m ([22m[2m5 tests[22m[2m)[22m[33m 321[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/ui/Loader.test.tsx [2m ([22m[2m7 tests[22m[2m)[22m[90m 169[2mms[22m[39m
+ [32mÔ£ô[39m src/app/layouts/PublicLayout.test.tsx [2m ([22m[2m3 tests[22m[2m)[22m[90m 65[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/ui/InlineError.test.tsx [2m ([22m[2m7 tests[22m[2m)[22m[90m 247[2mms[22m[39m
+ [32mÔ£ô[39m src/app/App.test.tsx [2m ([22m[2m1 test[22m[2m)[22m[90m 55[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/ui/CopyButton.test.tsx [2m ([22m[2m7 tests[22m[2m)[22m[33m 475[2mms[22m[39m
+ [32mÔ£ô[39m src/shared/api/client.test.ts [2m ([22m[2m23 tests[22m[2m)[22m[33m 3557[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m50 passed[39m[22m[90m (50)[39m
+[2m      Tests [22m [1m[32m466 passed[39m[22m[90m (466)[39m
+[2m   Start at [22m 16:40:42
+[2m   Duration [22m 6.59s[2m (transform 2.69s, setup 40.69s, collect 7.78s, tests 19.65s, environment 61.78s, prepare 11.38s)[22m
+

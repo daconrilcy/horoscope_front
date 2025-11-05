@@ -78,7 +78,8 @@ describe('useCheckout', () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(billingService.createCheckoutSession).toHaveBeenCalledWith(
       PLANS.PLUS,
-      expect.any(String)
+      expect.any(String),
+      undefined
     );
   });
 
