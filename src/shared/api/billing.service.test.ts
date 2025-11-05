@@ -156,7 +156,7 @@ describe('billingService', () => {
 
       await expect(
         billingService.createCheckoutSession(PLANS.PLUS, idemKey)
-      ).rejects.toThrow('Invalid checkout response');
+      ).rejects.toThrow('Invalid checkout payload or response');
     });
 
     it('devrait propager ApiError 401 et déclencher événement unauthorized', async () => {
@@ -267,7 +267,7 @@ describe('billingService', () => {
       );
 
       await expect(billingService.createPortalSession()).rejects.toThrow(
-        'Invalid portal response'
+        'Invalid portal payload or response'
       );
     });
 
