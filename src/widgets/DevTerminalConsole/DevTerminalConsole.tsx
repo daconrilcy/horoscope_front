@@ -34,15 +34,16 @@ type TerminalState =
  * Machine à états pour gérer les flows : connect → payment_intent → process → capture/refund/cancel
  */
 export function DevTerminalConsole(): JSX.Element | null {
-  // Masquer complètement en production
-  if (!import.meta.env.DEV) {
-    return null;
-  }
-
+  // Hooks doivent être appelés avant tout return conditionnel
   const [state, setState] = useState<TerminalState>({ type: 'idle' });
   const [amount, setAmount] = useState<string>('1000'); // 10.00 EUR par défaut
   const [currency, setCurrency] = useState<string>('eur');
   const [refundAmount, setRefundAmount] = useState<string>('');
+
+  // Masquer complètement en production
+  if (!import.meta.env.DEV) {
+    return null;
+  }
 
   // Guards pour éviter les double-soumissions
   const isProcessing =
@@ -324,14 +325,16 @@ export function DevTerminalConsole(): JSX.Element | null {
         <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>
           1. Connect
         </h3>
-        <button
-          type="button"
-          onClick={handleConnect}
-          disabled={isProcessing || state.type !== 'idle'}
-          style={buttonStyle}
-        >
-          Connect to Terminal
-        </button>
+          <button
+            type="button"
+            onClick={() => {
+              void handleConnect();
+            }}
+            disabled={isProcessing || state.type !== 'idle'}
+            style={buttonStyle}
+          >
+            Connect to Terminal
+          </button>
         {state.type === 'connected' && (
           <div style={{ marginTop: '0.5rem', fontSize: '0.8125rem', color: '#888' }}>
             Terminal ID: {state.connection.terminal_id ?? 'N/A'}
@@ -367,7 +370,9 @@ export function DevTerminalConsole(): JSX.Element | null {
           </select>
           <button
             type="button"
-            onClick={handleCreatePaymentIntent}
+            onClick={() => {
+              void handleCreatePaymentIntent();
+            }}
             disabled={isProcessing}
             style={buttonStyle}
           >
@@ -393,7 +398,9 @@ export function DevTerminalConsole(): JSX.Element | null {
           </h3>
           <button
             type="button"
-            onClick={handleProcess}
+            onClick={() => {
+              void handleProcess();
+            }}
             disabled={isProcessing}
             style={buttonStyle}
           >
@@ -415,7 +422,9 @@ export function DevTerminalConsole(): JSX.Element | null {
           </h3>
           <button
             type="button"
-            onClick={handleCapture}
+            onClick={() => {
+              void handleCapture();
+            }}
             disabled={isProcessing}
             style={buttonStyle}
           >
@@ -423,7 +432,9 @@ export function DevTerminalConsole(): JSX.Element | null {
           </button>
           <button
             type="button"
-            onClick={handleCancel}
+            onClick={() => {
+              void handleCancel();
+            }}
             disabled={isProcessing}
             style={{ ...buttonStyle, backgroundColor: '#dc3545' }}
           >
@@ -455,7 +466,9 @@ export function DevTerminalConsole(): JSX.Element | null {
           />
           <button
             type="button"
-            onClick={handleRefund}
+            onClick={() => {
+              void handleRefund();
+            }}
             disabled={isProcessing}
             style={{ ...buttonStyle, backgroundColor: '#ffc107', color: '#000' }}
           >
@@ -480,7 +493,9 @@ export function DevTerminalConsole(): JSX.Element | null {
         <div style={sectionStyle}>
           <button
             type="button"
-            onClick={handleCancel}
+            onClick={() => {
+              void handleCancel();
+            }}
             disabled={isProcessing}
             style={{ ...buttonStyle, backgroundColor: '#dc3545' }}
           >
