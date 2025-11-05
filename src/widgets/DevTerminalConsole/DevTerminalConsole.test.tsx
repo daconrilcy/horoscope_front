@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { DevTerminalConsole } from './DevTerminalConsole';
 import { terminalService } from '@/shared/api/terminal.service';
 import { eventBus } from '@/shared/api/eventBus';
@@ -161,6 +162,219 @@ describe('DevTerminalConsole', () => {
     // Le bouton Connect reste désactivé car on est dans l'état 'connected', pas 'idle'
     // C'est le comportement attendu selon la logique du composant
     expect(connectButton).toBeDisabled();
+  });
+
+  describe('Stripe Terminal Test Scenarios', () => {
+    /**
+     * Tests conformes à la documentation Stripe Terminal
+     * https://docs.stripe.com/terminal/references/testing
+     */
+
+    it('devrait gérer un paiement avec montant approuvé (25.00 EUR)', async () => {
+      const mockConnection = {
+        connection_token: 'pst_test_123',
+        terminal_id: 'tmr_test_123',
+      };
+
+      const mockPaymentIntent = {
+        payment_intent_id: 'pi_test_approved',
+        amount: 2500, // 25.00 EUR - montant approuvé selon Stripe docs
+        currency: 'eur',
+        status: 'requires_payment_method',
+      };
+
+      const mockProcessResponse = {
+        payment_intent_id: 'pi_test_approved',
+        status: 'succeeded',
+      };
+
+      const mockConnect = vi.mocked(terminalService.connect);
+      const mockCreatePaymentIntent = vi.mocked(terminalService.createPaymentIntent);
+      const mockProcess = vi.mocked(terminalService.process);
+
+      mockConnect.mockResolvedValue(mockConnection);
+      mockCreatePaymentIntent.mockResolvedValue(mockPaymentIntent);
+      mockProcess.mockResolvedValue(mockProcessResponse);
+
+      render(<DevTerminalConsole />);
+
+      // Connecter
+      const connectButton = screen.getByText('Connect to Terminal');
+      connectButton.click();
+
+      await waitFor(() => {
+        expect(screen.getByText(/🟢 Connected/)).toBeInTheDocument();
+      });
+
+      // Créer Payment Intent avec montant approuvé
+      const amountInput = screen.getByDisplayValue('1000') as HTMLInputElement;
+      await userEvent.clear(amountInput);
+      await userEvent.type(amountInput, '2500');
+      const createButton = screen.getByText('Create Payment Intent');
+      await userEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(mockCreatePaymentIntent).toHaveBeenCalledWith(2500, 'eur');
+      });
+
+      // Traiter le paiement
+      const processButton = screen.getByText('Process Payment');
+      await userEvent.click(processButton);
+
+      await waitFor(() => {
+        expect(mockProcess).toHaveBeenCalledWith('pi_test_approved');
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Processed|succeeded/i)).toBeInTheDocument();
+      });
+    });
+
+    it('devrait gérer un paiement refusé (10.01 EUR - call_issuer)', async () => {
+      const mockConnection = {
+        connection_token: 'pst_test_123',
+        terminal_id: 'tmr_test_123',
+      };
+
+      const mockPaymentIntent = {
+        payment_intent_id: 'pi_test_declined',
+        amount: 1001, // 10.01 EUR - montant refusé selon Stripe docs
+        currency: 'eur',
+        status: 'requires_payment_method',
+      };
+
+      const mockConnect = vi.mocked(terminalService.connect);
+      const mockCreatePaymentIntent = vi.mocked(terminalService.createPaymentIntent);
+      const mockProcess = vi.mocked(terminalService.process);
+
+      mockConnect.mockResolvedValue(mockConnection);
+      mockCreatePaymentIntent.mockResolvedValue(mockPaymentIntent);
+      mockProcess.mockRejectedValue(new Error('Your card was declined.'));
+
+      render(<DevTerminalConsole />);
+
+      // Connecter
+      const connectButton = screen.getByText('Connect to Terminal');
+      connectButton.click();
+
+      await waitFor(() => {
+        expect(screen.getByText(/🟢 Connected/)).toBeInTheDocument();
+      });
+
+      // Créer Payment Intent avec montant refusé
+      const amountInput = screen.getByDisplayValue('1000') as HTMLInputElement;
+      await userEvent.clear(amountInput);
+      await userEvent.type(amountInput, '1001');
+      const createButton = screen.getByText('Create Payment Intent');
+      await userEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(mockCreatePaymentIntent).toHaveBeenCalledWith(1001, 'eur');
+      });
+
+      // Traiter le paiement (devrait échouer)
+      const processButton = screen.getByText('Process Payment');
+      await userEvent.click(processButton);
+
+      await waitFor(() => {
+        expect(mockProcess).toHaveBeenCalledWith('pi_test_declined');
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/🔴 Error/)).toBeInTheDocument();
+        expect(screen.getByText(/declined/i)).toBeInTheDocument();
+      });
+    });
+
+    it('devrait gérer un remboursement avec succès', async () => {
+      const mockConnection = {
+        connection_token: 'pst_test_123',
+        terminal_id: 'tmr_test_123',
+      };
+
+      const mockPaymentIntent = {
+        payment_intent_id: 'pi_test_refund',
+        amount: 2500,
+        currency: 'eur',
+        status: 'requires_payment_method',
+      };
+
+      const mockProcessResponse = {
+        payment_intent_id: 'pi_test_refund',
+        status: 'succeeded',
+      };
+
+      const mockCaptureResponse = {
+        payment_intent_id: 'pi_test_refund',
+        status: 'succeeded',
+        amount_captured: 2500,
+      };
+
+      const mockRefundResponse = {
+        refund_id: 're_test_123',
+        payment_intent_id: 'pi_test_refund',
+        amount: 2500,
+        status: 'succeeded',
+      };
+
+      const mockConnect = vi.mocked(terminalService.connect);
+      const mockCreatePaymentIntent = vi.mocked(terminalService.createPaymentIntent);
+      const mockProcess = vi.mocked(terminalService.process);
+      const mockCapture = vi.mocked(terminalService.capture);
+      const mockRefund = vi.mocked(terminalService.refund);
+
+      mockConnect.mockResolvedValue(mockConnection);
+      mockCreatePaymentIntent.mockResolvedValue(mockPaymentIntent);
+      mockProcess.mockResolvedValue(mockProcessResponse);
+      mockCapture.mockResolvedValue(mockCaptureResponse);
+      mockRefund.mockResolvedValue(mockRefundResponse);
+
+      render(<DevTerminalConsole />);
+
+      // Connecter
+      const connectButton = screen.getByText('Connect to Terminal');
+      connectButton.click();
+
+      await waitFor(() => {
+        expect(screen.getByText(/🟢 Connected/)).toBeInTheDocument();
+      });
+
+      // Créer Payment Intent
+      const createButton = screen.getByText('Create Payment Intent');
+      await userEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(mockCreatePaymentIntent).toHaveBeenCalled();
+      });
+
+      // Traiter
+      const processButton = screen.getByText('Process Payment');
+      await userEvent.click(processButton);
+
+      await waitFor(() => {
+        expect(mockProcess).toHaveBeenCalled();
+      });
+
+      // Capturer
+      const captureButton = screen.getByText('Capture');
+      await userEvent.click(captureButton);
+
+      await waitFor(() => {
+        expect(mockCapture).toHaveBeenCalled();
+      });
+
+      // Rembourser
+      const refundButton = screen.getByText('Refund');
+      await userEvent.click(refundButton);
+
+      await waitFor(() => {
+        expect(mockRefund).toHaveBeenCalled();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Refunded|succeeded/i)).toBeInTheDocument();
+      });
+    });
   });
 });
 
