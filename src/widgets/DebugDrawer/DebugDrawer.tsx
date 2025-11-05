@@ -128,15 +128,38 @@ export function DebugDrawer(): JSX.Element | null {
   };
 
   const formatDuration = (duration?: number): string => {
-    if (!duration) return '-';
+    if (duration == null || duration === 0) return '-';
     if (duration < 1000) return `${duration}ms`;
     return `${(duration / 1000).toFixed(2)}s`;
   };
 
   const copyRequestId = (requestId?: string): void => {
-    if (requestId) {
+    if (requestId != null && requestId !== '') {
       void navigator.clipboard.writeText(requestId);
     }
+  };
+
+  const copyCurl = (breadcrumb: BillingBreadcrumb): void => {
+    if (breadcrumb.fullUrl == null || breadcrumb.fullUrl === '') {
+      return;
+    }
+
+    const method = breadcrumb.method != null && breadcrumb.method !== '' ? breadcrumb.method : 'GET';
+    const url = breadcrumb.fullUrl;
+
+    // Générer une commande CURL basique
+    // Note: On ne stocke pas le body dans les breadcrumbs pour des raisons de sécurité/taille
+    // Le CURL généré sera sans body, mais avec les headers essentiels
+    let curlCommand = `curl -X ${method} "${url}"`;
+
+    // Ajouter des headers standards
+    curlCommand += ` \\\n  -H "Content-Type: application/json"`;
+
+    if (breadcrumb.requestId != null && breadcrumb.requestId !== '') {
+      curlCommand += ` \\\n  -H "X-Request-ID: ${breadcrumb.requestId}"`;
+    }
+
+    void navigator.clipboard.writeText(curlCommand);
   };
 
   if (!isOpen) {
@@ -177,11 +200,14 @@ export function DebugDrawer(): JSX.Element | null {
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#666' }}>
                     {breadcrumb.event}
-                    {breadcrumb.requestId && (
+                    {breadcrumb.requestId != null && breadcrumb.requestId !== '' && (
                       <>
                         {' • '}
                         <button
-                          onClick={() => copyRequestId(breadcrumb.requestId)}
+                          type="button"
+                          onClick={() => {
+                            copyRequestId(breadcrumb.requestId);
+                          }}
                           style={{
                             background: 'none',
                             border: 'none',
@@ -191,6 +217,27 @@ export function DebugDrawer(): JSX.Element | null {
                           }}
                         >
                           ID: {breadcrumb.requestId.slice(0, 8)}...
+                        </button>
+                      </>
+                    )}
+                    {breadcrumb.fullUrl != null && breadcrumb.fullUrl !== '' && (
+                      <>
+                        {' • '}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            copyCurl(breadcrumb);
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#60a5fa',
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                          }}
+                          title="Copy CURL command"
+                        >
+                          📋 CURL
                         </button>
                       </>
                     )}

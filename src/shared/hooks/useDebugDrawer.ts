@@ -8,6 +8,7 @@ export interface BillingBreadcrumb {
   event: string;
   requestId?: string;
   endpoint: string;
+  fullUrl?: string; // URL complète pour générer CURL
   status: number;
   timestamp: number;
   duration?: number;
@@ -38,7 +39,30 @@ export function useDebugDrawer(): {
       return;
     }
 
-    // Écouter tous les événements billing/terminal
+    // Écouter l'événement générique api:request pour toutes les requêtes HTTP
+    const unsubscribeApiRequest = eventBus.on('api:request', (payload?: unknown) => {
+      if (payload != null && typeof payload === 'object') {
+        const p = payload as Partial<BillingBreadcrumb>;
+        const breadcrumb: BillingBreadcrumb = {
+          event: 'api:request',
+          requestId: p.requestId,
+          endpoint: p.endpoint != null && p.endpoint !== '' ? p.endpoint : '',
+          fullUrl: p.fullUrl,
+          status: p.status != null && p.status !== 0 ? p.status : 0,
+          timestamp: p.timestamp != null && p.timestamp !== 0 ? p.timestamp : Date.now(),
+          duration: p.duration,
+          method: p.method != null && p.method !== '' ? p.method : 'UNKNOWN',
+        };
+
+        setBreadcrumbs((prev) => {
+          const updated = [breadcrumb, ...prev];
+          // Garder seulement les MAX_BREADCRUMBS derniers
+          return updated.slice(0, MAX_BREADCRUMBS);
+        });
+      }
+    });
+
+    // Écouter aussi les événements billing/terminal spécifiques pour un contexte supplémentaire
     const events: Array<
       | 'billing:checkout'
       | 'billing:portal'
@@ -61,16 +85,17 @@ export function useDebugDrawer(): {
 
     const unsubscribers = events.map((event) => {
       return eventBus.on(event, (payload?: unknown) => {
-        if (payload && typeof payload === 'object') {
+        if (payload != null && typeof payload === 'object') {
           const p = payload as Partial<BillingBreadcrumb>;
           const breadcrumb: BillingBreadcrumb = {
             event,
             requestId: p.requestId,
-            endpoint: p.endpoint || '',
-            status: p.status || 0,
-            timestamp: p.timestamp || Date.now(),
+            endpoint: p.endpoint != null && p.endpoint !== '' ? p.endpoint : '',
+            fullUrl: p.fullUrl,
+            status: p.status != null && p.status !== 0 ? p.status : 0,
+            timestamp: p.timestamp != null && p.timestamp !== 0 ? p.timestamp : Date.now(),
             duration: p.duration,
-            method: p.method || 'UNKNOWN',
+            method: p.method != null && p.method !== '' ? p.method : 'UNKNOWN',
           };
 
           setBreadcrumbs((prev) => {
@@ -83,6 +108,7 @@ export function useDebugDrawer(): {
     });
 
     return () => {
+      unsubscribeApiRequest();
       unsubscribers.forEach((unsub) => unsub());
     };
   }, []);
