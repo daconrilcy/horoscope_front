@@ -17,6 +17,10 @@ export const ROUTES = {
     TOS: '/legal/tos',
     PRIVACY: '/legal/privacy',
   },
+  BILLING: {
+    SUCCESS: '/billing/success',
+    CANCEL: '/billing/cancel',
+  },
 
   // Routes privées
   APP: {
