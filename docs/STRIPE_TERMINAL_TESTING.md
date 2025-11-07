@@ -188,3 +188,7 @@ Commandes utiles:
 - Captures (screenshots/vidéos)
   - Configurées pour être conservées uniquement en cas d’échec (`only-on-failure` / `retain-on-failure`).
   - Artefacts visibles dans `test-results/` et intégrés au rapport HTML.
+
+- Rebuild forcé / serveur propre
+  - `CI=1 npm run test:e2e -- --grep "Dev Terminal (refund)"` pour relancer un test ciblé avec un nouveau build Vite.
+  - Si besoin, stopper manuellement un serveur `vite preview` toujours actif (port 5173) avant de relancer un test ciblé.
