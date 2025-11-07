@@ -9,6 +9,7 @@ import { NetworkError } from './errors';
 vi.mock('./client', () => ({
   http: {
     post: vi.fn(),
+    get: vi.fn(),
   },
 }));
 
@@ -293,6 +294,155 @@ describe('billingService', () => {
       await expect(billingService.createPortalSession()).rejects.toThrow(
         NetworkError
       );
+    });
+  });
+
+  describe('verifyCheckoutSession', () => {
+    const sessionId = 'cs_test_1234567890';
+
+    it('devrait retourner statut paid avec plan', async () => {
+      const mockResponse = {
+        status: 'paid',
+        session_id: sessionId,
+        plan: 'plus',
+      };
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpGet = vi.mocked(http.get);
+      (mockHttpGet as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      const result = await billingService.verifyCheckoutSession(sessionId);
+
+      expect(result).toEqual(mockResponse);
+      expect(result.status).toBe('paid');
+      expect(result.plan).toBe('plus');
+      expect(mockHttpGet).toHaveBeenCalledWith(
+        `/v1/billing/checkout/session?session_id=${encodeURIComponent(sessionId)}`
+      );
+    });
+
+    it('devrait retourner statut unpaid sans plan', async () => {
+      const mockResponse = {
+        status: 'unpaid',
+        session_id: sessionId,
+      };
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpGet = vi.mocked(http.get);
+      (mockHttpGet as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      const result = await billingService.verifyCheckoutSession(sessionId);
+
+      expect(result.status).toBe('unpaid');
+      expect(result.plan).toBeUndefined();
+    });
+
+    it('devrait retourner statut expired', async () => {
+      const mockResponse = {
+        status: 'expired',
+        session_id: sessionId,
+      };
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpGet = vi.mocked(http.get);
+      (mockHttpGet as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      const result = await billingService.verifyCheckoutSession(sessionId);
+
+      expect(result.status).toBe('expired');
+    });
+
+    it("devrait encoder correctement session_id dans l'URL", async () => {
+      const specialSessionId = 'cs_test_abc@123+456';
+      const mockResponse = {
+        status: 'paid',
+        session_id: specialSessionId,
+      };
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpGet = vi.mocked(http.get);
+      (mockHttpGet as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      await billingService.verifyCheckoutSession(specialSessionId);
+
+      expect(mockHttpGet).toHaveBeenCalledWith(
+        `/v1/billing/checkout/session?session_id=${encodeURIComponent(specialSessionId)}`
+      );
+    });
+
+    it('devrait échouer si session_id est vide', async () => {
+      await expect(billingService.verifyCheckoutSession('')).rejects.toThrow(
+        'session_id is required'
+      );
+    });
+
+    it('devrait échouer si session_id est null', async () => {
+      await expect(
+        billingService.verifyCheckoutSession(null as unknown as string)
+      ).rejects.toThrow('session_id is required');
+    });
+
+    it('devrait échouer si réponse invalide (status manquant)', async () => {
+      const mockResponse = {
+        session_id: sessionId,
+        // status manquant
+      };
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpGet = vi.mocked(http.get);
+      (mockHttpGet as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      await expect(
+        billingService.verifyCheckoutSession(sessionId)
+      ).rejects.toThrow('Invalid verify checkout session response');
+    });
+
+    it('devrait échouer si réponse invalide (status invalide)', async () => {
+      const mockResponse = {
+        status: 'invalid_status',
+        session_id: sessionId,
+      };
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpGet = vi.mocked(http.get);
+      (mockHttpGet as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      await expect(
+        billingService.verifyCheckoutSession(sessionId)
+      ).rejects.toThrow('Invalid verify checkout session response');
+    });
+
+    it('devrait propager ApiError 404', async () => {
+      const apiError = new ApiError('Session introuvable', 404);
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpGet = vi.mocked(http.get);
+      (mockHttpGet as ReturnType<typeof vi.fn>).mockRejectedValue(apiError);
+
+      await expect(
+        billingService.verifyCheckoutSession(sessionId)
+      ).rejects.toThrow(ApiError);
+    });
+
+    it('devrait propager ApiError 401', async () => {
+      const apiError = new ApiError('Unauthorized', 401);
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpGet = vi.mocked(http.get);
+      (mockHttpGet as ReturnType<typeof vi.fn>).mockRejectedValue(apiError);
+
+      await expect(
+        billingService.verifyCheckoutSession(sessionId)
+      ).rejects.toThrow(ApiError);
+    });
+
+    it('devrait propager NetworkError', async () => {
+      const networkError = new NetworkError('offline', 'Network error');
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const mockHttpGet = vi.mocked(http.get);
+      (mockHttpGet as ReturnType<typeof vi.fn>).mockRejectedValue(networkError);
+
+      await expect(
+        billingService.verifyCheckoutSession(sessionId)
+      ).rejects.toThrow(NetworkError);
     });
   });
 });

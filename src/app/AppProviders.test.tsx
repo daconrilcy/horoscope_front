@@ -179,8 +179,9 @@ describe('AppProviders', () => {
     let authCallback: (() => void) | undefined;
 
     // Intercepter eventBus.on pour capturer le callback
-    const onMockFn = vi.mocked(eventBus.on);
     // eslint-disable-next-line @typescript-eslint/unbound-method
+    const onMockFn = vi.mocked(eventBus.on);
+
     onMockFn.mockImplementation((event, callback): (() => void) => {
       if (event === 'auth:unauthorized') {
         authCallback = callback as () => void;
@@ -198,23 +199,26 @@ describe('AppProviders', () => {
       </MemoryRouter>
     );
 
-      // Attendre que le listener soit enregistré
-      await waitFor(() => {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(eventBus.on).toHaveBeenCalledWith(
-          'auth:unauthorized',
-          expect.any(Function)
-        );
-      });
+    // Attendre que le listener soit enregistré
+    await waitFor(() => {
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(eventBus.on).toHaveBeenCalledWith(
+        'auth:unauthorized',
+        expect.any(Function)
+      );
+    });
 
     // Simuler l'événement auth:unauthorized
     if (authCallback) {
       authCallback();
 
       // Vérifier que toast.warning a été appelé
-      await waitFor(() => {
-        expect(mockToastWarning).toHaveBeenCalledWith('Session expirée');
-      }, { timeout: 2000 });
+      await waitFor(
+        () => {
+          expect(mockToastWarning).toHaveBeenCalledWith('Session expirée');
+        },
+        { timeout: 2000 }
+      );
 
       // Vérifier que post_login_redirect a été stocké
       expect(sessionStorage.getItem('post_login_redirect')).toBe(
@@ -222,9 +226,14 @@ describe('AppProviders', () => {
       );
 
       // Vérifier que navigate a été appelé
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
-      }, { timeout: 2000 });
+      await waitFor(
+        () => {
+          expect(mockNavigate).toHaveBeenCalledWith('/login', {
+            replace: true,
+          });
+        },
+        { timeout: 2000 }
+      );
     }
   });
 
@@ -240,8 +249,9 @@ describe('AppProviders', () => {
     let authCallback: (() => void) | undefined;
 
     // Intercepter eventBus.on pour capturer le callback
-    const onMockFn = vi.mocked(eventBus.on);
     // eslint-disable-next-line @typescript-eslint/unbound-method
+    const onMockFn = vi.mocked(eventBus.on);
+
     onMockFn.mockImplementation((event, callback): (() => void) => {
       if (event === 'auth:unauthorized') {
         authCallback = callback as () => void;
@@ -259,14 +269,14 @@ describe('AppProviders', () => {
       </MemoryRouter>
     );
 
-      // Attendre que le listener soit enregistré
-      await waitFor(() => {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(eventBus.on).toHaveBeenCalledWith(
-          'auth:unauthorized',
-          expect.any(Function)
-        );
-      });
+    // Attendre que le listener soit enregistré
+    await waitFor(() => {
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(eventBus.on).toHaveBeenCalledWith(
+        'auth:unauthorized',
+        expect.any(Function)
+      );
+    });
 
     // Simuler l'événement auth:unauthorized
     if (authCallback) {

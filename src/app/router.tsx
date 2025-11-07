@@ -24,6 +24,7 @@ import { TermsOfServicePage } from '@/pages/legal/tos';
 import { PrivacyPolicyPage } from '@/pages/legal/privacy';
 import { BillingSuccessPage } from '@/pages/billing/success';
 import { BillingCancelPage } from '@/pages/billing/cancel';
+import { DevTerminalConsole } from '@/features/terminal/DevTerminalConsole';
 import { NotFoundPage } from '@/pages/NotFound';
 
 // Pages privées - lazy loading pour code splitting
@@ -145,6 +146,14 @@ const router = createBrowserRouter([
           {
             path: ROUTES.BILLING.CANCEL,
             element: <BillingCancelPage />,
+          },
+          {
+            path: ROUTES.DEV.TERMINAL,
+            element: import.meta.env.DEV ? (
+              <DevTerminalConsole />
+            ) : (
+              <NotFoundPage />
+            ),
           },
         ],
       },

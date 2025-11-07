@@ -40,18 +40,50 @@ let onUnauthorized: (() => void) | null = null;
 
 // Debounce global 401 (60s par défaut)
 let unauthorizedFiredAt = 0;
+let unauthorizedEmissionInProgress = false; // Verrou pour éviter les émissions simultanées
 const UNAUTHORIZED_DEBOUNCE_MS = 60_000; // 60 secondes
 
 /**
  * Émet un événement auth:unauthorized seulement si >60s depuis le dernier
  * Anti-spam pour éviter les avalanches de toasts
+ * Utilise une approche avec mise à jour atomique du timestamp pour éviter les émissions simultanées
+ *
+ * Stratégie : mettre à jour le timestamp AVANT de vérifier si on doit émettre.
+ * Si plusieurs requêtes arrivent simultanément, seule la première verra
+ * `previousFiredAt < now - DEBOUNCE_MS` et mettra à jour le timestamp.
+ * Les autres verront déjà `unauthorizedFiredAt >= now - DEBOUNCE_MS` et ne déclencheront pas.
  */
 function fireUnauthorizedOnce(): void {
   const now = Date.now();
-  if (now - unauthorizedFiredAt > UNAUTHORIZED_DEBOUNCE_MS) {
-    unauthorizedFiredAt = now;
+  const previousFiredAt = unauthorizedFiredAt;
+
+  // Vérifier le debounce
+  if (now - previousFiredAt <= UNAUTHORIZED_DEBOUNCE_MS) {
+    return; // Trop tôt, ne pas émettre
+  }
+
+  // Vérifier le verrou
+  if (unauthorizedEmissionInProgress) {
+    return; // Une émission est déjà en cours, ne pas émettre
+  }
+
+  // Acquérir le verrou immédiatement (synchrone)
+  unauthorizedEmissionInProgress = true;
+
+  // Mettre à jour le timestamp immédiatement (synchrone)
+  // Cette mise à jour atomique garantit qu'une seule requête peut passer
+  unauthorizedFiredAt = now;
+
+  // Vérifier si on était la première à mettre à jour
+  // Si unauthorizedFiredAt === now ET qu'il était différent de previousFiredAt,
+  // c'est qu'on était la première requête
+  if (unauthorizedFiredAt === now && unauthorizedFiredAt !== previousFiredAt) {
+    // Émettre l'événement
     eventBus.emit('auth:unauthorized');
   }
+
+  // Libérer le verrou immédiatement après (synchrone)
+  unauthorizedEmissionInProgress = false;
 }
 
 /**
@@ -60,6 +92,7 @@ function fireUnauthorizedOnce(): void {
  */
 export function resetUnauthorizedDebounce(): void {
   unauthorizedFiredAt = 0;
+  unauthorizedEmissionInProgress = false;
 }
 
 /**
@@ -391,6 +424,23 @@ async function performRequest<T>(
   options: RequestOptions = {}
 ): Promise<T> {
   const fullUrl = buildUrl(url);
+  const startTime = Date.now();
+  const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+  // Émettre événement start
+  eventBus.emit('api:request', {
+    id: requestId,
+    ts: startTime,
+    phase: 'start',
+    method,
+    url,
+    fullUrl,
+    headers: options.headers
+      ? Object.fromEntries(new Headers(options.headers).entries())
+      : undefined,
+    body: body != null ? body : undefined,
+  });
+
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
@@ -413,6 +463,21 @@ async function performRequest<T>(
   try {
     const headers = buildHeaders(method, fullUrl, options, options.headers);
 
+    // Extraire les headers finals pour l'observabilité (exclure Authorization)
+    const finalHeaders =
+      headers instanceof Headers ? headers : new Headers(headers);
+    const headersForObservability: Record<string, string> = {};
+    finalHeaders.forEach((value, key) => {
+      // Exclure Authorization et autres données sensibles
+      if (
+        key.toLowerCase() !== 'authorization' &&
+        !key.toLowerCase().includes('secret') &&
+        !key.toLowerCase().includes('password')
+      ) {
+        headersForObservability[key] = value;
+      }
+    });
+
     const requestInit: RequestInit = {
       method,
       headers,
@@ -424,19 +489,74 @@ async function performRequest<T>(
     }
 
     const response = await fetch(fullUrl, requestInit);
+    const durationMs = Date.now() - startTime;
+    const responseRequestId = extractRequestId(response);
 
     // Parsing de la réponse
     const data = await parseResponse<T>(response, options.parseAs);
 
     // Vérification du status
     if (!response.ok) {
-      throw toApiError(response, data, fullUrl);
+      const error = toApiError(response, data, fullUrl);
+      // Émettre événement error
+      eventBus.emit('api:request', {
+        id: requestId,
+        ts: startTime,
+        phase: 'error',
+        method,
+        url,
+        fullUrl,
+        status: error.status,
+        requestId: error.requestId ?? responseRequestId,
+        durationMs,
+        headers: headersForObservability,
+      });
+      throw error;
     }
+
+    // Émettre événement end (succès)
+    eventBus.emit('api:request', {
+      id: requestId,
+      ts: startTime,
+      phase: 'end',
+      method,
+      url,
+      fullUrl,
+      status: response.status,
+      requestId: responseRequestId,
+      durationMs,
+      headers: headersForObservability,
+    });
 
     return data;
   } catch (error) {
+    const durationMs = Date.now() - startTime;
+
+    // Extraire les headers finals pour l'observabilité (si disponibles)
+    // Note: headersForObservability peut ne pas être défini si l'erreur survient avant buildHeaders
+    let headersForError: Record<string, string> | undefined;
+    try {
+      const headers = buildHeaders(method, fullUrl, options, options.headers);
+      const finalHeaders =
+        headers instanceof Headers ? headers : new Headers(headers);
+      headersForError = {};
+      finalHeaders.forEach((value, key) => {
+        if (
+          key.toLowerCase() !== 'authorization' &&
+          !key.toLowerCase().includes('secret') &&
+          !key.toLowerCase().includes('password')
+        ) {
+          headersForError![key] = value;
+        }
+      });
+    } catch {
+      // Si buildHeaders échoue, on continue sans headers
+      headersForError = undefined;
+    }
+
     // Gestion des erreurs réseau
     if (error instanceof ApiError) {
+      // Événement error déjà émis dans le bloc if (!response.ok)
       throw error;
     }
 
@@ -447,15 +567,57 @@ async function performRequest<T>(
       const abortedSignal = options.signal?.aborted;
       // Si c'est le timeout controller qui a aborté, c'est un timeout
       const isTimeout = controller.signal.aborted && !abortedSignal;
-      throw new NetworkError(
+      const networkError = new NetworkError(
         isTimeout ? 'timeout' : 'aborted',
         isTimeout ? 'Request timeout' : 'Request aborted'
       );
+      // Émettre événement error pour NetworkError (status 0)
+      eventBus.emit('api:request', {
+        id: requestId,
+        ts: startTime,
+        phase: 'error',
+        method,
+        url,
+        fullUrl,
+        status: 0,
+        durationMs,
+        headers: headersForError,
+      });
+      throw networkError;
     }
 
     if (error instanceof TypeError) {
-      throw new NetworkError('offline', 'Network error: offline');
+      const networkError = new NetworkError(
+        'offline',
+        'Network error: offline'
+      );
+      // Émettre événement error pour NetworkError (status 0)
+      eventBus.emit('api:request', {
+        id: requestId,
+        ts: startTime,
+        phase: 'error',
+        method,
+        url,
+        fullUrl,
+        status: 0,
+        durationMs,
+        headers: headersForError,
+      });
+      throw networkError;
     }
+
+    // Émettre événement error pour erreur inconnue (status 0)
+    eventBus.emit('api:request', {
+      id: requestId,
+      ts: startTime,
+      phase: 'error',
+      method,
+      url,
+      fullUrl,
+      status: 0,
+      durationMs,
+      headers: headersForError,
+    });
 
     throw error;
   } finally {

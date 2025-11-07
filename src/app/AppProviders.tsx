@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
 import { NetworkError } from '@/shared/api/errors';
 import { useAuthStore } from '@/stores/authStore';
 import { eventBus } from '@/shared/api/eventBus';
+import { DebugDrawer } from '@/widgets/DebugDrawer/DebugDrawer';
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -127,6 +128,7 @@ export function AppProviders({ children }: AppProvidersProps): JSX.Element {
         <Toaster richColors position="top-right" />
       </ErrorBoundary>
       {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      <DebugDrawer />
     </QueryClientProvider>
   );
 }

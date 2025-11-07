@@ -118,14 +118,75 @@ Tous les composants sont accessibles avec :
 
 ## 📝 Variables d'environnement
 
+### Variables obligatoires
+
 ```env
 VITE_API_BASE_URL=http://localhost:8000
 ```
+
+### Variables Billing (optionnelles, fallback si /v1/config indisponible)
+
+```env
+VITE_PUBLIC_BASE_URL=http://localhost:5173
+VITE_CHECKOUT_SUCCESS_PATH=/billing/success
+VITE_CHECKOUT_CANCEL_PATH=/billing/cancel
+VITE_PORTAL_RETURN_URL=http://localhost:5173/app/account
+VITE_CHECKOUT_TRIALS_ENABLED=true
+VITE_CHECKOUT_COUPONS_ENABLED=true
+VITE_STRIPE_TAX_ENABLED=false
+```
+
+### Variables Dev (optionnelles)
+
+```env
+VITE_DEV_TERMINAL=true  # Active le simulateur Stripe Terminal (dev-only)
+```
+
+## 🧪 Quickstart Billing & Terminal
+
+### Billing
+
+1. **Checkout Stripe** : Utiliser `useCheckout` hook pour créer une session checkout
+2. **Success/Cancel** : Pages `/billing/success` et `/billing/cancel` avec validation serveur
+3. **Portal** : Utiliser `usePortal` hook avec fallback automatique pour `return_url`
+
+### Terminal (Dev Only)
+
+Le simulateur Stripe Terminal est accessible via `/dev/terminal` en développement.
+
+**Prérequis** :
+
+- `VITE_DEV_TERMINAL=true` dans `.env`
+- Backend avec endpoints `/v1/terminal/*`
+
+Voir [docs/STRIPE_TERMINAL_TESTING.md](./docs/STRIPE_TERMINAL_TESTING.md) pour le guide complet.
+
+## 🔍 Troubleshooting
+
+### Whitelist Portal
+
+Si vous recevez une erreur "return_url not whitelisted" :
+
+- Le hook `usePortal` tente automatiquement un fallback avec `portalReturnUrl` de la config
+- Vérifier que `VITE_PORTAL_RETURN_URL` est dans la whitelist backend
+
+### Idempotency-Key
+
+- L'Idempotency-Key est générée automatiquement pour les mutations (POST/PUT/PATCH/DELETE)
+- Si vous fournissez un header `Idempotency-Key` personnalisé, il ne sera jamais écrasé
+- Les requêtes GET ne génèrent pas d'Idempotency-Key (sauf si explicitement fournie)
+
+### Request ID & Observabilité
+
+- Chaque requête HTTP génère un `request_id` unique
+- Le DebugDrawer (Ctrl+Shift+D en dev) affiche les breadcrumbs avec `request_id`, latence et cURL
+- Les erreurs API incluent le `request_id` pour le debugging côté backend
 
 ## 📚 Documentation
 
 - [RELEASE_0.5.md](./RELEASE_0.5.md) - Détails complets de la release 0.5
 - [RELEASE_0.0.md](./RELEASE_0.0.md) - Release initiale (bootstrap)
+- [docs/STRIPE_TERMINAL_TESTING.md](./docs/STRIPE_TERMINAL_TESTING.md) - Guide de test Stripe Terminal
 
 ## 🔄 Roadmap
 

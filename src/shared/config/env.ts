@@ -58,38 +58,37 @@ export type Env = EnvRequired & EnvBilling & EnvDev;
 function getEnv(): Env {
   const viteApiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const raw = {
     VITE_API_BASE_URL: viteApiBaseUrl,
     // Billing config fallback (optionnel)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     VITE_PUBLIC_BASE_URL: import.meta.env.VITE_PUBLIC_BASE_URL as
       | string
       | undefined,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     VITE_CHECKOUT_SUCCESS_PATH: import.meta.env.VITE_CHECKOUT_SUCCESS_PATH as
       | string
       | undefined,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     VITE_CHECKOUT_CANCEL_PATH: import.meta.env.VITE_CHECKOUT_CANCEL_PATH as
       | string
       | undefined,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     VITE_PORTAL_RETURN_URL: import.meta.env.VITE_PORTAL_RETURN_URL as
       | string
       | undefined,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     VITE_CHECKOUT_TRIALS_ENABLED: import.meta.env
       .VITE_CHECKOUT_TRIALS_ENABLED as string | undefined,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     VITE_CHECKOUT_COUPONS_ENABLED: import.meta.env
       .VITE_CHECKOUT_COUPONS_ENABLED as string | undefined,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     VITE_STRIPE_TAX_ENABLED: import.meta.env.VITE_STRIPE_TAX_ENABLED as
       | string
       | undefined,
     // Dev tools (optionnel)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     VITE_DEV_TERMINAL: import.meta.env.VITE_DEV_TERMINAL as string | undefined,
   };
 

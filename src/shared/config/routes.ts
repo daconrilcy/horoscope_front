@@ -21,6 +21,9 @@ export const ROUTES = {
     SUCCESS: '/billing/success',
     CANCEL: '/billing/cancel',
   },
+  DEV: {
+    TERMINAL: '/dev/terminal',
+  },
 
   // Routes privées
   APP: {

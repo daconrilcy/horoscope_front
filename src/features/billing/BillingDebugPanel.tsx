@@ -1,5 +1,6 @@
 import { useBillingConfig } from './hooks/useBillingConfig';
 import { billingConfigService } from '@/shared/api/billingConfig.service';
+import { useClearPriceLookupCache } from './hooks/useClearPriceLookupCache';
 
 /**
  * Composant Panel de debug billing (dev-only)
@@ -7,6 +8,7 @@ import { billingConfigService } from '@/shared/api/billingConfig.service';
  */
 export function BillingDebugPanel(): JSX.Element | null {
   const { data: config, isLoading, error } = useBillingConfig();
+  const { clearCache, isPending: isClearingCache } = useClearPriceLookupCache();
 
   // Masquer complètement en production
   if (!import.meta.env.DEV) {
@@ -134,6 +136,33 @@ export function BillingDebugPanel(): JSX.Element | null {
           <span style={{ color: '#60a5fa', fontSize: '0.75rem' }}>
             {config.priceLookupHash.slice(0, 8)}...
           </span>
+        </div>
+      )}
+
+      {config.priceLookupHash && (
+        <div style={{ marginTop: '0.75rem' }}>
+          <button
+            type="button"
+            onClick={() => {
+              void clearCache();
+            }}
+            disabled={isClearingCache}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: isClearingCache ? '#6b7280' : '#ef4444',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '0.25rem',
+              cursor: isClearingCache ? 'not-allowed' : 'pointer',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              width: '100%',
+            }}
+          >
+            {isClearingCache
+              ? 'Vidage en cours...'
+              : 'Clear price lookup cache'}
+          </button>
         </div>
       )}
 
