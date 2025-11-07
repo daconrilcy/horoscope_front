@@ -74,6 +74,7 @@ export function DevTerminalConsole(): JSX.Element | null {
       const response = await terminalService.createPaymentIntent({
         amount: selectedAmount,
         currency: 'eur',
+        payment_method_types: ['card_present'],
       });
       setPaymentIntentId(response.payment_intent_id);
       setClientSecret(response.client_secret);
@@ -90,7 +91,11 @@ export function DevTerminalConsole(): JSX.Element | null {
   };
 
   const handleProcess = async (): Promise<void> => {
-    if (state !== 'intent_created' || !paymentIntentId) {
+    if (
+      state !== 'intent_created' ||
+      paymentIntentId == null ||
+      paymentIntentId === ''
+    ) {
       return;
     }
     setIsLoading(true);
@@ -106,8 +111,12 @@ export function DevTerminalConsole(): JSX.Element | null {
         toast.success('Paiement réussi');
       } else if (response.status === 'requires_payment_method') {
         setState('failed');
-        setError(response.error_message || 'Paiement échoué');
-        toast.error(response.error_message || 'Paiement échoué');
+        const errorMessage =
+          response.error_message != null && response.error_message !== ''
+            ? response.error_message
+            : 'Paiement échoué';
+        setError(errorMessage);
+        toast.error(errorMessage);
       } else {
         setState('processing');
         toast.info('Paiement en cours de traitement');
@@ -124,7 +133,11 @@ export function DevTerminalConsole(): JSX.Element | null {
   };
 
   const handleCapture = async (): Promise<void> => {
-    if (state !== 'processing' || !paymentIntentId) {
+    if (
+      state !== 'processing' ||
+      paymentIntentId == null ||
+      paymentIntentId === ''
+    ) {
       return;
     }
     setIsLoading(true);
@@ -154,7 +167,8 @@ export function DevTerminalConsole(): JSX.Element | null {
   const handleCancel = async (): Promise<void> => {
     if (
       (state !== 'intent_created' && state !== 'processing') ||
-      !paymentIntentId
+      paymentIntentId == null ||
+      paymentIntentId === ''
     ) {
       return;
     }
@@ -176,7 +190,11 @@ export function DevTerminalConsole(): JSX.Element | null {
   };
 
   const handleRefund = async (): Promise<void> => {
-    if (state !== 'captured' || !paymentIntentId) {
+    if (
+      state !== 'captured' ||
+      paymentIntentId == null ||
+      paymentIntentId === ''
+    ) {
       return;
     }
     setIsLoading(true);
@@ -232,6 +250,11 @@ export function DevTerminalConsole(): JSX.Element | null {
     marginBottom: '0.5rem',
   });
 
+  const amountSelectId = 'terminal-amount-select';
+  const cardSelectId = 'terminal-card-select';
+  const hasValue = (value: string | null): value is string =>
+    value != null && value !== '';
+
   return (
     <div style={containerStyle}>
       <h1>Stripe Terminal Simulator (Dev Only)</h1>
@@ -239,17 +262,17 @@ export function DevTerminalConsole(): JSX.Element | null {
       {/* État actuel */}
       <div style={sectionStyle}>
         <h2>État: {state}</h2>
-        {error && (
+        {hasValue(error) && (
           <div style={{ color: '#dc3545', marginTop: '0.5rem' }}>{error}</div>
         )}
-        {connectionToken && (
+        {hasValue(connectionToken) && (
           <div
             style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.5rem' }}
           >
             Connection Token: {connectionToken.slice(0, 20)}...
           </div>
         )}
-        {paymentIntentId && (
+        {hasValue(paymentIntentId) && (
           <div
             style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.5rem' }}
           >
@@ -263,10 +286,14 @@ export function DevTerminalConsole(): JSX.Element | null {
         <div style={sectionStyle}>
           <h3>Configuration</h3>
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+            <label
+              htmlFor={amountSelectId}
+              style={{ display: 'block', marginBottom: '0.5rem' }}
+            >
               Montant (centimes):
             </label>
             <select
+              id={amountSelectId}
               value={selectedAmount}
               onChange={(e) => {
                 setSelectedAmount(Number.parseInt(e.target.value, 10));
@@ -303,10 +330,14 @@ export function DevTerminalConsole(): JSX.Element | null {
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+            <label
+              htmlFor={cardSelectId}
+              style={{ display: 'block', marginBottom: '0.5rem' }}
+            >
               Carte de test:
             </label>
             <select
+              id={cardSelectId}
               value={selectedCard}
               onChange={(e) => {
                 setSelectedCard(e.target.value);

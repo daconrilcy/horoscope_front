@@ -10,11 +10,14 @@ import { toast } from '@/app/AppProviders';
  * Accessible via Ctrl+Shift+D
  */
 export function DebugDrawer(): JSX.Element | null {
-  const { breadcrumbs, isOpen, toggle, clear } = useDebugDrawer();
+  const isDev = import.meta.env.DEV;
+  const debugDrawer = useDebugDrawer();
 
-  if (!import.meta.env.DEV) {
+  if (!isDev) {
     return null;
   }
+
+  const { breadcrumbs, isOpen, toggle, clear } = debugDrawer;
 
   const copyCurl = (breadcrumb: BillingBreadcrumb): void => {
     if (breadcrumb.fullUrl == null || breadcrumb.fullUrl === '') {

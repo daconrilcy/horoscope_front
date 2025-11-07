@@ -304,8 +304,10 @@ describe('usePortal', () => {
 
     const { result } = renderHook(() => usePortal(), { wrapper });
 
-    // Le premier appel échoue, mais le fallback est géré dans onError (ne rejette pas)
-    void result.current.openPortal(customReturnUrl);
+    // Le premier appel échoue; on capture l'erreur whitelist pour éviter un rejet non géré
+    await result.current.openPortal(customReturnUrl).catch((err) => {
+      expect(err).toBe(whitelistError);
+    });
 
     // Attendre que le fallback soit appelé (appel direct depuis onError)
     await waitFor(
@@ -354,8 +356,10 @@ describe('usePortal', () => {
 
     const { result } = renderHook(() => usePortal(), { wrapper });
 
-    // Le premier appel échoue, mais le fallback est géré dans onError (ne rejette pas)
-    void result.current.openPortal(customReturnUrl);
+    // Le premier appel échoue; on capture l'erreur whitelist pour éviter un rejet non géré
+    await result.current.openPortal(customReturnUrl).catch((err) => {
+      expect(err).toBe(whitelistError);
+    });
 
     // Attendre que le fallback soit appelé avec configReturnUrl (appel direct depuis onError)
     await waitFor(

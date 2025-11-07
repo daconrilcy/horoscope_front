@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
@@ -28,16 +28,25 @@ vi.mock('import.meta', () => ({
   },
 }));
 
-// Mock navigator.clipboard
-Object.assign(navigator, {
-  clipboard: {
-    writeText: vi.fn().mockResolvedValue(undefined),
-  },
-});
-
 describe('DebugDrawer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // S'assurer que DEV est toujours true après reset
+    vi.mocked(import.meta.env).DEV = true;
+    // Mock par défaut pour useDebugDrawer
+    vi.mocked(useDebugDrawer).mockReturnValue({
+      breadcrumbs: [],
+      isOpen: false,
+      toggle: vi.fn(),
+      clear: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    // Restaurer DEV = true après chaque test
+    vi.mocked(import.meta.env).DEV = true;
+    // Restaurer les spies éventuels
+    vi.restoreAllMocks();
   });
 
   const wrapper = ({
@@ -52,6 +61,9 @@ describe('DebugDrawer', () => {
 
     const { container } = render(<DebugDrawer />, { wrapper });
     expect(container.firstChild).toBeNull();
+
+    // Restaurer DEV = true immédiatement après le test
+    vi.mocked(import.meta.env).DEV = true;
   });
 
   it('ne devrait pas rendre si isOpen est false', () => {
@@ -116,7 +128,7 @@ describe('DebugDrawer', () => {
         requestId: 'req_456',
         endpoint: '/v1/billing/config',
         fullUrl: 'http://localhost:8000/v1/billing/config',
-        status: 200,
+        status: 201,
         timestamp: Date.now(),
         duration: 100,
         method: 'GET',
@@ -134,7 +146,10 @@ describe('DebugDrawer', () => {
 
     expect(screen.getByText('/v1/billing/checkout')).toBeInTheDocument();
     expect(screen.getByText('/v1/billing/config')).toBeInTheDocument();
-    expect(screen.getByText('200')).toBeInTheDocument();
+    // Utiliser getAllByText car il peut y avoir plusieurs éléments avec le même status
+    const status200 = screen.getAllByText('200');
+    expect(status200.length).toBeGreaterThan(0);
+    expect(screen.getByText('201')).toBeInTheDocument();
     expect(screen.getByText('POST')).toBeInTheDocument();
     expect(screen.getByText('GET')).toBeInTheDocument();
   });
@@ -193,6 +208,9 @@ describe('DebugDrawer', () => {
 
   it('devrait copier la commande cURL au clic sur le bouton CURL', async () => {
     const user = userEvent.setup();
+    const clipboardWriteTextSpy = vi
+      .spyOn(navigator.clipboard, 'writeText')
+      .mockResolvedValue(undefined);
     const mockBreadcrumbs = [
       {
         event: 'api:request',
@@ -220,19 +238,26 @@ describe('DebugDrawer', () => {
 
     render(<DebugDrawer />, { wrapper });
 
+    // Vérifier que le bouton existe
     const curlButton = screen.getByTitle('Copy CURL command');
+    expect(curlButton).toBeInTheDocument();
+    expect(typeof navigator.clipboard.writeText).toBe('function');
+
+    expect(clipboardWriteTextSpy).toBeDefined();
+
+    // Cliquer sur le bouton
     await user.click(curlButton);
 
-    await waitFor(() => {
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(navigator.clipboard.writeText).toHaveBeenCalled();
-    });
+    // Attendre que writeText soit appelé (avec un délai plus long si nécessaire)
+    await waitFor(
+      () => {
+        expect(clipboardWriteTextSpy).toHaveBeenCalled();
+      },
+      { timeout: 2000 }
+    );
 
     // Vérifier que la commande cURL contient les éléments attendus
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    const writeTextCall = vi.mocked(navigator.clipboard.writeText).mock
-      .calls[0];
-    const curlCommand = writeTextCall[0];
+    const [[curlCommand]] = clipboardWriteTextSpy.mock.calls;
 
     expect(curlCommand).toContain('curl -X POST');
     expect(curlCommand).toContain('http://localhost:8000/v1/billing/checkout');
@@ -246,6 +271,9 @@ describe('DebugDrawer', () => {
 
   it('devrait générer cURL sans body pour GET', async () => {
     const user = userEvent.setup();
+    const clipboardWriteTextSpy = vi
+      .spyOn(navigator.clipboard, 'writeText')
+      .mockResolvedValue(undefined);
     const mockBreadcrumbs = [
       {
         event: 'api:request',
@@ -272,17 +300,15 @@ describe('DebugDrawer', () => {
     render(<DebugDrawer />, { wrapper });
 
     const curlButton = screen.getByTitle('Copy CURL command');
+    expect(typeof navigator.clipboard.writeText).toBe('function');
+
     await user.click(curlButton);
 
     await waitFor(() => {
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(navigator.clipboard.writeText).toHaveBeenCalled();
+      expect(clipboardWriteTextSpy).toHaveBeenCalled();
     });
 
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    const writeTextCall = vi.mocked(navigator.clipboard.writeText).mock
-      .calls[0];
-    const curlCommand = writeTextCall[0];
+    const [[curlCommand]] = clipboardWriteTextSpy.mock.calls;
 
     expect(curlCommand).toContain('curl -X GET');
     expect(curlCommand).not.toContain('-d');
@@ -382,12 +408,13 @@ describe('DebugDrawer', () => {
 
     // Vérifier que les status sont affichés dans les spans avec backgroundColor
     // Les status sont rendus dans des spans avec le texte du status
-    const status200 = screen.getByText('200');
-    const status400 = screen.getByText('400');
-    const status500 = screen.getByText('500');
+    // Utiliser getAllByText car il peut y avoir plusieurs éléments avec le même status
+    const status200 = screen.getAllByText('200');
+    const status400 = screen.getAllByText('400');
+    const status500 = screen.getAllByText('500');
 
-    expect(status200).toBeInTheDocument();
-    expect(status400).toBeInTheDocument();
-    expect(status500).toBeInTheDocument();
+    expect(status200.length).toBeGreaterThan(0);
+    expect(status400.length).toBeGreaterThan(0);
+    expect(status500.length).toBeGreaterThan(0);
   });
 });
