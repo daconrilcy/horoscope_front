@@ -417,4 +417,54 @@ describe('DebugDrawer', () => {
     expect(status400.length).toBeGreaterThan(0);
     expect(status500.length).toBeGreaterThan(0);
   });
+
+  it('devrait ignorer Authorization et ajouter Content-Type par défaut pour les mutations', async () => {
+    const user = userEvent.setup();
+    const clipboardWriteTextSpy = vi
+      .spyOn(navigator.clipboard, 'writeText')
+      .mockResolvedValue(undefined);
+    const mockBreadcrumbs = [
+      {
+        event: 'api:request',
+        requestId: 'req_auth',
+        endpoint: '/v1/secure',
+        fullUrl: 'http://localhost:8000/v1/secure',
+        status: 200,
+        timestamp: Date.now(),
+        duration: 120,
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer secret_token',
+          'X-Custom-Header': 'value',
+        },
+        body: { foo: 'bar' },
+      },
+    ];
+
+    vi.mocked(useDebugDrawer).mockReturnValue({
+      breadcrumbs: mockBreadcrumbs,
+      isOpen: true,
+      toggle: vi.fn(),
+      clear: vi.fn(),
+    });
+
+    render(<DebugDrawer />, { wrapper });
+
+    const curlButton = screen.getByTitle('Copy CURL command');
+    await user.click(curlButton);
+
+    await waitFor(() => {
+      expect(clipboardWriteTextSpy).toHaveBeenCalled();
+    });
+
+    const [[curlCommand]] = clipboardWriteTextSpy.mock.calls;
+
+    expect(curlCommand).toContain('curl -X POST');
+    expect(curlCommand).toContain('X-Custom-Header: value');
+    expect(curlCommand).not.toContain('Authorization:');
+    expect(
+      curlCommand.match(/Content-Type: application\/json/g)?.length ?? 0
+    ).toBe(1);
+    expect(curlCommand).toContain('-d \'{\n  "foo": "bar"\n}\'');
+  });
 });

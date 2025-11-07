@@ -78,9 +78,14 @@ export function BillingDebugPanel(): JSX.Element | null {
     fontSize: '0.8125rem',
   };
 
+  const hasPortalReturnUrl =
+    config.portalReturnUrl != null && config.portalReturnUrl !== '';
+  const hasPriceLookupHash =
+    config.priceLookupHash != null && config.priceLookupHash !== '';
+
   return (
     <div style={panelStyle}>
-      <div style={titleStyle}>🔧 Billing Debug Panel (DEV)</div>
+      <div style={titleStyle}>Billing Debug Panel (DEV)</div>
 
       <div style={rowStyle}>
         <span style={labelStyle}>Environment:</span>
@@ -102,7 +107,7 @@ export function BillingDebugPanel(): JSX.Element | null {
         <span style={{ color: '#60a5fa' }}>{config.checkoutCancelPath}</span>
       </div>
 
-      {config.portalReturnUrl && (
+      {hasPortalReturnUrl && (
         <div style={rowStyle}>
           <span style={labelStyle}>Portal Return URL:</span>
           <span style={{ color: '#60a5fa' }}>{config.portalReturnUrl}</span>
@@ -130,7 +135,7 @@ export function BillingDebugPanel(): JSX.Element | null {
         </span>
       </div>
 
-      {config.priceLookupHash && (
+      {hasPriceLookupHash && (
         <div style={rowStyle}>
           <span style={labelStyle}>Price Lookup:</span>
           <span style={{ color: '#60a5fa', fontSize: '0.75rem' }}>
@@ -139,7 +144,7 @@ export function BillingDebugPanel(): JSX.Element | null {
         </div>
       )}
 
-      {config.priceLookupHash && (
+      {hasPriceLookupHash && (
         <div style={{ marginTop: '0.75rem' }}>
           <button
             type="button"
@@ -168,8 +173,8 @@ export function BillingDebugPanel(): JSX.Element | null {
 
       {!originCheck.matches && (
         <div style={warningStyle}>
-          ⚠️ Origin mismatch: current ({originCheck.current}) ≠ expected (
-          {originCheck.expected})
+          Attention : origin actuelle ({originCheck.current}) ≠ origin attendue
+          ({originCheck.expected})
         </div>
       )}
     </div>

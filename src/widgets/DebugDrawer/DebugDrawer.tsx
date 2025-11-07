@@ -30,13 +30,29 @@ export function DebugDrawer(): JSX.Element | null {
     const url = breadcrumb.fullUrl;
     let curlCommand = `curl -X ${method} "${url}"`;
 
-    // Ajouter les headers (hors Authorization déjà exclu)
-    if (breadcrumb.headers != null) {
-      Object.entries(breadcrumb.headers).forEach(([key, value]) => {
-        curlCommand += ` \\\n  -H "${key}: ${value}"`;
-      });
-    } else {
-      // Fallback: Content-Type par défaut
+    const headerEntries =
+      breadcrumb.headers != null
+        ? Object.entries(breadcrumb.headers).filter(
+            ([key]) => key.toLowerCase() !== 'authorization'
+          )
+        : [];
+
+    const requiresBody =
+      method === 'POST' ||
+      method === 'PUT' ||
+      method === 'PATCH' ||
+      method === 'DELETE';
+
+    let hasContentType = false;
+
+    headerEntries.forEach(([key, value]) => {
+      curlCommand += ` \\\n  -H "${key}: ${value}"`;
+      if (key.toLowerCase() === 'content-type') {
+        hasContentType = true;
+      }
+    });
+
+    if (requiresBody && !hasContentType) {
       curlCommand += ` \\\n  -H "Content-Type: application/json"`;
     }
 

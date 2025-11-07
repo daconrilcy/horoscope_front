@@ -37,8 +37,11 @@ export function useDebugDrawer(): {
       return;
     }
 
-    // Cache pour stocker le body depuis l'événement 'start' et l'associer à 'end'/'error'
-    const requestBodies = new Map<string, unknown>();
+    // Cache pour stocker les informations depuis l'événement 'start' et les associer à 'end'/'error'
+    const requestCache = new Map<
+      string,
+      { headers?: Record<string, string>; body?: unknown }
+    >();
 
     // Écouter les événements api:request
     const unsubscribeApiRequest = eventBus.on(
@@ -58,15 +61,17 @@ export function useDebugDrawer(): {
             headers?: Record<string, string>;
             body?: unknown;
           };
-          // Stocker le body depuis l'événement 'start'
-          if (p.phase === 'start' && p.id != null && p.body != null) {
-            requestBodies.set(p.id, p.body);
+          // Stocker les informations provenant de l'événement 'start'
+          if (p.phase === 'start' && p.id != null) {
+            requestCache.set(p.id, {
+              headers: p.headers,
+              body: p.body,
+            });
           }
           // Ne garder que les événements 'end' et 'error' (pas 'start')
           if (p.phase === 'end' || p.phase === 'error') {
-            // Récupérer le body depuis le cache si disponible
-            const cachedBody =
-              p.id != null ? requestBodies.get(p.id) : undefined;
+            // Récupérer les informations du cache si disponibles
+            const cached = p.id != null ? requestCache.get(p.id) : undefined;
             const breadcrumb: BillingBreadcrumb = {
               event: 'api:request',
               requestId: p.requestId,
@@ -77,15 +82,18 @@ export function useDebugDrawer(): {
               duration: p.durationMs,
               method:
                 p.method != null && p.method !== '' ? p.method : 'UNKNOWN',
-              headers: p.headers,
-              body: cachedBody,
+              headers: p.headers ?? cached?.headers,
+              body:
+                cached !== undefined && cached.body !== undefined
+                  ? cached.body
+                  : p.body,
             };
             setBreadcrumbs((prev) =>
               [breadcrumb, ...prev].slice(0, MAX_BREADCRUMBS)
             );
             // Nettoyer le cache après utilisation
             if (p.id != null) {
-              requestBodies.delete(p.id);
+              requestCache.delete(p.id);
             }
           }
         }
