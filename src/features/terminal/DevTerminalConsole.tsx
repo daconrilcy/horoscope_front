@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { env } from '@/shared/config/env';
 import {
   terminalService,
   TERMINAL_TEST_AMOUNTS,
@@ -32,7 +33,7 @@ export function DevTerminalConsole(): JSX.Element | null {
   const [connectionToken, setConnectionToken] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  // clientSecret non utilisé dans le simulateur actuel
   const [selectedAmount, setSelectedAmount] = useState<number>(
     TERMINAL_TEST_AMOUNTS.SUCCESS
   );
@@ -42,7 +43,7 @@ export function DevTerminalConsole(): JSX.Element | null {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  if (!import.meta.env.DEV) {
+  if (!(import.meta.env.DEV || env.VITE_DEV_TERMINAL === true)) {
     return null;
   }
 
@@ -77,7 +78,7 @@ export function DevTerminalConsole(): JSX.Element | null {
         payment_method_types: ['card_present'],
       });
       setPaymentIntentId(response.payment_intent_id);
-      setClientSecret(response.client_secret);
+      // clientSecret non utilisé: omis
       setState('intent_created');
       toast.success('PaymentIntent créé');
     } catch (err) {
@@ -219,7 +220,6 @@ export function DevTerminalConsole(): JSX.Element | null {
     setState('disconnected');
     setConnectionToken(null);
     setPaymentIntentId(null);
-    setClientSecret(null);
     setError(null);
     setSelectedAmount(TERMINAL_TEST_AMOUNTS.SUCCESS);
     setSelectedCard(TERMINAL_TEST_CARDS.SUCCESS);
@@ -282,7 +282,9 @@ export function DevTerminalConsole(): JSX.Element | null {
       </div>
 
       {/* Configuration */}
-      {state === 'disconnected' || state === 'connected' ? (
+      {state === 'disconnected' ||
+      state === 'connected' ||
+      state === 'intent_created' ? (
         <div style={sectionStyle}>
           <h3>Configuration</h3>
           <div style={{ marginBottom: '1rem' }}>
@@ -314,6 +316,12 @@ export function DevTerminalConsole(): JSX.Element | null {
               </option>
               <option value={TERMINAL_TEST_AMOUNTS.SUCCESS_05}>
                 1.05 EUR - 3D Secure
+              </option>
+              <option value={TERMINAL_TEST_AMOUNTS.OFFLINE_PIN}>
+                2.55 EUR - PIN offline (flow)
+              </option>
+              <option value={TERMINAL_TEST_AMOUNTS.ONLINE_PIN}>
+                2.65 EUR - PIN online (flow)
               </option>
               <option value={TERMINAL_TEST_AMOUNTS.DECLINED}>
                 2.00 EUR - Refusé

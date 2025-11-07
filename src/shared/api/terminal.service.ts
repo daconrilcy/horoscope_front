@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { http } from './client';
+import { env } from '@/shared/config/env';
 
 /**
  * Schémas Zod pour les payloads et réponses Terminal
@@ -89,7 +90,7 @@ export const terminalService = {
    * Endpoint : POST /v1/terminal/connect
    */
   async connect(): Promise<TerminalConnectResponse> {
-    if (!import.meta.env.DEV) {
+    if (!(import.meta.env.DEV || env.VITE_DEV_TERMINAL === true)) {
       throw new Error('Terminal service is only available in development');
     }
 
@@ -122,7 +123,7 @@ export const terminalService = {
     currency?: string;
     payment_method_types?: string[];
   }): Promise<CreatePaymentIntentResponse> {
-    if (!import.meta.env.DEV) {
+    if (!(import.meta.env.DEV || env.VITE_DEV_TERMINAL === true)) {
       throw new Error('Terminal service is only available in development');
     }
 
@@ -158,7 +159,7 @@ export const terminalService = {
     payment_intent_id: string;
     payment_method: string;
   }): Promise<ProcessPaymentResponse> {
-    if (!import.meta.env.DEV) {
+    if (!(import.meta.env.DEV || env.VITE_DEV_TERMINAL === true)) {
       throw new Error('Terminal service is only available in development');
     }
 
@@ -188,7 +189,7 @@ export const terminalService = {
   }: {
     payment_intent_id: string;
   }): Promise<CapturePaymentResponse> {
-    if (!import.meta.env.DEV) {
+    if (!(import.meta.env.DEV || env.VITE_DEV_TERMINAL === true)) {
       throw new Error('Terminal service is only available in development');
     }
 
@@ -217,7 +218,7 @@ export const terminalService = {
   }: {
     payment_intent_id: string;
   }): Promise<CancelPaymentResponse> {
-    if (!import.meta.env.DEV) {
+    if (!(import.meta.env.DEV || env.VITE_DEV_TERMINAL === true)) {
       throw new Error('Terminal service is only available in development');
     }
 
@@ -249,7 +250,7 @@ export const terminalService = {
     payment_intent_id: string;
     amount?: number;
   }): Promise<RefundPaymentResponse> {
-    if (!import.meta.env.DEV) {
+    if (!(import.meta.env.DEV || env.VITE_DEV_TERMINAL === true)) {
       throw new Error('Terminal service is only available in development');
     }
 

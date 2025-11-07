@@ -49,6 +49,9 @@ test.describe('Dev Terminal (declined)', () => {
 
     await page.getByRole('button', { name: /traiter paiement/i }).click();
     await expect(page.getByText(/État: failed/i)).toBeVisible();
-    await expect(page.getByText(/Your card was declined/i)).toBeVisible();
+    // Scope message to main content to avoid strict mode violation with toast
+    await expect(
+      page.getByRole('main').getByText(/Your card was declined/i)
+    ).toBeVisible();
   });
 });

@@ -41,16 +41,16 @@ test.describe('Dev Terminal (declined PIN scenario)', () => {
     await page.getByRole('button', { name: /connecter terminal/i }).click();
     await expect(page.getByText(/État: connected/i)).toBeVisible();
 
+    // Sélectionner la carte avant de créer le PaymentIntent
+    await page.selectOption('#terminal-card-select', '4000000000000002');
+
     await page.getByRole('button', { name: /créer paymentintent/i }).click();
     await expect(page.getByText(/État: intent_created/i)).toBeVisible();
 
-    // Sélectionner montant PIN offline (2.55€ = 255 centimes)
-    await page.getByLabel('Montant (centimes):').selectOption('255');
-    // Sélectionner carte DECLINED 4000000000000002
-    await page.getByLabel('Carte de test:').selectOption('4000000000000002');
-
     await page.getByRole('button', { name: /traiter paiement/i }).click();
     await expect(page.getByText(/État: failed/i)).toBeVisible();
-    await expect(page.getByText(/Your card was declined/i)).toBeVisible();
+    await expect(
+      page.getByText(/Your card was declined/i).first()
+    ).toBeVisible();
   });
 });

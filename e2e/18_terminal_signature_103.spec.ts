@@ -39,9 +39,6 @@ test.describe('Dev Terminal (signature amount 1.03€)', () => {
     await page.getByRole('button', { name: /créer paymentintent/i }).click();
     await expect(page.getByText(/État: intent_created/i)).toBeVisible();
 
-    // Sélectionner montant 1.03€ (103)
-    await page.getByLabel('Montant (centimes):').selectOption('103');
-
     await page.getByRole('button', { name: /traiter paiement/i }).click();
     await expect(page.getByText(/État: captured/i)).toBeVisible();
   });

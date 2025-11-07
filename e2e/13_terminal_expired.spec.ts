@@ -47,11 +47,10 @@ test.describe('Dev Terminal (expired card)', () => {
     await page.getByRole('button', { name: /créer paymentintent/i }).click();
     await expect(page.getByText(/État: intent_created/i)).toBeVisible();
 
-    // Sélectionner montant 2.02€ (202)
-    await page.getByLabel('Montant (centimes):').selectOption('202');
-
     await page.getByRole('button', { name: /traiter paiement/i }).click();
     await expect(page.getByText(/État: failed/i)).toBeVisible();
-    await expect(page.getByText(/Your card has expired/i)).toBeVisible();
+    await expect(
+      page.getByText(/Your card has expired/i).first()
+    ).toBeVisible();
   });
 });

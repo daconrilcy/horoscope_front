@@ -139,7 +139,7 @@ export function BillingDebugPanel(): JSX.Element | null {
         <div style={rowStyle}>
           <span style={labelStyle}>Price Lookup:</span>
           <span style={{ color: '#60a5fa', fontSize: '0.75rem' }}>
-            {config.priceLookupHash.slice(0, 8)}...
+            {(config.priceLookupHash ?? '').slice(0, 8)}...
           </span>
         </div>
       )}

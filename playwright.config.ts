@@ -28,12 +28,16 @@ export default defineConfig({
     },
   ],
 
-  // Optionnel: lancer le serveur dev automatiquement (décommenter si nécessaire)
-  // webServer: {
-  //   command: 'npm run dev',
-  //   url: 'http://localhost:5173',
-  //   reuseExistingServer: !process.env.CI,
-  //   timeout: 120000,
-  // },
+  // Lancer automatiquement un build + preview Vite pour les tests E2E
+  // Utilise un serveur plus stable que le mode dev, et active le flag Terminal
+  webServer: {
+    command: 'npm run e2e:web',
+    url: 'http://localhost:5173',
+    reuseExistingServer: !process.env.CI,
+    timeout: 180000,
+    env: {
+      // Assure que le build inclut la page /dev/terminal même hors DEV
+      VITE_DEV_TERMINAL: 'true',
+    },
+  },
 });
-

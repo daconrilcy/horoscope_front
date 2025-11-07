@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-// E2E: Dev Terminal PIN flows (offline/online) — simulate processing then capture
+// E2E: Dev Terminal PIN flows (offline/online) - simulate processing then capture
 test.describe('Dev Terminal (PIN flows)', () => {
   test('offline PIN amount leads to processing then capture', async ({
     page,
@@ -44,19 +44,16 @@ test.describe('Dev Terminal (PIN flows)', () => {
       page.getByRole('heading', { name: /Stripe Terminal Simulator/i })
     ).toBeVisible();
     await page.getByRole('button', { name: /connecter terminal/i }).click();
-    await expect(page.getByText(/État: connected/i)).toBeVisible();
+    await expect(page.getByText(/état: connected/i)).toBeVisible();
 
     await page.getByRole('button', { name: /créer paymentintent/i }).click();
-    await expect(page.getByText(/État: intent_created/i)).toBeVisible();
-
-    // Sélectionner montant PIN offline (2.55€ = 255 centimes)
-    await page.getByLabel('Montant (centimes):').selectOption('255');
+    await expect(page.getByText(/état: intent_created/i)).toBeVisible();
 
     await page.getByRole('button', { name: /traiter paiement/i }).click();
-    await expect(page.getByText(/État: processing/i)).toBeVisible();
+    await expect(page.getByText(/état: processing/i)).toBeVisible();
 
     await page.getByRole('button', { name: /capturer/i }).click();
-    await expect(page.getByText(/État: captured/i)).toBeVisible();
+    await expect(page.getByText(/état: captured/i)).toBeVisible();
   });
 
   test('online PIN amount leads to processing then capture', async ({
@@ -79,7 +76,7 @@ test.describe('Dev Terminal (PIN flows)', () => {
     );
     await page.route('**/v1/terminal/process', (route) =>
       route.fulfill({
-        status: '200',
+        status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           status: 'requires_action',
@@ -101,18 +98,15 @@ test.describe('Dev Terminal (PIN flows)', () => {
       page.getByRole('heading', { name: /Stripe Terminal Simulator/i })
     ).toBeVisible();
     await page.getByRole('button', { name: /connecter terminal/i }).click();
-    await expect(page.getByText(/État: connected/i)).toBeVisible();
+    await expect(page.getByText(/état: connected/i)).toBeVisible();
 
     await page.getByRole('button', { name: /créer paymentintent/i }).click();
-    await expect(page.getByText(/État: intent_created/i)).toBeVisible();
-
-    // Sélectionner montant PIN online (2.65€ = 265 centimes)
-    await page.getByLabel('Montant (centimes):').selectOption('265');
+    await expect(page.getByText(/état: intent_created/i)).toBeVisible();
 
     await page.getByRole('button', { name: /traiter paiement/i }).click();
-    await expect(page.getByText(/État: processing/i)).toBeVisible();
+    await expect(page.getByText(/état: processing/i)).toBeVisible();
 
     await page.getByRole('button', { name: /capturer/i }).click();
-    await expect(page.getByText(/État: captured/i)).toBeVisible();
+    await expect(page.getByText(/état: captured/i)).toBeVisible();
   });
 });

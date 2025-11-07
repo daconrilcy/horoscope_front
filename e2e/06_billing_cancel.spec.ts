@@ -19,15 +19,18 @@ test.describe('Billing cancel page', () => {
 
     // Vérifier le message d'annulation
     await expect(
-      page.locator(
-        'text=Votre paiement a été annulé. Vous pouvez réessayer ou retourner à votre tableau de bord.'
-      )
+      page.getByRole('heading', { name: /Paiement annulé/i })
+    ).toBeVisible();
+    await expect(
+      page.locator('text=Vous avez annulé le processus de paiement.')
     ).toBeVisible();
 
     // Vérifier le bouton "Réessayer le paiement"
-    const retryButton = page.locator('a:has-text("Réessayer le paiement")');
-    await expect(retryButton).toBeVisible();
-    await expect(retryButton).toHaveAttribute('href', '/app/dashboard');
+    const dashboardLink = page.locator(
+      'a:has-text("Retour au tableau de bord")'
+    );
+    await expect(dashboardLink).toBeVisible();
+    await expect(dashboardLink).toHaveAttribute('href', '/app/dashboard');
 
     // Vérifier le bouton "Retour au tableau de bord"
     const dashboardButton = page.locator(

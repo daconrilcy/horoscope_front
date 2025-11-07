@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  type FormEvent,
-  type KeyboardEvent,
-} from 'react';
+import React, { useEffect, useRef, useState, type FormEvent } from 'react';
 
 export interface ConfirmModalProps {
   /** Indique si le modal est ouvert */
@@ -63,9 +57,8 @@ export function ConfirmModal({
     }, 0);
 
     // Gestion Tab/Shift+Tab: focus trap
-    const handleKeyDown = (e: Event): void => {
-      const keyEvent = e as KeyboardEvent;
-      if (keyEvent.key !== 'Tab') return;
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if (e.key !== 'Tab') return;
 
       const modal = modalRef.current;
       if (!modal) return;
@@ -77,16 +70,16 @@ export function ConfirmModal({
       const firstFocusable = focusableElements[0];
       const lastFocusable = focusableElements[focusableElements.length - 1];
 
-      if (keyEvent.shiftKey) {
+      if (e.shiftKey) {
         // Shift+Tab: si on est sur le premier, aller au dernier
         if (document.activeElement === firstFocusable) {
-          keyEvent.preventDefault();
+          e.preventDefault();
           lastFocusable?.focus();
         }
       } else {
         // Tab: si on est sur le dernier, aller au premier
         if (document.activeElement === lastFocusable) {
-          keyEvent.preventDefault();
+          e.preventDefault();
           firstFocusable?.focus();
         }
       }
@@ -99,9 +92,8 @@ export function ConfirmModal({
     }
 
     // Gestion Escape: fermer le modal
-    const handleEscape = (e: Event): void => {
-      const keyEvent = e as KeyboardEvent;
-      if (keyEvent.key === 'Escape') {
+    const handleEscape = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') {
         onClose();
       }
     };

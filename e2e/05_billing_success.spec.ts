@@ -31,12 +31,7 @@ test.describe('Billing success page', () => {
     // Naviguer directement vers la page success avec session_id
     await page.goto(`/billing/success?session_id=${mockSessionId}`);
 
-    // Vérifier que la page affiche "Validation en cours..." puis "Paiement réussi !"
-    await expect(page.locator('text=Validation en cours')).toBeVisible({
-      timeout: 2000,
-    });
-
-    // Attendre que la validation soit terminée
+    // Attendre que la validation soit terminée (le loader peut être éphémère)
     await expect(page.locator('text=Paiement réussi !')).toBeVisible({
       timeout: 5000,
     });

@@ -50,11 +50,8 @@ test.describe('Dev Terminal (processing error)', () => {
     await page.getByRole('button', { name: /créer paymentintent/i }).click();
     await expect(page.getByText(/État: intent_created/i)).toBeVisible();
 
-    // Sélectionner montant 2.03€ (203)
-    await page.getByLabel('Montant (centimes):').selectOption('203');
-
     await page.getByRole('button', { name: /traiter paiement/i }).click();
     await expect(page.getByText(/État: failed/i)).toBeVisible();
-    await expect(page.getByText(/processing error/i)).toBeVisible();
+    await expect(page.getByText(/processing error/i).first()).toBeVisible();
   });
 });

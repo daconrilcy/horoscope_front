@@ -50,11 +50,8 @@ test.describe('Dev Terminal (insufficient funds)', () => {
     await page.getByRole('button', { name: /créer paymentintent/i }).click();
     await expect(page.getByText(/État: intent_created/i)).toBeVisible();
 
-    // Sélectionner montant 2.01€ (201)
-    await page.getByLabel('Montant (centimes):').selectOption('201');
-
     await page.getByRole('button', { name: /traiter paiement/i }).click();
     await expect(page.getByText(/État: failed/i)).toBeVisible();
-    await expect(page.getByText(/Insufficient funds/i)).toBeVisible();
+    await expect(page.getByText(/Insufficient funds/i).first()).toBeVisible();
   });
 });

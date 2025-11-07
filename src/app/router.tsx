@@ -25,6 +25,7 @@ import { PrivacyPolicyPage } from '@/pages/legal/privacy';
 import { BillingSuccessPage } from '@/pages/billing/success';
 import { BillingCancelPage } from '@/pages/billing/cancel';
 import { DevTerminalConsole } from '@/features/terminal/DevTerminalConsole';
+import { env } from '@/shared/config/env';
 import { NotFoundPage } from '@/pages/NotFound';
 
 // Pages privées - lazy loading pour code splitting
@@ -149,11 +150,12 @@ const router = createBrowserRouter([
           },
           {
             path: ROUTES.DEV.TERMINAL,
-            element: import.meta.env.DEV ? (
-              <DevTerminalConsole />
-            ) : (
-              <NotFoundPage />
-            ),
+            element:
+              import.meta.env.DEV || env.VITE_DEV_TERMINAL === true ? (
+                <DevTerminalConsole />
+              ) : (
+                <NotFoundPage />
+              ),
           },
         ],
       },

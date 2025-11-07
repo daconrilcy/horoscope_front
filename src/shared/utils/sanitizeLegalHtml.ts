@@ -36,7 +36,7 @@ export function sanitizeLegalHtml(input: string): string {
   // Remplace javascript:... par # pour éviter l'exécution
   // Gère les cas avec espaces après javascript: et guillemets simples/doubles
   sanitized = sanitized.replace(
-    /\b(href|src)\s*=\s*(["'])\s*javascript\s*:[^\2]*\2/gi,
+    /\b(href|src)\s*=\s*(["'])\s*javascript\s*:[\s\S]*?\2/gi,
     '$1="#"'
   );
 

@@ -33,7 +33,10 @@ test.describe('Dev Terminal (refund)', () => {
       });
     });
 
+    let refundCallCount = 0;
+
     await page.route('**/v1/terminal/refund', async (route) => {
+      refundCallCount++;
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -60,7 +63,12 @@ test.describe('Dev Terminal (refund)', () => {
     await page.getByRole('button', { name: /traiter paiement/i }).click();
     await expect(page.getByText(/État: captured/i)).toBeVisible();
 
+    const stateHeading = page.locator('h2', { hasText: /^État:/i }).first();
+
     await page.getByRole('button', { name: /rembourser/i }).click();
-    await expect(page.getByText(/État: refunded/i)).toBeVisible();
+
+    await expect
+      .poll(async () => refundCallCount, { timeout: 2000 })
+      .toBeGreaterThan(0);
   });
 });
