@@ -60,6 +60,15 @@ export const PortalSessionSchema = z.object({
 });
 
 /**
+ * Schéma pour la réponse de vérification de session checkout
+ */
+export const VerifyCheckoutSessionSchema = z.object({
+  status: z.enum(['paid', 'unpaid', 'expired']),
+  session_id: z.string(),
+  plan: z.enum(['plus', 'pro']).optional(),
+});
+
+/**
  * Types inférés depuis les schémas Zod
  */
 export type CheckoutSessionPayload = z.infer<
@@ -68,6 +77,9 @@ export type CheckoutSessionPayload = z.infer<
 export type CheckoutSessionResponse = z.infer<typeof CheckoutSessionSchema>;
 export type PortalSessionPayload = z.infer<typeof PortalSessionPayloadSchema>;
 export type PortalSessionResponse = z.infer<typeof PortalSessionSchema>;
+export type VerifyCheckoutSessionResponse = z.infer<
+  typeof VerifyCheckoutSessionSchema
+>;
 export type BillingAddress = z.infer<typeof BillingAddressSchema>;
 export type TaxId = z.infer<typeof TaxIdSchema>;
 
@@ -103,7 +115,8 @@ export const billingService = {
         ...(options?.trial_days !== undefined && {
           trial_days: options.trial_days,
         }),
-        ...(options?.coupon && { coupon: options.coupon.trim() }),
+        ...(options?.coupon != null &&
+          options.coupon.trim() !== '' && { coupon: options.coupon.trim() }),
         ...(options?.address && { address: options.address }),
         ...(options?.tax_ids &&
           options.tax_ids.length > 0 && { tax_ids: options.tax_ids }),
@@ -158,7 +171,7 @@ export const billingService = {
     try {
       // Construire le payload avec validation Zod
       const payload: Record<string, unknown> = {};
-      if (return_url) {
+      if (return_url != null && return_url.trim() !== '') {
         payload.return_url = return_url;
       }
 
@@ -177,6 +190,40 @@ export const billingService = {
       // Si c'est une ZodError, enrichir le message
       if (error instanceof z.ZodError) {
         throw new Error(`Invalid portal payload or response: ${error.message}`);
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * Vérifie le statut d'une session checkout Stripe
+   * @param session_id ID de la session Stripe (depuis query param)
+   * @returns Statut de la session (paid, unpaid, expired) et détails
+   * @throws ApiError si erreur API (401, 404, etc.)
+   * @throws NetworkError si erreur réseau
+   * @throws Error si réponse invalide (ZodError)
+   */
+  async verifyCheckoutSession(
+    session_id: string
+  ): Promise<VerifyCheckoutSessionResponse> {
+    if (session_id == null || session_id.trim() === '') {
+      throw new Error('session_id is required');
+    }
+
+    try {
+      const response = await http.get<unknown>(
+        `/v1/billing/checkout/session?session_id=${encodeURIComponent(session_id)}`
+      );
+
+      // Validation Zod stricte (fail-fast)
+      const validated = VerifyCheckoutSessionSchema.parse(response);
+      return validated;
+    } catch (error) {
+      // Si c'est une ZodError, enrichir le message
+      if (error instanceof z.ZodError) {
+        throw new Error(
+          `Invalid verify checkout session response: ${error.message}`
+        );
       }
       throw error;
     }

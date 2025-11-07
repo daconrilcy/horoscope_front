@@ -94,7 +94,9 @@ describe('HTTP Client', () => {
 
       await http.get('/test', { auth: false });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const fetchCall = mockFetch.mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers
@@ -114,7 +116,9 @@ describe('HTTP Client', () => {
 
       await http.post('/test', { data: 'test' }, { idempotency: true });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const fetchCall = mockFetch.mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers
@@ -139,7 +143,9 @@ describe('HTTP Client', () => {
 
       await http.put('/test', { data: 'test' }, { idempotency: true });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const fetchCall = mockFetch.mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers
@@ -158,7 +164,9 @@ describe('HTTP Client', () => {
 
       await http.del('/test', { idempotency: true });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const fetchCall = mockFetch.mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers
@@ -184,7 +192,9 @@ describe('HTTP Client', () => {
 
       await http.get('/test', { idempotency: true });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const fetchCall = mockFetch.mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers
@@ -208,7 +218,9 @@ describe('HTTP Client', () => {
 
       await http.post('/test', { data: 'test' }, { idempotency: false });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const fetchCall = mockFetch.mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers
@@ -216,6 +228,68 @@ describe('HTTP Client', () => {
           : new Headers(requestInit?.headers);
 
       expect(headers.get('Idempotency-Key')).toBeNull();
+    });
+
+    it('ne devrait pas écraser un header Idempotency-Key existant', async () => {
+      const mockResponse = new Response(JSON.stringify({ data: 'test' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      mockFetch.mockResolvedValue(mockResponse);
+
+      const customIdempotencyKey = 'custom-key-12345';
+      await http.post(
+        '/test',
+        { data: 'test' },
+        {
+          idempotency: true,
+          headers: {
+            'Idempotency-Key': customIdempotencyKey,
+          },
+        }
+      );
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const fetchCall = mockFetch.mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const requestInit = fetchCall[1] as RequestInit | undefined;
+      const headers =
+        requestInit?.headers instanceof Headers
+          ? requestInit.headers
+          : new Headers(requestInit?.headers);
+
+      // Le header personnalisé doit être préservé, pas écrasé
+      expect(headers.get('Idempotency-Key')).toBe(customIdempotencyKey);
+    });
+
+    it('devrait préserver Idempotency-Key existant même sur GET avec idempotency: true', async () => {
+      const mockResponse = new Response(JSON.stringify({ data: 'test' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      mockFetch.mockResolvedValue(mockResponse);
+
+      const customIdempotencyKey = 'custom-key-67890';
+      await http.get('/test', {
+        idempotency: true,
+        headers: {
+          'Idempotency-Key': customIdempotencyKey,
+        },
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const fetchCall = mockFetch.mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const requestInit = fetchCall[1] as RequestInit | undefined;
+      const headers =
+        requestInit?.headers instanceof Headers
+          ? requestInit.headers
+          : new Headers(requestInit?.headers);
+
+      // Le header personnalisé doit être préservé même sur GET
+      expect(headers.get('Idempotency-Key')).toBe(customIdempotencyKey);
     });
 
     it('ne devrait pas injecter Idempotency-Key quand idempotency non défini', async () => {
@@ -228,7 +302,9 @@ describe('HTTP Client', () => {
 
       await http.post('/test', { data: 'test' });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const fetchCall = mockFetch.mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const requestInit = fetchCall[1] as RequestInit | undefined;
       const headers =
         requestInit?.headers instanceof Headers

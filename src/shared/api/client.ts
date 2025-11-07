@@ -137,13 +137,17 @@ function buildHeaders(
   }
 
   // Idempotency-Key uniquement sur mutations (POST/PUT/PATCH/DELETE)
+  // Ne jamais écraser un header Idempotency-Key fourni par l'appelant
   if (options.idempotency === true) {
     // Warning en dev si utilisé sur GET
     if (method === 'GET' && import.meta.env.DEV) {
       console.warn('Idempotency-Key on GET: avoid unless you know why.');
     }
-    // Injecter uniquement sur mutations
-    if (shouldAddIdempotencyKey(method, options.idempotency)) {
+    // Injecter uniquement sur mutations et seulement si le header n'existe pas déjà
+    if (
+      shouldAddIdempotencyKey(method, options.idempotency) &&
+      !headers.has('Idempotency-Key')
+    ) {
       headers.set('Idempotency-Key', uuidv4());
     }
   }
