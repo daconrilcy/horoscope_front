@@ -173,7 +173,7 @@ export function BillingDebugPanel(): JSX.Element | null {
 
       {!originCheck.matches && (
         <div style={warningStyle}>
-          Attention : origin actuelle ({originCheck.current}) ≠ origin attendue
+          Attention : origin actuelle ({originCheck.current}) != origin attendue
           ({originCheck.expected})
         </div>
       )}

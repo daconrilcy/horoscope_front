@@ -126,3 +126,65 @@ Tous les endpoints doivent être protégés par authentification JWT et disponib
 - Route conditionnelle dans le router
 
 Les cartes de test Stripe ne fonctionnent qu'en mode test et ne génèrent pas de transactions réelles.
+
+## Scénarios E2E (montant → scénario → spec)
+
+| Montant (centimes) | EUR  | Scénario                                     | Spec associée                                      |
+| ------------------ | ---- | -------------------------------------------- | -------------------------------------------------- |
+| 100                | 1.00 | Succès standard (happy path)                 | e2e/08_terminal_dev.spec.ts                        |
+| 101                | 1.01 | Succès (PIN offline, bas montant)            | e2e/19_terminal_success_101.spec.ts                |
+| 102                | 1.02 | Succès (PIN online, bas montant)             | e2e/20_terminal_success_102.spec.ts                |
+| 103                | 1.03 | Succès avec signature                        | e2e/18_terminal_signature_103.spec.ts              |
+| 105                | 1.05 | Succès 3D Secure (simulé)                    | e2e/21_terminal_success_105_3ds.spec.ts            |
+| 200                | 2.00 | Carte refusée                                | e2e/09_terminal_declined.spec.ts                   |
+| 201                | 2.01 | Fonds insuffisants                           | e2e/12_terminal_insufficient.spec.ts               |
+| 202                | 2.02 | Carte expirée                                | e2e/13_terminal_expired.spec.ts                    |
+| 203                | 2.03 | Erreur de traitement                         | e2e/14_terminal_processing_error.spec.ts           |
+| 255                | 2.55 | PIN offline requis → processing → capture    | e2e/11_terminal_pin.spec.ts                        |
+| 265                | 2.65 | PIN online requis → processing → capture     | e2e/11_terminal_pin.spec.ts                        |
+| 275                | 2.75 | Montant de test de remboursement (indicatif) | e2e/10_terminal_refund.spec.ts (montant non forcé) |
+
+Autres scénarios E2E:
+
+- Annulation de PaymentIntent: e2e/16_terminal_cancel.spec.ts
+- Échec de capture (après processing): e2e/17_terminal_capture_failed.spec.ts
+- Carte déclinée avec montant PIN (2.55€ + carte 4000..0002): e2e/15_terminal_declined_pin.spec.ts
+
+## Commandes Playwright (exécution, traces, captures)
+
+Pré-requis:
+
+- Le serveur Vite est démarré automatiquement via `webServer` dans `playwright.config.ts`.
+- Vous pouvez surcharger la base URL en exportant `E2E_BASE_URL`.
+
+Commandes utiles:
+
+- Exécuter tous les tests E2E
+  - `npm run test:e2e`
+
+- Exécuter un fichier de test spécifique
+  - `npx playwright test e2e/08_terminal_dev.spec.ts`
+
+- Filtrer par nom de test (grep)
+  - `npx playwright test -g "Terminal .* refund"`
+
+- Forcer l’ouverture du navigateur (headed)
+  - `npx playwright test --headed`
+
+- Mode debug interactif
+  - `npx playwright test e2e/08_terminal_dev.spec.ts --debug`
+
+- UI Playwright (tableau de bord interactif)
+  - `npm run test:e2e:ui`
+
+- Rapport HTML (ouvrir le dernier rapport)
+  - `npx playwright show-report`
+
+- Traces (enregistrées sur échec: `retain-on-failure`)
+  - Activer les traces pour toutes les exécutions ponctuelles: `npx playwright test --trace on`
+  - Ouvrir une trace: `npx playwright show-trace path/vers/trace.zip`
+    - Les traces se trouvent généralement dans `test-results/`.
+
+- Captures (screenshots/vidéos)
+  - Configurées pour être conservées uniquement en cas d’échec (`only-on-failure` / `retain-on-failure`).
+  - Artefacts visibles dans `test-results/` et intégrés au rapport HTML.
