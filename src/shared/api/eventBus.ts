@@ -5,7 +5,20 @@
 
 type EventCallback = (payload?: unknown) => void;
 
-type EventType = 'auth:unauthorized' | 'paywall:plan' | 'paywall:rate';
+type EventType =
+  | 'auth:unauthorized'
+  | 'paywall:plan'
+  | 'paywall:rate'
+  | 'admin:clear-price-lookup-cache'
+  | 'api:request'
+  | 'billing:checkout'
+  | 'billing:portal'
+  | 'terminal:connect'
+  | 'terminal:payment_intent'
+  | 'terminal:process'
+  | 'terminal:capture'
+  | 'terminal:cancel'
+  | 'terminal:refund';
 
 class EventBus {
   private listeners: Map<EventType, Set<EventCallback>> = new Map();

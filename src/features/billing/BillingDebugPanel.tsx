@@ -1,5 +1,6 @@
 import { useBillingConfig } from './hooks/useBillingConfig';
 import { billingConfigService } from '@/shared/api/billingConfig.service';
+import { useClearPriceLookupCache } from './hooks/useClearPriceLookupCache';
 
 /**
  * Composant Panel de debug billing (dev-only)
@@ -7,18 +8,17 @@ import { billingConfigService } from '@/shared/api/billingConfig.service';
  */
 export function BillingDebugPanel(): JSX.Element | null {
   const { data: config, isLoading, error } = useBillingConfig();
+  const { mutate: clearCache, isPending: isClearingCache } =
+    useClearPriceLookupCache();
 
-  // Masquer complètement en production
   if (!import.meta.env.DEV) {
     return null;
   }
 
-  // Panel invisible si pas de config
   if (isLoading || error || !config) {
     return null;
   }
 
-  // Vérifier le mismatch d'URL
   const originCheck = billingConfigService.validateOrigin(config);
 
   const panelStyle: React.CSSProperties = {
@@ -76,9 +76,23 @@ export function BillingDebugPanel(): JSX.Element | null {
     fontSize: '0.8125rem',
   };
 
+  const buttonStyle: React.CSSProperties = {
+    marginTop: '0.75rem',
+    padding: '0.5rem 1rem',
+    backgroundColor: '#3b82f6',
+    border: 'none',
+    borderRadius: '0.25rem',
+    color: '#fff',
+    fontSize: '0.8125rem',
+    fontWeight: 600,
+    cursor: isClearingCache ? 'not-allowed' : 'pointer',
+    opacity: isClearingCache ? 0.6 : 1,
+    width: '100%',
+  };
+
   return (
     <div style={panelStyle}>
-      <div style={titleStyle}>🔧 Billing Debug Panel (DEV)</div>
+      <div style={titleStyle}>Billing Debug Panel (DEV)</div>
 
       <div style={rowStyle}>
         <span style={labelStyle}>Environment:</span>
@@ -100,12 +114,12 @@ export function BillingDebugPanel(): JSX.Element | null {
         <span style={{ color: '#60a5fa' }}>{config.checkoutCancelPath}</span>
       </div>
 
-      {config.portalReturnUrl && (
+      {config.portalReturnUrl ? (
         <div style={rowStyle}>
           <span style={labelStyle}>Portal Return URL:</span>
           <span style={{ color: '#60a5fa' }}>{config.portalReturnUrl}</span>
         </div>
-      )}
+      ) : null}
 
       <div style={{ ...rowStyle, marginTop: '0.75rem' }}>
         <span style={labelStyle}>Trials:</span>
@@ -128,18 +142,30 @@ export function BillingDebugPanel(): JSX.Element | null {
         </span>
       </div>
 
-      {config.priceLookupHash && (
+      {config.priceLookupHash ? (
         <div style={rowStyle}>
           <span style={labelStyle}>Price Lookup:</span>
           <span style={{ color: '#60a5fa', fontSize: '0.75rem' }}>
             {config.priceLookupHash.slice(0, 8)}...
           </span>
         </div>
-      )}
+      ) : null}
+
+      <button
+        type="button"
+        onClick={() => {
+          clearCache();
+        }}
+        disabled={isClearingCache}
+        style={buttonStyle}
+        title="Clear price_lookup cache on backend"
+      >
+        {isClearingCache ? 'Clearing...' : 'Clear Price Lookup Cache'}
+      </button>
 
       {!originCheck.matches && (
         <div style={warningStyle}>
-          ⚠️ Origin mismatch: current ({originCheck.current}) ≠ expected (
+          Origin mismatch: current ({originCheck.current}) vs expected (
           {originCheck.expected})
         </div>
       )}

@@ -17,6 +17,13 @@ export const ROUTES = {
     TOS: '/legal/tos',
     PRIVACY: '/legal/privacy',
   },
+  BILLING: {
+    SUCCESS: '/billing/success',
+    CANCEL: '/billing/cancel',
+  },
+  DEV: {
+    TERMINAL: '/dev/terminal',
+  },
 
   // Routes privées
   APP: {

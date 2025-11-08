@@ -22,6 +22,8 @@ import { ResetRequestPage } from '@/pages/reset/request';
 import { ResetConfirmPage } from '@/pages/reset/confirm';
 import { TermsOfServicePage } from '@/pages/legal/tos';
 import { PrivacyPolicyPage } from '@/pages/legal/privacy';
+import { BillingSuccessPage } from '@/pages/billing/success';
+import { BillingCancelPage } from '@/pages/billing/cancel';
 import { NotFoundPage } from '@/pages/NotFound';
 
 // Pages privées - lazy loading pour code splitting
@@ -43,6 +45,11 @@ const ChatPage = lazy(() =>
 const AccountPage = lazy(() =>
   import('@/pages/app/account').then((module) => ({
     default: module.AccountPage,
+  }))
+);
+const DevTerminalPage = lazy(() =>
+  import('@/pages/dev/terminal').then((module) => ({
+    default: module.DevTerminalPage,
   }))
 );
 
@@ -136,6 +143,14 @@ const router = createBrowserRouter([
             path: ROUTES.LEGAL.PRIVACY,
             element: <PrivacyPolicyPage />,
           },
+          {
+            path: ROUTES.BILLING.SUCCESS,
+            element: <BillingSuccessPage />,
+          },
+          {
+            path: ROUTES.BILLING.CANCEL,
+            element: <BillingCancelPage />,
+          },
         ],
       },
       {
@@ -174,6 +189,14 @@ const router = createBrowserRouter([
                 element: (
                   <Suspense fallback={<PageLoader />}>
                     <AccountPage />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'dev/terminal',
+                element: (
+                  <Suspense fallback={<PageLoader />}>
+                    <DevTerminalPage />
                   </Suspense>
                 ),
               },

@@ -118,14 +118,182 @@ Tous les composants sont accessibles avec :
 
 ## 📝 Variables d'environnement
 
+### Variables obligatoires
+
 ```env
+# URL de base de l'API backend (obligatoire)
 VITE_API_BASE_URL=http://localhost:8000
 ```
+
+### Variables optionnelles (Billing Config)
+
+Ces variables sont utilisées comme **fallback** si l'endpoint `/v1/config` n'est pas disponible. En production, il est recommandé de configurer le backend pour exposer `/v1/config` plutôt que d'utiliser ces variables.
+
+```env
+# URL publique de base (pour générer les URLs de retour Stripe)
+VITE_PUBLIC_BASE_URL=http://localhost:5173
+
+# Chemins de redirection après checkout Stripe
+VITE_CHECKOUT_SUCCESS_PATH=/billing/success
+VITE_CHECKOUT_CANCEL_PATH=/billing/cancel
+
+# URL de retour après session Portal Stripe
+VITE_PORTAL_RETURN_URL=http://localhost:5173/app/account
+
+# Feature flags billing (true/false)
+VITE_CHECKOUT_TRIALS_ENABLED=false
+VITE_CHECKOUT_COUPONS_ENABLED=false
+VITE_STRIPE_TAX_ENABLED=false
+```
+
+### Variables optionnelles (Dev Tools)
+
+```env
+# Activer le simulateur Stripe Terminal (dev uniquement)
+VITE_DEV_TERMINAL=true
+```
+
+### Notes importantes
+
+- **Priorité** : Si `/v1/config` est disponible, ses valeurs prennent priorité sur les variables d'environnement.
+- **Production** : Il est recommandé de configurer le backend pour exposer `/v1/config` avec toutes les valeurs nécessaires.
+- **Développement** : Les variables d'environnement sont pratiques pour le développement local sans backend.
+
+## 🚀 Quickstart Billing & Terminal
+
+### Configuration Billing
+
+Le système de billing utilise Stripe pour les sessions checkout et portal. La configuration est récupérée depuis l'endpoint `/v1/config` avec fallback sur les variables d'environnement.
+
+#### Étapes de configuration
+
+1. **Configurer le backend** (recommandé pour la production) :
+   - Exposer l'endpoint `GET /v1/config` avec la configuration billing
+   - Inclure les URLs et feature flags nécessaires
+
+2. **Ou utiliser les variables d'environnement** (pour le développement) :
+
+   ```env
+   VITE_PUBLIC_BASE_URL=http://localhost:5173
+   VITE_CHECKOUT_SUCCESS_PATH=/billing/success
+   VITE_CHECKOUT_CANCEL_PATH=/billing/cancel
+   VITE_PORTAL_RETURN_URL=http://localhost:5173/app/account
+   VITE_CHECKOUT_TRIALS_ENABLED=false
+   VITE_CHECKOUT_COUPONS_ENABLED=false
+   VITE_STRIPE_TAX_ENABLED=false
+   ```
+
+3. **Tester le checkout** :
+   - Utiliser le hook `useCheckout()` pour créer une session checkout
+   - L'utilisateur sera redirigé vers Stripe Checkout
+   - Après paiement, redirection vers `/billing/success`
+
+4. **Tester le portal** :
+   - Utiliser le hook `usePortal()` pour créer une session portal
+   - L'utilisateur sera redirigé vers Stripe Customer Portal
+   - Après gestion, redirection vers l'URL configurée
+
+### Stripe Terminal Simulator (Dev)
+
+Le simulateur Stripe Terminal est disponible uniquement en mode développement pour tester les flows Terminal.
+
+> 📚 **Guide de test complet** : Consultez [docs/STRIPE_TERMINAL_TESTING.md](docs/STRIPE_TERMINAL_TESTING.md) pour la documentation complète des cartes de test Stripe, des montants de test avec décimales spécifiques, et des scénarios de test recommandés.
+
+#### Accès au simulateur
+
+1. **Activer le mode dev** :
+
+   ```env
+   VITE_DEV_TERMINAL=true
+   ```
+
+2. **Accéder à la console** :
+   - Naviguer vers `/dev/terminal`
+   - Ou utiliser le raccourci dans le menu dev (si disponible)
+
+3. **Flow de test** :
+   - **Connect** : Se connecter au terminal
+   - **Create Payment Intent** : Créer un PI avec montant et devise
+   - **Process** : Traiter le paiement
+   - **Capture** : Capturer le paiement
+   - **Cancel** : Annuler un paiement (si nécessaire)
+   - **Refund** : Rembourser un paiement (après capture)
+
+#### Debug Tools (Dev)
+
+Plusieurs outils de debug sont disponibles en mode développement :
+
+- **Billing Debug Panel** : Affiche la configuration billing actuelle, les flags, et les warnings (visible en bas-droite)
+- **Debug Drawer** : Affiche les breadcrumbs de toutes les requêtes API avec `request_id` et latence (accessible via `Ctrl+Shift+D`)
+- **Admin Tools** : Bouton pour clear le cache `price_lookup` dans le Billing Debug Panel
+
+### Headers de corrélation
+
+Toutes les requêtes HTTP incluent automatiquement :
+
+- `X-Client-Version` : Version du client (hash de dev ou version définie)
+- `X-Request-Source` : Source de la requête (`frontend`)
+
+Ces headers permettent au backend de corréler les logs et de tracer les requêtes.
 
 ## 📚 Documentation
 
 - [RELEASE_0.5.md](./RELEASE_0.5.md) - Détails complets de la release 0.5
 - [RELEASE_0.0.md](./RELEASE_0.0.md) - Release initiale (bootstrap)
+
+## 🔧 Troubleshooting
+
+### Problèmes de configuration Billing
+
+**Problème** : Les URLs de redirection Stripe ne fonctionnent pas
+
+- **Solution** : Vérifier que `VITE_PUBLIC_BASE_URL` correspond à l'URL réelle de l'application
+- **Solution** : Vérifier que les chemins `/billing/success` et `/billing/cancel` sont bien configurés dans le backend Stripe
+- **Solution** : Vérifier que l'endpoint `/v1/config` retourne les bonnes valeurs
+
+**Problème** : Le Billing Debug Panel n'apparaît pas
+
+- **Solution** : Vérifier que vous êtes en mode développement (`npm run dev`)
+- **Solution** : Vérifier que le panel n'est pas masqué par d'autres éléments (z-index)
+
+**Problème** : Les événements billing/terminal ne s'affichent pas dans le Debug Drawer
+
+- **Solution** : Vérifier que le Debug Drawer est ouvert (`Ctrl+Shift+D`)
+- **Solution** : Vérifier que les requêtes sont bien effectuées (vérifier la console)
+- **Solution** : Vérifier que `import.meta.env.DEV` est `true`
+
+### Problèmes de Terminal Simulator
+
+**Problème** : La page `/dev/terminal` redirige vers le dashboard
+
+- **Solution** : Vérifier que `VITE_DEV_TERMINAL=true` dans `.env`
+- **Solution** : Vérifier que vous êtes en mode développement
+
+**Problème** : Les appels Terminal échouent
+
+- **Solution** : Vérifier que le backend expose les endpoints `/v1/terminal/*`
+- **Solution** : Vérifier que vous êtes authentifié (JWT valide)
+- **Solution** : Vérifier les logs du backend pour plus de détails
+
+### Problèmes généraux
+
+**Problème** : Erreur "Configuration d'environnement invalide"
+
+- **Solution** : Vérifier que `VITE_API_BASE_URL` est définie dans `.env`
+- **Solution** : Vérifier que l'URL est valide (commence par `http://` ou `https://`)
+- **Solution** : Redémarrer le serveur de développement après modification de `.env`
+
+**Problème** : Les requêtes API échouent avec 401
+
+- **Solution** : Vérifier que vous êtes connecté (JWT valide)
+- **Solution** : Vérifier que le token n'a pas expiré
+- **Solution** : Se reconnecter si nécessaire
+
+**Problème** : Les requêtes API échouent avec 402/429
+
+- **Solution** : Vérifier votre plan d'abonnement
+- **Solution** : Vérifier vos quotas (pour 429)
+- **Solution** : Utiliser le bouton "Upgrade" si nécessaire
 
 ## 🔄 Roadmap
 
