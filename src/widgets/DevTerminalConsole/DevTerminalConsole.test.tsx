@@ -1,9 +1,11 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+/* eslint-disable @typescript-eslint/unbound-method */
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DevTerminalConsole } from './DevTerminalConsole';
 import { terminalService } from '@/shared/api/terminal.service';
 import { eventBus } from '@/shared/api/eventBus';
+import { actUser } from '@/test/utils/actUser';
 
 // Mock terminalService
 vi.mock('@/shared/api/terminal.service', () => ({
@@ -24,6 +26,9 @@ vi.mock('@/shared/api/eventBus', () => ({
   },
 }));
 
+const mockedTerminalService = vi.mocked(terminalService);
+const mockedEventBus = vi.mocked(eventBus);
+
 describe('DevTerminalConsole', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -31,10 +36,12 @@ describe('DevTerminalConsole', () => {
 
   it('devrait afficher le titre en mode dev', () => {
     render(<DevTerminalConsole />);
-    expect(screen.getByText('🔧 Stripe Terminal Simulator (DEV)')).toBeInTheDocument();
+    expect(
+      screen.getByText('🔧 Stripe Terminal Simulator (DEV)')
+    ).toBeInTheDocument();
   });
 
-  it('devrait afficher l\'état idle initial', () => {
+  it("devrait afficher l'état idle initial", () => {
     render(<DevTerminalConsole />);
     expect(screen.getByText(/État:/)).toBeInTheDocument();
     expect(screen.getByText(/🟢 Idle/)).toBeInTheDocument();
@@ -45,23 +52,22 @@ describe('DevTerminalConsole', () => {
     expect(screen.getByText('Connect to Terminal')).toBeInTheDocument();
   });
 
-  it('devrait appeler connect et mettre à jour l\'état', async () => {
+  it("devrait appeler connect et mettre à jour l'état", async () => {
     const mockConnection = {
       connection_token: 'pst_test_1234567890',
       terminal_id: 'tmr_test_123',
     };
 
-    const mockConnect = vi.mocked(terminalService.connect);
-    mockConnect.mockResolvedValue(mockConnection);
+    mockedTerminalService.connect.mockResolvedValue(mockConnection);
 
     render(<DevTerminalConsole />);
 
     const connectButton = screen.getByText('Connect to Terminal');
-    connectButton.click();
+    await actUser(() => userEvent.click(connectButton));
 
     await waitFor(() => {
-      expect(mockConnect).toHaveBeenCalled();
-      expect(eventBus.emit).toHaveBeenCalledWith('terminal:connect', {});
+      expect(mockedTerminalService.connect).toHaveBeenCalled();
+      expect(mockedEventBus.emit).toHaveBeenCalledWith('terminal:connect', {});
     });
 
     await waitFor(() => {
@@ -83,17 +89,16 @@ describe('DevTerminalConsole', () => {
       status: 'requires_payment_method',
     };
 
-    const mockConnect = vi.mocked(terminalService.connect);
-    const mockCreatePaymentIntent = vi.mocked(terminalService.createPaymentIntent);
-
-    mockConnect.mockResolvedValue(mockConnection);
-    mockCreatePaymentIntent.mockResolvedValue(mockPaymentIntent);
+    mockedTerminalService.connect.mockResolvedValue(mockConnection);
+    mockedTerminalService.createPaymentIntent.mockResolvedValue(
+      mockPaymentIntent
+    );
 
     render(<DevTerminalConsole />);
 
     // Connecter
     const connectButton = screen.getByText('Connect to Terminal');
-    connectButton.click();
+    await actUser(() => userEvent.click(connectButton));
 
     await waitFor(() => {
       expect(screen.getByText(/🟢 Connected/)).toBeInTheDocument();
@@ -101,25 +106,32 @@ describe('DevTerminalConsole', () => {
 
     // Créer Payment Intent
     const createButton = screen.getByText('Create Payment Intent');
-    createButton.click();
+    await actUser(() => userEvent.click(createButton));
 
     await waitFor(() => {
-      expect(mockCreatePaymentIntent).toHaveBeenCalledWith(1000, 'eur');
-      expect(eventBus.emit).toHaveBeenCalledWith('terminal:payment_intent', {
-        amount: 1000,
-        currency: 'eur',
-      });
+      expect(mockedTerminalService.createPaymentIntent).toHaveBeenCalledWith(
+        1000,
+        'eur'
+      );
+      expect(mockedEventBus.emit).toHaveBeenCalledWith(
+        'terminal:payment_intent',
+        {
+          amount: 1000,
+          currency: 'eur',
+        }
+      );
     });
   });
 
   it('devrait afficher une erreur si la connexion échoue', async () => {
-    const mockConnect = vi.mocked(terminalService.connect);
-    mockConnect.mockRejectedValue(new Error('Connection failed'));
+    mockedTerminalService.connect.mockRejectedValue(
+      new Error('Connection failed')
+    );
 
     render(<DevTerminalConsole />);
 
     const connectButton = screen.getByText('Connect to Terminal');
-    connectButton.click();
+    await actUser(() => userEvent.click(connectButton));
 
     await waitFor(() => {
       expect(screen.getByText(/🔴 Error/)).toBeInTheDocument();
@@ -133,15 +145,14 @@ describe('DevTerminalConsole', () => {
       resolveConnect = resolve;
     });
 
-    const mockConnect = vi.mocked(terminalService.connect);
-    mockConnect.mockImplementation(() => connectPromise);
+    mockedTerminalService.connect.mockImplementation(() => connectPromise);
 
     render(<DevTerminalConsole />);
 
-    const connectButton = screen.getByText('Connect to Terminal') as HTMLButtonElement;
+    const connectButton = screen.getByText('Connect to Terminal');
     expect(connectButton).not.toBeDisabled();
 
-    connectButton.click();
+    await actUser(() => userEvent.click(connectButton));
 
     // Attendre que le bouton soit désactivé (état connecting)
     await waitFor(() => {
@@ -155,9 +166,12 @@ describe('DevTerminalConsole', () => {
     });
 
     // Attendre que l'état change vers 'connected' (le bouton reste désactivé car state.type !== 'idle')
-    await waitFor(() => {
-      expect(screen.getByText(/🟢 Connected/)).toBeInTheDocument();
-    }, { timeout: 2000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText(/🟢 Connected/)).toBeInTheDocument();
+      },
+      { timeout: 2000 }
+    );
 
     // Le bouton Connect reste désactivé car on est dans l'état 'connected', pas 'idle'
     // C'est le comportement attendu selon la logique du composant
@@ -188,41 +202,44 @@ describe('DevTerminalConsole', () => {
         status: 'succeeded',
       };
 
-      const mockConnect = vi.mocked(terminalService.connect);
-      const mockCreatePaymentIntent = vi.mocked(terminalService.createPaymentIntent);
-      const mockProcess = vi.mocked(terminalService.process);
-
-      mockConnect.mockResolvedValue(mockConnection);
-      mockCreatePaymentIntent.mockResolvedValue(mockPaymentIntent);
-      mockProcess.mockResolvedValue(mockProcessResponse);
+      mockedTerminalService.connect.mockResolvedValue(mockConnection);
+      mockedTerminalService.createPaymentIntent.mockResolvedValue(
+        mockPaymentIntent
+      );
+      mockedTerminalService.process.mockResolvedValue(mockProcessResponse);
 
       render(<DevTerminalConsole />);
 
       // Connecter
       const connectButton = screen.getByText('Connect to Terminal');
-      connectButton.click();
+      await actUser(() => userEvent.click(connectButton));
 
       await waitFor(() => {
         expect(screen.getByText(/🟢 Connected/)).toBeInTheDocument();
       });
 
       // Créer Payment Intent avec montant approuvé
-      const amountInput = screen.getByDisplayValue('1000') as HTMLInputElement;
-      await userEvent.clear(amountInput);
-      await userEvent.type(amountInput, '2500');
+      const amountInput = screen.getByDisplayValue('1000');
+      await actUser(() => userEvent.clear(amountInput));
+      await actUser(() => userEvent.type(amountInput, '2500'));
       const createButton = screen.getByText('Create Payment Intent');
-      await userEvent.click(createButton);
+      await actUser(() => userEvent.click(createButton));
 
       await waitFor(() => {
-        expect(mockCreatePaymentIntent).toHaveBeenCalledWith(2500, 'eur');
+        expect(mockedTerminalService.createPaymentIntent).toHaveBeenCalledWith(
+          2500,
+          'eur'
+        );
       });
 
       // Traiter le paiement
       const processButton = screen.getByText('Process Payment');
-      await userEvent.click(processButton);
+      await actUser(() => userEvent.click(processButton));
 
       await waitFor(() => {
-        expect(mockProcess).toHaveBeenCalledWith('pi_test_approved');
+        expect(mockedTerminalService.process).toHaveBeenCalledWith(
+          'pi_test_approved'
+        );
       });
 
       await waitFor(() => {
@@ -243,41 +260,46 @@ describe('DevTerminalConsole', () => {
         status: 'requires_payment_method',
       };
 
-      const mockConnect = vi.mocked(terminalService.connect);
-      const mockCreatePaymentIntent = vi.mocked(terminalService.createPaymentIntent);
-      const mockProcess = vi.mocked(terminalService.process);
-
-      mockConnect.mockResolvedValue(mockConnection);
-      mockCreatePaymentIntent.mockResolvedValue(mockPaymentIntent);
-      mockProcess.mockRejectedValue(new Error('Your card was declined.'));
+      mockedTerminalService.connect.mockResolvedValue(mockConnection);
+      mockedTerminalService.createPaymentIntent.mockResolvedValue(
+        mockPaymentIntent
+      );
+      mockedTerminalService.process.mockRejectedValue(
+        new Error('Your card was declined.')
+      );
 
       render(<DevTerminalConsole />);
 
       // Connecter
       const connectButton = screen.getByText('Connect to Terminal');
-      connectButton.click();
+      await actUser(() => userEvent.click(connectButton));
 
       await waitFor(() => {
         expect(screen.getByText(/🟢 Connected/)).toBeInTheDocument();
       });
 
       // Créer Payment Intent avec montant refusé
-      const amountInput = screen.getByDisplayValue('1000') as HTMLInputElement;
-      await userEvent.clear(amountInput);
-      await userEvent.type(amountInput, '1001');
+      const amountInput = screen.getByDisplayValue('1000');
+      await actUser(() => userEvent.clear(amountInput));
+      await actUser(() => userEvent.type(amountInput, '1001'));
       const createButton = screen.getByText('Create Payment Intent');
-      await userEvent.click(createButton);
+      await actUser(() => userEvent.click(createButton));
 
       await waitFor(() => {
-        expect(mockCreatePaymentIntent).toHaveBeenCalledWith(1001, 'eur');
+        expect(mockedTerminalService.createPaymentIntent).toHaveBeenCalledWith(
+          1001,
+          'eur'
+        );
       });
 
       // Traiter le paiement (devrait échouer)
       const processButton = screen.getByText('Process Payment');
-      await userEvent.click(processButton);
+      await actUser(() => userEvent.click(processButton));
 
       await waitFor(() => {
-        expect(mockProcess).toHaveBeenCalledWith('pi_test_declined');
+        expect(mockedTerminalService.process).toHaveBeenCalledWith(
+          'pi_test_declined'
+        );
       });
 
       await waitFor(() => {
@@ -317,23 +339,19 @@ describe('DevTerminalConsole', () => {
         status: 'succeeded',
       };
 
-      const mockConnect = vi.mocked(terminalService.connect);
-      const mockCreatePaymentIntent = vi.mocked(terminalService.createPaymentIntent);
-      const mockProcess = vi.mocked(terminalService.process);
-      const mockCapture = vi.mocked(terminalService.capture);
-      const mockRefund = vi.mocked(terminalService.refund);
-
-      mockConnect.mockResolvedValue(mockConnection);
-      mockCreatePaymentIntent.mockResolvedValue(mockPaymentIntent);
-      mockProcess.mockResolvedValue(mockProcessResponse);
-      mockCapture.mockResolvedValue(mockCaptureResponse);
-      mockRefund.mockResolvedValue(mockRefundResponse);
+      mockedTerminalService.connect.mockResolvedValue(mockConnection);
+      mockedTerminalService.createPaymentIntent.mockResolvedValue(
+        mockPaymentIntent
+      );
+      mockedTerminalService.process.mockResolvedValue(mockProcessResponse);
+      mockedTerminalService.capture.mockResolvedValue(mockCaptureResponse);
+      mockedTerminalService.refund.mockResolvedValue(mockRefundResponse);
 
       render(<DevTerminalConsole />);
 
       // Connecter
       const connectButton = screen.getByText('Connect to Terminal');
-      connectButton.click();
+      await actUser(() => userEvent.click(connectButton));
 
       await waitFor(() => {
         expect(screen.getByText(/🟢 Connected/)).toBeInTheDocument();
@@ -341,34 +359,34 @@ describe('DevTerminalConsole', () => {
 
       // Créer Payment Intent
       const createButton = screen.getByText('Create Payment Intent');
-      await userEvent.click(createButton);
+      await actUser(() => userEvent.click(createButton));
 
       await waitFor(() => {
-        expect(mockCreatePaymentIntent).toHaveBeenCalled();
+        expect(mockedTerminalService.createPaymentIntent).toHaveBeenCalled();
       });
 
       // Traiter
       const processButton = screen.getByText('Process Payment');
-      await userEvent.click(processButton);
+      await actUser(() => userEvent.click(processButton));
 
       await waitFor(() => {
-        expect(mockProcess).toHaveBeenCalled();
+        expect(mockedTerminalService.process).toHaveBeenCalled();
       });
 
       // Capturer
       const captureButton = screen.getByText('Capture');
-      await userEvent.click(captureButton);
+      await actUser(() => userEvent.click(captureButton));
 
       await waitFor(() => {
-        expect(mockCapture).toHaveBeenCalled();
+        expect(mockedTerminalService.capture).toHaveBeenCalled();
       });
 
       // Rembourser
       const refundButton = screen.getByText('Refund');
-      await userEvent.click(refundButton);
+      await actUser(() => userEvent.click(refundButton));
 
       await waitFor(() => {
-        expect(mockRefund).toHaveBeenCalled();
+        expect(mockedTerminalService.refund).toHaveBeenCalled();
       });
 
       await waitFor(() => {
@@ -377,4 +395,3 @@ describe('DevTerminalConsole', () => {
     });
   });
 });
-

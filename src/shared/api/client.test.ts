@@ -94,8 +94,9 @@ describe('HTTP Client', () => {
 
       await http.get('/test', { auth: false });
 
-      const fetchCall = mockFetch.mock.calls[0];
-      const requestInit = fetchCall[1] as RequestInit | undefined;
+      const [, requestInit] = mockFetch.mock.calls[0] as Parameters<
+        typeof fetch
+      >;
       const headers =
         requestInit?.headers instanceof Headers
           ? requestInit.headers
@@ -114,8 +115,9 @@ describe('HTTP Client', () => {
 
       await http.post('/test', { data: 'test' }, { idempotency: true });
 
-      const fetchCall = mockFetch.mock.calls[0];
-      const requestInit = fetchCall[1] as RequestInit | undefined;
+      const [, requestInit] = mockFetch.mock.calls[0] as Parameters<
+        typeof fetch
+      >;
       const headers =
         requestInit?.headers instanceof Headers
           ? requestInit.headers
@@ -139,8 +141,9 @@ describe('HTTP Client', () => {
 
       await http.put('/test', { data: 'test' }, { idempotency: true });
 
-      const fetchCall = mockFetch.mock.calls[0];
-      const requestInit = fetchCall[1] as RequestInit | undefined;
+      const [, requestInit] = mockFetch.mock.calls[0] as Parameters<
+        typeof fetch
+      >;
       const headers =
         requestInit?.headers instanceof Headers
           ? requestInit.headers
@@ -158,8 +161,9 @@ describe('HTTP Client', () => {
 
       await http.del('/test', { idempotency: true });
 
-      const fetchCall = mockFetch.mock.calls[0];
-      const requestInit = fetchCall[1] as RequestInit | undefined;
+      const [, requestInit] = mockFetch.mock.calls[0] as Parameters<
+        typeof fetch
+      >;
       const headers =
         requestInit?.headers instanceof Headers
           ? requestInit.headers
@@ -184,8 +188,9 @@ describe('HTTP Client', () => {
 
       await http.get('/test', { idempotency: true });
 
-      const fetchCall = mockFetch.mock.calls[0];
-      const requestInit = fetchCall[1] as RequestInit | undefined;
+      const [, requestInit] = mockFetch.mock.calls[0] as Parameters<
+        typeof fetch
+      >;
       const headers =
         requestInit?.headers instanceof Headers
           ? requestInit.headers
@@ -208,8 +213,9 @@ describe('HTTP Client', () => {
 
       await http.post('/test', { data: 'test' }, { idempotency: false });
 
-      const fetchCall = mockFetch.mock.calls[0];
-      const requestInit = fetchCall[1] as RequestInit | undefined;
+      const [, requestInit] = mockFetch.mock.calls[0] as Parameters<
+        typeof fetch
+      >;
       const headers =
         requestInit?.headers instanceof Headers
           ? requestInit.headers
@@ -228,8 +234,9 @@ describe('HTTP Client', () => {
 
       await http.post('/test', { data: 'test' });
 
-      const fetchCall = mockFetch.mock.calls[0];
-      const requestInit = fetchCall[1] as RequestInit | undefined;
+      const [, requestInit] = mockFetch.mock.calls[0] as Parameters<
+        typeof fetch
+      >;
       const headers =
         requestInit?.headers instanceof Headers
           ? requestInit.headers
@@ -277,9 +284,12 @@ describe('HTTP Client', () => {
         expect(http.get('/test3')).rejects.toThrow(ApiError),
       ]);
 
-      // Un seul événement devrait être émis (debounce 60s)
-      expect(emitSpy).toHaveBeenCalledTimes(1);
-      expect(emitSpy).toHaveBeenCalledWith('auth:unauthorized');
+      // Un seul événement auth:unauthorized doit être émis (debounce 60s)
+      const unauthorizedCalls = emitSpy.mock.calls.filter(
+        ([eventName]) => eventName === 'auth:unauthorized'
+      );
+      expect(unauthorizedCalls).toHaveLength(1);
+      expect(unauthorizedCalls[0]).toEqual(['auth:unauthorized']);
     });
 
     it('devrait mapper 402 → événement paywall:plan avec payload', async () => {

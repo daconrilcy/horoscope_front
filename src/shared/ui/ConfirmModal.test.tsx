@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ConfirmModal } from './ConfirmModal';
 import React from 'react';
+import { actUser } from '@/test/utils/actUser';
 
 describe('ConfirmModal', () => {
   const defaultProps = {
@@ -44,7 +45,7 @@ describe('ConfirmModal', () => {
     render(<ConfirmModal {...defaultProps} onClose={onClose} />);
 
     const overlay = screen.getByRole('presentation');
-    await userEvent.click(overlay);
+    await actUser(() => userEvent.click(overlay));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -53,7 +54,7 @@ describe('ConfirmModal', () => {
     const onClose = vi.fn();
     render(<ConfirmModal {...defaultProps} onClose={onClose} />);
 
-    await userEvent.keyboard('{Escape}');
+    await actUser(() => userEvent.keyboard('{Escape}'));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -67,7 +68,7 @@ describe('ConfirmModal', () => {
     expect(confirmButton).toBeDisabled();
 
     // Taper un texte incorrect
-    await userEvent.type(input, 'supprimer'); // minuscule
+    await actUser(() => userEvent.type(input, 'supprimer')); // minuscule
 
     await waitFor(() => {
       expect(confirmButton).toBeDisabled();
@@ -80,7 +81,7 @@ describe('ConfirmModal', () => {
     const input = screen.getByPlaceholderText('SUPPRIMER');
     const confirmButton = screen.getByRole('button', { name: 'Confirmer' });
 
-    await userEvent.type(input, 'SUPPRIMER');
+    await actUser(() => userEvent.type(input, 'SUPPRIMER'));
 
     await waitFor(() => {
       expect(confirmButton).not.toBeDisabled();
@@ -94,7 +95,7 @@ describe('ConfirmModal', () => {
     const input = screen.getByPlaceholderText('SUPPRIMER');
     const confirmButton = screen.getByRole('button', { name: 'Confirmer' });
 
-    await userEvent.type(input, 'supprimer'); // minuscule
+    await actUser(() => userEvent.type(input, 'supprimer')); // minuscule
 
     await waitFor(() => {
       expect(confirmButton).toBeDisabled();
@@ -111,10 +112,9 @@ describe('ConfirmModal', () => {
     expect(confirmButton).toBeDisabled();
 
     // Définir directement la valeur avec espaces (simuler un input avec espaces)
-    await act(async () => {
+    await actUser(() => {
       input.value = '  SUPPRIMER  ';
       input.dispatchEvent(new Event('input', { bubbles: true }));
-      await new Promise((resolve) => setTimeout(resolve, 0)); // Laisser React mettre à jour
     });
 
     // Vérifier que le bouton reste désactivé car trim() !== confirmText
@@ -140,8 +140,8 @@ describe('ConfirmModal', () => {
     const input = screen.getByPlaceholderText('SUPPRIMER');
     const confirmButton = screen.getByRole('button', { name: 'Confirmer' });
 
-    await userEvent.type(input, 'SUPPRIMER');
-    await userEvent.click(confirmButton);
+    await actUser(() => userEvent.type(input, 'SUPPRIMER'));
+    await actUser(() => userEvent.click(confirmButton));
 
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
@@ -151,7 +151,7 @@ describe('ConfirmModal', () => {
     render(<ConfirmModal {...defaultProps} onClose={onClose} />);
 
     const cancelButton = screen.getByRole('button', { name: 'Annuler' });
-    await userEvent.click(cancelButton);
+    await actUser(() => userEvent.click(cancelButton));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -204,7 +204,7 @@ describe('ConfirmModal', () => {
     });
 
     // Tab devrait aller au bouton Annuler (le bouton Confirmer est désactivé donc non focusable)
-    await userEvent.keyboard('{Tab}');
+    await actUser(() => userEvent.keyboard('{Tab}'));
     await waitFor(() => {
       expect(cancelButton).toHaveFocus();
     });
@@ -226,14 +226,14 @@ describe('ConfirmModal', () => {
     });
 
     // Aller au bouton Annuler d'abord
-    await userEvent.keyboard('{Tab}');
+    await actUser(() => userEvent.keyboard('{Tab}'));
     await waitFor(() => {
       expect(cancelButton).toHaveFocus();
     });
 
     // Shift+Tab depuis le bouton Annuler devrait revenir au premier élément (input)
     // car le confirmButton est désactivé et non focusable
-    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    await actUser(() => userEvent.keyboard('{Shift>}{Tab}{/Shift}'));
     await waitFor(() => {
       expect(input).toHaveFocus();
     });
@@ -251,11 +251,11 @@ describe('ConfirmModal', () => {
 
     const input = screen.getByPlaceholderText('SUPPRIMER');
 
-    await userEvent.type(input, 'SUPPRIMER');
+    await actUser(() => userEvent.type(input, 'SUPPRIMER'));
     expect(input.value).toBe('SUPPRIMER');
 
     const confirmButton = screen.getByRole('button', { name: 'Confirmer' });
-    await userEvent.click(confirmButton);
+    await actUser(() => userEvent.click(confirmButton));
 
     // L'input devrait être réinitialisé après confirmation
     await waitFor(() => {
