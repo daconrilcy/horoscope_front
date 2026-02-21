@@ -83,26 +83,26 @@ development_status:
   7-4-personnalisation-editoriale-du-contenu-b2b: done
   7-5-facturation-hybride-fixe-volume: done
   epic-7-retrospective: done
-  epic-8: in-progress
+  epic-8: done
   8-1-pipeline-ci-cd-avec-quality-gates-obligatoires: done
   8-2-observabilite-operationnelle-dashboards-alertes: done
   8-3-sauvegarde-restauration-et-runbooks-incidents: done
   8-4-tests-de-charge-et-de-concurrence-des-flux-critiques: done
-  epic-8-retrospective: optional
+  epic-8-retrospective: done
   epic-9: done
   9-1-durcissement-de-la-gestion-des-secrets-et-rotation: done
   9-2-pack-de-verification-securite-sast-deps-pentest: done
   9-3-preuves-operationnelles-rgpd-export-suppression-audit: done
-  epic-9-retrospective: optional
+  epic-9-retrospective: done
   epic-10: done
   10-1-couverture-tests-frontend-b2b-completee: done
   10-2-reconciliation-usage-facturation-b2b-pour-ops: done
   10-3-tuning-performance-guide-par-slo: done
-  epic-10-retrospective: optional
-  epic-11: in-progress
-  11-1-raffinement-multi-persona-astrologue: review
+  epic-10-retrospective: done
+  epic-11: done
+  11-1-raffinement-multi-persona-astrologue: done
   11-2-modules-tarot-runes-derriere-feature-flags: done
-  11-3-instrumentation-des-experiments-packaging-pricing: review
-  epic-11-retrospective: optional
+  11-3-instrumentation-des-experiments-packaging-pricing: done
+  epic-11-retrospective: done
 
 
