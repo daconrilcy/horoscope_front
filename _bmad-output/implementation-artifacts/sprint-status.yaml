@@ -89,10 +89,10 @@ development_status:
   8-3-sauvegarde-restauration-et-runbooks-incidents: done
   8-4-tests-de-charge-et-de-concurrence-des-flux-critiques: done
   epic-8-retrospective: optional
-  epic-9: in-progress
-  9-1-durcissement-de-la-gestion-des-secrets-et-rotation: review
-  9-2-pack-de-verification-securite-sast-deps-pentest: review
-  9-3-preuves-operationnelles-rgpd-export-suppression-audit: review
+  epic-9: done
+  9-1-durcissement-de-la-gestion-des-secrets-et-rotation: done
+  9-2-pack-de-verification-securite-sast-deps-pentest: done
+  9-3-preuves-operationnelles-rgpd-export-suppression-audit: done
   epic-9-retrospective: optional
   epic-10: in-progress
   10-1-couverture-tests-frontend-b2b-completee: review

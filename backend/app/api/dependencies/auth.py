@@ -82,3 +82,12 @@ def require_authenticated_user(
         )
 
     return AuthenticatedUser(id=user.id, role=user.role)
+
+
+def get_optional_authenticated_user(
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db_session),
+) -> AuthenticatedUser | None:
+    if authorization is None:
+        return None
+    return require_authenticated_user(authorization=authorization, db=db)

@@ -17,6 +17,22 @@ class Settings:
         fingerprint = sha256(f"{app_env}:{database_url}".encode("utf-8")).hexdigest()[:32]
         return f"dev-seed-{fingerprint}"
 
+    @staticmethod
+    def _allows_implicit_seed_admin_token(app_env: str) -> bool:
+        return app_env in {"development", "dev", "local", "test", "testing"}
+
+    @staticmethod
+    def _is_local_sqlite_database_url(database_url: str) -> bool:
+        normalized = database_url.strip().lower()
+        return normalized.startswith("sqlite:///./") or normalized.startswith("sqlite:///:memory:")
+
+    @staticmethod
+    def _parse_bool_env(env_name: str, default: bool = False) -> bool:
+        raw = os.getenv(env_name)
+        if raw is None:
+            return default
+        return raw.strip().lower() in {"1", "true", "yes", "on"}
+
     def __init__(self) -> None:
         self.app_env = os.getenv("APP_ENV", "development").strip().lower()
         self.database_url = os.getenv("DATABASE_URL", "sqlite:///./horoscope.db")
@@ -62,17 +78,30 @@ class Settings:
             raise RuntimeError("LLM_ANONYMIZATION_SALT must be set in production")
         if not self.llm_anonymization_salt:
             self.llm_anonymization_salt = secrets.token_hex(32)
+        self.enable_reference_seed_admin_fallback = self._parse_bool_env(
+            "ENABLE_REFERENCE_SEED_ADMIN_FALLBACK", default=False
+        )
         self.b2b_daily_usage_limit = int(os.getenv("B2B_DAILY_USAGE_LIMIT", "500"))
         self.b2b_monthly_usage_limit = int(os.getenv("B2B_MONTHLY_USAGE_LIMIT", "10000"))
         self.b2b_usage_limit_mode = os.getenv("B2B_USAGE_LIMIT_MODE", "block").strip().lower()
         if self.b2b_usage_limit_mode not in {"block", "overage"}:
             self.b2b_usage_limit_mode = "block"
         token = os.getenv("REFERENCE_SEED_ADMIN_TOKEN", "").strip()
-        if self.app_env == "production" and not token:
-            raise RuntimeError("REFERENCE_SEED_ADMIN_TOKEN must be set in production")
-        self.reference_seed_admin_token = token or self._derive_non_prod_seed_admin_token(
-            self.app_env, self.database_url
-        )
+        if token:
+            self.reference_seed_admin_token = token
+        elif self._allows_implicit_seed_admin_token(
+            self.app_env
+        ) and self._is_local_sqlite_database_url(self.database_url):
+            if self.enable_reference_seed_admin_fallback:
+                self.reference_seed_admin_token = self._derive_non_prod_seed_admin_token(
+                    self.app_env, self.database_url
+                )
+            else:
+                self.reference_seed_admin_token = secrets.token_hex(32)
+        else:
+            raise RuntimeError(
+                "REFERENCE_SEED_ADMIN_TOKEN must be set outside local/test environments"
+            )
 
     @property
     def jwt_verification_secret_keys(self) -> list[str]:

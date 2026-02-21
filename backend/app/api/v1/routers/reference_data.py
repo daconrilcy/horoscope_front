@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.api.dependencies.auth import AuthenticatedUser, get_optional_authenticated_user
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
@@ -81,8 +82,26 @@ def _record_reference_audit(
     )
 
 
-def _validate_seed_admin_token(x_admin_token: str | None) -> ReferenceDataServiceError | None:
-    if x_admin_token == settings.reference_seed_admin_token:
+def _can_use_seed_token_fallback() -> bool:
+    return (
+        settings.enable_reference_seed_admin_fallback
+        and settings.app_env in {"development", "dev", "local", "test", "testing"}
+    )
+
+
+def _validate_seed_access(
+    x_admin_token: str | None,
+    current_user: AuthenticatedUser | None,
+) -> ReferenceDataServiceError | None:
+    if current_user is not None and current_user.role == "ops":
+        return None
+    if current_user is not None and current_user.role != "ops":
+        return ReferenceDataServiceError(
+            code="insufficient_role",
+            message="role is not allowed",
+            details={"required_role": "ops", "actual_role": current_user.role},
+        )
+    if _can_use_seed_token_fallback() and x_admin_token == settings.reference_seed_admin_token:
         return None
     return ReferenceDataServiceError(
         code="unauthorized_seed_access",
@@ -97,6 +116,7 @@ def _validate_seed_admin_token(x_admin_token: str | None) -> ReferenceDataServic
     responses={
         200: {"model": dict[str, object]},
         401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
         503: {"model": ErrorEnvelope},
     },
 )
@@ -104,13 +124,18 @@ def seed_reference_data(
     request: Request,
     version: str | None = Query(default=None),
     x_admin_token: str | None = Header(default=None),
+    current_user: AuthenticatedUser | None = Depends(get_optional_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> dict[str, object] | JSONResponse:
     request_id = resolve_request_id(request)
-    auth_error = _validate_seed_admin_token(x_admin_token)
+    auth_error = _validate_seed_access(x_admin_token, current_user)
     if auth_error is not None:
         return _error_response(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=(
+                status.HTTP_403_FORBIDDEN
+                if auth_error.code == "insufficient_role"
+                else status.HTTP_401_UNAUTHORIZED
+            ),
             request_id=request_id,
             code=auth_error.code,
             message=auth_error.message,
@@ -211,6 +236,7 @@ def get_active_reference_data(
     responses={
         200: {"model": dict[str, object]},
         401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
         422: {"model": ErrorEnvelope},
         503: {"model": ErrorEnvelope},
     },
@@ -219,13 +245,18 @@ def clone_reference_version(
     request: Request,
     payload: CloneReferenceVersionPayload = Body(...),
     x_admin_token: str | None = Header(default=None),
+    current_user: AuthenticatedUser | None = Depends(get_optional_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> dict[str, object] | JSONResponse:
     request_id = resolve_request_id(request)
-    auth_error = _validate_seed_admin_token(x_admin_token)
+    auth_error = _validate_seed_access(x_admin_token, current_user)
     if auth_error is not None:
         return _error_response(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=(
+                status.HTTP_403_FORBIDDEN
+                if auth_error.code == "insufficient_role"
+                else status.HTTP_401_UNAUTHORIZED
+            ),
             request_id=request_id,
             code=auth_error.code,
             message=auth_error.message,

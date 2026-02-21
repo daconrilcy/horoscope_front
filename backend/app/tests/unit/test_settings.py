@@ -12,6 +12,17 @@ def test_settings_requires_seed_token_in_production(monkeypatch: pytest.MonkeyPa
         Settings()
 
 
+def test_settings_requires_seed_token_in_staging(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APP_ENV", "staging")
+    monkeypatch.delenv("REFERENCE_SEED_ADMIN_TOKEN", raising=False)
+    monkeypatch.delenv("API_CREDENTIALS_SECRET_KEY", raising=False)
+    monkeypatch.delenv("JWT_SECRET_KEY", raising=False)
+    monkeypatch.delenv("LLM_ANONYMIZATION_SALT", raising=False)
+
+    with pytest.raises(RuntimeError):
+        Settings()
+
+
 def test_settings_requires_api_credentials_secret_in_production(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -27,6 +38,7 @@ def test_settings_allows_default_seed_token_in_non_production(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("ENABLE_REFERENCE_SEED_ADMIN_FALLBACK", "1")
     monkeypatch.delenv("REFERENCE_SEED_ADMIN_TOKEN", raising=False)
     monkeypatch.delenv("API_CREDENTIALS_SECRET_KEY", raising=False)
     monkeypatch.delenv("JWT_SECRET_KEY", raising=False)
@@ -59,6 +71,7 @@ def test_non_production_seed_token_is_stable_without_env_token(
 ) -> None:
     monkeypatch.setenv("APP_ENV", "development")
     monkeypatch.setenv("DATABASE_URL", "sqlite:///./stable-dev.db")
+    monkeypatch.setenv("ENABLE_REFERENCE_SEED_ADMIN_FALLBACK", "1")
     monkeypatch.delenv("REFERENCE_SEED_ADMIN_TOKEN", raising=False)
 
     first = Settings().reference_seed_admin_token
@@ -66,3 +79,32 @@ def test_non_production_seed_token_is_stable_without_env_token(
 
     assert first == second
     assert first.startswith("dev-seed-")
+
+
+def test_settings_requires_seed_token_when_non_local_database_in_development(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://user:pass@db:5432/horoscope")
+    monkeypatch.delenv("REFERENCE_SEED_ADMIN_TOKEN", raising=False)
+    monkeypatch.delenv("API_CREDENTIALS_SECRET_KEY", raising=False)
+    monkeypatch.delenv("JWT_SECRET_KEY", raising=False)
+    monkeypatch.delenv("LLM_ANONYMIZATION_SALT", raising=False)
+
+    with pytest.raises(RuntimeError):
+        Settings()
+
+
+def test_settings_disables_seed_token_fallback_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///./horoscope.db")
+    monkeypatch.delenv("ENABLE_REFERENCE_SEED_ADMIN_FALLBACK", raising=False)
+    monkeypatch.delenv("REFERENCE_SEED_ADMIN_TOKEN", raising=False)
+    monkeypatch.delenv("API_CREDENTIALS_SECRET_KEY", raising=False)
+    monkeypatch.delenv("JWT_SECRET_KEY", raising=False)
+    monkeypatch.delenv("LLM_ANONYMIZATION_SALT", raising=False)
+
+    settings = Settings()
+    assert settings.enable_reference_seed_admin_fallback is False
+    assert settings.reference_seed_admin_token
+    assert not settings.reference_seed_admin_token.startswith("dev-seed-")

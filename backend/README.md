@@ -160,7 +160,7 @@ Pour les environnements conteneurises, l image installe le package local avec `p
 
 ## Secrets Rotation
 
-Secrets minimum requis en production:
+Secrets minimum requis hors environnements locaux/test (staging, production):
 - `JWT_SECRET_KEY`
 - `API_CREDENTIALS_SECRET_KEY`
 - `LLM_ANONYMIZATION_SALT`
@@ -169,3 +169,7 @@ Secrets minimum requis en production:
 Rotation grace period (without immediate service interruption):
 - `JWT_PREVIOUS_SECRET_KEYS` (comma-separated previous JWT secrets)
 - `API_CREDENTIALS_PREVIOUS_SECRET_KEYS` (comma-separated previous API credential HMAC secrets)
+
+Reference data seed/clone access:
+- Preferred: bearer token with role `ops`.
+- Local/test fallback only (explicit opt-in): `x-admin-token` (`REFERENCE_SEED_ADMIN_TOKEN`) with `ENABLE_REFERENCE_SEED_ADMIN_FALLBACK=1`.
