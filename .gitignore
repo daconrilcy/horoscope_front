@@ -1,0 +1,27 @@
+# Python caches and bytecode
+__pycache__/
+*.py[cod]
+
+# Python virtual envs
+.venv/
+venv/
+
+# Local databases and runtime artifacts
+horoscope.db
+backend/horoscope.db
+*.sqlite
+*.sqlite3
+
+# Node artifacts
+node_modules/
+frontend/node_modules/
+
+# Build outputs
+dist/
+build/
+frontend/dist/
+
+# Env files
+.env
+backend/.env
+frontend/.env
