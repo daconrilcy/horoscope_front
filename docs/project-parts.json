@@ -1,0 +1,33 @@
+{
+  "repository_type": "monorepo",
+  "parts": [
+    {
+      "part_id": "backend",
+      "project_type_id": "backend",
+      "root_path": "backend",
+      "primary_language": "Python",
+      "framework": "FastAPI"
+    },
+    {
+      "part_id": "frontend",
+      "project_type_id": "web",
+      "root_path": "frontend",
+      "primary_language": "TypeScript",
+      "framework": "React"
+    }
+  ],
+  "integration_points": [
+    {
+      "from": "frontend/src/api/*",
+      "to": "backend/app/api/v1/routers/*",
+      "protocol": "HTTP/JSON",
+      "auth": "Bearer JWT or X-API-Key depending on route"
+    },
+    {
+      "from": "scripts/*",
+      "to": "backend API and database artifacts",
+      "protocol": "PowerShell CLI",
+      "auth": "tokens/keys via env vars"
+    }
+  ]
+}
