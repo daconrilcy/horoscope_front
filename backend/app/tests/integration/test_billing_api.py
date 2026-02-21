@@ -11,6 +11,7 @@ from app.infra.db.models.billing import (
 )
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
+from app.infra.observability.metrics import get_metrics_snapshot, reset_metrics
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
@@ -20,6 +21,7 @@ client = TestClient(app)
 
 def _cleanup_tables() -> None:
     BillingService.reset_subscription_status_cache()
+    reset_metrics()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
@@ -100,6 +102,33 @@ def test_billing_checkout_success_and_subscription_visibility() -> None:
     assert status.json()["data"]["status"] == "active"
     assert status.json()["data"]["plan"]["code"] == "basic-entry"
 
+    counters = get_metrics_snapshot()["counters"]
+    assert any(
+        name.startswith("pricing_experiment_exposure_total|") and "|variant_id=" in name
+        for name in counters
+    )
+    assert any(
+        name.startswith("pricing_experiment_conversion_total|") and "|variant_id=" in name
+        for name in counters
+    )
+    assert any(
+        name.startswith("pricing_experiment_conversion_total|")
+        and "|conversion_type=checkout" in name
+        and "|status=success" in name
+        and "|plan_code=basic-entry" in name
+        for name in counters
+    )
+    assert any(
+        name.startswith("pricing_experiment_revenue_cents_total|") and "|variant_id=" in name
+        for name in counters
+    )
+    assert any(
+        name.startswith("pricing_experiment_retention_usage_total|")
+        and "|retention_event=subscription_status_view" in name
+        and "|plan_code=basic-entry" in name
+        for name in counters
+    )
+
 
 def test_billing_checkout_failure_then_retry_success() -> None:
     _cleanup_tables()
@@ -132,6 +161,15 @@ def test_billing_checkout_failure_then_retry_success() -> None:
     assert retry.status_code == 200
     assert retry.json()["data"]["subscription"]["status"] == "active"
     assert retry.json()["data"]["payment_status"] == "succeeded"
+
+    counters = get_metrics_snapshot()["counters"]
+    assert any(
+        name.startswith("pricing_experiment_conversion_total|")
+        and "|conversion_type=retry" in name
+        and "|status=success" in name
+        and "|plan_code=basic-entry" in name
+        for name in counters
+    )
 
 
 def test_billing_checkout_is_idempotent_for_same_key() -> None:
@@ -223,6 +261,31 @@ def test_billing_checkout_returns_503_when_audit_write_fails(monkeypatch: object
     assert status.json()["data"]["plan"] is None
 
 
+def test_billing_checkout_validation_error_returns_503_when_audit_write_fails(
+    monkeypatch: object,
+) -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    def _raise_audit_error(*args: object, **kwargs: object) -> None:
+        raise RuntimeError("audit unavailable")
+
+    monkeypatch.setattr("app.api.v1.routers.billing.AuditService.record_event", _raise_audit_error)
+
+    response = client.post(
+        "/v1/billing/checkout",
+        headers=headers,
+        json={
+            "plan_code": {"invalid": "shape"},
+            "payment_method_token": "pm_card_ok",
+            "idempotency_key": "billing-audit-fail-validation-1",
+        },
+    )
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "audit_unavailable"
+
+
 def test_billing_quota_status_returns_usage_snapshot() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
@@ -307,6 +370,15 @@ def test_billing_plan_change_updates_subscription_and_quota_limit() -> None:
     assert quota_after.status_code == 200
     assert quota_after.json()["data"]["limit"] == 1000
 
+    counters = get_metrics_snapshot()["counters"]
+    assert any(
+        name.startswith("pricing_experiment_conversion_total|")
+        and "|conversion_type=plan_change" in name
+        and "|status=success" in name
+        and "|plan_code=premium-unlimited" in name
+        for name in counters
+    )
+
 
 def test_billing_plan_change_rejects_invalid_target_plan() -> None:
     _cleanup_tables()
@@ -390,6 +462,64 @@ def test_billing_plan_change_is_idempotent_for_same_key() -> None:
     assert second.status_code == 200
     assert first.json()["data"]["plan_change_id"] == second.json()["data"]["plan_change_id"]
     assert second.json()["data"]["target_plan_code"] == "premium-unlimited"
+
+
+def test_billing_retry_error_returns_503_when_audit_write_fails(monkeypatch: object) -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    checkout = client.post(
+        "/v1/billing/checkout",
+        headers=headers,
+        json={
+            "plan_code": "basic-entry",
+            "payment_method_token": "pm_card_ok",
+            "idempotency_key": "api-checkout-retry-audit-setup-1",
+        },
+    )
+    assert checkout.status_code == 200
+
+    def _raise_audit_error(*args: object, **kwargs: object) -> None:
+        raise RuntimeError("audit unavailable")
+
+    monkeypatch.setattr("app.api.v1.routers.billing.AuditService.record_event", _raise_audit_error)
+
+    response = client.post(
+        "/v1/billing/retry",
+        headers=headers,
+        json={
+            "plan_code": "basic-entry",
+            "payment_method_token": "pm_card_ok",
+            "idempotency_key": "api-retry-audit-fail-1",
+        },
+    )
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "audit_unavailable"
+
+
+def test_billing_plan_change_validation_error_returns_503_when_audit_write_fails(
+    monkeypatch: object,
+) -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    def _raise_audit_error(*args: object, **kwargs: object) -> None:
+        raise RuntimeError("audit unavailable")
+
+    monkeypatch.setattr("app.api.v1.routers.billing.AuditService.record_event", _raise_audit_error)
+
+    response = client.post(
+        "/v1/billing/plan-change",
+        headers=headers,
+        json={
+            "target_plan_code": {"invalid": "shape"},
+            "idempotency_key": "api-plan-change-audit-fail-validation-1",
+        },
+    )
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "audit_unavailable"
 
 
 def test_billing_plan_change_returns_429_when_rate_limited(monkeypatch: object) -> None:

@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Awaitable, Callable
+from contextlib import asynccontextmanager
 from time import monotonic
 
 from fastapi import FastAPI, Request
@@ -33,8 +34,19 @@ from app.api.v1.routers.support import router as support_router
 from app.api.v1.routers.users import router as users_router
 from app.core.request_id import resolve_request_id
 from app.infra.observability.metrics import increment_counter, observe_duration
+from app.services.pricing_experiment_service import PricingExperimentService
 
-app = FastAPI(title="horoscope-backend", version="0.1.0")
+
+@asynccontextmanager
+async def _app_lifespan(_: FastAPI):
+    PricingExperimentService.record_variant_state_change(
+        enabled=PricingExperimentService.is_enabled(),
+        request_id=None,
+    )
+    yield
+
+
+app = FastAPI(title="horoscope-backend", version="0.1.0", lifespan=_app_lifespan)
 logger = logging.getLogger(__name__)
 
 

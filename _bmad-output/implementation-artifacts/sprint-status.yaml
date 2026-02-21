@@ -94,15 +94,15 @@ development_status:
   9-2-pack-de-verification-securite-sast-deps-pentest: done
   9-3-preuves-operationnelles-rgpd-export-suppression-audit: done
   epic-9-retrospective: optional
-  epic-10: in-progress
-  10-1-couverture-tests-frontend-b2b-completee: review
-  10-2-reconciliation-usage-facturation-b2b-pour-ops: review
-  10-3-tuning-performance-guide-par-slo: review
+  epic-10: done
+  10-1-couverture-tests-frontend-b2b-completee: done
+  10-2-reconciliation-usage-facturation-b2b-pour-ops: done
+  10-3-tuning-performance-guide-par-slo: done
   epic-10-retrospective: optional
   epic-11: in-progress
   11-1-raffinement-multi-persona-astrologue: review
   11-2-modules-tarot-runes-derriere-feature-flags: done
-  11-3-instrumentation-des-experiments-packaging-pricing: backlog
+  11-3-instrumentation-des-experiments-packaging-pricing: review
   epic-11-retrospective: optional
 
 

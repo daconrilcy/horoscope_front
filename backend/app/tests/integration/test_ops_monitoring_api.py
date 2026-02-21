@@ -268,3 +268,63 @@ def test_ops_monitoring_persona_kpis_reflect_live_chat_and_guidance_flows() -> N
     assert "out_of_scope_count" in persona
     assert "recovery_success_count" in persona
     assert "recovery_success_rate" in persona
+
+
+def test_ops_monitoring_pricing_experiment_kpis_returns_data_for_ops_role() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("monitoring-pricing@example.com", "ops")
+    user_token = _register_user_with_role_and_token("monitoring-pricing-user@example.com", "user")
+
+    checkout_response = client.post(
+        "/v1/billing/checkout",
+        headers={"Authorization": f"Bearer {user_token}"},
+        json={
+            "plan_code": "basic-entry",
+            "payment_method_token": "pm_card_ok",
+            "idempotency_key": "monitoring-pricing-checkout-1",
+        },
+    )
+    assert checkout_response.status_code == 200
+
+    subscription_response = client.get(
+        "/v1/billing/subscription",
+        headers={"Authorization": f"Bearer {user_token}"},
+    )
+    assert subscription_response.status_code == 200
+
+    response = client.get(
+        "/v1/ops/monitoring/pricing-experiments-kpis",
+        params={"window": "24h"},
+        headers={
+            "Authorization": f"Bearer {ops_token}",
+            "X-Request-Id": "rid-monitoring-pricing",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["meta"]["request_id"] == "rid-monitoring-pricing"
+    assert payload["data"]["window"] == "24h"
+    assert payload["data"]["aggregation_scope"] == "database_persistent"
+    assert len(payload["data"]["variants"]) == 1
+    variant = payload["data"]["variants"][0]
+    assert variant["variant_id"] in {"control", "value_plus"}
+    assert variant["exposures_total"] == 1
+    assert variant["conversions_total"] == 1
+    assert variant["revenue_cents_total"] == 500
+    assert variant["retention_events_total"] >= 1
+
+
+def test_ops_monitoring_pricing_experiment_kpis_invalid_window_returns_422() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token(
+        "monitoring-pricing-invalid@example.com",
+        "ops",
+    )
+
+    response = client.get(
+        "/v1/ops/monitoring/pricing-experiments-kpis",
+        params={"window": "3h"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "invalid_monitoring_window"

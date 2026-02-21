@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
+from app.core.config import settings
+from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.observability.metrics import (
     get_counter_sum_in_window,
     get_counter_sums_by_prefix_in_window,
@@ -78,6 +82,24 @@ class OpsMonitoringPersonaKpisData(BaseModel):
     personas: list[OpsMonitoringPersonaKpisItem]
 
 
+class OpsMonitoringPricingKpisVariantItem(BaseModel):
+    variant_id: str
+    exposures_total: int
+    conversions_total: int
+    conversion_rate: float
+    retention_events_total: int
+    revenue_cents_total: int
+    avg_revenue_per_conversion_cents: float
+    sample_size_is_low: bool
+
+
+class OpsMonitoringPricingKpisData(BaseModel):
+    window: str
+    aggregation_scope: str
+    min_sample_size: int
+    variants: list[OpsMonitoringPricingKpisVariantItem]
+
+
 def _percentile(values: list[float], q: float) -> float:
     if not values:
         return 0.0
@@ -96,6 +118,30 @@ def _percentile(values: list[float], q: float) -> float:
 
 
 class OpsMonitoringService:
+    @staticmethod
+    def _variant_from_metric_name(metric_name: str) -> str | None:
+        marker = "variant_id="
+        if marker not in metric_name:
+            return None
+        return metric_name.split(marker, 1)[1].split("|", 1)[0]
+
+    @staticmethod
+    def _aggregate_by_variant(
+        metric_values: dict[str, float],
+        *,
+        success_only: bool = False,
+    ) -> dict[str, int]:
+        totals: dict[str, int] = {}
+        for metric_name, value in metric_values.items():
+            variant = OpsMonitoringService._variant_from_metric_name(metric_name)
+            if variant is None:
+                continue
+            if success_only and "|status=success" not in metric_name:
+                continue
+            normalized_value = max(0, int(round(value)))
+            totals[variant] = totals.get(variant, 0) + normalized_value
+        return totals
+
     @staticmethod
     def get_conversation_kpis(*, window: str) -> OpsMonitoringKpisData:
         selected_window = window.strip().lower()
@@ -330,6 +376,160 @@ class OpsMonitoringService:
             window=selected_window,
             aggregation_scope="instance_local",
             personas=items,
+        )
+
+    @staticmethod
+    def get_pricing_experiment_kpis(
+        *,
+        window: str,
+        db: Session | None = None,
+    ) -> OpsMonitoringPricingKpisData:
+        selected_window = window.strip().lower()
+        if selected_window not in WINDOWS:
+            raise OpsMonitoringServiceError(
+                code="invalid_monitoring_window",
+                message="monitoring window is invalid",
+                details={"supported_windows": "1h,24h,7d"},
+            )
+
+        duration = WINDOWS[selected_window]
+        min_sample_size = max(1, settings.pricing_experiment_min_sample_size)
+
+        if db is not None:
+            since = datetime.now(timezone.utc) - duration
+            rows = db.scalars(
+                select(AuditEventModel).where(
+                    AuditEventModel.action == "pricing_experiment_event",
+                    AuditEventModel.status == "success",
+                    AuditEventModel.created_at >= since,
+                )
+            ).all()
+            variant_totals: dict[str, dict[str, int]] = {}
+            for row in rows:
+                details = row.details if isinstance(row.details, dict) else {}
+                variant = str(details.get("variant_id", "")).strip()
+                if not variant:
+                    continue
+                bucket = variant_totals.setdefault(
+                    variant,
+                    {
+                        "exposures_total": 0,
+                        "conversions_total": 0,
+                        "retention_events_total": 0,
+                        "revenue_cents_total": 0,
+                    },
+                )
+                event_name = str(details.get("event_name", "")).strip()
+                if event_name == "offer_exposure":
+                    bucket["exposures_total"] += 1
+                elif event_name == "offer_conversion":
+                    if str(details.get("conversion_status", "")).strip() == "success":
+                        bucket["conversions_total"] += 1
+                elif event_name == "offer_retention":
+                    bucket["retention_events_total"] += 1
+                elif event_name == "offer_revenue":
+                    revenue_cents = details.get("revenue_cents", 0)
+                    try:
+                        bucket["revenue_cents_total"] += max(0, int(revenue_cents))
+                    except (TypeError, ValueError):
+                        continue
+
+            if variant_totals:
+                variants = []
+                for variant in sorted(variant_totals):
+                    totals = variant_totals[variant]
+                    exposures_total = totals["exposures_total"]
+                    conversions_total = totals["conversions_total"]
+                    revenue_cents_total = totals["revenue_cents_total"]
+                    variants.append(
+                        OpsMonitoringPricingKpisVariantItem(
+                            variant_id=variant,
+                            exposures_total=exposures_total,
+                            conversions_total=conversions_total,
+                            conversion_rate=(
+                                conversions_total / exposures_total
+                                if exposures_total > 0
+                                else 0.0
+                            ),
+                            retention_events_total=totals["retention_events_total"],
+                            revenue_cents_total=revenue_cents_total,
+                            avg_revenue_per_conversion_cents=(
+                                revenue_cents_total / conversions_total
+                                if conversions_total > 0
+                                else 0.0
+                            ),
+                            sample_size_is_low=exposures_total < min_sample_size,
+                        )
+                    )
+
+                return OpsMonitoringPricingKpisData(
+                    window=selected_window,
+                    aggregation_scope="database_persistent",
+                    min_sample_size=min_sample_size,
+                    variants=variants,
+                )
+
+        exposures_map = get_counter_sums_by_prefix_in_window(
+            "pricing_experiment_exposure_total|",
+            duration,
+        )
+        conversions_map = get_counter_sums_by_prefix_in_window(
+            "pricing_experiment_conversion_total|",
+            duration,
+        )
+        retention_map = get_counter_sums_by_prefix_in_window(
+            "pricing_experiment_retention_usage_total|",
+            duration,
+        )
+        revenue_map = get_counter_sums_by_prefix_in_window(
+            "pricing_experiment_revenue_cents_total|",
+            duration,
+        )
+
+        exposures_by_variant = OpsMonitoringService._aggregate_by_variant(exposures_map)
+        conversions_by_variant = OpsMonitoringService._aggregate_by_variant(
+            conversions_map,
+            success_only=True,
+        )
+        retention_by_variant = OpsMonitoringService._aggregate_by_variant(retention_map)
+        revenue_by_variant = OpsMonitoringService._aggregate_by_variant(revenue_map)
+
+        variant_codes = (
+            set(exposures_by_variant)
+            | set(conversions_by_variant)
+            | set(retention_by_variant)
+            | set(revenue_by_variant)
+        )
+
+        variant_items: list[OpsMonitoringPricingKpisVariantItem] = []
+        for variant in sorted(variant_codes):
+            exposures_total = exposures_by_variant.get(variant, 0)
+            conversions_total = conversions_by_variant.get(variant, 0)
+            retention_events_total = retention_by_variant.get(variant, 0)
+            revenue_cents_total = revenue_by_variant.get(variant, 0)
+            conversion_rate = (conversions_total / exposures_total) if exposures_total > 0 else 0.0
+            avg_revenue_per_conversion = (
+                revenue_cents_total / conversions_total if conversions_total > 0 else 0.0
+            )
+            variant_items.append(
+                OpsMonitoringPricingKpisVariantItem(
+                    variant_id=variant,
+                    exposures_total=exposures_total,
+                    conversions_total=conversions_total,
+                    conversion_rate=conversion_rate,
+                    retention_events_total=retention_events_total,
+                    revenue_cents_total=revenue_cents_total,
+                    avg_revenue_per_conversion_cents=avg_revenue_per_conversion,
+                    sample_size_is_low=exposures_total < min_sample_size,
+                )
+            )
+
+        scope = "instance_local_fallback" if db is not None else "instance_local"
+        return OpsMonitoringPricingKpisData(
+            window=selected_window,
+            aggregation_scope=scope,
+            min_sample_size=min_sample_size,
+            variants=variant_items,
         )
 
     @staticmethod

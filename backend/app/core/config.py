@@ -33,6 +33,24 @@ class Settings:
             return default
         return raw.strip().lower() in {"1", "true", "yes", "on"}
 
+    @staticmethod
+    def _parse_int_env(
+        env_name: str,
+        *,
+        default: int,
+        minimum: int | None = None,
+    ) -> int:
+        raw = os.getenv(env_name)
+        if raw is None or not raw.strip():
+            return default
+        try:
+            parsed = int(raw.strip())
+        except ValueError:
+            return default
+        if minimum is not None and parsed < minimum:
+            return minimum
+        return parsed
+
     def __init__(self) -> None:
         self.app_env = os.getenv("APP_ENV", "development").strip().lower()
         self.database_url = os.getenv("DATABASE_URL", "sqlite:///./horoscope.db")
@@ -86,6 +104,15 @@ class Settings:
         self.b2b_usage_limit_mode = os.getenv("B2B_USAGE_LIMIT_MODE", "block").strip().lower()
         if self.b2b_usage_limit_mode not in {"block", "overage"}:
             self.b2b_usage_limit_mode = "block"
+        self.pricing_experiment_enabled = self._parse_bool_env(
+            "PRICING_EXPERIMENT_ENABLED",
+            default=True,
+        )
+        self.pricing_experiment_min_sample_size = self._parse_int_env(
+            "PRICING_EXPERIMENT_MIN_SAMPLE_SIZE",
+            default=50,
+            minimum=1,
+        )
         token = os.getenv("REFERENCE_SEED_ADMIN_TOKEN", "").strip()
         if token:
             self.reference_seed_admin_token = token

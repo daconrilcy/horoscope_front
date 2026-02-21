@@ -108,3 +108,51 @@ def test_settings_disables_seed_token_fallback_by_default(monkeypatch: pytest.Mo
     assert settings.enable_reference_seed_admin_fallback is False
     assert settings.reference_seed_admin_token
     assert not settings.reference_seed_admin_token.startswith("dev-seed-")
+
+
+def test_settings_pricing_experiment_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///./horoscope.db")
+    monkeypatch.setenv("REFERENCE_SEED_ADMIN_TOKEN", "seed-token")
+    monkeypatch.setenv("API_CREDENTIALS_SECRET_KEY", "api-current")
+    monkeypatch.setenv("JWT_SECRET_KEY", "jwt-current")
+    monkeypatch.setenv("LLM_ANONYMIZATION_SALT", "llm-salt")
+    monkeypatch.delenv("PRICING_EXPERIMENT_ENABLED", raising=False)
+    monkeypatch.delenv("PRICING_EXPERIMENT_MIN_SAMPLE_SIZE", raising=False)
+
+    settings = Settings()
+
+    assert settings.pricing_experiment_enabled is True
+    assert settings.pricing_experiment_min_sample_size == 50
+
+
+def test_settings_pricing_experiment_env_overrides(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///./horoscope.db")
+    monkeypatch.setenv("REFERENCE_SEED_ADMIN_TOKEN", "seed-token")
+    monkeypatch.setenv("API_CREDENTIALS_SECRET_KEY", "api-current")
+    monkeypatch.setenv("JWT_SECRET_KEY", "jwt-current")
+    monkeypatch.setenv("LLM_ANONYMIZATION_SALT", "llm-salt")
+    monkeypatch.setenv("PRICING_EXPERIMENT_ENABLED", "false")
+    monkeypatch.setenv("PRICING_EXPERIMENT_MIN_SAMPLE_SIZE", "120")
+
+    settings = Settings()
+
+    assert settings.pricing_experiment_enabled is False
+    assert settings.pricing_experiment_min_sample_size == 120
+
+
+def test_settings_pricing_experiment_min_sample_size_is_hardened(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///./horoscope.db")
+    monkeypatch.setenv("REFERENCE_SEED_ADMIN_TOKEN", "seed-token")
+    monkeypatch.setenv("API_CREDENTIALS_SECRET_KEY", "api-current")
+    monkeypatch.setenv("JWT_SECRET_KEY", "jwt-current")
+    monkeypatch.setenv("LLM_ANONYMIZATION_SALT", "llm-salt")
+    monkeypatch.setenv("PRICING_EXPERIMENT_MIN_SAMPLE_SIZE", "not-an-int")
+    assert Settings().pricing_experiment_min_sample_size == 50
+
+    monkeypatch.setenv("PRICING_EXPERIMENT_MIN_SAMPLE_SIZE", "0")
+    assert Settings().pricing_experiment_min_sample_size == 1

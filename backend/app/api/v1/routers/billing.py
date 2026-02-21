@@ -23,6 +23,10 @@ from app.services.billing_service import (
     PlanChangePayload,
     SubscriptionStatusData,
 )
+from app.services.pricing_experiment_service import (
+    PricingExperimentService,
+    PricingExperimentServiceError,
+)
 from app.services.quota_service import QuotaService, QuotaServiceError, QuotaStatusData
 
 
@@ -78,6 +82,80 @@ logger = logging.getLogger(__name__)
 
 class AuditWriteError(Exception):
     pass
+
+
+def _record_pricing_event_safely(
+    *,
+    db: Session,
+    request_id: str,
+    action: str,
+    details: dict[str, object],
+) -> None:
+    try:
+        event = None
+        if action == "offer_exposure":
+            event = PricingExperimentService.record_offer_exposure(
+                user_id=int(details["user_id"]),
+                user_role=str(details["user_role"]),
+                plan_code=str(details["plan_code"]),
+                request_id=request_id,
+            )
+        elif action == "offer_conversion":
+            event = PricingExperimentService.record_offer_conversion(
+                user_id=int(details["user_id"]),
+                user_role=str(details["user_role"]),
+                plan_code=str(details["plan_code"]),
+                conversion_type=str(details["conversion_type"]),
+                conversion_status=str(details["conversion_status"]),
+                request_id=request_id,
+            )
+        elif action == "offer_revenue":
+            event = PricingExperimentService.record_offer_revenue(
+                user_id=int(details["user_id"]),
+                user_role=str(details["user_role"]),
+                plan_code=str(details["plan_code"]),
+                revenue_cents=int(details["revenue_cents"]),
+                request_id=request_id,
+            )
+        elif action == "offer_retention":
+            event = PricingExperimentService.record_retention_usage(
+                user_id=int(details["user_id"]),
+                user_role=str(details["user_role"]),
+                plan_code=str(details["plan_code"]),
+                retention_event=str(details["retention_event"]),
+                request_id=request_id,
+            )
+
+        if event is None:
+            return
+
+        AuditService.record_event(
+            db,
+            payload=AuditEventCreatePayload(
+                request_id=request_id,
+                actor_user_id=int(details["user_id"]),
+                actor_role=str(details["user_role"]),
+                action="pricing_experiment_event",
+                target_type="pricing_experiment",
+                target_id=event.variant_id,
+                status="success",
+                details=event.model_dump(mode="json"),
+            ),
+        )
+    except PricingExperimentServiceError as error:
+        logger.warning(
+            "pricing_experiment_event_rejected action=%s request_id=%s code=%s details=%s",
+            action,
+            request_id,
+            error.code,
+            error.details,
+        )
+    except Exception:
+        logger.exception(
+            "pricing_experiment_event_failed action=%s request_id=%s",
+            action,
+            request_id,
+        )
 
 
 def _error_response(
@@ -144,6 +222,16 @@ def _record_audit_event(
         raise AuditWriteError("audit event write failed") from error
 
 
+def _audit_unavailable_response(*, request_id: str) -> JSONResponse:
+    return _error_response(
+        status_code=503,
+        request_id=request_id,
+        code="audit_unavailable",
+        message="audit persistence is unavailable",
+        details={},
+    )
+
+
 def _enforce_billing_limits(
     *,
     user_id: int,
@@ -194,6 +282,19 @@ def get_subscription_status(
     if rate_error is not None:
         return rate_error
     subscription = BillingService.get_subscription_status(db, user_id=current_user.id)
+    if subscription.plan is not None:
+        _record_pricing_event_safely(
+            db=db,
+            request_id=request_id,
+            action="offer_retention",
+            details={
+                "user_id": current_user.id,
+                "user_role": current_user.role,
+                "plan_code": subscription.plan.code,
+                "retention_event": "subscription_status_view",
+            },
+        )
+        db.commit()
     return {"data": subscription.model_dump(mode="json"), "meta": {"request_id": request_id}}
 
 
@@ -231,6 +332,18 @@ def get_quota_status(
             user_id=current_user.id,
             subscription=subscription,
         )
+        _record_pricing_event_safely(
+            db=db,
+            request_id=request_id,
+            action="offer_retention",
+            details={
+                "user_id": current_user.id,
+                "user_role": current_user.role,
+                "plan_code": plan_code,
+                "retention_event": "quota_status_view",
+            },
+        )
+        db.commit()
         return {"data": quota.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except QuotaServiceError as error:
         status_code = 403 if error.code == "no_active_subscription" else 422
@@ -273,6 +386,16 @@ def create_checkout(
         )
         if rate_error is not None:
             return rate_error
+        _record_pricing_event_safely(
+            db=db,
+            request_id=request_id,
+            action="offer_exposure",
+            details={
+                "user_id": current_user.id,
+                "user_role": current_user.role,
+                "plan_code": parsed.plan_code,
+            },
+        )
         request_payload = CheckoutPayload(
             plan_code=parsed.plan_code,
             payment_method_token=parsed.payment_method_token,
@@ -284,6 +407,31 @@ def create_checkout(
             payload=request_payload,
             request_id=request_id,
         )
+        conversion_status = "success" if result.payment_status == "succeeded" else "failed"
+        _record_pricing_event_safely(
+            db=db,
+            request_id=request_id,
+            action="offer_conversion",
+            details={
+                "user_id": current_user.id,
+                "user_role": current_user.role,
+                "plan_code": parsed.plan_code,
+                "conversion_type": "checkout",
+                "conversion_status": conversion_status,
+            },
+        )
+        if conversion_status == "success" and result.subscription.plan is not None:
+            _record_pricing_event_safely(
+                db=db,
+                request_id=request_id,
+                action="offer_revenue",
+                details={
+                    "user_id": current_user.id,
+                    "user_role": current_user.role,
+                    "plan_code": result.subscription.plan.code,
+                    "revenue_cents": result.subscription.plan.monthly_price_cents,
+                },
+            )
         _record_audit_event(
             db,
             request_id=request_id,
@@ -299,17 +447,21 @@ def create_checkout(
         return {"data": result.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ValidationError as error:
         db.rollback()
-        _record_audit_event(
-            db,
-            request_id=request_id,
-            actor_user_id=current_user.id,
-            actor_role=current_user.role,
-            action="billing_checkout",
-            target_type="user",
-            target_id=str(current_user.id),
-            status="failed",
-            details={"error_code": "invalid_checkout_request"},
-        )
+        try:
+            _record_audit_event(
+                db,
+                request_id=request_id,
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="billing_checkout",
+                target_type="user",
+                target_id=str(current_user.id),
+                status="failed",
+                details={"error_code": "invalid_checkout_request"},
+            )
+        except AuditWriteError:
+            db.rollback()
+            return _audit_unavailable_response(request_id=request_id)
         db.commit()
         return _error_response(
             status_code=422,
@@ -320,17 +472,33 @@ def create_checkout(
         )
     except BillingServiceError as error:
         db.rollback()
-        _record_audit_event(
-            db,
+        _record_pricing_event_safely(
+            db=db,
             request_id=request_id,
-            actor_user_id=current_user.id,
-            actor_role=current_user.role,
-            action="billing_checkout",
-            target_type="user",
-            target_id=str(current_user.id),
-            status="failed",
-            details={"error_code": error.code},
+            action="offer_conversion",
+            details={
+                "user_id": current_user.id,
+                "user_role": current_user.role,
+                "plan_code": parsed.plan_code if "parsed" in locals() else "unknown",
+                "conversion_type": "checkout",
+                "conversion_status": "failed",
+            },
         )
+        try:
+            _record_audit_event(
+                db,
+                request_id=request_id,
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="billing_checkout",
+                target_type="user",
+                target_id=str(current_user.id),
+                status="failed",
+                details={"error_code": error.code},
+            )
+        except AuditWriteError:
+            db.rollback()
+            return _audit_unavailable_response(request_id=request_id)
         db.commit()
         status_code = 409 if error.code == "subscription_already_active" else 422
         return _error_response(
@@ -342,13 +510,7 @@ def create_checkout(
         )
     except AuditWriteError:
         db.rollback()
-        return _error_response(
-            status_code=503,
-            request_id=request_id,
-            code="audit_unavailable",
-            message="audit persistence is unavailable",
-            details={},
-        )
+        return _audit_unavailable_response(request_id=request_id)
 
 
 @router.post(
@@ -381,6 +543,16 @@ def retry_checkout(
         )
         if rate_error is not None:
             return rate_error
+        _record_pricing_event_safely(
+            db=db,
+            request_id=request_id,
+            action="offer_exposure",
+            details={
+                "user_id": current_user.id,
+                "user_role": current_user.role,
+                "plan_code": parsed.plan_code,
+            },
+        )
         request_payload = CheckoutPayload(
             plan_code=parsed.plan_code,
             payment_method_token=parsed.payment_method_token,
@@ -392,6 +564,31 @@ def retry_checkout(
             payload=request_payload,
             request_id=request_id,
         )
+        conversion_status = "success" if result.payment_status == "succeeded" else "failed"
+        _record_pricing_event_safely(
+            db=db,
+            request_id=request_id,
+            action="offer_conversion",
+            details={
+                "user_id": current_user.id,
+                "user_role": current_user.role,
+                "plan_code": parsed.plan_code,
+                "conversion_type": "retry",
+                "conversion_status": conversion_status,
+            },
+        )
+        if conversion_status == "success" and result.subscription.plan is not None:
+            _record_pricing_event_safely(
+                db=db,
+                request_id=request_id,
+                action="offer_revenue",
+                details={
+                    "user_id": current_user.id,
+                    "user_role": current_user.role,
+                    "plan_code": result.subscription.plan.code,
+                    "revenue_cents": result.subscription.plan.monthly_price_cents,
+                },
+            )
         _record_audit_event(
             db,
             request_id=request_id,
@@ -407,17 +604,21 @@ def retry_checkout(
         return {"data": result.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ValidationError as error:
         db.rollback()
-        _record_audit_event(
-            db,
-            request_id=request_id,
-            actor_user_id=current_user.id,
-            actor_role=current_user.role,
-            action="billing_retry_checkout",
-            target_type="user",
-            target_id=str(current_user.id),
-            status="failed",
-            details={"error_code": "invalid_checkout_request"},
-        )
+        try:
+            _record_audit_event(
+                db,
+                request_id=request_id,
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="billing_retry_checkout",
+                target_type="user",
+                target_id=str(current_user.id),
+                status="failed",
+                details={"error_code": "invalid_checkout_request"},
+            )
+        except AuditWriteError:
+            db.rollback()
+            return _audit_unavailable_response(request_id=request_id)
         db.commit()
         return _error_response(
             status_code=422,
@@ -428,17 +629,33 @@ def retry_checkout(
         )
     except BillingServiceError as error:
         db.rollback()
-        _record_audit_event(
-            db,
+        _record_pricing_event_safely(
+            db=db,
             request_id=request_id,
-            actor_user_id=current_user.id,
-            actor_role=current_user.role,
-            action="billing_retry_checkout",
-            target_type="user",
-            target_id=str(current_user.id),
-            status="failed",
-            details={"error_code": error.code},
+            action="offer_conversion",
+            details={
+                "user_id": current_user.id,
+                "user_role": current_user.role,
+                "plan_code": parsed.plan_code if "parsed" in locals() else "unknown",
+                "conversion_type": "retry",
+                "conversion_status": "failed",
+            },
         )
+        try:
+            _record_audit_event(
+                db,
+                request_id=request_id,
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="billing_retry_checkout",
+                target_type="user",
+                target_id=str(current_user.id),
+                status="failed",
+                details={"error_code": error.code},
+            )
+        except AuditWriteError:
+            db.rollback()
+            return _audit_unavailable_response(request_id=request_id)
         db.commit()
         status_code = 409 if error.code == "subscription_already_active" else 422
         return _error_response(
@@ -450,13 +667,7 @@ def retry_checkout(
         )
     except AuditWriteError:
         db.rollback()
-        return _error_response(
-            status_code=503,
-            request_id=request_id,
-            code="audit_unavailable",
-            message="audit persistence is unavailable",
-            details={},
-        )
+        return _audit_unavailable_response(request_id=request_id)
 
 
 @router.post(
@@ -491,6 +702,16 @@ def change_plan(
         )
         if rate_error is not None:
             return rate_error
+        _record_pricing_event_safely(
+            db=db,
+            request_id=request_id,
+            action="offer_exposure",
+            details={
+                "user_id": current_user.id,
+                "user_role": current_user.role,
+                "plan_code": parsed.target_plan_code,
+            },
+        )
         request_payload = PlanChangePayload(
             target_plan_code=parsed.target_plan_code,
             idempotency_key=parsed.idempotency_key or uuid4().hex,
@@ -501,6 +722,31 @@ def change_plan(
             payload=request_payload,
             request_id=request_id,
         )
+        conversion_status = "success" if result.plan_change_status == "succeeded" else "failed"
+        _record_pricing_event_safely(
+            db=db,
+            request_id=request_id,
+            action="offer_conversion",
+            details={
+                "user_id": current_user.id,
+                "user_role": current_user.role,
+                "plan_code": result.target_plan_code,
+                "conversion_type": "plan_change",
+                "conversion_status": conversion_status,
+            },
+        )
+        if conversion_status == "success" and result.subscription.plan is not None:
+            _record_pricing_event_safely(
+                db=db,
+                request_id=request_id,
+                action="offer_revenue",
+                details={
+                    "user_id": current_user.id,
+                    "user_role": current_user.role,
+                    "plan_code": result.subscription.plan.code,
+                    "revenue_cents": result.subscription.plan.monthly_price_cents,
+                },
+            )
         _record_audit_event(
             db,
             request_id=request_id,
@@ -516,17 +762,21 @@ def change_plan(
         return {"data": result.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ValidationError as error:
         db.rollback()
-        _record_audit_event(
-            db,
-            request_id=request_id,
-            actor_user_id=current_user.id,
-            actor_role=current_user.role,
-            action="billing_plan_change",
-            target_type="user",
-            target_id=str(current_user.id),
-            status="failed",
-            details={"error_code": "invalid_plan_change_request"},
-        )
+        try:
+            _record_audit_event(
+                db,
+                request_id=request_id,
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="billing_plan_change",
+                target_type="user",
+                target_id=str(current_user.id),
+                status="failed",
+                details={"error_code": "invalid_plan_change_request"},
+            )
+        except AuditWriteError:
+            db.rollback()
+            return _audit_unavailable_response(request_id=request_id)
         db.commit()
         return _error_response(
             status_code=422,
@@ -537,17 +787,33 @@ def change_plan(
         )
     except BillingServiceError as error:
         db.rollback()
-        _record_audit_event(
-            db,
+        _record_pricing_event_safely(
+            db=db,
             request_id=request_id,
-            actor_user_id=current_user.id,
-            actor_role=current_user.role,
-            action="billing_plan_change",
-            target_type="user",
-            target_id=str(current_user.id),
-            status="failed",
-            details={"error_code": error.code},
+            action="offer_conversion",
+            details={
+                "user_id": current_user.id,
+                "user_role": current_user.role,
+                "plan_code": parsed.target_plan_code if "parsed" in locals() else "unknown",
+                "conversion_type": "plan_change",
+                "conversion_status": "failed",
+            },
         )
+        try:
+            _record_audit_event(
+                db,
+                request_id=request_id,
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="billing_plan_change",
+                target_type="user",
+                target_id=str(current_user.id),
+                status="failed",
+                details={"error_code": error.code},
+            )
+        except AuditWriteError:
+            db.rollback()
+            return _audit_unavailable_response(request_id=request_id)
         db.commit()
         status_code = (
             409 if error.code in {"duplicate_plan_change", "plan_change_not_allowed"} else 422
@@ -561,10 +827,7 @@ def change_plan(
         )
     except AuditWriteError:
         db.rollback()
-        return _error_response(
-            status_code=503,
-            request_id=request_id,
-            code="audit_unavailable",
-            message="audit persistence is unavailable",
-            details={},
-        )
+        return _audit_unavailable_response(request_id=request_id)
+
+
+

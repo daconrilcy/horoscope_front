@@ -5,14 +5,17 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
+from app.infra.db.session import get_db_session
 from app.services.ops_monitoring_service import (
     OpsMonitoringKpisData,
     OpsMonitoringOperationalSummaryData,
     OpsMonitoringPersonaKpisData,
+    OpsMonitoringPricingKpisData,
     OpsMonitoringService,
     OpsMonitoringServiceError,
 )
@@ -45,6 +48,11 @@ class OpsMonitoringOperationalSummaryApiResponse(BaseModel):
 
 class OpsMonitoringPersonaKpisApiResponse(BaseModel):
     data: OpsMonitoringPersonaKpisData
+    meta: ResponseMeta
+
+
+class OpsMonitoringPricingKpisApiResponse(BaseModel):
+    data: OpsMonitoringPricingKpisData
     meta: ResponseMeta
 
 
@@ -206,6 +214,44 @@ def get_persona_kpis(
         return limit_error
     try:
         data = OpsMonitoringService.get_persona_kpis(window=window)
+        return {"data": data.model_dump(mode="json"), "meta": {"request_id": request_id}}
+    except OpsMonitoringServiceError as error:
+        return _error_response(
+            status_code=422,
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
+        )
+
+
+@router.get(
+    "/pricing-experiments-kpis",
+    response_model=OpsMonitoringPricingKpisApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        422: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def get_pricing_experiment_kpis(
+    request: Request,
+    window: str = Query(default="24h"),
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    role_error = _ensure_ops_role(current_user, request_id)
+    if role_error is not None:
+        return role_error
+    limit_error = _enforce_limits(
+        user=current_user, request_id=request_id, operation="pricing_experiment_kpis"
+    )
+    if limit_error is not None:
+        return limit_error
+    try:
+        data = OpsMonitoringService.get_pricing_experiment_kpis(window=window, db=db)
         return {"data": data.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except OpsMonitoringServiceError as error:
         return _error_response(
