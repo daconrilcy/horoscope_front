@@ -15,41 +15,14 @@ vi.mock("../api/opsPersona", () => ({
   useRollbackPersonaConfig: () => mockUseRollbackPersonaConfig(),
 }))
 
-function setAccessTokenWithRole(role: string) {
-  const payload = btoa(JSON.stringify({ role }))
-  localStorage.setItem("access_token", `x.${payload}.y`)
-}
-
 afterEach(() => {
   cleanup()
-  localStorage.removeItem("access_token")
   mockUseConversationKpis.mockReset()
   mockUseRollbackPersonaConfig.mockReset()
 })
 
 describe("OpsMonitoringPanel", () => {
-  it("does not render for non ops role", () => {
-    setAccessTokenWithRole("user")
-    mockUseConversationKpis.mockReturnValue({
-      isPending: false,
-      isFetching: false,
-      error: null,
-      data: null,
-      refetch: vi.fn(),
-    })
-    mockUseRollbackPersonaConfig.mockReturnValue({
-      isPending: false,
-      isSuccess: false,
-      error: null,
-      mutate: vi.fn(),
-    })
-
-    render(<OpsMonitoringPanel />)
-    expect(screen.queryByText("Monitoring conversationnel Ops")).not.toBeInTheDocument()
-  })
-
-  it("renders kpis and triggers rollback for ops role", () => {
-    setAccessTokenWithRole("ops")
+  it("renders kpis and triggers rollback", () => {
     const refetch = vi.fn()
     const rollbackMutate = vi.fn()
     mockUseConversationKpis.mockReturnValue({
@@ -91,7 +64,6 @@ describe("OpsMonitoringPanel", () => {
   })
 
   it("shows loading, error and empty states", () => {
-    setAccessTokenWithRole("ops")
     mockUseRollbackPersonaConfig.mockReturnValue({
       isPending: false,
       isSuccess: false,

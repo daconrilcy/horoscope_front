@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 
-import { API_BASE_URL } from "./client"
+import { API_BASE_URL, apiFetch } from "./client"
+import { getSubjectFromAccessToken, useAccessTokenSnapshot } from "../utils/authToken"
 
 type PlanetPosition = {
   planet_code: string
@@ -65,10 +66,9 @@ export class ApiError extends Error {
   }
 }
 
-async function fetchLatestNatalChart(): Promise<LatestNatalChart> {
-  const token = localStorage.getItem("access_token")
-  const response = await fetch(`${API_BASE_URL}/v1/users/me/natal-chart/latest`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+async function fetchLatestNatalChart(accessToken: string): Promise<LatestNatalChart> {
+  const response = await apiFetch(`${API_BASE_URL}/v1/users/me/natal-chart/latest`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
   })
 
   if (!response.ok) {
@@ -90,8 +90,17 @@ async function fetchLatestNatalChart(): Promise<LatestNatalChart> {
 }
 
 export function useLatestNatalChart() {
+  const accessToken = useAccessTokenSnapshot()
+  const tokenSubject = getSubjectFromAccessToken(accessToken) ?? "anonymous"
+  const fetchForCurrentUser = async () => {
+    if (!accessToken) {
+      throw new ApiError("unauthorized", "access token is required", 401)
+    }
+    return fetchLatestNatalChart(accessToken)
+  }
   return useQuery({
-    queryKey: ["latest-natal-chart"],
-    queryFn: fetchLatestNatalChart,
+    queryKey: ["latest-natal-chart", tokenSubject],
+    queryFn: fetchForCurrentUser,
+    enabled: Boolean(accessToken),
   })
 }

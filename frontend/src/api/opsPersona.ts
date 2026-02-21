@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 
 import { API_BASE_URL, apiFetch } from "./client"
+import { getAccessTokenAuthHeader } from "../utils/authToken"
 
 type ErrorEnvelope = {
   error: {
@@ -64,16 +65,11 @@ function toTransportError(error: unknown): OpsPersonaApiError {
   return new OpsPersonaApiError("network_error", "Erreur reseau. Reessayez plus tard.", 0, {})
 }
 
-function getAuthHeader(): Record<string, string> {
-  const token = localStorage.getItem("access_token")
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 export async function getActivePersonaConfig(): Promise<OpsPersonaConfig> {
   try {
     const response = await apiFetch(`${API_BASE_URL}/v1/ops/persona/config`, {
       method: "GET",
-      headers: getAuthHeader(),
+      headers: getAccessTokenAuthHeader(),
     })
     if (!response.ok) {
       let payload: ErrorEnvelope | null = null
@@ -104,7 +100,7 @@ export async function updateActivePersonaConfig(
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        ...getAuthHeader(),
+        ...getAccessTokenAuthHeader(),
       },
       body: JSON.stringify(payload),
     })
@@ -133,7 +129,7 @@ export async function rollbackPersonaConfig(): Promise<OpsPersonaRollbackData> {
   try {
     const response = await apiFetch(`${API_BASE_URL}/v1/ops/persona/rollback`, {
       method: "POST",
-      headers: getAuthHeader(),
+      headers: getAccessTokenAuthHeader(),
     })
     if (!response.ok) {
       let errorPayload: ErrorEnvelope | null = null

@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 
 import { API_BASE_URL } from "./client"
+import { getAccessTokenAuthHeader } from "../utils/authToken"
 
 type ErrorEnvelope = {
   error: {
@@ -104,11 +105,6 @@ export class SupportApiError extends Error {
   }
 }
 
-function getAuthHeaders(): Record<string, string> {
-  const token = localStorage.getItem("access_token")
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 async function parseError(response: Response): Promise<never> {
   let payload: ErrorEnvelope | null = null
   try {
@@ -127,7 +123,7 @@ async function parseError(response: Response): Promise<never> {
 async function getSupportContext(userId: number): Promise<SupportUserContext> {
   const response = await fetch(`${API_BASE_URL}/v1/support/users/${userId}/context`, {
     method: "GET",
-    headers: getAuthHeaders(),
+    headers: getAccessTokenAuthHeader(),
   })
   if (!response.ok) {
     return parseError(response)
@@ -156,7 +152,7 @@ async function listSupportIncidents(filters: IncidentFilters): Promise<SupportIn
   const suffix = params.toString() ? `?${params.toString()}` : ""
   const response = await fetch(`${API_BASE_URL}/v1/support/incidents${suffix}`, {
     method: "GET",
-    headers: getAuthHeaders(),
+    headers: getAccessTokenAuthHeader(),
   })
   if (!response.ok) {
     return parseError(response)
@@ -170,7 +166,7 @@ async function createSupportIncident(payload: CreateSupportIncidentPayload): Pro
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...getAuthHeaders(),
+      ...getAccessTokenAuthHeader(),
     },
     body: JSON.stringify(payload),
   })
@@ -189,7 +185,7 @@ async function updateSupportIncident(
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      ...getAuthHeaders(),
+      ...getAccessTokenAuthHeader(),
     },
     body: JSON.stringify(payload),
   })

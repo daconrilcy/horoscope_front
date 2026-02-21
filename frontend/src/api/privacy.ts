@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 
 import { API_BASE_URL, apiFetch } from "./client"
+import { getAccessTokenAuthHeader } from "../utils/authToken"
 
 type ErrorEnvelope = {
   error: {
@@ -48,11 +49,6 @@ function toTransportError(error: unknown): PrivacyApiError {
   return new PrivacyApiError("network_error", "Erreur reseau. Reessayez plus tard.", 0, {})
 }
 
-function getAuthHeaders(): Record<string, string> {
-  const token = localStorage.getItem("access_token")
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 async function parseError(response: Response): Promise<never> {
   let payload: ErrorEnvelope | null = null
   try {
@@ -72,7 +68,7 @@ export async function requestExport(): Promise<PrivacyRequestStatus> {
   try {
     const response = await apiFetch(`${API_BASE_URL}/v1/privacy/export`, {
       method: "POST",
-      headers: getAuthHeaders(),
+      headers: getAccessTokenAuthHeader(),
     })
     if (!response.ok) {
       return parseError(response)
@@ -88,7 +84,7 @@ export async function getExportStatus(): Promise<PrivacyRequestStatus | null> {
   try {
     const response = await apiFetch(`${API_BASE_URL}/v1/privacy/export`, {
       method: "GET",
-      headers: getAuthHeaders(),
+      headers: getAccessTokenAuthHeader(),
     })
     if (!response.ok) {
       let payload: ErrorEnvelope | null = null
@@ -120,7 +116,7 @@ export async function requestDelete(): Promise<PrivacyRequestStatus> {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...getAuthHeaders(),
+        ...getAccessTokenAuthHeader(),
       },
       body: JSON.stringify({ confirmation: "DELETE" }),
     })
@@ -138,7 +134,7 @@ export async function getDeleteStatus(): Promise<PrivacyRequestStatus | null> {
   try {
     const response = await apiFetch(`${API_BASE_URL}/v1/privacy/delete`, {
       method: "GET",
-      headers: getAuthHeaders(),
+      headers: getAccessTokenAuthHeader(),
     })
     if (!response.ok) {
       let payload: ErrorEnvelope | null = null

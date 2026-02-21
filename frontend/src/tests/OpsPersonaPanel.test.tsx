@@ -14,37 +14,15 @@ vi.mock("../api/opsPersona", () => ({
   useRollbackPersonaConfig: () => mockUseRollbackPersonaConfig(),
 }))
 
-function setAccessTokenWithRole(role: string) {
-  const payload = btoa(JSON.stringify({ role }))
-  localStorage.setItem("access_token", `x.${payload}.y`)
-}
-
-function setBase64UrlAccessTokenWithRole(role: string) {
-  const payload = btoa(JSON.stringify({ role })).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "")
-  localStorage.setItem("access_token", `x.${payload}.y`)
-}
-
 afterEach(() => {
   cleanup()
-  localStorage.removeItem("access_token")
   mockUseActivePersonaConfig.mockReset()
   mockUseUpdatePersonaConfig.mockReset()
   mockUseRollbackPersonaConfig.mockReset()
 })
 
 describe("OpsPersonaPanel", () => {
-  it("does not render for non ops role", () => {
-    setAccessTokenWithRole("user")
-    mockUseActivePersonaConfig.mockReturnValue({ isPending: false, error: null, data: null })
-    mockUseUpdatePersonaConfig.mockReturnValue({ isPending: false, isSuccess: false, error: null, mutate: vi.fn() })
-    mockUseRollbackPersonaConfig.mockReturnValue({ isPending: false, isSuccess: false, error: null, mutate: vi.fn() })
-
-    render(<OpsPersonaPanel />)
-    expect(screen.queryByText("Parametrage Persona Ops")).not.toBeInTheDocument()
-  })
-
-  it("renders and submits update + rollback for ops role", () => {
-    setAccessTokenWithRole("ops")
+  it("renders and submits update + rollback", () => {
     const mutateUpdate = vi.fn()
     const mutateRollback = vi.fn()
     mockUseActivePersonaConfig.mockReturnValue({
@@ -87,15 +65,5 @@ describe("OpsPersonaPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Rollback persona" }))
     expect(mutateRollback).toHaveBeenCalled()
-  })
-
-  it("renders for ops role with base64url token payload", () => {
-    setBase64UrlAccessTokenWithRole("ops")
-    mockUseActivePersonaConfig.mockReturnValue({ isPending: false, error: null, data: null })
-    mockUseUpdatePersonaConfig.mockReturnValue({ isPending: false, isSuccess: false, error: null, mutate: vi.fn() })
-    mockUseRollbackPersonaConfig.mockReturnValue({ isPending: false, isSuccess: false, error: null, mutate: vi.fn() })
-
-    render(<OpsPersonaPanel />)
-    expect(screen.getByText("Parametrage Persona Ops")).toBeInTheDocument()
   })
 })

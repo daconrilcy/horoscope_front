@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 
 import { API_BASE_URL, apiFetch } from "./client"
+import { getAccessTokenAuthHeader } from "../utils/authToken"
 
 type ErrorEnvelope = {
   error: {
@@ -88,11 +89,6 @@ export class B2BReconciliationApiError extends Error {
   }
 }
 
-function getAuthHeader(): Record<string, string> {
-  const token = localStorage.getItem("access_token")
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 async function parseError(response: Response): Promise<never> {
   let payload: ErrorEnvelope | null = null
   try {
@@ -136,7 +132,7 @@ async function listReconciliationIssues(input: ListReconciliationInput): Promise
 
   const response = await apiFetch(`${API_BASE_URL}/v1/ops/b2b/reconciliation/issues?${params.toString()}`, {
     method: "GET",
-    headers: getAuthHeader(),
+    headers: getAccessTokenAuthHeader(),
   })
   if (!response.ok) {
     return parseError(response)
@@ -148,7 +144,7 @@ async function listReconciliationIssues(input: ListReconciliationInput): Promise
 async function getReconciliationIssueDetail(issueId: string): Promise<ReconciliationIssueDetail> {
   const response = await apiFetch(`${API_BASE_URL}/v1/ops/b2b/reconciliation/issues/${encodeURIComponent(issueId)}`, {
     method: "GET",
-    headers: getAuthHeader(),
+    headers: getAccessTokenAuthHeader(),
   })
   if (!response.ok) {
     return parseError(response)
@@ -171,7 +167,7 @@ async function executeReconciliationAction(
     {
       method: "POST",
       headers: {
-        ...getAuthHeader(),
+        ...getAccessTokenAuthHeader(),
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ action: input.action, note: input.note ?? null }),

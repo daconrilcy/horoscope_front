@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.rbac import is_valid_role
 from app.core.request_id import resolve_request_id
 from app.core.security import SecurityError, decode_token
+from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.infra.db.session import get_db_session
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 from app.services.auth_service import AuthResponse, AuthService, AuthServiceError, AuthTokens
@@ -53,6 +54,16 @@ class AuthApiResponse(BaseModel):
 
 class RefreshApiResponse(BaseModel):
     data: AuthTokens
+    meta: ResponseMeta
+
+
+class AuthMeData(BaseModel):
+    id: int
+    role: str
+
+
+class AuthMeApiResponse(BaseModel):
+    data: AuthMeData
     meta: ResponseMeta
 
 
@@ -119,6 +130,22 @@ def _resolve_refresh_actor(refresh_token: str) -> tuple[int | None, str]:
     actor_user_id = int(subject) if isinstance(subject, str) and subject.isdigit() else None
     actor_role = role if isinstance(role, str) and is_valid_role(role) else "anonymous"
     return actor_user_id, actor_role
+
+
+@router.get(
+    "/me",
+    response_model=AuthMeApiResponse,
+    responses={401: {"model": ErrorEnvelope}, 403: {"model": ErrorEnvelope}},
+)
+def me(
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+) -> Any:
+    request_id = resolve_request_id(request)
+    return {
+        "data": {"id": current_user.id, "role": current_user.role},
+        "meta": {"request_id": request_id},
+    }
 
 
 @router.post(

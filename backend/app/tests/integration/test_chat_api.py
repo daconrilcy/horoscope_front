@@ -28,12 +28,14 @@ from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.services.billing_service import BillingService
 from app.services.chat_guidance_service import ChatGuidanceServiceError
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
+    BillingService.reset_subscription_status_cache()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:

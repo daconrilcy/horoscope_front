@@ -111,6 +111,28 @@ def test_refresh_expired_token() -> None:
     assert "request_id" in response.json()["error"]
 
 
+def test_me_returns_authenticated_user_profile() -> None:
+    _cleanup_users()
+    register = client.post(
+        "/v1/auth/register",
+        json={"email": "me@example.com", "password": "strong-pass-123"},
+    )
+    access_token = register.json()["data"]["tokens"]["access_token"]
+    response = client.get("/v1/auth/me", headers={"Authorization": f"Bearer {access_token}"})
+
+    assert response.status_code == 200
+    assert response.json()["data"]["role"] == "user"
+    assert isinstance(response.json()["data"]["id"], int)
+    assert "request_id" in response.json()["meta"]
+
+
+def test_me_requires_bearer_token() -> None:
+    _cleanup_users()
+    response = client.get("/v1/auth/me")
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "missing_access_token"
+
+
 def test_refresh_token_replay_is_rejected() -> None:
     _cleanup_users()
     register = client.post(

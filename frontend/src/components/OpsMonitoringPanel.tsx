@@ -3,25 +3,6 @@ import { useState } from "react"
 import { type MonitoringWindow, OpsMonitoringApiError, useConversationKpis } from "../api/opsMonitoring"
 import { useRollbackPersonaConfig } from "../api/opsPersona"
 
-function getRoleFromAccessToken(): string | null {
-  const token = localStorage.getItem("access_token")
-  if (!token) {
-    return null
-  }
-  const parts = token.split(".")
-  if (parts.length !== 3) {
-    return null
-  }
-  try {
-    const base64Url = parts[1].replace(/-/g, "+").replace(/_/g, "/")
-    const padding = "=".repeat((4 - (base64Url.length % 4)) % 4)
-    const payload = JSON.parse(atob(`${base64Url}${padding}`)) as { role?: string }
-    return payload.role ?? null
-  } catch {
-    return null
-  }
-}
-
 function formatPercent(value: number): string {
   return `${(value * 100).toFixed(1)}%`
 }
@@ -31,10 +12,6 @@ function formatLatencyMs(value: number): string {
 }
 
 export function OpsMonitoringPanel() {
-  const role = getRoleFromAccessToken()
-  if (role !== "ops") {
-    return null
-  }
   return <OpsMonitoringPanelContent />
 }
 

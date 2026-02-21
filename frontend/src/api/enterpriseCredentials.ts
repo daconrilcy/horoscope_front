@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 
 import { API_BASE_URL } from "./client"
+import { getAccessTokenAuthHeader } from "../utils/authToken"
 
 type ErrorEnvelope = {
   error: {
@@ -60,11 +61,6 @@ export class EnterpriseCredentialsApiError extends Error {
   }
 }
 
-function getAuthHeaders(): Record<string, string> {
-  const token = localStorage.getItem("access_token")
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 async function parseError(response: Response): Promise<never> {
   let payload: ErrorEnvelope | null = null
   try {
@@ -84,7 +80,7 @@ async function parseError(response: Response): Promise<never> {
 async function listEnterpriseCredentials(): Promise<EnterpriseCredentialsList> {
   const response = await fetch(`${API_BASE_URL}/v1/b2b/credentials`, {
     method: "GET",
-    headers: getAuthHeaders(),
+    headers: getAccessTokenAuthHeader(),
   })
   if (!response.ok) {
     return parseError(response)
@@ -96,7 +92,7 @@ async function listEnterpriseCredentials(): Promise<EnterpriseCredentialsList> {
 async function generateCredential(): Promise<EnterpriseCredentialSecret> {
   const response = await fetch(`${API_BASE_URL}/v1/b2b/credentials/generate`, {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: getAccessTokenAuthHeader(),
   })
   if (!response.ok) {
     return parseError(response)
@@ -108,7 +104,7 @@ async function generateCredential(): Promise<EnterpriseCredentialSecret> {
 async function rotateCredential(): Promise<EnterpriseCredentialSecret> {
   const response = await fetch(`${API_BASE_URL}/v1/b2b/credentials/rotate`, {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: getAccessTokenAuthHeader(),
   })
   if (!response.ok) {
     return parseError(response)

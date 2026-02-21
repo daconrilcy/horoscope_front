@@ -17,6 +17,9 @@ ruff check .
 pytest -q
 ```
 
+Note:
+- Executer les tests backend de maniere sequentielle (une seule commande `pytest` a la fois) pour eviter les collisions SQLite sur les suites integration qui recreent le schema.
+
 ## Quality Gate (repository)
 
 ```powershell

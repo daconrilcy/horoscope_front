@@ -9,30 +9,7 @@ import {
   useUpdatePersonaConfig,
 } from "../api/opsPersona"
 
-function getRoleFromAccessToken(): string | null {
-  const token = localStorage.getItem("access_token")
-  if (!token) {
-    return null
-  }
-  const parts = token.split(".")
-  if (parts.length !== 3) {
-    return null
-  }
-  try {
-    const base64Url = parts[1].replace(/-/g, "+").replace(/_/g, "/")
-    const padding = "=".repeat((4 - (base64Url.length % 4)) % 4)
-    const payload = JSON.parse(atob(`${base64Url}${padding}`)) as { role?: string }
-    return payload.role ?? null
-  } catch {
-    return null
-  }
-}
-
 export function OpsPersonaPanel() {
-  const role = getRoleFromAccessToken()
-  if (role !== "ops") {
-    return null
-  }
   return <OpsPersonaPanelContent />
 }
 

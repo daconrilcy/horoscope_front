@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 
 import { API_BASE_URL } from "./client"
+import { getAccessTokenAuthHeader } from "../utils/authToken"
 
 type ErrorEnvelope = {
   error: {
@@ -36,16 +37,11 @@ export class OpsMonitoringApiError extends Error {
   }
 }
 
-function getAuthHeader(): Record<string, string> {
-  const token = localStorage.getItem("access_token")
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 async function getConversationKpis(window: MonitoringWindow): Promise<OpsMonitoringKpis> {
   const params = new URLSearchParams({ window })
   const response = await fetch(`${API_BASE_URL}/v1/ops/monitoring/conversation-kpis?${params.toString()}`, {
     method: "GET",
-    headers: getAuthHeader(),
+    headers: getAccessTokenAuthHeader(),
   })
   if (!response.ok) {
     let payload: ErrorEnvelope | null = null

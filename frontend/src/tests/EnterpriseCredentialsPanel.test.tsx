@@ -14,45 +14,15 @@ vi.mock("../api/enterpriseCredentials", () => ({
   useRotateEnterpriseCredential: () => mockUseRotateEnterpriseCredential(),
 }))
 
-function setAccessTokenWithRole(role: string) {
-  const payload = btoa(JSON.stringify({ role }))
-  localStorage.setItem("access_token", `x.${payload}.y`)
-}
-
 afterEach(() => {
   cleanup()
-  localStorage.removeItem("access_token")
   mockUseEnterpriseCredentials.mockReset()
   mockUseGenerateEnterpriseCredential.mockReset()
   mockUseRotateEnterpriseCredential.mockReset()
 })
 
 describe("EnterpriseCredentialsPanel", () => {
-  it("does not render for non enterprise_admin role", () => {
-    setAccessTokenWithRole("user")
-    mockUseEnterpriseCredentials.mockReturnValue({
-      isPending: false,
-      error: null,
-      data: null,
-      refetch: vi.fn(),
-    })
-    mockUseGenerateEnterpriseCredential.mockReturnValue({
-      isPending: false,
-      error: null,
-      mutateAsync: vi.fn(),
-    })
-    mockUseRotateEnterpriseCredential.mockReturnValue({
-      isPending: false,
-      error: null,
-      mutateAsync: vi.fn(),
-    })
-
-    render(<EnterpriseCredentialsPanel />)
-    expect(screen.queryByText("Credentials API entreprise")).not.toBeInTheDocument()
-  })
-
   it("renders panel and supports generate + rotate", async () => {
-    setAccessTokenWithRole("enterprise_admin")
     const refetch = vi.fn()
     const generateMutate = vi.fn().mockResolvedValue({ api_key: "b2b_secret_generated" })
     const rotateMutate = vi.fn().mockResolvedValue({ api_key: "b2b_secret_rotated" })
@@ -92,8 +62,6 @@ describe("EnterpriseCredentialsPanel", () => {
   })
 
   it("shows loading, error and empty states", () => {
-    setAccessTokenWithRole("enterprise_admin")
-
     mockUseGenerateEnterpriseCredential.mockReturnValue({
       isPending: false,
       error: null,

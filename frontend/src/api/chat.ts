@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 
 import { API_BASE_URL, apiFetch } from "./client"
+import { getAccessTokenAuthHeader } from "../utils/authToken"
 
 type ErrorEnvelope = {
   error: {
@@ -103,12 +104,11 @@ function toTransportError(error: unknown): ChatApiError {
 
 async function sendChatMessage(requestPayload: SendChatPayload): Promise<SendChatResponse> {
   try {
-    const token = localStorage.getItem("access_token")
     const response = await apiFetch(`${API_BASE_URL}/v1/chat/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...getAccessTokenAuthHeader(),
       },
       body: JSON.stringify(requestPayload),
     })
@@ -137,11 +137,10 @@ async function sendChatMessage(requestPayload: SendChatPayload): Promise<SendCha
 
 async function getChatConversations(limit = 20, offset = 0): Promise<ChatConversationListResponse> {
   try {
-    const token = localStorage.getItem("access_token")
     const response = await apiFetch(`${API_BASE_URL}/v1/chat/conversations?limit=${limit}&offset=${offset}`, {
       method: "GET",
       headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...getAccessTokenAuthHeader(),
       },
     })
 
@@ -169,11 +168,10 @@ async function getChatConversations(limit = 20, offset = 0): Promise<ChatConvers
 
 async function getChatConversationHistory(conversationId: number): Promise<ChatConversationHistoryResponse> {
   try {
-    const token = localStorage.getItem("access_token")
     const response = await apiFetch(`${API_BASE_URL}/v1/chat/conversations/${conversationId}`, {
       method: "GET",
       headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...getAccessTokenAuthHeader(),
       },
     })
 

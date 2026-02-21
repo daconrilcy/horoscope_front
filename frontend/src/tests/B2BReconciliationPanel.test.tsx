@@ -33,48 +33,15 @@ vi.mock("../api/b2bReconciliation", () => ({
   useB2BReconciliationAction: () => mockUseAction(),
 }))
 
-function setAccessTokenWithRole(role: string) {
-  const payload = btoa(JSON.stringify({ role }))
-  localStorage.setItem("access_token", `x.${payload}.y`)
-}
-
 afterEach(() => {
   cleanup()
-  localStorage.removeItem("access_token")
   mockUseIssues.mockReset()
   mockUseDetail.mockReset()
   mockUseAction.mockReset()
 })
 
 describe("B2BReconciliationPanel", () => {
-  it("does not render for non ops role", () => {
-    setAccessTokenWithRole("user")
-    mockUseIssues.mockReturnValue({
-      isPending: false,
-      isFetching: false,
-      error: null,
-      data: null,
-      refetch: vi.fn(),
-    })
-    mockUseDetail.mockReturnValue({
-      isPending: false,
-      error: null,
-      data: null,
-      refetch: vi.fn(),
-    })
-    mockUseAction.mockReturnValue({
-      isPending: false,
-      isSuccess: false,
-      error: null,
-      mutate: vi.fn(),
-    })
-
-    render(<B2BReconciliationPanel />)
-    expect(screen.queryByText("Reconciliation B2B Ops")).not.toBeInTheDocument()
-  })
-
   it("loads list, detail and executes actions", async () => {
-    setAccessTokenWithRole("ops")
     const issuesRefetch = vi.fn()
     const detailRefetch = vi.fn()
     const actionMutate = vi.fn((_: unknown, options?: { onSuccess?: () => void }) => {
@@ -176,7 +143,6 @@ describe("B2BReconciliationPanel", () => {
   })
 
   it("renders loading, empty and error states", () => {
-    setAccessTokenWithRole("ops")
     mockUseIssues.mockReturnValue({
       isPending: false,
       isFetching: false,

@@ -9,27 +9,6 @@ import {
   useUpdateSupportIncident,
 } from "../api/support"
 
-function getRoleFromAccessToken(): string | null {
-  const token = localStorage.getItem("access_token")
-  if (!token) {
-    return null
-  }
-  const parts = token.split(".")
-  if (parts.length < 2) {
-    return null
-  }
-  const base64Url = parts[1]
-  const padding = "=".repeat((4 - (base64Url.length % 4)) % 4)
-  try {
-    const payload = JSON.parse(
-      atob(`${base64Url}${padding}`.replace(/-/g, "+").replace(/_/g, "/")),
-    ) as { role?: string }
-    return payload.role ?? null
-  } catch {
-    return null
-  }
-}
-
 function nextStatus(current: SupportIncident["status"]): SupportIncident["status"] | null {
   if (current === "open") {
     return "in_progress"
@@ -44,17 +23,14 @@ function nextStatus(current: SupportIncident["status"]): SupportIncident["status
 }
 
 export function SupportOpsPanel() {
-  const role = getRoleFromAccessToken()
-  const canAccess = role === "support" || role === "ops"
-
   const [targetUserId, setTargetUserId] = useState(1)
   const [title, setTitle] = useState("Incident support")
   const [description, setDescription] = useState("Description de l incident.")
   const [category, setCategory] = useState<"account" | "subscription" | "content">("account")
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium")
 
-  const supportContext = useSupportContext(targetUserId, canAccess)
-  const incidents = useSupportIncidents({ user_id: targetUserId }, canAccess)
+  const supportContext = useSupportContext(targetUserId, true)
+  const incidents = useSupportIncidents({ user_id: targetUserId }, true)
   const createIncident = useCreateSupportIncident()
   const updateIncident = useUpdateSupportIncident()
 
@@ -62,10 +38,6 @@ export function SupportOpsPanel() {
   const updateError = updateIncident.error as SupportApiError | null
 
   const orderedIncidents = useMemo(() => incidents.data?.incidents ?? [], [incidents.data?.incidents])
-
-  if (!canAccess) {
-    return null
-  }
 
   return (
     <section className="panel">

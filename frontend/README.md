@@ -10,6 +10,13 @@ This template provides a minimal setup to get React working in Vite with HMR.
 - `npm run test:b2b:coverage`: run the B2B suite with coverage thresholds.
 - `npm run audit:prod`: audit runtime dependencies only (`--omit=dev`).
 
+## Auth Session Behavior
+
+- The app resolves authenticated role-based navigation from `GET /v1/auth/me` (server-validated identity), not from JWT payload parsing in UI components.
+- If an access token exists but `auth/me` is still loading, the app shows a temporary session verification state.
+- If `auth/me` fails, the app falls back to a minimal navigation surface (`Theme natal`) and hides privileged/role-specific views.
+- This fallback is intentional to keep UX safe-by-default during transient auth/backend issues.
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh

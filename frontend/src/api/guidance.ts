@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query"
 
 import { API_BASE_URL, apiFetch } from "./client"
+import { getAccessTokenAuthHeader } from "../utils/authToken"
 
 type ErrorEnvelope = {
   error: {
@@ -98,12 +99,11 @@ export async function requestGuidance(
   requestPayload: GuidanceRequestPayload,
 ): Promise<GuidanceResponse> {
   try {
-    const token = localStorage.getItem("access_token")
     const response = await apiFetch(`${API_BASE_URL}/v1/guidance`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...getAccessTokenAuthHeader(),
       },
       body: JSON.stringify(requestPayload),
     })
@@ -134,12 +134,11 @@ export async function requestContextualGuidance(
   requestPayload: ContextualGuidanceRequestPayload,
 ): Promise<ContextualGuidanceResponse> {
   try {
-    const token = localStorage.getItem("access_token")
     const response = await apiFetch(`${API_BASE_URL}/v1/guidance/contextual`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...getAccessTokenAuthHeader(),
       },
       body: JSON.stringify(requestPayload),
     })

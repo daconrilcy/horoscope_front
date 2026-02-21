@@ -16,14 +16,8 @@ vi.mock("../api/support", () => ({
   useUpdateSupportIncident: () => mockUseUpdateSupportIncident(),
 }))
 
-function setAccessTokenWithRole(role: string) {
-  const payload = btoa(JSON.stringify({ role }))
-  localStorage.setItem("access_token", `x.${payload}.y`)
-}
-
 afterEach(() => {
   cleanup()
-  localStorage.removeItem("access_token")
   mockUseSupportContext.mockReset()
   mockUseSupportIncidents.mockReset()
   mockUseCreateSupportIncident.mockReset()
@@ -31,37 +25,7 @@ afterEach(() => {
 })
 
 describe("SupportOpsPanel", () => {
-  it("does not render for user role", () => {
-    setAccessTokenWithRole("user")
-    mockUseSupportContext.mockReturnValue({
-      isLoading: false,
-      error: null,
-      data: null,
-      refetch: vi.fn(),
-    })
-    mockUseSupportIncidents.mockReturnValue({
-      isLoading: false,
-      error: null,
-      data: { incidents: [], total: 0, limit: 50, offset: 0 },
-      refetch: vi.fn(),
-    })
-    mockUseCreateSupportIncident.mockReturnValue({
-      isPending: false,
-      error: null,
-      mutateAsync: vi.fn(),
-    })
-    mockUseUpdateSupportIncident.mockReturnValue({
-      isPending: false,
-      error: null,
-      mutateAsync: vi.fn(),
-    })
-
-    render(<SupportOpsPanel />)
-    expect(screen.queryByText("Support et operations")).not.toBeInTheDocument()
-  })
-
-  it("renders and supports create/update incident for support role", async () => {
-    setAccessTokenWithRole("support")
+  it("renders and supports create/update incident", async () => {
     const createMutate = vi.fn().mockResolvedValue({
       incident_id: 12,
       status: "open",
