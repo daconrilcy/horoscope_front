@@ -1,0 +1,69 @@
+{
+  "generated_at_utc": "2026-02-20T16:57:19.5011140Z",
+  "base_url": "http://127.0.0.1:8000",
+  "profile": "smoke",
+  "iterations": 20,
+  "concurrency": 5,
+  "require_b2b": false,
+  "scenarios": [
+    {
+      "name": "billing_quota",
+      "total_requests": 20,
+      "concurrency": 5,
+      "success_count": 20,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "latency_ms": {
+        "p50": 5.58,
+        "p95": 67.57,
+        "p99": 67.57
+      },
+      "status_codes": {
+        "200": 20
+      }
+    },
+    {
+      "name": "privacy_export_status",
+      "total_requests": 20,
+      "concurrency": 5,
+      "success_count": 10,
+      "error_count": 10,
+      "error_rate": 50.0,
+      "latency_ms": {
+        "p50": 6.69,
+        "p95": 71.51,
+        "p99": 71.51
+      },
+      "status_codes": {
+        "429": 10,
+        "200": 10
+      }
+    },
+    {
+      "name": "chat_conversations",
+      "total_requests": 20,
+      "concurrency": 5,
+      "success_count": 20,
+      "error_count": 0,
+      "error_rate": 0.0,
+      "latency_ms": {
+        "p50": 3.59,
+        "p95": 67.15,
+        "p99": 67.15
+      },
+      "status_codes": {
+        "200": 20
+      }
+    }
+  ],
+  "skipped_scenarios": [
+    "b2b_weekly_by_sign"
+  ],
+  "recommendations": [
+    {
+      "priority": "high",
+      "scenario": "privacy_export_status",
+      "action": "Investigate non-2xx responses; review logs/request_id and retry/rate-limit behavior."
+    }
+  ]
+}

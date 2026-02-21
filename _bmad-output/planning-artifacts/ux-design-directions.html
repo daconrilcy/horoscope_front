@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Horoscope Front - Design Directions</title>
+  <style>
+    :root {
+      --bg: #090d14;
+      --panel: #111826cc;
+      --text: #eaf0ff;
+      --muted: #a4aec5;
+      --accent: #ffbe74;
+      --line: #ffffff1f;
+      --ok: #78d3a6;
+      --warn: #ffca80;
+      --err: #ff8585;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 10%, #2f1f1a 0%, #090d14 45%),
+        radial-gradient(circle at 85% 0%, #1a2235 0%, #090d14 30%),
+        var(--bg);
+    }
+    .shell { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      margin-bottom: 20px;
+    }
+    .title { font-size: 24px; font-weight: 700; letter-spacing: .2px; }
+    .note { color: var(--muted); font-size: 14px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #ffffff12 0%, #ffffff08 100%);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 40px #00000055;
+    }
+    .thumb {
+      min-height: 170px;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .name { font-size: 15px; font-weight: 600; }
+    .desc { color: var(--muted); font-size: 13px; margin-top: 6px; line-height: 1.35; }
+    .actions { padding: 12px 14px; font-size: 13px; color: var(--muted); }
+    .chip {
+      display: inline-block;
+      margin-right: 6px;
+      margin-bottom: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #ffffff0d;
+    }
+    .mini {
+      margin-top: 12px;
+      border-radius: 12px;
+      border: 1px solid #ffffff1a;
+      background: #0f1625cc;
+      padding: 10px;
+    }
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .bar { height: 6px; border-radius: 99px; margin-top: 8px; background: #ffffff12; overflow: hidden; }
+    .fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ffbe74, #ffd8a8); }
+    .sub { color: #d7def6; font-size: 12px; margin-top: 8px; }
+    .m-top { margin-top: 8px; }
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: linear-gradient(145deg, #ffffff12, #ffffff06);
+      backdrop-filter: blur(14px);
+      margin-bottom: 18px;
+    }
+    .legend {
+      display: grid; gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      margin-top: 12px;
+    }
+    .legend > div {
+      border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 12px;
+      color: var(--muted);
+    }
+    .dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; }
+    @media (max-width: 700px) {
+      .shell { padding: 14px; }
+      .title { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <div>
+        <div class="title">Horoscope Front - 8 Directions Visuelles</div>
+        <div class="note">Inspiration: liquid glass, sombre + chaleur, mobile-first, respiration visuelle</div>
+      </div>
+      <div class="note">Fichier: <code>_bmad-output/planning-artifacts/ux-design-directions.html</code></div>
+    </div>
+
+    <div class="hero">
+      <strong>Cadre d'evaluation:</strong> clarte onboarding, lisibilite chat, personnalite mystique moderne, sentiment de guidance, charge cognitive faible.
+      <div class="legend">
+        <div><span class="dot" style="background:#ffbe74"></span>Primary action (guidance)</div>
+        <div><span class="dot" style="background:#78d3a6"></span>Success / reassurance</div>
+        <div><span class="dot" style="background:#ffca80"></span>Attention douce</div>
+        <div><span class="dot" style="background:#ff8585"></span>Erreur non agressive</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <div class="thumb">
+          <div class="name">Direction 01 - Glass Minimal Oracle</div>
+          <div class="desc">Une seule colonne, cartes translucides, hierarchie ultra claire pour le chat et la guidance.</div>
+          <div class="mini">
+            <div class="row"><strong>Tu traverses:</strong><span>Phase Saturne</span></div>
+            <div class="bar"><div class="fill" style="width:78%"></div></div>
+            <div class="sub">Prochaine action: clarifier ton intention avant 18h.</div>
+          </div>
+        </div>
+        <div class="actions"><span class="chip">Onboarding direct</span><span class="chip">Chat prioritaire</span><span class="chip">Aere</span></div>
+      </section>
+
+      <section class="card">
+        <div class="thumb">
+          <div class="name">Direction 02 - Warm Night Feed</div>
+          <div class="desc">Flux vertical type feed, sections "phase", "question du jour", "chat rapide".</div>
+          <div class="mini">
+            <div class="row"><strong>Question du jour</strong><span style="color:var(--accent)">Demander</span></div>
+            <div class="sub m-top">"Quel est le meilleur moment pour ce rendez-vous?"</div>
+          </div>
+        </div>
+        <div class="actions"><span class="chip">Scroll continu</span><span class="chip">Rituel hebdo</span><span class="chip">Simple</span></div>
+      </section>
+
+      <section class="card">
+        <div class="thumb">
+          <div class="name">Direction 03 - Messenger Mystic</div>
+          <div class="desc">Pattern messagerie familier, identité visuelle plus forte sur les bulles et CTA.</div>
+          <div class="mini">
+            <div class="row"><strong>Astrologue recommande</strong><span style="color:var(--ok)">En ligne</span></div>
+            <div class="sub m-top">"Je te propose 2 pistes concretes pour ce moment sensible."</div>
+          </div>
+        </div>
+        <div class="actions"><span class="chip">Familiarite forte</span><span class="chip">Trust</span><span class="chip">Mobile</span></div>
+      </section>
+
+      <section class="card">
+        <div class="thumb">
+          <div class="name">Direction 04 - Astro Dashboard Lightbeam</div>
+          <div class="desc">Vue synthese avec modules: phase, energie, relationnel, decision du jour.</div>
+          <div class="mini">
+            <div class="row"><strong>Energie</strong><span style="color:var(--warn)">Moyenne</span></div>
+            <div class="bar"><div class="fill" style="width:52%"></div></div>
+            <div class="sub">Conseil: ralentir avant de trancher.</div>
+          </div>
+        </div>
+        <div class="actions"><span class="chip">Vue globale</span><span class="chip">Actionnable</span><span class="chip">Clarte</span></div>
+      </section>
+
+      <section class="card">
+        <div class="thumb">
+          <div class="name">Direction 05 - Ritual Steps</div>
+          <div class="desc">Parcours guidé en 3 etapes: comprendre, decider, agir. Ideal moments critiques.</div>
+          <div class="mini">
+            <div class="row"><strong>Etape 2/3</strong><span>Decider</span></div>
+            <div class="sub m-top">"Quelle action te soulage aujourd'hui?"</div>
+          </div>
+        </div>
+        <div class="actions"><span class="chip">Guidage fort</span><span class="chip">Anti-panique</span><span class="chip">Progressif</span></div>
+      </section>
+
+      <section class="card">
+        <div class="thumb">
+          <div class="name">Direction 06 - Profile Galaxy</div>
+          <div class="desc">Choix d'astrologues visuel et chaleureux, puis bascule instantanee vers chat.</div>
+          <div class="mini">
+            <div class="row"><strong>Elena - Tarot + Astro</strong><span style="color:var(--accent)">98% match</span></div>
+            <div class="sub m-top">Ton: rassurant, clair, orienté decisions.</div>
+          </div>
+        </div>
+        <div class="actions"><span class="chip">Personnalisation</span><span class="chip">Galerie profils</span><span class="chip">Switch rapide</span></div>
+      </section>
+
+      <section class="card">
+        <div class="thumb">
+          <div class="name">Direction 07 - Quiet Focus</div>
+          <div class="desc">Design tres epure, peu d'elements, focus sur texte et respiration visuelle.</div>
+          <div class="mini">
+            <div class="row"><strong>Message clair</strong><span style="color:var(--ok)">Compris</span></div>
+            <div class="sub m-top">"Aujourd'hui: consolider, pas accelerer."</div>
+          </div>
+        </div>
+        <div class="actions"><span class="chip">Minimal radical</span><span class="chip">Aere</span><span class="chip">Premium</span></div>
+      </section>
+
+      <section class="card">
+        <div class="thumb">
+          <div class="name">Direction 08 - Hybrid Signature</div>
+          <div class="desc">Melange messenger + feed + rituels. Candidat "base produit" pour MVP.</div>
+          <div class="mini">
+            <div class="row"><strong>Ton prochain pas</strong><span style="color:var(--accent)">Voir</span></div>
+            <div class="sub m-top">1) respirer 2 min 2) envoyer ce message 3) attendre demain.</div>
+          </div>
+        </div>
+        <div class="actions"><span class="chip">Equilibre</span><span class="chip">Singulier</span><span class="chip">MVP-friendly</span></div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

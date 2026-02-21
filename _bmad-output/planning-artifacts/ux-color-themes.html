@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Horoscope Front - Color Themes</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #0b0f16; color: #e9eefc; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; }
+    p { color: #aab6d0; margin: 0 0 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    .theme { border: 1px solid #ffffff22; border-radius: 14px; overflow: hidden; background: #ffffff0a; }
+    .head { padding: 12px; font-weight: 600; border-bottom: 1px solid #ffffff1a; }
+    .sw { display: grid; grid-template-columns: 1fr 1fr; }
+    .c { min-height: 48px; display: flex; align-items: end; padding: 6px 8px; font-size: 12px; color: #fff; }
+    .foot { padding: 10px 12px; color: #9fb0d7; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Color Themes - Horoscope Front</h1>
+    <p>Palette mystique moderne, base sombre + chaleur eclairante.</p>
+    <div class="grid">
+      <section class="theme">
+        <div class="head">Theme A - Warm Night Glass</div>
+        <div class="sw">
+          <div class="c" style="background:#0b101a">bg #0B101A</div>
+          <div class="c" style="background:#151f31">surface #151F31</div>
+          <div class="c" style="background:#ffbe74">primary #FFBE74</div>
+          <div class="c" style="background:#78d3a6">success #78D3A6</div>
+        </div>
+        <div class="foot">Direction recommandee pour le MVP.</div>
+      </section>
+      <section class="theme">
+        <div class="head">Theme B - Deep Blue Oracle</div>
+        <div class="sw">
+          <div class="c" style="background:#090d17">bg #090D17</div>
+          <div class="c" style="background:#1b2640">surface #1B2640</div>
+          <div class="c" style="background:#f3c98b">primary #F3C98B</div>
+          <div class="c" style="background:#8fd0ff">info #8FD0FF</div>
+        </div>
+        <div class="foot">Plus analytique, moins emotionnel.</div>
+      </section>
+      <section class="theme">
+        <div class="head">Theme C - Ember Dusk</div>
+        <div class="sw">
+          <div class="c" style="background:#120f12">bg #120F12</div>
+          <div class="c" style="background:#2a2023">surface #2A2023</div>
+          <div class="c" style="background:#ffb26b">primary #FFB26B</div>
+          <div class="c" style="background:#ff8b8b">error #FF8B8B</div>
+        </div>
+        <div class="foot">Chaleur plus forte, ton plus intime.</div>
+      </section>
+      <section class="theme">
+        <div class="head">Theme D - Quiet Moon</div>
+        <div class="sw">
+          <div class="c" style="background:#0e1014">bg #0E1014</div>
+          <div class="c" style="background:#1d222b">surface #1D222B</div>
+          <div class="c" style="background:#ffd8aa">primary #FFD8AA</div>
+          <div class="c" style="background:#ffca80">warning #FFCA80</div>
+        </div>
+        <div class="foot">Minimal premium, contraste renforce.</div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

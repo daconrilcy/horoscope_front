@@ -1,0 +1,139 @@
+{
+  "summary": {
+    "generated_at": "2026-02-20T21:20:57",
+    "root": "C:\\dev\\horoscope_front",
+    "findings_total": 3,
+    "findings_by_severity": {
+      "info": 0,
+      "medium": 1,
+      "unknown": 0,
+      "critical": 0,
+      "low": 2,
+      "high": 0
+    },
+    "findings_by_tool": {
+      "bandit": 2,
+      "npm_audit": 1,
+      "pip_audit": 0
+    },
+    "fail_on_severities": [
+      "high",
+      "critical"
+    ],
+    "include_dev_dependencies": true
+  },
+  "findings": [
+    {
+      "key": "bandit:B101:backend/app\\services\\privacy_service.py:525",
+      "tool": "bandit",
+      "category": "sast",
+      "id": "B101",
+      "title": "assert_used",
+      "severity": "low",
+      "package": "backend/app\\services\\privacy_service.py",
+      "location": "backend/app\\services\\privacy_service.py",
+      "line": "525",
+      "recommendation": "Review code pattern and apply secure alternative.",
+      "raw": {
+        "code": "524 \n525         assert export_request is not None\n526         assert delete_request is not None\n",
+        "col_offset": 8,
+        "end_col_offset": 41,
+        "filename": "backend/app\\services\\privacy_service.py",
+        "issue_confidence": "HIGH",
+        "issue_cwe": {
+          "id": 703,
+          "link": "https://cwe.mitre.org/data/definitions/703.html"
+        },
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.",
+        "line_number": 525,
+        "line_range": [
+          525
+        ],
+        "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html",
+        "test_id": "B101",
+        "test_name": "assert_used"
+      }
+    },
+    {
+      "key": "bandit:B101:backend/app\\services\\privacy_service.py:526",
+      "tool": "bandit",
+      "category": "sast",
+      "id": "B101",
+      "title": "assert_used",
+      "severity": "low",
+      "package": "backend/app\\services\\privacy_service.py",
+      "location": "backend/app\\services\\privacy_service.py",
+      "line": "526",
+      "recommendation": "Review code pattern and apply secure alternative.",
+      "raw": {
+        "code": "525         assert export_request is not None\n526         assert delete_request is not None\n527 \n",
+        "col_offset": 8,
+        "end_col_offset": 41,
+        "filename": "backend/app\\services\\privacy_service.py",
+        "issue_confidence": "HIGH",
+        "issue_cwe": {
+          "id": 703,
+          "link": "https://cwe.mitre.org/data/definitions/703.html"
+        },
+        "issue_severity": "LOW",
+        "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.",
+        "line_number": 526,
+        "line_range": [
+          526
+        ],
+        "more_info": "https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html",
+        "test_id": "B101",
+        "test_name": "assert_used"
+      }
+    },
+    {
+      "key": "npm-audit:npm:ajv",
+      "tool": "npm-audit",
+      "category": "dependency",
+      "id": "npm:ajv",
+      "title": "npm audit finding for ajv",
+      "severity": "medium",
+      "package": "ajv",
+      "location": "frontend/package-lock.json",
+      "line": "",
+      "recommendation": "Upgrade to eslint@10.0.1.",
+      "raw": {
+        "name": "ajv",
+        "severity": "moderate",
+        "isDirect": false,
+        "via": [
+          {
+            "source": 1113214,
+            "name": "ajv",
+            "dependency": "ajv",
+            "title": "ajv has ReDoS when using `$data` option",
+            "url": "https://github.com/advisories/GHSA-2g4f-4pwh-qvx6",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-400"
+            ],
+            "cvss": {
+              "score": 0,
+              "vectorString": null
+            },
+            "range": "<8.18.0"
+          }
+        ],
+        "effects": [
+          "@eslint/eslintrc",
+          "eslint"
+        ],
+        "range": "<8.18.0",
+        "nodes": [
+          "node_modules/ajv"
+        ],
+        "fixAvailable": {
+          "name": "eslint",
+          "version": "10.0.1",
+          "isSemVerMajor": true
+        }
+      }
+    }
+  ]
+}

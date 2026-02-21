@@ -1,0 +1,17 @@
+# Format: finding key from security-verification report
+# Examples:
+# bandit:B101:backend/app/module.py:42
+# pip-audit:PYSEC-2021-44228:some-package
+# npm-audit:npm:some-package
+
+# Temporary accepted dev-tooling findings; tracked in Story 9.2 remediation plan.
+npm-audit:npm:@eslint/config-array
+npm-audit:npm:@eslint/eslintrc
+npm-audit:npm:@typescript-eslint/eslint-plugin
+npm-audit:npm:@typescript-eslint/parser
+npm-audit:npm:@typescript-eslint/type-utils
+npm-audit:npm:@typescript-eslint/typescript-estree
+npm-audit:npm:@typescript-eslint/utils
+npm-audit:npm:eslint
+npm-audit:npm:minimatch
+npm-audit:npm:typescript-eslint
