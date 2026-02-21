@@ -18,6 +18,7 @@ from app.infra.db.models.enterprise_billing import (
 )
 from app.infra.db.models.enterprise_editorial_config import EnterpriseEditorialConfigModel
 from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
+from app.infra.db.models.feature_flag import FeatureFlagModel
 from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.privacy import UserPrivacyRequestModel
 from app.infra.db.models.reference import (
@@ -53,6 +54,7 @@ __all__ = [
     "EnterpriseBillingCycleModel",
     "EnterpriseEditorialConfigModel",
     "EnterpriseDailyUsageModel",
+    "FeatureFlagModel",
     "PersonaConfigModel",
     "UserPrivacyRequestModel",
     "ReferenceVersionModel",

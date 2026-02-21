@@ -9,10 +9,10 @@ from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.core.rbac import is_valid_role
 from app.core.request_id import resolve_request_id
 from app.core.security import SecurityError, decode_token
-from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.infra.db.session import get_db_session
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 from app.services.auth_service import AuthResponse, AuthService, AuthServiceError, AuthTokens

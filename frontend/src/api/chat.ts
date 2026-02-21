@@ -74,6 +74,34 @@ type ChatConversationHistoryResponse = {
   }[]
 }
 
+type ModuleAvailabilityItem = {
+  module: "tarot" | "runes"
+  flag_key: "tarot_enabled" | "runes_enabled"
+  status: "module-locked" | "module-ready"
+  available: boolean
+  reason: "feature_disabled" | "segment_mismatch" | "segment_match"
+}
+
+type ModuleAvailabilityResponse = {
+  modules: ModuleAvailabilityItem[]
+  total: number
+  available_count: number
+}
+
+type ExecuteModulePayload = {
+  question: string
+  situation?: string
+  conversation_id?: number
+}
+
+type ExecuteModuleResponse = {
+  module: "tarot" | "runes"
+  status: "completed"
+  interpretation: string
+  persona_profile_code: string
+  conversation_id: number | null
+}
+
 export class ChatApiError extends Error {
   readonly code: string
   readonly status: number
@@ -197,6 +225,73 @@ async function getChatConversationHistory(conversationId: number): Promise<ChatC
   }
 }
 
+async function getModuleAvailability(): Promise<ModuleAvailabilityResponse> {
+  try {
+    const response = await apiFetch(`${API_BASE_URL}/v1/chat/modules/availability`, {
+      method: "GET",
+      headers: {
+        ...getAccessTokenAuthHeader(),
+      },
+    })
+
+    if (!response.ok) {
+      let payload: ErrorEnvelope | null = null
+      try {
+        payload = (await response.json()) as ErrorEnvelope
+      } catch {
+        payload = null
+      }
+      throw new ChatApiError(
+        payload?.error?.code ?? "unknown_error",
+        payload?.error?.message ?? `Request failed with status ${response.status}`,
+        response.status,
+        payload?.error?.details ?? {},
+      )
+    }
+
+    const payload = (await response.json()) as { data: ModuleAvailabilityResponse }
+    return payload.data
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
+async function executeModule(
+  module: "tarot" | "runes",
+  requestPayload: ExecuteModulePayload,
+): Promise<ExecuteModuleResponse> {
+  try {
+    const response = await apiFetch(`${API_BASE_URL}/v1/chat/modules/${module}/execute`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAccessTokenAuthHeader(),
+      },
+      body: JSON.stringify(requestPayload),
+    })
+
+    if (!response.ok) {
+      let payload: ErrorEnvelope | null = null
+      try {
+        payload = (await response.json()) as ErrorEnvelope
+      } catch {
+        payload = null
+      }
+      throw new ChatApiError(
+        payload?.error?.code ?? "unknown_error",
+        payload?.error?.message ?? `Request failed with status ${response.status}`,
+        response.status,
+        payload?.error?.details ?? {},
+      )
+    }
+
+    const payload = (await response.json()) as { data: ExecuteModuleResponse }
+    return payload.data
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
 export function useSendChatMessage() {
   return useMutation({
     mutationFn: sendChatMessage,
@@ -218,10 +313,28 @@ export function useChatConversationHistory(conversationId: number | null) {
   })
 }
 
+export function useModuleAvailability() {
+  return useQuery({
+    queryKey: ["chat-modules-availability"],
+    queryFn: getModuleAvailability,
+  })
+}
+
+export function useExecuteModule() {
+  return useMutation({
+    mutationFn: (args: { module: "tarot" | "runes"; payload: ExecuteModulePayload }) =>
+      executeModule(args.module, args.payload),
+  })
+}
+
 export type {
   ChatConversationHistoryResponse,
   ChatConversationListResponse,
   ChatConversationSummary,
+  ExecuteModulePayload,
+  ExecuteModuleResponse,
+  ModuleAvailabilityItem,
+  ModuleAvailabilityResponse,
   SendChatPayload,
   SendChatResponse,
 }

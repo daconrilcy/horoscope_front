@@ -14,6 +14,7 @@ from app.infra.db.models.billing import (
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
+from app.infra.db.models.feature_flag import FeatureFlagModel
 from app.infra.db.models.reference import (
     AspectModel,
     AstroCharacteristicModel,
@@ -42,6 +43,7 @@ def _cleanup_tables() -> None:
         for model in (
             ChatMessageModel,
             ChatConversationModel,
+            FeatureFlagModel,
             ChartResultModel,
             UserDailyQuotaUsageModel,
             PaymentAttemptModel,
@@ -87,6 +89,26 @@ def _register_user_with_role_and_token(email: str, role: str) -> str:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
+
+
+def _enable_module_for_user(
+    *,
+    module: str,
+    ops_token: str,
+    user_id: int,
+    enabled: bool = True,
+) -> None:
+    flag_key = f"{module}_enabled"
+    response = client.put(
+        f"/v1/ops/feature-flags/{flag_key}",
+        headers={"Authorization": f"Bearer {ops_token}"},
+        json={
+            "enabled": enabled,
+            "target_roles": ["user"],
+            "target_user_ids": [user_id],
+        },
+    )
+    assert response.status_code == 200
 
 
 def test_send_chat_message_requires_token() -> None:
@@ -672,3 +694,164 @@ def test_send_chat_message_requires_active_subscription() -> None:
     )
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "no_active_subscription"
+
+
+def test_chat_modules_availability_is_locked_by_default() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    _activate_entry_plan(access_token, "chat-checkout-modules-default-1")
+
+    response = client.get(
+        "/v1/chat/modules/availability",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert response.status_code == 200
+    modules = {item["module"]: item for item in response.json()["data"]["modules"]}
+    assert modules["tarot"]["status"] == "module-locked"
+    assert modules["tarot"]["reason"] == "feature_disabled"
+    assert modules["runes"]["status"] == "module-locked"
+    assert modules["runes"]["reason"] == "feature_disabled"
+
+
+def test_chat_module_execute_requires_flag_enabled_for_user_segment() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    _activate_entry_plan(access_token, "chat-checkout-modules-segment-1")
+    with SessionLocal() as db:
+        user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
+        assert user is not None
+        user_id = user.id
+    ops_token = _register_user_with_role_and_token("chat-modules-ops@example.com", "ops")
+
+    locked = client.post(
+        "/v1/chat/modules/tarot/execute",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"question": "Faut-il temporiser ?"},
+    )
+    assert locked.status_code == 403
+    assert locked.json()["error"]["code"] == "module_locked"
+
+    _enable_module_for_user(module="tarot", ops_token=ops_token, user_id=user_id, enabled=True)
+
+    available = client.get(
+        "/v1/chat/modules/availability",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert available.status_code == 200
+    tarot = next(item for item in available.json()["data"]["modules"] if item["module"] == "tarot")
+    assert tarot["status"] == "module-ready"
+    assert tarot["available"] is True
+
+    execute = client.post(
+        "/v1/chat/modules/tarot/execute",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"question": "Faut-il temporiser ?", "situation": "Choix professionnel"},
+    )
+    assert execute.status_code == 200
+    payload = execute.json()["data"]
+    assert payload["module"] == "tarot"
+    assert payload["status"] == "completed"
+    assert "Tirage tarot" in payload["interpretation"]
+
+    _enable_module_for_user(module="tarot", ops_token=ops_token, user_id=user_id, enabled=False)
+    disabled = client.post(
+        "/v1/chat/modules/tarot/execute",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"question": "Nouvelle question"},
+    )
+    assert disabled.status_code == 403
+    assert disabled.json()["error"]["code"] == "module_locked"
+
+
+def test_chat_module_execute_locked_does_not_consume_quota() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    _activate_entry_plan(access_token, "chat-checkout-modules-quota-locked-1")
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    before = client.get("/v1/billing/quota", headers=headers)
+    assert before.status_code == 200
+    consumed_before = before.json()["data"]["consumed"]
+
+    locked = client.post(
+        "/v1/chat/modules/tarot/execute",
+        headers=headers,
+        json={"question": "Question verrouillee"},
+    )
+    assert locked.status_code == 403
+    assert locked.json()["error"]["code"] == "module_locked"
+
+    after = client.get("/v1/billing/quota", headers=headers)
+    assert after.status_code == 200
+    consumed_after = after.json()["data"]["consumed"]
+    assert consumed_after == consumed_before
+
+
+def test_chat_module_execute_forbidden_conversation_returns_403() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    _activate_entry_plan(access_token, "chat-checkout-modules-conv-forbidden-1")
+    other_user_token = _register_user_with_role_and_token("chat-modules-other@example.com", "user")
+    assert other_user_token
+    ops_token = _register_user_with_role_and_token("chat-modules-ops-403@example.com", "ops")
+
+    with SessionLocal() as db:
+        user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
+        other_user = db.scalar(
+            select(UserModel).where(UserModel.email == "chat-modules-other@example.com")
+        )
+        assert user is not None
+        assert other_user is not None
+        user_id = user.id
+        foreign_conversation = ChatRepository(db).create_conversation(other_user.id)
+        ChatRepository(db).create_message(
+            conversation_id=foreign_conversation.id,
+            role="user",
+            content="Conversation externe",
+        )
+        db.commit()
+        foreign_conversation_id = foreign_conversation.id
+
+    _enable_module_for_user(module="tarot", ops_token=ops_token, user_id=user_id, enabled=True)
+
+    forbidden = client.post(
+        "/v1/chat/modules/tarot/execute",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"question": "Question", "conversation_id": foreign_conversation_id},
+    )
+    assert forbidden.status_code == 403
+    assert forbidden.json()["error"]["code"] == "conversation_forbidden"
+
+
+def test_chat_module_user_override_takes_precedence_over_role_segment() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    _activate_entry_plan(access_token, "chat-checkout-modules-override-1")
+    ops_token = _register_user_with_role_and_token("chat-modules-ops-override@example.com", "ops")
+
+    with SessionLocal() as db:
+        user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
+        assert user is not None
+        user_id = user.id
+
+    set_flag = client.put(
+        "/v1/ops/feature-flags/tarot_enabled",
+        headers={"Authorization": f"Bearer {ops_token}"},
+        json={
+            "enabled": True,
+            "target_roles": ["ops"],
+            "target_user_ids": [user_id],
+        },
+    )
+    assert set_flag.status_code == 200
+
+    availability = client.get(
+        "/v1/chat/modules/availability",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert availability.status_code == 200
+    tarot = next(
+        item for item in availability.json()["data"]["modules"] if item["module"] == "tarot"
+    )
+    assert tarot["status"] == "module-ready"
+    assert tarot["available"] is True

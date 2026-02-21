@@ -1,12 +1,14 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { FormEvent } from "react"
 
 import { BillingApiError, useBillingQuota } from "../api/billing"
 import {
   ChatApiError,
+  useExecuteModule,
   type SendChatResponse,
   useChatConversationHistory,
   useChatConversations,
+  useModuleAvailability,
   useSendChatMessage,
 } from "../api/chat"
 import {
@@ -31,6 +33,8 @@ export function ChatPage() {
   const requestGuidance = useRequestGuidance()
   const requestContextualGuidance = useRequestContextualGuidance()
   const conversations = useChatConversations(20, 0)
+  const moduleAvailability = useModuleAvailability()
+  const executeModule = useExecuteModule()
   const [inputValue, setInputValue] = useState("")
   const [contextSituation, setContextSituation] = useState("")
   const [contextObjective, setContextObjective] = useState("")
@@ -39,9 +43,15 @@ export function ChatPage() {
   const [lastRecovery, setLastRecovery] = useState<SendChatResponse["recovery"] | null>(null)
   const [lastAttemptedMessage, setLastAttemptedMessage] = useState("")
   const [selectedConversationId, setSelectedConversationId] = useState<number | null>(null)
+  const [moduleQuestion, setModuleQuestion] = useState("")
+  const [moduleSituation, setModuleSituation] = useState("")
+  const [moduleResults, setModuleResults] = useState<Record<string, string>>({})
+  const [moduleErrorByKey, setModuleErrorByKey] = useState<Record<string, string>>({})
+  const [moduleInProgressByKey, setModuleInProgressByKey] = useState<Record<string, boolean>>({})
   const history = useChatConversationHistory(selectedConversationId)
   const activeConversationId = selectedConversationId
   const quotaBlocked = quota.data?.blocked === true
+  const anyModuleInProgress = Object.values(moduleInProgressByKey).some((value) => value)
   const displayedMessages = history.data
     ? history.data.messages.map((message) => ({
         id: `${message.role}-${message.message_id}`,
@@ -126,6 +136,81 @@ export function ChatPage() {
   const quotaError = quota.error as BillingApiError | null
   const guidanceError = requestGuidance.error as GuidanceApiError | null
   const contextualGuidanceError = requestContextualGuidance.error as GuidanceApiError | null
+
+  useEffect(() => {
+    const modules = moduleAvailability.data?.modules ?? []
+    const unavailableModules = modules
+      .filter((module) => !module.available)
+      .map((module) => module.module)
+    if (unavailableModules.length === 0) {
+      return
+    }
+    setModuleResults((current) => {
+      const next = { ...current }
+      for (const key of unavailableModules) {
+        delete next[key]
+      }
+      return next
+    })
+    setModuleErrorByKey((current) => {
+      const next = { ...current }
+      for (const key of unavailableModules) {
+        delete next[key]
+      }
+      return next
+    })
+  }, [moduleAvailability.data])
+
+  const handleModuleExecution = async (module: "tarot" | "runes") => {
+    if (anyModuleInProgress || moduleInProgressByKey[module] || quotaBlocked) {
+      return
+    }
+    const moduleEntry = moduleAvailability.data?.modules.find((item) => item.module === module)
+    if (!moduleEntry || !moduleEntry.available) {
+      return
+    }
+    const question = moduleQuestion.trim()
+    if (!question) {
+      setModuleErrorByKey((current) => ({
+        ...current,
+        [module]: "Question module requise.",
+      }))
+      return
+    }
+    setModuleInProgressByKey((current) => ({ ...current, [module]: true }))
+    setModuleErrorByKey((current) => ({ ...current, [module]: "" }))
+    try {
+      const response = await executeModule.mutateAsync({
+        module,
+        payload: {
+          question,
+          ...(moduleSituation.trim() ? { situation: moduleSituation.trim() } : {}),
+          ...(selectedConversationId ? { conversation_id: selectedConversationId } : {}),
+        },
+      })
+      setModuleResults((current) => ({
+        ...current,
+        [module]: response.interpretation,
+      }))
+      if (response.conversation_id) {
+        setSelectedConversationId(response.conversation_id)
+      }
+      void conversations.refetch()
+      void moduleAvailability.refetch()
+      void quota.refetch()
+      if (selectedConversationId || response.conversation_id) {
+        void history.refetch()
+      }
+    } catch (caught) {
+      const transportError = caught as ChatApiError
+      setModuleErrorByKey((current) => ({
+        ...current,
+        [module]: transportError.message,
+      }))
+    } finally {
+      setModuleInProgressByKey((current) => ({ ...current, [module]: false }))
+    }
+  }
 
   return (
     <section className="panel">
@@ -270,6 +355,75 @@ export function ChatPage() {
           </ul>
           <p>{requestContextualGuidance.data.disclaimer}</p>
         </article>
+      ) : null}
+      <h2>Modules specialises</h2>
+      <p>Tarot et runes sont actives progressivement via feature flags.</p>
+      <div className="chat-form">
+        <label htmlFor="module-question">Question module</label>
+        <textarea
+          id="module-question"
+          name="module-question"
+          rows={2}
+          value={moduleQuestion}
+          onChange={(event) => setModuleQuestion(event.target.value)}
+          placeholder="Ex: Quelle direction privilegier cette semaine ?"
+        />
+        <label htmlFor="module-situation">Contexte (optionnel)</label>
+        <textarea
+          id="module-situation"
+          name="module-situation"
+          rows={2}
+          value={moduleSituation}
+          onChange={(event) => setModuleSituation(event.target.value)}
+          placeholder="Ex: Decision professionnelle imminente."
+        />
+      </div>
+      {moduleAvailability.isPending ? <p aria-busy="true">Chargement des modules...</p> : null}
+      {moduleAvailability.error ? <p>Erreur modules: indisponibles pour le moment.</p> : null}
+      {moduleAvailability.data ? (
+        <div className="chat-form" aria-label="Modules specialises">
+          {moduleAvailability.data.modules.map((module) => {
+            const moduleName = module.module === "tarot" ? "Tarot" : "Runes"
+            const isInProgress = moduleInProgressByKey[module.module] === true
+            const hasCompleted = module.available && Boolean(moduleResults[module.module])
+            const hasError = Boolean(moduleErrorByKey[module.module])
+            let visualStatus: string = module.status
+            if (hasError) {
+              visualStatus = "error"
+            }
+            if (isInProgress) {
+              visualStatus = "in-progress"
+            }
+            if (hasCompleted) {
+              visualStatus = "completed"
+            }
+            return (
+              <article key={module.module} className="card">
+                <h3>{moduleName}</h3>
+                <p>
+                  Etat: <strong>{visualStatus}</strong>
+                </p>
+                {!module.available ? <p>Module verrouille ({module.reason}).</p> : null}
+                <button
+                  type="button"
+                  disabled={!module.available || isInProgress || anyModuleInProgress || quotaBlocked}
+                  onClick={() => handleModuleExecution(module.module)}
+                >
+                  Lancer {moduleName}
+                </button>
+                {isInProgress ? <p aria-busy="true">Execution en cours...</p> : null}
+                {moduleErrorByKey[module.module] ? (
+                  <p role="alert">Erreur {moduleName}: {moduleErrorByKey[module.module]}</p>
+                ) : null}
+                {moduleResults[module.module] ? (
+                  <p>{moduleResults[module.module]}</p>
+                ) : (
+                  <p>Aucun resultat module.</p>
+                )}
+              </article>
+            )
+          })}
+        </div>
       ) : null}
       {activeConversationId ? <p>Conversation active: #{activeConversationId}</p> : null}
       <h2>Historique</h2>

@@ -1,14 +1,26 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ChatPage } from "../pages/ChatPage"
 
 const mockUseSendChatMessage = vi.fn()
 const mockUseChatConversations = vi.fn()
 const mockUseChatConversationHistory = vi.fn()
+const mockUseModuleAvailability = vi.fn()
+const mockUseExecuteModule = vi.fn()
 const mockUseRequestGuidance = vi.fn()
 const mockUseRequestContextualGuidance = vi.fn()
 const mockUseBillingQuota = vi.fn()
+
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  return { promise, resolve, reject }
+}
 
 vi.mock("../api/chat", () => ({
   ChatApiError: class extends Error {
@@ -26,6 +38,8 @@ vi.mock("../api/chat", () => ({
   useSendChatMessage: () => mockUseSendChatMessage(),
   useChatConversations: () => mockUseChatConversations(),
   useChatConversationHistory: () => mockUseChatConversationHistory(),
+  useModuleAvailability: () => mockUseModuleAvailability(),
+  useExecuteModule: () => mockUseExecuteModule(),
 }))
 
 vi.mock("../api/guidance", () => ({
@@ -66,6 +80,8 @@ afterEach(() => {
   mockUseSendChatMessage.mockReset()
   mockUseChatConversations.mockReset()
   mockUseChatConversationHistory.mockReset()
+  mockUseModuleAvailability.mockReset()
+  mockUseExecuteModule.mockReset()
   mockUseRequestGuidance.mockReset()
   mockUseRequestContextualGuidance.mockReset()
   mockUseBillingQuota.mockReset()
@@ -99,6 +115,41 @@ describe("ChatPage", () => {
     refetch: vi.fn(),
   }
 
+  const baseModuleAvailability = {
+    isPending: false,
+    error: null,
+    data: {
+      modules: [
+        {
+          module: "tarot",
+          flag_key: "tarot_enabled",
+          status: "module-ready",
+          available: true,
+          reason: "segment_match",
+        },
+        {
+          module: "runes",
+          flag_key: "runes_enabled",
+          status: "module-locked",
+          available: false,
+          reason: "feature_disabled",
+        },
+      ],
+      total: 2,
+      available_count: 1,
+    },
+    refetch: vi.fn(),
+  }
+
+  beforeEach(() => {
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
+  })
+
   it("renders empty state", () => {
     mockUseRequestGuidance.mockReturnValue({
       isPending: false,
@@ -114,6 +165,12 @@ describe("ChatPage", () => {
     })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -141,6 +198,12 @@ describe("ChatPage", () => {
     })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: true,
@@ -168,6 +231,12 @@ describe("ChatPage", () => {
     })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -202,6 +271,12 @@ describe("ChatPage", () => {
     })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -236,6 +311,12 @@ describe("ChatPage", () => {
     const refetch = vi.fn()
     mockUseChatConversations.mockReturnValue({ ...baseConversationsState, refetch })
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     const quotaRefetch = vi.fn()
     mockUseBillingQuota.mockReturnValue({ ...baseQuotaState, refetch: quotaRefetch })
     const mutateAsync = vi.fn().mockResolvedValue({
@@ -286,6 +367,12 @@ describe("ChatPage", () => {
       },
     })
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     const mutateAsync = vi
       .fn()
@@ -360,6 +447,12 @@ describe("ChatPage", () => {
       },
     })
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
       isError: false,
@@ -400,6 +493,12 @@ describe("ChatPage", () => {
       },
     })
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     const mutateAsync = vi.fn().mockResolvedValue({
       conversation_id: 10,
@@ -443,6 +542,12 @@ describe("ChatPage", () => {
     })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -489,6 +594,12 @@ describe("ChatPage", () => {
       },
     })
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -529,6 +640,12 @@ describe("ChatPage", () => {
     })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -570,6 +687,12 @@ describe("ChatPage", () => {
     })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -602,6 +725,12 @@ describe("ChatPage", () => {
     })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -688,6 +817,12 @@ describe("ChatPage", () => {
     })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     mockUseBillingQuota.mockReturnValue({
       ...baseQuotaState,
       data: { ...baseQuotaState.data, consumed: 5, remaining: 0, blocked: true },
@@ -711,5 +846,316 @@ describe("ChatPage", () => {
     expect(screen.getByText("Quota journalier atteint. Vous pourrez reprendre apres le reset.")).toBeInTheDocument()
     expect(screen.getByText(/Quota atteint \(5\/5\)/)).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Envoyer" })).toBeDisabled()
+  })
+
+  it("executes available module and does not execute locked module", async () => {
+    mockUseRequestGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: null,
+      mutate: vi.fn(),
+    })
+    mockUseRequestContextualGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: null,
+      mutate: vi.fn(),
+    })
+    const moduleRefetch = vi.fn()
+    mockUseModuleAvailability.mockReturnValue({ ...baseModuleAvailability, refetch: moduleRefetch })
+    const executeMutateAsync = vi.fn().mockResolvedValue({
+      module: "tarot",
+      status: "completed",
+      interpretation: "Lecture test",
+      persona_profile_code: "legacy-default",
+      conversation_id: null,
+    })
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: executeMutateAsync,
+    })
+    mockUseChatConversations.mockReturnValue(baseConversationsState)
+    mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseBillingQuota.mockReturnValue(baseQuotaState)
+    mockUseSendChatMessage.mockReturnValue({
+      isPending: false,
+      isError: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
+
+    render(<ChatPage />)
+    fireEvent.change(screen.getByLabelText("Question module"), { target: { value: "Question tarot" } })
+    fireEvent.click(screen.getByRole("button", { name: "Lancer Tarot" }))
+    fireEvent.click(screen.getByRole("button", { name: "Lancer Runes" }))
+
+    await waitFor(() => {
+      expect(executeMutateAsync).toHaveBeenCalledTimes(1)
+    })
+    expect(executeMutateAsync).toHaveBeenCalledWith({
+      module: "tarot",
+      payload: { question: "Question tarot" },
+    })
+    expect(moduleRefetch).toHaveBeenCalled()
+    expect(screen.getByText("Lecture test")).toBeInTheDocument()
+    const tarotCard = screen.getByRole("heading", { name: "Tarot" }).closest("article")
+    expect(tarotCard).not.toBeNull()
+    expect(tarotCard as HTMLElement).toHaveTextContent(/Etat:\s*completed/i)
+  })
+
+  it("shows module in-progress state while execution is pending", async () => {
+    mockUseRequestGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: null,
+      mutate: vi.fn(),
+    })
+    mockUseRequestContextualGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: null,
+      mutate: vi.fn(),
+    })
+    const deferred = createDeferred<{
+      module: "tarot"
+      status: "completed"
+      interpretation: string
+      persona_profile_code: string
+      conversation_id: number | null
+    }>()
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn().mockReturnValue(deferred.promise),
+    })
+    mockUseChatConversations.mockReturnValue(baseConversationsState)
+    mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseBillingQuota.mockReturnValue(baseQuotaState)
+    mockUseSendChatMessage.mockReturnValue({
+      isPending: false,
+      isError: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
+
+    render(<ChatPage />)
+    fireEvent.change(screen.getByLabelText("Question module"), { target: { value: "Question tarot" } })
+    fireEvent.click(screen.getByRole("button", { name: "Lancer Tarot" }))
+
+    const tarotCard = screen.getByRole("heading", { name: "Tarot" }).closest("article")
+    expect(tarotCard).not.toBeNull()
+    await waitFor(() => {
+      expect(tarotCard as HTMLElement).toHaveTextContent(/Etat:\s*in-progress/i)
+    })
+    expect(within(tarotCard as HTMLElement).getByText("Execution en cours...")).toBeInTheDocument()
+
+    deferred.resolve({
+      module: "tarot",
+      status: "completed",
+      interpretation: "Lecture differee",
+      persona_profile_code: "legacy-default",
+      conversation_id: null,
+    })
+
+    await waitFor(() => {
+      expect(tarotCard as HTMLElement).toHaveTextContent(/Etat:\s*completed/i)
+    })
+  })
+
+  it("shows module error state when execution fails", async () => {
+    mockUseRequestGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: null,
+      mutate: vi.fn(),
+    })
+    mockUseRequestContextualGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: null,
+      mutate: vi.fn(),
+    })
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn().mockRejectedValue(new Error("module unavailable")),
+    })
+    mockUseChatConversations.mockReturnValue(baseConversationsState)
+    mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseBillingQuota.mockReturnValue(baseQuotaState)
+    mockUseSendChatMessage.mockReturnValue({
+      isPending: false,
+      isError: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
+
+    render(<ChatPage />)
+    fireEvent.change(screen.getByLabelText("Question module"), { target: { value: "Question tarot" } })
+    fireEvent.click(screen.getByRole("button", { name: "Lancer Tarot" }))
+
+    const tarotCard = screen.getByRole("heading", { name: "Tarot" }).closest("article")
+    expect(tarotCard).not.toBeNull()
+    await waitFor(() => {
+      expect(tarotCard as HTMLElement).toHaveTextContent(/Etat:\s*error/i)
+    })
+    expect(within(tarotCard as HTMLElement).getByRole("alert")).toHaveTextContent(
+      "Erreur Tarot: module unavailable",
+    )
+  })
+
+  it("clears completed state immediately when module becomes locked", async () => {
+    mockUseRequestGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: null,
+      mutate: vi.fn(),
+    })
+    mockUseRequestContextualGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: null,
+      mutate: vi.fn(),
+    })
+    const executeMutateAsync = vi.fn().mockResolvedValue({
+      module: "tarot",
+      status: "completed",
+      interpretation: "Lecture a retirer",
+      persona_profile_code: "legacy-default",
+      conversation_id: null,
+    })
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: executeMutateAsync,
+    })
+    mockUseChatConversations.mockReturnValue(baseConversationsState)
+    mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseBillingQuota.mockReturnValue(baseQuotaState)
+    mockUseSendChatMessage.mockReturnValue({
+      isPending: false,
+      isError: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
+    const { rerender } = render(<ChatPage />)
+
+    fireEvent.change(screen.getByLabelText("Question module"), { target: { value: "Question tarot" } })
+    fireEvent.click(screen.getByRole("button", { name: "Lancer Tarot" }))
+    expect(await screen.findByText("Lecture a retirer")).toBeInTheDocument()
+
+    mockUseModuleAvailability.mockReturnValue({
+      ...baseModuleAvailability,
+      data: {
+        modules: [
+          {
+            module: "tarot",
+            flag_key: "tarot_enabled",
+            status: "module-locked",
+            available: false,
+            reason: "feature_disabled",
+          },
+          {
+            module: "runes",
+            flag_key: "runes_enabled",
+            status: "module-locked",
+            available: false,
+            reason: "feature_disabled",
+          },
+        ],
+        total: 2,
+        available_count: 0,
+      },
+    })
+    rerender(<ChatPage />)
+
+    const tarotCard = screen.getByRole("heading", { name: "Tarot" }).closest("article")
+    expect(tarotCard).not.toBeNull()
+    await waitFor(() => {
+      expect(tarotCard as HTMLElement).toHaveTextContent(/Etat:\s*module-locked/i)
+    })
+    expect(tarotCard as HTMLElement).not.toHaveTextContent("Lecture a retirer")
+  })
+
+  it("blocks concurrent module execution while a module request is pending", async () => {
+    mockUseRequestGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: null,
+      mutate: vi.fn(),
+    })
+    mockUseRequestContextualGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: null,
+      mutate: vi.fn(),
+    })
+    const deferred = createDeferred<{
+      module: "tarot"
+      status: "completed"
+      interpretation: string
+      persona_profile_code: string
+      conversation_id: number | null
+    }>()
+    mockUseModuleAvailability.mockReturnValue({
+      ...baseModuleAvailability,
+      data: {
+        modules: [
+          {
+            module: "tarot",
+            flag_key: "tarot_enabled",
+            status: "module-ready",
+            available: true,
+            reason: "segment_match",
+          },
+          {
+            module: "runes",
+            flag_key: "runes_enabled",
+            status: "module-ready",
+            available: true,
+            reason: "segment_match",
+          },
+        ],
+        total: 2,
+        available_count: 2,
+      },
+    })
+    const executeMutateAsync = vi.fn().mockReturnValue(deferred.promise)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: executeMutateAsync,
+    })
+    mockUseChatConversations.mockReturnValue(baseConversationsState)
+    mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseBillingQuota.mockReturnValue(baseQuotaState)
+    mockUseSendChatMessage.mockReturnValue({
+      isPending: false,
+      isError: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
+
+    render(<ChatPage />)
+    fireEvent.change(screen.getByLabelText("Question module"), { target: { value: "Question multi-module" } })
+    fireEvent.click(screen.getByRole("button", { name: "Lancer Tarot" }))
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Lancer Runes" })).toBeDisabled()
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: "Lancer Runes" }))
+    expect(executeMutateAsync).toHaveBeenCalledTimes(1)
+
+    deferred.resolve({
+      module: "tarot",
+      status: "completed",
+      interpretation: "Lecture finale",
+      persona_profile_code: "legacy-default",
+      conversation_id: null,
+    })
   })
 })

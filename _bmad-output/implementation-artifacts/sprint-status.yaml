@@ -101,7 +101,7 @@ development_status:
   epic-10-retrospective: optional
   epic-11: in-progress
   11-1-raffinement-multi-persona-astrologue: review
-  11-2-modules-tarot-runes-derriere-feature-flags: backlog
+  11-2-modules-tarot-runes-derriere-feature-flags: done
   11-3-instrumentation-des-experiments-packaging-pricing: backlog
   epic-11-retrospective: optional
 
