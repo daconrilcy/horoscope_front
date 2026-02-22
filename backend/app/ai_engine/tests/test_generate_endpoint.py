@@ -1,0 +1,189 @@
+"""Tests for /v1/ai/generate endpoint."""
+
+from unittest.mock import AsyncMock, patch
+
+import pytest
+from fastapi.testclient import TestClient
+
+from app.ai_engine.exceptions import UpstreamTimeoutError
+from app.ai_engine.providers.base import ProviderResult
+from app.main import app
+
+
+@pytest.fixture
+def client() -> TestClient:
+    """Create test client."""
+    return TestClient(app)
+
+
+class TestGenerateEndpoint:
+    """Tests for POST /v1/ai/generate endpoint."""
+
+    def test_generate_returns_validation_error_for_unknown_use_case(
+        self, client: TestClient
+    ) -> None:
+        """Generate returns 400 for unknown use_case."""
+        response = client.post(
+            "/v1/ai/generate",
+            json={
+                "use_case": "unknown_case",
+                "locale": "fr-FR",
+            },
+        )
+
+        assert response.status_code == 400
+        data = response.json()
+        assert data["error"]["type"] == "VALIDATION_ERROR"
+        assert "unknown_case" in data["error"]["message"]
+
+    def test_generate_returns_success_with_valid_request(
+        self, client: TestClient
+    ) -> None:
+        """Generate returns 200 with valid request."""
+        mock_result = ProviderResult(
+            text="Generated astrological insight",
+            input_tokens=100,
+            output_tokens=50,
+            model="gpt-4o-mini",
+        )
+
+        with patch(
+            "app.ai_engine.services.generate_service.get_provider_client"
+        ) as mock_provider:
+            mock_client = AsyncMock()
+            mock_client.generate_text = AsyncMock(return_value=mock_result)
+            mock_client.provider_name = "openai"
+            mock_provider.return_value = mock_client
+
+            response = client.post(
+                "/v1/ai/generate",
+                json={
+                    "use_case": "natal_chart_interpretation",
+                    "locale": "fr-FR",
+                    "input": {
+                        "question": "Que dit mon thème sur ma carrière ?",
+                        "tone": "warm",
+                    },
+                    "context": {
+                        "natal_chart_summary": "Soleil en Bélier",
+                    },
+                },
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["text"] == "Generated astrological insight"
+        assert data["provider"] == "openai"
+        assert data["model"] == "gpt-4o-mini"
+        assert "request_id" in data
+        assert "trace_id" in data
+        assert data["usage"]["input_tokens"] == 100
+        assert data["usage"]["output_tokens"] == 50
+        assert data["usage"]["total_tokens"] == 150
+
+    def test_generate_includes_trace_id_from_header(
+        self, client: TestClient
+    ) -> None:
+        """Generate uses trace_id from header when provided."""
+        mock_result = ProviderResult(
+            text="Response",
+            input_tokens=10,
+            output_tokens=5,
+            model="gpt-4o-mini",
+        )
+
+        with patch(
+            "app.ai_engine.services.generate_service.get_provider_client"
+        ) as mock_provider:
+            mock_client = AsyncMock()
+            mock_client.generate_text = AsyncMock(return_value=mock_result)
+            mock_client.provider_name = "openai"
+            mock_provider.return_value = mock_client
+
+            response = client.post(
+                "/v1/ai/generate",
+                json={"use_case": "chat", "locale": "fr-FR"},
+                headers={"X-Trace-Id": "custom-trace-123"},
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["trace_id"] == "custom-trace-123"
+
+    def test_generate_includes_trace_id_from_body(
+        self, client: TestClient
+    ) -> None:
+        """Generate uses trace_id from body when provided."""
+        mock_result = ProviderResult(
+            text="Response",
+            input_tokens=10,
+            output_tokens=5,
+            model="gpt-4o-mini",
+        )
+
+        with patch(
+            "app.ai_engine.services.generate_service.get_provider_client"
+        ) as mock_provider:
+            mock_client = AsyncMock()
+            mock_client.generate_text = AsyncMock(return_value=mock_result)
+            mock_client.provider_name = "openai"
+            mock_provider.return_value = mock_client
+
+            response = client.post(
+                "/v1/ai/generate",
+                json={
+                    "use_case": "chat",
+                    "locale": "fr-FR",
+                    "trace_id": "body-trace-456",
+                },
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["trace_id"] == "body-trace-456"
+
+    def test_generate_returns_timeout_error(self, client: TestClient) -> None:
+        """Generate returns 504 on upstream timeout."""
+        with patch(
+            "app.ai_engine.services.generate_service.get_provider_client"
+        ) as mock_provider:
+            mock_client = AsyncMock()
+            mock_client.generate_text = AsyncMock(
+                side_effect=UpstreamTimeoutError(30)
+            )
+            mock_provider.return_value = mock_client
+
+            response = client.post(
+                "/v1/ai/generate",
+                json={"use_case": "chat", "locale": "fr-FR"},
+            )
+
+        assert response.status_code == 504
+        data = response.json()
+        assert data["error"]["type"] == "UPSTREAM_TIMEOUT"
+
+    def test_generate_calculates_estimated_cost(self, client: TestClient) -> None:
+        """Generate calculates estimated cost in USD."""
+        mock_result = ProviderResult(
+            text="Response",
+            input_tokens=1000,
+            output_tokens=500,
+            model="gpt-4o-mini",
+        )
+
+        with patch(
+            "app.ai_engine.services.generate_service.get_provider_client"
+        ) as mock_provider:
+            mock_client = AsyncMock()
+            mock_client.generate_text = AsyncMock(return_value=mock_result)
+            mock_client.provider_name = "openai"
+            mock_provider.return_value = mock_client
+
+            response = client.post(
+                "/v1/ai/generate",
+                json={"use_case": "chat", "locale": "fr-FR"},
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["usage"]["estimated_cost_usd"] > 0
