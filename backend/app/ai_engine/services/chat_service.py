@@ -253,4 +253,3 @@ async def chat_stream(
         )
         error_data = {"error": {"type": type(err).__name__, "message": str(err)}}
         yield f"data: {json.dumps(error_data)}\n\n"
-        raise

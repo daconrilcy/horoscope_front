@@ -369,3 +369,43 @@ class TestChatStreamingEndpoint:
         assert "output_tokens" in usage
         assert "total_tokens" in usage
         assert "estimated_cost_usd" in usage
+
+    def test_chat_streaming_emits_error_event_on_failure(
+        self, client: TestClient
+    ) -> None:
+        """Chat streaming emits error event when provider fails mid-stream (AC5)."""
+        import json as json_module
+
+        async def mock_failing_stream():
+            yield "Starting"
+            raise RuntimeError("Connection lost mid-stream")
+
+        with patch(
+            "app.ai_engine.services.chat_service.get_provider_client"
+        ) as mock_provider:
+            mock_client = AsyncMock()
+            mock_client.chat = AsyncMock(return_value=mock_failing_stream())
+            mock_client.provider_name = "openai"
+            mock_provider.return_value = mock_client
+
+            response = client.post(
+                "/v1/ai/chat",
+                json={
+                    "locale": "fr-FR",
+                    "messages": [{"role": "user", "content": "Test"}],
+                    "output": {"stream": True},
+                },
+            )
+
+        content = response.text
+        lines = [line for line in content.split("\n") if line.startswith("data: ")]
+
+        events = []
+        for line in lines:
+            data = json_module.loads(line[6:])
+            events.append(data)
+
+        error_events = [e for e in events if "error" in e]
+        assert len(error_events) >= 1, "stream should emit error event on failure"
+        assert error_events[0]["error"]["type"] == "RuntimeError"
+        assert "Connection lost" in error_events[0]["error"]["message"]

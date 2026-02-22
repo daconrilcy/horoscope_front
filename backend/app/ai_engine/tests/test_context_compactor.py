@@ -68,11 +68,15 @@ class TestValidateContextSize:
         validate_context_size("Small context", max_tokens=1000)
 
     def test_validate_context_size_raises_for_excessive_context(self) -> None:
-        """Excessive context raises ContextTooLargeError."""
+        """Excessive context raises ContextTooLargeError with correct details."""
         context = "a" * 100000
         with pytest.raises(ContextTooLargeError) as exc_info:
             validate_context_size(context, max_tokens=1000)
-        assert exc_info.value.status_code == 400
+        error = exc_info.value
+        assert error.status_code == 400
+        assert error.error_type == "VALIDATION_ERROR"
+        assert "token_count" in error.details
+        assert "max_tokens" in error.details
 
     def test_validate_context_size_respects_multiplier(self) -> None:
         """Validation respects hard limit multiplier."""

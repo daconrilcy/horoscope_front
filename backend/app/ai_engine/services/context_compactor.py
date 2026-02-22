@@ -47,20 +47,18 @@ def compact_context(
         return context
 
     max_chars = int(max_tokens * CHARS_PER_TOKEN_ESTIMATE)
-    effective_strategy = "truncate"
 
     if strategy == "summarize":
         logger.warning(
             "context_compactor_summarize_not_implemented falling_back_to=truncate"
         )
-        effective_strategy = "truncate"
 
     compacted = _truncate_context(context, max_chars)
 
     final_tokens = estimate_tokens(compacted)
     logger.info(
         "context_compacted strategy=%s original_tokens=%d final_tokens=%d max_tokens=%d",
-        effective_strategy,
+        "truncate",
         estimated_tokens,
         final_tokens,
         max_tokens,
