@@ -33,6 +33,7 @@ async def generate_text(
         request: Generation request
         request_id: Request identifier for logging
         trace_id: Trace identifier for distributed tracing
+        user_id: User identifier for audit tracing
 
     Returns:
         GenerateResponse with generated text and metadata

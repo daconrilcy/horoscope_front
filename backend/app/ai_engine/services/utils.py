@@ -26,9 +26,6 @@ def get_provider_client(provider_name: str) -> ProviderClient:
     Raises:
         ValidationError: If provider is not supported
     """
-    if provider_name in _provider_clients:
-        return _provider_clients[provider_name]
-
     with _provider_lock:
         if provider_name in _provider_clients:
             return _provider_clients[provider_name]

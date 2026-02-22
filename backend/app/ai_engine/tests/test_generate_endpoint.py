@@ -38,6 +38,27 @@ class TestGenerateEndpointAuth:
         assert response.status_code == 401
 
 
+class TestGenerateEndpointValidation:
+    """Tests for Pydantic validation on POST /v1/ai/generate."""
+
+    def test_generate_returns_422_for_invalid_provider(
+        self, client: TestClient
+    ) -> None:
+        """Generate returns 422 for invalid provider name (Pydantic Literal validation)."""
+        response = client.post(
+            "/v1/ai/generate",
+            json={
+                "use_case": "chat",
+                "locale": "fr-FR",
+                "provider": {"name": "anthropic", "model": "AUTO"},
+            },
+        )
+        assert response.status_code == 422
+        data = response.json()
+        assert "error" in data
+        assert data["error"]["code"] == "invalid_request_payload"
+
+
 class TestGenerateEndpoint:
     """Tests for POST /v1/ai/generate endpoint."""
 

@@ -56,6 +56,7 @@ async def chat(
         request: Chat request
         request_id: Request identifier for logging
         trace_id: Trace identifier for distributed tracing
+        user_id: User identifier for audit tracing
 
     Returns:
         ChatResponse with generated text and metadata
@@ -66,10 +67,12 @@ async def chat(
     increment_counter("ai_engine_requests_total|use_case=chat|status=started", 1.0)
 
     logger.info(
-        "ai_chat_start request_id=%s trace_id=%s user_id=%d locale=%s message_count=%d",
+        "ai_chat_start request_id=%s trace_id=%s user_id=%d "
+        "conversation_id=%s locale=%s message_count=%d",
         request_id,
         trace_id,
         user_id,
+        request.conversation_id or "none",
         request.locale,
         len(request.messages),
     )
@@ -145,12 +148,13 @@ async def chat_stream(
 
     Yields SSE-formatted chunks:
     - data: {"delta": "..."}
-    - data: {"done": true, "text": "..."}
+    - data: {"done": true, "text": "...", "usage": {...}}
 
     Args:
         request: Chat request
         request_id: Request identifier for logging
         trace_id: Trace identifier for distributed tracing
+        user_id: User identifier for audit tracing
 
     Yields:
         SSE-formatted strings
@@ -161,10 +165,12 @@ async def chat_stream(
     increment_counter("ai_engine_requests_total|use_case=chat_stream|status=started", 1.0)
 
     logger.info(
-        "ai_chat_stream_start request_id=%s trace_id=%s user_id=%d locale=%s message_count=%d",
+        "ai_chat_stream_start request_id=%s trace_id=%s user_id=%d "
+        "conversation_id=%s locale=%s message_count=%d",
         request_id,
         trace_id,
         user_id,
+        request.conversation_id or "none",
         request.locale,
         len(request.messages),
     )

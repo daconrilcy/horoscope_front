@@ -42,6 +42,40 @@ class TestChatEndpointAuth:
         assert response.status_code == 401
 
 
+class TestChatEndpointValidation:
+    """Tests for Pydantic validation on POST /v1/ai/chat."""
+
+    def test_chat_returns_422_for_invalid_provider(self, client: TestClient) -> None:
+        """Chat returns 422 for invalid provider name (Pydantic Literal validation)."""
+        response = client.post(
+            "/v1/ai/chat",
+            json={
+                "locale": "fr-FR",
+                "messages": [{"role": "user", "content": "Hello"}],
+                "output": {"stream": False},
+                "provider": {"name": "mistral", "model": "AUTO"},
+            },
+        )
+        assert response.status_code == 422
+        data = response.json()
+        assert "error" in data
+        assert data["error"]["code"] == "invalid_request_payload"
+
+    def test_chat_returns_422_for_invalid_message_role(
+        self, client: TestClient
+    ) -> None:
+        """Chat returns 422 for invalid message role (Pydantic Literal validation)."""
+        response = client.post(
+            "/v1/ai/chat",
+            json={
+                "locale": "fr-FR",
+                "messages": [{"role": "bot", "content": "Hello"}],
+                "output": {"stream": False},
+            },
+        )
+        assert response.status_code == 422
+
+
 class TestChatEndpoint:
     """Tests for POST /v1/ai/chat endpoint."""
 
@@ -327,3 +361,11 @@ class TestChatStreamingEndpoint:
         assert len(delta_events) >= 1
         assert len(done_events) == 1
         assert "Part1" in done_events[0]["text"] and "Part2" in done_events[0]["text"]
+
+        usage = done_events[0].get("usage")
+        assert usage is not None, "done event should include usage info"
+        assert usage.get("is_estimate") is True
+        assert "input_tokens" in usage
+        assert "output_tokens" in usage
+        assert "total_tokens" in usage
+        assert "estimated_cost_usd" in usage
