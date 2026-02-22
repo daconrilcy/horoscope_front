@@ -7,6 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.ai_engine.exceptions import (
+    ProviderNotConfiguredError,
     UpstreamError,
     UpstreamRateLimitError,
     UpstreamTimeoutError,
@@ -266,6 +267,29 @@ class TestChatEndpoint:
         data = response.json()
         assert data["error"]["type"] == "UPSTREAM_TIMEOUT"
         assert "timeout_seconds" in data["error"]["details"]
+
+    def test_chat_returns_500_when_provider_not_configured(
+        self, client: TestClient
+    ) -> None:
+        """Chat returns 500 when provider is not configured (no API key)."""
+        with patch(
+            "app.ai_engine.services.chat_service.get_provider_client"
+        ) as mock_provider:
+            mock_provider.side_effect = ProviderNotConfiguredError("openai")
+
+            response = client.post(
+                "/v1/ai/chat",
+                json={
+                    "locale": "fr-FR",
+                    "messages": [{"role": "user", "content": "Hello"}],
+                    "output": {"stream": False},
+                },
+            )
+
+        assert response.status_code == 500
+        data = response.json()
+        assert data["error"]["type"] == "PROVIDER_NOT_CONFIGURED"
+        assert "openai" in data["error"]["message"]
 
     def test_chat_includes_context_in_system_prompt(
         self, client: TestClient

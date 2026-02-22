@@ -131,7 +131,7 @@ Cette story met en place le **AI Text Engine**, un module backend unique qui :
   - [x] 429: rate-limit
   - [x] 502: provider error
   - [x] 504: timeout
-- [x] Tests d'intégration endpoints (AC: #2, #3) — 10 tests dans `test_generate_endpoint.py`, 14 tests dans `test_chat_endpoint.py`
+- [x] Tests d'intégration endpoints (AC: #2, #3) — 10 tests dans `test_generate_endpoint.py`, 15 tests dans `test_chat_endpoint.py`
 
 ### Subtask 15.1.5: Non-functional — Logs, métriques, rate limiting
 - [x] Intégrer logs structurés avec `trace_id` (AC: #7)
@@ -307,7 +307,7 @@ Claude Opus 4.5
 
 ### Debug Log References
 
-- Backend tests: 53 tests AI Engine passent (après 8 rounds de code review)
+- Backend tests: 54 tests AI Engine passent (après 10 rounds de code review)
 - Lint: ruff check app/ai_engine/ — All checks passed!
 
 ### Completion Notes List
@@ -362,3 +362,4 @@ Claude Opus 4.5
 - 2026-02-22: Adversarial Code Review #7 fixes (claude-opus-4-5) — M1: user_id ajouté au log ai_chat_stream_error. M2: test rate limit 429 pour chat (AC5). L1: test count vérifié. L2: tests edge cases context_compactor (empty string, unicode). 52/52 tests, 0 erreur lint.
 - 2026-02-22: Adversarial Code Review #8 fixes (claude-opus-4-5) — M1: test timeout 504 pour chat endpoint (AC5). L1: test count subtask corrigé (12 tests context_compactor). L2: docstring _stream_chat avec Raises documenté. 53/53 tests, 0 erreur lint.
 - 2026-02-22: Adversarial Code Review #9 fixes (claude-opus-4-5) — L1: ProviderResult converti en dataclass. L2: test counts subtask 15.1.4 corrigés (10 generate, 14 chat). L3: test count subtask 15.1.2 corrigé (11 tests prompt_registry). 53/53 tests, 0 erreur lint.
+- 2026-02-22: Adversarial Code Review #10 fixes (claude-opus-4-5) — L1: validation robuste des env vars (fallback sur parse error). L2: test ProviderNotConfiguredError pour chat endpoint. L3: exports explicites dans providers/__init__.py. 54/54 tests, 0 erreur lint.
