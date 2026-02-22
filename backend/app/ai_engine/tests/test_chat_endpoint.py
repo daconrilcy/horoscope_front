@@ -1,5 +1,6 @@
 """Tests for /v1/ai/chat endpoint."""
 
+from typing import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -7,13 +8,21 @@ from fastapi.testclient import TestClient
 
 from app.ai_engine.exceptions import UpstreamError
 from app.ai_engine.providers.base import ProviderResult
+from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.main import app
 
 
+def _mock_authenticated_user() -> AuthenticatedUser:
+    """Return a mock authenticated user for tests."""
+    return AuthenticatedUser(id=1, role="user")
+
+
 @pytest.fixture
-def client() -> TestClient:
-    """Create test client."""
-    return TestClient(app)
+def client() -> Generator[TestClient, None, None]:
+    """Create test client with mocked authentication."""
+    app.dependency_overrides[require_authenticated_user] = _mock_authenticated_user
+    yield TestClient(app)
+    app.dependency_overrides.clear()
 
 
 class TestChatEndpoint:
@@ -195,3 +204,109 @@ class TestChatEndpoint:
         messages = call_args[0][0]
         system_content = messages[0].content
         assert "Soleil en Bélier" in system_content
+
+
+class TestChatStreamingEndpoint:
+    """Tests for POST /v1/ai/chat endpoint with streaming."""
+
+    def test_chat_streaming_returns_sse_events(self, client: TestClient) -> None:
+        """Chat streaming returns SSE-formatted response."""
+
+        async def mock_stream_generator():
+            yield "Hello"
+            yield " world"
+            yield "!"
+
+        with patch(
+            "app.ai_engine.services.chat_service.get_provider_client"
+        ) as mock_provider:
+            mock_client = AsyncMock()
+            mock_client.chat = AsyncMock(return_value=mock_stream_generator())
+            mock_client.provider_name = "openai"
+            mock_provider.return_value = mock_client
+
+            response = client.post(
+                "/v1/ai/chat",
+                json={
+                    "locale": "fr-FR",
+                    "messages": [{"role": "user", "content": "Hello"}],
+                    "output": {"stream": True},
+                },
+            )
+
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/event-stream")
+        assert "X-Request-Id" in response.headers
+        assert "X-Trace-Id" in response.headers
+
+    def test_chat_streaming_includes_cache_control_headers(
+        self, client: TestClient
+    ) -> None:
+        """Chat streaming response has proper cache headers."""
+
+        async def mock_stream_generator():
+            yield "chunk"
+
+        with patch(
+            "app.ai_engine.services.chat_service.get_provider_client"
+        ) as mock_provider:
+            mock_client = AsyncMock()
+            mock_client.chat = AsyncMock(return_value=mock_stream_generator())
+            mock_client.provider_name = "openai"
+            mock_provider.return_value = mock_client
+
+            response = client.post(
+                "/v1/ai/chat",
+                json={
+                    "locale": "fr-FR",
+                    "messages": [{"role": "user", "content": "Hello"}],
+                    "output": {"stream": True},
+                },
+            )
+
+        assert response.status_code == 200
+        assert response.headers.get("cache-control") == "no-cache"
+        assert response.headers.get("connection") == "keep-alive"
+
+    def test_chat_streaming_emits_delta_and_done_events(
+        self, client: TestClient
+    ) -> None:
+        """Chat streaming emits delta events and done event."""
+        import json as json_module
+
+        async def mock_stream_generator():
+            yield "Part1"
+            yield "Part2"
+
+        with patch(
+            "app.ai_engine.services.chat_service.get_provider_client"
+        ) as mock_provider:
+            mock_client = AsyncMock()
+            mock_client.chat = AsyncMock(return_value=mock_stream_generator())
+            mock_client.provider_name = "openai"
+            mock_provider.return_value = mock_client
+
+            response = client.post(
+                "/v1/ai/chat",
+                json={
+                    "locale": "fr-FR",
+                    "messages": [{"role": "user", "content": "Test"}],
+                    "output": {"stream": True},
+                },
+            )
+
+        assert response.status_code == 200
+        content = response.text
+        lines = [line for line in content.split("\n") if line.startswith("data: ")]
+
+        events = []
+        for line in lines:
+            data = json_module.loads(line[6:])
+            events.append(data)
+
+        assert len(events) >= 2
+        delta_events = [e for e in events if "delta" in e]
+        done_events = [e for e in events if e.get("done") is True]
+        assert len(delta_events) >= 1
+        assert len(done_events) == 1
+        assert "Part1" in done_events[0]["text"] and "Part2" in done_events[0]["text"]

@@ -1,5 +1,6 @@
 """Tests for /v1/ai/generate endpoint."""
 
+from typing import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -7,13 +8,21 @@ from fastapi.testclient import TestClient
 
 from app.ai_engine.exceptions import UpstreamTimeoutError
 from app.ai_engine.providers.base import ProviderResult
+from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.main import app
 
 
+def _mock_authenticated_user() -> AuthenticatedUser:
+    """Return a mock authenticated user for tests."""
+    return AuthenticatedUser(id=1, role="user")
+
+
 @pytest.fixture
-def client() -> TestClient:
-    """Create test client."""
-    return TestClient(app)
+def client() -> Generator[TestClient, None, None]:
+    """Create test client with mocked authentication."""
+    app.dependency_overrides[require_authenticated_user] = _mock_authenticated_user
+    yield TestClient(app)
+    app.dependency_overrides.clear()
 
 
 class TestGenerateEndpoint:
@@ -187,3 +196,61 @@ class TestGenerateEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert data["usage"]["estimated_cost_usd"] > 0
+
+    def test_generate_returns_error_for_excessively_large_context(
+        self, client: TestClient
+    ) -> None:
+        """Generate returns 400 when context exceeds hard limit (AC6)."""
+        large_context = "x" * 100000
+
+        response = client.post(
+            "/v1/ai/generate",
+            json={
+                "use_case": "natal_chart_interpretation",
+                "locale": "fr-FR",
+                "context": {"natal_chart_summary": large_context},
+            },
+        )
+
+        assert response.status_code == 400
+        data = response.json()
+        assert data["error"]["type"] == "VALIDATION_ERROR"
+        assert "context exceeds maximum tokens" in data["error"]["message"]
+        assert "token_count" in data["error"]["details"]
+        assert "max_tokens" in data["error"]["details"]
+
+    def test_generate_truncates_moderately_large_context(
+        self, client: TestClient
+    ) -> None:
+        """Generate truncates context that exceeds soft limit but not hard limit."""
+        moderate_context = "a" * 20000
+        mock_result = ProviderResult(
+            text="Generated response",
+            input_tokens=500,
+            output_tokens=100,
+            model="gpt-4o-mini",
+        )
+
+        with patch(
+            "app.ai_engine.services.generate_service.get_provider_client"
+        ) as mock_provider:
+            mock_client = AsyncMock()
+            mock_client.generate_text = AsyncMock(return_value=mock_result)
+            mock_client.provider_name = "openai"
+            mock_provider.return_value = mock_client
+
+            response = client.post(
+                "/v1/ai/generate",
+                json={
+                    "use_case": "natal_chart_interpretation",
+                    "locale": "fr-FR",
+                    "context": {"natal_chart_summary": moderate_context},
+                },
+            )
+
+        assert response.status_code == 200
+        call_args = mock_client.generate_text.call_args
+        rendered_prompt = call_args[0][0]
+        assert "[...contexte tronqué" in rendered_prompt or len(rendered_prompt) < len(
+            moderate_context
+        )

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import uuid
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from app.ai_engine.exceptions import AIEngineError
@@ -16,6 +16,7 @@ from app.ai_engine.schemas import (
     GenerateResponse,
 )
 from app.ai_engine.services import chat_service, generate_service
+from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.core.request_id import resolve_request_id
 from app.infra.observability.metrics import increment_counter
 
@@ -56,6 +57,7 @@ def _build_error_response(
 async def generate(
     request: Request,
     body: GenerateRequest,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
 ) -> GenerateResponse | JSONResponse:
     """
     Generate text using the AI engine.
@@ -79,9 +81,10 @@ async def generate(
             1.0,
         )
         logger.warning(
-            "ai_generate_error request_id=%s trace_id=%s error_type=%s message=%s",
+            "ai_generate_error request_id=%s trace_id=%s user_id=%d error_type=%s message=%s",
             request_id,
             trace_id,
+            current_user.id,
             err.error_type,
             err.message,
         )
@@ -92,6 +95,7 @@ async def generate(
 async def chat(
     request: Request,
     body: ChatRequest,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
 ) -> ChatResponse | StreamingResponse | JSONResponse:
     """
     Generate a chat completion.
@@ -127,9 +131,10 @@ async def chat(
     except AIEngineError as err:
         increment_counter("ai_engine_requests_total|use_case=chat|status=error", 1.0)
         logger.warning(
-            "ai_chat_error request_id=%s trace_id=%s error_type=%s message=%s",
+            "ai_chat_error request_id=%s trace_id=%s user_id=%d error_type=%s message=%s",
             request_id,
             trace_id,
+            current_user.id,
             err.error_type,
             err.message,
         )

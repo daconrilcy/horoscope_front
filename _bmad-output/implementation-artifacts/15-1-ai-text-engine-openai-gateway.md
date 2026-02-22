@@ -332,6 +332,7 @@ Claude Opus 4.5
 - `backend/app/ai_engine/services/context_compactor.py`
 - `backend/app/ai_engine/services/generate_service.py`
 - `backend/app/ai_engine/services/chat_service.py`
+- `backend/app/ai_engine/services/utils.py`
 - `backend/app/ai_engine/providers/__init__.py`
 - `backend/app/ai_engine/providers/base.py`
 - `backend/app/ai_engine/providers/openai_client.py`
@@ -354,3 +355,4 @@ Claude Opus 4.5
 - 2026-02-22: Implémentation complète — Module AI Engine avec tous les AC validés, 38 tests passent
 - 2026-02-22: Adversarial Code Review fixes (claude-opus-4-5) — H1: coroutine retry pattern corrigé (func_factory au lieu de func()). M1: code dupliqué extrait dans services/utils.py. M2: typage Callable/Coroutine au lieu de object. M3: stratégie summarize documentée comme non implémentée avec warning. L1: status done. L2: constantes coût déplacées dans config.py. 38/38 tests, 0 erreur lint.
 - 2026-02-22: Adversarial Code Review #2 fixes (claude-opus-4-5) — H1: dépendances jinja2/openai installées. H2: pytest asyncio_mode=auto configuré. M1: testpaths inclut ai_engine/tests. M2: singleton provider client. M3: erreur explicite pour provider inconnu. M4: type hints AsyncOpenAI/ChatCompletion. L2: estimation tokens 3.5 chars/token pour multilingue. L3: logs coût à 4 décimales. 38/38 tests, 0 erreur lint.
+- 2026-02-22: Adversarial Code Review #3 fixes (claude-opus-4-5) — H1: endpoints protégés par require_authenticated_user. M1: tests streaming SSE ajoutés. M2: tests contexte volumineux (AC6). M3: singleton provider thread-safe avec Lock. L1: utils.py ajouté à File List. L2: ChatMessage.role utilise Literal["system","user","assistant"].

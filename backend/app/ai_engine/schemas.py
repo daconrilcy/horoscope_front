@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
+
+ChatRole = Literal["system", "user", "assistant"]
 
 
 class ProviderConfig(BaseModel):
@@ -86,7 +90,7 @@ class GenerateResponse(BaseModel):
 class ChatMessage(BaseModel):
     """A single chat message."""
 
-    role: str = Field(..., description="Message role: system, user, assistant")
+    role: ChatRole = Field(..., description="Message role: system, user, assistant")
     content: str = Field(..., description="Message content")
 
 
