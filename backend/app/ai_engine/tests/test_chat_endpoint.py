@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.ai_engine.exceptions import UpstreamError
+from app.ai_engine.exceptions import UpstreamError, UpstreamRateLimitError
 from app.ai_engine.providers.base import ProviderResult
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.main import app
@@ -216,6 +216,29 @@ class TestChatEndpoint:
         assert response.status_code == 502
         data = response.json()
         assert data["error"]["type"] == "UPSTREAM_ERROR"
+
+    def test_chat_returns_429_on_rate_limit(self, client: TestClient) -> None:
+        """Chat returns 429 on upstream rate limit (AC5)."""
+        with patch(
+            "app.ai_engine.services.chat_service.get_provider_client"
+        ) as mock_provider:
+            mock_client = AsyncMock()
+            mock_client.chat = AsyncMock(side_effect=UpstreamRateLimitError())
+            mock_provider.return_value = mock_client
+
+            response = client.post(
+                "/v1/ai/chat",
+                json={
+                    "locale": "fr-FR",
+                    "messages": [{"role": "user", "content": "Hello"}],
+                    "output": {"stream": False},
+                },
+            )
+
+        assert response.status_code == 429
+        data = response.json()
+        assert data["error"]["type"] == "UPSTREAM_RATE_LIMIT"
+        assert "retry_after_ms" in data["error"]
 
     def test_chat_includes_context_in_system_prompt(
         self, client: TestClient

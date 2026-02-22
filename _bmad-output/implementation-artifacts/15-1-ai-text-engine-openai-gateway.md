@@ -307,7 +307,7 @@ Claude Opus 4.5
 
 ### Debug Log References
 
-- Backend tests: 49 tests AI Engine passent (après 6 rounds de code review)
+- Backend tests: 52 tests AI Engine passent (après 7 rounds de code review)
 - Lint: ruff check app/ai_engine/ — All checks passed!
 
 ### Completion Notes List
@@ -359,3 +359,4 @@ Claude Opus 4.5
 - 2026-02-22: Adversarial Code Review #4 fixes (claude-opus-4-5) — H1: user_id passé aux services pour traçabilité dans logs. M1: tests 401 sans auth ajoutés. M2: ProviderConfig.name utilise Literal["openai"]. M3: événement done du streaming inclut usage/cost estimé avec flag is_estimate. L1-L2: vérification architecture/total_tokens OK. 45/45 tests, 0 erreur lint.
 - 2026-02-22: Adversarial Code Review #5 fixes (claude-opus-4-5) — M1: test streaming valide usage dans done event. M2: double-check provider client hors lock supprimé (thread-safety). M3: tests 422 pour provider/role invalides ajoutés. L1: conversation_id loggé pour traçabilité conversations. L2: docstrings mises à jour avec user_id. 48/48 tests, 0 erreur lint.
 - 2026-02-22: Adversarial Code Review #6 fixes (claude-opus-4-5) — M1: test erreur streaming AC5 ajouté (vérifie émission error event). M2: test validate_context_size vérifie details (token_count/max_tokens). L1: variable effective_strategy supprimée (code mort). L2: test count mis à jour. Fix: erreurs streaming non re-raised (SSE best practice). 49/49 tests, 0 erreur lint.
+- 2026-02-22: Adversarial Code Review #7 fixes (claude-opus-4-5) — M1: user_id ajouté au log ai_chat_stream_error. M2: test rate limit 429 pour chat (AC5). L1: test count vérifié. L2: tests edge cases context_compactor (empty string, unicode). 52/52 tests, 0 erreur lint.

@@ -246,9 +246,10 @@ async def chat_stream(
     except Exception as err:
         increment_counter("ai_engine_requests_total|use_case=chat_stream|status=error", 1.0)
         logger.error(
-            "ai_chat_stream_error request_id=%s trace_id=%s error=%s",
+            "ai_chat_stream_error request_id=%s trace_id=%s user_id=%d error=%s",
             request_id,
             trace_id,
+            user_id,
             str(err),
         )
         error_data = {"error": {"type": type(err).__name__, "message": str(err)}}

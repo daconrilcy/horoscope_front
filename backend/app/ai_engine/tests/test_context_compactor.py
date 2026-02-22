@@ -29,9 +29,20 @@ class TestEstimateTokens:
         text = "a" * 350
         assert estimate_tokens(text) == 100
 
+    def test_estimate_tokens_unicode_multibyte(self) -> None:
+        """Unicode multibyte chars are counted correctly."""
+        text = "日本語テスト文字列"
+        tokens = estimate_tokens(text)
+        assert tokens == int(len(text) / 3.5)
+
 
 class TestCompactContext:
     """Tests for context compaction."""
+
+    def test_compact_context_handles_empty_string(self) -> None:
+        """Empty context returns empty string."""
+        result = compact_context("", max_tokens=1000)
+        assert result == ""
 
     def test_compact_context_returns_unchanged_if_under_limit(self) -> None:
         """Context under limit returns unchanged."""
