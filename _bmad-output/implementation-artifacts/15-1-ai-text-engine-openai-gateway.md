@@ -114,7 +114,7 @@ Cette story met en place le **AI Text Engine**, un module backend unique qui :
 - [x] Créer `backend/app/ai_engine/services/context_compactor.py` (AC: #6)
   - [x] Fonction `compact_context(context, max_tokens)`
   - [x] Stratégie de troncature ou résumé
-- [x] Tests unitaires avec mocks OpenAI (AC: #1, #5) — 6 tests dans `test_openai_client.py`, 9 tests dans `test_context_compactor.py`
+- [x] Tests unitaires avec mocks OpenAI (AC: #1, #5) — 6 tests dans `test_openai_client.py`, 12 tests dans `test_context_compactor.py`
 
 ### Subtask 15.1.4: Endpoints `/v1/ai/generate` et `/v1/ai/chat`
 - [x] Implémenter `POST /v1/ai/generate` dans `routes.py` (AC: #2)
@@ -307,7 +307,7 @@ Claude Opus 4.5
 
 ### Debug Log References
 
-- Backend tests: 52 tests AI Engine passent (après 7 rounds de code review)
+- Backend tests: 53 tests AI Engine passent (après 8 rounds de code review)
 - Lint: ruff check app/ai_engine/ — All checks passed!
 
 ### Completion Notes List
@@ -360,3 +360,4 @@ Claude Opus 4.5
 - 2026-02-22: Adversarial Code Review #5 fixes (claude-opus-4-5) — M1: test streaming valide usage dans done event. M2: double-check provider client hors lock supprimé (thread-safety). M3: tests 422 pour provider/role invalides ajoutés. L1: conversation_id loggé pour traçabilité conversations. L2: docstrings mises à jour avec user_id. 48/48 tests, 0 erreur lint.
 - 2026-02-22: Adversarial Code Review #6 fixes (claude-opus-4-5) — M1: test erreur streaming AC5 ajouté (vérifie émission error event). M2: test validate_context_size vérifie details (token_count/max_tokens). L1: variable effective_strategy supprimée (code mort). L2: test count mis à jour. Fix: erreurs streaming non re-raised (SSE best practice). 49/49 tests, 0 erreur lint.
 - 2026-02-22: Adversarial Code Review #7 fixes (claude-opus-4-5) — M1: user_id ajouté au log ai_chat_stream_error. M2: test rate limit 429 pour chat (AC5). L1: test count vérifié. L2: tests edge cases context_compactor (empty string, unicode). 52/52 tests, 0 erreur lint.
+- 2026-02-22: Adversarial Code Review #8 fixes (claude-opus-4-5) — M1: test timeout 504 pour chat endpoint (AC5). L1: test count subtask corrigé (12 tests context_compactor). L2: docstring _stream_chat avec Raises documenté. 53/53 tests, 0 erreur lint.

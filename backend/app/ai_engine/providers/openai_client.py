@@ -215,7 +215,17 @@ class OpenAIClient(ProviderClient):
         temperature: float = 0.7,
         timeout_seconds: int = 30,
     ) -> AsyncIterator[str]:
-        """Stream chat completion."""
+        """
+        Stream chat completion.
+
+        Yields:
+            Text deltas from the streaming response.
+
+        Raises:
+            UpstreamTimeoutError: If the request times out.
+            UpstreamRateLimitError: If rate limit is exceeded.
+            UpstreamError: For other upstream failures.
+        """
         self._ensure_configured()
         try:
             response = await asyncio.wait_for(

@@ -6,7 +6,11 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.ai_engine.exceptions import UpstreamError, UpstreamRateLimitError
+from app.ai_engine.exceptions import (
+    UpstreamError,
+    UpstreamRateLimitError,
+    UpstreamTimeoutError,
+)
 from app.ai_engine.providers.base import ProviderResult
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.main import app
@@ -239,6 +243,29 @@ class TestChatEndpoint:
         data = response.json()
         assert data["error"]["type"] == "UPSTREAM_RATE_LIMIT"
         assert "retry_after_ms" in data["error"]
+
+    def test_chat_returns_504_on_timeout(self, client: TestClient) -> None:
+        """Chat returns 504 on upstream timeout (AC5)."""
+        with patch(
+            "app.ai_engine.services.chat_service.get_provider_client"
+        ) as mock_provider:
+            mock_client = AsyncMock()
+            mock_client.chat = AsyncMock(side_effect=UpstreamTimeoutError(30))
+            mock_provider.return_value = mock_client
+
+            response = client.post(
+                "/v1/ai/chat",
+                json={
+                    "locale": "fr-FR",
+                    "messages": [{"role": "user", "content": "Hello"}],
+                    "output": {"stream": False},
+                },
+            )
+
+        assert response.status_code == 504
+        data = response.json()
+        assert data["error"]["type"] == "UPSTREAM_TIMEOUT"
+        assert "timeout_seconds" in data["error"]["details"]
 
     def test_chat_includes_context_in_system_prompt(
         self, client: TestClient
