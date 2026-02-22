@@ -13,6 +13,7 @@ stepsCompleted:
   - step-09-functional
   - step-10-nonfunctional
   - step-11-polish
+  - step-12-complete
 inputDocuments: []
 documentCounts:
   briefCount: 0
@@ -25,6 +26,16 @@ classification:
   complexity: medium
   projectContext: greenfield
 workflowType: 'prd'
+lastEdited: '2026-02-21T14:35:34+01:00'
+editHistory:
+  - date: '2026-02-21T14:35:34+01:00'
+    changes: 'PRD coherence pass: harmonisation FR + precision NFR11'
+  - date: '2026-02-21T14:34:26+01:00'
+    changes: 'NFR SMART pass #3: formalisation accessibilite et integration (NFR13/14/15/17/18)'
+  - date: '2026-02-21T14:33:00+01:00'
+    changes: 'NFR SMART pass #2: formalisation des NFR6/7/8/11/12/16/20/21/22'
+  - date: '2026-02-21T14:28:51+01:00'
+    changes: 'NFR SMART pass: clarifications measurability/security/scalability/reliability'
 ---
 
 # Product Requirements Document - horoscope_front
@@ -40,7 +51,7 @@ La proposition de valeur combine trois exigences rarement réunies: rigueur des 
 
 Le positionnement repose sur la confiance: méthodes de calcul explicites, qualité perçue stable, et confidentialité forte des données personnelles. L’objectif est de créer une relation durable par la précision, la continuité de service et la sécurité des informations intimes partagées par l’utilisateur.
 
-### What Makes This Special
+### Ce Qui Rend Le Produit Unique
 
 Le différenciateur principal est l’intégration d’un socle de calcul astrologique robuste avec une interface conversationnelle personnalisée en continu. Contrairement aux horoscopes génériques, l’expérience cible des recommandations contextualisées par utilisateur, exploitables dans des situations concrètes.
 
@@ -446,50 +457,50 @@ Objectif: prouver rapidement la valeur utilisateur (thème + chat) et la viabili
 
 ### B2B API & Enterprise Self-Service (Post-MVP Scope)
 
-- FR38: Enterprise clients can create and manage API credentials for their account.
-- FR39: Enterprise clients can consume astrology content through authenticated API access.
-- FR40: Enterprise clients can manage plan limits and view consumption metrics.
-- FR41: Enterprise clients can request content style adjustments aligned with editorial needs.
-- FR42: The business can bill enterprise clients using fixed subscription and usage-based components.
+- FR38: Les clients entreprise peuvent créer et gérer des identifiants API pour leur compte.
+- FR39: Les clients entreprise peuvent consommer du contenu astrologique via un accès API authentifié.
+- FR40: Les clients entreprise peuvent gérer les limites de leur plan et consulter leurs métriques de consommation.
+- FR41: Les clients entreprise peuvent demander des ajustements de style de contenu alignés avec leurs besoins éditoriaux.
+- FR42: L’entreprise peut facturer les clients entreprise via un modèle combinant abonnement fixe et composante variable à l’usage.
 ## Non-Functional Requirements
 
 ### Performance
 
 - NFR1: Le système doit permettre la génération d’un premier thème astral en <= 2 min 30 après soumission complète des données de naissance.
 - NFR2: Le parcours inscription -> première réponse utile doit être réalisable en < 5 min pour un utilisateur standard.
-- NFR3: Les actions d’interface critiques (navigation interne SPA, envoi message, ouverture historique) doivent fournir un feedback utilisateur immédiat et éviter les blocages perçus.
-- NFR4: Le service conversationnel doit supporter des réponses progressives (streaming ou équivalent) pour réduire la latence perçue.
+- NFR3: Les actions d’interface critiques (navigation interne SPA, envoi message, ouverture historique) doivent afficher un feedback visuel en <= 200 ms dans 95% des cas et ne jamais bloquer l’interface utilisateur plus de 1 s sans indicateur de chargement.
+- NFR4: Le service conversationnel doit fournir une première unité de réponse en <= 3 s (p95) et terminer la réponse complète en <= 15 s (p95) pour une requête standard.
 
 ### Security & Privacy
 
-- NFR5: Les données sensibles doivent être chiffrées en transit et au repos selon standards reconnus.
-- NFR6: Les échanges envoyés aux LLM doivent exclure les identifiants personnels directs.
-- NFR7: Le système doit fournir des mécanismes opérationnels d’export et suppression des données utilisateur.
-- NFR8: Les actions sensibles (suppression données, régénération clés, changements d’offre) doivent être journalisées de manière traçable.
-- NFR9: Les secrets d’intégration (clés API, credentials) doivent être gérés via un mécanisme dédié de gestion des secrets.
+- NFR5: Les données sensibles doivent être chiffrées en transit (TLS 1.2+) et au repos (AES-256 ou équivalent), avec vérification trimestrielle documentée de la configuration.
+- NFR6: 100% des requêtes envoyées aux LLM doivent être pseudonymisées pour exclure les identifiants personnels directs (email, téléphone, nom complet, adresse postale), avec contrôle automatique en pré-envoi.
+- NFR7: Le système doit permettre l’export des données utilisateur en format structuré (JSON ou CSV) sous <= 72 h après demande validée, et la suppression complète sous <= 30 jours calendaires avec confirmation d’exécution.
+- NFR8: Les actions sensibles (suppression données, régénération clés, changements d’offre) doivent être journalisées avec horodatage, acteur, type d’action et identifiant de ressource, avec conservation des journaux pendant au moins 12 mois.
+- NFR9: Les secrets d’intégration (clés API, credentials) doivent être stockés dans un gestionnaire de secrets dédié, jamais en clair dans le code ou les logs, et tournés au minimum tous les 90 jours.
 
 ### Scalability
 
-- NFR10: Le système doit pouvoir absorber une croissance progressive vers l’objectif de ~2 000 utilisateurs payants sans dégradation majeure de l’expérience perçue.
-- NFR11: Les composants critiques doivent permettre une montée en charge incrémentale (scale out ou équivalent) sans refonte fonctionnelle.
-- NFR12: Le système doit permettre la mise en place de limites d’usage (quotas/messages) afin de maîtriser la charge et les coûts LLM.
+- NFR10: Le système doit supporter au moins 2 000 utilisateurs payants actifs/mois en maintenant une latence API p95 <= 2 s sur les endpoints critiques et un taux d’erreur serveur mensuel < 1%.
+- NFR11: Les composants critiques doivent permettre une montée en charge horizontale d’au moins x2 du trafic moyen observé sur les 30 derniers jours, sans refonte fonctionnelle et sans régression des SLO définis (latence p95 et taux d’erreur).
+- NFR12: Le système doit appliquer des quotas configurables par plan (messages/jour et appels API/jour) avec blocage automatique au dépassement et remise à zéro périodique documentée.
 
 ### Accessibility
 
-- NFR13: Les parcours critiques doivent viser la conformité WCAG 2.1 AA.
-- NFR14: Les interactions principales doivent être utilisables au clavier et compréhensibles par lecteur d’écran.
-- NFR15: Les contrastes et libellés des composants critiques doivent respecter les bonnes pratiques d’accessibilité.
+- NFR13: Les parcours critiques doivent atteindre la conformité WCAG 2.1 niveau AA sur 100% des écrans MVP audités avant mise en production.
+- NFR14: 100% des interactions principales doivent être utilisables au clavier (navigation tabulation + activation Entrée/Espace) et compatibles lecteur d’écran sur Chrome et Edge.
+- NFR15: Les composants critiques doivent respecter un contraste minimum de 4.5:1 pour le texte normal et 3:1 pour les éléments UI non textuels.
 
 ### Integration
 
-- NFR16: Le système doit intégrer de manière fiable les APIs LLM avec gestion d’erreurs, retries contrôlés et fallback défini.
-- NFR17: Le système doit exposer des interfaces d’intégration versionnables pour les usages B2B (post-MVP).
-- NFR18: Les intégrations externes doivent être observables via métriques minimales (disponibilité, erreurs, latence).
+- NFR16: Le système doit intégrer les APIs LLM avec timeout <= 20 s par appel, au maximum 2 retries exponentiels sur erreurs transitoires, et fallback explicite vers une réponse dégradée en cas d’échec final.
+- NFR17: Le système doit exposer des interfaces d’intégration B2B versionnées (ex. `/v1`, `/v2`) avec politique de compatibilité rétroactive d’au moins 6 mois après annonce de dépréciation.
+- NFR18: Les intégrations externes doivent publier au minimum les métriques disponibilité, taux d’erreur et latence p95, avec une fenêtre d’observation continue et un tableau de bord opérationnel mis à jour en temps réel.
 
 ### Reliability & Operational Quality
 
-- NFR19: Le système doit maintenir une disponibilité compatible avec un service utilisateur 24/7.
-- NFR20: Le système doit détecter, tracer et remonter les réponses hors-scope afin de soutenir l’amélioration continue.
-- NFR21: Le système doit disposer d’un mécanisme de rollback de configuration pour restaurer rapidement la qualité de service.
-- NFR22: Le système doit conserver une traçabilité entre résultats astrologiques et version du moteur logique utilisée.
+- NFR19: Le système doit maintenir une disponibilité mensuelle >= 99.5% sur les services critiques orientés utilisateur.
+- NFR20: Le système doit détecter et tracer les réponses hors-scope avec un taux de classification automatique >= 90% sur jeu de validation interne, et produire un rapport hebdomadaire de suivi.
+- NFR21: Le mécanisme de rollback de configuration doit permettre un retour à la dernière configuration stable en <= 15 minutes après déclenchement.
+- NFR22: Chaque résultat astrologique doit inclure un identifiant de version du moteur logique et des règles utilisées, afin de garantir une traçabilité de 100% des calculs restitués.
 

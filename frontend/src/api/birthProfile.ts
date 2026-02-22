@@ -2,9 +2,13 @@ import { API_BASE_URL, apiFetch } from "./client"
 
 export type BirthProfileData = {
   birth_date: string
-  birth_time: string
+  birth_time: string | null
   birth_place: string
   birth_timezone: string
+  birth_city?: string
+  birth_country?: string
+  birth_lat?: number
+  birth_lon?: number
 }
 
 export class BirthProfileApiError extends Error {

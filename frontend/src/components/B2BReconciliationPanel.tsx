@@ -79,8 +79,8 @@ function B2BReconciliationPanelContent() {
 
   return (
     <section className="panel">
-      <h2>Reconciliation B2B Ops</h2>
-      <p>Compare usage mesure et facturation afin de detecter les ecarts avant impact client.</p>
+      <h2>Réconciliation B2B Ops</h2>
+      <p>Compare l'usage mesuré et la facturation afin de détecter les écarts avant impact client.</p>
 
       <label htmlFor="reco-account">Compte entreprise (optionnel)</label>
       <input
@@ -90,48 +90,54 @@ function B2BReconciliationPanelContent() {
         placeholder="42"
       />
 
-      <label htmlFor="reco-severity">Severite</label>
+      <label htmlFor="reco-severity">Sévérité</label>
       <select
         id="reco-severity"
         value={severity}
         onChange={(event) => setSeverity(event.target.value as "" | "none" | "minor" | "major")}
       >
         <option value="">Toutes</option>
-        <option value="major">major</option>
-        <option value="minor">minor</option>
-        <option value="none">none</option>
+        <option value="major">Majeure</option>
+        <option value="minor">Mineure</option>
+        <option value="none">Aucune</option>
       </select>
 
-      <button
-        type="button"
-        onClick={() => {
-          setSubmittedFilters(true)
-          void issuesQuery.refetch()
-        }}
-        disabled={issuesQuery.isFetching}
-      >
-        Charger la reconciliation
-      </button>
+      <div className="action-row">
+        <button
+          type="button"
+          onClick={() => {
+            setSubmittedFilters(true)
+            void issuesQuery.refetch()
+          }}
+          disabled={issuesQuery.isFetching}
+        >
+          Charger la réconciliation
+        </button>
+      </div>
 
-      {isLoading ? <p aria-busy="true">Chargement reconciliation...</p> : null}
+      {isLoading ? (
+        <p aria-busy="true" className="state-line state-loading">
+          Chargement réconciliation...
+        </p>
+      ) : null}
       {listError ? (
-        <p role="alert">
-          Erreur reconciliation liste: {listError.message} ({listError.code})
+        <p role="alert" className="chat-error">
+          Erreur réconciliation liste: {listError.message} ({listError.code})
           {listError.requestId ? ` [request_id=${listError.requestId}]` : ""}
         </p>
       ) : null}
       {detailError ? (
-        <p role="alert">
-          Erreur reconciliation detail: {detailError.message} ({detailError.code})
+        <p role="alert" className="chat-error">
+          Erreur réconciliation détail: {detailError.message} ({detailError.code})
           {detailError.requestId ? ` [request_id=${detailError.requestId}]` : ""}
         </p>
       ) : null}
-      {isEmpty ? <p>Aucun ecart de reconciliation pour ces filtres.</p> : null}
+      {isEmpty ? <p className="state-line state-empty">Aucun écart de réconciliation pour ces filtres.</p> : null}
 
       {issuesQuery.data && issuesQuery.data.items.length > 0 ? (
         <>
-          <h3>Ecarts identifies ({issuesQuery.data.total})</h3>
-          <ul className="chat-list">
+          <h3>Écarts identifiés ({issuesQuery.data.total})</h3>
+          <ul className="chat-list compact-list">
             {issuesQuery.data.items.map((issue) => (
               <li key={issue.issue_id} className="chat-item">
                 <button
@@ -150,12 +156,12 @@ function B2BReconciliationPanelContent() {
 
       {activeIssue ? (
         <>
-          <h3>Detail ecart</h3>
-          <ul className="chat-list">
+          <h3>Détail écart</h3>
+          <ul className="chat-list compact-list">
             <li className="chat-item">Issue: {activeIssue.issue_id}</li>
             <li className="chat-item">Type: {activeIssue.mismatch_type}</li>
-            <li className="chat-item">Delta units: {activeIssue.delta_units}</li>
-            <li className="chat-item">Etat correction: {activeIssue.status}</li>
+            <li className="chat-item">Delta unités: {activeIssue.delta_units}</li>
+            <li className="chat-item">État correction: {activeIssue.status}</li>
             <li className="chat-item">Trace source: usage_rows={(activeIssue.source_trace.usage_rows as number) ?? 0}</li>
           </ul>
 
@@ -167,7 +173,7 @@ function B2BReconciliationPanelContent() {
             placeholder="commentaire ops"
           />
 
-          <div>
+          <div className="action-row">
             {activeIssue.recommended_actions.map((hint) => (
               <button
                 key={hint.code}
@@ -181,13 +187,13 @@ function B2BReconciliationPanelContent() {
           </div>
 
           {actionMutation.isSuccess ? (
-            <p>
-              Action executee: {actionMutation.data.action} ({actionMutation.data.correction_state})
+            <p className="state-line state-success">
+              Action exécutée: {actionMutation.data.action} ({actionMutation.data.correction_state})
             </p>
           ) : null}
           {actionError ? (
-            <p role="alert">
-              Erreur action reconciliation: {actionError.message} ({actionError.code})
+            <p role="alert" className="chat-error">
+              Erreur action réconciliation: {actionError.message} ({actionError.code})
               {actionError.requestId ? ` [request_id=${actionError.requestId}]` : ""}
             </p>
           ) : null}

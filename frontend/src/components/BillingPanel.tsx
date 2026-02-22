@@ -48,12 +48,16 @@ export function BillingPanel() {
       <h2>Abonnement</h2>
       <p>Souscrivez au plan Basic pour activer le service payant.</p>
 
-      {subscription.isLoading ? <p aria-busy="true">Chargement du statut abonnement...</p> : null}
+      {subscription.isLoading ? (
+        <p aria-busy="true" className="state-line state-loading">
+          Chargement du statut abonnement...
+        </p>
+      ) : null}
       {subscription.isError ? (
-        <div role="alert">
+        <div role="alert" className="chat-error">
           <p>Erreur abonnement: {(subscription.error as BillingApiError).message}</p>
-          <button type="button" onClick={() => subscription.refetch()}>
-            Reessayer
+          <button type="button" onClick={() => void subscription.refetch()}>
+            Réessayer
           </button>
         </div>
       ) : null}
@@ -68,106 +72,108 @@ export function BillingPanel() {
       ) : null}
 
       <label htmlFor="billing-payment-token">Simulation paiement</label>
-      <select
-        id="billing-payment-token"
-        value={paymentToken}
-        onChange={(event) => setPaymentToken(event.target.value)}
-      >
-        <option value="pm_card_ok">Paiement valide</option>
-        <option value="pm_fail">Paiement refuse</option>
-      </select>
-
-      <button
-        type="button"
-        disabled={busy}
-        onClick={async () => {
-          const idempotencyKey = crypto.randomUUID()
-          const result = await checkout.mutateAsync({
-            plan_code: "basic-entry",
-            payment_method_token: paymentToken,
-            idempotency_key: idempotencyKey,
-          })
-          setLastCheckoutResult(result)
-          setLastRetryResult(null)
-          if (result.payment_status === "failed") {
-            setLastFailedIdempotencyKey(idempotencyKey)
-          } else {
-            setLastFailedIdempotencyKey(null)
-          }
-          void subscription.refetch()
-          void quota.refetch()
-        }}
-      >
-        Souscrire au plan Basic (5 EUR/mois)
-      </button>
-
-      {showRetryAction ? (
+      <div className="action-row">
+        <select
+          id="billing-payment-token"
+          value={paymentToken}
+          onChange={(event) => setPaymentToken(event.target.value)}
+        >
+          <option value="pm_card_ok">Paiement valide</option>
+          <option value="pm_fail">Paiement refuse</option>
+        </select>
         <button
           type="button"
           disabled={busy}
           onClick={async () => {
-            const retryKey = lastFailedIdempotencyKey
-              ? `${lastFailedIdempotencyKey}-retry`
-              : crypto.randomUUID()
-            const result = await retryCheckout.mutateAsync({
+            const idempotencyKey = crypto.randomUUID()
+            const result = await checkout.mutateAsync({
               plan_code: "basic-entry",
-              payment_method_token: "pm_card_ok",
-              idempotency_key: retryKey,
+              payment_method_token: paymentToken,
+              idempotency_key: idempotencyKey,
             })
-            setLastRetryResult(result)
+            setLastCheckoutResult(result)
+            setLastRetryResult(null)
+            if (result.payment_status === "failed") {
+              setLastFailedIdempotencyKey(idempotencyKey)
+            } else {
+              setLastFailedIdempotencyKey(null)
+            }
             void subscription.refetch()
             void quota.refetch()
           }}
         >
-          Reessayer le paiement
+          Souscrire au plan Basic (5 EUR/mois)
         </button>
-      ) : null}
-
-      {subscription.data?.status === "active" ? (
-        <>
-          <label htmlFor="billing-target-plan">Changer de plan</label>
-          <select
-            id="billing-target-plan"
-            value={targetPlanCode}
-            onChange={(event) => setTargetPlanCode(event.target.value)}
-          >
-            <option value="basic-entry">Basic 5 EUR/mois</option>
-            <option value="premium-unlimited">Premium 20 EUR/mois</option>
-          </select>
-          <p>Impact quota cible: {targetPlanLimitLabel}</p>
+        {showRetryAction ? (
           <button
             type="button"
             disabled={busy}
             onClick={async () => {
-              const result = await changePlan.mutateAsync({
-                target_plan_code: targetPlanCode,
-                idempotency_key: crypto.randomUUID(),
+              const retryKey = lastFailedIdempotencyKey
+                ? `${lastFailedIdempotencyKey}-retry`
+                : crypto.randomUUID()
+              const result = await retryCheckout.mutateAsync({
+                plan_code: "basic-entry",
+                payment_method_token: "pm_card_ok",
+                idempotency_key: retryKey,
               })
-              setLastPlanChangeResult(result)
+              setLastRetryResult(result)
               void subscription.refetch()
               void quota.refetch()
             }}
           >
-            Changer de plan
+            Réessayer le paiement
           </button>
+        ) : null}
+      </div>
+
+      {subscription.data?.status === "active" ? (
+        <>
+          <label htmlFor="billing-target-plan">Changer de plan</label>
+          <div className="action-row">
+            <select
+              id="billing-target-plan"
+              value={targetPlanCode}
+              onChange={(event) => setTargetPlanCode(event.target.value)}
+            >
+              <option value="basic-entry">Basic 5 EUR/mois</option>
+              <option value="premium-unlimited">Premium 20 EUR/mois</option>
+            </select>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={async () => {
+                const result = await changePlan.mutateAsync({
+                  target_plan_code: targetPlanCode,
+                  idempotency_key: crypto.randomUUID(),
+                })
+                setLastPlanChangeResult(result)
+                void subscription.refetch()
+                void quota.refetch()
+              }}
+            >
+              Changer de plan
+            </button>
+          </div>
+          <p className="state-line">Impact quota cible: {targetPlanLimitLabel}</p>
         </>
       ) : null}
 
       {lastCheckoutResult?.payment_status === "succeeded" ||
       lastRetryResult?.payment_status === "succeeded" ? (
-        <p>Abonnement actif.</p>
+        <p className="state-line state-success">Abonnement actif.</p>
       ) : null}
       {lastPlanChangeResult?.plan_change_status === "succeeded" ? (
-        <p>
+        <p className="state-line state-success">
           Plan mis a jour: {lastPlanChangeResult.previous_plan_code} -&gt;{" "}
           {lastPlanChangeResult.target_plan_code}
         </p>
       ) : null}
 
-      {failedReason ? <p>Motif echec paiement: {failedReason}</p> : null}
-      {checkoutError ? <p>Erreur souscription: {checkoutError.message}</p> : null}
-      {retryError ? <p>Erreur retry paiement: {retryError.message}</p> : null}
-      {changePlanError ? <p>Erreur changement de plan: {changePlanError.message}</p> : null}
+      {failedReason ? <p className="state-line state-empty">Motif echec paiement: {failedReason}</p> : null}
+      {checkoutError ? <p className="chat-error">Erreur souscription: {checkoutError.message}</p> : null}
+      {retryError ? <p className="chat-error">Erreur retry paiement: {retryError.message}</p> : null}
+      {changePlanError ? <p className="chat-error">Erreur changement de plan: {changePlanError.message}</p> : null}
     </section>
   )
 }

@@ -1,0 +1,46 @@
+---
+description: Gestion des dépendances Python via pyproject.toml
+globs: backend/**/*.py, backend/pyproject.toml
+alwaysApply: false
+---
+
+# Gestion des dépendances Python
+
+## Source unique: backend/pyproject.toml
+
+Les dépendances Python sont gérées exclusivement via `backend/pyproject.toml` (format PEP 621).
+
+**NE JAMAIS créer de fichier requirements.txt** - c'est un doublon inutile.
+
+## Commandes d'installation
+
+```powershell
+# Activer le venv d'abord
+.\.venv\Scripts\Activate.ps1
+
+# Installation production
+cd backend && pip install .
+
+# Installation développement (avec pytest, ruff, etc.)
+cd backend && pip install -e ".[dev]"
+```
+
+## Ajouter une dépendance
+
+Modifier `backend/pyproject.toml`:
+- Section `[project].dependencies` pour les dépendances de production
+- Section `[project.optional-dependencies].dev` pour les outils de dev
+
+Exemple:
+```toml
+[project]
+dependencies = [
+  "fastapi==0.129.0",
+  "nouvelle-lib>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==9.0.2",
+]
+```

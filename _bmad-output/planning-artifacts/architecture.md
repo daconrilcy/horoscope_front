@@ -29,6 +29,10 @@ date: '2026-02-17T22:52:34+01:00'
 lastStep: 8
 status: 'complete'
 completedAt: '2026-02-17T23:09:49+01:00'
+lastEdited: '2026-02-21T14:38:03+01:00'
+editHistory:
+  - date: '2026-02-21T14:38:03+01:00'
+    changes: 'Architecture rebaseline after PRD final validation (NFR measurability pass)'
 ---
 # Architecture Decision Document
 
@@ -41,7 +45,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 Le produit couvre 42 capacités structurées autour d’un noyau métier astrologique et d’une application web conversationnelle. Le moteur astrologique est explicitement positionné comme prérequis fondation (Phase 0), avant les capacités applicatives MVP. Le MVP simplifié cible un flux B2C centré sur onboarding natal -> génération du thème -> chat astrologue, avec monétisation initiale simple. Les capacités post-MVP étendent vers multi-profils, offres avancées et API B2B.
 
 **Non-Functional Requirements:**
-Les NFR qui orientent fortement l’architecture sont: confidentialité/sécurité des données personnelles, traçabilité des résultats astrologiques par version de règles/données, expérience conversationnelle fluide, disponibilité 24/7, accessibilité WCAG 2.1 AA, et capacité de montée en charge vers l’objectif business (~2000 payants). Le rapport de validation souligne un besoin de formalisation plus stricte de la mesurabilité de certains NFR.
+Les NFR qui orientent fortement l’architecture sont: confidentialité/sécurité des données personnelles, traçabilité des résultats astrologiques par version de règles/données, expérience conversationnelle fluide, disponibilité 24/7, accessibilité WCAG 2.1 AA, et capacité de montée en charge vers l’objectif business (~2000 payants). La dernière validation PRD (2026-02-21) confirme que les NFR critiques sont désormais formulées de manière mesurable et testable.
 
 **Scale & Complexity:**
 Le projet combine un cœur de calcul symbolique spécialisé, une couche conversationnelle LLM, et une application produit monétisée. Cette combinaison crée une complexité élevée malgré un MVP fonctionnellement simplifié.
@@ -548,7 +552,7 @@ Les categories FR sont adressees via:
 - frontend pour experience utilisateur.
 
 **Non-Functional Requirements Coverage:**
-Les exigences performance, securite, observabilite, accessibilite et scalabilite sont couvertes architecturalement, avec besoin de calibration metrique fine en implementation.
+Les exigences performance, securite, observabilite, accessibilite et scalabilite sont couvertes architecturalement, avec des cibles metriques explicites deja definies dans le PRD.
 
 ### Implementation Readiness Validation ✅
 
@@ -566,7 +570,7 @@ Patterns suffisants pour empecher les conflits de conventions entre agents.
 **Critical Gaps:** None identified.
 
 **Important Gaps:**
-- Formaliser des cibles mesurables operationnelles pour certains NFR (ex: p95 latence API, SLA disponibilite, seuil hors-scope IA).
+- Aucun gap bloquant identifie a ce stade.
 
 **Nice-to-Have Gaps:**
 - ADRs additionnels pour decisions futures (CI/CD, scaling post-MVP, event bus evolutif).
@@ -614,7 +618,6 @@ Patterns suffisants pour empecher les conflits de conventions entre agents.
 - Conventions de coherence pretes pour multi-agents.
 
 **Areas for Future Enhancement:**
-- Durcissement SLO/SLA/NFR mesurables.
 - Industrialisation CI/CD.
 - Strategie de scaling post-MVP.
 

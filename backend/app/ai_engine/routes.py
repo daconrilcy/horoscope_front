@@ -8,7 +8,7 @@ import uuid
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from app.ai_engine.exceptions import AIEngineError
+from app.ai_engine.exceptions import AIEngineError, RateLimitExceededError
 from app.ai_engine.schemas import (
     ChatRequest,
     ChatResponse,
@@ -16,6 +16,7 @@ from app.ai_engine.schemas import (
     GenerateResponse,
 )
 from app.ai_engine.services import chat_service, generate_service
+from app.ai_engine.services.rate_limiter import RateLimiter
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.core.request_id import resolve_request_id
 from app.infra.observability.metrics import increment_counter
@@ -23,6 +24,25 @@ from app.infra.observability.metrics import increment_counter
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1/ai", tags=["ai"])
+
+
+def _check_rate_limit(user_id: int) -> None:
+    """Check rate limit and raise if exceeded."""
+    limiter = RateLimiter.get_instance()
+    result = limiter.check_rate_limit(user_id)
+    if not result.allowed:
+        logger.warning(
+            "ai_rate_limit_exceeded user_id=%d current_count=%d limit=%d retry_after_ms=%d",
+            user_id,
+            result.current_count,
+            result.limit,
+            result.retry_after_ms or 0,
+        )
+        increment_counter("ai_engine_rate_limit_exceeded_total", 1.0)
+        raise RateLimitExceededError(
+            retry_after_ms=result.retry_after_ms or 60000,
+            user_id=user_id,
+        )
 
 
 def _resolve_trace_id(request: Request, body_trace_id: str | None) -> str:
@@ -69,6 +89,8 @@ async def generate(
     trace_id = _resolve_trace_id(request, body.trace_id)
 
     try:
+        _check_rate_limit(current_user.id)
+
         response = await generate_service.generate_text(
             body,
             request_id=request_id,
@@ -108,6 +130,8 @@ async def chat(
     trace_id = _resolve_trace_id(request, body.trace_id)
 
     try:
+        _check_rate_limit(current_user.id)
+
         if body.output.stream:
             return StreamingResponse(
                 chat_service.chat_stream(

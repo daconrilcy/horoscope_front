@@ -1,6 +1,6 @@
 ---
 validationTarget: 'C:\dev\horoscope_front\_bmad-output\planning-artifacts\prd.md'
-validationDate: '2026-02-17T22:49:54+01:00'
+validationDate: '2026-02-21T14:36:11+01:00'
 inputDocuments:
   - 'C:\dev\horoscope_front\docs\recherches astro\00_Orientation_et_reglages.md'
   - 'C:\dev\horoscope_front\docs\recherches astro\01_Langage_astro_signes_planetes_maisons.md'
@@ -28,13 +28,13 @@ validationStepsCompleted:
   - step-v-12-completeness-validation
 validationStatus: COMPLETE
 holisticQualityRating: '4/5'
-overallStatus: 'Warning'
+overallStatus: 'Pass'
 ---
 
 # PRD Validation Report
 
 **PRD Being Validated:** C:\dev\horoscope_front\_bmad-output\planning-artifacts\prd.md
-**Validation Date:** 2026-02-17T22:44:57+01:00
+**Validation Date:** 2026-02-21T14:36:11+01:00
 
 ## Input Documents
 
@@ -54,6 +54,166 @@ overallStatus: 'Warning'
 ## Validation Findings
 
 [Findings will be appended as validation progresses]
+
+## Revalidation Snapshot (2026-02-21)
+
+**Overall Status:** Warning  
+**Holistic Quality:** 4/5  
+**Validation Target:** `_bmad-output/planning-artifacts/prd.md`
+
+### Quick Results
+
+- Format Detection: Pass (BMAD Standard, sections coeur presentes)
+- Information Density: Pass
+- Traceability: Pass
+- Implementation Leakage: Pass (mineur)
+- Project-Type Compliance (`web_app`): Pass
+- Completeness: Pass (aucune variable template detectee)
+- Measurability: Warning (plusieurs NFR non testables tels quels)
+
+### Evidence Check (current file)
+
+- FR detectes: 42
+- NFR detectes: 22
+- Variables template restantes (`{{...}}`, `{...}`, `[placeholder]`): 0
+
+### Primary Warnings To Address
+
+1. Plusieurs NFR utilisent des termes non mesurables sans seuil/protocole de test explicite (ex. `NFR3`, `NFR4`, `NFR10`, `NFR19`) dans `_bmad-output/planning-artifacts/prd.md:461`, `_bmad-output/planning-artifacts/prd.md:462`, `_bmad-output/planning-artifacts/prd.md:474`, `_bmad-output/planning-artifacts/prd.md:492`.
+2. Certains NFR sécurité restent génériques et gagneraient à préciser les critères de conformité attendus (ex. `NFR5`, `NFR9`) dans `_bmad-output/planning-artifacts/prd.md:466`, `_bmad-output/planning-artifacts/prd.md:470`.
+3. Le PRD est exploitable en l'état, mais la qualité downstream (architecture/tests/acceptance) sera meilleure avec des NFR reformulés en critères vérifiables.
+
+### Recommendation
+
+PRD utilisable immédiatement, avec un passage `edit-prd` recommandé pour rendre les NFR 100% SMART avant un cycle d'implémentation long.
+
+## Revalidation Snapshot (2026-02-21 14:31)
+
+**Overall Status:** Warning  
+**Holistic Quality:** 4/5  
+**Validation Target:** `_bmad-output/planning-artifacts/prd.md`
+
+### Quick Results
+
+- Format Detection: Pass (BMAD Standard)
+- Information Density: Pass
+- Traceability: Pass
+- Implementation Leakage: Pass (mineur)
+- Project-Type Compliance (`web_app`): Pass
+- Completeness: Pass (aucune variable template detectee)
+- Measurability: Warning (amelioration partielle, NFR encore heterogenes en testabilite)
+
+### Evidence Check (current file)
+
+- FR detectes: 42
+- NFR detectes: 22
+- Variables template restantes (`{{...}}`, `{...}`, `[placeholder]`): 0
+
+### Delta Since Previous Revalidation
+
+1. NFR reformulees avec seuils explicites: `NFR3`, `NFR4`, `NFR5`, `NFR9`, `NFR10`, `NFR19`.
+2. Niveau de precision mesurable nettement meilleur pour performance, securite et disponibilite.
+3. Statut global conserve en `Warning` car plusieurs NFR restent qualitatives (`NFR6`, `NFR7`, `NFR8`, `NFR11`, `NFR12`, `NFR16`, `NFR20`, `NFR21`, `NFR22`) et peuvent encore etre transformees en criteres d'acceptation chiffrables.
+
+### Recommendation
+
+PRD en bon etat pour avancer, avec un dernier passage cible `edit-prd` recommande pour finaliser les NFR restantes en format 100% SMART avant implementation longue.
+
+## Revalidation Snapshot (2026-02-21 14:33)
+
+**Overall Status:** Pass  
+**Holistic Quality:** 4/5  
+**Validation Target:** `_bmad-output/planning-artifacts/prd.md`
+
+### Quick Results
+
+- Format Detection: Pass (BMAD Standard)
+- Information Density: Pass
+- Traceability: Pass
+- Implementation Leakage: Pass (mineur)
+- Project-Type Compliance (`web_app`): Pass
+- Completeness: Pass (aucune variable template detectee)
+- Measurability: Pass (NFR critiques rendues testables avec seuils et conditions)
+
+### Evidence Check (current file)
+
+- FR detectes: 42
+- NFR detectes: 22
+- Variables template restantes (`{{...}}`, `{...}`, `[placeholder]`): 0
+
+### Delta Since Previous Revalidation
+
+1. Les NFR precedemment les plus faibles sont desormais formalisées avec criteres mesurables (`NFR6`, `NFR7`, `NFR8`, `NFR11`, `NFR12`, `NFR16`, `NFR20`, `NFR21`, `NFR22`).
+2. Le bloc NFR est maintenant exploitable pour derivation directe en tests d'acceptation et SLO/SLA.
+3. Aucun gap de structure ou de complétude detecte sur la version courante du PRD.
+
+### Recommendation
+
+PRD valide pour la suite (architecture, epics, implementation). Les ameliorations restantes sont optionnelles et relèvent du raffinement produit, pas d'un blocage qualité.
+
+## Revalidation Snapshot (2026-02-21 14:35)
+
+**Overall Status:** Pass  
+**Holistic Quality:** 4/5  
+**Validation Target:** `_bmad-output/planning-artifacts/prd.md`
+
+### Quick Results
+
+- Format Detection: Pass (BMAD Standard)
+- Information Density: Pass
+- Traceability: Pass
+- Implementation Leakage: Pass (mineur)
+- Project-Type Compliance (`web_app`): Pass
+- Completeness: Pass (aucune variable template detectee)
+- Measurability: Pass
+
+### Evidence Check (current file)
+
+- FR detectes: 42
+- NFR detectes: 22
+- Variables template restantes (`{{...}}`, `{...}`, `[placeholder]`): 0
+
+### Delta Since Previous Revalidation
+
+1. Renforcement final des NFR accessibilite (`NFR13`, `NFR14`, `NFR15`) avec criteres auditables.
+2. Renforcement final des NFR integration (`NFR17`, `NFR18`) avec politique de versionnement et observabilite explicite.
+3. Aucun nouveau warning structurel detecte.
+
+### Recommendation
+
+Validation PRD confirmee. Document pret pour utilisation directe dans les workflows architecture/epics/implementation.
+
+## Revalidation Snapshot (2026-02-21 14:36)
+
+**Overall Status:** Pass  
+**Holistic Quality:** 4/5  
+**Validation Target:** `_bmad-output/planning-artifacts/prd.md`
+
+### Quick Results
+
+- Format Detection: Pass (BMAD Standard)
+- Information Density: Pass
+- Traceability: Pass
+- Implementation Leakage: Pass (mineur)
+- Project-Type Compliance (`web_app`): Pass
+- Completeness: Pass
+- Measurability: Pass
+
+### Evidence Check (current file)
+
+- FR detectes: 42
+- NFR detectes: 22
+- Variables template restantes (`{{...}}`, `{...}`, `[placeholder]`): 0
+
+### Delta Since Previous Revalidation
+
+1. Cohérence linguistique améliorée (`Ce Qui Rend Le Produit Unique`, FR38-FR42 en français).
+2. NFR11 mieux bornée via baseline explicite sur 30 jours.
+3. Aucun impact négatif sur la qualité globale du PRD.
+
+### Recommendation
+
+Validation maintenue en `Pass`. PRD prêt pour les workflows suivants sans action corrective supplémentaire.
 
 ## Format Detection
 

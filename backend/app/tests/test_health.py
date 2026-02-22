@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
@@ -10,16 +11,38 @@ from app.infra.observability.metrics import (
 from app.main import app
 
 
-def test_healthcheck() -> None:
+def test_healthcheck_healthy() -> None:
     reset_metrics()
     client = TestClient(app)
     response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    data = response.json()
+    assert data["status"] in ["healthy", "degraded"]
+    assert "services" in data
+    assert "db" in data["services"]
+    assert "redis" in data["services"]
     assert response.headers.get("X-Request-Id")
     counters = get_counter_sums_by_prefix_in_window("http_requests_total|", timedelta(hours=1))
     assert sum(counters.values()) >= 1.0
+
+
+def test_healthcheck_db_ok() -> None:
+    """Test that DB check returns ok when database is available."""
+    client = TestClient(app)
+    response = client.get("/health")
+    data = response.json()
+
+    assert data["services"]["db"]["status"] == "ok"
+
+
+def test_healthcheck_returns_redis_status() -> None:
+    """Test that Redis check returns a valid status."""
+    client = TestClient(app)
+    response = client.get("/health")
+    data = response.json()
+
+    assert data["services"]["redis"]["status"] in ["ok", "error"]
 
 
 def test_unmatched_routes_use_low_cardinality_metric_label() -> None:

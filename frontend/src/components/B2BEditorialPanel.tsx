@@ -43,36 +43,42 @@ export function B2BEditorialPanel() {
 
   return (
     <section className="panel">
-      <h2>Personnalisation editoriale B2B</h2>
-      <p>Configurez le style des reponses astrologiques selon votre ligne editoriale.</p>
+      <h2>Personnalisation éditoriale B2B</h2>
+      <p>Configurez le style des réponses astrologiques selon votre ligne éditoriale.</p>
 
-      <label htmlFor="b2b-editorial-api-key">Cle API B2B</label>
-      <input
-        id="b2b-editorial-api-key"
-        value={apiKey}
-        onChange={(event) => setApiKey(event.target.value)}
-        placeholder="b2b_xxxxx"
-      />
-      <button
-        type="button"
-        disabled={isBusy}
-        onClick={async () => {
-          const config = await readConfig.mutateAsync(apiKey.trim())
-          setLoadedConfig(config)
-          setTone(config.tone)
-          setLengthStyle(config.length_style)
-          setOutputFormat(config.output_format)
-          setPreferredTerms(config.preferred_terms.join(", "))
-          setAvoidedTerms(config.avoided_terms.join(", "))
-        }}
-      >
-        Charger la configuration
-      </button>
+      <label htmlFor="b2b-editorial-api-key">Clé API B2B</label>
+      <div className="action-row">
+        <input
+          id="b2b-editorial-api-key"
+          value={apiKey}
+          onChange={(event) => setApiKey(event.target.value)}
+          placeholder="b2b_xxxxx"
+        />
+        <button
+          type="button"
+          disabled={isBusy}
+          onClick={async () => {
+            const config = await readConfig.mutateAsync(apiKey.trim())
+            setLoadedConfig(config)
+            setTone(config.tone)
+            setLengthStyle(config.length_style)
+            setOutputFormat(config.output_format)
+            setPreferredTerms(config.preferred_terms.join(", "))
+            setAvoidedTerms(config.avoided_terms.join(", "))
+          }}
+        >
+          Charger la configuration
+        </button>
+      </div>
 
-      {isBusy ? <p aria-busy="true">Chargement configuration editoriale...</p> : null}
+      {isBusy ? (
+        <p aria-busy="true" className="state-line state-loading">
+          Chargement configuration éditoriale...
+        </p>
+      ) : null}
       {readError ? (
-        <p role="alert">
-          Erreur lecture editoriale: {readError.message} ({readError.code})
+        <p role="alert" className="chat-error">
+          Erreur lecture éditoriale: {readError.message} ({readError.code})
           {readError.requestId ? ` [request_id=${readError.requestId}]` : ""}
           {Object.keys(readError.details).length > 0
             ? ` [details=${formatErrorDetails(readError.details)}]`
@@ -80,19 +86,19 @@ export function B2BEditorialPanel() {
         </p>
       ) : null}
       {updateError ? (
-        <p role="alert">
-          Erreur mise a jour editoriale: {updateError.message} ({updateError.code})
+        <p role="alert" className="chat-error">
+          Erreur mise à jour éditoriale: {updateError.message} ({updateError.code})
           {updateError.requestId ? ` [request_id=${updateError.requestId}]` : ""}
           {Object.keys(updateError.details).length > 0
             ? ` [details=${formatErrorDetails(updateError.details)}]`
             : ""}
         </p>
       ) : null}
-      {isEmpty ? <p>Aucune configuration chargee.</p> : null}
+      {isEmpty ? <p className="state-line state-empty">Aucune configuration chargée.</p> : null}
 
       {loadedConfig ? (
         <>
-          <p>
+          <p className="state-line state-success">
             Version active: {loadedConfig.version_number} ({loadedConfig.is_active ? "active" : "inactive"})
           </p>
 
@@ -102,8 +108,8 @@ export function B2BEditorialPanel() {
             value={tone}
             onChange={(event) => setTone(event.target.value as "neutral" | "friendly" | "premium")}
           >
-            <option value="neutral">Neutral</option>
-            <option value="friendly">Friendly</option>
+            <option value="neutral">Neutre</option>
+            <option value="friendly">Amical</option>
             <option value="premium">Premium</option>
           </select>
 
@@ -113,8 +119,8 @@ export function B2BEditorialPanel() {
             value={lengthStyle}
             onChange={(event) => setLengthStyle(event.target.value as "short" | "medium" | "long")}
           >
-            <option value="short">Short</option>
-            <option value="medium">Medium</option>
+            <option value="short">Court</option>
+            <option value="medium">Moyen</option>
             <option value="long">Long</option>
           </select>
 
@@ -124,19 +130,19 @@ export function B2BEditorialPanel() {
             value={outputFormat}
             onChange={(event) => setOutputFormat(event.target.value as "paragraph" | "bullet")}
           >
-            <option value="paragraph">Paragraph</option>
-            <option value="bullet">Bullet</option>
+            <option value="paragraph">Paragraphe</option>
+            <option value="bullet">Liste à puces</option>
           </select>
 
-          <label htmlFor="b2b-editorial-preferred">Mots a privilegier (comma separated)</label>
+          <label htmlFor="b2b-editorial-preferred">Mots à privilégier (séparés par des virgules)</label>
           <input
             id="b2b-editorial-preferred"
             value={preferredTerms}
             onChange={(event) => setPreferredTerms(event.target.value)}
-            placeholder="focus, clarte"
+            placeholder="focus, clarté"
           />
 
-          <label htmlFor="b2b-editorial-avoided">Mots a eviter (comma separated)</label>
+          <label htmlFor="b2b-editorial-avoided">Mots à éviter (séparés par des virgules)</label>
           <input
             id="b2b-editorial-avoided"
             value={avoidedTerms}

@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.responses import Response
 
+from app.ai_engine.routes import router as ai_engine_router
 from app.api.dependencies.auth import UserAuthenticationError
 from app.api.dependencies.b2b_auth import EnterpriseApiKeyAuthenticationError
 from app.api.health import router as health_router
@@ -210,3 +211,4 @@ app.include_router(privacy_router)
 app.include_router(reference_data_router)
 app.include_router(users_router)
 app.include_router(support_router)
+app.include_router(ai_engine_router)

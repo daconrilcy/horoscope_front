@@ -188,4 +188,30 @@ describe("SignInForm", () => {
       expect(passwordInput).toHaveAttribute("aria-describedby", "signin-password-error")
     })
   })
+
+  // M2 — prop onRegister : visibilité conditionnelle et invocation du callback
+  it("shows 'Créer un compte' button when onRegister prop is provided", () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
+    const onRegister = vi.fn()
+    render(<SignInForm onRegister={onRegister} />)
+
+    expect(screen.getByRole("button", { name: "Créer un compte" })).toBeInTheDocument()
+  })
+
+  it("does not show 'Créer un compte' button when onRegister prop is omitted", () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
+    render(<SignInForm />)
+
+    expect(screen.queryByRole("button", { name: "Créer un compte" })).not.toBeInTheDocument()
+  })
+
+  it("calls onRegister callback when 'Créer un compte' button is clicked", () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
+    const onRegister = vi.fn()
+    render(<SignInForm onRegister={onRegister} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Créer un compte" }))
+
+    expect(onRegister).toHaveBeenCalledOnce()
+  })
 })

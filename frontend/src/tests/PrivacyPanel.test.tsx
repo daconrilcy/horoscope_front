@@ -92,7 +92,7 @@ describe("PrivacyPanel", () => {
     expect(screen.getByText("Statut export: completed")).toBeInTheDocument()
     expect(screen.getByText("Statut suppression: completed")).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole("button", { name: "Supprimer mes donnees" }))
+    fireEvent.click(screen.getByRole("button", { name: "Supprimer mes données" }))
     await waitFor(() => expect(mutateAsyncDelete).toHaveBeenCalled())
     expect(refetchDelete).toHaveBeenCalled()
   })
@@ -125,10 +125,10 @@ describe("PrivacyPanel", () => {
     })
 
     render(<PrivacyPanel />)
-    expect(screen.getByText("Aucune demande d export pour le moment.")).toBeInTheDocument()
+    expect(screen.getByText("Aucune demande d'export pour le moment.")).toBeInTheDocument()
     expect(screen.getByText("Aucune demande de suppression pour le moment.")).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole("button", { name: "Supprimer mes donnees" }))
+    fireEvent.click(screen.getByRole("button", { name: "Supprimer mes données" }))
 
     await waitFor(() => expect(confirmSpy).toHaveBeenCalled())
     expect(mutateAsyncDelete).not.toHaveBeenCalled()

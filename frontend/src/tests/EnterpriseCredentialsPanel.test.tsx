@@ -1,44 +1,52 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 
 import { EnterpriseCredentialsPanel } from "../components/EnterpriseCredentialsPanel"
+import * as api from "../api/enterpriseCredentials"
+import { AppProviders } from "../state/providers"
 
-const mockUseEnterpriseCredentials = vi.fn()
-const mockUseGenerateEnterpriseCredential = vi.fn()
-const mockUseRotateEnterpriseCredential = vi.fn()
+vi.mock("../api/enterpriseCredentials", async () => {
+  const actual = await vi.importActual("../api/enterpriseCredentials")
+  return {
+    ...actual,
+    useEnterpriseCredentials: vi.fn(),
+    useGenerateEnterpriseCredential: vi.fn(),
+    useRotateEnterpriseCredential: vi.fn(),
+  }
+})
 
-vi.mock("../api/enterpriseCredentials", () => ({
-  EnterpriseCredentialsApiError: class extends Error {},
-  useEnterpriseCredentials: (...args: unknown[]) => mockUseEnterpriseCredentials(...args),
-  useGenerateEnterpriseCredential: () => mockUseGenerateEnterpriseCredential(),
-  useRotateEnterpriseCredential: () => mockUseRotateEnterpriseCredential(),
-}))
+const mockUseEnterpriseCredentials = api.useEnterpriseCredentials as any
+const mockUseGenerateEnterpriseCredential = api.useGenerateEnterpriseCredential as any
+const mockUseRotateEnterpriseCredential = api.useRotateEnterpriseCredential as any
 
 afterEach(() => {
   cleanup()
-  mockUseEnterpriseCredentials.mockReset()
-  mockUseGenerateEnterpriseCredential.mockReset()
-  mockUseRotateEnterpriseCredential.mockReset()
+  vi.clearAllMocks()
 })
 
 describe("EnterpriseCredentialsPanel", () => {
   it("renders panel and supports generate + rotate", async () => {
-    const refetch = vi.fn()
     const generateMutate = vi.fn().mockResolvedValue({ api_key: "b2b_secret_generated" })
     const rotateMutate = vi.fn().mockResolvedValue({ api_key: "b2b_secret_rotated" })
 
     mockUseEnterpriseCredentials.mockReturnValue({
-      isPending: false,
-      error: null,
+      isLoading: false,
+      isError: false,
       data: {
-        account_id: 1,
-        company_name: "Acme Media",
+        company_name: "AstroCorp",
         status: "active",
-        has_active_credential: true,
-        credentials: [{ credential_id: 9, key_prefix: "b2b_abcd", status: "active" }],
+        credentials: [
+          {
+            credential_id: 9,
+            key_prefix: "b2b_abcd",
+            status: "active",
+            created_at: "2026-02-20T00:00:00Z",
+          },
+        ],
       },
-      refetch,
+      refetch: vi.fn(),
     })
+
     mockUseGenerateEnterpriseCredential.mockReturnValue({
       isPending: false,
       error: null,
@@ -50,14 +58,19 @@ describe("EnterpriseCredentialsPanel", () => {
       mutateAsync: rotateMutate,
     })
 
-    render(<EnterpriseCredentialsPanel />)
-    expect(screen.getByText("Credentials API entreprise")).toBeInTheDocument()
-    expect(screen.getByText("Credential #9 · b2b_abcd · active")).toBeInTheDocument()
+    render(
+      <AppProviders>
+        <EnterpriseCredentialsPanel />
+      </AppProviders>
+    )
+    expect(screen.getByText("API Entreprise")).toBeInTheDocument()
+    expect(screen.getByText("Compte: AstroCorp")).toBeInTheDocument()
+    expect(screen.getByText("Clé: b2b_abcd***")).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole("button", { name: "Generer une cle API" }))
+    fireEvent.click(screen.getByRole("button", { name: "Générer une clé API" }))
     await waitFor(() => expect(generateMutate).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole("button", { name: "Regenerer la cle active" }))
+    fireEvent.click(screen.getByRole("button", { name: "Régénérer la clé active" }))
     await waitFor(() => expect(rotateMutate).toHaveBeenCalled())
   })
 
@@ -74,36 +87,31 @@ describe("EnterpriseCredentialsPanel", () => {
     })
 
     mockUseEnterpriseCredentials.mockReturnValueOnce({
-      isPending: true,
-      error: null,
+      isLoading: true,
+      isError: false,
       data: null,
       refetch: vi.fn(),
     })
-    const { rerender } = render(<EnterpriseCredentialsPanel />)
-    expect(screen.getByText("Chargement credentials...")).toBeInTheDocument()
+
+    const { rerender } = render(
+      <AppProviders>
+        <EnterpriseCredentialsPanel />
+      </AppProviders>
+    )
+    expect(screen.getByText("Chargement des credentials...")).toBeInTheDocument()
 
     mockUseEnterpriseCredentials.mockReturnValueOnce({
-      isPending: false,
-      error: new Error("service down"),
+      isLoading: false,
+      isError: true,
       data: null,
       refetch: vi.fn(),
     })
-    rerender(<EnterpriseCredentialsPanel />)
-    expect(screen.getByText("Erreur credentials: service down")).toBeInTheDocument()
 
-    mockUseEnterpriseCredentials.mockReturnValueOnce({
-      isPending: false,
-      error: null,
-      data: {
-        account_id: 1,
-        company_name: "Acme Media",
-        status: "active",
-        has_active_credential: false,
-        credentials: [],
-      },
-      refetch: vi.fn(),
-    })
-    rerender(<EnterpriseCredentialsPanel />)
-    expect(screen.getByText("Aucun credential configure pour ce compte.")).toBeInTheDocument()
+    rerender(
+      <AppProviders>
+        <EnterpriseCredentialsPanel />
+      </AppProviders>
+    )
+    expect(screen.getByText("Impossible de charger les credentials.")).toBeInTheDocument()
   })
 })

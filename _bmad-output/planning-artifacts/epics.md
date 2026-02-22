@@ -7,6 +7,10 @@ stepsCompleted:
 inputDocuments:
   - 'C:\dev\horoscope_front\_bmad-output\planning-artifacts\prd.md'
   - 'C:\dev\horoscope_front\_bmad-output\planning-artifacts\architecture.md'
+lastEdited: '2026-02-21T14:39:07+01:00'
+editHistory:
+  - date: '2026-02-21T14:39:07+01:00'
+    changes: 'Epics rebaseline after PRD/Architecture finalization (FR38-42 + NFR SMART alignment)'
 ---
 
 # horoscope_front - Epic Breakdown
@@ -56,36 +60,36 @@ FR34: Support users can manage incidents related to account, subscription, and c
 FR35: Operations users can monitor product quality indicators related to conversational relevance.  
 FR36: Operations users can apply and revert configuration changes affecting response quality behavior.  
 FR37: Operations users can monitor usage indicators needed for product and business decisions.  
-FR38: Enterprise clients can create and manage API credentials for their account.  
-FR39: Enterprise clients can consume astrology content through authenticated API access.  
-FR40: Enterprise clients can manage plan limits and view consumption metrics.  
-FR41: Enterprise clients can request content style adjustments aligned with editorial needs.  
-FR42: The business can bill enterprise clients using fixed subscription and usage-based components.
+FR38: Les clients entreprise peuvent creer et gerer des identifiants API pour leur compte.  
+FR39: Les clients entreprise peuvent consommer du contenu astrologique via un acces API authentifie.  
+FR40: Les clients entreprise peuvent gerer les limites de leur plan et consulter leurs metriques de consommation.  
+FR41: Les clients entreprise peuvent demander des ajustements de style de contenu alignes avec leurs besoins editoriaux.  
+FR42: L entreprise peut facturer les clients entreprise via un modele combinant abonnement fixe et composante variable a l usage.
 
 ### NonFunctional Requirements
 
 NFR1: Le systeme doit permettre la generation d un premier theme astral en <= 2 min 30 apres soumission complete des donnees de naissance.  
 NFR2: Le parcours inscription -> premiere reponse utile doit etre realisable en < 5 min pour un utilisateur standard.  
-NFR3: Les actions d interface critiques (navigation interne SPA, envoi message, ouverture historique) doivent fournir un feedback utilisateur immediat et eviter les blocages percus.  
-NFR4: Le service conversationnel doit supporter des reponses progressives (streaming ou equivalent) pour reduire la latence percue.  
-NFR5: Les donnees sensibles doivent etre chiffrees en transit et au repos selon standards reconnus.  
-NFR6: Les echanges envoyes aux LLM doivent exclure les identifiants personnels directs.  
-NFR7: Le systeme doit fournir des mecanismes operationnels d export et suppression des donnees utilisateur.  
-NFR8: Les actions sensibles (suppression donnees, regeneration cles, changements d offre) doivent etre journalisees de maniere tracable.  
-NFR9: Les secrets d integration (cles API, credentials) doivent etre geres via un mecanisme dedie de gestion des secrets.  
-NFR10: Le systeme doit pouvoir absorber une croissance progressive vers l objectif de ~2 000 utilisateurs payants sans degradation majeure de l experience percue.  
-NFR11: Les composants critiques doivent permettre une montee en charge incrementale (scale out ou equivalent) sans refonte fonctionnelle.  
-NFR12: Le systeme doit permettre la mise en place de limites d usage (quotas/messages) afin de maitriser la charge et les couts LLM.  
-NFR13: Les parcours critiques doivent viser la conformite WCAG 2.1 AA.  
-NFR14: Les interactions principales doivent etre utilisables au clavier et comprehensibles par lecteur d ecran.  
-NFR15: Les contrastes et libelles des composants critiques doivent respecter les bonnes pratiques d accessibilite.  
-NFR16: Le systeme doit integrer de maniere fiable les APIs LLM avec gestion d erreurs, retries controles et fallback defini.  
-NFR17: Le systeme doit exposer des interfaces d integration versionnables pour les usages B2B (post-MVP).  
-NFR18: Les integrations externes doivent etre observables via metriques minimales (disponibilite, erreurs, latence).  
-NFR19: Le systeme doit maintenir une disponibilite compatible avec un service utilisateur 24/7.  
-NFR20: Le systeme doit detecter, tracer et remonter les reponses hors-scope afin de soutenir l amelioration continue.  
-NFR21: Le systeme doit disposer d un mecanisme de rollback de configuration pour restaurer rapidement la qualite de service.  
-NFR22: Le systeme doit conserver une tracabilite entre resultats astrologiques et version du moteur logique utilisee.
+NFR3: Les actions d interface critiques (navigation interne SPA, envoi message, ouverture historique) doivent afficher un feedback visuel en <= 200 ms dans 95% des cas et ne jamais bloquer l interface utilisateur plus de 1 s sans indicateur de chargement.  
+NFR4: Le service conversationnel doit fournir une premiere unite de reponse en <= 3 s (p95) et terminer la reponse complete en <= 15 s (p95) pour une requete standard.  
+NFR5: Les donnees sensibles doivent etre chiffrees en transit (TLS 1.2+) et au repos (AES-256 ou equivalent), avec verification trimestrielle documentee de la configuration.  
+NFR6: 100% des requetes envoyees aux LLM doivent etre pseudonymisees pour exclure les identifiants personnels directs (email, telephone, nom complet, adresse postale), avec controle automatique en pre-envoi.  
+NFR7: Le systeme doit permettre l export des donnees utilisateur en format structure (JSON ou CSV) sous <= 72 h apres demande validee, et la suppression complete sous <= 30 jours calendaires avec confirmation d execution.  
+NFR8: Les actions sensibles (suppression donnees, regeneration cles, changements d offre) doivent etre journalisees avec horodatage, acteur, type d action et identifiant de ressource, avec conservation des journaux pendant au moins 12 mois.  
+NFR9: Les secrets d integration (cles API, credentials) doivent etre stockes dans un gestionnaire de secrets dedie, jamais en clair dans le code ou les logs, et tournes au minimum tous les 90 jours.  
+NFR10: Le systeme doit supporter au moins 2 000 utilisateurs payants actifs/mois en maintenant une latence API p95 <= 2 s sur les endpoints critiques et un taux d erreur serveur mensuel < 1%.  
+NFR11: Les composants critiques doivent permettre une montee en charge horizontale d au moins x2 du trafic moyen observe sur les 30 derniers jours, sans refonte fonctionnelle et sans regression des SLO definis (latence p95 et taux d erreur).  
+NFR12: Le systeme doit appliquer des quotas configurables par plan (messages/jour et appels API/jour) avec blocage automatique au depassement et remise a zero periodique documentee.  
+NFR13: Les parcours critiques doivent atteindre la conformite WCAG 2.1 niveau AA sur 100% des ecrans MVP audites avant mise en production.  
+NFR14: 100% des interactions principales doivent etre utilisables au clavier (navigation tabulation + activation Entree/Espace) et compatibles lecteur d ecran sur Chrome et Edge.  
+NFR15: Les composants critiques doivent respecter un contraste minimum de 4.5:1 pour le texte normal et 3:1 pour les elements UI non textuels.  
+NFR16: Le systeme doit integrer les APIs LLM avec timeout <= 20 s par appel, au maximum 2 retries exponentiels sur erreurs transitoires, et fallback explicite vers une reponse degradee en cas d echec final.  
+NFR17: Le systeme doit exposer des interfaces d integration B2B versionnees (ex. /v1, /v2) avec politique de compatibilite retroactive d au moins 6 mois apres annonce de depreciation.  
+NFR18: Les integrations externes doivent publier au minimum les metriques disponibilite, taux d erreur et latence p95, avec une fenetre d observation continue et un tableau de bord operationnel mis a jour en temps reel.  
+NFR19: Le systeme doit maintenir une disponibilite mensuelle >= 99.5% sur les services critiques orientes utilisateur.  
+NFR20: Le systeme doit detecter et tracer les reponses hors-scope avec un taux de classification automatique >= 90% sur jeu de validation interne, et produire un rapport hebdomadaire de suivi.  
+NFR21: Le mecanisme de rollback de configuration doit permettre un retour a la derniere configuration stable en <= 15 minutes apres declenchement.  
+NFR22: Chaque resultat astrologique doit inclure un identifiant de version du moteur logique et des regles utilisees, afin de garantir une tracabilite de 100% des calculs restitues.
 
 ### Additional Requirements
 
@@ -176,6 +180,10 @@ Permettre aux equipes support/ops de traiter les incidents et maintenir la quali
 ### Epic 7: Offre B2B API et Self-Service Entreprise
 Permettre aux clients entreprise de consommer le moteur via API, gerer leurs acces/offres et etre factures en fixe + volume.
 **FRs covered:** FR38, FR39, FR40, FR41, FR42
+
+### Epic 12: Profil natal — saisie des donnees de naissance et generation du theme
+Permettre a l utilisateur de renseigner ses donnees de naissance depuis le frontend et de declencher la generation de son theme natal, avec feedback adequat pendant le calcul.
+**FRs covered:** FR10, FR11, FR14
 
 ## Epic 1: Fondation pour des calculs astrologiques fiables et tracables
 
@@ -315,6 +323,49 @@ So that la confiance utilisateur soit maintenue.
 **When** le theme est regenere
 **Then** la sortie reste coherente
 **And** tout ecart est tracable via versioning/audit
+
+### Story 2.6: Interface utilisateur signin, signup et signout
+
+As a user,
+I want acceder a une page d accueil, un formulaire d inscription, un formulaire de connexion et un bouton de deconnexion,
+So that je puisse creer mon compte, m authentifier et me deconnecter depuis l interface de l application.
+
+**Acceptance Criteria:**
+
+**Given** un utilisateur non authentifie
+**When** il ouvre l application
+**Then** une page d accueil est affichee avec deux actions : Se connecter et Creer un compte
+**And** le clic sur Se connecter affiche le formulaire SignInForm
+**And** le clic sur Creer un compte affiche le formulaire SignUpForm
+
+**Given** le formulaire SignInForm affiche
+**When** l utilisateur soumet son email et son mot de passe
+**Then** le formulaire valide les champs avec React Hook Form + Zod
+**And** les etats loading/error sont geres explicitement
+**And** en cas d identifiants incorrects, un message d erreur non technique est affiche
+**And** en cas de succes, setAccessToken() est appele et l interface personnalisee est affichee
+**And** un lien Creer un compte permet de naviguer vers SignUpForm
+
+**Given** le formulaire SignUpForm affiche
+**When** l utilisateur soumet son email et un mot de passe d au moins 8 caracteres
+**Then** le formulaire valide les champs avec React Hook Form + Zod
+**And** POST /v1/auth/register est appele via registerApi()
+**And** en cas de succes, setAccessToken() est appele et l interface personnalisee est affichee
+**And** en cas d email deja utilise, un message explicite est affiche
+**And** un lien Se connecter permet de revenir a SignInForm
+
+**Given** un utilisateur authentifie
+**When** il navigue dans l application
+**Then** un bouton Se deconnecter est accessible dans l interface
+**And** le clic appelle clearAccessToken() et retourne a la page d accueil
+**And** la navigation clavier est fonctionnelle (NFR14 - WCAG 2.1 AA)
+
+**Implementation notes:**
+- `frontend/src/pages/HomePage.tsx` : page d accueil avec props onSignIn / onRegister
+- `frontend/src/components/SignInForm.tsx` : prop optionnelle onRegister pour lien croisement
+- `frontend/src/components/SignUpForm.tsx` : nouveau composant avec prop onSignIn
+- `frontend/src/api/auth.ts` : loginApi() + registerApi() via helper postAuth()
+- `frontend/src/App.tsx` : state authView (home | signin | register), reset sur logout
 
 ## Epic 3: Guidance Astrologique Conversationnelle Contextuelle
 
@@ -769,3 +820,424 @@ So that les decisions commerciales reposent sur des donnees fiables.
 **When** les utilisateurs interagissent avec ces offres
 **Then** les KPI conversion/retention/revenu sont traces par variante
 **And** les resultats sont exploitables pour arbitrage produit
+
+## Epic 12: Profil natal — saisie des donnees de naissance et generation du theme
+
+Permettre a l utilisateur de renseigner ses donnees de naissance depuis le frontend (date, heure, lieu, fuseau horaire) et de declencher la generation de son theme natal, avec un feedback adequat pendant le calcul long.
+
+**FRs covered:** FR10, FR11, FR14
+
+### Story 12.1: Formulaire de saisie du profil natal
+
+As a utilisateur inscrit,
+I want renseigner mes donnees de naissance (date, heure, lieu, fuseau horaire) via un formulaire dedie,
+So that le systeme dispose des informations necessaires pour generer mon theme astral.
+
+**Acceptance Criteria:**
+
+**Given** un utilisateur authentifie naviguant vers la page de profil natal
+**When** la page se charge
+**Then** le formulaire est pre-rempli avec les donnees existantes issues de `GET /v1/users/me/birth-data`
+**And** les champs vides sont affichés sans valeur par defaut
+
+**Given** un utilisateur soumettant le formulaire avec des donnees valides
+**When** la requete `PUT /v1/users/me/birth-data` reussit
+**Then** un message de confirmation de sauvegarde est affiche
+**And** les donnees mises a jour restent dans le formulaire
+
+**Given** un utilisateur soumettant une heure de naissance au mauvais format
+**When** l API retourne `invalid_birth_time`
+**Then** un message d erreur specifique est affiche sous le champ heure
+
+**Given** un utilisateur soumettant un fuseau horaire invalide
+**When** l API retourne `invalid_timezone`
+**Then** un message d erreur specifique est affiche sous le champ fuseau horaire
+
+**Given** n importe quel champ invalide cote client
+**When** l utilisateur tente de soumettre
+**Then** la validation RHF+Zod bloque la soumission et affiche les erreurs inline
+**And** les attributs aria-invalid et aria-describedby sont correctement positionnes
+
+**Notes techniques:**
+- Nouveau fichier: `frontend/src/api/birthProfile.ts` avec `getBirthData()` et `saveBirthData()`
+- Nouveau fichier: `frontend/src/pages/BirthProfilePage.tsx`
+- Validation Zod: `birth_date` (date ISO), `birth_time` (HH:MM optionnel), `birth_place` (string non vide), `birth_timezone` (IANA string non vide)
+- Pattern RHF + Zod conforme a l architecture du projet
+- Accessibilite WCAG 2.1 AA: labels associes, aria-invalid, role="alert" sur les erreurs
+
+### Story 12.2: Declenchement et feedback de la generation du theme natal depuis l UI
+
+As a utilisateur ayant sauvegarde ses donnees de naissance,
+I want declencher la generation de mon theme natal depuis le frontend et voir un feedback clair pendant le calcul,
+So that je sais que le calcul est en cours et je suis notifie du succes ou de l echec.
+
+**Acceptance Criteria:**
+
+**Given** un utilisateur sur la page de profil natal avec des donnees de naissance sauvegardees
+**When** il clique sur le bouton "Generer mon theme astral"
+**Then** le bouton est desactive et un indicateur de chargement est affiche
+**And** une requete `POST /v1/users/me/natal-chart` est envoyee
+
+**Given** la generation qui se termine avec succes
+**When** l API retourne 200 avec les donnees du theme
+**Then** l utilisateur est redirige ou navigue vers la page du theme natal
+**And** les donnees du theme sont affichees via le composant existant `NatalChartPage`
+
+**Given** la generation qui depasse le delai (NFR1: ≤ 2min30)
+**When** l API retourne 503 avec `natal_generation_timeout`
+**Then** un message d erreur non technique est affiche ("La generation a pris trop de temps, veuillez reessayer.")
+**And** le bouton de generation redevient actif
+
+**Given** le moteur natal indisponible
+**When** l API retourne 503 avec `natal_engine_unavailable`
+**Then** un message d erreur non technique est affiche ("Le service de generation est temporairement indisponible.")
+**And** le bouton de generation redevient actif
+
+**Given** n importe quelle erreur reseau (fetch rejete)
+**When** la requete echoue sans reponse serveur
+**Then** un message generique est affiche ("Une erreur est survenue. Veuillez reessayer.")
+
+**Notes techniques:**
+- Appel `POST /v1/users/me/natal-chart` via `birthProfile.ts` ou `natalChart.ts`
+- Timeout UX: afficher le spinner pendant toute la duree du calcul (jusqu a 2min30)
+- Pas de polling necessaire: la reponse HTTP est synchrone cote backend
+- Integration avec `useLatestNatalChart()` pour invalider le cache TanStack Query apres generation reussie
+- NFR1: latence p95 ≤ 2min30 pour la generation complete
+
+## Epic 13: Stabilisation post-MVP — corrections des flux utilisateur critiques
+
+Corriger les bugs bloquants identifies en test manuel apres le MVP, notamment l'erreur 422 lors de la generation du theme natal, afin de livrer un flux utilisateur complet et fonctionnel de bout en bout.
+
+**FRs covered:** FR10, FR11 (correction de regression)
+
+### Story 13.1: Correction erreur 422 lors de la generation du theme natal
+
+As a utilisateur ayant sauvegarde ses donnees de naissance,
+I want pouvoir declencher la generation de mon theme natal sans obtenir une erreur 422,
+So that le flux de creation du theme fonctionne de bout en bout comme prevu.
+
+**Root Cause identifie:** La fonction `generateNatalChart` dans `frontend/src/api/natalChart.ts` envoie un POST sans header `Content-Type: application/json`. FastAPI retourne systematiquement 422 Unprocessable Content pour les POST sans Content-Type correct, meme quand le corps est vide. De plus, le format de reponse 422 natif FastAPI (`{"detail": [...]}`) n'est pas gere par `handleResponse` (qui attend `{"error": {...}}`), causant un double-bug : l'erreur n'est pas parsee correctement et remontee comme `unknown_error`.
+
+**Acceptance Criteria:**
+
+**Given** un utilisateur ayant sauvegarde son profil natal
+**When** il clique sur "Generer mon theme astral"
+**Then** la requete POST /v1/users/me/natal-chart inclut le header `Content-Type: application/json`
+**And** le backend repond 200 avec le theme genere
+
+**Given** le backend retourne une erreur 422 (donnees invalides ou incompletes)
+**When** la generation echoue avec code HTTP 422
+**Then** un message clair est affiche : "Vos données de naissance sont invalides ou incomplètes. Veuillez vérifier votre profil natal."
+**And** le bouton de generation redevient actif
+
+**Given** le backend retourne un 422 au format FastAPI natif (`{"detail": [...]}`)
+**When** `handleResponse` tente de parser l'erreur
+**Then** le message est extrait ou un fallback generique est utilise (pas de crash silencieux)
+
+**Notes techniques:**
+- Fix principal: ajouter `"Content-Type": "application/json"` aux headers de `generateNatalChart` dans `natalChart.ts`
+- Fix secondaire: dans `handleResponse`, ajouter un fallback pour parser `{"detail": [...]}` en plus de `{"error": {...}}`
+- Fix UX: dans `BirthProfilePage.tsx` `generationMutation.onError`, ajouter le cas `code === "unprocessable_entity"` ou HTTP status 422 avec message utilisateur adapte
+- Tests a ajouter: test 422 pendant generation dans `BirthProfilePage.test.tsx`, test du parsing `{"detail": [...]}` dans `natalChart.ts`
+
+## Epic 14: Géocodage du lieu de naissance et précision astronomique du thème natal
+
+Enrichir le profil natal avec la saisie structurée ville + pays, le géocodage automatique via Nominatim (OpenStreetMap open data) pour obtenir les coordonnées GPS, puis transmettre ces coordonnées au backend pour un calcul astronomique précis des maisons et des aspects. Gérer les modes dégradés (lieu absent, heure absente) avec feedback UX explicite. Fournir une table de traduction des termes astrologiques (maisons, signes, planètes) en FR/EN/ES, extensible à d'autres langues.
+
+**FRs covered:** FR3, FR4, FR5, FR10, FR11, FR14, FR15
+
+**Contrat API étendu (backend) :**
+- `PUT /v1/users/me/birth-data` accepte les nouveaux champs : `birth_city` (string), `birth_country` (string), `birth_lat` (float, nullable), `birth_lon` (float, nullable)
+- `birth_place` (free text) est déprécié mais maintenu pour rétrocompatibilité
+- `POST /v1/users/me/natal-chart` body peut inclure `{ "birth_lat": float, "birth_lon": float }` optionnel ; si absent, le backend utilise les coordonnées stockées ou le mode dégradé Equal House
+- Quand `birth_lat` / `birth_lon` sont fournis, le backend utilise Placidus (système de maisons par défaut) et calcule les aspects planétaires
+- Quand les coordonnées sont absentes, le backend utilise Equal House (mode dégradé géographique)
+- Quand `birth_time` est absent ou marqué "unknown", le backend utilise Solar chart (Soleil en Ascendant, heure forcée à midi) et l'indique dans `metadata.degraded_mode`
+
+**Architecture open data géocodage :**
+- API : Nominatim (OpenStreetMap) `https://nominatim.openstreetmap.org/search`
+- Appel depuis le frontend (navigateur), pas de proxy backend nécessaire
+- Paramètres : `?q={city},{country}&format=json&limit=1`
+- Politique Nominatim : User-Agent obligatoire, max 1 req/s, pas de géocodage en masse
+- Fallback : si Nominatim échoue ou ne trouve pas de résultat, mode dégradé Equal House
+
+### Story 14.1: Refonte formulaire profil natal — ville, pays et géocodage Nominatim
+
+As a utilisateur,
+I want saisir ma ville et mon pays de naissance et obtenir automatiquement les coordonnées GPS,
+So that mon theme natal puisse etre calcule avec precision geographique.
+
+**Acceptance Criteria:**
+
+**Given** un utilisateur sur la page de profil natal
+**When** il renseigne la ville et le pays puis clique sur "Valider les coordonnées"
+**Then** le frontend appelle Nominatim avec `?q={ville},{pays}&format=json&limit=1`
+**And** les coordonnées (lat, lon, label résolu) sont affichées en confirmation
+**And** les coordonnées sont incluses dans le payload `PUT /v1/users/me/birth-data` avec `birth_city`, `birth_country`, `birth_lat`, `birth_lon`
+**And** en cas de succès de sauvegarde, le message "Profil natal sauvegardé." s'affiche
+
+**Given** Nominatim ne trouve pas de résultat pour la ville/pays saisis
+**When** la recherche retourne un tableau vide
+**Then** un message d'alerte s'affiche : "Lieu introuvable. Vérifiez la ville et le pays, ou laissez le lieu vide pour utiliser le mode dégradé (maisons égales)."
+**And** aucune coordonnée n'est envoyée au backend
+
+**Given** Nominatim est indisponible (erreur réseau ou timeout)
+**When** la requête échoue
+**Then** un message d'alerte s'affiche : "Service de géocodage indisponible. Vous pouvez sauvegarder sans coordonnées (mode dégradé)."
+**And** le bouton "Sauvegarder" reste actif pour permettre une sauvegarde sans coordonnées
+
+**Notes techniques:**
+- Nouveau service `frontend/src/api/geocoding.ts` — fonction `geocodeCity(city: string, country: string): Promise<{lat: number, lon: number, display_name: string} | null>`
+- User-Agent header : `"User-Agent": "horoscope-app/1.0 (contact: admin@horoscope.app)"` (requis par Nominatim)
+- `BirthProfilePage.tsx` : ajouter champs `birth_city` (requis si coordonnées souhaitées), `birth_country` (requis si coordonnées souhaitées), bouton "Valider les coordonnées", état `geocodingState` (idle | loading | success | error), affichage du `display_name` résolu
+- `birthProfile.ts` : étendre `saveBirthData` pour inclure `birth_city`, `birth_country`, `birth_lat?`, `birth_lon?`
+- Zod schema : `birth_city` et `birth_country` non requis mais conditionnellement requis ensemble
+- Tests : test géocodage succès, lieu introuvable, Nominatim indisponible, sauvegarde avec et sans coordonnées
+
+### Story 14.2: Modes dégradés — lieu absent et heure de naissance absente
+
+As a utilisateur,
+I want pouvoir utiliser l'application même si je ne connais pas mon heure ou mon lieu de naissance exact,
+So that j'obtiens quand même un theme natal partiel avec un avertissement clair sur les limitations.
+
+**Acceptance Criteria:**
+
+**Given** un utilisateur qui ne renseigne pas de lieu de naissance (ou dont le géocodage a échoué)
+**When** il génère son thème natal
+**Then** le backend utilise le mode Equal House (sans coordonnées géographiques)
+**And** `metadata.degraded_mode` contient `"no_location"` dans la réponse
+**And** un bandeau d'avertissement est affiché sur la page du thème natal : "⚠ Thème calculé en maisons égales — lieu de naissance non renseigné ou non trouvé. Pour un calcul précis, renseignez votre ville et pays dans votre profil."
+
+**Given** un utilisateur qui ne renseigne pas d'heure de naissance (champ laissé vide ou coché "inconnue")
+**When** il génère son thème natal
+**Then** le backend utilise Solar chart (Soleil en Ascendant, heure forcée à 12:00 UTC)
+**And** `metadata.degraded_mode` contient `"no_time"` dans la réponse
+**And** un bandeau d'avertissement est affiché : "⚠ Thème calculé en thème solaire — heure de naissance non renseignée. Les positions des maisons et de la Lune peuvent être inexactes."
+
+**Given** un utilisateur sans lieu ET sans heure
+**When** il génère son thème natal
+**Then** les deux avertissements sont affichés simultanément
+**And** `metadata.degraded_mode` contient `"no_location_no_time"`
+
+**Given** un utilisateur sans date de naissance
+**When** il tente de sauvegarder son profil natal
+**Then** le formulaire bloque la soumission avec un message : "La date de naissance est indispensable pour calculer votre thème natal."
+**And** aucune requête n'est envoyée au backend
+
+**Notes techniques:**
+- `BirthProfilePage.tsx` : ajouter une case à cocher "Heure inconnue" qui vide `birth_time` et envoie `birth_time: null` au backend
+- `NatalChartPage.tsx` : lire `metadata.degraded_mode` et afficher le bandeau approprié
+- `birth_date` reste obligatoire côté Zod (validation inchangée)
+- Tests : test bandeau "no_location", test bandeau "no_time", test bandeau combiné, test date obligatoire
+
+### Story 14.3: Table de traduction des termes astrologiques (FR/EN/ES)
+
+As a utilisateur,
+I want voir les termes astrologiques (maisons, signes, planètes) dans ma langue,
+So that je comprenne facilement mon thème natal sans termes techniques en anglais.
+
+**Acceptance Criteria:**
+
+**Given** un thème natal affiché en français (langue par défaut)
+**When** l'utilisateur consulte la page `NatalChartPage`
+**Then** les noms des signes sont affichés en français (ex: "Bélier" au lieu de "aries")
+**And** les noms des planètes sont affichés en français (ex: "Soleil" au lieu de "sun")
+**And** les maisons sont affichées avec leur nom traditionnel en français (ex: "Maison I — Identité")
+
+**Given** l'architecture i18n des termes astrologiques
+**When** un développeur veut ajouter une nouvelle langue (ex: allemand)
+**Then** il suffit d'ajouter une clé de langue dans `frontend/src/i18n/astrology.ts` sans modifier aucun composant
+
+**Given** un code inconnu retourné par l'API (ex: nouveau planète ou signe non répertorié)
+**When** la traduction est absente
+**Then** le code brut est affiché en fallback (ex: "chiron") sans erreur
+
+**Notes techniques:**
+- Nouveau fichier `frontend/src/i18n/astrology.ts` — dictionnaire indexé par langue puis par code
+- Langues initiales : `fr` (par défaut), `en`, `es`
+- Entrées : signs (12), planets (10 : sun, moon, mercury, venus, mars, jupiter, saturn, uranus, neptune, pluto), houses (12 maisons avec nom symbolique)
+- Maisons : numéro + nom symbolique FR/EN/ES (ex: I — Identité/Identity/Identidad, II — Valeurs/Values/Valores...)
+- Hook `useAstrologyLabels(lang: string)` retourne les dictionnaires traduits
+- Langue détectée depuis `navigator.language` ou `localStorage`, avec fallback `fr`
+- Tests : test traduction FR/EN/ES pour signs, planets, houses; test fallback code inconnu
+
+## Epic 15: AI Text Engine — Moteur de génération de texte IA (OpenAI Gateway)
+
+Centraliser tous les appels aux APIs LLM (OpenAI initialement) dans un module backend unique, gérant la robustesse (retries, timeouts, rate-limit), la traçabilité (trace_id) et le contrôle des coûts/tokens. Ce moteur supporte le chat (option streaming), la génération one-shot (thème astral, interprétation cartes/runes), et est extensible à d'autres providers.
+
+**FRs covered:** FR19, FR20, FR22 (amélioration de la couche LLM existante)
+
+### Story 15.1: AI Text Engine — Moteur de génération de texte IA (OpenAI Gateway)
+
+As a service métier (chat, thème astral, tirage),
+I want appeler un moteur centralisé de génération de texte IA,
+So that je bénéficie d'une abstraction stable, robuste et traçable pour tous mes appels LLM.
+
+**Acceptance Criteria:**
+
+**Given** le backend Python existant
+**When** le module `ai_engine` est créé avec une interface `ProviderClient`
+**Then** l'implémentation OpenAI est isolée dans `openai_client.py`
+**And** un autre provider peut être ajouté sans modifier les services appelants
+
+**Given** un service métier appelant `/v1/ai/generate` avec un `use_case` valide
+**When** la requête contient `use_case`, `locale`, `input`, `context` et `output`
+**Then** le moteur sélectionne le prompt approprié depuis le Prompt Registry
+**And** appelle le provider OpenAI avec les paramètres adéquats
+**And** retourne une réponse JSON avec `text`, `usage` (tokens), `meta` (latency, cached)
+
+**Given** un service chat appelant `/v1/ai/chat` avec `messages` et `stream: true`
+**When** le moteur traite la requête
+**Then** la réponse est envoyée en SSE (Server-Sent Events)
+**And** chaque chunk contient `{ "delta": "..." }`
+**And** le dernier événement contient `{ "done": true, "text": "..." }`
+
+**Given** le Prompt Registry configuré
+**When** un `use_case` est demandé (`chat`, `natal_chart_interpretation`, `card_reading`)
+**Then** le template Jinja2 correspondant est chargé et rendu
+**And** un `use_case` inconnu retourne une erreur 400 explicite
+
+**Given** une erreur upstream (timeout, 429, 5xx)
+**When** le provider OpenAI échoue
+**Then** le moteur applique retries exponentiels (2-3 tentatives max)
+**And** les erreurs sont traduites en codes HTTP standard (429, 502, 504)
+**And** le body d'erreur contient `error.type`, `error.message`, `retry_after_ms`
+
+**Notes techniques:**
+- Nouveau module `backend/app/ai_engine/` avec structure: `config.py`, `schemas.py`, `routes.py`, `providers/`, `prompts/`, `services/`
+- Dépendances: `openai>=1.0.0`, `jinja2>=3.0.0`
+- Configuration: `OPENAI_API_KEY`, `OPENAI_MODEL_DEFAULT`, `AI_ENGINE_TIMEOUT_SECONDS`
+- Endpoints: `POST /v1/ai/generate` (sync), `POST /v1/ai/chat` (sync + streaming SSE)
+- [Source: docs/agent/story-15-ai-text-engine-bmad.md] — Spécification complète
+
+### Story 15.2: AI Text Engine — Rate limiting, observabilité et déploiement Docker
+
+As a platform engineer,
+I want que le moteur AI soit protégé par rate limiting, observable via logs structurés, et déployable en production Docker,
+So that le service soit robuste, monitorable et prêt pour le déploiement VPS.
+
+**Acceptance Criteria:**
+
+**Given** le module `ai_engine` existant (story 15.1)
+**When** un utilisateur dépasse le quota de requêtes (ex: 30 req/min par user_id)
+**Then** le moteur retourne une erreur 429 avec `error.type: "RATE_LIMIT_EXCEEDED"` et `retry_after_ms`
+**And** le compteur est stocké en Redis (ou mémoire en dev)
+
+**Given** une requête traitée par le moteur AI
+**When** la requête est complétée (succès ou erreur)
+**Then** un log structuré JSON est émis avec `request_id`, `trace_id`, `user_id`, `use_case`, `latency_ms`, `status`, `tokens_used`
+**And** les données sensibles (birth_data, contenu conversation) ne sont pas loggées en clair
+
+**Given** l'environnement de production Docker
+**When** le déploiement est exécuté via `docker compose -f docker-compose.prod.yml up -d`
+**Then** les services `api` (backend + ai_engine), `web` (Nginx), et `redis` démarrent correctement
+**And** le frontend React buildé est servi par Nginx sur `/`
+**And** les endpoints `/v1/ai/*` sont accessibles via le reverse proxy
+
+**Given** un développeur ou ops consultant la documentation
+**When** il lit le README de déploiement
+**Then** il trouve les instructions pour : configuration `.env`, build des images, démarrage prod, vérification des logs
+**And** les commandes de troubleshooting sont documentées
+
+**Given** le cache optionnel activé
+**When** une requête identique (même `use_case` + hash `input+context`) est reçue dans le TTL
+**Then** la réponse est servie depuis le cache Redis
+**And** `meta.cached: true` est retourné dans la réponse
+
+**Notes techniques:**
+- Fichiers à créer/modifier :
+  - `backend/app/ai_engine/services/rate_limiter.py` — Rate limiting par user_id avec Redis/mémoire
+  - `backend/app/ai_engine/services/cache_service.py` — Cache optionnel des réponses
+  - `backend/app/ai_engine/middleware/logging_middleware.py` — Logs structurés JSON
+  - `docker-compose.prod.yml` — Configuration production avec services api, web, redis
+  - `Dockerfile` (backend) — Image Python optimisée
+  - `frontend/Dockerfile` — Build React + copie vers Nginx
+  - `nginx/nginx.conf` — Reverse proxy configuration
+  - `docs/deploy-vps.md` — Documentation déploiement
+- Configuration : `AI_ENGINE_RATE_LIMIT_PER_MIN`, `AI_ENGINE_CACHE_TTL_SECONDS`, `REDIS_URL`
+- Redis requis en prod pour rate limiting distribué et cache partagé
+- [Source: docs/agent/story-15-ai-text-engine-bmad.md#sections-7-8-9-11-12] — Spécification complète
+
+### Story 15.3: Migration des services Chat et Guidance vers le AI Engine
+
+As a utilisateur du chat et des guidances astrologiques,
+I want que mes conversations et guidances soient générées par le vrai moteur OpenAI,
+So that je reçoive des réponses astrologiques de qualité au lieu de simples échos de prompt.
+
+**Acceptance Criteria:**
+
+**Given** le service `ChatGuidanceService` existant
+**When** un utilisateur envoie un message dans le chat
+**Then** le service utilise le nouveau AI Engine (`/v1/ai/chat` ou appel direct au module)
+**And** la réponse est générée par OpenAI avec le prompt `chat` du Prompt Registry
+**And** le streaming SSE est supporté si configuré
+
+**Given** le service `GuidanceService` existant
+**When** un utilisateur demande une guidance (daily/weekly/contextual)
+**Then** le service utilise le nouveau AI Engine avec `use_case=guidance_daily` ou `guidance_weekly` ou `guidance_contextual`
+**And** les templates de prompts appropriés sont utilisés depuis le Prompt Registry
+**And** les garde-fous hors-scope existants sont préservés via le AI Engine
+
+**Given** l'ancien `LLMClient` stub dans `infra/llm/client.py`
+**When** la migration est terminée
+**Then** l'ancien stub est supprimé ou déprécié
+**And** tous les imports de `LLMClient` sont remplacés par des appels au AI Engine
+
+**Given** les tests existants des services Chat et Guidance
+**When** ils sont exécutés après la migration
+**Then** ils passent avec le nouveau AI Engine (mode mock/test)
+**And** aucune régression n'est introduite dans le comportement fonctionnel
+
+**Given** le frontend React existant
+**When** l'utilisateur utilise le chat
+**Then** le frontend peut consommer les réponses streaming SSE du AI Engine
+**And** les états loading/error/empty sont correctement gérés
+
+**Notes techniques:**
+- Créer nouveaux use_cases dans le Prompt Registry : `guidance_daily`, `guidance_weekly`, `guidance_contextual`
+- Créer templates Jinja2 correspondants dans `ai_engine/prompts/`
+- Modifier `ChatGuidanceService.send_message()` pour appeler `ai_engine.services.chat_service`
+- Modifier `GuidanceService.request_guidance()` et `request_contextual_guidance()` pour appeler `ai_engine.services.generate_service`
+- Conserver la logique de récupération hors-scope (peut être déléguée au AI Engine ou maintenue dans les services)
+- Adapter les tests pour mocker le AI Engine au lieu de `LLMClient`
+- Option frontend : soit appeler directement `/v1/ai/chat`, soit garder l'endpoint existant `/v1/chat` qui délègue au AI Engine
+- [Source: docs/agent/story-15-ai-text-engine-bmad.md] — Objectif #3 : "Réduire le couplage des services métier à OpenAI"
+
+### Story 15.4: Interprétation textuelle du thème natal via AI Engine
+
+As a utilisateur ayant généré son thème natal,
+I want recevoir une interprétation textuelle riche et personnalisée de mon thème,
+So that je comprenne la signification de mes positions planétaires, aspects et maisons.
+
+**Acceptance Criteria:**
+
+**Given** un utilisateur avec un thème natal calculé (NatalResult)
+**When** il demande l'interprétation de son thème
+**Then** le AI Engine est appelé avec `use_case=natal_chart_interpretation`
+**And** le contexte contient le résumé du thème (positions, aspects, maisons, ascendant)
+**And** une interprétation textuelle structurée est retournée (synthèse, points clés, conseils, disclaimer)
+
+**Given** le template `natal_chart_interpretation_v1.jinja2` existant
+**When** le AI Engine génère l'interprétation
+**Then** le texte suit la structure définie (synthèse, points clés Soleil/Lune/Ascendant, conseils, prudence)
+**And** le ton est bienveillant et non-alarmiste
+**And** aucun diagnostic médical/juridique/financier n'est fait
+
+**Given** l'endpoint `/v1/users/me/natal-chart`
+**When** l'utilisateur génère ou récupère son thème natal
+**Then** l'interprétation textuelle peut être incluse dans la réponse (champ `interpretation`)
+**And** l'interprétation est optionnelle (paramètre `include_interpretation=true`)
+
+**Given** un thème natal avec des données incomplètes (heure ou lieu manquant)
+**When** l'interprétation est demandée
+**Then** le AI Engine adapte l'interprétation avec les limitations appropriées
+**And** un avertissement est inclus concernant les données manquantes
+
+**Notes techniques:**
+- Créer `backend/app/services/natal_interpretation_service.py` — Service d'interprétation du thème
+- Utiliser le AI Engine avec `use_case=natal_chart_interpretation`
+- Convertir `NatalResult` en `natal_chart_summary` exploitable par le template
+- Champs du résumé : sun_sign, moon_sign, ascendant, dominant aspects, house placements
+- Modifier `UserNatalChartService` ou créer endpoint dédié `/v1/users/me/natal-chart/interpretation`
+- Cache possible : l'interprétation pour un même thème (même input_hash) peut être cachée
+- [Source: docs/agent/story-15-ai-text-engine-bmad.md] — Use case `natal_chart_interpretation`

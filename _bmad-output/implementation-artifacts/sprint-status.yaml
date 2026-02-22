@@ -1,4 +1,4 @@
-# generated: 2026-02-20 08:51:58
+# generated: 2026-02-21 14:46:14
 # project: horoscope_front
 # project_key: NOKEY
 # tracking_system: file-system
@@ -33,7 +33,7 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-02-20 08:51:58
+generated: 2026-02-21 14:46:14
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -53,6 +53,7 @@ development_status:
   2-3-generation-du-theme-natal-initial: done
   2-4-restitution-lisible-du-theme-natal: done
   2-5-coherence-inter-sessions-des-resultats: done
+  2-6-interface-utilisateur-signin-signout: done
   epic-2-retrospective: done
   epic-3: done
   3-1-chat-astrologue-avec-envoi-reception-de-messages: done
@@ -104,5 +105,17 @@ development_status:
   11-2-modules-tarot-runes-derriere-feature-flags: done
   11-3-instrumentation-des-experiments-packaging-pricing: done
   epic-11-retrospective: done
-
-
+  epic-12: done
+  12-1-formulaire-saisie-profil-natal: done
+  12-2-declenchement-generation-theme-natal-depuis-ui: done
+  epic-13: done
+  13-1-correction-erreur-422-generation-theme-natal: done
+  epic-14: in-progress
+  14-1-geocodage-lieu-naissance-nominatim: done
+  14-2-modes-degrades-lieu-heure-absents: done
+  14-3-table-traduction-termes-astrologiques: review
+  epic-15: in-progress
+  15-1-ai-text-engine-openai-gateway: review
+  15-2-ai-text-engine-rate-limiting-observability-docker: done
+  15-3-migration-services-chat-guidance-vers-ai-engine: done
+  15-4-interpretation-textuelle-theme-natal-via-ai-engine: ready-for-dev

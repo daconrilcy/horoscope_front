@@ -51,11 +51,12 @@ describe("B2BAstrologyPanel", () => {
     })
 
     render(<B2BAstrologyPanel />)
-    fireEvent.change(screen.getByLabelText("Cle API B2B"), { target: { value: "b2b_demo_secret" } })
-    fireEvent.click(screen.getByRole("button", { name: "Recuperer weekly-by-sign" }))
+    fireEvent.change(screen.getByLabelText("Clé API B2B"), { target: { value: "b2b_demo_secret" } })
+    fireEvent.click(screen.getByRole("button", { name: "Récupérer weekly-by-sign" }))
 
     await waitFor(() => expect(mutate).toHaveBeenCalledWith("b2b_demo_secret"))
     expect(screen.getByText(/Version API: v1/)).toBeInTheDocument()
+    expect(screen.getByText(/Référence: 2026.01/)).toBeInTheDocument()
     expect(screen.getByText(/Aries/)).toBeInTheDocument()
   })
 
@@ -98,6 +99,6 @@ describe("B2BAstrologyPanel", () => {
       },
     })
     rerender(<B2BAstrologyPanel />)
-    expect(screen.getByText("Aucun contenu astrologique disponible pour cette periode.")).toBeInTheDocument()
+    expect(screen.getByText("Aucun contenu astrologique disponible pour cette période.")).toBeInTheDocument()
   })
 })

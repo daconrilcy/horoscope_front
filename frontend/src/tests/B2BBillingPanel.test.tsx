@@ -131,8 +131,8 @@ describe("B2BBillingPanel", () => {
     })
 
     render(<B2BBillingPanel />)
-    fireEvent.change(screen.getByLabelText("Cle API B2B"), { target: { value: "b2b_billing_secret" } })
-    fireEvent.click(screen.getByRole("button", { name: "Recuperer le releve facture" }))
+    fireEvent.change(screen.getByLabelText("Clé API B2B"), { target: { value: "b2b_billing_secret" } })
+    fireEvent.click(screen.getByRole("button", { name: "Récupérer le relevé facturé" }))
 
     await waitFor(() => expect(mutateAsyncLatest).toHaveBeenCalledWith("b2b_billing_secret"))
     await waitFor(() =>
@@ -141,7 +141,7 @@ describe("B2BBillingPanel", () => {
     expect(screen.getByText("Fixe: 50.00 EUR")).toBeInTheDocument()
     expect(screen.getByText("Variable: 40.00 EUR")).toBeInTheDocument()
     expect(screen.getByText("Total: 90.00 EUR")).toBeInTheDocument()
-    expect(screen.getByText("Historique recent")).toBeInTheDocument()
+    expect(screen.getByText("Historique récent")).toBeInTheDocument()
   })
 
   it("renders loading, error and empty states", () => {
@@ -194,6 +194,6 @@ describe("B2BBillingPanel", () => {
       mutateAsync: vi.fn().mockResolvedValue({ items: [], total: 0, limit: 10, offset: 0 }),
     })
     rerender(<B2BBillingPanel />)
-    expect(screen.getByText("Aucun cycle de facturation cloture pour ce compte.")).toBeInTheDocument()
+    expect(screen.getByText("Aucun cycle de facturation clôturé pour ce compte.")).toBeInTheDocument()
   })
 })

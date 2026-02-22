@@ -35,45 +35,51 @@ export function B2BBillingPanel() {
   return (
     <section className="panel">
       <h2>Facturation B2B</h2>
-      <p>Consultez votre releve facture (fixe + volume) pour la derniere periode cloturee.</p>
+      <p>Consultez votre relevé facturé (fixe + volume) pour la dernière période clôturée.</p>
 
-      <label htmlFor="b2b-billing-api-key">Cle API B2B</label>
-      <input
-        id="b2b-billing-api-key"
-        value={apiKey}
-        onChange={(event) => setApiKey(event.target.value)}
-        placeholder="b2b_xxxxx"
-      />
-      <button
-        type="button"
-        disabled={isBusy}
-        onClick={async () => {
-          const key = apiKey.trim()
-          const latest = await billingLatest.mutateAsync(key)
-          const history = await billingHistory.mutateAsync({ apiKey: key, limit: 10, offset: 0 })
-          setHistoryItems(history.items)
-          if (latest === null) {
-            return
-          }
-        }}
-      >
-        Recuperer le releve facture
-      </button>
+      <label htmlFor="b2b-billing-api-key">Clé API B2B</label>
+      <div className="action-row">
+        <input
+          id="b2b-billing-api-key"
+          value={apiKey}
+          onChange={(event) => setApiKey(event.target.value)}
+          placeholder="b2b_xxxxx"
+        />
+        <button
+          type="button"
+          disabled={isBusy}
+          onClick={async () => {
+            const key = apiKey.trim()
+            const latest = await billingLatest.mutateAsync(key)
+            const history = await billingHistory.mutateAsync({ apiKey: key, limit: 10, offset: 0 })
+            setHistoryItems(history.items)
+            if (latest === null) {
+              return
+            }
+          }}
+        >
+          Récupérer le relevé facturé
+        </button>
+      </div>
 
-      {isBusy ? <p aria-busy="true">Chargement facturation B2B...</p> : null}
+      {isBusy ? (
+        <p aria-busy="true" className="state-line state-loading">
+          Chargement facturation B2B...
+        </p>
+      ) : null}
       {error ? (
-        <p role="alert">
+        <p role="alert" className="chat-error">
           Erreur facturation B2B: {error.message} ({error.code})
           {error.requestId ? ` [request_id=${error.requestId}]` : ""}
           {Object.keys(error.details).length > 0 ? ` [details=${formatErrorDetails(error.details)}]` : ""}
         </p>
       ) : null}
-      {isEmpty ? <p>Aucun cycle de facturation cloture pour ce compte.</p> : null}
+      {isEmpty ? <p className="state-line state-empty">Aucun cycle de facturation clôturé pour ce compte.</p> : null}
 
       {billingLatest.data ? (
-        <ul className="chat-list">
+        <ul className="chat-list compact-list">
           <li className="chat-item">
-            Periode: {billingLatest.data.period_start} {"->"} {billingLatest.data.period_end}
+            Période: {billingLatest.data.period_start} {"->"} {billingLatest.data.period_end}
           </li>
           <li className="chat-item">Plan: {billingLatest.data.plan_display_name}</li>
           <li className="chat-item">Fixe: {formatEuro(billingLatest.data.fixed_amount_cents)}</li>
@@ -84,8 +90,8 @@ export function B2BBillingPanel() {
 
       {historyItems.length > 0 ? (
         <>
-          <h3>Historique recent</h3>
-          <ul className="chat-list">
+          <h3>Historique récent</h3>
+          <ul className="chat-list compact-list">
             {historyItems.map((item) => (
               <li key={item.cycle_id} className="chat-item">
                 {item.period_start} {"->"} {item.period_end}: {formatEuro(item.total_amount_cents)}

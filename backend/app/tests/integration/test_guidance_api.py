@@ -23,6 +23,10 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
+from app.services.ai_engine_adapter import (
+    reset_test_generators,
+    set_test_guidance_generator,
+)
 from app.services.auth_service import AuthService
 from app.services.guidance_service import GuidanceServiceError
 
@@ -30,6 +34,7 @@ client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
+    reset_test_generators()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
@@ -283,23 +288,18 @@ def test_guidance_response_keeps_guardrailed_output_contract() -> None:
     assert "financier" in data["disclaimer"]
 
 
-def test_guidance_response_never_exposes_internal_prompt_on_provider_echo(
-    monkeypatch: object,
-) -> None:
+def test_guidance_response_never_exposes_internal_prompt_on_provider_echo() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
     _seed_birth_profile(access_token)
 
-    def _echo_prompt(*args: object, **kwargs: object) -> str:
+    async def _echo_prompt(*args: object, **kwargs: object) -> str:
         return (
             "Guidance astrologique: [guidance_prompt_version:guidance-v1]\n"
             "Recent context:\nuser: donnee sensible"
         )
 
-    monkeypatch.setattr(
-        "app.services.guidance_service.LLMClient.generate_reply",
-        _echo_prompt,
-    )
+    set_test_guidance_generator(_echo_prompt)
     response = client.post(
         "/v1/guidance",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -311,24 +311,19 @@ def test_guidance_response_never_exposes_internal_prompt_on_provider_echo(
     assert "Recent context:" not in summary
 
 
-def test_guidance_applies_recovery_metadata_when_off_scope_detected(
-    monkeypatch: object,
-) -> None:
+def test_guidance_applies_recovery_metadata_when_off_scope_detected() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
     _seed_birth_profile(access_token)
     calls = {"count": 0}
 
-    def _off_scope_then_recover(*args: object, **kwargs: object) -> str:
+    async def _off_scope_then_recover(*args: object, **kwargs: object) -> str:
         calls["count"] += 1
         if calls["count"] == 1:
             return "[off_scope] incoherent"
         return "Guidance reformulee pertinente"
 
-    monkeypatch.setattr(
-        "app.services.guidance_service.LLMClient.generate_reply",
-        _off_scope_then_recover,
-    )
+    set_test_guidance_generator(_off_scope_then_recover)
     response = client.post(
         "/v1/guidance",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -506,20 +501,15 @@ def test_contextual_guidance_rejects_foreign_or_unknown_conversation_id() -> Non
     assert missing.json()["error"]["code"] == "conversation_not_found"
 
 
-def test_contextual_guidance_uses_safe_fallback_metadata_when_recovery_fails(
-    monkeypatch: object,
-) -> None:
+def test_contextual_guidance_uses_safe_fallback_metadata_when_recovery_fails() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
     _seed_birth_profile(access_token)
 
-    def _always_off_scope(*args: object, **kwargs: object) -> str:
+    async def _always_off_scope(*args: object, **kwargs: object) -> str:
         return "[off_scope] incoherent"
 
-    monkeypatch.setattr(
-        "app.services.guidance_service.LLMClient.generate_reply",
-        _always_off_scope,
-    )
+    set_test_guidance_generator(_always_off_scope)
     response = client.post(
         "/v1/guidance/contextual",
         headers={"Authorization": f"Bearer {access_token}"},

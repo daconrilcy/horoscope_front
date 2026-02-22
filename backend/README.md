@@ -1,5 +1,25 @@
 # Horoscope backend
 
+## Deployment
+
+Pour le déploiement en production sur VPS, voir le guide complet: [docs/deploy-vps.md](../docs/deploy-vps.md)
+
+Quick start production:
+```bash
+# Build frontend
+cd frontend && npm ci && npm run build && cd ..
+
+# Configurer les variables d'environnement
+cp .env.example .env
+nano .env  # Configurer les secrets
+
+# Démarrer en production
+docker compose -f docker-compose.prod.yml up -d --build
+
+# Vérifier le status
+curl http://localhost/health
+```
+
 ## Run
 
 ```powershell

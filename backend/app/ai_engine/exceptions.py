@@ -117,3 +117,16 @@ class ProviderNotConfiguredError(AIEngineError):
             status_code=500,
             details={"provider": provider},
         )
+
+
+class RateLimitExceededError(AIEngineError):
+    """Raised when internal rate limit is exceeded."""
+
+    def __init__(self, retry_after_ms: int, *, user_id: str | int) -> None:
+        super().__init__(
+            error_type="RATE_LIMIT_EXCEEDED",
+            message="rate limit exceeded for AI engine requests",
+            status_code=429,
+            retry_after_ms=retry_after_ms,
+            details={"user_id": str(user_id)},
+        )

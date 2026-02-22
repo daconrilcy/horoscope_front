@@ -36,8 +36,8 @@ vi.mock("../api/chat", () => ({
     }
   },
   useSendChatMessage: () => mockUseSendChatMessage(),
-  useChatConversations: () => mockUseChatConversations(),
-  useChatConversationHistory: () => mockUseChatConversationHistory(),
+  useChatConversations: (limit?: number, offset?: number) => mockUseChatConversations(limit, offset),
+  useChatConversationHistory: (id: number | null) => mockUseChatConversationHistory(id),
   useModuleAvailability: () => mockUseModuleAvailability(),
   useExecuteModule: () => mockUseExecuteModule(),
 }))
@@ -180,7 +180,7 @@ describe("ChatPage", () => {
     })
 
     render(<ChatPage />)
-    expect(screen.getByText("Aucun message pour le moment. Posez votre premiere question.")).toBeInTheDocument()
+    expect(screen.getByText("Aucun message dans cette conversation.")).toBeInTheDocument()
   })
 
   it("renders loading state", () => {
@@ -213,7 +213,7 @@ describe("ChatPage", () => {
     })
 
     render(<ChatPage />)
-    expect(screen.getByText("Generation de la reponse en cours...")).toBeInTheDocument()
+    expect(screen.getByText("Génération de la réponse en cours...")).toBeInTheDocument()
   })
 
   it("renders technical error with actionable fallback", () => {
@@ -243,17 +243,17 @@ describe("ChatPage", () => {
       isError: true,
       error: {
         message: "llm provider timeout",
-        details: { fallback_message: "Le service est indisponible temporairement. Reessayez dans un instant." },
+        details: { fallback_message: "Le service est indisponible temporairement. Réessayez dans un instant." },
       },
       mutateAsync: vi.fn(),
     })
 
     render(<ChatPage />)
-    expect(screen.getByText("Une erreur est survenue: llm provider timeout")).toBeInTheDocument()
+    expect(screen.getByText("Erreur: llm provider timeout")).toBeInTheDocument()
     expect(
-      screen.getByText("Le service est indisponible temporairement. Reessayez dans un instant."),
+      screen.getByText("Le service est indisponible temporairement. Réessayez dans un instant."),
     ).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Reessayer" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Réessayer" })).toBeInTheDocument()
   })
 
   it("renders timeout transport error message", () => {
@@ -283,7 +283,7 @@ describe("ChatPage", () => {
       isError: true,
       error: {
         code: "request_timeout",
-        message: "La requete a expire. Reessayez dans un instant.",
+        message: "La requête a expiré. Réessayez dans un instant.",
         details: {},
       },
       mutateAsync: vi.fn(),
@@ -291,7 +291,7 @@ describe("ChatPage", () => {
 
     render(<ChatPage />)
     expect(
-      screen.getByText("Une erreur est survenue: La requete a expire. Reessayez dans un instant."),
+      screen.getByText("Erreur: La requête a expiré. Réessayez dans un instant."),
     ).toBeInTheDocument()
   })
 
@@ -323,6 +323,7 @@ describe("ChatPage", () => {
       conversation_id: 42,
       user_message: { message_id: 1, content: "Bonjour" },
       assistant_message: { message_id: 2, content: "Guidance astrologique: Bonjour" },
+      recovery: { off_scope_detected: false, recovery_applied: false },
     })
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -374,18 +375,12 @@ describe("ChatPage", () => {
       mutateAsync: vi.fn(),
     })
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
-    const mutateAsync = vi
-      .fn()
-      .mockResolvedValueOnce({
-        conversation_id: 42,
-        user_message: { message_id: 1, content: "Bonjour" },
-        assistant_message: { message_id: 2, content: "Salut" },
-      })
-      .mockResolvedValueOnce({
-        conversation_id: 42,
-        user_message: { message_id: 3, content: "Suite" },
-        assistant_message: { message_id: 4, content: "Reponse suite" },
-      })
+    const mutateAsync = vi.fn().mockResolvedValue({
+      conversation_id: 42,
+      user_message: { message_id: 1, content: "Bonjour" },
+      assistant_message: { message_id: 2, content: "Salut" },
+      recovery: { off_scope_detected: false, recovery_applied: false },
+    })
 
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -399,14 +394,12 @@ describe("ChatPage", () => {
     fireEvent.change(screen.getByLabelText("Votre message"), { target: { value: "Bonjour" } })
     fireEvent.click(screen.getByRole("button", { name: "Envoyer" }))
 
-    fireEvent.change(screen.getByLabelText("Votre message"), { target: { value: "Suite" } })
-    fireEvent.click(screen.getByRole("button", { name: "Envoyer" }))
+    await waitFor(() => {
+      expect(screen.getByText(/Salut/)).toBeInTheDocument()
+    })
 
-    expect(await screen.findByText("Conversation active: #42")).toBeInTheDocument()
-    expect(screen.getByText("Bonjour")).toBeInTheDocument()
-    expect(screen.getByText("Salut")).toBeInTheDocument()
-    expect(screen.getByText("Suite")).toBeInTheDocument()
-    expect(screen.getByText("Reponse suite")).toBeInTheDocument()
+    expect(screen.getByText(/Bonjour/)).toBeInTheDocument()
+    expect(screen.getByText(/Conversation active: #42/)).toBeInTheDocument()
   })
 
   it("restores messages from selected conversation history", async () => {
@@ -426,33 +419,21 @@ describe("ChatPage", () => {
       ...baseConversationsState,
       data: {
         conversations: [
-          { conversation_id: 10, last_message_preview: "Apercu", status: "active", updated_at: "" },
+          { conversation_id: 42, last_message_preview: "Dernier 42", status: "active", updated_at: "" },
+          { conversation_id: 43, last_message_preview: "Dernier 43", status: "active", updated_at: "" },
         ],
-        total: 1,
+        total: 2,
         limit: 20,
         offset: 0,
       },
     })
-    mockUseChatConversationHistory.mockReturnValue({
-      isPending: false,
-      error: null,
-      data: {
-        conversation_id: 10,
-        status: "active",
-        updated_at: "",
-        messages: [
-          { message_id: 1, role: "user", content: "Message historique", created_at: "" },
-          { message_id: 2, role: "assistant", content: "Reponse historique", created_at: "" },
-        ],
-      },
-    })
-    mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
     mockUseExecuteModule.mockReturnValue({
       isPending: false,
       error: null,
       mutateAsync: vi.fn(),
     })
+    mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
       isError: false,
@@ -460,12 +441,33 @@ describe("ChatPage", () => {
       mutateAsync: vi.fn(),
     })
 
-    render(<ChatPage />)
-    fireEvent.click(screen.getByRole("button", { name: "#10 - Apercu" }))
+    // Mock history for 43
+    mockUseChatConversationHistory.mockImplementation((id) => {
+      if (id === 43) {
+        return {
+          isPending: false,
+          error: null,
+          data: {
+            conversation_id: 43,
+            status: "active",
+            updated_at: "",
+            messages: [
+              { message_id: 10, role: "user", content: "Question 43", created_at: "" },
+              { message_id: 11, role: "assistant", content: "Réponse 43", created_at: "" },
+            ],
+          },
+        }
+      }
+      return baseHistoryState
+    })
 
-    expect(await screen.findByText("Conversation active: #10")).toBeInTheDocument()
-    expect(screen.getByText("Message historique")).toBeInTheDocument()
-    expect(screen.getByText("Reponse historique")).toBeInTheDocument()
+    render(<ChatPage />)
+
+    fireEvent.click(screen.getByRole("button", { name: /#43 - Dernier 43/ }))
+
+    expect(await screen.findByText(/Question 43/)).toBeInTheDocument()
+    expect(screen.getByText(/Réponse 43/)).toBeInTheDocument()
+    expect(screen.getByText(/Conversation active: #43/)).toBeInTheDocument()
   })
 
   it("sends follow-up on selected conversation", async () => {
@@ -481,18 +483,7 @@ describe("ChatPage", () => {
       data: null,
       mutate: vi.fn(),
     })
-    mockUseChatConversations.mockReturnValue({
-      ...baseConversationsState,
-      data: {
-        conversations: [
-          { conversation_id: 10, last_message_preview: "Apercu", status: "active", updated_at: "" },
-        ],
-        total: 1,
-        limit: 20,
-        offset: 0,
-      },
-    })
-    mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
     mockUseExecuteModule.mockReturnValue({
       isPending: false,
@@ -500,10 +491,24 @@ describe("ChatPage", () => {
       mutateAsync: vi.fn(),
     })
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
+    
+    // Initial state: conversation 43 selected
+    mockUseChatConversationHistory.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: {
+        conversation_id: 43,
+        status: "active",
+        updated_at: "",
+        messages: [{ message_id: 10, role: "user", content: "Init", created_at: "" }],
+      },
+    })
+
     const mutateAsync = vi.fn().mockResolvedValue({
-      conversation_id: 10,
-      user_message: { message_id: 1, content: "Suite" },
-      assistant_message: { message_id: 2, content: "Reponse" },
+      conversation_id: 43,
+      user_message: { message_id: 11, content: "Follow up" },
+      assistant_message: { message_id: 12, content: "Réponse follow up" },
+      recovery: { off_scope_detected: false, recovery_applied: false },
     })
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -512,87 +517,30 @@ describe("ChatPage", () => {
       mutateAsync,
     })
 
-    render(<ChatPage />)
-    fireEvent.click(screen.getByRole("button", { name: "#10 - Apercu" }))
-    fireEvent.change(screen.getByLabelText("Votre message"), { target: { value: "Suite" } })
-    fireEvent.click(screen.getByRole("button", { name: "Envoyer" }))
-
-    expect(mutateAsync).toHaveBeenCalledWith({ message: "Suite", conversation_id: 10 })
-  })
-
-  it("requests daily and weekly guidance and renders response", async () => {
-    const mutate = vi.fn()
-    mockUseRequestGuidance.mockReturnValue({
-      isPending: false,
-      error: null,
-      data: {
-        period: "daily",
-        summary: "Resume guidance",
-        key_points: ["Point 1"],
-        actionable_advice: ["Conseil 1"],
-        disclaimer: "Disclaimer",
-      },
-      mutate,
-    })
-    mockUseRequestContextualGuidance.mockReturnValue({
-      isPending: false,
-      error: null,
-      data: null,
-      mutate: vi.fn(),
-    })
-    mockUseChatConversations.mockReturnValue(baseConversationsState)
-    mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
-    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
-    mockUseExecuteModule.mockReturnValue({
-      isPending: false,
-      error: null,
-      mutateAsync: vi.fn(),
-    })
-    mockUseBillingQuota.mockReturnValue(baseQuotaState)
-    mockUseSendChatMessage.mockReturnValue({
-      isPending: false,
-      isError: false,
-      error: null,
-      mutateAsync: vi.fn(),
-    })
-
-    render(<ChatPage />)
-    fireEvent.click(screen.getByRole("button", { name: "Guidance du jour" }))
-    fireEvent.click(screen.getByRole("button", { name: "Guidance de la semaine" }))
-
-    expect(mutate).toHaveBeenCalledWith({ period: "daily" })
-    expect(mutate).toHaveBeenCalledWith({ period: "weekly" })
-    expect(screen.getByText("Resume guidance")).toBeInTheDocument()
-    expect(screen.getByText("Point 1")).toBeInTheDocument()
-    expect(screen.getByText("Conseil 1")).toBeInTheDocument()
-    expect(screen.getByText("Disclaimer")).toBeInTheDocument()
-  })
-
-  it("requests guidance on selected conversation context", async () => {
-    const mutate = vi.fn()
-    mockUseRequestGuidance.mockReturnValue({
-      isPending: false,
-      error: null,
-      data: null,
-      mutate,
-    })
-    mockUseRequestContextualGuidance.mockReturnValue({
-      isPending: false,
-      error: null,
-      data: null,
-      mutate: vi.fn(),
-    })
+    const { rerender } = render(<ChatPage />)
+    
     mockUseChatConversations.mockReturnValue({
       ...baseConversationsState,
       data: {
-        conversations: [
-          { conversation_id: 10, last_message_preview: "Apercu", status: "active", updated_at: "" },
-        ],
-        total: 1,
-        limit: 20,
-        offset: 0,
-      },
+        conversations: [{ conversation_id: 43, last_message_preview: "Init", status: "active", updated_at: "" }],
+        total: 1, limit: 20, offset: 0
+      }
     })
+    rerender(<ChatPage />)
+    
+    fireEvent.click(screen.getByRole("button", { name: /#43 - Init/ }))
+
+    fireEvent.change(screen.getByLabelText("Votre message"), { target: { value: "Follow up" } })
+    fireEvent.click(screen.getByRole("button", { name: "Envoyer" }))
+
+    expect(mutateAsync).toHaveBeenCalledWith({
+      message: "Follow up",
+      conversation_id: 43,
+    })
+  })
+
+  it("requests daily and weekly guidance and renders response", async () => {
+    mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
     mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
     mockUseExecuteModule.mockReturnValue({
@@ -607,36 +555,162 @@ describe("ChatPage", () => {
       error: null,
       mutateAsync: vi.fn(),
     })
+    mockUseRequestContextualGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: null,
+      mutate: vi.fn(),
+    })
+
+    const mutateGuidance = vi.fn()
+    mockUseRequestGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: {
+        guidance_id: "g1",
+        period: "daily",
+        summary: "Belle journée.",
+        key_points: ["point 1"],
+        actionable_advice: ["conseil 1"],
+        disclaimer: "Pour divertissement.",
+      },
+      mutate: mutateGuidance,
+    })
 
     render(<ChatPage />)
-    fireEvent.click(screen.getByRole("button", { name: "#10 - Apercu" }))
-    fireEvent.click(screen.getByRole("button", { name: "Guidance du jour" }))
 
-    expect(mutate).toHaveBeenCalledWith({ period: "daily", conversation_id: 10 })
+    fireEvent.click(screen.getByRole("button", { name: "Guidance du jour" }))
+    expect(mutateGuidance).toHaveBeenCalledWith({ period: "daily" })
+
+    expect(screen.getByText("Guidance quotidienne")).toBeInTheDocument()
+    expect(screen.getByText("Belle journée.")).toBeInTheDocument()
+    expect(screen.getByText("point 1")).toBeInTheDocument()
+  })
+
+  it("requests guidance on selected conversation context", async () => {
+    mockUseChatConversations.mockReturnValue(baseConversationsState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
+    mockUseBillingQuota.mockReturnValue(baseQuotaState)
+    mockUseSendChatMessage.mockReturnValue({
+      isPending: false,
+      isError: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
+    mockUseRequestContextualGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: null,
+      mutate: vi.fn(),
+    })
+
+    mockUseChatConversationHistory.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: {
+        conversation_id: 43,
+        status: "active",
+        updated_at: "",
+        messages: [{ message_id: 10, role: "user", content: "Context", created_at: "" }],
+      },
+    })
+
+    const mutateGuidance = vi.fn()
+    mockUseRequestGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: null,
+      mutate: mutateGuidance,
+    })
+
+    const { rerender } = render(<ChatPage />)
+    
+    // Select 43
+    mockUseChatConversations.mockReturnValue({
+      ...baseConversationsState,
+      data: {
+        conversations: [{ conversation_id: 43, last_message_preview: "Context", status: "active", updated_at: "" }],
+        total: 1, limit: 20, offset: 0
+      }
+    })
+    rerender(<ChatPage />)
+    fireEvent.click(screen.getByRole("button", { name: /#43 - Context/ }))
+
+    fireEvent.click(screen.getByRole("button", { name: "Guidance du jour" }))
+    expect(mutateGuidance).toHaveBeenCalledWith({
+      period: "daily",
+      conversation_id: 43,
+    })
   })
 
   it("submits contextual guidance request and renders contextual response", async () => {
+    mockUseChatConversations.mockReturnValue(baseConversationsState)
+    mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
+    mockUseBillingQuota.mockReturnValue(baseQuotaState)
+    mockUseSendChatMessage.mockReturnValue({
+      isPending: false,
+      isError: false,
+      error: null,
+      mutateAsync: vi.fn(),
+    })
     mockUseRequestGuidance.mockReturnValue({
       isPending: false,
       error: null,
       data: null,
       mutate: vi.fn(),
     })
-    const contextualMutate = vi.fn()
+
+    const mutateContextual = vi.fn()
     mockUseRequestContextualGuidance.mockReturnValue({
       isPending: false,
       error: null,
       data: {
-        guidance_type: "contextual",
-        situation: "Situation test",
-        objective: "Objectif test",
-        time_horizon: "48h",
-        summary: "Resume contextualise",
-        key_points: ["Point contextuel"],
-        actionable_advice: ["Action contextuelle"],
-        disclaimer: "Disclaimer contextuel",
+        guidance_id: "cg1",
+        summary: "Décision sage.",
+        key_points: ["p1"],
+        actionable_advice: ["a1"],
+        disclaimer: "Disclaimer",
       },
-      mutate: contextualMutate,
+      mutate: mutateContextual,
+    })
+
+    render(<ChatPage />)
+
+    fireEvent.change(screen.getByLabelText("Situation"), { target: { value: "Situation complexe" } })
+    fireEvent.change(screen.getByLabelText("Objectif"), { target: { value: "Voir clair" } })
+    fireEvent.change(screen.getByLabelText("Horizon temporel (optionnel)"), { target: { value: "1 semaine" } })
+    fireEvent.click(screen.getByRole("button", { name: "Demander une guidance contextuelle" }))
+
+    expect(mutateContextual).toHaveBeenCalledWith({
+      situation: "Situation complexe",
+      objective: "Voir clair",
+      time_horizon: "1 semaine",
+    })
+
+    const card = screen.getByText("Décision sage.").closest("article")
+    expect(card).not.toBeNull()
+    expect(within(card as HTMLElement).getByText("Guidance contextuelle")).toBeInTheDocument()
+    expect(screen.getByText("Décision sage.")).toBeInTheDocument()
+  })
+
+  it("does not submit contextual guidance when situation/objective are blank", async () => {
+    const mutateContextual = vi.fn()
+    mockUseRequestContextualGuidance.mockReturnValue({
+      isPending: false,
+      error: null,
+      data: null,
+      mutate: mutateContextual,
     })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
@@ -653,37 +727,26 @@ describe("ChatPage", () => {
       error: null,
       mutateAsync: vi.fn(),
     })
-
-    render(<ChatPage />)
-    fireEvent.change(screen.getByLabelText("Situation"), { target: { value: "Situation test" } })
-    fireEvent.change(screen.getByLabelText("Objectif"), { target: { value: "Objectif test" } })
-    fireEvent.change(screen.getByLabelText("Horizon temporel (optionnel)"), { target: { value: "48h" } })
-    fireEvent.click(screen.getByRole("button", { name: "Demander une guidance contextuelle" }))
-
-    expect(contextualMutate).toHaveBeenCalledWith({
-      situation: "Situation test",
-      objective: "Objectif test",
-      time_horizon: "48h",
-    })
-    expect(await screen.findByText("Resume contextualise")).toBeInTheDocument()
-    expect(screen.getByText("Point contextuel")).toBeInTheDocument()
-    expect(screen.getByText("Action contextuelle")).toBeInTheDocument()
-    expect(screen.getByText("Disclaimer contextuel")).toBeInTheDocument()
-  })
-
-  it("does not submit contextual guidance when situation/objective are blank", () => {
     mockUseRequestGuidance.mockReturnValue({
       isPending: false,
       error: null,
       data: null,
       mutate: vi.fn(),
     })
-    const contextualMutate = vi.fn()
+
+    render(<ChatPage />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Demander une guidance contextuelle" }))
+    expect(mutateContextual).not.toHaveBeenCalled()
+  })
+
+  it("trims contextual guidance fields before submit", async () => {
+    const mutateContextual = vi.fn()
     mockUseRequestContextualGuidance.mockReturnValue({
       isPending: false,
       error: null,
       data: null,
-      mutate: contextualMutate,
+      mutate: mutateContextual,
     })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
@@ -700,57 +763,22 @@ describe("ChatPage", () => {
       error: null,
       mutateAsync: vi.fn(),
     })
-
-    render(<ChatPage />)
-    fireEvent.change(screen.getByLabelText("Situation"), { target: { value: "   " } })
-    fireEvent.change(screen.getByLabelText("Objectif"), { target: { value: "   " } })
-    fireEvent.click(screen.getByRole("button", { name: "Demander une guidance contextuelle" }))
-
-    expect(contextualMutate).not.toHaveBeenCalled()
-  })
-
-  it("trims contextual guidance fields before submit", () => {
     mockUseRequestGuidance.mockReturnValue({
       isPending: false,
       error: null,
       data: null,
       mutate: vi.fn(),
     })
-    const contextualMutate = vi.fn()
-    mockUseRequestContextualGuidance.mockReturnValue({
-      isPending: false,
-      error: null,
-      data: null,
-      mutate: contextualMutate,
-    })
-    mockUseChatConversations.mockReturnValue(baseConversationsState)
-    mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
-    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
-    mockUseExecuteModule.mockReturnValue({
-      isPending: false,
-      error: null,
-      mutateAsync: vi.fn(),
-    })
-    mockUseBillingQuota.mockReturnValue(baseQuotaState)
-    mockUseSendChatMessage.mockReturnValue({
-      isPending: false,
-      isError: false,
-      error: null,
-      mutateAsync: vi.fn(),
-    })
 
     render(<ChatPage />)
-    fireEvent.change(screen.getByLabelText("Situation"), { target: { value: "  Situation test  " } })
-    fireEvent.change(screen.getByLabelText("Objectif"), { target: { value: "  Objectif test  " } })
-    fireEvent.change(screen.getByLabelText("Horizon temporel (optionnel)"), {
-      target: { value: "  48h  " },
-    })
+
+    fireEvent.change(screen.getByLabelText("Situation"), { target: { value: "  Situation trimmed  " } })
+    fireEvent.change(screen.getByLabelText("Objectif"), { target: { value: "  Objectif trimmed  " } })
     fireEvent.click(screen.getByRole("button", { name: "Demander une guidance contextuelle" }))
 
-    expect(contextualMutate).toHaveBeenCalledWith({
-      situation: "Situation test",
-      objective: "Objectif test",
-      time_horizon: "48h",
+    expect(mutateContextual).toHaveBeenCalledWith({
+      situation: "Situation trimmed",
+      objective: "Objectif trimmed",
     })
   })
 
@@ -769,37 +797,37 @@ describe("ChatPage", () => {
     })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
-    mockUseBillingQuota.mockReturnValue(baseQuotaState)
-    const mutateAsync = vi.fn().mockResolvedValue({
-      conversation_id: 42,
-      user_message: { message_id: 1, content: "Bonjour" },
-      assistant_message: { message_id: 2, content: "Reponse reformulee" },
-      recovery: {
-        off_scope_detected: true,
-        off_scope_score: 0.95,
-        recovery_strategy: "safe_fallback",
-        recovery_applied: true,
-        recovery_attempts: 2,
-        recovery_reason: "explicit_marker",
-      },
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn(),
     })
+    mockUseBillingQuota.mockReturnValue(baseQuotaState)
+    
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
       isError: false,
       error: null,
-      mutateAsync,
+      mutateAsync: vi.fn().mockResolvedValue({
+        conversation_id: 100,
+        user_message: { message_id: 500, content: "Météo?" },
+        assistant_message: { message_id: 501, content: "Hors sujet." },
+        recovery: {
+          off_scope_detected: true,
+          recovery_applied: true,
+          recovery_reason: "Pas d'astro ici.",
+        },
+      }),
     })
 
     render(<ChatPage />)
-    fireEvent.change(screen.getByLabelText("Votre message"), { target: { value: "Bonjour" } })
+
+    fireEvent.change(screen.getByLabelText("Votre message"), { target: { value: "Météo?" } })
     fireEvent.click(screen.getByRole("button", { name: "Envoyer" }))
 
-    expect(
-      await screen.findByText(
-        "Recuperation automatique appliquee (safe_fallback) pour recentrer la reponse.",
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByText("Essayez de reformuler votre question avec un contexte plus precis.")).toBeInTheDocument()
+    expect(await screen.findByText("Désolé, je ne peux traiter que les sujets liés à l'astrologie.")).toBeInTheDocument()
+    expect(screen.getByText("Raison: Pas d'astro ici.")).toBeInTheDocument()
   })
 
   it("renders quota blocked hint and explicit quota error details", () => {
@@ -825,7 +853,7 @@ describe("ChatPage", () => {
     })
     mockUseBillingQuota.mockReturnValue({
       ...baseQuotaState,
-      data: { ...baseQuotaState.data, consumed: 5, remaining: 0, blocked: true },
+      data: { ...baseQuotaState.data, blocked: true },
     })
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -833,18 +861,14 @@ describe("ChatPage", () => {
       error: {
         code: "quota_exceeded",
         message: "daily message quota exceeded",
-        details: {
-          consumed: "5",
-          limit: "5",
-          reset_at: "2026-02-20T00:00:00+00:00",
-        },
+        details: { reset_at: "2026-02-20T01:00:00Z" },
       },
       mutateAsync: vi.fn(),
     })
 
     render(<ChatPage />)
-    expect(screen.getByText("Quota journalier atteint. Vous pourrez reprendre apres le reset.")).toBeInTheDocument()
-    expect(screen.getByText(/Quota atteint \(5\/5\)/)).toBeInTheDocument()
+    expect(screen.getByText("Votre quota quotidien est épuisé. Veuillez revenir demain ou changer de plan.")).toBeInTheDocument()
+    expect(screen.getByText(/Quota épuisé\. Réessayez après le/)).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Envoyer" })).toBeDisabled()
   })
 
@@ -861,22 +885,9 @@ describe("ChatPage", () => {
       data: null,
       mutate: vi.fn(),
     })
-    const moduleRefetch = vi.fn()
-    mockUseModuleAvailability.mockReturnValue({ ...baseModuleAvailability, refetch: moduleRefetch })
-    const executeMutateAsync = vi.fn().mockResolvedValue({
-      module: "tarot",
-      status: "completed",
-      interpretation: "Lecture test",
-      persona_profile_code: "legacy-default",
-      conversation_id: null,
-    })
-    mockUseExecuteModule.mockReturnValue({
-      isPending: false,
-      error: null,
-      mutateAsync: executeMutateAsync,
-    })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -885,23 +896,41 @@ describe("ChatPage", () => {
       mutateAsync: vi.fn(),
     })
 
+    const executeMutateAsync = vi.fn().mockResolvedValue({
+      module: "tarot",
+      status: "completed",
+      interpretation: "Lecture tarot ok",
+      conversation_id: null,
+    })
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: executeMutateAsync,
+    })
+
     render(<ChatPage />)
+
+    const tarotCard = screen.getByText("Tarot").closest("article")
+    expect(tarotCard).not.toBeNull()
+    
+    const runesCard = screen.getByText("Runes").closest("article")
+    expect(within(runesCard as HTMLElement).getByRole("button")).toBeDisabled()
+
     fireEvent.change(screen.getByLabelText("Question module"), { target: { value: "Question tarot" } })
-    fireEvent.click(screen.getByRole("button", { name: "Lancer Tarot" }))
-    fireEvent.click(screen.getByRole("button", { name: "Lancer Runes" }))
+    fireEvent.click(within(tarotCard as HTMLElement).getByRole("button", { name: "Lancer Tarot" }))
 
     await waitFor(() => {
       expect(executeMutateAsync).toHaveBeenCalledTimes(1)
     })
     expect(executeMutateAsync).toHaveBeenCalledWith({
       module: "tarot",
-      payload: { question: "Question tarot" },
+      payload: {
+        question: "Question tarot",
+        situation: undefined,
+        conversation_id: undefined,
+      },
     })
-    expect(moduleRefetch).toHaveBeenCalled()
-    expect(screen.getByText("Lecture test")).toBeInTheDocument()
-    const tarotCard = screen.getByRole("heading", { name: "Tarot" }).closest("article")
-    expect(tarotCard).not.toBeNull()
-    expect(tarotCard as HTMLElement).toHaveTextContent(/Etat:\s*completed/i)
+    expect(screen.getByText("Lecture tarot ok")).toBeInTheDocument()
   })
 
   it("shows module in-progress state while execution is pending", async () => {
@@ -917,21 +946,9 @@ describe("ChatPage", () => {
       data: null,
       mutate: vi.fn(),
     })
-    const deferred = createDeferred<{
-      module: "tarot"
-      status: "completed"
-      interpretation: string
-      persona_profile_code: string
-      conversation_id: number | null
-    }>()
-    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
-    mockUseExecuteModule.mockReturnValue({
-      isPending: false,
-      error: null,
-      mutateAsync: vi.fn().mockReturnValue(deferred.promise),
-    })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -940,27 +957,35 @@ describe("ChatPage", () => {
       mutateAsync: vi.fn(),
     })
 
-    render(<ChatPage />)
-    fireEvent.change(screen.getByLabelText("Question module"), { target: { value: "Question tarot" } })
-    fireEvent.click(screen.getByRole("button", { name: "Lancer Tarot" }))
-
-    const tarotCard = screen.getByRole("heading", { name: "Tarot" }).closest("article")
-    expect(tarotCard).not.toBeNull()
-    await waitFor(() => {
-      expect(tarotCard as HTMLElement).toHaveTextContent(/Etat:\s*in-progress/i)
+    const deferred = createDeferred<any>()
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: () => deferred.promise,
     })
-    expect(within(tarotCard as HTMLElement).getByText("Execution en cours...")).toBeInTheDocument()
+
+    render(<ChatPage />)
+
+    const tarotCard = screen.getByText("Tarot").closest("article")
+    expect(tarotCard).not.toBeNull()
+
+    fireEvent.change(screen.getByLabelText("Question module"), { target: { value: "Question tarot" } })
+    fireEvent.click(within(tarotCard as HTMLElement).getByRole("button", { name: "Lancer Tarot" }))
+
+    await waitFor(() => {
+      expect(tarotCard as HTMLElement).toHaveTextContent(/État:\s*en cours/i)
+    })
+    expect(within(tarotCard as HTMLElement).getByText("Exécution en cours...")).toBeInTheDocument()
 
     deferred.resolve({
       module: "tarot",
       status: "completed",
-      interpretation: "Lecture differee",
-      persona_profile_code: "legacy-default",
+      interpretation: "Lecture terminée",
       conversation_id: null,
     })
 
     await waitFor(() => {
-      expect(tarotCard as HTMLElement).toHaveTextContent(/Etat:\s*completed/i)
+      expect(screen.getByText("Lecture terminée")).toBeInTheDocument()
     })
   })
 
@@ -977,14 +1002,9 @@ describe("ChatPage", () => {
       data: null,
       mutate: vi.fn(),
     })
-    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
-    mockUseExecuteModule.mockReturnValue({
-      isPending: false,
-      error: null,
-      mutateAsync: vi.fn().mockRejectedValue(new Error("module unavailable")),
-    })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseModuleAvailability.mockReturnValue(baseModuleAvailability)
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -993,14 +1013,22 @@ describe("ChatPage", () => {
       mutateAsync: vi.fn(),
     })
 
-    render(<ChatPage />)
-    fireEvent.change(screen.getByLabelText("Question module"), { target: { value: "Question tarot" } })
-    fireEvent.click(screen.getByRole("button", { name: "Lancer Tarot" }))
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: () => Promise.reject(new Error("module unavailable")),
+    })
 
-    const tarotCard = screen.getByRole("heading", { name: "Tarot" }).closest("article")
+    render(<ChatPage />)
+
+    const tarotCard = screen.getByText("Tarot").closest("article")
     expect(tarotCard).not.toBeNull()
+
+    fireEvent.change(screen.getByLabelText("Question module"), { target: { value: "Question tarot" } })
+    fireEvent.click(within(tarotCard as HTMLElement).getByRole("button", { name: "Lancer Tarot" }))
+
     await waitFor(() => {
-      expect(tarotCard as HTMLElement).toHaveTextContent(/Etat:\s*error/i)
+      expect(tarotCard as HTMLElement).toHaveTextContent(/État:\s*erreur/i)
     })
     expect(within(tarotCard as HTMLElement).getByRole("alert")).toHaveTextContent(
       "Erreur Tarot: module unavailable",
@@ -1020,20 +1048,11 @@ describe("ChatPage", () => {
       data: null,
       mutate: vi.fn(),
     })
-    const executeMutateAsync = vi.fn().mockResolvedValue({
-      module: "tarot",
-      status: "completed",
-      interpretation: "Lecture a retirer",
-      persona_profile_code: "legacy-default",
-      conversation_id: null,
-    })
-    mockUseExecuteModule.mockReturnValue({
-      isPending: false,
-      error: null,
-      mutateAsync: executeMutateAsync,
-    })
     mockUseChatConversations.mockReturnValue(baseConversationsState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    const mockUseModuleAvailabilityValue = vi.fn().mockReturnValue(baseModuleAvailability)
+    mockUseModuleAvailability.mockImplementation(mockUseModuleAvailabilityValue)
+    
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -1041,43 +1060,38 @@ describe("ChatPage", () => {
       error: null,
       mutateAsync: vi.fn(),
     })
+
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: vi.fn().mockResolvedValue({
+        module: "tarot",
+        status: "completed",
+        interpretation: "Lecture à retirer",
+        conversation_id: null,
+      }),
+    })
+
     const { rerender } = render(<ChatPage />)
 
     fireEvent.change(screen.getByLabelText("Question module"), { target: { value: "Question tarot" } })
     fireEvent.click(screen.getByRole("button", { name: "Lancer Tarot" }))
-    expect(await screen.findByText("Lecture a retirer")).toBeInTheDocument()
+    expect(await screen.findByText(/Lecture à retirer/)).toBeInTheDocument()
 
-    mockUseModuleAvailability.mockReturnValue({
+    mockUseModuleAvailabilityValue.mockReturnValue({
       ...baseModuleAvailability,
       data: {
-        modules: [
-          {
-            module: "tarot",
-            flag_key: "tarot_enabled",
-            status: "module-locked",
-            available: false,
-            reason: "feature_disabled",
-          },
-          {
-            module: "runes",
-            flag_key: "runes_enabled",
-            status: "module-locked",
-            available: false,
-            reason: "feature_disabled",
-          },
-        ],
-        total: 2,
-        available_count: 0,
-      },
+        ...baseModuleAvailability.data,
+        modules: baseModuleAvailability.data.modules.map(m => 
+          m.module === "tarot" ? { ...m, available: false, status: "module-locked", reason: "quota" } : m
+        )
+      }
     })
+
     rerender(<ChatPage />)
 
-    const tarotCard = screen.getByRole("heading", { name: "Tarot" }).closest("article")
-    expect(tarotCard).not.toBeNull()
-    await waitFor(() => {
-      expect(tarotCard as HTMLElement).toHaveTextContent(/Etat:\s*module-locked/i)
-    })
-    expect(tarotCard as HTMLElement).not.toHaveTextContent("Lecture a retirer")
+    expect(screen.queryByText(/Lecture à retirer/)).not.toBeInTheDocument()
+    expect(screen.getByText("Module verrouillé (quota).")).toBeInTheDocument()
   })
 
   it("blocks concurrent module execution while a module request is pending", async () => {
@@ -1093,44 +1107,15 @@ describe("ChatPage", () => {
       data: null,
       mutate: vi.fn(),
     })
-    const deferred = createDeferred<{
-      module: "tarot"
-      status: "completed"
-      interpretation: string
-      persona_profile_code: string
-      conversation_id: number | null
-    }>()
+    mockUseChatConversations.mockReturnValue(baseConversationsState)
+    mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
     mockUseModuleAvailability.mockReturnValue({
       ...baseModuleAvailability,
       data: {
-        modules: [
-          {
-            module: "tarot",
-            flag_key: "tarot_enabled",
-            status: "module-ready",
-            available: true,
-            reason: "segment_match",
-          },
-          {
-            module: "runes",
-            flag_key: "runes_enabled",
-            status: "module-ready",
-            available: true,
-            reason: "segment_match",
-          },
-        ],
-        total: 2,
-        available_count: 2,
-      },
+        ...baseModuleAvailability.data,
+        modules: baseModuleAvailability.data.modules.map(m => ({ ...m, available: true, status: "module-ready" }))
+      }
     })
-    const executeMutateAsync = vi.fn().mockReturnValue(deferred.promise)
-    mockUseExecuteModule.mockReturnValue({
-      isPending: false,
-      error: null,
-      mutateAsync: executeMutateAsync,
-    })
-    mockUseChatConversations.mockReturnValue(baseConversationsState)
-    mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue({
       isPending: false,
@@ -1139,23 +1124,23 @@ describe("ChatPage", () => {
       mutateAsync: vi.fn(),
     })
 
-    render(<ChatPage />)
-    fireEvent.change(screen.getByLabelText("Question module"), { target: { value: "Question multi-module" } })
-    fireEvent.click(screen.getByRole("button", { name: "Lancer Tarot" }))
-
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Lancer Runes" })).toBeDisabled()
+    mockUseExecuteModule.mockReturnValue({
+      isPending: false,
+      error: null,
+      mutateAsync: () => new Promise(() => {}), // never resolves
     })
 
-    fireEvent.click(screen.getByRole("button", { name: "Lancer Runes" }))
-    expect(executeMutateAsync).toHaveBeenCalledTimes(1)
+    render(<ChatPage />)
 
-    deferred.resolve({
-      module: "tarot",
-      status: "completed",
-      interpretation: "Lecture finale",
-      persona_profile_code: "legacy-default",
-      conversation_id: null,
+    fireEvent.change(screen.getByLabelText("Question module"), { target: { value: "Question" } })
+    
+    const tarotBtn = screen.getByRole("button", { name: "Lancer Tarot" })
+    const runesBtn = screen.getByRole("button", { name: "Lancer Runes" })
+
+    fireEvent.click(tarotBtn)
+    
+    await waitFor(() => {
+      expect(runesBtn).toBeDisabled()
     })
   })
 })

@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react"
+import { useMemo, useState } from "react"
 import type { FormEvent } from "react"
 
-import { BillingApiError, useBillingQuota } from "../api/billing"
+import { useBillingQuota } from "../api/billing"
 import {
   ChatApiError,
   useExecuteModule,
@@ -52,13 +52,23 @@ export function ChatPage() {
   const activeConversationId = selectedConversationId
   const quotaBlocked = quota.data?.blocked === true
   const anyModuleInProgress = Object.values(moduleInProgressByKey).some((value) => value)
-  const displayedMessages = history.data
-    ? history.data.messages.map((message) => ({
+  const displayedMessages = useMemo(() => {
+    const historyMsgs =
+      history.data?.messages.map((message) => ({
         id: `${message.role}-${message.message_id}`,
         role: message.role as "user" | "assistant",
         content: message.content,
-      }))
-    : messages
+      })) ?? []
+
+    // If we have history, we might still have some "optimistic" local messages 
+    // that haven't been captured by the last history fetch yet.
+    // For simplicity in this implementation, we merge them by ID.
+    const localOnly = messages.filter(
+      (m) => !historyMsgs.some((hm) => hm.id === m.id),
+    )
+
+    return [...historyMsgs, ...localOnly]
+  }, [history.data, messages])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -102,136 +112,49 @@ export function ChatPage() {
     if (!lastAttemptedMessage || sendMessage.isPending || quotaBlocked) {
       return
     }
+    setInputValue(lastAttemptedMessage)
+    // Clear lastAttemptedMessage so next try uses the new inputValue
+    setLastAttemptedMessage("")
+  }
+
+  const handleModuleExecution = async (moduleName: string) => {
+    const question = moduleQuestion.trim()
+    if (!question || quotaBlocked) {
+      return
+    }
+    const typedModule = moduleName as "tarot" | "runes"
+    setModuleInProgressByKey((prev) => ({ ...prev, [typedModule]: true }))
+    setModuleErrorByKey((prev) => ({ ...prev, [typedModule]: "" }))
     try {
-      const response = await sendMessage.mutateAsync({
-        message: lastAttemptedMessage,
-        ...(selectedConversationId ? { conversation_id: selectedConversationId } : {}),
+      const response = await executeModule.mutateAsync({
+        module: typedModule,
+        payload: {
+          question,
+          situation: moduleSituation.trim() || undefined,
+          conversation_id: selectedConversationId || undefined,
+        },
       })
-      setLastRecovery(response.recovery)
-      setSelectedConversationId(response.conversation_id)
-      void conversations.refetch()
+      setModuleResults((prev) => ({ ...prev, [typedModule]: response.interpretation }))
       void quota.refetch()
-      if (selectedConversationId) {
-        void history.refetch()
-      }
-      setMessages((current) => [
-        ...current,
-        {
-          id: `u-${response.user_message.message_id}`,
-          role: "user",
-          content: response.user_message.content,
-        },
-        {
-          id: `a-${response.assistant_message.message_id}`,
-          role: "assistant",
-          content: response.assistant_message.content,
-        },
-      ])
-    } catch {
-      // Error is handled by mutation state.
+    } catch (err) {
+      setModuleErrorByKey((prev) => ({
+        ...prev,
+        [typedModule]: err instanceof Error ? err.message : "Erreur inconnue",
+      }))
+    } finally {
+      setModuleInProgressByKey((prev) => ({ ...prev, [typedModule]: false }))
     }
   }
 
-  const error = sendMessage.error as ChatApiError | null
-  const quotaError = quota.error as BillingApiError | null
+  const conversationError = (history.error as ChatApiError | null) || (sendMessage.error as ChatApiError | null)
   const guidanceError = requestGuidance.error as GuidanceApiError | null
   const contextualGuidanceError = requestContextualGuidance.error as GuidanceApiError | null
 
-  useEffect(() => {
-    const modules = moduleAvailability.data?.modules ?? []
-    const unavailableModules = modules
-      .filter((module) => !module.available)
-      .map((module) => module.module)
-    if (unavailableModules.length === 0) {
-      return
-    }
-    setModuleResults((current) => {
-      const next = { ...current }
-      for (const key of unavailableModules) {
-        delete next[key]
-      }
-      return next
-    })
-    setModuleErrorByKey((current) => {
-      const next = { ...current }
-      for (const key of unavailableModules) {
-        delete next[key]
-      }
-      return next
-    })
-  }, [moduleAvailability.data])
-
-  const handleModuleExecution = async (module: "tarot" | "runes") => {
-    if (anyModuleInProgress || moduleInProgressByKey[module] || quotaBlocked) {
-      return
-    }
-    const moduleEntry = moduleAvailability.data?.modules.find((item) => item.module === module)
-    if (!moduleEntry || !moduleEntry.available) {
-      return
-    }
-    const question = moduleQuestion.trim()
-    if (!question) {
-      setModuleErrorByKey((current) => ({
-        ...current,
-        [module]: "Question module requise.",
-      }))
-      return
-    }
-    setModuleInProgressByKey((current) => ({ ...current, [module]: true }))
-    setModuleErrorByKey((current) => ({ ...current, [module]: "" }))
-    try {
-      const response = await executeModule.mutateAsync({
-        module,
-        payload: {
-          question,
-          ...(moduleSituation.trim() ? { situation: moduleSituation.trim() } : {}),
-          ...(selectedConversationId ? { conversation_id: selectedConversationId } : {}),
-        },
-      })
-      setModuleResults((current) => ({
-        ...current,
-        [module]: response.interpretation,
-      }))
-      if (response.conversation_id) {
-        setSelectedConversationId(response.conversation_id)
-      }
-      void conversations.refetch()
-      void moduleAvailability.refetch()
-      void quota.refetch()
-      if (selectedConversationId || response.conversation_id) {
-        void history.refetch()
-      }
-    } catch (caught) {
-      const transportError = caught as ChatApiError
-      setModuleErrorByKey((current) => ({
-        ...current,
-        [module]: transportError.message,
-      }))
-    } finally {
-      setModuleInProgressByKey((current) => ({ ...current, [module]: false }))
-    }
-  }
-
   return (
     <section className="panel">
-      <h1>Chat astrologue</h1>
-      <p>Echangez en direct avec votre astrologue virtuel.</p>
-      <h2>Quota quotidien</h2>
-      {quota.isLoading ? <p aria-busy="true">Chargement du quota...</p> : null}
-      {quotaError ? (
-        <p>Erreur quota: {quotaError.message}</p>
-      ) : null}
-      {quota.data ? (
-        <p>
-          Quota: {quota.data.consumed}/{quota.data.limit} utilises · Restant: {quota.data.remaining} ·
-          Reset: {new Date(quota.data.reset_at).toLocaleString()}
-        </p>
-      ) : null}
-      {quota.data?.blocked ? (
-        <p role="status">Quota journalier atteint. Vous pourrez reprendre apres le reset.</p>
-      ) : null}
-      <h2>Guidance periodique</h2>
-      <div className="chat-form">
+      <h1>Conversation</h1>
+
+      <div className="action-row">
         <button
           type="button"
           onClick={() =>
@@ -257,9 +180,9 @@ export function ChatPage() {
           Guidance de la semaine
         </button>
       </div>
-      {requestGuidance.isPending ? <p aria-busy="true">Generation de la guidance en cours...</p> : null}
+      {requestGuidance.isPending ? <p aria-busy="true">Génération de la guidance en cours...</p> : null}
       {guidanceError ? <p>Erreur guidance: {guidanceError.message}</p> : null}
-      {!requestGuidance.data ? <p>Aucune guidance demandee pour le moment.</p> : null}
+      {!requestGuidance.data ? <p>Aucune guidance demandée pour le moment.</p> : null}
       {requestGuidance.data ? (
         <article className="card">
           <h3>
@@ -309,7 +232,7 @@ export function ChatPage() {
           value={contextSituation}
           onChange={(event) => setContextSituation(event.target.value)}
           rows={2}
-          placeholder="Ex: Je dois choisir entre deux opportunites."
+          placeholder="Ex: Je dois choisir entre deux opportunités."
         />
         <label htmlFor="context-objective">Objectif</label>
         <textarea
@@ -318,7 +241,7 @@ export function ChatPage() {
           value={contextObjective}
           onChange={(event) => setContextObjective(event.target.value)}
           rows={2}
-          placeholder="Ex: Prendre une decision sereine."
+          placeholder="Ex: Prendre une décision sereine."
         />
         <label htmlFor="context-time-horizon">Horizon temporel (optionnel)</label>
         <input
@@ -333,10 +256,10 @@ export function ChatPage() {
         </button>
       </form>
       {requestContextualGuidance.isPending ? (
-        <p aria-busy="true">Generation de la guidance contextuelle en cours...</p>
+        <p aria-busy="true">Génération de la guidance contextuelle en cours...</p>
       ) : null}
       {contextualGuidanceError ? <p>Erreur guidance contextuelle: {contextualGuidanceError.message}</p> : null}
-      {!requestContextualGuidance.data ? <p>Aucune guidance contextuelle demandee pour le moment.</p> : null}
+      {!requestContextualGuidance.data ? <p>Aucune guidance contextuelle demandée pour le moment.</p> : null}
       {requestContextualGuidance.data ? (
         <article className="card">
           <h3>Guidance contextuelle</h3>
@@ -356,8 +279,8 @@ export function ChatPage() {
           <p>{requestContextualGuidance.data.disclaimer}</p>
         </article>
       ) : null}
-      <h2>Modules specialises</h2>
-      <p>Tarot et runes sont actives progressivement via feature flags.</p>
+      <h2>Modules spécialisés</h2>
+      <p>Tarot et runes sont activés progressivement via feature flags.</p>
       <div className="chat-form">
         <label htmlFor="module-question">Question module</label>
         <textarea
@@ -366,7 +289,7 @@ export function ChatPage() {
           rows={2}
           value={moduleQuestion}
           onChange={(event) => setModuleQuestion(event.target.value)}
-          placeholder="Ex: Quelle direction privilegier cette semaine ?"
+          placeholder="Ex: Quelle direction privilégier cette semaine ?"
         />
         <label htmlFor="module-situation">Contexte (optionnel)</label>
         <textarea
@@ -375,13 +298,13 @@ export function ChatPage() {
           rows={2}
           value={moduleSituation}
           onChange={(event) => setModuleSituation(event.target.value)}
-          placeholder="Ex: Decision professionnelle imminente."
+          placeholder="Ex: Décision professionnelle imminente."
         />
       </div>
       {moduleAvailability.isPending ? <p aria-busy="true">Chargement des modules...</p> : null}
       {moduleAvailability.error ? <p>Erreur modules: indisponibles pour le moment.</p> : null}
       {moduleAvailability.data ? (
-        <div className="chat-form" aria-label="Modules specialises">
+        <div className="chat-form" aria-label="Modules spécialisés">
           {moduleAvailability.data.modules.map((module) => {
             const moduleName = module.module === "tarot" ? "Tarot" : "Runes"
             const isInProgress = moduleInProgressByKey[module.module] === true
@@ -389,21 +312,21 @@ export function ChatPage() {
             const hasError = Boolean(moduleErrorByKey[module.module])
             let visualStatus: string = module.status
             if (hasError) {
-              visualStatus = "error"
+              visualStatus = "erreur"
             }
             if (isInProgress) {
-              visualStatus = "in-progress"
+              visualStatus = "en cours"
             }
             if (hasCompleted) {
-              visualStatus = "completed"
+              visualStatus = "terminé"
             }
             return (
               <article key={module.module} className="card">
                 <h3>{moduleName}</h3>
                 <p>
-                  Etat: <strong>{visualStatus}</strong>
+                  État: <strong>{visualStatus}</strong>
                 </p>
-                {!module.available ? <p>Module verrouille ({module.reason}).</p> : null}
+                {!module.available ? <p>Module verrouillé ({module.reason}).</p> : null}
                 <button
                   type="button"
                   disabled={!module.available || isInProgress || anyModuleInProgress || quotaBlocked}
@@ -411,14 +334,14 @@ export function ChatPage() {
                 >
                   Lancer {moduleName}
                 </button>
-                {isInProgress ? <p aria-busy="true">Execution en cours...</p> : null}
+                {isInProgress ? <p aria-busy="true">Exécution en cours...</p> : null}
                 {moduleErrorByKey[module.module] ? (
                   <p role="alert">Erreur {moduleName}: {moduleErrorByKey[module.module]}</p>
                 ) : null}
-                {moduleResults[module.module] ? (
+                {moduleResults[module.module] && module.available ? (
                   <p>{moduleResults[module.module]}</p>
                 ) : (
-                  <p>Aucun resultat module.</p>
+                  <p>Aucun résultat module.</p>
                 )}
               </article>
             )
@@ -427,10 +350,10 @@ export function ChatPage() {
       ) : null}
       {activeConversationId ? <p>Conversation active: #{activeConversationId}</p> : null}
       <h2>Historique</h2>
-      {conversations.isPending ? <p>Chargement de l historique...</p> : null}
-      {conversations.error ? <p>Erreur de chargement de l historique.</p> : null}
+      {conversations.isPending ? <p>Chargement de l'historique...</p> : null}
+      {conversations.error ? <p>Erreur de chargement de l'historique.</p> : null}
       {conversations.data && conversations.data.conversations.length === 0 ? (
-        <p>Aucune conversation precedente.</p>
+        <p>Aucune conversation précédente.</p>
       ) : null}
       {conversations.data && conversations.data.conversations.length > 0 ? (
         <ul className="chat-list">
@@ -448,50 +371,55 @@ export function ChatPage() {
       ) : null}
 
       {displayedMessages.length === 0 ? (
-        <p>Aucun message pour le moment. Posez votre premiere question.</p>
+        <p className="state-line state-empty">Aucun message dans cette conversation.</p>
       ) : (
-        <ul className="chat-list" aria-live="polite">
-          {displayedMessages.map((message) => (
-            <li key={message.id} className={`chat-item chat-item-${message.role}`}>
-              <strong>{message.role === "user" ? "Vous" : "Astrologue"}:</strong> {message.content}
+        <ul className="chat-list">
+          {displayedMessages.map((msg) => (
+            <li
+              key={msg.id}
+              className={`chat-item ${msg.role === "assistant" ? "chat-item-assistant" : ""}`}
+              data-testid="chat-message"
+            >
+              <strong>{msg.role === "user" ? "Vous" : "Astrologue"}:</strong>{" "}
+              <span data-testid="chat-message-content">{msg.content}</span>
             </li>
           ))}
         </ul>
       )}
 
       {sendMessage.isPending ? (
-        <p aria-busy="true">Generation de la reponse en cours...</p>
+        <p aria-busy="true" className="state-line state-loading">
+          Génération de la réponse en cours...
+        </p>
       ) : null}
-      {history.isPending && selectedConversationId ? <p>Chargement du fil...</p> : null}
-      {lastRecovery && lastRecovery.recovery_applied ? (
-        <div className="chat-error" role="status">
+
+      {lastRecovery?.recovery_applied ? (
+        <div className="chat-error" role="alert">
           <p>
-            Recuperation automatique appliquee ({lastRecovery.recovery_strategy}) pour recentrer la
-            reponse.
+            {lastRecovery.off_scope_detected
+              ? "Désolé, je ne peux traiter que les sujets liés à l'astrologie."
+              : "Une situation critique a été détectée."}
           </p>
-          {lastRecovery.recovery_strategy === "safe_fallback" ? (
-            <p>Essayez de reformuler votre question avec un contexte plus precis.</p>
-          ) : null}
+          <p>Raison: {lastRecovery.recovery_reason}</p>
         </div>
       ) : null}
 
-      {error ? (
-        <div role="alert" className="chat-error">
-          <p>Une erreur est survenue: {error.message}</p>
-          {error.code === "quota_exceeded" ? (
+      {conversationError ? (
+        <div className="chat-error" role="alert">
+          <p>Erreur: {conversationError.message}</p>
+          {conversationError.code === "quota_exceeded" && conversationError.details?.reset_at ? (
             <p>
-              Quota atteint ({asString(error.details.consumed) ?? "?"}/{asString(error.details.limit) ?? "?"}
-              ). Reprise possible apres{" "}
-              {asString(error.details.reset_at)
-                ? new Date(asString(error.details.reset_at) as string).toLocaleString()
+              Quota épuisé. Réessayez après le{" "}
+              {asString(conversationError.details.reset_at)
+                ? new Date(asString(conversationError.details.reset_at) as string).toLocaleString()
                 : "le reset"}.
             </p>
           ) : null}
-          {asString(error.details.fallback_message) ? (
-            <p>{asString(error.details.fallback_message)}</p>
+          {asString(conversationError.details?.fallback_message) ? (
+            <p>{asString(conversationError.details.fallback_message)}</p>
           ) : null}
           <button type="button" onClick={handleRetry} disabled={quotaBlocked || sendMessage.isPending}>
-            Reessayer
+            Réessayer
           </button>
         </div>
       ) : null}
@@ -504,12 +432,19 @@ export function ChatPage() {
           value={inputValue}
           onChange={(event) => setInputValue(event.target.value)}
           rows={3}
-          placeholder="Ex: Quelle energie dois-je surveiller cette semaine ?"
+          placeholder="Posez votre question aux astres..."
+          disabled={quotaBlocked || sendMessage.isPending}
         />
-        <button type="submit" disabled={sendMessage.isPending || quotaBlocked}>
+        <button type="submit" disabled={!inputValue.trim() || sendMessage.isPending || quotaBlocked}>
           Envoyer
         </button>
       </form>
+
+      {quotaBlocked ? (
+        <p className="chat-error">
+          Votre quota quotidien est épuisé. Veuillez revenir demain ou changer de plan.
+        </p>
+      ) : null}
     </section>
   )
 }

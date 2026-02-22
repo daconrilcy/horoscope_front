@@ -14,34 +14,40 @@ export function B2BUsagePanel() {
   return (
     <section className="panel">
       <h2>Consommation B2B</h2>
-      <p>Consultez limites contractuelles et volumes utilises pour votre credential API.</p>
+      <p>Consultez limites contractuelles et volumes utilisés pour votre credential API.</p>
 
-      <label htmlFor="b2b-usage-api-key">Cle API B2B</label>
-      <input
-        id="b2b-usage-api-key"
-        value={apiKey}
-        onChange={(event) => setApiKey(event.target.value)}
-        placeholder="b2b_xxxxx"
-      />
-      <button
-        type="button"
-        disabled={usageSummary.isPending}
-        onClick={() => usageSummary.mutate(apiKey.trim())}
-      >
-        Recuperer le resume de consommation
-      </button>
+      <label htmlFor="b2b-usage-api-key">Clé API B2B</label>
+      <div className="action-row">
+        <input
+          id="b2b-usage-api-key"
+          value={apiKey}
+          onChange={(event) => setApiKey(event.target.value)}
+          placeholder="b2b_xxxxx"
+        />
+        <button
+          type="button"
+          disabled={usageSummary.isPending}
+          onClick={() => usageSummary.mutate(apiKey.trim())}
+        >
+          Récupérer le résumé de consommation
+        </button>
+      </div>
 
-      {usageSummary.isPending ? <p aria-busy="true">Chargement consommation B2B...</p> : null}
+      {usageSummary.isPending ? (
+        <p aria-busy="true" className="state-line state-loading">
+          Chargement consommation B2B...
+        </p>
+      ) : null}
       {error ? (
-        <p role="alert">
+        <p role="alert" className="chat-error">
           Erreur consommation B2B: {error.message} ({error.code})
           {error.requestId ? ` [request_id=${error.requestId}]` : ""}
         </p>
       ) : null}
-      {isEmpty ? <p>Aucune consommation enregistree pour cette periode.</p> : null}
+      {isEmpty ? <p className="state-line state-empty">Aucune consommation enregistrée pour cette période.</p> : null}
 
       {usageSummary.data && !isEmpty ? (
-        <ul className="chat-list">
+        <ul className="chat-list compact-list">
           <li className="chat-item">
             Quotidien: {usageSummary.data.daily_consumed}/{usageSummary.data.daily_limit} (
             {usageSummary.data.daily_remaining} restant)

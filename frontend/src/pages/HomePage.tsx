@@ -1,8 +1,21 @@
-export function HomePage() {
+type HomePageProps = {
+  onSignIn: () => void
+  onRegister: () => void
+}
+
+export function HomePage({ onSignIn, onRegister }: HomePageProps) {
   return (
-    <section>
-      <h1>horoscope_front</h1>
-      <p>Starter React/Vite pret pour les stories suivantes.</p>
+    <section className="panel">
+      <h1>Bienvenue</h1>
+      <p>Votre astrologue virtuel personnel, disponible 24h/24.</p>
+      <div className="chat-form">
+        <button type="button" onClick={onSignIn}>
+          Se connecter
+        </button>
+        <button type="button" onClick={onRegister}>
+          Créer un compte
+        </button>
+      </div>
     </section>
   )
 }

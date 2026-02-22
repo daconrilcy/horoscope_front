@@ -28,6 +28,10 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
+from app.services.ai_engine_adapter import (
+    reset_test_generators,
+    set_test_chat_generator,
+)
 from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
 from app.services.chat_guidance_service import ChatGuidanceServiceError
@@ -37,6 +41,7 @@ client = TestClient(app)
 
 def _cleanup_tables() -> None:
     BillingService.reset_subscription_status_cache()
+    reset_test_generators()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
@@ -627,24 +632,19 @@ def test_send_chat_message_with_conversation_id_targets_selected_thread() -> Non
     assert "Follow-up A" in contents
 
 
-def test_send_chat_message_off_scope_recovery_reformulates_response(
-    monkeypatch: object,
-) -> None:
+def test_send_chat_message_off_scope_recovery_reformulates_response() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
     _activate_entry_plan(access_token, "chat-checkout-offscope-reformulate-1")
     calls = {"count": 0}
 
-    def _off_scope_then_recover(*args: object, **kwargs: object) -> str:
+    async def _off_scope_then_recover(*args: object, **kwargs: object) -> str:
         calls["count"] += 1
         if calls["count"] == 1:
             return "[off_scope] incoherent"
         return "Reponse reformulee pertinente"
 
-    monkeypatch.setattr(
-        "app.services.chat_guidance_service.LLMClient.generate_reply",
-        _off_scope_then_recover,
-    )
+    set_test_chat_generator(_off_scope_then_recover)
     response = client.post(
         "/v1/chat/messages",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -658,20 +658,15 @@ def test_send_chat_message_off_scope_recovery_reformulates_response(
     assert payload["fallback_used"] is False
 
 
-def test_send_chat_message_off_scope_recovery_uses_safe_fallback(
-    monkeypatch: object,
-) -> None:
+def test_send_chat_message_off_scope_recovery_uses_safe_fallback() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
     _activate_entry_plan(access_token, "chat-checkout-offscope-fallback-1")
 
-    def _always_off_scope(*args: object, **kwargs: object) -> str:
+    async def _always_off_scope(*args: object, **kwargs: object) -> str:
         return "[off_scope] incoherent"
 
-    monkeypatch.setattr(
-        "app.services.chat_guidance_service.LLMClient.generate_reply",
-        _always_off_scope,
-    )
+    set_test_chat_generator(_always_off_scope)
     response = client.post(
         "/v1/chat/messages",
         headers={"Authorization": f"Bearer {access_token}"},

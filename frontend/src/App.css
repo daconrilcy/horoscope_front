@@ -5,17 +5,29 @@
 }
 
 .panel {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid #cbd5e1;
+  background: linear-gradient(155deg, rgba(13, 21, 44, 0.94) 0%, rgba(11, 16, 32, 0.96) 100%);
+  border: 1px solid var(--line);
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 20px 45px rgba(2, 6, 23, 0.4);
   margin-bottom: 1rem;
 }
 
 .panel h1 {
   margin-top: 0;
   font-size: 2rem;
+}
+
+.panel h2,
+.panel h3,
+.panel p,
+.panel li,
+.panel label {
+  color: var(--text-1);
+}
+
+.panel p {
+  color: var(--text-2);
 }
 
 .grid {
@@ -25,19 +37,39 @@
 }
 
 .card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(17, 25, 56, 0.75);
+  border: 1px solid var(--line);
   border-radius: 12px;
   padding: 1rem;
 }
 
 button {
-  border: 1px solid #0f766e;
+  border: 1px solid rgba(102, 230, 255, 0.35);
   border-radius: 8px;
-  background: #0f766e;
-  color: #ffffff;
+  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-strong) 100%);
+  color: #062432;
+  font-weight: 700;
   padding: 0.55rem 0.95rem;
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(46, 200, 255, 0.3);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .chat-list {
@@ -50,15 +82,15 @@ button {
 }
 
 .chat-item {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.7rem 0.8rem;
-  background: #ffffff;
+  background: rgba(17, 25, 56, 0.6);
 }
 
 .chat-item-assistant {
-  background: #f0fdfa;
-  border-color: #99f6e4;
+  background: rgba(0, 211, 167, 0.08);
+  border-color: rgba(0, 211, 167, 0.4);
 }
 
 .chat-form {
@@ -70,27 +102,85 @@ button {
 
 .chat-form textarea {
   width: 100%;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.55rem 0.7rem;
   font: inherit;
   resize: vertical;
+  color: var(--text-1);
+  background: rgba(17, 25, 56, 0.75);
 }
 
 .chat-form input,
 .chat-form select {
   width: 100%;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.5rem 0.65rem;
   font: inherit;
-  background: #ffffff;
+  color: var(--text-1);
+  background: rgba(17, 25, 56, 0.75);
 }
 
 .chat-error {
-  border: 1px solid #fecaca;
+  border: 1px solid rgba(255, 107, 129, 0.5);
   border-radius: 10px;
-  background: #fff1f2;
+  background: rgba(255, 107, 129, 0.1);
   padding: 0.7rem 0.8rem;
   margin-top: 0.8rem;
+  color: #ffd7de;
+}
+
+.state-line {
+  margin-top: 0.6rem;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  background: rgba(17, 25, 56, 0.5);
+  color: var(--text-1);
+}
+
+.state-loading {
+  border-color: rgba(102, 230, 255, 0.45);
+  background: rgba(102, 230, 255, 0.12);
+}
+
+.state-empty {
+  border-color: rgba(166, 178, 214, 0.55);
+  background: rgba(166, 178, 214, 0.12);
+}
+
+.state-success {
+  border-color: rgba(0, 211, 167, 0.45);
+  background: rgba(0, 211, 167, 0.12);
+}
+
+.action-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.action-row > * {
+  flex: 1 1 220px;
+}
+
+.compact-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.compact-list .chat-item {
+  margin: 0;
+}
+
+.section-divider {
+  margin-top: 2rem;
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+}
+
+.degraded-warning {
+  margin-bottom: 1rem;
 }

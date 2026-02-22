@@ -1,9 +1,24 @@
 :root {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  --bg-base: #070a14;
+  --bg-sheen: #101934;
+  --surface-1: #0b1020;
+  --surface-2: #111938;
+  --text-1: #f5f7ff;
+  --text-2: #a6b2d6;
+  --line: #2d3a69;
+  --primary: #66e6ff;
+  --primary-strong: #2ec8ff;
+  --danger: #ff6b81;
+  --success: #00d3a7;
+
+  font-family: "DM Sans", "Nunito Sans", "Trebuchet MS", sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #1f2937;
-  background: radial-gradient(circle at top left, #f0f9ff 0%, #e0f2fe 40%, #f8fafc 100%);
+  color: var(--text-1);
+  background:
+    radial-gradient(1200px circle at 8% -10%, #2d3f7a 0%, transparent 50%),
+    radial-gradient(950px circle at 95% -15%, #1d6f97 0%, transparent 45%),
+    linear-gradient(170deg, var(--bg-base) 0%, var(--bg-sheen) 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -18,4 +33,5 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  color: var(--text-1);
 }

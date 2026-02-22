@@ -99,7 +99,7 @@ describe("B2BReconciliationPanel", () => {
           total_amount_cents: 5000,
           source_trace: { usage_rows: 1 },
           recommended_actions: [
-            { code: "mark_investigated", label: "Marquer investigue", description: "desc" },
+            { code: "mark_investigated", label: "Marquer investigué", description: "desc" },
           ],
           last_action: null,
         },
@@ -121,7 +121,7 @@ describe("B2BReconciliationPanel", () => {
     })
 
     render(<B2BReconciliationPanel />)
-    fireEvent.click(screen.getByRole("button", { name: "Charger la reconciliation" }))
+    fireEvent.click(screen.getByRole("button", { name: "Charger la réconciliation" }))
     expect(issuesRefetch).toHaveBeenCalled()
 
     fireEvent.click(screen.getByRole("button", { name: "A9 2026-02-01 -> 2026-02-28 (major)" }))
@@ -130,7 +130,7 @@ describe("B2BReconciliationPanel", () => {
     )
 
     fireEvent.change(screen.getByLabelText("Note action (optionnel)"), { target: { value: "analyste assigne" } })
-    fireEvent.click(screen.getByRole("button", { name: "Marquer investigue" }))
+    fireEvent.click(screen.getByRole("button", { name: "Marquer investigué" }))
 
     expect(actionMutate).toHaveBeenCalledWith({
       issueId: "9:2026-02-01:2026-02-28",
@@ -139,7 +139,7 @@ describe("B2BReconciliationPanel", () => {
     }, expect.objectContaining({ onSuccess: expect.any(Function) }))
     expect(issuesRefetch).toHaveBeenCalledTimes(2)
     expect(detailRefetch).toHaveBeenCalledTimes(1)
-    expect(screen.getByText("Action executee: mark_investigated (investigating)")).toBeInTheDocument()
+    expect(screen.getByText("Action exécutée: mark_investigated (investigating)")).toBeInTheDocument()
   })
 
   it("renders loading, empty and error states", () => {
@@ -178,7 +178,7 @@ describe("B2BReconciliationPanel", () => {
       refetch: vi.fn(),
     })
     const { rerender } = render(<B2BReconciliationPanel />)
-    expect(screen.getByText("Chargement reconciliation...")).toBeInTheDocument()
+    expect(screen.getByText("Chargement réconciliation...")).toBeInTheDocument()
 
     mockUseIssues.mockReturnValueOnce({
       isPending: false,
@@ -198,7 +198,7 @@ describe("B2BReconciliationPanel", () => {
       refetch: vi.fn(),
     })
     rerender(<B2BReconciliationPanel />)
-    expect(screen.getByText(/Erreur reconciliation liste: token invalid/)).toBeInTheDocument()
+    expect(screen.getByText(/Erreur réconciliation liste: token invalid/)).toBeInTheDocument()
 
     mockUseIssues.mockReturnValueOnce({
       isPending: false,
@@ -214,7 +214,7 @@ describe("B2BReconciliationPanel", () => {
       refetch: vi.fn(),
     })
     rerender(<B2BReconciliationPanel />)
-    fireEvent.click(screen.getByRole("button", { name: "Charger la reconciliation" }))
-    expect(screen.getByText("Aucun ecart de reconciliation pour ces filtres.")).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "Charger la réconciliation" }))
+    expect(screen.getByText("Aucun écart de réconciliation pour ces filtres.")).toBeInTheDocument()
   })
 })

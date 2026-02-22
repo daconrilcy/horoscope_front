@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from time import monotonic
 from typing import TYPE_CHECKING
 
 from app.ai_engine.config import ai_engine_settings
 from app.ai_engine.providers.base import ProviderResult
+from app.ai_engine.services.cache_service import CachedResponse, CacheService
 from app.ai_engine.services.context_compactor import compact_context, validate_context_size
+from app.ai_engine.services.log_sanitizer import sanitize_request_for_logging
 from app.ai_engine.services.prompt_registry import PromptRegistry
 from app.ai_engine.services.utils import calculate_cost, get_provider_client
 from app.infra.observability.metrics import increment_counter, observe_duration
@@ -17,6 +20,8 @@ if TYPE_CHECKING:
     from app.ai_engine.schemas import GenerateRequest, GenerateResponse
 
 logger = logging.getLogger(__name__)
+
+CACHEABLE_TEMPERATURE_THRESHOLD = 0.0
 
 
 async def generate_text(
@@ -46,16 +51,58 @@ async def generate_text(
 
     increment_counter(f"ai_engine_requests_total|use_case={use_case}|status=started", 1.0)
 
-    logger.info(
-        "ai_generate_start request_id=%s trace_id=%s user_id=%d use_case=%s locale=%s",
-        request_id,
-        trace_id,
-        user_id,
-        use_case,
-        locale,
+    input_dict = request.input.model_dump()
+    context_dict = request.context.model_dump()
+
+    log_payload = sanitize_request_for_logging(
+        use_case=use_case,
+        user_id=user_id,
+        request_id=request_id,
+        trace_id=trace_id,
+        input_data=input_dict,
+        context=context_dict,
+        locale=locale,
     )
+    logger.info("ai_generate_start %s", json.dumps(log_payload))
 
     config = PromptRegistry.get_config(use_case)
+    is_cacheable = config.temperature <= CACHEABLE_TEMPERATURE_THRESHOLD
+
+    cache_service = CacheService.get_instance()
+    cached = None
+    if is_cacheable:
+        cached = cache_service.get_cached_response(use_case, input_dict, context_dict)
+    if cached:
+        latency_ms = int((monotonic() - start_time) * 1000)
+        usage = UsageInfo(
+            input_tokens=cached.input_tokens,
+            output_tokens=cached.output_tokens,
+            total_tokens=cached.total_tokens,
+            estimated_cost_usd=0.0,
+        )
+        increment_counter(f"ai_engine_requests_total|use_case={use_case}|status=cached", 1.0)
+        increment_counter("ai_engine_cache_hits_total", 1.0)
+        logger.info(
+            "ai_generate_cached %s",
+            json.dumps({
+                "request_id": request_id,
+                "trace_id": trace_id,
+                "user_id": str(user_id),
+                "use_case": use_case,
+                "latency_ms": latency_ms,
+                "cached": True,
+            }),
+        )
+        return GenerateResponse(
+            request_id=request_id,
+            trace_id=trace_id,
+            provider="openai",
+            model=cached.model,
+            text=cached.text,
+            usage=usage,
+            meta=GenerateMeta(cached=True, latency_ms=latency_ms),
+        )
+
     prompt = PromptRegistry.render_prompt(
         use_case=use_case,
         locale=locale,
@@ -78,6 +125,20 @@ async def generate_text(
         timeout_seconds=ai_engine_settings.timeout_seconds,
     )
 
+    if is_cacheable:
+        cache_service.cache_response(
+            use_case,
+            input_dict,
+            context_dict,
+            CachedResponse(
+                text=result.text,
+                input_tokens=result.input_tokens,
+                output_tokens=result.output_tokens,
+                total_tokens=result.total_tokens,
+                model=result.model,
+            ),
+        )
+
     latency_ms = int((monotonic() - start_time) * 1000)
     usage = UsageInfo(
         input_tokens=result.input_tokens,
@@ -93,16 +154,18 @@ async def generate_text(
     observe_duration(f"ai_engine_latency_seconds|use_case={use_case}", latency_ms / 1000.0)
 
     logger.info(
-        "ai_generate_complete request_id=%s trace_id=%s user_id=%d use_case=%s "
-        "latency_ms=%d input_tokens=%d output_tokens=%d cost_usd=%.4f",
-        request_id,
-        trace_id,
-        user_id,
-        use_case,
-        latency_ms,
-        result.input_tokens,
-        result.output_tokens,
-        usage.estimated_cost_usd,
+        "ai_generate_complete %s",
+        json.dumps({
+            "request_id": request_id,
+            "trace_id": trace_id,
+            "user_id": str(user_id),
+            "use_case": use_case,
+            "latency_ms": latency_ms,
+            "input_tokens": result.input_tokens,
+            "output_tokens": result.output_tokens,
+            "cost_usd": round(usage.estimated_cost_usd, 6),
+            "cached": False,
+        }),
     )
 
     return GenerateResponse(

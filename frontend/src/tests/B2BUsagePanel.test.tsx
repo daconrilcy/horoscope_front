@@ -61,8 +61,8 @@ describe("B2BUsagePanel", () => {
     })
 
     render(<B2BUsagePanel />)
-    fireEvent.change(screen.getByLabelText("Cle API B2B"), { target: { value: "b2b_usage_secret" } })
-    fireEvent.click(screen.getByRole("button", { name: "Recuperer le resume de consommation" }))
+    fireEvent.change(screen.getByLabelText("Clé API B2B"), { target: { value: "b2b_usage_secret" } })
+    fireEvent.click(screen.getByRole("button", { name: "Récupérer le résumé de consommation" }))
 
     await waitFor(() => expect(mutate).toHaveBeenCalledWith("b2b_usage_secret"))
     expect(screen.getByText("Quotidien: 2/5 (3 restant)")).toBeInTheDocument()
@@ -118,6 +118,6 @@ describe("B2BUsagePanel", () => {
       },
     })
     rerender(<B2BUsagePanel />)
-    expect(screen.getByText("Aucune consommation enregistree pour cette periode.")).toBeInTheDocument()
+    expect(screen.getByText("Aucune consommation enregistrée pour cette période.")).toBeInTheDocument()
   })
 })

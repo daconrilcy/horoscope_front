@@ -136,7 +136,7 @@ describe("BillingPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Souscrire au plan Basic (5 EUR/mois)" }))
     await waitFor(() => expect(checkoutMutateAsync).toHaveBeenCalled())
 
-    const retryButton = await screen.findByRole("button", { name: "Reessayer le paiement" })
+    const retryButton = await screen.findByRole("button", { name: "Réessayer le paiement" })
     expect(retryButton).toBeInTheDocument()
     expect(screen.getByText(/Motif echec paiement:/)).toBeInTheDocument()
 

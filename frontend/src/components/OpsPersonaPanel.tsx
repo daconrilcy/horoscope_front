@@ -30,10 +30,10 @@ function OpsPersonaPanelContent() {
     <section className="panel">
       <h2>Parametrage Persona Ops</h2>
       <p>Controlez le ton et les bornes de l astrologue virtuel.</p>
-      {configQuery.isPending ? <p>Chargement configuration persona...</p> : null}
-      {configQuery.error ? <p>Erreur chargement persona.</p> : null}
+      {configQuery.isPending ? <p className="state-line state-loading">Chargement configuration persona...</p> : null}
+      {configQuery.error ? <p className="chat-error">Erreur chargement persona.</p> : null}
       {configQuery.data ? (
-        <p>
+        <p className="state-line state-success">
           Configuration active: v{configQuery.data.version} ({configQuery.data.tone},{" "}
           {configQuery.data.prudence_level}, {configQuery.data.scope_policy},{" "}
           {configQuery.data.response_style})
@@ -88,17 +88,21 @@ function OpsPersonaPanelContent() {
           <option value="concise">concise</option>
           <option value="detailed">detailed</option>
         </select>
-        <button type="submit" disabled={isBusy}>
-          Activer configuration persona
-        </button>
+        <div className="action-row">
+          <button type="submit" disabled={isBusy}>
+            Activer configuration persona
+          </button>
+        </div>
       </form>
-      <button type="button" disabled={isBusy} onClick={() => rollbackConfig.mutate()}>
-        Rollback persona
-      </button>
-      {updateConfig.isSuccess ? <p>Configuration persona mise a jour.</p> : null}
-      {rollbackConfig.isSuccess ? <p>Rollback persona effectue.</p> : null}
-      {updateError ? <p>Erreur persona: {updateError.message}</p> : null}
-      {rollbackError ? <p>Erreur rollback persona: {rollbackError.message}</p> : null}
+      <div className="action-row">
+        <button type="button" disabled={isBusy} onClick={() => rollbackConfig.mutate()}>
+          Rollback persona
+        </button>
+      </div>
+      {updateConfig.isSuccess ? <p className="state-line state-success">Configuration persona mise a jour.</p> : null}
+      {rollbackConfig.isSuccess ? <p className="state-line state-success">Rollback persona effectue.</p> : null}
+      {updateError ? <p className="chat-error">Erreur persona: {updateError.message}</p> : null}
+      {rollbackError ? <p className="chat-error">Erreur rollback persona: {rollbackError.message}</p> : null}
     </section>
   )
 }

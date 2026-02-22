@@ -38,16 +38,22 @@ function OpsMonitoringPanelContent() {
         <option value="24h">24h</option>
         <option value="7d">7d</option>
       </select>
-      <button type="button" onClick={() => void monitoring.refetch()} disabled={monitoring.isFetching}>
-        Rafraichir KPI
-      </button>
+      <div className="action-row">
+        <button type="button" onClick={() => void monitoring.refetch()} disabled={monitoring.isFetching}>
+          Rafraichir KPI
+        </button>
+      </div>
 
-      {monitoring.isPending ? <p aria-busy="true">Chargement KPI monitoring...</p> : null}
-      {monitoringError ? <p role="alert">Erreur monitoring: {monitoringError.message}</p> : null}
-      {isEmpty ? <p>Aucune donnee conversationnelle sur cette fenetre.</p> : null}
+      {monitoring.isPending ? (
+        <p aria-busy="true" className="state-line state-loading">
+          Chargement KPI monitoring...
+        </p>
+      ) : null}
+      {monitoringError ? <p role="alert" className="chat-error">Erreur monitoring: {monitoringError.message}</p> : null}
+      {isEmpty ? <p className="state-line state-empty">Aucune donnee conversationnelle sur cette fenetre.</p> : null}
 
       {monitoring.data && !isEmpty ? (
-        <ul className="chat-list">
+        <ul className="chat-list compact-list">
           <li className="chat-item">Portee aggregation: {monitoring.data.aggregation_scope}</li>
           <li className="chat-item">Messages total: {monitoring.data.messages_total}</li>
           <li className="chat-item">
@@ -60,16 +66,18 @@ function OpsMonitoringPanelContent() {
         </ul>
       ) : null}
 
-      <button
-        type="button"
-        disabled={rollbackPersona.isPending}
-        onClick={() => rollbackPersona.mutate()}
-      >
-        Rollback configuration persona
-      </button>
-      {rollbackPersona.isSuccess ? <p>Rollback persona effectue.</p> : null}
+      <div className="action-row">
+        <button
+          type="button"
+          disabled={rollbackPersona.isPending}
+          onClick={() => rollbackPersona.mutate()}
+        >
+          Rollback configuration persona
+        </button>
+      </div>
+      {rollbackPersona.isSuccess ? <p className="state-line state-success">Rollback persona effectue.</p> : null}
       {rollbackPersona.error ? (
-        <p role="alert">Erreur rollback persona: {(rollbackPersona.error as Error).message}</p>
+        <p role="alert" className="chat-error">Erreur rollback persona: {(rollbackPersona.error as Error).message}</p>
       ) : null}
     </section>
   )

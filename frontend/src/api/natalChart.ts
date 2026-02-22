@@ -44,6 +44,7 @@ export type LatestNatalChart = {
   metadata: {
     reference_version: string
     ruleset_version: string
+    degraded_mode?: "no_location" | "no_time" | "no_location_no_time" | null
   }
   created_at: string
 }
@@ -52,29 +53,41 @@ type ErrorEnvelope = {
   error: {
     code: string
     message: string
+    request_id?: string
   }
 }
 
 export class ApiError extends Error {
   readonly code: string
   readonly status: number
+  readonly requestId?: string
 
-  constructor(code: string, message: string, status: number) {
+  constructor(code: string, message: string, status: number, requestId?: string) {
     super(message)
     this.code = code
     this.status = status
+    this.requestId = requestId
   }
 }
 
-async function fetchLatestNatalChart(accessToken: string): Promise<LatestNatalChart> {
-  const response = await apiFetch(`${API_BASE_URL}/v1/users/me/natal-chart/latest`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
-
+async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     let payload: ErrorEnvelope | null = null
     try {
-      payload = (await response.json()) as ErrorEnvelope
+      const raw = (await response.json()) as Record<string, unknown>
+      if (raw?.error) {
+        // Format API standard : { error: { code, message, request_id? } }
+        payload = raw as unknown as ErrorEnvelope
+      } else if (Array.isArray(raw?.detail)) {
+        // Format FastAPI natif 422 : { detail: [{ loc, msg, type }] }
+        const firstDetail = (raw.detail as Array<{ msg?: string }>)[0]
+        payload = {
+          error: {
+            code: "unprocessable_entity",
+            message: firstDetail?.msg || "Données invalides",
+          },
+        }
+      }
     } catch {
       payload = null
     }
@@ -82,11 +95,33 @@ async function fetchLatestNatalChart(accessToken: string): Promise<LatestNatalCh
       payload?.error?.code ?? "unknown_error",
       payload?.error?.message ?? `Request failed with status ${response.status}`,
       response.status,
+      payload?.error?.request_id,
     )
   }
 
-  const payload = (await response.json()) as { data: LatestNatalChart }
+  const payload = (await response.json()) as { data: T }
   return payload.data
+}
+
+async function fetchLatestNatalChart(accessToken: string): Promise<LatestNatalChart> {
+  const response = await apiFetch(`${API_BASE_URL}/v1/users/me/natal-chart/latest`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+
+  return handleResponse<LatestNatalChart>(response)
+}
+
+export async function generateNatalChart(accessToken: string): Promise<LatestNatalChart> {
+  const response = await apiFetch(`${API_BASE_URL}/v1/users/me/natal-chart`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({}),
+  })
+
+  return handleResponse<LatestNatalChart>(response)
 }
 
 export function useLatestNatalChart() {
@@ -102,5 +137,6 @@ export function useLatestNatalChart() {
     queryKey: ["latest-natal-chart", tokenSubject],
     queryFn: fetchForCurrentUser,
     enabled: Boolean(accessToken),
+    staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }

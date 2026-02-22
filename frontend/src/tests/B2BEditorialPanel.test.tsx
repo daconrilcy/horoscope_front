@@ -61,7 +61,7 @@ describe("B2BEditorialPanel", () => {
       tone: "friendly",
       length_style: "short",
       output_format: "bullet",
-      preferred_terms: ["focus", "clarte"],
+      preferred_terms: ["focus", "clarté"],
       avoided_terms: ["drama"],
       created_by_credential_id: 5,
       created_at: "2026-02-20T00:00:00Z",
@@ -80,15 +80,15 @@ describe("B2BEditorialPanel", () => {
     })
 
     render(<B2BEditorialPanel />)
-    fireEvent.change(screen.getByLabelText("Cle API B2B"), { target: { value: "b2b_editorial_secret" } })
+    fireEvent.change(screen.getByLabelText("Clé API B2B"), { target: { value: "b2b_editorial_secret" } })
     fireEvent.click(screen.getByRole("button", { name: "Charger la configuration" }))
     await waitFor(() => expect(loadMutateAsync).toHaveBeenCalledWith("b2b_editorial_secret"))
 
     fireEvent.change(screen.getByLabelText("Ton"), { target: { value: "friendly" } })
     fireEvent.change(screen.getByLabelText("Longueur"), { target: { value: "short" } })
     fireEvent.change(screen.getByLabelText("Format"), { target: { value: "bullet" } })
-    fireEvent.change(screen.getByLabelText("Mots a privilegier (comma separated)"), {
-      target: { value: "focus, clarte" },
+    fireEvent.change(screen.getByLabelText("Mots à privilégier (séparés par des virgules)"), {
+      target: { value: "focus, clarté" },
     })
     fireEvent.click(screen.getByRole("button", { name: "Enregistrer la configuration" }))
 
@@ -99,7 +99,7 @@ describe("B2BEditorialPanel", () => {
           tone: "friendly",
           length_style: "short",
           output_format: "bullet",
-          preferred_terms: ["focus", "clarte"],
+          preferred_terms: ["focus", "clarté"],
           avoided_terms: ["drama"],
         },
       }),
@@ -119,7 +119,7 @@ describe("B2BEditorialPanel", () => {
       mutateAsync: vi.fn(),
     })
     const { rerender } = render(<B2BEditorialPanel />)
-    expect(screen.getByText("Chargement configuration editoriale...")).toBeInTheDocument()
+    expect(screen.getByText("Chargement configuration éditoriale...")).toBeInTheDocument()
 
     mockUseB2BEditorialConfig.mockReturnValueOnce({
       isPending: false,
@@ -137,8 +137,8 @@ describe("B2BEditorialPanel", () => {
       mutateAsync: vi.fn(),
     })
     rerender(<B2BEditorialPanel />)
-    expect(screen.getByText(/Erreur lecture editoriale:/)).toBeInTheDocument()
+    expect(screen.getByText(/Erreur lecture éditoriale:/)).toBeInTheDocument()
     expect(screen.getByText(/\[details=retry_after=3\]/)).toBeInTheDocument()
-    expect(screen.queryByText("Aucune configuration chargee.")).not.toBeInTheDocument()
+    expect(screen.queryByText("Aucune configuration chargée.")).not.toBeInTheDocument()
   })
 })
