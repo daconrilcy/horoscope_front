@@ -9,7 +9,11 @@ from typing import TYPE_CHECKING, AsyncIterator
 
 from app.ai_engine.config import ai_engine_settings
 from app.ai_engine.providers.base import ProviderResult
-from app.ai_engine.services.context_compactor import compact_context, validate_context_size
+from app.ai_engine.services.context_compactor import (
+    compact_context,
+    estimate_tokens,
+    validate_context_size,
+)
 from app.ai_engine.services.prompt_registry import PromptRegistry
 from app.ai_engine.services.utils import calculate_cost, get_provider_client
 from app.infra.observability.metrics import increment_counter, observe_duration
@@ -43,6 +47,7 @@ async def chat(
     *,
     request_id: str,
     trace_id: str,
+    user_id: int,
 ) -> "ChatResponse":
     """
     Generate a chat completion (non-streaming).
@@ -61,9 +66,10 @@ async def chat(
     increment_counter("ai_engine_requests_total|use_case=chat|status=started", 1.0)
 
     logger.info(
-        "ai_chat_start request_id=%s trace_id=%s locale=%s message_count=%d",
+        "ai_chat_start request_id=%s trace_id=%s user_id=%d locale=%s message_count=%d",
         request_id,
         trace_id,
+        user_id,
         request.locale,
         len(request.messages),
     )
@@ -105,10 +111,11 @@ async def chat(
     observe_duration("ai_engine_latency_seconds|use_case=chat", latency_ms / 1000.0)
 
     logger.info(
-        "ai_chat_complete request_id=%s trace_id=%s "
+        "ai_chat_complete request_id=%s trace_id=%s user_id=%d "
         "latency_ms=%d input_tokens=%d output_tokens=%d cost_usd=%.4f",
         request_id,
         trace_id,
+        user_id,
         latency_ms,
         result.input_tokens,
         result.output_tokens,
@@ -131,6 +138,7 @@ async def chat_stream(
     *,
     request_id: str,
     trace_id: str,
+    user_id: int,
 ) -> AsyncIterator[str]:
     """
     Generate a streaming chat completion.
@@ -153,9 +161,10 @@ async def chat_stream(
     increment_counter("ai_engine_requests_total|use_case=chat_stream|status=started", 1.0)
 
     logger.info(
-        "ai_chat_stream_start request_id=%s trace_id=%s locale=%s message_count=%d",
+        "ai_chat_stream_start request_id=%s trace_id=%s user_id=%d locale=%s message_count=%d",
         request_id,
         trace_id,
+        user_id,
         request.locale,
         len(request.messages),
     )
@@ -192,17 +201,37 @@ async def chat_stream(
             yield f"data: {json.dumps({'delta': delta})}\n\n"
 
         latency_ms = int((monotonic() - start_time) * 1000)
-        yield f"data: {json.dumps({'done': True, 'text': full_text})}\n\n"
+
+        input_text = "".join(m.content for m in messages)
+        estimated_input_tokens = estimate_tokens(input_text)
+        estimated_output_tokens = estimate_tokens(full_text)
+        estimated_cost = calculate_cost(estimated_input_tokens, estimated_output_tokens)
+
+        done_event = {
+            "done": True,
+            "text": full_text,
+            "usage": {
+                "input_tokens": estimated_input_tokens,
+                "output_tokens": estimated_output_tokens,
+                "total_tokens": estimated_input_tokens + estimated_output_tokens,
+                "estimated_cost_usd": estimated_cost,
+                "is_estimate": True,
+            },
+        }
+        yield f"data: {json.dumps(done_event)}\n\n"
 
         increment_counter("ai_engine_requests_total|use_case=chat_stream|status=success", 1.0)
+        increment_counter("ai_engine_tokens_total|direction=input", float(estimated_input_tokens))
+        increment_counter("ai_engine_tokens_total|direction=output", float(estimated_output_tokens))
         observe_duration("ai_engine_latency_seconds", latency_ms / 1000.0)
         observe_duration("ai_engine_latency_seconds|use_case=chat_stream", latency_ms / 1000.0)
 
         logger.info(
-            "ai_chat_stream_complete request_id=%s trace_id=%s "
+            "ai_chat_stream_complete request_id=%s trace_id=%s user_id=%d "
             "latency_ms=%d chunks=%d text_length=%d",
             request_id,
             trace_id,
+            user_id,
             latency_ms,
             chunk_count,
             len(full_text),

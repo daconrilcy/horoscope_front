@@ -25,6 +25,19 @@ def client() -> Generator[TestClient, None, None]:
     app.dependency_overrides.clear()
 
 
+class TestGenerateEndpointAuth:
+    """Tests for authentication on POST /v1/ai/generate."""
+
+    def test_generate_returns_401_without_auth_token(self) -> None:
+        """Generate returns 401 when no auth token provided."""
+        unauthenticated_client = TestClient(app)
+        response = unauthenticated_client.post(
+            "/v1/ai/generate",
+            json={"use_case": "chat", "locale": "fr-FR"},
+        )
+        assert response.status_code == 401
+
+
 class TestGenerateEndpoint:
     """Tests for POST /v1/ai/generate endpoint."""
 

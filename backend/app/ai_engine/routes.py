@@ -73,6 +73,7 @@ async def generate(
             body,
             request_id=request_id,
             trace_id=trace_id,
+            user_id=current_user.id,
         )
         return response
     except AIEngineError as err:
@@ -113,6 +114,7 @@ async def chat(
                     body,
                     request_id=request_id,
                     trace_id=trace_id,
+                    user_id=current_user.id,
                 ),
                 media_type="text/event-stream",
                 headers={
@@ -126,6 +128,7 @@ async def chat(
             body,
             request_id=request_id,
             trace_id=trace_id,
+            user_id=current_user.id,
         )
         return response
     except AIEngineError as err:

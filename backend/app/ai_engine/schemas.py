@@ -7,12 +7,13 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 ChatRole = Literal["system", "user", "assistant"]
+ProviderName = Literal["openai"]
 
 
 class ProviderConfig(BaseModel):
     """Provider configuration for AI requests."""
 
-    name: str = Field(default="openai", description="Provider name")
+    name: ProviderName = Field(default="openai", description="Provider name (openai)")
     model: str = Field(default="AUTO", description="Model name or AUTO for default")
 
 

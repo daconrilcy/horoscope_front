@@ -24,6 +24,7 @@ async def generate_text(
     *,
     request_id: str,
     trace_id: str,
+    user_id: int,
 ) -> "GenerateResponse":
     """
     Generate text using the AI engine.
@@ -45,9 +46,10 @@ async def generate_text(
     increment_counter(f"ai_engine_requests_total|use_case={use_case}|status=started", 1.0)
 
     logger.info(
-        "ai_generate_start request_id=%s trace_id=%s use_case=%s locale=%s",
+        "ai_generate_start request_id=%s trace_id=%s user_id=%d use_case=%s locale=%s",
         request_id,
         trace_id,
+        user_id,
         use_case,
         locale,
     )
@@ -90,10 +92,11 @@ async def generate_text(
     observe_duration(f"ai_engine_latency_seconds|use_case={use_case}", latency_ms / 1000.0)
 
     logger.info(
-        "ai_generate_complete request_id=%s trace_id=%s use_case=%s "
+        "ai_generate_complete request_id=%s trace_id=%s user_id=%d use_case=%s "
         "latency_ms=%d input_tokens=%d output_tokens=%d cost_usd=%.4f",
         request_id,
         trace_id,
+        user_id,
         use_case,
         latency_ms,
         result.input_tokens,
