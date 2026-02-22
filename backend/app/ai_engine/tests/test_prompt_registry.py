@@ -16,6 +16,9 @@ class TestPromptRegistry:
         assert "chat" in use_cases
         assert "natal_chart_interpretation" in use_cases
         assert "card_reading" in use_cases
+        assert "guidance_daily" in use_cases
+        assert "guidance_weekly" in use_cases
+        assert "guidance_contextual" in use_cases
 
     def test_get_config_returns_config_for_valid_use_case(self) -> None:
         """Get config returns PromptConfig for valid use case."""
@@ -152,3 +155,137 @@ class TestPromptRegistry:
         """Extract language returns locale itself for unknown languages."""
         result = PromptRegistry._extract_language("xx-XX")
         assert result == "xx-XX"
+
+    def test_get_config_guidance_daily(self) -> None:
+        """Get config for guidance_daily returns expected config."""
+        config = PromptRegistry.get_config("guidance_daily")
+        assert config.template_name == "guidance_daily_v1.jinja2"
+        assert config.max_tokens == 1200
+        assert config.temperature == 0.7
+
+    def test_get_config_guidance_weekly(self) -> None:
+        """Get config for guidance_weekly returns expected config."""
+        config = PromptRegistry.get_config("guidance_weekly")
+        assert config.template_name == "guidance_weekly_v1.jinja2"
+        assert config.max_tokens == 1500
+        assert config.temperature == 0.7
+
+    def test_get_config_guidance_contextual(self) -> None:
+        """Get config for guidance_contextual returns expected config."""
+        config = PromptRegistry.get_config("guidance_contextual")
+        assert config.template_name == "guidance_contextual_v1.jinja2"
+        assert config.max_tokens == 1200
+        assert config.temperature == 0.7
+
+    def test_render_prompt_guidance_daily(self) -> None:
+        """Render prompt for guidance_daily use case."""
+        input_data = GenerateInput()
+        context = GenerateContext(
+            birth_data={
+                "birth_date": "1985-03-21",
+                "birth_time": "10:30",
+                "birth_timezone": "Europe/Paris",
+            },
+            extra={"persona_line": "Persona prudent et bienveillant"},
+        )
+
+        prompt = PromptRegistry.render_prompt(
+            use_case="guidance_daily",
+            locale="fr-FR",
+            input_data=input_data,
+            context=context,
+        )
+
+        assert "français" in prompt
+        assert "guidance" in prompt.lower() or "quotidienne" in prompt.lower()
+        assert "1985-03-21" in prompt
+        assert "10:30" in prompt
+        assert "sécurité" in prompt.lower() or "médical" in prompt.lower()
+        assert "Persona prudent et bienveillant" in prompt
+
+    def test_render_prompt_guidance_weekly(self) -> None:
+        """Render prompt for guidance_weekly use case."""
+        input_data = GenerateInput()
+        context = GenerateContext(
+            birth_data={
+                "birth_date": "1990-07-15",
+                "birth_time": "14:00",
+                "birth_timezone": "UTC",
+            },
+        )
+
+        prompt = PromptRegistry.render_prompt(
+            use_case="guidance_weekly",
+            locale="fr-FR",
+            input_data=input_data,
+            context=context,
+        )
+
+        assert "français" in prompt
+        assert "hebdomadaire" in prompt.lower() or "semaine" in prompt.lower()
+        assert "1990-07-15" in prompt
+
+    def test_render_prompt_guidance_contextual(self) -> None:
+        """Render prompt for guidance_contextual use case."""
+        input_data = GenerateInput()
+        context = GenerateContext(
+            birth_data={
+                "birth_date": "1988-12-01",
+                "birth_time": "08:45",
+                "birth_timezone": "America/New_York",
+            },
+            extra={
+                "situation": "Changement de carrière prévu",
+                "objective": "Trouver le bon timing",
+                "time_horizon": "3 mois",
+            },
+        )
+
+        prompt = PromptRegistry.render_prompt(
+            use_case="guidance_contextual",
+            locale="fr-FR",
+            input_data=input_data,
+            context=context,
+        )
+
+        assert "français" in prompt
+        assert "contextuell" in prompt.lower() or "situation" in prompt.lower()
+        assert "Changement de carrière" in prompt
+        assert "Trouver le bon timing" in prompt
+        assert "3 mois" in prompt
+
+    def test_render_prompt_guidance_daily_missing_birth_data(self) -> None:
+        """Render prompt for guidance_daily without birth data."""
+        input_data = GenerateInput()
+        context = GenerateContext()
+
+        prompt = PromptRegistry.render_prompt(
+            use_case="guidance_daily",
+            locale="fr-FR",
+            input_data=input_data,
+            context=context,
+        )
+
+        assert "français" in prompt
+        assert len(prompt) > 100
+
+    def test_render_prompt_guidance_contextual_with_context_lines(self) -> None:
+        """Render prompt for guidance_contextual with context lines."""
+        input_data = GenerateInput()
+        context = GenerateContext(
+            extra={
+                "context_lines": "user: Bonjour\nassistant: Bonjour!",
+                "situation": "Test situation",
+                "objective": "Test objectif",
+            },
+        )
+
+        prompt = PromptRegistry.render_prompt(
+            use_case="guidance_contextual",
+            locale="fr-FR",
+            input_data=input_data,
+            context=context,
+        )
+
+        assert "Bonjour" in prompt
+        assert "Test situation" in prompt

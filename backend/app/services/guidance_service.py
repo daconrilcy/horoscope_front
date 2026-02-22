@@ -1,16 +1,17 @@
 """
-Service de guidance astrologique.
+Astrological guidance service.
 
-Ce module génère des guidances quotidiennes/hebdomadaires et contextuelles
-basées sur le profil natal de l'utilisateur et l'historique de conversation.
+This module generates daily/weekly and contextual guidances based on
+the user's natal profile and conversation history.
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import random
 from datetime import datetime, timezone
-from time import monotonic, sleep
+from time import monotonic
 
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -18,8 +19,12 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.llm.anonymizer import anonymize_text
-from app.infra.llm.client import LLMClient
 from app.infra.observability.metrics import increment_counter, observe_duration
+from app.services.ai_engine_adapter import (
+    AIEngineAdapter,
+    AIEngineAdapterError,
+    assess_off_scope,
+)
 from app.services.persona_config_service import PersonaConfigService
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
@@ -28,16 +33,16 @@ from app.services.user_birth_profile_service import (
 
 
 class GuidanceServiceError(Exception):
-    """Exception levée lors d'erreurs de génération de guidance."""
+    """Exception raised by the guidance service."""
 
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
         """
-        Initialise une erreur de guidance.
+        Initialize a guidance error.
 
         Args:
-            code: Code d'erreur unique.
-            message: Message descriptif de l'erreur.
-            details: Dictionnaire optionnel de détails supplémentaires.
+            code: Unique error code.
+            message: Descriptive error message.
+            details: Optional dictionary of additional details.
         """
         self.code = code
         self.message = message
@@ -46,7 +51,7 @@ class GuidanceServiceError(Exception):
 
 
 class GuidanceData(BaseModel):
-    """Données d'une guidance périodique (quotidienne ou hebdomadaire)."""
+    """Data for a periodic guidance (daily or weekly)."""
 
     period: str
     summary: str
@@ -61,7 +66,7 @@ class GuidanceData(BaseModel):
 
 
 class ContextualGuidanceData(BaseModel):
-    """Données d'une guidance contextuelle basée sur une situation."""
+    """Data for a contextual guidance based on a specific situation."""
 
     guidance_type: str
     situation: str
@@ -79,7 +84,7 @@ class ContextualGuidanceData(BaseModel):
 
 
 class GuidanceRecoveryMetadata(BaseModel):
-    """Métadonnées sur les tentatives de récupération hors-scope."""
+    """Metadata about off-scope recovery attempts."""
 
     off_scope_detected: bool
     off_scope_score: float
@@ -104,8 +109,8 @@ class GuidanceService:
     )
 
     @staticmethod
-    def _sleep_before_retry(*, attempts: int, max_attempts: int) -> None:
-        """Effectue une pause exponentielle avec jitter avant une nouvelle tentative."""
+    async def _sleep_before_retry_async(*, attempts: int, max_attempts: int) -> None:
+        """Apply exponential backoff with jitter before retry (async)."""
         if attempts >= max_attempts:
             return
         base_seconds = max(0.0, settings.chat_llm_retry_backoff_seconds)
@@ -121,11 +126,11 @@ class GuidanceService:
             return
         observe_duration("guidance_retry_backoff_seconds", delay_seconds)
         increment_counter("guidance_retry_backoff_total", 1.0)
-        sleep(delay_seconds)
+        await asyncio.sleep(delay_seconds)
 
     @staticmethod
     def _validate_period(period: str) -> str:
-        """Valide et normalise la période de guidance."""
+        """Validate and normalize the guidance period."""
         normalized = period.strip().lower()
         if normalized not in {"daily", "weekly"}:
             raise GuidanceServiceError(
@@ -136,37 +141,11 @@ class GuidanceService:
         return normalized
 
     @staticmethod
-    def _build_prompt(
-        *,
-        period: str,
-        birth_date: str,
-        birth_time: str,
-        birth_timezone: str,
-        persona_line: str,
-        context_lines: list[str],
-    ) -> str:
-        """Construit le prompt pour une guidance périodique."""
-        lines = [
-            "[guidance_prompt_version:guidance-v1]",
-            persona_line,
-            "You are a prudent astrology assistant.",
-            "Never provide medical, legal, or financial certainty.",
-            f"Period: {period}",
-            f"Birth date: {birth_date}",
-            f"Birth time: {birth_time}",
-            f"Birth timezone: {birth_timezone}",
-            "Recent context:",
-            *context_lines,
-            "Return practical and calm guidance in French.",
-        ]
-        return anonymize_text("\n".join(lines))
-
-    @staticmethod
     def _select_context_lines(
         repo: ChatRepository,
         conversation_id: int | None,
     ) -> tuple[list[str], int]:
-        """Sélectionne les lignes de contexte depuis l'historique de conversation."""
+        """Select context lines from conversation history."""
         if conversation_id is None:
             return ["no conversation context"], 0
 
@@ -195,8 +174,46 @@ class GuidanceService:
         return selected or ["no conversation context"], selected_count
 
     @staticmethod
+    def _resolve_conversation_id(
+        repo: ChatRepository,
+        user_id: int,
+        conversation_id: int | None,
+    ) -> int | None:
+        """
+        Resolve and validate conversation ID for guidance context.
+
+        Args:
+            repo: Chat repository instance.
+            user_id: User identifier for ownership validation.
+            conversation_id: Optional conversation ID to validate.
+
+        Returns:
+            Resolved conversation ID or None if no conversation context.
+
+        Raises:
+            GuidanceServiceError: If conversation not found or forbidden.
+        """
+        if conversation_id is not None:
+            selected_conversation = repo.get_conversation_by_id(conversation_id)
+            if selected_conversation is None:
+                raise GuidanceServiceError(
+                    code="conversation_not_found",
+                    message="conversation was not found",
+                    details={"conversation_id": str(conversation_id)},
+                )
+            if selected_conversation.user_id != user_id:
+                raise GuidanceServiceError(
+                    code="conversation_forbidden",
+                    message="conversation does not belong to user",
+                    details={"conversation_id": str(conversation_id)},
+                )
+            return selected_conversation.id
+        latest_conversation = repo.get_latest_active_conversation_by_user_id(user_id)
+        return latest_conversation.id if latest_conversation else None
+
+    @staticmethod
     def _normalize_summary(generated_text: str, period: str) -> str:
-        """Normalise le résumé généré en filtrant les artefacts de prompt."""
+        """Normalize generated summary by filtering prompt artifacts."""
         raw_summary = generated_text.strip()
         # Local stub echoes the full prompt; never expose internal prompt/context to end users.
         if "[guidance_prompt_version:" in raw_summary or "Recent context:" in raw_summary:
@@ -213,7 +230,7 @@ class GuidanceService:
 
     @staticmethod
     def _normalize_contextual_summary(generated_text: str) -> str:
-        """Normalise le résumé contextuel en filtrant les artefacts."""
+        """Normalize contextual summary by filtering prompt artifacts."""
         raw_summary = generated_text.strip()
         # Local stub echoes the full prompt; never expose internal prompt/context to end users.
         if "[guidance_prompt_version:" in raw_summary or "Recent context:" in raw_summary:
@@ -229,7 +246,7 @@ class GuidanceService:
         objective: str,
         time_horizon: str | None,
     ) -> tuple[str, str, str | None]:
-        """Valide et normalise les entrées de guidance contextuelle."""
+        """Validate and normalize contextual guidance inputs."""
         normalized_situation = situation.strip()
         normalized_objective = objective.strip()
         normalized_horizon = time_horizon.strip() if time_horizon else None
@@ -244,81 +261,22 @@ class GuidanceService:
         return normalized_situation, normalized_objective, normalized_horizon
 
     @staticmethod
-    def _build_contextual_prompt(
-        *,
-        birth_date: str,
-        birth_time: str,
-        birth_timezone: str,
-        persona_line: str,
-        situation: str,
-        objective: str,
-        time_horizon: str | None,
-        context_lines: list[str],
-    ) -> str:
-        """Construit le prompt pour une guidance contextuelle."""
-        lines = [
-            "[guidance_prompt_version:guidance-contextual-v1]",
-            persona_line,
-            "You are a prudent astrology assistant.",
-            "Never provide medical, legal, or financial certainty.",
-            f"Birth date: {birth_date}",
-            f"Birth time: {birth_time}",
-            f"Birth timezone: {birth_timezone}",
-            f"Situation: {situation}",
-            f"Objective: {objective}",
-            f"Time horizon: {time_horizon or 'not provided'}",
-            "Recent context:",
-            *context_lines,
-            "Return practical and calm guidance in French.",
-        ]
-        return anonymize_text("\n".join(lines))
-
-    @staticmethod
     def _assess_off_scope(content: str) -> tuple[bool, float, str | None]:
-        """Évalue si une réponse est hors-scope avec un score de confiance."""
-        normalized = content.strip().lower()
-        if not normalized:
-            return True, 1.0, "empty_response"
-        if "[off_scope]" in normalized:
-            return True, 0.95, "explicit_marker"
-        if normalized.startswith("hors_scope:"):
-            return True, 0.9, "explicit_prefix"
-        return False, 0.0, None
+        """Assess if a response is off-scope with a confidence score."""
+        return assess_off_scope(content)
 
     @staticmethod
-    def _build_recovery_prompt(prompt: str, previous_reply: str, mode: str) -> str:
-        """Construit un prompt de récupération pour reformuler une guidance hors-scope."""
-        if mode == "reformulate":
-            instruction = (
-                "The previous guidance appears out-of-scope. "
-                "Reformulate in French, stay practical, "
-                "and keep a prudent tone."
-            )
-        else:
-            instruction = (
-                "Previous reformulation is still out-of-scope. "
-                "Provide a concise, relevant French guidance. "
-                "Do not include system markers, role prefixes, or prompt transcript."
-            )
-        lines = [
-            "[recovery_prompt_version:guidance-offscope-v1]",
-            instruction,
-            "Guidance request context:",
-            prompt,
-            "Previous guidance answer:",
-            anonymize_text(previous_reply),
-        ]
-        return "\n".join(lines)
-
-    @staticmethod
-    def _apply_off_scope_recovery(
+    async def _apply_off_scope_recovery_async(
         *,
-        client: LLMClient,
-        prompt: str,
+        use_case: str,
+        context: dict[str, str | None],
+        user_id: int,
+        request_id: str,
+        trace_id: str,
         assistant_content: str,
         persona_profile_code: str,
     ) -> tuple[str, bool, GuidanceRecoveryMetadata]:
-        """Applique les stratégies de récupération si la guidance est hors-scope."""
+        """Applique les stratégies de récupération si la guidance est hors-scope (async)."""
         off_scope_detected, off_scope_score, off_scope_reason = GuidanceService._assess_off_scope(
             assistant_content
         )
@@ -350,13 +308,12 @@ class GuidanceService:
         recovery_attempts = 0
         try:
             recovery_attempts += 1
-            reformulated = client.generate_reply(
-                prompt=GuidanceService._build_recovery_prompt(
-                    prompt,
-                    assistant_content,
-                    "reformulate",
-                ),
-                timeout_seconds=settings.chat_llm_timeout_seconds,
+            reformulated = await AIEngineAdapter.generate_guidance(
+                use_case=use_case,
+                context=context,
+                user_id=user_id,
+                request_id=f"{request_id}-recovery-1",
+                trace_id=trace_id,
             )
             reformulate_off_scope, _, _ = GuidanceService._assess_off_scope(reformulated)
             if not reformulate_off_scope:
@@ -380,18 +337,17 @@ class GuidanceService:
                         recovery_reason=off_scope_reason,
                     ),
                 )
-        except (TimeoutError, ConnectionError):
+        except (TimeoutError, ConnectionError, AIEngineAdapterError):
             GuidanceService.logger.warning("guidance_recovery_error strategy=reformulate")
 
         try:
             recovery_attempts += 1
-            retried = client.generate_reply(
-                prompt=GuidanceService._build_recovery_prompt(
-                    prompt,
-                    assistant_content,
-                    "retry_once",
-                ),
-                timeout_seconds=settings.chat_llm_timeout_seconds,
+            retried = await AIEngineAdapter.generate_guidance(
+                use_case=use_case,
+                context=context,
+                user_id=user_id,
+                request_id=f"{request_id}-recovery-2",
+                trace_id=trace_id,
             )
             retry_off_scope, _, _ = GuidanceService._assess_off_scope(retried)
             if not retry_off_scope:
@@ -415,7 +371,7 @@ class GuidanceService:
                         recovery_reason=off_scope_reason,
                     ),
                 )
-        except (TimeoutError, ConnectionError):
+        except (TimeoutError, ConnectionError, AIEngineAdapterError):
             GuidanceService.logger.warning("guidance_recovery_error strategy=retry_once")
 
         GuidanceService.logger.info("guidance_recovery_applied strategy=safe_fallback success=true")
@@ -439,18 +395,20 @@ class GuidanceService:
         user_id: int,
         period: str,
         conversation_id: int | None = None,
-        llm_client: LLMClient | None = None,
         request_id: str = "n/a",
     ) -> GuidanceData:
         """
         Génère une guidance périodique (quotidienne ou hebdomadaire).
+
+        Cette méthode synchrone est un wrapper autour de request_guidance_async.
+        Note: Utilise asyncio.run() pour les tests unitaires synchrones.
+        Les endpoints FastAPI utilisent directement request_guidance_async.
 
         Args:
             db: Session de base de données.
             user_id: Identifiant de l'utilisateur.
             period: Période de guidance ("daily" ou "weekly").
             conversation_id: ID de conversation pour le contexte (optionnel).
-            llm_client: Client LLM personnalisé (optionnel).
             request_id: Identifiant de requête pour le logging.
 
         Returns:
@@ -459,8 +417,47 @@ class GuidanceService:
         Raises:
             GuidanceServiceError: Si le profil natal manque ou en cas d'erreur LLM.
         """
+        return asyncio.run(
+            GuidanceService.request_guidance_async(
+                db,
+                user_id=user_id,
+                period=period,
+                conversation_id=conversation_id,
+                request_id=request_id,
+            )
+        )
+
+    @staticmethod
+    async def request_guidance_async(
+        db: Session,
+        *,
+        user_id: int,
+        period: str,
+        conversation_id: int | None = None,
+        request_id: str = "n/a",
+        trace_id: str | None = None,
+    ) -> GuidanceData:
+        """
+        Génère une guidance périodique (quotidienne ou hebdomadaire) - version async.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            period: Période de guidance ("daily" ou "weekly").
+            conversation_id: ID de conversation pour le contexte (optionnel).
+            request_id: Identifiant de requête pour le logging.
+            trace_id: Identifiant de trace pour le tracing distribué.
+
+        Returns:
+            Guidance générée avec résumé et conseils.
+
+        Raises:
+            GuidanceServiceError: Si le profil natal manque ou en cas d'erreur LLM.
+        """
         start = monotonic()
+        trace_id = trace_id or request_id
         normalized_period = GuidanceService._validate_period(period)
+        use_case = f"guidance_{normalized_period}"
         increment_counter("conversation_messages_total", 1.0)
         try:
             profile = UserBirthProfileService.get_for_user(db, user_id=user_id)
@@ -478,24 +475,9 @@ class GuidanceService:
             ) from error
 
         repo = ChatRepository(db)
-        if conversation_id is not None:
-            selected_conversation = repo.get_conversation_by_id(conversation_id)
-            if selected_conversation is None:
-                raise GuidanceServiceError(
-                    code="conversation_not_found",
-                    message="conversation was not found",
-                    details={"conversation_id": str(conversation_id)},
-                )
-            if selected_conversation.user_id != user_id:
-                raise GuidanceServiceError(
-                    code="conversation_forbidden",
-                    message="conversation does not belong to user",
-                    details={"conversation_id": str(conversation_id)},
-                )
-            selected_conversation_id = selected_conversation.id
-        else:
-            latest_conversation = repo.get_latest_active_conversation_by_user_id(user_id)
-            selected_conversation_id = latest_conversation.id if latest_conversation else None
+        selected_conversation_id = GuidanceService._resolve_conversation_id(
+            repo, user_id, conversation_id
+        )
 
         context_lines, context_message_count = GuidanceService._select_context_lines(
             repo,
@@ -512,33 +494,44 @@ class GuidanceService:
             f"conversation_guidance_messages_total|persona_profile={persona_profile_code}",
             1.0,
         )
-        prompt = GuidanceService._build_prompt(
-            period=normalized_period,
-            birth_date=profile.birth_date,
-            birth_time=profile.birth_time,
-            birth_timezone=profile.birth_timezone,
-            persona_line=persona_config.to_prompt_line(),
-            context_lines=context_lines,
-        )
-        client = llm_client or LLMClient()
+
+        # natal_chart_summary: Not yet implemented. Templates support it via
+        # {% if context.natal_chart_summary %} but computed chart data isn't
+        # available here yet. Future enhancement: integrate with NatalChartService.
+        context: dict[str, str | None] = {
+            "birth_date": profile.birth_date,
+            "birth_time": profile.birth_time,
+            "birth_timezone": profile.birth_timezone,
+            "persona_line": persona_config.to_prompt_line(),
+            "context_lines": "\n".join(context_lines),
+            "natal_chart_summary": None,
+        }
+
         attempts = 0
         max_attempts = max(1, settings.chat_llm_retry_count + 1)
         last_error_code = "llm_unavailable"
         last_error_message = "llm provider is unavailable"
+
         for _ in range(max_attempts):
             attempts += 1
             try:
-                generated_text = client.generate_reply(
-                    prompt=prompt,
-                    timeout_seconds=settings.chat_llm_timeout_seconds,
+                generated_text = await AIEngineAdapter.generate_guidance(
+                    use_case=use_case,
+                    context=context,
+                    user_id=user_id,
+                    request_id=request_id,
+                    trace_id=trace_id,
                 )
                 (
                     recovered_text,
                     fallback_used,
                     recovery_metadata,
-                ) = GuidanceService._apply_off_scope_recovery(
-                    client=client,
-                    prompt=prompt,
+                ) = await GuidanceService._apply_off_scope_recovery_async(
+                    use_case=use_case,
+                    context=context,
+                    user_id=user_id,
+                    request_id=request_id,
+                    trace_id=trace_id,
                     assistant_content=generated_text,
                     persona_profile_code=persona_profile_code,
                 )
@@ -574,6 +567,29 @@ class GuidanceService:
                     context_message_count=context_message_count,
                     generated_at=datetime.now(timezone.utc),
                 )
+            except AIEngineAdapterError as err:
+                if err.code == "rate_limit_exceeded":
+                    last_error_code = "rate_limit_exceeded"
+                    last_error_message = "rate limit exceeded"
+                elif err.code == "context_too_large":
+                    last_error_code = "context_too_large"
+                    last_error_message = "context too large"
+                else:
+                    last_error_code = err.code
+                    last_error_message = err.message
+                increment_counter("conversation_llm_errors_total", 1.0)
+                increment_counter(
+                    f"conversation_llm_errors_total|persona_profile={persona_profile_code}",
+                    1.0,
+                )
+                GuidanceService.logger.warning(
+                    "guidance_generation_error request_id=%s code=%s",
+                    request_id,
+                    last_error_code,
+                )
+                await GuidanceService._sleep_before_retry_async(
+                    attempts=attempts, max_attempts=max_attempts
+                )
             except TimeoutError:
                 last_error_code = "llm_timeout"
                 last_error_message = "llm provider timeout"
@@ -587,7 +603,9 @@ class GuidanceService:
                     request_id,
                     last_error_code,
                 )
-                GuidanceService._sleep_before_retry(attempts=attempts, max_attempts=max_attempts)
+                await GuidanceService._sleep_before_retry_async(
+                    attempts=attempts, max_attempts=max_attempts
+                )
             except ConnectionError:
                 last_error_code = "llm_unavailable"
                 last_error_message = "llm provider is unavailable"
@@ -601,7 +619,9 @@ class GuidanceService:
                     request_id,
                     last_error_code,
                 )
-                GuidanceService._sleep_before_retry(attempts=attempts, max_attempts=max_attempts)
+                await GuidanceService._sleep_before_retry_async(
+                    attempts=attempts, max_attempts=max_attempts
+                )
 
         elapsed_seconds = monotonic() - start
         observe_duration("guidance_latency_seconds", elapsed_seconds)
@@ -631,11 +651,14 @@ class GuidanceService:
         objective: str,
         time_horizon: str | None = None,
         conversation_id: int | None = None,
-        llm_client: LLMClient | None = None,
         request_id: str = "n/a",
     ) -> ContextualGuidanceData:
         """
         Génère une guidance contextuelle basée sur une situation spécifique.
+
+        Cette méthode synchrone est un wrapper autour de request_contextual_guidance_async.
+        Note: Utilise asyncio.run() pour les tests unitaires synchrones.
+        Les endpoints FastAPI utilisent directement request_contextual_guidance_async.
 
         Args:
             db: Session de base de données.
@@ -644,7 +667,6 @@ class GuidanceService:
             objective: Objectif visé par l'utilisateur.
             time_horizon: Horizon temporel (optionnel).
             conversation_id: ID de conversation pour le contexte (optionnel).
-            llm_client: Client LLM personnalisé (optionnel).
             request_id: Identifiant de requête pour le logging.
 
         Returns:
@@ -653,7 +675,52 @@ class GuidanceService:
         Raises:
             GuidanceServiceError: Si le profil natal manque ou les entrées sont invalides.
         """
+        return asyncio.run(
+            GuidanceService.request_contextual_guidance_async(
+                db,
+                user_id=user_id,
+                situation=situation,
+                objective=objective,
+                time_horizon=time_horizon,
+                conversation_id=conversation_id,
+                request_id=request_id,
+            )
+        )
+
+    @staticmethod
+    async def request_contextual_guidance_async(
+        db: Session,
+        *,
+        user_id: int,
+        situation: str,
+        objective: str,
+        time_horizon: str | None = None,
+        conversation_id: int | None = None,
+        request_id: str = "n/a",
+        trace_id: str | None = None,
+    ) -> ContextualGuidanceData:
+        """
+        Génère une guidance contextuelle basée sur une situation spécifique (async).
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            situation: Description de la situation actuelle.
+            objective: Objectif visé par l'utilisateur.
+            time_horizon: Horizon temporel (optionnel).
+            conversation_id: ID de conversation pour le contexte (optionnel).
+            request_id: Identifiant de requête pour le logging.
+            trace_id: Identifiant de trace pour le tracing distribué.
+
+        Returns:
+            Guidance contextuelle générée.
+
+        Raises:
+            GuidanceServiceError: Si le profil natal manque ou les entrées sont invalides.
+        """
         start = monotonic()
+        trace_id = trace_id or request_id
+        use_case = "guidance_contextual"
         (
             normalized_situation,
             normalized_objective,
@@ -680,24 +747,9 @@ class GuidanceService:
             ) from error
 
         repo = ChatRepository(db)
-        if conversation_id is not None:
-            selected_conversation = repo.get_conversation_by_id(conversation_id)
-            if selected_conversation is None:
-                raise GuidanceServiceError(
-                    code="conversation_not_found",
-                    message="conversation was not found",
-                    details={"conversation_id": str(conversation_id)},
-                )
-            if selected_conversation.user_id != user_id:
-                raise GuidanceServiceError(
-                    code="conversation_forbidden",
-                    message="conversation does not belong to user",
-                    details={"conversation_id": str(conversation_id)},
-                )
-            selected_conversation_id = selected_conversation.id
-        else:
-            latest_conversation = repo.get_latest_active_conversation_by_user_id(user_id)
-            selected_conversation_id = latest_conversation.id if latest_conversation else None
+        selected_conversation_id = GuidanceService._resolve_conversation_id(
+            repo, user_id, conversation_id
+        )
 
         context_lines, context_message_count = GuidanceService._select_context_lines(
             repo,
@@ -713,35 +765,47 @@ class GuidanceService:
             f"conversation_guidance_messages_total|persona_profile={persona_profile_code}",
             1.0,
         )
-        prompt = GuidanceService._build_contextual_prompt(
-            birth_date=profile.birth_date,
-            birth_time=profile.birth_time,
-            birth_timezone=profile.birth_timezone,
-            persona_line=persona_config.to_prompt_line(),
-            situation=normalized_situation,
-            objective=normalized_objective,
-            time_horizon=normalized_horizon,
-            context_lines=context_lines,
-        )
-        client = llm_client or LLMClient()
+
+        # natal_chart_summary: Not yet implemented. Templates support it via
+        # {% if context.natal_chart_summary %} but computed chart data isn't
+        # available here yet. Future enhancement: integrate with NatalChartService.
+        context: dict[str, str | None] = {
+            "birth_date": profile.birth_date,
+            "birth_time": profile.birth_time,
+            "birth_timezone": profile.birth_timezone,
+            "persona_line": persona_config.to_prompt_line(),
+            "context_lines": "\n".join(context_lines),
+            "situation": normalized_situation,
+            "objective": normalized_objective,
+            "time_horizon": normalized_horizon,
+            "natal_chart_summary": None,
+        }
+
         attempts = 0
         max_attempts = max(1, settings.chat_llm_retry_count + 1)
         last_error_code = "llm_unavailable"
         last_error_message = "llm provider is unavailable"
+
         for _ in range(max_attempts):
             attempts += 1
             try:
-                generated_text = client.generate_reply(
-                    prompt=prompt,
-                    timeout_seconds=settings.chat_llm_timeout_seconds,
+                generated_text = await AIEngineAdapter.generate_guidance(
+                    use_case=use_case,
+                    context=context,
+                    user_id=user_id,
+                    request_id=request_id,
+                    trace_id=trace_id,
                 )
                 (
                     recovered_text,
                     fallback_used,
                     recovery_metadata,
-                ) = GuidanceService._apply_off_scope_recovery(
-                    client=client,
-                    prompt=prompt,
+                ) = await GuidanceService._apply_off_scope_recovery_async(
+                    use_case=use_case,
+                    context=context,
+                    user_id=user_id,
+                    request_id=request_id,
+                    trace_id=trace_id,
                     assistant_content=generated_text,
                     persona_profile_code=persona_profile_code,
                 )
@@ -776,6 +840,29 @@ class GuidanceService:
                     context_message_count=context_message_count,
                     generated_at=datetime.now(timezone.utc),
                 )
+            except AIEngineAdapterError as err:
+                if err.code == "rate_limit_exceeded":
+                    last_error_code = "rate_limit_exceeded"
+                    last_error_message = "rate limit exceeded"
+                elif err.code == "context_too_large":
+                    last_error_code = "context_too_large"
+                    last_error_message = "context too large"
+                else:
+                    last_error_code = err.code
+                    last_error_message = err.message
+                increment_counter("conversation_llm_errors_total", 1.0)
+                increment_counter(
+                    f"conversation_llm_errors_total|persona_profile={persona_profile_code}",
+                    1.0,
+                )
+                GuidanceService.logger.warning(
+                    "guidance_generation_error request_id=%s code=%s",
+                    request_id,
+                    last_error_code,
+                )
+                await GuidanceService._sleep_before_retry_async(
+                    attempts=attempts, max_attempts=max_attempts
+                )
             except TimeoutError:
                 last_error_code = "llm_timeout"
                 last_error_message = "llm provider timeout"
@@ -789,7 +876,9 @@ class GuidanceService:
                     request_id,
                     last_error_code,
                 )
-                GuidanceService._sleep_before_retry(attempts=attempts, max_attempts=max_attempts)
+                await GuidanceService._sleep_before_retry_async(
+                    attempts=attempts, max_attempts=max_attempts
+                )
             except ConnectionError:
                 last_error_code = "llm_unavailable"
                 last_error_message = "llm provider is unavailable"
@@ -803,7 +892,9 @@ class GuidanceService:
                     request_id,
                     last_error_code,
                 )
-                GuidanceService._sleep_before_retry(attempts=attempts, max_attempts=max_attempts)
+                await GuidanceService._sleep_before_retry_async(
+                    attempts=attempts, max_attempts=max_attempts
+                )
 
         elapsed_seconds = monotonic() - start
         observe_duration("guidance_latency_seconds", elapsed_seconds)

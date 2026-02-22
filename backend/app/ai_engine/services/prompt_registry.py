@@ -45,6 +45,21 @@ USE_CASE_REGISTRY: dict[str, PromptConfig] = {
         max_tokens=1500,
         temperature=0.75,
     ),
+    "guidance_daily": PromptConfig(
+        template_name="guidance_daily_v1.jinja2",
+        max_tokens=1200,
+        temperature=0.7,
+    ),
+    "guidance_weekly": PromptConfig(
+        template_name="guidance_weekly_v1.jinja2",
+        max_tokens=1500,
+        temperature=0.7,
+    ),
+    "guidance_contextual": PromptConfig(
+        template_name="guidance_contextual_v1.jinja2",
+        max_tokens=1200,
+        temperature=0.7,
+    ),
 }
 
 

@@ -19,6 +19,10 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
+from app.services.ai_engine_adapter import (
+    reset_test_generators,
+    set_test_guidance_generator,
+)
 from app.services.auth_service import AuthService
 from app.services.guidance_service import GuidanceService, GuidanceServiceError
 from app.services.persona_config_service import PersonaConfigService, PersonaConfigUpdatePayload
@@ -26,6 +30,7 @@ from app.services.user_birth_profile_service import UserBirthProfileService
 
 
 def _cleanup_tables() -> None:
+    reset_test_generators()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
@@ -84,43 +89,73 @@ def _create_ops_user_id(email: str) -> int:
         return auth.user.id
 
 
-class RecordingClient:
+class RecordingGenerator:
+    """Generator that records all calls and returns a simple guidance response."""
+
     def __init__(self) -> None:
-        self.prompts: list[str] = []
+        self.contexts: list[dict[str, str | None]] = []
+        self.use_cases: list[str] = []
 
-    def generate_reply(self, prompt: str, timeout_seconds: int) -> str:
-        self.prompts.append(prompt)
-        return f"guidance-ok:{timeout_seconds}"
+    async def __call__(
+        self,
+        use_case: str,
+        context: dict[str, str | None],
+        user_id: int,
+        request_id: str,
+        trace_id: str,
+        locale: str,
+    ) -> str:
+        self.use_cases.append(use_case)
+        self.contexts.append(context)
+        return "guidance-ok:30"
 
 
-class TimeoutClient:
-    def generate_reply(self, prompt: str, timeout_seconds: int) -> str:
+class TimeoutGenerator:
+    """Generator that raises TimeoutError."""
+
+    async def __call__(self, *args, **kwargs) -> str:
         raise TimeoutError("timeout")
 
 
-class UnavailableClient:
-    def generate_reply(self, prompt: str, timeout_seconds: int) -> str:
+class UnavailableGenerator:
+    """Generator that raises ConnectionError."""
+
+    async def __call__(self, *args, **kwargs) -> str:
         raise ConnectionError("unavailable")
 
 
-class EchoPromptClient:
-    def generate_reply(self, prompt: str, timeout_seconds: int) -> str:
-        return f"Guidance astrologique: {prompt}"
+class EchoPromptGenerator:
+    """Generator that echoes part of the context."""
+
+    async def __call__(
+        self,
+        use_case: str,
+        context: dict[str, str | None],
+        user_id: int,
+        request_id: str,
+        trace_id: str,
+        locale: str,
+    ) -> str:
+        return f"Guidance astrologique: {use_case}"
 
 
-class OffScopeThenRecoveredClient:
+class OffScopeThenRecoveredGenerator:
+    """Generator that returns off-scope on first call, then recovers."""
+
     def __init__(self) -> None:
         self.calls = 0
 
-    def generate_reply(self, prompt: str, timeout_seconds: int) -> str:
+    async def __call__(self, *args, **kwargs) -> str:
         self.calls += 1
         if self.calls == 1:
             return "[off_scope] guidance incoherente"
         return "Guidance reformulee et pertinente"
 
 
-class AlwaysOffScopeClient:
-    def generate_reply(self, prompt: str, timeout_seconds: int) -> str:
+class AlwaysOffScopeGenerator:
+    """Generator that always returns off-scope."""
+
+    async def __call__(self, *args, **kwargs) -> str:
         return "[off_scope] guidance toujours incoherente"
 
 
@@ -128,7 +163,8 @@ def test_request_guidance_daily_success() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
-    client = RecordingClient()
+    generator = RecordingGenerator()
+    set_test_guidance_generator(generator)
 
     with SessionLocal() as db:
         conversation = ChatRepository(db).create_conversation(user_id=user_id)
@@ -141,7 +177,6 @@ def test_request_guidance_daily_success() -> None:
             db=db,
             user_id=user_id,
             period="daily",
-            llm_client=client,
         )
         db.commit()
 
@@ -153,7 +188,42 @@ def test_request_guidance_daily_success() -> None:
     assert len(response.key_points) > 0
     assert "medical" in response.disclaimer
     assert response.context_message_count >= 1
-    assert "Period: daily" in client.prompts[0]
+    assert len(generator.use_cases) == 1
+    assert generator.use_cases[0] == "guidance_daily"
+
+
+def test_request_guidance_weekly_success() -> None:
+    """Test weekly guidance generation via AIEngineAdapter."""
+    _cleanup_tables()
+    user_id = _create_user_id()
+    _seed_birth_profile(user_id)
+    generator = RecordingGenerator()
+    set_test_guidance_generator(generator)
+
+    with SessionLocal() as db:
+        conversation = ChatRepository(db).create_conversation(user_id=user_id)
+        ChatRepository(db).create_message(
+            conversation.id,
+            "user",
+            "Quels sont les themes majeurs de ma semaine ?",
+        )
+        response = GuidanceService.request_guidance(
+            db=db,
+            user_id=user_id,
+            period="weekly",
+        )
+        db.commit()
+
+    assert response.period == "weekly"
+    assert response.attempts == 1
+    assert response.fallback_used is False
+    assert response.recovery.recovery_strategy == "none"
+    assert response.recovery.recovery_applied is False
+    assert len(response.key_points) > 0
+    assert "medical" in response.disclaimer
+    assert response.context_message_count >= 1
+    assert len(generator.use_cases) == 1
+    assert generator.use_cases[0] == "guidance_weekly"
 
 
 def test_request_guidance_uses_active_persona_policy_in_prompt() -> None:
@@ -161,7 +231,8 @@ def test_request_guidance_uses_active_persona_policy_in_prompt() -> None:
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
     ops_user_id = _create_ops_user_id("guidance-ops@example.com")
-    client = RecordingClient()
+    generator = RecordingGenerator()
+    set_test_guidance_generator(generator)
 
     with SessionLocal() as db:
         PersonaConfigService.update_active(
@@ -178,13 +249,15 @@ def test_request_guidance_uses_active_persona_policy_in_prompt() -> None:
             db=db,
             user_id=user_id,
             period="daily",
-            llm_client=client,
         )
         db.commit()
 
-    assert (
-        "Persona policy: profile=legacy-default; tone=direct; prudence=high;" in client.prompts[0]
-    )
+    assert len(generator.contexts) == 1
+    assert "persona_line" in generator.contexts[0]
+    persona_line = generator.contexts[0].get("persona_line", "")
+    assert "profile=legacy-default" in persona_line
+    assert "tone=direct" in persona_line
+    assert "prudence=high" in persona_line
 
 
 def test_request_guidance_invalid_period() -> None:
@@ -212,24 +285,24 @@ def test_request_guidance_timeout_and_unavailable_are_retryable() -> None:
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
 
+    set_test_guidance_generator(TimeoutGenerator())
     with SessionLocal() as db:
         with pytest.raises(GuidanceServiceError) as timeout_error:
             GuidanceService.request_guidance(
                 db=db,
                 user_id=user_id,
                 period="daily",
-                llm_client=TimeoutClient(),
             )
     assert timeout_error.value.code == "llm_timeout"
     assert timeout_error.value.details["retryable"] == "true"
 
+    set_test_guidance_generator(UnavailableGenerator())
     with SessionLocal() as db:
         with pytest.raises(GuidanceServiceError) as unavailable_error:
             GuidanceService.request_guidance(
                 db=db,
                 user_id=user_id,
                 period="weekly",
-                llm_client=UnavailableClient(),
             )
     assert unavailable_error.value.code == "llm_unavailable"
     assert unavailable_error.value.details["retryable"] == "true"
@@ -242,12 +315,16 @@ def test_request_guidance_applies_retry_backoff_when_configured(
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
     delays: list[float] = []
+    set_test_guidance_generator(TimeoutGenerator())
+
+    async def fake_sleep(delay: float) -> None:
+        delays.append(delay)
 
     monkeypatch.setattr(settings, "chat_llm_retry_count", 1)
     monkeypatch.setattr(settings, "chat_llm_retry_backoff_seconds", 0.01)
     monkeypatch.setattr(settings, "chat_llm_retry_backoff_max_seconds", 0.01)
     monkeypatch.setattr(settings, "chat_llm_retry_jitter_seconds", 0.0)
-    monkeypatch.setattr("app.services.guidance_service.sleep", lambda delay: delays.append(delay))
+    monkeypatch.setattr("asyncio.sleep", fake_sleep)
 
     with SessionLocal() as db:
         with pytest.raises(GuidanceServiceError) as timeout_error:
@@ -255,7 +332,6 @@ def test_request_guidance_applies_retry_backoff_when_configured(
                 db=db,
                 user_id=user_id,
                 period="daily",
-                llm_client=TimeoutClient(),
             )
 
     assert timeout_error.value.code == "llm_timeout"
@@ -267,6 +343,7 @@ def test_request_guidance_never_leaks_internal_prompt_in_summary() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
+    set_test_guidance_generator(EchoPromptGenerator())
 
     with SessionLocal() as db:
         conversation = ChatRepository(db).create_conversation(user_id=user_id)
@@ -275,7 +352,6 @@ def test_request_guidance_never_leaks_internal_prompt_in_summary() -> None:
             db=db,
             user_id=user_id,
             period="daily",
-            llm_client=EchoPromptClient(),
         )
         db.commit()
 
@@ -287,6 +363,7 @@ def test_request_guidance_rejects_unknown_or_foreign_conversation_id() -> None:
     _cleanup_tables()
     owner_user_id = _create_user_id()
     _seed_birth_profile(owner_user_id)
+    set_test_guidance_generator(RecordingGenerator())
     with SessionLocal() as db:
         foreign_user = AuthService.register(
             db,
@@ -310,7 +387,6 @@ def test_request_guidance_rejects_unknown_or_foreign_conversation_id() -> None:
                 user_id=owner_user_id,
                 period="daily",
                 conversation_id=999999,
-                llm_client=RecordingClient(),
             )
     assert missing_error.value.code == "conversation_not_found"
 
@@ -321,7 +397,6 @@ def test_request_guidance_rejects_unknown_or_foreign_conversation_id() -> None:
                 user_id=foreign_user_id,
                 period="daily",
                 conversation_id=owner_conversation_id,
-                llm_client=RecordingClient(),
             )
     assert forbidden_error.value.code == "conversation_forbidden"
 
@@ -330,7 +405,8 @@ def test_request_contextual_guidance_success() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
-    client = RecordingClient()
+    generator = RecordingGenerator()
+    set_test_guidance_generator(generator)
 
     with SessionLocal() as db:
         conversation = ChatRepository(db).create_conversation(user_id=user_id)
@@ -342,7 +418,6 @@ def test_request_contextual_guidance_success() -> None:
             objective="Prendre une decision sereine.",
             time_horizon="48h",
             conversation_id=conversation.id,
-            llm_client=client,
         )
         db.commit()
 
@@ -353,20 +428,21 @@ def test_request_contextual_guidance_success() -> None:
     assert response.recovery.recovery_strategy == "none"
     assert response.recovery.recovery_applied is False
     assert response.context_message_count >= 1
-    assert "Situation:" in client.prompts[0]
+    assert len(generator.use_cases) == 1
+    assert generator.use_cases[0] == "guidance_contextual"
 
 
 def test_request_guidance_applies_recovery_when_off_scope_detected() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
+    set_test_guidance_generator(OffScopeThenRecoveredGenerator())
 
     with SessionLocal() as db:
         response = GuidanceService.request_guidance(
             db=db,
             user_id=user_id,
             period="daily",
-            llm_client=OffScopeThenRecoveredClient(),
         )
         db.commit()
 
@@ -380,6 +456,7 @@ def test_request_contextual_guidance_uses_safe_fallback_when_recovery_fails() ->
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
+    set_test_guidance_generator(AlwaysOffScopeGenerator())
 
     with SessionLocal() as db:
         response = GuidanceService.request_contextual_guidance(
@@ -387,7 +464,6 @@ def test_request_contextual_guidance_uses_safe_fallback_when_recovery_fails() ->
             user_id=user_id,
             situation="Situation",
             objective="Objectif",
-            llm_client=AlwaysOffScopeClient(),
         )
         db.commit()
 
@@ -401,6 +477,7 @@ def test_request_contextual_guidance_normalizes_blank_time_horizon_to_none() -> 
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
+    set_test_guidance_generator(RecordingGenerator())
 
     with SessionLocal() as db:
         response = GuidanceService.request_contextual_guidance(
@@ -409,7 +486,6 @@ def test_request_contextual_guidance_normalizes_blank_time_horizon_to_none() -> 
             situation="Situation",
             objective="Objectif",
             time_horizon="   ",
-            llm_client=RecordingClient(),
         )
         db.commit()
 
@@ -420,6 +496,7 @@ def test_request_contextual_guidance_never_leaks_internal_prompt_in_summary() ->
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
+    set_test_guidance_generator(EchoPromptGenerator())
 
     with SessionLocal() as db:
         conversation = ChatRepository(db).create_conversation(user_id=user_id)
@@ -429,7 +506,6 @@ def test_request_contextual_guidance_never_leaks_internal_prompt_in_summary() ->
             user_id=user_id,
             situation="Situation sensible",
             objective="Objectif sensible",
-            llm_client=EchoPromptClient(),
         )
         db.commit()
 
@@ -442,6 +518,7 @@ def test_request_contextual_guidance_invalid_context_rejected() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
+    set_test_guidance_generator(RecordingGenerator())
 
     with SessionLocal() as db:
         with pytest.raises(GuidanceServiceError) as error:
@@ -450,7 +527,6 @@ def test_request_contextual_guidance_invalid_context_rejected() -> None:
                 user_id=user_id,
                 situation="   ",
                 objective="   ",
-                llm_client=RecordingClient(),
             )
     assert error.value.code == "invalid_guidance_context"
 
@@ -458,6 +534,7 @@ def test_request_contextual_guidance_invalid_context_rejected() -> None:
 def test_request_contextual_guidance_missing_birth_profile() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
+    set_test_guidance_generator(RecordingGenerator())
 
     with SessionLocal() as db:
         with pytest.raises(GuidanceServiceError) as error:
@@ -466,7 +543,6 @@ def test_request_contextual_guidance_missing_birth_profile() -> None:
                 user_id=user_id,
                 situation="Situation",
                 objective="Objectif",
-                llm_client=RecordingClient(),
             )
     assert error.value.code == "missing_birth_profile"
 
@@ -475,6 +551,7 @@ def test_request_contextual_guidance_rejects_unknown_or_foreign_conversation_id(
     _cleanup_tables()
     owner_user_id = _create_user_id()
     _seed_birth_profile(owner_user_id)
+    set_test_guidance_generator(RecordingGenerator())
     with SessionLocal() as db:
         foreign_user = AuthService.register(
             db,
@@ -499,7 +576,6 @@ def test_request_contextual_guidance_rejects_unknown_or_foreign_conversation_id(
                 situation="Situation",
                 objective="Objectif",
                 conversation_id=999999,
-                llm_client=RecordingClient(),
             )
     assert missing_error.value.code == "conversation_not_found"
 
@@ -511,6 +587,5 @@ def test_request_contextual_guidance_rejects_unknown_or_foreign_conversation_id(
                 situation="Situation",
                 objective="Objectif",
                 conversation_id=owner_conversation_id,
-                llm_client=RecordingClient(),
             )
     assert forbidden_error.value.code == "conversation_forbidden"

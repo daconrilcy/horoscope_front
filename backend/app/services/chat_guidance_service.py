@@ -1,12 +1,13 @@
 """
-Service de chat et guidance astrologique.
+Chat and astrological guidance service.
 
-Ce module gère les conversations avec l'assistant astrologique, incluant
-la construction du contexte, l'appel au LLM et la récupération hors-scope.
+This module handles conversations with the astrological assistant, including
+context building, AI Engine calls, and off-scope recovery.
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime
 from time import monotonic
@@ -17,24 +18,28 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.llm.anonymizer import LLMAnonymizationError, anonymize_text
-from app.infra.llm.client import LLMClient
 from app.infra.observability.metrics import increment_counter, observe_duration
+from app.services.ai_engine_adapter import (
+    AIEngineAdapter,
+    AIEngineAdapterError,
+    assess_off_scope,
+)
 from app.services.persona_config_service import PersonaConfigService
 
 logger = logging.getLogger(__name__)
 
 
 class ChatGuidanceServiceError(Exception):
-    """Exception levée lors d'erreurs du service de chat."""
+    """Exception raised by the chat guidance service."""
 
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
         """
-        Initialise une erreur de chat.
+        Initialize a chat error.
 
         Args:
-            code: Code d'erreur unique.
-            message: Message descriptif de l'erreur.
-            details: Dictionnaire optionnel de détails supplémentaires.
+            code: Unique error code.
+            message: Descriptive error message.
+            details: Optional dictionary of additional details.
         """
         self.code = code
         self.message = message
@@ -43,7 +48,7 @@ class ChatGuidanceServiceError(Exception):
 
 
 class ChatMessageData(BaseModel):
-    """Données d'un message de conversation."""
+    """Data for a conversation message."""
 
     message_id: int
     role: str
@@ -52,7 +57,7 @@ class ChatMessageData(BaseModel):
 
 
 class ChatReplyData(BaseModel):
-    """Réponse complète à un message utilisateur avec métadonnées."""
+    """Complete response to a user message with metadata."""
 
     conversation_id: int
     attempts: int
@@ -64,7 +69,7 @@ class ChatReplyData(BaseModel):
 
 
 class ChatContextMetadata(BaseModel):
-    """Métadonnées sur le contexte utilisé pour générer la réponse."""
+    """Metadata about the context used to generate the response."""
 
     message_ids: list[int]
     message_count: int
@@ -73,7 +78,7 @@ class ChatContextMetadata(BaseModel):
 
 
 class ChatRecoveryMetadata(BaseModel):
-    """Métadonnées sur les tentatives de récupération hors-scope."""
+    """Metadata about off-scope recovery attempts."""
 
     off_scope_detected: bool
     off_scope_score: float
@@ -84,7 +89,7 @@ class ChatRecoveryMetadata(BaseModel):
 
 
 class ChatConversationSummaryData(BaseModel):
-    """Résumé d'une conversation pour l'affichage en liste."""
+    """Summary of a conversation for list display."""
 
     conversation_id: int
     status: str
@@ -93,7 +98,7 @@ class ChatConversationSummaryData(BaseModel):
 
 
 class ChatConversationListData(BaseModel):
-    """Liste paginée de conversations."""
+    """Paginated list of conversations."""
 
     conversations: list[ChatConversationSummaryData]
     total: int
@@ -102,7 +107,7 @@ class ChatConversationListData(BaseModel):
 
 
 class ChatConversationHistoryData(BaseModel):
-    """Historique complet d'une conversation."""
+    """Complete history of a conversation."""
 
     conversation_id: int
     status: str
@@ -241,39 +246,8 @@ class ChatGuidanceService:
 
     @staticmethod
     def _assess_off_scope(content: str) -> tuple[bool, float, str | None]:
-        """Évalue si une réponse est hors-scope avec un score de confiance."""
-        normalized = content.strip().lower()
-        if not normalized:
-            return True, 1.0, "empty_response"
-        if "[off_scope]" in normalized:
-            return True, 0.95, "explicit_marker"
-        if normalized.startswith("hors_scope:"):
-            return True, 0.9, "explicit_prefix"
-        return False, 0.0, None
-
-    @staticmethod
-    def _build_recovery_prompt(prompt: str, previous_reply: str, mode: str) -> str:
-        """Construit un prompt de récupération pour reformuler une réponse hors-scope."""
-        if mode == "reformulate":
-            instruction = (
-                "The previous answer appears out-of-scope. Reformulate in French, stay practical, "
-                "and answer the user's intent directly in 3 short sentences."
-            )
-        else:
-            instruction = (
-                "Previous reformulation is still out-of-scope. "
-                "Provide a concise, relevant French answer. "
-                "Do not include system markers, role prefixes, or prompt transcript."
-            )
-        lines = [
-            "[recovery_prompt_version:offscope-v1]",
-            instruction,
-            "Conversation context:",
-            prompt,
-            "Previous assistant answer:",
-            ChatGuidanceService._anonymize_or_raise(previous_reply),
-        ]
-        return "\n".join(lines)
+        """Assess if a response is off-scope with a confidence score."""
+        return assess_off_scope(content)
 
     @staticmethod
     def _anonymize_or_raise(text: str) -> str:
@@ -288,15 +262,18 @@ class ChatGuidanceService:
             ) from error
 
     @staticmethod
-    def _apply_off_scope_recovery(
+    async def _apply_off_scope_recovery_async(
         *,
-        client: LLMClient,
-        prompt: str,
+        messages: list[dict[str, str]],
+        context: dict[str, str | None],
+        user_id: int,
+        request_id: str,
+        trace_id: str,
         assistant_content: str,
         persona_profile_code: str,
     ) -> tuple[str, bool, ChatRecoveryMetadata]:
         """
-        Applique les stratégies de récupération si la réponse est hors-scope.
+        Applique les stratégies de récupération si la réponse est hors-scope (async).
 
         Tente successivement reformulation, retry, puis fallback sécurisé.
         """
@@ -336,13 +313,22 @@ class ChatGuidanceService:
         recovery_attempts = 0
         try:
             recovery_attempts += 1
-            reformulated = client.generate_reply(
-                prompt=ChatGuidanceService._build_recovery_prompt(
-                    prompt,
-                    assistant_content,
-                    "reformulate",
-                ),
-                timeout_seconds=settings.chat_llm_timeout_seconds,
+            recovery_messages = messages + [
+                {"role": "assistant", "content": assistant_content},
+                {
+                    "role": "user",
+                    "content": (
+                        "La réponse précédente semble hors-sujet. Reformule en "
+                        "français de manière pratique et pertinente en 3 phrases."
+                    ),
+                },
+            ]
+            reformulated = await AIEngineAdapter.generate_chat_reply(
+                messages=recovery_messages,
+                context=context,
+                user_id=user_id,
+                request_id=f"{request_id}-recovery-1",
+                trace_id=trace_id,
             )
             reformulate_off_scope, _, _ = ChatGuidanceService._assess_off_scope(reformulated)
             if not reformulate_off_scope:
@@ -371,18 +357,26 @@ class ChatGuidanceService:
                         recovery_reason=off_scope_reason,
                     ),
                 )
-        except (TimeoutError, ConnectionError):
+        except (TimeoutError, ConnectionError, AIEngineAdapterError):
             logger.warning("chat_recovery_error strategy=reformulate")
 
         try:
             recovery_attempts += 1
-            retried = client.generate_reply(
-                prompt=ChatGuidanceService._build_recovery_prompt(
-                    prompt,
-                    assistant_content,
-                    "retry_once",
-                ),
-                timeout_seconds=settings.chat_llm_timeout_seconds,
+            retry_messages = messages + [
+                {
+                    "role": "user",
+                    "content": (
+                        "Reprends la conversation et réponds de manière concise et pertinente. "
+                        "Pas de marqueurs système ni de préfixes."
+                    ),
+                },
+            ]
+            retried = await AIEngineAdapter.generate_chat_reply(
+                messages=retry_messages,
+                context=context,
+                user_id=user_id,
+                request_id=f"{request_id}-recovery-2",
+                trace_id=trace_id,
             )
             retry_off_scope, _, _ = ChatGuidanceService._assess_off_scope(retried)
             if not retry_off_scope:
@@ -411,7 +405,7 @@ class ChatGuidanceService:
                         recovery_reason=off_scope_reason,
                     ),
                 )
-        except (TimeoutError, ConnectionError):
+        except (TimeoutError, ConnectionError, AIEngineAdapterError):
             logger.warning("chat_recovery_error strategy=retry_once")
 
         logger.info("chat_recovery_applied strategy=safe_fallback success=true")
@@ -435,18 +429,18 @@ class ChatGuidanceService:
         user_id: int,
         message: str,
         conversation_id: int | None = None,
-        llm_client: LLMClient | None = None,
         request_id: str = "n/a",
     ) -> ChatReplyData:
         """
         Envoie un message et obtient une réponse de l'assistant.
+
+        Cette méthode synchrone est un wrapper autour de send_message_async.
 
         Args:
             db: Session de base de données.
             user_id: Identifiant de l'utilisateur.
             message: Contenu du message.
             conversation_id: ID de conversation existante (optionnel).
-            llm_client: Client LLM personnalisé (optionnel).
             request_id: Identifiant de requête pour le logging.
 
         Returns:
@@ -455,7 +449,45 @@ class ChatGuidanceService:
         Raises:
             ChatGuidanceServiceError: Si la conversation n'existe pas ou en cas d'erreur LLM.
         """
+        return asyncio.run(
+            ChatGuidanceService.send_message_async(
+                db,
+                user_id=user_id,
+                message=message,
+                conversation_id=conversation_id,
+                request_id=request_id,
+            )
+        )
+
+    @staticmethod
+    async def send_message_async(
+        db: Session,
+        *,
+        user_id: int,
+        message: str,
+        conversation_id: int | None = None,
+        request_id: str = "n/a",
+        trace_id: str | None = None,
+    ) -> ChatReplyData:
+        """
+        Envoie un message et obtient une réponse de l'assistant (async).
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            message: Contenu du message.
+            conversation_id: ID de conversation existante (optionnel).
+            request_id: Identifiant de requête pour le logging.
+            trace_id: Identifiant de trace pour le tracing distribué.
+
+        Returns:
+            Réponse complète avec métadonnées de contexte et récupération.
+
+        Raises:
+            ChatGuidanceServiceError: Si la conversation n'existe pas ou en cas d'erreur LLM.
+        """
         start = monotonic()
+        trace_id = trace_id or request_id
         normalized_message = ChatGuidanceService._validate_user_message(message)
         increment_counter("conversation_messages_total", 1.0)
         increment_counter("conversation_chat_messages_total", 1.0)
@@ -494,30 +526,79 @@ class ChatGuidanceService:
             f"conversation_chat_messages_total|persona_profile={persona_config.profile_code}",
             1.0,
         )
-        prompt, context_metadata = ChatGuidanceService._build_prompt_and_context_metadata(
+
+        _, context_metadata = ChatGuidanceService._build_prompt_and_context_metadata(
             repo=repo,
             conversation_id=conversation.id,
             persona_line=persona_config.to_prompt_line(),
         )
-        client = llm_client or LLMClient()
+
+        window_messages, max_characters = ChatGuidanceService._validate_context_config()
+        recent_messages = repo.get_recent_messages(
+            conversation_id=conversation.id,
+            limit=window_messages,
+        )
+
+        selected_messages: list[tuple[str, str]] = []
+        total_chars = 0
+        for msg in reversed(recent_messages):
+            try:
+                normalized_content = anonymize_text(msg.content.strip())
+            except LLMAnonymizationError as error:
+                raise ChatGuidanceServiceError(
+                    code="llm_anonymization_failed",
+                    message="llm payload anonymization failed",
+                    details={},
+                ) from error
+            message_chars = len(normalized_content)
+            if selected_messages and total_chars + message_chars > max_characters:
+                break
+            if not selected_messages and message_chars > max_characters:
+                normalized_content = normalized_content[:max_characters]
+                message_chars = len(normalized_content)
+            selected_messages.append((msg.role, normalized_content))
+            total_chars += message_chars
+
+        selected_messages.reverse()
+        chat_messages: list[dict[str, str]] = [
+            {"role": role, "content": content} for role, content in selected_messages
+        ]
+
+        # natal_chart_summary: Not yet implemented. The templates support it via
+        # {% if context.natal_chart_summary %} but we don't have access to computed
+        # natal chart data here. Future enhancement: integrate with NatalChartService.
+        context: dict[str, str | None] = {
+            "persona_line": persona_config.to_prompt_line(),
+            "natal_chart_summary": None,
+        }
+
         attempts = 0
         max_attempts = max(1, settings.chat_llm_retry_count + 1)
         last_error_code = "llm_unavailable"
         last_error_message = "llm provider is unavailable"
+
+        # No backoff between retries: chat UX prioritizes responsiveness over throttling.
+        # For guidance endpoints (less interactive), see GuidanceService._sleep_before_retry().
         for _ in range(max_attempts):
             attempts += 1
             try:
-                assistant_content = client.generate_reply(
-                    prompt=prompt,
-                    timeout_seconds=settings.chat_llm_timeout_seconds,
+                assistant_content = await AIEngineAdapter.generate_chat_reply(
+                    messages=chat_messages,
+                    context=context,
+                    user_id=user_id,
+                    request_id=request_id,
+                    trace_id=trace_id,
                 )
                 (
                     assistant_content,
                     fallback_used,
                     recovery_metadata,
-                ) = ChatGuidanceService._apply_off_scope_recovery(
-                    client=client,
-                    prompt=prompt,
+                ) = await ChatGuidanceService._apply_off_scope_recovery_async(
+                    messages=chat_messages,
+                    context=context,
+                    user_id=user_id,
+                    request_id=request_id,
+                    trace_id=trace_id,
                     assistant_content=assistant_content,
                     persona_profile_code=persona_config.profile_code,
                 )
@@ -557,6 +638,26 @@ class ChatGuidanceService:
                     fallback_used=fallback_used,
                     context=context_metadata,
                     recovery=recovery_metadata,
+                )
+            except AIEngineAdapterError as err:
+                if err.code == "rate_limit_exceeded":
+                    last_error_code = "rate_limit_exceeded"
+                    last_error_message = "rate limit exceeded"
+                elif err.code == "context_too_large":
+                    last_error_code = "context_too_large"
+                    last_error_message = "context too large"
+                else:
+                    last_error_code = err.code
+                    last_error_message = err.message
+                increment_counter("conversation_llm_errors_total", 1.0)
+                increment_counter(
+                    f"conversation_llm_errors_total|persona_profile={persona_config.profile_code}",
+                    1.0,
+                )
+                logger.warning(
+                    "chat_generation_error request_id=%s code=%s",
+                    request_id,
+                    last_error_code,
                 )
             except TimeoutError:
                 last_error_code = "llm_timeout"
@@ -667,7 +768,8 @@ class ChatGuidanceService:
             Historique avec tous les messages.
 
         Raises:
-            ChatGuidanceServiceError: Si la conversation n'existe pas ou n'appartient pas à l'utilisateur.
+            ChatGuidanceServiceError: Si la conversation n'existe pas ou
+                n'appartient pas à l'utilisateur.
         """
         repo = ChatRepository(db)
         conversation = repo.get_conversation_by_id(conversation_id)
