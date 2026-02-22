@@ -3,27 +3,21 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, AsyncIterator
 
 if TYPE_CHECKING:
     from app.ai_engine.schemas import ChatMessage
 
 
+@dataclass
 class ProviderResult:
     """Result from a provider call."""
 
-    def __init__(
-        self,
-        text: str,
-        *,
-        input_tokens: int = 0,
-        output_tokens: int = 0,
-        model: str = "",
-    ) -> None:
-        self.text = text
-        self.input_tokens = input_tokens
-        self.output_tokens = output_tokens
-        self.model = model
+    text: str
+    input_tokens: int = field(default=0)
+    output_tokens: int = field(default=0)
+    model: str = field(default="")
 
     @property
     def total_tokens(self) -> int:
