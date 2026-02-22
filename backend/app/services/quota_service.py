@@ -1,3 +1,10 @@
+"""
+Service de gestion des quotas utilisateur.
+
+Ce module gère les quotas de messages journaliers des utilisateurs
+en fonction de leur plan d'abonnement.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -18,7 +25,17 @@ logger = logging.getLogger(__name__)
 
 
 class QuotaServiceError(Exception):
+    """Exception levée lors d'erreurs de gestion de quota."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de quota.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -26,6 +43,8 @@ class QuotaServiceError(Exception):
 
 
 class QuotaStatusData(BaseModel):
+    """État du quota journalier d'un utilisateur."""
+
     quota_date: date
     limit: int
     consumed: int
@@ -36,23 +55,34 @@ class QuotaStatusData(BaseModel):
 
 @dataclass(frozen=True)
 class _ActiveSubscriptionQuota:
+    """Quota dérivé de l'abonnement actif."""
+
     plan_code: str
     daily_limit: int
 
 
 class QuotaService:
+    """
+    Service de gestion des quotas de messages.
+
+    Suit la consommation journalière des utilisateurs et applique les
+    limites définies par leur plan d'abonnement.
+    """
     @staticmethod
     def _utc_today() -> date:
+        """Retourne la date du jour en UTC."""
         return datetime.now(UTC).date()
 
     @staticmethod
     def _next_reset_at(quota_date: date) -> datetime:
+        """Calcule l'instant de réinitialisation du quota."""
         return datetime.combine(quota_date + timedelta(days=1), time.min, tzinfo=UTC)
 
     @staticmethod
     def _resolve_active_quota_from_subscription(
         *, user_id: int, subscription: SubscriptionStatusData
     ) -> _ActiveSubscriptionQuota:
+        """Résout le quota depuis un abonnement donné."""
         if subscription.status != "active" or subscription.plan is None:
             raise QuotaServiceError(
                 code="no_active_subscription",
@@ -76,6 +106,7 @@ class QuotaService:
 
     @staticmethod
     def _resolve_active_quota(db: Session, *, user_id: int) -> _ActiveSubscriptionQuota:
+        """Résout le quota depuis l'abonnement actif de l'utilisateur."""
         subscription = BillingService.get_subscription_status(db, user_id=user_id)
         return QuotaService._resolve_active_quota_from_subscription(
             user_id=user_id, subscription=subscription
@@ -88,6 +119,7 @@ class QuotaService:
         user_id: int,
         quota_date: date,
     ) -> UserDailyQuotaUsageModel:
+        """Trouve ou crée l'enregistrement d'usage journalier avec verrou."""
         query = (
             select(UserDailyQuotaUsageModel)
             .where(
@@ -122,6 +154,7 @@ class QuotaService:
         user_id: int,
         quota_date: date,
     ) -> UserDailyQuotaUsageModel | None:
+        """Récupère l'enregistrement d'usage journalier s'il existe."""
         return db.scalar(
             select(UserDailyQuotaUsageModel)
             .where(
@@ -138,6 +171,17 @@ class QuotaService:
         user_id: int,
         subscription: SubscriptionStatusData | None = None,
     ) -> QuotaStatusData:
+        """
+        Récupère l'état actuel du quota d'un utilisateur.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            subscription: Abonnement pré-chargé (optionnel).
+
+        Returns:
+            État du quota avec consommation et limite.
+        """
         start = monotonic()
         if subscription is None:
             active_quota = QuotaService._resolve_active_quota(db, user_id=user_id)
@@ -167,6 +211,20 @@ class QuotaService:
         user_id: int,
         request_id: str,
     ) -> QuotaStatusData:
+        """
+        Consomme une unité de quota ou lève une exception si limite atteinte.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            request_id: Identifiant de requête pour le logging.
+
+        Returns:
+            État du quota après consommation.
+
+        Raises:
+            QuotaServiceError: Si le quota est épuisé.
+        """
         start = monotonic()
         active_quota = QuotaService._resolve_active_quota(db, user_id=user_id)
         quota_date = QuotaService._utc_today()

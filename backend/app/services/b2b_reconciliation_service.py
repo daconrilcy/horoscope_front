@@ -1,3 +1,10 @@
+"""
+Service de réconciliation B2B.
+
+Ce module gère la réconciliation entre les données d'usage et de facturation
+des comptes entreprise, détectant et permettant de résoudre les écarts.
+"""
+
 from __future__ import annotations
 
 from datetime import date, timedelta
@@ -15,7 +22,17 @@ from app.services.b2b_billing_service import B2BBillingService
 
 
 class B2BReconciliationServiceError(Exception):
+    """Exception levée lors d'erreurs de réconciliation B2B."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de réconciliation.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -23,18 +40,24 @@ class B2BReconciliationServiceError(Exception):
 
 
 class ReconciliationSeverity(StrEnum):
+    """Niveaux de gravité des écarts de réconciliation."""
+
     NONE = "none"
     MINOR = "minor"
     MAJOR = "major"
 
 
 class ReconciliationStatus(StrEnum):
+    """Statuts possibles d'un problème de réconciliation."""
+
     OPEN = "open"
     INVESTIGATING = "investigating"
     RESOLVED = "resolved"
 
 
 class ReconciliationActionCode(StrEnum):
+    """Actions disponibles pour résoudre un problème de réconciliation."""
+
     RECALCULATE = "recalculate"
     RESYNC = "resync"
     MARK_INVESTIGATED = "mark_investigated"
@@ -42,12 +65,16 @@ class ReconciliationActionCode(StrEnum):
 
 
 class ReconciliationActionHint(BaseModel):
+    """Suggestion d'action de réconciliation avec description."""
+
     code: ReconciliationActionCode
     label: str
     description: str
 
 
 class ReconciliationLastAction(BaseModel):
+    """Dernière action effectuée sur un problème de réconciliation."""
+
     action: ReconciliationActionCode
     at: str
     actor_user_id: int | None
@@ -55,6 +82,8 @@ class ReconciliationLastAction(BaseModel):
 
 
 class ReconciliationIssueData(BaseModel):
+    """Données d'un problème de réconciliation détecté."""
+
     issue_id: str
     account_id: int
     period_start: date
@@ -74,6 +103,8 @@ class ReconciliationIssueData(BaseModel):
 
 
 class ReconciliationIssueListData(BaseModel):
+    """Liste paginée de problèmes de réconciliation."""
+
     items: list[ReconciliationIssueData]
     total: int
     limit: int
@@ -81,11 +112,15 @@ class ReconciliationIssueListData(BaseModel):
 
 
 class ReconciliationIssueDetailData(BaseModel):
+    """Détails complets d'un problème avec historique des actions."""
+
     issue: ReconciliationIssueData
     action_log: list[ReconciliationLastAction]
 
 
 class ReconciliationActionResultData(BaseModel):
+    """Résultat de l'exécution d'une action de réconciliation."""
+
     issue_id: str
     action: ReconciliationActionCode
     status: str
@@ -94,11 +129,20 @@ class ReconciliationActionResultData(BaseModel):
 
 
 class ReconciliationActionPayload(BaseModel):
+    """Payload pour exécuter une action de réconciliation."""
+
     action: ReconciliationActionCode
     note: str | None = None
 
 
 class B2BReconciliationService:
+    """
+    Service de réconciliation usage/facturation B2B.
+
+    Détecte les écarts entre les données d'usage mesurées et les montants
+    facturés, et fournit des outils pour investiguer et corriger ces écarts.
+    """
+
     _TARGET_TYPE = "enterprise_billing_reconciliation"
     _ACTION_HINTS = [
         ReconciliationActionHint(
@@ -125,6 +169,7 @@ class B2BReconciliationService:
 
     @staticmethod
     def _month_bounds(day: date) -> tuple[date, date]:
+        """Calcule les bornes du mois contenant la date donnée."""
         month_start = day.replace(day=1)
         next_month = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
         month_end = next_month - timedelta(days=1)
@@ -134,6 +179,7 @@ class B2BReconciliationService:
     def _normalize_period_bounds(
         period_start: date | None, period_end: date | None
     ) -> tuple[date | None, date | None]:
+        """Normalise les bornes de période aux limites de mois."""
         normalized_start: date | None = None
         normalized_end: date | None = None
         if period_start is not None:
@@ -144,10 +190,23 @@ class B2BReconciliationService:
 
     @staticmethod
     def _issue_id(*, account_id: int, period_start: date, period_end: date) -> str:
+        """Génère un identifiant unique pour un problème de réconciliation."""
         return f"{account_id}:{period_start.isoformat()}:{period_end.isoformat()}"
 
     @staticmethod
     def parse_issue_id(issue_id: str) -> tuple[int, date, date]:
+        """
+        Parse un identifiant de problème de réconciliation.
+
+        Args:
+            issue_id: Identifiant au format "account_id:start:end".
+
+        Returns:
+            Tuple (account_id, period_start, period_end).
+
+        Raises:
+            B2BReconciliationServiceError: Si le format est invalide.
+        """
         parts = issue_id.split(":")
         if len(parts) != 3:
             raise B2BReconciliationServiceError(
@@ -183,6 +242,7 @@ class B2BReconciliationService:
     def _severity(
         usage_units: int, billed_units: int, cycle_exists: bool
     ) -> ReconciliationSeverity:
+        """Détermine la gravité d'un écart entre usage et facturation."""
         delta = abs(usage_units - billed_units)
         if delta == 0:
             return ReconciliationSeverity.NONE
@@ -194,6 +254,7 @@ class B2BReconciliationService:
 
     @staticmethod
     def _mismatch_type(usage_units: int, billed_units: int, cycle_exists: bool) -> str:
+        """Classifie le type d'écart détecté."""
         if not cycle_exists and usage_units > 0:
             return "missing_billing_cycle"
         if cycle_exists and usage_units == 0 and billed_units > 0:
@@ -208,6 +269,7 @@ class B2BReconciliationService:
         severity: ReconciliationSeverity,
         last_action: ReconciliationLastAction | None,
     ) -> ReconciliationStatus:
+        """Détermine le statut du problème selon sa gravité et les actions."""
         if severity == ReconciliationSeverity.NONE:
             return ReconciliationStatus.RESOLVED
         if last_action is None:
@@ -229,6 +291,7 @@ class B2BReconciliationService:
         period_start: date | None,
         period_end: date | None,
     ) -> dict[tuple[int, date, date], dict[str, int]]:
+        """Agrège les données d'usage par période mensuelle."""
         query = select(
             EnterpriseDailyUsageModel.enterprise_account_id,
             EnterpriseDailyUsageModel.usage_date,
@@ -259,6 +322,7 @@ class B2BReconciliationService:
         period_start: date | None,
         period_end: date | None,
     ) -> dict[tuple[int, date, date], EnterpriseBillingCycleModel]:
+        """Récupère les cycles de facturation par période."""
         query = select(EnterpriseBillingCycleModel)
         if account_id is not None:
             query = query.where(EnterpriseBillingCycleModel.enterprise_account_id == account_id)
@@ -275,6 +339,7 @@ class B2BReconciliationService:
         *,
         issue_ids: set[str],
     ) -> dict[str, ReconciliationLastAction]:
+        """Récupère la dernière action pour chaque problème."""
         if not issue_ids:
             return {}
         rows = db.scalars(
@@ -315,6 +380,7 @@ class B2BReconciliationService:
         cycle: EnterpriseBillingCycleModel | None,
         last_action: ReconciliationLastAction | None,
     ) -> ReconciliationIssueData:
+        """Construit un objet problème de réconciliation."""
         billed_units = cycle.consumed_units if cycle is not None else 0
         severity = B2BReconciliationService._severity(
             usage_units=usage_units,
@@ -366,6 +432,24 @@ class B2BReconciliationService:
         limit: int = 20,
         offset: int = 0,
     ) -> ReconciliationIssueListData:
+        """
+        Liste les problèmes de réconciliation avec filtres optionnels.
+
+        Args:
+            db: Session de base de données.
+            account_id: Filtrer par compte (optionnel).
+            period_start: Début de période (optionnel).
+            period_end: Fin de période (optionnel).
+            severity: Filtrer par gravité (optionnel).
+            limit: Nombre maximum de résultats.
+            offset: Décalage pour la pagination.
+
+        Returns:
+            Liste paginée des problèmes détectés.
+
+        Raises:
+            B2BReconciliationServiceError: Si la pagination est invalide.
+        """
         if limit <= 0 or limit > 100:
             raise B2BReconciliationServiceError(
                 code="invalid_reconciliation_pagination",
@@ -441,6 +525,19 @@ class B2BReconciliationService:
 
     @staticmethod
     def get_issue_detail(db: Session, *, issue_id: str) -> ReconciliationIssueDetailData:
+        """
+        Récupère les détails d'un problème avec l'historique des actions.
+
+        Args:
+            db: Session de base de données.
+            issue_id: Identifiant du problème.
+
+        Returns:
+            Détails complets du problème.
+
+        Raises:
+            B2BReconciliationServiceError: Si le problème n'existe pas.
+        """
         account_id, period_start, period_end = B2BReconciliationService.parse_issue_id(issue_id)
         listed = B2BReconciliationService.list_issues(
             db,
@@ -491,6 +588,17 @@ class B2BReconciliationService:
         issue_id: str,
         payload: ReconciliationActionPayload,
     ) -> ReconciliationActionResultData:
+        """
+        Exécute une action de réconciliation sur un problème.
+
+        Args:
+            db: Session de base de données.
+            issue_id: Identifiant du problème.
+            payload: Action à exécuter avec note optionnelle.
+
+        Returns:
+            Résultat de l'exécution de l'action.
+        """
         account_id, period_start, period_end = B2BReconciliationService.parse_issue_id(issue_id)
         if payload.action in {
             ReconciliationActionCode.RECALCULATE,

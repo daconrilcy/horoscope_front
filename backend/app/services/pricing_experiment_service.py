@@ -1,3 +1,11 @@
+"""
+Service d'expérimentation tarifaire.
+
+Ce module gère les expérimentations A/B sur les offres tarifaires :
+assignation de variantes, enregistrement des événements (exposition,
+conversion, rétention, revenus).
+"""
+
 from __future__ import annotations
 
 import hashlib
@@ -18,7 +26,17 @@ VARIANTS: tuple[str, ...] = ("control", "value_plus")
 
 
 class PricingExperimentServiceError(Exception):
+    """Exception levée lors d'erreurs d'expérimentation tarifaire."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur d'expérimentation.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -26,6 +44,8 @@ class PricingExperimentServiceError(Exception):
 
 
 class PricingExperimentEvent(BaseModel):
+    """Événement d'expérimentation tarifaire."""
+
     event_name: Literal["offer_exposure", "offer_conversion", "offer_retention", "offer_revenue"]
     event_version: str = EVENT_VERSION
     variant_id: str
@@ -41,6 +61,7 @@ class PricingExperimentEvent(BaseModel):
 
     @model_validator(mode="after")
     def _validate_payload(self) -> "PricingExperimentEvent":
+        """Valide les champs requis selon le type d'événement."""
         if self.event_version != EVENT_VERSION:
             raise ValueError("event_version is invalid")
         if not self.variant_id.strip():
@@ -66,23 +87,34 @@ class PricingExperimentEvent(BaseModel):
 
 
 class PricingExperimentService:
+    """
+    Service d'expérimentation tarifaire A/B.
+
+    Gère l'assignation déterministe des variantes et l'enregistrement
+    des événements pour mesurer l'impact des offres.
+    """
+
     @staticmethod
     def is_enabled() -> bool:
+        """Indique si l'expérimentation est activée."""
         return settings.pricing_experiment_enabled
 
     @staticmethod
     def assign_variant(user_id: int) -> str:
+        """Assigne une variante de façon déterministe basée sur l'ID utilisateur."""
         digest = hashlib.sha256(f"{EXPERIMENT_KEY}:{user_id}".encode("utf-8")).digest()
         variant_index = digest[0] % len(VARIANTS)
         return VARIANTS[variant_index]
 
     @staticmethod
     def _segment_from_role(user_role: str) -> str:
+        """Normalise le rôle utilisateur en segment."""
         normalized = user_role.strip().lower()
         return normalized or "unknown"
 
     @staticmethod
     def _metric_name(base: str, **labels: str) -> str:
+        """Construit un nom de métrique avec labels."""
         parts = [base]
         for key in sorted(labels):
             safe_value = labels[key].replace("|", "_").replace("=", "_").replace(" ", "_")
@@ -91,6 +123,7 @@ class PricingExperimentService:
 
     @staticmethod
     def _guard_enabled() -> bool:
+        """Vérifie si l'expérimentation est activée et incrémente le compteur si désactivée."""
         if settings.pricing_experiment_enabled:
             return True
         increment_counter("pricing_experiment_events_dropped_total|reason=disabled", 1.0)
@@ -104,6 +137,7 @@ class PricingExperimentService:
         plan_code: str,
         request_id: str | None,
     ) -> PricingExperimentEvent | None:
+        """Enregistre une exposition à une offre."""
         if not PricingExperimentService._guard_enabled():
             return None
         event = PricingExperimentEvent(
@@ -135,6 +169,7 @@ class PricingExperimentService:
         conversion_status: str,
         request_id: str | None,
     ) -> PricingExperimentEvent | None:
+        """Enregistre une conversion (souscription ou achat)."""
         if not PricingExperimentService._guard_enabled():
             return None
         event = PricingExperimentEvent(
@@ -169,6 +204,7 @@ class PricingExperimentService:
         revenue_cents: int,
         request_id: str | None,
     ) -> PricingExperimentEvent | None:
+        """Enregistre un revenu généré."""
         if not PricingExperimentService._guard_enabled():
             return None
         event = PricingExperimentEvent(
@@ -200,6 +236,7 @@ class PricingExperimentService:
         retention_event: str,
         request_id: str | None,
     ) -> PricingExperimentEvent | None:
+        """Enregistre un événement de rétention (usage continu)."""
         if not PricingExperimentService._guard_enabled():
             return None
         event = PricingExperimentEvent(
@@ -225,6 +262,7 @@ class PricingExperimentService:
 
     @staticmethod
     def record_variant_state_change(*, enabled: bool, request_id: str | None = None) -> None:
+        """Enregistre un changement d'état de l'expérimentation."""
         logger.info(
             "pricing_experiment_state_changed enabled=%s request_id=%s variants=%s",
             enabled,

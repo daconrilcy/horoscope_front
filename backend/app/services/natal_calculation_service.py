@@ -1,3 +1,10 @@
+"""
+Service de calcul de thèmes natals.
+
+Ce module orchestre le calcul des thèmes natals en utilisant les données
+de référence et les règles de calcul astrologique.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -15,6 +22,13 @@ from app.services.reference_data_service import ReferenceDataService
 
 
 class NatalCalculationService:
+    """
+    Service de calcul de thèmes natals.
+
+    Coordonne le chargement des données de référence et l'exécution
+    des calculs astrologiques.
+    """
+
     @staticmethod
     def calculate(
         db: Session,
@@ -22,6 +36,21 @@ class NatalCalculationService:
         reference_version: str | None = None,
         timeout_check: Callable[[], None] | None = None,
     ) -> NatalResult:
+        """
+        Calcule un thème natal complet.
+
+        Args:
+            db: Session de base de données.
+            birth_input: Données de naissance.
+            reference_version: Version des données de référence (optionnel).
+            timeout_check: Callback de vérification de timeout (optionnel).
+
+        Returns:
+            Résultat du calcul natal.
+
+        Raises:
+            NatalCalculationError: Si la version de référence n'existe pas.
+        """
         reference_data = ReferenceDataService.get_active_reference_data(
             db,
             version=reference_version,

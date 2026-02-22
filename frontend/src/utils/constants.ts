@@ -1,0 +1,1 @@
+export const GENERATION_TIMEOUT_LABEL = "2m30"

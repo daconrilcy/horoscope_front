@@ -1,3 +1,10 @@
+"""
+Service de conformité vie privée (RGPD).
+
+Ce module gère les demandes d'export et de suppression de données
+utilisateur conformément aux obligations RGPD.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -29,7 +36,17 @@ logger = logging.getLogger(__name__)
 
 
 class PrivacyServiceError(Exception):
+    """Exception levée lors d'erreurs de traitement vie privée."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de vie privée.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -37,6 +54,8 @@ class PrivacyServiceError(Exception):
 
 
 class PrivacyRequestData(BaseModel):
+    """Données d'une demande de vie privée (export ou suppression)."""
+
     request_id: int
     request_kind: str
     status: str
@@ -47,6 +66,8 @@ class PrivacyRequestData(BaseModel):
 
 
 class PrivacyEvidenceRequestSummary(BaseModel):
+    """Résumé d'une demande pour les preuves de conformité."""
+
     request_id: int
     request_kind: str
     status: str
@@ -57,6 +78,8 @@ class PrivacyEvidenceRequestSummary(BaseModel):
 
 
 class PrivacyEvidenceAuditSummary(BaseModel):
+    """Résumé d'un événement d'audit pour les preuves de conformité."""
+
     event_id: int
     request_id: str
     action: str
@@ -68,6 +91,8 @@ class PrivacyEvidenceAuditSummary(BaseModel):
 
 
 class PrivacyComplianceEvidenceData(BaseModel):
+    """Preuves de conformité RGPD complètes pour un utilisateur."""
+
     schema_version: str
     user_id: int
     export_request: PrivacyEvidenceRequestSummary
@@ -77,10 +102,18 @@ class PrivacyComplianceEvidenceData(BaseModel):
 
 
 class PrivacyService:
+    """
+    Service de conformité vie privée RGPD.
+
+    Gère les demandes d'export et de suppression de données utilisateur
+    avec traçabilité complète pour la conformité réglementaire.
+    """
+
     @staticmethod
     def _summarize_result_data(
         request_kind: str, result_data: dict[str, object]
     ) -> dict[str, object]:
+        """Résume les données de résultat pour les preuves de conformité."""
         if request_kind == "export":
             return {
                 "contains_user_data": isinstance(result_data.get("user"), dict),
@@ -108,6 +141,7 @@ class PrivacyService:
     def _to_evidence_request_summary(
         request: UserPrivacyRequestModel,
     ) -> PrivacyEvidenceRequestSummary:
+        """Convertit une demande en résumé pour les preuves."""
         return PrivacyEvidenceRequestSummary(
             request_id=request.id,
             request_kind=request.request_kind,
@@ -122,6 +156,7 @@ class PrivacyService:
 
     @staticmethod
     def _extract_request_correlation_id(request: UserPrivacyRequestModel) -> str | None:
+        """Extrait l'identifiant de corrélation d'une demande."""
         value = request.request_data.get("request_id")
         if isinstance(value, str) and value.strip():
             return value.strip()
@@ -133,12 +168,14 @@ class PrivacyService:
         *,
         reason: str,
     ) -> None:
+        """Marque une demande comme échouée avec la raison."""
         request.status = "failed"
         request.error_reason = reason[:255]
         request.completed_at = datetime.now(timezone.utc)
 
     @staticmethod
     def _to_request_data(request: UserPrivacyRequestModel) -> PrivacyRequestData:
+        """Convertit un modèle de demande en DTO."""
         return PrivacyRequestData(
             request_id=request.id,
             request_kind=request.request_kind,
@@ -156,6 +193,7 @@ class PrivacyService:
         user_id: int,
         request_kind: str,
     ) -> UserPrivacyRequestModel | None:
+        """Récupère la dernière demande d'un type donné pour un utilisateur."""
         return db.scalar(
             select(UserPrivacyRequestModel)
             .where(
@@ -171,6 +209,7 @@ class PrivacyService:
 
     @staticmethod
     def get_latest_export_status(db: Session, *, user_id: int) -> PrivacyRequestData:
+        """Récupère le statut de la dernière demande d'export."""
         request = PrivacyService._get_latest_request(db, user_id=user_id, request_kind="export")
         if request is None:
             raise PrivacyServiceError(
@@ -182,6 +221,7 @@ class PrivacyService:
 
     @staticmethod
     def get_latest_delete_status(db: Session, *, user_id: int) -> PrivacyRequestData:
+        """Récupère le statut de la dernière demande de suppression."""
         request = PrivacyService._get_latest_request(db, user_id=user_id, request_kind="delete")
         if request is None:
             raise PrivacyServiceError(
@@ -193,6 +233,22 @@ class PrivacyService:
 
     @staticmethod
     def request_export(db: Session, *, user_id: int, request_id: str) -> PrivacyRequestData:
+        """
+        Exécute une demande d'export de données RGPD.
+
+        Opération idempotente : retourne l'export existant si déjà complété.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            request_id: Identifiant de corrélation de la requête.
+
+        Returns:
+            Données de la demande d'export.
+
+        Raises:
+            PrivacyServiceError: Si un export est déjà en cours.
+        """
         start = monotonic()
         latest = PrivacyService._get_latest_request(db, user_id=user_id, request_kind="export")
         if latest is not None and latest.status == "completed":
@@ -316,6 +372,23 @@ class PrivacyService:
 
     @staticmethod
     def request_delete(db: Session, *, user_id: int, request_id: str) -> PrivacyRequestData:
+        """
+        Exécute une demande de suppression de données RGPD.
+
+        Supprime toutes les données utilisateur et anonymise le compte.
+        Opération idempotente : retourne la suppression existante si déjà complétée.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            request_id: Identifiant de corrélation de la requête.
+
+        Returns:
+            Données de la demande de suppression.
+
+        Raises:
+            PrivacyServiceError: Si une suppression est déjà en cours.
+        """
         start = monotonic()
         latest = PrivacyService._get_latest_request(db, user_id=user_id, request_kind="delete")
         if latest is not None and latest.status == "completed":
@@ -435,6 +508,23 @@ class PrivacyService:
     def get_compliance_evidence(
         db: Session, *, user_id: int, max_audit_events: int = 50
     ) -> PrivacyComplianceEvidenceData:
+        """
+        Génère les preuves de conformité RGPD pour un utilisateur.
+
+        Agrège les demandes d'export/suppression et les événements d'audit
+        pour constituer un dossier de conformité.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            max_audit_events: Nombre maximum d'événements d'audit à inclure.
+
+        Returns:
+            Preuves de conformité complètes.
+
+        Raises:
+            PrivacyServiceError: Si les preuves sont incomplètes.
+        """
         if max_audit_events <= 0 or max_audit_events > 200:
             raise PrivacyServiceError(
                 code="privacy_request_invalid",

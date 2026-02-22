@@ -1,3 +1,10 @@
+"""
+Service de gestion des credentials API entreprise.
+
+Ce module gère la création, la rotation et l'authentification des clés API
+pour les comptes entreprise B2B.
+"""
+
 from __future__ import annotations
 
 import hmac
@@ -16,11 +23,22 @@ from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentia
 
 
 def utc_now() -> datetime:
+    """Retourne l'instant actuel en UTC."""
     return datetime.now(timezone.utc)
 
 
 class EnterpriseCredentialsServiceError(Exception):
+    """Exception levée lors d'erreurs de gestion des credentials."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de credentials.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -28,6 +46,8 @@ class EnterpriseCredentialsServiceError(Exception):
 
 
 class EnterpriseCredentialMetadataData(BaseModel):
+    """Métadonnées d'un credential API (sans le secret)."""
+
     credential_id: int
     key_prefix: str
     status: str
@@ -36,6 +56,8 @@ class EnterpriseCredentialMetadataData(BaseModel):
 
 
 class EnterpriseCredentialListData(BaseModel):
+    """Liste des credentials d'un compte entreprise."""
+
     account_id: int
     company_name: str
     status: str
@@ -44,6 +66,8 @@ class EnterpriseCredentialListData(BaseModel):
 
 
 class EnterpriseCredentialSecretData(BaseModel):
+    """Données d'un credential incluant la clé API en clair."""
+
     credential_id: int
     key_prefix: str
     api_key: str
@@ -52,6 +76,8 @@ class EnterpriseCredentialSecretData(BaseModel):
 
 
 class EnterpriseApiKeyAuthData(BaseModel):
+    """Résultat d'authentification par clé API."""
+
     account_id: int
     credential_id: int
     key_prefix: str
@@ -60,8 +86,15 @@ class EnterpriseApiKeyAuthData(BaseModel):
 
 
 class EnterpriseCredentialsService:
+    """
+    Service de gestion des credentials API B2B.
+
+    Gère la création, la rotation et l'authentification des clés API
+    avec hachage sécurisé et support de rotation des clés secrètes.
+    """
     @staticmethod
     def _hash_secret(secret: str, key: str) -> str:
+        """Calcule le hash HMAC-SHA256 d'un secret avec une clé."""
         digest = hmac.new(
             key.encode(),
             secret.encode(),
@@ -71,11 +104,13 @@ class EnterpriseCredentialsService:
 
     @staticmethod
     def _candidate_hashes(secret: str) -> set[str]:
+        """Génère les hashes candidats avec toutes les clés actives et précédentes."""
         keys = [settings.api_credentials_secret_key, *settings.api_credentials_previous_secret_keys]
         return {EnterpriseCredentialsService._hash_secret(secret, key) for key in keys}
 
     @staticmethod
     def _to_metadata(model: EnterpriseApiCredentialModel) -> EnterpriseCredentialMetadataData:
+        """Convertit un modèle de credential en DTO de métadonnées."""
         return EnterpriseCredentialMetadataData(
             credential_id=model.id,
             key_prefix=model.key_prefix,
@@ -90,6 +125,19 @@ class EnterpriseCredentialsService:
         *,
         api_key: str,
     ) -> EnterpriseApiKeyAuthData:
+        """
+        Authentifie une clé API et retourne les informations du compte.
+
+        Args:
+            db: Session de base de données.
+            api_key: Clé API brute à authentifier.
+
+        Returns:
+            Informations d'authentification du compte et credential.
+
+        Raises:
+            EnterpriseCredentialsServiceError: Si la clé est invalide ou révoquée.
+        """
         normalized = api_key.strip()
         if not normalized:
             raise EnterpriseCredentialsServiceError(
@@ -168,6 +216,7 @@ class EnterpriseCredentialsService:
         *,
         admin_user_id: int,
     ) -> EnterpriseAccountModel:
+        """Récupère le compte entreprise actif de l'administrateur."""
         account = db.scalar(
             select(EnterpriseAccountModel)
             .where(EnterpriseAccountModel.admin_user_id == admin_user_id)
@@ -193,6 +242,7 @@ class EnterpriseCredentialsService:
         *,
         account_id: int,
     ) -> EnterpriseApiCredentialModel | None:
+        """Récupère le credential actif d'un compte avec verrou."""
         return db.scalar(
             select(EnterpriseApiCredentialModel)
             .where(
@@ -213,6 +263,16 @@ class EnterpriseCredentialsService:
         *,
         admin_user_id: int,
     ) -> EnterpriseCredentialListData:
+        """
+        Liste tous les credentials d'un compte entreprise.
+
+        Args:
+            db: Session de base de données.
+            admin_user_id: Identifiant de l'administrateur du compte.
+
+        Returns:
+            Liste des credentials avec métadonnées.
+        """
         account = EnterpriseCredentialsService._get_active_enterprise_account(
             db, admin_user_id=admin_user_id
         )
@@ -239,6 +299,19 @@ class EnterpriseCredentialsService:
         *,
         admin_user_id: int,
     ) -> EnterpriseCredentialSecretData:
+        """
+        Crée un nouveau credential API pour un compte.
+
+        Args:
+            db: Session de base de données.
+            admin_user_id: Identifiant de l'administrateur.
+
+        Returns:
+            Nouveau credential avec la clé API en clair (à sauvegarder).
+
+        Raises:
+            EnterpriseCredentialsServiceError: Si un credential actif existe déjà.
+        """
         account = EnterpriseCredentialsService._get_active_enterprise_account(
             db, admin_user_id=admin_user_id
         )
@@ -285,6 +358,19 @@ class EnterpriseCredentialsService:
         *,
         admin_user_id: int,
     ) -> EnterpriseCredentialSecretData:
+        """
+        Fait la rotation du credential actif (révoque et en crée un nouveau).
+
+        Args:
+            db: Session de base de données.
+            admin_user_id: Identifiant de l'administrateur.
+
+        Returns:
+            Nouveau credential avec la clé API en clair.
+
+        Raises:
+            EnterpriseCredentialsServiceError: Si aucun credential actif n'existe.
+        """
         account = EnterpriseCredentialsService._get_active_enterprise_account(
             db, admin_user_id=admin_user_id
         )

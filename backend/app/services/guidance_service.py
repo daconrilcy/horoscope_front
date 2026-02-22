@@ -1,3 +1,10 @@
+"""
+Service de guidance astrologique.
+
+Ce module génère des guidances quotidiennes/hebdomadaires et contextuelles
+basées sur le profil natal de l'utilisateur et l'historique de conversation.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -21,7 +28,17 @@ from app.services.user_birth_profile_service import (
 
 
 class GuidanceServiceError(Exception):
+    """Exception levée lors d'erreurs de génération de guidance."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de guidance.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -29,6 +46,8 @@ class GuidanceServiceError(Exception):
 
 
 class GuidanceData(BaseModel):
+    """Données d'une guidance périodique (quotidienne ou hebdomadaire)."""
+
     period: str
     summary: str
     key_points: list[str]
@@ -42,6 +61,8 @@ class GuidanceData(BaseModel):
 
 
 class ContextualGuidanceData(BaseModel):
+    """Données d'une guidance contextuelle basée sur une situation."""
+
     guidance_type: str
     situation: str
     objective: str
@@ -58,6 +79,8 @@ class ContextualGuidanceData(BaseModel):
 
 
 class GuidanceRecoveryMetadata(BaseModel):
+    """Métadonnées sur les tentatives de récupération hors-scope."""
+
     off_scope_detected: bool
     off_scope_score: float
     recovery_strategy: str
@@ -67,6 +90,13 @@ class GuidanceRecoveryMetadata(BaseModel):
 
 
 class GuidanceService:
+    """
+    Service de génération de guidances astrologiques.
+
+    Génère des guidances périodiques et contextuelles en utilisant le profil
+    natal de l'utilisateur, avec gestion des récupérations hors-scope.
+    """
+
     logger = logging.getLogger(__name__)
     SAFE_FALLBACK_MESSAGE = (
         "Je prefere reformuler prudemment cette guidance. "
@@ -75,6 +105,7 @@ class GuidanceService:
 
     @staticmethod
     def _sleep_before_retry(*, attempts: int, max_attempts: int) -> None:
+        """Effectue une pause exponentielle avec jitter avant une nouvelle tentative."""
         if attempts >= max_attempts:
             return
         base_seconds = max(0.0, settings.chat_llm_retry_backoff_seconds)
@@ -94,6 +125,7 @@ class GuidanceService:
 
     @staticmethod
     def _validate_period(period: str) -> str:
+        """Valide et normalise la période de guidance."""
         normalized = period.strip().lower()
         if normalized not in {"daily", "weekly"}:
             raise GuidanceServiceError(
@@ -113,6 +145,7 @@ class GuidanceService:
         persona_line: str,
         context_lines: list[str],
     ) -> str:
+        """Construit le prompt pour une guidance périodique."""
         lines = [
             "[guidance_prompt_version:guidance-v1]",
             persona_line,
@@ -133,6 +166,7 @@ class GuidanceService:
         repo: ChatRepository,
         conversation_id: int | None,
     ) -> tuple[list[str], int]:
+        """Sélectionne les lignes de contexte depuis l'historique de conversation."""
         if conversation_id is None:
             return ["no conversation context"], 0
 
@@ -162,6 +196,7 @@ class GuidanceService:
 
     @staticmethod
     def _normalize_summary(generated_text: str, period: str) -> str:
+        """Normalise le résumé généré en filtrant les artefacts de prompt."""
         raw_summary = generated_text.strip()
         # Local stub echoes the full prompt; never expose internal prompt/context to end users.
         if "[guidance_prompt_version:" in raw_summary or "Recent context:" in raw_summary:
@@ -178,6 +213,7 @@ class GuidanceService:
 
     @staticmethod
     def _normalize_contextual_summary(generated_text: str) -> str:
+        """Normalise le résumé contextuel en filtrant les artefacts."""
         raw_summary = generated_text.strip()
         # Local stub echoes the full prompt; never expose internal prompt/context to end users.
         if "[guidance_prompt_version:" in raw_summary or "Recent context:" in raw_summary:
@@ -193,6 +229,7 @@ class GuidanceService:
         objective: str,
         time_horizon: str | None,
     ) -> tuple[str, str, str | None]:
+        """Valide et normalise les entrées de guidance contextuelle."""
         normalized_situation = situation.strip()
         normalized_objective = objective.strip()
         normalized_horizon = time_horizon.strip() if time_horizon else None
@@ -218,6 +255,7 @@ class GuidanceService:
         time_horizon: str | None,
         context_lines: list[str],
     ) -> str:
+        """Construit le prompt pour une guidance contextuelle."""
         lines = [
             "[guidance_prompt_version:guidance-contextual-v1]",
             persona_line,
@@ -237,6 +275,7 @@ class GuidanceService:
 
     @staticmethod
     def _assess_off_scope(content: str) -> tuple[bool, float, str | None]:
+        """Évalue si une réponse est hors-scope avec un score de confiance."""
         normalized = content.strip().lower()
         if not normalized:
             return True, 1.0, "empty_response"
@@ -248,6 +287,7 @@ class GuidanceService:
 
     @staticmethod
     def _build_recovery_prompt(prompt: str, previous_reply: str, mode: str) -> str:
+        """Construit un prompt de récupération pour reformuler une guidance hors-scope."""
         if mode == "reformulate":
             instruction = (
                 "The previous guidance appears out-of-scope. "
@@ -278,6 +318,7 @@ class GuidanceService:
         assistant_content: str,
         persona_profile_code: str,
     ) -> tuple[str, bool, GuidanceRecoveryMetadata]:
+        """Applique les stratégies de récupération si la guidance est hors-scope."""
         off_scope_detected, off_scope_score, off_scope_reason = GuidanceService._assess_off_scope(
             assistant_content
         )
@@ -401,6 +442,23 @@ class GuidanceService:
         llm_client: LLMClient | None = None,
         request_id: str = "n/a",
     ) -> GuidanceData:
+        """
+        Génère une guidance périodique (quotidienne ou hebdomadaire).
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            period: Période de guidance ("daily" ou "weekly").
+            conversation_id: ID de conversation pour le contexte (optionnel).
+            llm_client: Client LLM personnalisé (optionnel).
+            request_id: Identifiant de requête pour le logging.
+
+        Returns:
+            Guidance générée avec résumé et conseils.
+
+        Raises:
+            GuidanceServiceError: Si le profil natal manque ou en cas d'erreur LLM.
+        """
         start = monotonic()
         normalized_period = GuidanceService._validate_period(period)
         increment_counter("conversation_messages_total", 1.0)
@@ -576,6 +634,25 @@ class GuidanceService:
         llm_client: LLMClient | None = None,
         request_id: str = "n/a",
     ) -> ContextualGuidanceData:
+        """
+        Génère une guidance contextuelle basée sur une situation spécifique.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            situation: Description de la situation actuelle.
+            objective: Objectif visé par l'utilisateur.
+            time_horizon: Horizon temporel (optionnel).
+            conversation_id: ID de conversation pour le contexte (optionnel).
+            llm_client: Client LLM personnalisé (optionnel).
+            request_id: Identifiant de requête pour le logging.
+
+        Returns:
+            Guidance contextuelle générée.
+
+        Raises:
+            GuidanceServiceError: Si le profil natal manque ou les entrées sont invalides.
+        """
         start = monotonic()
         (
             normalized_situation,

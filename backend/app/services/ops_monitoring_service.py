@@ -1,3 +1,10 @@
+"""
+Service de monitoring opérationnel.
+
+Ce module fournit des KPIs et des alertes pour le monitoring de l'application :
+conversations, latence, erreurs, quotas et expérimentations tarifaires.
+"""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -23,7 +30,17 @@ WINDOWS: dict[str, timedelta] = {
 
 
 class OpsMonitoringServiceError(Exception):
+    """Exception levée lors d'erreurs de monitoring."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de monitoring.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -31,6 +48,8 @@ class OpsMonitoringServiceError(Exception):
 
 
 class OpsMonitoringKpisData(BaseModel):
+    """KPIs de conversation et guidance."""
+
     window: str
     aggregation_scope: str
     messages_total: int
@@ -42,6 +61,8 @@ class OpsMonitoringKpisData(BaseModel):
 
 
 class OpsMonitoringAlertData(BaseModel):
+    """Alerte opérationnelle."""
+
     code: str
     severity: str
     status: str
@@ -50,6 +71,8 @@ class OpsMonitoringAlertData(BaseModel):
 
 
 class OpsMonitoringOperationalSummaryData(BaseModel):
+    """Résumé opérationnel avec métriques et alertes."""
+
     window: str
     aggregation_scope: str
     requests_total: int
@@ -65,6 +88,8 @@ class OpsMonitoringOperationalSummaryData(BaseModel):
 
 
 class OpsMonitoringPersonaKpisItem(BaseModel):
+    """KPIs pour un profil persona spécifique."""
+
     persona_profile_code: str
     messages_total: int
     guidance_messages_total: int
@@ -77,12 +102,16 @@ class OpsMonitoringPersonaKpisItem(BaseModel):
 
 
 class OpsMonitoringPersonaKpisData(BaseModel):
+    """KPIs agrégés par profil persona."""
+
     window: str
     aggregation_scope: str
     personas: list[OpsMonitoringPersonaKpisItem]
 
 
 class OpsMonitoringPricingKpisVariantItem(BaseModel):
+    """KPIs pour une variante d'expérimentation tarifaire."""
+
     variant_id: str
     exposures_total: int
     conversions_total: int
@@ -94,6 +123,8 @@ class OpsMonitoringPricingKpisVariantItem(BaseModel):
 
 
 class OpsMonitoringPricingKpisData(BaseModel):
+    """KPIs d'expérimentation tarifaire par variante."""
+
     window: str
     aggregation_scope: str
     min_sample_size: int
@@ -101,6 +132,7 @@ class OpsMonitoringPricingKpisData(BaseModel):
 
 
 def _percentile(values: list[float], q: float) -> float:
+    """Calcule un percentile sur une liste de valeurs."""
     if not values:
         return 0.0
     if len(values) == 1:
@@ -118,8 +150,16 @@ def _percentile(values: list[float], q: float) -> float:
 
 
 class OpsMonitoringService:
+    """
+    Service de monitoring opérationnel.
+
+    Agrège les métriques de l'instance locale pour fournir des KPIs
+    de conversation, d'opérations et d'expérimentation tarifaire.
+    """
+
     @staticmethod
     def _variant_from_metric_name(metric_name: str) -> str | None:
+        """Extrait l'identifiant de variante d'un nom de métrique."""
         marker = "variant_id="
         if marker not in metric_name:
             return None
@@ -131,6 +171,7 @@ class OpsMonitoringService:
         *,
         success_only: bool = False,
     ) -> dict[str, int]:
+        """Agrège les valeurs de métriques par variante."""
         totals: dict[str, int] = {}
         for metric_name, value in metric_values.items():
             variant = OpsMonitoringService._variant_from_metric_name(metric_name)
@@ -144,6 +185,18 @@ class OpsMonitoringService:
 
     @staticmethod
     def get_conversation_kpis(*, window: str) -> OpsMonitoringKpisData:
+        """
+        Récupère les KPIs de conversation pour une fenêtre temporelle.
+
+        Args:
+            window: Fenêtre temporelle ("1h", "24h", "7d").
+
+        Returns:
+            KPIs de conversation avec messages, erreurs et latence.
+
+        Raises:
+            OpsMonitoringServiceError: Si la fenêtre est invalide.
+        """
         selected_window = window.strip().lower()
         if selected_window not in WINDOWS:
             raise OpsMonitoringServiceError(
@@ -185,6 +238,15 @@ class OpsMonitoringService:
 
     @staticmethod
     def get_operational_summary(*, window: str) -> OpsMonitoringOperationalSummaryData:
+        """
+        Récupère le résumé opérationnel avec alertes.
+
+        Args:
+            window: Fenêtre temporelle ("1h", "24h", "7d").
+
+        Returns:
+            Résumé incluant requêtes, erreurs, disponibilité et alertes.
+        """
         selected_window = window.strip().lower()
         if selected_window not in WINDOWS:
             raise OpsMonitoringServiceError(
@@ -256,6 +318,15 @@ class OpsMonitoringService:
 
     @staticmethod
     def get_persona_kpis(*, window: str) -> OpsMonitoringPersonaKpisData:
+        """
+        Récupère les KPIs agrégés par profil persona.
+
+        Args:
+            window: Fenêtre temporelle ("1h", "24h", "7d").
+
+        Returns:
+            KPIs par persona avec messages, erreurs et récupérations.
+        """
         selected_window = window.strip().lower()
         if selected_window not in WINDOWS:
             raise OpsMonitoringServiceError(
@@ -384,6 +455,16 @@ class OpsMonitoringService:
         window: str,
         db: Session | None = None,
     ) -> OpsMonitoringPricingKpisData:
+        """
+        Récupère les KPIs d'expérimentation tarifaire.
+
+        Args:
+            window: Fenêtre temporelle ("1h", "24h", "7d").
+            db: Session de base de données pour lecture persistante (optionnel).
+
+        Returns:
+            KPIs par variante avec expositions, conversions et revenus.
+        """
         selected_window = window.strip().lower()
         if selected_window not in WINDOWS:
             raise OpsMonitoringServiceError(
@@ -543,6 +624,7 @@ class OpsMonitoringService:
         privacy_failures_total: int,
         b2b_auth_failures_total: int,
     ) -> list[OpsMonitoringAlertData]:
+        """Construit la liste des alertes basée sur les seuils."""
         alerts: list[OpsMonitoringAlertData] = []
 
         def _build_alert(

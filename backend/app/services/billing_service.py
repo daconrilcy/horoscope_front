@@ -1,3 +1,10 @@
+"""
+Service de facturation B2C.
+
+Ce module gère les abonnements utilisateurs, les plans tarifaires,
+les tentatives de paiement et les changements de plan.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -37,7 +44,17 @@ _SUBSCRIPTION_STATUS_CACHE_LOCK = Lock()
 
 
 class BillingServiceError(Exception):
+    """Exception levée lors d'erreurs de facturation."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de facturation.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -45,6 +62,8 @@ class BillingServiceError(Exception):
 
 
 class BillingPlanData(BaseModel):
+    """Modèle représentant un plan tarifaire."""
+
     code: str
     display_name: str
     monthly_price_cents: int
@@ -54,6 +73,8 @@ class BillingPlanData(BaseModel):
 
 
 class SubscriptionStatusData(BaseModel):
+    """Modèle représentant le statut d'un abonnement utilisateur."""
+
     status: str
     plan: BillingPlanData | None
     failure_reason: str | None
@@ -61,12 +82,16 @@ class SubscriptionStatusData(BaseModel):
 
 
 class CheckoutPayload(BaseModel):
+    """Payload pour une demande de souscription."""
+
     plan_code: str = ENTRY_PLAN_CODE
     payment_method_token: str = "pm_card_ok"
     idempotency_key: str
 
 
 class CheckoutData(BaseModel):
+    """Résultat d'une opération de checkout."""
+
     subscription: SubscriptionStatusData
     payment_status: str
     payment_attempt_id: int
@@ -74,11 +99,15 @@ class CheckoutData(BaseModel):
 
 
 class PlanChangePayload(BaseModel):
+    """Payload pour un changement de plan."""
+
     target_plan_code: str
     idempotency_key: str
 
 
 class PlanChangeData(BaseModel):
+    """Résultat d'un changement de plan."""
+
     subscription: SubscriptionStatusData
     previous_plan_code: str
     target_plan_code: str
@@ -88,12 +117,28 @@ class PlanChangeData(BaseModel):
 
 
 class BillingService:
+    """
+    Service de gestion de la facturation B2C.
+
+    Gère les abonnements utilisateurs, les tentatives de paiement,
+    les changements de plan et le cache des statuts d'abonnement.
+    """
     @staticmethod
     def _subscription_cache_ttl_seconds() -> float:
+        """Retourne la durée de vie du cache d'abonnement en secondes."""
         return max(0.0, settings.billing_subscription_cache_ttl_seconds)
 
     @staticmethod
     def _get_cached_subscription_status(user_id: int) -> SubscriptionStatusData | None:
+        """
+        Récupère le statut d'abonnement depuis le cache.
+
+        Args:
+            user_id: Identifiant de l'utilisateur.
+
+        Returns:
+            Statut d'abonnement caché ou None si absent/expiré.
+        """
         ttl = BillingService._subscription_cache_ttl_seconds()
         if ttl <= 0:
             return None
@@ -111,6 +156,13 @@ class BillingService:
 
     @staticmethod
     def _set_cached_subscription_status(user_id: int, payload: SubscriptionStatusData) -> None:
+        """
+        Met en cache le statut d'abonnement d'un utilisateur.
+
+        Args:
+            user_id: Identifiant de l'utilisateur.
+            payload: Statut d'abonnement à mettre en cache.
+        """
         ttl = BillingService._subscription_cache_ttl_seconds()
         if ttl <= 0:
             return
@@ -126,6 +178,7 @@ class BillingService:
 
     @staticmethod
     def _prune_subscription_cache_locked(*, now: float) -> None:
+        """Supprime les entrées expirées du cache (doit être appelé avec le verrou)."""
         expired_keys = [
             cached_user_id
             for cached_user_id, (expires_at, _) in _SUBSCRIPTION_STATUS_CACHE.items()
@@ -136,16 +189,19 @@ class BillingService:
 
     @staticmethod
     def _invalidate_cached_subscription_status(user_id: int) -> None:
+        """Invalide le cache d'abonnement pour un utilisateur donné."""
         with _SUBSCRIPTION_STATUS_CACHE_LOCK:
             _SUBSCRIPTION_STATUS_CACHE.pop(user_id, None)
 
     @staticmethod
     def reset_subscription_status_cache() -> None:
+        """Vide complètement le cache des statuts d'abonnement."""
         with _SUBSCRIPTION_STATUS_CACHE_LOCK:
             _SUBSCRIPTION_STATUS_CACHE.clear()
 
     @staticmethod
     def _to_plan_data(model: BillingPlanModel) -> BillingPlanData:
+        """Convertit un modèle de plan en DTO."""
         return BillingPlanData(
             code=model.code,
             display_name=model.display_name,
@@ -161,6 +217,16 @@ class BillingService:
         subscription: UserSubscriptionModel | None,
         plan: BillingPlanModel | None,
     ) -> SubscriptionStatusData:
+        """
+        Convertit les modèles d'abonnement et de plan en DTO de statut.
+
+        Args:
+            subscription: Modèle d'abonnement utilisateur (peut être None).
+            plan: Modèle du plan associé (peut être None).
+
+        Returns:
+            SubscriptionStatusData avec le statut approprié.
+        """
         if subscription is None:
             return SubscriptionStatusData(
                 status="inactive",
@@ -178,14 +244,25 @@ class BillingService:
 
     @staticmethod
     def _get_plan_by_code(db: Session, code: str) -> BillingPlanModel | None:
+        """Récupère un plan par son code."""
         return db.scalar(select(BillingPlanModel).where(BillingPlanModel.code == code).limit(1))
 
     @staticmethod
     def ensure_entry_plan(db: Session) -> BillingPlanModel:
+        """S'assure que le plan d'entrée existe et le retourne."""
         return BillingService.ensure_default_plans(db)[ENTRY_PLAN_CODE]
 
     @staticmethod
     def ensure_default_plans(db: Session) -> dict[str, BillingPlanModel]:
+        """
+        S'assure que les plans par défaut existent en base.
+
+        Args:
+            db: Session de base de données.
+
+        Returns:
+            Dictionnaire code_plan -> modèle du plan.
+        """
         defaults = {
             ENTRY_PLAN_CODE: {
                 "display_name": ENTRY_PLAN_NAME,
@@ -219,6 +296,7 @@ class BillingService:
 
     @staticmethod
     def _get_latest_subscription(db: Session, user_id: int) -> UserSubscriptionModel | None:
+        """Récupère le dernier abonnement d'un utilisateur."""
         return db.scalar(
             select(UserSubscriptionModel)
             .where(UserSubscriptionModel.user_id == user_id)
@@ -233,6 +311,7 @@ class BillingService:
         user_id: int,
         idempotency_key: str,
     ) -> PaymentAttemptModel | None:
+        """Recherche une tentative de paiement existante par clé d'idempotence."""
         return db.scalar(
             select(PaymentAttemptModel)
             .where(
@@ -244,6 +323,15 @@ class BillingService:
 
     @staticmethod
     def _simulate_payment_failure(payment_method_token: str) -> tuple[bool, str | None]:
+        """
+        Simule un échec de paiement basé sur le token.
+
+        Args:
+            payment_method_token: Token du moyen de paiement.
+
+        Returns:
+            Tuple (échec, raison) indiquant si le paiement doit échouer.
+        """
         token = payment_method_token.strip().lower()
         if token in {"pm_fail", "fail", "declined"}:
             return True, "payment provider declined the payment method"
@@ -251,6 +339,18 @@ class BillingService:
 
     @staticmethod
     def get_subscription_status(db: Session, *, user_id: int) -> SubscriptionStatusData:
+        """
+        Récupère le statut d'abonnement d'un utilisateur.
+
+        Utilise le cache si disponible, sinon interroge la base.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+
+        Returns:
+            SubscriptionStatusData avec le statut actuel.
+        """
         cached = BillingService._get_cached_subscription_status(user_id)
         if cached is not None:
             return cached
@@ -267,6 +367,16 @@ class BillingService:
 
     @staticmethod
     def get_subscription_status_readonly(db: Session, *, user_id: int) -> SubscriptionStatusData:
+        """
+        Récupère le statut d'abonnement en lecture seule (sans créer de plans).
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+
+        Returns:
+            SubscriptionStatusData avec le statut actuel.
+        """
         cached = BillingService._get_cached_subscription_status(user_id)
         if cached is not None:
             return cached
@@ -489,6 +599,21 @@ class BillingService:
     def create_checkout(
         db: Session, *, user_id: int, payload: CheckoutPayload, request_id: str
     ) -> CheckoutData:
+        """
+        Crée une nouvelle souscription pour un utilisateur.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            payload: Données du checkout.
+            request_id: Identifiant de la requête pour traçabilité.
+
+        Returns:
+            CheckoutData avec le résultat de l'opération.
+
+        Raises:
+            BillingServiceError: Si le plan est invalide ou l'utilisateur a déjà un abonnement actif.
+        """
         return BillingService._checkout_internal(
             db,
             user_id=user_id,
@@ -501,6 +626,21 @@ class BillingService:
     def retry_checkout(
         db: Session, *, user_id: int, payload: CheckoutPayload, request_id: str
     ) -> CheckoutData:
+        """
+        Réessaie une souscription après un échec de paiement.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            payload: Données du checkout.
+            request_id: Identifiant de la requête pour traçabilité.
+
+        Returns:
+            CheckoutData avec le résultat de la tentative.
+
+        Raises:
+            BillingServiceError: Si l'utilisateur a déjà un abonnement actif.
+        """
         latest = BillingService._get_latest_subscription(db, user_id=user_id)
         if latest is not None and latest.status == "active":
             raise BillingServiceError(
@@ -525,6 +665,22 @@ class BillingService:
         payload: PlanChangePayload,
         request_id: str,
     ) -> PlanChangeData:
+        """
+        Change le plan d'un abonnement actif.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            payload: Données du changement de plan.
+            request_id: Identifiant de la requête pour traçabilité.
+
+        Returns:
+            PlanChangeData avec le résultat du changement.
+
+        Raises:
+            BillingServiceError: Si pas d'abonnement actif, plan cible invalide,
+                ou déjà sur le plan cible.
+        """
         start = monotonic()
         BillingService._invalidate_cached_subscription_status(user_id)
         BillingService.ensure_default_plans(db)

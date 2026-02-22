@@ -1,3 +1,10 @@
+"""
+Service de gestion des incidents support.
+
+Ce module gère le cycle de vie des incidents support : création, mise à jour,
+assignation et suivi des métriques de résolution.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -25,7 +32,17 @@ ALLOWED_STATUS_TRANSITIONS: dict[str, set[str]] = {
 
 
 class IncidentServiceError(Exception):
+    """Exception levée lors d'erreurs de gestion d'incidents."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur d'incident.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -33,6 +50,8 @@ class IncidentServiceError(Exception):
 
 
 class SupportIncidentData(BaseModel):
+    """Données d'un incident support."""
+
     incident_id: int
     user_id: int
     created_by_user_id: int | None
@@ -48,6 +67,8 @@ class SupportIncidentData(BaseModel):
 
 
 class SupportIncidentCreatePayload(BaseModel):
+    """Payload pour créer un incident support."""
+
     user_id: int
     category: str
     title: str
@@ -57,6 +78,8 @@ class SupportIncidentCreatePayload(BaseModel):
 
 
 class SupportIncidentUpdatePayload(BaseModel):
+    """Payload pour mettre à jour un incident."""
+
     status: str | None = None
     priority: str | None = None
     description: str | None = None
@@ -64,6 +87,8 @@ class SupportIncidentUpdatePayload(BaseModel):
 
 
 class SupportIncidentListFilters(BaseModel):
+    """Filtres pour lister les incidents."""
+
     user_id: int | None = None
     status: str | None = None
     priority: str | None = None
@@ -72,6 +97,8 @@ class SupportIncidentListFilters(BaseModel):
 
 
 class SupportIncidentListData(BaseModel):
+    """Liste paginée d'incidents support."""
+
     incidents: list[SupportIncidentData]
     total: int
     limit: int
@@ -79,14 +106,23 @@ class SupportIncidentListData(BaseModel):
 
 
 class IncidentService:
+    """
+    Service de gestion des incidents support.
+
+    Gère le cycle de vie complet des incidents avec validation des transitions
+    d'état et suivi des métriques de temps de résolution.
+    """
+
     @staticmethod
     def _coerce_utc(value: datetime) -> datetime:
+        """Convertit une datetime en UTC."""
         if value.tzinfo is None:
             return value.replace(tzinfo=timezone.utc)
         return value.astimezone(timezone.utc)
 
     @staticmethod
     def _to_data(model: SupportIncidentModel) -> SupportIncidentData:
+        """Convertit un modèle d'incident en DTO."""
         return SupportIncidentData(
             incident_id=model.id,
             user_id=model.user_id,
@@ -104,6 +140,7 @@ class IncidentService:
 
     @staticmethod
     def _require_user_exists(db: Session, user_id: int, *, field: str) -> None:
+        """Vérifie qu'un utilisateur existe en base."""
         user = db.get(UserModel, user_id)
         if user is None:
             raise IncidentServiceError(
@@ -114,6 +151,7 @@ class IncidentService:
 
     @staticmethod
     def _validate_pagination(limit: int, offset: int) -> None:
+        """Valide les paramètres de pagination."""
         if limit <= 0 or limit > 100:
             raise IncidentServiceError(
                 code="incident_validation_error",
@@ -135,6 +173,21 @@ class IncidentService:
         actor_user_id: int | None,
         request_id: str,
     ) -> SupportIncidentData:
+        """
+        Crée un nouvel incident support.
+
+        Args:
+            db: Session de base de données.
+            payload: Données de l'incident à créer.
+            actor_user_id: Identifiant de l'utilisateur créant l'incident.
+            request_id: Identifiant de requête pour le logging.
+
+        Returns:
+            Incident créé.
+
+        Raises:
+            IncidentServiceError: Si la validation échoue.
+        """
         if payload.category not in VALID_INCIDENT_CATEGORY:
             raise IncidentServiceError(
                 code="incident_validation_error",
@@ -201,6 +254,16 @@ class IncidentService:
     def list_incidents(
         db: Session, *, filters: SupportIncidentListFilters
     ) -> SupportIncidentListData:
+        """
+        Liste les incidents avec filtres et pagination.
+
+        Args:
+            db: Session de base de données.
+            filters: Filtres à appliquer (user_id, status, priority).
+
+        Returns:
+            Liste paginée des incidents.
+        """
         IncidentService._validate_pagination(filters.limit, filters.offset)
         if filters.status is not None and filters.status not in VALID_INCIDENT_STATUS:
             raise IncidentServiceError(
@@ -249,6 +312,7 @@ class IncidentService:
         user_id: int,
         limit: int = 20,
     ) -> list[SupportIncidentData]:
+        """Liste les incidents d'un utilisateur spécifique."""
         IncidentService._validate_pagination(limit, 0)
         query = (
             select(SupportIncidentModel)
@@ -267,6 +331,23 @@ class IncidentService:
         payload: SupportIncidentUpdatePayload,
         request_id: str,
     ) -> SupportIncidentData:
+        """
+        Met à jour un incident existant.
+
+        Valide les transitions d'état et met à jour resolved_at si applicable.
+
+        Args:
+            db: Session de base de données.
+            incident_id: Identifiant de l'incident.
+            payload: Modifications à appliquer.
+            request_id: Identifiant de requête pour le logging.
+
+        Returns:
+            Incident mis à jour.
+
+        Raises:
+            IncidentServiceError: Si l'incident n'existe pas ou transition invalide.
+        """
         model = db.get(SupportIncidentModel, incident_id)
         if model is None:
             raise IncidentServiceError(

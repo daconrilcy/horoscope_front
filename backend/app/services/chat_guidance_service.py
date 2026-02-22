@@ -1,3 +1,10 @@
+"""
+Service de chat et guidance astrologique.
+
+Ce module gère les conversations avec l'assistant astrologique, incluant
+la construction du contexte, l'appel au LLM et la récupération hors-scope.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -18,7 +25,17 @@ logger = logging.getLogger(__name__)
 
 
 class ChatGuidanceServiceError(Exception):
+    """Exception levée lors d'erreurs du service de chat."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de chat.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -26,6 +43,8 @@ class ChatGuidanceServiceError(Exception):
 
 
 class ChatMessageData(BaseModel):
+    """Données d'un message de conversation."""
+
     message_id: int
     role: str
     content: str
@@ -33,6 +52,8 @@ class ChatMessageData(BaseModel):
 
 
 class ChatReplyData(BaseModel):
+    """Réponse complète à un message utilisateur avec métadonnées."""
+
     conversation_id: int
     attempts: int
     user_message: ChatMessageData
@@ -43,6 +64,8 @@ class ChatReplyData(BaseModel):
 
 
 class ChatContextMetadata(BaseModel):
+    """Métadonnées sur le contexte utilisé pour générer la réponse."""
+
     message_ids: list[int]
     message_count: int
     context_characters: int
@@ -50,6 +73,8 @@ class ChatContextMetadata(BaseModel):
 
 
 class ChatRecoveryMetadata(BaseModel):
+    """Métadonnées sur les tentatives de récupération hors-scope."""
+
     off_scope_detected: bool
     off_scope_score: float
     recovery_strategy: str
@@ -59,6 +84,8 @@ class ChatRecoveryMetadata(BaseModel):
 
 
 class ChatConversationSummaryData(BaseModel):
+    """Résumé d'une conversation pour l'affichage en liste."""
+
     conversation_id: int
     status: str
     updated_at: datetime
@@ -66,6 +93,8 @@ class ChatConversationSummaryData(BaseModel):
 
 
 class ChatConversationListData(BaseModel):
+    """Liste paginée de conversations."""
+
     conversations: list[ChatConversationSummaryData]
     total: int
     limit: int
@@ -73,6 +102,8 @@ class ChatConversationListData(BaseModel):
 
 
 class ChatConversationHistoryData(BaseModel):
+    """Historique complet d'une conversation."""
+
     conversation_id: int
     status: str
     updated_at: datetime
@@ -80,6 +111,13 @@ class ChatConversationHistoryData(BaseModel):
 
 
 class ChatGuidanceService:
+    """
+    Service de conversation avec l'assistant astrologique.
+
+    Gère l'envoi de messages, la construction du contexte, l'appel au LLM,
+    et les stratégies de récupération en cas de réponse hors-scope.
+    """
+
     _off_scope_events = 0
     _recovery_success_events = 0
 
@@ -90,11 +128,13 @@ class ChatGuidanceService:
 
     @classmethod
     def reset_quality_kpis(cls) -> None:
+        """Réinitialise les compteurs de KPI qualité."""
         cls._off_scope_events = 0
         cls._recovery_success_events = 0
 
     @classmethod
     def get_quality_kpis(cls) -> dict[str, float]:
+        """Retourne les KPI de qualité des conversations."""
         recovery_success_rate = (
             cls._recovery_success_events / cls._off_scope_events if cls._off_scope_events else 0.0
         )
@@ -105,6 +145,7 @@ class ChatGuidanceService:
 
     @staticmethod
     def _validate_user_message(message: str) -> str:
+        """Valide et normalise le message utilisateur."""
         normalized = message.strip()
         if not normalized:
             raise ChatGuidanceServiceError(
@@ -116,6 +157,7 @@ class ChatGuidanceService:
 
     @staticmethod
     def _validate_context_config() -> tuple[int, int]:
+        """Valide la configuration de contexte de chat."""
         window_messages = settings.chat_context_window_messages
         max_characters = settings.chat_context_max_characters
         if window_messages <= 0 or max_characters <= 0:
@@ -128,6 +170,7 @@ class ChatGuidanceService:
 
     @staticmethod
     def _validate_pagination(limit: int, offset: int) -> tuple[int, int]:
+        """Valide les paramètres de pagination."""
         if limit <= 0 or limit > 100:
             raise ChatGuidanceServiceError(
                 code="invalid_chat_pagination",
@@ -149,6 +192,7 @@ class ChatGuidanceService:
         conversation_id: int,
         persona_line: str,
     ) -> tuple[str, ChatContextMetadata]:
+        """Construit le prompt LLM avec le contexte de conversation."""
         window_messages, max_characters = ChatGuidanceService._validate_context_config()
         recent_messages = repo.get_recent_messages(
             conversation_id=conversation_id,
@@ -197,6 +241,7 @@ class ChatGuidanceService:
 
     @staticmethod
     def _assess_off_scope(content: str) -> tuple[bool, float, str | None]:
+        """Évalue si une réponse est hors-scope avec un score de confiance."""
         normalized = content.strip().lower()
         if not normalized:
             return True, 1.0, "empty_response"
@@ -208,6 +253,7 @@ class ChatGuidanceService:
 
     @staticmethod
     def _build_recovery_prompt(prompt: str, previous_reply: str, mode: str) -> str:
+        """Construit un prompt de récupération pour reformuler une réponse hors-scope."""
         if mode == "reformulate":
             instruction = (
                 "The previous answer appears out-of-scope. Reformulate in French, stay practical, "
@@ -231,6 +277,7 @@ class ChatGuidanceService:
 
     @staticmethod
     def _anonymize_or_raise(text: str) -> str:
+        """Anonymise le texte ou lève une exception en cas d'erreur."""
         try:
             return anonymize_text(text)
         except LLMAnonymizationError as error:
@@ -248,6 +295,11 @@ class ChatGuidanceService:
         assistant_content: str,
         persona_profile_code: str,
     ) -> tuple[str, bool, ChatRecoveryMetadata]:
+        """
+        Applique les stratégies de récupération si la réponse est hors-scope.
+
+        Tente successivement reformulation, retry, puis fallback sécurisé.
+        """
         off_scope_detected, off_scope_score, off_scope_reason = (
             ChatGuidanceService._assess_off_scope(assistant_content)
         )
@@ -386,6 +438,23 @@ class ChatGuidanceService:
         llm_client: LLMClient | None = None,
         request_id: str = "n/a",
     ) -> ChatReplyData:
+        """
+        Envoie un message et obtient une réponse de l'assistant.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            message: Contenu du message.
+            conversation_id: ID de conversation existante (optionnel).
+            llm_client: Client LLM personnalisé (optionnel).
+            request_id: Identifiant de requête pour le logging.
+
+        Returns:
+            Réponse complète avec métadonnées de contexte et récupération.
+
+        Raises:
+            ChatGuidanceServiceError: Si la conversation n'existe pas ou en cas d'erreur LLM.
+        """
         start = monotonic()
         normalized_message = ChatGuidanceService._validate_user_message(message)
         increment_counter("conversation_messages_total", 1.0)
@@ -542,6 +611,18 @@ class ChatGuidanceService:
         limit: int = 20,
         offset: int = 0,
     ) -> ChatConversationListData:
+        """
+        Liste les conversations d'un utilisateur avec pagination.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            limit: Nombre maximum de résultats.
+            offset: Décalage pour la pagination.
+
+        Returns:
+            Liste paginée des conversations avec aperçu.
+        """
         validated_limit, validated_offset = ChatGuidanceService._validate_pagination(limit, offset)
         repo = ChatRepository(db)
         conversations = repo.list_conversations_with_last_preview_by_user_id(
@@ -574,6 +655,20 @@ class ChatGuidanceService:
         user_id: int,
         conversation_id: int,
     ) -> ChatConversationHistoryData:
+        """
+        Récupère l'historique complet d'une conversation.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur (pour vérification d'accès).
+            conversation_id: Identifiant de la conversation.
+
+        Returns:
+            Historique avec tous les messages.
+
+        Raises:
+            ChatGuidanceServiceError: Si la conversation n'existe pas ou n'appartient pas à l'utilisateur.
+        """
         repo = ChatRepository(db)
         conversation = repo.get_conversation_by_id(conversation_id)
         if conversation is None:

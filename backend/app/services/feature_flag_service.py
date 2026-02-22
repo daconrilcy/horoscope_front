@@ -1,3 +1,10 @@
+"""
+Service de gestion des feature flags.
+
+Ce module gère les drapeaux de fonctionnalités pour le déploiement progressif
+et le contrôle d'accès aux modules (tarot, runes, etc.).
+"""
+
 from __future__ import annotations
 
 import logging
@@ -17,7 +24,17 @@ logger = logging.getLogger(__name__)
 
 
 class FeatureFlagServiceError(Exception):
+    """Exception levée lors d'erreurs de feature flags."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de feature flag.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -25,6 +42,8 @@ class FeatureFlagServiceError(Exception):
 
 
 class FeatureFlagData(BaseModel):
+    """Données d'un feature flag."""
+
     key: str
     description: str
     enabled: bool
@@ -35,17 +54,23 @@ class FeatureFlagData(BaseModel):
 
 
 class FeatureFlagListData(BaseModel):
+    """Liste de tous les feature flags."""
+
     flags: list[FeatureFlagData]
     total: int
 
 
 class FeatureFlagUpdatePayload(BaseModel):
+    """Payload pour mettre à jour un feature flag."""
+
     enabled: bool
     target_roles: list[str] = Field(default_factory=list)
     target_user_ids: list[int] = Field(default_factory=list)
 
 
 class ModuleAvailabilityData(BaseModel):
+    """Disponibilité d'un module pour un utilisateur."""
+
     module: str
     flag_key: str
     status: str
@@ -54,18 +79,24 @@ class ModuleAvailabilityData(BaseModel):
 
 
 class ModuleAvailabilityListData(BaseModel):
+    """Liste de disponibilité de tous les modules."""
+
     modules: list[ModuleAvailabilityData]
     total: int
     available_count: int
 
 
 class ModuleExecutionPayload(BaseModel):
+    """Payload pour exécuter un module."""
+
     question: str
     situation: str | None = None
     conversation_id: int | None = None
 
 
 class ModuleExecutionData(BaseModel):
+    """Résultat de l'exécution d'un module."""
+
     module: str
     status: str
     interpretation: str
@@ -74,6 +105,13 @@ class ModuleExecutionData(BaseModel):
 
 
 class FeatureFlagService:
+    """
+    Service de gestion des feature flags et modules.
+
+    Permet le déploiement progressif de fonctionnalités avec ciblage
+    par rôle ou par utilisateur spécifique.
+    """
+
     _KNOWN_FLAGS: dict[str, str] = {
         "tarot_enabled": "Activation module Tarot",
         "runes_enabled": "Activation module Runes",
@@ -86,6 +124,7 @@ class FeatureFlagService:
 
     @staticmethod
     def _parse_roles(csv_value: str | None) -> list[str]:
+        """Parse une liste de rôles depuis une chaîne CSV."""
         if not csv_value:
             return []
         parsed = [item.strip().lower() for item in csv_value.split(",") if item.strip()]
@@ -93,6 +132,7 @@ class FeatureFlagService:
 
     @staticmethod
     def _parse_user_ids(csv_value: str | None) -> list[int]:
+        """Parse une liste d'IDs utilisateur depuis une chaîne CSV."""
         if not csv_value:
             return []
         values: list[int] = []
@@ -104,6 +144,7 @@ class FeatureFlagService:
 
     @staticmethod
     def _serialize_roles(roles: list[str]) -> str | None:
+        """Sérialise une liste de rôles en chaîne CSV."""
         cleaned = sorted(set(role.strip().lower() for role in roles if role.strip()))
         for role in cleaned:
             if role not in FeatureFlagService._ALLOWED_ROLES:
@@ -116,11 +157,13 @@ class FeatureFlagService:
 
     @staticmethod
     def _serialize_user_ids(user_ids: list[int]) -> str | None:
+        """Sérialise une liste d'IDs utilisateur en chaîne CSV."""
         cleaned = sorted(set(user_id for user_id in user_ids if user_id > 0))
         return ",".join(str(user_id) for user_id in cleaned) if cleaned else None
 
     @staticmethod
     def _to_data(model: FeatureFlagModel) -> FeatureFlagData:
+        """Convertit un modèle de feature flag en DTO."""
         return FeatureFlagData(
             key=model.key,
             description=model.description,
@@ -133,6 +176,7 @@ class FeatureFlagService:
 
     @staticmethod
     def _ensure_seeded(db: Session) -> None:
+        """S'assure que tous les flags connus existent en base."""
         keys = list(FeatureFlagService._KNOWN_FLAGS.keys())
         existing = {
             row.key: row
@@ -157,6 +201,7 @@ class FeatureFlagService:
 
     @staticmethod
     def list_flags(db: Session) -> FeatureFlagListData:
+        """Liste tous les feature flags."""
         FeatureFlagService._ensure_seeded(db)
         rows = list(db.scalars(select(FeatureFlagModel).order_by(FeatureFlagModel.key.asc())).all())
         data = [FeatureFlagService._to_data(row) for row in rows]
@@ -170,6 +215,21 @@ class FeatureFlagService:
         payload: FeatureFlagUpdatePayload,
         updated_by_user_id: int,
     ) -> FeatureFlagData:
+        """
+        Met à jour un feature flag.
+
+        Args:
+            db: Session de base de données.
+            key: Clé du flag à mettre à jour.
+            payload: Nouvelles valeurs.
+            updated_by_user_id: Identifiant de l'utilisateur effectuant la modification.
+
+        Returns:
+            Flag mis à jour.
+
+        Raises:
+            FeatureFlagServiceError: Si le flag n'existe pas.
+        """
         FeatureFlagService._ensure_seeded(db)
         if key not in FeatureFlagService._KNOWN_FLAGS:
             raise FeatureFlagServiceError(
@@ -202,6 +262,7 @@ class FeatureFlagService:
 
     @staticmethod
     def _resolve_module_flag(module: str) -> str:
+        """Résout la clé de flag associée à un module."""
         normalized = module.strip().lower()
         if normalized not in FeatureFlagService._MODULE_TO_FLAG:
             raise FeatureFlagServiceError(
@@ -219,6 +280,18 @@ class FeatureFlagService:
         user_id: int,
         user_role: str,
     ) -> ModuleAvailabilityData:
+        """
+        Vérifie la disponibilité d'un module pour un utilisateur.
+
+        Args:
+            db: Session de base de données.
+            module: Nom du module.
+            user_id: Identifiant de l'utilisateur.
+            user_role: Rôle de l'utilisateur.
+
+        Returns:
+            Statut de disponibilité avec raison.
+        """
         FeatureFlagService._ensure_seeded(db)
         normalized_module = module.strip().lower()
         flag_key = FeatureFlagService._resolve_module_flag(normalized_module)
@@ -295,6 +368,7 @@ class FeatureFlagService:
         user_id: int,
         user_role: str,
     ) -> ModuleAvailabilityListData:
+        """Liste la disponibilité de tous les modules pour un utilisateur."""
         modules = [
             FeatureFlagService.get_module_availability(
                 db,
@@ -321,6 +395,23 @@ class FeatureFlagService:
         payload: ModuleExecutionPayload,
         skip_availability_check: bool = False,
     ) -> ModuleExecutionData:
+        """
+        Exécute un module (tarot, runes) pour un utilisateur.
+
+        Args:
+            db: Session de base de données.
+            module: Nom du module à exécuter.
+            user_id: Identifiant de l'utilisateur.
+            user_role: Rôle de l'utilisateur.
+            payload: Données d'entrée pour le module.
+            skip_availability_check: Ignorer la vérification d'accès.
+
+        Returns:
+            Résultat de l'interprétation du module.
+
+        Raises:
+            FeatureFlagServiceError: Si le module n'est pas disponible.
+        """
         normalized_module = module.strip().lower()
         if skip_availability_check:
             FeatureFlagService._resolve_module_flag(normalized_module)

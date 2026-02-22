@@ -1,3 +1,10 @@
+"""
+Service de facturation B2B.
+
+Ce module gère la facturation des comptes entreprise : cycles de facturation,
+calcul des consommations et génération des relevés.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -23,7 +30,17 @@ logger = logging.getLogger(__name__)
 
 
 class B2BBillingServiceError(Exception):
+    """Exception levée lors d'erreurs de facturation B2B."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de facturation B2B.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -31,6 +48,8 @@ class B2BBillingServiceError(Exception):
 
 
 class B2BBillingCycleData(BaseModel):
+    """Données d'un cycle de facturation B2B."""
+
     cycle_id: int
     account_id: int
     plan_id: int
@@ -56,6 +75,8 @@ class B2BBillingCycleData(BaseModel):
 
 
 class B2BBillingCycleListData(BaseModel):
+    """Liste paginée de cycles de facturation B2B."""
+
     items: list[B2BBillingCycleData]
     total: int
     limit: int
@@ -63,14 +84,35 @@ class B2BBillingCycleListData(BaseModel):
 
 
 class B2BBillingClosePayload(BaseModel):
+    """Payload pour clôturer un cycle de facturation."""
+
     account_id: int
     period_start: date
     period_end: date
 
 
 class B2BBillingService:
+    """
+    Service de facturation pour comptes entreprise B2B.
+
+    Gère les cycles de facturation, le calcul des montants basés sur
+    la consommation et les plans tarifaires.
+    """
     @staticmethod
     def _ensure_active_account(db: Session, *, account_id: int) -> EnterpriseAccountModel:
+        """
+        Vérifie qu'un compte entreprise existe et est actif.
+
+        Args:
+            db: Session de base de données.
+            account_id: Identifiant du compte entreprise.
+
+        Returns:
+            Modèle du compte entreprise.
+
+        Raises:
+            B2BBillingServiceError: Si le compte n'existe pas ou est inactif.
+        """
         account = db.scalar(
             select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id).limit(1)
         )
@@ -90,6 +132,7 @@ class B2BBillingService:
 
     @staticmethod
     def _resolve_default_active_plan(db: Session) -> EnterpriseBillingPlanModel:
+        """Récupère ou crée le plan B2B par défaut."""
         plan = db.scalar(
             select(EnterpriseBillingPlanModel)
             .where(EnterpriseBillingPlanModel.is_active.is_(True))
@@ -115,6 +158,7 @@ class B2BBillingService:
     def _resolve_active_plan_for_account(
         db: Session, *, account_id: int
     ) -> EnterpriseBillingPlanModel:
+        """Récupère le plan actif pour un compte entreprise, ou le plan par défaut."""
         mapping = db.scalar(
             select(EnterpriseAccountBillingPlanModel)
             .where(EnterpriseAccountBillingPlanModel.enterprise_account_id == account_id)
@@ -165,6 +209,7 @@ class B2BBillingService:
 
     @staticmethod
     def _validate_period(*, period_start: date, period_end: date) -> None:
+        """Valide que la période de facturation est cohérente."""
         if period_start > period_end:
             raise B2BBillingServiceError(
                 code="invalid_billing_period",
@@ -179,6 +224,7 @@ class B2BBillingService:
     def _consumed_units_for_period(
         db: Session, *, account_id: int, period_start: date, period_end: date
     ) -> int:
+        """Calcule le total d'unités consommées sur une période."""
         value = db.scalar(
             select(func.coalesce(func.sum(EnterpriseDailyUsageModel.used_count), 0)).where(
                 EnterpriseDailyUsageModel.enterprise_account_id == account_id,
@@ -192,6 +238,7 @@ class B2BBillingService:
     def _to_data(
         cycle: EnterpriseBillingCycleModel, plan: EnterpriseBillingPlanModel
     ) -> B2BBillingCycleData:
+        """Convertit les modèles de cycle et plan en DTO."""
         return B2BBillingCycleData(
             cycle_id=cycle.id,
             account_id=cycle.enterprise_account_id,
@@ -244,6 +291,25 @@ class B2BBillingService:
         period_end: date,
         closed_by_user_id: int | None,
     ) -> B2BBillingCycleData:
+        """
+        Clôture un cycle de facturation pour un compte.
+
+        Calcule les montants basés sur la consommation et crée le cycle.
+        Opération idempotente : retourne le cycle existant si déjà créé.
+
+        Args:
+            db: Session de base de données.
+            account_id: Identifiant du compte entreprise.
+            period_start: Date de début de la période.
+            period_end: Date de fin de la période.
+            closed_by_user_id: Identifiant de l'utilisateur clôturant le cycle.
+
+        Returns:
+            B2BBillingCycleData du cycle créé ou existant.
+
+        Raises:
+            B2BBillingServiceError: Si le compte est invalide ou la période incorrecte.
+        """
         started = monotonic()
         B2BBillingService._ensure_active_account(db, account_id=account_id)
         B2BBillingService._validate_period(period_start=period_start, period_end=period_end)
@@ -348,6 +414,19 @@ class B2BBillingService:
 
     @staticmethod
     def get_latest_cycle(db: Session, *, account_id: int) -> B2BBillingCycleData | None:
+        """
+        Récupère le dernier cycle de facturation d'un compte.
+
+        Args:
+            db: Session de base de données.
+            account_id: Identifiant du compte entreprise.
+
+        Returns:
+            B2BBillingCycleData du dernier cycle ou None si aucun.
+
+        Raises:
+            B2BBillingServiceError: Si le compte est invalide.
+        """
         B2BBillingService._ensure_active_account(db, account_id=account_id)
         cycle = db.scalar(
             select(EnterpriseBillingCycleModel)
@@ -380,6 +459,21 @@ class B2BBillingService:
         limit: int = 20,
         offset: int = 0,
     ) -> B2BBillingCycleListData:
+        """
+        Liste les cycles de facturation d'un compte avec pagination.
+
+        Args:
+            db: Session de base de données.
+            account_id: Identifiant du compte entreprise.
+            limit: Nombre maximum de résultats.
+            offset: Décalage pour la pagination.
+
+        Returns:
+            B2BBillingCycleListData avec les cycles et métadonnées de pagination.
+
+        Raises:
+            B2BBillingServiceError: Si les paramètres de pagination sont invalides.
+        """
         B2BBillingService._ensure_active_account(db, account_id=account_id)
         if limit <= 0 or limit > 100:
             raise B2BBillingServiceError(

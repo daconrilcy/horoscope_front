@@ -1,3 +1,10 @@
+"""
+Service d'audit.
+
+Ce module gère l'enregistrement et la consultation des événements d'audit,
+permettant la traçabilité des actions effectuées dans l'application.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -14,7 +21,17 @@ logger = logging.getLogger(__name__)
 
 
 class AuditServiceError(Exception):
+    """Exception levée lors d'erreurs dans le service d'audit."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur d'audit.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -22,6 +39,8 @@ class AuditServiceError(Exception):
 
 
 class AuditEventData(BaseModel):
+    """Modèle représentant un événement d'audit."""
+
     event_id: int
     request_id: str
     actor_user_id: int | None
@@ -35,6 +54,8 @@ class AuditEventData(BaseModel):
 
 
 class AuditEventListData(BaseModel):
+    """Modèle pour la liste paginée d'événements d'audit."""
+
     events: list[AuditEventData]
     total: int
     limit: int
@@ -42,6 +63,8 @@ class AuditEventListData(BaseModel):
 
 
 class AuditEventCreatePayload(BaseModel):
+    """Payload pour la création d'un événement d'audit."""
+
     request_id: str
     actor_user_id: int | None
     actor_role: str
@@ -53,6 +76,8 @@ class AuditEventCreatePayload(BaseModel):
 
 
 class AuditEventListFilters(BaseModel):
+    """Filtres pour la recherche d'événements d'audit."""
+
     action: str | None = None
     status: str | None = None
     target_user_id: int | None = None
@@ -63,8 +88,23 @@ class AuditEventListFilters(BaseModel):
 
 
 class AuditService:
+    """
+    Service de gestion des événements d'audit.
+
+    Permet d'enregistrer et de consulter l'historique des actions
+    effectuées dans l'application pour assurer la traçabilité.
+    """
     @staticmethod
     def _to_data(model: AuditEventModel) -> AuditEventData:
+        """
+        Convertit un modèle d'événement d'audit en DTO.
+
+        Args:
+            model: Modèle ORM de l'événement d'audit.
+
+        Returns:
+            Objet AuditEventData prêt pour l'API.
+        """
         return AuditEventData(
             event_id=model.id,
             request_id=model.request_id,
@@ -80,6 +120,19 @@ class AuditService:
 
     @staticmethod
     def record_event(db: Session, *, payload: AuditEventCreatePayload) -> AuditEventData:
+        """
+        Enregistre un nouvel événement d'audit.
+
+        Args:
+            db: Session de base de données.
+            payload: Données de l'événement à enregistrer.
+
+        Returns:
+            AuditEventData représentant l'événement créé.
+
+        Raises:
+            AuditServiceError: Si les données de l'événement sont invalides.
+        """
         if not payload.request_id.strip():
             raise AuditServiceError(
                 code="audit_validation_error",
@@ -121,6 +174,19 @@ class AuditService:
 
     @staticmethod
     def list_events(db: Session, *, filters: AuditEventListFilters) -> AuditEventListData:
+        """
+        Liste les événements d'audit avec filtres et pagination.
+
+        Args:
+            db: Session de base de données.
+            filters: Critères de filtrage et paramètres de pagination.
+
+        Returns:
+            AuditEventListData contenant les événements et les métadonnées de pagination.
+
+        Raises:
+            AuditServiceError: Si les paramètres de pagination sont invalides.
+        """
         if filters.limit <= 0 or filters.limit > 100:
             raise AuditServiceError(
                 code="audit_validation_error",

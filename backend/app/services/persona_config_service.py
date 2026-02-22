@@ -1,3 +1,10 @@
+"""
+Service de configuration des personas.
+
+Ce module gère les profils de persona de l'assistant astrologique : création,
+activation, archivage et rollback des configurations.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -31,7 +38,17 @@ DEFAULT_PERSONA_CONFIG = {
 
 
 class PersonaConfigServiceError(Exception):
+    """Exception levée lors d'erreurs de configuration persona."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de configuration persona.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -39,6 +56,8 @@ class PersonaConfigServiceError(Exception):
 
 
 class PersonaConfigData(BaseModel):
+    """Données d'une configuration persona."""
+
     id: int | None
     version: int
     profile_code: str
@@ -55,6 +74,7 @@ class PersonaConfigData(BaseModel):
     is_default: bool
 
     def to_prompt_line(self) -> str:
+        """Génère la ligne de prompt pour cette configuration persona."""
         return (
             "Persona policy: "
             f"profile={self.profile_code}; "
@@ -65,6 +85,8 @@ class PersonaConfigData(BaseModel):
 
 
 class PersonaConfigUpdatePayload(BaseModel):
+    """Payload pour mettre à jour la configuration active."""
+
     tone: str
     prudence_level: str
     scope_policy: str
@@ -75,6 +97,8 @@ class PersonaConfigUpdatePayload(BaseModel):
 
 
 class PersonaProfileCreatePayload(BaseModel):
+    """Payload pour créer un nouveau profil persona."""
+
     profile_code: str
     display_name: str
     tone: str
@@ -86,18 +110,29 @@ class PersonaProfileCreatePayload(BaseModel):
 
 
 class PersonaRollbackData(BaseModel):
+    """Résultat d'un rollback de configuration persona."""
+
     active: PersonaConfigData
     rolled_back_version: int
 
 
 class PersonaProfileListData(BaseModel):
+    """Liste des profils persona."""
+
     items: list[PersonaConfigData]
     total: int
 
 
 class PersonaConfigService:
+    """
+    Service de gestion des configurations persona.
+
+    Gère le cycle de vie des profils persona avec versioning,
+    activation/désactivation et capacité de rollback.
+    """
     @staticmethod
     def _to_data(model: PersonaConfigModel) -> PersonaConfigData:
+        """Convertit un modèle de configuration en DTO."""
         return PersonaConfigData(
             id=model.id,
             version=model.version,
@@ -117,6 +152,7 @@ class PersonaConfigService:
 
     @staticmethod
     def _default_data() -> PersonaConfigData:
+        """Retourne la configuration persona par défaut."""
         return PersonaConfigData(
             id=None,
             version=0,
@@ -136,6 +172,7 @@ class PersonaConfigService:
 
     @staticmethod
     def _validate_profile_code(profile_code: str) -> str:
+        """Valide et normalise un code de profil."""
         normalized = profile_code.strip().lower()
         if not PROFILE_CODE_PATTERN.match(normalized):
             raise PersonaConfigServiceError(
@@ -147,6 +184,7 @@ class PersonaConfigService:
 
     @staticmethod
     def _validate_payload(payload: PersonaConfigUpdatePayload) -> PersonaConfigUpdatePayload:
+        """Valide les champs d'un payload de mise à jour."""
         if payload.tone not in ALLOWED_TONES:
             raise PersonaConfigServiceError(
                 code="invalid_persona_config",
@@ -191,6 +229,7 @@ class PersonaConfigService:
     def _validate_create_payload(
         payload: PersonaProfileCreatePayload,
     ) -> PersonaProfileCreatePayload:
+        """Valide un payload de création de profil."""
         PersonaConfigService._validate_payload(
             PersonaConfigUpdatePayload(
                 tone=payload.tone,
@@ -206,6 +245,7 @@ class PersonaConfigService:
 
     @staticmethod
     def _next_version(db: Session) -> int:
+        """Calcule le prochain numéro de version."""
         latest = db.scalar(
             select(PersonaConfigModel).order_by(desc(PersonaConfigModel.version)).limit(1)
         )
@@ -213,6 +253,7 @@ class PersonaConfigService:
 
     @staticmethod
     def _get_active_model(db: Session, *, for_update: bool = False) -> PersonaConfigModel | None:
+        """Récupère le modèle de configuration actif."""
         query = (
             select(PersonaConfigModel)
             .where(PersonaConfigModel.status == "active")
@@ -230,6 +271,7 @@ class PersonaConfigService:
         profile_id: int,
         for_update: bool = False,
     ) -> PersonaConfigModel | None:
+        """Récupère un profil par son identifiant."""
         query = select(PersonaConfigModel).where(PersonaConfigModel.id == profile_id).limit(1)
         if for_update:
             query = query.with_for_update()
@@ -237,6 +279,7 @@ class PersonaConfigService:
 
     @staticmethod
     def get_active(db: Session) -> PersonaConfigData:
+        """Récupère la configuration persona active."""
         active = PersonaConfigService._get_active_model(db)
         if active is None:
             return PersonaConfigService._default_data()
@@ -244,6 +287,7 @@ class PersonaConfigService:
 
     @staticmethod
     def list_profiles(db: Session) -> PersonaProfileListData:
+        """Liste tous les profils persona triés par version."""
         rows = list(
             db.scalars(
                 select(PersonaConfigModel).order_by(
@@ -264,6 +308,17 @@ class PersonaConfigService:
         user_id: int,
         payload: PersonaProfileCreatePayload,
     ) -> PersonaConfigData:
+        """
+        Crée un nouveau profil persona.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur créateur.
+            payload: Données du nouveau profil.
+
+        Returns:
+            Profil créé.
+        """
         validated = PersonaConfigService._validate_create_payload(payload)
         current_active = PersonaConfigService._get_active_model(db, for_update=True)
         if validated.activate and current_active is not None:
@@ -302,6 +357,20 @@ class PersonaConfigService:
         user_id: int,
         profile_id: int,
     ) -> PersonaConfigData:
+        """
+        Active un profil persona existant.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            profile_id: Identifiant du profil à activer.
+
+        Returns:
+            Profil activé.
+
+        Raises:
+            PersonaConfigServiceError: Si le profil n'existe pas ou est archivé.
+        """
         target = PersonaConfigService._get_profile_by_id(db, profile_id=profile_id, for_update=True)
         if target is None:
             raise PersonaConfigServiceError(
@@ -341,6 +410,20 @@ class PersonaConfigService:
         user_id: int,
         profile_id: int,
     ) -> PersonaConfigData:
+        """
+        Archive un profil persona inactif.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            profile_id: Identifiant du profil à archiver.
+
+        Returns:
+            Profil archivé.
+
+        Raises:
+            PersonaConfigServiceError: Si le profil est actif ou n'existe pas.
+        """
         target = PersonaConfigService._get_profile_by_id(db, profile_id=profile_id, for_update=True)
         if target is None:
             raise PersonaConfigServiceError(
@@ -371,6 +454,17 @@ class PersonaConfigService:
         user_id: int,
         profile_id: int,
     ) -> PersonaConfigData:
+        """
+        Restaure un profil persona archivé.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            profile_id: Identifiant du profil à restaurer.
+
+        Returns:
+            Profil restauré (statut inactif).
+        """
         target = PersonaConfigService._get_profile_by_id(db, profile_id=profile_id, for_update=True)
         if target is None:
             raise PersonaConfigServiceError(
@@ -396,6 +490,17 @@ class PersonaConfigService:
         user_id: int,
         payload: PersonaConfigUpdatePayload,
     ) -> PersonaConfigData:
+        """
+        Met à jour la configuration active en créant une nouvelle version.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            payload: Nouvelles valeurs de configuration.
+
+        Returns:
+            Nouvelle configuration active.
+        """
         validated = PersonaConfigService._validate_payload(payload)
         current_active = PersonaConfigService._get_active_model(db, for_update=True)
         current = (
@@ -445,6 +550,19 @@ class PersonaConfigService:
         *,
         user_id: int,
     ) -> PersonaRollbackData:
+        """
+        Effectue un rollback vers la version précédente.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+
+        Returns:
+            Données du rollback avec la nouvelle configuration active.
+
+        Raises:
+            PersonaConfigServiceError: Si aucun rollback n'est disponible.
+        """
         current_active = PersonaConfigService._get_active_model(db, for_update=True)
         if current_active is None:
             raise PersonaConfigServiceError(

@@ -1,3 +1,10 @@
+"""
+Service de gestion des données de référence astrologiques.
+
+Ce module gère les versions des données de référence utilisées pour
+les calculs astrologiques : seeding, récupération et clonage.
+"""
+
 from __future__ import annotations
 
 from sqlalchemy.exc import IntegrityError
@@ -8,7 +15,17 @@ from app.infra.db.repositories.reference_repository import ReferenceRepository
 
 
 class ReferenceDataServiceError(Exception):
+    """Exception levée lors d'erreurs de gestion des données de référence."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de données de référence.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -16,8 +33,27 @@ class ReferenceDataServiceError(Exception):
 
 
 class ReferenceDataService:
+    """
+    Service de gestion des données de référence.
+
+    Gère les versions des données astrologiques de référence avec
+    support du seeding initial et du clonage entre versions.
+    """
+
     @staticmethod
     def seed_reference_version(db: Session, version: str | None = None) -> str:
+        """
+        Initialise ou vérifie une version de données de référence.
+
+        Crée la version si elle n'existe pas et ajoute les données par défaut.
+
+        Args:
+            db: Session de base de données.
+            version: Version à initialiser (par défaut: version active).
+
+        Returns:
+            Version initialisée.
+        """
         target_version = version or settings.active_reference_version
         repo = ReferenceRepository(db)
         model = repo.get_version(target_version)
@@ -32,11 +68,35 @@ class ReferenceDataService:
 
     @staticmethod
     def get_active_reference_data(db: Session, version: str | None = None) -> dict[str, object]:
+        """
+        Récupère les données de référence pour une version.
+
+        Args:
+            db: Session de base de données.
+            version: Version à récupérer (par défaut: version active).
+
+        Returns:
+            Dictionnaire des données de référence.
+        """
         target_version = version or settings.active_reference_version
         return ReferenceRepository(db).get_reference_data(target_version)
 
     @staticmethod
     def clone_reference_version(db: Session, source_version: str, new_version: str) -> str:
+        """
+        Clone une version de données de référence vers une nouvelle version.
+
+        Args:
+            db: Session de base de données.
+            source_version: Version source à cloner.
+            new_version: Nom de la nouvelle version.
+
+        Returns:
+            Nom de la version créée.
+
+        Raises:
+            ReferenceDataServiceError: Si la source n'existe pas ou la cible existe déjà.
+        """
         repo = ReferenceRepository(db)
         source_model = repo.get_version(source_version)
         if source_model is None:

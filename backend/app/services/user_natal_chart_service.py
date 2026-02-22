@@ -1,3 +1,10 @@
+"""
+Service de gestion des thèmes natals utilisateur.
+
+Ce module gère la génération, la récupération et la vérification de
+cohérence des thèmes natals des utilisateurs.
+"""
+
 from __future__ import annotations
 
 import json
@@ -21,7 +28,17 @@ from app.services.user_birth_profile_service import (
 
 
 class UserNatalChartServiceError(Exception):
+    """Exception levée lors d'erreurs de thème natal utilisateur."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de thème natal.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -29,17 +46,23 @@ class UserNatalChartServiceError(Exception):
 
 
 class UserNatalChartMetadata(BaseModel):
+    """Métadonnées d'un thème natal (versions de référence et règles)."""
+
     reference_version: str
     ruleset_version: str
 
 
 class UserNatalChartGenerationData(BaseModel):
+    """Données d'un thème natal nouvellement généré."""
+
     chart_id: str
     result: NatalResult
     metadata: UserNatalChartMetadata
 
 
 class UserNatalChartReadData(BaseModel):
+    """Données d'un thème natal récupéré avec date de création."""
+
     chart_id: str
     result: NatalResult
     metadata: UserNatalChartMetadata
@@ -47,6 +70,8 @@ class UserNatalChartReadData(BaseModel):
 
 
 class UserNatalChartConsistencyData(BaseModel):
+    """Résultat de vérification de cohérence entre thèmes."""
+
     user_id: int
     consistent: bool
     reason: str
@@ -59,12 +84,20 @@ class UserNatalChartConsistencyData(BaseModel):
 
 
 class UserNatalChartService:
+    """
+    Service de gestion des thèmes natals utilisateur.
+
+    Orchestre la génération, la récupération et la vérification de
+    cohérence des thèmes natals avec gestion des timeouts.
+    """
     @staticmethod
     def _normalize_payload(payload: dict[str, object]) -> str:
+        """Normalise un payload pour comparaison déterministe."""
         return json.dumps(payload, sort_keys=True, separators=(",", ":"))
 
     @staticmethod
     def _validate_natal_result_payload(payload: dict[str, object], chart_id: str) -> NatalResult:
+        """Valide et parse un payload de résultat natal."""
         try:
             return NatalResult.model_validate(payload)
         except ValidationError as error:
@@ -80,6 +113,7 @@ class UserNatalChartService:
         user_id: int,
         birth_input: BirthInput,
     ) -> None:
+        """Associe un thème natal legacy existant à un utilisateur si compatible."""
         profile_count = UserBirthProfileRepository(db).count_users_with_same_profile(
             birth_date=birth_input.birth_date,
             birth_time=birth_input.birth_time,
@@ -107,6 +141,20 @@ class UserNatalChartService:
         user_id: int,
         reference_version: str | None = None,
     ) -> UserNatalChartGenerationData:
+        """
+        Génère un nouveau thème natal pour un utilisateur.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            reference_version: Version de référence à utiliser (optionnel).
+
+        Returns:
+            Thème natal généré avec métadonnées.
+
+        Raises:
+            UserNatalChartServiceError: Si le profil manque ou en cas de timeout.
+        """
         try:
             profile = UserBirthProfileService.get_for_user(db, user_id=user_id)
         except UserBirthProfileServiceError as error:
@@ -191,6 +239,21 @@ class UserNatalChartService:
 
     @staticmethod
     def get_latest_for_user(db: Session, user_id: int) -> UserNatalChartReadData:
+        """
+        Récupère le dernier thème natal d'un utilisateur.
+
+        Tente de récupérer un thème legacy si aucun n'est associé.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+
+        Returns:
+            Dernier thème natal avec métadonnées.
+
+        Raises:
+            UserNatalChartServiceError: Si aucun thème n'existe.
+        """
         repo = ChartResultRepository(db)
         model = repo.get_latest_by_user_id(user_id)
         if model is None:
@@ -242,6 +305,21 @@ class UserNatalChartService:
 
     @staticmethod
     def verify_consistency_for_user(db: Session, user_id: int) -> UserNatalChartConsistencyData:
+        """
+        Vérifie la cohérence entre les thèmes natals d'un utilisateur.
+
+        Compare le dernier thème avec une baseline pour détecter les écarts.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+
+        Returns:
+            Résultat de la vérification de cohérence.
+
+        Raises:
+            UserNatalChartServiceError: Si pas assez de thèmes ou incohérence détectée.
+        """
         repo = ChartResultRepository(db)
         latest = repo.get_latest_by_user_id(user_id=user_id)
         if latest is None:

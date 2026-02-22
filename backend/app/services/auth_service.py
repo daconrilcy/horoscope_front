@@ -1,3 +1,10 @@
+"""
+Service d'authentification.
+
+Ce module fournit les fonctionnalités d'authentification utilisateur :
+inscription, connexion et rafraîchissement des tokens JWT.
+"""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, EmailStr, TypeAdapter, ValidationError
@@ -17,7 +24,17 @@ from app.infra.db.repositories.user_repository import UserRepository
 
 
 class AuthServiceError(Exception):
+    """Exception levée lors d'erreurs d'authentification."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur d'authentification.
+
+        Args:
+            code: Code d'erreur unique identifiant le type d'erreur.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel contenant des détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -25,23 +42,41 @@ class AuthServiceError(Exception):
 
 
 class AuthTokens(BaseModel):
+    """Modèle représentant la paire de tokens d'authentification."""
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
 
 
 class AuthUser(BaseModel):
+    """Modèle représentant les informations utilisateur retournées après authentification."""
+
     id: int
     email: str
     role: str
 
 
 class AuthResponse(BaseModel):
+    """Réponse complète d'authentification incluant l'utilisateur et ses tokens."""
+
     user: AuthUser
     tokens: AuthTokens
 
 
 def _normalize_email(email: str) -> str:
+    """
+    Normalise et valide une adresse email.
+
+    Args:
+        email: Adresse email brute à normaliser.
+
+    Returns:
+        Adresse email normalisée (minuscules, sans espaces).
+
+    Raises:
+        AuthServiceError: Si l'email est invalide.
+    """
     normalized = email.strip().lower()
     try:
         validated = TypeAdapter(EmailStr).validate_python(normalized)
@@ -55,6 +90,15 @@ def _normalize_email(email: str) -> str:
 
 
 def _validate_password(password: str) -> None:
+    """
+    Valide la complexité du mot de passe.
+
+    Args:
+        password: Mot de passe à valider.
+
+    Raises:
+        AuthServiceError: Si le mot de passe ne respecte pas les critères de sécurité.
+    """
     if len(password) < 8:
         raise AuthServiceError(
             code="invalid_password",
@@ -64,8 +108,27 @@ def _validate_password(password: str) -> None:
 
 
 class AuthService:
+    """
+    Service gérant l'authentification des utilisateurs.
+
+    Fournit les méthodes pour l'inscription, la connexion et le
+    rafraîchissement des tokens JWT.
+    """
+
     @staticmethod
     def _extract_refresh_jti(refresh_token: str) -> str:
+        """
+        Extrait l'identifiant unique (JTI) d'un token de rafraîchissement.
+
+        Args:
+            refresh_token: Token de rafraîchissement JWT.
+
+        Returns:
+            Identifiant unique du token.
+
+        Raises:
+            AuthServiceError: Si le token est invalide ou mal formé.
+        """
         try:
             payload = decode_token(refresh_token, expected_type="refresh")
         except SecurityError as error:
@@ -85,6 +148,22 @@ class AuthService:
 
     @staticmethod
     def register(db: Session, email: str, password: str, role: str = "user") -> AuthResponse:
+        """
+        Inscrit un nouvel utilisateur.
+
+        Args:
+            db: Session de base de données.
+            email: Adresse email de l'utilisateur.
+            password: Mot de passe choisi.
+            role: Rôle de l'utilisateur (par défaut "user").
+
+        Returns:
+            AuthResponse contenant l'utilisateur créé et ses tokens.
+
+        Raises:
+            AuthServiceError: Si l'email est déjà utilisé, invalide,
+                ou si le mot de passe/rôle ne respecte pas les critères.
+        """
         normalized_email = _normalize_email(email)
         _validate_password(password)
         if not is_valid_role(role):
@@ -118,6 +197,20 @@ class AuthService:
 
     @staticmethod
     def login(db: Session, email: str, password: str) -> AuthResponse:
+        """
+        Authentifie un utilisateur existant.
+
+        Args:
+            db: Session de base de données.
+            email: Adresse email de l'utilisateur.
+            password: Mot de passe de l'utilisateur.
+
+        Returns:
+            AuthResponse contenant l'utilisateur et ses nouveaux tokens.
+
+        Raises:
+            AuthServiceError: Si les identifiants sont invalides.
+        """
         normalized_email = _normalize_email(email)
         repo = UserRepository(db)
         user = repo.get_by_email(normalized_email)
@@ -139,6 +232,22 @@ class AuthService:
 
     @staticmethod
     def refresh(db: Session, refresh_token: str) -> AuthTokens:
+        """
+        Rafraîchit les tokens d'authentification.
+
+        Valide le token de rafraîchissement fourni et génère une nouvelle
+        paire de tokens (access + refresh). L'ancien refresh token est invalidé.
+
+        Args:
+            db: Session de base de données.
+            refresh_token: Token de rafraîchissement actuel.
+
+        Returns:
+            AuthTokens contenant la nouvelle paire de tokens.
+
+        Raises:
+            AuthServiceError: Si le token est invalide, expiré ou révoqué.
+        """
         try:
             payload = decode_token(refresh_token, expected_type="refresh")
         except SecurityError as error:

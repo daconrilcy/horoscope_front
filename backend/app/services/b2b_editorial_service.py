@@ -1,3 +1,10 @@
+"""
+Service de configuration éditoriale B2B.
+
+Ce module gère les configurations éditoriales des comptes entreprise,
+permettant de personnaliser le ton, le style et le format du contenu généré.
+"""
+
 from __future__ import annotations
 
 import re
@@ -17,7 +24,17 @@ _VALID_FORMATS = {"paragraph", "bullet"}
 
 
 class B2BEditorialServiceError(Exception):
+    """Exception levée lors d'erreurs de configuration éditoriale B2B."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de configuration éditoriale.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -25,6 +42,8 @@ class B2BEditorialServiceError(Exception):
 
 
 class B2BEditorialConfigUpdatePayload(BaseModel):
+    """Payload pour la mise à jour d'une configuration éditoriale."""
+
     tone: str = "neutral"
     length_style: str = "medium"
     output_format: str = "paragraph"
@@ -77,6 +96,8 @@ class B2BEditorialConfigUpdatePayload(BaseModel):
 
 
 class B2BEditorialConfigData(BaseModel):
+    """Données d'une configuration éditoriale B2B."""
+
     config_id: int | None
     account_id: int
     version_number: int
@@ -92,8 +113,15 @@ class B2BEditorialConfigData(BaseModel):
 
 
 class B2BEditorialService:
+    """
+    Service de gestion des configurations éditoriales B2B.
+
+    Permet aux comptes entreprise de personnaliser le ton, le style
+    et le vocabulaire utilisés dans le contenu astrologique généré.
+    """
     @staticmethod
     def _default_for_account(account_id: int) -> B2BEditorialConfigData:
+        """Retourne la configuration éditoriale par défaut pour un compte."""
         return B2BEditorialConfigData(
             config_id=None,
             account_id=account_id,
@@ -111,10 +139,20 @@ class B2BEditorialService:
 
     @staticmethod
     def default_config(*, account_id: int) -> B2BEditorialConfigData:
+        """
+        Retourne la configuration éditoriale par défaut.
+
+        Args:
+            account_id: Identifiant du compte entreprise.
+
+        Returns:
+            Configuration avec les valeurs par défaut.
+        """
         return B2BEditorialService._default_for_account(account_id)
 
     @staticmethod
     def _to_data(model: EnterpriseEditorialConfigModel) -> B2BEditorialConfigData:
+        """Convertit un modèle de configuration en DTO."""
         return B2BEditorialConfigData(
             config_id=model.id,
             account_id=model.enterprise_account_id,
@@ -132,6 +170,7 @@ class B2BEditorialService:
 
     @staticmethod
     def _ensure_active_account(db: Session, *, account_id: int) -> EnterpriseAccountModel:
+        """Vérifie qu'un compte entreprise existe et est actif."""
         account = db.scalar(
             select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id).limit(1)
         )
@@ -166,6 +205,19 @@ class B2BEditorialService:
 
     @staticmethod
     def get_active_config(db: Session, *, account_id: int) -> B2BEditorialConfigData:
+        """
+        Récupère la configuration éditoriale active d'un compte.
+
+        Args:
+            db: Session de base de données.
+            account_id: Identifiant du compte entreprise.
+
+        Returns:
+            Configuration active ou configuration par défaut si aucune.
+
+        Raises:
+            B2BEditorialServiceError: Si le compte n'existe pas ou est inactif.
+        """
         B2BEditorialService._ensure_active_account(db, account_id=account_id)
         active = B2BEditorialService._get_active_model(db, account_id=account_id)
         if active is None:
@@ -180,6 +232,23 @@ class B2BEditorialService:
         credential_id: int,
         payload: B2BEditorialConfigUpdatePayload,
     ) -> B2BEditorialConfigData:
+        """
+        Crée ou met à jour la configuration éditoriale d'un compte.
+
+        Crée une nouvelle version si la configuration a changé.
+
+        Args:
+            db: Session de base de données.
+            account_id: Identifiant du compte entreprise.
+            credential_id: Identifiant du credential effectuant la modification.
+            payload: Nouvelles valeurs de configuration.
+
+        Returns:
+            Configuration mise à jour.
+
+        Raises:
+            B2BEditorialServiceError: Si le compte n'existe pas ou est inactif.
+        """
         B2BEditorialService._ensure_active_account(db, account_id=account_id)
         active = B2BEditorialService._get_active_model(db, account_id=account_id)
         if active is not None:
@@ -215,6 +284,7 @@ class B2BEditorialService:
 
     @staticmethod
     def _compose_base_body(*, sign_name: str, length_style: str) -> str:
+        """Compose le corps de base du résumé selon le style de longueur."""
         if length_style == "short":
             return f"Semaine de {sign_name}: avancez pas a pas."
         if length_style == "long":
@@ -226,6 +296,7 @@ class B2BEditorialService:
 
     @staticmethod
     def _apply_avoided_terms(text: str, avoided_terms: list[str]) -> str:
+        """Supprime les termes à éviter du texte."""
         output = text
         for term in avoided_terms:
             pattern = re.compile(re.escape(term), flags=re.IGNORECASE)
@@ -238,6 +309,16 @@ class B2BEditorialService:
         sign_name: str,
         config: B2BEditorialConfigData,
     ) -> str:
+        """
+        Génère un résumé hebdomadaire pour un signe avec la configuration donnée.
+
+        Args:
+            sign_name: Nom du signe astrologique.
+            config: Configuration éditoriale à appliquer.
+
+        Returns:
+            Texte du résumé formaté selon la configuration.
+        """
         tone_prefix = {
             "neutral": "Tendance",
             "friendly": "Conseil",

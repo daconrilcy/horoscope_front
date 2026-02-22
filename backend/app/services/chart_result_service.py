@@ -1,3 +1,10 @@
+"""
+Service de persistance des résultats de thèmes natals.
+
+Ce module gère la sauvegarde et la récupération des résultats de calculs
+de thèmes natals pour l'audit et la traçabilité.
+"""
+
 from __future__ import annotations
 
 import hashlib
@@ -14,6 +21,8 @@ from app.infra.db.repositories.chart_result_repository import ChartResultReposit
 
 
 class ChartResultAuditRecord(BaseModel):
+    """Enregistrement d'audit d'un résultat de thème natal."""
+
     chart_id: str
     reference_version: str
     ruleset_version: str
@@ -23,7 +32,17 @@ class ChartResultAuditRecord(BaseModel):
 
 
 class ChartResultServiceError(Exception):
+    """Exception levée lors d'erreurs du service de résultats."""
+
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        """
+        Initialise une erreur de résultat de thème.
+
+        Args:
+            code: Code d'erreur unique.
+            message: Message descriptif de l'erreur.
+            details: Dictionnaire optionnel de détails supplémentaires.
+        """
         self.code = code
         self.message = message
         self.details = details or {}
@@ -31,12 +50,20 @@ class ChartResultServiceError(Exception):
 
 
 class ChartResultService:
+    """
+    Service de gestion des résultats de thèmes natals.
+
+    Persiste les résultats avec un hash des entrées pour permettre
+    la vérification de reproductibilité et l'audit.
+    """
+
     @staticmethod
     def compute_input_hash(
         birth_input: BirthInput,
         reference_version: str,
         ruleset_version: str,
     ) -> str:
+        """Calcule un hash SHA-256 des données d'entrée pour garantir l'unicité."""
         payload = {
             "birth_input": birth_input.model_dump(mode="json"),
             "reference_version": reference_version,
@@ -52,6 +79,21 @@ class ChartResultService:
         natal_result: NatalResult,
         user_id: int | None = None,
     ) -> str:
+        """
+        Persiste un résultat de thème natal pour audit.
+
+        Args:
+            db: Session de base de données.
+            birth_input: Données de naissance utilisées.
+            natal_result: Résultat du calcul.
+            user_id: Identifiant de l'utilisateur (optionnel).
+
+        Returns:
+            Identifiant unique du thème créé.
+
+        Raises:
+            ChartResultServiceError: Si les versions sont manquantes.
+        """
         if not natal_result.reference_version:
             raise ChartResultServiceError(
                 code="invalid_chart_result",
@@ -93,6 +135,19 @@ class ChartResultService:
 
     @staticmethod
     def get_audit_record(db: Session, chart_id: str) -> ChartResultAuditRecord:
+        """
+        Récupère l'enregistrement d'audit d'un thème natal.
+
+        Args:
+            db: Session de base de données.
+            chart_id: Identifiant du thème.
+
+        Returns:
+            Enregistrement d'audit complet.
+
+        Raises:
+            ChartResultServiceError: Si le thème n'existe pas.
+        """
         model = ChartResultRepository(db).get_by_chart_id(chart_id)
         if model is None:
             raise ChartResultServiceError(
