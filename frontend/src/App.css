@@ -2266,6 +2266,11 @@ textarea:focus-visible {
   position: relative;
   padding-top: 6px;
   text-align: center;
+  min-height: 52px; /* Assure que le titre ne saute pas si l'avatar est lent à charger */
+}
+
+.today-header__content {
+  padding: 0 44px; /* Réserve de l'espace pour l'avatar à droite (40px + marge) et équilibre à gauche */
 }
 
 .today-header__kicker {
@@ -2291,7 +2296,7 @@ textarea:focus-visible {
   right: 0;
   width: 40px;
   height: 40px;
-  border-radius: 999px;
+  border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.4);
   overflow: hidden;
   background: var(--chip);
