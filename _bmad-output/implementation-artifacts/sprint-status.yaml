@@ -1,4 +1,4 @@
-# generated: 2026-02-21 14:46:14
+# generated: 2026-02-22 12:00:00
 # project: horoscope_front
 # project_key: NOKEY
 # tracking_system: file-system
@@ -33,7 +33,7 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-02-21 14:46:14
+generated: 2026-02-22 12:00:00
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -47,6 +47,7 @@ development_status:
   1-4-calculer-un-resultat-natal-de-base: done
   1-5-assurer-la-tracabilite-regle-donnee-resultat: done
   epic-1-retrospective: done
+
   epic-2: done
   2-1-inscription-et-authentification-utilisateur-jwt: done
   2-2-saisie-et-gestion-des-donnees-natales: done
@@ -55,6 +56,7 @@ development_status:
   2-5-coherence-inter-sessions-des-resultats: done
   2-6-interface-utilisateur-signin-signout: done
   epic-2-retrospective: done
+
   epic-3: done
   3-1-chat-astrologue-avec-envoi-reception-de-messages: done
   3-2-persistance-du-contexte-conversationnel: done
@@ -64,19 +66,23 @@ development_status:
   3-6-detection-hors-scope-et-recuperation-guidee: done
   3-7-parametrage-des-bornes-de-persona-astrologue: done
   epic-3-retrospective: done
+
   epic-4: done
   4-1-souscription-au-plan-payant-d-entree: done
   4-2-quotas-journaliers-et-suivi-de-consommation: done
   4-3-upgrade-modification-de-plan: done
   epic-4-retrospective: done
+
   epic-5: done
   5-1-export-et-suppression-des-donnees-personnelles: done
   5-2-anonymisation-llm-et-audit-des-actions-sensibles: done
   epic-5-retrospective: done
+
   epic-6: done
   6-1-outillage-support-compte-incidents-demandes-privacy: done
   6-2-monitoring-qualite-conversationnelle-et-pilotage-ops: done
   epic-6-retrospective: done
+
   epic-7: done
   7-1-espace-compte-entreprise-et-gestion-des-credentials-api: done
   7-2-consommation-api-astrologie-authentifiee: done
@@ -84,38 +90,72 @@ development_status:
   7-4-personnalisation-editoriale-du-contenu-b2b: done
   7-5-facturation-hybride-fixe-volume: done
   epic-7-retrospective: done
+
   epic-8: done
   8-1-pipeline-ci-cd-avec-quality-gates-obligatoires: done
   8-2-observabilite-operationnelle-dashboards-alertes: done
   8-3-sauvegarde-restauration-et-runbooks-incidents: done
   8-4-tests-de-charge-et-de-concurrence-des-flux-critiques: done
   epic-8-retrospective: done
+
   epic-9: done
   9-1-durcissement-de-la-gestion-des-secrets-et-rotation: done
   9-2-pack-de-verification-securite-sast-deps-pentest: done
   9-3-preuves-operationnelles-rgpd-export-suppression-audit: done
   epic-9-retrospective: done
+
   epic-10: done
   10-1-couverture-tests-frontend-b2b-completee: done
   10-2-reconciliation-usage-facturation-b2b-pour-ops: done
   10-3-tuning-performance-guide-par-slo: done
   epic-10-retrospective: done
+
   epic-11: done
   11-1-raffinement-multi-persona-astrologue: done
   11-2-modules-tarot-runes-derriere-feature-flags: done
   11-3-instrumentation-des-experiments-packaging-pricing: done
   epic-11-retrospective: done
+
   epic-12: done
   12-1-formulaire-saisie-profil-natal: done
   12-2-declenchement-generation-theme-natal-depuis-ui: done
+  epic-12-retrospective: done
+
   epic-13: done
   13-1-correction-erreur-422-generation-theme-natal: done
-  epic-14: in-progress
+  epic-13-retrospective: done
+
+  epic-14: done
   14-1-geocodage-lieu-naissance-nominatim: done
   14-2-modes-degrades-lieu-heure-absents: done
-  14-3-table-traduction-termes-astrologiques: review
-  epic-15: in-progress
-  15-1-ai-text-engine-openai-gateway: review
+  14-3-table-traduction-termes-astrologiques: done
+  epic-14-retrospective: done
+
+  epic-15: done
+  15-1-ai-text-engine-openai-gateway: done
   15-2-ai-text-engine-rate-limiting-observability-docker: done
   15-3-migration-services-chat-guidance-vers-ai-engine: done
-  15-4-interpretation-textuelle-theme-natal-via-ai-engine: ready-for-dev
+  15-4-interpretation-textuelle-theme-natal-via-ai-engine: done
+  epic-15-retrospective: done
+
+  epic-16: in-progress
+  16-1-react-router-layout-foundation: done
+  16-2-dashboard-page: done
+  16-3-chat-messenger-style: done
+  16-4-astrologers-pages: done
+  16-5-consultations-pages: done
+  16-6-settings-pages: done
+  16-7-admin-pages: done
+  16-8-correction-parcours-theme-natal: done
+  epic-16-retrospective: optional
+
+  epic-17: in-progress
+  17-1-fondations-ui-tokens-typo-lucide: done
+  17-2-fond-premium-gradient-noise-starfield: done
+  17-3-header-composant: review
+  17-4-hero-horoscope-card-glassmorphism: review
+  17-5-raccourcis-shortcut-card: review
+  17-6-section-amour-mini-insight-card: review
+  17-7-bottom-navigation-glass-pill: ready-for-dev
+  17-8-today-page-assemblage-route-tests: ready-for-dev
+  epic-17-retrospective: optional

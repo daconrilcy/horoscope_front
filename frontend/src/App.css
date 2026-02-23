@@ -1,15 +1,201 @@
 #root {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 2rem 1rem 3rem;
+  min-height: 100vh;
+}
+
+/* App Shell Layout */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-shell-body {
+  display: flex;
+  flex: 1;
+}
+
+.app-shell-main {
+  flex: 1;
+  width: 100%;
+  padding: 22px 18px 110px;
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  background: var(--glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--glass-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.app-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.app-header-title {
+  font-size: 1.25rem;
+  margin: 0;
+  background: linear-gradient(90deg, var(--cta-l) 0%, var(--cta-r) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.app-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-header-user {
+  font-size: 0.9rem;
+  color: var(--text-2);
+}
+
+.app-header-role {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: var(--chip);
+  color: var(--text-1);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.app-header-logout {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+}
+
+/* Sidebar */
+.app-sidebar {
+  width: 220px;
+  background: var(--glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-right: 1px solid var(--glass-border);
+  padding: 1rem 0;
+  flex-shrink: 0;
+}
+
+.app-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.app-sidebar-link {
+  display: block;
+  padding: 0.65rem 1.25rem;
+  color: var(--text-2);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.app-sidebar-link:hover {
+  color: var(--text-1);
+  background: var(--glass-2);
+}
+
+.app-sidebar-link--active {
+  color: var(--text-1);
+  background: var(--glass-2);
+  border-left-color: var(--cta-l);
+}
+
+/* Bottom Nav (Mobile) */
+.app-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  background: var(--nav-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--nav-border);
+  border-radius: 24px;
+  padding: 10px;
+  box-shadow: var(--shadow-nav);
+  z-index: 100;
+}
+
+.app-bottom-nav-link {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.25rem;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  text-decoration: none;
+  border-radius: 12px;
+  transition: all 0.15s ease;
+}
+
+.app-bottom-nav-link:hover {
+  color: var(--text-1);
+  background: var(--glass-2);
+}
+
+.app-bottom-nav-link--active {
+  color: var(--text-1);
+  background: rgba(134, 108, 208, 0.18);
+}
+
+.dark .app-bottom-nav-link--active {
+  background: rgba(150, 110, 255, 0.18);
+}
+
+/* Admin/Enterprise Layout */
+.admin-layout,
+.enterprise-layout {
+  width: 100%;
+}
+
+.admin-layout h2,
+.enterprise-layout h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  color: var(--text-1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-sidebar {
+    display: none;
+  }
+
+  .app-bottom-nav {
+    display: flex;
+  }
+
+  .app-header-title {
+    font-size: 1.1rem;
+  }
 }
 
 .panel {
-  background: linear-gradient(155deg, rgba(13, 21, 44, 0.94) 0%, rgba(11, 16, 32, 0.96) 100%);
-  border: 1px solid var(--line);
+  background: var(--glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border);
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 20px 45px rgba(2, 6, 23, 0.4);
+  box-shadow: var(--shadow-card);
   margin-bottom: 1rem;
 }
 
@@ -37,8 +223,8 @@
 }
 
 .card {
-  background: rgba(17, 25, 56, 0.75);
-  border: 1px solid var(--line);
+  background: var(--glass-2);
+  border: 1px solid var(--glass-border);
   border-radius: 12px;
   padding: 1rem;
 }
@@ -47,7 +233,7 @@ button {
   border: 1px solid rgba(102, 230, 255, 0.35);
   border-radius: 8px;
   background: linear-gradient(180deg, var(--primary) 0%, var(--primary-strong) 100%);
-  color: #062432;
+  color: var(--btn-text);
   font-weight: 700;
   padding: 0.55rem 0.95rem;
   cursor: pointer;
@@ -85,7 +271,7 @@ textarea:focus-visible {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.7rem 0.8rem;
-  background: rgba(17, 25, 56, 0.6);
+  background: var(--glass-2);
 }
 
 .chat-item-assistant {
@@ -108,7 +294,7 @@ textarea:focus-visible {
   font: inherit;
   resize: vertical;
   color: var(--text-1);
-  background: rgba(17, 25, 56, 0.75);
+  background: var(--glass-2);
 }
 
 .chat-form input,
@@ -119,7 +305,7 @@ textarea:focus-visible {
   padding: 0.5rem 0.65rem;
   font: inherit;
   color: var(--text-1);
-  background: rgba(17, 25, 56, 0.75);
+  background: var(--glass-2);
 }
 
 .chat-error {
@@ -128,7 +314,7 @@ textarea:focus-visible {
   background: rgba(255, 107, 129, 0.1);
   padding: 0.7rem 0.8rem;
   margin-top: 0.8rem;
-  color: #ffd7de;
+  color: var(--error);
 }
 
 .state-line {
@@ -136,7 +322,7 @@ textarea:focus-visible {
   border-radius: 10px;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--line);
-  background: rgba(17, 25, 56, 0.5);
+  background: var(--glass-2);
   color: var(--text-1);
 }
 
@@ -183,4 +369,2083 @@ textarea:focus-visible {
 
 .degraded-warning {
   margin-bottom: 1rem;
+}
+
+/* Dashboard Styles */
+.dashboard-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 1.5rem;
+}
+
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1rem;
+  background: var(--glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  text-align: center;
+  min-height: 140px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--cta-l);
+  background: var(--glass-2);
+  box-shadow: var(--shadow-card);
+}
+
+.dashboard-card:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.dashboard-card-icon {
+  font-size: 2.5rem;
+}
+
+.dashboard-card-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.dashboard-card-description {
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+/* Chat Layout - 3 Column Messenger Style */
+.chat-layout {
+  height: calc(100vh - 120px);
+  min-height: 500px;
+}
+
+.chat-layout--desktop {
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  gap: 0;
+  background: var(--glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+}
+
+.chat-layout--mobile {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-layout-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.chat-layout-panel--left {
+  background: var(--glass-2);
+  border-right: 1px solid var(--glass-border);
+}
+
+.chat-layout-panel--center {
+  background: var(--glass);
+}
+
+.chat-layout-panel--right {
+  background: var(--glass-2);
+  border-left: 1px solid var(--glass-border);
+}
+
+.chat-layout-mobile-action {
+  margin: 1rem;
+}
+
+/* Conversation List */
+.conversation-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.conversation-list-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.conversation-list-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  color: var(--text-1);
+}
+
+.conversation-list-search {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  background: var(--glass);
+  color: var(--text-1);
+  font-size: 0.9rem;
+}
+
+.conversation-list-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.conversation-list-loading,
+.conversation-list-error,
+.conversation-list-empty {
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.conversation-list-error {
+  color: #ff6b81;
+}
+
+/* Conversation Item */
+.conversation-item {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 0.25rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  color: var(--text-1);
+  font-weight: normal;
+}
+
+.conversation-item:hover {
+  background: rgba(102, 230, 255, 0.05);
+  border-color: var(--line);
+  transform: none;
+  box-shadow: none;
+}
+
+.conversation-item--active {
+  background: rgba(102, 230, 255, 0.1);
+  border-color: var(--primary);
+}
+
+.conversation-item-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.conversation-item-preview {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.conversation-item-date {
+  font-size: 0.75rem;
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+
+/* Chat Window */
+.chat-window {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-window-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.chat-window-back {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.chat-window-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.chat-window-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: var(--text-2);
+  padding: 2rem;
+}
+
+.chat-window-empty p {
+  margin: 0.5rem 0;
+}
+
+.chat-window-error,
+.chat-window-quota {
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 1rem;
+  border-radius: 8px;
+  background: rgba(255, 107, 129, 0.1);
+  border: 1px solid rgba(255, 107, 129, 0.4);
+  color: var(--error);
+}
+
+.chat-window-error button {
+  margin-top: 0.5rem;
+}
+
+/* Message Bubble */
+.message-bubble {
+  max-width: 80%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+}
+
+.message-bubble--user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+  color: var(--btn-text);
+}
+
+.message-bubble--assistant {
+  align-self: flex-start;
+  background: var(--badge-chat);
+  opacity: 0.85;
+  border: 1px solid var(--glass-border);
+  color: var(--text-1);
+}
+
+.message-bubble-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.message-bubble-author {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.message-bubble--user .message-bubble-author {
+  color: var(--btn-text);
+}
+
+.message-bubble-text {
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.message-bubble-time {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  align-self: flex-end;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+  align-self: flex-start;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: var(--badge-chat);
+  opacity: 0.85;
+  border: 1px solid var(--glass-border);
+}
+
+.typing-indicator-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.typing-indicator-author {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.typing-indicator-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.typing-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-2);
+  animation: typing-bounce 1.4s infinite ease-in-out;
+}
+
+.typing-indicator-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typing-indicator-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Chat Composer */
+.chat-composer {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid var(--glass-border);
+  background: var(--glass-2);
+}
+
+.chat-composer-input {
+  flex: 1;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  background: var(--glass);
+  color: var(--text-1);
+  font: inherit;
+  resize: none;
+}
+
+.chat-composer-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.chat-composer-button {
+  align-self: flex-end;
+  padding: 0.65rem 1.25rem;
+}
+
+/* Astrologer Panel */
+.astrologer-panel {
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.astrologer-panel-header {
+  text-align: center;
+}
+
+.astrologer-panel-avatar {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 0.75rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(102, 230, 255, 0.2) 0%, rgba(0, 211, 167, 0.2) 100%);
+  border: 2px solid var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.astrologer-panel-avatar-icon {
+  font-size: 1.75rem;
+}
+
+.astrologer-panel-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.astrologer-panel-name {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-1);
+}
+
+.astrologer-panel-status {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: #00d3a7;
+}
+
+.astrologer-panel-info,
+.astrologer-panel-specialties,
+.astrologer-panel-conversation {
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.astrologer-panel-info h4,
+.astrologer-panel-specialties h4,
+.astrologer-panel-conversation h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.astrologer-panel-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-1);
+  line-height: 1.5;
+}
+
+.astrologer-panel-specialties ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.astrologer-panel-specialties li {
+  padding: 0.35rem 0;
+  font-size: 0.9rem;
+  color: var(--text-1);
+}
+
+.astrologer-panel-specialties li::before {
+  content: "✦ ";
+  color: var(--primary);
+}
+
+.astrologer-panel-conversation-id {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--primary);
+  font-family: monospace;
+}
+
+/* Chat Empty State */
+.chat-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+}
+
+.chat-empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.chat-empty-state-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+  color: var(--text-1);
+}
+
+.chat-empty-state-description {
+  margin: 0 0 1.5rem;
+  color: var(--text-2);
+}
+
+/* Responsive adjustments for chat */
+@media (max-width: 1024px) {
+  .chat-layout--desktop {
+    grid-template-columns: 240px 1fr 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .chat-layout {
+    height: calc(100vh - 160px);
+  }
+
+  .chat-layout-panel--left {
+    border-right: none;
+  }
+
+  .chat-layout-panel--right {
+    display: none;
+  }
+
+  .message-bubble {
+    max-width: 90%;
+  }
+}
+
+/* Astrologer Catalogue */
+.astrologer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.astrologer-grid-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--text-2);
+}
+
+.astrologer-grid-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.astrologer-grid-empty p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Astrologer Card */
+.astrologer-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 1.25rem;
+  background: var(--glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  color: inherit;
+  font-weight: normal;
+}
+
+.astrologer-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--cta-l);
+  background: var(--glass-2);
+  box-shadow: var(--shadow-card);
+}
+
+.astrologer-card-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(102, 230, 255, 0.2) 0%, rgba(0, 211, 167, 0.2) 100%);
+  border: 2px solid var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.astrologer-card-avatar-icon {
+  font-size: 2rem;
+}
+
+.astrologer-card-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.astrologer-card-name {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+  color: var(--text-1);
+}
+
+.astrologer-card-style {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--primary);
+}
+
+.astrologer-card-specialties {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.astrologer-card-tag {
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  background: rgba(102, 230, 255, 0.1);
+  border: 1px solid rgba(102, 230, 255, 0.25);
+  font-size: 0.75rem;
+  color: var(--text-1);
+}
+
+.astrologer-card-bio {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-2);
+  line-height: 1.45;
+}
+
+/* Astrologer Profile Header */
+.astrologer-profile-header {
+  background: var(--glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: var(--shadow-card);
+}
+
+.astrologer-profile-header-top {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.astrologer-profile-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(102, 230, 255, 0.2) 0%, rgba(0, 211, 167, 0.2) 100%);
+  border: 3px solid var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.astrologer-profile-avatar-icon {
+  font-size: 2.5rem;
+}
+
+.astrologer-profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.astrologer-profile-info {
+  flex: 1;
+}
+
+.astrologer-profile-name {
+  margin: 0 0 0.35rem;
+  font-size: 1.75rem;
+  color: var(--text-1);
+}
+
+.astrologer-profile-style {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  color: var(--primary);
+}
+
+.astrologer-profile-experience {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-2);
+}
+
+.astrologer-profile-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 1.5rem;
+}
+
+.astrologer-profile-specialties h3,
+.astrologer-profile-languages h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.astrologer-profile-languages p {
+  margin: 0;
+  color: var(--text-1);
+}
+
+.astrologer-profile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.astrologer-profile-tag {
+  padding: 0.3rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(102, 230, 255, 0.1);
+  border: 1px solid rgba(102, 230, 255, 0.25);
+  font-size: 0.85rem;
+  color: var(--text-1);
+}
+
+.astrologer-profile-bio h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.astrologer-profile-bio p {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-1);
+  line-height: 1.6;
+}
+
+.astrologer-profile-actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.astrologer-profile-cta {
+  flex: 1;
+  padding: 0.85rem 1.5rem;
+  font-size: 1rem;
+}
+
+/* Astrologers Page */
+.astrologers-page-header {
+  margin-bottom: 1rem;
+}
+
+.astrologers-page-header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  color: var(--text-1);
+}
+
+.astrologers-page-header p {
+  margin: 0;
+  color: var(--text-2);
+}
+
+.astrologers-page-loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+  color: var(--text-2);
+}
+
+.astrologers-page-error {
+  padding: 1rem;
+  margin-top: 1rem;
+  border-radius: 10px;
+  background: rgba(255, 107, 129, 0.1);
+  border: 1px solid rgba(255, 107, 129, 0.4);
+  color: #ffd7de;
+}
+
+/* Astrologer Profile Page */
+.astrologer-profile-page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-1);
+}
+
+.astrologer-profile-page-back:hover {
+  background: rgba(102, 230, 255, 0.05);
+  border-color: var(--primary);
+}
+
+.astrologer-profile-page-loading,
+.astrologer-profile-page-not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-2);
+}
+
+.astrologer-profile-page-not-found-icon,
+.astrologer-profile-page-error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.astrologer-profile-page-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-2);
+}
+
+.astrologer-profile-page-error h2 {
+  margin: 0 0 1rem;
+  color: var(--error, #ff6b6b);
+}
+
+.astrologer-profile-page-error button {
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .astrologer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .astrologer-profile-header-top {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .astrologer-profile-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .astrologer-profile-actions {
+    flex-direction: column;
+  }
+}
+
+/* ============================================
+   CONSULTATIONS - Wizard & Result Pages
+   ============================================ */
+
+/* Consultations Page */
+.consultations-page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.consultations-page-header {
+  margin-bottom: 2rem;
+}
+
+.consultations-page-header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  color: var(--text-1);
+}
+
+.consultations-page-header p {
+  margin: 0;
+  color: var(--text-2);
+}
+
+.consultations-types-section {
+  margin-bottom: 2rem;
+}
+
+.consultations-cta {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+}
+
+.consultations-types-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.consultations-type-preview-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 1rem;
+  background: rgba(102, 230, 255, 0.05);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--text-1);
+  transition: all 0.2s ease;
+}
+
+.consultations-type-preview-card:hover {
+  border-color: var(--primary);
+  background: rgba(102, 230, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.consultations-type-preview-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.consultations-type-preview-label {
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.consultations-history-section h2 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  color: var(--text-1);
+}
+
+.consultations-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.consultations-history-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.consultations-history-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  text-decoration: none;
+  color: var(--text-1);
+  transition: background 0.2s ease;
+}
+
+.consultations-history-link:hover {
+  background: rgba(102, 230, 255, 0.05);
+}
+
+.consultations-history-icon {
+  font-size: 1.5rem;
+}
+
+.consultations-history-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 120px;
+}
+
+.consultations-history-type {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.consultations-history-date {
+  font-size: 0.8rem;
+  color: var(--text-2);
+}
+
+.consultations-history-context {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Wizard Page */
+.consultation-wizard-page {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.wizard-progress {
+  margin-bottom: 2rem;
+}
+
+.wizard-progress-list {
+  display: flex;
+  justify-content: space-between;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+.wizard-progress-list::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: var(--line);
+  z-index: 0;
+}
+
+.wizard-progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.wizard-progress-number {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-2);
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.wizard-progress-step--current .wizard-progress-number {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: rgba(102, 230, 255, 0.1);
+}
+
+.wizard-progress-step--completed .wizard-progress-number {
+  border-color: var(--success, #4ade80);
+  background: var(--success, #4ade80);
+  color: #fff;
+}
+
+.wizard-progress-label {
+  font-size: 0.75rem;
+  color: var(--text-2);
+}
+
+.wizard-progress-step--current .wizard-progress-label {
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.wizard-content {
+  min-height: 300px;
+}
+
+.wizard-step {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.wizard-step-title {
+  margin: 0 0 1.5rem;
+  font-size: 1.25rem;
+  color: var(--text-1);
+}
+
+.wizard-loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--text-2);
+}
+
+.wizard-error {
+  padding: 1rem;
+  border-radius: 8px;
+  background: rgba(255, 107, 129, 0.1);
+  border: 1px solid rgba(255, 107, 129, 0.4);
+  color: #ffd7de;
+  margin-top: 1rem;
+}
+
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.wizard-actions-nav {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Consultation Type Grid */
+.consultation-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.consultation-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  background: rgba(102, 230, 255, 0.03);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.consultation-type-card:hover {
+  border-color: var(--primary);
+  background: rgba(102, 230, 255, 0.08);
+}
+
+.consultation-type-card--selected {
+  border-color: var(--primary);
+  background: rgba(102, 230, 255, 0.12);
+  box-shadow: 0 0 0 3px rgba(102, 230, 255, 0.2);
+}
+
+.consultation-type-icon {
+  font-size: 2.5rem;
+}
+
+.consultation-type-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: center;
+  color: var(--text-1);
+}
+
+/* Astrologer Select Grid */
+.astrologer-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.astrologer-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: rgba(102, 230, 255, 0.03);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.astrologer-option:hover {
+  border-color: var(--primary);
+  background: rgba(102, 230, 255, 0.08);
+}
+
+.astrologer-option--selected {
+  border-color: var(--primary);
+  background: rgba(102, 230, 255, 0.12);
+  box-shadow: 0 0 0 3px rgba(102, 230, 255, 0.2);
+}
+
+.astrologer-option--auto {
+  flex-direction: row;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.astrologer-option-icon {
+  font-size: 1.5rem;
+}
+
+.astrologer-option-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.astrologer-option-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.astrologer-option-avatar-fallback {
+  font-size: 1.5rem;
+}
+
+.astrologer-option-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.astrologer-option-name {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--text-1);
+}
+
+.astrologer-option-style {
+  font-size: 0.75rem;
+  color: var(--text-2);
+}
+
+.astrologer-option-label {
+  font-size: 0.9rem;
+  color: var(--text-1);
+}
+
+/* Drawing Options */
+.drawing-option-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.drawing-option-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  background: rgba(102, 230, 255, 0.03);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.drawing-option-card:hover {
+  border-color: var(--primary);
+  background: rgba(102, 230, 255, 0.08);
+}
+
+.drawing-option-card--selected {
+  border-color: var(--primary);
+  background: rgba(102, 230, 255, 0.12);
+  box-shadow: 0 0 0 3px rgba(102, 230, 255, 0.2);
+}
+
+.drawing-option-icon {
+  font-size: 2rem;
+}
+
+.drawing-option-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-1);
+}
+
+/* Validation Step */
+.validation-summary {
+  background: rgba(102, 230, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.validation-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.validation-item:last-child {
+  border-bottom: none;
+}
+
+.validation-label {
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.validation-value {
+  color: var(--text-1);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.validation-context {
+  margin-top: 1rem;
+}
+
+.validation-context-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-2);
+}
+
+.validation-context-input {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text-1);
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.validation-context-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.validation-context-input::placeholder {
+  color: var(--text-2);
+  opacity: 0.7;
+}
+
+.validation-context-counter {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-2);
+  text-align: right;
+}
+
+/* Consultation Result Page */
+.consultation-result-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.consultation-result-loading,
+.consultation-result-error,
+.consultation-result-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.consultation-result-loading {
+  color: var(--text-2);
+}
+
+.consultation-result-error {
+  color: #ffd7de;
+}
+
+.consultation-result-header {
+  margin-bottom: 1.5rem;
+}
+
+.consultation-result-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-1);
+}
+
+.consultation-result-summary {
+  background: rgba(102, 230, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.consultation-result-type {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.consultation-result-type-icon {
+  font-size: 2rem;
+}
+
+.consultation-result-type-label {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.consultation-result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-2);
+}
+
+.consultation-result-context {
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.consultation-result-context strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-2);
+  font-size: 0.85rem;
+}
+
+.consultation-result-context p {
+  margin: 0;
+  color: var(--text-1);
+  line-height: 1.5;
+}
+
+.consultation-result-drawing-section {
+  background: rgba(138, 107, 255, 0.08);
+  border: 1px solid rgba(138, 107, 255, 0.3);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.consultation-result-cards,
+.consultation-result-runes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.consultation-result-card,
+.consultation-result-rune {
+  padding: 0.5rem 1rem;
+  background: rgba(138, 107, 255, 0.15);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: var(--text-1);
+}
+
+.consultation-result-interpretation {
+  margin-bottom: 2rem;
+}
+
+.consultation-result-interpretation h2 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  color: var(--text-1);
+}
+
+.consultation-result-interpretation-text {
+  margin: 0;
+  line-height: 1.7;
+  color: var(--text-1);
+  font-size: 1rem;
+  white-space: pre-wrap;
+}
+
+.consultation-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.consultation-result-actions .btn-success {
+  background: var(--success, #4ade80);
+  border-color: var(--success, #4ade80);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .wizard-progress-label {
+    display: none;
+  }
+
+  .consultation-type-grid,
+  .drawing-option-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .astrologer-select-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .wizard-actions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .wizard-actions-nav {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .consultation-result-actions {
+    flex-direction: column;
+  }
+
+  .consultation-result-actions .btn {
+    width: 100%;
+  }
+}
+
+/* ============================================
+   SETTINGS PAGES
+   ============================================ */
+
+.settings-layout {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.settings-title {
+  margin: 0 0 1.5rem;
+  font-size: 1.75rem;
+  color: var(--text-1);
+}
+
+.settings-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0;
+}
+
+.settings-tab {
+  padding: 0.75rem 1.25rem;
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 0.95rem;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+  margin-bottom: -1px;
+}
+
+.settings-tab:hover {
+  color: var(--text-1);
+  background: rgba(102, 230, 255, 0.05);
+}
+
+.settings-tab--active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.settings-content {
+  min-height: 300px;
+}
+
+.settings-section-title {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  color: var(--text-1);
+}
+
+/* Account Settings */
+.account-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.account-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.account-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.account-info-label {
+  font-size: 0.85rem;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.account-info-value {
+  font-size: 1rem;
+  color: var(--text-1);
+}
+
+/* Usage Settings */
+.usage-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.usage-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.usage-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+  padding: 1rem;
+  background: rgba(102, 230, 255, 0.05);
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+.usage-stat-label {
+  font-size: 0.8rem;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.usage-stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.usage-progress-bar {
+  height: 8px;
+  background: rgba(102, 230, 255, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.usage-progress-fill {
+  height: 100%;
+  width: calc(var(--usage-progress, 0) * 1%);
+  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-strong) 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Subscription Settings */
+.subscription-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Danger Button */
+.btn-danger {
+  background: linear-gradient(180deg, #ff6b81 0%, #e84a5f 100%);
+  border-color: rgba(255, 107, 129, 0.5);
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  box-shadow: 0 8px 20px rgba(255, 107, 129, 0.3);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 450px;
+  width: 100%;
+  box-shadow: var(--shadow-card);
+}
+
+.modal-title {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  color: var(--text-1);
+}
+
+.modal-message {
+  margin: 0 0 1.5rem;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.modal-confirm-word {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 107, 129, 0.15);
+  border: 1px solid rgba(255, 107, 129, 0.4);
+  border-radius: 8px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ff6b81;
+  text-align: center;
+  letter-spacing: 0.1em;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  background: var(--glass-2);
+  color: var(--text-1);
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.modal-error {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 107, 129, 0.1);
+  border-radius: 6px;
+  color: #ff6b81;
+  font-size: 0.9rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.complete-profile-link {
+  margin-top: 1rem;
+  display: inline-block;
+}
+
+/* === HeroHoroscopeCard === */
+.hero-card {
+  border-radius: 26px;
+  padding: 18px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-card__top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hero-card__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--chip);
+  font-size: 13px;
+  color: var(--text-1);
+}
+
+.hero-card__headline {
+  margin-top: 12px;
+  margin-bottom: 0;
+  font-size: 28px;
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.3px;
+  color: var(--text-1);
+}
+
+.hero-card__constellation {
+  position: absolute;
+  right: -20px;
+  top: 60px;
+  width: 120px;
+  height: 100px;
+  pointer-events: none;
+}
+
+.hero-card__constellation svg {
+  width: 100%;
+  height: 100%;
+}
+
+.hero-card__cta {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 48px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(90deg, var(--cta-l), var(--cta-r));
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(90, 120, 255, 0.25);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.dark .hero-card__cta {
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+.hero-card__cta:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.hero-card__link {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+/* === TodayHeader === */
+.today-header {
+  position: relative;
+  padding-top: 6px;
+  text-align: center;
+}
+
+.today-header__kicker {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  color: var(--text-2);
+  margin: 0;
+}
+
+.today-header__title {
+  font-size: 40px;
+  font-weight: 650;
+  line-height: 1.05;
+  letter-spacing: -0.5px;
+  color: var(--text-1);
+  margin: 0;
+}
+
+.today-header__avatar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  overflow: hidden;
+  background: var(--chip);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.today-header__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .settings-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .settings-tab {
+    padding: 0.6rem 1rem;
+    white-space: nowrap;
+  }
+
+  .account-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .usage-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+}
+
+/* === MiniInsightCard === */
+.mini-card {
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--glass-2);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.mini-card__badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.mini-card__title {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--text-1);
+  margin: 0 0 4px;
+}
+
+.mini-card__desc {
+  font-size: 13px;
+  color: var(--text-2);
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.mini-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.section-header__title {
+  font-size: 18px;
+  font-weight: 650;
+  color: var(--text-1);
+  margin: 0;
+}
+
+/* === ShortcutCard === */
+.shortcut-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--glass-2);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.shortcut-card__badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.shortcut-card__title {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--text-1);
+}
+
+.shortcut-card__subtitle {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+.shortcuts-section__title {
+  font-size: 18px;
+  font-weight: 650;
+  color: var(--text-1);
+  margin-top: 18px;
+  margin-bottom: 0;
+}
+
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
 }

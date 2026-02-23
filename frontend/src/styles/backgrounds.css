@@ -45,6 +45,12 @@
   min-height: 100dvh;
 }
 
+@media (min-width: 769px) {
+  .app-bg-container {
+    max-width: 1100px;
+  }
+}
+
 /* Starfield background (dark mode only) */
 .starfield-bg {
   position: fixed;

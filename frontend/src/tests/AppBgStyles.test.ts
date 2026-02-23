@@ -165,6 +165,10 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
     it("sets position relative for stacking context", () => {
       expect(cssContent).toMatch(/\.app-bg-container\s*\{[^}]*position:\s*relative/)
     })
+
+    it("increases max-width to 1100px on desktop", () => {
+      expect(cssContent).toMatch(/@media\s*\(min-width:\s*769px\)\s*\{[^}]*\.app-bg-container\s*\{[^}]*max-width:\s*1100px/)
+    })
   })
 
   describe("AC4: Starfield background styling", () => {
