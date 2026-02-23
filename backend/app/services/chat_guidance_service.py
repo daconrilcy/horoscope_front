@@ -23,6 +23,7 @@ from app.services.ai_engine_adapter import (
     AIEngineAdapter,
     AIEngineAdapterError,
     assess_off_scope,
+    map_adapter_error_to_codes,
 )
 from app.services.persona_config_service import PersonaConfigService
 
@@ -527,19 +528,13 @@ class ChatGuidanceService:
             1.0,
         )
 
-        _, context_metadata = ChatGuidanceService._build_prompt_and_context_metadata(
-            repo=repo,
-            conversation_id=conversation.id,
-            persona_line=persona_config.to_prompt_line(),
-        )
-
         window_messages, max_characters = ChatGuidanceService._validate_context_config()
         recent_messages = repo.get_recent_messages(
             conversation_id=conversation.id,
             limit=window_messages,
         )
 
-        selected_messages: list[tuple[str, str]] = []
+        selected: list[tuple[int, str, str]] = []  # (id, role, content)
         total_chars = 0
         for msg in reversed(recent_messages):
             try:
@@ -551,22 +546,33 @@ class ChatGuidanceService:
                     details={},
                 ) from error
             message_chars = len(normalized_content)
-            if selected_messages and total_chars + message_chars > max_characters:
+            if selected and total_chars + message_chars > max_characters:
                 break
-            if not selected_messages and message_chars > max_characters:
+            if not selected and message_chars > max_characters:
                 normalized_content = normalized_content[:max_characters]
                 message_chars = len(normalized_content)
-            selected_messages.append((msg.role, normalized_content))
+            selected.append((msg.id, msg.role, normalized_content))
             total_chars += message_chars
 
-        selected_messages.reverse()
-        chat_messages: list[dict[str, str]] = [
-            {"role": role, "content": content} for role, content in selected_messages
-        ]
+        if not selected:
+            raise ChatGuidanceServiceError(
+                code="chat_context_unavailable",
+                message="chat context could not be built",
+                details={"conversation_id": str(conversation.id)},
+            )
 
-        # natal_chart_summary: Not yet implemented. The templates support it via
-        # {% if context.natal_chart_summary %} but we don't have access to computed
-        # natal chart data here. Future enhancement: integrate with NatalChartService.
+        selected.reverse()
+        chat_messages: list[dict[str, str]] = [
+            {"role": role, "content": content} for _, role, content in selected
+        ]
+        context_metadata = ChatContextMetadata(
+            message_ids=[item[0] for item in selected],
+            message_count=len(selected),
+            context_characters=total_chars,
+            prompt_version=settings.chat_prompt_version,
+        )
+
+        # natal_chart_summary: placeholder for future NatalChartService integration
         context: dict[str, str | None] = {
             "persona_line": persona_config.to_prompt_line(),
             "natal_chart_summary": None,
@@ -639,42 +645,8 @@ class ChatGuidanceService:
                     context=context_metadata,
                     recovery=recovery_metadata,
                 )
-            except AIEngineAdapterError as err:
-                if err.code == "rate_limit_exceeded":
-                    last_error_code = "rate_limit_exceeded"
-                    last_error_message = "rate limit exceeded"
-                elif err.code == "context_too_large":
-                    last_error_code = "context_too_large"
-                    last_error_message = "context too large"
-                else:
-                    last_error_code = err.code
-                    last_error_message = err.message
-                increment_counter("conversation_llm_errors_total", 1.0)
-                increment_counter(
-                    f"conversation_llm_errors_total|persona_profile={persona_config.profile_code}",
-                    1.0,
-                )
-                logger.warning(
-                    "chat_generation_error request_id=%s code=%s",
-                    request_id,
-                    last_error_code,
-                )
-            except TimeoutError:
-                last_error_code = "llm_timeout"
-                last_error_message = "llm provider timeout"
-                increment_counter("conversation_llm_errors_total", 1.0)
-                increment_counter(
-                    f"conversation_llm_errors_total|persona_profile={persona_config.profile_code}",
-                    1.0,
-                )
-                logger.warning(
-                    "chat_generation_error request_id=%s code=%s",
-                    request_id,
-                    last_error_code,
-                )
-            except ConnectionError:
-                last_error_code = "llm_unavailable"
-                last_error_message = "llm provider is unavailable"
+            except (AIEngineAdapterError, TimeoutError, ConnectionError) as err:
+                last_error_code, last_error_message = map_adapter_error_to_codes(err)
                 increment_counter("conversation_llm_errors_total", 1.0)
                 increment_counter(
                     f"conversation_llm_errors_total|persona_profile={persona_config.profile_code}",

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from fastapi import Depends, Header
@@ -15,6 +16,8 @@ from app.infra.db.session import get_db_session
 class AuthenticatedUser(BaseModel):
     id: int
     role: str
+    email: str
+    created_at: datetime
 
 
 class UserAuthenticationError(Exception):
@@ -81,7 +84,12 @@ def require_authenticated_user(
             details={},
         )
 
-    return AuthenticatedUser(id=user.id, role=user.role)
+    return AuthenticatedUser(
+        id=user.id,
+        role=user.role,
+        email=user.email,
+        created_at=user.created_at,
+    )
 
 
 def get_optional_authenticated_user(

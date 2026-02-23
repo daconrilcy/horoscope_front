@@ -8,6 +8,17 @@ existing error handling patterns.
 
 from __future__ import annotations
 
+__all__ = [
+    "AIEngineAdapter",
+    "AIEngineAdapterError",
+    "assess_off_scope",
+    "map_adapter_error_to_codes",
+    "set_test_chat_generator",
+    "set_test_guidance_generator",
+    "reset_test_generators",
+    "get_test_generators_state",
+]
+
 import logging
 from typing import TYPE_CHECKING, Awaitable, Callable, NoReturn
 
@@ -105,6 +116,31 @@ def assess_off_scope(content: str) -> tuple[bool, float, str | None]:
     if normalized.startswith("hors_scope:"):
         return True, 0.9, "explicit_prefix"
     return False, 0.0, None
+
+def map_adapter_error_to_codes(
+    err: AIEngineAdapterError | TimeoutError | ConnectionError,
+) -> tuple[str, str]:
+    """
+    Map AI Engine adapter errors to standardized error codes and messages.
+
+    Args:
+        err: The exception to map.
+
+    Returns:
+        Tuple of (error_code, error_message) for service-level error handling.
+    """
+    if isinstance(err, AIEngineAdapterError):
+        if err.code == "rate_limit_exceeded":
+            return "rate_limit_exceeded", "rate limit exceeded"
+        if err.code == "context_too_large":
+            return "context_too_large", "context too large"
+        return err.code, err.message
+    if isinstance(err, TimeoutError):
+        return "llm_timeout", "llm provider timeout"
+    if isinstance(err, ConnectionError):
+        return "llm_unavailable", "llm provider is unavailable"
+    return "llm_unavailable", "llm provider is unavailable"
+
 
 ChatGeneratorFunc = Callable[
     [list[dict[str, str]], dict[str, str | None], int, str, str, str],
@@ -205,7 +241,6 @@ class AIEngineAdapter:
 
         request = ChatRequest(
             locale=locale,
-            user_id=str(user_id),
             request_id=request_id,
             trace_id=trace_id,
             messages=chat_messages,
@@ -295,7 +330,6 @@ class AIEngineAdapter:
         request = GenerateRequest(
             use_case=use_case,
             locale=locale,
-            user_id=str(user_id),
             request_id=request_id,
             trace_id=trace_id,
             input=GenerateInput(),

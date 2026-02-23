@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 
 import { API_BASE_URL, apiFetch } from "./client"
 import { getSubjectFromAccessToken, useAccessTokenSnapshot } from "../utils/authToken"
+import { ANONYMOUS_SUBJECT } from "../utils/constants"
 
 type PlanetPosition = {
   planet_code: string
@@ -126,7 +127,7 @@ export async function generateNatalChart(accessToken: string): Promise<LatestNat
 
 export function useLatestNatalChart() {
   const accessToken = useAccessTokenSnapshot()
-  const tokenSubject = getSubjectFromAccessToken(accessToken) ?? "anonymous"
+  const tokenSubject = getSubjectFromAccessToken(accessToken) ?? ANONYMOUS_SUBJECT
   const fetchForCurrentUser = async () => {
     if (!accessToken) {
       throw new ApiError("unauthorized", "access token is required", 401)

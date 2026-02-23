@@ -286,7 +286,7 @@ Claude Opus 4.5 (code-review: 2026-02-22)
 
 ### Debug Log References
 
-- Tests unitaires: 70 passed (17 guidance_service, 21 chat_guidance_service, 13 ai_engine_adapter, 19 prompt_registry)
+- Tests unitaires: 183 passed (17 guidance_service, 21 chat_guidance_service, 18 ai_engine_adapter, 21 prompt_registry, 106 autres modules)
 - Lint: All checks passed (ruff)
 
 ### Completion Notes List
@@ -297,6 +297,8 @@ Claude Opus 4.5 (code-review: 2026-02-22)
 - **CR7 Fix (2026-02-22)** : Documentation — Ajout note sur pattern `asyncio.run()` dans docstrings des méthodes sync wrapper (`request_guidance`, `request_contextual_guidance`). Code review final validé avec 0 issues HIGH/MEDIUM.
 - **CR8 Fix (2026-02-22)** : Debug Log corrigé (63→70 tests). Test `reset_test_generators` amélioré avec assertions avant/après reset. DoD clarifié (8 tests guidance-spécifiques sur 19 total prompt_registry).
 - **CR9 Fix (2026-02-22)** : Docstrings harmonisées en anglais dans `GuidanceService` (6 méthodes privées). Code review final: 0 issues HIGH/MEDIUM, story validée.
+- **CR10 Fix (2026-02-22)** : [H1] `persona_line` perdue dans le chat — `chat_service._build_system_prompt()` JSON-encodait `ChatContext.memory` au lieu d'aplatir les clés dans `GenerateContext.extra` ; `chat_system.jinja2` accède maintenant à `context.extra.persona_line` (cohérent avec les templates guidance). [M1] Double construction du contexte dans `send_message_async()` supprimée — 2e requête DB et boucle de sélection dupliquées fusionnées en une seule boucle qui produit `context_metadata` + `chat_messages`. [M2] Champs `user_id=str(user_id)` fantômes supprimés des constructeurs `ChatRequest()` et `GenerateRequest()` (champs non déclarés dans les schémas Pydantic).
+- **CR11 Fix (2026-02-22)** : [M1] Tests unitaires ajoutés pour `map_adapter_error_to_codes()` (5 tests). [L1] Export explicite via `__all__` dans `ai_engine_adapter.py`. Debug Log corrigé (71→183 tests, reflet de la suite complète).
 
 1. **AIEngineAdapter créé** avec test generators pour faciliter les tests unitaires et d'intégration
 2. **Templates Jinja2 guidance_* créés** avec structure cohérente incluant birth_data, persona_line, context_lines
@@ -306,11 +308,12 @@ Claude Opus 4.5 (code-review: 2026-02-22)
 6. **Code Review (2026-02-22)**: Tests dupliqués supprimés, docstrings Pydantic harmonisées en anglais
 7. **Code Review #2 (2026-02-22)**: Templates Jinja2 corrigés (context.persona_line → context.extra.persona_line), test assertion ajoutée, error handling refactorisé avec `_handle_ai_engine_error()`, constante `DEFAULT_MODEL` introduite
 8. **Code Review #3 (2026-02-22)**: Type hint `NoReturn` ajouté sur `_handle_ai_engine_error`, constante `DEFAULT_PROVIDER` introduite, tests error handling étendus (context_too_large, validation_error), validation conversation extraite dans `_resolve_conversation_id()`
+9. **Code Review #4 (2026-02-22)**: [M1] Clarification File List — fichiers git non listés (openai_client.py, schemas.py, rate_limiter.py, health.py, docker-compose.prod.yml, nginx.conf) appartiennent aux stories 15-1/15-2/15-4, pas à 15-3. [M2] Helper `_map_adapter_error_to_service_error()` extrait dans ai_engine_adapter.py pour factoriser le mapping d'erreurs dupliqué entre ChatGuidanceService et GuidanceService. [L1] Commentaires `natal_chart_summary` centralisés avec référence unique. [L2] Test d'erreur de rendu Jinja2 ajouté dans test_prompt_registry.py.
 
 ### File List
 
 **Fichiers créés :**
-- `backend/app/services/ai_engine_adapter.py` — Adaptateur AI Engine avec test generators
+- `backend/app/services/ai_engine_adapter.py` — Adaptateur AI Engine avec test generators + helper `map_adapter_error_to_codes()`
 - `backend/app/ai_engine/prompts/guidance_daily_v1.jinja2` — Template guidance quotidienne
 - `backend/app/ai_engine/prompts/guidance_weekly_v1.jinja2` — Template guidance hebdomadaire
 - `backend/app/ai_engine/prompts/guidance_contextual_v1.jinja2` — Template guidance contextuelle
@@ -318,12 +321,15 @@ Claude Opus 4.5 (code-review: 2026-02-22)
 
 **Fichiers modifiés :**
 - `backend/app/ai_engine/services/prompt_registry.py` — Ajout use_cases guidance_daily, guidance_weekly, guidance_contextual
-- `backend/app/services/chat_guidance_service.py` — Migration vers AIEngineAdapter (async)
-- `backend/app/services/guidance_service.py` — Migration vers AIEngineAdapter (async)
+- `backend/app/ai_engine/services/chat_service.py` — Fix CR10: _build_system_prompt aplatit memory dans extra (persona_line)
+- `backend/app/ai_engine/prompts/chat_system.jinja2` — Fix CR10: context.extra.persona_line au lieu de context.memory.style
+- `backend/app/services/ai_engine_adapter.py` — Fix CR10: suppression user_id fantôme + CR4: helper map_adapter_error_to_codes
+- `backend/app/services/chat_guidance_service.py` — Migration vers AIEngineAdapter (async) + Fix CR10 + CR4: utilise map_adapter_error_to_codes
+- `backend/app/services/guidance_service.py` — Migration vers AIEngineAdapter (async) + CR4: utilise map_adapter_error_to_codes
 - `backend/app/infra/llm/client.py` — Dépréciation avec DeprecationWarning
 - `backend/app/infra/llm/__init__.py` — Mise à jour docstring dépréciation
 - `backend/app/tests/unit/test_chat_guidance_service.py` — Utilise set_test_chat_generator
 - `backend/app/tests/unit/test_guidance_service.py` — Utilise set_test_guidance_generator
-- `backend/app/ai_engine/tests/test_prompt_registry.py` — Tests rendu templates guidance
+- `backend/app/ai_engine/tests/test_prompt_registry.py` — Tests rendu templates guidance + test template_not_found
 - `backend/app/tests/integration/test_chat_api.py` — Migration vers test generators
 - `backend/app/tests/integration/test_guidance_api.py` — Migration vers test generators

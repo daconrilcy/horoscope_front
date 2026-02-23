@@ -1,7 +1,7 @@
 """Tests for /v1/ai/chat endpoint."""
 
 from typing import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -483,3 +483,86 @@ class TestChatStreamingEndpoint:
         assert len(error_events) >= 1, "stream should emit error event on failure"
         assert error_events[0]["error"]["type"] == "RuntimeError"
         assert "Connection lost" in error_events[0]["error"]["message"]
+
+
+class TestChatEndpointRateLimiting:
+    """Tests for rate limiting on POST /v1/ai/chat."""
+
+    def test_chat_returns_429_when_rate_limit_exceeded(
+        self, client: TestClient
+    ) -> None:
+        """Chat returns 429 with RATE_LIMIT_EXCEEDED when limit is exceeded."""
+        from app.ai_engine.services.rate_limiter import RateLimiter, RateLimitResult
+
+        with patch.object(
+            RateLimiter, "get_instance"
+        ) as mock_get_instance:
+            mock_limiter = MagicMock()
+            mock_limiter.check_rate_limit.return_value = RateLimitResult(
+                allowed=False,
+                current_count=30,
+                limit=30,
+                retry_after_ms=45000,
+            )
+            mock_get_instance.return_value = mock_limiter
+
+            response = client.post(
+                "/v1/ai/chat",
+                json={
+                    "locale": "fr-FR",
+                    "messages": [{"role": "user", "content": "Hello"}],
+                    "output": {"stream": False},
+                },
+            )
+
+        assert response.status_code == 429
+        data = response.json()
+        assert data["error"]["type"] == "RATE_LIMIT_EXCEEDED"
+        assert "retry_after_ms" in data["error"]
+        assert data["error"]["retry_after_ms"] == 45000
+        assert "request_id" in data["error"]
+        assert "trace_id" in data["error"]
+
+    def test_chat_continues_when_rate_limit_not_exceeded(
+        self, client: TestClient
+    ) -> None:
+        """Chat proceeds normally when rate limit is not exceeded."""
+        from app.ai_engine.providers.base import ProviderResult
+        from app.ai_engine.services.rate_limiter import RateLimiter, RateLimitResult
+
+        mock_result = ProviderResult(
+            text="Response",
+            input_tokens=10,
+            output_tokens=5,
+            model="gpt-4o-mini",
+        )
+
+        with patch.object(
+            RateLimiter, "get_instance"
+        ) as mock_get_instance, patch(
+            "app.ai_engine.services.chat_service.get_provider_client"
+        ) as mock_provider:
+            mock_limiter = MagicMock()
+            mock_limiter.check_rate_limit.return_value = RateLimitResult(
+                allowed=True,
+                current_count=5,
+                limit=30,
+            )
+            mock_get_instance.return_value = mock_limiter
+
+            mock_client = AsyncMock()
+            mock_client.chat = AsyncMock(return_value=mock_result)
+            mock_client.provider_name = "openai"
+            mock_provider.return_value = mock_client
+
+            response = client.post(
+                "/v1/ai/chat",
+                json={
+                    "locale": "fr-FR",
+                    "messages": [{"role": "user", "content": "Hello"}],
+                    "output": {"stream": False},
+                },
+            )
+
+        assert response.status_code == 200
+        mock_limiter.check_rate_limit.assert_called_once_with(1)

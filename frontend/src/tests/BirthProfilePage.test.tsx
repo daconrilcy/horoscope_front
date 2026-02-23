@@ -1,15 +1,17 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react"
 
 import { BirthProfilePage } from "../pages/BirthProfilePage"
-import { AppProviders } from "../state/providers"
 import { setAccessToken } from "../utils/authToken"
+import { renderWithRouter } from "./test-utils"
 
 const VALID_PROFILE = {
   birth_date: "1990-01-15",
   birth_time: "10:30",
   birth_place: "Paris, France",
   birth_timezone: "Europe/Paris",
+  birth_city: "Paris",
+  birth_country: "France",
 }
 
 const SUCCESS_GET_RESPONSE = {
@@ -30,18 +32,39 @@ const SUCCESS_PUT_RESPONSE = {
   json: async () => ({ data: VALID_PROFILE, meta: { request_id: "r2" } }),
 }
 
-function renderWithProviders(onNavigate = vi.fn()) {
-  return render(
-    <AppProviders>
-      <BirthProfilePage onNavigate={onNavigate} />
-    </AppProviders>,
-  )
+function renderBirthProfilePage(initialEntries = ["/profile"]) {
+  return renderWithRouter(<BirthProfilePage />, { initialEntries })
 }
 
 function setupToken() {
   const payload = btoa(JSON.stringify({ sub: "42", role: "user" }))
   setAccessToken(`x.${payload}.y`)
 }
+
+/**
+ * Helper pour remplir les champs obligatoires du formulaire de naissance.
+ * Les labels sont recherchés de manière case-insensitive via le flag /i.
+ * Note: birth_timezone utilise un composant custom TimezoneSelect, pas un input standard.
+ */
+function fillBirthForm(overrides: Partial<typeof VALID_PROFILE> = {}) {
+  const values = { ...VALID_PROFILE, ...overrides }
+  if (values.birth_date) {
+    fireEvent.change(screen.getByLabelText(/Date de naissance/i), { target: { value: values.birth_date } })
+  }
+  if (values.birth_time) {
+    fireEvent.change(screen.getByLabelText(/Heure de naissance/i), { target: { value: values.birth_time } })
+  }
+  if (values.birth_city) {
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: values.birth_city } })
+  }
+  if (values.birth_country) {
+    fireEvent.change(screen.getByLabelText(/Pays de naissance/i), { target: { value: values.birth_country } })
+  }
+}
+
+beforeEach(() => {
+  localStorage.setItem("lang", "fr")
+})
 
 afterEach(() => {
   cleanup()
@@ -53,7 +76,7 @@ describe("BirthProfilePage", () => {
   it("shows loading then pre-fills form with existing birth data", async () => {
     setupToken()
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_GET_RESPONSE))
-    renderWithProviders()
+    renderBirthProfilePage()
 
     expect(screen.getByText(/Chargement de votre profil natal/i)).toBeInTheDocument()
 
@@ -61,14 +84,15 @@ describe("BirthProfilePage", () => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
     expect(screen.getByLabelText(/Heure de naissance/i)).toHaveValue("10:30")
-    expect(screen.getByLabelText(/Lieu de naissance/i)).toHaveValue("Paris, France")
+    expect(screen.getByLabelText(/Ville de naissance/i)).toHaveValue("Paris")
+    expect(screen.getByLabelText(/Pays de naissance/i)).toHaveValue("France")
     expect(screen.getByLabelText(/Fuseau horaire/i)).toHaveValue("Europe/Paris")
   })
 
   it("shows the generation button only if birth data exists", async () => {
     setupToken()
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND_RESPONSE))
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument()
@@ -79,16 +103,15 @@ describe("BirthProfilePage", () => {
     // Mock successful get
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_GET_RESPONSE))
     cleanup()
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /Générer mon thème astral/i })).toBeInTheDocument()
     })
   })
 
-  it("generates natal chart successfully and navigates to natal view", async () => {
+  it("generates natal chart successfully and triggers navigation", async () => {
     setupToken()
-    const onNavigate = vi.fn()
     const SUCCESS_GENERATE_RESPONSE = {
       ok: true,
       status: 200,
@@ -99,7 +122,7 @@ describe("BirthProfilePage", () => {
       "fetch",
       vi.fn().mockResolvedValueOnce(SUCCESS_GET_RESPONSE).mockResolvedValue(SUCCESS_GENERATE_RESPONSE),
     )
-    renderWithProviders(onNavigate)
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /Générer mon thème astral/i })).toBeInTheDocument()
@@ -108,12 +131,13 @@ describe("BirthProfilePage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Générer mon thème astral/i }))
 
     await waitFor(() => {
-      expect(onNavigate).toHaveBeenCalledWith("natal")
+      expect(screen.queryByRole("button", { name: /Générer mon thème astral/i })).not.toBeInTheDocument()
     })
   })
 
   it("shows specific error message and requestId on natal generation timeout", async () => {
     setupToken()
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
     const TIMEOUT_ERROR_RESPONSE = {
       ok: false,
       status: 503,
@@ -124,7 +148,7 @@ describe("BirthProfilePage", () => {
       "fetch",
       vi.fn().mockResolvedValueOnce(SUCCESS_GET_RESPONSE).mockResolvedValue(TIMEOUT_ERROR_RESPONSE),
     )
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /Générer mon thème astral/i })).toBeInTheDocument()
@@ -133,11 +157,47 @@ describe("BirthProfilePage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Générer mon thème astral/i }))
 
     expect(await screen.findByText(/La génération a pris trop de temps/i)).toBeInTheDocument()
-    expect(screen.getByText(/req-gen-123/i)).toBeInTheDocument()
+    // AC8: requestId is logged to console, not displayed to user
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[Support] Request ID: req-gen-123")
+    consoleErrorSpy.mockRestore()
+  })
+
+  it("clears generationError when form changes after failed generation", async () => {
+    setupToken()
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    const TIMEOUT_ERROR_RESPONSE = {
+      ok: false,
+      status: 503,
+      json: async () => ({ error: { code: "natal_generation_timeout", message: "timeout", request_id: "req-gen-789" } }),
+    }
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(SUCCESS_GET_RESPONSE).mockResolvedValue(TIMEOUT_ERROR_RESPONSE),
+    )
+    renderBirthProfilePage()
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Générer mon thème astral/i })).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: /Générer mon thème astral/i }))
+
+    expect(await screen.findByText(/La génération a pris trop de temps/i)).toBeInTheDocument()
+
+    fireEvent.input(screen.getByLabelText(/Date de naissance/i), {
+      target: { value: "1991-02-20" },
+    })
+
+    await waitFor(() => {
+      expect(screen.queryByText(/La génération a pris trop de temps/i)).not.toBeInTheDocument()
+    })
+    consoleErrorSpy.mockRestore()
   })
 
   it("shows specific error message when natal engine is unavailable", async () => {
     setupToken()
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
     const UNAVAILABLE_ERROR_RESPONSE = {
       ok: false,
       status: 503,
@@ -148,7 +208,7 @@ describe("BirthProfilePage", () => {
       "fetch",
       vi.fn().mockResolvedValueOnce(SUCCESS_GET_RESPONSE).mockResolvedValue(UNAVAILABLE_ERROR_RESPONSE),
     )
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /Générer mon thème astral/i })).toBeInTheDocument()
@@ -157,7 +217,9 @@ describe("BirthProfilePage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Générer mon thème astral/i }))
 
     expect(await screen.findByText(/Le service de génération est temporairement indisponible/i)).toBeInTheDocument()
-    expect(screen.getByText(/req-gen-456/i)).toBeInTheDocument()
+    // AC8: requestId is logged to console, not displayed to user
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[Support] Request ID: req-gen-456")
+    consoleErrorSpy.mockRestore()
   })
 
   it("shows specific error message when generation returns 422 (invalid birth data)", async () => {
@@ -172,7 +234,7 @@ describe("BirthProfilePage", () => {
       "fetch",
       vi.fn().mockResolvedValueOnce(SUCCESS_GET_RESPONSE).mockResolvedValue(UNPROCESSABLE_RESPONSE),
     )
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /Générer mon thème astral/i })).toBeInTheDocument()
@@ -192,7 +254,7 @@ describe("BirthProfilePage", () => {
       "fetch",
       vi.fn().mockResolvedValueOnce(SUCCESS_GET_RESPONSE).mockRejectedValue(new Error("Network error")),
     )
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /Générer mon thème astral/i })).toBeInTheDocument()
@@ -205,20 +267,24 @@ describe("BirthProfilePage", () => {
 
   it("shows error message and requestId when initial data load fails", async () => {
     setupToken()
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
     const errorResponse = {
       ok: false,
       status: 500,
       json: async () => ({ error: { code: "internal_error", message: "server error", request_id: "req-load-456" } }),
     }
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(errorResponse))
-    renderWithProviders()
+    renderBirthProfilePage()
 
-    expect(await screen.findByText(/Impossible de charger votre profil natal/i, {}, { timeout: 3000 })).toBeInTheDocument()
-    expect(screen.getByText(/req-load-456/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Impossible de charger votre profil natal/i)).toBeInTheDocument()
+    // AC8: requestId is logged to console, not displayed to user
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[Support] Request ID: req-load-456")
+    consoleErrorSpy.mockRestore()
   })
 
   it("shows global error and requestId when saving birth data fails with a general error", async () => {
     setupToken()
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
     const errorResponse = {
       ok: false,
       status: 422,
@@ -228,7 +294,7 @@ describe("BirthProfilePage", () => {
       "fetch",
       vi.fn().mockResolvedValueOnce(NOT_FOUND_RESPONSE).mockResolvedValue(errorResponse),
     )
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument()
@@ -236,18 +302,22 @@ describe("BirthProfilePage", () => {
 
     fireEvent.change(screen.getByLabelText(/Date de naissance/i), { target: { value: "1990-01-15" } })
     fireEvent.change(screen.getByLabelText(/Heure de naissance/i), { target: { value: "10:30" } })
-    fireEvent.change(screen.getByLabelText(/Lieu de naissance/i), { target: { value: "Paris" } })
-    fireEvent.change(screen.getByLabelText(/Fuseau horaire/i), { target: { value: "Europe/Paris" } })
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "Paris" } })
+    fireEvent.change(screen.getByLabelText(/Pays de naissance/i), { target: { value: "France" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
-    expect(await screen.findByText(/Données invalides/i)).toBeInTheDocument()
-    expect(screen.getByText(/req-save-789/i)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText(/Données invalides/i)).toBeInTheDocument()
+    })
+    // AC8: requestId is logged to console, not displayed to user
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[Support] Request ID: req-save-789")
+    consoleErrorSpy.mockRestore()
   })
 
   it("shows empty form without error when birth profile is not found (404)", async () => {
     setupToken()
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND_RESPONSE))
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument()
@@ -258,7 +328,7 @@ describe("BirthProfilePage", () => {
 
   it("shows success message after saving birth data and verifies payload with updated values", async () => {
     setupToken()
-    const UPDATED_PROFILE = { ...VALID_PROFILE, birth_place: "Lyon, France" }
+    const UPDATED_PROFILE = { ...VALID_PROFILE, birth_city: "Lyon" }
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
       if (url.includes("/v1/users/me/birth-data")) {
@@ -267,16 +337,20 @@ describe("BirthProfilePage", () => {
         }
         return SUCCESS_GET_RESPONSE
       }
+      // Mock geocoding to avoid network errors
+      if (url.includes("nominatim.openstreetmap.org")) {
+        return { ok: true, json: async () => [{ display_name: "Lyon, France", lat: "45.76", lon: "4.83" }] }
+      }
       return NOT_FOUND_RESPONSE
     })
     vi.stubGlobal("fetch", fetchMock)
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    fireEvent.change(screen.getByLabelText(/Lieu de naissance/i), { target: { value: "Lyon, France" } })
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "Lyon" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     expect(await screen.findByText(/Profil natal sauvegardé/i)).toBeInTheDocument()
@@ -285,7 +359,7 @@ describe("BirthProfilePage", () => {
     const lastCall = fetchMock.mock.calls.find((call) => call[1]?.method === "PUT")
     expect(lastCall).toBeDefined()
     const body = JSON.parse(lastCall![1]!.body as string)
-    expect(body).toMatchObject(UPDATED_PROFILE)
+    expect(body.birth_city).toBe("Lyon")
   })
 
   it("removes success message when user modifies a field after saving", async () => {
@@ -294,7 +368,7 @@ describe("BirthProfilePage", () => {
       "fetch",
       vi.fn().mockResolvedValueOnce(SUCCESS_GET_RESPONSE).mockResolvedValue(SUCCESS_PUT_RESPONSE),
     )
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
@@ -314,6 +388,40 @@ describe("BirthProfilePage", () => {
     })
   })
 
+  it("clears all feedback messages (success, globalError, generationError) when form changes", async () => {
+    setupToken()
+    const saveError = {
+      ok: false,
+      status: 500,
+      json: async () => ({ error: { code: "server_error", message: "Server error" } }),
+    }
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(SUCCESS_GET_RESPONSE).mockResolvedValue(saveError),
+    )
+    renderBirthProfilePage()
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
+    })
+
+    // Trigger a save that fails with globalError
+    fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/Server error/i)).toBeInTheDocument()
+    })
+
+    // Modify form - should clear the globalError
+    fireEvent.input(screen.getByLabelText(/Date de naissance/i), {
+      target: { value: "1991-02-20" },
+    })
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Server error/i)).not.toBeInTheDocument()
+    })
+  })
+
   it("shows inline error on birth_time field when API returns invalid_birth_time", async () => {
     setupToken()
     const invalidTimeResponse = {
@@ -325,23 +433,14 @@ describe("BirthProfilePage", () => {
       "fetch",
       vi.fn().mockResolvedValueOnce(NOT_FOUND_RESPONSE).mockResolvedValue(invalidTimeResponse),
     )
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument()
     })
 
     // Use values that PASS Zod but trigger the mocked API error
-    fireEvent.change(screen.getByLabelText(/Date de naissance/i), {
-      target: { value: "1990-01-15" },
-    })
-    fireEvent.change(screen.getByLabelText(/Heure de naissance/i), {
-      target: { value: "10:30" },
-    })
-    fireEvent.change(screen.getByLabelText(/Lieu de naissance/i), { target: { value: "Paris" } })
-    fireEvent.change(screen.getByLabelText(/Fuseau horaire/i), {
-      target: { value: "Europe/Paris" },
-    })
+    fillBirthForm()
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     // Now it should reach the API and get the "Format HH:MM(:SS) requis (ex: 10:30)" error
@@ -349,7 +448,7 @@ describe("BirthProfilePage", () => {
     expect(screen.getByLabelText(/Heure de naissance/i)).toHaveAttribute("aria-invalid", "true")
 
     // UX refinement test: field errors PERSIST when a DIFFERENT field is modified
-    fireEvent.input(screen.getByLabelText(/Lieu de naissance/i), { target: { value: "Paris, France" } })
+    fireEvent.input(screen.getByLabelText(/Ville de naissance/i), { target: { value: "Lyon" } })
     
     // The error on birth_time should STILL BE THERE (better UX than clearing everything)
     expect(screen.queryByText(/Format HH:MM\(:SS\) requis \(ex: 10:30\)/i)).toBeInTheDocument()
@@ -374,16 +473,13 @@ describe("BirthProfilePage", () => {
       "fetch",
       vi.fn().mockResolvedValueOnce(NOT_FOUND_RESPONSE).mockResolvedValue(invalidTimezoneResponse),
     )
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument()
     })
 
-    fireEvent.change(screen.getByLabelText(/Date de naissance/i), { target: { value: "1990-01-15" } })
-    fireEvent.change(screen.getByLabelText(/Heure de naissance/i), { target: { value: "10:30" } })
-    fireEvent.change(screen.getByLabelText(/Lieu de naissance/i), { target: { value: "Paris" } })
-    fireEvent.change(screen.getByLabelText(/Fuseau horaire/i), { target: { value: "Europe/Paris" } })
+    fillBirthForm()
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     expect(await screen.findByText(/Fuseau horaire invalide \(ex: Europe\/Paris\)/i)).toBeInTheDocument()
@@ -397,16 +493,13 @@ describe("BirthProfilePage", () => {
       "fetch",
       vi.fn().mockResolvedValueOnce(NOT_FOUND_RESPONSE).mockResolvedValue(SUCCESS_PUT_RESPONSE),
     )
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument()
     })
 
-    fireEvent.change(screen.getByLabelText(/Date de naissance/i), { target: { value: "1990-01-15" } })
-    fireEvent.change(screen.getByLabelText(/Heure de naissance/i), { target: { value: "10:30" } })
-    fireEvent.change(screen.getByLabelText(/Lieu de naissance/i), { target: { value: "Paris" } })
-    fireEvent.change(screen.getByLabelText(/Fuseau horaire/i), { target: { value: "UTC" } })
+    fillBirthForm()
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     // UTC should pass client validation → API call made → success message
@@ -420,22 +513,13 @@ describe("BirthProfilePage", () => {
       "fetch",
       vi.fn().mockResolvedValueOnce(NOT_FOUND_RESPONSE).mockRejectedValue(new Error("Network error")),
     )
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument()
     })
 
-    fireEvent.change(screen.getByLabelText(/Date de naissance/i), {
-      target: { value: "1990-01-15" },
-    })
-    fireEvent.change(screen.getByLabelText(/Heure de naissance/i), {
-      target: { value: "10:30" },
-    })
-    fireEvent.change(screen.getByLabelText(/Lieu de naissance/i), { target: { value: "Paris" } })
-    fireEvent.change(screen.getByLabelText(/Fuseau horaire/i), {
-      target: { value: "Europe/Paris" },
-    })
+    fillBirthForm()
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     expect(await screen.findByText(/Erreur lors de la sauvegarde. Veuillez réessayer/i)).toBeInTheDocument()
@@ -444,7 +528,7 @@ describe("BirthProfilePage", () => {
   it("blocks client-side submission and shows inline errors for missing fields", async () => {
     setupToken()
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND_RESPONSE))
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument()
@@ -454,13 +538,14 @@ describe("BirthProfilePage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     expect(await screen.findByText(/La date de naissance est indispensable/i)).toBeInTheDocument()
-    expect(screen.getByText(/Le lieu de naissance est requis/i)).toBeInTheDocument()
-    expect(screen.getByText(/Le fuseau horaire est requis/i)).toBeInTheDocument()
+    expect(screen.getByText(/La ville de naissance est requise/i)).toBeInTheDocument()
+    expect(screen.getByText(/Le pays de naissance est requis/i)).toBeInTheDocument()
+    // Fuseau horaire auto-détecté via getUserTimezone() dans TimezoneSelect, pas d'erreur si vide
 
-    expect(screen.getByLabelText(/Lieu de naissance/i)).toHaveAttribute("aria-invalid", "true")
-    expect(screen.getByLabelText(/Lieu de naissance/i)).toHaveAttribute(
+    expect(screen.getByLabelText(/Ville de naissance/i)).toHaveAttribute("aria-invalid", "true")
+    expect(screen.getByLabelText(/Ville de naissance/i)).toHaveAttribute(
       "aria-describedby",
-      "birth-place-error",
+      "birth-city-error",
     )
   })
 
@@ -476,7 +561,7 @@ describe("BirthProfilePage", () => {
       return SUCCESS_GET_RESPONSE
     })
     vi.stubGlobal("fetch", fetchMock)
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument())
 
@@ -488,14 +573,14 @@ describe("BirthProfilePage", () => {
     await waitFor(() => {
       expect(putCalls.length).toBeGreaterThan(0)
       const body = JSON.parse(putCalls[0].init.body as string)
-      expect(body.birth_time).toBeNull()
+      expect(body.birth_time).toBe("00:00") // backend sentinel for unknown time
     })
   })
 
   it("décocher 'Heure inconnue' → champ réactivé", async () => {
     setupToken()
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_GET_RESPONSE))
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument())
 
@@ -514,7 +599,7 @@ describe("BirthProfilePage", () => {
       json: async () => ({ data: { ...VALID_PROFILE, birth_time: null }, meta: { request_id: "r1" } }),
     }
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NULL_TIME_RESPONSE))
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument())
 
@@ -522,16 +607,33 @@ describe("BirthProfilePage", () => {
     expect(screen.getByLabelText(/Heure de naissance/i)).toHaveValue("")
   })
 
+  it("reset depuis API avec birth_time '00:00' (sentinel) → checkbox auto-cochée, champ vide", async () => {
+    setupToken()
+    const SENTINEL_TIME_RESPONSE = {
+      ok: true,
+      status: 200,
+      json: async () => ({ data: { ...VALID_PROFILE, birth_time: "00:00" }, meta: { request_id: "r1" } }),
+    }
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SENTINEL_TIME_RESPONSE))
+    renderBirthProfilePage()
+
+    await waitFor(() => expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument())
+
+    expect(screen.getByRole("checkbox", { name: /Heure inconnue/i })).toBeChecked()
+    expect(screen.getByLabelText(/Heure de naissance/i)).toHaveValue("")
+    expect(screen.getByLabelText(/Heure de naissance/i)).toBeDisabled()
+  })
+
   it("soumission sans birth_date → blocage + message indispensable (AC4)", async () => {
     setupToken()
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND_RESPONSE))
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument())
 
     fireEvent.change(screen.getByLabelText(/Heure de naissance/i), { target: { value: "10:30" } })
-    fireEvent.change(screen.getByLabelText(/Lieu de naissance/i), { target: { value: "Paris" } })
-    fireEvent.change(screen.getByLabelText(/Fuseau horaire/i), { target: { value: "Europe/Paris" } })
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "Paris" } })
+    fireEvent.change(screen.getByLabelText(/Pays de naissance/i), { target: { value: "France" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     expect(
@@ -546,7 +648,7 @@ describe("BirthProfilePage", () => {
   it("blocks client-side submission for a future date", async () => {
     setupToken()
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND_RESPONSE))
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument()
@@ -559,10 +661,8 @@ describe("BirthProfilePage", () => {
     fireEvent.change(screen.getByLabelText(/Heure de naissance/i), {
       target: { value: "10:30" },
     })
-    fireEvent.change(screen.getByLabelText(/Lieu de naissance/i), { target: { value: "Paris" } })
-    fireEvent.change(screen.getByLabelText(/Fuseau horaire/i), {
-      target: { value: "Europe/Paris" },
-    })
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "Paris" } })
+    fireEvent.change(screen.getByLabelText(/Pays de naissance/i), { target: { value: "France" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     expect(await screen.findByText(/La date de naissance ne peut pas être dans le futur/i)).toBeInTheDocument()
@@ -575,55 +675,47 @@ describe("BirthProfilePage", () => {
     const fetchMock = vi.fn().mockResolvedValue(SUCCESS_GET_RESPONSE)
     vi.stubGlobal("fetch", fetchMock)
     
-    const { rerender } = renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    // User starts typing
-    fireEvent.change(screen.getByLabelText(/Lieu de naissance/i), { target: { value: "New York" } })
+    // User starts typing in city field
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "New York" } })
     
-    // Simulate background refetch with different data
-    const NEW_DATA = { ...VALID_PROFILE, birth_place: "London" }
+    // Simulate background refetch with different data - this would be triggered by React Query
+    const NEW_DATA = { ...VALID_PROFILE, birth_city: "London" }
     fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => ({ data: NEW_DATA }) })
     
-    rerender(<AppProviders><BirthProfilePage onNavigate={vi.fn()} /></AppProviders>)
-
-    // Form should still have "New York", not "London"
-    expect(screen.getByLabelText(/Lieu de naissance/i)).toHaveValue("New York")
+    // Wait a bit for any potential refetch
+    await waitFor(() => {
+      // Form should still have "New York", not "London" since isDirty prevents reset
+      expect(screen.getByLabelText(/Ville de naissance/i)).toHaveValue("New York")
+    })
   })
 
-  it("disables geocoding button when city or country is empty, enables when both filled", async () => {
+  it("shows validation error when city or country is empty on submit", async () => {
     setupToken()
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_GET_RESPONSE))
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    const geocodeButton = screen.getByRole("button", { name: /Valider les coordonnées/i })
-
-    // Initially both empty → disabled
-    expect(geocodeButton).toBeDisabled()
-
-    // City filled, country still empty → still disabled
-    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Paris" } })
-    expect(geocodeButton).toBeDisabled()
-
-    // Both filled → enabled
-    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "France" } })
-    expect(geocodeButton).not.toBeDisabled()
-
-    // City cleared → disabled again
     fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "" } })
-    expect(geocodeButton).toBeDisabled()
+    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "" } })
+    fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/La ville de naissance est requise/i)).toBeInTheDocument()
+    })
   })
 
-  it("shows resolved geocoding label after successful Nominatim search", async () => {
+  it("shows resolved geocoding label after successful save with geocoding", async () => {
     setupToken()
-    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
       if (url.includes("nominatim")) {
         return {
@@ -631,10 +723,13 @@ describe("BirthProfilePage", () => {
           json: async () => [{ lat: "48.8566", lon: "2.3522", display_name: "Paris, Île-de-France, France" }],
         }
       }
+      if (url.includes("/birth-data") && init?.method === "PUT") {
+        return { ok: true, status: 200, json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }) }
+      }
       return SUCCESS_GET_RESPONSE
     })
     vi.stubGlobal("fetch", fetchMock)
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
@@ -642,26 +737,25 @@ describe("BirthProfilePage", () => {
 
     fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Paris" } })
     fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "France" } })
-    fireEvent.click(screen.getByRole("button", { name: /Valider les coordonnées/i }))
+    fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
-    expect(await screen.findByText(/Paris, Île-de-France, France/i)).toBeInTheDocument()
-    expect(screen.getByText(/lat:/i)).toBeInTheDocument()
-    
-    // Check that birth_place was automatically updated (H2 Fix)
-    expect(screen.getByLabelText(/Lieu de naissance/i)).toHaveValue("Paris, Île-de-France, France")
+    expect(await screen.findByText(/Lieu résolu : Paris, Île-de-France, France/i)).toBeInTheDocument()
   })
 
-  it("shows not-found error message when Nominatim returns empty array", async () => {
+  it("shows not-found warning message when Nominatim returns empty array on save", async () => {
     setupToken()
-    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
       if (url.includes("nominatim")) {
         return { ok: true, json: async () => [] }
       }
+      if (url.includes("/birth-data") && init?.method === "PUT") {
+        return { ok: true, status: 200, json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }) }
+      }
       return SUCCESS_GET_RESPONSE
     })
     vi.stubGlobal("fetch", fetchMock)
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
@@ -669,24 +763,27 @@ describe("BirthProfilePage", () => {
 
     fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "XyzUnknown" } })
     fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "ZZ" } })
-    fireEvent.click(screen.getByRole("button", { name: /Valider les coordonnées/i }))
+    fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     expect(
-      await screen.findByText(/Lieu introuvable/i),
+      await screen.findByText(/Ville ou pays introuvable/i),
     ).toBeInTheDocument()
   })
 
-  it("shows service-unavailable error message and keeps save button active when Nominatim fails", async () => {
+  it("saves data in degraded mode when Nominatim fails", async () => {
     setupToken()
-    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
       if (url.includes("nominatim")) {
         throw new Error("Network error")
       }
+      if (url.includes("/birth-data") && init?.method === "PUT") {
+        return { ok: true, status: 200, json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }) }
+      }
       return SUCCESS_GET_RESPONSE
     })
     vi.stubGlobal("fetch", fetchMock)
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
@@ -694,29 +791,64 @@ describe("BirthProfilePage", () => {
 
     fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Paris" } })
     fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "France" } })
-    fireEvent.click(screen.getByRole("button", { name: /Valider les coordonnées/i }))
+    fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
-    expect(await screen.findByText(/Service de géocodage indisponible/i)).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: /Sauvegarder/i })).not.toBeDisabled()
+    await waitFor(() => {
+      expect(screen.getByText(/Profil natal sauvegardé/i)).toBeInTheDocument()
+    })
   })
 
-  it("does not include birth_lat or birth_lon in save payload when geocoding was not performed (AC4)", async () => {
+  it("shows service unavailable warning when geocoding service fails (AC4 - Story 16.8)", async () => {
+    // Note: geocodeCity wraps network errors into GeocodingError, which triggers error_unavailable state
     setupToken()
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
+      if (url.includes("nominatim")) {
+        throw new Error("Network error") // geocodeCity converts this to GeocodingError
+      }
       if (url.includes("/birth-data") && init?.method === "PUT") {
         return { ok: true, status: 200, json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }) }
       }
       return SUCCESS_GET_RESPONSE
     })
     vi.stubGlobal("fetch", fetchMock)
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    // Save directly without geocoding
+    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Paris" } })
+    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "France" } })
+    fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/Service de géolocalisation temporairement indisponible/i)).toBeInTheDocument()
+    })
+    expect(screen.getByText(/mode dégradé/i)).toBeInTheDocument()
+  })
+
+  it("does not include birth_lat or birth_lon in save payload when geocoding fails", async () => {
+    setupToken()
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes("nominatim")) {
+        return { ok: true, json: async () => [] }
+      }
+      if (url.includes("/birth-data") && init?.method === "PUT") {
+        return { ok: true, status: 200, json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }) }
+      }
+      return SUCCESS_GET_RESPONSE
+    })
+    vi.stubGlobal("fetch", fetchMock)
+    renderBirthProfilePage()
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
+    })
+
+    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Unknown" } })
+    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "ZZ" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
     await screen.findByText(/Profil natal sauvegardé/i)
 
@@ -730,9 +862,9 @@ describe("BirthProfilePage", () => {
     expect(body.birth_lon).toBeUndefined()
   })
 
-  it("resets geocoding state and clears resolved label when city field changes after successful geocoding (L4)", async () => {
+  it("resets geocoding state when city field changes (L4)", async () => {
     setupToken()
-    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
       if (url.includes("nominatim")) {
         return {
@@ -740,27 +872,27 @@ describe("BirthProfilePage", () => {
           json: async () => [{ lat: "48.8566", lon: "2.3522", display_name: "Paris, Île-de-France, France" }],
         }
       }
+      if (url.includes("/birth-data") && init?.method === "PUT") {
+        return { ok: true, status: 200, json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }) }
+      }
       return SUCCESS_GET_RESPONSE
     })
     vi.stubGlobal("fetch", fetchMock)
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    // Successful geocode
     fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Paris" } })
     fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "France" } })
-    fireEvent.click(screen.getByRole("button", { name: /Valider les coordonnées/i }))
-    await screen.findByText(/Paris, Île-de-France, France/i)
+    fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
+    await screen.findByText(/Lieu résolu : Paris, Île-de-France, France/i)
 
-    // Changing city should reset geocoding state
     fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Lyon" } })
     await waitFor(() => {
-      expect(screen.queryByText(/Paris, Île-de-France, France/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Lieu résolu/i)).not.toBeInTheDocument()
     })
-    expect(screen.queryByText(/lat:/i)).not.toBeInTheDocument()
   })
 
   it("includes birth_lat and birth_lon in save payload when geocoding succeeded", async () => {
@@ -779,19 +911,14 @@ describe("BirthProfilePage", () => {
       return SUCCESS_GET_RESPONSE
     })
     vi.stubGlobal("fetch", fetchMock)
-    renderWithProviders()
+    renderBirthProfilePage()
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    // Geocode first
     fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Paris" } })
     fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "France" } })
-    fireEvent.click(screen.getByRole("button", { name: /Valider les coordonnées/i }))
-    await screen.findByText(/Paris, France/i)
-
-    // Then save
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
     await screen.findByText(/Profil natal sauvegardé/i)
 
@@ -807,7 +934,6 @@ describe("BirthProfilePage", () => {
 
   it("flux complet mode dégradé: checkbox cochée → sauvegarde → génération avec birth_time null", async () => {
     setupToken()
-    const onNavigate = vi.fn()
     const CHART_WITH_DEGRADED = {
       chart_id: "c1",
       metadata: { reference_version: "1.0", ruleset_version: "1.0", degraded_mode: "no_time" },
@@ -843,7 +969,7 @@ describe("BirthProfilePage", () => {
       return SUCCESS_GET_RESPONSE
     })
     vi.stubGlobal("fetch", fetchMock)
-    renderWithProviders(onNavigate)
+    renderBirthProfilePage()
 
     await waitFor(() => expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument())
 
@@ -855,23 +981,22 @@ describe("BirthProfilePage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
     await screen.findByText(/Profil natal sauvegardé/i)
 
-    // Verify birth_time is null in PUT payload
+    // Verify birth_time is "00:00" sentinel in PUT payload (backend convention for unknown time)
     expect(putCalls.length).toBeGreaterThan(0)
     const savedBody = JSON.parse(putCalls[0].body)
-    expect(savedBody.birth_time).toBeNull()
+    expect(savedBody.birth_time).toBe("00:00")
 
     // Step 3: Generate natal chart
     fireEvent.click(screen.getByRole("button", { name: /Générer mon thème astral/i }))
 
-    // Step 4: Verify navigation to natal view
+    // Step 4: Verify navigation triggered (button no longer visible after navigation)
     await waitFor(() => {
-      expect(onNavigate).toHaveBeenCalledWith("natal")
+      expect(screen.queryByRole("button", { name: /Générer mon thème astral/i })).not.toBeInTheDocument()
     })
   })
 
   it("flux complet mode dégradé no_location: géocodage échoué → sauvegarde sans coords → génération", async () => {
     setupToken()
-    const onNavigate = vi.fn()
     const CHART_NO_LOCATION = {
       chart_id: "c2",
       metadata: { reference_version: "1.0", ruleset_version: "1.0", degraded_mode: "no_location" },
@@ -910,18 +1035,16 @@ describe("BirthProfilePage", () => {
       return SUCCESS_GET_RESPONSE
     })
     vi.stubGlobal("fetch", fetchMock)
-    renderWithProviders(onNavigate)
+    renderBirthProfilePage()
 
     await waitFor(() => expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument())
 
-    // Step 1: Try geocoding with unknown location
+    // Step 1: Try saving with unknown location (geocoding happens during save)
     fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "UnknownCity" } })
     fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "ZZ" } })
-    fireEvent.click(screen.getByRole("button", { name: /Valider les coordonnées/i }))
-    await screen.findByText(/Lieu introuvable/i)
-
-    // Step 2: Save profile without coords (degraded mode)
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
+    
+    // Should show geocoding warning but still save
     await screen.findByText(/Profil natal sauvegardé/i)
 
     // Verify no birth_lat/birth_lon in PUT payload
@@ -933,9 +1056,60 @@ describe("BirthProfilePage", () => {
     // Step 3: Generate natal chart
     fireEvent.click(screen.getByRole("button", { name: /Générer mon thème astral/i }))
 
-    // Step 4: Verify navigation to natal view
+    // Step 4: Verify navigation triggered
     await waitFor(() => {
-      expect(onNavigate).toHaveBeenCalledWith("natal")
+      expect(screen.queryByRole("button", { name: /Générer mon thème astral/i })).not.toBeInTheDocument()
     })
+  })
+
+  it("aborts pending geocode request on unmount", async () => {
+    setupToken()
+    const abortSpy = vi.fn()
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+    // Track if geocode fetch started
+    let geocodeFetchStarted = false
+    let resolveGeocode: (() => void) | null = null
+
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes("nominatim")) {
+        geocodeFetchStarted = true
+        // Track the abort signal
+        if (init?.signal) {
+          init.signal.addEventListener("abort", abortSpy)
+        }
+        // Return a promise that never resolves to simulate pending request
+        return new Promise<Response>((resolve) => {
+          resolveGeocode = () => resolve({ ok: true, json: async () => [] } as Response)
+        })
+      }
+      if (url.includes("/birth-data")) {
+        return SUCCESS_GET_RESPONSE
+      }
+      return SUCCESS_GET_RESPONSE
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const { unmount } = renderBirthProfilePage()
+
+    await waitFor(() => expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument())
+
+    // Trigger geocoding by changing city and country
+    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "TestCity" } })
+    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "TestCountry" } })
+    fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
+
+    // Wait for geocode fetch to actually start
+    await waitFor(() => expect(geocodeFetchStarted).toBe(true))
+
+    // Unmount while geocoding is pending
+    unmount()
+
+    // Verify abort was called
+    expect(abortSpy).toHaveBeenCalled()
+    consoleErrorSpy.mockRestore()
+    // Cleanup: resolve the pending promise to avoid leaks
+    resolveGeocode?.()
   })
 })

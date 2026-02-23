@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { useNavigate, useSearchParams } from "react-router-dom"
 
 import { registerApi, AuthApiError } from "../api/auth"
 import { setAccessToken } from "../utils/authToken"
@@ -19,6 +20,8 @@ type SignUpFormProps = {
 
 export function SignUpForm({ onSignIn }: SignUpFormProps) {
   const [apiError, setApiError] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const {
     register,
@@ -33,6 +36,12 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
     try {
       const result = await registerApi(data.email, data.password)
       setAccessToken(result.access_token)
+      const returnTo = searchParams.get("returnTo")
+      if (returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")) {
+        navigate(returnTo, { replace: true })
+      } else {
+        navigate("/dashboard", { replace: true })
+      }
     } catch (err) {
       if (err instanceof AuthApiError && err.code === "email_already_registered") {
         setApiError("Cette adresse e-mail est déjà utilisée.")

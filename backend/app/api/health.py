@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 from typing import Literal
 
 from fastapi import APIRouter
@@ -42,33 +43,38 @@ def _check_db() -> ServiceStatus:
 
 
 _redis_client: "object | None" = None
+_redis_client_lock = threading.Lock()
 
 
 def _get_redis_client() -> "object | None":
-    """Get or create Redis client for health checks."""
+    """Get or create Redis client for health checks (thread-safe, double-checked locking)."""
     global _redis_client
     if _redis_client is not None:
         return _redis_client
 
-    try:
-        from app.ai_engine.config import ai_engine_settings
+    with _redis_client_lock:
+        if _redis_client is not None:
+            return _redis_client
 
-        if not ai_engine_settings.redis_url:
+        try:
+            from app.ai_engine.config import ai_engine_settings
+
+            if not ai_engine_settings.redis_url:
+                return None
+
+            import redis
+
+            _redis_client = redis.from_url(
+                ai_engine_settings.redis_url,
+                decode_responses=False,
+                socket_timeout=2.0,
+                socket_connect_timeout=2.0,
+            )
+            return _redis_client
+        except ImportError:
             return None
-
-        import redis
-
-        _redis_client = redis.from_url(
-            ai_engine_settings.redis_url,
-            decode_responses=False,
-            socket_timeout=2.0,
-            socket_connect_timeout=2.0,
-        )
-        return _redis_client
-    except ImportError:
-        return None
-    except Exception:
-        return None
+        except Exception:
+            return None
 
 
 def _check_redis() -> ServiceStatus:

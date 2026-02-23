@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
+import uuid
 from collections import defaultdict
 from dataclasses import dataclass
 from threading import Lock
@@ -13,6 +14,39 @@ if TYPE_CHECKING:
     from redis import Redis
 
 logger = logging.getLogger(__name__)
+
+# Atomic sliding window rate limit Lua script.
+# Cleans expired entries, checks count, and conditionally adds a new entry — all atomically.
+# Args: KEYS[1]=key, ARGV[1]=now(float), ARGV[2]=window_seconds, ARGV[3]=limit, ARGV[4]=unique_member
+# Returns: {0|1 (blocked|allowed), current_count, retry_after_ms}
+_SLIDING_WINDOW_SCRIPT = """
+local key = KEYS[1]
+local now = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])
+local limit = tonumber(ARGV[3])
+local member = ARGV[4]
+local window_start = now - window
+
+redis.call('ZREMRANGEBYSCORE', key, '-inf', window_start)
+local count = tonumber(redis.call('ZCARD', key))
+
+if count >= limit then
+    local oldest = redis.call('ZRANGEBYSCORE', key, '-inf', '+inf', 'WITHSCORES', 'LIMIT', 0, 1)
+    local retry_ms = 60000
+    if oldest and #oldest >= 2 then
+        local oldest_ts = tonumber(oldest[2])
+        if oldest_ts then
+            local diff = oldest_ts + window - now
+            retry_ms = math.max(math.floor(diff * 1000), 1000)
+        end
+    end
+    return {0, count, retry_ms}
+end
+
+redis.call('ZADD', key, now, member)
+redis.call('EXPIRE', key, math.floor(window) + 10)
+return {1, count + 1, 0}
+"""
 
 
 @dataclass
@@ -77,41 +111,28 @@ class RedisRateLimiter:
         self.window_seconds = 60
 
     def check_rate_limit(self, user_id: str) -> RateLimitResult:
-        """Check if user has exceeded rate limit using sliding window."""
+        """Check if user has exceeded rate limit using atomic sliding window Lua script."""
         key = f"{self.KEY_PREFIX}:{user_id}"
         now = time.time()
-        window_start = now - self.window_seconds
+        member = uuid.uuid4().hex
 
-        pipe = self.redis.pipeline()
-        pipe.zremrangebyscore(key, 0, window_start)
-        pipe.zcard(key)
-        pipe.execute()
+        result = self.redis.eval(
+            _SLIDING_WINDOW_SCRIPT,
+            1,
+            key,
+            str(now),
+            str(self.window_seconds),
+            str(self.limit_per_min),
+            member,
+        )
 
-        current_count = self.redis.zcard(key)
-
-        if current_count >= self.limit_per_min:
-            oldest_scores = self.redis.zrange(key, 0, 0, withscores=True)
-            if oldest_scores:
-                oldest_ts = oldest_scores[0][1]
-                retry_after_ms = int((oldest_ts + self.window_seconds - now) * 1000)
-            else:
-                retry_after_ms = 60000
-            return RateLimitResult(
-                allowed=False,
-                current_count=current_count,
-                limit=self.limit_per_min,
-                retry_after_ms=max(retry_after_ms, 1000),
-            )
-
-        pipe = self.redis.pipeline()
-        pipe.zadd(key, {str(now): now})
-        pipe.expire(key, self.window_seconds + 10)
-        pipe.execute()
-
+        allowed = bool(result[0])
+        current_count = int(result[1])
         return RateLimitResult(
-            allowed=True,
-            current_count=current_count + 1,
+            allowed=allowed,
+            current_count=current_count,
             limit=self.limit_per_min,
+            retry_after_ms=int(result[2]) if not allowed else None,
         )
 
     def reset(self, user_id: str) -> None:

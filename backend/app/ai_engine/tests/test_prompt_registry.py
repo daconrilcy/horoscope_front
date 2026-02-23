@@ -289,3 +289,33 @@ class TestPromptRegistry:
 
         assert "Bonjour" in prompt
         assert "Test situation" in prompt
+
+    def test_render_prompt_template_not_found_raises_validation_error(self) -> None:
+        """Render prompt raises ValidationError when template file is missing."""
+        from app.ai_engine.exceptions import ValidationError
+        from app.ai_engine.services.prompt_registry import USE_CASE_REGISTRY, PromptConfig
+
+        original_config = USE_CASE_REGISTRY.get("chat")
+        try:
+            USE_CASE_REGISTRY["chat"] = PromptConfig(
+                template_name="nonexistent_template.jinja2",
+                max_tokens=1000,
+                temperature=0.8,
+            )
+
+            input_data = GenerateInput()
+            context = GenerateContext()
+
+            with pytest.raises(ValidationError) as exc_info:
+                PromptRegistry.render_prompt(
+                    use_case="chat",
+                    locale="fr-FR",
+                    input_data=input_data,
+                    context=context,
+                )
+
+            assert "template not found" in exc_info.value.message
+            assert exc_info.value.details["use_case"] == "chat"
+        finally:
+            if original_config:
+                USE_CASE_REGISTRY["chat"] = original_config

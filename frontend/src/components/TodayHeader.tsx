@@ -1,10 +1,19 @@
 import { useState } from "react"
 
+/**
+ * Props for the TodayHeader component
+ */
 export interface TodayHeaderProps {
+  /** Display name of the user to generate initials or alt text */
   userName?: string
+  /** URL of the user's avatar image */
   avatarUrl?: string
 }
 
+/**
+ * TodayHeader displays the main page title ("Horoscope") and the user profile avatar.
+ * It automatically handles initials fallback if the image fails to load.
+ */
 export function TodayHeader({ userName = "U", avatarUrl }: TodayHeaderProps) {
   const [imgError, setImgError] = useState(false)
 
@@ -18,7 +27,7 @@ export function TodayHeader({ userName = "U", avatarUrl }: TodayHeaderProps) {
       const last = parts[parts.length - 1]?.[0] || ""
       if (first && last) return (first + last).toUpperCase()
     }
-    return safeName.slice(0, 2).toUpperCase()
+    return (safeName[0] || "U").toUpperCase()
   }
 
   const initials = getInitials(userName)

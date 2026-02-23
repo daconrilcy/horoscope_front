@@ -40,10 +40,10 @@ so that je comprenne facilement mon thème natal sans termes techniques en angla
 - [x] Mettre à jour `NatalChartPage.tsx` pour utiliser les traductions (AC: 1, 3)
   - [x] Importer `useAstrologyLabels` depuis `../i18n/astrology`
   - [x] Appeler le hook au début du composant
-  - [x] Remplacer `item.planet_code` par `translatePlanet(item.planet_code, lang)`
-  - [x] Remplacer `item.sign_code` par `translateSign(item.sign_code, lang)`
-  - [x] Remplacer `"Maison ${item.number}"` par `translateHouse(item.number, lang)`
-  - [x] Remplacer `item.aspect_code` par `translateAspect(item.aspect_code, lang)`
+  - [x] Utiliser `translatePlanet(item.planet_code)` (fonction bound, sans param lang)
+  - [x] Utiliser `translateSign(item.sign_code)` (fonction bound, sans param lang)
+  - [x] Utiliser `translateHouse(item.number)` (fonction bound, sans param lang)
+  - [x] Utiliser `translateAspect(item.aspect_code)` (fonction bound, sans param lang)
 
 - [x] Tests unitaires `frontend/src/tests/astrology-i18n.test.ts` (AC: 1, 2, 3)
   - [x] Test : `translateSign("aries", "fr")` → "Bélier"
@@ -118,7 +118,7 @@ so that je comprenne facilement mon thème natal sans termes techniques en angla
 | 11 | Maison XI — Communauté | House XI — Community | Casa XI — Comunidad |
 | 12 | Maison XII — Inconscient | House XII — Unconscious | Casa XII — Inconsciente |
 
-### Dictionnaire des aspects (5 majeurs)
+### Dictionnaire des aspects (9 aspects)
 
 | Code | FR | EN | ES |
 |------|-----|-----|-----|
@@ -127,101 +127,72 @@ so that je comprenne facilement mon thème natal sans termes techniques en angla
 | square | Carré | Square | Cuadratura |
 | trine | Trigone | Trine | Trígono |
 | opposition | Opposition | Opposition | Oposición |
+| semisextile | Semi-sextile | Semi-sextile | Semisextil |
+| quincunx | Quinconce | Quincunx | Quincuncio |
+| semisquare | Semi-carré | Semi-square | Semicuadratura |
+| sesquiquadrate | Sesqui-carré | Sesquiquadrate | Sesquicuadratura |
 
-### Implémentation recommandée `astrology.ts`
+### Implémentation actuelle `astrology.ts`
+
+Le module utilise un vrai hook React avec `useState`/`useEffect` pour la réactivité :
 
 ```typescript
+import { useCallback, useEffect, useState } from "react"
+
 export type AstrologyLang = "fr" | "en" | "es"
 
-const SIGNS: Record<string, Record<AstrologyLang, string>> = {
-  aries: { fr: "Bélier", en: "Aries", es: "Aries" },
-  taurus: { fr: "Taureau", en: "Taurus", es: "Tauro" },
-  gemini: { fr: "Gémeaux", en: "Gemini", es: "Géminis" },
-  cancer: { fr: "Cancer", en: "Cancer", es: "Cáncer" },
-  leo: { fr: "Lion", en: "Leo", es: "Leo" },
-  virgo: { fr: "Vierge", en: "Virgo", es: "Virgo" },
-  libra: { fr: "Balance", en: "Libra", es: "Libra" },
-  scorpio: { fr: "Scorpion", en: "Scorpio", es: "Escorpio" },
-  sagittarius: { fr: "Sagittaire", en: "Sagittarius", es: "Sagitario" },
-  capricorn: { fr: "Capricorne", en: "Capricorn", es: "Capricornio" },
-  aquarius: { fr: "Verseau", en: "Aquarius", es: "Acuario" },
-  pisces: { fr: "Poissons", en: "Pisces", es: "Piscis" },
+const HOUSE_FALLBACK_PREFIX: Record<AstrologyLang, string> = {
+  fr: "Maison", en: "House", es: "Casa",
 }
 
-const PLANETS: Record<string, Record<AstrologyLang, string>> = {
-  sun: { fr: "Soleil", en: "Sun", es: "Sol" },
-  moon: { fr: "Lune", en: "Moon", es: "Luna" },
-  mercury: { fr: "Mercure", en: "Mercury", es: "Mercurio" },
-  venus: { fr: "Vénus", en: "Venus", es: "Venus" },
-  mars: { fr: "Mars", en: "Mars", es: "Marte" },
-  jupiter: { fr: "Jupiter", en: "Jupiter", es: "Júpiter" },
-  saturn: { fr: "Saturne", en: "Saturn", es: "Saturno" },
-  uranus: { fr: "Uranus", en: "Uranus", es: "Urano" },
-  neptune: { fr: "Neptune", en: "Neptune", es: "Neptuno" },
-  pluto: { fr: "Pluton", en: "Pluto", es: "Plutón" },
-}
+const SIGNS: Record<string, Record<AstrologyLang, string>> = { /* 12 signes */ }
+const PLANETS: Record<string, Record<AstrologyLang, string>> = { /* 10 planètes */ }
+const HOUSES: Record<number, Record<AstrologyLang, string>> = { /* 12 maisons */ }
+const ASPECTS: Record<string, Record<AstrologyLang, string>> = { /* 5 aspects */ }
 
-const HOUSES: Record<number, Record<AstrologyLang, string>> = {
-  1: { fr: "Maison I — Identité", en: "House I — Identity", es: "Casa I — Identidad" },
-  2: { fr: "Maison II — Valeurs", en: "House II — Values", es: "Casa II — Valores" },
-  // ... (12 maisons)
-}
+const SUPPORTED_LANGS: AstrologyLang[] = ["fr", "en", "es"]
+const LANG_STORAGE_KEY = "lang"
 
-const ASPECTS: Record<string, Record<AstrologyLang, string>> = {
-  conjunction: { fr: "Conjonction", en: "Conjunction", es: "Conjunción" },
-  sextile: { fr: "Sextile", en: "Sextile", es: "Sextil" },
-  square: { fr: "Carré", en: "Square", es: "Cuadratura" },
-  trine: { fr: "Trigone", en: "Trine", es: "Trígono" },
-  opposition: { fr: "Opposition", en: "Opposition", es: "Oposición" },
-}
+// Fonctions de traduction pures (exportées pour tests unitaires)
+export function translateSign(code: string, lang: AstrologyLang): string { /* ... */ }
+export function translatePlanet(code: string, lang: AstrologyLang): string { /* ... */ }
+export function translateHouse(number: number, lang: AstrologyLang): string { /* ... */ }
+export function translateAspect(code: string, lang: AstrologyLang): string { /* ... */ }
 
-export function translateSign(code: string, lang: AstrologyLang): string {
-  const entry = SIGNS[code.toLowerCase()]
-  return entry?.[lang] ?? code
-}
-
-export function translatePlanet(code: string, lang: AstrologyLang): string {
-  const entry = PLANETS[code.toLowerCase()]
-  return entry?.[lang] ?? code
-}
-
-export function translateHouse(number: number, lang: AstrologyLang): string {
-  const entry = HOUSES[number]
-  if (!entry) {
-    const prefix = lang === "en" ? "House" : lang === "es" ? "Casa" : "Maison"
-    return `${prefix} ${number}`
-  }
-  return entry[lang]
-}
-
-export function translateAspect(code: string, lang: AstrologyLang): string {
-  const entry = ASPECTS[code.toLowerCase()]
-  return entry?.[lang] ?? code
-}
-
-function detectLang(): AstrologyLang {
-  const stored = typeof localStorage !== "undefined" ? localStorage.getItem("lang") : null
-  if (stored && ["fr", "en", "es"].includes(stored)) {
-    return stored as AstrologyLang
-  }
-  const nav = typeof navigator !== "undefined" ? navigator.language?.substring(0, 2) : "fr"
-  if (["fr", "en", "es"].includes(nav)) {
-    return nav as AstrologyLang
-  }
-  return "fr"
+export function detectLang(): AstrologyLang {
+  // Priorité: localStorage > navigator.language > "fr"
 }
 
 export function useAstrologyLabels() {
-  const lang = detectLang()
-  return {
-    lang,
-    translateSign: (code: string) => translateSign(code, lang),
-    translatePlanet: (code: string) => translatePlanet(code, lang),
-    translateHouse: (number: number) => translateHouse(number, lang),
-    translateAspect: (code: string) => translateAspect(code, lang),
-  }
+  const [lang, setLangState] = useState<AstrologyLang>(detectLang)
+
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === LANG_STORAGE_KEY) setLangState(detectLang())
+    }
+    window.addEventListener("storage", handleStorageChange)
+    return () => window.removeEventListener("storage", handleStorageChange)
+  }, [])
+
+  const setLang = useCallback((newLang: AstrologyLang) => {
+    localStorage.setItem(LANG_STORAGE_KEY, newLang)
+    setLangState(newLang)
+  }, [])
+
+  // Fonctions bound avec useCallback (pas besoin de passer lang)
+  const boundTranslateSign = useCallback((code: string) => translateSign(code, lang), [lang])
+  // ... idem pour planet, house, aspect
+
+  return { lang, setLang, translateSign: boundTranslateSign, /* ... */ }
 }
 ```
+
+**Points clés de l'implémentation :**
+- `useState` + `useEffect` pour réactivité React
+- `setLang` persiste dans `localStorage` ET met à jour l'état
+- Écoute `storage` event pour sync entre onglets
+- Fonctions bound via `useCallback` (pas de param `lang` requis à l'appel)
+- `HOUSE_FALLBACK_PREFIX` pour extensibilité des langues
 
 ### Mise à jour de `NatalChartPage.tsx`
 
@@ -276,13 +247,14 @@ L'API retourne actuellement des codes en MAJUSCULES (ex: `"SUN"`, `"GEMINI"`, `"
 Pour ajouter l'allemand (`de`) :
 
 1. Modifier le type : `export type AstrologyLang = "fr" | "en" | "es" | "de"`
-2. Ajouter les entrées dans chaque dictionnaire :
+2. Ajouter `de` dans `SUPPORTED_LANGS` et `HOUSE_FALLBACK_PREFIX`
+3. Ajouter les entrées dans chaque dictionnaire :
 
 ```typescript
 aries: { fr: "Bélier", en: "Aries", es: "Aries", de: "Widder" },
 ```
 
-3. Aucune modification des composants n'est nécessaire.
+4. Aucune modification des composants n'est nécessaire.
 
 ### Project Structure Notes
 
@@ -329,25 +301,30 @@ Claude Opus 4.5
 ### Completion Notes List
 
 - **Module i18n créé** : `frontend/src/i18n/astrology.ts` avec dictionnaires complets FR/EN/ES pour 12 signes, 10 planètes, 12 maisons, 5 aspects
-- **Hook `useAstrologyLabels`** : détection automatique de langue via `localStorage.getItem("lang")` > `navigator.language` > fallback `"fr"`
+- **Hook `useAstrologyLabels`** : vrai hook React avec `useState`/`useEffect`, réactif aux changements de localStorage (événement "storage")
+- **Détection de langue** : priorité `localStorage.getItem("lang")` > `navigator.language` > fallback `"fr"`
+- **Fonctions bound** : le hook retourne des fonctions partiellement appliquées (pas besoin de passer `lang` à chaque appel)
 - **Normalisation case-insensitive** : tous les codes API en MAJUSCULES sont convertis en lowercase pour correspondance robuste
 - **Fallback gracieux** : codes inconnus retournés tels quels (pas d'erreur)
 - **NatalChartPage mis à jour** : planètes, signes, maisons et aspects maintenant traduits dynamiquement
-- **20 tests unitaires i18n** : couverture complète des 4 fonctions de traduction + cas edge
-- **4 tests d'intégration** : validation de l'affichage en français dans NatalChartPage
-- **Extensibilité AC2** : ajouter une langue = modifier le type + ajouter les entrées dans les dictionnaires, aucun composant à modifier
+- **69 tests unitaires i18n** : couverture complète avec `it.each` pour tous les dictionnaires (9 aspects) + test persistance localStorage
+- **13 tests d'intégration** : validation de l'affichage en français dans NatalChartPage
+- **Extensibilité AC2** : ajouter une langue = modifier le type + ajouter entrées dans dictionnaires + `HOUSE_FALLBACK_PREFIX`
 
 ### File List
 
 | Fichier | État | Description |
 |---------|------|-------------|
-| `frontend/src/i18n/astrology.ts` | Nouveau | Module i18n avec dictionnaires et hook |
-| `frontend/src/pages/NatalChartPage.tsx` | Modifié | Utilise les traductions pour planètes, signes, maisons, aspects |
-| `frontend/src/tests/astrology-i18n.test.ts` | Nouveau | 27 tests unitaires du module i18n (20 translate + 7 hook) |
-| `frontend/src/tests/NatalChartPage.test.tsx` | Modifié | +4 tests i18n, mock `navigator.language` |
+| `frontend/src/i18n/astrology.ts` | Modifié | Module i18n avec vrai hook React réactif, JSDoc complet |
+| `frontend/src/pages/NatalChartPage.tsx` | Modifié | Utilise les fonctions bound (sans paramètre lang) |
+| `frontend/src/tests/astrology-i18n.test.ts` | Modifié | 69 tests avec `it.each`, 9 aspects, tests hook React + persistance |
+| `frontend/src/tests/NatalChartPage.test.tsx` | Modifié | 13 tests i18n, mock `navigator.language` |
 
 ### Change Log
 
 - **2026-02-22** : Implémentation story 14.3 — module i18n astrology (FR/EN/ES), hook `useAstrologyLabels`, intégration dans NatalChartPage. 199/199 tests OK, 0 erreur lint.
 - **2026-02-22** : Code review AI round 1 — Corrigé M1 (hook conditionnel), M2 (retour fonctions pures), L1 (tests hook), L2 (status done). +7 tests useAstrologyLabels.
 - **2026-02-22** : Code review AI round 2 — Corrigé M1 (doc priorité localStorage/navigator), L1 (test count 27), L2 (change log 199 tests).
+- **2026-02-22** : Code review AI round 3 — Refonte majeure: H1 (vrai hook React useState/useEffect), H2 (test storage event), M1 (JSDoc API), M2 (tests edge navigator vide/undefined), M3 (HOUSE_FALLBACK_PREFIX), L1 (it.each paramétré), L2 (JSDoc complet). 77/77 tests OK, 0 erreur lint.
+- **2026-02-22** : Code review AI round 4 — M2 (setLang persiste dans localStorage), M3 (test persistance), L1 (JSDoc example corrigé), M1/L3 (doc story synchronisée avec implémentation). 78/78 tests OK.
+- **2026-02-22** : Code review AI round 5 — M2 (guard SSR sur setLang), L1 (+4 aspects mineurs: semisextile, quincunx, semisquare, sesquiquadrate), L3 (export SUPPORTED_LANGS). 82/82 tests OK.

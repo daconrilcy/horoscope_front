@@ -58,6 +58,19 @@ class TestGenerateEndpointValidation:
         assert "error" in data
         assert data["error"]["code"] == "invalid_request_payload"
 
+    def test_generate_returns_422_for_missing_use_case(
+        self, client: TestClient
+    ) -> None:
+        """Generate returns 422 when required field use_case is absent."""
+        response = client.post(
+            "/v1/ai/generate",
+            json={"locale": "fr-FR"},
+        )
+        assert response.status_code == 422
+        data = response.json()
+        assert "error" in data
+        assert data["error"]["code"] == "invalid_request_payload"
+
 
 class TestGenerateEndpoint:
     """Tests for POST /v1/ai/generate endpoint."""
@@ -288,6 +301,39 @@ class TestGenerateEndpoint:
         assert "[...contexte tronqué" in rendered_prompt or len(rendered_prompt) < len(
             moderate_context
         )
+
+
+class TestGenerateEndpointMetrics:
+    """Tests for Prometheus metrics emission on POST /v1/ai/generate (AC7)."""
+
+    def test_generate_emits_success_metric(self, client: TestClient) -> None:
+        """Generate increments ai_engine_requests_total with status=success on success."""
+        mock_result = ProviderResult(
+            text="Response",
+            input_tokens=10,
+            output_tokens=5,
+            model="gpt-4o-mini",
+        )
+
+        with patch(
+            "app.ai_engine.services.generate_service.get_provider_client"
+        ) as mock_provider, patch(
+            "app.ai_engine.services.generate_service.increment_counter"
+        ) as mock_counter:
+            mock_client = AsyncMock()
+            mock_client.generate_text = AsyncMock(return_value=mock_result)
+            mock_client.provider_name = "openai"
+            mock_provider.return_value = mock_client
+
+            response = client.post(
+                "/v1/ai/generate",
+                json={"use_case": "chat", "locale": "fr-FR"},
+            )
+
+        assert response.status_code == 200
+        counter_calls = [str(c) for c in mock_counter.call_args_list]
+        success_calls = [c for c in counter_calls if "status=success" in c]
+        assert len(success_calls) >= 1, "Should emit at least one success metric"
 
 
 class TestGenerateEndpointRateLimiting:

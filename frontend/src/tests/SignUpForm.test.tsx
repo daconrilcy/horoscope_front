@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react"
 
 import { SignUpForm } from "../components/SignUpForm"
+import { renderWithRouter } from "./test-utils"
 
 const ACCESS_TOKEN = "tok.eyJzdWIiOiI0MiIsInJvbGUiOiJ1c2VyIn0.sig"
 
@@ -45,7 +46,7 @@ afterEach(() => {
 describe("SignUpForm", () => {
   it("renders email input, password input, submit button, and back-to-signin link", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignUpForm onSignIn={onSignInMock} />)
+    renderWithRouter(<SignUpForm onSignIn={onSignInMock} />)
 
     expect(screen.getByLabelText("Adresse e-mail")).toBeInTheDocument()
     expect(screen.getByLabelText("Mot de passe")).toBeInTheDocument()
@@ -55,14 +56,14 @@ describe("SignUpForm", () => {
 
   it("submit button has type=submit for Enter key activation", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignUpForm onSignIn={onSignInMock} />)
+    renderWithRouter(<SignUpForm onSignIn={onSignInMock} />)
 
     expect(screen.getByRole("button", { name: "Créer mon compte" })).toHaveAttribute("type", "submit")
   })
 
   it("shows validation error when email is invalid", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignUpForm onSignIn={onSignInMock} />)
+    renderWithRouter(<SignUpForm onSignIn={onSignInMock} />)
 
     fireEvent.change(screen.getByLabelText("Adresse e-mail"), { target: { value: "not-an-email" } })
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "password123" } })
@@ -75,7 +76,7 @@ describe("SignUpForm", () => {
 
   it("shows validation error when password is too short (< 8 characters)", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignUpForm onSignIn={onSignInMock} />)
+    renderWithRouter(<SignUpForm onSignIn={onSignInMock} />)
 
     fireEvent.change(screen.getByLabelText("Adresse e-mail"), { target: { value: "test@example.com" } })
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "short" } })
@@ -88,7 +89,7 @@ describe("SignUpForm", () => {
 
   it("sets aria-invalid and aria-describedby on email field after validation error", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignUpForm onSignIn={onSignInMock} />)
+    renderWithRouter(<SignUpForm onSignIn={onSignInMock} />)
 
     const emailInput = screen.getByLabelText("Adresse e-mail")
     expect(emailInput).toHaveAttribute("aria-invalid", "false")
@@ -105,7 +106,7 @@ describe("SignUpForm", () => {
 
   it("calls setAccessToken with access_token on successful registration", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignUpForm onSignIn={onSignInMock} />)
+    renderWithRouter(<SignUpForm onSignIn={onSignInMock} />)
 
     fireEvent.change(screen.getByLabelText("Adresse e-mail"), { target: { value: "new@example.com" } })
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "password123" } })
@@ -118,7 +119,7 @@ describe("SignUpForm", () => {
 
   it("shows specific error message when email is already registered", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(EMAIL_TAKEN_RESPONSE))
-    render(<SignUpForm onSignIn={onSignInMock} />)
+    renderWithRouter(<SignUpForm onSignIn={onSignInMock} />)
 
     fireEvent.change(screen.getByLabelText("Adresse e-mail"), { target: { value: "taken@example.com" } })
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "password123" } })
@@ -131,7 +132,7 @@ describe("SignUpForm", () => {
 
   it("shows generic error message on other API errors", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(GENERIC_ERROR_RESPONSE))
-    render(<SignUpForm onSignIn={onSignInMock} />)
+    renderWithRouter(<SignUpForm onSignIn={onSignInMock} />)
 
     fireEvent.change(screen.getByLabelText("Adresse e-mail"), { target: { value: "test@example.com" } })
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "password123" } })
@@ -144,7 +145,7 @@ describe("SignUpForm", () => {
 
   it("shows generic error message when network request fails", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")))
-    render(<SignUpForm onSignIn={onSignInMock} />)
+    renderWithRouter(<SignUpForm onSignIn={onSignInMock} />)
 
     fireEvent.change(screen.getByLabelText("Adresse e-mail"), { target: { value: "test@example.com" } })
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "password123" } })
@@ -157,7 +158,7 @@ describe("SignUpForm", () => {
 
   it("calls onSignIn callback when 'Se connecter' button is clicked", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignUpForm onSignIn={onSignInMock} />)
+    renderWithRouter(<SignUpForm onSignIn={onSignInMock} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Se connecter" }))
 

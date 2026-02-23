@@ -1,3 +1,4 @@
+import { act, renderHook } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
@@ -6,128 +7,133 @@ import {
   translateHouse,
   translateAspect,
   useAstrologyLabels,
+  detectLang,
 } from "../i18n/astrology"
 
+const ALL_SIGNS = [
+  ["aries", "Bélier", "Aries", "Aries"],
+  ["taurus", "Taureau", "Taurus", "Tauro"],
+  ["gemini", "Gémeaux", "Gemini", "Géminis"],
+  ["cancer", "Cancer", "Cancer", "Cáncer"],
+  ["leo", "Lion", "Leo", "Leo"],
+  ["virgo", "Vierge", "Virgo", "Virgo"],
+  ["libra", "Balance", "Libra", "Libra"],
+  ["scorpio", "Scorpion", "Scorpio", "Escorpio"],
+  ["sagittarius", "Sagittaire", "Sagittarius", "Sagitario"],
+  ["capricorn", "Capricorne", "Capricorn", "Capricornio"],
+  ["aquarius", "Verseau", "Aquarius", "Acuario"],
+  ["pisces", "Poissons", "Pisces", "Piscis"],
+] as const
+
 describe("translateSign", () => {
-  it("translates aries to Bélier in French", () => {
-    expect(translateSign("aries", "fr")).toBe("Bélier")
-  })
-
-  it("translates aries to Aries in English", () => {
-    expect(translateSign("aries", "en")).toBe("Aries")
-  })
-
-  it("translates aries to Aries in Spanish", () => {
-    expect(translateSign("aries", "es")).toBe("Aries")
+  it.each(ALL_SIGNS)("translates %s correctly in FR/EN/ES", (code, fr, en, es) => {
+    expect(translateSign(code, "fr")).toBe(fr)
+    expect(translateSign(code, "en")).toBe(en)
+    expect(translateSign(code, "es")).toBe(es)
   })
 
   it("handles uppercase codes (case-insensitive)", () => {
     expect(translateSign("ARIES", "fr")).toBe("Bélier")
+    expect(translateSign("GEMINI", "en")).toBe("Gemini")
   })
 
   it("returns raw code as fallback for unknown sign", () => {
     expect(translateSign("unknown_sign", "fr")).toBe("unknown_sign")
   })
-
-  it("translates all 12 signs correctly in French", () => {
-    expect(translateSign("taurus", "fr")).toBe("Taureau")
-    expect(translateSign("gemini", "fr")).toBe("Gémeaux")
-    expect(translateSign("cancer", "fr")).toBe("Cancer")
-    expect(translateSign("leo", "fr")).toBe("Lion")
-    expect(translateSign("virgo", "fr")).toBe("Vierge")
-    expect(translateSign("libra", "fr")).toBe("Balance")
-    expect(translateSign("scorpio", "fr")).toBe("Scorpion")
-    expect(translateSign("sagittarius", "fr")).toBe("Sagittaire")
-    expect(translateSign("capricorn", "fr")).toBe("Capricorne")
-    expect(translateSign("aquarius", "fr")).toBe("Verseau")
-    expect(translateSign("pisces", "fr")).toBe("Poissons")
-  })
 })
 
+const ALL_PLANETS = [
+  ["sun", "Soleil", "Sun", "Sol"],
+  ["moon", "Lune", "Moon", "Luna"],
+  ["mercury", "Mercure", "Mercury", "Mercurio"],
+  ["venus", "Vénus", "Venus", "Venus"],
+  ["mars", "Mars", "Mars", "Marte"],
+  ["jupiter", "Jupiter", "Jupiter", "Júpiter"],
+  ["saturn", "Saturne", "Saturn", "Saturno"],
+  ["uranus", "Uranus", "Uranus", "Urano"],
+  ["neptune", "Neptune", "Neptune", "Neptuno"],
+  ["pluto", "Pluton", "Pluto", "Plutón"],
+] as const
+
 describe("translatePlanet", () => {
-  it("translates sun to Soleil in French", () => {
-    expect(translatePlanet("sun", "fr")).toBe("Soleil")
+  it.each(ALL_PLANETS)("translates %s correctly in FR/EN/ES", (code, fr, en, es) => {
+    expect(translatePlanet(code, "fr")).toBe(fr)
+    expect(translatePlanet(code, "en")).toBe(en)
+    expect(translatePlanet(code, "es")).toBe(es)
   })
 
   it("handles uppercase codes (case-insensitive)", () => {
     expect(translatePlanet("SUN", "fr")).toBe("Soleil")
+    expect(translatePlanet("MOON", "en")).toBe("Moon")
   })
 
   it("returns raw code as fallback for unknown planet", () => {
     expect(translatePlanet("chiron", "fr")).toBe("chiron")
   })
-
-  it("translates all 10 planets correctly in French", () => {
-    expect(translatePlanet("moon", "fr")).toBe("Lune")
-    expect(translatePlanet("mercury", "fr")).toBe("Mercure")
-    expect(translatePlanet("venus", "fr")).toBe("Vénus")
-    expect(translatePlanet("mars", "fr")).toBe("Mars")
-    expect(translatePlanet("jupiter", "fr")).toBe("Jupiter")
-    expect(translatePlanet("saturn", "fr")).toBe("Saturne")
-    expect(translatePlanet("uranus", "fr")).toBe("Uranus")
-    expect(translatePlanet("neptune", "fr")).toBe("Neptune")
-    expect(translatePlanet("pluto", "fr")).toBe("Pluton")
-  })
 })
+
+const ALL_HOUSES = [
+  [1, "Maison I — Identité", "House I — Identity", "Casa I — Identidad"],
+  [2, "Maison II — Valeurs", "House II — Values", "Casa II — Valores"],
+  [3, "Maison III — Communication", "House III — Communication", "Casa III — Comunicación"],
+  [4, "Maison IV — Foyer", "House IV — Home", "Casa IV — Hogar"],
+  [5, "Maison V — Créativité", "House V — Creativity", "Casa V — Creatividad"],
+  [6, "Maison VI — Santé", "House VI — Health", "Casa VI — Salud"],
+  [7, "Maison VII — Relations", "House VII — Relationships", "Casa VII — Relaciones"],
+  [8, "Maison VIII — Transformation", "House VIII — Transformation", "Casa VIII — Transformación"],
+  [9, "Maison IX — Philosophie", "House IX — Philosophy", "Casa IX — Filosofía"],
+  [10, "Maison X — Carrière", "House X — Career", "Casa X — Carrera"],
+  [11, "Maison XI — Communauté", "House XI — Community", "Casa XI — Comunidad"],
+  [12, "Maison XII — Inconscient", "House XII — Unconscious", "Casa XII — Inconsciente"],
+] as const
 
 describe("translateHouse", () => {
-  it("translates house 1 to Maison I — Identité in French", () => {
-    expect(translateHouse(1, "fr")).toBe("Maison I — Identité")
+  it.each(ALL_HOUSES)("translates house %i correctly in FR/EN/ES", (num, fr, en, es) => {
+    expect(translateHouse(num, "fr")).toBe(fr)
+    expect(translateHouse(num, "en")).toBe(en)
+    expect(translateHouse(num, "es")).toBe(es)
   })
 
-  it("translates house 1 to House I — Identity in English", () => {
-    expect(translateHouse(1, "en")).toBe("House I — Identity")
-  })
-
-  it("returns fallback format for unknown house number", () => {
-    expect(translateHouse(13, "fr")).toBe("Maison 13")
-  })
-
-  it("returns English fallback for unknown house number in English", () => {
-    expect(translateHouse(99, "en")).toBe("House 99")
-  })
-
-  it("returns Spanish fallback for unknown house number in Spanish", () => {
-    expect(translateHouse(14, "es")).toBe("Casa 14")
-  })
-
-  it("translates all 12 houses correctly in French", () => {
-    expect(translateHouse(2, "fr")).toBe("Maison II — Valeurs")
-    expect(translateHouse(3, "fr")).toBe("Maison III — Communication")
-    expect(translateHouse(4, "fr")).toBe("Maison IV — Foyer")
-    expect(translateHouse(5, "fr")).toBe("Maison V — Créativité")
-    expect(translateHouse(6, "fr")).toBe("Maison VI — Santé")
-    expect(translateHouse(7, "fr")).toBe("Maison VII — Relations")
-    expect(translateHouse(8, "fr")).toBe("Maison VIII — Transformation")
-    expect(translateHouse(9, "fr")).toBe("Maison IX — Philosophie")
-    expect(translateHouse(10, "fr")).toBe("Maison X — Carrière")
-    expect(translateHouse(11, "fr")).toBe("Maison XI — Communauté")
-    expect(translateHouse(12, "fr")).toBe("Maison XII — Inconscient")
+  it.each([
+    [13, "fr", "Maison 13"],
+    [99, "en", "House 99"],
+    [14, "es", "Casa 14"],
+    [0, "fr", "Maison 0"],
+  ] as const)("returns fallback for house %i in %s", (num, lang, expected) => {
+    expect(translateHouse(num, lang)).toBe(expected)
   })
 })
 
+const ALL_ASPECTS = [
+  ["conjunction", "Conjonction", "Conjunction", "Conjunción"],
+  ["sextile", "Sextile", "Sextile", "Sextil"],
+  ["square", "Carré", "Square", "Cuadratura"],
+  ["trine", "Trigone", "Trine", "Trígono"],
+  ["opposition", "Opposition", "Opposition", "Oposición"],
+  ["semisextile", "Semi-sextile", "Semi-sextile", "Semisextil"],
+  ["quincunx", "Quinconce", "Quincunx", "Quincuncio"],
+  ["semisquare", "Semi-carré", "Semi-square", "Semicuadratura"],
+  ["sesquiquadrate", "Sesqui-carré", "Sesquiquadrate", "Sesquicuadratura"],
+] as const
+
 describe("translateAspect", () => {
-  it("translates conjunction to Conjonction in French", () => {
-    expect(translateAspect("conjunction", "fr")).toBe("Conjonction")
+  it.each(ALL_ASPECTS)("translates %s correctly in FR/EN/ES", (code, fr, en, es) => {
+    expect(translateAspect(code, "fr")).toBe(fr)
+    expect(translateAspect(code, "en")).toBe(en)
+    expect(translateAspect(code, "es")).toBe(es)
   })
 
   it("handles uppercase codes (case-insensitive)", () => {
     expect(translateAspect("TRINE", "fr")).toBe("Trigone")
+    expect(translateAspect("SQUARE", "en")).toBe("Square")
   })
 
   it("returns raw code as fallback for unknown aspect", () => {
     expect(translateAspect("unknown", "fr")).toBe("unknown")
   })
-
-  it("translates all 5 major aspects correctly in French", () => {
-    expect(translateAspect("sextile", "fr")).toBe("Sextile")
-    expect(translateAspect("square", "fr")).toBe("Carré")
-    expect(translateAspect("trine", "fr")).toBe("Trigone")
-    expect(translateAspect("opposition", "fr")).toBe("Opposition")
-  })
 })
 
-describe("useAstrologyLabels", () => {
+describe("detectLang", () => {
   beforeEach(() => {
     localStorage.clear()
   })
@@ -139,48 +145,131 @@ describe("useAstrologyLabels", () => {
 
   it("returns French when navigator.language is fr-FR", () => {
     vi.stubGlobal("navigator", { language: "fr-FR" })
-    const { lang } = useAstrologyLabels()
-    expect(lang).toBe("fr")
+    expect(detectLang()).toBe("fr")
   })
 
   it("returns English when navigator.language is en-US", () => {
     vi.stubGlobal("navigator", { language: "en-US" })
-    const { lang } = useAstrologyLabels()
-    expect(lang).toBe("en")
+    expect(detectLang()).toBe("en")
   })
 
   it("returns Spanish when navigator.language is es-ES", () => {
     vi.stubGlobal("navigator", { language: "es-ES" })
-    const { lang } = useAstrologyLabels()
-    expect(lang).toBe("es")
+    expect(detectLang()).toBe("es")
   })
 
   it("falls back to French for unsupported language", () => {
     vi.stubGlobal("navigator", { language: "de-DE" })
-    const { lang } = useAstrologyLabels()
-    expect(lang).toBe("fr")
+    expect(detectLang()).toBe("fr")
   })
 
   it("prefers localStorage lang over navigator.language", () => {
     vi.stubGlobal("navigator", { language: "en-US" })
     localStorage.setItem("lang", "es")
-    const { lang } = useAstrologyLabels()
-    expect(lang).toBe("es")
+    expect(detectLang()).toBe("es")
   })
 
   it("ignores invalid localStorage lang and uses navigator", () => {
     vi.stubGlobal("navigator", { language: "en-US" })
     localStorage.setItem("lang", "invalid")
-    const { lang } = useAstrologyLabels()
-    expect(lang).toBe("en")
+    expect(detectLang()).toBe("en")
   })
 
-  it("returns all translation functions", () => {
+  it("falls back to French when navigator.language is empty string", () => {
+    vi.stubGlobal("navigator", { language: "" })
+    expect(detectLang()).toBe("fr")
+  })
+
+  it("falls back to French when navigator.language is undefined", () => {
+    vi.stubGlobal("navigator", { language: undefined })
+    expect(detectLang()).toBe("fr")
+  })
+
+  it("falls back to French when navigator is undefined", () => {
+    vi.stubGlobal("navigator", undefined)
+    expect(detectLang()).toBe("fr")
+  })
+})
+
+describe("useAstrologyLabels", () => {
+  beforeEach(() => {
+    localStorage.clear()
     vi.stubGlobal("navigator", { language: "fr-FR" })
-    const result = useAstrologyLabels()
-    expect(result.translateSign).toBe(translateSign)
-    expect(result.translatePlanet).toBe(translatePlanet)
-    expect(result.translateHouse).toBe(translateHouse)
-    expect(result.translateAspect).toBe(translateAspect)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    localStorage.clear()
+  })
+
+  it("returns current language from detectLang", () => {
+    const { result } = renderHook(() => useAstrologyLabels())
+    expect(result.current.lang).toBe("fr")
+  })
+
+  it("returns bound translation functions that work without lang parameter", () => {
+    const { result } = renderHook(() => useAstrologyLabels())
+    expect(result.current.translateSign("aries")).toBe("Bélier")
+    expect(result.current.translatePlanet("sun")).toBe("Soleil")
+    expect(result.current.translateHouse(1)).toBe("Maison I — Identité")
+    expect(result.current.translateAspect("trine")).toBe("Trigone")
+  })
+
+  it("exposes setLang to change language programmatically", () => {
+    const { result } = renderHook(() => useAstrologyLabels())
+    expect(result.current.lang).toBe("fr")
+    
+    act(() => {
+      result.current.setLang("es")
+    })
+    
+    expect(result.current.lang).toBe("es")
+    expect(result.current.translateSign("aries")).toBe("Aries")
+  })
+
+  it("setLang persists the new language to localStorage", () => {
+    const { result } = renderHook(() => useAstrologyLabels())
+    expect(localStorage.getItem("lang")).toBeNull()
+    
+    act(() => {
+      result.current.setLang("en")
+    })
+    
+    expect(localStorage.getItem("lang")).toBe("en")
+    expect(result.current.lang).toBe("en")
+  })
+
+  it("updates lang when localStorage changes in another tab (storage event)", () => {
+    const { result } = renderHook(() => useAstrologyLabels())
+    expect(result.current.lang).toBe("fr")
+
+    act(() => {
+      localStorage.setItem("lang", "en")
+      window.dispatchEvent(new StorageEvent("storage", { key: "lang", newValue: "en" }))
+    })
+
+    expect(result.current.lang).toBe("en")
+    expect(result.current.translatePlanet("sun")).toBe("Sun")
+  })
+
+  it("ignores storage events for other keys", () => {
+    const { result } = renderHook(() => useAstrologyLabels())
+    expect(result.current.lang).toBe("fr")
+
+    act(() => {
+      window.dispatchEvent(new StorageEvent("storage", { key: "other", newValue: "value" }))
+    })
+
+    expect(result.current.lang).toBe("fr")
+  })
+
+  it("cleans up storage event listener on unmount", () => {
+    const removeEventListenerSpy = vi.spyOn(window, "removeEventListener")
+    const { unmount } = renderHook(() => useAstrologyLabels())
+    
+    unmount()
+    
+    expect(removeEventListenerSpy).toHaveBeenCalledWith("storage", expect.any(Function))
+    removeEventListenerSpy.mockRestore()
   })
 })

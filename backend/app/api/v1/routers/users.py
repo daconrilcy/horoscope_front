@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -13,6 +14,11 @@ from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_u
 from app.core.request_id import resolve_request_id
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
 from app.infra.db.session import get_db_session
+from app.services.natal_interpretation_service import (
+    NatalInterpretationData,
+    NatalInterpretationService,
+    NatalInterpretationServiceError,
+)
 from app.services.user_birth_profile_service import (
     UserBirthProfileData,
     UserBirthProfileService,
@@ -66,6 +72,11 @@ class UserNatalChartConsistencyApiResponse(BaseModel):
     meta: ResponseMeta
 
 
+class NatalInterpretationApiResponse(BaseModel):
+    data: NatalInterpretationData
+    meta: ResponseMeta
+
+
 router = APIRouter(prefix="/v1/users", tags=["users"])
 logger = logging.getLogger(__name__)
 
@@ -110,21 +121,129 @@ def get_me_birth_data(
         401: {"model": ErrorEnvelope},
         403: {"model": ErrorEnvelope},
         404: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
     },
 )
-def get_me_latest_natal_chart(
+async def get_me_latest_natal_chart(
     request: Request,
+    include_interpretation: bool = False,
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
     try:
         latest = UserNatalChartService.get_latest_for_user(db=db, user_id=current_user.id)
-        return {"data": latest.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except UserNatalChartServiceError as error:
         status_code = (
             404 if error.code in {"natal_chart_not_found", "birth_profile_not_found"} else 422
         )
+        return JSONResponse(
+            status_code=status_code,
+            content={
+                "error": {
+                    "code": error.code,
+                    "message": error.message,
+                    "details": error.details,
+                    "request_id": request_id,
+                }
+            },
+        )
+
+    response_data = latest.model_dump(mode="json")
+
+    if include_interpretation:
+        trace_id = request.headers.get("X-Trace-Id", request_id)
+        try:
+            profile = UserBirthProfileService.get_for_user(db, user_id=current_user.id)
+            interpretation = await NatalInterpretationService.interpret_chart(
+                natal_chart=latest,
+                birth_profile=profile,
+                user_id=current_user.id,
+                request_id=request_id,
+                trace_id=trace_id,
+            )
+            response_data["interpretation"] = interpretation.model_dump(mode="json")
+        except (
+            UserBirthProfileServiceError,
+            NatalInterpretationServiceError,
+            asyncio.TimeoutError,
+        ):
+            pass
+
+    return {"data": response_data, "meta": {"request_id": request_id}}
+
+
+@router.get(
+    "/me/natal-chart/interpretation",
+    response_model=NatalInterpretationApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+        503: {"model": ErrorEnvelope},
+    },
+)
+async def get_me_natal_chart_interpretation(
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    """Génère une interprétation textuelle du thème natal de l'utilisateur."""
+    request_id = resolve_request_id(request)
+    trace_id = request.headers.get("X-Trace-Id", request_id)
+
+    try:
+        chart = UserNatalChartService.get_latest_for_user(db=db, user_id=current_user.id)
+    except UserNatalChartServiceError as error:
+        status_code = (
+            404 if error.code in {"natal_chart_not_found", "birth_profile_not_found"} else 422
+        )
+        return JSONResponse(
+            status_code=status_code,
+            content={
+                "error": {
+                    "code": error.code,
+                    "message": error.message,
+                    "details": error.details,
+                    "request_id": request_id,
+                }
+            },
+        )
+
+    try:
+        profile = UserBirthProfileService.get_for_user(db, user_id=current_user.id)
+    except UserBirthProfileServiceError as error:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "error": {
+                    "code": error.code,
+                    "message": error.message,
+                    "details": error.details,
+                    "request_id": request_id,
+                }
+            },
+        )
+
+    try:
+        interpretation = await NatalInterpretationService.interpret_chart(
+            natal_chart=chart,
+            birth_profile=profile,
+            user_id=current_user.id,
+            request_id=request_id,
+            trace_id=trace_id,
+        )
+        return {
+            "data": interpretation.model_dump(mode="json"),
+            "meta": {"request_id": request_id},
+        }
+    except NatalInterpretationServiceError as error:
+        if error.code == "ai_engine_timeout":
+            status_code = 503
+        elif "rate" in error.code.lower() or error.code == "rate_limit_exceeded":
+            status_code = 429
+        else:
+            status_code = 503
         return JSONResponse(
             status_code=status_code,
             content={

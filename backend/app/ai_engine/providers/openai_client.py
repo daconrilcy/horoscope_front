@@ -218,6 +218,9 @@ class OpenAIClient(ProviderClient):
         """
         Stream chat completion.
 
+        Retries the initial connection on transient failures (up to max_retries).
+        Once streaming has started, errors propagate without retry.
+
         Yields:
             Text deltas from the streaming response.
 
@@ -227,17 +230,58 @@ class OpenAIClient(ProviderClient):
             UpstreamError: For other upstream failures.
         """
         self._ensure_configured()
+        max_retries = ai_engine_settings.max_retries
+        base_delay_ms = ai_engine_settings.retry_base_delay_ms
+        max_delay_ms = ai_engine_settings.retry_max_delay_ms
+
+        last_error: Exception | None = None
+        response = None
+
+        for attempt in range(max_retries + 1):
+            try:
+                response = await asyncio.wait_for(
+                    client.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        max_tokens=max_tokens,
+                        temperature=temperature,
+                        stream=True,
+                    ),
+                    timeout=timeout_seconds,
+                )
+                break
+            except asyncio.TimeoutError as err:
+                logger.warning(
+                    "openai_timeout operation=stream_chat attempt=%d timeout=%ds",
+                    attempt + 1,
+                    timeout_seconds,
+                )
+                last_error = err
+            except Exception as err:
+                error_msg = str(err)
+                if "rate_limit" in error_msg.lower() or "429" in error_msg:
+                    raise UpstreamRateLimitError() from err
+                logger.warning(
+                    "openai_error operation=stream_chat attempt=%d error=%s",
+                    attempt + 1,
+                    error_msg,
+                )
+                last_error = err
+
+            if attempt < max_retries:
+                delay_ms = min(base_delay_ms * (2**attempt), max_delay_ms)
+                jitter_ms = random.randint(0, delay_ms // 4)
+                await asyncio.sleep((delay_ms + jitter_ms) / 1000.0)
+
+        if response is None:
+            if isinstance(last_error, asyncio.TimeoutError):
+                raise UpstreamTimeoutError(timeout_seconds) from last_error
+            raise UpstreamError(
+                f"openai stream_chat failed after {max_retries + 1} attempts",
+                details={"error": str(last_error)},
+            ) from last_error
+
         try:
-            response = await asyncio.wait_for(
-                client.chat.completions.create(
-                    model=model,
-                    messages=messages,
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                    stream=True,
-                ),
-                timeout=timeout_seconds,
-            )
             async for chunk in response:
                 if chunk.choices and chunk.choices[0].delta.content:
                     yield chunk.choices[0].delta.content

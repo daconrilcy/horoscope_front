@@ -51,7 +51,6 @@ class GenerateRequest(BaseModel):
 
     use_case: str = Field(..., description="Use case identifier")
     locale: str = Field(default="fr-FR", description="Locale for response")
-    user_id: str | None = Field(default=None, description="User identifier")
     request_id: str | None = Field(default=None, description="Request identifier")
     trace_id: str | None = Field(default=None, description="Trace identifier")
     input: GenerateInput = Field(default_factory=GenerateInput)
@@ -107,7 +106,6 @@ class ChatRequest(BaseModel):
 
     conversation_id: str | None = Field(default=None, description="Conversation identifier")
     locale: str = Field(default="fr-FR", description="Locale for response")
-    user_id: str | None = Field(default=None, description="User identifier")
     request_id: str | None = Field(default=None, description="Request identifier")
     trace_id: str | None = Field(default=None, description="Trace identifier")
     messages: list[ChatMessage] = Field(..., description="Conversation messages")

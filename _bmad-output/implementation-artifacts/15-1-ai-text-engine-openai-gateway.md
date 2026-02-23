@@ -139,8 +139,8 @@ Cette story met en place le **AI Text Engine**, un module backend unique qui :
   - [x] `ai_engine_requests_total` (labels: use_case, status)
   - [x] `ai_engine_latency_seconds` (histogram)
   - [x] `ai_engine_tokens_total` (labels: direction=input/output)
-- [ ] Rate limiting interne (optionnel, via Redis existant) (AC: #5) — différé, peut être ajouté ultérieurement
-- [ ] Tests de rate limiting (AC: #5) — différé avec rate limiting
+- [x] Rate limiting interne avec Redis + fallback mémoire (AC: #5) — implémenté dans `services/rate_limiter.py` (Redis sliding window + MemoryRateLimiter fallback)
+- [x] Tests de rate limiting (AC: #5) — implémentés dans `test_generate_endpoint.py` (`TestGenerateEndpointRateLimiting`) et `test_chat_endpoint.py` (`TestChatEndpointRateLimiting`)
 
 ### Subtask 15.1.6: Intégration avec services existants
 - [ ] Adapter `ChatGuidanceService` pour utiliser le nouveau AI Engine (optionnel, peut être une story séparée) — différé vers story de suivi
@@ -162,7 +162,10 @@ backend/app/ai_engine/
 │   ├── generate_service.py      # Orchestration génération
 │   ├── chat_service.py          # Orchestration chat
 │   ├── prompt_registry.py       # Gestion des prompts
-│   └── context_compactor.py     # Compaction du contexte
+│   ├── context_compactor.py     # Compaction du contexte
+│   ├── rate_limiter.py          # Rate limiting Redis + fallback mémoire
+│   ├── cache_service.py         # Cache Redis + fallback mémoire
+│   └── log_sanitizer.py         # Sanitisation des logs (données sensibles)
 ├── providers/
 │   ├── __init__.py
 │   ├── base.py                  # Interface abstraite
@@ -187,7 +190,6 @@ Request:
 {
   "use_case": "natal_chart_interpretation",
   "locale": "fr-FR",
-  "user_id": "u_123",
   "request_id": "req_...",
   "trace_id": "trace_...",
   "input": {
@@ -229,7 +231,6 @@ Request:
 {
   "conversation_id": "c_123",
   "locale": "fr-FR",
-  "user_id": "u_123",
   "messages": [
     { "role": "system", "content": "..." },
     { "role": "user", "content": "Salut, peux-tu lire mon thème ?" }
@@ -333,6 +334,9 @@ Claude Opus 4.5
 - `backend/app/ai_engine/services/generate_service.py`
 - `backend/app/ai_engine/services/chat_service.py`
 - `backend/app/ai_engine/services/utils.py`
+- `backend/app/ai_engine/services/rate_limiter.py`
+- `backend/app/ai_engine/services/cache_service.py`
+- `backend/app/ai_engine/services/log_sanitizer.py`
 - `backend/app/ai_engine/providers/__init__.py`
 - `backend/app/ai_engine/providers/base.py`
 - `backend/app/ai_engine/providers/openai_client.py`
@@ -363,3 +367,4 @@ Claude Opus 4.5
 - 2026-02-22: Adversarial Code Review #8 fixes (claude-opus-4-5) — M1: test timeout 504 pour chat endpoint (AC5). L1: test count subtask corrigé (12 tests context_compactor). L2: docstring _stream_chat avec Raises documenté. 53/53 tests, 0 erreur lint.
 - 2026-02-22: Adversarial Code Review #9 fixes (claude-opus-4-5) — L1: ProviderResult converti en dataclass. L2: test counts subtask 15.1.4 corrigés (10 generate, 14 chat). L3: test count subtask 15.1.2 corrigé (11 tests prompt_registry). 53/53 tests, 0 erreur lint.
 - 2026-02-22: Adversarial Code Review #10 fixes (claude-opus-4-5) — L1: validation robuste des env vars (fallback sur parse error). L2: test ProviderNotConfiguredError pour chat endpoint. L3: exports explicites dans providers/__init__.py. 54/54 tests, 0 erreur lint.
+- 2026-02-22: Adversarial Code Review #11 fixes (claude-sonnet-4-6) — M1: validate_context_size appliqué au texte combiné de tous les messages dans chat() et chat_stream() (AC6 complet). M2: checkboxes rate limiting corrigées en [x] (fonctionnalité déjà implémentée). M3: rate_limiter.py, cache_service.py, log_sanitizer.py ajoutés au File List et à l'arbre d'architecture. M4: _stream_chat() avec retry loop sur la connexion initiale (cohérence avec generate_text/chat non-streaming). L1: TestChatEndpointRateLimiting ajouté dans test_chat_endpoint.py (+2 tests). L2: test_generate_returns_422_for_missing_use_case ajouté. L3: champ user_id mort supprimé de GenerateRequest et ChatRequest, exemples Dev Notes mis à jour. L4: TestGenerateEndpointMetrics ajouté (vérification émission compteur status=success, AC7).

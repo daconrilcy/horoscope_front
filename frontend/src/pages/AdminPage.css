@@ -1,0 +1,156 @@
+.admin-page {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.admin-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  color: var(--color-text-primary, #1f2937);
+}
+
+.admin-back-link {
+  font-size: 0.875rem;
+  color: var(--color-primary, #6366f1);
+  text-decoration: none;
+}
+
+.admin-back-link:hover {
+  text-decoration: underline;
+}
+
+.admin-hub {
+  width: 100%;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.admin-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  background: var(--color-bg-card, #ffffff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 12px;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.admin-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.admin-card-icon-svg {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-primary, #6366f1);
+}
+
+.admin-card-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-primary, #1f2937);
+  text-align: center;
+}
+
+.admin-content {
+  width: 100%;
+}
+
+.pricing-admin,
+.monitoring-admin,
+.personas-admin,
+.reconciliation-admin {
+  padding: 1rem;
+}
+
+.pricing-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: var(--color-bg-card, #ffffff);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pricing-table th,
+.pricing-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+.pricing-table th {
+  background: var(--color-bg-secondary, #f9fafb);
+  font-weight: 600;
+  color: var(--color-text-secondary, #6b7280);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pricing-table tbody tr:hover {
+  background: var(--color-bg-hover, #f3f4f6);
+}
+
+.status-active {
+  color: var(--color-success, #10b981);
+  font-weight: 500;
+}
+
+.status-inactive {
+  color: var(--color-text-muted, #9ca3af);
+}
+
+.admin-notice {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: var(--color-bg-secondary, #f9fafb);
+  border-radius: 8px;
+  border-left: 4px solid var(--color-primary, #6366f1);
+}
+
+.admin-notice h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: var(--color-text-primary, #1f2937);
+}
+
+.admin-notice ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.admin-notice li {
+  color: var(--color-text-secondary, #6b7280);
+  margin-bottom: 0.25rem;
+}
+
+.info-note {
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #9ca3af);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+.error-detail {
+  font-size: 0.875rem;
+  color: var(--color-error, #ef4444);
+  margin: 0.5rem 0;
+}

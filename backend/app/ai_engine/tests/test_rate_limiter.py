@@ -171,31 +171,34 @@ class TestRateLimiter:
 
 
 class TestRedisRateLimiter:
-    """Tests for RedisRateLimiter with mocked Redis."""
+    """Tests for RedisRateLimiter with mocked Redis (uses atomic Lua script via eval)."""
 
     def test_allows_requests_under_limit(self) -> None:
         """Requests under limit should be allowed."""
         mock_redis = MagicMock()
-        mock_redis.zcard.return_value = 0
+        # Lua script returns [1 (allowed), count, 0]
+        mock_redis.eval.return_value = [1, 1, 0]
 
         limiter = RedisRateLimiter(mock_redis, limit_per_min=5)
         result = limiter.check_rate_limit("user1")
 
         assert result.allowed is True
         assert result.current_count == 1
+        assert result.retry_after_ms is None
+        mock_redis.eval.assert_called_once()
 
     def test_blocks_requests_at_limit(self) -> None:
         """Requests at limit should be blocked."""
         mock_redis = MagicMock()
-        mock_redis.zcard.return_value = 5
-        mock_redis.zrange.return_value = [(b"score", time.time() - 30)]
+        # Lua script returns [0 (blocked), count, retry_ms]
+        mock_redis.eval.return_value = [0, 5, 30000]
 
         limiter = RedisRateLimiter(mock_redis, limit_per_min=5)
         result = limiter.check_rate_limit("user1")
 
         assert result.allowed is False
-        assert result.retry_after_ms is not None
-        assert result.retry_after_ms > 0
+        assert result.current_count == 5
+        assert result.retry_after_ms == 30000
 
     def test_reset_deletes_key(self) -> None:
         """Reset should delete Redis key."""

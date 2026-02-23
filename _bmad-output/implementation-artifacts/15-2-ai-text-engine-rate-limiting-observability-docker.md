@@ -334,3 +334,10 @@ Claude Opus 4.5
 - 2026-02-22: **Code Review Fixes (Pass 2)**
   - Optimisation CacheService: réutilisation instance RedisCacheService (_redis_cache) au lieu de création à chaque appel get/set
   - Correction documentation deploy-vps.md: suppression instructions redondantes build frontend manuel (le Dockerfile fait le build)
+- 2026-02-22: **Code Review Fixes (Pass 3)**
+  - [HIGH] RedisRateLimiter: remplacement pipeline non-atomique par script Lua atomique (sliding window) — élimine race condition et double appel Redis
+  - [HIGH] generate_service.py: ajout champs `status` et `tokens_used` dans les logs de complétion (violation AC2)
+  - [MEDIUM] health.py: initialisation _redis_client protégée par threading.Lock (double-checked locking)
+  - [MEDIUM] docker-compose.prod.yml: ajout volume `app_logs` pour persistance des logs applicatifs
+  - [MEDIUM] nginx/nginx.conf: ajout location dédiée `/v1/ai/chat` avec proxy_read_timeout 3600s (SSE streaming)
+  - [MEDIUM] test_rate_limiter.py: mise à jour TestRedisRateLimiter pour interface eval() Lua

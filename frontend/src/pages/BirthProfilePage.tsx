@@ -1,66 +1,76 @@
-import { useEffect, useRef, useState } from "react"
-import { useForm } from "react-hook-form"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "react-router-dom"
 
 import { getBirthData, saveBirthData, BirthProfileApiError } from "../api/birthProfile"
 import { generateNatalChart, ApiError, type LatestNatalChart } from "../api/natalChart"
-import { geocodeCity } from "../api/geocoding"
+import { geocodeCity, GeocodingError } from "../api/geocoding"
 import { useAccessTokenSnapshot, getSubjectFromAccessToken } from "../utils/authToken"
-import { GENERATION_TIMEOUT_LABEL } from "../utils/constants"
-import type { ViewId } from "../App"
+import { ANONYMOUS_SUBJECT, GENERATION_TIMEOUT_LABEL, UNKNOWN_BIRTH_TIME_SENTINEL, logSupportRequestId, formatBirthPlace } from "../utils/constants"
+import { TimezoneSelect } from "../components/TimezoneSelect"
+import { getUserTimezone } from "../data/timezones"
+import { detectLang, GEOCODING_MESSAGES } from "../i18n/astrology"
+import { birthProfileTranslations, type BirthProfileValidation } from "../i18n/birthProfile"
+import "./BirthProfilePage.css"
 
-const birthProfileSchema = z.object({
-  birth_date: z
-    .string()
-    .min(1, "La date de naissance est indispensable pour calculer votre thème natal.")
-    .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, "Format YYYY-MM-DD requis (ex: 1990-01-15)")
-    .refine((val) => {
-      const date = new Date(val)
-      return !isNaN(date.getTime()) && date.toISOString().startsWith(val)
-    }, "Date invalide")
-    .refine((val) => {
-      const date = new Date(val)
-      return date <= new Date()
-    }, "La date de naissance ne peut pas être dans le futur"),
-  birth_time: z
-    .string()
-    .regex(/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/, "Format HH:MM(:SS) requis (ex: 10:30)")
-    .or(z.literal("")),
-  birth_place: z.string().trim().min(1, "Le lieu de naissance est requis").max(255),
-  birth_timezone: z
-    .string()
-    .trim()
-    .min(1, "Le fuseau horaire est requis")
-    .regex(/^[A-Za-z0-9_-]+(\/[A-Za-z0-9_-]+)*$/, "Format IANA requis (ex: Europe/Paris, UTC ou America/Argentina/Buenos_Aires)")
-    .max(64),
-  birth_city: z.string().trim().max(255).optional(),
-  birth_country: z.string().trim().max(100).optional(),
-})
+function createBirthProfileSchema(v: BirthProfileValidation) {
+  return z.object({
+    birth_date: z
+      .string()
+      .min(1, v.dateRequired)
+      .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, v.dateFormat)
+      .refine((val) => {
+        const date = new Date(val)
+        return !isNaN(date.getTime()) && date.toISOString().startsWith(val)
+      }, v.dateInvalid)
+      .refine((val) => {
+        const date = new Date(val)
+        return date <= new Date()
+      }, v.dateFuture),
+    birth_time: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/, v.timeFormat)
+      .or(z.literal("")),
+    birth_place: z.string().trim().max(255).optional(),
+    birth_timezone: z
+      .string()
+      .trim()
+      .min(1, v.timezoneRequired)
+      .regex(/^[A-Za-z][A-Za-z0-9_+-]*(\/[A-Za-z0-9][A-Za-z0-9_+-]*)+$|^UTC$/, v.timezoneFormat)
+      .max(64),
+    birth_city: z.string().trim().min(1, v.cityRequired).max(255),
+    birth_country: z.string().trim().min(1, v.countryRequired).max(100),
+  })
+}
 
-type BirthProfileFormData = z.infer<typeof birthProfileSchema>
+type BirthProfileFormData = z.infer<ReturnType<typeof createBirthProfileSchema>>
 
 type GeocodingState = "idle" | "loading" | "success" | "error_not_found" | "error_unavailable"
 
-interface BirthProfilePageProps {
-  onNavigate: (viewId: ViewId) => void
-}
+type GeoResult = { lat: number; lon: number; display_name: string } | null
 
-export function BirthProfilePage({ onNavigate }: BirthProfilePageProps) {
+export function BirthProfilePage() {
+  const lang = detectLang()
+  const t = birthProfileTranslations[lang]
   const queryClient = useQueryClient()
   const accessToken = useAccessTokenSnapshot()
-  const tokenSubject = getSubjectFromAccessToken(accessToken) ?? "anonymous"
+  const navigate = useNavigate()
+  const tokenSubject = getSubjectFromAccessToken(accessToken) ?? ANONYMOUS_SUBJECT
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [globalError, setGlobalError] = useState<string | null>(null)
-  const [saveErrorRequestId, setSaveErrorRequestId] = useState<string | null>(null)
   const [generationError, setGenerationError] = useState<string | null>(null)
-  const [generationErrorRequestId, setGenerationErrorRequestId] = useState<string | null>(null)
   const [geocodingState, setGeocodingState] = useState<GeocodingState>("idle")
   const [resolvedGeoLabel, setResolvedGeoLabel] = useState<string | null>(null)
-  const [birthCoords, setBirthCoords] = useState<{ lat: number; lon: number } | null>(null)
   const geocodeAbortRef = useRef<AbortController | null>(null)
   const [birthTimeUnknown, setBirthTimeUnknown] = useState(false)
+
+  const schema = useMemo(
+    () => createBirthProfileSchema(birthProfileTranslations[lang].validation),
+    [lang],
+  )
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["birth-profile", tokenSubject],
@@ -69,7 +79,6 @@ export function BirthProfilePage({ onNavigate }: BirthProfilePageProps) {
       return getBirthData(accessToken)
     },
     enabled: Boolean(accessToken),
-    retry: 1,
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 
@@ -80,22 +89,23 @@ export function BirthProfilePage({ onNavigate }: BirthProfilePageProps) {
     },
     onSuccess: (newChart) => {
       queryClient.setQueryData(["latest-natal-chart", tokenSubject], newChart)
-      onNavigate("natal")
+      navigate("/natal")
     },
     onError: (err) => {
-      const requestId = err instanceof ApiError ? err.requestId : undefined
-      setGenerationErrorRequestId(requestId || null)
+      if (err instanceof ApiError) {
+        logSupportRequestId(err)
+      }
 
       const code = err instanceof ApiError ? err.code : undefined
       const status = err instanceof ApiError ? err.status : undefined
       if (code === "natal_generation_timeout") {
-        setGenerationError("La génération a pris trop de temps, veuillez réessayer.")
+        setGenerationError(t.errors.generationTimeout)
       } else if (code === "natal_engine_unavailable") {
-        setGenerationError("Le service de génération est temporairement indisponible.")
+        setGenerationError(t.errors.generationUnavailable)
       } else if (code === "unprocessable_entity" || status === 422) {
-        setGenerationError("Vos données de naissance sont invalides ou incomplètes. Veuillez vérifier votre profil natal.")
+        setGenerationError(t.errors.generationInvalidData)
       } else {
-        setGenerationError("Une erreur est survenue. Veuillez réessayer.")
+        setGenerationError(t.errors.generationGeneric)
       }
     },
   })
@@ -105,72 +115,81 @@ export function BirthProfilePage({ onNavigate }: BirthProfilePageProps) {
     handleSubmit,
     reset,
     setError,
-    getValues,
     setValue,
-    watch,
+    control,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<BirthProfileFormData>({
-    resolver: zodResolver(birthProfileSchema),
+    resolver: zodResolver(schema),
+    defaultValues: {
+      birth_timezone: getUserTimezone(),
+    },
   })
-
-  const birthCity = watch("birth_city")
-  const birthCountry = watch("birth_country")
-  const canGeocode = Boolean(birthCity?.trim() && birthCountry?.trim())
 
   useEffect(() => {
     return () => { geocodeAbortRef.current?.abort() }
   }, [])
 
+  /**
+   * Synchronise le formulaire avec les données du profil API.
+   * useCallback requis car utilisé comme dépendance du useEffect suivant,
+   * évitant des appels reset() superflus lors de re-renders.
+   */
+  const syncFormWithProfileData = useCallback(
+    (profileData: NonNullable<typeof data>) => {
+      const isTimeUnknown = profileData.birth_time === null || profileData.birth_time === UNKNOWN_BIRTH_TIME_SENTINEL
+      reset({
+        birth_date: profileData.birth_date,
+        birth_time: isTimeUnknown ? "" : (profileData.birth_time ?? ""),
+        birth_place: profileData.birth_place ?? "",
+        birth_timezone: profileData.birth_timezone || getUserTimezone(),
+        birth_city: profileData.birth_city ?? "",
+        birth_country: profileData.birth_country ?? "",
+      })
+      setBirthTimeUnknown(isTimeUnknown)
+    },
+    [reset],
+  )
+
   useEffect(() => {
     if (data && !isSubmitting && !isDirty) {
       syncFormWithProfileData(data)
     }
-  }, [data, reset, isSubmitting, isDirty])
+  }, [data, syncFormWithProfileData, isSubmitting, isDirty])
+
+  useEffect(() => {
+    if (isError && error instanceof BirthProfileApiError) {
+      logSupportRequestId(error)
+    }
+  }, [isError, error])
 
   function resetGeocodingState() {
     setGeocodingState("idle")
-    setBirthCoords(null)
     setResolvedGeoLabel(null)
   }
 
-  function syncFormWithProfileData(profileData: NonNullable<typeof data>) {
-    reset({
-      birth_date: profileData.birth_date,
-      birth_time: profileData.birth_time ?? "",
-      birth_place: profileData.birth_place,
-      birth_timezone: profileData.birth_timezone,
-      birth_city: profileData.birth_city ?? "",
-      birth_country: profileData.birth_country ?? "",
-    })
-    setBirthTimeUnknown(profileData.birth_time === null)
+  /** Réinitialise tous les états de feedback utilisateur (succès, erreurs globales et erreurs de génération) */
+  function clearFormFeedback() {
+    setSaveSuccess(false)
+    setGlobalError(null)
+    setGenerationError(null)
   }
 
-  async function handleGeocode() {
-    const city = (getValues("birth_city") ?? "").trim()
-    const country = (getValues("birth_country") ?? "").trim()
-    if (!city || !country) return
+  /**
+   * Exécute le géocodage avec gestion d'annulation.
+   * Le controller externe permet d'annuler la requête au démontage du composant.
+   * geocodeCity gère son propre timeout interne et chaîne le signal externe.
+   */
+  async function performGeocode(city: string, country: string): Promise<{ result: GeoResult; isServiceUnavailable: boolean }> {
+    if (!city || !country) return { result: null, isServiceUnavailable: false }
 
     const controller = new AbortController()
     geocodeAbortRef.current = controller
 
-    setGeocodingState("loading")
     try {
       const result = await geocodeCity(city, country, controller.signal)
-      if (result === null) {
-        setGeocodingState("error_not_found")
-        setBirthCoords(null)
-        setResolvedGeoLabel(null)
-      } else {
-        setGeocodingState("success")
-        setBirthCoords({ lat: result.lat, lon: result.lon })
-        setResolvedGeoLabel(result.display_name)
-        // Automatically sync birth_place (truncated to Zod max 255)
-        setValue("birth_place", result.display_name.slice(0, 255), { shouldDirty: true })
-      }
-    } catch {
-      setGeocodingState("error_unavailable")
-      setBirthCoords(null)
-      setResolvedGeoLabel(null)
+      return { result, isServiceUnavailable: false }
+    } catch (err) {
+      return { result: null, isServiceUnavailable: err instanceof GeocodingError }
     }
   }
 
@@ -178,64 +197,74 @@ export function BirthProfilePage({ onNavigate }: BirthProfilePageProps) {
     if (!accessToken) return
     setSaveSuccess(false)
     setGlobalError(null)
-    setSaveErrorRequestId(null)
     setGenerationError(null)
-    setGenerationErrorRequestId(null)
+    resetGeocodingState()
+
+    const city = formData.birth_city.trim()
+    const country = formData.birth_country.trim()
+
+    setGeocodingState("loading")
+    const { result: geoResult, isServiceUnavailable } = await performGeocode(city, country)
+
+    let coords: { lat: number; lon: number } | null = null
+    let resolvedPlace = formData.birth_place?.trim() || ""
+
+    if (geoResult === null) {
+      setGeocodingState(isServiceUnavailable ? "error_unavailable" : "error_not_found")
+    } else {
+      setGeocodingState("success")
+      coords = { lat: geoResult.lat, lon: geoResult.lon }
+      resolvedPlace = geoResult.display_name.slice(0, 255)
+      setResolvedGeoLabel(geoResult.display_name)
+    }
 
     try {
-      // birth_time is null if checkbox "Heure inconnue" is checked OR if field was left empty
       const payload = {
         ...formData,
-        birth_time: (birthTimeUnknown || !formData.birth_time) ? null : formData.birth_time,
-        birth_city: formData.birth_city?.trim() || undefined,
-        birth_country: formData.birth_country?.trim() || undefined,
-        ...(birthCoords ? { birth_lat: birthCoords.lat, birth_lon: birthCoords.lon } : {}),
+        birth_time: (birthTimeUnknown || !formData.birth_time) ? UNKNOWN_BIRTH_TIME_SENTINEL : formData.birth_time,
+        birth_place: resolvedPlace || formatBirthPlace(city, country),
+        birth_city: city,
+        birth_country: country,
+        ...(coords ? { birth_lat: coords.lat, birth_lon: coords.lon } : {}),
       }
       const updatedData = await saveBirthData(accessToken, payload)
       queryClient.setQueryData(["birth-profile", tokenSubject], updatedData)
       syncFormWithProfileData(updatedData)
       setSaveSuccess(true)
     } catch (err) {
-      const defaultError = "Erreur lors de la sauvegarde. Veuillez réessayer."
       if (err instanceof BirthProfileApiError) {
-        setSaveErrorRequestId(err.requestId || null)
+        logSupportRequestId(err)
         if (err.code === "invalid_birth_time") {
-          setError("birth_time", { message: err.message || "Format HH:MM(:SS) requis (ex: 10:30)" })
+          setError("birth_time", { message: err.message || t.validation.timeFormat })
         } else if (err.code === "invalid_timezone") {
-          setError("birth_timezone", { message: err.message || "Fuseau horaire invalide (ex: Europe/Paris)." })
+          setError("birth_timezone", { message: err.message || t.validation.timezoneFormat })
         } else if (err.code === "invalid_birth_input") {
-          setGlobalError("Données invalides. Vérifiez les champs.")
+          setGlobalError(t.errors.saveInvalidData)
         } else {
-          setGlobalError(err.message || defaultError)
+          setGlobalError(err.message || t.errors.saveNetwork)
         }
       } else {
-        setGlobalError(defaultError)
+        setGlobalError(t.errors.saveNetwork)
       }
     }
   }
 
   return (
     <section className="panel">
-      <h2 id="birth-profile-title">Mon profil natal</h2>
+      <h2 id="birth-profile-title">{t.title}</h2>
 
       {isLoading ? (
         <p className="state-line" aria-busy="true" role="status">
           <span className="state-loading" aria-hidden="true" />
-          Chargement de votre profil natal...
+          {t.loading}
         </p>
       ) : null}
 
       {isError && !isLoading ? (
         <div className="chat-error" role="alert">
-          <p>Impossible de charger votre profil natal. Veuillez réessayer plus tard.</p>
-          {error instanceof BirthProfileApiError && error.requestId ? (
-            <p className="state-line" style={{ fontSize: "0.8rem", opacity: 0.7 }}>
-              <span aria-hidden="true">ID de requête: </span>
-              <span aria-label={`Identifiant de support technique: ${error.requestId}`}>{error.requestId}</span>
-            </p>
-          ) : null}
-          <button type="button" onClick={() => void refetch()} style={{ marginTop: "0.5rem" }}>
-            Réessayer
+          <p>{t.loadError}</p>
+          <button type="button" onClick={() => void refetch()} className="retry-button">
+            {t.retry}
           </button>
         </div>
       ) : null}
@@ -244,16 +273,12 @@ export function BirthProfilePage({ onNavigate }: BirthProfilePageProps) {
         <form
           className="chat-form"
           onSubmit={handleSubmit(onSubmit)}
-          onChange={() => {
-            if (saveSuccess) setSaveSuccess(false)
-            if (globalError) { setGlobalError(null); setSaveErrorRequestId(null) }
-            if (generationError) { setGenerationError(null); setGenerationErrorRequestId(null) }
-          }}
+          onChange={clearFormFeedback}
           noValidate
           aria-labelledby="birth-profile-title"
         >
           <div>
-            <label htmlFor="birth-date">Date de naissance (YYYY-MM-DD)</label>
+            <label htmlFor="birth-date">{t.labels.birthDate}</label>
             <input
               id="birth-date"
               type="text"
@@ -270,7 +295,7 @@ export function BirthProfilePage({ onNavigate }: BirthProfilePageProps) {
           </div>
 
           <div>
-            <label htmlFor="birth-time">Heure de naissance (HH:MM)</label>
+            <label htmlFor="birth-time">{t.labels.birthTime}</label>
             <input
               id="birth-time"
               type="text"
@@ -282,20 +307,19 @@ export function BirthProfilePage({ onNavigate }: BirthProfilePageProps) {
             />
             <label
               htmlFor="birth-time-unknown"
-              style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.25rem" }}
+              className="birth-time-unknown-label"
             >
               <input
                 id="birth-time-unknown"
                 type="checkbox"
                 checked={birthTimeUnknown}
                 onChange={(e) => {
-                  setBirthTimeUnknown(e.target.checked)
-                  if (e.target.checked) {
-                    setValue("birth_time", "", { shouldValidate: false })
-                  }
+                  const checked = e.target.checked
+                  setBirthTimeUnknown(checked)
+                  if (checked) setValue("birth_time", "", { shouldValidate: false })
                 }}
               />
-              Heure inconnue
+              {t.labels.unknownTime}
             </label>
             {!birthTimeUnknown && errors.birth_time && (
               <span id="birth-time-error" className="chat-error" role="alert">
@@ -304,32 +328,84 @@ export function BirthProfilePage({ onNavigate }: BirthProfilePageProps) {
             )}
           </div>
 
-          <div>
-            <label htmlFor="birth-place">Lieu de naissance</label>
-            <input
-              id="birth-place"
-              type="text"
-              placeholder="Paris, France"
-              aria-invalid={Boolean(errors.birth_place)}
-              aria-describedby={errors.birth_place ? "birth-place-error" : undefined}
-              {...register("birth_place")}
-            />
-            {errors.birth_place && (
-              <span id="birth-place-error" className="chat-error" role="alert">
-                {errors.birth_place.message}
-              </span>
+          <div className="birth-location-row">
+            <div className="birth-location-field">
+              <label htmlFor="birth-city">{t.labels.birthCity}</label>
+              <input
+                id="birth-city"
+                type="text"
+                placeholder="Paris"
+                aria-invalid={Boolean(errors.birth_city)}
+                aria-describedby={errors.birth_city ? "birth-city-error" : undefined}
+                {...register("birth_city", {
+                  onChange: resetGeocodingState,
+                })}
+              />
+              {errors.birth_city && (
+                <span id="birth-city-error" className="chat-error" role="alert">
+                  {errors.birth_city.message}
+                </span>
+              )}
+            </div>
+            <div className="birth-location-field">
+              <label htmlFor="birth-country">{t.labels.birthCountry}</label>
+              <input
+                id="birth-country"
+                type="text"
+                placeholder="France"
+                aria-invalid={Boolean(errors.birth_country)}
+                aria-describedby={errors.birth_country ? "birth-country-error" : undefined}
+                {...register("birth_country", {
+                  onChange: resetGeocodingState,
+                })}
+              />
+              {errors.birth_country && (
+                <span id="birth-country-error" className="chat-error" role="alert">
+                  {errors.birth_country.message}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div aria-live="polite" aria-atomic="true">
+            {geocodingState === "loading" && (
+              <p className="state-line" aria-busy="true" role="status">
+                <span className="state-loading" aria-hidden="true" />
+                {GEOCODING_MESSAGES.loading[lang]}
+              </p>
+            )}
+            {geocodingState === "success" && resolvedGeoLabel !== null && (
+              <p className="state-line state-success" role="status">
+                ✓ {GEOCODING_MESSAGES.success[lang]} : {resolvedGeoLabel}
+              </p>
+            )}
+            {geocodingState === "error_not_found" && (
+              <div className="chat-error degraded-warning" role="alert">
+                <p>{GEOCODING_MESSAGES.error_not_found[lang]}</p>
+              </div>
+            )}
+            {geocodingState === "error_unavailable" && (
+              <div className="chat-error degraded-warning" role="alert">
+                <p>{GEOCODING_MESSAGES.error_unavailable[lang]}</p>
+              </div>
             )}
           </div>
 
           <div>
-            <label htmlFor="birth-timezone">Fuseau horaire IANA (ex: Europe/Paris)</label>
-            <input
-              id="birth-timezone"
-              type="text"
-              placeholder="Europe/Paris"
-              aria-invalid={Boolean(errors.birth_timezone)}
-              aria-describedby={errors.birth_timezone ? "birth-timezone-error" : undefined}
-              {...register("birth_timezone")}
+            <label htmlFor="birth-timezone">{t.labels.birthTimezone}</label>
+            <Controller
+              name="birth_timezone"
+              control={control}
+              render={({ field }) => (
+                <TimezoneSelect
+                  id="birth-timezone"
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  disabled={isSubmitting}
+                  aria-invalid={Boolean(errors.birth_timezone)}
+                  aria-describedby={errors.birth_timezone ? "birth-timezone-error" : undefined}
+                />
+              )}
             />
             {errors.birth_timezone && (
               <span id="birth-timezone-error" className="chat-error" role="alert">
@@ -338,80 +414,15 @@ export function BirthProfilePage({ onNavigate }: BirthProfilePageProps) {
             )}
           </div>
 
-          <fieldset style={{ border: "1px solid var(--line)", borderRadius: "4px", padding: "0.75rem" }}>
-            <legend>Géolocalisation précise <span style={{ fontWeight: "normal", fontSize: "0.9em" }}>(optionnel)</span></legend>
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "flex-end" }}>
-              <div style={{ flex: 1, minWidth: "8rem" }}>
-                <label htmlFor="birth-city">Ville</label>
-                <input
-                  id="birth-city"
-                  type="text"
-                  placeholder="Paris"
-                  {...register("birth_city", {
-                    onChange: resetGeocodingState,
-                  })}
-                />
-              </div>
-              <div style={{ flex: 1, minWidth: "8rem" }}>
-                <label htmlFor="birth-country">Pays</label>
-                <input
-                  id="birth-country"
-                  type="text"
-                  placeholder="France"
-                  {...register("birth_country", {
-                    onChange: resetGeocodingState,
-                  })}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => void handleGeocode()}
-                disabled={geocodingState === "loading" || !canGeocode}
-                aria-busy={geocodingState === "loading"}
-              >
-                {geocodingState === "loading" ? (
-                  <span className="state-line">
-                    <span className="state-loading" aria-hidden="true" />
-                    Recherche...
-                  </span>
-                ) : (
-                  "Valider les coordonnées"
-                )}
-              </button>
-            </div>
-
-            {geocodingState === "success" && resolvedGeoLabel !== null && (
-              <p className="state-line state-success" role="status">
-                ✓ {resolvedGeoLabel} · lat: {birthCoords?.lat.toFixed(4)}, lon: {birthCoords?.lon.toFixed(4)}
-              </p>
-            )}
-            {geocodingState === "error_not_found" && (
-              <div className="chat-error" role="alert">
-                <p>Lieu introuvable. Vérifiez la ville et le pays, ou laissez le lieu vide pour utiliser le mode dégradé (maisons égales).</p>
-              </div>
-            )}
-            {geocodingState === "error_unavailable" && (
-              <div className="chat-error" role="alert">
-                <p>Service de géocodage indisponible. Vous pouvez sauvegarder sans coordonnées (mode dégradé).</p>
-              </div>
-            )}
-          </fieldset>
-
           {globalError && (
             <div className="chat-error" role="alert">
               <p>{globalError}</p>
-              {saveErrorRequestId ? (
-                <p className="state-line" style={{ fontSize: "0.8rem", opacity: 0.7 }}>
-                  <span aria-hidden="true">ID de requête: </span>
-                  <span aria-label={`Identifiant de support technique: ${saveErrorRequestId}`}>{saveErrorRequestId}</span>
-                </p>
-              ) : null}
             </div>
           )}
 
           {saveSuccess && (
             <p className="state-line state-success" role="status">
-              Profil natal sauvegardé.
+              {t.status.saveSuccess}
             </p>
           )}
 
@@ -419,10 +430,10 @@ export function BirthProfilePage({ onNavigate }: BirthProfilePageProps) {
             {isSubmitting ? (
               <span className="state-line">
                 <span className="state-loading" aria-hidden="true" />
-                Sauvegarde en cours...
+                {t.buttons.saving}
               </span>
             ) : (
-              "Sauvegarder"
+              t.buttons.save
             )}
           </button>
         </form>
@@ -430,23 +441,16 @@ export function BirthProfilePage({ onNavigate }: BirthProfilePageProps) {
 
       {data && !isLoading && !isError ? (
         <div className="section-divider" aria-labelledby="natal-generation-title">
-          <h3 id="natal-generation-title">Génération du thème astral</h3>
+          <h3 id="natal-generation-title">{t.status.generationSection}</h3>
           {generationError && (
             <div className="chat-error" role="alert">
               <p>{generationError}</p>
-              {generationErrorRequestId ? (
-                <p className="state-line" style={{ fontSize: "0.8rem", opacity: 0.7 }}>
-                  <span aria-hidden="true">ID de requête: </span>
-                  <span aria-label={`Identifiant de support technique: ${generationErrorRequestId}`}>{generationErrorRequestId}</span>
-                </p>
-              ) : null}
             </div>
           )}
           <button
             type="button"
             onClick={() => {
               setGenerationError(null)
-              setGenerationErrorRequestId(null)
               generationMutation.mutate()
             }}
             disabled={generationMutation.isPending}
@@ -455,10 +459,10 @@ export function BirthProfilePage({ onNavigate }: BirthProfilePageProps) {
             {generationMutation.isPending ? (
               <span className="state-line" role="status">
                 <span className="state-loading" aria-hidden="true" />
-                Génération en cours (max {GENERATION_TIMEOUT_LABEL})...
+                {t.buttons.generating.replace("{timeout}", GENERATION_TIMEOUT_LABEL)}
               </span>
             ) : (
-              "Générer mon thème astral"
+              t.buttons.generate
             )}
           </button>
         </div>

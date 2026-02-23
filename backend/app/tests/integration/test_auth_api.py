@@ -121,8 +121,11 @@ def test_me_returns_authenticated_user_profile() -> None:
     response = client.get("/v1/auth/me", headers={"Authorization": f"Bearer {access_token}"})
 
     assert response.status_code == 200
-    assert response.json()["data"]["role"] == "user"
-    assert isinstance(response.json()["data"]["id"], int)
+    data = response.json()["data"]
+    assert data["role"] == "user"
+    assert isinstance(data["id"], int)
+    assert data["email"] == "me@example.com"
+    assert "created_at" in data
     assert "request_id" in response.json()["meta"]
 
 

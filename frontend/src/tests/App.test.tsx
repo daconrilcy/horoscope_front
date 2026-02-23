@@ -1,9 +1,13 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
-import App from "../App"
-import { AppProviders } from "../state/providers"
 import { clearAccessToken, setAccessToken } from "../utils/authToken"
+import { TestAppRouter } from "../app/router"
+
+beforeEach(() => {
+  localStorage.setItem("lang", "fr")
+})
 
 afterEach(() => {
   cleanup()
@@ -14,7 +18,14 @@ afterEach(() => {
 const AUTH_ME_SUCCESS = {
   ok: true,
   status: 200,
-  json: async () => ({ data: { id: 42, role: "user" } }),
+  json: async () => ({
+    data: {
+      id: 42,
+      role: "user",
+      email: "test@example.com",
+      created_at: "2025-01-15T10:30:00Z",
+    },
+  }),
 }
 
 const NOT_FOUND = {
@@ -23,144 +34,159 @@ const NOT_FOUND = {
   json: async () => ({ error: { code: "not_found", message: "not found" } }),
 }
 
+const BILLING_SUBSCRIPTION = {
+  ok: true,
+  status: 200,
+  json: async () => ({
+    data: {
+      status: "active",
+      plan: { code: "basic-entry", display_name: "Basic", monthly_price_cents: 500, currency: "EUR", daily_message_limit: 5, is_active: true },
+      failure_reason: null,
+      updated_at: "2026-01-01T00:00:00Z",
+    },
+  }),
+}
+
+const BILLING_QUOTA = {
+  ok: true,
+  status: 200,
+  json: async () => ({
+    data: { quota_date: "2026-02-23", limit: 5, consumed: 2, remaining: 3, reset_at: "2026-02-24T00:00:00Z", blocked: false },
+  }),
+}
+
+const PRIVACY_EMPTY = {
+  ok: true,
+  status: 200,
+  json: async () => ({ data: null }),
+}
+
 function makeFetchMock(withAuthMe = true) {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
     if (withAuthMe && url.endsWith("/v1/auth/me")) return AUTH_ME_SUCCESS
+    if (url.endsWith("/v1/billing/subscription")) return BILLING_SUBSCRIPTION
+    if (url.endsWith("/v1/billing/quota")) return BILLING_QUOTA
+    if (url.endsWith("/v1/privacy/export")) return PRIVACY_EMPTY
+    if (url.endsWith("/v1/privacy/delete")) return PRIVACY_EMPTY
     return NOT_FOUND
   })
 }
 
+function renderApp(initialEntries: string[] = ["/"]) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+  })
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <TestAppRouter initialEntries={initialEntries} />
+    </QueryClientProvider>
+  )
+}
+
 describe("App", () => {
-  it("reacts to access token changes in runtime", async () => {
-    vi.stubGlobal("fetch", makeFetchMock())
+  it("redirects unauthenticated user from / to /login", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
     localStorage.removeItem("access_token")
-    const { rerender } = render(
-      <AppProviders>
-        <App />
-      </AppProviders>,
-    )
-    expect(screen.getByRole("button", { name: "Se connecter" })).toBeInTheDocument()
-
-    const payload = btoa(JSON.stringify({ sub: "42", role: "user" }))
-    setAccessToken(`x.${payload}.y`)
-    rerender(
-      <AppProviders>
-        <App />
-      </AppProviders>,
-    )
-    expect(screen.queryByRole("button", { name: "Se connecter" })).not.toBeInTheDocument()
-    expect(await screen.findByRole("button", { name: "Chat" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Mon profil natal" })).toBeInTheDocument()
-  })
-
-  it("renders birth profile page when Mon profil natal is clicked", async () => {
-    vi.stubGlobal("fetch", makeFetchMock())
-    const payload = btoa(JSON.stringify({ sub: "42", role: "user" }))
-    setAccessToken(`x.${payload}.y`)
-
-    render(
-      <AppProviders>
-        <App />
-      </AppProviders>,
-    )
-
-    const profileButton = await screen.findByRole("button", { name: "Mon profil natal" })
-    fireEvent.click(profileButton)
-
-    expect(await screen.findByRole("heading", { name: "Mon profil natal" })).toBeInTheDocument()
-  })
-
-  it("renders natal chart page shell", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
-    render(
-      <AppProviders>
-        <App />
-      </AppProviders>,
-    )
-    expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeInTheDocument()
-  })
-
-  // H2 — Flux auth : nouveaux tests pour machine d'état home/signin/register
-  it("shows HomePage with Se connecter and Créer un compte buttons when unauthenticated", () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
-    render(
-      <AppProviders>
-        <App />
-      </AppProviders>,
-    )
-    expect(screen.getByRole("heading", { name: "Bienvenue" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Se connecter" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Créer un compte" })).toBeInTheDocument()
-  })
-
-  it("navigates from HomePage to SignInForm when Se connecter is clicked", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
-    render(
-      <AppProviders>
-        <App />
-      </AppProviders>,
-    )
-    fireEvent.click(screen.getByRole("button", { name: "Se connecter" }))
-
+    
+    renderApp(["/"])
+    
     await waitFor(() => {
-      expect(screen.getByLabelText("Adresse e-mail")).toBeInTheDocument()
-      expect(screen.getByLabelText("Mot de passe")).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Connexion" })).toBeInTheDocument()
     })
-    expect(screen.queryByRole("heading", { name: "Bienvenue" })).not.toBeInTheDocument()
   })
 
-  it("navigates from HomePage to SignUpForm when Créer un compte is clicked", async () => {
+  it("shows login form at /login when unauthenticated", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
-    render(
-      <AppProviders>
-        <App />
-      </AppProviders>,
-    )
-    fireEvent.click(screen.getByRole("button", { name: "Créer un compte" }))
+    localStorage.removeItem("access_token")
+    
+    renderApp(["/login"])
+    
+    expect(screen.getByLabelText("Adresse e-mail")).toBeInTheDocument()
+    expect(screen.getByLabelText("Mot de passe")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Se connecter" })).toBeInTheDocument()
+  })
 
+  it("navigates from login to register when Créer un compte is clicked", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
+    localStorage.removeItem("access_token")
+    
+    renderApp(["/login"])
+    
+    fireEvent.click(screen.getByRole("button", { name: "Créer un compte" }))
+    
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Créer un compte" })).toBeInTheDocument()
     })
-    expect(screen.queryByRole("heading", { name: "Bienvenue" })).not.toBeInTheDocument()
   })
 
-  it("returns to HomePage after signing out", async () => {
+  it("navigates from register to login when Se connecter is clicked", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
+    localStorage.removeItem("access_token")
+    
+    renderApp(["/register"])
+    
+    expect(screen.getByRole("heading", { name: "Créer un compte" })).toBeInTheDocument()
+    
+    fireEvent.click(screen.getByRole("button", { name: "Se connecter" }))
+    
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Connexion" })).toBeInTheDocument()
+    })
+  })
+
+  it("redirects authenticated user from / to /dashboard", async () => {
     vi.stubGlobal("fetch", makeFetchMock())
     const payload = btoa(JSON.stringify({ sub: "42", role: "user" }))
     setAccessToken(`x.${payload}.y`)
-
-    render(
-      <AppProviders>
-        <App />
-      </AppProviders>,
-    )
-
-    expect(await screen.findByRole("button", { name: "Se déconnecter" })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole("button", { name: "Se déconnecter" }))
-
+    
+    renderApp(["/"])
+    
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Bienvenue" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Tableau de bord" })).toBeInTheDocument()
     })
-    expect(screen.queryByRole("button", { name: "Se déconnecter" })).not.toBeInTheDocument()
   })
 
-  it("clears authView back to home when token is removed externally", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
-    render(
-      <AppProviders>
-        <App />
-      </AppProviders>,
-    )
-    // Navigate to signin
-    fireEvent.click(screen.getByRole("button", { name: "Se connecter" }))
+  it("shows AppShell with sidebar for authenticated user", async () => {
+    vi.stubGlobal("fetch", makeFetchMock())
+    const payload = btoa(JSON.stringify({ sub: "42", role: "user" }))
+    setAccessToken(`x.${payload}.y`)
+    
+    renderApp(["/dashboard"])
+    
     await waitFor(() => {
-      expect(screen.getByLabelText("Adresse e-mail")).toBeInTheDocument()
+      expect(screen.getAllByRole("link", { name: "Chat" }).length).toBeGreaterThan(0)
     })
-    // Token cleared externally (simulates another tab logout)
-    clearAccessToken()
+    expect(screen.getByRole("link", { name: "Données de naissance" })).toBeInTheDocument()
+    expect(screen.getAllByRole("link", { name: "Abonnement" }).length).toBeGreaterThan(0)
+  })
+
+  it("redirects to login when logout button is clicked", async () => {
+    vi.stubGlobal("fetch", makeFetchMock())
+    const payload = btoa(JSON.stringify({ sub: "42", role: "user" }))
+    setAccessToken(`x.${payload}.y`)
+    
+    renderApp(["/dashboard"])
+    
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Bienvenue" })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Se déconnecter" })).toBeInTheDocument()
+    })
+    
+    fireEvent.click(screen.getByRole("button", { name: "Se déconnecter" }))
+    
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Connexion" })).toBeInTheDocument()
+    })
+  })
+
+  it("redirects unauthenticated user to login when accessing protected route", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
+    localStorage.removeItem("access_token")
+    
+    renderApp(["/chat"])
+    
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Connexion" })).toBeInTheDocument()
     })
   })
 })

@@ -2189,6 +2189,11 @@ textarea:focus-visible {
   justify-content: space-between;
 }
 
+.hero-card__top-chevron {
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+
 .hero-card__chip {
   display: inline-flex;
   align-items: center;
@@ -2225,6 +2230,13 @@ textarea:focus-visible {
   height: 100%;
 }
 
+.hero-card__constellation-svg {
+  color: var(--constellation-color, #ffffff);
+  opacity: 0.55;
+  filter: drop-shadow(0 0 6px rgba(200, 180, 255, 0.4));
+  pointer-events: none;
+}
+
 .hero-card__cta {
   margin-top: 20px;
   display: flex;
@@ -2240,12 +2252,12 @@ textarea:focus-visible {
   font-size: 16px;
   font-weight: 650;
   cursor: pointer;
-  box-shadow: 0 14px 30px rgba(90, 120, 255, 0.25);
+  box-shadow: var(--shadow-cta, 0 14px 30px rgba(90, 120, 255, 0.25));
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .dark .hero-card__cta {
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-cta-dark, 0 14px 30px rgba(0, 0, 0, 0.35));
 }
 
 .hero-card__cta:hover:not(:disabled) {
@@ -2253,12 +2265,33 @@ textarea:focus-visible {
   transform: translateY(-1px);
 }
 
+.hero-card__cta:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
+
 .hero-card__link {
   margin-top: 14px;
+  width: 100%;
+  display: block;
+  background: transparent;
+  border: none;
+  padding: 0;
   text-align: center;
   font-size: 13px;
   color: var(--text-2);
   cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.hero-card__link:hover:not(:disabled) {
+  color: var(--text-1);
+}
+
+.hero-card__link:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+  border-radius: 4px;
 }
 
 /* === TodayHeader === */

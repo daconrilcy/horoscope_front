@@ -5,8 +5,8 @@ Contexte du thème natal de l'utilisateur:
 {{ context.natal_chart_summary }}
 {% endif %}
 
-{% if context.memory and context.memory.style %}
-Style de communication préféré: {{ context.memory.style }}
+{% if context.extra and context.extra.persona_line %}
+{{ context.extra.persona_line }}
 {% endif %}
 
 Instructions:

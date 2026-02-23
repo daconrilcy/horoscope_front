@@ -2,10 +2,13 @@ import { useQuery } from "@tanstack/react-query"
 
 import { API_BASE_URL, apiFetch } from "./client"
 import { getSubjectFromAccessToken } from "../utils/authToken"
+import { ANONYMOUS_SUBJECT } from "../utils/constants"
 
 type AuthMeData = {
   id: number
   role: string
+  email: string
+  created_at: string
 }
 
 async function fetchAuthMe(accessToken: string): Promise<AuthMeData> {
@@ -20,7 +23,7 @@ async function fetchAuthMe(accessToken: string): Promise<AuthMeData> {
 }
 
 export function useAuthMe(accessToken: string | null) {
-  const tokenSubject = getSubjectFromAccessToken(accessToken) ?? "anonymous"
+  const tokenSubject = getSubjectFromAccessToken(accessToken) ?? ANONYMOUS_SUBJECT
   return useQuery({
     queryKey: ["auth-me", tokenSubject],
     queryFn: async () => {

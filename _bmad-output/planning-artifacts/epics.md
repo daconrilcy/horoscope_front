@@ -1241,3 +1241,124 @@ So that je comprenne la signification de mes positions planétaires, aspects et 
 - Modifier `UserNatalChartService` ou créer endpoint dédié `/v1/users/me/natal-chart/interpretation`
 - Cache possible : l'interprétation pour un même thème (même input_hash) peut être cachée
 - [Source: docs/agent/story-15-ai-text-engine-bmad.md] — Use case `natal_chart_interpretation`
+
+## Epic 16: Refonte Architecture Frontend — Information Architecture et Navigation
+
+Refactoriser le frontend pour décomposer l'application en pages/sections dédiées avec React Router, un layout global cohérent, un chat messenger-style, et une navigation fluide. Cette refonte améliore l'UX sans modifier le backend.
+
+**FRs covered:** FR10, FR11, FR12, FR14, FR15, FR19, FR20, FR21, FR24, FR26, FR29, FR30 (amélioration de la couche présentation)
+
+### Story 16.1: React Router et Layout Foundation
+
+As a utilisateur de l'application horoscope,
+I want que l'application utilise React Router avec des URLs propres et un layout global cohérent,
+So that je puisse naviguer avec back/forward, partager des liens directs, et avoir une interface structurée.
+
+**Acceptance Criteria:**
+- Routes fonctionnelles avec URLs significatives
+- Protection des routes (AuthGuard, RoleGuard)
+- Layout responsive (sidebar desktop, bottom nav mobile)
+- Rétrocompatibilité des pages existantes
+
+**Notes:** Installation react-router-dom@6, création guards, refactoring AppShell
+[Source: _bmad-output/implementation-artifacts/16-1-react-router-layout-foundation.md]
+
+### Story 16.2: Dashboard Page — Hub d'accueil
+
+As a utilisateur connecté,
+I want voir un dashboard d'accueil avec des raccourcis vers toutes les fonctionnalités,
+So that je puisse accéder rapidement à ce que je cherche.
+
+**Acceptance Criteria:**
+- Page `/dashboard` avec cartes de raccourci
+- Navigation vers : thème natal, chat, consultations, astrologues, paramètres
+- Accessibilité clavier
+
+[Source: _bmad-output/implementation-artifacts/16-2-dashboard-page.md]
+
+### Story 16.3: Chat Messenger-Style — Layout 3 colonnes
+
+As a utilisateur du chat astrologue,
+I want une interface de chat style messenger avec liste de conversations, fenêtre de chat et détails astrologue,
+So that je puisse naviguer facilement entre mes conversations et voir le contexte.
+
+**Acceptance Criteria:**
+- Layout 3 colonnes desktop, 1 colonne mobile
+- Sélection conversation avec deep link `/chat/:conversationId`
+- Envoi message avec état "typing"
+- Auto-scroll intelligent
+- Empty state avec CTA
+
+[Source: _bmad-output/implementation-artifacts/16-3-chat-messenger-style.md]
+
+### Story 16.4: Catalogue et Profil Astrologues
+
+As a utilisateur,
+I want parcourir un catalogue d'astrologues et voir leur profil détaillé,
+So that je puisse choisir l'astrologue qui me correspond pour démarrer une conversation.
+
+**Acceptance Criteria:**
+- Page `/astrologers` avec grille de vignettes
+- Page `/astrologers/:id` avec profil détaillé
+- CTAs : démarrer conversation, consultation thématique
+- Mock data si API non disponible
+
+[Source: _bmad-output/implementation-artifacts/16-4-astrologers-pages.md]
+
+### Story 16.5: Consultations Thématiques — Pages et Wizard
+
+As a utilisateur,
+I want créer des consultations thématiques (dating, pro, événement) avec option tirage cartes/runes,
+So that je puisse obtenir des guidances spécialisées et les partager dans le chat.
+
+**Acceptance Criteria:**
+- Page `/consultations` avec types et historique
+- Wizard multi-step : type → astrologue → tirage → validation
+- Page résultat avec CTAs "Ouvrir dans le chat", "Sauvegarder"
+
+[Source: _bmad-output/implementation-artifacts/16-5-consultations-pages.md]
+
+### Story 16.6: Settings Pages — Compte, Abonnement, Usage
+
+As a utilisateur,
+I want accéder à mes paramètres de compte, abonnement et usage dans des pages dédiées,
+So that je puisse gérer mon profil et mes données facilement.
+
+**Acceptance Criteria:**
+- Page `/settings` avec sous-routes account, subscription, usage
+- Double confirmation pour suppression compte
+- Migration des composants existants (BillingPanel, PrivacyPanel)
+
+[Source: _bmad-output/implementation-artifacts/16-6-settings-pages.md]
+
+### Story 16.7: Admin Pages — Pricing, Monitoring, Personas
+
+As a utilisateur ops/admin,
+I want accéder à des pages d'administration dédiées,
+So that je puisse gérer les tarifs, le monitoring et les personas astrologues.
+
+**Acceptance Criteria:**
+- Protection RoleGuard pour ops/admin uniquement
+- Hub `/admin` avec navigation
+- Sous-pages : pricing, monitoring, personas, reconciliation
+- Migration des composants existants
+
+[Source: _bmad-output/implementation-artifacts/16-7-admin-pages.md]
+
+### Story 16.8: Correction du parcours Thème Natal
+
+As a utilisateur souhaitant générer son thème natal,
+I want un parcours fluide de saisie des données de naissance avec gestion claire des erreurs et accessibilité depuis plusieurs points d'entrée,
+So that je puisse compléter mes informations sans friction et comprendre les problèmes éventuels.
+
+**Acceptance Criteria:**
+- Message d'alerte clair si données de naissance manquantes (pas d'ID de requête technique)
+- Lien vers `/profile` depuis : menu navigation, page `/natal`, page `/settings`
+- Champs ville + pays séparés avec géocodage Nominatim transparent
+- Feedback utilisateur si ville/pays introuvable
+- Fuseau horaire détecté automatiquement (timezone utilisateur ou UTC par défaut)
+- Sélection du fuseau horaire via liste déroulante avec recherche
+- Correction du bug de validation des données de naissance
+- Suppression de l'affichage des request_id côté utilisateur (log console uniquement)
+
+[Source: _bmad-output/implementation-artifacts/16-8-correction-parcours-theme-natal.md]

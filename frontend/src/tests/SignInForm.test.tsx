@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react"
 
 import { SignInForm } from "../components/SignInForm"
+import { renderWithRouter } from "./test-utils"
 
 const ACCESS_TOKEN = "tok.eyJzdWIiOiI0MiIsInJvbGUiOiJ1c2VyIn0.sig"
 
@@ -34,7 +35,7 @@ afterEach(() => {
 describe("SignInForm", () => {
   it("renders email input, password input, and submit button", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignInForm />)
+    renderWithRouter(<SignInForm />)
 
     expect(screen.getByLabelText("Adresse e-mail")).toBeInTheDocument()
     expect(screen.getByLabelText("Mot de passe")).toBeInTheDocument()
@@ -43,7 +44,7 @@ describe("SignInForm", () => {
 
   it("shows validation error when email is invalid", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignInForm />)
+    renderWithRouter(<SignInForm />)
 
     fireEvent.change(screen.getByLabelText("Adresse e-mail"), { target: { value: "not-an-email" } })
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "secret" } })
@@ -57,7 +58,7 @@ describe("SignInForm", () => {
 
   it("shows validation error when password is empty", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignInForm />)
+    renderWithRouter(<SignInForm />)
 
     fireEvent.change(screen.getByLabelText("Adresse e-mail"), { target: { value: "test@example.com" } })
     fireEvent.click(screen.getByRole("button", { name: "Se connecter" }))
@@ -73,7 +74,7 @@ describe("SignInForm", () => {
       resolveLogin = resolve
     })
     vi.stubGlobal("fetch", vi.fn().mockReturnValue(loginPromise))
-    render(<SignInForm />)
+    renderWithRouter(<SignInForm />)
 
     fireEvent.change(screen.getByLabelText("Adresse e-mail"), { target: { value: "test@example.com" } })
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "secret" } })
@@ -92,7 +93,7 @@ describe("SignInForm", () => {
 
   it("calls setAccessToken with access_token on successful login", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignInForm />)
+    renderWithRouter(<SignInForm />)
 
     fireEvent.change(screen.getByLabelText("Adresse e-mail"), { target: { value: "test@example.com" } })
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "secret" } })
@@ -105,7 +106,7 @@ describe("SignInForm", () => {
 
   it("shows non-technical error message on API authentication failure", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(ERROR_RESPONSE))
-    render(<SignInForm />)
+    renderWithRouter(<SignInForm />)
 
     fireEvent.change(screen.getByLabelText("Adresse e-mail"), { target: { value: "test@example.com" } })
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "wrongpassword" } })
@@ -119,7 +120,7 @@ describe("SignInForm", () => {
   // M4 — Erreur réseau : fetch qui rejette
   it("shows generic error message when network request fails", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")))
-    render(<SignInForm />)
+    renderWithRouter(<SignInForm />)
 
     fireEvent.change(screen.getByLabelText("Adresse e-mail"), { target: { value: "test@example.com" } })
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "secret" } })
@@ -137,7 +138,7 @@ describe("SignInForm", () => {
       status: 502,
       json: async () => { throw new SyntaxError("Unexpected token < in JSON") },
     }))
-    render(<SignInForm />)
+    renderWithRouter(<SignInForm />)
 
     fireEvent.change(screen.getByLabelText("Adresse e-mail"), { target: { value: "test@example.com" } })
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "secret" } })
@@ -151,14 +152,14 @@ describe("SignInForm", () => {
   // H1 — Navigation clavier : attributs WCAG (aria-invalid, aria-describedby, type=submit)
   it("submit button has type=submit for Enter key activation", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignInForm />)
+    renderWithRouter(<SignInForm />)
 
     expect(screen.getByRole("button", { name: "Se connecter" })).toHaveAttribute("type", "submit")
   })
 
   it("sets aria-invalid and aria-describedby on email field after validation error", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignInForm />)
+    renderWithRouter(<SignInForm />)
 
     const emailInput = screen.getByLabelText("Adresse e-mail")
     expect(emailInput).toHaveAttribute("aria-invalid", "false")
@@ -175,7 +176,7 @@ describe("SignInForm", () => {
 
   it("sets aria-invalid and aria-describedby on password field after validation error", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignInForm />)
+    renderWithRouter(<SignInForm />)
 
     const passwordInput = screen.getByLabelText("Mot de passe")
     expect(passwordInput).toHaveAttribute("aria-invalid", "false")
@@ -193,14 +194,14 @@ describe("SignInForm", () => {
   it("shows 'Créer un compte' button when onRegister prop is provided", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
     const onRegister = vi.fn()
-    render(<SignInForm onRegister={onRegister} />)
+    renderWithRouter(<SignInForm onRegister={onRegister} />)
 
     expect(screen.getByRole("button", { name: "Créer un compte" })).toBeInTheDocument()
   })
 
   it("does not show 'Créer un compte' button when onRegister prop is omitted", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
-    render(<SignInForm />)
+    renderWithRouter(<SignInForm />)
 
     expect(screen.queryByRole("button", { name: "Créer un compte" })).not.toBeInTheDocument()
   })
@@ -208,7 +209,7 @@ describe("SignInForm", () => {
   it("calls onRegister callback when 'Créer un compte' button is clicked", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
     const onRegister = vi.fn()
-    render(<SignInForm onRegister={onRegister} />)
+    renderWithRouter(<SignInForm onRegister={onRegister} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Créer un compte" }))
 

@@ -121,6 +121,45 @@ describe("geocodeCity", () => {
     expect(err).toMatchObject({ code: "service_unavailable" })
   })
 
+  it("returns null immediately when externalSignal is already aborted (early return)", async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal("fetch", fetchMock)
+
+    const alreadyAbortedController = new AbortController()
+    alreadyAbortedController.abort()
+
+    const result = await geocodeCity("Paris", "France", alreadyAbortedController.signal)
+
+    expect(result).toBeNull()
+    // Fetch should never be called when signal is pre-aborted
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("removes abort listener from externalSignal after successful fetch (no memory leak)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [{ lat: "48.8566", lon: "2.3522", display_name: "Paris, France" }],
+      }),
+    )
+
+    const controller = new AbortController()
+    const addEventListenerSpy = vi.spyOn(controller.signal, "addEventListener")
+    const removeEventListenerSpy = vi.spyOn(controller.signal, "removeEventListener")
+
+    await geocodeCity("Paris", "France", controller.signal)
+
+    // Verify the same handler function is passed to both add and remove
+    expect(addEventListenerSpy).toHaveBeenCalledWith("abort", expect.any(Function), { once: true })
+    expect(removeEventListenerSpy).toHaveBeenCalledWith("abort", expect.any(Function))
+
+    // Extract the handler functions to verify they are the same reference
+    const addedHandler = addEventListenerSpy.mock.calls[0][1]
+    const removedHandler = removeEventListenerSpy.mock.calls[0][1]
+    expect(addedHandler).toBe(removedHandler)
+  })
+
   it("properly encodes city names with accents (São Paulo)", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

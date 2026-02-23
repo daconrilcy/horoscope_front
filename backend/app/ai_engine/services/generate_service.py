@@ -90,6 +90,8 @@ async def generate_text(
                 "user_id": str(user_id),
                 "use_case": use_case,
                 "latency_ms": latency_ms,
+                "status": "success",
+                "tokens_used": cached.total_tokens,
                 "cached": True,
             }),
         )
@@ -161,6 +163,8 @@ async def generate_text(
             "user_id": str(user_id),
             "use_case": use_case,
             "latency_ms": latency_ms,
+            "status": "success",
+            "tokens_used": result.total_tokens,
             "input_tokens": result.input_tokens,
             "output_tokens": result.output_tokens,
             "cost_usd": round(usage.estimated_cost_usd, 6),

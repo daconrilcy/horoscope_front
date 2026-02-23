@@ -1,0 +1,6 @@
+export { ConsultationTypeStep } from "./components/ConsultationTypeStep"
+export { AstrologerSelectStep } from "./components/AstrologerSelectStep"
+export { DrawingOptionStep } from "./components/DrawingOptionStep"
+export { ValidationStep } from "./components/ValidationStep"
+export { WizardProgress } from "./components/WizardProgress"
+export { ConsultationLayout } from "./components/ConsultationLayout"

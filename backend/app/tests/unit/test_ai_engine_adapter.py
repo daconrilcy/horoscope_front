@@ -7,6 +7,7 @@ from app.services.ai_engine_adapter import (
     AIEngineAdapterError,
     assess_off_scope,
     get_test_generators_state,
+    map_adapter_error_to_codes,
     reset_test_generators,
     set_test_chat_generator,
     set_test_guidance_generator,
@@ -298,3 +299,55 @@ async def test_reset_test_generators_clears_generators() -> None:
     chat_active, guidance_active = get_test_generators_state()
     assert chat_active is False
     assert guidance_active is False
+
+
+def test_map_adapter_error_to_codes_rate_limit() -> None:
+    """Test mapping of rate_limit_exceeded error."""
+    err = AIEngineAdapterError(
+        code="rate_limit_exceeded",
+        message="rate limit exceeded",
+        details={"retry_after_ms": "60000"},
+    )
+    code, message = map_adapter_error_to_codes(err)
+    assert code == "rate_limit_exceeded"
+    assert message == "rate limit exceeded"
+
+
+def test_map_adapter_error_to_codes_context_too_large() -> None:
+    """Test mapping of context_too_large error."""
+    err = AIEngineAdapterError(
+        code="context_too_large",
+        message="context exceeds maximum tokens",
+        details={"max_tokens": "4096"},
+    )
+    code, message = map_adapter_error_to_codes(err)
+    assert code == "context_too_large"
+    assert message == "context too large"
+
+
+def test_map_adapter_error_to_codes_timeout() -> None:
+    """Test mapping of TimeoutError."""
+    err = TimeoutError("provider timeout")
+    code, message = map_adapter_error_to_codes(err)
+    assert code == "llm_timeout"
+    assert message == "llm provider timeout"
+
+
+def test_map_adapter_error_to_codes_connection_error() -> None:
+    """Test mapping of ConnectionError."""
+    err = ConnectionError("connection failed")
+    code, message = map_adapter_error_to_codes(err)
+    assert code == "llm_unavailable"
+    assert message == "llm provider is unavailable"
+
+
+def test_map_adapter_error_to_codes_other_adapter_error() -> None:
+    """Test mapping of other AIEngineAdapterError codes."""
+    err = AIEngineAdapterError(
+        code="invalid_chat_input",
+        message="messages cannot be empty",
+        details={"field": "messages"},
+    )
+    code, message = map_adapter_error_to_codes(err)
+    assert code == "invalid_chat_input"
+    assert message == "messages cannot be empty"

@@ -30,7 +30,7 @@ def _build_system_prompt(request: "ChatRequest") -> str:
 
     context = GenerateContext(
         natal_chart_summary=request.context.natal_chart_summary,
-        extra={"memory": json.dumps(request.context.memory)} if request.context.memory else None,
+        extra=dict(request.context.memory) if request.context.memory else None,
     )
     input_data = GenerateInput()
 
@@ -84,6 +84,10 @@ async def chat(
         validate_context_size(system_prompt)
         system_prompt = compact_context(system_prompt)
         messages.insert(0, ChatMessage(role="system", content=system_prompt))
+
+    # Validate total size of all messages (AC6: guards against oversized user input)
+    combined_text = " ".join(m.content for m in messages)
+    validate_context_size(combined_text)
 
     provider_name = request.provider.name
     model = request.provider.model
@@ -182,6 +186,10 @@ async def chat_stream(
         validate_context_size(system_prompt)
         system_prompt = compact_context(system_prompt)
         messages.insert(0, ChatMessage(role="system", content=system_prompt))
+
+    # Validate total size of all messages (AC6: guards against oversized user input)
+    combined_text = " ".join(m.content for m in messages)
+    validate_context_size(combined_text)
 
     provider_name = request.provider.name
     model = request.provider.model

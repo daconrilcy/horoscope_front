@@ -60,6 +60,8 @@ class RefreshApiResponse(BaseModel):
 class AuthMeData(BaseModel):
     id: int
     role: str
+    email: str
+    created_at: str
 
 
 class AuthMeApiResponse(BaseModel):
@@ -143,7 +145,12 @@ def me(
 ) -> Any:
     request_id = resolve_request_id(request)
     return {
-        "data": {"id": current_user.id, "role": current_user.role},
+        "data": {
+            "id": current_user.id,
+            "role": current_user.role,
+            "email": current_user.email,
+            "created_at": current_user.created_at.isoformat(),
+        },
         "meta": {"request_id": request_id},
     }
 

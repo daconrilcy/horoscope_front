@@ -2,6 +2,7 @@ import { render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ApiError, generateNatalChart, useLatestNatalChart } from "../api/natalChart"
+import { ANONYMOUS_SUBJECT } from "../utils/constants"
 
 const useQueryMock = vi.fn()
 const useAccessTokenSnapshotMock = vi.fn()
@@ -123,7 +124,7 @@ describe("useLatestNatalChart", () => {
 
     expect(useQueryMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        queryKey: ["latest-natal-chart", "anonymous"],
+        queryKey: ["latest-natal-chart", ANONYMOUS_SUBJECT],
         enabled: false,
       }),
     )

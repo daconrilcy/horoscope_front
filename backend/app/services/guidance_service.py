@@ -24,6 +24,7 @@ from app.services.ai_engine_adapter import (
     AIEngineAdapter,
     AIEngineAdapterError,
     assess_off_scope,
+    map_adapter_error_to_codes,
 )
 from app.services.persona_config_service import PersonaConfigService
 from app.services.user_birth_profile_service import (
@@ -495,9 +496,8 @@ class GuidanceService:
             1.0,
         )
 
-        # natal_chart_summary: Not yet implemented. Templates support it via
-        # {% if context.natal_chart_summary %} but computed chart data isn't
-        # available here yet. Future enhancement: integrate with NatalChartService.
+        # natal_chart_summary: placeholder for future NatalChartService integration.
+        # Templates conditionally render it via {% if context.natal_chart_summary %}.
         context: dict[str, str | None] = {
             "birth_date": profile.birth_date,
             "birth_time": profile.birth_time,
@@ -567,48 +567,8 @@ class GuidanceService:
                     context_message_count=context_message_count,
                     generated_at=datetime.now(timezone.utc),
                 )
-            except AIEngineAdapterError as err:
-                if err.code == "rate_limit_exceeded":
-                    last_error_code = "rate_limit_exceeded"
-                    last_error_message = "rate limit exceeded"
-                elif err.code == "context_too_large":
-                    last_error_code = "context_too_large"
-                    last_error_message = "context too large"
-                else:
-                    last_error_code = err.code
-                    last_error_message = err.message
-                increment_counter("conversation_llm_errors_total", 1.0)
-                increment_counter(
-                    f"conversation_llm_errors_total|persona_profile={persona_profile_code}",
-                    1.0,
-                )
-                GuidanceService.logger.warning(
-                    "guidance_generation_error request_id=%s code=%s",
-                    request_id,
-                    last_error_code,
-                )
-                await GuidanceService._sleep_before_retry_async(
-                    attempts=attempts, max_attempts=max_attempts
-                )
-            except TimeoutError:
-                last_error_code = "llm_timeout"
-                last_error_message = "llm provider timeout"
-                increment_counter("conversation_llm_errors_total", 1.0)
-                increment_counter(
-                    f"conversation_llm_errors_total|persona_profile={persona_profile_code}",
-                    1.0,
-                )
-                GuidanceService.logger.warning(
-                    "guidance_generation_error request_id=%s code=%s",
-                    request_id,
-                    last_error_code,
-                )
-                await GuidanceService._sleep_before_retry_async(
-                    attempts=attempts, max_attempts=max_attempts
-                )
-            except ConnectionError:
-                last_error_code = "llm_unavailable"
-                last_error_message = "llm provider is unavailable"
+            except (AIEngineAdapterError, TimeoutError, ConnectionError) as err:
+                last_error_code, last_error_message = map_adapter_error_to_codes(err)
                 increment_counter("conversation_llm_errors_total", 1.0)
                 increment_counter(
                     f"conversation_llm_errors_total|persona_profile={persona_profile_code}",
@@ -766,9 +726,7 @@ class GuidanceService:
             1.0,
         )
 
-        # natal_chart_summary: Not yet implemented. Templates support it via
-        # {% if context.natal_chart_summary %} but computed chart data isn't
-        # available here yet. Future enhancement: integrate with NatalChartService.
+        # natal_chart_summary: placeholder for future NatalChartService integration
         context: dict[str, str | None] = {
             "birth_date": profile.birth_date,
             "birth_time": profile.birth_time,
@@ -840,48 +798,8 @@ class GuidanceService:
                     context_message_count=context_message_count,
                     generated_at=datetime.now(timezone.utc),
                 )
-            except AIEngineAdapterError as err:
-                if err.code == "rate_limit_exceeded":
-                    last_error_code = "rate_limit_exceeded"
-                    last_error_message = "rate limit exceeded"
-                elif err.code == "context_too_large":
-                    last_error_code = "context_too_large"
-                    last_error_message = "context too large"
-                else:
-                    last_error_code = err.code
-                    last_error_message = err.message
-                increment_counter("conversation_llm_errors_total", 1.0)
-                increment_counter(
-                    f"conversation_llm_errors_total|persona_profile={persona_profile_code}",
-                    1.0,
-                )
-                GuidanceService.logger.warning(
-                    "guidance_generation_error request_id=%s code=%s",
-                    request_id,
-                    last_error_code,
-                )
-                await GuidanceService._sleep_before_retry_async(
-                    attempts=attempts, max_attempts=max_attempts
-                )
-            except TimeoutError:
-                last_error_code = "llm_timeout"
-                last_error_message = "llm provider timeout"
-                increment_counter("conversation_llm_errors_total", 1.0)
-                increment_counter(
-                    f"conversation_llm_errors_total|persona_profile={persona_profile_code}",
-                    1.0,
-                )
-                GuidanceService.logger.warning(
-                    "guidance_generation_error request_id=%s code=%s",
-                    request_id,
-                    last_error_code,
-                )
-                await GuidanceService._sleep_before_retry_async(
-                    attempts=attempts, max_attempts=max_attempts
-                )
-            except ConnectionError:
-                last_error_code = "llm_unavailable"
-                last_error_message = "llm provider is unavailable"
+            except (AIEngineAdapterError, TimeoutError, ConnectionError) as err:
+                last_error_code, last_error_message = map_adapter_error_to_codes(err)
                 increment_counter("conversation_llm_errors_total", 1.0)
                 increment_counter(
                     f"conversation_llm_errors_total|persona_profile={persona_profile_code}",

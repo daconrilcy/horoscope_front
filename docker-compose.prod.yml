@@ -20,6 +20,8 @@ services:
       - AI_ENGINE_RATE_LIMIT_ENABLED=${AI_ENGINE_RATE_LIMIT_ENABLED:-true}
       - AI_ENGINE_CACHE_ENABLED=${AI_ENGINE_CACHE_ENABLED:-true}
       - AI_ENGINE_CACHE_TTL_SECONDS=${AI_ENGINE_CACHE_TTL_SECONDS:-3600}
+    volumes:
+      - app_logs:/app/logs
     networks:
       - internal
     depends_on:
@@ -101,3 +103,4 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  app_logs:

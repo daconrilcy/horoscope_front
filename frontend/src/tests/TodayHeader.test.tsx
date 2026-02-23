@@ -73,7 +73,7 @@ describe("TodayHeader", () => {
       if (img) fireEvent.error(img)
       
       expect(container.querySelector("img")).not.toBeInTheDocument()
-      expect(screen.getByText("AL")).toBeInTheDocument()
+      expect(screen.getByText("A")).toBeInTheDocument()
     })
 
     it("shows improved initials for multi-word names", () => {
@@ -86,7 +86,7 @@ describe("TodayHeader", () => {
       const avatar = screen.getByRole("img", { name: /profil de alice/i })
       const span = avatar.querySelector("span")
       expect(span).toBeInTheDocument()
-      expect(span?.textContent).toBe("AL")
+      expect(span?.textContent).toBe("A")
     })
 
     it("shows default initials 'U' when userName is not provided", () => {
