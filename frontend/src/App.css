@@ -2461,16 +2461,24 @@ textarea:focus-visible {
   flex-shrink: 0;
 }
 
+.shortcut-card__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .shortcut-card__title {
   font-size: 15px;
   font-weight: 650;
   color: var(--text-1);
+  display: block;
 }
 
 .shortcut-card__subtitle {
   font-size: 13px;
   color: var(--text-2);
   margin-top: 2px;
+  display: block;
 }
 
 .shortcuts-section__title {

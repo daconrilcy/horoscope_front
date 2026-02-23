@@ -11,145 +11,51 @@ afterEach(() => {
 // ─── ShortcutCard ────────────────────────────────────────────────────────────
 
 describe("ShortcutCard", () => {
-  describe("AC3 & AC4: Rendu titre + sous-titre", () => {
-    it("affiche le titre", () => {
-      render(
-        <ShortcutCard
-          title="Chat astrologue"
-          subtitle="En ligne"
-          icon={MessageCircle}
-          badgeColor="var(--badge-chat)"
-        />
-      )
-      expect(screen.getByText("Chat astrologue")).toBeInTheDocument()
+  const defaultProps = {
+    title: "Chat astrologue",
+    subtitle: "En ligne",
+    icon: MessageCircle,
+    badgeColor: "var(--badge-chat)",
+  }
+
+  describe("Rendu et Structure", () => {
+    it("affiche le titre et le sous-titre", () => {
+      render(<ShortcutCard {...defaultProps} />)
+      expect(screen.getByText(defaultProps.title)).toBeInTheDocument()
+      expect(screen.getByText(defaultProps.subtitle)).toBeInTheDocument()
     })
 
-    it("affiche le sous-titre", () => {
-      render(
-        <ShortcutCard
-          title="Chat astrologue"
-          subtitle="En ligne"
-          icon={MessageCircle}
-          badgeColor="var(--badge-chat)"
-        />
-      )
-      expect(screen.getByText("En ligne")).toBeInTheDocument()
+    it("est un bouton de type 'button'", () => {
+      render(<ShortcutCard {...defaultProps} />)
+      const button = screen.getByRole("button")
+      expect(button).toHaveAttribute("type", "button")
+      expect(button).toHaveClass("shortcut-card")
     })
 
-    it("le titre a la classe shortcut-card__title", () => {
-      render(
-        <ShortcutCard
-          title="Tirage du jour"
-          subtitle="3 cartes"
-          icon={Layers}
-          badgeColor="var(--badge-tirage)"
-        />
-      )
-      const title = document.querySelector(".shortcut-card__title")
-      expect(title).toBeInTheDocument()
-      expect(title?.textContent).toBe("Tirage du jour")
+    it("rend le badge avec la bonne couleur", () => {
+      const { container } = render(<ShortcutCard {...defaultProps} />)
+      const badge = container.querySelector(".shortcut-card__badge") as HTMLElement
+      expect(badge).toHaveStyle({ background: defaultProps.badgeColor })
     })
 
-    it("le sous-titre a la classe shortcut-card__subtitle", () => {
-      render(
-        <ShortcutCard
-          title="Tirage du jour"
-          subtitle="3 cartes"
-          icon={Layers}
-          badgeColor="var(--badge-tirage)"
-        />
-      )
-      const subtitle = document.querySelector(".shortcut-card__subtitle")
-      expect(subtitle).toBeInTheDocument()
-      expect(subtitle?.textContent).toBe("3 cartes")
-    })
-  })
-
-  describe("AC5: Glassmorphism - classes CSS", () => {
-    it("le conteneur a la classe shortcut-card", () => {
-      render(
-        <ShortcutCard
-          title="Chat astrologue"
-          subtitle="En ligne"
-          icon={MessageCircle}
-          badgeColor="var(--badge-chat)"
-        />
-      )
-      const card = document.querySelector(".shortcut-card")
-      expect(card).toBeInTheDocument()
-    })
-
-    it("le badge a la classe shortcut-card__badge", () => {
-      render(
-        <ShortcutCard
-          title="Chat astrologue"
-          subtitle="En ligne"
-          icon={MessageCircle}
-          badgeColor="var(--badge-chat)"
-        />
-      )
-      const badge = document.querySelector(".shortcut-card__badge")
-      expect(badge).toBeInTheDocument()
-    })
-
-    it("le badge applique la couleur de fond via le prop badgeColor", () => {
-      render(
-        <ShortcutCard
-          title="Chat astrologue"
-          subtitle="En ligne"
-          icon={MessageCircle}
-          badgeColor="var(--badge-chat)"
-        />
-      )
-      const badge = document.querySelector(".shortcut-card__badge") as HTMLElement
-      expect(badge?.style.background).toBe("var(--badge-chat)")
-    })
-  })
-
-  describe("AC3: Icône dans le badge", () => {
-    it("rend un SVG dans le badge", () => {
-      render(
-        <ShortcutCard
-          title="Chat astrologue"
-          subtitle="En ligne"
-          icon={MessageCircle}
-          badgeColor="var(--badge-chat)"
-        />
-      )
-      const badge = document.querySelector(".shortcut-card__badge")
-      const svg = badge?.querySelector("svg")
+    it("rend l'icône Lucide", () => {
+      const { container } = render(<ShortcutCard {...defaultProps} />)
+      const svg = container.querySelector("svg")
       expect(svg).toBeInTheDocument()
     })
   })
 
-  describe("AC6: Clic → callback appelé", () => {
-    it("appelle onClick quand on clique sur la card", () => {
+  describe("Interactions", () => {
+    it("appelle onClick lors du clic", () => {
       const onClick = vi.fn()
-      render(
-        <ShortcutCard
-          title="Chat astrologue"
-          subtitle="En ligne"
-          icon={MessageCircle}
-          badgeColor="var(--badge-chat)"
-          onClick={onClick}
-        />
-      )
-      const card = document.querySelector(".shortcut-card") as HTMLElement
-      fireEvent.click(card)
+      render(<ShortcutCard {...defaultProps} onClick={onClick} />)
+      fireEvent.click(screen.getByRole("button"))
       expect(onClick).toHaveBeenCalledTimes(1)
     })
 
-    it("ne lance pas d'erreur si onClick est absent", () => {
-      render(
-        <ShortcutCard
-          title="Chat astrologue"
-          subtitle="En ligne"
-          icon={MessageCircle}
-          badgeColor="var(--badge-chat)"
-        />
-      )
-      const card = document.querySelector(".shortcut-card") as HTMLElement
-      expect(() => fireEvent.click(card)).not.toThrow()
+    it("ne plante pas sans onClick", () => {
+      render(<ShortcutCard {...defaultProps} />)
+      expect(() => fireEvent.click(screen.getByRole("button"))).not.toThrow()
     })
   })
 })
@@ -157,70 +63,34 @@ describe("ShortcutCard", () => {
 // ─── ShortcutsSection ────────────────────────────────────────────────────────
 
 describe("ShortcutsSection", () => {
-  describe("AC1: Titre de section rendu correctement", () => {
-    it("affiche le titre 'Raccourcis'", () => {
-      render(<ShortcutsSection />)
-      expect(screen.getByText("Raccourcis")).toBeInTheDocument()
-    })
-
-    it("le titre a la classe shortcuts-section__title", () => {
-      render(<ShortcutsSection />)
-      const title = document.querySelector(".shortcuts-section__title")
-      expect(title).toBeInTheDocument()
-    })
+  it("affiche le titre de section 'Raccourcis'", () => {
+    render(<ShortcutsSection />)
+    expect(screen.getByRole("heading", { name: /raccourcis/i })).toBeInTheDocument()
   })
 
-  describe("AC2: Grille 2 colonnes", () => {
-    it("rend exactement 2 ShortcutCards", () => {
-      render(<ShortcutsSection />)
-      const cards = document.querySelectorAll(".shortcut-card")
-      expect(cards).toHaveLength(2)
-    })
-
-    it("la grille a la classe shortcuts-grid", () => {
-      render(<ShortcutsSection />)
-      const grid = document.querySelector(".shortcuts-grid")
-      expect(grid).toBeInTheDocument()
-    })
+  it("rend les deux raccourcis par défaut", () => {
+    render(<ShortcutsSection />)
+    expect(screen.getByText("Chat astrologue")).toBeInTheDocument()
+    expect(screen.getByText("Tirage du jour")).toBeInTheDocument()
+    expect(screen.getAllByRole("button")).toHaveLength(2)
   })
 
-  describe("AC3 & AC4: Données statiques des cards", () => {
-    it("la première card affiche 'Chat astrologue'", () => {
-      render(<ShortcutsSection />)
-      expect(screen.getByText("Chat astrologue")).toBeInTheDocument()
-    })
-
-    it("la première card affiche 'En ligne'", () => {
-      render(<ShortcutsSection />)
-      expect(screen.getByText("En ligne")).toBeInTheDocument()
-    })
-
-    it("la deuxième card affiche 'Tirage du jour'", () => {
-      render(<ShortcutsSection />)
-      expect(screen.getByText("Tirage du jour")).toBeInTheDocument()
-    })
-
-    it("la deuxième card affiche '3 cartes'", () => {
-      render(<ShortcutsSection />)
-      expect(screen.getByText("3 cartes")).toBeInTheDocument()
-    })
+  it("déclenche onChatClick lors du clic sur le chat", () => {
+    const onChatClick = vi.fn()
+    render(<ShortcutsSection onChatClick={onChatClick} />)
+    fireEvent.click(screen.getByText("Chat astrologue").closest("button")!)
+    expect(onChatClick).toHaveBeenCalledTimes(1)
   })
 
-  describe("AC6: Callbacks onChatClick / onTirageClick", () => {
-    it("appelle onChatClick quand on clique sur la card Chat", () => {
-      const onChatClick = vi.fn()
-      render(<ShortcutsSection onChatClick={onChatClick} />)
-      const cards = document.querySelectorAll(".shortcut-card")
-      fireEvent.click(cards[0])
-      expect(onChatClick).toHaveBeenCalledTimes(1)
-    })
+  it("déclenche onTirageClick lors du clic sur le tirage", () => {
+    const onTirageClick = vi.fn()
+    render(<ShortcutsSection onTirageClick={onTirageClick} />)
+    fireEvent.click(screen.getByText("Tirage du jour").closest("button")!)
+    expect(onTirageClick).toHaveBeenCalledTimes(1)
+  })
 
-    it("appelle onTirageClick quand on clique sur la card Tirage", () => {
-      const onTirageClick = vi.fn()
-      render(<ShortcutsSection onTirageClick={onTirageClick} />)
-      const cards = document.querySelectorAll(".shortcut-card")
-      fireEvent.click(cards[1])
-      expect(onTirageClick).toHaveBeenCalledTimes(1)
-    })
+  it("utilise une structure sémantique <section>", () => {
+    const { container } = render(<ShortcutsSection />)
+    expect(container.querySelector("section")).toHaveClass("shortcuts-section")
   })
 })

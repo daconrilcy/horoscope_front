@@ -26,24 +26,26 @@ const SHORTCUTS = [
 ]
 
 export function ShortcutsSection({ onChatClick, onTirageClick }: ShortcutsSectionProps) {
+  const getClickHandler = (key: string) => {
+    if (key === 'chat') return onChatClick
+    if (key === 'tirage') return onTirageClick
+    return undefined
+  }
+
   return (
-    <section>
+    <section className="shortcuts-section">
       <h2 className="shortcuts-section__title">Raccourcis</h2>
       <div className="shortcuts-grid">
-        <ShortcutCard
-          title={SHORTCUTS[0].title}
-          subtitle={SHORTCUTS[0].subtitle}
-          icon={SHORTCUTS[0].icon}
-          badgeColor={SHORTCUTS[0].badgeColor}
-          onClick={onChatClick}
-        />
-        <ShortcutCard
-          title={SHORTCUTS[1].title}
-          subtitle={SHORTCUTS[1].subtitle}
-          icon={SHORTCUTS[1].icon}
-          badgeColor={SHORTCUTS[1].badgeColor}
-          onClick={onTirageClick}
-        />
+        {SHORTCUTS.map((shortcut) => (
+          <ShortcutCard
+            key={shortcut.key}
+            title={shortcut.title}
+            subtitle={shortcut.subtitle}
+            icon={shortcut.icon}
+            badgeColor={shortcut.badgeColor}
+            onClick={getClickHandler(shortcut.key)}
+          />
+        ))}
       </div>
     </section>
   )

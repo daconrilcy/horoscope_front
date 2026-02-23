@@ -1,12 +1,22 @@
 # Story 17.5: Section Raccourcis — ShortcutCard
 
-Status: review
+Status: done
 
 ## Story
 
 As a utilisateur de l'application horoscope,
 I want voir une section "Raccourcis" avec deux accès rapides (Chat astrologue et Tirage du jour) sur la page "Aujourd'hui",
 So that je puisse lancer une action courante en un tap sans parcourir les menus.
+
+## Review Follow-ups (AI)
+
+### Improvements applied during Code Review
+
+- [x] **Data-driven implementation**: `ShortcutsSection` now uses `.map()` on the `SHORTCUTS` array instead of hardcoded indices.
+- [x] **Accessibility & Safety**: Added `type="button"` to `ShortcutCard` to prevent accidental form submissions.
+- [x] **Semantic HTML**: Replaced `div` with `span` for title and subtitle inside the button.
+- [x] **Robust Testing**: Refactored `ShortcutCard.test.tsx` to use React Testing Library best practices (`screen.getByRole`) and removed redundant/inflated tests.
+- [x] **CSS Refinement**: Added `.shortcut-card__content` and enforced block display for spans to maintain layout.
 
 ## Contexte
 
