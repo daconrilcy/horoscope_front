@@ -1,0 +1,122 @@
+/* Theme tokens - Light Pastel Premium + Dark Cosmic */
+/* Source: docs/interfaces/horoscope-ui-spec.md §2, §3, §4 */
+
+:root {
+  /* Text */
+  --text-1: #1E1B2E;
+  --text-2: rgba(30,27,46,0.72);
+  --text-3: rgba(30,27,46,0.55);
+
+  /* Background */
+  --bg-top: #FDF5F8;
+  --bg-mid: #D9CBE1;
+  --bg-bot: #D8D0EE;
+
+  /* Glass surfaces */
+  --glass: rgba(255,255,255,0.55);
+  --glass-2: rgba(255,255,255,0.38);
+  --glass-border: rgba(255,255,255,0.65);
+
+  /* Accent / CTA */
+  --cta-l: #866CD0;
+  --cta-r: #A190ED;
+
+  /* Primary (legacy compatibility) */
+  --primary: #866CD0;
+  --primary-strong: #7355C7;
+
+  /* Chips */
+  --chip: #C6B9E5;
+
+  /* Nav */
+  --nav-glass: rgba(255,255,255,0.55);
+  --nav-border: rgba(255,255,255,0.65);
+
+  /* Shadows */
+  --shadow-card: 0 18px 40px rgba(20,20,40,0.12);
+  --shadow-nav:  0 10px 30px rgba(20,20,40,0.18);
+
+  /* Lines/borders */
+  --line: rgba(30,27,46,0.15);
+
+  /* Badge accents (§2.1) */
+  --badge-chat: #E1F0EA;
+  --badge-tirage: #F8CAA5;
+  --badge-amour: #EBA4C9;
+  --badge-travail: #AABEEF;
+  --badge-energie: #F6D2A7;
+
+  /* Semantic colors */
+  --success: #4ade80;
+  --error: #ff6b81;
+  --btn-text: #1E1B2E;
+
+  /* Background level 2 (for inputs, etc.) */
+  --bg-2: rgba(255,255,255,0.25);
+
+  /* Starfield (not visible in light mode, defined for consistency) */
+  --star-fill: #ffffff;
+}
+
+.dark {
+  /* Text */
+  --text-1: rgba(245,245,255,0.92);
+  --text-2: rgba(235,235,245,0.72);
+  --text-3: rgba(235,235,245,0.55);
+
+  /* Background */
+  --bg-top: #181626;
+  --bg-mid: #0F0E18;
+  --bg-bot: #2A2436;
+
+  /* Glass surfaces */
+  --glass: rgba(255,255,255,0.08);
+  --glass-2: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.12);
+
+  /* Accent / CTA */
+  --cta-l: #37226E;
+  --cta-r: #5839B8;
+
+  /* Primary (legacy compatibility) */
+  --primary: #A190ED;
+  --primary-strong: #7355C7;
+
+  /* Chips */
+  --chip: #4F3F71;
+
+  /* Nav */
+  --nav-glass: rgba(255,255,255,0.08);
+  --nav-border: rgba(255,255,255,0.12);
+
+  /* Shadows */
+  --shadow-card: 0 18px 40px rgba(0,0,0,0.45);
+  --shadow-nav:  0 10px 30px rgba(0,0,0,0.55);
+
+  /* Lines/borders */
+  --line: rgba(255,255,255,0.12);
+
+  /* Badge accents (§2.2) */
+  --badge-chat: #E4F2EC;
+  --badge-tirage: #D5946A;
+  --badge-amour: #E779B4;
+  --badge-travail: #A8ACEF;
+  --badge-energie: #E5B270;
+
+  /* Semantic colors */
+  --success: #4ade80;
+  --error: #ff6b81;
+  --btn-text: #ffffff;
+
+  /* Background level 2 (for inputs, etc.) */
+  --bg-2: rgba(17,25,56,0.75);
+
+  /* Starfield */
+  --star-fill: #ffffff;
+}
+
+/* Typography - System font stack (§4.2) */
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, system-ui, sans-serif;
+}
+

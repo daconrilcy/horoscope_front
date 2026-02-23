@@ -1,0 +1,55 @@
+/* Premium background - Gradient + noise overlay + starfield foundation */
+/* Source: docs/interfaces/horoscope-ui-spec.md §6 */
+
+/* Background - Premium gradient + noise overlay (§6) */
+.app-bg {
+  min-height: 100dvh;
+  position: relative;
+  background:
+    radial-gradient(1200px 800px at 20% 10%, rgba(160,120,255,0.18), transparent 55%),
+    radial-gradient(900px 700px at 80% 60%, rgba(120,190,255,0.10), transparent 60%),
+    linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 55%, var(--bg-bot) 100%);
+}
+
+.dark .app-bg {
+  background:
+    radial-gradient(1200px 800px at 20% 10%, rgba(160,120,255,0.22), transparent 55%),
+    radial-gradient(900px 700px at 80% 60%, rgba(90,170,255,0.14), transparent 60%),
+    linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 55%, var(--bg-bot) 100%);
+}
+
+/* Noise overlay - light mode only (§6.1 Option B - SVG feTurbulence) */
+.app-bg::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  z-index: 0;
+}
+
+.dark .app-bg::after {
+  display: none;
+}
+
+/* Container centering (§5.1, §10.2) */
+.app-bg-container {
+  position: relative;
+  z-index: 1;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+  min-height: 100dvh;
+}
+
+/* Starfield background (dark mode only) */
+.starfield-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
