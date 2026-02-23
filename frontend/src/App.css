@@ -2419,11 +2419,44 @@ textarea:focus-visible {
   margin-top: 12px;
 }
 
+@media (max-width: 480px) {
+  .mini-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 340px) {
+  .mini-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 18px;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: default;
+}
+
+.section-header--clickable {
+  cursor: pointer;
+  border-radius: 8px;
+  transition: opacity 0.2s;
+}
+
+.section-header--clickable:hover {
+  opacity: 0.7;
+}
+
+.section-header--clickable:focus-visible {
+  outline: 2px solid var(--text-2);
+  outline-offset: 4px;
 }
 
 .section-header__title {
@@ -2431,6 +2464,12 @@ textarea:focus-visible {
   font-weight: 650;
   color: var(--text-1);
   margin: 0;
+}
+
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 /* === ShortcutCard === */

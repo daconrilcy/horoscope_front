@@ -1,11 +1,16 @@
-import { describe, it, expect } from "vitest"
-import { render, cleanup, screen } from "@testing-library/react"
+import { describe, it, expect, vi, beforeEach } from "vitest"
+import { render, cleanup, screen, fireEvent } from "@testing-library/react"
 import { Heart, Briefcase, Zap } from "lucide-react"
 import { afterEach } from "vitest"
 import { MiniInsightCard } from "../components/MiniInsightCard"
-import { AmourSection } from "../components/AmourSection"
+import { DailyInsightsSection } from "../components/DailyInsightsSection"
+
+beforeEach(() => {
+  localStorage.setItem("lang", "fr")
+})
 
 afterEach(() => {
+  localStorage.clear()
   cleanup()
 })
 
@@ -37,7 +42,7 @@ describe("MiniInsightCard", () => {
       expect(screen.getByText("Nouvelle opportunité à saisir")).toBeInTheDocument()
     })
 
-    it("le titre a la classe mini-card__title", () => {
+    it("le titre est un h3 avec la classe mini-card__title", () => {
       render(
         <MiniInsightCard
           title="Amour"
@@ -46,7 +51,7 @@ describe("MiniInsightCard", () => {
           badgeColor="var(--badge-amour)"
         />
       )
-      const title = document.querySelector(".mini-card__title")
+      const title = document.querySelector("h3.mini-card__title")
       expect(title).toBeInTheDocument()
       expect(title?.textContent).toBe("Amour")
     })
@@ -78,6 +83,19 @@ describe("MiniInsightCard", () => {
       )
       const badge = document.querySelector(".mini-card__badge") as HTMLElement
       expect(badge?.style.background).toBe("var(--badge-amour)")
+    })
+
+    it("le badge est caché pour les lecteurs d'écran (aria-hidden)", () => {
+      render(
+        <MiniInsightCard
+          title="Amour"
+          description="Balance dans ta relation"
+          icon={Heart}
+          badgeColor="var(--badge-amour)"
+        />
+      )
+      const badge = document.querySelector(".mini-card__badge")
+      expect(badge).toHaveAttribute("aria-hidden", "true")
     })
 
     it("le badge a la classe mini-card__badge", () => {
@@ -124,25 +142,40 @@ describe("MiniInsightCard", () => {
   })
 })
 
-// ─── AmourSection ─────────────────────────────────────────────────────────────
+// ─── DailyInsightsSection ─────────────────────────────────────────────────────
 
-describe("AmourSection", () => {
+describe("DailyInsightsSection", () => {
   describe("AC1: En-tête de section correct", () => {
-    it("affiche le titre 'Amour' dans l'en-tête", () => {
-      render(<AmourSection />)
-      const header = document.querySelector(".section-header__title")
+    it("affiche le titre 'Insights du jour' dans un h2", () => {
+      render(<DailyInsightsSection />)
+      const header = document.querySelector("h2.section-header__title")
       expect(header).toBeInTheDocument()
-      expect(header?.textContent).toBe("Amour")
+      expect(header?.textContent).toBe("Insights du jour")
     })
 
     it("l'en-tête a la classe section-header", () => {
-      render(<AmourSection />)
+      render(<DailyInsightsSection />)
       const header = document.querySelector(".section-header")
       expect(header).toBeInTheDocument()
     })
 
+    it("appelle onSectionClick quand on clique sur l'en-tête", () => {
+      const handleClick = vi.fn()
+      render(<DailyInsightsSection onSectionClick={handleClick} />)
+      const header = document.querySelector(".section-header")
+      if (header) fireEvent.click(header)
+      expect(handleClick).toHaveBeenCalled()
+    })
+
+    it("l'en-tête est un bouton quand onSectionClick est présent", () => {
+      const handleClick = vi.fn()
+      render(<DailyInsightsSection onSectionClick={handleClick} />)
+      const header = screen.getByRole("button", { name: /Voir tous les insights du jour/i })
+      expect(header).toBeInTheDocument()
+    })
+
     it("rend un SVG ChevronRight dans l'en-tête", () => {
-      render(<AmourSection />)
+      render(<DailyInsightsSection />)
       const header = document.querySelector(".section-header")
       const svg = header?.querySelector("svg")
       expect(svg).toBeInTheDocument()
@@ -151,66 +184,66 @@ describe("AmourSection", () => {
 
   describe("AC2: Grille 3 colonnes avec 3 MiniInsightCards", () => {
     it("rend exactement 3 MiniInsightCards", () => {
-      render(<AmourSection />)
+      render(<DailyInsightsSection />)
       const cards = document.querySelectorAll(".mini-card")
       expect(cards).toHaveLength(3)
     })
 
     it("la grille a la classe mini-cards-grid", () => {
-      render(<AmourSection />)
+      render(<DailyInsightsSection />)
       const grid = document.querySelector(".mini-cards-grid")
       expect(grid).toBeInTheDocument()
     })
   })
 
   describe("AC3, AC4, AC5: Données statiques des 3 cards", () => {
-    it("affiche le titre 'Amour' (card + en-tête)", () => {
-      render(<AmourSection />)
-      const amourElements = screen.getAllByText("Amour")
-      expect(amourElements.length).toBeGreaterThanOrEqual(1)
+    it("affiche le titre 'Amour' dans une card", () => {
+      render(<DailyInsightsSection />)
+      const amourTitle = screen.getByText("Amour")
+      expect(amourTitle).toBeInTheDocument()
     })
 
     it("affiche la description 'Balance dans ta relation'", () => {
-      render(<AmourSection />)
+      render(<DailyInsightsSection />)
       expect(screen.getByText("Balance dans ta relation")).toBeInTheDocument()
     })
 
     it("affiche le titre 'Travail'", () => {
-      render(<AmourSection />)
+      render(<DailyInsightsSection />)
       expect(screen.getByText("Travail")).toBeInTheDocument()
     })
 
     it("affiche la description 'Nouvelle opportunité à saisir'", () => {
-      render(<AmourSection />)
+      render(<DailyInsightsSection />)
       expect(screen.getByText("Nouvelle opportunité à saisir")).toBeInTheDocument()
     })
 
     it("affiche le titre 'Énergie'", () => {
-      render(<AmourSection />)
+      render(<DailyInsightsSection />)
       expect(screen.getByText("Énergie")).toBeInTheDocument()
     })
 
     it("affiche la description 'Énergie haute, humeur positive'", () => {
-      render(<AmourSection />)
+      render(<DailyInsightsSection />)
       expect(screen.getByText("Énergie haute, humeur positive")).toBeInTheDocument()
     })
   })
 
   describe("AC3: Badges avec les bonnes couleurs", () => {
     it("la card Amour a le badge avec var(--badge-amour)", () => {
-      render(<AmourSection />)
+      render(<DailyInsightsSection />)
       const badges = document.querySelectorAll(".mini-card__badge") as NodeListOf<HTMLElement>
       expect(badges[0]?.style.background).toBe("var(--badge-amour)")
     })
 
     it("la card Travail a le badge avec var(--badge-travail)", () => {
-      render(<AmourSection />)
+      render(<DailyInsightsSection />)
       const badges = document.querySelectorAll(".mini-card__badge") as NodeListOf<HTMLElement>
       expect(badges[1]?.style.background).toBe("var(--badge-travail)")
     })
 
     it("la card Énergie a le badge avec var(--badge-energie)", () => {
-      render(<AmourSection />)
+      render(<DailyInsightsSection />)
       const badges = document.querySelectorAll(".mini-card__badge") as NodeListOf<HTMLElement>
       expect(badges[2]?.style.background).toBe("var(--badge-energie)")
     })

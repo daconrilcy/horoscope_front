@@ -86,6 +86,58 @@ describe("DashboardPage", () => {
       expect(screen.getByText("Astrologues")).toBeInTheDocument()
       expect(screen.getByText("Paramètres")).toBeInTheDocument()
     })
+
+    it("affiche le header personnalisé et la section des insights du jour", async () => {
+      vi.stubGlobal("fetch", makeFetchMock())
+      setupToken()
+
+      renderWithRouter(["/dashboard"])
+
+      await waitFor(() => {
+        expect(screen.getByRole("heading", { name: "Insights du jour" })).toBeInTheDocument()
+      })
+
+      const horoscopeTitles = screen.getAllByText(/Horoscope/i)
+      expect(horoscopeTitles.length).toBe(2) // One in app-header, one in today-header
+      expect(screen.getByText("Amour")).toBeInTheDocument()
+      expect(screen.getByText("Travail")).toBeInTheDocument()
+      expect(screen.getByText("Énergie")).toBeInTheDocument()
+    })
+
+    it("affiche '...' pendant le chargement des données utilisateur", async () => {
+      // Mock fetch qui ne résout pas immédiatement
+      let resolveAuthMe: (value: any) => void
+      const authMePromise = new Promise((resolve) => {
+        resolveAuthMe = resolve
+      })
+
+      vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+        if (url.endsWith("/v1/auth/me")) {
+          return authMePromise
+        }
+        return NOT_FOUND
+      }))
+      
+      setupToken()
+
+      renderWithRouter(["/dashboard"])
+
+      // On vérifie que le placeholder est présent dans l'aria-label
+      expect(screen.getByLabelText("Profil de ...")).toBeInTheDocument()
+
+      // On résout le mock
+      resolveAuthMe!({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: { email: "cyril@example.com" } }),
+      })
+
+      // On attend que le nom s'affiche
+      await waitFor(() => {
+        expect(screen.getByLabelText("Profil de cyril")).toBeInTheDocument()
+      })
+    })
   })
 
   describe("AC2: Cartes de navigation", () => {
