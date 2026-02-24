@@ -6,6 +6,7 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom"
 
 import { setAccessToken } from "../utils/authToken"
 import { routes } from "../app/routes"
+import { ThemeProvider } from "../state/ThemeProvider"
 import { STATIC_HOROSCOPE, TODAY_DATE_FORMATTER } from "../constants/horoscope"
 
 beforeEach(() => {
@@ -63,9 +64,11 @@ function renderWithRouter(initialEntries: string[] = ["/dashboard"]) {
   return {
     router,
     ...render(
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} future={{ v7_startTransition: true }} />
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} future={{ v7_startTransition: true }} />
+        </QueryClientProvider>
+      </ThemeProvider>
     ),
   }
 }
@@ -147,13 +150,13 @@ describe("TodayPage", () => {
       const { router, unmount } = renderWithRouter(["/dashboard"])
 
       await waitFor(() => {
-        expect(screen.getByText("Amour")).toBeInTheDocument()
+        expect(screen.getAllByText("Amour").length).toBeGreaterThanOrEqual(1)
       })
       expect(screen.getByText("Travail")).toBeInTheDocument()
       expect(screen.getByText("Énergie")).toBeInTheDocument()
 
-      // Test clic sur le header de section
-      const sectionHeader = screen.getByRole("button", { name: /Insights du jour/i })
+      // Test clic sur le header de section (aria-label contextuel)
+      const sectionHeader = screen.getByRole("button", { name: /Voir tous les insights amour/i })
       await user.click(sectionHeader)
 
       await waitFor(() => {
@@ -165,10 +168,11 @@ describe("TodayPage", () => {
       const { router: router2 } = renderWithRouter(["/dashboard"])
       
       await waitFor(() => {
-        expect(screen.getByText("Amour")).toBeInTheDocument()
+        expect(screen.getAllByText("Amour").length).toBeGreaterThanOrEqual(1)
       })
-      
-      const loveCard = screen.getByRole("button", { name: /Amour/i })
+
+      const loveCard = screen.getAllByRole("button", { name: /Amour/i }).find(el => el.classList.contains('mini-card'))
+      if (!loveCard) throw new Error("Could not find Amour mini-card button")
       await user.click(loveCard)
 
       await waitFor(() => {

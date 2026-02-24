@@ -9,6 +9,7 @@ const SHORTCUTS = [
     icon: MessageCircle,
     badgeColor: 'var(--badge-chat)',
     path: '/chat',
+    isOnline: true,
   },
   {
     key: 'tirage',
@@ -17,6 +18,7 @@ const SHORTCUTS = [
     icon: Layers,
     badgeColor: 'var(--badge-tirage)',
     path: '/consultations',
+    isOnline: false,
   },
 ]
 
@@ -41,6 +43,7 @@ export function ShortcutsSection({ onChatClick, onTirageClick }: ShortcutsSectio
               badgeColor={shortcut.badgeColor}
               to={shortcut.path}
               onClick={handleClick}
+              isOnline={shortcut.isOnline}
             />
           )
         })}

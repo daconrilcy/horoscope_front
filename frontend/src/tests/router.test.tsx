@@ -8,6 +8,7 @@ import { setAccessToken, clearAccessToken } from "../utils/authToken"
 import { TestAppRouter } from "../app/router"
 import { routes } from "../app/routes"
 import { STATIC_HOROSCOPE } from "../constants/horoscope"
+import { ThemeProvider } from "../state/ThemeProvider"
 
 beforeEach(() => {
   localStorage.setItem("lang", "fr")
@@ -121,9 +122,11 @@ function renderApp(initialEntries: string[] = ["/"]) {
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   })
   return render(
-    <QueryClientProvider client={queryClient}>
-      <TestAppRouter initialEntries={initialEntries} />
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <TestAppRouter initialEntries={initialEntries} />
+      </QueryClientProvider>
+    </ThemeProvider>
   )
 }
 
@@ -293,11 +296,13 @@ describe("Navigation", () => {
     })
     
     render(
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} future={{ v7_startTransition: true }} />
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} future={{ v7_startTransition: true }} />
+        </QueryClientProvider>
+      </ThemeProvider>
     )
-    
+
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
     })
@@ -336,11 +341,13 @@ describe("Navigation", () => {
     })
     
     render(
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} future={{ v7_startTransition: true }} />
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} future={{ v7_startTransition: true }} />
+        </QueryClientProvider>
+      </ThemeProvider>
     )
-    
+
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Connexion" })).toBeInTheDocument()
     })

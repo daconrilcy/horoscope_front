@@ -1,7 +1,7 @@
 import { memo, useId } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { ConstellationSVG } from './ConstellationSVG'
-import { ZodiacSign } from '../types/astrology'
+import type { ZodiacSign } from '../types/astrology'
 
 /**
  * Props for the HeroHoroscopeCard component

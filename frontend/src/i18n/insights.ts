@@ -26,9 +26,9 @@ const insightTranslations: Record<AstrologyLang, Record<InsightId, InsightTransl
 }
 
 export const INSIGHT_SECTION_TRANSLATIONS: Record<AstrologyLang, { title: string; ariaLabel: string }> = {
-  fr: { title: "Insights du jour", ariaLabel: "Voir tous les insights du jour" },
-  en: { title: "Daily Insights", ariaLabel: "View all daily insights" },
-  es: { title: "Insights del día", ariaLabel: "Ver todos los detalles del día" },
+  fr: { title: "Amour", ariaLabel: "Voir tous les insights amour" },
+  en: { title: "Love", ariaLabel: "View all love insights" },
+  es: { title: "Amor", ariaLabel: "Ver todos los insights de amor" },
 }
 
 export function translateInsight(

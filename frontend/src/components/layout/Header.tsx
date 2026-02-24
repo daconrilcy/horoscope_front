@@ -15,10 +15,12 @@ export function Header() {
   }
 
   // TodayPage (on /dashboard) has its own header title
-  const showTitle = location.pathname !== "/dashboard"
+  const normalizedPath = location.pathname.replace(/\/+$/, "") || "/"
+  const isDashboard = normalizedPath === "/dashboard"
+  const showTitle = !isDashboard
 
   return (
-    <header className="app-header">
+    <header className={`app-header${isDashboard ? " app-header--dashboard" : ""}`}>
       <div className="app-header-brand">
         {showTitle && <h1 className="app-header-title">Horoscope</h1>}
       </div>

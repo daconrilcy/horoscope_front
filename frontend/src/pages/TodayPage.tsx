@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
 
 import { TodayHeader } from '../components/TodayHeader'
 import { HeroHoroscopeCard } from '../components/HeroHoroscopeCard'

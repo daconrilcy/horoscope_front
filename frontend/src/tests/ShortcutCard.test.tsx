@@ -26,6 +26,18 @@ describe("ShortcutCard", () => {
       expect(screen.getByText(defaultProps.subtitle)).toBeInTheDocument()
     })
 
+    it("applique la classe subtitle--online quand isOnline est true", () => {
+      const { container } = render(<ShortcutCard {...defaultProps} isOnline={true} />, { wrapper: MemoryRouter })
+      const subtitle = container.querySelector(".shortcut-card__subtitle")
+      expect(subtitle).toHaveClass("shortcut-card__subtitle--online")
+    })
+
+    it("n'applique pas la classe subtitle--online quand isOnline est false ou absent", () => {
+      const { container } = render(<ShortcutCard {...defaultProps} />, { wrapper: MemoryRouter })
+      const subtitle = container.querySelector(".shortcut-card__subtitle")
+      expect(subtitle).not.toHaveClass("shortcut-card__subtitle--online")
+    })
+
     it("est un bouton par défaut si 'to' est absent", () => {
       render(<ShortcutCard {...defaultProps} />, { wrapper: MemoryRouter })
       const button = screen.getByRole("button")

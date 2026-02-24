@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { clearAccessToken, setAccessToken } from "../utils/authToken"
 import { TestAppRouter } from "../app/router"
 import { STATIC_HOROSCOPE } from "../constants/horoscope"
+import { ThemeProvider } from "../state/ThemeProvider"
 
 beforeEach(() => {
   localStorage.setItem("lang", "fr")
@@ -79,9 +80,11 @@ function renderApp(initialEntries: string[] = ["/"]) {
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   })
   return render(
-    <QueryClientProvider client={queryClient}>
-      <TestAppRouter initialEntries={initialEntries} />
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <TestAppRouter initialEntries={initialEntries} />
+      </QueryClientProvider>
+    </ThemeProvider>
   )
 }
 

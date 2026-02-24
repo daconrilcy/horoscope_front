@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createMemoryRouter, Navigate, RouterProvider } from "react-router-dom"
 
 import { setAccessToken, clearAccessToken } from "../utils/authToken"
+import { ThemeProvider } from "../state/ThemeProvider"
 import { DashboardPage } from "../pages/DashboardPage"
 import { AppShell } from "../components/AppShell"
 import { AuthGuard } from "../app/guards/AuthGuard"
@@ -88,9 +89,11 @@ function renderWithRouter(initialEntries: string[] = ["/dashboard"]) {
   return {
     router,
     ...render(
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} future={{ v7_startTransition: true }} />
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} future={{ v7_startTransition: true }} />
+        </QueryClientProvider>
+      </ThemeProvider>
     ),
   }
 }
@@ -121,12 +124,12 @@ describe("DashboardPage", () => {
       renderWithRouter(["/dashboard"])
 
       await waitFor(() => {
-        expect(screen.getByRole("heading", { name: "Insights du jour" })).toBeInTheDocument()
+        expect(screen.getByRole("heading", { level: 2, name: "Amour" })).toBeInTheDocument()
       })
 
       const horoscopeTitles = screen.getAllByText(/Horoscope/i)
       expect(horoscopeTitles.length).toBe(1) // Hidden in app-header on /dashboard, only in today-header
-      expect(screen.getByText("Amour")).toBeInTheDocument()
+      expect(screen.getAllByText("Amour").length).toBeGreaterThanOrEqual(1)
       expect(screen.getByText("Travail")).toBeInTheDocument()
       expect(screen.getByText("Énergie")).toBeInTheDocument()
     })

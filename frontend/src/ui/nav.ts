@@ -10,9 +10,7 @@ import {
   Layers, 
   User, 
   Shield, 
-  FileText, 
-  Settings,
-  Bell
+  FileText
 } from './icons.tsx'
 import type { LucideIcon } from 'lucide-react'
 

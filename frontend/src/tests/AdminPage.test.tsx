@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { TestAppRouter } from "../app/router"
 import { setAccessToken, clearAccessToken } from "../utils/authToken"
 import { STATIC_HOROSCOPE } from "../constants/horoscope"
+import { ThemeProvider } from "../state/ThemeProvider"
 
 afterEach(() => {
   cleanup()
@@ -147,9 +148,11 @@ function renderApp(initialEntries: string[] = ["/"]) {
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   })
   return render(
-    <QueryClientProvider client={queryClient}>
-      <TestAppRouter initialEntries={initialEntries} />
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <TestAppRouter initialEntries={initialEntries} />
+      </QueryClientProvider>
+    </ThemeProvider>
   )
 }
 

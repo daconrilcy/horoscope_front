@@ -48,7 +48,7 @@
   --badge-energie: #F6D2A7;
 
   /* Semantic colors */
-  --success: #4ade80;
+  --success: #166534; /* Darker green for AA contrast (4.5:1+) on light bg */
   --error: #ff6b81;
   --btn-text: #1E1B2E;
 
@@ -57,6 +57,9 @@
 
   /* Starfield (not visible in light mode, defined for consistency) */
   --star-fill: #ffffff;
+
+  /* Constellation SVG (lilas en light mode) */
+  --constellation-color: rgba(134, 100, 220, 0.7);
 }
 
 .dark {
@@ -115,6 +118,9 @@
 
   /* Starfield */
   --star-fill: #ffffff;
+
+  /* Constellation SVG (blanc en dark mode) */
+  --constellation-color: #ffffff;
 }
 
 /* Typography - System font stack (§4.2) */

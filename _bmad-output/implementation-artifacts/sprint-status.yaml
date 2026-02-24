@@ -1,4 +1,4 @@
-# generated: 2026-02-22 12:00:00
+# generated: 2026-02-24 11:50:00
 # project: horoscope_front
 # project_key: NOKEY
 # tracking_system: file-system
@@ -33,7 +33,7 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-02-22 12:00:00
+generated: 2026-02-24 11:50:00
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -149,7 +149,7 @@ development_status:
   16-8-correction-parcours-theme-natal: done
   epic-16-retrospective: done
 
-  epic-17: done
+  epic-17: in-progress
   17-1-fondations-ui-tokens-typo-lucide: done
   17-2-fond-premium-gradient-noise-starfield: done
   17-3-header-composant: done
@@ -158,4 +158,5 @@ development_status:
   17-6-section-amour-mini-insight-card: done
   17-7-bottom-navigation-glass-pill: done
   17-8-today-page-assemblage-route-tests: done
-  epic-17-retrospective: done
+  17-9-corrections-design-pixel-perfect: done
+  epic-17-retrospective: optional

@@ -8,9 +8,20 @@ export interface ShortcutCardProps {
   badgeColor: string
   onClick?: () => void
   to?: string
+  isOnline?: boolean
 }
 
-export function ShortcutCard({ title, subtitle, icon: Icon, badgeColor, onClick, to }: ShortcutCardProps) {
+export function ShortcutCard({ 
+  title, 
+  subtitle, 
+  icon: Icon, 
+  badgeColor, 
+  onClick, 
+  to, 
+  isOnline
+}: ShortcutCardProps) {
+  const subtitleClass = `shortcut-card__subtitle${isOnline ? " shortcut-card__subtitle--online" : ""}`
+
   const content = (
     <>
       <div className="shortcut-card__badge" style={{ background: badgeColor }}>
@@ -18,7 +29,9 @@ export function ShortcutCard({ title, subtitle, icon: Icon, badgeColor, onClick,
       </div>
       <div className="shortcut-card__content">
         <span className="shortcut-card__title">{title}</span>
-        <span className="shortcut-card__subtitle">{subtitle}</span>
+        <span className={subtitleClass}>
+          {subtitle}
+        </span>
       </div>
     </>
   )

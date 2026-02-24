@@ -146,11 +146,11 @@ describe("MiniInsightCard", () => {
 
 describe("DailyInsightsSection", () => {
   describe("AC1: En-tête de section correct", () => {
-    it("affiche le titre 'Insights du jour' dans un h2", () => {
+    it("affiche le titre 'Amour' dans un h2", () => {
       render(<DailyInsightsSection />)
       const header = document.querySelector("h2.section-header__title")
       expect(header).toBeInTheDocument()
-      expect(header?.textContent).toBe("Insights du jour")
+      expect(header?.textContent).toBe("Amour")
     })
 
     it("l'en-tête a la classe section-header", () => {
@@ -162,7 +162,7 @@ describe("DailyInsightsSection", () => {
     it("appelle onSectionClick quand on clique sur l'en-tête", () => {
       const handleClick = vi.fn()
       render(<DailyInsightsSection onSectionClick={handleClick} />)
-      const button = screen.getByRole("button", { name: /Voir tous les insights du jour/i })
+      const button = screen.getByRole("button", { name: /Voir tous les insights amour/i })
       fireEvent.click(button)
       expect(handleClick).toHaveBeenCalled()
     })
@@ -170,7 +170,7 @@ describe("DailyInsightsSection", () => {
     it("l'en-tête contient un bouton quand onSectionClick est présent", () => {
       const handleClick = vi.fn()
       render(<DailyInsightsSection onSectionClick={handleClick} />)
-      const button = screen.getByRole("button", { name: /Voir tous les insights du jour/i })
+      const button = screen.getByRole("button", { name: /Voir tous les insights amour/i })
       expect(button).toBeInTheDocument()
     })
 
@@ -202,8 +202,9 @@ describe("DailyInsightsSection", () => {
   describe("AC3, AC4, AC5: Données statiques des 3 cards", () => {
     it("affiche le titre 'Amour' dans une card", () => {
       render(<DailyInsightsSection />)
-      const amourTitle = screen.getByText("Amour")
-      expect(amourTitle).toBeInTheDocument()
+      // "Amour" apparaît aussi dans le titre de section (h2), d'où getAllByText
+      const amourElements = screen.getAllByText("Amour")
+      expect(amourElements.length).toBeGreaterThanOrEqual(1)
     })
 
     it("affiche la description 'Balance dans ta relation'", () => {

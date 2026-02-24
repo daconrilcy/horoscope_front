@@ -9,6 +9,8 @@
     "lint": "tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:dashboard": "playwright test e2e/dashboard-ac4-ac5.spec.ts",
     "test:b2b": "vitest run --config vitest.b2b.config.ts",
     "test:b2b:coverage": "vitest run --config vitest.b2b.config.ts --coverage",
     "audit:prod": "npm audit --omit=dev"
@@ -24,6 +26,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
