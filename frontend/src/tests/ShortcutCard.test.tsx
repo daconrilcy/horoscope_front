@@ -1,3 +1,4 @@
+import { MemoryRouter } from "react-router-dom"
 import { describe, it, expect, vi, afterEach } from "vitest"
 import { render, cleanup, screen, fireEvent } from "@testing-library/react"
 import { MessageCircle, Layers } from "lucide-react"
@@ -20,42 +21,45 @@ describe("ShortcutCard", () => {
 
   describe("Rendu et Structure", () => {
     it("affiche le titre et le sous-titre", () => {
-      render(<ShortcutCard {...defaultProps} />)
+      render(<ShortcutCard {...defaultProps} />, { wrapper: MemoryRouter })
       expect(screen.getByText(defaultProps.title)).toBeInTheDocument()
       expect(screen.getByText(defaultProps.subtitle)).toBeInTheDocument()
     })
 
-    it("est un bouton de type 'button'", () => {
-      render(<ShortcutCard {...defaultProps} />)
+    it("est un bouton par défaut si 'to' est absent", () => {
+      render(<ShortcutCard {...defaultProps} />, { wrapper: MemoryRouter })
       const button = screen.getByRole("button")
       expect(button).toHaveAttribute("type", "button")
       expect(button).toHaveClass("shortcut-card")
     })
 
-    it("rend le badge avec la bonne couleur", () => {
-      const { container } = render(<ShortcutCard {...defaultProps} />)
-      const badge = container.querySelector(".shortcut-card__badge") as HTMLElement
-      expect(badge).toHaveStyle({ background: defaultProps.badgeColor })
+    it("est un lien si 'to' est présent", () => {
+      render(<ShortcutCard {...defaultProps} to="/chat" />, { wrapper: MemoryRouter })
+      const link = screen.getByRole("link")
+      expect(link).toHaveAttribute("href", "/chat")
+      expect(link).toHaveClass("shortcut-card")
     })
 
-    it("rend l'icône Lucide", () => {
-      const { container } = render(<ShortcutCard {...defaultProps} />)
-      const svg = container.querySelector("svg")
-      expect(svg).toBeInTheDocument()
+    it("rend le badge avec la bonne couleur", () => {
+      const { container } = render(<ShortcutCard {...defaultProps} />, { wrapper: MemoryRouter })
+      const badge = container.querySelector(".shortcut-card__badge") as HTMLElement
+      expect(badge).toHaveStyle({ background: defaultProps.badgeColor })
     })
   })
 
   describe("Interactions", () => {
-    it("appelle onClick lors du clic", () => {
+    it("appelle onClick lors du clic sur bouton", () => {
       const onClick = vi.fn()
-      render(<ShortcutCard {...defaultProps} onClick={onClick} />)
+      render(<ShortcutCard {...defaultProps} onClick={onClick} />, { wrapper: MemoryRouter })
       fireEvent.click(screen.getByRole("button"))
       expect(onClick).toHaveBeenCalledTimes(1)
     })
 
-    it("ne plante pas sans onClick", () => {
-      render(<ShortcutCard {...defaultProps} />)
-      expect(() => fireEvent.click(screen.getByRole("button"))).not.toThrow()
+    it("appelle onClick lors du clic sur lien", () => {
+      const onClick = vi.fn()
+      render(<ShortcutCard {...defaultProps} to="/chat" onClick={onClick} />, { wrapper: MemoryRouter })
+      fireEvent.click(screen.getByRole("link"))
+      expect(onClick).toHaveBeenCalledTimes(1)
     })
   })
 })
@@ -64,33 +68,33 @@ describe("ShortcutCard", () => {
 
 describe("ShortcutsSection", () => {
   it("affiche le titre de section 'Raccourcis'", () => {
-    render(<ShortcutsSection />)
+    render(<ShortcutsSection />, { wrapper: MemoryRouter })
     expect(screen.getByRole("heading", { name: /raccourcis/i })).toBeInTheDocument()
   })
 
-  it("rend les deux raccourcis par défaut", () => {
-    render(<ShortcutsSection />)
+  it("rend les deux raccourcis par défaut sous forme de liens", () => {
+    render(<ShortcutsSection />, { wrapper: MemoryRouter })
     expect(screen.getByText("Chat astrologue")).toBeInTheDocument()
     expect(screen.getByText("Tirage du jour")).toBeInTheDocument()
-    expect(screen.getAllByRole("button")).toHaveLength(2)
+    expect(screen.getAllByRole("link")).toHaveLength(2)
   })
 
   it("déclenche onChatClick lors du clic sur le chat", () => {
     const onChatClick = vi.fn()
-    render(<ShortcutsSection onChatClick={onChatClick} />)
-    fireEvent.click(screen.getByText("Chat astrologue").closest("button")!)
+    render(<ShortcutsSection onChatClick={onChatClick} />, { wrapper: MemoryRouter })
+    fireEvent.click(screen.getByRole("link", { name: /Chat astrologue/i }))
     expect(onChatClick).toHaveBeenCalledTimes(1)
   })
 
   it("déclenche onTirageClick lors du clic sur le tirage", () => {
     const onTirageClick = vi.fn()
-    render(<ShortcutsSection onTirageClick={onTirageClick} />)
-    fireEvent.click(screen.getByText("Tirage du jour").closest("button")!)
+    render(<ShortcutsSection onTirageClick={onTirageClick} />, { wrapper: MemoryRouter })
+    fireEvent.click(screen.getByRole("link", { name: /Tirage du jour/i }))
     expect(onTirageClick).toHaveBeenCalledTimes(1)
   })
 
   it("utilise une structure sémantique <section>", () => {
-    const { container } = render(<ShortcutsSection />)
+    const { container } = render(<ShortcutsSection />, { wrapper: MemoryRouter })
     expect(container.querySelector("section")).toHaveClass("shortcuts-section")
   })
 })

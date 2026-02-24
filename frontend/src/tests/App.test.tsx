@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { clearAccessToken, setAccessToken } from "../utils/authToken"
 import { TestAppRouter } from "../app/router"
+import { STATIC_HOROSCOPE } from "../constants/horoscope"
 
 beforeEach(() => {
   localStorage.setItem("lang", "fr")
@@ -143,7 +144,7 @@ describe("App", () => {
     renderApp(["/"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Tableau de bord" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
     })
   })
 
@@ -157,8 +158,8 @@ describe("App", () => {
     await waitFor(() => {
       expect(screen.getAllByRole("link", { name: "Chat" }).length).toBeGreaterThan(0)
     })
-    expect(screen.getByRole("link", { name: "Données de naissance" })).toBeInTheDocument()
-    expect(screen.getAllByRole("link", { name: "Abonnement" }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole("link", { name: "Profil" }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole("link", { name: "Tirages" }).length).toBeGreaterThan(0)
   })
 
   it("redirects to login when logout button is clicked", async () => {

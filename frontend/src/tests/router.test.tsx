@@ -7,6 +7,7 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import { setAccessToken, clearAccessToken } from "../utils/authToken"
 import { TestAppRouter } from "../app/router"
 import { routes } from "../app/routes"
+import { STATIC_HOROSCOPE } from "../constants/horoscope"
 
 beforeEach(() => {
   localStorage.setItem("lang", "fr")
@@ -150,7 +151,7 @@ describe("AuthGuard", () => {
     renderApp(["/dashboard"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Tableau de bord" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
     })
   })
 
@@ -174,7 +175,7 @@ describe("RoleGuard", () => {
     renderApp(["/admin/monitoring"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Tableau de bord" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
     })
   })
 
@@ -207,7 +208,7 @@ describe("RoleGuard", () => {
     renderApp(["/support"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Tableau de bord" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
     })
   })
 
@@ -218,7 +219,7 @@ describe("RoleGuard", () => {
     renderApp(["/enterprise/credentials"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Tableau de bord" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
     })
   })
 
@@ -253,7 +254,7 @@ describe("RootRedirect", () => {
     renderApp(["/"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Tableau de bord" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
     })
   })
 })
@@ -267,7 +268,7 @@ describe("Navigation", () => {
     renderApp(["/dashboard"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Tableau de bord" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
     })
     
     const chatLinks = screen.getAllByRole("link", { name: /Chat/i })
@@ -298,7 +299,7 @@ describe("Navigation", () => {
     )
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Tableau de bord" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
     })
     
     const chatLinks = screen.getAllByRole("link", { name: /Chat/i })
@@ -311,7 +312,7 @@ describe("Navigation", () => {
     router.navigate(-1)
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Tableau de bord" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
     })
     
     router.navigate(1)

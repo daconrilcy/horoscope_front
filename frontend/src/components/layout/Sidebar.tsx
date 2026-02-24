@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom"
 
 import { useAccessTokenSnapshot } from "../../utils/authToken"
 import { useAuthMe } from "../../api/authMe"
-import { getAllNavItems } from "./navItems"
+import { getAllNavItems } from "../../ui/nav"
 
 export function Sidebar() {
   const token = useAccessTokenSnapshot()

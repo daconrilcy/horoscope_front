@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { getInitials } from "../utils/user"
 
 /**
  * Props for the TodayHeader component
@@ -17,21 +18,10 @@ export interface TodayHeaderProps {
 export function TodayHeader({ userName = "U", avatarUrl }: TodayHeaderProps) {
   const [imgError, setImgError] = useState(false)
 
-  const getInitials = (name: string) => {
-    const safeName = (name || "U").trim()
-    if (!safeName) return "U"
-    
-    const parts = safeName.split(/\s+/)
-    if (parts.length >= 2) {
-      const first = parts[0]?.[0] || ""
-      const last = parts[parts.length - 1]?.[0] || ""
-      if (first && last) return (first + last).toUpperCase()
-    }
-    return (safeName[0] || "U").toUpperCase()
-  }
-
-  const initials = getInitials(userName)
-  const showImage = avatarUrl && !imgError
+  const isLoading = userName === "loading"
+  const displayName = isLoading ? "" : userName
+  const initials = getInitials(displayName || "U")
+  const showImage = avatarUrl && !imgError && !isLoading
 
   return (
     <header className="today-header">
@@ -40,9 +30,9 @@ export function TodayHeader({ userName = "U", avatarUrl }: TodayHeaderProps) {
         <h1 className="today-header__title">Horoscope</h1>
       </div>
       <div
-        className="today-header__avatar"
+        className={`today-header__avatar ${isLoading ? "today-header__avatar--loading" : ""}`}
         role="img"
-        aria-label={`Profil de ${userName}`}
+        aria-label={isLoading ? "Chargement du profil" : `Profil de ${displayName}`}
       >
         {showImage ? (
           <img
@@ -52,7 +42,7 @@ export function TodayHeader({ userName = "U", avatarUrl }: TodayHeaderProps) {
             decoding="async"
           />
         ) : (
-          <span aria-hidden="true">{initials}</span>
+          !isLoading && <span aria-hidden="true">{initials}</span>
         )}
       </div>
     </header>

@@ -13,7 +13,7 @@ import { NatalChartPage } from "../pages/NatalChartPage"
 import { ChatPage } from "../pages/ChatPage"
 import { BirthProfilePage } from "../pages/BirthProfilePage"
 import { NotFoundPage } from "../pages/NotFoundPage"
-import { DashboardPage } from "../pages/DashboardPage"
+import { TodayPage } from "../pages/TodayPage"
 import { ConsultationsPage } from "../pages/ConsultationsPage"
 import { ConsultationWizardPage } from "../pages/ConsultationWizardPage"
 import { ConsultationResultPage } from "../pages/ConsultationResultPage"
@@ -74,7 +74,7 @@ export const routes: RouteObject[] = [
     children: [
       {
         path: "/dashboard",
-        element: <DashboardPage />,
+        element: <TodayPage />,
       },
       {
         path: "/natal",

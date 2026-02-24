@@ -97,6 +97,13 @@ describe("TodayHeader", () => {
       expect(span?.textContent).toBe("U")
     })
 
+    it("shows loading state when userName is 'loading'", () => {
+      render(<TodayHeader userName="loading" />)
+      const avatar = screen.getByRole("img", { name: /chargement du profil/i })
+      expect(avatar).toHaveClass("today-header__avatar--loading")
+      expect(avatar.querySelector("span")).not.toBeInTheDocument()
+    })
+
     it("avatar has aria-label with userName", () => {
       render(<TodayHeader userName="Alice" />)
       const avatar = screen.getByRole("img", { name: "Profil de Alice" })

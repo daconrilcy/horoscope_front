@@ -1,3 +1,7 @@
+:root {
+  --glass-blur: 14px;
+}
+
 #root {
   min-height: 100vh;
 }
@@ -17,7 +21,7 @@
 .app-shell-main {
   flex: 1;
   width: 100%;
-  padding: 22px 18px 110px;
+  padding: 22px 18px;
 }
 
 /* Header */
@@ -27,8 +31,8 @@
   justify-content: space-between;
   padding: 0.75rem 1.5rem;
   background: var(--glass);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border-bottom: 1px solid var(--glass-border);
   position: sticky;
   top: 0;
@@ -80,8 +84,8 @@
 .app-sidebar {
   width: 220px;
   background: var(--glass);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border-right: 1px solid var(--glass-border);
   padding: 1rem 0;
   flex-shrink: 0;
@@ -113,50 +117,45 @@
   border-left-color: var(--cta-l);
 }
 
-/* Bottom Nav (Mobile) */
-.app-bottom-nav {
+/* === BottomNav === */
+.bottom-nav {
   display: none;
   position: fixed;
   bottom: 16px;
   left: 16px;
   right: 16px;
-  background: var(--nav-glass);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid var(--nav-border);
   border-radius: 24px;
   padding: 10px;
+  background: var(--nav-glass);
+  border: 1px solid var(--nav-border);
   box-shadow: var(--shadow-nav);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   z-index: 100;
 }
 
-.app-bottom-nav-link {
+.bottom-nav__item {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 0.25rem;
+  gap: 3px;
+  padding: 6px 4px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--text-2);
+  transition: background 0.15s ease;
+}
+
+.bottom-nav__item--active {
+  background: var(--nav-active-bg);
+  color: var(--text-1);
+}
+
+.bottom-nav__label {
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-2);
-  text-decoration: none;
-  border-radius: 12px;
-  transition: all 0.15s ease;
-}
-
-.app-bottom-nav-link:hover {
-  color: var(--text-1);
-  background: var(--glass-2);
-}
-
-.app-bottom-nav-link--active {
-  color: var(--text-1);
-  background: rgba(134, 108, 208, 0.18);
-}
-
-.dark .app-bottom-nav-link--active {
-  background: rgba(150, 110, 255, 0.18);
 }
 
 /* Admin/Enterprise Layout */
@@ -179,8 +178,12 @@
     display: none;
   }
 
-  .app-bottom-nav {
+  .bottom-nav {
     display: flex;
+  }
+
+  .app-shell-main {
+    padding-bottom: 110px;
   }
 
   .app-header-title {
@@ -190,8 +193,8 @@
 
 .panel {
   background: var(--glass);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   padding: 1.5rem;
@@ -387,8 +390,8 @@ textarea:focus-visible {
   gap: 0.75rem;
   padding: 1.5rem 1rem;
   background: var(--glass);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   transition: all 0.2s ease;
@@ -436,8 +439,8 @@ textarea:focus-visible {
   grid-template-columns: 280px 1fr 280px;
   gap: 0;
   background: var(--glass);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid var(--glass-border);
@@ -943,8 +946,8 @@ textarea:focus-visible {
   align-items: center;
   padding: 1.5rem 1.25rem;
   background: var(--glass);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   cursor: pointer;
@@ -1023,8 +1026,8 @@ textarea:focus-visible {
 /* Astrologer Profile Header */
 .astrologer-profile-header {
   background: var(--glass);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   padding: 2rem;
@@ -2177,8 +2180,8 @@ textarea:focus-visible {
   background: var(--glass);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-card);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   position: relative;
   overflow: hidden;
 }
@@ -2299,7 +2302,7 @@ textarea:focus-visible {
   position: relative;
   padding-top: 6px;
   text-align: center;
-  min-height: 52px; /* Assure que le titre ne saute pas si l'avatar est lent à charger */
+  min-height: 48px; /* Prevents layout shift during avatar load */
 }
 
 .today-header__content {
@@ -2341,10 +2344,41 @@ textarea:focus-visible {
   color: var(--text-1);
 }
 
+.today-header__avatar--loading {
+  background: var(--glass-2);
+  border-color: var(--glass-border);
+  animation: avatar-pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes avatar-pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+  100% { opacity: 0.6; }
+}
+
 .today-header__avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* === TodayPage === */
+.today-page {
+  min-height: 100dvh;
+}
+
+.today-page--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.state-loading-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-2);
 }
 
 @media (max-width: 768px) {
@@ -2381,8 +2415,23 @@ textarea:focus-visible {
   border-radius: 18px;
   background: var(--glass-2);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+.mini-card--clickable {
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--glass-border);
+  font: inherit;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.mini-card--clickable:hover {
+  background: var(--glass);
+  transform: translateY(-2px);
+  border-color: var(--cta-l);
 }
 
 .mini-card__badge {
@@ -2466,6 +2515,23 @@ textarea:focus-visible {
   margin: 0;
 }
 
+.section-header__button {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  margin: -4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.section-header__button:hover {
+  background: var(--glass-2);
+}
+
 .dashboard-container {
   display: flex;
   flex-direction: column;
@@ -2481,8 +2547,8 @@ textarea:focus-visible {
   border-radius: 18px;
   background: var(--glass-2);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   cursor: pointer;
   width: 100%;
   text-align: left;
@@ -2534,3 +2600,4 @@ textarea:focus-visible {
   gap: 12px;
   margin-top: 12px;
 }
+

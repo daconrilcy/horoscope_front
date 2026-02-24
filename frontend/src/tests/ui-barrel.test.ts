@@ -24,7 +24,7 @@ describe("ui/ barrel export (index.ts)", () => {
   it("exports navItems from nav.ts", () => {
     expect(navItems).toBeDefined()
     expect(Array.isArray(navItems)).toBe(true)
-    expect(navItems).toHaveLength(5)
+    expect(navItems).toHaveLength(15)
   })
 
   it("exports NavItem type", () => {

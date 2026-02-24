@@ -38,24 +38,27 @@ export function DailyInsightsSection({ onSectionClick }: DailyInsightsSectionPro
           description={description}
           icon={config.icon}
           badgeColor={config.badgeColor}
+          onClick={onSectionClick}
         />
       )
     })
-  }, [lang])
-
-  const HeaderContainer = onSectionClick ? 'button' : 'div'
+  }, [lang, onSectionClick])
 
   return (
     <section aria-labelledby="daily-insights-title">
-      <HeaderContainer 
-        className={`section-header ${onSectionClick ? 'section-header--clickable' : ''}`}
-        onClick={onSectionClick}
-        type={onSectionClick ? 'button' : undefined}
-        aria-label={onSectionClick ? ariaLabel : undefined}
-      >
+      <div className={`section-header ${onSectionClick ? 'section-header--clickable' : ''}`}>
         <h2 id="daily-insights-title" className="section-header__title">{sectionTitle}</h2>
-        <ChevronRight size={18} strokeWidth={1.75} color="var(--text-2)" />
-      </HeaderContainer>
+        {onSectionClick && (
+          <button 
+            type="button"
+            className="section-header__button"
+            onClick={onSectionClick}
+            aria-label={ariaLabel}
+          >
+            <ChevronRight size={18} strokeWidth={1.75} color="var(--text-2)" />
+          </button>
+        )}
+      </div>
       
       <div className="mini-cards-grid">
         {renderedCards}

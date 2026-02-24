@@ -162,23 +162,26 @@ describe("DailyInsightsSection", () => {
     it("appelle onSectionClick quand on clique sur l'en-tête", () => {
       const handleClick = vi.fn()
       render(<DailyInsightsSection onSectionClick={handleClick} />)
-      const header = document.querySelector(".section-header")
-      if (header) fireEvent.click(header)
+      const button = screen.getByRole("button", { name: /Voir tous les insights du jour/i })
+      fireEvent.click(button)
       expect(handleClick).toHaveBeenCalled()
     })
 
-    it("l'en-tête est un bouton quand onSectionClick est présent", () => {
+    it("l'en-tête contient un bouton quand onSectionClick est présent", () => {
       const handleClick = vi.fn()
       render(<DailyInsightsSection onSectionClick={handleClick} />)
-      const header = screen.getByRole("button", { name: /Voir tous les insights du jour/i })
-      expect(header).toBeInTheDocument()
+      const button = screen.getByRole("button", { name: /Voir tous les insights du jour/i })
+      expect(button).toBeInTheDocument()
     })
 
-    it("rend un SVG ChevronRight dans l'en-tête", () => {
-      render(<DailyInsightsSection />)
-      const header = document.querySelector(".section-header")
-      const svg = header?.querySelector("svg")
-      expect(svg).toBeInTheDocument()
+    it("rend un SVG ChevronRight dans l'en-tête seulement si cliquable", () => {
+      const { rerender } = render(<DailyInsightsSection />)
+      let header = document.querySelector(".section-header")
+      expect(header?.querySelector("svg")).not.toBeInTheDocument()
+
+      rerender(<DailyInsightsSection onSectionClick={() => {}} />)
+      header = document.querySelector(".section-header")
+      expect(header?.querySelector("svg")).toBeInTheDocument()
     })
   })
 

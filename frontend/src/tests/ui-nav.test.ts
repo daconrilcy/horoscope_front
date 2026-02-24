@@ -2,10 +2,10 @@ import { describe, it, expect } from "vitest"
 import { navItems, type NavItem } from "../ui/nav"
 
 describe("ui/nav configuration", () => {
-  it("exports navItems array with 5 entries", () => {
+  it("exports navItems array with 15 entries", () => {
     expect(navItems).toBeDefined()
     expect(Array.isArray(navItems)).toBe(true)
-    expect(navItems).toHaveLength(5)
+    expect(navItems).toHaveLength(15)
   })
 
   it("each navItem has required properties", () => {
@@ -27,7 +27,7 @@ describe("ui/nav configuration", () => {
       { key: "chat", label: "Chat", path: "/chat" },
       { key: "natal", label: "Thème", path: "/natal" },
       { key: "tirages", label: "Tirages", path: "/consultations" },
-      { key: "profile", label: "Profil", path: "/settings/account" },
+      { key: "profile", label: "Profil", path: "/settings" },
     ]
 
     expectedItems.forEach((expected, index) => {

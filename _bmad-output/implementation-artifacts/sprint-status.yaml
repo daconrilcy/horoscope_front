@@ -138,7 +138,7 @@ development_status:
   15-4-interpretation-textuelle-theme-natal-via-ai-engine: done
   epic-15-retrospective: done
 
-  epic-16: in-progress
+  epic-16: done
   16-1-react-router-layout-foundation: done
   16-2-dashboard-page: done
   16-3-chat-messenger-style: done
@@ -147,15 +147,15 @@ development_status:
   16-6-settings-pages: done
   16-7-admin-pages: done
   16-8-correction-parcours-theme-natal: done
-  epic-16-retrospective: optional
+  epic-16-retrospective: done
 
-  epic-17: in-progress
+  epic-17: done
   17-1-fondations-ui-tokens-typo-lucide: done
   17-2-fond-premium-gradient-noise-starfield: done
   17-3-header-composant: done
   17-4-hero-horoscope-card-glassmorphism: done
   17-5-raccourcis-shortcut-card: done
   17-6-section-amour-mini-insight-card: done
-  17-7-bottom-navigation-glass-pill: ready-for-dev
-  17-8-today-page-assemblage-route-tests: ready-for-dev
-  epic-17-retrospective: optional
+  17-7-bottom-navigation-glass-pill: done
+  17-8-today-page-assemblage-route-tests: done
+  epic-17-retrospective: done

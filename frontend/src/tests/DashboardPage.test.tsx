@@ -2,10 +2,37 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { createMemoryRouter, RouterProvider } from "react-router-dom"
+import { createMemoryRouter, Navigate, RouterProvider } from "react-router-dom"
 
 import { setAccessToken, clearAccessToken } from "../utils/authToken"
-import { routes } from "../app/routes"
+import { DashboardPage } from "../pages/DashboardPage"
+import { AppShell } from "../components/AppShell"
+import { AuthGuard } from "../app/guards/AuthGuard"
+
+// Routes isolées pour tester DashboardPage indépendamment de la route globale /dashboard
+const dashboardTestRoutes = [
+  {
+    element: (
+      <AuthGuard>
+        <AppShell />
+      </AuthGuard>
+    ),
+    children: [
+      { path: "/dashboard", element: <DashboardPage /> },
+      { path: "/natal", element: <div><h1>Mon thème astral</h1></div> },
+      { path: "/chat", element: <div><h1>Chat</h1></div> },
+      { path: "/consultations", element: <div><h1>Consultations</h1></div> },
+      { path: "/astrologers", element: <div><h1>Nos Astrologues</h1></div> },
+      {
+        path: "/settings",
+        children: [
+          { index: true, element: <Navigate to="account" replace /> },
+          { path: "account", element: <div><h1>Paramètres</h1></div> },
+        ],
+      },
+    ],
+  },
+]
 
 beforeEach(() => {
   localStorage.setItem("lang", "fr")
@@ -50,7 +77,7 @@ function setupToken(sub = "42") {
 }
 
 function renderWithRouter(initialEntries: string[] = ["/dashboard"]) {
-  const router = createMemoryRouter(routes, {
+  const router = createMemoryRouter(dashboardTestRoutes, {
     initialEntries,
     future: { v7_relativeSplatPath: true },
   })
@@ -98,7 +125,7 @@ describe("DashboardPage", () => {
       })
 
       const horoscopeTitles = screen.getAllByText(/Horoscope/i)
-      expect(horoscopeTitles.length).toBe(2) // One in app-header, one in today-header
+      expect(horoscopeTitles.length).toBe(1) // Hidden in app-header on /dashboard, only in today-header
       expect(screen.getByText("Amour")).toBeInTheDocument()
       expect(screen.getByText("Travail")).toBeInTheDocument()
       expect(screen.getByText("Énergie")).toBeInTheDocument()
@@ -124,7 +151,7 @@ describe("DashboardPage", () => {
       renderWithRouter(["/dashboard"])
 
       // On vérifie que le placeholder est présent dans l'aria-label
-      expect(screen.getByLabelText("Profil de ...")).toBeInTheDocument()
+      expect(screen.getByLabelText("Chargement du profil")).toBeInTheDocument()
 
       // On résout le mock
       resolveAuthMe!({
@@ -299,7 +326,7 @@ describe("DashboardPage", () => {
       expect(screen.getByRole("link", { name: "Aller à Paramètres" })).toBeInTheDocument()
     })
 
-    it("le nav a un aria-label 'Navigation principale'", async () => {
+    it("le nav des raccourcis a un aria-label 'Navigation rapide'", async () => {
       vi.stubGlobal("fetch", makeFetchMock())
       setupToken()
 
@@ -309,7 +336,7 @@ describe("DashboardPage", () => {
         expect(screen.getByRole("heading", { name: "Tableau de bord" })).toBeInTheDocument()
       })
 
-      expect(screen.getByRole("navigation", { name: "Navigation principale" })).toBeInTheDocument()
+      expect(screen.getByRole("navigation", { name: "Navigation rapide" })).toBeInTheDocument()
     })
   })
 })
