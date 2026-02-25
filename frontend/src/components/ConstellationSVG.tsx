@@ -14,45 +14,45 @@ export const ConstellationSVG = memo(function ConstellationSVG({ className }: Co
       className={className}
       preserveAspectRatio="xMidYMid meet"
     >
-      {/* Stars */}
-      <circle cx="10" cy="32" r="2" fill="currentColor" />
-      <circle cx="30" cy="22" r="1.5" fill="currentColor" />
-      <circle cx="55" cy="28" r="2" fill="currentColor" />
-      <circle cx="75" cy="18" r="1.5" fill="currentColor" />
-      <circle cx="95" cy="25" r="2" fill="currentColor" />
-      <circle cx="110" cy="32" r="1.5" fill="currentColor" />
+      <defs>
+        {/* Glow filter for star nodes */}
+        <filter id="star-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="1.5" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
 
-      <circle cx="10" cy="52" r="1.5" fill="currentColor" />
-      <circle cx="30" cy="45" r="2" fill="currentColor" />
-      <circle cx="55" cy="50" r="1.5" fill="currentColor" />
-      <circle cx="75" cy="42" r="2" fill="currentColor" />
-      <circle cx="95" cy="48" r="1.5" fill="currentColor" />
-      <circle cx="110" cy="52" r="2" fill="currentColor" />
+      {/* Constellation lines (white, 1.2px) */}
+      <line x1="12" y1="30" x2="32" y2="20" stroke="white" strokeWidth="1.2" />
+      <line x1="32" y1="20" x2="55" y2="28" stroke="white" strokeWidth="1.2" />
+      <line x1="55" y1="28" x2="72" y2="15" stroke="white" strokeWidth="1.2" />
+      <line x1="72" y1="15" x2="95" y2="25" stroke="white" strokeWidth="1.2" />
+      <line x1="95" y1="25" x2="108" y2="35" stroke="white" strokeWidth="1.2" />
 
-      {/* Extra accent stars */}
-      <circle cx="42" cy="14" r="1" fill="currentColor" opacity="0.6" />
-      <circle cx="85" cy="60" r="1" fill="currentColor" opacity="0.6" />
-      <circle cx="20" cy="68" r="1" fill="currentColor" opacity="0.5" />
+      <line x1="32" y1="20" x2="25" y2="55" stroke="white" strokeWidth="1.2" />
+      <line x1="55" y1="28" x2="50" y2="48" stroke="white" strokeWidth="1.2" />
+      <line x1="72" y1="15" x2="78" y2="52" stroke="white" strokeWidth="1.2" />
 
-      {/* Upper wave - Verseau characteristic double wave */}
-      <path
-        d="M10 32 Q20 22 30 22 Q42 22 55 28 Q65 34 75 18 Q85 8 95 25 Q102 35 110 32"
-        stroke="currentColor"
-        strokeWidth="1"
-        fill="none"
-      />
+      <line x1="25" y1="55" x2="50" y2="48" stroke="white" strokeWidth="1.2" />
+      <line x1="50" y1="48" x2="78" y2="52" stroke="white" strokeWidth="1.2" />
+      <line x1="78" y1="52" x2="100" y2="60" stroke="white" strokeWidth="1.2" />
 
-      {/* Lower wave */}
-      <path
-        d="M10 52 Q20 42 30 45 Q42 48 55 50 Q65 52 75 42 Q85 32 95 48 Q102 58 110 52"
-        stroke="currentColor"
-        strokeWidth="1"
-        fill="none"
-      />
+      {/* Star nodes with glow */}
+      <circle cx="12" cy="30" r="2" fill="white" filter="url(#star-glow)" />
+      <circle cx="32" cy="20" r="2" fill="white" filter="url(#star-glow)" />
+      <circle cx="55" cy="28" r="1.5" fill="white" filter="url(#star-glow)" />
+      <circle cx="72" cy="15" r="2" fill="white" filter="url(#star-glow)" />
+      <circle cx="95" cy="25" r="1.5" fill="white" filter="url(#star-glow)" />
+      <circle cx="108" cy="35" r="2" fill="white" filter="url(#star-glow)" />
+      <circle cx="25" cy="55" r="1.5" fill="white" filter="url(#star-glow)" />
+      <circle cx="50" cy="48" r="2" fill="white" filter="url(#star-glow)" />
+      <circle cx="78" cy="52" r="1.5" fill="white" filter="url(#star-glow)" />
+      <circle cx="100" cy="60" r="2" fill="white" filter="url(#star-glow)" />
 
-      {/* Connecting vertical lines */}
-      <line x1="30" y1="22" x2="30" y2="45" stroke="currentColor" strokeWidth="0.6" />
-      <line x1="75" y1="18" x2="75" y2="42" stroke="currentColor" strokeWidth="0.6" />
+      {/* Accent stars (smaller, semi-transparent) */}
+      <circle cx="42" cy="10" r="1" fill="white" opacity="0.6" />
+      <circle cx="85" cy="42" r="1" fill="white" opacity="0.6" />
+      <circle cx="62" cy="68" r="1" fill="white" opacity="0.5" />
     </svg>
   )
 })

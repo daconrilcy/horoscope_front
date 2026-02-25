@@ -29,25 +29,23 @@ describe("HeroHoroscopeCard", () => {
     })
   })
 
-  describe("AC2: Chip signe + date rendu correctement", () => {
+  describe("AC2: Chip signe + date rendu correctement (AC#5 de la story)", () => {
     it("renders chip with sign, signName and date", () => {
       render(<HeroHoroscopeCard {...defaultProps} />)
-      const chipText = `♒Verseau • 23 fév.`
-      // Use findByText or similar, or just check the container of the chip if needed.
-      // But let's look for the text content directly which is more robust.
       expect(screen.getByText("♒")).toBeInTheDocument()
       expect(screen.getByText(/Verseau • 23 fév./)).toBeInTheDocument()
+    })
+
+    it("chip has class hero-card__chip for styling (gradient token --chip)", () => {
+      const { container } = render(<HeroHoroscopeCard {...defaultProps} />)
+      const chip = container.querySelector(".hero-card__chip")
+      expect(chip).toBeInTheDocument()
     })
   })
 
   describe("AC3: Chevron top-right présent", () => {
     it("renders top-row with hidden decorative icon", () => {
       render(<HeroHoroscopeCard {...defaultProps} />)
-      // The icon is hidden from aria, so we can't get by role easily unless we use querySelector
-      // or we check the container. But we want to avoid querySelector.
-      // We can check for the existence of the chevron by searching for its characteristic path or just using a test id if really needed.
-      // However, for icons, sometimes querySelector is acceptable IF there is no other way, 
-      // but here we can check the presence of the container.
       const topRow = screen.getByRole("article").firstChild
       expect(topRow).toHaveClass("hero-card__top-row")
     })
@@ -64,22 +62,59 @@ describe("HeroHoroscopeCard", () => {
     it("headline updates when prop changes", () => {
       const { rerender } = render(<HeroHoroscopeCard {...defaultProps} headline="Nouvelle headline" />)
       expect(screen.getByText("Nouvelle headline")).toBeInTheDocument()
-      
+
       rerender(<HeroHoroscopeCard {...defaultProps} headline="Updated headline" />)
       expect(screen.getByText("Updated headline")).toBeInTheDocument()
     })
   })
 
-  describe("AC5: Constellation SVG en filigrane", () => {
+  describe("AC5: Constellation SVG conforme (points + segments droits)", () => {
     it("renders constellation container as aria-hidden", () => {
       const { container } = render(<HeroHoroscopeCard {...defaultProps} />)
       const constellation = container.querySelector(".hero-card__constellation")
       expect(constellation).toBeInTheDocument()
       expect(constellation).toHaveAttribute("aria-hidden", "true")
     })
+
+    it("constellation SVG contient des segments droits (<line>), pas de courbes Bezier (<path>)", () => {
+      const { container } = render(<HeroHoroscopeCard {...defaultProps} />)
+      const svg = container.querySelector(".hero-card__constellation svg")
+      expect(svg).toBeInTheDocument()
+      // Doit avoir des lignes droites
+      const lines = svg?.querySelectorAll("line")
+      expect(lines?.length).toBeGreaterThan(0)
+      // Ne doit pas avoir de courbes Bezier (paths)
+      const paths = svg?.querySelectorAll("path")
+      expect(paths?.length ?? 0).toBe(0)
+    })
+
+    it("constellation SVG contient des étoiles (cercles)", () => {
+      const { container } = render(<HeroHoroscopeCard {...defaultProps} />)
+      const svg = container.querySelector(".hero-card__constellation svg")
+      const circles = svg?.querySelectorAll("circle")
+      expect(circles?.length).toBeGreaterThan(5)
+    })
+
+    it("constellation SVG a la classe hero-card__constellation-svg", () => {
+      const { container } = render(<HeroHoroscopeCard {...defaultProps} />)
+      const svg = container.querySelector(".hero-card__constellation-svg")
+      expect(svg).toBeInTheDocument()
+    })
+
+    it("constellation SVG respecte une épaisseur de traits entre 1.2 et 1.5px", () => {
+      const { container } = render(<HeroHoroscopeCard {...defaultProps} />)
+      const lines = container.querySelectorAll(".hero-card__constellation svg line")
+      expect(lines.length).toBeGreaterThan(0)
+
+      for (const line of lines) {
+        const strokeWidth = Number(line.getAttribute("stroke-width"))
+        expect(strokeWidth).toBeGreaterThanOrEqual(1.2)
+        expect(strokeWidth).toBeLessThanOrEqual(1.5)
+      }
+    })
   })
 
-  describe("AC6: CTA button pill gradient fonctionnel", () => {
+  describe("AC6: CTA button pill gradient fonctionnel (AC#3 de la story)", () => {
     it("renders CTA button only when onReadFull is provided", () => {
       const { rerender } = render(<HeroHoroscopeCard {...defaultProps} onReadFull={undefined} />)
       expect(screen.queryByRole("button", { name: /Lire l'horoscope complet/i })).not.toBeInTheDocument()
@@ -93,6 +128,12 @@ describe("HeroHoroscopeCard", () => {
       const cta = screen.getByRole("button", { name: /Lire l'horoscope complet en 2 minutes/i })
       expect(cta).toBeInTheDocument()
       expect(cta.textContent).toContain("Lire en 2 min")
+    })
+
+    it("CTA button a la classe hero-card__cta pour le gradient et le glow", () => {
+      render(<HeroHoroscopeCard {...defaultProps} onReadFull={() => {}} />)
+      const cta = screen.getByRole("button", { name: /Lire l'horoscope complet/i })
+      expect(cta).toHaveClass("hero-card__cta")
     })
 
     it("CTA button calls onReadFull when clicked", () => {
