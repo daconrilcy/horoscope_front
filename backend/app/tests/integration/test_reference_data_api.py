@@ -67,6 +67,15 @@ def test_reference_seed_then_read_active() -> None:
     assert read_payload["meta"]["request_id"] == "rid-reference-read"
     assert read_payload["data"]["version"] == "1.0.0"
     assert len(read_payload["data"]["planets"]) > 0
+    aspects = read_payload["data"]["aspects"]
+    assert {item["code"] for item in aspects} == {
+        "conjunction",
+        "sextile",
+        "square",
+        "trine",
+        "opposition",
+    }
+    assert all("default_orb_deg" in item for item in aspects)
 
 
 def test_reference_read_missing_version_returns_404() -> None:

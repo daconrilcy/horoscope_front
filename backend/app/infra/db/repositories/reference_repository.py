@@ -3,6 +3,7 @@ from __future__ import annotations
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.core.constants import DEFAULT_ASPECT_ORBS
 from app.infra.db.models.reference import (
     AspectModel,
     AstroCharacteristicModel,
@@ -157,30 +158,35 @@ class ReferenceRepository:
                     code="conjunction",
                     name="Conjunction",
                     angle=0,
+                    default_orb_deg=DEFAULT_ASPECT_ORBS["conjunction"],
                 ),
                 AspectModel(
                     reference_version_id=reference_version_id,
                     code="sextile",
                     name="Sextile",
                     angle=60,
+                    default_orb_deg=DEFAULT_ASPECT_ORBS["sextile"],
                 ),
                 AspectModel(
                     reference_version_id=reference_version_id,
                     code="square",
                     name="Square",
                     angle=90,
+                    default_orb_deg=DEFAULT_ASPECT_ORBS["square"],
                 ),
                 AspectModel(
                     reference_version_id=reference_version_id,
                     code="trine",
                     name="Trine",
                     angle=120,
+                    default_orb_deg=DEFAULT_ASPECT_ORBS["trine"],
                 ),
                 AspectModel(
                     reference_version_id=reference_version_id,
                     code="opposition",
                     name="Opposition",
                     angle=180,
+                    default_orb_deg=DEFAULT_ASPECT_ORBS["opposition"],
                 ),
             ]
         )
@@ -259,6 +265,7 @@ class ReferenceRepository:
                     code=item.code,
                     name=item.name,
                     angle=item.angle,
+                    default_orb_deg=item.default_orb_deg,
                 )
                 for item in aspects
             ]
@@ -317,7 +324,13 @@ class ReferenceRepository:
             "signs": [{"code": item.code, "name": item.name} for item in signs],
             "houses": [{"number": item.number, "name": item.name} for item in houses],
             "aspects": [
-                {"code": item.code, "name": item.name, "angle": item.angle} for item in aspects
+                {
+                    "code": item.code,
+                    "name": item.name,
+                    "angle": item.angle,
+                    "default_orb_deg": item.default_orb_deg,
+                }
+                for item in aspects
             ],
             "characteristics": [
                 {

@@ -1,5 +1,6 @@
 from typing import Any, cast
 
+import pytest
 from sqlalchemy import delete, select
 
 from app.infra.db.base import Base
@@ -12,7 +13,7 @@ from app.infra.db.models.reference import (
     SignModel,
 )
 from app.infra.db.session import SessionLocal, engine
-from app.services.reference_data_service import ReferenceDataService
+from app.services.reference_data_service import ReferenceDataService, ReferenceDataServiceError
 
 
 def _cleanup_reference_tables() -> None:
@@ -56,6 +57,14 @@ def test_seed_reference_version_is_idempotent() -> None:
         "trine",
         "opposition",
     }
+    expected_default_orbs = {
+        "conjunction": 8.0,
+        "sextile": 4.0,
+        "square": 6.0,
+        "trine": 6.0,
+        "opposition": 8.0,
+    }
+    assert {item["code"]: item.get("default_orb_deg") for item in aspects} == expected_default_orbs
 
 
 def test_clone_reference_version_preserves_previous_version() -> None:
@@ -103,3 +112,31 @@ def test_locked_reference_version_rejects_in_place_mutation() -> None:
         except ValueError as error:
             db.rollback()
             assert str(error) == "reference version is immutable"
+
+
+def test_validate_orb_overrides_accepts_values_between_zero_and_fifteen() -> None:
+    validated = ReferenceDataService.validate_orb_overrides(
+        {
+            "conjunction": 7.5,
+            "sun-moon": 9,
+        }
+    )
+    assert validated == {"conjunction": 7.5, "sun-moon": 9.0}
+
+
+@pytest.mark.parametrize(
+    ("input_value", "expected_reason"),
+    [
+        (0, "must_be_gt_0"),
+        (-1, "must_be_gt_0"),
+        (15.1, "must_be_lte_15"),
+    ],
+)
+def test_validate_orb_overrides_rejects_out_of_range_values(
+    input_value: float,
+    expected_reason: str,
+) -> None:
+    with pytest.raises(ReferenceDataServiceError) as error:
+        ReferenceDataService.validate_orb_overrides({"conjunction": input_value})
+    assert error.value.code == "invalid_orb_override"
+    assert error.value.details.get("reason") == expected_reason

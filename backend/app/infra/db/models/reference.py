@@ -2,7 +2,17 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, event
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    event,
+)
 from sqlalchemy.orm import Mapped, Session, mapped_column, object_session, relationship
 
 from app.infra.db.base import Base
@@ -87,6 +97,7 @@ class AspectModel(Base):
     code: Mapped[str] = mapped_column(String(32), index=True)
     name: Mapped[str] = mapped_column(String(64))
     angle: Mapped[int] = mapped_column(Integer)
+    default_orb_deg: Mapped[float] = mapped_column(Float, nullable=False)
 
     reference_version: Mapped[ReferenceVersionModel] = relationship(back_populates="aspects")
 

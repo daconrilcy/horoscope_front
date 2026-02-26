@@ -191,7 +191,7 @@ development_status:
   20-6-tests-golden-reference-swisseph: done
   20-7-migration-compat-engine-simplified-feature-flag: done
   20-8-ui-impact-retrograde-house-system: done
-  20-9-modelisation-regles-orbes-parametrables: ready-for-dev
+  20-9-modelisation-regles-orbes-parametrables: done
   20-10-calcul-aspects-orbes-hierarchiques: ready-for-dev
   20-11-contrat-api-zodiac-frame-ayanamsa: ready-for-dev
   20-12-golden-tests-zodiac-frame-invariants: ready-for-dev

@@ -7,6 +7,7 @@ les calculs astrologiques : seeding, récupération et clonage.
 
 from __future__ import annotations
 
+from math import isfinite
 from threading import Lock
 from time import monotonic
 
@@ -14,6 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.constants import MAX_ORB_DEG, MIN_ORB_DEG
 from app.infra.db.repositories.reference_repository import ReferenceRepository
 
 
@@ -77,6 +79,48 @@ class ReferenceDataService:
     def _clear_cache_for_tests(cls) -> None:
         with cls._reference_cache_lock:
             cls._reference_cache.clear()
+
+    @classmethod
+    def validate_orb_overrides(cls, overrides: dict[str, float | int]) -> dict[str, float]:
+        normalized: dict[str, float] = {}
+        for rule_key, rule_value in overrides.items():
+            normalized_key = str(rule_key).strip()
+            if not normalized_key:
+                raise ReferenceDataServiceError(
+                    code="invalid_orb_override",
+                    message="orb override key is invalid",
+                    details={"reason": "empty_key"},
+                )
+
+            try:
+                parsed_value = float(rule_value)
+            except (TypeError, ValueError) as error:
+                raise ReferenceDataServiceError(
+                    code="invalid_orb_override",
+                    message="orb override value is invalid",
+                    details={"key": normalized_key, "reason": "not_a_number"},
+                ) from error
+
+            if not isfinite(parsed_value):
+                raise ReferenceDataServiceError(
+                    code="invalid_orb_override",
+                    message="orb override value is invalid",
+                    details={"key": normalized_key, "reason": "non_finite"},
+                )
+            if parsed_value <= MIN_ORB_DEG:
+                raise ReferenceDataServiceError(
+                    code="invalid_orb_override",
+                    message=f"orb override must be greater than {MIN_ORB_DEG}",
+                    details={"key": normalized_key, "reason": "must_be_gt_0"},
+                )
+            if parsed_value > MAX_ORB_DEG:
+                raise ReferenceDataServiceError(
+                    code="invalid_orb_override",
+                    message=f"orb override must be lower or equal to {MAX_ORB_DEG}",
+                    details={"key": normalized_key, "reason": "must_be_lte_15"},
+                )
+            normalized[normalized_key] = parsed_value
+        return normalized
 
     @classmethod
     def seed_reference_version(cls, db: Session, version: str | None = None) -> str:
