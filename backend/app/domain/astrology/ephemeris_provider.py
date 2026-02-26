@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING
 from app.core.ephemeris import SWISSEPH_LOCK
 
 if TYPE_CHECKING:
-    import swisseph as swe
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,8 @@ _AYANAMSA_IDS: dict[str, int] = {
     "lahiri": 1,  # swe.SIDM_LAHIRI
     "fagan_bradley": 0,  # swe.SIDM_FAGAN_BRADLEY
 }
+
+SUPPORTED_AYANAMSAS = frozenset(_AYANAMSA_IDS.keys())
 
 # Constantes de flags SwissEph (stables entre versions).
 _FLG_SWIEPH: int = 2  # swe.FLG_SWIEPH

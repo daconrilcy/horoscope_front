@@ -47,6 +47,7 @@ class NatalResult(BaseModel):
     zodiac: str = "tropical"
     frame: str = "geocentric"
     ayanamsa: str | None = None
+    altitude_m: float | None = None
     ephemeris_path_version: str | None = None
     prepared_input: BirthPreparedData
     planet_positions: list[PlanetPosition]
@@ -394,6 +395,7 @@ def build_natal_result(
         zodiac=zodiac,
         frame=frame,
         ayanamsa=ayanamsa,
+        altitude_m=altitude_m,
         ephemeris_path_version=ephemeris_path_version,
         prepared_input=prepared,
         planet_positions=positions,

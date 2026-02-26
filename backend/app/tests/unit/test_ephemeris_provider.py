@@ -16,16 +16,16 @@ Note: pyswisseph peut ne pas être installé dans l'environnement de test.
 
 from __future__ import annotations
 
-import sys
+from importlib.util import find_spec
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from app.domain.astrology.ephemeris_provider import (
-    EphemerisCalcError,
-    PlanetData,
     _AYANAMSA_IDS,
     _PLANET_IDS,
+    EphemerisCalcError,
+    PlanetData,
     calculate_planets,
 )
 
@@ -255,7 +255,10 @@ class TestRetrograde:
 class TestErrorHandling:
     def test_import_error_raises_ephemeris_calc_error(self) -> None:
         """Si pyswisseph n'est pas installé → EphemerisCalcError."""
-        with patch("app.domain.astrology.ephemeris_provider._get_swe_module", side_effect=EphemerisCalcError("pyswisseph module is not installed")):
+        with patch(
+            "app.domain.astrology.ephemeris_provider._get_swe_module",
+            side_effect=EphemerisCalcError("pyswisseph module is not installed"),
+        ):
             with pytest.raises(EphemerisCalcError) as exc_info:
                 calculate_planets(JDUT_J2000)
         assert exc_info.value.code == "ephemeris_calc_failed"
@@ -314,12 +317,10 @@ class TestErrorHandling:
 # Smoke Test (Real library interaction)
 # ---------------------------------------------------------------------------
 
-@pytest.mark.skipif("swisseph" not in sys.modules and not patch.dict("sys.modules", {}), reason="swisseph not installed")
+@pytest.mark.skipif(find_spec("swisseph") is None, reason="swisseph not installed")
 def test_swisseph_smoke_test() -> None:
     """Basic smoke test to ensure we can at least call the real library if present."""
     try:
-        import swisseph as swe
-        # Just a simple call to verify it doesn't crash
         results = calculate_planets(JDUT_J2000)
         assert len(results) == 10
     except (ImportError, EphemerisCalcError):

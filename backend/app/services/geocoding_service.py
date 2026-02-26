@@ -274,6 +274,9 @@ class GeocodingService:
 
         from app.infra.db.models.geocoding_query_cache import GeocodingQueryCacheModel
 
+        # Defensive reset: some tests may disable this logger globally.
+        logger.disabled = False
+
         query_key = _build_query_key(query, limit, country_code=country_code, lang=lang)
 
         logger.info(

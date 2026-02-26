@@ -12,6 +12,8 @@ from collections.abc import Callable
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.domain.astrology.ephemeris_provider import SUPPORTED_AYANAMSAS, EphemerisCalcError
+from app.domain.astrology.houses_provider import HousesCalcError
 from app.domain.astrology.natal_calculation import (
     NatalCalculationError,
     NatalResult,
@@ -35,6 +37,8 @@ class NatalCalculationService:
         accurate: bool,
         engine_override: str | None,
         internal_request: bool,
+        zodiac: str,
+        frame: str,
     ) -> str:
         override = (engine_override or "").strip().lower() or None
 
@@ -56,6 +60,12 @@ class NatalCalculationService:
                         message="natal engine override is forbidden",
                         details={"engine": "simplified"},
                     )
+                if zodiac == "sidereal" or frame == "topocentric":
+                    raise NatalCalculationError(
+                        code="natal_engine_option_unsupported",
+                        message="simplified engine does not support sidereal or topocentric",
+                        details={"zodiac": zodiac, "frame": frame},
+                    )
                 return "simplified"
             if not settings.swisseph_enabled:
                 raise NatalCalculationError(
@@ -65,17 +75,69 @@ class NatalCalculationService:
                 )
             return "swisseph"
 
-        if accurate and not settings.swisseph_enabled:
+        # Sidereal and Topocentric require SwissEph
+        requires_accurate = zodiac == "sidereal" or frame == "topocentric"
+        if requires_accurate and not accurate:
+            raise NatalCalculationError(
+                code="accurate_mode_required",
+                message="sidereal zodiac or topocentric frame requires accurate=True",
+                details={"zodiac": zodiac, "frame": frame},
+            )
+
+        if (accurate or requires_accurate) and not settings.swisseph_enabled:
             raise NatalCalculationError(
                 code="natal_engine_unavailable",
                 message="accurate mode requires SwissEph which is disabled",
                 details={"engine": "swisseph"},
             )
 
-        preferred = "swisseph" if accurate else settings.natal_engine_default
+        preferred = "swisseph" if (accurate or requires_accurate) else settings.natal_engine_default
         if preferred == "swisseph" and settings.swisseph_enabled:
             return "swisseph"
         return "simplified"
+
+    @staticmethod
+    def _resolve_calculation_options(
+        *,
+        zodiac: str,
+        ayanamsa: str | None,
+        frame: str,
+        altitude_m: float | None,
+    ) -> tuple[str, str | None, str, float | None]:
+        normalized_zodiac = zodiac.strip().lower()
+        if normalized_zodiac not in {"tropical", "sidereal"}:
+            raise NatalCalculationError(
+                code="invalid_zodiac",
+                message="invalid zodiac parameter",
+                details={"allowed": "tropical,sidereal", "actual": zodiac},
+            )
+
+        normalized_frame = frame.strip().lower()
+        if normalized_frame not in {"geocentric", "topocentric"}:
+            raise NatalCalculationError(
+                code="invalid_frame",
+                message="invalid frame parameter",
+                details={"allowed": "geocentric,topocentric", "actual": frame},
+            )
+
+        normalized_ayanamsa: str | None = None
+        if normalized_zodiac == "sidereal":
+            normalized_ayanamsa = (ayanamsa or "").strip().lower() or "lahiri"
+            if normalized_ayanamsa not in SUPPORTED_AYANAMSAS:
+                raise NatalCalculationError(
+                    code="invalid_ayanamsa",
+                    message="unsupported ayanamsa for sidereal zodiac",
+                    details={
+                        "allowed": ",".join(sorted(SUPPORTED_AYANAMSAS)),
+                        "actual": normalized_ayanamsa,
+                    },
+                )
+
+        effective_altitude = None
+        if normalized_frame == "topocentric":
+            effective_altitude = 0.0 if altitude_m is None else altitude_m
+
+        return normalized_zodiac, normalized_ayanamsa, normalized_frame, effective_altitude
 
     @staticmethod
     def calculate(
@@ -133,10 +195,24 @@ class NatalCalculationService:
                 details={"version": resolved_version},
             )
 
+        (
+            resolved_zodiac,
+            resolved_ayanamsa,
+            resolved_frame,
+            resolved_altitude_m,
+        ) = NatalCalculationService._resolve_calculation_options(
+            zodiac=zodiac,
+            ayanamsa=ayanamsa,
+            frame=frame,
+            altitude_m=altitude_m,
+        )
+
         engine = NatalCalculationService._resolve_engine(
             accurate=accurate,
             engine_override=engine_override,
             internal_request=internal_request,
+            zodiac=resolved_zodiac,
+            frame=resolved_frame,
         )
         ephemeris_path_version: str | None = None
         if engine == "swisseph":
@@ -156,17 +232,24 @@ class NatalCalculationService:
             engine = "swisseph"
             ephemeris_path_version = bootstrap.path_version
 
-        return build_natal_result(
-            birth_input=birth_input,
-            reference_data=reference_data,
-            ruleset_version=settings.ruleset_version,
-            timeout_check=timeout_check,
-            engine=engine,
-            birth_lat=birth_input.birth_lat,
-            birth_lon=birth_input.birth_lon,
-            zodiac=zodiac,
-            ayanamsa=ayanamsa,
-            frame=frame,
-            altitude_m=altitude_m,
-            ephemeris_path_version=ephemeris_path_version,
-        )
+        try:
+            return build_natal_result(
+                birth_input=birth_input,
+                reference_data=reference_data,
+                ruleset_version=settings.ruleset_version,
+                timeout_check=timeout_check,
+                engine=engine,
+                birth_lat=birth_input.birth_lat,
+                birth_lon=birth_input.birth_lon,
+                zodiac=resolved_zodiac,
+                ayanamsa=resolved_ayanamsa,
+                frame=resolved_frame,
+                altitude_m=resolved_altitude_m,
+                ephemeris_path_version=ephemeris_path_version,
+            )
+        except (EphemerisCalcError, HousesCalcError) as error:
+            raise NatalCalculationError(
+                code=error.code,
+                message=error.message,
+                details={"engine": engine},
+            ) from error

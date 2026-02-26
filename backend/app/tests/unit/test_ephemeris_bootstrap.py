@@ -23,7 +23,6 @@ import pytest
 
 import app.infra.observability.metrics as metrics_module
 from app.core import ephemeris
-from app.core.ephemeris import SwissEphInitError
 from app.core.config import Settings
 from app.infra.observability.metrics import get_counter_sum_in_window
 

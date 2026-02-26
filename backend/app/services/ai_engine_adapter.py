@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Awaitable, Callable, NoReturn
 from app.ai_engine.exceptions import (
     AIEngineError,
     ContextTooLargeError,
+    ProviderNotConfiguredError,
     RateLimitExceededError,
     UpstreamError,
     UpstreamTimeoutError,
@@ -42,6 +43,7 @@ from app.ai_engine.schemas import (
     ProviderConfig,
 )
 from app.ai_engine.services import chat_service, generate_service
+from app.core.config import settings
 
 if TYPE_CHECKING:
     from app.ai_engine.schemas import ChatResponse, GenerateResponse
@@ -50,6 +52,30 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = "AUTO"
 DEFAULT_PROVIDER = "openai"
+
+
+def _is_non_production_env() -> bool:
+    return settings.app_env not in {"production", "prod"}
+
+
+def _build_test_chat_fallback(messages: list[dict[str, str]]) -> str:
+    user_lines = [msg["content"].strip() for msg in messages if msg.get("role") == "user"]
+    joined = " | ".join(line for line in user_lines if line)
+    if joined:
+        return f"Reponse test hors provider: {joined}"
+    return "Reponse test hors provider."
+
+
+def _build_test_guidance_fallback(use_case: str) -> str:
+    return f"Guidance test hors provider pour {use_case}."
+
+
+def _can_use_test_fallback(err: Exception) -> bool:
+    if not _is_non_production_env():
+        return False
+    if isinstance(err, ProviderNotConfiguredError):
+        return True
+    return "not configured" in str(err).lower()
 
 
 def _handle_ai_engine_error(
@@ -265,6 +291,8 @@ class AIEngineAdapter:
             )
             raise TimeoutError("llm provider timeout") from err
         except (UpstreamError, AIEngineError) as err:
+            if _can_use_test_fallback(err):
+                return _build_test_chat_fallback(messages)
             _handle_ai_engine_error(err, request_id, "chat")
 
     @staticmethod
@@ -354,4 +382,6 @@ class AIEngineAdapter:
             )
             raise TimeoutError("llm provider timeout") from err
         except (UpstreamError, AIEngineError) as err:
+            if _can_use_test_fallback(err):
+                return _build_test_guidance_fallback(use_case)
             _handle_ai_engine_error(err, request_id, "guidance")

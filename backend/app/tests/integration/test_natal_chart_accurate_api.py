@@ -7,6 +7,7 @@ from __future__ import annotations
 import pytest
 from sqlalchemy import delete
 
+from app.domain.astrology.natal_calculation import NatalCalculationError
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
@@ -29,33 +30,54 @@ from app.services.user_natal_chart_service import (
     UserNatalChartService,
     UserNatalChartServiceError,
 )
-from app.domain.astrology.natal_calculation import NatalCalculationError
 
 
 @pytest.fixture
 def mock_swisseph(monkeypatch: pytest.MonkeyPatch) -> None:
     """Active SwissEph et mock le bootstrap pour les tests d'intégration."""
-    from app.services import natal_calculation_service
     from app.core import ephemeris
-    
+    from app.services import natal_calculation_service
+
     monkeypatch.setattr(natal_calculation_service.settings, "swisseph_enabled", True)
-    
+
     class MockBootstrap:
         success = True
         path_version = "test_path_v1"
         error = None
-        
-    monkeypatch.setattr(ephemeris, "get_bootstrap_result", lambda: MockBootstrap())
-    
-    # Mock des providers pour éviter d'appeler pyswisseph réel
-    def _mock_positions(jdut: float, planet_codes: list[str], **kwargs: object) -> list[dict[str, object]]:
-        return [{"planet_code": code, "longitude": 0.0, "sign_code": "aries"} for code in planet_codes]
-        
-    def _mock_houses(jdut: float, lat: float, lon: float, house_numbers: list[int], **kwargs: object) -> tuple[list[dict[str, object]], str]:
-        return [{"number": n, "cusp_longitude": float((n - 1) * 30)} for n in house_numbers], "placidus"
 
-    monkeypatch.setattr("app.domain.astrology.natal_calculation._build_swisseph_positions", _mock_positions)
-    monkeypatch.setattr("app.domain.astrology.natal_calculation._build_swisseph_houses", _mock_houses)
+    monkeypatch.setattr(ephemeris, "get_bootstrap_result", lambda: MockBootstrap())
+
+    # Mock des providers pour éviter d'appeler pyswisseph réel
+    def _mock_positions(
+        jdut: float,
+        planet_codes: list[str],
+        **kwargs: object,
+    ) -> list[dict[str, object]]:
+        return [
+            {"planet_code": code, "longitude": 0.0, "sign_code": "aries"}
+            for code in planet_codes
+        ]
+
+    def _mock_houses(
+        jdut: float,
+        lat: float,
+        lon: float,
+        house_numbers: list[int],
+        **kwargs: object,
+    ) -> tuple[list[dict[str, object]], str]:
+        return (
+            [{"number": n, "cusp_longitude": float((n - 1) * 30)} for n in house_numbers],
+            "placidus",
+        )
+
+    monkeypatch.setattr(
+        "app.domain.astrology.natal_calculation._build_swisseph_positions",
+        _mock_positions,
+    )
+    monkeypatch.setattr(
+        "app.domain.astrology.natal_calculation._build_swisseph_houses",
+        _mock_houses,
+    )
 
 
 def _cleanup() -> None:
@@ -284,7 +306,7 @@ def test_metadata_sidereal_mode_reconstructed(mock_swisseph: None) -> None:
 
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
-        data = UserNatalChartService.generate_for_user(
+        UserNatalChartService.generate_for_user(
             db=db,
             user_id=user_id,
             accurate=True,
@@ -312,7 +334,7 @@ def test_metadata_topocentric_mode_reconstructed(mock_swisseph: None) -> None:
 
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
-        data = UserNatalChartService.generate_for_user(
+        UserNatalChartService.generate_for_user(
             db=db,
             user_id=user_id,
             accurate=True,

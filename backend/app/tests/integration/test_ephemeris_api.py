@@ -22,7 +22,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core import ephemeris
-from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.observability.metrics import get_counter_sum_in_window, reset_metrics
 from app.main import app
 

@@ -1,4 +1,5 @@
 from itertools import combinations
+
 from app.core.constants import DEFAULT_FALLBACK_ORB, LUMINARIES
 
 

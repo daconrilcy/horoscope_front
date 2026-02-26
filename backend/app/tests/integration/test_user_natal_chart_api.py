@@ -1,3 +1,4 @@
+import pytest
 from copy import deepcopy
 
 from fastapi.testclient import TestClient
@@ -7,6 +8,15 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.base import Base
+
+
+@pytest.fixture
+def _mock_swisseph(monkeypatch: object) -> None:
+    from app.core import ephemeris
+    monkeypatch.setattr("app.services.natal_calculation_service.settings.swisseph_enabled", True)
+    
+    mock_result = ephemeris._BootstrapResult(success=True, path_version="test-v1")
+    monkeypatch.setattr("app.core.ephemeris.get_bootstrap_result", lambda: mock_result)
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.reference import (
@@ -123,6 +133,23 @@ def _seed_reference_data() -> None:
         headers={"x-admin-token": settings.reference_seed_admin_token},
     )
     assert response.status_code == 200
+
+
+def _seed_resolved_place() -> int:
+    with SessionLocal() as db:
+        place = GeoPlaceResolvedModel(
+            provider="nominatim",
+            provider_place_id=12345,
+            display_name="Paris, France",
+            latitude=48.8566,
+            longitude=2.3522,
+            country_code="FR",
+            city="Paris",
+        )
+        db.add(place)
+        db.commit()
+        db.refresh(place)
+        return place.id
 
 
 def test_generate_natal_chart_requires_token() -> None:
@@ -456,6 +483,239 @@ def test_generate_natal_chart_invalid_payload_uses_standard_error_envelope() -> 
     payload = response.json()
     assert "error" in payload
     assert payload["error"]["code"] == "invalid_natal_chart_request"
+
+
+def test_generate_natal_chart_sidereal_without_ayanamsa_exposes_lahiri(_mock_swisseph: None) -> None:
+    _cleanup_tables()
+    _seed_reference_data()
+    place_id = _seed_resolved_place()
+    access_token = _register_and_get_access_token()
+    put_birth = client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+            "place_resolved_id": place_id,
+        },
+    )
+    assert put_birth.status_code == 200
+
+    response = client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"reference_version": "1.0.0", "zodiac": "sidereal", "accurate": True},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    assert payload["result"]["zodiac"] == "sidereal"
+    assert payload["result"]["ayanamsa"] == "lahiri"
+    assert payload["metadata"]["zodiac"] == "sidereal"
+    assert payload["metadata"]["ayanamsa"] == "lahiri"
+    assert payload["metadata"]["zodiac"] == payload["result"]["zodiac"]
+    assert payload["metadata"]["ayanamsa"] == payload["result"]["ayanamsa"]
+
+
+def test_generate_natal_chart_topocentric_without_altitude_exposes_zero_altitude(_mock_swisseph: None) -> None:
+    _cleanup_tables()
+    _seed_reference_data()
+    place_id = _seed_resolved_place()
+    access_token = _register_and_get_access_token()
+    put_birth = client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+            "place_resolved_id": place_id,
+        },
+    )
+    assert put_birth.status_code == 200
+
+    response = client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"reference_version": "1.0.0", "frame": "topocentric", "accurate": True},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    assert payload["result"]["frame"] == "topocentric"
+    assert payload["metadata"]["frame"] == "topocentric"
+    assert payload["result"]["altitude_m"] == 0.0
+    assert payload["metadata"]["altitude_m"] == 0.0
+    assert payload["metadata"]["frame"] == payload["result"]["frame"]
+    assert payload["metadata"]["altitude_m"] == payload["result"]["altitude_m"]
+
+
+def test_generate_natal_chart_invalid_zodiac_returns_explicit_business_code() -> None:
+    _cleanup_tables()
+    _seed_reference_data()
+    access_token = _register_and_get_access_token()
+    put_birth = client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+    assert put_birth.status_code == 200
+
+    response = client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"reference_version": "1.0.0", "zodiac": "wrong"},
+    )
+
+    assert response.status_code == 422
+    payload = response.json()["error"]
+    assert payload["code"] == "invalid_zodiac"
+    assert payload["details"]["allowed"] == "tropical,sidereal"
+    assert payload["details"]["actual"] == "wrong"
+
+
+def test_generate_natal_chart_invalid_frame_returns_explicit_business_code() -> None:
+    _cleanup_tables()
+    _seed_reference_data()
+    access_token = _register_and_get_access_token()
+    put_birth = client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+    assert put_birth.status_code == 200
+
+    response = client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"reference_version": "1.0.0", "frame": "wrong"},
+    )
+
+    assert response.status_code == 422
+    payload = response.json()["error"]
+    assert payload["code"] == "invalid_frame"
+    assert payload["details"]["allowed"] == "geocentric,topocentric"
+    assert payload["details"]["actual"] == "wrong"
+
+
+def test_generate_natal_chart_invalid_ayanamsa_returns_422() -> None:
+    _cleanup_tables()
+    _seed_reference_data()
+    access_token = _register_and_get_access_token()
+    client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+    response = client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"zodiac": "sidereal", "ayanamsa": "unknown"},
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "invalid_ayanamsa"
+
+
+def test_generate_natal_chart_sidereal_requires_accurate_mode() -> None:
+    _cleanup_tables()
+    _seed_reference_data()
+    access_token = _register_and_get_access_token()
+    client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+    response = client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"zodiac": "sidereal", "accurate": False},
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "accurate_mode_required"
+
+
+def test_generate_natal_chart_topocentric_requires_accurate_mode() -> None:
+    _cleanup_tables()
+    _seed_reference_data()
+    access_token = _register_and_get_access_token()
+    client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+    response = client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"frame": "topocentric", "accurate": False},
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "accurate_mode_required"
+
+
+def test_generate_natal_chart_sidereal_with_simplified_override_fails(monkeypatch: object) -> None:
+    _cleanup_tables()
+    _seed_reference_data()
+    access_token = _register_and_get_access_token()
+    client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+
+    from app.services.natal_calculation_service import NatalCalculationService
+    from app.domain.astrology.natal_preparation import BirthInput
+    
+    # Mock settings to allow simplified engine for internal requests
+    monkeypatch.setattr("app.services.natal_calculation_service.settings.natal_engine_simplified_enabled", True)
+    monkeypatch.setattr("app.services.natal_calculation_service.settings.app_env", "test")
+
+    with SessionLocal() as db:
+        birth_input = BirthInput(
+            birth_date="1990-06-15",
+            birth_time="10:30",
+            birth_place="Paris",
+            birth_timezone="Europe/Paris",
+        )
+        try:
+            NatalCalculationService.calculate(
+                db, birth_input, zodiac="sidereal", engine_override="simplified", internal_request=True
+            )
+            pytest.fail("Should have raised NatalCalculationError")
+        except Exception as e:
+            assert getattr(e, "code", "") == "natal_engine_option_unsupported"
 
 
 def test_get_natal_chart_consistency_requires_token() -> None:

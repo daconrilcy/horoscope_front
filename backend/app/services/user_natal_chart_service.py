@@ -57,6 +57,7 @@ class UserNatalChartMetadata(BaseModel):
     zodiac: str = "tropical"
     frame: str = "geocentric"
     ayanamsa: str | None = None
+    altitude_m: float | None = None
     timezone_used: str = ""
     ephemeris_path_version: str | None = None
 
@@ -320,6 +321,7 @@ class UserNatalChartService:
                 zodiac=result.zodiac,
                 frame=result.frame,
                 ayanamsa=result.ayanamsa,
+                altitude_m=result.altitude_m,
                 timezone_used=result.prepared_input.birth_timezone,
                 ephemeris_path_version=result.ephemeris_path_version,
             ),
@@ -392,6 +394,7 @@ class UserNatalChartService:
                 zodiac=result.zodiac,
                 frame=result.frame,
                 ayanamsa=result.ayanamsa,
+                altitude_m=result.altitude_m,
                 timezone_used=result.prepared_input.birth_timezone,
                 ephemeris_path_version=result.ephemeris_path_version,
             ),
