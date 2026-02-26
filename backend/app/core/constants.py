@@ -15,3 +15,6 @@ DEFAULT_FALLBACK_ORB = 6.0
 # Bornes de validation pour les orbes
 MIN_ORB_DEG = 0.0
 MAX_ORB_DEG = 15.0
+
+# Corps célestes considérés comme luminaires
+LUMINARIES = {"sun", "moon"}

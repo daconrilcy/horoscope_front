@@ -5,6 +5,7 @@ from math import isfinite
 
 from pydantic import BaseModel
 
+from app.core.constants import DEFAULT_FALLBACK_ORB
 from app.domain.astrology.angle_utils import contains_angle
 from app.domain.astrology.calculators import (
     calculate_houses,
@@ -35,6 +36,7 @@ class AspectResult(BaseModel):
     planet_b: str
     angle: float
     orb: float
+    orb_used: float | None = None
 
 
 class NatalResult(BaseModel):
@@ -260,8 +262,12 @@ def build_natal_result(
         if timeout_check is not None:
             timeout_check()
         houses_raw, effective_house_system = _build_swisseph_houses(
-            prepared.julian_day, birth_lat, birth_lon, house_numbers,
-            frame=frame, altitude_m=altitude_m,
+            prepared.julian_day,
+            birth_lat,
+            birth_lon,
+            house_numbers,
+            frame=frame,
+            altitude_m=altitude_m,
         )
     else:
         positions_raw = calculate_planet_positions(prepared.julian_day, planet_codes, sign_codes)
@@ -336,7 +342,7 @@ def build_natal_result(
                 },
             )
 
-    aspect_definitions: list[tuple[str, float]] = []
+    aspect_definitions: list[dict[str, object]] = []
     for item in aspects_data:
         if not isinstance(item, dict):
             _raise_invalid_reference(version, "aspects", "invalid_entry")
@@ -349,10 +355,29 @@ def build_natal_result(
             angle_value = float(item["angle"])
         except (TypeError, ValueError):
             _raise_invalid_reference(version, "aspects", "invalid_angle")
-        aspect_definitions.append((code_value.strip(), angle_value))
+        default_orb_raw = item.get("default_orb_deg", DEFAULT_FALLBACK_ORB)
+        try:
+            default_orb_value = float(default_orb_raw)
+        except (TypeError, ValueError):
+            _raise_invalid_reference(version, "aspects", "invalid_default_orb_deg")
+
+        aspect_definition: dict[str, object] = {
+            "code": code_value.strip(),
+            "angle": angle_value,
+            "default_orb_deg": default_orb_value,
+        }
+        if "orb_luminaries" in item:
+            aspect_definition["orb_luminaries"] = item.get("orb_luminaries")
+        if "orb_pair_overrides" in item:
+            aspect_definition["orb_pair_overrides"] = item.get("orb_pair_overrides")
+        if "orb_pairs" in item:
+            aspect_definition["orb_pairs"] = item.get("orb_pairs")
+        if "orb_overrides" in item:
+            aspect_definition["orb_overrides"] = item.get("orb_overrides")
+        aspect_definitions.append(aspect_definition)
     if not aspect_definitions:
         _raise_invalid_reference(version, "aspects", "missing_code_or_angle")
-    aspect_definitions.sort(key=lambda item: (item[1], item[0]))
+    aspect_definitions.sort(key=lambda item: (float(item["angle"]), str(item["code"])))
     aspects_raw = calculate_major_aspects(positions_raw, aspect_definitions)
     if timeout_check is not None:
         timeout_check()
