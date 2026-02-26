@@ -1,0 +1,33 @@
+<svg class="icon-aries" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Bélier (Aries)">
+  <!-- Background (modifiable in CSS) -->
+  <rect class="ar-bg" x="4" y="4" width="56" height="56" rx="14"></rect>
+
+  <!-- Aries stroke (model path scaled to 64x64) -->
+  <path class="ar-stroke" d="
+    M6.978 28.019
+    C3.389 24.231 1.608 20.364 2.389 15.155
+    C3.512 7.665 9.64 2.49 17 2.296
+    C24.578 2.096 30.764 7.479 31.786 15.155
+
+    M31.786 15.155
+    C31.786 33.341 31.786 61.739 31.786 61.739
+
+    M31.786 15.155
+    C33.008 7.355 39.338 2.22 47.058 2.296
+    C54.482 2.39 60.539 7.863 61.586 15.155
+    C62.352 20.377 60.847 24.259 57.214 28.019
+  "></path>
+
+  <style>
+    .ar-bg { fill: var(--aries-bg, #0b0b0b); }
+
+    .ar-stroke{
+      fill: none;
+      stroke: var(--aries-stroke, #ffffff);
+      /* équivalent stroke 50 sur 725px -&gt; ~4.41 sur 64px */
+      stroke-width: var(--aries-stroke-width, 4.4);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+</svg>

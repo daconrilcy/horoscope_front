@@ -41,7 +41,11 @@ const TEST_RULESET_VERSION = "1.0"
 const CHART_BASE = {
   chart_id: "abc",
   created_at: "2024-02-22T10:00:00Z",
-  metadata: { reference_version: TEST_REFERENCE_VERSION, ruleset_version: TEST_RULESET_VERSION },
+  metadata: {
+    reference_version: TEST_REFERENCE_VERSION,
+    ruleset_version: TEST_RULESET_VERSION,
+    house_system: "equal",
+  },
   result: {
     reference_version: TEST_REFERENCE_VERSION,
     ruleset_version: TEST_RULESET_VERSION,
@@ -171,7 +175,7 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("link", { name: "Compléter mon profil" })).toBeInTheDocument()
   })
 
-  it("logs requestId to console but does not display it to user (AC8)", () => {
+  it("does not log requestId for functional 4xx errors (birth_profile_not_found)", () => {
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
     mockUseLatestNatalChart.mockReturnValue({
       isLoading: false,
@@ -183,8 +187,25 @@ describe("NatalChartPage", () => {
         <NatalChartPage />
       </MemoryRouter>
     )
-    expect(consoleErrorSpy).toHaveBeenCalledWith("[Support] Request ID: req-test-123")
+    expect(consoleErrorSpy).not.toHaveBeenCalledWith("[Support] Request ID: req-test-123")
     expect(screen.queryByText(/req-test-123/)).not.toBeInTheDocument()
+    consoleErrorSpy.mockRestore()
+  })
+
+  it("logs requestId for technical 5xx errors", () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    mockUseLatestNatalChart.mockReturnValue({
+      isLoading: false,
+      isError: true,
+      error: new ApiError("natal_engine_unavailable", "service down", 503, "req-503-1"),
+      refetch: vi.fn(),
+    })
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <NatalChartPage />
+      </MemoryRouter>
+    )
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[Support] Request ID: req-503-1")
     consoleErrorSpy.mockRestore()
   })
 
@@ -202,6 +223,22 @@ describe("NatalChartPage", () => {
       </MemoryRouter>
     )
     expect(consoleErrorSpy).not.toHaveBeenCalledWith(expect.stringContaining("[Support] Request ID"))
+    consoleErrorSpy.mockRestore()
+  })
+
+  it("does not log requestId when error is natal_chart_not_found (expected empty state)", () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    mockUseLatestNatalChart.mockReturnValue({
+      isLoading: false,
+      isError: true,
+      error: new ApiError("natal_chart_not_found", "not found", 404, "req-not-found-1"),
+    })
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <NatalChartPage />
+      </MemoryRouter>
+    )
+    expect(consoleErrorSpy).not.toHaveBeenCalledWith("[Support] Request ID: req-not-found-1")
     consoleErrorSpy.mockRestore()
   })
 
@@ -242,17 +279,79 @@ describe("NatalChartPage", () => {
       </MemoryRouter>
     )
     expect(screen.getByRole("heading", { name: /Thème natal/i })).toBeInTheDocument()
-    expect(screen.getByRole("heading", { name: /Planètes/i })).toBeInTheDocument()
-    expect(screen.getByRole("heading", { name: /Maisons/i })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Planètes" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Maisons" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: /Aspects majeurs/i })).toBeInTheDocument()
     // Verify i18n metadata labels are rendered
     expect(screen.getByText(/Généré le/i)).toBeInTheDocument()
+    expect(screen.getByText(/Système de maisons Maisons égales/i)).toBeInTheDocument()
 
     // Sample data check — now translated to French
+    // Note: getAllByText used for terms that also appear in the pedagogical guide
     expect(screen.getAllByText(/Soleil/).length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText(/Gémeaux/)).toBeInTheDocument()
+    expect(screen.getAllByText(/Gémeaux/).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/Trigone/)).toBeInTheDocument()
     expect(screen.getByText(/Lune/)).toBeInTheDocument()
+  })
+
+  it("affiche le degré dans le signe et l'intervalle de maison pour chaque planète", () => {
+    mockUseLatestNatalChart.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: {
+        ...CHART_BASE,
+        result: {
+          ...CHART_BASE.result,
+          planet_positions: [
+            { planet_code: "SUN", sign_code: "TAURUS", longitude: 34.08, house_number: 1 },
+          ],
+          houses: Array.from({ length: 12 }).map((_, idx) => ({
+            number: idx + 1,
+            cusp_longitude: (18.46 + idx * 30) % 360,
+          })),
+          aspects: [],
+        },
+      },
+    })
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <NatalChartPage />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByText(/Taureau 4°05′ \(34\.08°\)/)).toBeInTheDocument()
+    expect(screen.getByText(/Maison I.+18\.46° -> 48\.46°/)).toBeInTheDocument()
+  })
+
+  it("borne le degré dans le signe à 29°59′ au lieu de 30°00′ sur frontière d'arrondi", () => {
+    mockUseLatestNatalChart.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: {
+        ...CHART_BASE,
+        result: {
+          ...CHART_BASE.result,
+          planet_positions: [
+            { planet_code: "SUN", sign_code: "ARIES", longitude: 29.9999, house_number: 1 },
+          ],
+          houses: Array.from({ length: 12 }).map((_, idx) => ({
+            number: idx + 1,
+            cusp_longitude: (18.46 + idx * 30) % 360,
+          })),
+          aspects: [],
+        },
+      },
+    })
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <NatalChartPage />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByText(/Bélier 29°59′ \(30\.00°\)/)).toBeInTheDocument()
+    expect(screen.queryByText(/30°00′/)).not.toBeInTheDocument()
   })
 
   it("affiche le bandeau lieu quand degraded_mode = no_location (AC1)", () => {
@@ -347,7 +446,8 @@ describe("NatalChartPage", () => {
         <NatalChartPage />
       </MemoryRouter>
     )
-    expect(screen.getByText(/Soleil/)).toBeInTheDocument()
+    // "Soleil" also appears in the pedagogical guide sign example — use getAllByText
+    expect(screen.getAllByText(/Soleil/).length).toBeGreaterThanOrEqual(1)
     expect(screen.queryByText(/SUN/)).not.toBeInTheDocument()
   })
 
@@ -368,7 +468,8 @@ describe("NatalChartPage", () => {
         <NatalChartPage />
       </MemoryRouter>
     )
-    expect(screen.getByText(/Gémeaux/)).toBeInTheDocument()
+    // "Gémeaux" also appears in the pedagogical guide signs description — use getAllByText
+    expect(screen.getAllByText(/Gémeaux/).length).toBeGreaterThanOrEqual(1)
     expect(screen.queryByText(/GEMINI/)).not.toBeInTheDocument()
   })
 
@@ -413,6 +514,298 @@ describe("NatalChartPage", () => {
     expect(screen.queryByText(/TRINE/)).not.toBeInTheDocument()
   })
 
+  describe("AC-18-3: Bloc résumé astro_profile", () => {
+    it("affiche le profil astrologique avec signe solaire et ascendant", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          ...CHART_BASE,
+          astro_profile: {
+            sun_sign_code: "leo",
+            ascendant_sign_code: "scorpio",
+            missing_birth_time: false,
+          },
+        },
+      })
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      expect(screen.getByRole("heading", { name: /Profil astrologique/i })).toBeInTheDocument()
+      expect(screen.getByText("Lion")).toBeInTheDocument()
+      expect(screen.getByText("Scorpion")).toBeInTheDocument()
+    })
+
+    it("affiche '— (heure de naissance manquante)' quand missing_birth_time=true et pas d'ascendant", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          ...CHART_BASE,
+          astro_profile: {
+            sun_sign_code: "leo",
+            ascendant_sign_code: null,
+            missing_birth_time: true,
+          },
+        },
+      })
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      expect(screen.getByText(/heure de naissance manquante/i)).toBeInTheDocument()
+    })
+
+    it("affiche '—' pour l'ascendant quand missing_birth_time=false et pas d'ascendant", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          ...CHART_BASE,
+          astro_profile: {
+            sun_sign_code: "leo",
+            ascendant_sign_code: null,
+            missing_birth_time: false,
+          },
+        },
+      })
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      // "—" should appear as the ascendant value
+      expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(1)
+      expect(screen.queryByText(/heure de naissance manquante/i)).not.toBeInTheDocument()
+    })
+
+    it("n'affiche pas le bloc profil astrologique quand astro_profile est absent", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { ...CHART_BASE },
+      })
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      expect(screen.queryByRole("heading", { name: /Profil astrologique/i })).not.toBeInTheDocument()
+    })
+  })
+
+  describe("AC-19-1: Bloc pédagogique NatalChartGuide", () => {
+    it("affiche le guide pédagogique avec les 3 sections (signes, maisons, planètes) (AC 1)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { ...CHART_BASE },
+      })
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      // Le summary doit être visible (section réduite par défaut)
+      expect(screen.getByText(/Comment lire ton thème natal/i)).toBeInTheDocument()
+    })
+
+    it("affiche le résumé du guide sans le développer (AC 1)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { ...CHART_BASE },
+      })
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      // Le titre summary est toujours visible même sans open
+      const summary = screen.getByText(/Comment lire ton thème natal/i)
+      expect(summary.tagName.toLowerCase()).toBe("summary")
+    })
+
+    it("affiche l'exemple de conversion longitude → signe (AC 2)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { ...CHART_BASE },
+      })
+      const { container } = render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      // Ouvrir le details pour voir le contenu
+      const details = container.querySelector("details.natal-chart-guide")
+      expect(details).toBeInTheDocument()
+      details!.setAttribute("open", "")
+      expect(screen.getByText(/Soleil 34,08° → Taureau 4°05′/)).toBeInTheDocument()
+    })
+
+    it("affiche la convention d'intervalle semi-ouvert [début, fin) (AC 3)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { ...CHART_BASE },
+      })
+      const { container } = render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      const details = container.querySelector("details.natal-chart-guide")
+      details!.setAttribute("open", "")
+      expect(screen.getByText(/\[début, fin\)/i)).toBeInTheDocument()
+    })
+
+    it("affiche un exemple de wrap 360->0 (AC 4)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { ...CHART_BASE },
+      })
+      const { container } = render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      const details = container.querySelector("details.natal-chart-guide")
+      details!.setAttribute("open", "")
+      expect(screen.getByText(/348,46° → 360° puis 0° → 18,46°/)).toBeInTheDocument()
+    })
+
+    it("affiche le message ascendant non calculé quand missing_birth_time=true (AC 5)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          ...CHART_BASE,
+          astro_profile: {
+            sun_sign_code: "leo",
+            ascendant_sign_code: null,
+            missing_birth_time: true,
+          },
+        },
+      })
+      const { container } = render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      const details = container.querySelector("details.natal-chart-guide")
+      details!.setAttribute("open", "")
+      expect(
+        screen.getByText(/L'heure de naissance n'est pas renseignée.*l'ascendant n'est pas calculé/i)
+      ).toBeInTheDocument()
+    })
+
+    it("n'affiche pas le message ascendant non calculé quand missing_birth_time=false (AC 5)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          ...CHART_BASE,
+          astro_profile: {
+            sun_sign_code: "leo",
+            ascendant_sign_code: "scorpio",
+            missing_birth_time: false,
+          },
+        },
+      })
+      const { container } = render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      const details = container.querySelector("details.natal-chart-guide")
+      details!.setAttribute("open", "")
+      expect(screen.queryByText(/l'ascendant n'est pas calculé/i)).not.toBeInTheDocument()
+    })
+
+    it("affiche le guide même quand astro_profile est absent (AC 1)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { ...CHART_BASE },
+      })
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      expect(screen.getByText(/Comment lire ton thème natal/i)).toBeInTheDocument()
+    })
+  })
+
+  describe("AC-19-1: Wrap 360->0 dans l'intervalle de maison (AC 4, AC 7)", () => {
+    it("affiche l'intervalle de wrap 360->0 pour la maison 12 (AC 4)", () => {
+      // House 12: cusp 348.46°, House 1: cusp 18.46° (wrap case)
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          ...CHART_BASE,
+          result: {
+            ...CHART_BASE.result,
+            planet_positions: [
+              { planet_code: "SUN", sign_code: "PISCES", longitude: 355.0, house_number: 12 },
+            ],
+            houses: Array.from({ length: 12 }).map((_, idx) => ({
+              number: idx + 1,
+              cusp_longitude: idx === 0 ? 18.46 : (18.46 + idx * 30) % 360,
+            })),
+            aspects: [],
+          },
+        },
+      })
+
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      // House 12 interval: 348.46° -> 360° puis 0° -> 18.46°
+      expect(screen.getByText(/348\.46° -> 360° puis 0° -> 18\.46°/)).toBeInTheDocument()
+    })
+
+    it("affiche l'intervalle normal pour une maison sans wrap (AC 7)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          ...CHART_BASE,
+          result: {
+            ...CHART_BASE.result,
+            planet_positions: [
+              { planet_code: "SUN", sign_code: "TAURUS", longitude: 34.08, house_number: 1 },
+            ],
+            houses: Array.from({ length: 12 }).map((_, idx) => ({
+              number: idx + 1,
+              cusp_longitude: (18.46 + idx * 30) % 360,
+            })),
+            aspects: [],
+          },
+        },
+      })
+
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      // House 1: 18.46° -> 48.46° (normal format, no wrap)
+      const planetLi = screen.getByText(/Maison I.+18\.46° -> 48\.46°/)
+      expect(planetLi).toBeInTheDocument()
+      // The planet list item itself should NOT contain the wrap notation "puis 0°"
+      expect(planetLi.textContent).not.toContain("puis 0°")
+    })
+  })
+
   it("handles undefined planet_positions, houses, and aspects gracefully", () => {
     mockUseLatestNatalChart.mockReturnValue({
       isLoading: false,
@@ -433,8 +826,8 @@ describe("NatalChartPage", () => {
       </MemoryRouter>
     )
     expect(screen.getByRole("heading", { name: /Thème natal/i })).toBeInTheDocument()
-    expect(screen.getByRole("heading", { name: /Planètes/i })).toBeInTheDocument()
-    expect(screen.getByRole("heading", { name: /Maisons/i })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Planètes" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Maisons" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: /Aspects majeurs/i })).toBeInTheDocument()
     expect(screen.getByText(/Aucun aspect majeur détecté/i)).toBeInTheDocument()
 

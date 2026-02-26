@@ -22,7 +22,7 @@ export function BottomNav() {
             className={`bottom-nav__item${isActive ? ' bottom-nav__item--active' : ''}`}
             aria-current={isActive ? 'page' : undefined}
           >
-            <Icon size={24} strokeWidth={1.75} />
+            <Icon size={24} strokeWidth={1.75} aria-hidden="true" />
             <span className="bottom-nav__label">{label}</span>
           </Link>
         )

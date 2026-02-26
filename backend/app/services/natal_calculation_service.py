@@ -51,15 +51,22 @@ class NatalCalculationService:
         Raises:
             NatalCalculationError: Si la version de référence n'existe pas.
         """
+        resolved_version = reference_version or settings.active_reference_version
+
+        if timeout_check is not None:
+            timeout_check()
         reference_data = ReferenceDataService.get_active_reference_data(
             db,
-            version=reference_version,
+            version=resolved_version,
         )
+        if timeout_check is not None:
+            timeout_check()
+
         if not reference_data:
             raise NatalCalculationError(
                 code="reference_version_not_found",
                 message="reference version not found",
-                details={"version": reference_version or settings.active_reference_version},
+                details={"version": resolved_version},
             )
 
         return build_natal_result(

@@ -15,12 +15,14 @@ from pydantic import BaseModel, ValidationError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.domain.astrology.calculators.houses import HOUSE_SYSTEM_CODE
 from app.domain.astrology.natal_calculation import NatalCalculationError, NatalResult
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.repositories.chart_result_repository import ChartResultRepository
 from app.infra.db.repositories.user_birth_profile_repository import UserBirthProfileRepository
 from app.services.chart_result_service import ChartResultService, ChartResultServiceError
 from app.services.natal_calculation_service import NatalCalculationService
+from app.services.reference_data_service import ReferenceDataService
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,
@@ -50,6 +52,7 @@ class UserNatalChartMetadata(BaseModel):
 
     reference_version: str
     ruleset_version: str
+    house_system: str = HOUSE_SYSTEM_CODE
 
 
 class UserNatalChartGenerationData(BaseModel):
@@ -169,7 +172,17 @@ class UserNatalChartService:
             birth_time=profile.birth_time,
             birth_place=profile.birth_place,
             birth_timezone=profile.birth_timezone,
+            # Propagate canonical coordinates from profile (story 19-4).
+            # In story 19-6, these will be resolved from geo_place_resolved FK.
+            birth_lat=profile.birth_lat,
+            birth_lon=profile.birth_lon,
         )
+        if birth_input.birth_time is None:
+            raise UserNatalChartServiceError(
+                code="missing_birth_time",
+                message="birth_time is required to generate natal chart",
+                details={"user_id": str(user_id)},
+            )
         started_at = perf_counter()
         timeout_deadline = started_at + settings.natal_generation_timeout_seconds
 
@@ -184,6 +197,29 @@ class UserNatalChartService:
                 reference_version=reference_version,
                 timeout_check=_timeout_check,
             )
+        except NatalCalculationError as error:
+            # Local/dev safeguard: if reference data is missing, seed once and retry.
+            should_auto_seed = (
+                error.code == "reference_version_not_found"
+                and (
+                    reference_version is None
+                    or reference_version == settings.active_reference_version
+                )
+            )
+            if should_auto_seed:
+                ReferenceDataService.seed_reference_version(db, version=reference_version)
+                result = NatalCalculationService.calculate(
+                    db=db,
+                    birth_input=birth_input,
+                    reference_version=reference_version,
+                    timeout_check=_timeout_check,
+                )
+            else:
+                raise UserNatalChartServiceError(
+                    code=error.code,
+                    message=error.message,
+                    details=error.details,
+                ) from error
         except TimeoutError as error:
             raise UserNatalChartServiceError(
                 code="natal_generation_timeout",
@@ -195,12 +231,6 @@ class UserNatalChartService:
                 code="natal_engine_unavailable",
                 message="natal engine is unavailable",
                 details={"retryable": "true"},
-            ) from error
-        except NatalCalculationError as error:
-            raise UserNatalChartServiceError(
-                code=error.code,
-                message=error.message,
-                details=error.details,
             ) from error
 
         elapsed_seconds = perf_counter() - started_at
@@ -234,6 +264,7 @@ class UserNatalChartService:
             metadata=UserNatalChartMetadata(
                 reference_version=result.reference_version,
                 ruleset_version=result.ruleset_version,
+                house_system=HOUSE_SYSTEM_CODE,
             ),
         )
 
@@ -299,6 +330,7 @@ class UserNatalChartService:
             metadata=UserNatalChartMetadata(
                 reference_version=model.reference_version,
                 ruleset_version=model.ruleset_version,
+                house_system=HOUSE_SYSTEM_CODE,
             ),
             created_at=model.created_at,
         )

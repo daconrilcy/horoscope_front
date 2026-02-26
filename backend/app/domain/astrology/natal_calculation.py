@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from math import isfinite
 
 from pydantic import BaseModel
 
+from app.domain.astrology.angle_utils import contains_angle
 from app.domain.astrology.calculators import (
     calculate_houses,
     calculate_major_aspects,
     calculate_planet_positions,
 )
+from app.domain.astrology.calculators.houses import HOUSE_SYSTEM_CODE, assign_house_number
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData, prepare_birth_data
 
 
@@ -49,12 +52,63 @@ class NatalCalculationError(Exception):
         super().__init__(message)
 
 
+ZODIAC_SIGNS = (
+    "aries",
+    "taurus",
+    "gemini",
+    "cancer",
+    "leo",
+    "virgo",
+    "libra",
+    "scorpio",
+    "sagittarius",
+    "capricorn",
+    "aquarius",
+    "pisces",
+)
+
+
+def _normalize_360(value: float) -> float:
+    normalized = value % 360.0
+    return normalized if normalized >= 0 else normalized + 360.0
+
+
+def _sign_from_longitude(longitude: float) -> str:
+    normalized = _normalize_360(longitude)
+    index = int(normalized // 30.0) % 12
+    return ZODIAC_SIGNS[index]
+
+
 def _raise_invalid_reference(version: str, field: str, reason: str) -> None:
     raise NatalCalculationError(
         code="invalid_reference_data",
         message=f"{field} reference data is invalid",
         details={"reference_version": version, "field": field, "reason": reason},
     )
+
+
+def _validate_house_cusps(version: str, houses_raw: list[dict[str, object]]) -> None:
+    if len(houses_raw) != 12:
+        _raise_invalid_reference(version, "houses", "expected_12_cusps")
+
+    longitudes: list[float] = []
+    for house in houses_raw:
+        value = house.get("cusp_longitude")
+        if value is None:
+            _raise_invalid_reference(version, "houses", "missing_cusp_longitude")
+        try:
+            longitude = float(value)
+        except (TypeError, ValueError):
+            _raise_invalid_reference(version, "houses", "invalid_cusp_longitude")
+        if not isfinite(longitude):
+            _raise_invalid_reference(version, "houses", "non_finite_cusp_longitude")
+        normalized = _normalize_360(longitude)
+        if normalized != longitude:
+            _raise_invalid_reference(version, "houses", "non_normalized_cusp_longitude")
+        longitudes.append(normalized)
+
+    if len(set(longitudes)) != len(longitudes):
+        _raise_invalid_reference(version, "houses", "duplicate_cusp_longitude")
 
 
 def build_natal_result(
@@ -91,19 +145,19 @@ def build_natal_result(
     prepared = prepare_birth_data(birth_input)
     if timeout_check is not None:
         timeout_check()
-    planet_codes = sorted(
+    planet_codes = [
         str(item["code"])
         for item in planets_data
         if isinstance(item, dict) and isinstance(item.get("code"), str)
-    )
+    ]
     if not planet_codes:
         _raise_invalid_reference(version, "planets", "missing_code")
 
-    sign_codes = sorted(
+    sign_codes = [
         str(item["code"])
         for item in signs_data
         if isinstance(item, dict) and isinstance(item.get("code"), str)
-    )
+    ]
     if not sign_codes:
         _raise_invalid_reference(version, "signs", "missing_code")
 
@@ -126,8 +180,71 @@ def build_natal_result(
     if timeout_check is not None:
         timeout_check()
     houses_raw = calculate_houses(prepared.julian_day, house_numbers)
+    _validate_house_cusps(version, houses_raw)
     if timeout_check is not None:
         timeout_check()
+
+    # Coherence invariant: house assignment must use the same cusp list we return.
+    for position in positions_raw:
+        longitude = float(position["longitude"])
+        position["house_number"] = assign_house_number(longitude, houses_raw)
+        expected_sign = _sign_from_longitude(longitude)
+        if str(position.get("sign_code")) != expected_sign:
+            raise NatalCalculationError(
+                code="inconsistent_natal_result",
+                message="planet sign does not match longitude",
+                details={
+                    "planet_code": str(position.get("planet_code", "")),
+                    "longitude": str(longitude),
+                    "expected_sign_code": expected_sign,
+                    "actual_sign_code": str(position.get("sign_code", "")),
+                    "reference_version": version,
+                    "house_system": HOUSE_SYSTEM_CODE,
+                },
+            )
+        house_number = int(position["house_number"])
+        current_cusp = next(
+            (
+                float(house["cusp_longitude"])
+                for house in houses_raw
+                if int(house["number"]) == house_number
+            ),
+            None,
+        )
+        next_house_number = 1 if house_number == 12 else house_number + 1
+        next_cusp = next(
+            (
+                float(house["cusp_longitude"])
+                for house in houses_raw
+                if int(house["number"]) == next_house_number
+            ),
+            None,
+        )
+        if current_cusp is None or next_cusp is None:
+            raise NatalCalculationError(
+                code="inconsistent_natal_result",
+                message="house cusp interval is missing for assigned house",
+                details={
+                    "planet_code": str(position.get("planet_code", "")),
+                    "house_number": str(house_number),
+                    "reference_version": version,
+                    "house_system": HOUSE_SYSTEM_CODE,
+                },
+            )
+        if not contains_angle(longitude, current_cusp, next_cusp):
+            raise NatalCalculationError(
+                code="inconsistent_natal_result",
+                message="planet house does not match cusp interval",
+                details={
+                    "planet_code": str(position.get("planet_code", "")),
+                    "longitude": str(longitude),
+                    "house_number": str(house_number),
+                    "interval_start": str(current_cusp),
+                    "interval_end": str(next_cusp),
+                    "reference_version": version,
+                    "house_system": HOUSE_SYSTEM_CODE,
+                },
+            )
 
     aspect_definitions: list[tuple[str, float]] = []
     for item in aspects_data:

@@ -1,9 +1,7 @@
-/** URL de base de l'API Nominatim (OpenStreetMap) pour le géocodage */
-const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
-/** Timeout en ms pour les requêtes de géocodage (10 secondes) */
-const GEOCODING_TIMEOUT_MS = 10000
-/** User-Agent pour Nominatim (requis par leur ToS). Version statique — à synchroniser si nécessaire. */
-const NOMINATIM_USER_AGENT = "horoscope-app/1.0"
+import { API_BASE_URL } from "./client"
+
+/** Timeout en ms pour les requêtes de géocodage vers le backend (15s pour laisser le temps à Nominatim) */
+const GEOCODING_TIMEOUT_MS = 15000
 
 export type GeocodingResult = {
   lat: number
@@ -12,17 +10,17 @@ export type GeocodingResult = {
 }
 
 export class GeocodingError extends Error {
-  readonly code: "service_unavailable"
+  readonly code: string
 
-  constructor(message: string) {
+  constructor(message: string, code?: string) {
     super(message)
     this.name = "GeocodingError"
-    this.code = "service_unavailable"
+    this.code = code ?? "service_unavailable"
   }
 }
 
 /**
- * Géocode une ville via l'API Nominatim (OpenStreetMap).
+ * Géocode une ville via le proxy backend (qui interroge Nominatim côté serveur).
  * @param city - Nom de la ville à géocoder
  * @param country - Nom du pays (améliore la précision du géocodage)
  * @param externalSignal - Signal d'annulation optionnel pour interrompre la requête
@@ -34,36 +32,54 @@ export async function geocodeCity(
   country: string,
   externalSignal?: AbortSignal,
 ): Promise<GeocodingResult | null> {
-  // Early return if already aborted to avoid unnecessary setup and fetch
+  // Early return si déjà annulé
   if (externalSignal?.aborted) {
     return null
   }
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), GEOCODING_TIMEOUT_MS)
-  // Handler stocké pour pouvoir le retirer dans finally (évite fuite mémoire si signal réutilisé)
+  let timedOut = false
+  const timeoutId = setTimeout(() => {
+    timedOut = true
+    controller.abort()
+  }, GEOCODING_TIMEOUT_MS)
   const abortHandler = () => controller.abort()
   externalSignal?.addEventListener("abort", abortHandler, { once: true })
+
   try {
-    const q = `${encodeURIComponent(city.trim())},${encodeURIComponent(country.trim())}`
-    const url = `${NOMINATIM_URL}?q=${q}&format=json&limit=1`
-    const response = await fetch(url, {
-      headers: { "User-Agent": NOMINATIM_USER_AGENT },
-      signal: controller.signal,
-    })
+    const q = encodeURIComponent(`${city.trim()}, ${country.trim()}`)
+    const url = `${API_BASE_URL}/v1/geocoding/search?q=${q}&limit=1`
+    const response = await fetch(url, { signal: controller.signal })
+
     if (!response.ok) {
-      throw new GeocodingError(`Nominatim returned status ${response.status}`)
+      let errorCode = "service_unavailable"
+      try {
+        const errPayload = (await response.json()) as { error?: { code?: string } }
+        errorCode = errPayload.error?.code ?? "service_unavailable"
+      } catch {
+        // ignore parse failure
+      }
+      throw new GeocodingError(`Geocoding backend error: ${response.status}`, errorCode)
     }
-    const data = (await response.json()) as Array<{ lat: string; lon: string; display_name: string }>
-    if (data.length === 0) return null
-    const lat = parseFloat(data[0].lat)
-    const lon = parseFloat(data[0].lon)
+
+    const payload = (await response.json()) as {
+      data: { results: Array<{ lat: number; lon: number; display_name: string }>; count: number }
+    }
+    const results = payload.data?.results ?? []
+    if (results.length === 0) return null
+
+    const { lat, lon, display_name } = results[0]
     if (!isFinite(lat) || !isFinite(lon)) {
-      throw new GeocodingError("Nominatim returned invalid coordinates")
+      throw new GeocodingError("Backend returned invalid coordinates", "service_unavailable")
     }
-    return { lat, lon, display_name: data[0].display_name }
+    return { lat, lon, display_name }
   } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      if (!timedOut && externalSignal?.aborted) {
+        return null
+      }
+    }
     if (err instanceof GeocodingError) throw err
-    throw new GeocodingError("Geocoding service unavailable")
+    throw new GeocodingError("Geocoding service unavailable", "service_unavailable")
   } finally {
     clearTimeout(timeoutId)
     externalSignal?.removeEventListener("abort", abortHandler)

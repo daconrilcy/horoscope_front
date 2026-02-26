@@ -30,7 +30,7 @@ export interface ShortcutsSectionProps {
 export function ShortcutsSection({ onChatClick, onTirageClick }: ShortcutsSectionProps) {
   return (
     <section className="shortcuts-section">
-      <h2 className="shortcuts-section__title">Raccourcis</h2>
+      <h2 className="shortcuts-section__title">Activités</h2>
       <div className="shortcuts-grid">
         {SHORTCUTS.map((shortcut) => {
           const handleClick = shortcut.key === 'chat' ? onChatClick : onTirageClick

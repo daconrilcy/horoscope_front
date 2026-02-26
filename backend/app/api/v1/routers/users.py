@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import random
+from threading import Lock
+from time import monotonic
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
@@ -14,10 +17,16 @@ from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_u
 from app.core.request_id import resolve_request_id
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
 from app.infra.db.session import get_db_session
+from app.infra.observability.metrics import increment_counter
 from app.services.natal_interpretation_service import (
     NatalInterpretationData,
     NatalInterpretationService,
     NatalInterpretationServiceError,
+)
+from app.services.user_astro_profile_service import (
+    UserAstroProfileData,
+    UserAstroProfileService,
+    UserAstroProfileServiceError,
 )
 from app.services.user_birth_profile_service import (
     UserBirthProfileData,
@@ -53,6 +62,23 @@ class UserBirthProfileApiResponse(BaseModel):
     meta: ResponseMeta
 
 
+class UserBirthProfileWithAstroData(BaseModel):
+    birth_date: str
+    birth_time: str | None
+    birth_place: str
+    birth_timezone: str
+    birth_city: str | None = None
+    birth_country: str | None = None
+    birth_lat: float | None = None
+    birth_lon: float | None = None
+    astro_profile: UserAstroProfileData | None = None
+
+
+class UserBirthProfileWithAstroApiResponse(BaseModel):
+    data: UserBirthProfileWithAstroData
+    meta: ResponseMeta
+
+
 class NatalChartGenerateRequest(BaseModel):
     reference_version: str | None = None
 
@@ -64,6 +90,16 @@ class UserNatalChartApiResponse(BaseModel):
 
 class UserNatalChartReadApiResponse(BaseModel):
     data: UserNatalChartReadData
+    meta: ResponseMeta
+
+
+class UserNatalChartLatestData(UserNatalChartReadData):
+    interpretation: NatalInterpretationData | None = None
+    astro_profile: UserAstroProfileData | None = None
+
+
+class UserNatalChartLatestApiResponse(BaseModel):
+    data: UserNatalChartLatestData
     meta: ResponseMeta
 
 
@@ -79,15 +115,58 @@ class NatalInterpretationApiResponse(BaseModel):
 
 router = APIRouter(prefix="/v1/users", tags=["users"])
 logger = logging.getLogger(__name__)
+_INCONSISTENT_LOG_WINDOW_SECONDS = 60.0
+_INCONSISTENT_LOG_ALWAYS_PER_WINDOW = 10
+_INCONSISTENT_LOG_SAMPLING_RATIO = 0.01
+_inconsistent_log_sampling_lock = Lock()
+_inconsistent_log_sampling_state = {"window_start": monotonic(), "count": 0}
+
+
+def _normalize_metric_label(value: str | None) -> str:
+    if value is None:
+        return "unknown"
+    normalized = value.strip().lower()
+    if not normalized:
+        return "unknown"
+    return normalized.replace("|", "_").replace("=", "_")
+
+
+def _natal_inconsistent_metric_name(
+    *,
+    reference_version: str | None,
+    house_system: str | None,
+    planet_code: str | None,
+) -> str:
+    return (
+        "natal_inconsistent_result_total"
+        f"|reference_version={_normalize_metric_label(reference_version)}"
+        f"|house_system={_normalize_metric_label(house_system)}"
+        f"|planet_code={_normalize_metric_label(planet_code)}"
+    )
+
+
+def _should_log_inconsistent_result_event() -> bool:
+    with _inconsistent_log_sampling_lock:
+        now = monotonic()
+        window_start = _inconsistent_log_sampling_state["window_start"]
+        if (now - window_start) >= _INCONSISTENT_LOG_WINDOW_SECONDS:
+            _inconsistent_log_sampling_state["window_start"] = now
+            _inconsistent_log_sampling_state["count"] = 0
+        _inconsistent_log_sampling_state["count"] += 1
+        count = _inconsistent_log_sampling_state["count"]
+    if count <= _INCONSISTENT_LOG_ALWAYS_PER_WINDOW:
+        return True
+    return random.random() < _INCONSISTENT_LOG_SAMPLING_RATIO
 
 
 @router.get(
     "/me/birth-data",
-    response_model=UserBirthProfileApiResponse,
+    response_model=UserBirthProfileWithAstroApiResponse,
     responses={
         401: {"model": ErrorEnvelope},
         403: {"model": ErrorEnvelope},
         404: {"model": ErrorEnvelope},
+        500: {"model": ErrorEnvelope},
     },
 )
 def get_me_birth_data(
@@ -98,7 +177,6 @@ def get_me_birth_data(
     request_id = resolve_request_id(request)
     try:
         profile = UserBirthProfileService.get_for_user(db, user_id=current_user.id)
-        return {"data": profile.model_dump(), "meta": {"request_id": request_id}}
     except UserBirthProfileServiceError as error:
         status_code = 404 if error.code == "birth_profile_not_found" else 422
         return JSONResponse(
@@ -113,15 +191,55 @@ def get_me_birth_data(
             },
         )
 
+    astro_profile: UserAstroProfileData | None = None
+    try:
+        astro_profile = UserAstroProfileService.get_for_user(db, user_id=current_user.id)
+    except UserAstroProfileServiceError as error:
+        logger.warning(
+            "astro profile computation failed",
+            extra={"user_id": current_user.id, "request_id": request_id, "code": error.code},
+        )
+    except Exception:
+        logger.exception(
+            "unexpected astro profile failure",
+            extra={"user_id": current_user.id, "request_id": request_id},
+        )
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": {
+                    "code": "astro_profile_computation_error",
+                    "message": "astro profile could not be computed",
+                    "details": {},
+                    "request_id": request_id,
+                }
+            },
+        )
+
+    data = UserBirthProfileWithAstroData(
+        birth_date=profile.birth_date,
+        birth_time=profile.birth_time,
+        birth_place=profile.birth_place,
+        birth_timezone=profile.birth_timezone,
+        birth_city=profile.birth_city,
+        birth_country=profile.birth_country,
+        birth_lat=profile.birth_lat,
+        birth_lon=profile.birth_lon,
+        astro_profile=astro_profile,
+    )
+    return {"data": data.model_dump(), "meta": {"request_id": request_id}}
+
 
 @router.get(
     "/me/natal-chart/latest",
-    response_model=UserNatalChartReadApiResponse,
+    response_model=UserNatalChartLatestApiResponse,
     responses={
+        200: {"description": "Latest natal chart with astro profile"},
         401: {"model": ErrorEnvelope},
         403: {"model": ErrorEnvelope},
         404: {"model": ErrorEnvelope},
         429: {"model": ErrorEnvelope},
+        500: {"model": ErrorEnvelope},
     },
 )
 async def get_me_latest_natal_chart(
@@ -169,6 +287,32 @@ async def get_me_latest_natal_chart(
             asyncio.TimeoutError,
         ):
             pass
+
+    try:
+        astro_profile = UserAstroProfileService.get_for_user(db, user_id=current_user.id)
+        response_data["astro_profile"] = astro_profile.model_dump()
+    except UserAstroProfileServiceError as error:
+        logger.warning(
+            "astro profile computation failed",
+            extra={"user_id": current_user.id, "request_id": request_id, "code": error.code},
+        )
+        response_data["astro_profile"] = None
+    except Exception:
+        logger.exception(
+            "unexpected astro profile failure",
+            extra={"user_id": current_user.id, "request_id": request_id},
+        )
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": {
+                    "code": "astro_profile_computation_error",
+                    "message": "astro profile could not be computed",
+                    "details": {},
+                    "request_id": request_id,
+                }
+            },
+        )
 
     return {"data": response_data, "meta": {"request_id": request_id}}
 
@@ -451,6 +595,35 @@ def generate_me_natal_chart(
         )
     except UserNatalChartServiceError as error:
         db.rollback()
+        if error.code == "inconsistent_natal_result":
+            reference_version = error.details.get("reference_version")
+            house_system = error.details.get("house_system")
+            planet_code = error.details.get("planet_code")
+            increment_counter("natal_inconsistent_result_total", 1.0)
+            increment_counter(
+                _natal_inconsistent_metric_name(
+                    reference_version=reference_version,
+                    house_system=house_system,
+                    planet_code=planet_code,
+                ),
+                1.0,
+            )
+            if _should_log_inconsistent_result_event():
+                logger.warning(
+                    "natal_inconsistent_result_detected",
+                    extra={
+                        "request_id": request_id,
+                        "reference_version": reference_version or "unknown",
+                        "house_system": house_system or "unknown",
+                        "planet_code": planet_code,
+                        "longitude": error.details.get("longitude"),
+                        "expected_sign_code": error.details.get("expected_sign_code"),
+                        "actual_sign_code": error.details.get("actual_sign_code"),
+                        "house_number": error.details.get("house_number"),
+                        "interval_start": error.details.get("interval_start"),
+                        "interval_end": error.details.get("interval_end"),
+                    },
+                )
         if error.code in {"birth_profile_not_found", "reference_version_not_found"}:
             status_code = 404
         elif error.code in {"natal_generation_timeout", "natal_engine_unavailable"}:

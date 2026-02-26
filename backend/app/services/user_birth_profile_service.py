@@ -37,9 +37,13 @@ class UserBirthProfileData(BaseModel):
     """Données du profil de naissance d'un utilisateur."""
 
     birth_date: str
-    birth_time: str
+    birth_time: str | None
     birth_place: str
     birth_timezone: str
+    birth_city: str | None = None
+    birth_country: str | None = None
+    birth_lat: float | None = None
+    birth_lon: float | None = None
 
 
 class UserBirthProfileService:
@@ -76,6 +80,10 @@ class UserBirthProfileService:
             birth_time=model.birth_time,
             birth_place=model.birth_place,
             birth_timezone=model.birth_timezone,
+            birth_city=model.birth_city,
+            birth_country=model.birth_country,
+            birth_lat=model.birth_lat,
+            birth_lon=model.birth_lon,
         )
 
     @staticmethod
@@ -109,10 +117,18 @@ class UserBirthProfileService:
             birth_time=payload.birth_time,
             birth_place=payload.birth_place,
             birth_timezone=payload.birth_timezone,
+            birth_city=payload.birth_city,
+            birth_country=payload.birth_country,
+            birth_lat=payload.birth_lat,
+            birth_lon=payload.birth_lon,
         )
         return UserBirthProfileData(
             birth_date=model.birth_date.isoformat(),
             birth_time=model.birth_time,
             birth_place=model.birth_place,
             birth_timezone=model.birth_timezone,
+            birth_city=model.birth_city,
+            birth_country=model.birth_country,
+            birth_lat=model.birth_lat,
+            birth_lon=model.birth_lon,
         )

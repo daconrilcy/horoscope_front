@@ -24,9 +24,28 @@ from app.main import app
 from app.services.auth_service import AuthService
 from app.services.natal_calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
+from app.services.user_astro_profile_service import UserAstroProfileServiceError
 from app.services.user_natal_chart_service import UserNatalChartServiceError
 
 client = TestClient(app)
+
+
+def _sign_from_longitude(longitude: float) -> str:
+    signs = (
+        "aries",
+        "taurus",
+        "gemini",
+        "cancer",
+        "leo",
+        "virgo",
+        "libra",
+        "scorpio",
+        "sagittarius",
+        "capricorn",
+        "aquarius",
+        "pisces",
+    )
+    return signs[int((longitude % 360.0) // 30.0) % 12]
 
 
 def _cleanup_tables() -> None:
@@ -145,6 +164,7 @@ def test_generate_natal_chart_success() -> None:
     assert data["chart_id"]
     assert data["metadata"]["reference_version"] == "1.0.0"
     assert data["metadata"]["ruleset_version"] == data["result"]["ruleset_version"]
+    assert data["metadata"]["house_system"] == "equal"
 
 
 def test_get_latest_natal_chart_success() -> None:
@@ -176,6 +196,7 @@ def test_get_latest_natal_chart_success() -> None:
     payload = latest.json()["data"]
     assert payload["chart_id"] == chart_id
     assert payload["metadata"]["reference_version"] == "1.0.0"
+    assert payload["metadata"]["house_system"] == "equal"
     assert "created_at" in payload
 
 
@@ -191,6 +212,31 @@ def test_generate_natal_chart_fails_when_profile_missing() -> None:
 
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "birth_profile_not_found"
+
+
+def test_generate_natal_chart_returns_422_when_birth_time_is_missing() -> None:
+    _cleanup_tables()
+    _seed_reference_data()
+    access_token = _register_and_get_access_token()
+    put_birth = client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": None,
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+    assert put_birth.status_code == 200
+
+    response = client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"reference_version": "1.0.0"},
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "missing_birth_time"
 
 
 def test_get_latest_natal_chart_not_found() -> None:
@@ -306,6 +352,68 @@ def test_generate_natal_chart_engine_unavailable_returns_retryable_503(
 
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "natal_engine_unavailable"
+
+
+def test_generate_natal_chart_logs_inconsistent_result_event(
+    monkeypatch: object,
+) -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    logged: list[dict[str, object]] = []
+    metrics: list[tuple[str, float]] = []
+
+    def _raise_inconsistent(*args: object, **kwargs: object) -> object:
+        raise UserNatalChartServiceError(
+            code="inconsistent_natal_result",
+            message="planet house does not match cusp interval",
+            details={"reference_version": "1.0.0", "house_system": "equal"},
+        )
+
+    def _spy_logger_error(message: str, extra: dict[str, object]) -> None:
+        logged.append({"message": message, "extra": extra})
+
+    def _spy_increment_counter(name: str, value: float = 1.0) -> None:
+        metrics.append((name, value))
+
+    monkeypatch.setattr(
+        "app.api.v1.routers.users.UserNatalChartService.generate_for_user",
+        _raise_inconsistent,
+    )
+    monkeypatch.setattr(
+        "app.api.v1.routers.users._should_log_inconsistent_result_event",
+        lambda: True,
+    )
+    monkeypatch.setattr(
+        "app.api.v1.routers.users.logger.warning",
+        _spy_logger_error,
+    )
+    monkeypatch.setattr(
+        "app.api.v1.routers.users.increment_counter",
+        _spy_increment_counter,
+    )
+
+    response = client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "inconsistent_natal_result"
+    assert len(logged) == 1
+    assert logged[0]["message"] == "natal_inconsistent_result_detected"
+    assert logged[0]["extra"]["reference_version"] == "1.0.0"
+    assert logged[0]["extra"]["house_system"] == "equal"
+    assert logged[0]["extra"]["planet_code"] is None
+    assert logged[0]["extra"]["longitude"] is None
+    assert logged[0]["extra"]["request_id"]
+    assert metrics == [
+        ("natal_inconsistent_result_total", 1.0),
+        (
+            "natal_inconsistent_result_total|reference_version=1.0.0|house_system=equal|planet_code=unknown",
+            1.0,
+        ),
+    ]
 
 
 def test_generate_natal_chart_invalid_payload_uses_standard_error_envelope() -> None:
@@ -522,3 +630,167 @@ def test_get_natal_chart_consistency_returns_422_when_payload_is_invalid() -> No
     )
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "invalid_chart_result_payload"
+
+
+# ---------------------------------------------------------------------------
+# AC5 — astro_profile présent dans GET /natal-chart/latest
+# ---------------------------------------------------------------------------
+
+
+def test_get_latest_natal_chart_returns_astro_profile_block() -> None:
+    """AC5: GET /natal-chart/latest inclut un bloc astro_profile."""
+    _cleanup_tables()
+    _seed_reference_data()
+    access_token = _register_and_get_access_token()
+    client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+    client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"reference_version": "1.0.0"},
+    )
+
+    latest = client.get(
+        "/v1/users/me/natal-chart/latest",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert latest.status_code == 200
+    data = latest.json()["data"]
+    assert "astro_profile" in data
+
+
+def test_get_latest_natal_chart_astro_profile_matches_result_geometry() -> None:
+    _cleanup_tables()
+    _seed_reference_data()
+    access_token = _register_and_get_access_token()
+    client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1973-04-24",
+            "birth_time": "11:00",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+    client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"reference_version": "1.0.0"},
+    )
+
+    latest = client.get(
+        "/v1/users/me/natal-chart/latest",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert latest.status_code == 200
+    payload = latest.json()["data"]
+    astro = payload["astro_profile"]
+    assert astro is not None
+
+    sun = next(
+        planet for planet in payload["result"]["planet_positions"] if planet["planet_code"] == "sun"
+    )
+    house1 = next(house for house in payload["result"]["houses"] if house["number"] == 1)
+    assert astro["sun_sign_code"] == _sign_from_longitude(float(sun["longitude"]))
+    assert astro["ascendant_sign_code"] == _sign_from_longitude(float(house1["cusp_longitude"]))
+
+
+def test_get_latest_natal_chart_returns_200_when_astro_profile_service_error(
+    monkeypatch: object,
+) -> None:
+    _cleanup_tables()
+    _seed_reference_data()
+    access_token = _register_and_get_access_token()
+    client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+    client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"reference_version": "1.0.0"},
+    )
+
+    def _raise_service_error(*args: object, **kwargs: object) -> object:
+        raise UserAstroProfileServiceError(
+            code="reference_version_not_found",
+            message="reference version not found",
+            details={},
+        )
+
+    monkeypatch.setattr(
+        "app.api.v1.routers.users.UserAstroProfileService.get_for_user",
+        _raise_service_error,
+    )
+
+    latest = client.get(
+        "/v1/users/me/natal-chart/latest",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert latest.status_code == 200
+    assert latest.json()["data"]["astro_profile"] is None
+
+
+def test_get_latest_natal_chart_returns_500_on_unexpected_astro_profile_error(
+    monkeypatch: object,
+) -> None:
+    _cleanup_tables()
+    _seed_reference_data()
+    access_token = _register_and_get_access_token()
+    client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+    client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"reference_version": "1.0.0"},
+    )
+
+    def _raise_runtime_error(*args: object, **kwargs: object) -> object:
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(
+        "app.api.v1.routers.users.UserAstroProfileService.get_for_user",
+        _raise_runtime_error,
+    )
+
+    latest = client.get(
+        "/v1/users/me/natal-chart/latest",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert latest.status_code == 500
+    assert latest.json()["error"]["code"] == "astro_profile_computation_error"
+
+
+def test_get_latest_natal_chart_non_regression_404_codes() -> None:
+    """Non-régression: GET /natal-chart/latest sans thème => 404."""
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    response = client.get(
+        "/v1/users/me/natal-chart/latest",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "birth_profile_not_found"

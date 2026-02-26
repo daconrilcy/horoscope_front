@@ -1,5 +1,6 @@
 """Tests for /v1/ai/generate endpoint."""
 
+from datetime import datetime, timezone
 from typing import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -14,7 +15,12 @@ from app.main import app
 
 def _mock_authenticated_user() -> AuthenticatedUser:
     """Return a mock authenticated user for tests."""
-    return AuthenticatedUser(id=1, role="user")
+    return AuthenticatedUser(
+        id=1,
+        role="user",
+        email="test-user@example.com",
+        created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+    )
 
 
 @pytest.fixture
@@ -41,9 +47,7 @@ class TestGenerateEndpointAuth:
 class TestGenerateEndpointValidation:
     """Tests for Pydantic validation on POST /v1/ai/generate."""
 
-    def test_generate_returns_422_for_invalid_provider(
-        self, client: TestClient
-    ) -> None:
+    def test_generate_returns_422_for_invalid_provider(self, client: TestClient) -> None:
         """Generate returns 422 for invalid provider name (Pydantic Literal validation)."""
         response = client.post(
             "/v1/ai/generate",
@@ -58,9 +62,7 @@ class TestGenerateEndpointValidation:
         assert "error" in data
         assert data["error"]["code"] == "invalid_request_payload"
 
-    def test_generate_returns_422_for_missing_use_case(
-        self, client: TestClient
-    ) -> None:
+    def test_generate_returns_422_for_missing_use_case(self, client: TestClient) -> None:
         """Generate returns 422 when required field use_case is absent."""
         response = client.post(
             "/v1/ai/generate",
@@ -92,9 +94,7 @@ class TestGenerateEndpoint:
         assert data["error"]["type"] == "VALIDATION_ERROR"
         assert "unknown_case" in data["error"]["message"]
 
-    def test_generate_returns_success_with_valid_request(
-        self, client: TestClient
-    ) -> None:
+    def test_generate_returns_success_with_valid_request(self, client: TestClient) -> None:
         """Generate returns 200 with valid request."""
         mock_result = ProviderResult(
             text="Generated astrological insight",
@@ -103,9 +103,7 @@ class TestGenerateEndpoint:
             model="gpt-4o-mini",
         )
 
-        with patch(
-            "app.ai_engine.services.generate_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.generate_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.generate_text = AsyncMock(return_value=mock_result)
             mock_client.provider_name = "openai"
@@ -137,9 +135,7 @@ class TestGenerateEndpoint:
         assert data["usage"]["output_tokens"] == 50
         assert data["usage"]["total_tokens"] == 150
 
-    def test_generate_includes_trace_id_from_header(
-        self, client: TestClient
-    ) -> None:
+    def test_generate_includes_trace_id_from_header(self, client: TestClient) -> None:
         """Generate uses trace_id from header when provided."""
         mock_result = ProviderResult(
             text="Response",
@@ -148,9 +144,7 @@ class TestGenerateEndpoint:
             model="gpt-4o-mini",
         )
 
-        with patch(
-            "app.ai_engine.services.generate_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.generate_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.generate_text = AsyncMock(return_value=mock_result)
             mock_client.provider_name = "openai"
@@ -166,9 +160,7 @@ class TestGenerateEndpoint:
         data = response.json()
         assert data["trace_id"] == "custom-trace-123"
 
-    def test_generate_includes_trace_id_from_body(
-        self, client: TestClient
-    ) -> None:
+    def test_generate_includes_trace_id_from_body(self, client: TestClient) -> None:
         """Generate uses trace_id from body when provided."""
         mock_result = ProviderResult(
             text="Response",
@@ -177,9 +169,7 @@ class TestGenerateEndpoint:
             model="gpt-4o-mini",
         )
 
-        with patch(
-            "app.ai_engine.services.generate_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.generate_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.generate_text = AsyncMock(return_value=mock_result)
             mock_client.provider_name = "openai"
@@ -200,13 +190,9 @@ class TestGenerateEndpoint:
 
     def test_generate_returns_timeout_error(self, client: TestClient) -> None:
         """Generate returns 504 on upstream timeout."""
-        with patch(
-            "app.ai_engine.services.generate_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.generate_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
-            mock_client.generate_text = AsyncMock(
-                side_effect=UpstreamTimeoutError(30)
-            )
+            mock_client.generate_text = AsyncMock(side_effect=UpstreamTimeoutError(30))
             mock_provider.return_value = mock_client
 
             response = client.post(
@@ -227,9 +213,7 @@ class TestGenerateEndpoint:
             model="gpt-4o-mini",
         )
 
-        with patch(
-            "app.ai_engine.services.generate_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.generate_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.generate_text = AsyncMock(return_value=mock_result)
             mock_client.provider_name = "openai"
@@ -244,9 +228,7 @@ class TestGenerateEndpoint:
         data = response.json()
         assert data["usage"]["estimated_cost_usd"] > 0
 
-    def test_generate_returns_error_for_excessively_large_context(
-        self, client: TestClient
-    ) -> None:
+    def test_generate_returns_error_for_excessively_large_context(self, client: TestClient) -> None:
         """Generate returns 400 when context exceeds hard limit (AC6)."""
         large_context = "x" * 100000
 
@@ -266,9 +248,7 @@ class TestGenerateEndpoint:
         assert "token_count" in data["error"]["details"]
         assert "max_tokens" in data["error"]["details"]
 
-    def test_generate_truncates_moderately_large_context(
-        self, client: TestClient
-    ) -> None:
+    def test_generate_truncates_moderately_large_context(self, client: TestClient) -> None:
         """Generate truncates context that exceeds soft limit but not hard limit."""
         moderate_context = "a" * 20000
         mock_result = ProviderResult(
@@ -278,9 +258,7 @@ class TestGenerateEndpoint:
             model="gpt-4o-mini",
         )
 
-        with patch(
-            "app.ai_engine.services.generate_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.generate_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.generate_text = AsyncMock(return_value=mock_result)
             mock_client.provider_name = "openai"
@@ -315,11 +293,10 @@ class TestGenerateEndpointMetrics:
             model="gpt-4o-mini",
         )
 
-        with patch(
-            "app.ai_engine.services.generate_service.get_provider_client"
-        ) as mock_provider, patch(
-            "app.ai_engine.services.generate_service.increment_counter"
-        ) as mock_counter:
+        with (
+            patch("app.ai_engine.services.generate_service.get_provider_client") as mock_provider,
+            patch("app.ai_engine.services.generate_service.increment_counter") as mock_counter,
+        ):
             mock_client = AsyncMock()
             mock_client.generate_text = AsyncMock(return_value=mock_result)
             mock_client.provider_name = "openai"
@@ -339,15 +316,11 @@ class TestGenerateEndpointMetrics:
 class TestGenerateEndpointRateLimiting:
     """Tests for rate limiting on POST /v1/ai/generate."""
 
-    def test_generate_returns_429_when_rate_limit_exceeded(
-        self, client: TestClient
-    ) -> None:
+    def test_generate_returns_429_when_rate_limit_exceeded(self, client: TestClient) -> None:
         """Generate returns 429 with RATE_LIMIT_EXCEEDED when limit is exceeded."""
         from app.ai_engine.services.rate_limiter import RateLimiter, RateLimitResult
 
-        with patch.object(
-            RateLimiter, "get_instance"
-        ) as mock_get_instance:
+        with patch.object(RateLimiter, "get_instance") as mock_get_instance:
             mock_limiter = MagicMock()
             mock_limiter.check_rate_limit.return_value = RateLimitResult(
                 allowed=False,
@@ -370,9 +343,7 @@ class TestGenerateEndpointRateLimiting:
         assert "request_id" in data["error"]
         assert "trace_id" in data["error"]
 
-    def test_generate_continues_when_rate_limit_not_exceeded(
-        self, client: TestClient
-    ) -> None:
+    def test_generate_continues_when_rate_limit_not_exceeded(self, client: TestClient) -> None:
         """Generate proceeds normally when rate limit is not exceeded."""
         from app.ai_engine.services.rate_limiter import RateLimiter, RateLimitResult
 
@@ -383,11 +354,10 @@ class TestGenerateEndpointRateLimiting:
             model="gpt-4o-mini",
         )
 
-        with patch.object(
-            RateLimiter, "get_instance"
-        ) as mock_get_instance, patch(
-            "app.ai_engine.services.generate_service.get_provider_client"
-        ) as mock_provider:
+        with (
+            patch.object(RateLimiter, "get_instance") as mock_get_instance,
+            patch("app.ai_engine.services.generate_service.get_provider_client") as mock_provider,
+        ):
             mock_limiter = MagicMock()
             mock_limiter.check_rate_limit.return_value = RateLimitResult(
                 allowed=True,

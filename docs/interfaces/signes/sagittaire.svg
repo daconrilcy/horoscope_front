@@ -1,0 +1,32 @@
+<svg class="icon-sagittarius" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Sagittaire (Sagittarius)">
+  <!-- Background (modifiable in CSS) -->
+  <rect class="sa-bg" x="4" y="4" width="56" height="56" rx="14"></rect>
+
+  <!-- Sagittarius stroke (model paths scaled to 64x64) -->
+  <path class="sa-stroke" d="
+    M1.882 61.817
+    L62.079 1.889
+
+    M62.079 1.889
+    H47.162
+
+    M62.079 1.889
+    V16.422
+
+    M16.414 16.422
+    L47.162 46.056
+  "></path>
+
+  <style>
+    .sa-bg { fill: var(--sagittarius-bg, #0b0b0b); }
+
+    .sa-stroke{
+      fill: none;
+      stroke: var(--sagittarius-stroke, #ffffff);
+      /* équivalent stroke 50 sur 850px -&gt; ~3.76 sur 64px */
+      stroke-width: var(--sagittarius-stroke-width, 3.8);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+</svg>

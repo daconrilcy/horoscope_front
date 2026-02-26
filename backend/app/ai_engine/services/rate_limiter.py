@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 # Atomic sliding window rate limit Lua script.
 # Cleans expired entries, checks count, and conditionally adds a new entry — all atomically.
-# Args: KEYS[1]=key, ARGV[1]=now(float), ARGV[2]=window_seconds, ARGV[3]=limit, ARGV[4]=unique_member
+# Args: KEYS[1]=key, ARGV[1]=now(float), ARGV[2]=window_seconds,
+# ARGV[3]=limit, ARGV[4]=unique_member
 # Returns: {0|1 (blocked|allowed), current_count, retry_after_ms}
 _SLIDING_WINDOW_SCRIPT = """
 local key = KEYS[1]

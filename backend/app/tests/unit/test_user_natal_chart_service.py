@@ -108,6 +108,23 @@ def test_generate_for_user_success_includes_versions_and_chart_id() -> None:
     assert generated.result.reference_version == "1.0.0"
     assert generated.metadata.reference_version == "1.0.0"
     assert generated.metadata.ruleset_version == generated.result.ruleset_version
+    assert generated.metadata.house_system == "equal"
+
+
+def test_generate_for_user_auto_seeds_reference_when_missing() -> None:
+    _cleanup_tables()
+    user_id = _create_user_and_profile()
+
+    with SessionLocal() as db:
+        generated = UserNatalChartService.generate_for_user(
+            db=db,
+            user_id=user_id,
+            reference_version="1.0.0",
+        )
+        db.commit()
+
+    assert generated.chart_id
+    assert generated.result.reference_version == "1.0.0"
 
 
 def test_get_latest_for_user_returns_most_recent_chart() -> None:
@@ -133,6 +150,7 @@ def test_get_latest_for_user_returns_most_recent_chart() -> None:
     assert latest.chart_id == second.chart_id
     assert latest.chart_id != first.chart_id
     assert latest.metadata.reference_version == "1.0.0"
+    assert latest.metadata.house_system == "equal"
 
 
 def test_generate_for_user_fails_when_birth_profile_missing() -> None:

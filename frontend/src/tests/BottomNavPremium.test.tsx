@@ -1,8 +1,10 @@
-import { describe, it, expect, afterEach } from "vitest"
+import { describe, it, expect, afterEach, beforeAll } from "vitest"
 import { render, cleanup, screen } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { BottomNav } from "../components/layout/BottomNav"
+import { readFileSync } from "fs"
+import { resolve } from "path"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -10,6 +12,84 @@ const queryClient = new QueryClient({
       retry: false,
     },
   },
+})
+
+// ─── CSS source files (AC1 / AC2 conformance) ────────────────────────────────
+
+let appCss: string
+let themeCss: string
+
+beforeAll(() => {
+  appCss = readFileSync(resolve(__dirname, "../App.css"), "utf-8")
+  themeCss = readFileSync(resolve(__dirname, "../styles/theme.css"), "utf-8")
+})
+
+// ─── AC1 : Container bottom-nav conforme ─────────────────────────────────────
+
+describe("AC1 — Container .bottom-nav conforme (CSS)", () => {
+  it("a position: fixed et bottom/left/right à 16px", () => {
+    const match = appCss.match(/\.bottom-nav\s*\{([^}]*)\}/)
+    const content = match ? match[1] : ""
+    expect(content).toContain("position: fixed")
+    expect(content).toContain("bottom: 16px")
+    expect(content).toContain("left: 16px")
+    expect(content).toContain("right: 16px")
+  })
+
+  it("a border-radius 24px et padding 10px", () => {
+    const match = appCss.match(/\.bottom-nav\s*\{([^}]*)\}/)
+    const content = match ? match[1] : ""
+    expect(content).toContain("border-radius: 24px")
+    expect(content).toContain("padding: 10px")
+  })
+
+  it("applique backdrop-filter (blur 14px via --glass-blur)", () => {
+    const match = appCss.match(/\.bottom-nav\s*\{([^}]*)\}/)
+    const content = match ? match[1] : ""
+    expect(content).toMatch(/backdrop-filter/)
+  })
+
+  it("utilise --nav-glass, --nav-border et --shadow-nav", () => {
+    const match = appCss.match(/\.bottom-nav\s*\{([^}]*)\}/)
+    const content = match ? match[1] : ""
+    expect(content).toContain("var(--nav-glass)")
+    expect(content).toContain("var(--nav-border)")
+    expect(content).toContain("var(--shadow-nav)")
+  })
+})
+
+// ─── AC2 : Items et actif premium ────────────────────────────────────────────
+
+describe("AC2 — Items nav premium (CSS)", () => {
+  it(".bottom-nav__item a border-radius 18px (premium, non-tile)", () => {
+    const match = appCss.match(/\.bottom-nav__item\s*\{([^}]*)\}/)
+    const content = match ? match[1] : ""
+    expect(content).toContain("border-radius: 18px")
+  })
+
+  it(".bottom-nav__item--active utilise var(--nav-active-bg)", () => {
+    const match = appCss.match(/\.bottom-nav__item--active\s*\{([^}]*)\}/)
+    const content = match ? match[1] : ""
+    expect(content).toContain("var(--nav-active-bg)")
+  })
+
+  it(".bottom-nav__item--active utilise var(--text-1) pour contraste renforcé", () => {
+    const match = appCss.match(/\.bottom-nav__item--active\s*\{([^}]*)\}/)
+    const content = match ? match[1] : ""
+    expect(content).toContain("var(--text-1)")
+  })
+
+  it("light --nav-active-bg est rgba(134,108,208,0.16) (discret premium)", () => {
+    const rootMatch = themeCss.match(/:root\s*\{([^}]*)\}/)
+    const rootContent = rootMatch ? rootMatch[1] : ""
+    expect(rootContent).toContain("--nav-active-bg: rgba(134, 108, 208, 0.16)")
+  })
+
+  it("dark --nav-active-bg est rgba(150,110,255,0.18) (discret premium)", () => {
+    const darkMatch = themeCss.match(/\.dark\s*\{([^}]*)\}/)
+    const darkContent = darkMatch ? darkMatch[1] : ""
+    expect(darkContent).toContain("--nav-active-bg: rgba(150, 110, 255, 0.18)")
+  })
 })
 
 afterEach(() => {

@@ -8,8 +8,9 @@ from app.core.config import settings
 
 
 def _alembic_config() -> Config:
-    config = Config(str(Path("backend/alembic.ini")))
-    config.set_main_option("script_location", str(Path("backend/migrations")))
+    backend_root = Path(__file__).resolve().parents[3]
+    config = Config(str(backend_root / "alembic.ini"))
+    config.set_main_option("script_location", str(backend_root / "migrations"))
     return config
 
 

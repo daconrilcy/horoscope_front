@@ -23,6 +23,7 @@ from app.services.natal_interpretation_service import (
     NatalInterpretationMetadata,
     NatalInterpretationServiceError,
 )
+from app.services.user_astro_profile_service import UserAstroProfileServiceError
 from app.services.user_birth_profile_service import UserBirthProfileData
 from app.services.user_natal_chart_service import (
     UserNatalChartMetadata,
@@ -106,7 +107,12 @@ def _make_interpretation() -> NatalInterpretationData:
 
 def _override_auth() -> AuthenticatedUser:
     """Override de l'authentification pour les tests."""
-    return AuthenticatedUser(id=1, role="user")
+    return AuthenticatedUser(
+        id=1,
+        role="user",
+        email="test-user@example.com",
+        created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+    )
 
 
 def _override_db() -> MagicMock:
@@ -131,6 +137,19 @@ def unauthenticated_client():
     client = TestClient(app)
     yield client
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def _mock_astro_profile_service():
+    """Évite les appels réels au calcul astro dans ce module de tests d'interprétation."""
+    with patch(
+        "app.api.v1.routers.users.UserAstroProfileService.get_for_user",
+        side_effect=UserAstroProfileServiceError(
+            code="astro_profile_unavailable",
+            message="astro profile unavailable in test scope",
+        ),
+    ):
+        yield
 
 
 class TestGetMeNatalChartInterpretationAuth:
@@ -248,7 +267,7 @@ class TestGetMeLatestNatalChartWithInterpretation:
         assert response.status_code == 200
         data = response.json()
         assert "data" in data
-        assert "interpretation" not in data["data"]
+        assert data["data"]["interpretation"] is None
 
     def test_with_interpretation_calls_service(self, test_client) -> None:
         """Vérifie que le service d'interprétation est appelé avec include_interpretation=true."""
@@ -303,7 +322,7 @@ class TestGetMeLatestNatalChartWithInterpretation:
 
         assert response.status_code == 200
         data = response.json()
-        assert "interpretation" not in data["data"]
+        assert data["data"]["interpretation"] is None
 
     def test_include_interpretation_false(self, test_client) -> None:
         with patch(
@@ -316,4 +335,4 @@ class TestGetMeLatestNatalChartWithInterpretation:
 
         assert response.status_code == 200
         data = response.json()
-        assert "interpretation" not in data["data"]
+        assert data["data"]["interpretation"] is None

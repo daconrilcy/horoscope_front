@@ -2,6 +2,7 @@ import { render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ApiError, generateNatalChart, useLatestNatalChart } from "../api/natalChart"
+import { getBirthData, type BirthProfileData } from "../api/birthProfile"
 import { ANONYMOUS_SUBJECT } from "../utils/constants"
 
 const useQueryMock = vi.fn()
@@ -93,6 +94,119 @@ describe("generateNatalChart", () => {
   })
 })
 
+describe("astro_profile nullable consumption", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("parses LatestNatalChart with astro_profile null fields without crash (AC5)", async () => {
+    const chartWithNullAstroProfile = {
+      chart_id: "c1",
+      result: {
+        reference_version: "1.0",
+        ruleset_version: "1.0",
+        prepared_input: {
+          birth_datetime_local: "1990-01-15T12:00:00",
+          birth_datetime_utc: "1990-01-15T12:00:00Z",
+          timestamp_utc: 632491200,
+          julian_day: 2447907.0,
+          birth_timezone: "UTC",
+        },
+        planet_positions: [],
+        houses: [],
+        aspects: [],
+      },
+      metadata: { reference_version: "1.0", ruleset_version: "1.0", house_system: "equal" },
+      created_at: "2026-01-01T00:00:00Z",
+      astro_profile: {
+        sun_sign_code: null,
+        ascendant_sign_code: null,
+        missing_birth_time: true,
+      },
+    }
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: chartWithNullAstroProfile }),
+      }),
+    )
+
+    const result = await generateNatalChart("test-token")
+    expect(result.metadata.house_system).toBe("equal")
+    expect(result.astro_profile?.sun_sign_code).toBeNull()
+    expect(result.astro_profile?.ascendant_sign_code).toBeNull()
+    expect(result.astro_profile?.missing_birth_time).toBe(true)
+  })
+
+  it("parses LatestNatalChart without astro_profile field (absent = undefined, no crash)", async () => {
+    const chartWithoutAstroProfile = {
+      chart_id: "c2",
+      result: {
+        reference_version: "1.0",
+        ruleset_version: "1.0",
+        prepared_input: {
+          birth_datetime_local: "1990-01-15T12:00:00",
+          birth_datetime_utc: "1990-01-15T12:00:00Z",
+          timestamp_utc: 632491200,
+          julian_day: 2447907.0,
+          birth_timezone: "UTC",
+        },
+        planet_positions: [],
+        houses: [],
+        aspects: [],
+      },
+      metadata: { reference_version: "1.0", ruleset_version: "1.0", house_system: "equal" },
+      created_at: "2026-01-01T00:00:00Z",
+    }
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: chartWithoutAstroProfile }),
+      }),
+    )
+
+    const result = await generateNatalChart("test-token")
+    expect(result.astro_profile).toBeUndefined()
+    // Optional chaining safe access — no crash
+    expect(result.astro_profile?.sun_sign_code).toBeUndefined()
+    expect(result.astro_profile?.missing_birth_time).toBeUndefined()
+  })
+
+  it("parses BirthProfileData with astro_profile including null signs (AC4)", async () => {
+    // Compile-time contract check for the payload shape consumed by getBirthData.
+    const profileWithAstroProfile: BirthProfileData = {
+      birth_date: "1990-01-15",
+      birth_time: null,
+      birth_place: "Paris, France",
+      birth_timezone: "Europe/Paris",
+      astro_profile: {
+        sun_sign_code: "CAPRICORN",
+        ascendant_sign_code: null,
+        missing_birth_time: true,
+      },
+    }
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: profileWithAstroProfile }),
+      }),
+    )
+
+    const result = await getBirthData("test-token")
+    expect(result).not.toBeNull()
+
+    const astroProfile = result?.astro_profile
+    expect(astroProfile).toBeDefined()
+    if (!astroProfile) throw new Error("astro_profile should be defined in this fixture")
+    expect(astroProfile.sun_sign_code).toBe("CAPRICORN")
+    expect(astroProfile.ascendant_sign_code).toBeNull()
+    expect(astroProfile.missing_birth_time).toBe(true)
+  })
+})
+
 describe("useLatestNatalChart", () => {
   beforeEach(() => {
     useQueryMock.mockReset()
@@ -111,6 +225,9 @@ describe("useLatestNatalChart", () => {
       expect.objectContaining({
         queryKey: ["latest-natal-chart", "42"],
         enabled: true,
+        retryOnMount: false,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
       }),
     )
   })
@@ -128,5 +245,20 @@ describe("useLatestNatalChart", () => {
         enabled: false,
       }),
     )
+  })
+
+  it("does not retry on client errors (4xx) for latest natal chart", () => {
+    useAccessTokenSnapshotMock.mockReturnValue("token-a")
+    getSubjectFromAccessTokenMock.mockReturnValue("42")
+    useQueryMock.mockReturnValue({})
+
+    render(<HookProbe />)
+
+    const options = useQueryMock.mock.calls[0]?.[0] as {
+      retry?: (failureCount: number, error: unknown) => boolean
+    }
+    expect(options.retry).toBeTypeOf("function")
+    const shouldRetry404 = options.retry?.(1, new ApiError("natal_chart_not_found", "not found", 404))
+    expect(shouldRetry404).toBe(false)
   })
 })

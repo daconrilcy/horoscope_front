@@ -124,7 +124,7 @@ describe("DashboardPage", () => {
       renderWithRouter(["/dashboard"])
 
       await waitFor(() => {
-        expect(screen.getByRole("heading", { level: 2, name: "Amour" })).toBeInTheDocument()
+        expect(screen.getByRole("heading", { level: 3, name: "Amour" })).toBeInTheDocument()
       })
 
       const horoscopeTitles = screen.getAllByText(/Horoscope/i)

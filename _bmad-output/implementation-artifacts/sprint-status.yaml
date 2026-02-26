@@ -159,4 +159,24 @@ development_status:
   17-7-bottom-navigation-glass-pill: done
   17-8-today-page-assemblage-route-tests: done
   17-9-corrections-design-pixel-perfect: done
-  epic-17-retrospective: optional
+  17-10-correctifs-p0-contrastes-tokens-et-fonds-premium: done
+  17-11-correctifs-p0-header-hero-glass-cta-constellation: done
+  17-12-correctifs-p1-sections-raccourcis-et-amour: done
+  17-13-correctifs-p0-bottom-nav-premium-et-validation-visuelle-dod: done
+  17-14-correctifs-premium-v3-fond-hero-mini-cards-toggle: done
+  17-15-correctifs-visuels-v5-gradient-original-mini-cards-wash-cta-panel: done
+  epic-17-retrospective: done
+
+  epic-18: done
+  18-1-astro-profile-backend-sun-sign-ascendant-null-time: done
+  18-2-astro-profile-frontend-api-types-null-time: done
+  18-3-astro-profile-ui-hero-profile-natal-svg-css: done
+
+  epic-19: in-progress
+  19-1-comment-lire-ton-theme-natal-dans-l-app: review
+  19-2-backend-geocoding-search-proxy-nominatim: done
+  19-3-cache-db-geocoding-query: done
+  19-4-modele-db-geo-place-resolved: in-progress
+  19-5-geocoding-resolve-confirm-selection: in-progress
+  19-6-rattachement-birth-profile-place-resolved: ready-for-dev
+  epic-19-retrospective: optional

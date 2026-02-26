@@ -9,7 +9,7 @@ import { getBirthData, saveBirthData, BirthProfileApiError } from "../api/birthP
 import { generateNatalChart, ApiError, type LatestNatalChart } from "../api/natalChart"
 import { geocodeCity, GeocodingError } from "../api/geocoding"
 import { useAccessTokenSnapshot, getSubjectFromAccessToken } from "../utils/authToken"
-import { ANONYMOUS_SUBJECT, GENERATION_TIMEOUT_LABEL, UNKNOWN_BIRTH_TIME_SENTINEL, logSupportRequestId, formatBirthPlace } from "../utils/constants"
+import { ANONYMOUS_SUBJECT, GENERATION_TIMEOUT_LABEL, logSupportRequestId, formatBirthPlace } from "../utils/constants"
 import { TimezoneSelect } from "../components/TimezoneSelect"
 import { getUserTimezone } from "../data/timezones"
 import { detectLang, GEOCODING_MESSAGES } from "../i18n/astrology"
@@ -52,6 +52,26 @@ type GeocodingState = "idle" | "loading" | "success" | "error_not_found" | "erro
 
 type GeoResult = { lat: number; lon: number; display_name: string } | null
 
+function shouldLogSupportForApiError(error: { status: number }): boolean {
+  return error.status >= 500
+}
+
+function inferCityCountryFromBirthPlace(
+  birthPlace: string | undefined,
+): { city: string; country: string } {
+  if (!birthPlace) return { city: "", country: "" }
+  const chunks = birthPlace
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+  if (chunks.length === 0) return { city: "", country: "" }
+  if (chunks.length === 1) return { city: chunks[0], country: "" }
+  return {
+    city: chunks[0],
+    country: chunks[chunks.length - 1],
+  }
+}
+
 export function BirthProfilePage() {
   const lang = detectLang()
   const t = birthProfileTranslations[lang]
@@ -92,7 +112,7 @@ export function BirthProfilePage() {
       navigate("/natal")
     },
     onError: (err) => {
-      if (err instanceof ApiError) {
+      if (err instanceof ApiError && shouldLogSupportForApiError(err)) {
         logSupportRequestId(err)
       }
 
@@ -136,14 +156,15 @@ export function BirthProfilePage() {
    */
   const syncFormWithProfileData = useCallback(
     (profileData: NonNullable<typeof data>) => {
-      const isTimeUnknown = profileData.birth_time === null || profileData.birth_time === UNKNOWN_BIRTH_TIME_SENTINEL
+      const isTimeUnknown = profileData.birth_time === null
+      const inferred = inferCityCountryFromBirthPlace(profileData.birth_place)
       reset({
         birth_date: profileData.birth_date,
         birth_time: isTimeUnknown ? "" : (profileData.birth_time ?? ""),
         birth_place: profileData.birth_place ?? "",
         birth_timezone: profileData.birth_timezone || getUserTimezone(),
-        birth_city: profileData.birth_city ?? "",
-        birth_country: profileData.birth_country ?? "",
+        birth_city: profileData.birth_city ?? inferred.city,
+        birth_country: profileData.birth_country ?? inferred.country,
       })
       setBirthTimeUnknown(isTimeUnknown)
     },
@@ -157,7 +178,7 @@ export function BirthProfilePage() {
   }, [data, syncFormWithProfileData, isSubmitting, isDirty])
 
   useEffect(() => {
-    if (isError && error instanceof BirthProfileApiError) {
+    if (isError && error instanceof BirthProfileApiError && shouldLogSupportForApiError(error)) {
       logSupportRequestId(error)
     }
   }, [isError, error])
@@ -221,7 +242,7 @@ export function BirthProfilePage() {
     try {
       const payload = {
         ...formData,
-        birth_time: (birthTimeUnknown || !formData.birth_time) ? UNKNOWN_BIRTH_TIME_SENTINEL : formData.birth_time,
+        birth_time: (birthTimeUnknown || !formData.birth_time) ? null : formData.birth_time,
         birth_place: resolvedPlace || formatBirthPlace(city, country),
         birth_city: city,
         birth_country: country,
@@ -229,11 +250,14 @@ export function BirthProfilePage() {
       }
       const updatedData = await saveBirthData(accessToken, payload)
       queryClient.setQueryData(["birth-profile", tokenSubject], updatedData)
+      void queryClient.invalidateQueries({ queryKey: ["birth-profile", tokenSubject] })
       syncFormWithProfileData(updatedData)
       setSaveSuccess(true)
     } catch (err) {
       if (err instanceof BirthProfileApiError) {
-        logSupportRequestId(err)
+        if (shouldLogSupportForApiError(err)) {
+          logSupportRequestId(err)
+        }
         if (err.code === "invalid_birth_time") {
           setError("birth_time", { message: err.message || t.validation.timeFormat })
         } else if (err.code === "invalid_timezone") {

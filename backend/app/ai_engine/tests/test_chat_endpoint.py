@@ -1,5 +1,6 @@
 """Tests for /v1/ai/chat endpoint."""
 
+from datetime import datetime, timezone
 from typing import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -19,7 +20,12 @@ from app.main import app
 
 def _mock_authenticated_user() -> AuthenticatedUser:
     """Return a mock authenticated user for tests."""
-    return AuthenticatedUser(id=1, role="user")
+    return AuthenticatedUser(
+        id=1,
+        role="user",
+        email="test-user@example.com",
+        created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+    )
 
 
 @pytest.fixture
@@ -66,9 +72,7 @@ class TestChatEndpointValidation:
         assert "error" in data
         assert data["error"]["code"] == "invalid_request_payload"
 
-    def test_chat_returns_422_for_invalid_message_role(
-        self, client: TestClient
-    ) -> None:
+    def test_chat_returns_422_for_invalid_message_role(self, client: TestClient) -> None:
         """Chat returns 422 for invalid message role (Pydantic Literal validation)."""
         response = client.post(
             "/v1/ai/chat",
@@ -84,9 +88,7 @@ class TestChatEndpointValidation:
 class TestChatEndpoint:
     """Tests for POST /v1/ai/chat endpoint."""
 
-    def test_chat_returns_success_with_valid_request(
-        self, client: TestClient
-    ) -> None:
+    def test_chat_returns_success_with_valid_request(self, client: TestClient) -> None:
         """Chat returns 200 with valid request."""
         mock_result = ProviderResult(
             text="Bonjour ! Je vois dans votre thème natal...",
@@ -95,9 +97,7 @@ class TestChatEndpoint:
             model="gpt-4o-mini",
         )
 
-        with patch(
-            "app.ai_engine.services.chat_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.chat_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.chat = AsyncMock(return_value=mock_result)
             mock_client.provider_name = "openai"
@@ -107,9 +107,7 @@ class TestChatEndpoint:
                 "/v1/ai/chat",
                 json={
                     "locale": "fr-FR",
-                    "messages": [
-                        {"role": "user", "content": "Bonjour, peux-tu lire mon thème ?"}
-                    ],
+                    "messages": [{"role": "user", "content": "Bonjour, peux-tu lire mon thème ?"}],
                     "output": {"stream": False},
                 },
             )
@@ -121,9 +119,7 @@ class TestChatEndpoint:
         assert data["usage"]["input_tokens"] == 150
         assert data["usage"]["output_tokens"] == 75
 
-    def test_chat_adds_system_prompt_when_missing(
-        self, client: TestClient
-    ) -> None:
+    def test_chat_adds_system_prompt_when_missing(self, client: TestClient) -> None:
         """Chat adds system prompt when not provided."""
         mock_result = ProviderResult(
             text="Response",
@@ -132,9 +128,7 @@ class TestChatEndpoint:
             model="gpt-4o-mini",
         )
 
-        with patch(
-            "app.ai_engine.services.chat_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.chat_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.chat = AsyncMock(return_value=mock_result)
             mock_client.provider_name = "openai"
@@ -144,9 +138,7 @@ class TestChatEndpoint:
                 "/v1/ai/chat",
                 json={
                     "locale": "fr-FR",
-                    "messages": [
-                        {"role": "user", "content": "Hello"}
-                    ],
+                    "messages": [{"role": "user", "content": "Hello"}],
                     "output": {"stream": False},
                 },
             )
@@ -157,9 +149,7 @@ class TestChatEndpoint:
         assert messages[0].role == "system"
         assert "bienveillant" in messages[0].content.lower()
 
-    def test_chat_preserves_existing_system_prompt(
-        self, client: TestClient
-    ) -> None:
+    def test_chat_preserves_existing_system_prompt(self, client: TestClient) -> None:
         """Chat preserves existing system prompt."""
         mock_result = ProviderResult(
             text="Response",
@@ -168,9 +158,7 @@ class TestChatEndpoint:
             model="gpt-4o-mini",
         )
 
-        with patch(
-            "app.ai_engine.services.chat_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.chat_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.chat = AsyncMock(return_value=mock_result)
             mock_client.provider_name = "openai"
@@ -194,26 +182,18 @@ class TestChatEndpoint:
         assert len([m for m in messages if m.role == "system"]) == 1
         assert messages[0].content == "Custom system prompt"
 
-    def test_chat_returns_error_on_upstream_failure(
-        self, client: TestClient
-    ) -> None:
+    def test_chat_returns_error_on_upstream_failure(self, client: TestClient) -> None:
         """Chat returns 502 on upstream error."""
-        with patch(
-            "app.ai_engine.services.chat_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.chat_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
-            mock_client.chat = AsyncMock(
-                side_effect=UpstreamError("Provider unavailable")
-            )
+            mock_client.chat = AsyncMock(side_effect=UpstreamError("Provider unavailable"))
             mock_provider.return_value = mock_client
 
             response = client.post(
                 "/v1/ai/chat",
                 json={
                     "locale": "fr-FR",
-                    "messages": [
-                        {"role": "user", "content": "Hello"}
-                    ],
+                    "messages": [{"role": "user", "content": "Hello"}],
                     "output": {"stream": False},
                 },
             )
@@ -224,9 +204,7 @@ class TestChatEndpoint:
 
     def test_chat_returns_429_on_rate_limit(self, client: TestClient) -> None:
         """Chat returns 429 on upstream rate limit (AC5)."""
-        with patch(
-            "app.ai_engine.services.chat_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.chat_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.chat = AsyncMock(side_effect=UpstreamRateLimitError())
             mock_provider.return_value = mock_client
@@ -247,9 +225,7 @@ class TestChatEndpoint:
 
     def test_chat_returns_504_on_timeout(self, client: TestClient) -> None:
         """Chat returns 504 on upstream timeout (AC5)."""
-        with patch(
-            "app.ai_engine.services.chat_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.chat_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.chat = AsyncMock(side_effect=UpstreamTimeoutError(30))
             mock_provider.return_value = mock_client
@@ -268,13 +244,9 @@ class TestChatEndpoint:
         assert data["error"]["type"] == "UPSTREAM_TIMEOUT"
         assert "timeout_seconds" in data["error"]["details"]
 
-    def test_chat_returns_500_when_provider_not_configured(
-        self, client: TestClient
-    ) -> None:
+    def test_chat_returns_500_when_provider_not_configured(self, client: TestClient) -> None:
         """Chat returns 500 when provider is not configured (no API key)."""
-        with patch(
-            "app.ai_engine.services.chat_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.chat_service.get_provider_client") as mock_provider:
             mock_provider.side_effect = ProviderNotConfiguredError("openai")
 
             response = client.post(
@@ -291,9 +263,7 @@ class TestChatEndpoint:
         assert data["error"]["type"] == "PROVIDER_NOT_CONFIGURED"
         assert "openai" in data["error"]["message"]
 
-    def test_chat_includes_context_in_system_prompt(
-        self, client: TestClient
-    ) -> None:
+    def test_chat_includes_context_in_system_prompt(self, client: TestClient) -> None:
         """Chat includes natal chart context in system prompt."""
         mock_result = ProviderResult(
             text="Response",
@@ -302,9 +272,7 @@ class TestChatEndpoint:
             model="gpt-4o-mini",
         )
 
-        with patch(
-            "app.ai_engine.services.chat_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.chat_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.chat = AsyncMock(return_value=mock_result)
             mock_client.provider_name = "openai"
@@ -314,12 +282,8 @@ class TestChatEndpoint:
                 "/v1/ai/chat",
                 json={
                     "locale": "fr-FR",
-                    "messages": [
-                        {"role": "user", "content": "Hello"}
-                    ],
-                    "context": {
-                        "natal_chart_summary": "Soleil en Bélier, Lune en Cancer"
-                    },
+                    "messages": [{"role": "user", "content": "Hello"}],
+                    "context": {"natal_chart_summary": "Soleil en Bélier, Lune en Cancer"},
                     "output": {"stream": False},
                 },
             )
@@ -342,9 +306,7 @@ class TestChatStreamingEndpoint:
             yield " world"
             yield "!"
 
-        with patch(
-            "app.ai_engine.services.chat_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.chat_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.chat = AsyncMock(return_value=mock_stream_generator())
             mock_client.provider_name = "openai"
@@ -364,17 +326,13 @@ class TestChatStreamingEndpoint:
         assert "X-Request-Id" in response.headers
         assert "X-Trace-Id" in response.headers
 
-    def test_chat_streaming_includes_cache_control_headers(
-        self, client: TestClient
-    ) -> None:
+    def test_chat_streaming_includes_cache_control_headers(self, client: TestClient) -> None:
         """Chat streaming response has proper cache headers."""
 
         async def mock_stream_generator():
             yield "chunk"
 
-        with patch(
-            "app.ai_engine.services.chat_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.chat_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.chat = AsyncMock(return_value=mock_stream_generator())
             mock_client.provider_name = "openai"
@@ -393,9 +351,7 @@ class TestChatStreamingEndpoint:
         assert response.headers.get("cache-control") == "no-cache"
         assert response.headers.get("connection") == "keep-alive"
 
-    def test_chat_streaming_emits_delta_and_done_events(
-        self, client: TestClient
-    ) -> None:
+    def test_chat_streaming_emits_delta_and_done_events(self, client: TestClient) -> None:
         """Chat streaming emits delta events and done event."""
         import json as json_module
 
@@ -403,9 +359,7 @@ class TestChatStreamingEndpoint:
             yield "Part1"
             yield "Part2"
 
-        with patch(
-            "app.ai_engine.services.chat_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.chat_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.chat = AsyncMock(return_value=mock_stream_generator())
             mock_client.provider_name = "openai"
@@ -444,9 +398,7 @@ class TestChatStreamingEndpoint:
         assert "total_tokens" in usage
         assert "estimated_cost_usd" in usage
 
-    def test_chat_streaming_emits_error_event_on_failure(
-        self, client: TestClient
-    ) -> None:
+    def test_chat_streaming_emits_error_event_on_failure(self, client: TestClient) -> None:
         """Chat streaming emits error event when provider fails mid-stream (AC5)."""
         import json as json_module
 
@@ -454,9 +406,7 @@ class TestChatStreamingEndpoint:
             yield "Starting"
             raise RuntimeError("Connection lost mid-stream")
 
-        with patch(
-            "app.ai_engine.services.chat_service.get_provider_client"
-        ) as mock_provider:
+        with patch("app.ai_engine.services.chat_service.get_provider_client") as mock_provider:
             mock_client = AsyncMock()
             mock_client.chat = AsyncMock(return_value=mock_failing_stream())
             mock_client.provider_name = "openai"
@@ -488,15 +438,11 @@ class TestChatStreamingEndpoint:
 class TestChatEndpointRateLimiting:
     """Tests for rate limiting on POST /v1/ai/chat."""
 
-    def test_chat_returns_429_when_rate_limit_exceeded(
-        self, client: TestClient
-    ) -> None:
+    def test_chat_returns_429_when_rate_limit_exceeded(self, client: TestClient) -> None:
         """Chat returns 429 with RATE_LIMIT_EXCEEDED when limit is exceeded."""
         from app.ai_engine.services.rate_limiter import RateLimiter, RateLimitResult
 
-        with patch.object(
-            RateLimiter, "get_instance"
-        ) as mock_get_instance:
+        with patch.object(RateLimiter, "get_instance") as mock_get_instance:
             mock_limiter = MagicMock()
             mock_limiter.check_rate_limit.return_value = RateLimitResult(
                 allowed=False,
@@ -523,9 +469,7 @@ class TestChatEndpointRateLimiting:
         assert "request_id" in data["error"]
         assert "trace_id" in data["error"]
 
-    def test_chat_continues_when_rate_limit_not_exceeded(
-        self, client: TestClient
-    ) -> None:
+    def test_chat_continues_when_rate_limit_not_exceeded(self, client: TestClient) -> None:
         """Chat proceeds normally when rate limit is not exceeded."""
         from app.ai_engine.providers.base import ProviderResult
         from app.ai_engine.services.rate_limiter import RateLimiter, RateLimitResult
@@ -537,11 +481,10 @@ class TestChatEndpointRateLimiting:
             model="gpt-4o-mini",
         )
 
-        with patch.object(
-            RateLimiter, "get_instance"
-        ) as mock_get_instance, patch(
-            "app.ai_engine.services.chat_service.get_provider_client"
-        ) as mock_provider:
+        with (
+            patch.object(RateLimiter, "get_instance") as mock_get_instance,
+            patch("app.ai_engine.services.chat_service.get_provider_client") as mock_provider,
+        ):
             mock_limiter = MagicMock()
             mock_limiter.check_rate_limit.return_value = RateLimitResult(
                 allowed=True,

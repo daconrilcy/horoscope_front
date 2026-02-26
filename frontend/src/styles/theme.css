@@ -3,14 +3,17 @@
 
 :root {
   /* Text */
+  --color-purple-1: #977FD3;
+  --color-purple-2: #dfd5fc;
   --text-1: #1E1B2E;
   --text-2: rgba(30,27,46,0.72);
   --text-3: rgba(30,27,46,0.55);
+  --text-headline: rgb(123,109,140); /* H1 muted purple — proche maquette originale */
 
-  /* Background */
-  --bg-top: #FDF5F8;
-  --bg-mid: #D9CBE1;
-  --bg-bot: #D8D0EE;
+  /* Background (V5 — gradient original maquette) */
+  --bg-top: #FEF7F9;
+  --bg-mid: #E3D8EC;
+  --bg-bot: hwb(257 62% 2%);
 
   /* Glass surfaces */
   --glass: rgba(255,255,255,0.55);
@@ -26,16 +29,19 @@
   --primary-strong: #7355C7;
 
   /* Chips */
-  --chip: #C6B9E5;
+  --chip: linear-gradient(90deg,#B3A5DE 0%, var(--color-purple-2) 100%);
 
   /* Nav */
-  --nav-glass: rgba(255,255,255,0.55);
-  --nav-border: rgba(255,255,255,0.65);
-  --nav-active-bg: rgba(134, 108, 208, 0.18);
+  --nav-glass: rgba(255,255,255,0.58);
+  --nav-border: rgba(255,255,255,0.70);
+  --nav-active-bg: rgba(134, 108, 208, 0.16);
 
   /* Shadows */
+  --shadow-hero: 0 18px 40px rgba(20,20,40,0.14);
   --shadow-card: 0 18px 40px rgba(20,20,40,0.12);
   --shadow-nav:  0 10px 30px rgba(20,20,40,0.18);
+  --shadow-cta:  0 14px 30px rgba(90, 120, 255, 0.25);
+  --shadow-cta-dark: 0 14px 30px rgba(0, 0, 0, 0.35);
 
   /* Lines/borders */
   --line: rgba(30,27,46,0.15);
@@ -60,6 +66,34 @@
 
   /* Constellation SVG (lilas en light mode) */
   --constellation-color: rgba(134, 100, 220, 0.7);
+
+  /* Glass surfaces spécifiques — Shortcut cards (V5 — plus blanches) */
+  --glass-shortcut: rgba(255,255,255,0.62);
+  --glass-shortcut-border: rgba(255,255,255,0.72);
+
+  /* Glass surfaces spécifiques — Mini-insight cards (AC #5) */
+  --glass-mini: rgba(255,255,255,0.40);
+  --glass-mini-border: rgba(255,255,255,0.58);
+
+  /* Hero card gradient (V3) */
+  --hero-g1: rgba(172,132,255,0.28);
+  --hero-g2: rgba(110,170,255,0.18);
+  --hero-chip-shadow: inset 0 0 0 -4px rgb(192 189 189 / 20%), -1px 8px 24px 4px rgb(20 20 40 / 10%);
+  --hero-constellation-filter: drop-shadow(0 10px 22px rgba(170,140,255,0.35)) drop-shadow(0 6px 14px rgba(255,255,255,0.25));
+  --hero-cta-panel-bg: rgba(255,255,255,0.15);
+  --hero-cta-panel-border: rgba(255,255,255,0.55);
+
+  /* Hero chip sign/date colors */
+  --hero-chip-sign-color: var(--text-1);
+  --hero-chip-date-color: var(--text-2);
+
+  /* Mini-card gradients (V3) */
+  --love-g1: #F3B5D6;
+  --love-g2: #E69BC6;
+  --work-g1: #B9C7FF;
+  --work-g2: #9FB2F4;
+  --energy-g1: #F9DEB2;
+  --energy-g2: #F0C98F;
 }
 
 .dark {
@@ -67,6 +101,7 @@
   --text-1: rgba(245,245,255,0.92);
   --text-2: rgba(235,235,245,0.72);
   --text-3: rgba(235,235,245,0.55);
+  --text-headline: rgba(245,245,255,0.92); /* même que --text-1 dark — lumineux sur fond cosmique */
 
   /* Background */
   --bg-top: #181626;
@@ -95,8 +130,11 @@
   --nav-active-bg: rgba(150, 110, 255, 0.18);
 
   /* Shadows */
+  --shadow-hero: 0 18px 40px rgba(0,0,0,0.45);
   --shadow-card: 0 18px 40px rgba(0,0,0,0.45);
   --shadow-nav:  0 10px 30px rgba(0,0,0,0.55);
+  --shadow-cta:  0 14px 30px rgba(90, 120, 255, 0.22);
+  --shadow-cta-dark: 0 14px 30px rgba(0, 0, 0, 0.35);
 
   /* Lines/borders */
   --line: rgba(255,255,255,0.12);
@@ -109,7 +147,7 @@
   --badge-energie: #E5B270;
 
   /* Semantic colors */
-  --success: #4ade80;
+  --success: #86CFA2;
   --error: #ff6b81;
   --btn-text: #ffffff;
 
@@ -121,6 +159,34 @@
 
   /* Constellation SVG (blanc en dark mode) */
   --constellation-color: #ffffff;
+
+  /* Glass surfaces spécifiques — Shortcut cards (AC #2) */
+  --glass-shortcut: rgba(255,255,255,0.06);
+  --glass-shortcut-border: rgba(255,255,255,0.10);
+
+  /* Glass surfaces spécifiques — Mini-insight cards (AC #5) */
+  --glass-mini: rgba(255,255,255,0.06);
+  --glass-mini-border: rgba(255,255,255,0.10);
+
+  /* Hero card gradient (V3 dark) */
+  --hero-g1: rgba(160,120,255,0.22);
+  --hero-g2: rgba(90,170,255,0.14);
+  --hero-chip-shadow: inset 0 0 0 -4px rgba(255,255,255,0.08), -1px 8px 24px 4px rgba(0,0,0,0.28);
+  --hero-constellation-filter: drop-shadow(0 10px 22px rgba(170,140,255,0.25)) drop-shadow(0 6px 14px rgba(255,255,255,0.12));
+  --hero-cta-panel-bg: rgba(255,255,255,0.06);
+  --hero-cta-panel-border: rgba(255,255,255,0.10);
+
+  /* Hero chip sign/date colors (dark) */
+  --hero-chip-sign-color: rgba(245,245,255,0.92);
+  --hero-chip-date-color: rgba(235,235,245,0.72);
+
+  /* Mini-card gradients (V3 dark) */
+  --love-g1: rgba(231,121,180,0.28);
+  --love-g2: rgba(160,70,130,0.18);
+  --work-g1: rgba(168,172,239,0.26);
+  --work-g2: rgba(90,110,220,0.16);
+  --energy-g1: rgba(229,178,112,0.26);
+  --energy-g2: rgba(170,110,40,0.16);
 }
 
 /* Typography - System font stack (§4.2) */

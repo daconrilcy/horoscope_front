@@ -1,0 +1,31 @@
+<svg class="icon-leo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lion (Leo)">
+  <!-- Background (modifiable in CSS) -->
+  <rect class="le-bg" x="4" y="4" width="56" height="56" rx="14"></rect>
+
+  <!-- Leo stroke (your model path scaled to 64x64) -->
+  <path class="le-stroke" d="M60.949 54.611
+           C60.797 58.924 55.948 62.334 51.715 62.118
+           C47.899 61.927 44.94 59.081 44.23 54.611
+           C43.023 47.031 46.784 40.374 49.762 31.224
+           C51.715 25.219 52.451 16.03 51.272 11.643
+           C50.094 7.256 45.584 2.644 38.943 1.93
+           C32.875 1.29 27.604 4.268 24.951 7.866
+           C22.49 11.21 21.807 16.37 23.259 20.279
+           C24.915 24.742 29.188 31.224 30.182 38.273
+           C30.821 42.805 27.202 47.298 22.706 47.196
+           C18.293 47.096 15.675 43.708 15.675 39.131
+           C15.675 34.554 18.976 31.224 22.706 31.224
+           C25.801 31.224 28.676 32.799 29.834 36.436"></path>
+
+  <style>
+    .le-bg { fill: var(--leo-bg, #0b0b0b); }
+
+    .le-stroke{
+      fill: none;
+      stroke: var(--leo-stroke, #ffffff);
+      stroke-width: var(--leo-stroke-width, 3.8);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+</svg>

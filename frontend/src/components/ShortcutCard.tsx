@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { LucideIcon } from 'lucide-react'
+import './ShortcutCard.css'
 
 export interface ShortcutCardProps {
   title: string
@@ -24,14 +25,14 @@ export function ShortcutCard({
 
   const content = (
     <>
-      <div className="shortcut-card__badge" style={{ background: badgeColor }}>
+      <div className="shortcut-card__badge" style={{ background: badgeColor }} aria-hidden="true">
         <Icon size={20} strokeWidth={1.75} />
       </div>
       <div className="shortcut-card__content">
-        <span className="shortcut-card__title">{title}</span>
-        <span className={subtitleClass}>
+        <h3 className="shortcut-card__title">{title}</h3>
+        <p className={subtitleClass}>
           {subtitle}
-        </span>
+        </p>
       </div>
     </>
   )

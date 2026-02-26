@@ -2,13 +2,17 @@ import { memo, useId } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { ConstellationSVG } from './ConstellationSVG'
 import type { ZodiacSign } from '../types/astrology'
+import { getZodiacIcon } from './zodiacSignIconMap'
+import './HeroHoroscopeCard.css'
 
 /**
  * Props for the HeroHoroscopeCard component
  */
 export interface HeroHoroscopeCardProps {
-  /** Zodiac sign symbol (e.g., "♒") */
-  sign: ZodiacSign
+  /** Zodiac sign symbol (e.g., "♒") — used as fallback when signCode is absent */
+  sign?: ZodiacSign
+  /** Sign code from the API (e.g., "aquarius") — used to display the SVG icon */
+  signCode?: string | null
   /** Translated name of the sign */
   signName: string
   /** Date string to display in the chip */
@@ -31,6 +35,7 @@ export interface HeroHoroscopeCardProps {
  */
 export const HeroHoroscopeCard = memo(function HeroHoroscopeCard({
   sign,
+  signCode,
   signName,
   date,
   headline,
@@ -41,16 +46,22 @@ export const HeroHoroscopeCard = memo(function HeroHoroscopeCard({
   ariaLabelReadDetailed = "Voir la version détaillée de l'horoscope",
 }: HeroHoroscopeCardProps) {
   const headlineId = useId()
+  const SignIcon = getZodiacIcon(signCode)
 
   return (
     <div className="hero-card" role="article" aria-labelledby={headlineId}>
       {/* Top row */}
       <div className="hero-card__top-row">
         <div className="hero-card__chip">
-          <span>{sign}</span>
-          <span>{signName} • {date}</span>
+          {SignIcon
+            ? <SignIcon className="hero-card__chip-icon" aria-hidden="true" />
+            : sign
+              ? <span>{sign}</span>
+              : null
+          }
+          <span className="hero-card__chip-text-sign">{signName}</span><span className="hero-card__chip-text-date"> • {date}</span>
         </div>
-        <ChevronRight size={18} strokeWidth={1.75} className="hero-card__top-chevron" aria-hidden="true" />
+        <ChevronRight size={20} strokeWidth={2.25} className="hero-card__top-chevron" aria-hidden="true" />
       </div>
 
       {/* Headline */}
@@ -61,28 +72,30 @@ export const HeroHoroscopeCard = memo(function HeroHoroscopeCard({
         <ConstellationSVG className="hero-card__constellation-svg" />
       </div>
 
-      {/* CTA Button */}
-      {onReadFull && (
-        <button
-          type="button"
-          className="hero-card__cta"
-          onClick={onReadFull}
-          aria-label={ariaLabelReadFull}
-        >
-          Lire en 2 min <ChevronRight size={18} strokeWidth={1.75} aria-hidden="true" />
-        </button>
-      )}
-
-      {/* Secondary Action (Link style) */}
-      {onReadDetailed && (
-        <button
-          type="button"
-          className="hero-card__link"
-          onClick={onReadDetailed}
-          aria-label={ariaLabelReadDetailed}
-        >
-          Version détaillée
-        </button>
+      {/* CTA Panel — second niveau glass (profondeur premium) */}
+      {(onReadFull || onReadDetailed) && (
+        <div className="hero-card__cta-panel">
+          {onReadFull && (
+            <button
+              type="button"
+              className="hero-card__cta"
+              onClick={onReadFull}
+              aria-label={ariaLabelReadFull}
+            >
+              Lire en 2 min <ChevronRight size={22} strokeWidth={2.25} aria-hidden="true" />
+            </button>
+          )}
+          {onReadDetailed && (
+            <button
+              type="button"
+              className="hero-card__link"
+              onClick={onReadDetailed}
+              aria-label={ariaLabelReadDetailed}
+            >
+              Version détaillée
+            </button>
+          )}
+        </div>
       )}
     </div>
   )

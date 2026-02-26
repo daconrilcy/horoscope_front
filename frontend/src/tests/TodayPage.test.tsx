@@ -40,10 +40,50 @@ const NOT_FOUND = {
   json: async () => ({ error: { code: "not_found", message: "not found" } }),
 }
 
-function makeFetchMock(authMeResponse: object = AUTH_ME_USER) {
+const BIRTH_DATA_LEO = {
+  ok: true,
+  status: 200,
+  json: async () => ({
+    data: {
+      birth_date: "1990-07-25",
+      birth_time: "10:30",
+      birth_place: "Paris, France",
+      birth_timezone: "Europe/Paris",
+      astro_profile: {
+        sun_sign_code: "leo",
+        ascendant_sign_code: "scorpio",
+        missing_birth_time: false,
+      },
+    },
+  }),
+}
+
+const BIRTH_DATA_UNKNOWN_SIGN = {
+  ok: true,
+  status: 200,
+  json: async () => ({
+    data: {
+      birth_date: "1990-07-25",
+      birth_time: "10:30",
+      birth_place: "Paris, France",
+      birth_timezone: "Europe/Paris",
+      astro_profile: {
+        sun_sign_code: "unknown_sign",
+        ascendant_sign_code: null,
+        missing_birth_time: false,
+      },
+    },
+  }),
+}
+
+function makeFetchMock(
+  authMeResponse: object = AUTH_ME_USER,
+  birthDataResponse: object = NOT_FOUND,
+) {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
     if (url.endsWith("/v1/auth/me")) return authMeResponse
+    if (url.includes("/v1/users/me/birth-data")) return birthDataResponse
     return NOT_FOUND
   })
 }
@@ -105,8 +145,8 @@ describe("TodayPage", () => {
       expect(sections[1]).toHaveClass('hero-card')
       // 3. ShortcutsSection
       expect(sections[2]).toHaveClass('shortcuts-section')
-      // 4. DailyInsightsSection (section sans classe spécifique sur le wrapper mais avec id sur le titre)
-      expect(sections[3].querySelector('#daily-insights-title')).toBeInTheDocument()
+      // 4. DailyInsightsSection (sans titre visible, mais avec une région accessible)
+      expect(sections[3]).toHaveAttribute("aria-label", "Voir tous les insights amour")
     })
   })
 
@@ -145,9 +185,9 @@ describe("TodayPage", () => {
       expect(screen.getByText("3 cartes")).toBeInTheDocument()
     })
 
-    it("affiche la section Insights avec les 3 mini cards et navigue au clic sur le header ou une card", async () => {
+    it("affiche la section Insights avec les 3 mini cards et navigue au clic sur une card", async () => {
       const user = userEvent.setup()
-      const { router, unmount } = renderWithRouter(["/dashboard"])
+      const { router } = renderWithRouter(["/dashboard"])
 
       await waitFor(() => {
         expect(screen.getAllByText("Amour").length).toBeGreaterThanOrEqual(1)
@@ -155,28 +195,12 @@ describe("TodayPage", () => {
       expect(screen.getByText("Travail")).toBeInTheDocument()
       expect(screen.getByText("Énergie")).toBeInTheDocument()
 
-      // Test clic sur le header de section (aria-label contextuel)
-      const sectionHeader = screen.getByRole("button", { name: /Voir tous les insights amour/i })
-      await user.click(sectionHeader)
-
-      await waitFor(() => {
-        expect(router.state.location.pathname).toBe("/natal")
-      })
-
-      // Reset et test clic sur une card individuelle
-      unmount()
-      const { router: router2 } = renderWithRouter(["/dashboard"])
-      
-      await waitFor(() => {
-        expect(screen.getAllByText("Amour").length).toBeGreaterThanOrEqual(1)
-      })
-
       const loveCard = screen.getAllByRole("button", { name: /Amour/i }).find(el => el.classList.contains('mini-card'))
       if (!loveCard) throw new Error("Could not find Amour mini-card button")
       await user.click(loveCard)
 
       await waitFor(() => {
-        expect(router2.state.location.pathname).toBe("/natal")
+        expect(router.state.location.pathname).toBe("/natal")
       })
     })
   })
@@ -337,6 +361,52 @@ describe("TodayPage", () => {
 
       await waitFor(() => {
         expect(screen.getByLabelText("Profil de cyril")).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe("AC-18-3-1: Signe solaire depuis l'API astro_profile", () => {
+    it("affiche le signName traduit depuis l'API quand sun_sign_code est disponible", async () => {
+      vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_USER, BIRTH_DATA_LEO))
+      localStorage.setItem("lang", "fr")
+
+      renderWithRouter(["/dashboard"])
+
+      await waitFor(() => {
+        // "Lion" = traduction FR de "leo"
+        expect(screen.getByText(/Lion/)).toBeInTheDocument()
+      })
+    })
+
+    it("affiche un SVG dans le chip quand sun_sign_code est disponible", async () => {
+      vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_USER, BIRTH_DATA_LEO))
+
+      const { container } = renderWithRouter(["/dashboard"])
+
+      await waitFor(() => {
+        const chip = container.querySelector(".hero-card__chip")
+        const svg = chip?.querySelector("svg.hero-card__chip-icon")
+        expect(svg).toBeInTheDocument()
+      })
+    })
+
+    it("fallback sur signName statique quand birth-data retourne 404", async () => {
+      // makeFetchMock par défaut: birth-data retourne NOT_FOUND
+      renderWithRouter(["/dashboard"])
+
+      await waitFor(() => {
+        // STATIC_HOROSCOPE.signName = "Verseau"
+        expect(screen.getByText(/Verseau/)).toBeInTheDocument()
+      })
+    })
+
+    it("fallback sur signName statique quand sun_sign_code est inconnu", async () => {
+      vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_USER, BIRTH_DATA_UNKNOWN_SIGN))
+
+      renderWithRouter(["/dashboard"])
+
+      await waitFor(() => {
+        expect(screen.getByText(/Verseau/)).toBeInTheDocument()
       })
     })
   })

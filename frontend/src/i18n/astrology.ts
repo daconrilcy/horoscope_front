@@ -140,6 +140,15 @@ export function translateSign(code: string, lang: AstrologyLang): string {
 }
 
 /**
+ * Checks whether a zodiac sign code is known by the translation catalog.
+ * @param code - Sign code (case-insensitive)
+ * @returns true when the code is supported
+ */
+export function isKnownSignCode(code: string): boolean {
+  return Boolean(SIGNS[code.toLowerCase()])
+}
+
+/**
  * Traduit un code de planète vers la langue spécifiée.
  * @param code - Code de la planète (ex: "sun", "MOON") - case-insensitive
  * @param lang - Langue cible

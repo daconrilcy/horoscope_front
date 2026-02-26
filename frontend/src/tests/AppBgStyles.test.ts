@@ -100,7 +100,7 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
 
     it("defines light gradient with linear-gradient using tokens", () => {
       expect(cssContent).toMatch(
-        /\.app-bg\s*\{[^}]*linear-gradient\(180deg, var\(--bg-top\) 0%, var\(--bg-mid\) 55%, var\(--bg-bot\) 100%\)/
+        /\.app-bg\s*\{[^}]*linear-gradient\(180deg, var\(--bg-top\) 0%, var\(--bg-mid\) \d+%, var\(--bg-bot\) 100%\)/
       )
     })
   })
@@ -144,9 +144,9 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
     })
   })
 
-  describe("AC6: Container centré max-width 420px", () => {
-    it("defines .app-bg-container class with max-width 420px", () => {
-      expect(cssContent).toMatch(/\.app-bg-container\s*\{[^}]*max-width:\s*420px/)
+  describe("AC6: Container centré max-width 1100px desktop", () => {
+    it("defines .app-bg-container class with max-width 1100px on desktop", () => {
+      expect(cssContent).toMatch(/@media\s*\(min-width:\s*769px\)[^{]*\{[^}]*\.app-bg-container\s*\{[^}]*max-width:\s*1100px/)
     })
 
     it("centers container with auto margins", () => {

@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
 import { render, cleanup, screen, fireEvent } from "@testing-library/react"
+import fs from "fs"
+import path from "path"
 import { HeroHoroscopeCard } from "../components/HeroHoroscopeCard"
 
 const defaultProps = {
@@ -33,7 +35,8 @@ describe("HeroHoroscopeCard", () => {
     it("renders chip with sign, signName and date", () => {
       render(<HeroHoroscopeCard {...defaultProps} />)
       expect(screen.getByText("♒")).toBeInTheDocument()
-      expect(screen.getByText(/Verseau • 23 fév./)).toBeInTheDocument()
+      expect(screen.getByText("Verseau")).toBeInTheDocument()
+      expect(screen.getByText(/23 fév\./)).toBeInTheDocument()
     })
 
     it("chip has class hero-card__chip for styling (gradient token --chip)", () => {
@@ -189,6 +192,113 @@ describe("HeroHoroscopeCard", () => {
     it("does not throw when onReadDetailed is not provided and link is clicked", () => {
       render(<HeroHoroscopeCard {...defaultProps} onReadDetailed={undefined} />)
       expect(screen.queryByRole("button", { name: /Voir la version détaillée/i })).not.toBeInTheDocument()
+    })
+  })
+
+  describe("AC-17-15: CTA sous-panel glass (2ème niveau de profondeur)", () => {
+    it("les boutons CTA sont enveloppés dans .hero-card__cta-panel", () => {
+      const { container } = render(<HeroHoroscopeCard {...defaultProps} onReadFull={() => {}} />)
+      const panel = container.querySelector(".hero-card__cta-panel")
+      expect(panel).toBeInTheDocument()
+    })
+
+    it("le CTA button est à l'intérieur du .hero-card__cta-panel", () => {
+      const { container } = render(<HeroHoroscopeCard {...defaultProps} onReadFull={() => {}} />)
+      const panel = container.querySelector(".hero-card__cta-panel")
+      const cta = panel?.querySelector(".hero-card__cta")
+      expect(cta).toBeInTheDocument()
+    })
+
+    it("le lien 'Version détaillée' est à l'intérieur du .hero-card__cta-panel", () => {
+      const { container } = render(
+        <HeroHoroscopeCard {...defaultProps} onReadFull={() => {}} onReadDetailed={() => {}} />
+      )
+      const panel = container.querySelector(".hero-card__cta-panel")
+      const link = panel?.querySelector(".hero-card__link")
+      expect(link).toBeInTheDocument()
+    })
+
+    it("le sparkle interne .hero-card::after est à opacity 0.18", () => {
+      const cssPath = path.resolve(__dirname, "../components/HeroHoroscopeCard.css")
+      const cssContent = fs.readFileSync(cssPath, "utf-8")
+      expect(cssContent).toMatch(/\.hero-card::after\s*\{[^}]*opacity:\s*0\.18/)
+    })
+  })
+
+  describe("AC-18-3: Icône SVG du signe zodiacal dans le chip", () => {
+    it("affiche un SVG quand signCode est fourni (ex: aquarius)", () => {
+      const { container } = render(
+        <HeroHoroscopeCard {...defaultProps} signCode="aquarius" signName="Verseau" />
+      )
+      const chip = container.querySelector(".hero-card__chip")
+      const svg = chip?.querySelector("svg")
+      expect(svg).toBeInTheDocument()
+    })
+
+    it("le SVG a aria-hidden=true (décoratif)", () => {
+      const { container } = render(
+        <HeroHoroscopeCard {...defaultProps} signCode="leo" signName="Lion" />
+      )
+      const chip = container.querySelector(".hero-card__chip")
+      const svg = chip?.querySelector("svg.hero-card__chip-icon")
+      expect(svg).toHaveAttribute("aria-hidden", "true")
+    })
+
+    it("le SVG a stroke=currentColor au niveau de ses éléments de tracé", () => {
+      const { container } = render(
+        <HeroHoroscopeCard {...defaultProps} signCode="aries" signName="Bélier" />
+      )
+      const chip = container.querySelector(".hero-card__chip")
+      const strokeElements = chip?.querySelectorAll("svg path, svg circle, svg g")
+      const hasCurrentColor = Array.from(strokeElements ?? []).some(
+        (el) => el.getAttribute("stroke") === "currentColor"
+      )
+      expect(hasCurrentColor).toBe(true)
+    })
+
+    it("fallback sur signe texte quand signCode est absent", () => {
+      render(<HeroHoroscopeCard {...defaultProps} signCode={undefined} sign="♒" />)
+      expect(screen.getByText("♒")).toBeInTheDocument()
+    })
+
+    it("fallback sur signe texte quand signCode est null", () => {
+      render(<HeroHoroscopeCard {...defaultProps} signCode={null} sign="♒" />)
+      expect(screen.getByText("♒")).toBeInTheDocument()
+    })
+
+    it("n'affiche pas d'icône SVG zodiacale quand signCode est absent", () => {
+      const { container } = render(
+        <HeroHoroscopeCard {...defaultProps} signCode={undefined} sign="♒" />
+      )
+      const chip = container.querySelector(".hero-card__chip")
+      const svg = chip?.querySelector("svg.hero-card__chip-icon")
+      expect(svg).not.toBeInTheDocument()
+    })
+
+    it("CSS: .hero-card__chip-text-sign utilise var(--hero-chip-sign-color) et pas white", () => {
+      const cssPath = path.resolve(__dirname, "../components/HeroHoroscopeCard.css")
+      const cssContent = fs.readFileSync(cssPath, "utf-8")
+      expect(cssContent).toMatch(/\.hero-card__chip-text-sign\s*\{[^}]*color:\s*var\(--hero-chip-sign-color\)/)
+      expect(cssContent).not.toMatch(/\.hero-card__chip-text-sign\s*\{[^}]*color:\s*white/)
+    })
+
+    it("CSS: .hero-card__chip-text-date utilise var(--hero-chip-date-color) et pas black", () => {
+      const cssPath = path.resolve(__dirname, "../components/HeroHoroscopeCard.css")
+      const cssContent = fs.readFileSync(cssPath, "utf-8")
+      expect(cssContent).toMatch(/\.hero-card__chip-text-date\s*\{[^}]*color:\s*var\(--hero-chip-date-color\)/)
+      expect(cssContent).not.toMatch(/\.hero-card__chip-text-date\s*\{[^}]*color:\s*black/)
+    })
+
+    it("signCode inconnu -> pas de SVG zodiacal (fallback signe texte)", () => {
+      const { container } = render(
+        <HeroHoroscopeCard {...defaultProps} signCode="unknown_sign" sign="♒" />
+      )
+      const chip = container.querySelector(".hero-card__chip")
+      // L'icône zodiacale ne doit pas être présente pour un code inconnu
+      const zodiacIcon = chip?.querySelector("svg.hero-card__chip-icon")
+      expect(zodiacIcon).not.toBeInTheDocument()
+      // Le texte fallback doit s'afficher
+      expect(screen.getByText("♒")).toBeInTheDocument()
     })
   })
 })

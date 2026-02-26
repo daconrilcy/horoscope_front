@@ -7,6 +7,9 @@ les calculs astrologiques : seeding, récupération et clonage.
 
 from __future__ import annotations
 
+from threading import Lock
+from time import monotonic
+
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -39,9 +42,43 @@ class ReferenceDataService:
     Gère les versions des données astrologiques de référence avec
     support du seeding initial et du clonage entre versions.
     """
+    _REFERENCE_CACHE_TTL_SECONDS = 60.0
+    _reference_cache: dict[str, tuple[float, dict[str, object]]] = {}
+    _reference_cache_lock = Lock()
 
-    @staticmethod
-    def seed_reference_version(db: Session, version: str | None = None) -> str:
+    @classmethod
+    def _get_from_cache(cls, version: str) -> dict[str, object] | None:
+        with cls._reference_cache_lock:
+            cached = cls._reference_cache.get(version)
+            if cached is None:
+                return None
+            cached_at, payload = cached
+            if (monotonic() - cached_at) > cls._REFERENCE_CACHE_TTL_SECONDS:
+                cls._reference_cache.pop(version, None)
+                return None
+            return payload
+
+    @classmethod
+    def _store_cache(cls, version: str, payload: dict[str, object]) -> None:
+        if payload:
+            with cls._reference_cache_lock:
+                cls._reference_cache[version] = (monotonic(), payload)
+
+    @classmethod
+    def _invalidate_cache(cls, version: str | None = None) -> None:
+        with cls._reference_cache_lock:
+            if version is None:
+                cls._reference_cache.clear()
+                return
+            cls._reference_cache.pop(version, None)
+
+    @classmethod
+    def _clear_cache_for_tests(cls) -> None:
+        with cls._reference_cache_lock:
+            cls._reference_cache.clear()
+
+    @classmethod
+    def seed_reference_version(cls, db: Session, version: str | None = None) -> str:
         """
         Initialise ou vérifie une version de données de référence.
 
@@ -64,10 +101,15 @@ class ReferenceDataService:
             repo.seed_version_defaults(model.id)
 
         db.commit()
+        cls._invalidate_cache(target_version)
         return target_version
 
-    @staticmethod
-    def get_active_reference_data(db: Session, version: str | None = None) -> dict[str, object]:
+    @classmethod
+    def get_active_reference_data(
+        cls,
+        db: Session,
+        version: str | None = None,
+    ) -> dict[str, object]:
         """
         Récupère les données de référence pour une version.
 
@@ -79,10 +121,15 @@ class ReferenceDataService:
             Dictionnaire des données de référence.
         """
         target_version = version or settings.active_reference_version
-        return ReferenceRepository(db).get_reference_data(target_version)
+        cached_payload = cls._get_from_cache(target_version)
+        if cached_payload is not None:
+            return cached_payload
+        payload = ReferenceRepository(db).get_reference_data(target_version)
+        cls._store_cache(target_version, payload)
+        return payload
 
-    @staticmethod
-    def clone_reference_version(db: Session, source_version: str, new_version: str) -> str:
+    @classmethod
+    def clone_reference_version(cls, db: Session, source_version: str, new_version: str) -> str:
         """
         Clone une version de données de référence vers une nouvelle version.
 
@@ -131,4 +178,5 @@ class ReferenceDataService:
                 message="reference version is immutable",
                 details={"new_version": new_version},
             ) from error
+        cls._invalidate_cache(new_version)
         return new_version

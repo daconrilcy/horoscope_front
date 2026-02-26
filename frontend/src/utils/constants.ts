@@ -4,8 +4,6 @@
  * `backend/app/services/natal_chart_service.py` (GENERATION_TIMEOUT_SECONDS).
  */
 export const GENERATION_TIMEOUT_LABEL = "60s"
-/** Valeur sentinelle pour birth_time indiquant que l'heure est inconnue (backend l'interprète comme mode dégradé) */
-export const UNKNOWN_BIRTH_TIME_SENTINEL = "00:00"
 /** Subject fallback pour les utilisateurs non authentifiés dans les query keys */
 export const ANONYMOUS_SUBJECT = "anonymous"
 

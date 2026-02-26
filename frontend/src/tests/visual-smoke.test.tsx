@@ -137,10 +137,10 @@ describe("AC#2 — Tokens design obligatoires (light/dark)", () => {
 // ─── AC#3 — Hiérarchie typographique ─────────────────────────────────────────
 
 describe("AC#3 — Hiérarchie typographique conforme (App.css)", () => {
-  it(".today-header__kicker a font-size: 13px", () => {
+  it(".today-header__kicker a font-size: 16px", () => {
     const match = appCss.match(/\.today-header__kicker\s*\{([^}]*)\}/)
     const content = match ? match[1] : ""
-    expect(content).toContain("font-size: 13px")
+    expect(content).toContain("font-size: 16px")
   })
 
   it(".today-header__kicker a font-weight: 500", () => {

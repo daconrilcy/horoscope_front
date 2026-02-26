@@ -1,5 +1,11 @@
 import { API_BASE_URL, apiFetch } from "./client"
 
+export type AstroProfile = {
+  sun_sign_code: string | null
+  ascendant_sign_code: string | null
+  missing_birth_time: boolean
+}
+
 export type BirthProfileData = {
   birth_date: string
   birth_time: string | null
@@ -9,6 +15,7 @@ export type BirthProfileData = {
   birth_country?: string
   birth_lat?: number
   birth_lon?: number
+  astro_profile?: AstroProfile
 }
 
 export class BirthProfileApiError extends Error {

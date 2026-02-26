@@ -45,9 +45,15 @@ export type LatestNatalChart = {
   metadata: {
     reference_version: string
     ruleset_version: string
+    house_system?: string
     degraded_mode?: "no_location" | "no_time" | "no_location_no_time" | null
   }
   created_at: string
+  astro_profile?: {
+    sun_sign_code: string | null
+    ascendant_sign_code: string | null
+    missing_birth_time: boolean
+  }
 }
 
 type ErrorEnvelope = {
@@ -138,6 +144,15 @@ export function useLatestNatalChart() {
     queryKey: ["latest-natal-chart", tokenSubject],
     queryFn: fetchForCurrentUser,
     enabled: Boolean(accessToken),
+    retryOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: (failureCount, error) => {
+      if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+        return false
+      }
+      return failureCount < 2
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }

@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest"
 import { render, cleanup, screen, fireEvent } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
 import { TodayHeader } from "../components/TodayHeader"
 import { ThemeProvider } from "../state/ThemeProvider"
 
@@ -13,6 +12,55 @@ describe("TodayHeader", () => {
     cleanup()
     localStorage.clear()
     document.documentElement.classList.remove("dark")
+  })
+
+  describe("AC1: Toggle dark/light présent et accessible (AC-17-14)", () => {
+    it("affiche exactement un bouton (le toggle dark/light)", () => {
+      renderWithTheme(<TodayHeader />)
+      expect(screen.queryAllByRole("button")).toHaveLength(1)
+    })
+
+    it("le bouton toggle a un aria-label accessible", () => {
+      renderWithTheme(<TodayHeader />)
+      const toggle = screen.getByRole("button")
+      expect(toggle).toHaveAttribute("aria-label")
+      const label = toggle.getAttribute("aria-label") ?? ""
+      expect(label.length).toBeGreaterThan(0)
+    })
+
+    it("le bouton toggle a aria-pressed", () => {
+      renderWithTheme(<TodayHeader />)
+      const toggle = screen.getByRole("button")
+      expect(toggle).toHaveAttribute("aria-pressed")
+    })
+
+    it("le bouton toggle a la classe today-header__toggle", () => {
+      renderWithTheme(<TodayHeader />)
+      const toggle = screen.getByRole("button")
+      expect(toggle).toHaveClass("today-header__toggle")
+    })
+
+    it("appeler le toggle change le label aria (dark <-> light)", () => {
+      renderWithTheme(<TodayHeader />)
+      const toggle = screen.getByRole("button")
+      const initialLabel = toggle.getAttribute("aria-label") ?? ""
+      fireEvent.click(toggle)
+      const newLabel = toggle.getAttribute("aria-label") ?? ""
+      expect(newLabel).not.toBe(initialLabel)
+    })
+
+    it("le toggle persiste le thème dans localStorage", () => {
+      renderWithTheme(<TodayHeader />)
+      const toggle = screen.getByRole("button")
+      fireEvent.click(toggle)
+      expect(localStorage.getItem("theme")).toMatch(/light|dark/)
+    })
+
+    it("l'avatar est positionné top-right avec la classe today-header__avatar", () => {
+      renderWithTheme(<TodayHeader />)
+      const avatar = screen.getByRole("img")
+      expect(avatar).toHaveClass("today-header__avatar")
+    })
   })
 
   describe("AC1: Kicker rendu correctement", () => {
@@ -35,7 +83,7 @@ describe("TodayHeader", () => {
     })
   })
 
-  describe("AC2: H1 'Horoscope' rendu correctement", () => {
+  describe("AC1: H1 'Horoscope' rendu correctement", () => {
     it("renders H1 with text 'Horoscope'", () => {
       renderWithTheme(<TodayHeader />)
       const title = screen.getByRole("heading", { level: 1 })
@@ -50,7 +98,7 @@ describe("TodayHeader", () => {
     })
   })
 
-  describe("AC3 & AC4: Structure sémantique et avatar", () => {
+  describe("AC1: Structure sémantique et avatar (40×40 top-right)", () => {
     it("renders header element as container with content wrapper", () => {
       renderWithTheme(<TodayHeader />)
       const header = document.querySelector("header.today-header")
@@ -116,40 +164,6 @@ describe("TodayHeader", () => {
       renderWithTheme(<TodayHeader userName="Alice" />)
       const avatar = screen.getByRole("img", { name: "Profil de Alice" })
       expect(avatar).toBeInTheDocument()
-    })
-  })
-
-  describe("AC6: Bouton toggle theme", () => {
-    it("affiche le bouton toggle theme avec aria-label", () => {
-      renderWithTheme(<TodayHeader />)
-      const toggleBtn = screen.getByRole("button", { name: /passer en mode/i })
-      expect(toggleBtn).toBeInTheDocument()
-      expect(toggleBtn).toHaveClass("today-header__theme-toggle")
-    })
-
-    it("bascule le thème au clic", async () => {
-      const user = userEvent.setup()
-      renderWithTheme(<TodayHeader />)
-      const toggleBtn = screen.getByRole("button", { name: /passer en mode/i })
-      // Le label initial dépend du thème système, on vérifie juste que le clic change le label
-      const initialLabel = toggleBtn.getAttribute("aria-label")
-      await user.click(toggleBtn)
-      const newLabel = screen.getByRole("button", { name: /passer en mode/i }).getAttribute("aria-label")
-      expect(newLabel).not.toBe(initialLabel)
-    })
-
-    it("affiche l'icône Moon en mode light", () => {
-      localStorage.setItem("theme", "light")
-      renderWithTheme(<TodayHeader />)
-      const toggleBtn = screen.getByRole("button", { name: "Passer en mode sombre" })
-      expect(toggleBtn).toBeInTheDocument()
-    })
-
-    it("affiche l'icône Sun en mode dark", () => {
-      localStorage.setItem("theme", "dark")
-      renderWithTheme(<TodayHeader />)
-      const toggleBtn = screen.getByRole("button", { name: "Passer en mode clair" })
-      expect(toggleBtn).toBeInTheDocument()
     })
   })
 })

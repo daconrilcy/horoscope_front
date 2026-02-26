@@ -89,6 +89,33 @@ describe("BirthProfilePage", () => {
     expect(screen.getByLabelText(/Fuseau horaire/i)).toHaveValue("Europe/Paris")
   })
 
+  it("falls back to birth_place parsing when birth_city and birth_country are missing", async () => {
+    setupToken()
+    const responseWithoutCityCountry = {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        data: {
+          birth_date: "1990-01-15",
+          birth_time: "10:30",
+          birth_place: "Paris, Ile-de-France, France",
+          birth_timezone: "Europe/Paris",
+          birth_city: null,
+          birth_country: null,
+        },
+        meta: { request_id: "r1" },
+      }),
+    }
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(responseWithoutCityCountry))
+
+    renderBirthProfilePage()
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Ville de naissance/i)).toHaveValue("Paris")
+    })
+    expect(screen.getByLabelText(/Pays de naissance/i)).toHaveValue("France")
+  })
+
   it("shows the generation button only if birth data exists", async () => {
     setupToken()
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND_RESPONSE))
@@ -224,10 +251,13 @@ describe("BirthProfilePage", () => {
 
   it("shows specific error message when generation returns 422 (invalid birth data)", async () => {
     setupToken()
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
     const UNPROCESSABLE_RESPONSE = {
       ok: false,
       status: 422,
-      json: async () => ({ error: { code: "unprocessable_entity", message: "Données invalides" } }),
+      json: async () => ({
+        error: { code: "unprocessable_entity", message: "Données invalides", request_id: "req-gen-422" },
+      }),
     }
 
     vi.stubGlobal(
@@ -246,6 +276,8 @@ describe("BirthProfilePage", () => {
       await screen.findByText(/Vos données de naissance sont invalides ou incomplètes/i),
     ).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /Générer mon thème astral/i })).not.toBeDisabled()
+    expect(consoleErrorSpy).not.toHaveBeenCalledWith("[Support] Request ID: req-gen-422")
+    consoleErrorSpy.mockRestore()
   })
 
   it("shows generic error message on network failure during generation", async () => {
@@ -282,7 +314,7 @@ describe("BirthProfilePage", () => {
     consoleErrorSpy.mockRestore()
   })
 
-  it("shows global error and requestId when saving birth data fails with a general error", async () => {
+  it("shows global error but does not log requestId when saving birth data fails with a 422 functional error", async () => {
     setupToken()
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
     const errorResponse = {
@@ -309,8 +341,7 @@ describe("BirthProfilePage", () => {
     await waitFor(() => {
       expect(screen.getByText(/Données invalides/i)).toBeInTheDocument()
     })
-    // AC8: requestId is logged to console, not displayed to user
-    expect(consoleErrorSpy).toHaveBeenCalledWith("[Support] Request ID: req-save-789")
+    expect(consoleErrorSpy).not.toHaveBeenCalledWith("[Support] Request ID: req-save-789")
     consoleErrorSpy.mockRestore()
   })
 
@@ -338,8 +369,8 @@ describe("BirthProfilePage", () => {
         return SUCCESS_GET_RESPONSE
       }
       // Mock geocoding to avoid network errors
-      if (url.includes("nominatim.openstreetmap.org")) {
-        return { ok: true, json: async () => [{ display_name: "Lyon, France", lat: "45.76", lon: "4.83" }] }
+      if (url.includes("/v1/geocoding/search")) {
+        return { ok: true, json: async () => ({ data: { results: [{ lat: 45.76, lon: 4.83, display_name: "Lyon, France" }], count: 1 } }) }
       }
       return NOT_FOUND_RESPONSE
     })
@@ -573,7 +604,7 @@ describe("BirthProfilePage", () => {
     await waitFor(() => {
       expect(putCalls.length).toBeGreaterThan(0)
       const body = JSON.parse(putCalls[0].init.body as string)
-      expect(body.birth_time).toBe("00:00") // backend sentinel for unknown time
+      expect(body.birth_time).toBeNull() // stratégie unique : null pour heure inconnue
     })
   })
 
@@ -607,21 +638,22 @@ describe("BirthProfilePage", () => {
     expect(screen.getByLabelText(/Heure de naissance/i)).toHaveValue("")
   })
 
-  it("reset depuis API avec birth_time '00:00' (sentinel) → checkbox auto-cochée, champ vide", async () => {
+  it("reset depuis API avec birth_time '00:00' → champ affiche '00:00', heure connue (pas de sentinelle)", async () => {
     setupToken()
-    const SENTINEL_TIME_RESPONSE = {
+    const MIDNIGHT_TIME_RESPONSE = {
       ok: true,
       status: 200,
       json: async () => ({ data: { ...VALID_PROFILE, birth_time: "00:00" }, meta: { request_id: "r1" } }),
     }
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SENTINEL_TIME_RESPONSE))
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(MIDNIGHT_TIME_RESPONSE))
     renderBirthProfilePage()
 
     await waitFor(() => expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument())
 
-    expect(screen.getByRole("checkbox", { name: /Heure inconnue/i })).toBeChecked()
-    expect(screen.getByLabelText(/Heure de naissance/i)).toHaveValue("")
-    expect(screen.getByLabelText(/Heure de naissance/i)).toBeDisabled()
+    // "00:00" is a valid explicit time, not a sentinel — checkbox must NOT be checked
+    expect(screen.getByRole("checkbox", { name: /Heure inconnue/i })).not.toBeChecked()
+    expect(screen.getByLabelText(/Heure de naissance/i)).toHaveValue("00:00")
+    expect(screen.getByLabelText(/Heure de naissance/i)).not.toBeDisabled()
   })
 
   it("soumission sans birth_date → blocage + message indispensable (AC4)", async () => {
@@ -717,10 +749,10 @@ describe("BirthProfilePage", () => {
     setupToken()
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
-      if (url.includes("nominatim")) {
+      if (url.includes("/v1/geocoding/search")) {
         return {
           ok: true,
-          json: async () => [{ lat: "48.8566", lon: "2.3522", display_name: "Paris, Île-de-France, France" }],
+          json: async () => ({ data: { results: [{ lat: 48.8566, lon: 2.3522, display_name: "Paris, Île-de-France, France" }], count: 1 } }),
         }
       }
       if (url.includes("/birth-data") && init?.method === "PUT") {
@@ -742,12 +774,12 @@ describe("BirthProfilePage", () => {
     expect(await screen.findByText(/Lieu résolu : Paris, Île-de-France, France/i)).toBeInTheDocument()
   })
 
-  it("shows not-found warning message when Nominatim returns empty array on save", async () => {
+  it("shows not-found warning message when backend geocoding returns empty results on save", async () => {
     setupToken()
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
-      if (url.includes("nominatim")) {
-        return { ok: true, json: async () => [] }
+      if (url.includes("/v1/geocoding/search")) {
+        return { ok: true, json: async () => ({ data: { results: [], count: 0 } }) }
       }
       if (url.includes("/birth-data") && init?.method === "PUT") {
         return { ok: true, status: 200, json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }) }
@@ -770,11 +802,11 @@ describe("BirthProfilePage", () => {
     ).toBeInTheDocument()
   })
 
-  it("saves data in degraded mode when Nominatim fails", async () => {
+  it("saves data in degraded mode when geocoding backend fails", async () => {
     setupToken()
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
-      if (url.includes("nominatim")) {
+      if (url.includes("/v1/geocoding/search")) {
         throw new Error("Network error")
       }
       if (url.includes("/birth-data") && init?.method === "PUT") {
@@ -803,7 +835,7 @@ describe("BirthProfilePage", () => {
     setupToken()
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
-      if (url.includes("nominatim")) {
+      if (url.includes("/v1/geocoding/search")) {
         throw new Error("Network error") // geocodeCity converts this to GeocodingError
       }
       if (url.includes("/birth-data") && init?.method === "PUT") {
@@ -828,12 +860,12 @@ describe("BirthProfilePage", () => {
     expect(screen.getByText(/mode dégradé/i)).toBeInTheDocument()
   })
 
-  it("does not include birth_lat or birth_lon in save payload when geocoding fails", async () => {
+  it("does not include birth_lat or birth_lon in save payload when geocoding finds nothing", async () => {
     setupToken()
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
-      if (url.includes("nominatim")) {
-        return { ok: true, json: async () => [] }
+      if (url.includes("/v1/geocoding/search")) {
+        return { ok: true, json: async () => ({ data: { results: [], count: 0 } }) }
       }
       if (url.includes("/birth-data") && init?.method === "PUT") {
         return { ok: true, status: 200, json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }) }
@@ -866,10 +898,10 @@ describe("BirthProfilePage", () => {
     setupToken()
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
-      if (url.includes("nominatim")) {
+      if (url.includes("/v1/geocoding/search")) {
         return {
           ok: true,
-          json: async () => [{ lat: "48.8566", lon: "2.3522", display_name: "Paris, Île-de-France, France" }],
+          json: async () => ({ data: { results: [{ lat: 48.8566, lon: 2.3522, display_name: "Paris, Île-de-France, France" }], count: 1 } }),
         }
       }
       if (url.includes("/birth-data") && init?.method === "PUT") {
@@ -899,10 +931,10 @@ describe("BirthProfilePage", () => {
     setupToken()
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const urlStr = String(input)
-      if (urlStr.includes("nominatim")) {
+      if (urlStr.includes("/v1/geocoding/search")) {
         return {
           ok: true,
-          json: async () => [{ lat: "48.8566", lon: "2.3522", display_name: "Paris, France" }],
+          json: async () => ({ data: { results: [{ lat: 48.8566, lon: 2.3522, display_name: "Paris, France" }], count: 1 } }),
         }
       }
       if (urlStr.includes("/birth-data") && init?.method === "PUT") {
@@ -981,10 +1013,10 @@ describe("BirthProfilePage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
     await screen.findByText(/Profil natal sauvegardé/i)
 
-    // Verify birth_time is "00:00" sentinel in PUT payload (backend convention for unknown time)
+    // Verify birth_time is null in PUT payload (stratégie unique : null pour heure inconnue)
     expect(putCalls.length).toBeGreaterThan(0)
     const savedBody = JSON.parse(putCalls[0].body)
-    expect(savedBody.birth_time).toBe("00:00")
+    expect(savedBody.birth_time).toBeNull()
 
     // Step 3: Generate natal chart
     fireEvent.click(screen.getByRole("button", { name: /Générer mon thème astral/i }))
@@ -1019,8 +1051,8 @@ describe("BirthProfilePage", () => {
     const putCalls: Array<{ url: string; body: string }> = []
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
-      if (url.includes("nominatim")) {
-        return { ok: true, json: async () => [] }
+      if (url.includes("/v1/geocoding/search")) {
+        return { ok: true, json: async () => ({ data: { results: [], count: 0 } }) }
       }
       if (url.includes("/birth-data")) {
         if (init?.method === "PUT") {
@@ -1073,7 +1105,7 @@ describe("BirthProfilePage", () => {
 
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
-      if (url.includes("nominatim")) {
+      if (url.includes("/v1/geocoding/search")) {
         geocodeFetchStarted = true
         // Track the abort signal
         if (init?.signal) {
@@ -1081,7 +1113,7 @@ describe("BirthProfilePage", () => {
         }
         // Return a promise that never resolves to simulate pending request
         return new Promise<Response>((resolve) => {
-          resolveGeocode = () => resolve({ ok: true, json: async () => [] } as Response)
+          resolveGeocode = () => resolve({ ok: true, json: async () => ({ data: { results: [], count: 0 } }) } as Response)
         })
       }
       if (url.includes("/birth-data")) {

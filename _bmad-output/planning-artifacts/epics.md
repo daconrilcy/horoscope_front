@@ -1362,3 +1362,24 @@ So that je puisse compléter mes informations sans friction et comprendre les pr
 - Suppression de l'affichage des request_id côté utilisateur (log console uniquement)
 
 [Source: _bmad-output/implementation-artifacts/16-8-correction-parcours-theme-natal.md]
+
+## Epic 19: Comment lire ton thème natal dans l'app
+
+Rendre la lecture du thème natal explicite et traçable dans l'interface, avec une pédagogie claire sur les signes, les maisons, les planètes, et les conventions de calcul.
+
+### Story 19.1: Guide de lecture du thème natal dans l'app
+
+As a utilisateur qui consulte son thème natal,
+I want une section claire "Comment lire ton thème natal dans l'app" avec conventions explicites et exemples concrets,
+So that je comprenne pourquoi chaque planète est affichée dans un signe et une maison donnés.
+
+**Acceptance Criteria:**
+- Explication claire des 3 briques: signes, maisons, planètes
+- Exemple de conversion exact: `Soleil 34.08° -> Taureau 4°05'`
+- Convention de maisons `[debut, fin)` explicitée
+- Exemple de wrap maison (`348.46° -> 18.46°`) documenté
+- Mode sans heure de naissance explicite: ascendant non calculé
+- Métadonnées visibles: date/heure de génération, version référentiel, version ruleset, système de maisons
+- Cohérence visuelle et métier entre liste des planètes et roue des maisons
+
+[Source: _bmad-output/implementation-artifacts/19-1-comment-lire-ton-theme-natal-dans-l-app.md]

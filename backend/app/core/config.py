@@ -113,6 +113,21 @@ class Settings:
             default=50,
             minimum=1,
         )
+        self.nominatim_url = os.getenv(
+            "NOMINATIM_URL", "https://nominatim.openstreetmap.org/search"
+        ).strip()
+        self.nominatim_user_agent = os.getenv(
+            "NOMINATIM_USER_AGENT", "horoscope-app/1.0"
+        ).strip()
+        self.nominatim_contact = os.getenv(
+            "NOMINATIM_CONTACT", "admin@horoscope.app"
+        ).strip()
+        self.nominatim_timeout_seconds = self._parse_int_env(
+            "NOMINATIM_TIMEOUT_SECONDS", default=10, minimum=1
+        )
+        self.geocoding_cache_ttl_seconds = self._parse_int_env(
+            "GEOCODING_CACHE_TTL_SECONDS", default=3600, minimum=1
+        )
         token = os.getenv("REFERENCE_SEED_ADMIN_TOKEN", "").strip()
         if token:
             self.reference_seed_admin_token = token

@@ -612,7 +612,8 @@ class BillingService:
             CheckoutData avec le résultat de l'opération.
 
         Raises:
-            BillingServiceError: Si le plan est invalide ou l'utilisateur a déjà un abonnement actif.
+            BillingServiceError: Si le plan est invalide
+                ou l'utilisateur a déjà un abonnement actif.
         """
         return BillingService._checkout_internal(
             db,

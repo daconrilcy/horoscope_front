@@ -142,7 +142,7 @@
   justify-content: center;
   gap: 3px;
   padding: 6px 4px;
-  border-radius: 14px;
+  border-radius: 18px;
   text-decoration: none;
   color: var(--text-2);
   transition: background 0.15s ease;
@@ -648,7 +648,6 @@ textarea:focus-visible {
 .message-bubble--assistant {
   align-self: flex-start;
   background: var(--badge-chat);
-  opacity: 0.85;
   border: 1px solid var(--glass-border);
   color: var(--text-1);
 }
@@ -662,11 +661,11 @@ textarea:focus-visible {
 .message-bubble-author {
   font-size: 0.75rem;
   font-weight: 600;
-  opacity: 0.8;
+  color: var(--text-2);
 }
 
 .message-bubble--user .message-bubble-author {
-  color: var(--btn-text);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .message-bubble-text {
@@ -678,7 +677,7 @@ textarea:focus-visible {
 
 .message-bubble-time {
   font-size: 0.7rem;
-  opacity: 0.7;
+  color: var(--text-3);
   align-self: flex-end;
 }
 
@@ -688,7 +687,6 @@ textarea:focus-visible {
   padding: 0.75rem 1rem;
   border-radius: 12px;
   background: var(--badge-chat);
-  opacity: 0.85;
   border: 1px solid var(--glass-border);
 }
 
@@ -2177,180 +2175,62 @@ textarea:focus-visible {
   display: inline-block;
 }
 
-/* === HeroHoroscopeCard === */
-.hero-card {
-  border-radius: 26px;
-  padding: 18px;
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-card);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  position: relative;
-  overflow: hidden;
-}
-
-.hero-card__top-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.hero-card__top-chevron {
-  color: var(--text-2);
-  flex-shrink: 0;
-}
-
-.hero-card__chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: var(--chip);
-  font-size: 13px;
-  color: var(--text-1);
-}
-
-.hero-card__headline {
-  margin-top: 12px;
-  margin-bottom: 0;
-  font-size: 28px;
-  font-weight: 650;
-  line-height: 1.12;
-  letter-spacing: -0.3px;
-  color: var(--text-1);
-}
-
-.hero-card__constellation {
-  position: absolute;
-  right: -20px;
-  top: 60px;
-  width: 120px;
-  height: 100px;
-  pointer-events: none;
-}
-
-.hero-card__constellation svg {
-  width: 100%;
-  height: 100%;
-}
-
-.hero-card__constellation-svg {
-  color: var(--constellation-color, #ffffff);
-  opacity: 0.55;
-  filter: drop-shadow(0 0 6px rgba(200, 180, 255, 0.4));
-  pointer-events: none;
-}
-
-.hero-card__cta {
-  margin-top: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  height: 48px;
-  border-radius: 999px;
-  border: none;
-  background: linear-gradient(90deg, var(--cta-l), var(--cta-r));
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 650;
-  cursor: pointer;
-  box-shadow: var(--shadow-cta, 0 14px 30px rgba(90, 120, 255, 0.25));
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.dark .hero-card__cta {
-  box-shadow: var(--shadow-cta-dark, 0 14px 30px rgba(0, 0, 0, 0.35));
-}
-
-.hero-card__cta:hover:not(:disabled) {
-  opacity: 0.92;
-  transform: translateY(-1px);
-}
-
-.hero-card__cta:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 4px;
-}
-
-.hero-card__link {
-  margin-top: 14px;
-  width: 100%;
-  display: block;
-  background: transparent;
-  border: none;
-  padding: 0;
-  text-align: center;
-  font-size: 13px;
-  color: var(--text-2);
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.hero-card__link:hover:not(:disabled) {
-  color: var(--text-1);
-}
-
-.hero-card__link:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 4px;
-  border-radius: 4px;
-}
-
 /* === TodayHeader === */
 .today-header {
   position: relative;
   padding-top: 6px;
+  padding-bottom: 18px;
   text-align: center;
   min-height: 48px; /* Prevents layout shift during avatar load */
 }
 
-.today-header__theme-toggle {
+.today-header__content {
+  padding: 0 44px; /* Espace symétrique : toggle gauche + avatar droite */
+}
+
+.today-header__toggle {
   position: absolute;
   top: 0;
   left: 0;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  border: 1px solid var(--glass-border);
-  background: var(--glass);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-2);
+  background: transparent;
+  border: none;
+  border-radius: 50%;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  color: var(--text-2);
+  transition: color 0.2s ease, background 0.2s ease;
+  padding: 0;
 }
 
-.today-header__theme-toggle:hover {
+.today-header__toggle:hover {
   background: var(--glass-2);
   color: var(--text-1);
+  transform: none;
+  box-shadow: none;
 }
 
-.today-header__theme-toggle:focus-visible {
+.today-header__toggle:focus-visible {
   outline: 2px solid var(--primary);
-  outline-offset: 4px;
-}
-
-.today-header__content {
-  padding: 0 44px; /* Réserve de l'espace pour l'avatar à droite (40px + marge) et équilibre à gauche */
+  outline-offset: 2px;
 }
 
 .today-header__kicker {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 500;
   letter-spacing: 0.2px;
   color: var(--text-2);
   margin: 0;
+  padding-bottom: 6px;
 }
 
 .today-header__title {
+  padding-top:6px;
   font-size: 40px;
-  font-weight: 650;
+  font-weight: 500;
   line-height: 1.05;
   letter-spacing: -0.5px;
   color: var(--text-1);
@@ -2364,7 +2244,7 @@ textarea:focus-visible {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--glass-border);
   overflow: hidden;
   background: var(--chip);
   display: flex;
@@ -2382,9 +2262,9 @@ textarea:focus-visible {
 }
 
 @keyframes avatar-pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 0.3; }
-  100% { opacity: 0.6; }
+  0% { background-color: var(--glass-2); }
+  50% { background-color: var(--glass); }
+  100% { background-color: var(--glass-2); }
 }
 
 .today-header__avatar img {
@@ -2440,58 +2320,7 @@ textarea:focus-visible {
   }
 }
 
-/* === MiniInsightCard === */
-.mini-card {
-  padding: 14px;
-  border-radius: 18px;
-  background: var(--glass-2);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-}
-
-.mini-card--clickable {
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-  border: 1px solid var(--glass-border);
-  font: inherit;
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.mini-card--clickable:hover {
-  background: var(--glass);
-  transform: translateY(-2px);
-  border-color: var(--cta-l);
-}
-
-.mini-card__badge {
-  width: 36px;
-  height: 36px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-
-.mini-card__title {
-  font-size: 14px;
-  font-weight: 650;
-  color: var(--text-1);
-  margin: 0 0 4px;
-}
-
-.mini-card__desc {
-  font-size: 13px;
-  color: var(--text-2);
-  margin: 0;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
+/* === Daily Insights Section === */
 .mini-cards-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2569,66 +2398,7 @@ textarea:focus-visible {
   gap: 24px;
 }
 
-/* === ShortcutCard === */
-.shortcut-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  border-radius: 18px;
-  background: var(--glass-2);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-  font: inherit;
-  color: inherit;
-}
-
-.shortcut-card__badge {
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.shortcut-card__content {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.shortcut-card__title {
-  font-size: 15px;
-  font-weight: 650;
-  color: var(--text-1);
-  display: block;
-}
-
-.shortcut-card__subtitle {
-  font-size: 13px;
-  color: var(--text-2);
-  margin-top: 2px;
-  display: block;
-}
-
-.shortcut-card__subtitle--online {
-  color: var(--success);
-}
-
-.shortcuts-section__title {
-  font-size: 18px;
-  font-weight: 650;
-  color: var(--text-1);
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
+/* === Shortcuts Section === */
 .shortcuts-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

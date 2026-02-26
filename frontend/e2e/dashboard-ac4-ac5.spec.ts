@@ -1,4 +1,7 @@
-import { expect, test } from "@playwright/test"
+import { expect, test, type Page } from "@playwright/test"
+import { mkdirSync } from "node:fs"
+import { dirname, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 
 const AUTH_ME_RESPONSE = {
   data: {
@@ -12,24 +15,45 @@ const AUTH_ME_RESPONSE = {
 const ACCESS_TOKEN =
   "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJwbGF5d3JpZ2h0LXVzZXIifQ."
 
+const SHOULD_CAPTURE_DOD = process.env.CAPTURE_DOD === "1"
+const SPEC_DIR = dirname(fileURLToPath(import.meta.url))
+const MOBILE_VIEWPORT = { width: 390, height: 844 }
+
+async function captureDodScreenshot(page: Page, fileName: string) {
+  if (!SHOULD_CAPTURE_DOD) {
+    return
+  }
+  const targetPath = resolve(SPEC_DIR, "../../artifacts/dashboard-17-15", fileName)
+  mkdirSync(dirname(targetPath), { recursive: true })
+  await page.screenshot({ path: targetPath, fullPage: true })
+}
+
+async function setupDashboardSession(page: Page, theme: "light" | "dark") {
+  await page.route("**/v1/auth/me*", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(AUTH_ME_RESPONSE),
+    })
+  })
+
+  await page.addInitScript(
+    ({ token, selectedTheme }) => {
+      window.localStorage.setItem("access_token", token)
+      window.localStorage.setItem("theme", selectedTheme)
+      window.localStorage.setItem("lang", "fr")
+    },
+    { token: ACCESS_TOKEN, selectedTheme: theme },
+  )
+}
+
 test.describe("Dashboard visual AC4/AC5", () => {
   test("keeps 3 mini cards columns at 390px and shows light constellation color", async ({ page }) => {
     const pageErrors: string[] = []
     page.on("pageerror", (error) => pageErrors.push(error.message))
+    await page.setViewportSize(MOBILE_VIEWPORT)
 
-    await page.route("**/v1/auth/me*", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(AUTH_ME_RESPONSE),
-      })
-    })
-
-    await page.addInitScript(({ token }) => {
-      window.localStorage.setItem("access_token", token)
-      window.localStorage.setItem("theme", "light")
-      window.localStorage.setItem("lang", "fr")
-    }, { token: ACCESS_TOKEN })
+    await setupDashboardSession(page, "light")
 
     await page.goto("/dashboard")
     await page.waitForLoadState("networkidle")
@@ -61,22 +85,11 @@ test.describe("Dashboard visual AC4/AC5", () => {
     const [r, g, b] = channels
     expect(b).toBeGreaterThan(r)
     expect(b).toBeGreaterThan(g)
+    await captureDodScreenshot(page, "dashboard-light.png")
   })
 
   test("shows white constellation in dark mode", async ({ page }) => {
-    await page.route("**/v1/auth/me*", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(AUTH_ME_RESPONSE),
-      })
-    })
-
-    await page.addInitScript(({ token }) => {
-      window.localStorage.setItem("access_token", token)
-      window.localStorage.setItem("theme", "dark")
-      window.localStorage.setItem("lang", "fr")
-    }, { token: ACCESS_TOKEN })
+    await setupDashboardSession(page, "dark")
 
     await page.goto("/dashboard")
     await page.waitForLoadState("networkidle")
@@ -89,5 +102,6 @@ test.describe("Dashboard visual AC4/AC5", () => {
     // In dark mode it should be #ffffff or rgba(255, 255, 255, ...)
     const channels = computedColor.match(/\d+/g)?.slice(0, 3).map(Number) ?? []
     expect(channels).toEqual([255, 255, 255])
+    await captureDodScreenshot(page, "dashboard-dark.png")
   })
 })

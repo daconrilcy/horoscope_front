@@ -1,0 +1,24 @@
+<svg class="icon-aquarius" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Verseau (Aquarius)">
+  <!-- Background (modifiable in CSS) -->
+  <rect class="aq-bg" x="4" y="4" width="56" height="56" rx="14"></rect>
+
+  <!-- Waves (modifiable in CSS) -->
+  <g class="aq-waves" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- top wave -->
+    <path d="M14 26
+             C18 22, 22 22, 26 26
+             S34 30, 38 26
+             S46 22, 50 26"></path>
+    <!-- bottom wave -->
+    <path d="M14 38
+             C18 34, 22 34, 26 38
+             S34 42, 38 38
+             S46 34, 50 38"></path>
+  </g>
+
+  <style>
+    /* Defaults (override these in your CSS) */
+    .aq-bg { fill: var(--aquarius-bg, #c7b0e6); }
+    .aq-waves { stroke: var(--aquarius-wave, #ffffff); stroke-width: 4; }
+  </style>
+</svg>

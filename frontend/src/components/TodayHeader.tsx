@@ -14,7 +14,8 @@ export interface TodayHeaderProps {
 }
 
 /**
- * TodayHeader displays the main page title ("Horoscope") and the user profile avatar.
+ * TodayHeader displays the main page title ("Horoscope"), a dark/light toggle top-left,
+ * and the user profile avatar top-right.
  * It automatically handles initials fallback if the image fails to load.
  */
 export function TodayHeader({ userName = "U", avatarUrl }: TodayHeaderProps) {
@@ -28,12 +29,13 @@ export function TodayHeader({ userName = "U", avatarUrl }: TodayHeaderProps) {
 
   return (
     <header className="today-header">
+      {/* Dark/light toggle — top left */}
       <button
         type="button"
-        className="today-header__theme-toggle"
+        className="today-header__toggle"
         onClick={toggleTheme}
         aria-label={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
-        title={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
+        aria-pressed={theme === "dark"}
       >
         {theme === "dark"
           ? <Sun size={20} strokeWidth={1.75} aria-hidden="true" />
@@ -45,6 +47,8 @@ export function TodayHeader({ userName = "U", avatarUrl }: TodayHeaderProps) {
         <p className="today-header__kicker">Aujourd'hui</p>
         <h1 className="today-header__title">Horoscope</h1>
       </div>
+
+      {/* Avatar — top right */}
       <div
         className={`today-header__avatar ${isLoading ? "today-header__avatar--loading" : ""}`}
         role="img"

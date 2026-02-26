@@ -3,7 +3,19 @@
     "allow": [
       "Bash(python -m ruff check:*)",
       "Bash(git stash:*)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(npx vite build:*)",
+      "Bash(CAPTURE_DOD=1 npx playwright test:*)",
+      "Bash(pkill:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(grep:*)",
+      "Bash(.venv/Scripts/Activate.ps1:*)",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(edit:*)"
+    ],
+    "additionalDirectories": [
+      "c:\\dev\\horoscope_front\\_bmad-output\\implementation-artifacts"
     ]
   }
 }

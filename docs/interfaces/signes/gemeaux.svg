@@ -1,0 +1,34 @@
+<svg class="icon-gemini" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Gémeaux (Gemini)">
+  <!-- Background (modifiable in CSS) -->
+  <rect class="ge-bg" x="4" y="4" width="56" height="56" rx="14"></rect>
+
+  <!-- Gemini stroke (model path scaled to 64x64) -->
+  <path class="ge-stroke" d="
+    M1.871 1.882
+    C12.259 7.776 19.925 9.848 31.839 9.979
+    C44.245 10.114 51.375 8.21 62.081 1.882
+
+    M1.871 62.352
+    C12.279 56.512 19.933 54.463 31.839 54.334
+    C44.238 54.199 51.352 56.082 62.081 62.352
+
+    M16.877 55.155
+    V9.979
+
+    M46.442 55.155
+    V9.979
+  "></path>
+
+  <style>
+    .ge-bg { fill: var(--gemini-bg, #0b0b0b); }
+
+    .ge-stroke{
+      fill: none;
+      stroke: var(--gemini-stroke, #ffffff);
+      /* équivalent stroke 50 sur 855px -&gt; ~3.74 sur 64px */
+      stroke-width: var(--gemini-stroke-width, 3.8);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+</svg>
