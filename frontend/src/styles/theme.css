@@ -133,7 +133,7 @@
   --shadow-hero: 0 18px 40px rgba(0,0,0,0.45);
   --shadow-card: 0 18px 40px rgba(0,0,0,0.45);
   --shadow-nav:  0 10px 30px rgba(0,0,0,0.55);
-  --shadow-cta:  0 14px 30px rgba(90, 120, 255, 0.22);
+  --shadow-cta:  0 10px 18px rgba(60, 20, 120, .18),     /* ombre sous le bouton */ 0 2px 0 rgba(255,255,255,.22) inset,    /* liseré lumineux en haut */ 0 -10px 18px rgba(50, 10, 90, .20) inset; /* assombrissement en bas */
   --shadow-cta-dark: 0 14px 30px rgba(0, 0, 0, 0.35);
 
   /* Lines/borders */

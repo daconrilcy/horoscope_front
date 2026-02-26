@@ -130,6 +130,7 @@ class PersonaConfigService:
     Gère le cycle de vie des profils persona avec versioning,
     activation/désactivation et capacité de rollback.
     """
+
     @staticmethod
     def _to_data(model: PersonaConfigModel) -> PersonaConfigData:
         """Convertit un modèle de configuration en DTO."""

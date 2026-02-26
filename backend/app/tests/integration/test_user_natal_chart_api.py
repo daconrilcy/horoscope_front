@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
+from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.reference import (
     AspectModel,
     AstroCharacteristicModel,
@@ -54,6 +55,7 @@ def _cleanup_tables() -> None:
     with SessionLocal() as db:
         for model in (
             ChartResultModel,
+            GeoPlaceResolvedModel,
             UserBirthProfileModel,
             UserModel,
             AstroCharacteristicModel,
@@ -237,6 +239,31 @@ def test_generate_natal_chart_returns_422_when_birth_time_is_missing() -> None:
     )
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "missing_birth_time"
+
+
+def test_generate_natal_chart_accurate_mode_requires_place_resolved_fk() -> None:
+    _cleanup_tables()
+    _seed_reference_data()
+    access_token = _register_and_get_access_token()
+    put_birth = client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+    assert put_birth.status_code == 200
+
+    response = client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"reference_version": "1.0.0", "accurate": True},
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "missing_birth_place_resolved"
 
 
 def test_get_latest_natal_chart_not_found() -> None:

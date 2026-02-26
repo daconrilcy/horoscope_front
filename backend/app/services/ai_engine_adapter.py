@@ -117,6 +117,7 @@ def assess_off_scope(content: str) -> tuple[bool, float, str | None]:
         return True, 0.9, "explicit_prefix"
     return False, 0.0, None
 
+
 def map_adapter_error_to_codes(
     err: AIEngineAdapterError | TimeoutError | ConnectionError,
 ) -> tuple[str, str]:

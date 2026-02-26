@@ -28,9 +28,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # Use a valid fallback time before restoring NOT NULL constraint.
-    op.execute(
-        "UPDATE user_birth_profiles SET birth_time = '00:00' WHERE birth_time IS NULL"
-    )
+    op.execute("UPDATE user_birth_profiles SET birth_time = '00:00' WHERE birth_time IS NULL")
     with op.batch_alter_table("user_birth_profiles") as batch_op:
         batch_op.alter_column(
             "birth_time",

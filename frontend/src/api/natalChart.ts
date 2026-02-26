@@ -9,6 +9,8 @@ type PlanetPosition = {
   longitude: number
   sign_code: string
   house_number: number
+  is_retrograde?: boolean
+  speed_longitude?: number
 }
 
 type HouseResult = {
@@ -45,7 +47,8 @@ export type LatestNatalChart = {
   metadata: {
     reference_version: string
     ruleset_version: string
-    house_system?: string
+    engine: string
+    house_system: string
     degraded_mode?: "no_location" | "no_time" | "no_location_no_time" | null
   }
   created_at: string
@@ -118,14 +121,17 @@ async function fetchLatestNatalChart(accessToken: string): Promise<LatestNatalCh
   return handleResponse<LatestNatalChart>(response)
 }
 
-export async function generateNatalChart(accessToken: string): Promise<LatestNatalChart> {
+export async function generateNatalChart(
+  accessToken: string,
+  accurate: boolean = false,
+): Promise<LatestNatalChart> {
   const response = await apiFetch(`${API_BASE_URL}/v1/users/me/natal-chart`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({}),
+    body: JSON.stringify({ accurate }),
   })
 
   return handleResponse<LatestNatalChart>(response)

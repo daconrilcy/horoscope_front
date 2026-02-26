@@ -53,6 +53,7 @@ def test_persist_trace_requires_versions() -> None:
     invalid_result = NatalResult(
         reference_version="",
         ruleset_version="1.0.0",
+        house_system="equal_house",
         prepared_input={
             "birth_datetime_local": "1990-06-15T10:30:00+02:00",
             "birth_datetime_utc": "1990-06-15T08:30:00+00:00",

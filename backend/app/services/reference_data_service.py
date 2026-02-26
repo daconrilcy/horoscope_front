@@ -42,6 +42,7 @@ class ReferenceDataService:
     Gère les versions des données astrologiques de référence avec
     support du seeding initial et du clonage entre versions.
     """
+
     _REFERENCE_CACHE_TTL_SECONDS = 60.0
     _reference_cache: dict[str, tuple[float, dict[str, object]]] = {}
     _reference_cache_lock = Lock()

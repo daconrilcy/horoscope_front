@@ -98,6 +98,7 @@ class B2BBillingService:
     Gère les cycles de facturation, le calcul des montants basés sur
     la consommation et les plans tarifaires.
     """
+
     @staticmethod
     def _ensure_active_account(db: Session, *, account_id: int) -> EnterpriseAccountModel:
         """

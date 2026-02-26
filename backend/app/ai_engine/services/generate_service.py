@@ -84,16 +84,18 @@ async def generate_text(
         increment_counter("ai_engine_cache_hits_total", 1.0)
         logger.info(
             "ai_generate_cached %s",
-            json.dumps({
-                "request_id": request_id,
-                "trace_id": trace_id,
-                "user_id": str(user_id),
-                "use_case": use_case,
-                "latency_ms": latency_ms,
-                "status": "success",
-                "tokens_used": cached.total_tokens,
-                "cached": True,
-            }),
+            json.dumps(
+                {
+                    "request_id": request_id,
+                    "trace_id": trace_id,
+                    "user_id": str(user_id),
+                    "use_case": use_case,
+                    "latency_ms": latency_ms,
+                    "status": "success",
+                    "tokens_used": cached.total_tokens,
+                    "cached": True,
+                }
+            ),
         )
         return GenerateResponse(
             request_id=request_id,
@@ -157,19 +159,21 @@ async def generate_text(
 
     logger.info(
         "ai_generate_complete %s",
-        json.dumps({
-            "request_id": request_id,
-            "trace_id": trace_id,
-            "user_id": str(user_id),
-            "use_case": use_case,
-            "latency_ms": latency_ms,
-            "status": "success",
-            "tokens_used": result.total_tokens,
-            "input_tokens": result.input_tokens,
-            "output_tokens": result.output_tokens,
-            "cost_usd": round(usage.estimated_cost_usd, 6),
-            "cached": False,
-        }),
+        json.dumps(
+            {
+                "request_id": request_id,
+                "trace_id": trace_id,
+                "user_id": str(user_id),
+                "use_case": use_case,
+                "latency_ms": latency_ms,
+                "status": "success",
+                "tokens_used": result.total_tokens,
+                "input_tokens": result.input_tokens,
+                "output_tokens": result.output_tokens,
+                "cost_usd": round(usage.estimated_cost_usd, 6),
+                "cached": False,
+            }
+        ),
     )
 
     return GenerateResponse(

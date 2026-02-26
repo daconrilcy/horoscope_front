@@ -1,6 +1,6 @@
 # Story 19.6: Rattacher le profil de naissance à `geo_place_resolved` (source-of-truth)
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -21,28 +21,28 @@ so that mes calculs futurs restent identiques et plus précis.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 — Étendre modèle profil de naissance (AC: 1, 3, 4)
-  - [ ] Migration ajoutant `birth_place_resolved_id` (+ FK) et `birth_place_text` si nécessaire.
-  - [ ] Mise à jour modèle SQLAlchemy et repository.
-  - [ ] Gestion de compatibilité pour anciens enregistrements.
+- [x] Task 1 — Étendre modèle profil de naissance (AC: 1, 3, 4)
+  - [x] Migration ajoutant `birth_place_resolved_id` (+ FK) et `birth_place_text` si nécessaire.
+  - [x] Mise à jour modèle SQLAlchemy et repository.
+  - [x] Gestion de compatibilité pour anciens enregistrements.
 
-- [ ] Task 2 — Adapter API profil utilisateur (AC: 2, 3)
-  - [ ] Étendre schémas de réponse (`/v1/users/me/birth-data`).
-  - [ ] Retourner l'objet `birth_place_resolved`.
-  - [ ] Retourner explicitement `birth_place_resolved=null` pour profils legacy.
-  - [ ] Conserver `birth_timezone` user-facing et préparer l'alignement `timezone_iana`.
+- [x] Task 2 — Adapter API profil utilisateur (AC: 2, 3)
+  - [x] Étendre schémas de réponse (`/v1/users/me/birth-data`).
+  - [x] Retourner l'objet `birth_place_resolved`.
+  - [x] Retourner explicitement `birth_place_resolved=null` pour profils legacy.
+  - [x] Conserver `birth_timezone` user-facing et préparer l'alignement `timezone_iana`.
 
-- [ ] Task 3 — Brancher pipeline de calcul natal (AC: 5, 6)
-  - [ ] Priorité aux coordonnées du lieu résolu.
-  - [ ] Décider et documenter le comportement sans FK (exiger FK ou fallback legacy temporaire).
-  - [ ] Si exigence FK en mode accurate: renvoyer une erreur fonctionnelle `422 missing_birth_place_resolved`.
+- [x] Task 3 — Brancher pipeline de calcul natal (AC: 5, 6)
+  - [x] Priorité aux coordonnées du lieu résolu.
+  - [x] Décider et documenter le comportement sans FK (exiger FK ou fallback legacy temporaire).
+  - [x] Si exigence FK en mode accurate: renvoyer une erreur fonctionnelle `422 missing_birth_place_resolved`.
 
-- [ ] Task 4 — Tests (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] Test upsert profil avec FK.
-  - [ ] Test GET profil renvoyant texte + objet résolu.
-  - [ ] Test GET profil legacy renvoyant `birth_place_resolved=null`.
-  - [ ] Test remplacement FK lors d'une édition.
-  - [ ] Test mode accurate sans FK: `422` avec `code=missing_birth_place_resolved`.
+- [x] Task 4 — Tests (AC: 1, 2, 3, 4, 5, 6)
+  - [x] Test upsert profil avec FK.
+  - [x] Test GET profil renvoyant texte + objet résolu.
+  - [x] Test GET profil legacy renvoyant `birth_place_resolved=null`.
+  - [x] Test remplacement FK lors d'une édition.
+  - [x] Test mode accurate sans FK: `422` avec `code=missing_birth_place_resolved`.
 
 ## Dev Notes
 
@@ -78,8 +78,39 @@ gpt-5-codex
 
 ### Completion Notes List
 
-- N/A (story de cadrage, non implémentée).
+- `birth_place_resolved_id` ajouté au modèle `user_birth_profiles` avec migration dédiée + FK nullable vers `geo_place_resolved`.
+- API `GET /v1/users/me/birth-data` enrichie avec `birth_place_text`, `birth_place_resolved_id` et `birth_place_resolved` (objet complet ou `null` pour legacy).
+- `PUT /v1/users/me/birth-data` valide désormais la présence du lieu résolu quand `place_resolved_id` est fourni.
+- Pipeline natal: priorité aux coordonnées du lieu résolu quand FK présent; fallback legacy `birth_lat/birth_lon` conservé si FK absent.
+- Mode `accurate` ajouté à `POST /v1/users/me/natal-chart`: renvoie `422` + `code=missing_birth_place_resolved` si FK absent.
+- Validation exécutée: `ruff format .`, `ruff check .`, tests ciblés story (`71 passed`) + tests unitaires géo reliés (`90 passed` incluant `test_geo_place_resolved.py`).
+- Suite backend complète lancée: échecs préexistants hors périmètre story (provider OpenAI non configuré et quelques tests de logs géocoding).
+- Passe post-review exécutée: corrections des tests frontend alignées avec le flux `geocoding/search -> geocoding/resolve` et avec le payload `generateNatalChart` (`accurate` explicite).
+- Validation finale post-fix: backend ciblé story (`72 passed`) et frontend ciblé story (`68 passed`).
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/19-6-rattachement-birth-profile-place-resolved.md`
+- `backend/migrations/versions/20260226_0026_add_birth_place_resolved_fk_to_user_birth_profiles.py`
+- `backend/app/infra/db/models/user_birth_profile.py`
+- `backend/app/infra/db/repositories/user_birth_profile_repository.py`
+- `backend/app/services/user_birth_profile_service.py`
+- `backend/app/api/v1/routers/users.py`
+- `backend/app/services/user_natal_chart_service.py`
+- `backend/app/tests/unit/test_user_birth_profile_service.py`
+- `backend/app/tests/unit/test_user_natal_chart_service.py`
+- `backend/app/tests/integration/test_user_birth_profile_api.py`
+- `backend/app/tests/integration/test_user_natal_chart_api.py`
+- `backend/app/main.py`
+- `frontend/src/api/birthProfile.ts`
+- `frontend/src/api/geocoding.ts`
+- `frontend/src/api/natalChart.ts`
+- `frontend/src/pages/BirthProfilePage.tsx`
+- `frontend/src/tests/BirthProfilePage.test.tsx`
+- `frontend/src/tests/natalChartApi.test.tsx`
+
+## Change Log
+
+- 2026-02-26: Implémentation complète de la story 19.6 (FK profil → `geo_place_resolved`, enrichissement API profil, branchement pipeline natal, mode `accurate` avec erreur métier `missing_birth_place_resolved`, couverture de tests associée).
+- 2026-02-26: Code Review Follow-up - Ajout des tests manquants (AC5 et mode dégradé), fix de la FK orpheline (logs), exposition de `accurate` côté Frontend.
+- 2026-02-26: Passe de vérification post-review - correction des tests frontend (`BirthProfilePage`, `natalChartApi`) et validation ciblée backend/frontend sans échec.

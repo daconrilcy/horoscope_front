@@ -92,6 +92,7 @@ class EnterpriseCredentialsService:
     Gère la création, la rotation et l'authentification des clés API
     avec hachage sécurisé et support de rotation des clés secrètes.
     """
+
     @staticmethod
     def _hash_secret(secret: str, key: str) -> str:
         """Calcule le hash HMAC-SHA256 d'un secret avec une clé."""

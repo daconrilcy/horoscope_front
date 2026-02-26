@@ -23,9 +23,10 @@ from app.api.v1.routers.b2b_reconciliation import router as b2b_reconciliation_r
 from app.api.v1.routers.b2b_usage import router as b2b_usage_router
 from app.api.v1.routers.billing import router as billing_router
 from app.api.v1.routers.chat import router as chat_router
-from app.api.v1.routers.geocoding import router as geocoding_router
 from app.api.v1.routers.chat_modules import router as chat_modules_router
 from app.api.v1.routers.enterprise_credentials import router as enterprise_credentials_router
+from app.api.v1.routers.ephemeris import router as ephemeris_router
+from app.api.v1.routers.geocoding import router as geocoding_router
 from app.api.v1.routers.guidance import router as guidance_router
 from app.api.v1.routers.ops_feature_flags import router as ops_feature_flags_router
 from app.api.v1.routers.ops_monitoring import router as ops_monitoring_router
@@ -34,7 +35,12 @@ from app.api.v1.routers.privacy import router as privacy_router
 from app.api.v1.routers.reference_data import router as reference_data_router
 from app.api.v1.routers.support import router as support_router
 from app.api.v1.routers.users import router as users_router
+from app.core import ephemeris as _eph
+from app.core.config import settings
+from app.core.ephemeris import EphemerisDataMissingError, SwissEphInitError
 from app.core.request_id import resolve_request_id
+from app.domain.astrology.ephemeris_provider import EphemerisCalcError
+from app.domain.astrology.houses_provider import HousesCalcError, UnsupportedHouseSystemError
 from app.infra.observability.metrics import increment_counter, observe_duration
 from app.services.pricing_experiment_service import PricingExperimentService
 
@@ -45,6 +51,15 @@ async def _app_lifespan(_: FastAPI):
         enabled=PricingExperimentService.is_enabled(),
         request_id=None,
     )
+    if settings.swisseph_enabled:
+        try:
+            _eph.bootstrap_swisseph(
+                data_path=settings.swisseph_data_path,
+                path_version=settings.swisseph_path_version,
+            )
+        except (EphemerisDataMissingError, SwissEphInitError):
+            # Error stored in ephemeris module state; accurate endpoints return 5xx.
+            pass
     yield
 
 
@@ -182,6 +197,86 @@ def handle_enterprise_api_key_authentication_error(
     )
 
 
+@app.exception_handler(EphemerisDataMissingError)
+def handle_ephemeris_data_missing_error(
+    request: Request, error: EphemerisDataMissingError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=503,
+        content={
+            "error": {
+                "code": error.code,
+                "message": error.message,
+                "request_id": resolve_request_id(request),
+            }
+        },
+    )
+
+
+@app.exception_handler(SwissEphInitError)
+def handle_swisseph_init_error(
+    request: Request, error: SwissEphInitError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=503,
+        content={
+            "error": {
+                "code": error.code,
+                "message": error.message,
+                "request_id": resolve_request_id(request),
+            }
+        },
+    )
+
+
+@app.exception_handler(EphemerisCalcError)
+def handle_ephemeris_calc_error(
+    request: Request, error: EphemerisCalcError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=503,
+        content={
+            "error": {
+                "code": error.code,
+                "message": error.message,
+                "request_id": resolve_request_id(request),
+            }
+        },
+    )
+
+
+@app.exception_handler(HousesCalcError)
+def handle_houses_calc_error(
+    request: Request, error: HousesCalcError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=503,
+        content={
+            "error": {
+                "code": error.code,
+                "message": error.message,
+                "request_id": resolve_request_id(request),
+            }
+        },
+    )
+
+
+@app.exception_handler(UnsupportedHouseSystemError)
+def handle_unsupported_house_system_error(
+    request: Request, error: UnsupportedHouseSystemError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": {
+                "code": error.code,
+                "message": error.message,
+                "request_id": resolve_request_id(request),
+            }
+        },
+    )
+
+
 # Restrictive-by-default CORS for local development bootstrap.
 app.add_middleware(
     CORSMiddleware,
@@ -192,6 +287,7 @@ app.add_middleware(
 )
 
 app.include_router(health_router)
+app.include_router(ephemeris_router)
 app.include_router(auth_router)
 app.include_router(audit_router)
 app.include_router(billing_router)

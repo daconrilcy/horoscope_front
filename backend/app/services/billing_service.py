@@ -123,6 +123,7 @@ class BillingService:
     Gère les abonnements utilisateurs, les tentatives de paiement,
     les changements de plan et le cache des statuts d'abonnement.
     """
+
     @staticmethod
     def _subscription_cache_ttl_seconds() -> float:
         """Retourne la durée de vie du cache d'abonnement en secondes."""

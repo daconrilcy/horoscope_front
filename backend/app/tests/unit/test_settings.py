@@ -156,3 +156,21 @@ def test_settings_pricing_experiment_min_sample_size_is_hardened(
 
     monkeypatch.setenv("PRICING_EXPERIMENT_MIN_SAMPLE_SIZE", "0")
     assert Settings().pricing_experiment_min_sample_size == 1
+
+
+def test_settings_natal_engine_flags(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///./horoscope.db")
+    monkeypatch.setenv("REFERENCE_SEED_ADMIN_TOKEN", "seed-token")
+    monkeypatch.setenv("API_CREDENTIALS_SECRET_KEY", "api-current")
+    monkeypatch.setenv("JWT_SECRET_KEY", "jwt-current")
+    monkeypatch.setenv("LLM_ANONYMIZATION_SALT", "llm-salt")
+    monkeypatch.setenv("NATAL_ENGINE_DEFAULT", "swisseph")
+    monkeypatch.setenv("NATAL_ENGINE_SIMPLIFIED_ENABLED", "true")
+    monkeypatch.setenv("NATAL_ENGINE_COMPARE_ENABLED", "1")
+
+    settings = Settings()
+
+    assert settings.natal_engine_default == "swisseph"
+    assert settings.natal_engine_simplified_enabled is True
+    assert settings.natal_engine_compare_enabled is True

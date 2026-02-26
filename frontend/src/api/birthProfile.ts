@@ -11,6 +11,7 @@ export type BirthProfileData = {
   birth_time: string | null
   birth_place: string
   birth_timezone: string
+  place_resolved_id?: number
   birth_city?: string
   birth_country?: string
   birth_lat?: number

@@ -95,19 +95,23 @@ class UserAstroProfileService:
                 details=error.details,
             ) from error
 
+        coords = UserBirthProfileService.resolve_coordinates(db, profile)
+
         birth_input = BirthInput(
             birth_date=profile.birth_date,
             birth_time=profile.birth_time,
             birth_place=profile.birth_place,
             birth_timezone=profile.birth_timezone,
+            place_resolved_id=coords.birth_place_resolved_id,
+            birth_lat=coords.birth_lat,
+            birth_lon=coords.birth_lon,
         )
 
         try:
             natal_result = NatalCalculationService.calculate(db, birth_input=birth_input)
         except NatalCalculationError as error:
             should_auto_seed = (
-                error.code == "reference_version_not_found"
-                and settings.active_reference_version
+                error.code == "reference_version_not_found" and settings.active_reference_version
             )
             if should_auto_seed:
                 ReferenceDataService.seed_reference_version(

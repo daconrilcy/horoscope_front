@@ -528,9 +528,7 @@ class OpsMonitoringService:
                             exposures_total=exposures_total,
                             conversions_total=conversions_total,
                             conversion_rate=(
-                                conversions_total / exposures_total
-                                if exposures_total > 0
-                                else 0.0
+                                conversions_total / exposures_total if exposures_total > 0 else 0.0
                             ),
                             retention_events_total=totals["retention_events_total"],
                             revenue_cents_total=revenue_cents_total,

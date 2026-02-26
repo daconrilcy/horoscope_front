@@ -66,11 +66,14 @@ class UserBirthProfileWithAstroData(BaseModel):
     birth_date: str
     birth_time: str | None
     birth_place: str
+    birth_place_text: str
     birth_timezone: str
     birth_city: str | None = None
     birth_country: str | None = None
     birth_lat: float | None = None
     birth_lon: float | None = None
+    birth_place_resolved_id: int | None = None
+    birth_place_resolved: dict[str, Any] | None = None
     astro_profile: UserAstroProfileData | None = None
 
 
@@ -81,6 +84,11 @@ class UserBirthProfileWithAstroApiResponse(BaseModel):
 
 class NatalChartGenerateRequest(BaseModel):
     reference_version: str | None = None
+    accurate: bool = False
+    zodiac: str = "tropical"
+    ayanamsa: str | None = None
+    frame: str = "geocentric"
+    altitude_m: float | None = None
 
 
 class UserNatalChartApiResponse(BaseModel):
@@ -220,11 +228,14 @@ def get_me_birth_data(
         birth_date=profile.birth_date,
         birth_time=profile.birth_time,
         birth_place=profile.birth_place,
+        birth_place_text=profile.birth_place_text,
         birth_timezone=profile.birth_timezone,
         birth_city=profile.birth_city,
         birth_country=profile.birth_country,
         birth_lat=profile.birth_lat,
         birth_lon=profile.birth_lon,
+        birth_place_resolved_id=profile.birth_place_resolved_id,
+        birth_place_resolved=profile.birth_place_resolved,
         astro_profile=astro_profile,
     )
     return {"data": data.model_dump(), "meta": {"request_id": request_id}}
@@ -577,6 +588,11 @@ def generate_me_natal_chart(
             db=db,
             user_id=current_user.id,
             reference_version=parsed_payload.reference_version,
+            accurate=parsed_payload.accurate,
+            zodiac=parsed_payload.zodiac,
+            ayanamsa=parsed_payload.ayanamsa,
+            frame=parsed_payload.frame,
+            altitude_m=parsed_payload.altitude_m,
         )
         db.commit()
         return {"data": generated.model_dump(mode="json"), "meta": {"request_id": request_id}}

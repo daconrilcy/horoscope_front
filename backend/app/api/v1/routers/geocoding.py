@@ -1,17 +1,22 @@
 from __future__ import annotations
 
+import math
 import re
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Header, Query, Request, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ValidationError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, get_optional_authenticated_user
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
-from app.infra.db.repositories.geo_place_resolved_repository import GeoPlaceResolvedRepository
+from app.infra.db.repositories.geo_place_resolved_repository import (
+    GeoPlaceResolvedCreateData,
+    GeoPlaceResolvedRepository,
+)
 from app.infra.db.session import get_db_session
 from app.services.geocoding_service import (
     GeocodingSearchResult,
@@ -31,6 +36,12 @@ class ErrorPayload(BaseModel):
 
 class ErrorEnvelope(BaseModel):
     error: ErrorPayload
+
+
+class GeocodingResolveRequest(BaseModel):
+    provider: Literal["nominatim"]
+    provider_place_id: int = Field(gt=0)
+    snapshot: GeocodingSearchResult | None = None
 
 
 def _error_response(
@@ -79,11 +90,29 @@ def _resolved_place_to_dict(model: Any) -> dict[str, Any]:
     }
 
 
+def _validate_resolve_snapshot(snapshot: GeocodingSearchResult) -> None:
+    if snapshot.provider_place_id <= 0:
+        raise ValueError("snapshot provider_place_id must be positive")
+    if not snapshot.display_name.strip():
+        raise ValueError("snapshot display_name must not be blank")
+    if not snapshot.osm_type.strip():
+        raise ValueError("snapshot osm_type must not be blank")
+    if snapshot.osm_id <= 0:
+        raise ValueError("snapshot osm_id must be positive")
+    if not math.isfinite(snapshot.lat) or snapshot.lat < -90 or snapshot.lat > 90:
+        raise ValueError("snapshot lat must be within [-90, 90]")
+    if not math.isfinite(snapshot.lon) or snapshot.lon < -180 or snapshot.lon > 180:
+        raise ValueError("snapshot lon must be within [-180, 180]")
+
+
 def _can_use_seed_token_fallback() -> bool:
-    return (
-        settings.enable_reference_seed_admin_fallback
-        and settings.app_env in {"development", "dev", "local", "test", "testing"}
-    )
+    return settings.enable_reference_seed_admin_fallback and settings.app_env in {
+        "development",
+        "dev",
+        "local",
+        "test",
+        "testing",
+    }
 
 
 def _validate_nocache_access(
@@ -227,3 +256,100 @@ def get_resolved_place(
         "data": _resolved_place_to_dict(place),
         "meta": {"request_id": request_id},
     }
+
+
+@router.post(
+    "/resolve",
+    response_model=None,
+    responses={
+        200: {"model": dict[str, Any]},
+        422: {"model": ErrorEnvelope},
+        503: {"model": ErrorEnvelope},
+        500: {"model": ErrorEnvelope},
+    },
+)
+def resolve_place(
+    request: Request,
+    payload: GeocodingResolveRequest,
+    db: Session = Depends(get_db_session),
+) -> dict[str, Any] | JSONResponse:
+    request_id = resolve_request_id(request)
+
+    if payload.snapshot is None:
+        try:
+            snapshot = GeocodingService.resolve_place_snapshot(
+                provider=payload.provider,
+                provider_place_id=payload.provider_place_id,
+            )
+        except GeocodingServiceError as err:
+            return _error_response(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                request_id=request_id,
+                code=err.code,
+                message=err.message,
+                details=err.details,
+            )
+    else:
+        snapshot = payload.snapshot
+
+    if isinstance(snapshot, dict):
+        try:
+            snapshot = GeocodingSearchResult.model_validate(snapshot)
+        except ValidationError as err:
+            return _error_response(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                request_id=request_id,
+                code="geocoding_provider_unavailable",
+                message="Invalid response from geocoding provider",
+                details={"errors": err.errors()},
+            )
+
+    try:
+        if snapshot.provider_place_id != payload.provider_place_id:
+            raise ValueError("snapshot provider_place_id must match request provider_place_id")
+        _validate_resolve_snapshot(snapshot)
+    except ValueError as err:
+        return _error_response(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            request_id=request_id,
+            code="invalid_geocoding_resolve_payload",
+            message="resolve payload validation failed",
+            details={"reason": str(err)},
+        )
+
+    repo = GeoPlaceResolvedRepository(db)
+    try:
+        resolved, _ = repo.find_or_create(
+            data=GeoPlaceResolvedCreateData(
+                provider=payload.provider,
+                provider_place_id=snapshot.provider_place_id,
+                display_name=snapshot.display_name,
+                latitude=snapshot.lat,
+                longitude=snapshot.lon,
+                osm_type=snapshot.osm_type,
+                osm_id=snapshot.osm_id,
+                place_type=snapshot.type,
+                place_class=snapshot.class_,
+                importance=snapshot.importance,
+                place_rank=snapshot.place_rank,
+                country_code=snapshot.address.country_code,
+                country=snapshot.address.country,
+                state=snapshot.address.state,
+                county=snapshot.address.county,
+                city=snapshot.address.city,
+                postcode=snapshot.address.postcode,
+                raw_payload=snapshot.model_dump(mode="json", by_alias=True),
+            )
+        )
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        return _error_response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            request_id=request_id,
+            code="geocoding_resolve_persistence_error",
+            message="resolved place could not be persisted",
+            details={},
+        )
+
+    return {"data": _resolved_place_to_dict(resolved), "meta": {"request_id": request_id}}

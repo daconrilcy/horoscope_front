@@ -119,6 +119,7 @@ class B2BEditorialService:
     Permet aux comptes entreprise de personnaliser le ton, le style
     et le vocabulaire utilisés dans le contenu astrologique généré.
     """
+
     @staticmethod
     def _default_for_account(account_id: int) -> B2BEditorialConfigData:
         """Retourne la configuration éditoriale par défaut pour un compte."""

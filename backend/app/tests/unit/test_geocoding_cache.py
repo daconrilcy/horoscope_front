@@ -8,6 +8,7 @@ Couvre :
 - AC5 : logs sans PII — q brut absent, query_key présent
 - AC6 : nocache=True bypass le cache
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -417,9 +418,7 @@ def test_geocoding_query_cache_index_on_query_key():
     from app.infra.db.models.geocoding_query_cache import GeocodingQueryCacheModel
 
     indexed_cols = {
-        col.name
-        for idx in GeocodingQueryCacheModel.__table__.indexes
-        for col in idx.columns
+        col.name for idx in GeocodingQueryCacheModel.__table__.indexes for col in idx.columns
     }
     assert "query_key" in indexed_cols
 
@@ -428,8 +427,6 @@ def test_geocoding_query_cache_index_on_expires_at():
     from app.infra.db.models.geocoding_query_cache import GeocodingQueryCacheModel
 
     indexed_cols = {
-        col.name
-        for idx in GeocodingQueryCacheModel.__table__.indexes
-        for col in idx.columns
+        col.name for idx in GeocodingQueryCacheModel.__table__.indexes for col in idx.columns
     }
     assert "expires_at" in indexed_cols

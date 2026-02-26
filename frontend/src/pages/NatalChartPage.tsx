@@ -43,7 +43,7 @@ export function NatalChartPage() {
     setIsGenerating(true)
     setGenerateError(null)
     try {
-      await generateNatalChart(accessToken)
+      await generateNatalChart(accessToken, true)
       await latestChart.refetch?.()
     } catch (err) {
       if (err instanceof ApiError && shouldLogSupportForApiError(err)) {
@@ -157,8 +157,17 @@ export function NatalChartPage() {
   }
 
   const astroProfile = chart.astro_profile
+  const houseSystemKey = chart.metadata.house_system
   const houseSystemLabel =
-    chart.metadata.house_system === "equal" ? t.equalHouseSystem : chart.metadata.house_system ?? null
+    houseSystemKey === "equal"
+      ? t.equalHouseSystem
+      : houseSystemKey === "placidus"
+        ? t.placidusHouseSystem
+        : houseSystemKey === "koch"
+          ? t.kochHouseSystem
+          : houseSystemKey === "regiomontanus"
+            ? t.regiomontanusHouseSystem
+            : houseSystemKey
   const sunSignName = astroProfile?.sun_sign_code ? translateSign(astroProfile.sun_sign_code) : null
   const ascendantSignName = astroProfile?.ascendant_sign_code ? translateSign(astroProfile.ascendant_sign_code) : null
   const missingBirthTime = astroProfile?.missing_birth_time ?? false
@@ -187,22 +196,18 @@ export function NatalChartPage() {
 
       {astroProfile && (
         <article className="card natal-astro-summary">
-          <h2>{lang === "fr" ? "Profil astrologique" : lang === "es" ? "Perfil astrológico" : "Astro Profile"}</h2>
+          <h2>{t.astroProfile.title}</h2>
           <dl className="natal-astro-summary__list">
             <div className="natal-astro-summary__item">
-              <dt>{lang === "fr" ? "Signe solaire" : lang === "es" ? "Signo solar" : "Sun sign"}</dt>
+              <dt>{t.astroProfile.sunSign}</dt>
               <dd>{sunSignName ?? "—"}</dd>
             </div>
             <div className="natal-astro-summary__item">
-              <dt>{lang === "fr" ? "Ascendant" : lang === "es" ? "Ascendente" : "Ascendant"}</dt>
+              <dt>{t.astroProfile.ascendant}</dt>
               <dd>
                 {ascendantSignName ?? (
                   missingBirthTime
-                    ? (lang === "fr"
-                        ? "— (heure de naissance manquante)"
-                        : lang === "es"
-                          ? "— (hora de nacimiento no disponible)"
-                          : "— (birth time missing)")
+                    ? `— (${t.astroProfile.missingTime})`
                     : "—"
                 )}
               </dd>
@@ -219,7 +224,8 @@ export function NatalChartPage() {
               const houseInterval = getHouseIntervalLabel(item.house_number)
               return (
                 <li key={item.planet_code}>
-                  {translatePlanet(item.planet_code)}: {translateSign(item.sign_code)}{" "}
+                  {translatePlanet(item.planet_code)}
+                  {item.is_retrograde === true ? " ℞" : ""}: {translateSign(item.sign_code)}{" "}
                   {formatDegreeMinuteFromSignLongitude(item.longitude)} ({item.longitude.toFixed(2)}°),{" "}
                   {translateHouse(item.house_number)}
                   {houseInterval ? ` (${houseInterval})` : ""}

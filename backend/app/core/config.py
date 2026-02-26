@@ -116,17 +116,26 @@ class Settings:
         self.nominatim_url = os.getenv(
             "NOMINATIM_URL", "https://nominatim.openstreetmap.org/search"
         ).strip()
-        self.nominatim_user_agent = os.getenv(
-            "NOMINATIM_USER_AGENT", "horoscope-app/1.0"
-        ).strip()
-        self.nominatim_contact = os.getenv(
-            "NOMINATIM_CONTACT", "admin@horoscope.app"
-        ).strip()
+        self.nominatim_user_agent = os.getenv("NOMINATIM_USER_AGENT", "horoscope-app/1.0").strip()
+        self.nominatim_contact = os.getenv("NOMINATIM_CONTACT", "admin@horoscope.app").strip()
         self.nominatim_timeout_seconds = self._parse_int_env(
             "NOMINATIM_TIMEOUT_SECONDS", default=10, minimum=1
         )
         self.geocoding_cache_ttl_seconds = self._parse_int_env(
             "GEOCODING_CACHE_TTL_SECONDS", default=3600, minimum=1
+        )
+        self.swisseph_enabled = self._parse_bool_env("SWISSEPH_ENABLED", default=False)
+        self.swisseph_data_path = os.getenv("SWISSEPH_DATA_PATH", "").strip()
+        self.swisseph_path_version = os.getenv("SWISSEPH_PATH_VERSION", "").strip()
+        natal_engine_default = os.getenv("NATAL_ENGINE_DEFAULT", "swisseph").strip().lower()
+        if natal_engine_default not in {"swisseph", "simplified"}:
+            natal_engine_default = "swisseph"
+        self.natal_engine_default = natal_engine_default
+        self.natal_engine_simplified_enabled = self._parse_bool_env(
+            "NATAL_ENGINE_SIMPLIFIED_ENABLED", default=False
+        )
+        self.natal_engine_compare_enabled = self._parse_bool_env(
+            "NATAL_ENGINE_COMPARE_ENABLED", default=False
         )
         token = os.getenv("REFERENCE_SEED_ADMIN_TOKEN", "").strip()
         if token:

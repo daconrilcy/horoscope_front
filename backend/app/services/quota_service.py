@@ -68,6 +68,7 @@ class QuotaService:
     Suit la consommation journalière des utilisateurs et applique les
     limites définies par leur plan d'abonnement.
     """
+
     @staticmethod
     def _utc_today() -> date:
         """Retourne la date du jour en UTC."""

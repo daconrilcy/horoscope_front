@@ -828,6 +828,3 @@ def change_plan(
     except AuditWriteError:
         db.rollback()
         return _audit_unavailable_response(request_id=request_id)
-
-
-

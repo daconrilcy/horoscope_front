@@ -68,6 +68,7 @@ class B2BUsageService:
     Suit la consommation des comptes entreprise et applique les limites
     journalières et mensuelles selon le mode configuré (blocage ou dépassement).
     """
+
     @staticmethod
     def _lock_enterprise_account(db: Session, *, account_id: int) -> None:
         """Verrouille un compte entreprise pour sérialiser les opérations de quota."""

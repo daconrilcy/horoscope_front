@@ -324,6 +324,82 @@ describe("NatalChartPage", () => {
     expect(screen.getByText(/Maison I.+18\.46° -> 48\.46°/)).toBeInTheDocument()
   })
 
+  it("affiche le symbole ℞ apres le nom de la planete quand is_retrograde=true", () => {
+    mockUseLatestNatalChart.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: {
+        ...CHART_BASE,
+        result: {
+          ...CHART_BASE.result,
+          planet_positions: [
+            {
+              planet_code: "MERCURY",
+              sign_code: "ARIES",
+              longitude: 15.0,
+              house_number: 1,
+              is_retrograde: true,
+            },
+          ],
+          houses: [{ number: 1, cusp_longitude: 15.2 }],
+          aspects: [],
+        },
+      },
+    })
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <NatalChartPage />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByText(/Mercure ℞:/i)).toBeInTheDocument()
+  })
+
+  it("n'affiche pas le symbole ℞ quand is_retrograde est absent (legacy)", () => {
+    mockUseLatestNatalChart.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: {
+        ...CHART_BASE,
+        result: {
+          ...CHART_BASE.result,
+          planet_positions: [{ planet_code: "MERCURY", sign_code: "ARIES", longitude: 15.0, house_number: 1 }],
+          houses: [{ number: 1, cusp_longitude: 15.2 }],
+          aspects: [],
+        },
+      },
+    })
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <NatalChartPage />
+      </MemoryRouter>
+    )
+
+    expect(screen.queryByText(/Mercure ℞:/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Mercure:/i)).toBeInTheDocument()
+  })
+
+  it("affiche le libelle house system mappe pour metadata.house_system=placidus", () => {
+    mockUseLatestNatalChart.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: {
+        ...CHART_BASE,
+        metadata: { ...CHART_BASE.metadata, house_system: "placidus" },
+      },
+    })
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <NatalChartPage />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByText(/Système de maisons Placidus/)).toBeInTheDocument()
+  })
+
   it("borne le degré dans le signe à 29°59′ au lieu de 30°00′ sur frontière d'arrondi", () => {
     mockUseLatestNatalChart.mockReturnValue({
       isLoading: false,

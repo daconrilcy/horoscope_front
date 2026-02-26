@@ -11,7 +11,14 @@ function backendSuccess(results: Array<{ lat: number; lon: number; display_name:
   return {
     ok: true,
     json: async () => ({
-      data: { results, count: results.length },
+      data: {
+        results: results.map((result, index) => ({
+          provider: "nominatim",
+          provider_place_id: 1000 + index,
+          ...result,
+        })),
+        count: results.length,
+      },
       meta: { request_id: "rid-test" },
     }),
   }
@@ -23,18 +30,45 @@ const backendNotFound = {
   json: async () => ({ data: { results: [], count: 0 }, meta: { request_id: "rid-test" } }),
 }
 
+function backendResolveSuccess(
+  payload: { id?: number; latitude: number; longitude: number; display_name: string },
+) {
+  return {
+    ok: true,
+    json: async () => ({
+      data: {
+        id: payload.id ?? 42,
+        latitude: payload.latitude,
+        longitude: payload.longitude,
+        display_name: payload.display_name,
+      },
+      meta: { request_id: "rid-test" },
+    }),
+  }
+}
+
 describe("geocodeCity", () => {
   it("returns { lat, lon, display_name } when backend finds a result", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        backendSuccess([{ lat: 48.8566, lon: 2.3522, display_name: "Paris, Île-de-France, France" }]),
-      ),
+      vi.fn()
+        .mockResolvedValueOnce(
+          backendSuccess([{ lat: 48.8566, lon: 2.3522, display_name: "Paris, Île-de-France, France" }]),
+        )
+        .mockResolvedValueOnce(
+          backendResolveSuccess({
+            id: 42,
+            latitude: 48.8566,
+            longitude: 2.3522,
+            display_name: "Paris, Île-de-France, France",
+          }),
+        ),
     )
 
     const result = await geocodeCity("Paris", "France")
 
     expect(result).not.toBeNull()
+    expect(result?.place_resolved_id).toBe(42)
     expect(result?.lat).toBeCloseTo(48.8566)
     expect(result?.lon).toBeCloseTo(2.3522)
     expect(result?.display_name).toBe("Paris, Île-de-France, France")
@@ -53,10 +87,41 @@ describe("geocodeCity", () => {
     expect(url).not.toContain("nominatim.openstreetmap.org")
   })
 
+  it("calls resolve endpoint after a successful search", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(
+        backendSuccess([{ lat: 48.8566, lon: 2.3522, display_name: "Paris, Île-de-France, France" }]),
+      )
+      .mockResolvedValueOnce(
+        backendResolveSuccess({
+          id: 123,
+          latitude: 48.8566,
+          longitude: 2.3522,
+          display_name: "Paris, Île-de-France, France",
+        }),
+      )
+    vi.stubGlobal("fetch", fetchMock)
+
+    await geocodeCity("Paris", "France")
+
+    const [, resolveInit] = fetchMock.mock.calls[1] as [string, RequestInit]
+    const [resolveUrl] = fetchMock.mock.calls[1] as [string, RequestInit]
+    expect(resolveUrl).toContain("/v1/geocoding/resolve")
+    expect(resolveInit.method).toBe("POST")
+  })
+
   it("properly encodes city and country in the query parameter", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      backendSuccess([{ lat: 40.7128, lon: -74.006, display_name: "New York City, New York, United States" }]),
-    )
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(
+        backendSuccess([{ lat: 40.7128, lon: -74.006, display_name: "New York City, New York, United States" }]),
+      )
+      .mockResolvedValueOnce(
+        backendResolveSuccess({
+          latitude: 40.7128,
+          longitude: -74.006,
+          display_name: "New York City, New York, United States",
+        }),
+      )
     vi.stubGlobal("fetch", fetchMock)
 
     await geocodeCity("New York", "United States")
@@ -161,9 +226,18 @@ describe("geocodeCity", () => {
   it("removes abort listener from externalSignal after successful fetch (no memory leak)", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        backendSuccess([{ lat: 48.8566, lon: 2.3522, display_name: "Paris, France" }]),
-      ),
+      vi.fn()
+        .mockResolvedValueOnce(
+          backendSuccess([{ lat: 48.8566, lon: 2.3522, display_name: "Paris, France" }]),
+        )
+        .mockResolvedValueOnce(
+          backendResolveSuccess({
+            id: 42,
+            latitude: 48.8566,
+            longitude: 2.3522,
+            display_name: "Paris, France",
+          }),
+        ),
     )
 
     const controller = new AbortController()
@@ -181,9 +255,17 @@ describe("geocodeCity", () => {
   })
 
   it("properly encodes city names with accents (São Paulo)", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      backendSuccess([{ lat: -23.5505, lon: -46.6333, display_name: "São Paulo, Brazil" }]),
-    )
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(
+        backendSuccess([{ lat: -23.5505, lon: -46.6333, display_name: "São Paulo, Brazil" }]),
+      )
+      .mockResolvedValueOnce(
+        backendResolveSuccess({
+          latitude: -23.5505,
+          longitude: -46.6333,
+          display_name: "São Paulo, Brazil",
+        }),
+      )
     vi.stubGlobal("fetch", fetchMock)
 
     const result = await geocodeCity("São Paulo", "Brazil")
@@ -196,9 +278,17 @@ describe("geocodeCity", () => {
   })
 
   it("properly encodes city names with apostrophes (L'Aquila)", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      backendSuccess([{ lat: 42.3498, lon: 13.3995, display_name: "L'Aquila, Abruzzo, Italy" }]),
-    )
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(
+        backendSuccess([{ lat: 42.3498, lon: 13.3995, display_name: "L'Aquila, Abruzzo, Italy" }]),
+      )
+      .mockResolvedValueOnce(
+        backendResolveSuccess({
+          latitude: 42.3498,
+          longitude: 13.3995,
+          display_name: "L'Aquila, Abruzzo, Italy",
+        }),
+      )
     vi.stubGlobal("fetch", fetchMock)
 
     const result = await geocodeCity("L'Aquila", "Italy")
@@ -209,9 +299,17 @@ describe("geocodeCity", () => {
   })
 
   it("properly encodes city names with hyphens (Bois-d'Arcy)", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      backendSuccess([{ lat: 48.8003, lon: 2.0367, display_name: "Bois-d'Arcy, Yvelines, France" }]),
-    )
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(
+        backendSuccess([{ lat: 48.8003, lon: 2.0367, display_name: "Bois-d'Arcy, Yvelines, France" }]),
+      )
+      .mockResolvedValueOnce(
+        backendResolveSuccess({
+          latitude: 48.8003,
+          longitude: 2.0367,
+          display_name: "Bois-d'Arcy, Yvelines, France",
+        }),
+      )
     vi.stubGlobal("fetch", fetchMock)
 
     const result = await geocodeCity("Bois-d'Arcy", "France")
@@ -222,9 +320,17 @@ describe("geocodeCity", () => {
   })
 
   it("properly encodes German city names with umlauts (München)", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      backendSuccess([{ lat: 48.1351, lon: 11.582, display_name: "München, Bavaria, Germany" }]),
-    )
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(
+        backendSuccess([{ lat: 48.1351, lon: 11.582, display_name: "München, Bavaria, Germany" }]),
+      )
+      .mockResolvedValueOnce(
+        backendResolveSuccess({
+          latitude: 48.1351,
+          longitude: 11.582,
+          display_name: "München, Bavaria, Germany",
+        }),
+      )
     vi.stubGlobal("fetch", fetchMock)
 
     const result = await geocodeCity("München", "Germany")
@@ -235,9 +341,17 @@ describe("geocodeCity", () => {
   })
 
   it("properly encodes Japanese city names (東京)", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      backendSuccess([{ lat: 35.6762, lon: 139.6503, display_name: "東京都, Japan" }]),
-    )
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(
+        backendSuccess([{ lat: 35.6762, lon: 139.6503, display_name: "東京都, Japan" }]),
+      )
+      .mockResolvedValueOnce(
+        backendResolveSuccess({
+          latitude: 35.6762,
+          longitude: 139.6503,
+          display_name: "東京都, Japan",
+        }),
+      )
     vi.stubGlobal("fetch", fetchMock)
 
     const result = await geocodeCity("東京", "Japan")

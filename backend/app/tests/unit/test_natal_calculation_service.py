@@ -71,6 +71,25 @@ def test_calculate_natal_is_deterministic() -> None:
     assert len(first.houses) == 12
 
 
+def test_calculate_natal_returns_major_aspects_with_extended_reference_planets() -> None:
+    _cleanup_reference_tables()
+    payload = BirthInput(
+        birth_date="1973-04-24",
+        birth_time="11:00",
+        birth_place="Paris",
+        birth_timezone="Europe/Paris",
+    )
+    with SessionLocal() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        result = NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
+
+    assert len(result.planet_positions) >= 10
+    assert len(result.aspects) > 0
+    assert {aspect.aspect_code for aspect in result.aspects}.issubset(
+        {"conjunction", "sextile", "square", "trine", "opposition"}
+    )
+
+
 def test_calculate_natal_fails_with_unknown_reference_version() -> None:
     _cleanup_reference_tables()
     payload = BirthInput(

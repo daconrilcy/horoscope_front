@@ -38,6 +38,15 @@ type NatalChartTranslations = {
   rulesetVersion: string
   houseSystem: string
   equalHouseSystem: string
+  placidusHouseSystem: string
+  kochHouseSystem: string
+  regiomontanusHouseSystem: string
+  astroProfile: {
+    title: string
+    sunSign: string
+    ascendant: string
+    missingTime: string
+  }
   sections: {
     planets: string
     houses: string
@@ -71,6 +80,15 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
     rulesetVersion: "Ruleset",
     houseSystem: "Système de maisons",
     equalHouseSystem: "Maisons égales",
+    placidusHouseSystem: "Placidus",
+    kochHouseSystem: "Koch",
+    regiomontanusHouseSystem: "Regiomontanus",
+    astroProfile: {
+      title: "Profil astrologique",
+      sunSign: "Signe solaire",
+      ascendant: "Ascendant",
+      missingTime: "heure de naissance manquante",
+    },
     sections: {
       planets: "Planètes",
       houses: "Maisons",
@@ -126,6 +144,15 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
     rulesetVersion: "Ruleset",
     houseSystem: "House system",
     equalHouseSystem: "Equal houses",
+    placidusHouseSystem: "Placidus",
+    kochHouseSystem: "Koch",
+    regiomontanusHouseSystem: "Regiomontanus",
+    astroProfile: {
+      title: "Astro Profile",
+      sunSign: "Sun sign",
+      ascendant: "Ascendant",
+      missingTime: "birth time missing",
+    },
     sections: {
       planets: "Planets",
       houses: "Houses",
@@ -178,6 +205,15 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
     rulesetVersion: "Conjunto de reglas",
     houseSystem: "Sistema de casas",
     equalHouseSystem: "Casas iguales",
+    placidusHouseSystem: "Placidus",
+    kochHouseSystem: "Koch",
+    regiomontanusHouseSystem: "Regiomontanus",
+    astroProfile: {
+      title: "Perfil astrológico",
+      sunSign: "Signo solar",
+      ascendant: "Ascendente",
+      missingTime: "hora de nacimiento no disponible",
+    },
     sections: {
       planets: "Planetas",
       houses: "Casas",

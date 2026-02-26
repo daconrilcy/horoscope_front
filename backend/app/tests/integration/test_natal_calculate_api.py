@@ -2,6 +2,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
 from app.core.config import settings
+from app.domain.astrology.natal_calculation import (
+    HouseResult,
+    NatalResult,
+    PlanetPosition,
+)
+from app.domain.astrology.natal_preparation import BirthPreparedData
 from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.reference import (
@@ -222,3 +228,103 @@ def test_calculate_natal_returns_422_for_invalid_birth_input() -> None:
     payload = response.json()
     assert payload["error"]["code"] == "invalid_birth_input"
     assert payload["error"]["request_id"] == "rid-natal-invalid-input"
+
+
+def test_compare_dev_only_returns_structured_diff(monkeypatch: object) -> None:
+    _cleanup_reference_tables()
+    _seed_reference_data()
+    support_access_token = _create_support_access_token("support-compare@example.com")
+
+    monkeypatch.setattr(settings, "app_env", "development")
+    monkeypatch.setattr(settings, "natal_engine_compare_enabled", True)
+
+    prepared = BirthPreparedData(
+        birth_datetime_local="1990-06-15T10:30:00+02:00",
+        birth_datetime_utc="1990-06-15T08:30:00Z",
+        timestamp_utc=645438600,
+        julian_day=2448057.8541666665,
+        birth_timezone="Europe/Paris",
+    )
+
+    def _fake_calc(*args: object, **kwargs: object) -> NatalResult:
+        engine = kwargs.get("engine_override") or "swisseph"
+        if engine == "simplified":
+            return NatalResult(
+                reference_version="1.0.0",
+                ruleset_version="1.0.0",
+                house_system="equal",
+                engine="simplified",
+                prepared_input=prepared,
+                planet_positions=[
+                    PlanetPosition(
+                        planet_code="sun", longitude=85.0, sign_code="gemini", house_number=3
+                    )
+                ],
+                houses=[HouseResult(number=1, cusp_longitude=0.0)],
+                aspects=[],
+            )
+        return NatalResult(
+            reference_version="1.0.0",
+            ruleset_version="1.0.0",
+            house_system="placidus",
+            engine="swisseph",
+            ephemeris_path_version="se-test-v1",
+            prepared_input=prepared,
+            planet_positions=[
+                PlanetPosition(
+                    planet_code="sun", longitude=86.0, sign_code="gemini", house_number=3
+                )
+            ],
+            houses=[HouseResult(number=1, cusp_longitude=1.0)],
+            aspects=[],
+        )
+
+    monkeypatch.setattr(
+        "app.api.v1.routers.astrology_engine.NatalCalculationService.calculate",
+        _fake_calc,
+    )
+
+    response = client.post(
+        "/v1/astrology-engine/natal/compare",
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+            "birth_lat": 48.8566,
+            "birth_lon": 2.3522,
+        },
+        headers={"Authorization": f"Bearer {support_access_token}"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert "simplified_vs_swisseph" in payload["data"]
+    assert payload["data"]["swisseph"]["engine"] == "swisseph"
+    assert payload["data"]["simplified"]["engine"] == "simplified"
+    assert payload["data"]["simplified_vs_swisseph"]["planet_positions"][0]["planet_code"] == "sun"
+
+
+def test_compare_dev_only_inaccessible_in_production(monkeypatch: object) -> None:
+    _cleanup_reference_tables()
+    _seed_reference_data()
+    support_access_token = _create_support_access_token("support-compare-prod@example.com")
+
+    monkeypatch.setattr(settings, "app_env", "production")
+    monkeypatch.setattr(settings, "natal_engine_compare_enabled", True)
+
+    response = client.post(
+        "/v1/astrology-engine/natal/compare",
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+            "birth_lat": 48.8566,
+            "birth_lon": 2.3522,
+        },
+        headers={"Authorization": f"Bearer {support_access_token}"},
+    )
+
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "endpoint_not_available"

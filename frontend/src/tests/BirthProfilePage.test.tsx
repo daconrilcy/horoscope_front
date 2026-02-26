@@ -32,6 +32,58 @@ const SUCCESS_PUT_RESPONSE = {
   json: async () => ({ data: VALID_PROFILE, meta: { request_id: "r2" } }),
 }
 
+function geocodingSearchAndResolveSuccess(
+  displayName: string,
+  lat: number,
+  lon: number,
+  placeResolvedId: number = 777,
+) {
+  return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input)
+    if (url.includes("/v1/geocoding/search")) {
+      return {
+        ok: true,
+        json: async () => ({
+          data: {
+            results: [{
+              provider: "nominatim",
+              provider_place_id: 12345,
+              lat,
+              lon,
+              display_name: displayName,
+            }],
+            count: 1,
+          },
+        }),
+      }
+    }
+    if (url.includes("/v1/geocoding/resolve")) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          data: {
+            id: placeResolvedId,
+            provider: "nominatim",
+            provider_place_id: 12345,
+            display_name: displayName,
+            latitude: lat,
+            longitude: lon,
+          },
+        }),
+      }
+    }
+    if (url.includes("/birth-data") && init?.method === "PUT") {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }),
+      }
+    }
+    return SUCCESS_GET_RESPONSE
+  })
+}
+
 function renderBirthProfilePage(initialEntries = ["/profile"]) {
   return renderWithRouter(<BirthProfilePage />, { initialEntries })
 }
@@ -747,19 +799,7 @@ describe("BirthProfilePage", () => {
 
   it("shows resolved geocoding label after successful save with geocoding", async () => {
     setupToken()
-    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input)
-      if (url.includes("/v1/geocoding/search")) {
-        return {
-          ok: true,
-          json: async () => ({ data: { results: [{ lat: 48.8566, lon: 2.3522, display_name: "Paris, Île-de-France, France" }], count: 1 } }),
-        }
-      }
-      if (url.includes("/birth-data") && init?.method === "PUT") {
-        return { ok: true, status: 200, json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }) }
-      }
-      return SUCCESS_GET_RESPONSE
-    })
+    const fetchMock = geocodingSearchAndResolveSuccess("Paris, Île-de-France, France", 48.8566, 2.3522)
     vi.stubGlobal("fetch", fetchMock)
     renderBirthProfilePage()
 
@@ -896,19 +936,7 @@ describe("BirthProfilePage", () => {
 
   it("resets geocoding state when city field changes (L4)", async () => {
     setupToken()
-    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input)
-      if (url.includes("/v1/geocoding/search")) {
-        return {
-          ok: true,
-          json: async () => ({ data: { results: [{ lat: 48.8566, lon: 2.3522, display_name: "Paris, Île-de-France, France" }], count: 1 } }),
-        }
-      }
-      if (url.includes("/birth-data") && init?.method === "PUT") {
-        return { ok: true, status: 200, json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }) }
-      }
-      return SUCCESS_GET_RESPONSE
-    })
+    const fetchMock = geocodingSearchAndResolveSuccess("Paris, Île-de-France, France", 48.8566, 2.3522)
     vi.stubGlobal("fetch", fetchMock)
     renderBirthProfilePage()
 
@@ -929,19 +957,7 @@ describe("BirthProfilePage", () => {
 
   it("includes birth_lat and birth_lon in save payload when geocoding succeeded", async () => {
     setupToken()
-    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const urlStr = String(input)
-      if (urlStr.includes("/v1/geocoding/search")) {
-        return {
-          ok: true,
-          json: async () => ({ data: { results: [{ lat: 48.8566, lon: 2.3522, display_name: "Paris, France" }], count: 1 } }),
-        }
-      }
-      if (urlStr.includes("/birth-data") && init?.method === "PUT") {
-        return { ok: true, status: 200, json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }) }
-      }
-      return SUCCESS_GET_RESPONSE
-    })
+    const fetchMock = geocodingSearchAndResolveSuccess("Paris, France", 48.8566, 2.3522)
     vi.stubGlobal("fetch", fetchMock)
     renderBirthProfilePage()
 
@@ -962,6 +978,69 @@ describe("BirthProfilePage", () => {
     const body = JSON.parse((putCall![1] as RequestInit).body as string)
     expect(body.birth_lat).toBeCloseTo(48.8566)
     expect(body.birth_lon).toBeCloseTo(2.3522)
+  })
+
+  it("calls geocoding resolve and sends place_resolved_id in save payload", async () => {
+    setupToken()
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const urlStr = String(input)
+      if (urlStr.includes("/v1/geocoding/search")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              results: [{
+                provider: "nominatim",
+                provider_place_id: 12345,
+                lat: 48.8566,
+                lon: 2.3522,
+                display_name: "Paris, France",
+              }],
+              count: 1,
+            },
+          }),
+        }
+      }
+      if (urlStr.includes("/v1/geocoding/resolve")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: {
+              id: 777,
+              provider: "nominatim",
+              provider_place_id: 12345,
+              display_name: "Paris, France",
+              latitude: 48.8566,
+              longitude: 2.3522,
+            },
+          }),
+        }
+      }
+      if (urlStr.includes("/birth-data") && init?.method === "PUT") {
+        return { ok: true, status: 200, json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }) }
+      }
+      return SUCCESS_GET_RESPONSE
+    })
+    vi.stubGlobal("fetch", fetchMock)
+    renderBirthProfilePage()
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
+    })
+
+    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Paris" } })
+    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "France" } })
+    fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
+    await screen.findByText(/Profil natal sauvegardé/i)
+
+    const putCall = fetchMock.mock.calls.find((call) => {
+      const [, requestInit] = call as [string, RequestInit]
+      return requestInit?.method === "PUT"
+    })
+    expect(putCall).toBeDefined()
+    const body = JSON.parse((putCall![1] as RequestInit).body as string)
+    expect(body.place_resolved_id).toBe(777)
   })
 
   it("flux complet mode dégradé: checkbox cochée → sauvegarde → génération avec birth_time null", async () => {

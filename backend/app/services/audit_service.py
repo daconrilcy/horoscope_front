@@ -94,6 +94,7 @@ class AuditService:
     Permet d'enregistrer et de consulter l'historique des actions
     effectuées dans l'application pour assurer la traçabilité.
     """
+
     @staticmethod
     def _to_data(model: AuditEventModel) -> AuditEventData:
         """

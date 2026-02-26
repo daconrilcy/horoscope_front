@@ -108,9 +108,7 @@ class NatalInterpretationData(BaseModel):
 class NatalInterpretationServiceError(Exception):
     """Exception levée lors d'erreurs d'interprétation."""
 
-    def __init__(
-        self, code: str, message: str, details: dict[str, str] | None = None
-    ) -> None:
+    def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
         self.code = code
         self.message = message
         self.details = details or {}
@@ -147,8 +145,7 @@ def _detect_degraded_mode(birth_profile: UserBirthProfileData) -> str | None:
     """
     no_time = birth_profile.birth_time == UNKNOWN_BIRTH_TIME_SENTINEL
     no_location = (
-        not birth_profile.birth_place
-        or birth_profile.birth_place in UNKNOWN_LOCATION_SENTINELS
+        not birth_profile.birth_place or birth_profile.birth_place in UNKNOWN_LOCATION_SENTINELS
     )
 
     if no_time and no_location:
@@ -195,9 +192,7 @@ def build_natal_chart_summary(
     lines.append(f"Thème natal né(e) le {birth_date} à {time_display} à {place_display}:")
     lines.append("")
 
-    sun_position = next(
-        (p for p in natal_result.planet_positions if p.planet_code == "sun"), None
-    )
+    sun_position = next((p for p in natal_result.planet_positions if p.planet_code == "sun"), None)
     if sun_position:
         sign_name = SIGN_NAMES_FR.get(sun_position.sign_code, sun_position.sign_code)
         lon_fmt = _format_longitude(sun_position.longitude)
@@ -380,9 +375,7 @@ class NatalInterpretationService:
                 details={"request_id": request_id},
             ) from error
 
-        summary, key_points, advice, disclaimer = _parse_interpretation_sections(
-            response.text
-        )
+        summary, key_points, advice, disclaimer = _parse_interpretation_sections(response.text)
 
         return NatalInterpretationData(
             chart_id=natal_chart.chart_id,

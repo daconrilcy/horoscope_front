@@ -2,9 +2,11 @@
 
 Couvre le comportement HTTP de la route et la couche cache DB (story 19-3).
 """
+
 from __future__ import annotations
 
 import urllib.error
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
@@ -79,6 +81,26 @@ NOMINATIM_PARIS = {
     },
 }
 
+RESOLVE_SNAPSHOT_PARIS = {
+    "provider_place_id": 12345,
+    "osm_type": "relation",
+    "osm_id": 7444,
+    "type": "administrative",
+    "class": "boundary",
+    "display_name": "Paris, Île-de-France, France",
+    "lat": 48.8566,
+    "lon": 2.3522,
+    "importance": 0.9,
+    "place_rank": 12,
+    "address": {
+        "country_code": "fr",
+        "country": "France",
+        "state": "Île-de-France",
+        "city": "Paris",
+        "postcode": "75000",
+    },
+}
+
 
 def _mock_nominatim_response(data: list) -> object:
     """Simule une réponse urllib.request.urlopen."""
@@ -127,8 +149,18 @@ def test_search_returns_all_required_fields():
 
     result = response.json()["data"]["results"][0]
     required_fields = [
-        "provider", "provider_place_id", "osm_type", "osm_id", "type",
-        "class", "display_name", "lat", "lon", "importance", "place_rank", "address",
+        "provider",
+        "provider_place_id",
+        "osm_type",
+        "osm_id",
+        "type",
+        "class",
+        "display_name",
+        "lat",
+        "lon",
+        "importance",
+        "place_rank",
+        "address",
     ]
     for field in required_fields:
         assert field in result, f"Missing field: {field}"
@@ -255,9 +287,7 @@ def test_search_missing_q_returns_422():
 def test_search_returns_429_on_nominatim_rate_limit():
     with patch(
         "app.api.v1.routers.geocoding.GeocodingService.search_with_cache",
-        side_effect=GeocodingServiceError(
-            code="geocoding_rate_limited", message="Rate limited"
-        ),
+        side_effect=GeocodingServiceError(code="geocoding_rate_limited", message="Rate limited"),
     ):
         response = client.get("/v1/geocoding/search", params={"q": "Paris rate429"})
 
@@ -332,11 +362,13 @@ def test_cache_miss_after_ttl_expiration_calls_nominatim():
     query = "Paris TTL expiry test"
     query_key = _build_query_key(query, 5)
     with SessionLocal() as db:
-        db.add(GeocodingQueryCacheModel(
-            query_key=query_key,
-            response_json="[]",
-            expires_at=datetime.now(timezone.utc) - timedelta(hours=1),
-        ))
+        db.add(
+            GeocodingQueryCacheModel(
+                query_key=query_key,
+                response_json="[]",
+                expires_at=datetime.now(timezone.utc) - timedelta(hours=1),
+            )
+        )
         db.commit()
 
     # Appel avec la même requête: entrée expirée => Nominatim doit être appelé
@@ -389,6 +421,7 @@ def test_cache_written_after_miss():
 
     with SessionLocal() as db:
         from sqlalchemy import select
+
         entries = db.execute(select(GeocodingQueryCacheModel)).scalars().all()
 
     assert len(entries) == 1
@@ -423,6 +456,7 @@ def test_cache_separation_from_geo_place_resolved():
     # Vérifie que seule geocoding_query_cache a été peuplée
     with SessionLocal() as db:
         from sqlalchemy import select
+
         cache_entries = db.execute(select(GeocodingQueryCacheModel)).scalars().all()
 
     assert len(cache_entries) == 1
@@ -468,3 +502,113 @@ def test_get_resolved_place_returns_expected_fields():
     assert payload["timezone_iana"] == "Europe/Paris"
     assert payload["timezone_source"] == "nominatim"
     assert payload["timezone_confidence"] == pytest.approx(0.9)
+
+
+def test_resolve_with_snapshot_persists_and_returns_place():
+    response = client.post(
+        "/v1/geocoding/resolve",
+        json={
+            "provider": "nominatim",
+            "provider_place_id": 12345,
+            "snapshot": RESOLVE_SNAPSHOT_PARIS,
+        },
+        headers={"x-request-id": "rid-resolve-01"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["meta"]["request_id"] == "rid-resolve-01"
+    data = body["data"]
+    assert isinstance(data["id"], int)
+    assert data["provider"] == "nominatim"
+    assert data["provider_place_id"] == 12345
+    assert data["display_name"] == "Paris, Île-de-France, France"
+    assert data["latitude"] == pytest.approx(48.8566)
+    assert data["longitude"] == pytest.approx(2.3522)
+
+    with SessionLocal() as db:
+        from sqlalchemy import select
+
+        rows = db.execute(select(GeoPlaceResolvedModel)).scalars().all()
+    assert len(rows) == 1
+    assert rows[0].provider_place_id == 12345
+
+
+def test_resolve_rejects_invalid_snapshot_payload():
+    response = client.post(
+        "/v1/geocoding/resolve",
+        json={
+            "provider": "nominatim",
+            "provider_place_id": 12345,
+            "snapshot": {
+                **RESOLVE_SNAPSHOT_PARIS,
+                "display_name": "   ",
+                "lat": 95.0,
+            },
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "invalid_geocoding_resolve_payload"
+
+
+def test_resolve_without_snapshot_uses_lookup_strategy():
+    with patch(
+        "app.api.v1.routers.geocoding.GeocodingService.resolve_place_snapshot",
+        return_value=RESOLVE_SNAPSHOT_PARIS,
+    ) as mock_resolve:
+        response = client.post(
+            "/v1/geocoding/resolve",
+            json={
+                "provider": "nominatim",
+                "provider_place_id": 12345,
+            },
+        )
+
+    assert response.status_code == 200
+    mock_resolve.assert_called_once_with(provider="nominatim", provider_place_id=12345)
+    assert response.json()["data"]["provider_place_id"] == 12345
+
+
+def test_resolve_without_snapshot_maps_provider_error_to_503():
+    with patch(
+        "app.api.v1.routers.geocoding.GeocodingService.resolve_place_snapshot",
+        side_effect=GeocodingServiceError(
+            code="geocoding_provider_unavailable",
+            message="Nominatim unavailable",
+        ),
+    ):
+        response = client.post(
+            "/v1/geocoding/resolve",
+            json={
+                "provider": "nominatim",
+                "provider_place_id": 12345,
+            },
+        )
+
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "geocoding_provider_unavailable"
+
+
+def test_resolve_concurrent_requests_return_same_place_id():
+    payload = {
+        "provider": "nominatim",
+        "provider_place_id": 12345,
+        "snapshot": RESOLVE_SNAPSHOT_PARIS,
+    }
+
+    def _call_resolve() -> int:
+        response = client.post("/v1/geocoding/resolve", json=payload)
+        assert response.status_code == 200
+        return int(response.json()["data"]["id"])
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        ids = list(executor.map(lambda _: _call_resolve(), range(2)))
+
+    assert ids[0] == ids[1]
+
+    with SessionLocal() as db:
+        from sqlalchemy import select
+
+        rows = db.execute(select(GeoPlaceResolvedModel)).scalars().all()
+    assert len(rows) == 1

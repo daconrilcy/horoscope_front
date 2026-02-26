@@ -83,10 +83,13 @@ def _record_reference_audit(
 
 
 def _can_use_seed_token_fallback() -> bool:
-    return (
-        settings.enable_reference_seed_admin_fallback
-        and settings.app_env in {"development", "dev", "local", "test", "testing"}
-    )
+    return settings.enable_reference_seed_admin_fallback and settings.app_env in {
+        "development",
+        "dev",
+        "local",
+        "test",
+        "testing",
+    }
 
 
 def _validate_seed_access(

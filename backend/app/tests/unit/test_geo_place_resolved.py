@@ -8,6 +8,7 @@ Couvre :
 - AC5 : lecture lat/lon canonique propagée au service natal
 - AC6 : tous les champs AC6 persistés et retrouvables
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -81,9 +82,9 @@ def test_geo_place_resolved_unique_constraint_on_provider_place_id():
         if isinstance(c, UniqueConstraint):
             uc_col_sets.append({col.name for col in c.columns})
 
-    assert any(
-        "provider" in s and "provider_place_id" in s for s in uc_col_sets
-    ), f"Aucune contrainte unique (provider, provider_place_id) trouvée. UC sets: {uc_col_sets}"
+    assert any("provider" in s and "provider_place_id" in s for s in uc_col_sets), (
+        f"Aucune contrainte unique (provider, provider_place_id) trouvée. UC sets: {uc_col_sets}"
+    )
 
 
 def test_geo_place_resolved_lat_lon_are_numeric_type():
@@ -108,9 +109,7 @@ def test_geo_place_resolved_check_constraints_exist():
     from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 
     check_constraints = [
-        c
-        for c in GeoPlaceResolvedModel.__table__.constraints
-        if isinstance(c, CheckConstraint)
+        c for c in GeoPlaceResolvedModel.__table__.constraints if isinstance(c, CheckConstraint)
     ]
     assert len(check_constraints) >= 2, (
         f"Au moins 2 CheckConstraints attendus (lat_range, lon_range). "
@@ -123,12 +122,11 @@ def test_geo_place_resolved_has_lat_lon_index():
     from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 
     indexed_col_sets = [
-        {col.name for col in idx.columns}
-        for idx in GeoPlaceResolvedModel.__table__.indexes
+        {col.name for col in idx.columns} for idx in GeoPlaceResolvedModel.__table__.indexes
     ]
-    assert any(
-        "latitude" in s and "longitude" in s for s in indexed_col_sets
-    ), f"Aucun index (latitude, longitude) trouvé. Index sets: {indexed_col_sets}"
+    assert any("latitude" in s and "longitude" in s for s in indexed_col_sets), (
+        f"Aucun index (latitude, longitude) trouvé. Index sets: {indexed_col_sets}"
+    )
 
 
 def test_geo_place_resolved_has_normalized_query_index():
@@ -136,13 +134,9 @@ def test_geo_place_resolved_has_normalized_query_index():
     from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 
     indexed_cols = {
-        col.name
-        for idx in GeoPlaceResolvedModel.__table__.indexes
-        for col in idx.columns
+        col.name for idx in GeoPlaceResolvedModel.__table__.indexes for col in idx.columns
     }
-    assert "normalized_query" in indexed_cols, (
-        "Index sur normalized_query manquant"
-    )
+    assert "normalized_query" in indexed_cols, "Index sur normalized_query manquant"
 
 
 def test_geo_place_resolved_country_code_is_string_2():
@@ -385,7 +379,14 @@ def test_natal_service_propagates_birth_lat_lon_to_birth_input():
 
     captured_birth_input = {}
 
-    def mock_calculate(db, birth_input, reference_version=None, timeout_check=None):
+    def mock_calculate(
+        db,
+        birth_input,
+        reference_version=None,
+        timeout_check=None,
+        accurate=False,
+        **kwargs,
+    ):
         captured_birth_input["birth_lat"] = birth_input.birth_lat
         captured_birth_input["birth_lon"] = birth_input.birth_lon
         raise Exception("stop-here")
@@ -427,7 +428,14 @@ def test_natal_service_propagates_none_lat_lon_when_absent():
 
     captured = {}
 
-    def mock_calculate(db, birth_input, reference_version=None, timeout_check=None):
+    def mock_calculate(
+        db,
+        birth_input,
+        reference_version=None,
+        timeout_check=None,
+        accurate=False,
+        **kwargs,
+    ):
         captured["birth_lat"] = birth_input.birth_lat
         captured["birth_lon"] = birth_input.birth_lon
         raise Exception("stop-here")
@@ -447,6 +455,64 @@ def test_natal_service_propagates_none_lat_lon_when_absent():
 
     assert captured.get("birth_lat") is None
     assert captured.get("birth_lon") is None
+
+
+def test_natal_service_prioritizes_resolved_coordinates_over_legacy_conflict():
+    """Conflit source: coords résolues doivent gagner sur les coords legacy."""
+    from datetime import date
+
+    from app.services.user_natal_chart_service import UserNatalChartService
+
+    mock_profile = MagicMock()
+    mock_profile.birth_date = date(1990, 1, 1)
+    mock_profile.birth_time = "12:00"
+    mock_profile.birth_place = "Paris, France"
+    mock_profile.birth_timezone = "Europe/Paris"
+    mock_profile.birth_lat = 40.7128
+    mock_profile.birth_lon = -74.0060
+    mock_profile.birth_place_resolved_id = 777
+
+    class _ResolvedCoordinates:
+        birth_lat = 48.8566
+        birth_lon = 2.3522
+        birth_place_resolved_id = 777
+        resolved_from_place = True
+
+    captured = {}
+
+    def mock_calculate(
+        db,
+        birth_input,
+        reference_version=None,
+        timeout_check=None,
+        accurate=False,
+        **kwargs,
+    ):
+        captured["place_resolved_id"] = birth_input.place_resolved_id
+        captured["birth_lat"] = birth_input.birth_lat
+        captured["birth_lon"] = birth_input.birth_lon
+        raise Exception("stop-here")
+
+    with (
+        patch(
+            "app.services.user_natal_chart_service.UserBirthProfileService.get_for_user",
+            return_value=mock_profile,
+        ),
+        patch(
+            "app.services.user_natal_chart_service.UserBirthProfileService.resolve_coordinates",
+            return_value=_ResolvedCoordinates(),
+        ),
+        patch(
+            "app.services.user_natal_chart_service.NatalCalculationService.calculate",
+            side_effect=mock_calculate,
+        ),
+    ):
+        with pytest.raises(Exception, match="stop-here"):
+            UserNatalChartService.generate_for_user(db=MagicMock(), user_id=1)
+
+    assert captured.get("place_resolved_id") == 777
+    assert captured.get("birth_lat") == pytest.approx(48.8566)
+    assert captured.get("birth_lon") == pytest.approx(2.3522)
 
 
 # ---------------------------------------------------------------------------

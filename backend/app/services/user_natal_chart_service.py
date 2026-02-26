@@ -53,6 +53,12 @@ class UserNatalChartMetadata(BaseModel):
     reference_version: str
     ruleset_version: str
     house_system: str = HOUSE_SYSTEM_CODE
+    engine: str = "simplified"
+    zodiac: str = "tropical"
+    frame: str = "geocentric"
+    ayanamsa: str | None = None
+    timezone_used: str = ""
+    ephemeris_path_version: str | None = None
 
 
 class UserNatalChartGenerationData(BaseModel):
@@ -93,6 +99,7 @@ class UserNatalChartService:
     Orchestre la génération, la récupération et la vérification de
     cohérence des thèmes natals avec gestion des timeouts.
     """
+
     @staticmethod
     def _normalize_payload(payload: dict[str, object]) -> str:
         """Normalise un payload pour comparaison déterministe."""
@@ -143,6 +150,11 @@ class UserNatalChartService:
         db: Session,
         user_id: int,
         reference_version: str | None = None,
+        accurate: bool = False,
+        zodiac: str = "tropical",
+        ayanamsa: str | None = None,
+        frame: str = "geocentric",
+        altitude_m: float | None = None,
     ) -> UserNatalChartGenerationData:
         """
         Génère un nouveau thème natal pour un utilisateur.
@@ -151,6 +163,11 @@ class UserNatalChartService:
             db: Session de base de données.
             user_id: Identifiant de l'utilisateur.
             reference_version: Version de référence à utiliser (optionnel).
+            accurate: Si True, utilise le moteur SwissEph si disponible.
+            zodiac: Zodiaque à utiliser ("tropical" ou "sidereal").
+            ayanamsa: Ayanamsa pour le zodiaque sidéral.
+            frame: Référentiel ("geocentric" ou "topocentric").
+            altitude_m: Altitude pour le cadre topocentrique.
 
         Returns:
             Thème natal généré avec métadonnées.
@@ -167,15 +184,43 @@ class UserNatalChartService:
                 details=error.details,
             ) from error
 
+        coords = UserBirthProfileService.resolve_coordinates(db, profile)
+        birth_lat = coords.birth_lat
+        birth_lon = coords.birth_lon
+        resolved_fk = coords.birth_place_resolved_id
+
+        if resolved_fk is not None and not coords.resolved_from_place:
+            raise UserNatalChartServiceError(
+                code="missing_birth_place_resolved",
+                message="birth_place_resolved_id does not reference an existing place",
+                details={
+                    "user_id": str(user_id),
+                    "birth_place_resolved_id": str(resolved_fk),
+                },
+            )
+
+        if accurate and resolved_fk is None:
+            raise UserNatalChartServiceError(
+                code="missing_birth_place_resolved",
+                message="accurate mode requires a resolved birth place reference",
+                details={"user_id": str(user_id)},
+            )
+
+        if accurate and not profile.birth_timezone:
+            raise UserNatalChartServiceError(
+                code="missing_timezone",
+                message="birth_timezone is required for accurate calculation",
+                details={"user_id": str(user_id)},
+            )
+
         birth_input = BirthInput(
             birth_date=profile.birth_date,
             birth_time=profile.birth_time,
             birth_place=profile.birth_place,
             birth_timezone=profile.birth_timezone,
-            # Propagate canonical coordinates from profile (story 19-4).
-            # In story 19-6, these will be resolved from geo_place_resolved FK.
-            birth_lat=profile.birth_lat,
-            birth_lon=profile.birth_lon,
+            place_resolved_id=resolved_fk,
+            birth_lat=birth_lat,
+            birth_lon=birth_lon,
         )
         if birth_input.birth_time is None:
             raise UserNatalChartServiceError(
@@ -196,15 +241,16 @@ class UserNatalChartService:
                 birth_input=birth_input,
                 reference_version=reference_version,
                 timeout_check=_timeout_check,
+                accurate=accurate,
+                zodiac=zodiac,
+                ayanamsa=ayanamsa,
+                frame=frame,
+                altitude_m=altitude_m,
             )
         except NatalCalculationError as error:
             # Local/dev safeguard: if reference data is missing, seed once and retry.
-            should_auto_seed = (
-                error.code == "reference_version_not_found"
-                and (
-                    reference_version is None
-                    or reference_version == settings.active_reference_version
-                )
+            should_auto_seed = error.code == "reference_version_not_found" and (
+                reference_version is None or reference_version == settings.active_reference_version
             )
             if should_auto_seed:
                 ReferenceDataService.seed_reference_version(db, version=reference_version)
@@ -213,6 +259,11 @@ class UserNatalChartService:
                     birth_input=birth_input,
                     reference_version=reference_version,
                     timeout_check=_timeout_check,
+                    accurate=accurate,
+                    zodiac=zodiac,
+                    ayanamsa=ayanamsa,
+                    frame=frame,
+                    altitude_m=altitude_m,
                 )
             else:
                 raise UserNatalChartServiceError(
@@ -264,7 +315,13 @@ class UserNatalChartService:
             metadata=UserNatalChartMetadata(
                 reference_version=result.reference_version,
                 ruleset_version=result.ruleset_version,
-                house_system=HOUSE_SYSTEM_CODE,
+                house_system=result.house_system,
+                engine=result.engine,
+                zodiac=result.zodiac,
+                frame=result.frame,
+                ayanamsa=result.ayanamsa,
+                timezone_used=result.prepared_input.birth_timezone,
+                ephemeris_path_version=result.ephemeris_path_version,
             ),
         )
 
@@ -330,7 +387,13 @@ class UserNatalChartService:
             metadata=UserNatalChartMetadata(
                 reference_version=model.reference_version,
                 ruleset_version=model.ruleset_version,
-                house_system=HOUSE_SYSTEM_CODE,
+                house_system=result.house_system,
+                engine=result.engine,
+                zodiac=result.zodiac,
+                frame=result.frame,
+                ayanamsa=result.ayanamsa,
+                timezone_used=result.prepared_input.birth_timezone,
+                ephemeris_path_version=result.ephemeris_path_version,
             ),
             created_at=model.created_at,
         )

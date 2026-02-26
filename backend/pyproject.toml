@@ -20,6 +20,7 @@ dependencies = [
   "redis>=5.0.0",
   "sqlalchemy==2.0.44",
   "tzdata==2025.2",
+  "pyswisseph>=2.10.0",
   "uvicorn==0.41.0",
 ]
 
@@ -47,6 +48,9 @@ dev = [
 pythonpath = ["."]
 testpaths = ["app/tests", "app/ai_engine/tests"]
 asyncio_mode = "auto"
+markers = [
+  "golden: SwissEph precision tests with frozen reference values (requires pyswisseph)",
+]
 
 [tool.ruff]
 line-length = 100

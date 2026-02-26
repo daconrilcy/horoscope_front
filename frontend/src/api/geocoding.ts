@@ -4,6 +4,7 @@ import { API_BASE_URL } from "./client"
 const GEOCODING_TIMEOUT_MS = 15000
 
 export type GeocodingResult = {
+  place_resolved_id: number
   lat: number
   lon: number
   display_name: string
@@ -62,16 +63,68 @@ export async function geocodeCity(
     }
 
     const payload = (await response.json()) as {
-      data: { results: Array<{ lat: number; lon: number; display_name: string }>; count: number }
+      data: {
+        results: Array<{
+          provider: string
+          provider_place_id: number
+          lat: number
+          lon: number
+          display_name: string
+          [key: string]: unknown
+        }>
+        count: number
+      }
     }
     const results = payload.data?.results ?? []
     if (results.length === 0) return null
 
-    const { lat, lon, display_name } = results[0]
+    const candidate = results[0]
+    const { lat, lon } = candidate
     if (!isFinite(lat) || !isFinite(lon)) {
       throw new GeocodingError("Backend returned invalid coordinates", "service_unavailable")
     }
-    return { lat, lon, display_name }
+
+    const resolveResponse = await fetch(`${API_BASE_URL}/v1/geocoding/resolve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify({
+        provider: candidate.provider,
+        provider_place_id: candidate.provider_place_id,
+        snapshot: candidate,
+      }),
+    })
+
+    if (!resolveResponse.ok) {
+      let errorCode = "service_unavailable"
+      try {
+        const errPayload = (await resolveResponse.json()) as { error?: { code?: string } }
+        errorCode = errPayload.error?.code ?? "service_unavailable"
+      } catch {
+        // ignore parse failure
+      }
+      throw new GeocodingError(`Geocoding resolve backend error: ${resolveResponse.status}`, errorCode)
+    }
+
+    const resolvePayload = (await resolveResponse.json()) as {
+      data: { id: number; latitude: number; longitude: number; display_name: string }
+    }
+    const resolved = resolvePayload.data
+    if (
+      Number.isInteger(resolved?.id) &&
+      resolved.id > 0 &&
+      isFinite(resolved.latitude) &&
+      isFinite(resolved.longitude)
+    ) {
+      return {
+        place_resolved_id: resolved.id,
+        lat: resolved.latitude,
+        lon: resolved.longitude,
+        display_name: resolved.display_name,
+      }
+    }
+    
+    throw new GeocodingError("Backend returned malformed resolved data", "service_unavailable")
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
       if (!timedOut && externalSignal?.aborted) {

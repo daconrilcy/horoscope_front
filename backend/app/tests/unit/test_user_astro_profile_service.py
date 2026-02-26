@@ -31,7 +31,7 @@ from app.services.user_astro_profile_service import (
     UserAstroProfileService,
     UserAstroProfileServiceError,
 )
-from app.services.user_birth_profile_service import UserBirthProfileService
+from app.services.user_birth_profile_service import UserBirthProfileData, UserBirthProfileService
 
 
 def _cleanup_tables() -> None:
@@ -338,3 +338,224 @@ def test_astro_profile_raises_when_birth_profile_missing() -> None:
             UserAstroProfileService.get_for_user(db, user_id=user_id)
 
     assert exc_info.value.code == "birth_profile_not_found"
+
+
+def test_astro_profile_forwards_geo_fields_to_birth_input(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Forward place_resolved_id/birth_lat/birth_lon vers BirthInput pour moteur swisseph."""
+
+    captured_birth_input: BirthInput | None = None
+
+    def _fake_get_for_user(_db: object, _user_id: int) -> UserBirthProfileData:
+        return UserBirthProfileData(
+            birth_date="1973-04-24",
+            birth_time="11:00",
+            birth_place="Paris",
+            birth_place_text="Paris",
+            birth_timezone="Europe/Paris",
+            birth_city="Paris",
+            birth_country="France",
+            birth_lat=48.8566,
+            birth_lon=2.3522,
+            birth_place_resolved_id=777,
+            birth_place_resolved=None,
+        )
+
+    def _fake_calculate(
+        _db: object,
+        birth_input: BirthInput,
+        *args: object,
+        **kwargs: object,
+    ) -> object:
+        nonlocal captured_birth_input
+        captured_birth_input = birth_input
+
+        class _FakePlanet:
+            planet_code = "sun"
+            longitude = 34.08
+
+        class _FakeHouse:
+            number = 1
+            cusp_longitude = 117.98
+
+        class _FakeNatalResult:
+            planet_positions = [_FakePlanet()]
+            houses = [_FakeHouse()]
+
+        return _FakeNatalResult()
+
+    monkeypatch.setattr(
+        "app.services.user_astro_profile_service.UserBirthProfileService.get_for_user",
+        _fake_get_for_user,
+    )
+    monkeypatch.setattr(
+        "app.services.user_astro_profile_service.NatalCalculationService.calculate",
+        _fake_calculate,
+    )
+
+    with SessionLocal() as db:
+        result = UserAstroProfileService.get_for_user(db, user_id=1)
+
+    assert result.sun_sign_code == "taurus"
+    assert result.ascendant_sign_code == "cancer"
+    assert result.missing_birth_time is False
+    assert captured_birth_input is not None
+    assert captured_birth_input.place_resolved_id == 777
+    assert captured_birth_input.birth_lat == 48.8566
+    assert captured_birth_input.birth_lon == 2.3522
+
+
+def test_astro_profile_resolves_coordinates_from_place_id_when_missing_on_profile(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Si birth_lat/lon sont absents, les coords viennent du resolver canonique."""
+
+    captured_birth_input: BirthInput | None = None
+
+    def _fake_get_for_user(_db: object, _user_id: int) -> UserBirthProfileData:
+        return UserBirthProfileData(
+            birth_date="1973-04-24",
+            birth_time="11:00",
+            birth_place="Paris",
+            birth_place_text="Paris",
+            birth_timezone="Europe/Paris",
+            birth_city="Paris",
+            birth_country="France",
+            birth_lat=None,
+            birth_lon=None,
+            birth_place_resolved_id=555,
+            birth_place_resolved=None,
+        )
+
+    def _fake_resolve_coordinates(_db: object, profile: UserBirthProfileData) -> object:
+        class _Resolved:
+            birth_lat = 48.8566
+            birth_lon = 2.3522
+            birth_place_resolved_id = profile.birth_place_resolved_id
+            resolved_from_place = True
+
+        return _Resolved()
+
+    def _fake_calculate(
+        _db: object,
+        birth_input: BirthInput,
+        *args: object,
+        **kwargs: object,
+    ) -> object:
+        nonlocal captured_birth_input
+        captured_birth_input = birth_input
+
+        class _FakePlanet:
+            planet_code = "sun"
+            longitude = 34.08
+
+        class _FakeHouse:
+            number = 1
+            cusp_longitude = 117.98
+
+        class _FakeNatalResult:
+            planet_positions = [_FakePlanet()]
+            houses = [_FakeHouse()]
+
+        return _FakeNatalResult()
+
+    monkeypatch.setattr(
+        "app.services.user_astro_profile_service.UserBirthProfileService.get_for_user",
+        _fake_get_for_user,
+    )
+    monkeypatch.setattr(
+        "app.services.user_astro_profile_service.UserBirthProfileService.resolve_coordinates",
+        _fake_resolve_coordinates,
+    )
+    monkeypatch.setattr(
+        "app.services.user_astro_profile_service.NatalCalculationService.calculate",
+        _fake_calculate,
+    )
+
+    with SessionLocal() as db:
+        result = UserAstroProfileService.get_for_user(db, user_id=1)
+
+    assert result.sun_sign_code == "taurus"
+    assert result.ascendant_sign_code == "cancer"
+    assert result.missing_birth_time is False
+    assert captured_birth_input is not None
+    assert captured_birth_input.place_resolved_id == 555
+    assert captured_birth_input.birth_lat == 48.8566
+    assert captured_birth_input.birth_lon == 2.3522
+
+
+def test_astro_profile_prioritizes_resolved_coordinates_over_legacy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """En cas de conflit, le resolver canonique doit imposer place_resolved."""
+
+    captured_birth_input: BirthInput | None = None
+
+    def _fake_get_for_user(_db: object, _user_id: int) -> UserBirthProfileData:
+        return UserBirthProfileData(
+            birth_date="1973-04-24",
+            birth_time="11:00",
+            birth_place="Paris",
+            birth_place_text="Paris",
+            birth_timezone="Europe/Paris",
+            birth_city="Paris",
+            birth_country="France",
+            birth_lat=40.7128,
+            birth_lon=-74.0060,
+            birth_place_resolved_id=999,
+            birth_place_resolved=None,
+        )
+
+    def _fake_resolve_coordinates(_db: object, profile: UserBirthProfileData) -> object:
+        class _Resolved:
+            birth_lat = 48.8566
+            birth_lon = 2.3522
+            birth_place_resolved_id = profile.birth_place_resolved_id
+            resolved_from_place = True
+
+        return _Resolved()
+
+    def _fake_calculate(
+        _db: object,
+        birth_input: BirthInput,
+        *args: object,
+        **kwargs: object,
+    ) -> object:
+        nonlocal captured_birth_input
+        captured_birth_input = birth_input
+
+        class _FakePlanet:
+            planet_code = "sun"
+            longitude = 34.08
+
+        class _FakeHouse:
+            number = 1
+            cusp_longitude = 117.98
+
+        class _FakeNatalResult:
+            planet_positions = [_FakePlanet()]
+            houses = [_FakeHouse()]
+
+        return _FakeNatalResult()
+
+    monkeypatch.setattr(
+        "app.services.user_astro_profile_service.UserBirthProfileService.get_for_user",
+        _fake_get_for_user,
+    )
+    monkeypatch.setattr(
+        "app.services.user_astro_profile_service.UserBirthProfileService.resolve_coordinates",
+        _fake_resolve_coordinates,
+    )
+    monkeypatch.setattr(
+        "app.services.user_astro_profile_service.NatalCalculationService.calculate",
+        _fake_calculate,
+    )
+
+    with SessionLocal() as db:
+        result = UserAstroProfileService.get_for_user(db, user_id=1)
+
+    assert result.sun_sign_code == "taurus"
+    assert result.ascendant_sign_code == "cancer"
+    assert captured_birth_input is not None
+    assert captured_birth_input.place_resolved_id == 999
+    assert captured_birth_input.birth_lat == 48.8566
+    assert captured_birth_input.birth_lon == 2.3522

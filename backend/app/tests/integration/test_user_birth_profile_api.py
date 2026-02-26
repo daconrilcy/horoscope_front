@@ -4,6 +4,7 @@ from sqlalchemy import delete
 import app.infra.db.models  # noqa: F401  # ensure all SQLAlchemy models are registered
 from app.core.security import create_token
 from app.infra.db.base import Base
+from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine
@@ -17,6 +18,7 @@ def _cleanup_tables() -> None:
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
+        db.execute(delete(GeoPlaceResolvedModel))
         db.execute(delete(UserBirthProfileModel))
         db.execute(delete(UserModel))
         db.commit()
@@ -134,6 +136,172 @@ def test_put_birth_data_rejects_unknown_fields() -> None:
         error.get("type") == "extra_forbidden"
         for error in response.json()["error"]["details"].get("errors", [])
     )
+
+
+def test_put_birth_data_accepts_place_resolved_id_field() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    with SessionLocal() as db:
+        place = GeoPlaceResolvedModel(
+            provider="nominatim",
+            provider_place_id=12345,
+            display_name="Paris, Ile-de-France, France",
+            latitude=48.8566,
+            longitude=2.3522,
+            timezone_iana="Europe/Paris",
+        )
+        db.add(place)
+        db.flush()
+        place_id = place.id
+        db.commit()
+
+    response = client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+            "place_resolved_id": place_id,
+        },
+    )
+    assert response.status_code == 200
+
+
+def test_get_birth_data_returns_birth_place_text_and_resolved_place() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    with SessionLocal() as db:
+        place = GeoPlaceResolvedModel(
+            provider="nominatim",
+            provider_place_id=12345,
+            display_name="Paris, Ile-de-France, France",
+            latitude=48.8566,
+            longitude=2.3522,
+            timezone_iana="Europe/Paris",
+        )
+        db.add(place)
+        db.flush()
+        place_id = place.id
+        db.commit()
+
+    put_response = client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+            "place_resolved_id": place_id,
+        },
+    )
+    assert put_response.status_code == 200
+
+    get_response = client.get(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert get_response.status_code == 200
+    data = get_response.json()["data"]
+    assert data["birth_place_text"] == "Paris"
+    resolved = data["birth_place_resolved"]
+    assert resolved is not None
+    assert resolved["provider"] == "nominatim"
+    assert resolved["provider_place_id"] == 12345
+    assert resolved["display_name"] == "Paris, Ile-de-France, France"
+    assert resolved["latitude"] == 48.8566
+    assert resolved["longitude"] == 2.3522
+    assert resolved["timezone_iana"] == "Europe/Paris"
+
+
+def test_get_birth_data_legacy_profile_returns_null_resolved_place() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    put_response = client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+    assert put_response.status_code == 200
+
+    get_response = client.get(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert get_response.status_code == 200
+    data = get_response.json()["data"]
+    assert data["birth_place_text"] == "Paris"
+    assert data["birth_place_resolved"] is None
+
+
+def test_put_birth_data_replaces_place_resolved_reference_on_edit() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    with SessionLocal() as db:
+        first_place = GeoPlaceResolvedModel(
+            provider="nominatim",
+            provider_place_id=12345,
+            display_name="Paris, Ile-de-France, France",
+            latitude=48.8566,
+            longitude=2.3522,
+            timezone_iana="Europe/Paris",
+        )
+        second_place = GeoPlaceResolvedModel(
+            provider="nominatim",
+            provider_place_id=67890,
+            display_name="Lyon, Auvergne-Rhone-Alpes, France",
+            latitude=45.764,
+            longitude=4.8357,
+            timezone_iana="Europe/Paris",
+        )
+        db.add(first_place)
+        db.add(second_place)
+        db.flush()
+        first_place_id = first_place.id
+        second_place_id = second_place.id
+        db.commit()
+
+    first_put = client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+            "place_resolved_id": first_place_id,
+        },
+    )
+    assert first_put.status_code == 200
+
+    second_put = client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Lyon",
+            "birth_timezone": "Europe/Paris",
+            "place_resolved_id": second_place_id,
+        },
+    )
+    assert second_put.status_code == 200
+
+    get_response = client.get(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert get_response.status_code == 200
+    data = get_response.json()["data"]
+    assert data["birth_place_text"] == "Lyon"
+    assert data["birth_place_resolved"]["provider_place_id"] == 67890
 
 
 def test_put_birth_data_rejects_overlong_place() -> None:

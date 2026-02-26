@@ -71,6 +71,41 @@ class ReferenceRepository:
                     code="mercury",
                     name="Mercury",
                 ),
+                PlanetModel(
+                    reference_version_id=reference_version_id,
+                    code="venus",
+                    name="Venus",
+                ),
+                PlanetModel(
+                    reference_version_id=reference_version_id,
+                    code="mars",
+                    name="Mars",
+                ),
+                PlanetModel(
+                    reference_version_id=reference_version_id,
+                    code="jupiter",
+                    name="Jupiter",
+                ),
+                PlanetModel(
+                    reference_version_id=reference_version_id,
+                    code="saturn",
+                    name="Saturn",
+                ),
+                PlanetModel(
+                    reference_version_id=reference_version_id,
+                    code="uranus",
+                    name="Uranus",
+                ),
+                PlanetModel(
+                    reference_version_id=reference_version_id,
+                    code="neptune",
+                    name="Neptune",
+                ),
+                PlanetModel(
+                    reference_version_id=reference_version_id,
+                    code="pluto",
+                    name="Pluto",
+                ),
             ]
         )
         self.db.add_all(
@@ -125,9 +160,27 @@ class ReferenceRepository:
                 ),
                 AspectModel(
                     reference_version_id=reference_version_id,
+                    code="sextile",
+                    name="Sextile",
+                    angle=60,
+                ),
+                AspectModel(
+                    reference_version_id=reference_version_id,
+                    code="square",
+                    name="Square",
+                    angle=90,
+                ),
+                AspectModel(
+                    reference_version_id=reference_version_id,
                     code="trine",
                     name="Trine",
                     angle=120,
+                ),
+                AspectModel(
+                    reference_version_id=reference_version_id,
+                    code="opposition",
+                    name="Opposition",
+                    angle=180,
                 ),
             ]
         )

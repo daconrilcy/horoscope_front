@@ -13,6 +13,7 @@ class BirthInput(BaseModel):
     birth_time: str | None = Field(default=None, min_length=5, max_length=8)
     birth_place: str = Field(min_length=1, max_length=255)
     birth_timezone: str = Field(min_length=1, max_length=64)
+    place_resolved_id: int | None = Field(default=None, gt=0)
     # Optional geo/context fields accepted from frontend payloads.
     # They are currently not required by the natal engine pipeline.
     birth_city: str | None = Field(default=None, max_length=255)
@@ -100,6 +101,18 @@ def prepare_birth_data(payload: BirthInput) -> BirthPreparedData:
 
     timestamp_utc = int(utc_datetime.timestamp())
     julian_day = _julian_day_from_timestamp(timestamp_utc)
+
+    # SwissEph range validation: approx -5401 BC to 5399 AD
+    # JD 0 is -4712-01-01. SwissEph usually supports JD -1000000 to 5000000.
+    # We'll use a safe range for standard astrology: -3000 BC to 3000 AD
+    # JD for -3000-01-01 is ~ 625674.5
+    # JD for 3000-01-01 is ~ 2817152.5
+    if julian_day < 625674.5 or julian_day > 2817152.5:
+        raise BirthPreparationError(
+            code="date_out_of_range",
+            message="birth_date is out of supported calculation range (-3000 to 3000)",
+            details={"julian_day": str(julian_day)},
+        )
 
     return BirthPreparedData(
         birth_datetime_local=local_datetime.isoformat(),

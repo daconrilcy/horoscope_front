@@ -104,9 +104,7 @@ class TestPromptRegistry:
     def test_render_prompt_card_reading(self) -> None:
         """Render prompt for card reading use case."""
         input_data = GenerateInput(question="Que me réserve cette semaine ?")
-        context = GenerateContext(
-            extra={"cards": "L'Étoile, Le Soleil, La Roue de Fortune"}
-        )
+        context = GenerateContext(extra={"cards": "L'Étoile, Le Soleil, La Roue de Fortune"})
 
         prompt = PromptRegistry.render_prompt(
             use_case="card_reading",

@@ -146,8 +146,19 @@ def test_map_nominatim_result_missing_place_id_raises():
 def test_map_nominatim_result_empty_class_raises():
     raw = dict(NOMINATIM_RESULT_FULL)
     raw["class"] = " "
-    with pytest.raises(ValueError, match="invalid class"):
+    raw["category"] = " "
+    with pytest.raises(ValueError, match="missing class"):
         _map_nominatim_result(raw)
+
+
+def test_map_nominatim_result_uses_category_when_class_is_missing():
+    raw = dict(NOMINATIM_RESULT_FULL)
+    raw.pop("class")
+    raw["category"] = "boundary"
+
+    result = _map_nominatim_result(raw)
+
+    assert result.class_ == "boundary"
 
 
 # ---------------------------------------------------------------------------

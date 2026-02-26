@@ -36,6 +36,7 @@ def _make_natal_result() -> NatalResult:
     return NatalResult(
         reference_version="v1.0",
         ruleset_version="r1.0",
+        house_system="placidus",
         prepared_input=BirthPreparedData(
             birth_datetime_local="1990-06-15T14:30:00+02:00",
             birth_datetime_utc="1990-06-15T12:30:00+00:00",

@@ -226,9 +226,7 @@ def test_get_pricing_experiment_kpis_uses_database_persistent_events() -> None:
     reset_metrics()
     with SessionLocal() as db:
         db.execute(
-            delete(AuditEventModel).where(
-                AuditEventModel.action == "pricing_experiment_event"
-            )
+            delete(AuditEventModel).where(AuditEventModel.action == "pricing_experiment_event")
         )
         AuditService.record_event(
             db,
@@ -289,9 +287,7 @@ def test_get_pricing_experiment_kpis_falls_back_when_db_has_no_events() -> None:
     )
     with SessionLocal() as db:
         db.execute(
-            delete(AuditEventModel).where(
-                AuditEventModel.action == "pricing_experiment_event"
-            )
+            delete(AuditEventModel).where(AuditEventModel.action == "pricing_experiment_event")
         )
         db.commit()
         data = OpsMonitoringService.get_pricing_experiment_kpis(window="24h", db=db)

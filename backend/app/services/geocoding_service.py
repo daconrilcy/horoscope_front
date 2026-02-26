@@ -100,6 +100,18 @@ def _required_text(raw: dict[str, Any], key: str) -> str:
     return normalized
 
 
+def _required_text_any(raw: dict[str, Any], *keys: str) -> str:
+    for key in keys:
+        value = raw.get(key)
+        if isinstance(value, str):
+            normalized = value.strip()
+            if normalized:
+                return normalized
+    if keys:
+        raise ValueError(f"missing {keys[0]}")
+    raise ValueError("missing value")
+
+
 def _map_nominatim_result(raw: dict) -> GeocodingSearchResult:
     """Mappe un résultat brut Nominatim jsonv2 vers le DTO persistable."""
     if not isinstance(raw, dict):
@@ -122,8 +134,8 @@ def _map_nominatim_result(raw: dict) -> GeocodingSearchResult:
         provider_place_id=_required_int(raw, "place_id"),
         osm_type=_required_text(raw, "osm_type"),
         osm_id=_required_int(raw, "osm_id"),
-        type=_required_text(raw, "type"),
-        class_=_required_text(raw, "class"),
+        type=_required_text_any(raw, "type", "addresstype"),
+        class_=_required_text_any(raw, "class", "category"),
         display_name=_required_text(raw, "display_name"),
         lat=lat,
         lon=lon,
@@ -197,6 +209,9 @@ class GeocodingService:
         params = urllib.parse.urlencode(payload)
         url = f"{settings.nominatim_url}?{params}"
         user_agent = f"{settings.nominatim_user_agent} (contact: {settings.nominatim_contact})"
+
+        # AC4: Timeout strict et retries=0. urllib.request.Request n'implémente
+        # pas de retry par défaut, garantissant le respect de la contrainte.
         req = urllib.request.Request(
             url,
             headers={"User-Agent": user_agent, "Accept": "application/json"},
@@ -319,3 +334,107 @@ class GeocodingService:
             db.commit()
 
         return results
+
+    @staticmethod
+    def _build_nominatim_details_url() -> str:
+        parsed = urllib.parse.urlparse(settings.nominatim_url)
+        if not parsed.scheme or not parsed.netloc:
+            raise GeocodingServiceError(
+                code="geocoding_provider_unavailable",
+                message="Invalid Nominatim base URL",
+            )
+        return urllib.parse.urlunparse((parsed.scheme, parsed.netloc, "/details.php", "", "", ""))
+
+    @staticmethod
+    def _map_nominatim_details_result(raw: dict[str, Any]) -> GeocodingSearchResult:
+        if not isinstance(raw, dict):
+            raise ValueError("invalid details payload")
+
+        addresstags = raw.get("addresstags")
+        address: dict[str, Any]
+        if isinstance(addresstags, dict):
+            address = dict(addresstags)
+        else:
+            address = {}
+
+        latitude = raw.get("lat")
+        longitude = raw.get("lon")
+        if (latitude is None or longitude is None) and isinstance(raw.get("centroid"), dict):
+            coords = raw["centroid"].get("coordinates")
+            if isinstance(coords, list) and len(coords) >= 2:
+                longitude = coords[0]
+                latitude = coords[1]
+
+        mapped = {
+            "place_id": raw.get("place_id"),
+            "osm_type": raw.get("osm_type") or raw.get("osmtype"),
+            "osm_id": raw.get("osm_id") or raw.get("osmid"),
+            "type": raw.get("type") or "unknown",
+            "class": raw.get("class") or raw.get("category") or "place",
+            "display_name": raw.get("display_name") or raw.get("localname"),
+            "lat": latitude,
+            "lon": longitude,
+            "importance": raw.get("importance", 0.0),
+            "place_rank": raw.get("place_rank", 0),
+            "address": address,
+        }
+        return _map_nominatim_result(mapped)
+
+    @classmethod
+    def resolve_place_snapshot(
+        cls,
+        *,
+        provider: str,
+        provider_place_id: int,
+    ) -> GeocodingSearchResult:
+        if provider != "nominatim":
+            raise GeocodingServiceError(
+                code="unsupported_geocoding_provider",
+                message="Unsupported geocoding provider",
+                details={"provider": provider},
+            )
+
+        details_url = cls._build_nominatim_details_url()
+        params = urllib.parse.urlencode(
+            {
+                "place_id": str(provider_place_id),
+                "format": "json",
+                "addressdetails": "1",
+            }
+        )
+        url = f"{details_url}?{params}"
+        user_agent = f"{settings.nominatim_user_agent} (contact: {settings.nominatim_contact})"
+
+        # AC4: Timeout strict et retries=0.
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": user_agent, "Accept": "application/json"},
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=settings.nominatim_timeout_seconds) as resp:
+                raw_bytes = resp.read()
+        except urllib.error.HTTPError as err:
+            if err.code == 429:
+                raise GeocodingServiceError(
+                    code="geocoding_rate_limited",
+                    message="Nominatim rate limit exceeded",
+                ) from err
+            raise GeocodingServiceError(
+                code="geocoding_provider_unavailable",
+                message=f"Nominatim returned HTTP {err.code}",
+            ) from err
+        except urllib.error.URLError as err:
+            raise GeocodingServiceError(
+                code="geocoding_provider_unavailable",
+                message="Nominatim service unavailable",
+            ) from err
+
+        try:
+            raw_data = json.loads(raw_bytes.decode("utf-8"))
+            return cls._map_nominatim_details_result(raw_data)
+        except (json.JSONDecodeError, TypeError, ValueError) as err:
+            raise GeocodingServiceError(
+                code="geocoding_provider_unavailable",
+                message="Invalid response from Nominatim details API",
+            ) from err

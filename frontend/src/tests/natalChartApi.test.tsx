@@ -40,7 +40,7 @@ describe("generateNatalChart", () => {
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
     expect((init.headers as Record<string, string>)["Content-Type"]).toBe("application/json")
     expect((init.headers as Record<string, string>)["Authorization"]).toBe("Bearer test-token")
-    expect(init.body).toBe("{}")
+    expect(init.body).toBe('{"accurate":false}')
   })
 
   it("parses FastAPI native 422 format {detail: [...]} as unprocessable_entity", async () => {
@@ -204,6 +204,96 @@ describe("astro_profile nullable consumption", () => {
     expect(astroProfile.sun_sign_code).toBe("CAPRICORN")
     expect(astroProfile.ascendant_sign_code).toBeNull()
     expect(astroProfile.missing_birth_time).toBe(true)
+  })
+})
+
+describe("planet position retrograde contract compatibility", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("keeps optional retrograde fields when backend sends them", async () => {
+    const chartWithRetrograde = {
+      chart_id: "c-retro",
+      result: {
+        reference_version: "1.0",
+        ruleset_version: "1.0",
+        prepared_input: {
+          birth_datetime_local: "1990-01-15T12:00:00",
+          birth_datetime_utc: "1990-01-15T12:00:00Z",
+          timestamp_utc: 632491200,
+          julian_day: 2447907.0,
+          birth_timezone: "UTC",
+        },
+        planet_positions: [
+          {
+            planet_code: "MERCURY",
+            longitude: 100.5,
+            sign_code: "CANCER",
+            house_number: 4,
+            is_retrograde: true,
+            speed_longitude: -0.75,
+          },
+        ],
+        houses: [],
+        aspects: [],
+      },
+      metadata: { reference_version: "1.0", ruleset_version: "1.0" },
+      created_at: "2026-01-01T00:00:00Z",
+    }
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: chartWithRetrograde }),
+      }),
+    )
+
+    const result = await generateNatalChart("test-token")
+    expect(result.result.planet_positions[0]?.is_retrograde).toBe(true)
+    expect(result.result.planet_positions[0]?.speed_longitude).toBe(-0.75)
+  })
+
+  it("remains compatible with legacy planet positions that omit retrograde fields", async () => {
+    const legacyChart = {
+      chart_id: "c-legacy",
+      result: {
+        reference_version: "1.0",
+        ruleset_version: "1.0",
+        prepared_input: {
+          birth_datetime_local: "1990-01-15T12:00:00",
+          birth_datetime_utc: "1990-01-15T12:00:00Z",
+          timestamp_utc: 632491200,
+          julian_day: 2447907.0,
+          birth_timezone: "UTC",
+        },
+        planet_positions: [
+          {
+            planet_code: "SUN",
+            longitude: 15.0,
+            sign_code: "ARIES",
+            house_number: 1,
+          },
+        ],
+        houses: [],
+        aspects: [],
+      },
+      metadata: { reference_version: "1.0", ruleset_version: "1.0" },
+      created_at: "2026-01-01T00:00:00Z",
+    }
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: legacyChart }),
+      }),
+    )
+
+    const result = await generateNatalChart("test-token")
+    expect(result.result.planet_positions[0]?.is_retrograde).toBeUndefined()
+    expect(result.result.planet_positions[0]?.speed_longitude).toBeUndefined()
   })
 })
 

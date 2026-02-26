@@ -50,9 +50,7 @@ class TestOpenAIClient:
 
             with patch("openai.AsyncOpenAI") as mock_openai:
                 mock_client_instance = AsyncMock()
-                mock_client_instance.chat.completions.create = AsyncMock(
-                    return_value=mock_response
-                )
+                mock_client_instance.chat.completions.create = AsyncMock(return_value=mock_response)
                 mock_openai.return_value = mock_client_instance
 
                 client = OpenAIClient()
@@ -84,9 +82,7 @@ class TestOpenAIClient:
 
             with patch("openai.AsyncOpenAI") as mock_openai:
                 mock_client_instance = AsyncMock()
-                mock_client_instance.chat.completions.create = AsyncMock(
-                    return_value=mock_response
-                )
+                mock_client_instance.chat.completions.create = AsyncMock(return_value=mock_response)
                 mock_openai.return_value = mock_client_instance
 
                 client = OpenAIClient()

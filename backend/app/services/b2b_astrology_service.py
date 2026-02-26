@@ -60,6 +60,7 @@ class B2BAstrologyService:
     Génère du contenu astrologique personnalisé selon la configuration
     éditoriale du compte entreprise.
     """
+
     @staticmethod
     def get_weekly_by_sign(
         db: Session,

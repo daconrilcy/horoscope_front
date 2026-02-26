@@ -28,6 +28,7 @@ class UserBirthProfileRepository:
         birth_country: str | None = None,
         birth_lat: float | None = None,
         birth_lon: float | None = None,
+        birth_place_resolved_id: int | None = None,
     ) -> UserBirthProfileModel:
         model = self.get_by_user_id(user_id)
         if model is None:
@@ -41,9 +42,9 @@ class UserBirthProfileRepository:
                 birth_country=birth_country,
                 birth_lat=birth_lat,
                 birth_lon=birth_lon,
+                birth_place_resolved_id=birth_place_resolved_id,
             )
             self.db.add(model)
-            self.db.flush()
             return model
 
         model.birth_date = birth_date
@@ -54,6 +55,7 @@ class UserBirthProfileRepository:
         model.birth_country = birth_country
         model.birth_lat = birth_lat
         model.birth_lon = birth_lon
+        model.birth_place_resolved_id = birth_place_resolved_id
         self.db.flush()
         return model
 

@@ -42,10 +42,20 @@ def test_seed_reference_version_is_idempotent() -> None:
     assert version_1 == "1.0.0"
     assert version_2 == "1.0.0"
     assert payload["version"] == "1.0.0"
-    assert len(payload["planets"]) == 3
+    assert len(payload["planets"]) == 10
     assert len(payload["signs"]) == 2
+    assert len(payload["aspects"]) == 5
     planets = cast(list[dict[str, Any]], payload["planets"])
+    aspects = cast(list[dict[str, Any]], payload["aspects"])
     assert any(item["code"] == "sun" and item["name"] == "Sun" for item in planets)
+    assert any(item["code"] == "pluto" and item["name"] == "Pluto" for item in planets)
+    assert {item["code"] for item in aspects} == {
+        "conjunction",
+        "sextile",
+        "square",
+        "trine",
+        "opposition",
+    }
 
 
 def test_clone_reference_version_preserves_previous_version() -> None:
@@ -59,8 +69,8 @@ def test_clone_reference_version_preserves_previous_version() -> None:
             db.add(
                 PlanetModel(
                     reference_version_id=source_version.id,
-                    code="venus",
-                    name="Venus",
+                    code="test_planet",
+                    name="Test Planet",
                 )
             )
             db.commit()
@@ -77,7 +87,7 @@ def test_clone_reference_version_preserves_previous_version() -> None:
     assert cloned_payload["version"] == "1.1.0"
     assert len(source_payload["planets"]) == len(cloned_payload["planets"])
     cloned_planets = cast(list[dict[str, Any]], cloned_payload["planets"])
-    assert any(item["code"] == "venus" for item in cloned_planets)
+    assert any(item["code"] == "test_planet" for item in cloned_planets)
 
 
 def test_locked_reference_version_rejects_in_place_mutation() -> None:

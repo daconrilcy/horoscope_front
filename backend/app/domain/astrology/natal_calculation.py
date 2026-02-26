@@ -20,6 +20,8 @@ class PlanetPosition(BaseModel):
     longitude: float
     sign_code: str
     house_number: int
+    speed_longitude: float | None = None
+    is_retrograde: bool | None = None
 
 
 class HouseResult(BaseModel):
@@ -38,6 +40,12 @@ class AspectResult(BaseModel):
 class NatalResult(BaseModel):
     reference_version: str
     ruleset_version: str
+    house_system: str
+    engine: str = "simplified"
+    zodiac: str = "tropical"
+    frame: str = "geocentric"
+    ayanamsa: str | None = None
+    ephemeris_path_version: str | None = None
     prepared_input: BirthPreparedData
     planet_positions: list[PlanetPosition]
     houses: list[HouseResult]
@@ -111,11 +119,73 @@ def _validate_house_cusps(version: str, houses_raw: list[dict[str, object]]) -> 
         _raise_invalid_reference(version, "houses", "duplicate_cusp_longitude")
 
 
+def _build_swisseph_positions(
+    jdut: float,
+    planet_codes: list[str],
+    zodiac: str = "tropical",
+    ayanamsa: str | None = None,
+) -> list[dict[str, object]]:
+    """Build positions_raw list from SwissEph ephemeris provider."""
+    from app.domain.astrology.ephemeris_provider import calculate_planets
+
+    planet_data_list = calculate_planets(jdut, zodiac=zodiac, ayanamsa=ayanamsa)
+    planet_data_by_id = {pd.planet_id: pd for pd in planet_data_list}
+
+    positions_raw: list[dict[str, object]] = []
+    for code in planet_codes:
+        pd = planet_data_by_id.get(code)
+        if pd is None:
+            continue
+        longitude = pd.longitude  # already normalized [0, 360) by ephemeris_provider
+        positions_raw.append(
+            {
+                "planet_code": code,
+                "longitude": longitude,
+                "sign_code": _sign_from_longitude(longitude),
+                "speed_longitude": pd.speed_longitude,
+                "is_retrograde": pd.is_retrograde,
+            }
+        )
+    return positions_raw
+
+
+def _build_swisseph_houses(
+    jdut: float,
+    lat: float,
+    lon: float,
+    house_numbers: list[int],
+    frame: str = "geocentric",
+    altitude_m: float | None = None,
+) -> tuple[list[dict[str, object]], str]:
+    """Build houses_raw list from SwissEph houses provider.
+
+    Returns:
+        Tuple of (houses_raw, house_system_name).
+    """
+    from app.domain.astrology.houses_provider import calculate_houses as calc_sw_houses
+
+    house_data = calc_sw_houses(jdut, lat, lon, frame=frame, altitude_m=altitude_m)
+    houses_raw: list[dict[str, object]] = [
+        {"number": number, "cusp_longitude": house_data.cusps[number - 1]}
+        for number in house_numbers
+        if 1 <= number <= 12
+    ]
+    return houses_raw, house_data.house_system
+
+
 def build_natal_result(
     birth_input: BirthInput,
     reference_data: dict[str, object],
     ruleset_version: str,
     timeout_check: Callable[[], None] | None = None,
+    engine: str = "simplified",
+    birth_lat: float | None = None,
+    birth_lon: float | None = None,
+    zodiac: str = "tropical",
+    ayanamsa: str | None = None,
+    frame: str = "geocentric",
+    altitude_m: float | None = None,
+    ephemeris_path_version: str | None = None,
 ) -> NatalResult:
     if timeout_check is not None:
         timeout_check()
@@ -176,10 +246,30 @@ def build_natal_result(
     if not house_numbers:
         _raise_invalid_reference(version, "houses", "missing_number")
 
-    positions_raw = calculate_planet_positions(prepared.julian_day, planet_codes, sign_codes)
-    if timeout_check is not None:
-        timeout_check()
-    houses_raw = calculate_houses(prepared.julian_day, house_numbers)
+    # Engine-specific calculation
+    if engine == "swisseph":
+        if birth_lat is None or birth_lon is None:
+            raise NatalCalculationError(
+                code="missing_birth_coordinates",
+                message="birth_lat and birth_lon are required for swisseph engine",
+                details={"engine": engine},
+            )
+        positions_raw = _build_swisseph_positions(
+            prepared.julian_day, planet_codes, zodiac=zodiac, ayanamsa=ayanamsa
+        )
+        if timeout_check is not None:
+            timeout_check()
+        houses_raw, effective_house_system = _build_swisseph_houses(
+            prepared.julian_day, birth_lat, birth_lon, house_numbers,
+            frame=frame, altitude_m=altitude_m,
+        )
+    else:
+        positions_raw = calculate_planet_positions(prepared.julian_day, planet_codes, sign_codes)
+        if timeout_check is not None:
+            timeout_check()
+        houses_raw = calculate_houses(prepared.julian_day, house_numbers)
+        effective_house_system = HOUSE_SYSTEM_CODE
+
     _validate_house_cusps(version, houses_raw)
     if timeout_check is not None:
         timeout_check()
@@ -199,7 +289,7 @@ def build_natal_result(
                     "expected_sign_code": expected_sign,
                     "actual_sign_code": str(position.get("sign_code", "")),
                     "reference_version": version,
-                    "house_system": HOUSE_SYSTEM_CODE,
+                    "house_system": effective_house_system,
                 },
             )
         house_number = int(position["house_number"])
@@ -228,7 +318,7 @@ def build_natal_result(
                     "planet_code": str(position.get("planet_code", "")),
                     "house_number": str(house_number),
                     "reference_version": version,
-                    "house_system": HOUSE_SYSTEM_CODE,
+                    "house_system": effective_house_system,
                 },
             )
         if not contains_angle(longitude, current_cusp, next_cusp):
@@ -242,7 +332,7 @@ def build_natal_result(
                     "interval_start": str(current_cusp),
                     "interval_end": str(next_cusp),
                     "reference_version": version,
-                    "house_system": HOUSE_SYSTEM_CODE,
+                    "house_system": effective_house_system,
                 },
             )
 
@@ -274,6 +364,12 @@ def build_natal_result(
     return NatalResult(
         reference_version=version,
         ruleset_version=ruleset_version,
+        house_system=effective_house_system,
+        engine=engine,
+        zodiac=zodiac,
+        frame=frame,
+        ayanamsa=ayanamsa,
+        ephemeris_path_version=ephemeris_path_version,
         prepared_input=prepared,
         planet_positions=positions,
         houses=houses,

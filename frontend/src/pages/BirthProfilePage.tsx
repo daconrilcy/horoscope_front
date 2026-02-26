@@ -50,7 +50,7 @@ type BirthProfileFormData = z.infer<ReturnType<typeof createBirthProfileSchema>>
 
 type GeocodingState = "idle" | "loading" | "success" | "error_not_found" | "error_unavailable"
 
-type GeoResult = { lat: number; lon: number; display_name: string } | null
+type GeoResult = { place_resolved_id: number; lat: number; lon: number; display_name: string } | null
 
 function shouldLogSupportForApiError(error: { status: number }): boolean {
   return error.status >= 500
@@ -105,10 +105,13 @@ export function BirthProfilePage() {
   const generationMutation = useMutation<LatestNatalChart, Error | ApiError>({
     mutationFn: async () => {
       if (!accessToken) throw new Error("No access token available")
-      return generateNatalChart(accessToken)
+      return generateNatalChart(accessToken, true)
     },
-    onSuccess: (newChart) => {
-      queryClient.setQueryData(["latest-natal-chart", tokenSubject], newChart)
+    onSuccess: () => {
+      // Le POST /natal-chart ne contient pas toujours les champs enrichis
+      // (created_at, astro_profile) retournés par /natal-chart/latest.
+      // On purge donc la cache pour forcer un fetch frais sur la page /natal.
+      queryClient.removeQueries({ queryKey: ["latest-natal-chart", tokenSubject], exact: true })
       navigate("/natal")
     },
     onError: (err) => {
@@ -228,12 +231,14 @@ export function BirthProfilePage() {
     const { result: geoResult, isServiceUnavailable } = await performGeocode(city, country)
 
     let coords: { lat: number; lon: number } | null = null
+    let resolvedPlaceId: number | null = null
     let resolvedPlace = formData.birth_place?.trim() || ""
 
     if (geoResult === null) {
       setGeocodingState(isServiceUnavailable ? "error_unavailable" : "error_not_found")
     } else {
       setGeocodingState("success")
+      resolvedPlaceId = geoResult.place_resolved_id
       coords = { lat: geoResult.lat, lon: geoResult.lon }
       resolvedPlace = geoResult.display_name.slice(0, 255)
       setResolvedGeoLabel(geoResult.display_name)
@@ -246,6 +251,7 @@ export function BirthProfilePage() {
         birth_place: resolvedPlace || formatBirthPlace(city, country),
         birth_city: city,
         birth_country: country,
+        ...(resolvedPlaceId !== null ? { place_resolved_id: resolvedPlaceId } : {}),
         ...(coords ? { birth_lat: coords.lat, birth_lon: coords.lon } : {}),
       }
       const updatedData = await saveBirthData(accessToken, payload)
