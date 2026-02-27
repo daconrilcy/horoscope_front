@@ -207,7 +207,7 @@ development_status:
   epic-21-retrospective: optional
 
   epic-22: in-progress
-  22-1-standardiser-pipeline-temps-prepared-input: ready-for-dev
+  22-1-standardiser-pipeline-temps-prepared-input: done
   22-2-ajouter-delta-t-jd-tt-optionnels: ready-for-dev
   epic-22-retrospective: optional
 

@@ -86,3 +86,66 @@ def test_prepare_natal_missing_birth_timezone() -> None:
     assert response.status_code == 422
     payload = response.json()
     assert payload["error"]["code"] == "invalid_birth_input"
+
+
+# ---------------------------------------------------------------------------
+# Story 22.1 — Endpoint retourne jd_ut et timezone_used dans prepared_input
+# ---------------------------------------------------------------------------
+
+
+def test_prepare_natal_returns_jd_ut_field() -> None:
+    """AC1: l'endpoint retourne jd_ut dans prepared_input."""
+    response = client.post(
+        "/v1/astrology-engine/natal/prepare",
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert "jd_ut" in data
+    assert isinstance(data["jd_ut"], float)
+    assert abs(data["jd_ut"] - data["julian_day"]) < 1e-9
+
+
+def test_prepare_natal_returns_timezone_used_field() -> None:
+    """AC1: l'endpoint retourne timezone_used dans prepared_input."""
+    response = client.post(
+        "/v1/astrology-engine/natal/prepare",
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "America/New_York",
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert "timezone_used" in data
+    assert data["timezone_used"] == "America/New_York"
+
+
+def test_prepare_natal_all_required_temporal_fields_present() -> None:
+    """AC1: les 5 champs temporels obligatoires sont présents dans la réponse."""
+    response = client.post(
+        "/v1/astrology-engine/natal/prepare",
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    required_fields = (
+        "birth_datetime_local", "birth_datetime_utc", "timestamp_utc", "jd_ut", "timezone_used"
+    )
+    for field in required_fields:
+        assert field in data, f"Champ obligatoire manquant: {field}"

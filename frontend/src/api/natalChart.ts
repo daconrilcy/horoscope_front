@@ -24,18 +24,27 @@ type AspectResult = {
   planet_b: string
   angle: number
   orb: number
-  orb_used?: number
+  orb_used?: number | null
 }
 
 type NatalResult = {
   reference_version: string
   ruleset_version: string
+  engine?: string
+  zodiac?: string
+  frame?: string
+  ayanamsa?: string | null
+  altitude_m?: number | null
+  ephemeris_path_version?: string | null
+  ephemeris_path_hash?: string | null
   prepared_input: {
     birth_datetime_local: string
     birth_datetime_utc: string
     timestamp_utc: number
     julian_day: number
     birth_timezone: string
+    jd_ut: number
+    timezone_used: string
   }
   planet_positions: PlanetPosition[]
   houses: HouseResult[]
@@ -50,6 +59,8 @@ export type LatestNatalChart = {
     ruleset_version: string
     engine: string
     house_system: string
+    ephemeris_path_version?: string | null
+    ephemeris_path_hash?: string | null
     degraded_mode?: "no_location" | "no_time" | "no_location_no_time" | null
   }
   created_at: string
