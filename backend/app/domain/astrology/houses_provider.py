@@ -5,8 +5,8 @@ l'Ascendant et le Milieu-du-Ciel via pyswisseph.
 
 Architecture strategy :
 - ``_HOUSE_SYSTEM_CODES`` centralise le mapping nom public → code octet SwissEph.
-- ``_SUPPORTED_HOUSE_SYSTEMS`` contrôle l'exposition publique (seul ``"placidus"``
-  en v1 ; ``"equal"`` et ``"whole_sign"`` réservés pour usage interne futur).
+- ``_SUPPORTED_HOUSE_SYSTEMS`` expose publiquement ``"placidus"``, ``"equal"``
+  et ``"whole_sign"`` (story 23.2).
 - ``UnsupportedHouseSystemError`` → 422 (erreur fonctionnelle).
 - ``HousesCalcError`` → 503 (erreur technique runtime).
 
@@ -41,13 +41,12 @@ METRIC_ERRORS = "swisseph_errors_total"
 # Reference: pyswisseph houses_ex hsys parameter.
 _HOUSE_SYSTEM_CODES: dict[str, bytes] = {
     "placidus": b"P",
-    "equal": b"E",       # Réservé — non exposé public API (story 20.7+)
-    "whole_sign": b"W",  # Réservé — non exposé public API (story 20.7+)
+    "equal": b"E",       # Exposé public API depuis story 23.2
+    "whole_sign": b"W",  # Exposé public API depuis story 23.2
 }
 
 # Systèmes de maisons exposés en public API.
-# Equal/Whole Sign restent cachés derrière un flag interne jusqu'à story 20.7.
-_SUPPORTED_HOUSE_SYSTEMS: frozenset[str] = frozenset({"placidus"})
+_SUPPORTED_HOUSE_SYSTEMS: frozenset[str] = frozenset({"placidus", "equal", "whole_sign"})
 
 _DEFAULT_HOUSE_SYSTEM = "placidus"
 _DEFAULT_FRAME = "geocentric"
@@ -137,7 +136,7 @@ def calculate_houses(
         lat: Latitude géographique en degrés (−90 à +90).
         lon: Longitude géographique en degrés (−180 à +180).
         house_system: Système de maisons. Défaut ``"placidus"``.
-            Seul ``"placidus"`` est supporté en v1.
+            Valeurs supportées : ``"placidus"``, ``"equal"``, ``"whole_sign"``.
         frame: Référentiel de calcul. ``"geocentric"`` (défaut) ou
             ``"topocentric"``.
         altitude_m: Altitude en mètres pour le cadre topocentrique.
@@ -199,11 +198,11 @@ def calculate_houses(
                             type(exc).__name__,
                         )
     except HousesCalcError:
-        increment_counter(f"{METRIC_ERRORS}|code=houses_calc_failed")
+        increment_counter(f"{METRIC_ERRORS}|code=houses_calc_failed|house_system={house_system}")
         raise
 
     elapsed_ms = (time.monotonic() - start) * 1000.0
-    observe_duration(METRIC_HOUSES_LATENCY, elapsed_ms)
+    observe_duration(f"{METRIC_HOUSES_LATENCY}|house_system={house_system}", elapsed_ms)
 
     # SwissEph peut retourner 12 ou 13 cuspides selon version/binding.
     cusps = _extract_cusps(cusps_raw)

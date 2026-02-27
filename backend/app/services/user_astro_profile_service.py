@@ -108,7 +108,9 @@ class UserAstroProfileService:
         )
 
         try:
-            natal_result = NatalCalculationService.calculate(db, birth_input=birth_input)
+            natal_result = NatalCalculationService.calculate(
+                db, birth_input=birth_input, accurate=True
+            )
         except NatalCalculationError as error:
             should_auto_seed = (
                 error.code == "reference_version_not_found" and settings.active_reference_version
@@ -117,7 +119,9 @@ class UserAstroProfileService:
                 ReferenceDataService.seed_reference_version(
                     db, version=settings.active_reference_version
                 )
-                natal_result = NatalCalculationService.calculate(db, birth_input=birth_input)
+                natal_result = NatalCalculationService.calculate(
+                db, birth_input=birth_input, accurate=True
+            )
             else:
                 raise UserAstroProfileServiceError(
                     code=error.code,

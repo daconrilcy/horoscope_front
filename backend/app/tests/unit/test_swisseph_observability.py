@@ -36,6 +36,8 @@ from app.domain.astrology.houses_provider import (
 )
 from app.infra.observability.metrics import (
     get_counter_sum_in_window,
+    get_counter_sums_by_prefix_in_window,
+    get_duration_values_by_prefix_in_window,
     get_duration_values_in_window,
 )
 
@@ -216,14 +218,16 @@ class TestEphemerisCalcErrors:
 
 class TestHousesCalcLatency:
     def test_houses_latency_emitted_on_success(self) -> None:
-        """swisseph_houses_latency_ms est enregistré après un calcul réussi."""
+        """swisseph_houses_latency_ms|house_system=X est enregistré après un calcul réussi."""
         mock_swe = _make_houses_mock()
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
             calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS)
 
-        values = get_duration_values_in_window(METRIC_HOUSES_LATENCY, timedelta(minutes=1))
-        assert len(values) == 1, "Une seule observation de latence attendue"
-        assert values[0] >= 0.0
+        # story 23.2: la métrique inclut le label house_system → cherche par préfixe
+        by_key = get_duration_values_by_prefix_in_window(METRIC_HOUSES_LATENCY, timedelta(minutes=1))
+        all_values = [v for vals in by_key.values() for v in vals]
+        assert len(all_values) == 1, "Une seule observation de latence attendue"
+        assert all_values[0] >= 0.0
 
     def test_houses_latency_not_emitted_on_error(self) -> None:
         """swisseph_houses_latency_ms n'est PAS enregistré si houses_ex échoue."""
@@ -232,26 +236,29 @@ class TestHousesCalcLatency:
             with pytest.raises(HousesCalcError):
                 calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS)
 
-        values = get_duration_values_in_window(METRIC_HOUSES_LATENCY, timedelta(minutes=1))
-        assert len(values) == 0
+        by_key = get_duration_values_by_prefix_in_window(METRIC_HOUSES_LATENCY, timedelta(minutes=1))
+        all_values = [v for vals in by_key.values() for v in vals]
+        assert len(all_values) == 0
 
 
 class TestHousesCalcErrors:
     def test_error_counter_incremented_on_houses_ex_exception(self) -> None:
-        """swisseph_errors_total|code=houses_calc_failed incrémenté sur erreur houses_ex."""
+        """swisseph_errors_total|code=houses_calc_failed|house_system=X incrémenté sur erreur houses_ex."""
         mock_swe = _make_houses_mock(houses_ex_side_effect=RuntimeError("swe error"))
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
             with pytest.raises(HousesCalcError):
                 calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS)
 
-        count = get_counter_sum_in_window(
+        # story 23.2: cherche par préfixe pour inclure le label house_system
+        by_key = get_counter_sums_by_prefix_in_window(
             f"{HOUSES_METRIC_ERRORS}|code=houses_calc_failed",
             timedelta(minutes=1),
         )
-        assert count == 1.0
+        total = sum(by_key.values())
+        assert total == 1.0
 
     def test_error_counter_incremented_on_import_error(self) -> None:
-        """swisseph_errors_total|code=houses_calc_failed incrémenté si module absent."""
+        """swisseph_errors_total|code=houses_calc_failed|house_system=X incrémenté si module absent."""
         with patch(
             "app.domain.astrology.houses_provider._get_swe_module",
             side_effect=HousesCalcError("pyswisseph module is not installed"),
@@ -259,11 +266,12 @@ class TestHousesCalcErrors:
             with pytest.raises(HousesCalcError):
                 calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS)
 
-        count = get_counter_sum_in_window(
+        by_key = get_counter_sums_by_prefix_in_window(
             f"{HOUSES_METRIC_ERRORS}|code=houses_calc_failed",
             timedelta(minutes=1),
         )
-        assert count == 1.0
+        total = sum(by_key.values())
+        assert total == 1.0
 
     def test_error_counter_not_incremented_on_success(self) -> None:
         """swisseph_errors_total n'est PAS incrémenté sur succès."""
@@ -271,11 +279,12 @@ class TestHousesCalcErrors:
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
             calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS)
 
-        count = get_counter_sum_in_window(
+        by_key = get_counter_sums_by_prefix_in_window(
             f"{HOUSES_METRIC_ERRORS}|code=houses_calc_failed",
             timedelta(minutes=1),
         )
-        assert count == 0.0
+        total = sum(by_key.values())
+        assert total == 0.0
 
     def test_error_counter_not_incremented_for_unsupported_system(self) -> None:
         """swisseph_errors_total n'est PAS incrémenté pour UnsupportedHouseSystemError."""

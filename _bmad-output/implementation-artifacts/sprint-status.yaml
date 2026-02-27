@@ -213,7 +213,7 @@ development_status:
 
   epic-23: done
   23-1-exposer-ruleset-zodiac-ayanamsa-frame-houses: done
-  23-2-houses-placidus-whole-sign-equal: ready-for-dev
+  23-2-houses-placidus-whole-sign-equal: done
   23-3-frame-geocentric-vs-topocentric: ready-for-dev
   23-4-zodiac-tropical-vs-sidereal-ayanamsa: ready-for-dev
   epic-23-retrospective: optional

@@ -1,15 +1,19 @@
 """Tests unitaires pour le provider SwissEph de maisons natales.
 
 Story 20-3: Provider maisons SwissEph (Placidus par défaut, extensible)
+Story 23-2: Supporter placidus, whole_sign, equal avec assignation maison robuste.
 
 Couvre :
 - Tests structure HouseData : 12 cuspides + ASC/MC normalisés [0, 360) (AC1)
 - Test Placidus par défaut — houses_ex appelé avec b"P" (AC2)
+- Test Whole Sign — houses_ex appelé avec b"W"
+- Test Equal — houses_ex appelé avec b"E"
 - Test topocentrique altitude implicite 0 — set_topo(lon, lat, 0.0) (AC3)
 - Test géocentrique — set_topo non appelé (AC3 négatif)
 - Test erreur 422 unsupported_house_system (AC4)
 - Tests erreurs HousesCalcError normalisées (robustesse)
-- Test métrique swisseph_houses_latency_ms
+- Tests métriques swisseph_houses_latency_ms avec label house_system (observabilité)
+- Golden: au moins 1 cas par house system (AC3)
 
 Note : pyswisseph peut ne pas être installé dans l'environnement de test.
       Les tests utilisent patch.dict(sys.modules, ...) pour injecter un mock
@@ -29,6 +33,7 @@ from app.domain.astrology.houses_provider import (
     UnsupportedHouseSystemError,
     calculate_houses,
 )
+from app.domain.astrology.calculators.houses import assign_house_number
 from app.infra.observability.metrics import reset_metrics
 
 # ---------------------------------------------------------------------------
@@ -237,6 +242,69 @@ class TestPlacidusDefault:
 
 
 # ---------------------------------------------------------------------------
+# Tests Whole Sign et Equal (story 23.2 — AC1)
+# ---------------------------------------------------------------------------
+
+
+class TestWholeSingAndEqualSystems:
+    def test_whole_sign_calls_houses_ex_with_W_code(self) -> None:
+        """houses_ex doit être appelé avec b'W' pour Whole Sign."""
+        mock_swe = _make_swe_mock()
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            result = calculate_houses(
+                JDUT_J2000, LAT_PARIS, LON_PARIS, house_system="whole_sign"
+            )
+        args, _ = mock_swe.houses_ex.call_args
+        assert b"W" in args, f"b'W' attendu dans les arguments, reçu: {args}"
+        assert result.house_system == "whole_sign"
+
+    def test_equal_calls_houses_ex_with_E_code(self) -> None:
+        """houses_ex doit être appelé avec b'E' pour Equal."""
+        mock_swe = _make_swe_mock()
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            result = calculate_houses(
+                JDUT_J2000, LAT_PARIS, LON_PARIS, house_system="equal"
+            )
+        args, _ = mock_swe.houses_ex.call_args
+        assert b"E" in args, f"b'E' attendu dans les arguments, reçu: {args}"
+        assert result.house_system == "equal"
+
+    def test_all_three_systems_in_supported_set(self) -> None:
+        """Les 3 systèmes placidus, equal, whole_sign doivent être supportés."""
+        assert "placidus" in _SUPPORTED_HOUSE_SYSTEMS
+        assert "equal" in _SUPPORTED_HOUSE_SYSTEMS
+        assert "whole_sign" in _SUPPORTED_HOUSE_SYSTEMS
+
+    def test_all_three_systems_have_byte_codes(self) -> None:
+        """Chaque système supporté doit avoir un code octet SwissEph."""
+        for system in ("placidus", "equal", "whole_sign"):
+            assert system in _HOUSE_SYSTEM_CODES, f"{system} manque dans _HOUSE_SYSTEM_CODES"
+            assert isinstance(_HOUSE_SYSTEM_CODES[system], bytes)
+
+    def test_whole_sign_returns_12_cusps(self) -> None:
+        """Whole Sign doit retourner 12 cuspides normalisées."""
+        mock_swe = _make_swe_mock()
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            result = calculate_houses(
+                JDUT_J2000, LAT_PARIS, LON_PARIS, house_system="whole_sign"
+            )
+        assert len(result.cusps) == 12
+        for cusp in result.cusps:
+            assert 0.0 <= cusp < 360.0
+
+    def test_equal_returns_12_cusps(self) -> None:
+        """Equal doit retourner 12 cuspides normalisées."""
+        mock_swe = _make_swe_mock()
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            result = calculate_houses(
+                JDUT_J2000, LAT_PARIS, LON_PARIS, house_system="equal"
+            )
+        assert len(result.cusps) == 12
+        for cusp in result.cusps:
+            assert 0.0 <= cusp < 360.0
+
+
+# ---------------------------------------------------------------------------
 # Test cadre topocentrique — altitude implicite 0 (AC3)
 # ---------------------------------------------------------------------------
 
@@ -349,32 +417,6 @@ class TestUnsupportedHouseSystem:
                 )
         assert "campanus" in exc_info.value.message
 
-    def test_equal_reserved_raises_error(self) -> None:
-        """'equal' est réservé (dans _HOUSE_SYSTEM_CODES) mais non supporté publiquement."""
-        assert "equal" in _HOUSE_SYSTEM_CODES, "equal doit être dans les codes"
-        assert "equal" not in _SUPPORTED_HOUSE_SYSTEMS, "equal ne doit pas être supporté"
-        mock_swe = _make_swe_mock()
-        with patch.dict("sys.modules", {"swisseph": mock_swe}):
-            with pytest.raises(UnsupportedHouseSystemError) as exc_info:
-                calculate_houses(
-                    JDUT_J2000, LAT_PARIS, LON_PARIS,
-                    house_system="equal",
-                )
-        assert exc_info.value.code == "unsupported_house_system"
-
-    def test_whole_sign_reserved_raises_error(self) -> None:
-        """'whole_sign' est réservé (dans _HOUSE_SYSTEM_CODES) mais non supporté publiquement."""
-        assert "whole_sign" in _HOUSE_SYSTEM_CODES, "whole_sign doit être dans les codes"
-        assert "whole_sign" not in _SUPPORTED_HOUSE_SYSTEMS, "whole_sign ne doit pas être supporté"
-        mock_swe = _make_swe_mock()
-        with patch.dict("sys.modules", {"swisseph": mock_swe}):
-            with pytest.raises(UnsupportedHouseSystemError) as exc_info:
-                calculate_houses(
-                    JDUT_J2000, LAT_PARIS, LON_PARIS,
-                    house_system="whole_sign",
-                )
-        assert exc_info.value.code == "unsupported_house_system"
-
     def test_unsupported_system_does_not_call_houses_ex(self) -> None:
         """houses_ex ne doit PAS être appelé si house_system est non supporté."""
         mock_swe = _make_swe_mock()
@@ -385,10 +427,6 @@ class TestUnsupportedHouseSystem:
                     house_system="regiomontanus",
                 )
         mock_swe.houses_ex.assert_not_called()
-
-    def test_only_placidus_is_supported(self) -> None:
-        """_SUPPORTED_HOUSE_SYSTEMS doit contenir uniquement 'placidus' en v1."""
-        assert _SUPPORTED_HOUSE_SYSTEMS == frozenset({"placidus"})
 
 
 # ---------------------------------------------------------------------------
@@ -445,7 +483,7 @@ class TestHousesCalcError:
 
 
 # ---------------------------------------------------------------------------
-# Tests métriques (3.7)
+# Tests métriques avec label {house_system} (story 23.2 — observabilité)
 # ---------------------------------------------------------------------------
 
 
@@ -463,9 +501,45 @@ class TestMetrics:
                 calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS)
         mock_observe.assert_called_once()
         metric_name, duration_ms = mock_observe.call_args[0]
-        assert metric_name == "swisseph_houses_latency_ms"
+        assert metric_name == "swisseph_houses_latency_ms|house_system=placidus"
         assert isinstance(duration_ms, float)
         assert duration_ms >= 0.0
+
+    def test_metric_includes_house_system_label_whole_sign(self) -> None:
+        """La métrique de durée doit inclure le label house_system=whole_sign."""
+        mock_swe = _make_swe_mock()
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            with patch(
+                "app.domain.astrology.houses_provider.observe_duration"
+            ) as mock_observe:
+                calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS, house_system="whole_sign")
+        metric_name, _ = mock_observe.call_args[0]
+        assert "house_system=whole_sign" in metric_name
+
+    def test_metric_includes_house_system_label_equal(self) -> None:
+        """La métrique de durée doit inclure le label house_system=equal."""
+        mock_swe = _make_swe_mock()
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            with patch(
+                "app.domain.astrology.houses_provider.observe_duration"
+            ) as mock_observe:
+                calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS, house_system="equal")
+        metric_name, _ = mock_observe.call_args[0]
+        assert "house_system=equal" in metric_name
+
+    def test_error_counter_includes_house_system_label(self) -> None:
+        """Le compteur d'erreurs doit inclure le label house_system."""
+        mock_swe = _make_swe_mock(
+            houses_ex_side_effect=RuntimeError("swe error")
+        )
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            with patch(
+                "app.domain.astrology.houses_provider.increment_counter"
+            ) as mock_counter:
+                with pytest.raises(HousesCalcError):
+                    calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS)
+        counter_name = mock_counter.call_args[0][0]
+        assert "house_system=placidus" in counter_name
 
     def test_metric_not_recorded_on_unsupported_system_error(self) -> None:
         """La métrique ne doit PAS être enregistrée si validation échoue avant calcul."""
@@ -480,6 +554,142 @@ class TestMetrics:
                         house_system="regiomontanus",
                     )
         mock_observe.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# Tests Golden — 1 cas par house system (story 23.2 — AC3)
+# ---------------------------------------------------------------------------
+
+
+# Cuspides mock distinctives pour Whole Sign (multiples de 30°)
+_WS_CUSPS_RAW = (
+    0.0,    # index 0 — non utilisé
+    0.0,    # maison 1 — 0° Bélier
+    30.0,   # maison 2 — 0° Taureau
+    60.0,   # maison 3 — 0° Gémeaux
+    90.0,   # maison 4 — 0° Cancer
+    120.0,  # maison 5 — 0° Lion
+    150.0,  # maison 6 — 0° Vierge
+    180.0,  # maison 7 — 0° Balance
+    210.0,  # maison 8 — 0° Scorpion
+    240.0,  # maison 9 — 0° Sagittaire
+    270.0,  # maison 10 — 0° Capricorne
+    300.0,  # maison 11 — 0° Verseau
+    330.0,  # maison 12 — 0° Poissons
+)
+_WS_ASCMC_RAW = (15.0, 285.0) + (0.0,) * 8
+
+# Cuspides mock pour Equal (intervalles de 30° depuis ASC 117.96°)
+_EQ_CUSPS_RAW = (
+    0.0,     # index 0 — non utilisé
+    117.96,  # maison 1 — ASC
+    147.96,  # maison 2 — ASC + 30°
+    177.96,  # maison 3 — ASC + 60°
+    207.96,  # maison 4 — ASC + 90°
+    237.96,  # maison 5 — ASC + 120°
+    267.96,  # maison 6 — ASC + 150°
+    297.96,  # maison 7 — ASC + 180°
+    327.96,  # maison 8 — ASC + 210°
+    357.96,  # maison 9 — ASC + 240°
+    27.96,   # maison 10 — ASC + 270° (wrap)
+    57.96,   # maison 11 — ASC + 300° (wrap)
+    87.96,   # maison 12 — ASC + 330° (wrap)
+)
+_EQ_ASCMC_RAW = (117.96, 27.96) + (0.0,) * 8
+
+
+class TestGoldenCuspsByHouseSystem:
+    """Tests golden avec valeurs mock fixes, vérifiables par système.
+
+    Ces tests vérifient que:
+    - Le bon code SwissEph est transmis à houses_ex
+    - Les cuspides retournées sont normalisées et cohérentes
+    - Le champ house_system correspond au système demandé
+
+    Cas golden fixe: JDUT J2000.0, Paris (48.8566N, 2.3522E).
+    Les valeurs mock représentent des cuspides distinctives par système.
+    """
+
+    def test_golden_placidus(self) -> None:
+        """Golden Placidus: code b'P', 12 cuspides normalisées, house_system='placidus'."""
+        mock_swe = _make_swe_mock(
+            cusps_raw=_MOCK_CUSPS_RAW,
+            ascmc_raw=_MOCK_ASCMC_RAW,
+        )
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            result = calculate_houses(
+                JDUT_J2000, LAT_PARIS, LON_PARIS, house_system="placidus"
+            )
+        assert result.house_system == "placidus"
+        assert len(result.cusps) == 12
+        for cusp in result.cusps:
+            assert 0.0 <= cusp < 360.0
+        args, _ = mock_swe.houses_ex.call_args
+        assert b"P" in args
+
+    def test_golden_whole_sign(self) -> None:
+        """Golden Whole Sign: code b'W', cuspides multiples de 30°, house_system='whole_sign'."""
+        mock_swe = _make_swe_mock(
+            cusps_raw=_WS_CUSPS_RAW,
+            ascmc_raw=_WS_ASCMC_RAW,
+        )
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            result = calculate_houses(
+                JDUT_J2000, LAT_PARIS, LON_PARIS, house_system="whole_sign"
+            )
+        assert result.house_system == "whole_sign"
+        assert len(result.cusps) == 12
+        for cusp in result.cusps:
+            assert 0.0 <= cusp < 360.0
+        args, _ = mock_swe.houses_ex.call_args
+        assert b"W" in args
+        # Vérifie que les cuspides correspondent aux valeurs mock (multiples de 30°)
+        assert result.cusps[0] == 0.0    # maison 1
+        assert result.cusps[1] == 30.0   # maison 2
+        assert result.cusps[6] == 180.0  # maison 7
+
+    def test_golden_equal(self) -> None:
+        """Golden Equal: code b'E', cuspides espacées de 30° depuis ASC, house_system='equal'."""
+        mock_swe = _make_swe_mock(
+            cusps_raw=_EQ_CUSPS_RAW,
+            ascmc_raw=_EQ_ASCMC_RAW,
+        )
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            result = calculate_houses(
+                JDUT_J2000, LAT_PARIS, LON_PARIS, house_system="equal"
+            )
+        assert result.house_system == "equal"
+        assert len(result.cusps) == 12
+        for cusp in result.cusps:
+            assert 0.0 <= cusp < 360.0
+        args, _ = mock_swe.houses_ex.call_args
+        assert b"E" in args
+        # Vérifie cohérence ASC = cuspide maison 1
+        assert abs(result.cusps[0] - result.ascendant_longitude) < 0.01
+
+    def test_golden_systems_produce_distinct_cusps(self) -> None:
+        """Les 3 systèmes produisent des cuspides distinctes (non identiques)."""
+        mock_swe_placidus = _make_swe_mock(
+            cusps_raw=_MOCK_CUSPS_RAW, ascmc_raw=_MOCK_ASCMC_RAW
+        )
+        mock_swe_ws = _make_swe_mock(
+            cusps_raw=_WS_CUSPS_RAW, ascmc_raw=_WS_ASCMC_RAW
+        )
+        mock_swe_eq = _make_swe_mock(
+            cusps_raw=_EQ_CUSPS_RAW, ascmc_raw=_EQ_ASCMC_RAW
+        )
+
+        with patch.dict("sys.modules", {"swisseph": mock_swe_placidus}):
+            result_p = calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS, house_system="placidus")
+        with patch.dict("sys.modules", {"swisseph": mock_swe_ws}):
+            result_ws = calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS, house_system="whole_sign")
+        with patch.dict("sys.modules", {"swisseph": mock_swe_eq}):
+            result_eq = calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS, house_system="equal")
+
+        # Les cuspides doivent être distinctes entre les 3 systèmes
+        assert result_p.cusps != result_ws.cusps
+        assert result_p.cusps != result_eq.cusps
+        assert result_ws.cusps != result_eq.cusps
 
 
 # ---------------------------------------------------------------------------
@@ -510,3 +720,81 @@ class TestHouseIntervalCompatibility:
             assert 0.0 <= cusp < 360.0, f"Cuspide maison {i + 1} = {cusp} invalide"
         assert 0.0 <= result.ascendant_longitude < 360.0
         assert 0.0 <= result.mc_longitude < 360.0
+
+    @pytest.mark.parametrize("house_system,expected_code", [
+        ("placidus", b"P"),
+        ("whole_sign", b"W"),
+        ("equal", b"E"),
+    ])
+    def test_all_systems_respect_interval_normalization(
+        self, house_system: str, expected_code: bytes
+    ) -> None:
+        """Chaque système doit retourner des cuspides normalisées [0, 360)."""
+        edge_cusps_raw = (
+            0.0, 359.5, 360.0, 0.5, -0.5, 90.0, 120.0,
+            150.0, 180.0, 210.0, 240.0, 300.0, 330.0,
+        )
+        edge_ascmc_raw = (359.5, 0.0) + (0.0,) * 8
+        mock_swe = _make_swe_mock(cusps_raw=edge_cusps_raw, ascmc_raw=edge_ascmc_raw)
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            result = calculate_houses(
+                JDUT_J2000, LAT_PARIS, LON_PARIS, house_system=house_system
+            )
+        for i, cusp in enumerate(result.cusps):
+            assert 0.0 <= cusp < 360.0, (
+                f"[{house_system}] Cuspide maison {i + 1} = {cusp} invalide"
+            )
+        args, _ = mock_swe.houses_ex.call_args
+        assert expected_code in args
+
+
+# ---------------------------------------------------------------------------
+# Test Assignation Maison [start, end) — Story 23.2 (AC2)
+# ---------------------------------------------------------------------------
+
+
+class TestHouseAssignmentIntervals:
+    """Vérifie la règle d'assignation [start, end) avec wrap 360."""
+
+    @pytest.mark.parametrize(
+        "longitude, expected_house",
+        [
+            (10.0, 1),   # Sur la cuspide 1 -> Maison 1
+            (25.0, 1),   # Milieu maison 1
+            (39.9, 1),   # Limite haute maison 1
+            (40.0, 2),   # Sur cuspide 2 -> Maison 2
+            (160.0, 6),  # Sur cuspide 6
+            (190.0, 7),  # Sur cuspide 7
+            (310.0, 11), # Sur cuspide 11
+            (350.0, 12), # Milieu maison 12
+        ],
+    )
+    def test_standard_assignment(self, longitude: float, expected_house: int) -> None:
+        """Cas standard sans wrap."""
+        # Cuspides : 10, 40, 70, ..., 340 (voir _MOCK_CUSPS_RAW)
+        houses = [
+            {"number": i + 1, "cusp_longitude": 10.0 + i * 30.0} for i in range(12)
+        ]
+        assert assign_house_number(longitude, houses) == expected_house
+
+    def test_wrap_assignment(self) -> None:
+        """Cas avec intervalle qui traverse 360/0."""
+        # Maison 12 de 340 à 10
+        houses = [
+            {"number": i + 1, "cusp_longitude": (10.0 + i * 30.0) % 360.0}
+            for i in range(12)
+        ]
+        # 350 est bien entre 340 et 10
+        assert assign_house_number(350.0, houses) == 12
+        # 5 est bien entre 340 et 10
+        assert assign_house_number(5.0, houses) == 12
+        # 10 est sur cuspide 1 -> Maison 1
+        assert assign_house_number(10.0, houses) == 1
+
+    def test_exact_boundary_belongs_to_next_house(self) -> None:
+        """Une longitude exactement sur la cuspide appartient à la maison qui commence."""
+        houses = [
+            {"number": i + 1, "cusp_longitude": i * 30.0} for i in range(12)
+        ]
+        # 30.0 est la fin de M1 et le début de M2 -> doit être M2
+        assert assign_house_number(30.0, houses) == 2
