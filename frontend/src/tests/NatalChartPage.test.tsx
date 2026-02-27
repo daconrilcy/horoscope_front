@@ -3,6 +3,8 @@ import { MemoryRouter } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { NatalChartPage } from "../pages/NatalChartPage"
+import { NatalChartGuide } from "../components/NatalChartGuide"
+import { getGuideTranslations, natalChartTranslations } from "../i18n/natalChart"
 /**
  * ApiError est importé pour créer des instances dans les tests (new ApiError(...)).
  * vi.mock remplace la classe réelle par notre mock défini ci-dessous.
@@ -1207,5 +1209,127 @@ describe("NatalChartPage", () => {
     const lists = screen.getAllByRole("list")
     const planetsAndHousesLists = lists.filter((ul) => ul.querySelectorAll("li").length === 0)
     expect(planetsAndHousesLists.length).toBe(2)
+  })
+
+  describe("Story 20-15: i18n guide natal fr/en/es et fallback", () => {
+    function openGuide(container: HTMLElement) {
+      const details = container.querySelector("details.natal-chart-guide")
+      details!.setAttribute("open", "")
+    }
+
+    it("affiche le guide en anglais — sections et FAQ (AC 2 - 20-15)", () => {
+      const { container } = render(
+        <NatalChartGuide lang="en" missingBirthTime={false} />
+      )
+      openGuide(container)
+
+      expect(screen.getByText("How to read your natal chart")).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Zodiac signs", level: 3 })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Planets", level: 3 })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Houses", level: 3 })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Angles", level: 3 })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Sun sign and ascendant", level: 3 })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Aspects", level: 3 })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "FAQ", level: 3 })).toBeInTheDocument()
+
+      // FAQ en anglais — 8 questions présentes
+      expect(screen.getByText(/Why do we talk about 360°/i)).toBeInTheDocument()
+      expect(screen.getByText(/Why are there two divisions/i)).toBeInTheDocument()
+      expect(screen.getByText(/What is a raw longitude/i)).toBeInTheDocument()
+      expect(screen.getByText(/What is a cusp/i)).toBeInTheDocument()
+      expect(screen.getByText(/Why do some houses look unusual or cross 0°/i)).toBeInTheDocument()
+      expect(screen.getByText(/What is the orb used for in aspects/i)).toBeInTheDocument()
+      expect(screen.getByText(/What does the ℞ symbol mean/i)).toBeInTheDocument()
+      expect(screen.getByText(/Why are the sun sign and ascendant highlighted/i)).toBeInTheDocument()
+    })
+
+    it("affiche le guide en espagnol — sections et FAQ (AC 3 - 20-15)", () => {
+      const { container } = render(
+        <NatalChartGuide lang="es" missingBirthTime={false} />
+      )
+      openGuide(container)
+
+      expect(screen.getByText("Cómo leer tu carta natal")).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Los signos zodiacales", level: 3 })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Los planetas", level: 3 })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Las casas", level: 3 })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Los ángulos", level: 3 })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Signo solar y ascendente", level: 3 })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Los aspectos", level: 3 })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "FAQ", level: 3 })).toBeInTheDocument()
+
+      // FAQ en espagnol — 8 questions présentes
+      expect(screen.getByText(/¿Por qué se habla de 360°/i)).toBeInTheDocument()
+      expect(screen.getByText(/¿Por qué hay dos divisiones/i)).toBeInTheDocument()
+      expect(screen.getByText(/¿Qué es una longitud bruta/i)).toBeInTheDocument()
+      expect(screen.getByText(/¿Qué es una cúspide/i)).toBeInTheDocument()
+      expect(screen.getByText(/¿Por qué algunas casas parecen extrañas/i)).toBeInTheDocument()
+      expect(screen.getByText(/¿Para qué sirve el orbe en los aspectos/i)).toBeInTheDocument()
+      expect(screen.getByText(/¿Qué significa el símbolo ℞/i)).toBeInTheDocument()
+      expect(screen.getByText(/¿Por qué se destacan el signo solar y el ascendente/i)).toBeInTheDocument()
+    })
+
+    it("affiche le guide en français — sections et FAQ (non-régression AC 1 - 20-15)", () => {
+      const { container } = render(
+        <NatalChartGuide lang="fr" missingBirthTime={false} />
+      )
+      openGuide(container)
+
+      expect(screen.getByText("Comment lire ton thème natal")).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: /Les signes astrologiques/i, level: 3 })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: /FAQ/i, level: 3 })).toBeInTheDocument()
+      expect(screen.getByText(/Pourquoi parle-t-on de 360°/i)).toBeInTheDocument()
+    })
+
+    it("fallback vers FR sans crash quand la langue n'est pas dans le dictionnaire (AC 4 - 20-15)", () => {
+      // Simule un runtime avec une langue non supportée — getGuideTranslations doit retourner FR
+      // @ts-expect-error - intentionnellement invalide pour tester le fallback runtime
+      const result = getGuideTranslations("pt")
+      expect(result.title).toBe(natalChartTranslations.fr.guide.title)
+      expect(result.signsTitle).toBe(natalChartTranslations.fr.guide.signsTitle)
+      expect(result.faq).toHaveLength(natalChartTranslations.fr.guide.faq.length)
+      // Aucun crash — le composant doit rendre sans erreur avec le guide FR
+      const { container } = render(
+        <NatalChartGuide lang={"pt" as any} missingBirthTime={false} />
+      )
+      openGuide(container)
+      expect(screen.getByText("Comment lire ton thème natal")).toBeInTheDocument()
+    })
+
+    it("affiche le message ascendant manquant dans la bonne langue (AC 2/3 - 20-15)", () => {
+      const { container: containerEn } = render(
+        <NatalChartGuide lang="en" missingBirthTime={true} />
+      )
+      openGuide(containerEn)
+      expect(screen.getByText(/Birth time is not provided.*the ascendant is not calculated/i)).toBeInTheDocument()
+      cleanup()
+
+      const { container: containerEs } = render(
+        <NatalChartGuide lang="es" missingBirthTime={true} />
+      )
+      openGuide(containerEs)
+      expect(screen.getByText(/La hora de nacimiento no está registrada.*el ascendente no se calcula/i)).toBeInTheDocument()
+    })
+
+    it("intégration : NatalChartPage transmet la langue du navigateur au guide (AC 1/2 - 20-15)", () => {
+      // Mock navigator.language = 'en-US'
+      vi.stubGlobal("navigator", { language: "en-US" })
+
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { ...CHART_BASE },
+      })
+
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+
+      // Le titre du guide doit être en anglais
+      expect(screen.getByText("How to read your natal chart")).toBeInTheDocument()
+      expect(screen.queryByText("Comment lire ton thème natal")).not.toBeInTheDocument()
+    })
   })
 })

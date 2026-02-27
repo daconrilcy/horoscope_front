@@ -1,5 +1,5 @@
 import type { AstrologyLang } from "../i18n/astrology"
-import { natalChartTranslations } from "../i18n/natalChart"
+import { getGuideTranslations } from "../i18n/natalChart"
 
 interface NatalChartGuideProps {
   lang: AstrologyLang
@@ -7,7 +7,7 @@ interface NatalChartGuideProps {
 }
 
 export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps) {
-  const g = natalChartTranslations[lang].guide
+  const g = getGuideTranslations(lang)
 
   return (
     <details className="card natal-chart-guide">
@@ -67,8 +67,8 @@ export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps
         <section className="natal-chart-guide__section natal-chart-guide__faq">
           <h3>{g.faqTitle}</h3>
           <dl>
-            {g.faq.map((item) => (
-              <div key={item.question} className="natal-chart-guide__faq-item">
+            {g.faq.map((item, idx) => (
+              <div key={`${idx}-${item.question}`} className="natal-chart-guide__faq-item">
                 <dt>{item.question}</dt>
                 <dd>{item.answer}</dd>
               </div>

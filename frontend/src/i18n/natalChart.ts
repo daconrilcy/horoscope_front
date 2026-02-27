@@ -1,11 +1,13 @@
 import type { AstrologyLang } from "./astrology"
 
-type NatalChartFaqItem = {
+export type NatalChartFaqItem = {
   question: string
   answer: string
 }
 
-type NatalChartGuideTranslations = {
+export const DEFAULT_ASTRO_LANG: AstrologyLang = "fr"
+
+export type NatalChartGuideTranslations = {
   title: string
   intro: string
   signsTitle: string
@@ -420,4 +422,13 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       ],
     },
   },
+}
+
+/**
+ * Retourne les traductions du guide natal pour la langue donnée.
+ * Si la langue n'est pas dans le dictionnaire (runtime), fallback sur la langue par défaut.
+ * Cela garantit qu'aucune section du guide ne peut être vide ou provoquer un crash.
+ */
+export function getGuideTranslations(lang: AstrologyLang): NatalChartGuideTranslations {
+  return natalChartTranslations[lang]?.guide ?? natalChartTranslations[DEFAULT_ASTRO_LANG].guide
 }
