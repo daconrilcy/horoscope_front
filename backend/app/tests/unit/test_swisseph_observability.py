@@ -353,6 +353,10 @@ def _run_failing_natal_calc(
         mock_settings.natal_engine_simplified_enabled = False
         mock_settings.natal_engine_compare_enabled = False
         mock_settings.app_env = "development"
+        mock_settings.natal_ruleset_default_zodiac = "tropical"
+        mock_settings.natal_ruleset_default_ayanamsa = None
+        mock_settings.natal_ruleset_default_frame = "geocentric"
+        mock_settings.natal_ruleset_default_house_system = "placidus"
 
         with pytest.raises(Exception):
             NatalCalculationService.calculate(

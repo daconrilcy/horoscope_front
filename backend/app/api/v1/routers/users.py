@@ -85,9 +85,10 @@ class UserBirthProfileWithAstroApiResponse(BaseModel):
 class NatalChartGenerateRequest(BaseModel):
     reference_version: str | None = None
     accurate: bool = False
-    zodiac: str = "tropical"
+    zodiac: str | None = None
     ayanamsa: str | None = None
-    frame: str = "geocentric"
+    frame: str | None = None
+    house_system: str | None = None
     altitude_m: float | None = None
 
 
@@ -592,6 +593,7 @@ def generate_me_natal_chart(
             zodiac=parsed_payload.zodiac,
             ayanamsa=parsed_payload.ayanamsa,
             frame=parsed_payload.frame,
+            house_system=parsed_payload.house_system,
             altitude_m=parsed_payload.altitude_m,
         )
         db.commit()

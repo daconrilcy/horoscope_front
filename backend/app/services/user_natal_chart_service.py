@@ -153,9 +153,10 @@ class UserNatalChartService:
         user_id: int,
         reference_version: str | None = None,
         accurate: bool = False,
-        zodiac: str = "tropical",
+        zodiac: str | None = None,
         ayanamsa: str | None = None,
-        frame: str = "geocentric",
+        frame: str | None = None,
+        house_system: str | None = None,
         altitude_m: float | None = None,
     ) -> UserNatalChartGenerationData:
         """
@@ -169,6 +170,7 @@ class UserNatalChartService:
             zodiac: Zodiaque à utiliser ("tropical" ou "sidereal").
             ayanamsa: Ayanamsa pour le zodiaque sidéral.
             frame: Référentiel ("geocentric" ou "topocentric").
+            house_system: Système de maisons ("placidus", "whole_sign", "equal").
             altitude_m: Altitude pour le cadre topocentrique.
 
         Returns:
@@ -185,6 +187,13 @@ class UserNatalChartService:
                 message=error.message,
                 details=error.details,
             ) from error
+
+        if profile.birth_time is None:
+            raise UserNatalChartServiceError(
+                code="missing_birth_time",
+                message="birth_time is required to generate natal chart",
+                details={"user_id": str(user_id)},
+            )
 
         coords = UserBirthProfileService.resolve_coordinates(db, profile)
         birth_lat = coords.birth_lat
@@ -224,12 +233,6 @@ class UserNatalChartService:
             birth_lat=birth_lat,
             birth_lon=birth_lon,
         )
-        if birth_input.birth_time is None:
-            raise UserNatalChartServiceError(
-                code="missing_birth_time",
-                message="birth_time is required to generate natal chart",
-                details={"user_id": str(user_id)},
-            )
         started_at = perf_counter()
         timeout_deadline = started_at + settings.natal_generation_timeout_seconds
 
@@ -247,6 +250,7 @@ class UserNatalChartService:
                 zodiac=zodiac,
                 ayanamsa=ayanamsa,
                 frame=frame,
+                house_system=house_system,
                 altitude_m=altitude_m,
             )
         except NatalCalculationError as error:
@@ -265,6 +269,7 @@ class UserNatalChartService:
                     zodiac=zodiac,
                     ayanamsa=ayanamsa,
                     frame=frame,
+                    house_system=house_system,
                     altitude_m=altitude_m,
                 )
             else:

@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import delete
 
+from app.core.config import FrameType, HouseSystemType, ZodiacType
 from app.domain.astrology.calculators.houses import assign_house_number
 from app.domain.astrology.natal_calculation import NatalCalculationError
 from app.domain.astrology.natal_preparation import BirthInput
@@ -15,6 +16,7 @@ from app.infra.db.models.reference import (
     SignModel,
 )
 from app.infra.db.session import SessionLocal, engine
+from app.infra.observability.metrics import get_counter_sum_in_window
 from app.services.natal_calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
 
@@ -62,8 +64,12 @@ def test_calculate_natal_is_deterministic() -> None:
     )
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
-        first = NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
-        second = NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
+        first = NatalCalculationService.calculate(
+            db, payload, reference_version="1.0.0", house_system="equal"
+        )
+        second = NatalCalculationService.calculate(
+            db, payload, reference_version="1.0.0", house_system="equal"
+        )
 
     assert first == second
     assert first.reference_version == "1.0.0"
@@ -81,7 +87,9 @@ def test_calculate_natal_returns_major_aspects_with_extended_reference_planets()
     )
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
-        result = NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
+        result = NatalCalculationService.calculate(
+            db, payload, reference_version="1.0.0", house_system="equal"
+        )
 
     assert len(result.planet_positions) >= 10
     assert len(result.aspects) > 0
@@ -133,7 +141,9 @@ def test_calculate_natal_keeps_sign_and_house_consistent_with_geometry() -> None
     )
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
-        result = NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
+        result = NatalCalculationService.calculate(
+            db, payload, reference_version="1.0.0", house_system="equal"
+        )
 
     houses_by_number = {house.number: house.cusp_longitude for house in result.houses}
     ordered_houses = [houses_by_number[number] for number in sorted(houses_by_number)]
@@ -182,7 +192,9 @@ def test_calculate_natal_hard_fails_on_sign_longitude_inconsistency(
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         with pytest.raises(NatalCalculationError) as error:
-            NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
+            NatalCalculationService.calculate(
+                db, payload, reference_version="1.0.0", house_system="equal"
+            )
 
     assert error.value.code == "inconsistent_natal_result"
 
@@ -252,7 +264,9 @@ def test_calculate_natal_fails_when_houses_have_duplicate_cusps(
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         with pytest.raises(NatalCalculationError) as error:
-            NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
+            NatalCalculationService.calculate(
+                db, payload, reference_version="1.0.0", house_system="equal"
+            )
 
     assert error.value.code == "invalid_reference_data"
     assert error.value.details["field"] == "houses"
@@ -280,6 +294,7 @@ def test_calculate_natal_calls_timeout_check_around_reference_loading() -> None:
             payload,
             reference_version="1.0.0",
             timeout_check=_timeout_check,
+            house_system="equal",
         )
 
     assert len(checkpoints) >= 2
@@ -312,8 +327,12 @@ def test_calculate_natal_uses_reference_cache_for_same_version(
 
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
-        NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
-        NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
+        NatalCalculationService.calculate(
+            db, payload, reference_version="1.0.0", house_system="equal"
+        )
+        NatalCalculationService.calculate(
+            db, payload, reference_version="1.0.0", house_system="equal"
+        )
 
     assert calls["count"] == 1
 
@@ -331,9 +350,127 @@ def test_calculate_natal_fails_with_incomplete_reference_data() -> None:
         db.execute(delete(HouseModel))
         db.commit()
         try:
-            NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
+            NatalCalculationService.calculate(
+                db, payload, reference_version="1.0.0", house_system="equal"
+            )
         except NatalCalculationError as error:
             assert error.code == "invalid_reference_data"
             assert error.details["field"] == "houses"
         else:
             raise AssertionError("Expected NatalCalculationError")
+
+
+def test_resolve_calculation_options_applies_ruleset_defaults(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "app.services.natal_calculation_service.settings.natal_ruleset_default_zodiac",
+        ZodiacType.TROPICAL,
+    )
+    monkeypatch.setattr(
+        "app.services.natal_calculation_service.settings.natal_ruleset_default_frame",
+        FrameType.GEOCENTRIC,
+    )
+    monkeypatch.setattr(
+        "app.services.natal_calculation_service.settings.natal_ruleset_default_house_system",
+        HouseSystemType.PLACIDUS,
+    )
+
+    zodiac, ayanamsa, frame, house_system, altitude = (
+        NatalCalculationService._resolve_calculation_options(
+            zodiac=None,
+            ayanamsa=None,
+            frame=None,
+            house_system=None,
+            altitude_m=None,
+        )
+    )
+
+    assert zodiac == ZodiacType.TROPICAL
+    assert ayanamsa is None
+    assert frame == FrameType.GEOCENTRIC
+    assert house_system == HouseSystemType.PLACIDUS
+    assert altitude is None
+
+
+def test_resolve_calculation_options_sidereal_without_ayanamsa_is_deferred() -> None:
+    zodiac, ayanamsa, frame, house_system, altitude = (
+        NatalCalculationService._resolve_calculation_options(
+            zodiac="sidereal",
+            ayanamsa=None,
+            frame="geocentric",
+            house_system="placidus",
+            altitude_m=None,
+        )
+    )
+    assert zodiac == ZodiacType.SIDEREAL
+    assert ayanamsa is None
+    assert frame == FrameType.GEOCENTRIC
+    assert house_system == HouseSystemType.PLACIDUS
+    assert altitude is None
+
+
+def test_calculate_natal_sidereal_requested_without_ayanamsa_fails_ac2() -> None:
+    _cleanup_reference_tables()
+    payload = BirthInput(
+        birth_date="1990-06-15",
+        birth_time="10:30",
+        birth_place="Paris",
+        birth_timezone="Europe/Paris",
+    )
+    with SessionLocal() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        with pytest.raises(NatalCalculationError) as exc:
+            NatalCalculationService.calculate(
+                db, payload, zodiac="sidereal", ayanamsa=None, accurate=True
+            )
+        assert exc.value.code == "missing_ayanamsa"
+
+        from datetime import timedelta
+        count = get_counter_sum_in_window(
+            "natal_ruleset_invalid_total|code=missing_ayanamsa", timedelta(minutes=1)
+        )
+        assert count == 1.0
+
+
+def test_calculate_natal_invalid_zodiac_increments_metric() -> None:
+    _cleanup_reference_tables()
+    payload = BirthInput(
+        birth_date="1990-06-15",
+        birth_time="10:30",
+        birth_place="Paris",
+        birth_timezone="Europe/Paris",
+    )
+    with SessionLocal() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        with pytest.raises(NatalCalculationError) as exc:
+            NatalCalculationService.calculate(db, payload, zodiac="invalid")
+        assert exc.value.code == "invalid_zodiac"
+
+        from datetime import timedelta
+        count = get_counter_sum_in_window(
+            "natal_ruleset_invalid_total|code=invalid_zodiac", timedelta(minutes=1)
+        )
+        assert count == 1.0
+
+
+def test_calculate_natal_simplified_engine_rejects_non_equal_house_system(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _cleanup_reference_tables()
+    monkeypatch.setattr("app.services.natal_calculation_service.settings.natal_engine_default", "simplified")
+    payload = BirthInput(
+        birth_date="1990-06-15",
+        birth_time="10:30",
+        birth_place="Paris",
+        birth_timezone="Europe/Paris",
+    )
+    with SessionLocal() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        # accurate=False -> tries simplified by default (if not overridden)
+        # but if we ask for Placidus, it should require accurate=True
+        with pytest.raises(NatalCalculationError) as exc:
+            NatalCalculationService.calculate(
+                db, payload, house_system="placidus", accurate=False
+            )
+        assert exc.value.code == "accurate_mode_required"

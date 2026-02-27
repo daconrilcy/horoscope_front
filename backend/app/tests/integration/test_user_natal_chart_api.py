@@ -10,7 +10,7 @@ from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.base import Base
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def _mock_swisseph(monkeypatch: object) -> None:
     from app.core import ephemeris
     monkeypatch.setattr("app.services.natal_calculation_service.settings.swisseph_enabled", True)
@@ -122,8 +122,12 @@ def _build_valid_natal_result_payload(db: Session) -> dict[str, object]:
         birth_time="10:30",
         birth_place="Paris",
         birth_timezone="Europe/Paris",
+        birth_lat=48.8566,
+        birth_lon=2.3522,
     )
-    result = NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
+    result = NatalCalculationService.calculate(
+        db, payload, reference_version="1.0.0", accurate=True
+    )
     return result.model_dump(mode="json")
 
 
@@ -169,6 +173,7 @@ def test_get_latest_natal_chart_requires_token() -> None:
 def test_generate_natal_chart_success() -> None:
     _cleanup_tables()
     _seed_reference_data()
+    place_id = _seed_resolved_place()
     access_token = _register_and_get_access_token()
     put_birth = client.put(
         "/v1/users/me/birth-data",
@@ -178,6 +183,7 @@ def test_generate_natal_chart_success() -> None:
             "birth_time": "10:30",
             "birth_place": "Paris",
             "birth_timezone": "Europe/Paris",
+            "place_resolved_id": place_id,
         },
     )
     assert put_birth.status_code == 200
@@ -185,7 +191,7 @@ def test_generate_natal_chart_success() -> None:
     response = client.post(
         "/v1/users/me/natal-chart",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"reference_version": "1.0.0"},
+        json={"reference_version": "1.0.0", "accurate": True},
     )
 
     assert response.status_code == 200
@@ -193,12 +199,13 @@ def test_generate_natal_chart_success() -> None:
     assert data["chart_id"]
     assert data["metadata"]["reference_version"] == "1.0.0"
     assert data["metadata"]["ruleset_version"] == data["result"]["ruleset_version"]
-    assert data["metadata"]["house_system"] == "equal"
+    assert data["metadata"]["house_system"] == "placidus"
 
 
 def test_get_latest_natal_chart_success() -> None:
     _cleanup_tables()
     _seed_reference_data()
+    place_id = _seed_resolved_place()
     access_token = _register_and_get_access_token()
     client.put(
         "/v1/users/me/birth-data",
@@ -208,12 +215,13 @@ def test_get_latest_natal_chart_success() -> None:
             "birth_time": "10:30",
             "birth_place": "Paris",
             "birth_timezone": "Europe/Paris",
+            "place_resolved_id": place_id,
         },
     )
     generated = client.post(
         "/v1/users/me/natal-chart",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"reference_version": "1.0.0"},
+        json={"reference_version": "1.0.0", "accurate": True},
     )
     chart_id = generated.json()["data"]["chart_id"]
 
@@ -225,7 +233,7 @@ def test_get_latest_natal_chart_success() -> None:
     payload = latest.json()["data"]
     assert payload["chart_id"] == chart_id
     assert payload["metadata"]["reference_version"] == "1.0.0"
-    assert payload["metadata"]["house_system"] == "equal"
+    assert payload["metadata"]["house_system"] == "placidus"
     assert "created_at" in payload
 
 
@@ -236,7 +244,7 @@ def test_generate_natal_chart_fails_when_profile_missing() -> None:
     response = client.post(
         "/v1/users/me/natal-chart",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"reference_version": "1.0.0"},
+        json={"reference_version": "1.0.0", "accurate": True},
     )
 
     assert response.status_code == 404
@@ -262,7 +270,7 @@ def test_generate_natal_chart_returns_422_when_birth_time_is_missing() -> None:
     response = client.post(
         "/v1/users/me/natal-chart",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"reference_version": "1.0.0"},
+        json={"reference_version": "1.0.0", "accurate": True},
     )
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "missing_birth_time"
@@ -485,7 +493,9 @@ def test_generate_natal_chart_invalid_payload_uses_standard_error_envelope() -> 
     assert payload["error"]["code"] == "invalid_natal_chart_request"
 
 
-def test_generate_natal_chart_sidereal_without_ayanamsa_exposes_lahiri(_mock_swisseph: None) -> None:
+def test_generate_natal_chart_sidereal_without_ayanamsa_returns_422_missing_ayanamsa(
+    _mock_swisseph: None,
+) -> None:
     _cleanup_tables()
     _seed_reference_data()
     place_id = _seed_resolved_place()
@@ -509,14 +519,8 @@ def test_generate_natal_chart_sidereal_without_ayanamsa_exposes_lahiri(_mock_swi
         json={"reference_version": "1.0.0", "zodiac": "sidereal", "accurate": True},
     )
 
-    assert response.status_code == 200
-    payload = response.json()["data"]
-    assert payload["result"]["zodiac"] == "sidereal"
-    assert payload["result"]["ayanamsa"] == "lahiri"
-    assert payload["metadata"]["zodiac"] == "sidereal"
-    assert payload["metadata"]["ayanamsa"] == "lahiri"
-    assert payload["metadata"]["zodiac"] == payload["result"]["zodiac"]
-    assert payload["metadata"]["ayanamsa"] == payload["result"]["ayanamsa"]
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "missing_ayanamsa"
 
 
 def test_generate_natal_chart_topocentric_without_altitude_exposes_zero_altitude(_mock_swisseph: None) -> None:
@@ -651,7 +655,7 @@ def test_generate_natal_chart_sidereal_requires_accurate_mode() -> None:
     response = client.post(
         "/v1/users/me/natal-chart",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"zodiac": "sidereal", "accurate": False},
+        json={"zodiac": "sidereal", "ayanamsa": "lahiri", "accurate": False},
     )
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "accurate_mode_required"
@@ -711,13 +715,17 @@ def test_generate_natal_chart_sidereal_with_simplified_override_fails(monkeypatc
         )
         try:
             NatalCalculationService.calculate(
-                db, birth_input, zodiac="sidereal", engine_override="simplified", internal_request=True
+                db,
+                birth_input,
+                zodiac="sidereal",
+                ayanamsa="lahiri",
+                engine_override="simplified",
+                internal_request=True,
             )
             pytest.fail("Should have raised NatalCalculationError")
         except Exception as e:
             assert getattr(e, "code", "") == "natal_engine_option_unsupported"
-
-
+    
 def test_get_natal_chart_consistency_requires_token() -> None:
     _cleanup_tables()
     response = client.get("/v1/users/1/natal-chart/consistency")
@@ -928,6 +936,7 @@ def test_get_latest_natal_chart_returns_astro_profile_block() -> None:
     """AC5: GET /natal-chart/latest inclut un bloc astro_profile."""
     _cleanup_tables()
     _seed_reference_data()
+    place_id = _seed_resolved_place()
     access_token = _register_and_get_access_token()
     client.put(
         "/v1/users/me/birth-data",
@@ -937,14 +946,14 @@ def test_get_latest_natal_chart_returns_astro_profile_block() -> None:
             "birth_time": "10:30",
             "birth_place": "Paris",
             "birth_timezone": "Europe/Paris",
+            "place_resolved_id": place_id,
         },
     )
     client.post(
         "/v1/users/me/natal-chart",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"reference_version": "1.0.0"},
+        json={"reference_version": "1.0.0", "accurate": True},
     )
-
     latest = client.get(
         "/v1/users/me/natal-chart/latest",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -957,6 +966,7 @@ def test_get_latest_natal_chart_returns_astro_profile_block() -> None:
 def test_get_latest_natal_chart_astro_profile_matches_result_geometry() -> None:
     _cleanup_tables()
     _seed_reference_data()
+    place_id = _seed_resolved_place()
     access_token = _register_and_get_access_token()
     client.put(
         "/v1/users/me/birth-data",
@@ -966,14 +976,14 @@ def test_get_latest_natal_chart_astro_profile_matches_result_geometry() -> None:
             "birth_time": "11:00",
             "birth_place": "Paris",
             "birth_timezone": "Europe/Paris",
+            "place_resolved_id": place_id,
         },
     )
     client.post(
         "/v1/users/me/natal-chart",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"reference_version": "1.0.0"},
+        json={"reference_version": "1.0.0", "accurate": True},
     )
-
     latest = client.get(
         "/v1/users/me/natal-chart/latest",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -996,6 +1006,7 @@ def test_get_latest_natal_chart_returns_200_when_astro_profile_service_error(
 ) -> None:
     _cleanup_tables()
     _seed_reference_data()
+    place_id = _seed_resolved_place()
     access_token = _register_and_get_access_token()
     client.put(
         "/v1/users/me/birth-data",
@@ -1005,14 +1016,14 @@ def test_get_latest_natal_chart_returns_200_when_astro_profile_service_error(
             "birth_time": "10:30",
             "birth_place": "Paris",
             "birth_timezone": "Europe/Paris",
+            "place_resolved_id": place_id,
         },
     )
     client.post(
         "/v1/users/me/natal-chart",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"reference_version": "1.0.0"},
+        json={"reference_version": "1.0.0", "accurate": True},
     )
-
     def _raise_service_error(*args: object, **kwargs: object) -> object:
         raise UserAstroProfileServiceError(
             code="reference_version_not_found",
@@ -1038,6 +1049,7 @@ def test_get_latest_natal_chart_returns_500_on_unexpected_astro_profile_error(
 ) -> None:
     _cleanup_tables()
     _seed_reference_data()
+    place_id = _seed_resolved_place()
     access_token = _register_and_get_access_token()
     client.put(
         "/v1/users/me/birth-data",
@@ -1047,14 +1059,14 @@ def test_get_latest_natal_chart_returns_500_on_unexpected_astro_profile_error(
             "birth_time": "10:30",
             "birth_place": "Paris",
             "birth_timezone": "Europe/Paris",
+            "place_resolved_id": place_id,
         },
     )
     client.post(
         "/v1/users/me/natal-chart",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"reference_version": "1.0.0"},
+        json={"reference_version": "1.0.0", "accurate": True},
     )
-
     def _raise_runtime_error(*args: object, **kwargs: object) -> object:
         raise RuntimeError("boom")
 

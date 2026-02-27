@@ -2,7 +2,24 @@ from __future__ import annotations
 
 import os
 import secrets
+from enum import Enum
 from hashlib import sha256
+
+
+class ZodiacType(str, Enum):
+    TROPICAL = "tropical"
+    SIDEREAL = "sidereal"
+
+
+class FrameType(str, Enum):
+    GEOCENTRIC = "geocentric"
+    TOPOCENTRIC = "topocentric"
+
+
+class HouseSystemType(str, Enum):
+    PLACIDUS = "placidus"
+    WHOLE_SIGN = "whole_sign"
+    EQUAL = "equal"
 
 
 class Settings:
@@ -56,6 +73,30 @@ class Settings:
         self.database_url = os.getenv("DATABASE_URL", "sqlite:///./horoscope.db")
         self.active_reference_version = os.getenv("ACTIVE_REFERENCE_VERSION", "1.0.0")
         self.ruleset_version = os.getenv("RULESET_VERSION", "1.0.0")
+
+        default_zodiac = os.getenv("NATAL_RULESET_DEFAULT_ZODIAC", ZodiacType.TROPICAL).strip().lower()
+        try:
+            self.natal_ruleset_default_zodiac = ZodiacType(default_zodiac)
+        except ValueError:
+            self.natal_ruleset_default_zodiac = ZodiacType.TROPICAL
+
+        default_ayanamsa_raw = os.getenv("NATAL_RULESET_DEFAULT_AYANAMSA", "").strip().lower()
+        self.natal_ruleset_default_ayanamsa = default_ayanamsa_raw or None
+
+        default_frame = os.getenv("NATAL_RULESET_DEFAULT_FRAME", FrameType.GEOCENTRIC).strip().lower()
+        try:
+            self.natal_ruleset_default_frame = FrameType(default_frame)
+        except ValueError:
+            self.natal_ruleset_default_frame = FrameType.GEOCENTRIC
+
+        default_house_system = (
+            os.getenv("NATAL_RULESET_DEFAULT_HOUSE_SYSTEM", HouseSystemType.PLACIDUS).strip().lower()
+        )
+        try:
+            self.natal_ruleset_default_house_system = HouseSystemType(default_house_system)
+        except ValueError:
+            self.natal_ruleset_default_house_system = HouseSystemType.PLACIDUS
+
         self.jwt_secret_key = os.getenv("JWT_SECRET_KEY", "").strip()
         if self.app_env == "production" and not self.jwt_secret_key:
             raise RuntimeError("JWT_SECRET_KEY must be set in production")

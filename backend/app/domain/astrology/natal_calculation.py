@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from enum import Enum
 from math import isfinite
 
 from pydantic import BaseModel
 
+from app.core.config import FrameType, HouseSystemType, ZodiacType
 from app.core.constants import DEFAULT_FALLBACK_ORB
 from app.domain.astrology.angle_utils import contains_angle
 from app.domain.astrology.calculators import (
@@ -42,10 +44,10 @@ class AspectResult(BaseModel):
 class NatalResult(BaseModel):
     reference_version: str
     ruleset_version: str
-    house_system: str
+    house_system: HouseSystemType
     engine: str = "simplified"
-    zodiac: str = "tropical"
-    frame: str = "geocentric"
+    zodiac: ZodiacType = ZodiacType.TROPICAL
+    frame: FrameType = FrameType.GEOCENTRIC
     ayanamsa: str | None = None
     altitude_m: float | None = None
     ephemeris_path_version: str | None = None
@@ -128,9 +130,9 @@ def _validate_house_cusps(version: str, houses_raw: list[dict[str, object]]) -> 
 def _build_swisseph_positions(
     jdut: float,
     planet_codes: list[str],
-    zodiac: str = "tropical",
+    zodiac: ZodiacType = ZodiacType.TROPICAL,
     ayanamsa: str | None = None,
-    frame: str = "geocentric",
+    frame: FrameType = FrameType.GEOCENTRIC,
     lat: float | None = None,
     lon: float | None = None,
     altitude_m: float | None = None,
@@ -172,7 +174,8 @@ def _build_swisseph_houses(
     lat: float,
     lon: float,
     house_numbers: list[int],
-    frame: str = "geocentric",
+    house_system: HouseSystemType = HouseSystemType.PLACIDUS,
+    frame: FrameType = FrameType.GEOCENTRIC,
     altitude_m: float | None = None,
 ) -> tuple[list[dict[str, object]], str]:
     """Build houses_raw list from SwissEph houses provider.
@@ -182,7 +185,14 @@ def _build_swisseph_houses(
     """
     from app.domain.astrology.houses_provider import calculate_houses as calc_sw_houses
 
-    house_data = calc_sw_houses(jdut, lat, lon, frame=frame, altitude_m=altitude_m)
+    house_data = calc_sw_houses(
+        jdut,
+        lat,
+        lon,
+        house_system=house_system,
+        frame=frame,
+        altitude_m=altitude_m,
+    )
     houses_raw: list[dict[str, object]] = [
         {"number": number, "cusp_longitude": house_data.cusps[number - 1]}
         for number in house_numbers
@@ -199,9 +209,10 @@ def build_natal_result(
     engine: str = "simplified",
     birth_lat: float | None = None,
     birth_lon: float | None = None,
-    zodiac: str = "tropical",
+    zodiac: ZodiacType = ZodiacType.TROPICAL,
     ayanamsa: str | None = None,
-    frame: str = "geocentric",
+    frame: FrameType = FrameType.GEOCENTRIC,
+    house_system: HouseSystemType = HouseSystemType.PLACIDUS,
     altitude_m: float | None = None,
     ephemeris_path_version: str | None = None,
     ephemeris_path_hash: str | None = None,
@@ -291,6 +302,7 @@ def build_natal_result(
             birth_lat,
             birth_lon,
             house_numbers,
+            house_system=house_system,
             frame=frame,
             altitude_m=altitude_m,
         )

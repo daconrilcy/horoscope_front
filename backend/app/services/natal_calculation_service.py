@@ -12,7 +12,7 @@ from collections.abc import Callable
 
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
+from app.core.config import FrameType, HouseSystemType, ZodiacType, settings
 from app.domain.astrology.ephemeris_provider import SUPPORTED_AYANAMSAS, EphemerisCalcError
 from app.domain.astrology.houses_provider import HousesCalcError
 from app.domain.astrology.natal_calculation import (
@@ -21,6 +21,7 @@ from app.domain.astrology.natal_calculation import (
     build_natal_result,
 )
 from app.domain.astrology.natal_preparation import BirthInput
+from app.infra.observability.metrics import increment_counter
 from app.services.reference_data_service import ReferenceDataService
 
 logger = logging.getLogger(__name__)
@@ -51,8 +52,9 @@ class NatalCalculationService:
         accurate: bool,
         engine_override: str | None,
         internal_request: bool,
-        zodiac: str,
-        frame: str,
+        zodiac: ZodiacType,
+        frame: FrameType,
+        house_system: HouseSystemType,
     ) -> str:
         override = (engine_override or "").strip().lower() or None
 
@@ -74,11 +76,16 @@ class NatalCalculationService:
                         message="natal engine override is forbidden",
                         details={"engine": "simplified"},
                     )
-                if zodiac == "sidereal" or frame == "topocentric":
+                if (
+                    zodiac != ZodiacType.TROPICAL
+                    or frame != FrameType.GEOCENTRIC
+                    or house_system != HouseSystemType.EQUAL
+                ):
+                    increment_counter("natal_ruleset_invalid_total|code=natal_engine_option_unsupported")
                     raise NatalCalculationError(
                         code="natal_engine_option_unsupported",
-                        message="simplified engine does not support sidereal or topocentric",
-                        details={"zodiac": zodiac, "frame": frame},
+                        message="simplified engine only supports tropical/geocentric/equal",
+                        details={"zodiac": zodiac, "frame": frame, "house_system": house_system},
                     )
                 return "simplified"
             if not settings.swisseph_enabled:
@@ -89,13 +96,18 @@ class NatalCalculationService:
                 )
             return "swisseph"
 
-        # Sidereal and Topocentric require SwissEph
-        requires_accurate = zodiac == "sidereal" or frame == "topocentric"
+        # Sidereal, Topocentric, or non-Equal house system require SwissEph
+        requires_accurate = (
+            zodiac == ZodiacType.SIDEREAL
+            or frame == FrameType.TOPOCENTRIC
+            or house_system != HouseSystemType.EQUAL
+        )
         if requires_accurate and not accurate:
+            increment_counter("natal_ruleset_invalid_total|code=accurate_mode_required")
             raise NatalCalculationError(
                 code="accurate_mode_required",
-                message="sidereal zodiac or topocentric frame requires accurate=True",
-                details={"zodiac": zodiac, "frame": frame},
+                message="sidereal, topocentric or non-equal house system requires accurate=True",
+                details={"zodiac": zodiac, "frame": frame, "house_system": house_system},
             )
 
         if (accurate or requires_accurate) and not settings.swisseph_enabled:
@@ -113,45 +125,90 @@ class NatalCalculationService:
     @staticmethod
     def _resolve_calculation_options(
         *,
-        zodiac: str,
+        zodiac: str | None,
         ayanamsa: str | None,
-        frame: str,
+        frame: str | None,
+        house_system: str | None,
         altitude_m: float | None,
-    ) -> tuple[str, str | None, str, float | None]:
-        normalized_zodiac = zodiac.strip().lower()
-        if normalized_zodiac not in {"tropical", "sidereal"}:
-            raise NatalCalculationError(
-                code="invalid_zodiac",
-                message="invalid zodiac parameter",
-                details={"allowed": "tropical,sidereal", "actual": zodiac},
-            )
+    ) -> tuple[ZodiacType, str | None, FrameType, HouseSystemType, float | None]:
+        zodiac_str = (zodiac or "").strip().lower()
+        if not zodiac_str:
+            resolved_zodiac = settings.natal_ruleset_default_zodiac
+        else:
+            try:
+                resolved_zodiac = ZodiacType(zodiac_str)
+            except ValueError:
+                increment_counter("natal_ruleset_invalid_total|code=invalid_zodiac")
+                raise NatalCalculationError(
+                    code="invalid_zodiac",
+                    message="invalid zodiac parameter",
+                    details={
+                        "allowed": ",".join(z.value for z in ZodiacType),
+                        "actual": zodiac or "",
+                    },
+                )
 
-        normalized_frame = frame.strip().lower()
-        if normalized_frame not in {"geocentric", "topocentric"}:
-            raise NatalCalculationError(
-                code="invalid_frame",
-                message="invalid frame parameter",
-                details={"allowed": "geocentric,topocentric", "actual": frame},
-            )
+        frame_str = (frame or "").strip().lower()
+        if not frame_str:
+            resolved_frame = settings.natal_ruleset_default_frame
+        else:
+            try:
+                resolved_frame = FrameType(frame_str)
+            except ValueError:
+                increment_counter("natal_ruleset_invalid_total|code=invalid_frame")
+                raise NatalCalculationError(
+                    code="invalid_frame",
+                    message="invalid frame parameter",
+                    details={
+                        "allowed": ",".join(f.value for f in FrameType),
+                        "actual": frame or "",
+                    },
+                )
 
-        normalized_ayanamsa: str | None = None
-        if normalized_zodiac == "sidereal":
-            normalized_ayanamsa = (ayanamsa or "").strip().lower() or "lahiri"
-            if normalized_ayanamsa not in SUPPORTED_AYANAMSAS:
+        hs_str = (house_system or "").strip().lower()
+        if not hs_str:
+            resolved_house_system = settings.natal_ruleset_default_house_system
+        else:
+            try:
+                resolved_house_system = HouseSystemType(hs_str)
+            except ValueError:
+                increment_counter("natal_ruleset_invalid_total|code=invalid_house_system")
+                raise NatalCalculationError(
+                    code="invalid_house_system",
+                    message="invalid house_system parameter",
+                    details={
+                        "allowed": ",".join(h.value for h in HouseSystemType),
+                        "actual": house_system or "",
+                    },
+                )
+
+        resolved_ayanamsa: str | None = None
+        if resolved_zodiac == ZodiacType.SIDEREAL:
+            # AC 2: sidereal WITHOUT ayanamsa must return 422 if explicitly requested.
+            # If zodiac was None, it took default. If default is sidereal, it might also need ayanamsa.
+            resolved_ayanamsa = (ayanamsa or "").strip().lower() or None
+            if resolved_ayanamsa and resolved_ayanamsa not in SUPPORTED_AYANAMSAS:
+                increment_counter("natal_ruleset_invalid_total|code=invalid_ayanamsa")
                 raise NatalCalculationError(
                     code="invalid_ayanamsa",
                     message="unsupported ayanamsa for sidereal zodiac",
                     details={
                         "allowed": ",".join(sorted(SUPPORTED_AYANAMSAS)),
-                        "actual": normalized_ayanamsa,
+                        "actual": resolved_ayanamsa,
                     },
                 )
 
         effective_altitude = None
-        if normalized_frame == "topocentric":
+        if resolved_frame == FrameType.TOPOCENTRIC:
             effective_altitude = 0.0 if altitude_m is None else altitude_m
 
-        return normalized_zodiac, normalized_ayanamsa, normalized_frame, effective_altitude
+        return (
+            resolved_zodiac,
+            resolved_ayanamsa,
+            resolved_frame,
+            resolved_house_system,
+            effective_altitude,
+        )
 
     @staticmethod
     def calculate(
@@ -162,9 +219,10 @@ class NatalCalculationService:
         accurate: bool = False,
         engine_override: str | None = None,
         internal_request: bool = False,
-        zodiac: str = "tropical",
+        zodiac: str | None = None,
         ayanamsa: str | None = None,
-        frame: str = "geocentric",
+        frame: str | None = None,
+        house_system: str | None = None,
         altitude_m: float | None = None,
         request_id: str | None = None,
         tt_enabled: bool = False,
@@ -216,13 +274,36 @@ class NatalCalculationService:
             resolved_zodiac,
             resolved_ayanamsa,
             resolved_frame,
+            resolved_house_system,
             resolved_altitude_m,
         ) = NatalCalculationService._resolve_calculation_options(
             zodiac=zodiac,
             ayanamsa=ayanamsa,
             frame=frame,
+            house_system=house_system,
             altitude_m=altitude_m,
         )
+
+        # AC 2: Given zodiac=sidereal sans ayanamsa -> 422 missing_ayanamsa
+        # This applies when zodiac is explicitly requested as sidereal.
+        if (zodiac or "").strip().lower() == "sidereal" and not (ayanamsa or "").strip():
+            increment_counter("natal_ruleset_invalid_total|code=missing_ayanamsa")
+            raise NatalCalculationError(
+                code="missing_ayanamsa",
+                message="ayanamsa is required when sidereal zodiac is explicitly requested",
+                details={"zodiac": "sidereal"},
+            )
+
+        # Fallback to default ayanamsa if still missing (e.g. zodiac came from defaults)
+        if resolved_zodiac == ZodiacType.SIDEREAL and not resolved_ayanamsa:
+            resolved_ayanamsa = settings.natal_ruleset_default_ayanamsa
+            if not resolved_ayanamsa:
+                increment_counter("natal_ruleset_invalid_total|code=missing_ayanamsa")
+                raise NatalCalculationError(
+                    code="missing_ayanamsa",
+                    message="ayanamsa is required for sidereal zodiac",
+                    details={"zodiac": "sidereal"},
+                )
 
         engine = NatalCalculationService._resolve_engine(
             accurate=accurate,
@@ -230,7 +311,9 @@ class NatalCalculationService:
             internal_request=internal_request,
             zodiac=resolved_zodiac,
             frame=resolved_frame,
+            house_system=resolved_house_system,
         )
+
         ephemeris_path_version: str | None = None
         ephemeris_path_hash: str | None = None
         if engine == "swisseph":
@@ -263,6 +346,7 @@ class NatalCalculationService:
                 zodiac=resolved_zodiac,
                 ayanamsa=resolved_ayanamsa,
                 frame=resolved_frame,
+                house_system=resolved_house_system,
                 altitude_m=resolved_altitude_m,
                 ephemeris_path_version=ephemeris_path_version,
                 ephemeris_path_hash=ephemeris_path_hash,

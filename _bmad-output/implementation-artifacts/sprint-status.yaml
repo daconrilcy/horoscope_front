@@ -211,8 +211,8 @@ development_status:
   22-2-ajouter-delta-t-jd-tt-optionnels: done
   epic-22-retrospective: optional
 
-  epic-23: in-progress
-  23-1-exposer-ruleset-zodiac-ayanamsa-frame-houses: ready-for-dev
+  epic-23: done
+  23-1-exposer-ruleset-zodiac-ayanamsa-frame-houses: done
   23-2-houses-placidus-whole-sign-equal: ready-for-dev
   23-3-frame-geocentric-vs-topocentric: ready-for-dev
   23-4-zodiac-tropical-vs-sidereal-ayanamsa: ready-for-dev
