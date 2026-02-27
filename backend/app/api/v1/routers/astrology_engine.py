@@ -27,6 +27,10 @@ class ResponseMeta(BaseModel):
     engine: str | None = None
     ephemeris_path_version: str | None = None
     ephemeris_path_hash: str | None = None
+    # Terrestrial Time fields (story 22.2) — present when tt_enabled=True.
+    time_scale: str = "UT"
+    delta_t_sec: float | None = None
+    jd_tt: float | None = None
 
 
 class ErrorPayload(BaseModel):
@@ -45,6 +49,10 @@ class BirthPrepareResponse(BaseModel):
     meta: ResponseMeta
 
 
+class NatalPrepareRequest(BirthInput):
+    tt_enabled: bool = False
+
+
 class NatalCalculateRequest(BirthInput):
     reference_version: str | None = None
     accurate: bool = False
@@ -52,6 +60,7 @@ class NatalCalculateRequest(BirthInput):
     ayanamsa: str | None = None
     frame: str = "geocentric"
     altitude_m: float | None = None
+    tt_enabled: bool = False
 
 
 class NatalCalculateResponse(BaseModel):
@@ -198,8 +207,20 @@ def _build_engine_diff(
 def prepare_natal(request: Request, payload: dict[str, Any]) -> Any:
     request_id = resolve_request_id(request)
     try:
-        parsed_payload = BirthInput.model_validate(payload)
-        prepared = NatalPreparationService.prepare(parsed_payload)
+        parsed_payload = NatalPrepareRequest.model_validate(payload)
+        birth_input = BirthInput(
+            birth_date=parsed_payload.birth_date,
+            birth_time=parsed_payload.birth_time,
+            birth_place=parsed_payload.birth_place,
+            birth_timezone=parsed_payload.birth_timezone,
+            place_resolved_id=parsed_payload.place_resolved_id,
+            birth_city=parsed_payload.birth_city,
+            birth_country=parsed_payload.birth_country,
+            birth_lat=parsed_payload.birth_lat,
+            birth_lon=parsed_payload.birth_lon,
+        )
+        tt_enabled = parsed_payload.tt_enabled or settings.swisseph_pro_mode
+        prepared = NatalPreparationService.prepare(birth_input, tt_enabled=tt_enabled)
 
         eph_version = None
         eph_hash = None
@@ -218,6 +239,9 @@ def prepare_natal(request: Request, payload: dict[str, Any]) -> Any:
                 "engine": engine_name,
                 "ephemeris_path_version": eph_version,
                 "ephemeris_path_hash": eph_hash,
+                "time_scale": prepared.time_scale,
+                "delta_t_sec": prepared.delta_t_sec,
+                "jd_tt": prepared.jd_tt,
             },
         }
     except ValidationError as error:
@@ -264,6 +288,7 @@ def calculate_natal(
             birth_lon=parsed_payload.birth_lon,
             place_resolved_id=parsed_payload.place_resolved_id,
         )
+        effective_tt_enabled = parsed_payload.tt_enabled or settings.swisseph_pro_mode
         result = NatalCalculationService.calculate(
             db=db,
             birth_input=birth_input,
@@ -274,6 +299,7 @@ def calculate_natal(
             frame=parsed_payload.frame,
             altitude_m=parsed_payload.altitude_m,
             request_id=request_id,
+            tt_enabled=effective_tt_enabled,
         )
         chart_id = ChartResultService.persist_trace(
             db=db,
@@ -290,6 +316,7 @@ def calculate_natal(
                 eph_version = eph_res.path_version
                 eph_hash = eph_res.path_hash or None
 
+        prepared = result.prepared_input
         return {
             "data": {"chart_id": chart_id, "result": result.model_dump()},
             "meta": {
@@ -297,6 +324,9 @@ def calculate_natal(
                 "engine": result.engine,
                 "ephemeris_path_version": eph_version,
                 "ephemeris_path_hash": eph_hash,
+                "time_scale": result.time_scale,
+                "delta_t_sec": prepared.delta_t_sec,
+                "jd_tt": prepared.jd_tt,
             },
         }
     except ValidationError as error:

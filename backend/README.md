@@ -178,6 +178,22 @@ Puis verifier:
 Le backend est defini via `pyproject.toml`.
 Pour les environnements conteneurises, l image installe le package local avec `pip install .`.
 
+## Swiss Ephemeris (prod)
+
+Variables de packaging/runtime:
+- `SWISSEPH_ENABLED`
+- `SWISSEPH_PRO_MODE` (active la validation stricte des fichiers requis)
+- `EPHEMERIS_PATH`
+- `EPHEMERIS_PATH_VERSION`
+- `EPHEMERIS_PATH_HASH`
+- `EPHEMERIS_REQUIRED_FILES` (liste CSV des fichiers requis)
+
+Traçabilité temporelle optionnelle (story 22.2):
+- Les endpoints `POST /v1/astrology-engine/natal/prepare` et `POST /v1/astrology-engine/natal/calculate` acceptent `tt_enabled` (bool, défaut `false`).
+- Quand `tt_enabled=true` (ou `SWISSEPH_PRO_MODE=true`), la réponse expose `data.delta_t_sec`, `data.jd_tt`, `data.time_scale="TT"` et les mêmes champs dans `meta`.
+- La valeur de ΔT est calculée via les approximations polynomiales de la NASA (Espenak & Meeus) couvrant les périodes historiques (-500 à 2150+) avec une précision adaptée à l'audit astrologique.
+- Quand `tt_enabled=false`, `delta_t_sec` et `jd_tt` valent `null` et `time_scale="UT"`.
+
 ## Secrets Rotation
 
 Secrets minimum requis hors environnements locaux/test (staging, production):

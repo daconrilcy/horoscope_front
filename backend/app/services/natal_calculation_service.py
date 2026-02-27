@@ -12,8 +12,6 @@ from collections.abc import Callable
 
 from sqlalchemy.orm import Session
 
-logger = logging.getLogger(__name__)
-
 from app.core.config import settings
 from app.domain.astrology.ephemeris_provider import SUPPORTED_AYANAMSAS, EphemerisCalcError
 from app.domain.astrology.houses_provider import HousesCalcError
@@ -25,6 +23,8 @@ from app.domain.astrology.natal_calculation import (
 from app.domain.astrology.natal_preparation import BirthInput
 from app.services.reference_data_service import ReferenceDataService
 
+logger = logging.getLogger(__name__)
+
 
 class NatalCalculationService:
     """
@@ -33,6 +33,17 @@ class NatalCalculationService:
     Coordonne le chargement des données de référence et l'exécution
     des calculs astrologiques.
     """
+
+    @staticmethod
+    def _is_swisseph_provider_error(error: Exception) -> bool:
+        """Return True for SwissEph provider errors, even if class identity drifted.
+
+        In large test suites some modules can be reloaded, creating a new exception
+        class object with the same name. `isinstance()` may then fail across modules.
+        """
+        if isinstance(error, (EphemerisCalcError, HousesCalcError)):
+            return True
+        return error.__class__.__name__ in {"EphemerisCalcError", "HousesCalcError"}
 
     @staticmethod
     def _resolve_engine(
@@ -156,6 +167,7 @@ class NatalCalculationService:
         frame: str = "geocentric",
         altitude_m: float | None = None,
         request_id: str | None = None,
+        tt_enabled: bool = False,
     ) -> NatalResult:
         """
         Calcule un thème natal complet.
@@ -172,6 +184,7 @@ class NatalCalculationService:
             ayanamsa: Ayanamsa pour zodiaque sidéral (défaut ``"lahiri"``).
             frame: Référentiel de calcul (``"geocentric"`` ou ``"topocentric"``).
             altitude_m: Altitude en mètres pour le cadre topocentrique.
+            tt_enabled: Si True, calcule ΔT et JD TT pour la traçabilité audit (story 22.2).
 
         Returns:
             Résultat du calcul natal.
@@ -253,18 +266,21 @@ class NatalCalculationService:
                 altitude_m=resolved_altitude_m,
                 ephemeris_path_version=ephemeris_path_version,
                 ephemeris_path_hash=ephemeris_path_hash,
+                tt_enabled=tt_enabled,
             )
-        except (EphemerisCalcError, HousesCalcError) as error:
+        except Exception as error:
+            if not NatalCalculationService._is_swisseph_provider_error(error):
+                raise
             logger.error(
                 "swisseph_calc_error request_id=%s engine=%s ephe_version=%s ephe_hash=%s code=%s",
                 request_id or "unknown",
                 engine,
                 ephemeris_path_version or "n/a",
                 ephemeris_path_hash or "n/a",
-                error.code,
+                getattr(error, "code", "swisseph_calc_failed"),
             )
             raise NatalCalculationError(
-                code=error.code,
-                message=error.message,
+                code=getattr(error, "code", "swisseph_calc_failed"),
+                message=getattr(error, "message", str(error)),
                 details={"engine": engine},
             ) from error

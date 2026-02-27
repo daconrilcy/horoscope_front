@@ -206,9 +206,9 @@ development_status:
   21-3-observabilite-perf-engine-swisseph: done
   epic-21-retrospective: optional
 
-  epic-22: in-progress
+  epic-22: done
   22-1-standardiser-pipeline-temps-prepared-input: done
-  22-2-ajouter-delta-t-jd-tt-optionnels: ready-for-dev
+  22-2-ajouter-delta-t-jd-tt-optionnels: done
   epic-22-retrospective: optional
 
   epic-23: in-progress

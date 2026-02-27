@@ -11,7 +11,7 @@ Couvre :
 
 from __future__ import annotations
 
-import logging
+import importlib
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -305,6 +305,8 @@ def _run_failing_natal_calc(
     from app.domain.astrology.natal_preparation import BirthInput
     from app.services.natal_calculation_service import NatalCalculationService
 
+    service_module = importlib.import_module(NatalCalculationService.__module__)
+
     reference_data = {
         "version": "test-v1",
         "planets": [{"code": "sun"}],
@@ -327,20 +329,22 @@ def _run_failing_natal_calc(
     mock_bootstrap.path_hash = "abc123"
 
     with (
-        patch(
-            "app.services.natal_calculation_service.ReferenceDataService.get_active_reference_data",
+        patch.object(
+            service_module.ReferenceDataService,
+            "get_active_reference_data",
             return_value=reference_data,
         ),
-        patch("app.services.natal_calculation_service.settings") as mock_settings,
-        patch(
-            "app.services.natal_calculation_service.build_natal_result",
+        patch.object(service_module, "settings") as mock_settings,
+        patch.object(
+            service_module,
+            "build_natal_result",
             side_effect=EphemerisCalcError("calc_ut failed"),
         ),
+        patch.object(service_module.logger, "error") as mock_logger_error,
         patch(
             "app.core.ephemeris.get_bootstrap_result",
             return_value=mock_bootstrap,
         ),
-        caplog.at_level(logging.ERROR, logger="app.services.natal_calculation_service"),
     ):
         mock_settings.active_reference_version = "test-v1"
         mock_settings.ruleset_version = "rules-v1"
@@ -358,7 +362,18 @@ def _run_failing_natal_calc(
                 request_id=request_id,
             )
 
-    return [r for r in caplog.records if r.levelno == logging.ERROR]
+    messages: list[str] = []
+    for call in mock_logger_error.call_args_list:
+        if not call.args:
+            continue
+        template = str(call.args[0])
+        values = call.args[1:]
+        try:
+            rendered = template % values if values else template
+        except (TypeError, ValueError):
+            rendered = template
+        messages.append(rendered)
+    return [msg for msg in messages if "swisseph_calc_error" in msg]
 
 
 class TestSwissephStructuredLogs:
@@ -375,7 +390,7 @@ class TestSwissephStructuredLogs:
         """Le log d'erreur contient le champ engine."""
         error_records = _run_failing_natal_calc(caplog, request_id="req-002")
         assert len(error_records) >= 1
-        log_msg = error_records[0].getMessage()
+        log_msg = error_records[-1]
         assert "engine=swisseph" in log_msg, (
             f"'engine=swisseph' manquant dans le log. Message: {log_msg}"
         )
@@ -384,7 +399,7 @@ class TestSwissephStructuredLogs:
         """Le log d'erreur contient le champ ephe_version."""
         error_records = _run_failing_natal_calc(caplog, request_id="req-003")
         assert len(error_records) >= 1
-        log_msg = error_records[0].getMessage()
+        log_msg = error_records[-1]
         assert "ephe_version=se-test-v1" in log_msg, (
             f"'ephe_version=se-test-v1' manquant dans le log. Message: {log_msg}"
         )
@@ -393,7 +408,7 @@ class TestSwissephStructuredLogs:
         """Le log d'erreur contient le champ request_id."""
         error_records = _run_failing_natal_calc(caplog, request_id="req-004")
         assert len(error_records) >= 1
-        log_msg = error_records[0].getMessage()
+        log_msg = error_records[-1]
         assert "request_id=req-004" in log_msg, (
             f"'request_id=req-004' manquant dans le log. Message: {log_msg}"
         )
@@ -402,7 +417,7 @@ class TestSwissephStructuredLogs:
         """Le log d'erreur contient explicitement le champ ephe_hash."""
         error_records = _run_failing_natal_calc(caplog, request_id="req-006")
         assert len(error_records) >= 1
-        log_msg = error_records[0].getMessage()
+        log_msg = error_records[-1]
         assert "ephe_hash=abc123" in log_msg, (
             f"'ephe_hash=abc123' manquant dans le log. Message: {log_msg}"
         )
@@ -411,6 +426,6 @@ class TestSwissephStructuredLogs:
         """Le log d'erreur ne contient pas les coordonnées GPS brutes (pas de PII)."""
         error_records = _run_failing_natal_calc(caplog, request_id="req-005")
         assert len(error_records) >= 1
-        log_msg = error_records[0].getMessage()
+        log_msg = error_records[-1]
         assert "48.8566" not in log_msg, "Latitude GPS ne doit pas être dans le log"
         assert "2.3522" not in log_msg, "Longitude GPS ne doit pas être dans le log"
