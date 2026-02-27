@@ -199,3 +199,41 @@ development_status:
   20-14-guide-natal-clarification-faq: done
   20-15-traductions-guide-natal-faq: done
   epic-20-retrospective: optional
+
+  epic-21: done
+  21-1-packager-fichiers-swiss-ephemeris-prod: done
+  21-2-initialisation-swisseph-robuste-erreurs-explicites: ready-for-dev
+  21-3-observabilite-perf-engine-swisseph: ready-for-dev
+  epic-21-retrospective: optional
+
+  epic-22: in-progress
+  22-1-standardiser-pipeline-temps-prepared-input: ready-for-dev
+  22-2-ajouter-delta-t-jd-tt-optionnels: ready-for-dev
+  epic-22-retrospective: optional
+
+  epic-23: in-progress
+  23-1-exposer-ruleset-zodiac-ayanamsa-frame-houses: ready-for-dev
+  23-2-houses-placidus-whole-sign-equal: ready-for-dev
+  23-3-frame-geocentric-vs-topocentric: ready-for-dev
+  23-4-zodiac-tropical-vs-sidereal-ayanamsa: ready-for-dev
+  epic-23-retrospective: optional
+
+  epic-24: in-progress
+  24-1-modele-regles-aspects-schools-versionnees: ready-for-dev
+  24-2-calcul-aspects-orbs-overrides: ready-for-dev
+  epic-24-retrospective: optional
+
+  epic-25: in-progress
+  25-1-dataset-golden-pro-50-200-cas: ready-for-dev
+  25-2-script-cross-tool-report-dev-only: ready-for-dev
+  epic-25-retrospective: optional
+
+  epic-26: in-progress
+  26-1-timezone-iana-derived-source-tracabilite: ready-for-dev
+  26-2-gestion-dates-historiques-ambigu-dst: ready-for-dev
+  epic-26-retrospective: optional
+
+  epic-27: in-progress
+  27-1-standardiser-sortie-api-audit-grade: ready-for-dev
+  27-2-documentation-dev-reglages-erreurs-validation: ready-for-dev
+  epic-27-retrospective: optional
