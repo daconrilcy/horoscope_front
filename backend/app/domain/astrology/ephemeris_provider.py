@@ -57,7 +57,7 @@ SUPPORTED_AYANAMSAS = frozenset(_AYANAMSA_IDS.keys())
 _FLG_SWIEPH: int = 2  # swe.FLG_SWIEPH
 _FLG_SPEED: int = 256  # swe.FLG_SPEED
 _FLG_SIDEREAL: int = 65536  # swe.FLG_SIDEREAL
-_SIDM_RESET: int = 0  # reset après mode sidéral (SIDM_FAGAN_BRADLEY)
+SIDM_RESET: int = 0  # reset après mode sidéral (SIDM_FAGAN_BRADLEY)
 
 
 @dataclass(frozen=True)
@@ -98,38 +98,48 @@ def _normalize_longitude(lon: float) -> float:
 
 def calculate_planets(
     jdut: float,
+    lat: float | None = None,
+    lon: float | None = None,
     *,
     zodiac: str = "tropical",
     ayanamsa: str | None = None,
+    frame: str = "geocentric",
+    altitude_m: float | None = None,
 ) -> list[PlanetData]:
     """Calcule les positions de Sun..Pluto via swe.calc_ut.
 
     Args:
         jdut: Jour julien en Temps Universel (Julian Day UT).
+        lat: Latitude (requis si ``frame="topocentric"``).
+        lon: Longitude (requis si ``frame="topocentric"``).
         zodiac: ``"tropical"`` (défaut) ou ``"sidereal"``.
         ayanamsa: Uniquement pour ``zodiac="sidereal"``.
             Défaut ``"lahiri"`` quand ``None``.
+        frame: ``"geocentric"`` (défaut) ou ``"topocentric"``.
+        altitude_m: Altitude en mètres. Défaut ``0.0`` si topocentrique.
 
     Returns:
-        Liste de :class:`PlanetData` dans l'ordre de définition
-        (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto).
+        Liste de :class:`PlanetData` dans l'ordre de définition.
 
     Raises:
-        EphemerisCalcError: Quand pyswisseph n'est pas installé ou que
-            ``calc_ut`` échoue. La stack brute n'est pas transmise aux appelants.
+        EphemerisCalcError: Si pyswisseph est absent, si ``calc_ut`` échoue,
+            ou si lat/lon manquent pour le mode topocentrique.
     """
     swe = _get_swe_module()
 
     is_sidereal = zodiac == "sidereal"
     effective_ayanamsa = (ayanamsa or "lahiri") if is_sidereal else None
+    is_topocentric = frame == "topocentric"
 
     # Resolve flags from module if possible, otherwise use hardcoded stable defaults
     flg_swieph = getattr(swe, "FLG_SWIEPH", _FLG_SWIEPH)
     flg_speed = getattr(swe, "FLG_SPEED", _FLG_SPEED)
     flg_sidereal = getattr(swe, "FLG_SIDEREAL", _FLG_SIDEREAL)
-    sidm_reset = getattr(swe, "SIDM_FAGAN_BRADLEY", _SIDM_RESET)
+    flg_topocentric = getattr(swe, "FLG_TOPOCENTRIC", 32768)  # swe.FLG_TOPOCENTRIC
+    sidm_reset = getattr(swe, "SIDM_FAGAN_BRADLEY", SIDM_RESET)
 
     flags = flg_swieph | flg_speed
+    topo_set = False
 
     results: list[PlanetData] = []
 
@@ -144,6 +154,18 @@ def calculate_planets(
             except Exception as exc:
                 raise EphemerisCalcError(
                     f"Failed to set sidereal mode: {type(exc).__name__}"
+                ) from exc
+
+        if is_topocentric:
+            if lat is None or lon is None:
+                raise EphemerisCalcError("lat/lon are required for topocentric frame")
+            flags |= flg_topocentric
+            try:
+                swe.set_topo(lon, lat, altitude_m or 0.0)
+                topo_set = True
+            except Exception as exc:
+                raise EphemerisCalcError(
+                    f"Failed to set topocentric position: {type(exc).__name__}"
                 ) from exc
 
         try:
@@ -179,12 +201,21 @@ def calculate_planets(
                         "failed_to_reset_sidereal_mode error_type=%s",
                         type(exc).__name__,
                     )
+            if topo_set:
+                try:
+                    swe.set_topo(0.0, 0.0, 0.0)
+                except Exception as exc:
+                    logger.error(
+                        "failed_to_reset_topocentric_position error_type=%s",
+                        type(exc).__name__,
+                    )
 
     logger.debug(
-        "ephemeris_planets_calculated jdut=%.4f zodiac=%s ayanamsa=%s planet_count=%d",
+        "ephemeris_planets_calculated jdut=%.4f zodiac=%s ayanamsa=%s frame=%s planet_count=%d",
         jdut,
         zodiac,
         effective_ayanamsa or "n/a",
+        frame,
         len(results),
     )
     return results
