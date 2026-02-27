@@ -256,7 +256,6 @@ export function BirthProfilePage() {
       }
       const updatedData = await saveBirthData(accessToken, payload)
       queryClient.setQueryData(["birth-profile", tokenSubject], updatedData)
-      void queryClient.invalidateQueries({ queryKey: ["birth-profile", tokenSubject] })
       syncFormWithProfileData(updatedData)
       setSaveSuccess(true)
     } catch (err) {

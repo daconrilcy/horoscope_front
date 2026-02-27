@@ -74,8 +74,15 @@ def test_status_ok_after_successful_bootstrap(
     monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
 
     mock_swe = _make_swe_mock()
+    required_file = tmp_path / "sepl_18.se1"
+    required_file.write_text("fixture", encoding="utf-8")
     with patch.dict("sys.modules", {"swisseph": mock_swe}):
-        ephemeris.bootstrap_swisseph(data_path=str(tmp_path), path_version="se-test-v1")
+        ephemeris.bootstrap_swisseph(
+            data_path=str(tmp_path),
+            path_version="se-test-v1",
+            required_files=["sepl_18.se1"],
+            validate_required_files=True,
+        )
 
     response = client.get("/v1/ephemeris/status")
 
@@ -83,6 +90,8 @@ def test_status_ok_after_successful_bootstrap(
     data = response.json()
     assert data["status"] == "ok"
     assert data["path_version"] == "se-test-v1"
+    assert isinstance(data["path_hash"], str)
+    assert len(data["path_hash"]) == 64
 
 
 # ---------------------------------------------------------------------------
@@ -228,11 +237,19 @@ def test_natal_calculate_includes_ephemeris_version_in_meta(
 ) -> None:
     """AC4: metadata.ephemeris_path_version est présent dans les réponses engine."""
     monkeypatch.setattr("app.api.v1.routers.astrology_engine.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.api.v1.routers.astrology_engine.settings.swisseph_pro_mode", True)
     
     # Mock successful bootstrap
     mock_swe = _make_swe_mock()
+    required_file = tmp_path / "sepl_18.se1"
+    required_file.write_text("fixture", encoding="utf-8")
     with patch.dict("sys.modules", {"swisseph": mock_swe}):
-        ephemeris.bootstrap_swisseph(data_path=str(tmp_path), path_version="se-2024-test")
+        ephemeris.bootstrap_swisseph(
+            data_path=str(tmp_path),
+            path_version="se-2024-test",
+            required_files=["sepl_18.se1"],
+            validate_required_files=True,
+        )
 
     # We use /v1/astrology-engine/natal/prepare as it's easier to call without DB
     payload = {
@@ -247,6 +264,8 @@ def test_natal_calculate_includes_ephemeris_version_in_meta(
     assert response.status_code == 200
     meta = response.json()["meta"]
     assert meta["ephemeris_path_version"] == "se-2024-test"
+    assert isinstance(meta["ephemeris_path_hash"], str)
+    assert len(meta["ephemeris_path_hash"]) == 64
 
 
 def test_natal_calculate_metadata_is_none_when_disabled(
@@ -267,6 +286,7 @@ def test_natal_calculate_metadata_is_none_when_disabled(
     assert response.status_code == 200
     meta = response.json()["meta"]
     assert meta["ephemeris_path_version"] is None
+    assert meta["ephemeris_path_hash"] is None
 
 
 # ---------------------------------------------------------------------------
@@ -312,3 +332,278 @@ def test_exception_handler_swisseph_init_error() -> None:
         app.routes[:] = [
             r for r in app.routes if getattr(r, "path", None) != "/test-swisseph-init-error"
         ]
+
+
+# ---------------------------------------------------------------------------
+# Story 21-2 — Payload normalisé: details + request_id
+# ---------------------------------------------------------------------------
+
+
+def test_exception_handler_ephemeris_data_missing_includes_details() -> None:
+    """AC1: EphemerisDataMissingError handler inclut details.missing_file."""
+    from app.core.ephemeris import EphemerisDataMissingError
+
+    @app.get("/test-ephemeris-data-missing-details")
+    def _raise_data_missing_with_file():
+        raise EphemerisDataMissingError(
+            "required file missing", missing_file="sepl_18.se1"
+        )
+
+    try:
+        response = client.get("/test-ephemeris-data-missing-details")
+        assert response.status_code == 503
+        error = response.json()["error"]
+        assert error["code"] == "ephemeris_data_missing"
+        assert "details" in error
+        assert isinstance(error["details"], dict)
+        assert error["details"]["missing_file"] == "sepl_18.se1"
+        assert "request_id" in error
+    finally:
+        app.routes[:] = [
+            r
+            for r in app.routes
+            if getattr(r, "path", None) != "/test-ephemeris-data-missing-details"
+        ]
+
+
+def test_exception_handler_ephemeris_data_missing_details_empty_when_no_file() -> None:
+    """EphemerisDataMissingError sans missing_file → details vide."""
+    from app.core.ephemeris import EphemerisDataMissingError
+
+    @app.get("/test-ephemeris-data-missing-no-file")
+    def _raise_data_missing_no_file():
+        raise EphemerisDataMissingError("path is empty")
+
+    try:
+        response = client.get("/test-ephemeris-data-missing-no-file")
+        assert response.status_code == 503
+        error = response.json()["error"]
+        assert "details" in error
+        assert error["details"] == {}
+    finally:
+        app.routes[:] = [
+            r
+            for r in app.routes
+            if getattr(r, "path", None) != "/test-ephemeris-data-missing-no-file"
+        ]
+
+
+def test_exception_handler_swisseph_init_error_includes_details() -> None:
+    """AC2: SwissEphInitError handler inclut details dict vide."""
+    from app.core.ephemeris import SwissEphInitError
+
+    @app.get("/test-swisseph-init-error-details")
+    def _raise_init_error():
+        raise SwissEphInitError("init failed")
+
+    try:
+        response = client.get("/test-swisseph-init-error-details")
+        assert response.status_code == 503
+        error = response.json()["error"]
+        assert error["code"] == "swisseph_init_failed"
+        assert "details" in error
+        assert isinstance(error["details"], dict)
+        assert "request_id" in error
+    finally:
+        app.routes[:] = [
+            r
+            for r in app.routes
+            if getattr(r, "path", None) != "/test-swisseph-init-error-details"
+        ]
+
+
+def test_status_503_includes_details_and_request_id_when_data_path_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AC1+2: /v1/ephemeris/status 503 inclut details et request_id."""
+    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+
+    try:
+        ephemeris.bootstrap_swisseph(data_path="", path_version="v1")
+    except ephemeris.EphemerisDataMissingError:
+        pass
+
+    response = client.get("/v1/ephemeris/status")
+
+    assert response.status_code == 503
+    error = response.json()["error"]
+    assert error["code"] == "ephemeris_data_missing"
+    assert "details" in error
+    assert isinstance(error["details"], dict)
+    assert "request_id" in error
+
+
+def test_status_503_includes_missing_file_in_details_when_file_absent(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    """AC1: /v1/ephemeris/status inclut details.missing_file quand fichier requis absent."""
+    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+    mock_swe = _make_swe_mock()
+
+    with patch.dict("sys.modules", {"swisseph": mock_swe}):
+        try:
+            ephemeris.bootstrap_swisseph(
+                data_path=str(tmp_path),
+                path_version="v1",
+                required_files=["sepl_18.se1"],
+                validate_required_files=True,
+            )
+        except ephemeris.EphemerisDataMissingError:
+            pass
+
+    response = client.get("/v1/ephemeris/status")
+
+    assert response.status_code == 503
+    error = response.json()["error"]
+    assert error["code"] == "ephemeris_data_missing"
+    assert error["details"].get("missing_file") == "sepl_18.se1"
+    assert "request_id" in error
+
+
+def test_status_503_includes_details_and_request_id_when_init_failed(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    """AC2: /v1/ephemeris/status 503 init failure inclut details et request_id."""
+    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+
+    mock_swe = _make_swe_mock(set_ephe_path_side_effect=RuntimeError("boom"))
+    with patch.dict("sys.modules", {"swisseph": mock_swe}):
+        try:
+            ephemeris.bootstrap_swisseph(data_path=str(tmp_path), path_version="v1")
+        except ephemeris.SwissEphInitError:
+            pass
+
+    response = client.get("/v1/ephemeris/status")
+
+    assert response.status_code == 503
+    error = response.json()["error"]
+    assert error["code"] == "swisseph_init_failed"
+    assert "details" in error
+    assert isinstance(error["details"], dict)
+    assert "request_id" in error
+
+
+def test_status_503_not_initialized_includes_details_and_request_id(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """swisseph_not_initialized → details et request_id présents."""
+    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+
+    response = client.get("/v1/ephemeris/status")
+
+    assert response.status_code == 503
+    error = response.json()["error"]
+    assert error["code"] == "swisseph_not_initialized"
+    assert "details" in error
+    assert "request_id" in error
+
+
+def test_natal_endpoint_returns_503_when_swisseph_init_failed() -> None:
+    """Integration: endpoint natal retourne 503 conforme quand SwissEphInitError propagée."""
+    from app.core.ephemeris import SwissEphInitError
+
+    @app.get("/test-natal-swisseph-init-error")
+    def _simulate_natal_swisseph_error():
+        raise SwissEphInitError("bootstrap failed")
+
+    try:
+        response = client.get("/test-natal-swisseph-init-error")
+        assert response.status_code == 503
+        error = response.json()["error"]
+        assert error["code"] == "swisseph_init_failed"
+        assert "details" in error
+        assert "request_id" in error
+        assert "message" in error
+    finally:
+        app.routes[:] = [
+            r
+            for r in app.routes
+            if getattr(r, "path", None) != "/test-natal-swisseph-init-error"
+        ]
+
+
+def test_natal_endpoint_returns_503_when_ephemeris_data_missing() -> None:
+    """Integration: endpoint natal retourne 503 conforme quand
+    EphemerisDataMissingError est propagee."""
+    from app.core.ephemeris import EphemerisDataMissingError
+
+    @app.get("/test-natal-ephemeris-data-missing")
+    def _simulate_natal_data_missing():
+        raise EphemerisDataMissingError(
+            "required file missing during natal calc", missing_file="seas_18.se1"
+        )
+
+    try:
+        response = client.get("/test-natal-ephemeris-data-missing")
+        assert response.status_code == 503
+        error = response.json()["error"]
+        assert error["code"] == "ephemeris_data_missing"
+        assert error["details"]["missing_file"] == "seas_18.se1"
+        assert "request_id" in error
+    finally:
+        app.routes[:] = [
+            r
+            for r in app.routes
+            if getattr(r, "path", None) != "/test-natal-ephemeris-data-missing"
+        ]
+
+
+def test_natal_calculate_endpoint_returns_503_when_swisseph_init_failed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Le vrai endpoint /natal/calculate renvoie 503 si SwissEphInitError est levée."""
+    from app.core.ephemeris import SwissEphInitError
+
+    def _raise_init_error(*args, **kwargs):  # noqa: ANN002, ANN003
+        raise SwissEphInitError("bootstrap failed")
+
+    monkeypatch.setattr(
+        "app.api.v1.routers.astrology_engine.NatalCalculationService.calculate",
+        _raise_init_error,
+    )
+
+    payload = {
+        "birth_date": "1990-01-01",
+        "birth_time": "12:00:00",
+        "birth_place": "Paris",
+        "birth_timezone": "Europe/Paris",
+    }
+    response = client.post("/v1/astrology-engine/natal/calculate", json=payload)
+
+    assert response.status_code == 503
+    error = response.json()["error"]
+    assert error["code"] == "swisseph_init_failed"
+    assert error["details"] == {}
+    assert "request_id" in error
+
+
+def test_natal_calculate_endpoint_returns_503_when_ephemeris_data_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Le vrai endpoint /natal/calculate renvoie 503 avec details.missing_file."""
+    from app.core.ephemeris import EphemerisDataMissingError
+
+    def _raise_data_missing(*args, **kwargs):  # noqa: ANN002, ANN003
+        raise EphemerisDataMissingError(
+            "required file missing during natal calc",
+            missing_file="seas_18.se1",
+        )
+
+    monkeypatch.setattr(
+        "app.api.v1.routers.astrology_engine.NatalCalculationService.calculate",
+        _raise_data_missing,
+    )
+
+    payload = {
+        "birth_date": "1990-01-01",
+        "birth_time": "12:00:00",
+        "birth_place": "Paris",
+        "birth_timezone": "Europe/Paris",
+    }
+    response = client.post("/v1/astrology-engine/natal/calculate", json=payload)
+
+    assert response.status_code == 503
+    error = response.json()["error"]
+    assert error["code"] == "ephemeris_data_missing"
+    assert error["details"]["missing_file"] == "seas_18.se1"
+    assert "request_id" in error

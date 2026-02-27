@@ -101,3 +101,4 @@ Aucun blocage rencontré. Pyswisseph disponible dans l'environnement ; tous les 
 - 2026-02-27 : [Code Review Fix] Nettoyage des imports et amélioration des messages d'assertion.
 - 2026-02-27 : [Refactoring AC1] Remplacement de `AYANAMSA_MIN_DIFF_DEG`/`AYANAMSA_MAX_DIFF_DEG` (valeurs arbitraires) par un check structurel via `swe.get_ayanamsa_ut()` : invariant `(Lt − Ls) mod 360 ≈ ayanamsa` avec `AYANAMSA_CONSISTENCY_TOL_DEG = 0.1°` et garde-fou `AYANAMSA_PLAUSIBLE_MAX_DEG = 40.0°`. Comptage final : 16 tests.
 - 2026-02-27 : [Fix AC1] Correction du calcul de `delta` : remplacement de `abs(observed_diff − actual_ayanamsa)` par `_angular_diff()` (distance circulaire) pour couvrir le cas de bord 0°/360° où `abs()` produirait une valeur erronée (~335° au lieu de ~25°).
+- 2026-02-27 : [Post-review] Ajout d'un test de non-régression de propagation topocentrique (frame/coords/altitude) dans `test_natal_metadata.py` pour couvrir la chaîne de calcul planétaire.

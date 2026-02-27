@@ -129,6 +129,7 @@ GPT-5 Codex
 - Mapping i18n du house system stabilise (`equal`, `placidus`) avec fallback silencieux si metadata absente.
 - Tests ajoutes pour retrograde, house system `placidus`, et compatibilite legacy sans crash.
 - Validation locale executee: tests cibles, lint TypeScript, et suite frontend complete sans regression.
+- Correctif post-livraison (UX/API): suppression du refetch automatique `birth-profile` apres `PUT /v1/users/me/birth-data` pour eviter le double appel reseau (`PUT` puis `GET`) et la reception de deux payloads successifs cote navigateur.
 
 ### File List
 
@@ -136,6 +137,7 @@ GPT-5 Codex
 - `frontend/src/api/natalChart.ts`
 - `frontend/src/i18n/natalChart.ts`
 - `frontend/src/pages/NatalChartPage.tsx`
+- `frontend/src/pages/BirthProfilePage.tsx` (correctif post-livraison: suppression `invalidateQueries` apres sauvegarde)
 - `frontend/src/tests/NatalChartPage.test.tsx`
 - `frontend/src/tests/natalChartApi.test.tsx`
 
@@ -148,3 +150,4 @@ GPT-5 Codex
 ## Change Log
 
 - 2026-02-26: Implementation UI minimale retrograde + house system (`placidus`/`equal`) avec renforcement des tests et validation locale complete.
+- 2026-02-27: Correctif post-livraison - suppression du refetch `birth-profile` apres sauvegarde pour eliminer le double appel `PUT` puis `GET` sur `/v1/users/me/birth-data`.

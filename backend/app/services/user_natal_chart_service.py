@@ -60,6 +60,7 @@ class UserNatalChartMetadata(BaseModel):
     altitude_m: float | None = None
     timezone_used: str = ""
     ephemeris_path_version: str | None = None
+    ephemeris_path_hash: str | None = None
 
 
 class UserNatalChartGenerationData(BaseModel):
@@ -324,6 +325,7 @@ class UserNatalChartService:
                 altitude_m=result.altitude_m,
                 timezone_used=result.prepared_input.birth_timezone,
                 ephemeris_path_version=result.ephemeris_path_version,
+                ephemeris_path_hash=result.ephemeris_path_hash,
             ),
         )
 
@@ -397,6 +399,7 @@ class UserNatalChartService:
                 altitude_m=result.altitude_m,
                 timezone_used=result.prepared_input.birth_timezone,
                 ephemeris_path_version=result.ephemeris_path_version,
+                ephemeris_path_hash=result.ephemeris_path_hash,
             ),
             created_at=model.created_at,
         )

@@ -93,3 +93,4 @@ GPT-5 Codex (with Adversarial Review fixes by Gemini CLI)
 
 - 2026-02-26: Implémentation du contrat API `zodiac/frame/ayanamsa/altitude_m` avec valeurs effectives exposées et erreurs métier explicites (`invalid_zodiac`, `invalid_frame`), plus couverture de tests d'intégration associée.
 - 2026-02-26: Validation globale repo lancée; blocages hors périmètre détectés (lint historique + tests dépendants d'un provider LLM non configuré), puis levés dans la même session. Story promue en `review`.
+- 2026-02-27: Correctif post-review - alignement comportement/contrat `frame=topocentric` sur les positions planétaires (propagation complète vers provider SwissEph).

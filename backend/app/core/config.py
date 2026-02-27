@@ -125,8 +125,18 @@ class Settings:
             "GEOCODING_CACHE_TTL_SECONDS", default=3600, minimum=1
         )
         self.swisseph_enabled = self._parse_bool_env("SWISSEPH_ENABLED", default=False)
-        self.swisseph_data_path = os.getenv("SWISSEPH_DATA_PATH", "").strip()
-        self.swisseph_path_version = os.getenv("SWISSEPH_PATH_VERSION", "").strip()
+        self.swisseph_pro_mode = self._parse_bool_env("SWISSEPH_PRO_MODE", default=False)
+        self.ephemeris_path = os.getenv(
+            "EPHEMERIS_PATH", os.getenv("SWISSEPH_DATA_PATH", "")
+        ).strip()
+        self.ephemeris_path_version = os.getenv(
+            "EPHEMERIS_PATH_VERSION", os.getenv("SWISSEPH_PATH_VERSION", "")
+        ).strip()
+        self.ephemeris_path_hash = os.getenv("EPHEMERIS_PATH_HASH", "").strip()
+        self.ephemeris_required_files = self._parse_secret_list("EPHEMERIS_REQUIRED_FILES")
+        # Backward-compatible aliases from previous stories.
+        self.swisseph_data_path = self.ephemeris_path
+        self.swisseph_path_version = self.ephemeris_path_version
         natal_engine_default = os.getenv("NATAL_ENGINE_DEFAULT", "swisseph").strip().lower()
         if natal_engine_default not in {"swisseph", "simplified"}:
             natal_engine_default = "swisseph"

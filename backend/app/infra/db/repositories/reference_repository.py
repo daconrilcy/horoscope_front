@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
@@ -113,6 +115,32 @@ class ReferenceRepository:
             [
                 SignModel(reference_version_id=reference_version_id, code="aries", name="Aries"),
                 SignModel(reference_version_id=reference_version_id, code="taurus", name="Taurus"),
+                SignModel(reference_version_id=reference_version_id, code="gemini", name="Gemini"),
+                SignModel(reference_version_id=reference_version_id, code="cancer", name="Cancer"),
+                SignModel(reference_version_id=reference_version_id, code="leo", name="Leo"),
+                SignModel(reference_version_id=reference_version_id, code="virgo", name="Virgo"),
+                SignModel(reference_version_id=reference_version_id, code="libra", name="Libra"),
+                SignModel(
+                    reference_version_id=reference_version_id,
+                    code="scorpio",
+                    name="Scorpio",
+                ),
+                SignModel(
+                    reference_version_id=reference_version_id,
+                    code="sagittarius",
+                    name="Sagittarius",
+                ),
+                SignModel(
+                    reference_version_id=reference_version_id,
+                    code="capricorn",
+                    name="Capricorn",
+                ),
+                SignModel(
+                    reference_version_id=reference_version_id,
+                    code="aquarius",
+                    name="Aquarius",
+                ),
+                SignModel(reference_version_id=reference_version_id, code="pisces", name="Pisces"),
             ]
         )
         self.db.add_all(
@@ -318,6 +346,27 @@ class ReferenceRepository:
             )
         ).all()
 
+        aspect_traits_by_code: dict[str, dict[str, object]] = {}
+        for trait in characteristics:
+            if trait.entity_type != "aspect":
+                continue
+            aspect_code = trait.entity_code.strip().lower()
+            if not aspect_code:
+                continue
+            bucket = aspect_traits_by_code.setdefault(aspect_code, {})
+            if trait.trait == "orb_luminaries":
+                try:
+                    bucket["orb_luminaries"] = float(trait.value)
+                except (TypeError, ValueError):
+                    continue
+            elif trait.trait == "orb_pair_overrides":
+                try:
+                    parsed = json.loads(trait.value)
+                except (TypeError, ValueError, json.JSONDecodeError):
+                    continue
+                if isinstance(parsed, dict):
+                    bucket["orb_pair_overrides"] = parsed
+
         return {
             "version": model.version,
             "planets": [{"code": item.code, "name": item.name} for item in planets],
@@ -329,6 +378,7 @@ class ReferenceRepository:
                     "name": item.name,
                     "angle": item.angle,
                     "default_orb_deg": item.default_orb_deg,
+                    **aspect_traits_by_code.get(item.code, {}),
                 }
                 for item in aspects
             ],

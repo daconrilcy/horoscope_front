@@ -79,3 +79,4 @@ claude-sonnet-4-6
 ## Change Log
 
 - 2026-02-27: Affichage `orb_used` dans les aspects natal, clé i18n `orbUsed` (3 langues), 4 nouveaux tests, lint et suite complète OK.
+- 2026-02-27: Correctif post-review - contrat frontend assoupli sur `orb_used?: number | null` pour refléter les payloads API défensifs déjà supportés au rendu.

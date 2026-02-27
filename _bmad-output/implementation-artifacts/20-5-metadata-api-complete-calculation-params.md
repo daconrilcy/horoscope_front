@@ -183,3 +183,4 @@ UserNatalChartService.generate_for_user()
 | 2026-02-26 | Dev Agent | Démarrage story 20-5 : metadata API complète     |
 | 2026-02-26 | Dev Agent | Implémentation complète tasks 1-6; 436 unit tests pass; fix régressions story-20-4 |
 | 2026-02-26 | Reviewer  | Fix API exposure & missing integration tests (AC2/AC3) |
+| 2026-02-27 | Dev Agent | Fix review: cohérence topocentric renforcée (pipeline planètes SwissEph reçoit désormais `frame/lat/lon/altitude_m`) |

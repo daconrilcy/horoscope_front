@@ -98,6 +98,7 @@ def test_natal_result_defaults() -> None:
     assert result.frame == "geocentric"
     assert result.ayanamsa is None
     assert result.ephemeris_path_version is None
+    assert result.ephemeris_path_hash is None
 
 
 def test_natal_result_model_validate_legacy_payload() -> None:
@@ -126,6 +127,7 @@ def test_natal_result_model_validate_legacy_payload() -> None:
     assert result.frame == "geocentric"
     assert result.ayanamsa is None
     assert result.ephemeris_path_version is None
+    assert result.ephemeris_path_hash is None
     # Champs historiques préservés
     assert result.reference_version == "1.0.0"
     assert result.ruleset_version == "1.0.0"
@@ -166,6 +168,7 @@ def test_build_natal_result_swisseph_engine_metadata(
     assert result.frame == "geocentric"
     assert result.ayanamsa is None
     assert result.ephemeris_path_version is None
+    assert result.ephemeris_path_hash is None
 
 
 def test_build_natal_result_ephemeris_path_version_propagated(
@@ -195,6 +198,36 @@ def test_build_natal_result_ephemeris_path_version_propagated(
     )
 
     assert result.ephemeris_path_version == "se2_2.10"
+    assert result.ephemeris_path_hash is None
+
+
+def test_build_natal_result_ephemeris_path_hash_propagated(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """ephemeris_path_hash passé en paramètre est présent dans NatalResult."""
+    ref_data = _make_reference_data()
+    birth_input = _make_birth_input()
+
+    monkeypatch.setattr(
+        "app.domain.astrology.natal_calculation._build_swisseph_positions",
+        _swisseph_positions_mock,
+    )
+    monkeypatch.setattr(
+        "app.domain.astrology.natal_calculation._build_swisseph_houses",
+        _swisseph_houses_mock,
+    )
+
+    result = build_natal_result(
+        birth_input=birth_input,
+        reference_data=ref_data,
+        ruleset_version="1.0.0",
+        engine="swisseph",
+        birth_lat=48.85,
+        birth_lon=2.35,
+        ephemeris_path_hash="abc123",
+    )
+
+    assert result.ephemeris_path_hash == "abc123"
 
 
 def test_build_natal_result_simplified_engine_metadata() -> None:
@@ -214,6 +247,7 @@ def test_build_natal_result_simplified_engine_metadata() -> None:
     assert result.frame == "geocentric"
     assert result.ayanamsa is None
     assert result.ephemeris_path_version is None
+    assert result.ephemeris_path_hash is None
 
 
 # ---------------------------------------------------------------------------
@@ -378,6 +412,47 @@ def test_build_natal_result_topocentric_altitude_zero_default(
     assert captured_alt == [None]
 
 
+def test_build_natal_result_topocentric_propagates_frame_and_coordinates_to_planets(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """frame/coords topocentriques sont propagés au provider planétaire SwissEph."""
+    ref_data = _make_reference_data()
+    birth_input = _make_birth_input(birth_lat=48.85, birth_lon=2.35)
+
+    captured_positions_kwargs: dict[str, object] = {}
+
+    def _positions_capture(
+        jdut: float, planet_codes: list[str], **kwargs: object
+    ) -> list[dict[str, object]]:
+        captured_positions_kwargs.update(kwargs)
+        return [{"planet_code": "sun", "longitude": 85.0, "sign_code": "gemini"}]
+
+    monkeypatch.setattr(
+        "app.domain.astrology.natal_calculation._build_swisseph_positions",
+        _positions_capture,
+    )
+    monkeypatch.setattr(
+        "app.domain.astrology.natal_calculation._build_swisseph_houses",
+        _swisseph_houses_mock,
+    )
+
+    build_natal_result(
+        birth_input=birth_input,
+        reference_data=ref_data,
+        ruleset_version="1.0.0",
+        engine="swisseph",
+        birth_lat=48.85,
+        birth_lon=2.35,
+        frame="topocentric",
+        altitude_m=120.0,
+    )
+
+    assert captured_positions_kwargs.get("frame") == "topocentric"
+    assert captured_positions_kwargs.get("lat") == 48.85
+    assert captured_positions_kwargs.get("lon") == 2.35
+    assert captured_positions_kwargs.get("altitude_m") == 120.0
+
+
 # ---------------------------------------------------------------------------
 # Task 4.5 — UserNatalChartMetadata: timezone_used depuis prepared_input
 # ---------------------------------------------------------------------------
@@ -395,6 +470,7 @@ def test_user_natal_chart_metadata_timezone_used() -> None:
         frame="geocentric",
         ayanamsa=None,
         ephemeris_path_version="se2_2.10",
+        ephemeris_path_hash="hash-1",
         prepared_input=_make_prepared_data(birth_timezone="America/New_York"),
         planet_positions=[],
         houses=[],
@@ -411,6 +487,7 @@ def test_user_natal_chart_metadata_timezone_used() -> None:
         ayanamsa=result.ayanamsa,
         timezone_used=result.prepared_input.birth_timezone,
         ephemeris_path_version=result.ephemeris_path_version,
+        ephemeris_path_hash=result.ephemeris_path_hash,
     )
 
     assert metadata.timezone_used == "America/New_York"
@@ -419,6 +496,7 @@ def test_user_natal_chart_metadata_timezone_used() -> None:
     assert metadata.frame == "geocentric"
     assert metadata.ayanamsa is None
     assert metadata.ephemeris_path_version == "se2_2.10"
+    assert metadata.ephemeris_path_hash == "hash-1"
 
 
 # ---------------------------------------------------------------------------
@@ -435,6 +513,7 @@ def test_user_natal_chart_metadata_ephemeris_path_version_none_for_simplified() 
         house_system="equal_house",
         engine="simplified",
         ephemeris_path_version=None,
+        ephemeris_path_hash=None,
         prepared_input=_make_prepared_data(),
         planet_positions=[],
         houses=[],
@@ -451,9 +530,11 @@ def test_user_natal_chart_metadata_ephemeris_path_version_none_for_simplified() 
         ayanamsa=result.ayanamsa,
         timezone_used=result.prepared_input.birth_timezone,
         ephemeris_path_version=result.ephemeris_path_version,
+        ephemeris_path_hash=result.ephemeris_path_hash,
     )
 
     assert metadata.ephemeris_path_version is None
+    assert metadata.ephemeris_path_hash is None
 
 
 # ---------------------------------------------------------------------------
@@ -481,6 +562,7 @@ def test_user_natal_chart_metadata_historical_fields_preserved() -> None:
     assert metadata.ayanamsa is None
     assert metadata.timezone_used == ""
     assert metadata.ephemeris_path_version is None
+    assert metadata.ephemeris_path_hash is None
 
 
 # ---------------------------------------------------------------------------
@@ -499,6 +581,7 @@ def test_natal_calculation_service_extracts_ephemeris_path_version(
     mock_bootstrap.success = True
     mock_bootstrap.error = None
     mock_bootstrap.path_version = "se2_2.10"
+    mock_bootstrap.path_hash = "hash-se2"
 
     ref_data = _make_reference_data()
     captured_kwargs: dict[str, object] = {}
@@ -511,6 +594,7 @@ def test_natal_calculation_service_extracts_ephemeris_path_version(
             house_system="placidus",
             engine="swisseph",
             ephemeris_path_version=str(kwargs.get("ephemeris_path_version")),
+            ephemeris_path_hash=str(kwargs.get("ephemeris_path_hash")),
             prepared_input=_make_prepared_data(),
             planet_positions=[],
             houses=[],
@@ -532,6 +616,7 @@ def test_natal_calculation_service_extracts_ephemeris_path_version(
             )
 
     assert captured_kwargs.get("ephemeris_path_version") == "se2_2.10"
+    assert captured_kwargs.get("ephemeris_path_hash") == "hash-se2"
 
 
 def test_natal_calculation_service_ephemeris_path_version_none_for_simplified(
@@ -553,6 +638,7 @@ def test_natal_calculation_service_ephemeris_path_version_none_for_simplified(
             house_system="equal_house",
             engine="simplified",
             ephemeris_path_version=None,
+            ephemeris_path_hash=None,
             prepared_input=_make_prepared_data(),
             planet_positions=[],
             houses=[],
@@ -573,3 +659,4 @@ def test_natal_calculation_service_ephemeris_path_version_none_for_simplified(
         )
 
     assert captured_kwargs.get("ephemeris_path_version") is None
+    assert captured_kwargs.get("ephemeris_path_hash") is None

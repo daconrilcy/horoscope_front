@@ -54,8 +54,11 @@ async def _app_lifespan(_: FastAPI):
     if settings.swisseph_enabled:
         try:
             _eph.bootstrap_swisseph(
-                data_path=settings.swisseph_data_path,
-                path_version=settings.swisseph_path_version,
+                data_path=settings.ephemeris_path,
+                path_version=settings.ephemeris_path_version,
+                expected_path_hash=settings.ephemeris_path_hash,
+                required_files=settings.ephemeris_required_files,
+                validate_required_files=True,
             )
         except (EphemerisDataMissingError, SwissEphInitError):
             # Error stored in ephemeris module state; accurate endpoints return 5xx.
@@ -201,12 +204,22 @@ def handle_enterprise_api_key_authentication_error(
 def handle_ephemeris_data_missing_error(
     request: Request, error: EphemerisDataMissingError
 ) -> JSONResponse:
+    details: dict[str, str] = {}
+    if getattr(error, "missing_file", None) is not None:
+        details["missing_file"] = error.missing_file  # type: ignore[assignment]
+    logger.error(
+        "swisseph_error_handled code=%s missing_file=%s request_id=%s",
+        error.code,
+        details.get("missing_file", ""),
+        resolve_request_id(request),
+    )
     return JSONResponse(
         status_code=503,
         content={
             "error": {
                 "code": error.code,
                 "message": error.message,
+                "details": details,
                 "request_id": resolve_request_id(request),
             }
         },
@@ -217,12 +230,18 @@ def handle_ephemeris_data_missing_error(
 def handle_swisseph_init_error(
     request: Request, error: SwissEphInitError
 ) -> JSONResponse:
+    logger.error(
+        "swisseph_error_handled code=%s request_id=%s",
+        error.code,
+        resolve_request_id(request),
+    )
     return JSONResponse(
         status_code=503,
         content={
             "error": {
                 "code": error.code,
                 "message": error.message,
+                "details": {},
                 "request_id": resolve_request_id(request),
             }
         },
@@ -239,6 +258,7 @@ def handle_ephemeris_calc_error(
             "error": {
                 "code": error.code,
                 "message": error.message,
+                "details": {},
                 "request_id": resolve_request_id(request),
             }
         },
@@ -255,6 +275,7 @@ def handle_houses_calc_error(
             "error": {
                 "code": error.code,
                 "message": error.message,
+                "details": {},
                 "request_id": resolve_request_id(request),
             }
         },
@@ -271,6 +292,7 @@ def handle_unsupported_house_system_error(
             "error": {
                 "code": error.code,
                 "message": error.message,
+                "details": {},
                 "request_id": resolve_request_id(request),
             }
         },

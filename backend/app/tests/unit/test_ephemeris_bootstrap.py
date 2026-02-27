@@ -50,6 +50,13 @@ def _make_swe_mock(*, set_ephe_path_side_effect=None) -> MagicMock:
     return mock_swe
 
 
+def _create_required_files(base_path, files: list[str]) -> None:
+    for name in files:
+        target = base_path / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(f"fixture-{name}", encoding="utf-8")
+
+
 # ---------------------------------------------------------------------------
 # Settings SwissEph
 # ---------------------------------------------------------------------------
@@ -186,6 +193,90 @@ class TestBootstrapSwisseph:
 
         mock_swe.set_ephe_path.assert_called_once_with(str(tmp_path))
 
+    def test_raises_when_required_files_missing_in_pro_mode(self, tmp_path) -> None:
+        mock_swe = _make_swe_mock()
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            with pytest.raises(ephemeris.EphemerisDataMissingError) as exc_info:
+                ephemeris.bootstrap_swisseph(
+                    data_path=str(tmp_path),
+                    path_version="v1",
+                    required_files=["sepl_18.se1"],
+                    validate_required_files=True,
+                )
+        assert exc_info.value.code == "ephemeris_data_missing"
+
+    def test_missing_file_attribute_set_when_required_file_absent(self, tmp_path) -> None:
+        """AC1: missing_file est rempli quand un fichier requis est absent."""
+        mock_swe = _make_swe_mock()
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            with pytest.raises(ephemeris.EphemerisDataMissingError) as exc_info:
+                ephemeris.bootstrap_swisseph(
+                    data_path=str(tmp_path),
+                    path_version="v1",
+                    required_files=["sepl_18.se1"],
+                    validate_required_files=True,
+                )
+        assert exc_info.value.missing_file == "sepl_18.se1"
+
+    def test_missing_file_attribute_is_none_for_empty_path(self) -> None:
+        """missing_file est None pour une erreur de path vide (pas un fichier manquant)."""
+        with pytest.raises(ephemeris.EphemerisDataMissingError) as exc_info:
+            ephemeris.bootstrap_swisseph(data_path="", path_version="v1")
+        assert exc_info.value.missing_file is None
+
+    def test_missing_file_attribute_is_none_for_missing_dir(self, tmp_path) -> None:
+        """missing_file est None pour une erreur de répertoire inexistant."""
+        bad_path = str(tmp_path / "no_such_dir")
+        with pytest.raises(ephemeris.EphemerisDataMissingError) as exc_info:
+            ephemeris.bootstrap_swisseph(data_path=bad_path, path_version="v1")
+        assert exc_info.value.missing_file is None
+
+    def test_ephemeris_data_missing_error_accepts_missing_file_kwarg(self) -> None:
+        """EphemerisDataMissingError accepte missing_file comme kwarg."""
+        err = ephemeris.EphemerisDataMissingError(
+            "test message", missing_file="sepl_18.se1"
+        )
+        assert err.missing_file == "sepl_18.se1"
+        assert err.code == "ephemeris_data_missing"
+
+    def test_ephemeris_data_missing_error_missing_file_defaults_to_none(self) -> None:
+        """EphemerisDataMissingError.missing_file vaut None par défaut."""
+        err = ephemeris.EphemerisDataMissingError("test message")
+        assert err.missing_file is None
+
+    def test_raises_when_expected_hash_mismatch(self, tmp_path) -> None:
+        mock_swe = _make_swe_mock()
+        _create_required_files(tmp_path, ["sepl_18.se1"])
+
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            with pytest.raises(ephemeris.SwissEphInitError) as exc_info:
+                ephemeris.bootstrap_swisseph(
+                    data_path=str(tmp_path),
+                    path_version="v1",
+                    expected_path_hash="deadbeef",
+                    required_files=["sepl_18.se1"],
+                    validate_required_files=True,
+                )
+        assert exc_info.value.code == "swisseph_init_failed"
+
+    def test_success_computes_and_stores_path_hash(self, tmp_path) -> None:
+        mock_swe = _make_swe_mock()
+        _create_required_files(tmp_path, ["sepl_18.se1"])
+
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            ephemeris.bootstrap_swisseph(
+                data_path=str(tmp_path),
+                path_version="v1",
+                required_files=["sepl_18.se1"],
+                validate_required_files=True,
+            )
+
+        result = ephemeris.get_bootstrap_result()
+        assert result is not None
+        assert result.success is True
+        assert isinstance(result.path_hash, str)
+        assert len(result.path_hash) == 64
+
     def test_failure_stores_error_in_result(self) -> None:
         try:
             ephemeris.bootstrap_swisseph(data_path="", path_version="v1")
@@ -278,3 +369,48 @@ class TestEphemerisMetrics:
         )
         assert missing_count == 0.0
         assert init_error_count == 0.0
+
+    def test_unified_errors_metric_incremented_on_data_missing(self) -> None:
+        """swisseph_errors_total|code=ephemeris_data_missing est incrémenté."""
+        try:
+            ephemeris.bootstrap_swisseph(data_path="", path_version="v1")
+        except ephemeris.EphemerisDataMissingError:
+            pass
+
+        count = get_counter_sum_in_window(
+            f"{ephemeris.METRIC_ERRORS}|code=ephemeris_data_missing",
+            timedelta(minutes=1),
+        )
+        assert count == 1.0
+
+    def test_unified_errors_metric_incremented_on_init_failed(self, tmp_path) -> None:
+        """swisseph_errors_total|code=swisseph_init_failed est incrémenté."""
+        mock_swe = _make_swe_mock(set_ephe_path_side_effect=RuntimeError("boom"))
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            try:
+                ephemeris.bootstrap_swisseph(data_path=str(tmp_path), path_version="v1")
+            except ephemeris.SwissEphInitError:
+                pass
+
+        count = get_counter_sum_in_window(
+            f"{ephemeris.METRIC_ERRORS}|code=swisseph_init_failed",
+            timedelta(minutes=1),
+        )
+        assert count == 1.0
+
+    def test_unified_errors_metric_not_incremented_on_success(self, tmp_path) -> None:
+        """swisseph_errors_total n'est pas incrémenté en cas de succès."""
+        mock_swe = _make_swe_mock()
+        with patch.dict("sys.modules", {"swisseph": mock_swe}):
+            ephemeris.bootstrap_swisseph(data_path=str(tmp_path), path_version="v1")
+
+        count_missing = get_counter_sum_in_window(
+            f"{ephemeris.METRIC_ERRORS}|code=ephemeris_data_missing",
+            timedelta(minutes=1),
+        )
+        count_init = get_counter_sum_in_window(
+            f"{ephemeris.METRIC_ERRORS}|code=swisseph_init_failed",
+            timedelta(minutes=1),
+        )
+        assert count_missing == 0.0
+        assert count_init == 0.0

@@ -183,3 +183,4 @@ houses_raw = [
 | Date       | Auteur       | Description                                                        |
 |------------|--------------|--------------------------------------------------------------------|
 | 2026-02-26 | Dev Agent    | Implémentation story 20-4 : intégration SwissEph pipeline natal   |
+| 2026-02-27 | Dev Agent    | Fix review: propagation `frame/lat/lon/altitude_m` vers `_build_swisseph_positions` pour activer le vrai mode topocentrique planétaire |

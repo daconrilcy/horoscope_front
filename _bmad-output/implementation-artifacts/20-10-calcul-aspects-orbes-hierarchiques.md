@@ -74,3 +74,4 @@ GPT-5 Codex
 
 ### Change Log
 - 2026-02-26: Implémentation story 20.10 (résolution hiérarchique des orbes + champ `orb_used` + tests unitaires dédiés).
+- 2026-02-27: Correctif post-review - branchement end-to-end confirmé avec chargement des règles hiérarchiques persistées depuis les données de référence (via `astro_characteristics` côté repository).

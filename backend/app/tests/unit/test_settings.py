@@ -168,9 +168,19 @@ def test_settings_natal_engine_flags(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("NATAL_ENGINE_DEFAULT", "swisseph")
     monkeypatch.setenv("NATAL_ENGINE_SIMPLIFIED_ENABLED", "true")
     monkeypatch.setenv("NATAL_ENGINE_COMPARE_ENABLED", "1")
+    monkeypatch.setenv("SWISSEPH_PRO_MODE", "true")
+    monkeypatch.setenv("EPHEMERIS_PATH", "/opt/ephe/se-2026a")
+    monkeypatch.setenv("EPHEMERIS_PATH_VERSION", "se-2026a")
+    monkeypatch.setenv("EPHEMERIS_PATH_HASH", "abc123")
+    monkeypatch.setenv("EPHEMERIS_REQUIRED_FILES", "a.se1,b.se1")
 
     settings = Settings()
 
     assert settings.natal_engine_default == "swisseph"
     assert settings.natal_engine_simplified_enabled is True
     assert settings.natal_engine_compare_enabled is True
+    assert settings.swisseph_pro_mode is True
+    assert settings.ephemeris_path == "/opt/ephe/se-2026a"
+    assert settings.ephemeris_path_version == "se-2026a"
+    assert settings.ephemeris_path_hash == "abc123"
+    assert settings.ephemeris_required_files == ["a.se1", "b.se1"]

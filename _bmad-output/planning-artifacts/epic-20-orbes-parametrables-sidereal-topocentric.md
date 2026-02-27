@@ -125,6 +125,50 @@ Rendre le moteur natal accurate configurable par ruleset pour les aspects (orbes
   **When** la page s'affiche
   **Then** un état vide explicite est rendu sans erreur UI.
 
+### Story 20.14 — Guide natal: clarification approfondie + FAQ
+
+- Fichier: `_bmad-output/implementation-artifacts/20-14-guide-natal-clarification-faq.md`
+- Scope:
+  - mettre à jour la section "Comment lire ton thème natal" avec une explication plus structurée et plus pédagogique
+  - ajouter une FAQ dédiée sur les notions clés (360°, signes vs maisons, longitude brute, cuspide, wrap 0°, orbe, rétrogradation)
+  - préserver la cohérence avec les conventions déjà implémentées (`[debut, fin)`, wrap 360->0, ascendant selon heure/lieu)
+
+**Acceptance Criteria:**
+
+- **Given** la page natal est affichée
+  **When** l'utilisateur ouvre le guide "Comment lire ton thème natal"
+  **Then** la section est réorganisée en parties explicites: signes, planètes, maisons, angles, signe solaire/ascendant, aspects
+  **And** chaque partie explicite le lien entre valeur géométrique (0-360°) et affichage lisible.
+
+- **Given** la section maisons
+  **When** les conventions sont affichées
+  **Then** la règle d'appartenance en intervalle semi-ouvert `[debut, fin)` est expliquée
+  **And** le cas de passage 360° -> 0° est illustré sans ambiguïté.
+
+- **Given** la section guide enrichie
+  **When** l'utilisateur ouvre la FAQ
+  **Then** les questions/réponses couvrent au minimum: 360°, double découpage signes/maisons, longitude brute, cuspide, wrap, orbe, symbole ℞, différence signe solaire/ascendant.
+
+### Story 20.15 — Traductions du guide natal enrichi et FAQ
+
+- Fichier: `_bmad-output/implementation-artifacts/20-15-traductions-guide-natal-faq.md`
+- Scope:
+  - traduire tout le nouveau contenu du guide + FAQ en `fr`, `en`, `es`
+  - assurer une clé i18n explicite et maintenable pour chaque entrée guide/FAQ
+  - garantir fallback robuste si une traduction manque
+
+**Acceptance Criteria:**
+
+- **Given** le guide "Comment lire ton thème natal" enrichi (story 20.14)
+  **When** l'utilisateur bascule de langue (`fr`, `en`, `es`)
+  **Then** l'intégralité du texte guide + FAQ est traduite dans la langue active
+  **And** le contenu reste cohérent sémantiquement entre les langues.
+
+- **Given** une clé de traduction manquante pour une langue
+  **When** le rendu guide/FAQ est évalué
+  **Then** le fallback applicatif s'applique sans crash UI
+  **And** un test couvre explicitement ce cas.
+
 ## Ordonnancement recommandé
 
 1. Story 20.9
@@ -132,6 +176,8 @@ Rendre le moteur natal accurate configurable par ruleset pour les aspects (orbes
 3. Story 20.11
 4. Story 20.12
 5. Story 20.13
+6. Story 20.14
+7. Story 20.15
 
 ## Plan de tests global
 
@@ -146,6 +192,10 @@ Rendre le moteur natal accurate configurable par ruleset pour les aspects (orbes
   - tropical vs sidereal (Sun/Moon/Mercury)
   - geocentric vs topocentric (ASC/MC)
   - stabilité `ephemeris_path_version`
+- Front:
+  - rendu guide enrichi (sections détaillées + FAQ)
+  - rendu multilingue `fr/en/es`
+  - fallback de traduction manquante
 
 ## Checklist globale de Done
 
@@ -154,3 +204,5 @@ Rendre le moteur natal accurate configurable par ruleset pour les aspects (orbes
 - [ ] Invariants metadata/result couverts par tests.
 - [ ] Golden tests comparatifs verts (tropical/sidereal, geo/topo).
 - [ ] UI natal affiche aspects enrichis (`orb_used`) et rétrograde.
+- [ ] Guide "Comment lire ton thème natal" clarifié avec structure complète et FAQ.
+- [ ] Traductions `fr/en/es` du guide enrichi et FAQ validées avec fallback.

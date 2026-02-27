@@ -44,12 +44,27 @@ def test_seed_reference_version_is_idempotent() -> None:
     assert version_2 == "1.0.0"
     assert payload["version"] == "1.0.0"
     assert len(payload["planets"]) == 10
-    assert len(payload["signs"]) == 2
+    assert len(payload["signs"]) == 12
     assert len(payload["aspects"]) == 5
     planets = cast(list[dict[str, Any]], payload["planets"])
+    signs = cast(list[dict[str, Any]], payload["signs"])
     aspects = cast(list[dict[str, Any]], payload["aspects"])
     assert any(item["code"] == "sun" and item["name"] == "Sun" for item in planets)
     assert any(item["code"] == "pluto" and item["name"] == "Pluto" for item in planets)
+    assert {item["code"] for item in signs} == {
+        "aries",
+        "taurus",
+        "gemini",
+        "cancer",
+        "leo",
+        "virgo",
+        "libra",
+        "scorpio",
+        "sagittarius",
+        "capricorn",
+        "aquarius",
+        "pisces",
+    }
     assert {item["code"] for item in aspects} == {
         "conjunction",
         "sextile",
@@ -65,6 +80,41 @@ def test_seed_reference_version_is_idempotent() -> None:
         "opposition": 8.0,
     }
     assert {item["code"]: item.get("default_orb_deg") for item in aspects} == expected_default_orbs
+
+
+def test_reference_data_exposes_persisted_aspect_orb_traits() -> None:
+    _cleanup_reference_tables()
+    with SessionLocal() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        version_model = db.scalar(
+            select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0")
+        )
+        assert version_model is not None
+        db.add(
+            AstroCharacteristicModel(
+                reference_version_id=version_model.id,
+                entity_type="aspect",
+                entity_code="square",
+                trait="orb_luminaries",
+                value="8.5",
+            )
+        )
+        db.add(
+            AstroCharacteristicModel(
+                reference_version_id=version_model.id,
+                entity_type="aspect",
+                entity_code="square",
+                trait="orb_pair_overrides",
+                value='{"sun-mercury": 9.0}',
+            )
+        )
+        db.commit()
+        payload = ReferenceDataService.get_active_reference_data(db, version="1.0.0")
+
+    aspects = cast(list[dict[str, Any]], payload["aspects"])
+    square = next(item for item in aspects if item["code"] == "square")
+    assert square["orb_luminaries"] == 8.5
+    assert square["orb_pair_overrides"] == {"sun-mercury": 9.0}
 
 
 def test_clone_reference_version_preserves_previous_version() -> None:

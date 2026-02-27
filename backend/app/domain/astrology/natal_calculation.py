@@ -49,6 +49,9 @@ class NatalResult(BaseModel):
     ayanamsa: str | None = None
     altitude_m: float | None = None
     ephemeris_path_version: str | None = None
+    ephemeris_path_hash: str | None = None
+    # time_scale: "TT" when Terrestrial Time fields are present, "UT" otherwise (story 22.2).
+    time_scale: str = "UT"
     prepared_input: BirthPreparedData
     planet_positions: list[PlanetPosition]
     houses: list[HouseResult]
@@ -127,11 +130,23 @@ def _build_swisseph_positions(
     planet_codes: list[str],
     zodiac: str = "tropical",
     ayanamsa: str | None = None,
+    frame: str = "geocentric",
+    lat: float | None = None,
+    lon: float | None = None,
+    altitude_m: float | None = None,
 ) -> list[dict[str, object]]:
     """Build positions_raw list from SwissEph ephemeris provider."""
     from app.domain.astrology.ephemeris_provider import calculate_planets
 
-    planet_data_list = calculate_planets(jdut, zodiac=zodiac, ayanamsa=ayanamsa)
+    planet_data_list = calculate_planets(
+        jdut,
+        lat=lat,
+        lon=lon,
+        zodiac=zodiac,
+        ayanamsa=ayanamsa,
+        frame=frame,
+        altitude_m=altitude_m,
+    )
     planet_data_by_id = {pd.planet_id: pd for pd in planet_data_list}
 
     positions_raw: list[dict[str, object]] = []
@@ -189,6 +204,8 @@ def build_natal_result(
     frame: str = "geocentric",
     altitude_m: float | None = None,
     ephemeris_path_version: str | None = None,
+    ephemeris_path_hash: str | None = None,
+    tt_enabled: bool = False,
 ) -> NatalResult:
     if timeout_check is not None:
         timeout_check()
@@ -215,7 +232,7 @@ def build_natal_result(
     if not isinstance(aspects_data, list) or not aspects_data:
         _raise_invalid_reference(version, "aspects", "missing_or_empty")
 
-    prepared = prepare_birth_data(birth_input)
+    prepared = prepare_birth_data(birth_input, tt_enabled=tt_enabled)
     if timeout_check is not None:
         timeout_check()
     planet_codes = [
@@ -258,7 +275,14 @@ def build_natal_result(
                 details={"engine": engine},
             )
         positions_raw = _build_swisseph_positions(
-            prepared.julian_day, planet_codes, zodiac=zodiac, ayanamsa=ayanamsa
+            prepared.julian_day,
+            planet_codes,
+            zodiac=zodiac,
+            ayanamsa=ayanamsa,
+            frame=frame,
+            lat=birth_lat,
+            lon=birth_lon,
+            altitude_m=altitude_m,
         )
         if timeout_check is not None:
             timeout_check()
@@ -397,6 +421,8 @@ def build_natal_result(
         ayanamsa=ayanamsa,
         altitude_m=altitude_m,
         ephemeris_path_version=ephemeris_path_version,
+        ephemeris_path_hash=ephemeris_path_hash,
+        time_scale=prepared.time_scale,
         prepared_input=prepared,
         planet_positions=positions,
         houses=houses,

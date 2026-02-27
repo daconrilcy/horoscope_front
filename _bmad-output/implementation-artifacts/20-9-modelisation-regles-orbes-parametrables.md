@@ -63,6 +63,8 @@ GPT-5 Codex
 - Ajout de `default_orb_deg` au modèle `aspects` avec migration Alembic dédiée (`20260226_0027`).
 - Seed de référence enrichi pour les 5 aspects majeurs avec orbes par défaut: conjunction 8, sextile 4, square 6, trine 6, opposition 8.
 - `ReferenceRepository.get_reference_data` expose désormais `default_orb_deg` dans le payload `aspects`.
+- Fix review: seed des 12 signes zodiacaux (plus seulement 2) pour fiabiliser le fallback `simplified`.
+- Fix review: `ReferenceRepository.get_reference_data` reconstruit aussi les règles hiérarchiques persistées (`orb_luminaries`, `orb_pair_overrides`) depuis `astro_characteristics` (`entity_type="aspect"`).
 - Ajout d’une validation centralisée `ReferenceDataService.validate_orb_overrides` avec bornes strictes `0 < orb <= 15` et erreur métier `invalid_orb_override`.
 - Couverture tests ajoutée/étendue pour présence de `default_orb_deg`, stabilité des codes d’aspects majeurs et rejet des overrides invalides.
 
@@ -77,6 +79,7 @@ GPT-5 Codex
 ### Change Log
 - 2026-02-26: Implémentation complète story 20-9 (modèle DB + migration + repository + validation orbes + tests).
 - 2026-02-26: Revue de code (AI) - Correction de la migration non suivie, consolidation des constantes d'orbes et amélioration de la sécurité du schéma (server_default).
+- 2026-02-27: Correctifs post-review - seed 12 signes + exposition des traits d'orbes hiérarchiques persistés (`orb_luminaries`/`orb_pair_overrides`) dans le payload de référence.
 
 ## Senior Developer Review (AI)
 
