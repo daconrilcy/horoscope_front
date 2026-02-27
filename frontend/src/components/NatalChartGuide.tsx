@@ -26,6 +26,7 @@ export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps
         <section className="natal-chart-guide__section">
           <h3>{g.planetsTitle}</h3>
           <p>{g.planetsDesc}</p>
+          <p>{g.planetsRetrogradeTip}</p>
         </section>
 
         <section className="natal-chart-guide__section">
@@ -44,8 +45,13 @@ export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps
         </section>
 
         <section className="natal-chart-guide__section">
-          <h3>{g.ascendantTitle}</h3>
-          <p>{g.ascendantDesc}</p>
+          <h3>{g.anglesTitle}</h3>
+          <p>{g.anglesDesc}</p>
+        </section>
+
+        <section className="natal-chart-guide__section">
+          <h3>{g.sunAscendantTitle}</h3>
+          <p>{g.sunAscendantDesc}</p>
           {missingBirthTime && (
             <p className="natal-chart-guide__missing-time" role="note">
               {g.ascendantMissing}
@@ -56,6 +62,18 @@ export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps
         <section className="natal-chart-guide__section">
           <h3>{g.aspectsTitle}</h3>
           <p>{g.aspectsDesc}</p>
+        </section>
+
+        <section className="natal-chart-guide__section natal-chart-guide__faq">
+          <h3>{g.faqTitle}</h3>
+          <dl>
+            {g.faq.map((item) => (
+              <div key={item.question} className="natal-chart-guide__faq-item">
+                <dt>{item.question}</dt>
+                <dd>{item.answer}</dd>
+              </div>
+            ))}
+          </dl>
         </section>
       </div>
     </details>

@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, render, screen, within } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -288,11 +288,16 @@ describe("NatalChartPage", () => {
     expect(screen.getByText(/Système de maisons Maisons égales/i)).toBeInTheDocument()
 
     // Sample data check — now translated to French
-    // Note: getAllByText used for terms that also appear in the pedagogical guide
-    expect(screen.getAllByText(/Soleil/).length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText(/Gémeaux/).length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText(/Trigone/)).toBeInTheDocument()
-    expect(screen.getByText(/Lune/)).toBeInTheDocument()
+    const planetSection = screen.getByRole("heading", { name: "Planètes" }).parentElement!
+    const aspectSection = screen.getByRole("heading", { name: /Les aspects/i, level: 2 }).parentElement!
+
+    const { getByText: getByTextInPlanets } = within(planetSection)
+    const { getByText: getByTextInAspects } = within(aspectSection)
+
+    expect(getByTextInPlanets(/Soleil/)).toBeInTheDocument()
+    expect(getByTextInPlanets(/Gémeaux/)).toBeInTheDocument()
+    expect(getByTextInAspects(/Trigone/)).toBeInTheDocument()
+    expect(getByTextInAspects(/Lune/)).toBeInTheDocument()
   })
 
   it("affiche le degré dans le signe et l'intervalle de maison pour chaque planète", () => {
@@ -523,8 +528,8 @@ describe("NatalChartPage", () => {
         <NatalChartPage />
       </MemoryRouter>
     )
-    // "Soleil" also appears in the pedagogical guide sign example — use getAllByText
-    expect(screen.getAllByText(/Soleil/).length).toBeGreaterThanOrEqual(1)
+    const planetSection = screen.getByRole("heading", { name: "Planètes" }).parentElement!
+    expect(within(planetSection).getByText(/Soleil/)).toBeInTheDocument()
     expect(screen.queryByText(/SUN/)).not.toBeInTheDocument()
   })
 
@@ -545,8 +550,8 @@ describe("NatalChartPage", () => {
         <NatalChartPage />
       </MemoryRouter>
     )
-    // "Gémeaux" also appears in the pedagogical guide signs description — use getAllByText
-    expect(screen.getAllByText(/Gémeaux/).length).toBeGreaterThanOrEqual(1)
+    const planetSection = screen.getByRole("heading", { name: "Planètes" }).parentElement!
+    expect(within(planetSection).getByText(/Gémeaux/)).toBeInTheDocument()
     expect(screen.queryByText(/GEMINI/)).not.toBeInTheDocument()
   })
 
@@ -836,6 +841,123 @@ describe("NatalChartPage", () => {
         </MemoryRouter>
       )
       expect(screen.getByText(/Comment lire ton thème natal/i)).toBeInTheDocument()
+    })
+
+    describe("Story 20-14: guide enrichi 6 sections + FAQ", () => {
+      it("affiche les 6 sections métier dans le guide (AC 1 - 20-14)", () => {
+        mockUseLatestNatalChart.mockReturnValue({
+          isLoading: false,
+          isError: false,
+          data: { ...CHART_BASE },
+        })
+        const { container } = render(
+          <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <NatalChartPage />
+          </MemoryRouter>
+        )
+        const details = container.querySelector("details.natal-chart-guide")
+        details!.setAttribute("open", "")
+
+        expect(screen.getByRole("heading", { name: /Les signes astrologiques/i, level: 3 })).toBeInTheDocument()
+        expect(screen.getByRole("heading", { name: /Les planètes/i, level: 3 })).toBeInTheDocument()
+        expect(screen.getByRole("heading", { name: /Les maisons/i, level: 3 })).toBeInTheDocument()
+        expect(screen.getByRole("heading", { name: /Les angles/i, level: 3 })).toBeInTheDocument()
+        expect(screen.getByRole("heading", { name: /Signe solaire et ascendant/i, level: 3 })).toBeInTheDocument()
+        expect(screen.getByRole("heading", { name: /Les aspects/i, level: 3 })).toBeInTheDocument()
+      })
+
+      it("affiche le contenu de la section angles (AC 2 - 20-14)", () => {
+        mockUseLatestNatalChart.mockReturnValue({
+          isLoading: false,
+          isError: false,
+          data: { ...CHART_BASE },
+        })
+        const { container } = render(
+          <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <NatalChartPage />
+          </MemoryRouter>
+        )
+        const details = container.querySelector("details.natal-chart-guide")
+        details!.setAttribute("open", "")
+
+        expect(screen.getByText(/Ascendant \(ASC\)/i)).toBeInTheDocument()
+        expect(screen.getByText(/Milieu du Ciel \(MC\)/i)).toBeInTheDocument()
+      })
+
+      it("affiche la section signe solaire et ascendant avec desc (AC 5 - 20-14)", () => {
+        mockUseLatestNatalChart.mockReturnValue({
+          isLoading: false,
+          isError: false,
+          data: { ...CHART_BASE },
+        })
+        const { container } = render(
+          <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <NatalChartPage />
+          </MemoryRouter>
+        )
+        const details = container.querySelector("details.natal-chart-guide")
+        details!.setAttribute("open", "")
+
+        expect(screen.getByText(/Le signe solaire est le signe dans lequel se trouve le Soleil/i)).toBeInTheDocument()
+      })
+
+      it("affiche l'astuce rétrograde dans la section planètes (AC 2 - 20-14)", () => {
+        mockUseLatestNatalChart.mockReturnValue({
+          isLoading: false,
+          isError: false,
+          data: { ...CHART_BASE },
+        })
+        const { container } = render(
+          <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <NatalChartPage />
+          </MemoryRouter>
+        )
+        const details = container.querySelector("details.natal-chart-guide")
+        details!.setAttribute("open", "")
+
+        expect(screen.getByText(/Le symbole ℞ signifie que la planète est en mouvement rétrograde apparent/i)).toBeInTheDocument()
+      })
+
+      it("affiche une FAQ avec 8 questions (AC 4 - 20-14)", () => {
+        mockUseLatestNatalChart.mockReturnValue({
+          isLoading: false,
+          isError: false,
+          data: { ...CHART_BASE },
+        })
+        const { container } = render(
+          <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <NatalChartPage />
+          </MemoryRouter>
+        )
+        const details = container.querySelector("details.natal-chart-guide")
+        details!.setAttribute("open", "")
+
+        expect(screen.getByText(/Pourquoi parle-t-on de 360°/i)).toBeInTheDocument()
+        expect(screen.getByText(/Pourquoi y a-t-il deux découpages.*signes et maisons/i)).toBeInTheDocument()
+        expect(screen.getByText(/Qu'est-ce qu'une longitude brute/i)).toBeInTheDocument()
+        expect(screen.getByText(/Qu'est-ce qu'une cuspide/i)).toBeInTheDocument()
+        expect(screen.getByText(/Pourquoi certaines maisons semblent bizarres/i)).toBeInTheDocument()
+        expect(screen.getByText(/À quoi sert l'orbe dans les aspects/i)).toBeInTheDocument()
+        expect(screen.getByText(/Que signifie le symbole ℞/i)).toBeInTheDocument()
+        expect(screen.getByText(/Pourquoi le signe solaire et l'ascendant sont-ils mis en avant/i)).toBeInTheDocument()
+      })
+
+      it("affiche le titre FAQ dans le guide (AC 4 - 20-14)", () => {
+        mockUseLatestNatalChart.mockReturnValue({
+          isLoading: false,
+          isError: false,
+          data: { ...CHART_BASE },
+        })
+        const { container } = render(
+          <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <NatalChartPage />
+          </MemoryRouter>
+        )
+        const details = container.querySelector("details.natal-chart-guide")
+        details!.setAttribute("open", "")
+
+        expect(screen.getByRole("heading", { name: /FAQ/i, level: 3 })).toBeInTheDocument()
+      })
     })
   })
 
