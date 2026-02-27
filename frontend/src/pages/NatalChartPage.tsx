@@ -256,7 +256,7 @@ export function NatalChartPage() {
             {aspects.map((item, index) => (
               <li key={`${item.aspect_code}-${item.planet_a}-${item.planet_b}-${index}`}>
                 {translateAspect(item.aspect_code)}: {translatePlanet(item.planet_a)} - {translatePlanet(item.planet_b)} ({t.angle} {item.angle.toFixed(2)}°, {t.orb}{" "}
-                {item.orb.toFixed(2)}°)
+                {item.orb.toFixed(2)}°{item.orb_used != null ? `, ${t.orbUsed} ${item.orb_used.toFixed(2)}°` : ""})
               </li>
             ))}
           </ul>

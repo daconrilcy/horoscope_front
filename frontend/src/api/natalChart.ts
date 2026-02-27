@@ -24,6 +24,7 @@ type AspectResult = {
   planet_b: string
   angle: number
   orb: number
+  orb_used?: number
 }
 
 type NatalResult = {

@@ -17,6 +17,8 @@ type NatalChartGuideTranslations = {
   ascendantTitle: string
   ascendantDesc: string
   ascendantMissing: string
+  aspectsTitle: string
+  aspectsDesc: string
 }
 
 type NatalChartTranslations = {
@@ -56,6 +58,7 @@ type NatalChartTranslations = {
   cuspide: string
   angle: string
   orb: string
+  orbUsed: string
   wrapConnector: string
   guide: NatalChartGuideTranslations
 }
@@ -92,12 +95,13 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
     sections: {
       planets: "Planètes",
       houses: "Maisons",
-      aspects: "Aspects majeurs",
+      aspects: "Les aspects",
     },
     noAspects: "Aucun aspect majeur détecté pour ce calcul.",
     cuspide: "cuspide",
     angle: "angle",
     orb: "orbe",
+    orbUsed: "orbe eff.",
     wrapConnector: "puis 0°",
     guide: {
       title: "Comment lire ton thème natal",
@@ -123,6 +127,8 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
         "L'ascendant correspond au signe de la cuspide de la Maison I. Il dépend de l'heure et du lieu de naissance, et il est calculé selon le référentiel indiqué en en-tête.",
       ascendantMissing:
         "L'heure de naissance n'est pas renseignée\u00a0: l'ascendant n'est pas calculé.",
+      aspectsTitle: "Les aspects",
+      aspectsDesc: "Les aspects sont les angles géométriques entre deux planètes. L'orbe est l'écart maximal autorisé pour qu'un aspect soit considéré comme valide. L'orbe effective (orbe eff.) indique l'écart réel mesuré pour cet aspect spécifique.",
     },
   },
   en: {
@@ -156,12 +162,13 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
     sections: {
       planets: "Planets",
       houses: "Houses",
-      aspects: "Major aspects",
+      aspects: "Aspects",
     },
     noAspects: "No major aspects detected for this calculation.",
     cuspide: "cusp",
     angle: "angle",
     orb: "orb",
+    orbUsed: "eff. orb",
     wrapConnector: "then 0°",
     guide: {
       title: "How to read your natal chart",
@@ -184,6 +191,8 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       ascendantDesc:
         "The ascendant is the degree of the ecliptic rising on the eastern horizon at the time of birth. It is calculated from the birth time and location.",
       ascendantMissing: "Birth time is not provided: the ascendant is not calculated.",
+      aspectsTitle: "Aspects",
+      aspectsDesc: "Aspects are the geometric angles between two planets. The 'orb' is the maximum deviation allowed for the aspect to be valid. The 'effective orb' (eff. orb) is the actual measured deviation for this specific aspect.",
     },
   },
   es: {
@@ -217,12 +226,13 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
     sections: {
       planets: "Planetas",
       houses: "Casas",
-      aspects: "Aspectos mayores",
+      aspects: "Los aspectos",
     },
     noAspects: "No se detectaron aspectos mayores para este cálculo.",
     cuspide: "cúspide",
     angle: "ángulo",
     orb: "orbe",
+    orbUsed: "orbe efec.",
     wrapConnector: "luego 0°",
     guide: {
       title: "Cómo leer tu carta natal",
@@ -245,6 +255,9 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       ascendantDesc:
         "El ascendente es el grado de la eclíptica que asciende por el horizonte este en el momento del nacimiento. Se calcula a partir de la hora y el lugar de nacimiento.",
       ascendantMissing: "La hora de nacimiento no está registrada: el ascendente no se calcula.",
+      aspectsTitle: "Los aspectos",
+      aspectsDesc: "Los aspectos son los ángulos geométricos entre dos planetas. El 'orbe' es la desviación máxima permitida para que el aspecto sea válido. El 'orbe efectivo' (orbe efec.) es la desviación real medida para este aspecto específico.",
     },
   },
 }
+

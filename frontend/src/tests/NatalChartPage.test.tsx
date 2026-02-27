@@ -7,7 +7,7 @@ import { NatalChartPage } from "../pages/NatalChartPage"
  * ApiError est importé pour créer des instances dans les tests (new ApiError(...)).
  * vi.mock remplace la classe réelle par notre mock défini ci-dessous.
  */
-import { ApiError, useLatestNatalChart } from "../api/natalChart"
+import { ApiError, useLatestNatalChart, generateNatalChart } from "../api/natalChart"
 
 /**
  * Mock de ApiError pour les tests.
@@ -26,6 +26,7 @@ vi.mock("../api/natalChart", () => ({
     }
   },
   useLatestNatalChart: vi.fn(),
+  generateNatalChart: vi.fn(),
 }))
 
 const mockUseLatestNatalChart: ReturnType<typeof vi.mocked<typeof useLatestNatalChart>> = vi.mocked(useLatestNatalChart)
@@ -281,7 +282,7 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("heading", { name: /Thème natal/i })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Planètes" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Maisons" })).toBeInTheDocument()
-    expect(screen.getByRole("heading", { name: /Aspects majeurs/i })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: /Les aspects/i, level: 2 })).toBeInTheDocument()
     // Verify i18n metadata labels are rendered
     expect(screen.getByText(/Généré le/i)).toBeInTheDocument()
     expect(screen.getByText(/Système de maisons Maisons égales/i)).toBeInTheDocument()
@@ -780,6 +781,26 @@ describe("NatalChartPage", () => {
       ).toBeInTheDocument()
     })
 
+    it("affiche la section des aspects dans le guide (AC 1)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { ...CHART_BASE },
+      })
+      const { container } = render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      const details = container.querySelector("details.natal-chart-guide")
+      details!.setAttribute("open", "")
+      
+      // On vérifie que le titre de la section dans le guide correspond au titre de la section principale
+      const guideAspectsTitle = screen.getByRole("heading", { name: "Les aspects", level: 3 })
+      expect(guideAspectsTitle).toBeInTheDocument()
+      expect(screen.getByText(/L'orbe effective \(orbe eff\.\) indique l'écart réel mesuré/)).toBeInTheDocument()
+    })
+
     it("n'affiche pas le message ascendant non calculé quand missing_birth_time=false (AC 5)", () => {
       mockUseLatestNatalChart.mockReturnValue({
         isLoading: false,
@@ -882,6 +903,159 @@ describe("NatalChartPage", () => {
     })
   })
 
+  describe("Story 20-13: aspects enrichis orb/orb_used et rétrograde", () => {
+    it("affiche orb et orb_used quand les deux champs sont présents (AC 1)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          ...CHART_BASE,
+          result: {
+            ...CHART_BASE.result,
+            aspects: [
+              {
+                aspect_code: "TRINE",
+                planet_a: "SUN",
+                planet_b: "MOON",
+                angle: 120.0,
+                orb: 2.5,
+                orb_used: 1.8,
+              },
+            ],
+          },
+        },
+      })
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      expect(screen.getByText(/orbe 2\.50°/i)).toBeInTheDocument()
+      expect(screen.getByText(/orbe eff\. 1\.80°/i)).toBeInTheDocument()
+    })
+
+    it("affiche un état vide explicite quand aspects est vide (AC 2)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          ...CHART_BASE,
+          result: { ...CHART_BASE.result, aspects: [] },
+        },
+      })
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      expect(screen.getByText(/Aucun aspect majeur détecté/i)).toBeInTheDocument()
+    })
+
+    it("affiche encore le symbole ℞ (non-régression retrograde) (AC 3)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          ...CHART_BASE,
+          result: {
+            ...CHART_BASE.result,
+            planet_positions: [
+              {
+                planet_code: "MERCURY",
+                sign_code: "ARIES",
+                longitude: 15.0,
+                house_number: 1,
+                is_retrograde: true,
+              },
+            ],
+            aspects: [
+              {
+                aspect_code: "CONJUNCTION",
+                planet_a: "MERCURY",
+                planet_b: "SUN",
+                angle: 0.0,
+                orb: 1.2,
+                orb_used: 1.0,
+              },
+            ],
+          },
+        },
+      })
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      expect(screen.getByText(/Mercure ℞:/i)).toBeInTheDocument()
+      expect(screen.getByText(/orbe eff\. 1\.00°/i)).toBeInTheDocument()
+    })
+
+    it("rendu stable sans orb_used sur payload legacy (AC 4)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          ...CHART_BASE,
+          result: {
+            ...CHART_BASE.result,
+            aspects: [
+              {
+                aspect_code: "OPPOSITION",
+                planet_a: "SUN",
+                planet_b: "MOON",
+                angle: 180.0,
+                orb: 3.0,
+              },
+            ],
+          },
+        },
+      })
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      expect(screen.getByText(/Opposition/i)).toBeInTheDocument()
+      expect(screen.getByText(/orbe 3\.00°/i)).toBeInTheDocument()
+      
+      const legacyList = screen.getByRole("heading", { name: /Les aspects/i, level: 2 }).parentElement?.querySelector("ul")
+      expect(legacyList?.textContent).not.toContain("orbe eff.")
+    })
+
+    it("rendu stable quand orb_used est null (sécurité API)", () => {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          ...CHART_BASE,
+          result: {
+            ...CHART_BASE.result,
+            aspects: [
+              {
+                aspect_code: "SEXTILE",
+                planet_a: "SUN",
+                planet_b: "MARS",
+                angle: 60.0,
+                orb: 2.0,
+                orb_used: null as any,
+              },
+            ],
+          },
+        },
+      })
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+      expect(screen.getByText(/Sextile/i)).toBeInTheDocument()
+      expect(screen.getByText(/orbe 2\.00°/i)).toBeInTheDocument()
+      
+      const nullOrbList = screen.getByRole("heading", { name: /Les aspects/i, level: 2 }).parentElement?.querySelector("ul")
+      expect(nullOrbList?.textContent).not.toContain("orbe eff.")
+    })
+  })
+
   it("handles undefined planet_positions, houses, and aspects gracefully", () => {
     mockUseLatestNatalChart.mockReturnValue({
       isLoading: false,
@@ -904,7 +1078,7 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("heading", { name: /Thème natal/i })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Planètes" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Maisons" })).toBeInTheDocument()
-    expect(screen.getByRole("heading", { name: /Aspects majeurs/i })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: /Les aspects/i, level: 2 })).toBeInTheDocument()
     expect(screen.getByText(/Aucun aspect majeur détecté/i)).toBeInTheDocument()
 
     // Vérifier que les listes planètes et maisons sont vides (aucun <li>)

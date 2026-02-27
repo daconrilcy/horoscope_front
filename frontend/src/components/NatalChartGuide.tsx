@@ -52,6 +52,11 @@ export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps
             </p>
           )}
         </section>
+
+        <section className="natal-chart-guide__section">
+          <h3>{g.aspectsTitle}</h3>
+          <p>{g.aspectsDesc}</p>
+        </section>
       </div>
     </details>
   )
