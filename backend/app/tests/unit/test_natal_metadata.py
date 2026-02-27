@@ -86,7 +86,7 @@ def test_natal_result_defaults() -> None:
     result = NatalResult(
         reference_version="1.0.0",
         ruleset_version="1.0.0",
-        house_system="equal_house",
+        house_system="placidus",
         prepared_input=_make_prepared_data(),
         planet_positions=[],
         houses=[],
@@ -103,11 +103,11 @@ def test_natal_result_defaults() -> None:
 
 def test_natal_result_model_validate_legacy_payload() -> None:
     """NatalResult.model_validate() accepte un payload ancien sans les nouveaux champs."""
-    # Payload minimal tel que stocké avant story 20-5
+    # Payload minimal tel que stocké avant story 20-5 (sans engine, zodiac, frame, etc.)
     legacy_payload = {
         "reference_version": "1.0.0",
         "ruleset_version": "1.0.0",
-        "house_system": "equal_house",
+        "house_system": "placidus",
         "prepared_input": {
             "birth_datetime_local": "1990-06-15T12:00:00+02:00",
             "birth_datetime_utc": "1990-06-15T10:00:00Z",
@@ -131,7 +131,7 @@ def test_natal_result_model_validate_legacy_payload() -> None:
     # Champs historiques préservés
     assert result.reference_version == "1.0.0"
     assert result.ruleset_version == "1.0.0"
-    assert result.house_system == "equal_house"
+    assert result.house_system == "placidus"
 
 
 # ---------------------------------------------------------------------------
@@ -510,7 +510,7 @@ def test_user_natal_chart_metadata_ephemeris_path_version_none_for_simplified() 
     result = NatalResult(
         reference_version="1.0.0",
         ruleset_version="1.0.0",
-        house_system="equal_house",
+        house_system="placidus",
         engine="simplified",
         ephemeris_path_version=None,
         ephemeris_path_hash=None,
@@ -635,7 +635,7 @@ def test_natal_calculation_service_ephemeris_path_version_none_for_simplified(
         return NatalResult(
             reference_version="1.0.0",
             ruleset_version="1.0.0",
-            house_system="equal_house",
+            house_system="placidus",
             engine="simplified",
             ephemeris_path_version=None,
             ephemeris_path_hash=None,
@@ -655,7 +655,7 @@ def test_natal_calculation_service_ephemeris_path_version_none_for_simplified(
         return_value=ref_data,
     ):
         natal_calculation_service.NatalCalculationService.calculate(
-            db=db, birth_input=birth_input, accurate=False
+            db=db, birth_input=birth_input, accurate=False, house_system="equal"
         )
 
     assert captured_kwargs.get("ephemeris_path_version") is None

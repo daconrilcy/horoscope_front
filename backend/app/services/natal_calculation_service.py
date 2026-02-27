@@ -284,6 +284,16 @@ class NatalCalculationService:
             altitude_m=altitude_m,
         )
 
+        # Story 23-3: topocentric frame requires lat/lon to avoid provider-level 503
+        if resolved_frame == FrameType.TOPOCENTRIC:
+            if birth_input.birth_lat is None or birth_input.birth_lon is None:
+                increment_counter("natal_ruleset_invalid_total|code=missing_topocentric_coordinates")
+                raise NatalCalculationError(
+                    code="missing_topocentric_coordinates",
+                    message="lat/lon are required for topocentric frame",
+                    details={"frame": "topocentric"},
+                )
+
         # AC 2: Given zodiac=sidereal sans ayanamsa -> 422 missing_ayanamsa
         # This applies when zodiac is explicitly requested as sidereal.
         if (zodiac or "").strip().lower() == "sidereal" and not (ayanamsa or "").strip():
