@@ -7,9 +7,12 @@ de référence et les règles de calcul astrologique.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.core.config import settings
 from app.domain.astrology.ephemeris_provider import SUPPORTED_AYANAMSAS, EphemerisCalcError
@@ -152,6 +155,7 @@ class NatalCalculationService:
         ayanamsa: str | None = None,
         frame: str = "geocentric",
         altitude_m: float | None = None,
+        request_id: str | None = None,
     ) -> NatalResult:
         """
         Calcule un thème natal complet.
@@ -215,6 +219,7 @@ class NatalCalculationService:
             frame=resolved_frame,
         )
         ephemeris_path_version: str | None = None
+        ephemeris_path_hash: str | None = None
         if engine == "swisseph":
             from app.core.ephemeris import (
                 SwissEphInitError,
@@ -231,6 +236,7 @@ class NatalCalculationService:
                 raise SwissEphInitError("SwissEph bootstrap failed with unknown error")
             engine = "swisseph"
             ephemeris_path_version = bootstrap.path_version
+            ephemeris_path_hash = getattr(bootstrap, "path_hash", "") or None
 
         try:
             return build_natal_result(
@@ -246,8 +252,17 @@ class NatalCalculationService:
                 frame=resolved_frame,
                 altitude_m=resolved_altitude_m,
                 ephemeris_path_version=ephemeris_path_version,
+                ephemeris_path_hash=ephemeris_path_hash,
             )
         except (EphemerisCalcError, HousesCalcError) as error:
+            logger.error(
+                "swisseph_calc_error request_id=%s engine=%s ephe_version=%s ephe_hash=%s code=%s",
+                request_id or "unknown",
+                engine,
+                ephemeris_path_version or "n/a",
+                ephemeris_path_hash or "n/a",
+                error.code,
+            )
             raise NatalCalculationError(
                 code=error.code,
                 message=error.message,

@@ -1,9 +1,14 @@
+import logging
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
 from app.core.config import settings
+from app.domain.astrology.ephemeris_provider import EphemerisCalcError
 from app.domain.astrology.natal_calculation import (
     HouseResult,
+    NatalCalculationError,
     NatalResult,
     PlanetPosition,
 )
@@ -328,3 +333,109 @@ def test_compare_dev_only_inaccessible_in_production(monkeypatch: object) -> Non
 
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "endpoint_not_available"
+
+
+@pytest.mark.parametrize("error_code", ["ephemeris_calc_failed", "houses_calc_failed"])
+def test_calculate_natal_maps_technical_errors_to_503(
+    monkeypatch: pytest.MonkeyPatch, error_code: str
+) -> None:
+    _cleanup_reference_tables()
+    _seed_reference_data()
+
+    def _raise_technical(*args: object, **kwargs: object) -> None:
+        raise NatalCalculationError(
+            code=error_code,
+            message="technical failure",
+            details={"engine": "swisseph"},
+        )
+
+    monkeypatch.setattr(
+        "app.api.v1.routers.astrology_engine.NatalCalculationService.calculate",
+        _raise_technical,
+    )
+
+    response = client.post(
+        "/v1/astrology-engine/natal/calculate",
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+            "reference_version": "1.0.0",
+        },
+        headers={"x-request-id": "rid-natal-technical"},
+    )
+
+    assert response.status_code == 503
+    payload = response.json()
+    assert payload["error"]["code"] == error_code
+    assert payload["error"]["request_id"] == "rid-natal-technical"
+
+
+def test_calculate_natal_sanitizes_request_id_header() -> None:
+    _cleanup_reference_tables()
+    _seed_reference_data()
+
+    response = client.post(
+        "/v1/astrology-engine/natal/calculate",
+        json={
+            "birth_date": "1990-15-99",
+            "birth_time": "invalid-time",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+        headers={"x-request-id": "rid-natal\r\ninject"},
+    )
+
+    assert response.status_code == 422
+    payload = response.json()
+    assert payload["error"]["request_id"] == "rid-natalinject"
+
+
+def test_calculate_natal_logs_structured_swisseph_error_fields(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    _cleanup_reference_tables()
+    _seed_reference_data()
+
+    class _Bootstrap:
+        success = True
+        path_version = "se-test-v1"
+        path_hash = "abc123"
+        error = None
+
+    monkeypatch.setattr("app.services.natal_calculation_service.settings.swisseph_enabled", True)
+    monkeypatch.setattr(
+        "app.core.ephemeris.get_bootstrap_result",
+        lambda: _Bootstrap(),
+    )
+    monkeypatch.setattr(
+        "app.services.natal_calculation_service.build_natal_result",
+        lambda *args, **kwargs: (_ for _ in ()).throw(EphemerisCalcError("calc failed")),
+    )
+
+    with caplog.at_level(logging.ERROR, logger="app.services.natal_calculation_service"):
+        response = client.post(
+            "/v1/astrology-engine/natal/calculate",
+            json={
+                "birth_date": "1990-06-15",
+                "birth_time": "10:30",
+                "birth_place": "Paris",
+                "birth_timezone": "Europe/Paris",
+                "reference_version": "1.0.0",
+                "accurate": True,
+                "birth_lat": 48.8566,
+                "birth_lon": 2.3522,
+            },
+            headers={"x-request-id": "rid-structured-log"},
+        )
+
+    assert response.status_code == 503
+    log_messages = [
+        record.getMessage() for record in caplog.records if record.levelno == logging.ERROR
+    ]
+    assert any("request_id=rid-structured-log" in msg for msg in log_messages)
+    assert any("engine=swisseph" in msg for msg in log_messages)
+    assert any("ephe_version=se-test-v1" in msg for msg in log_messages)
+    assert any("ephe_hash=abc123" in msg for msg in log_messages)

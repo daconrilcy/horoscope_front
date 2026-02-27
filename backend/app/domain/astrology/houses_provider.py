@@ -30,11 +30,12 @@ from dataclasses import dataclass
 from types import ModuleType
 
 from app.core.ephemeris import SWISSEPH_LOCK
-from app.infra.observability.metrics import observe_duration
+from app.infra.observability.metrics import increment_counter, observe_duration
 
 logger = logging.getLogger(__name__)
 
-METRIC_HOUSES_DURATION = "swisseph_houses_calc_duration_ms"
+METRIC_HOUSES_LATENCY = "swisseph_houses_latency_ms"
+METRIC_ERRORS = "swisseph_errors_total"
 
 # Mapping nom de système public → code octet SwissEph.
 # Reference: pyswisseph houses_ex hsys parameter.
@@ -158,8 +159,6 @@ def calculate_houses(
     if house_system not in _SUPPORTED_HOUSE_SYSTEMS:
         raise UnsupportedHouseSystemError(house_system)
 
-    swe = _get_swe_module()
-
     is_topocentric = frame == "topocentric"
     # AC3 : altitude implicite 0 si frame topocentric sans altitude fournie.
     effective_altitude = altitude_m if altitude_m is not None else 0.0
@@ -168,37 +167,43 @@ def calculate_houses(
     topo_set = False
     start = time.monotonic()
 
-    with SWISSEPH_LOCK:
-        try:
-            if is_topocentric:
+    try:
+        swe = _get_swe_module()
+
+        with SWISSEPH_LOCK:
+            try:
+                if is_topocentric:
+                    try:
+                        swe.set_topo(lon, lat, effective_altitude)
+                        topo_set = True
+                    except Exception as exc:
+                        raise HousesCalcError(
+                            f"Failed to set topocentric position: {type(exc).__name__}"
+                        ) from exc
+
                 try:
-                    swe.set_topo(lon, lat, effective_altitude)
-                    topo_set = True
+                    cusps_raw, ascmc_raw = swe.houses_ex(jdut, lat, lon, hsys_code)
                 except Exception as exc:
                     raise HousesCalcError(
-                        f"Failed to set topocentric position: {type(exc).__name__}"
+                        f"houses_ex failed: {type(exc).__name__}"
                     ) from exc
 
-            try:
-                cusps_raw, ascmc_raw = swe.houses_ex(jdut, lat, lon, hsys_code)
-            except Exception as exc:
-                raise HousesCalcError(
-                    f"houses_ex failed: {type(exc).__name__}"
-                ) from exc
-
-        finally:
-            if topo_set:
-                try:
-                    swe.set_topo(0.0, 0.0, 0.0)
-                except Exception as exc:
-                    # Ne pas masquer les exceptions d'origine, mais logger.
-                    logger.error(
-                        "failed_to_reset_topocentric_position error_type=%s",
-                        type(exc).__name__,
-                    )
+            finally:
+                if topo_set:
+                    try:
+                        swe.set_topo(0.0, 0.0, 0.0)
+                    except Exception as exc:
+                        # Ne pas masquer les exceptions d'origine, mais logger.
+                        logger.error(
+                            "failed_to_reset_topocentric_position error_type=%s",
+                            type(exc).__name__,
+                        )
+    except HousesCalcError:
+        increment_counter(f"{METRIC_ERRORS}|code=houses_calc_failed")
+        raise
 
     elapsed_ms = (time.monotonic() - start) * 1000.0
-    observe_duration(METRIC_HOUSES_DURATION, elapsed_ms)
+    observe_duration(METRIC_HOUSES_LATENCY, elapsed_ms)
 
     # SwissEph peut retourner 12 ou 13 cuspides selon version/binding.
     cusps = _extract_cusps(cusps_raw)

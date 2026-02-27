@@ -26,6 +26,7 @@ class ResponseMeta(BaseModel):
     request_id: str
     engine: str | None = None
     ephemeris_path_version: str | None = None
+    ephemeris_path_hash: str | None = None
 
 
 class ErrorPayload(BaseModel):
@@ -74,6 +75,12 @@ class ChartResultAuditResponse(BaseModel):
 
 router = APIRouter(prefix="/v1/astrology-engine", tags=["astrology-engine"])
 logger = logging.getLogger(__name__)
+_NATAL_TECHNICAL_ERROR_CODES = frozenset(
+    {
+        "ephemeris_calc_failed",
+        "houses_calc_failed",
+    }
+)
 
 
 def _error_response(
@@ -95,6 +102,14 @@ def _error_response(
             }
         },
     )
+
+
+def _status_code_for_natal_error(error_code: str) -> int:
+    if error_code == "reference_version_not_found":
+        return 404
+    if error_code in _NATAL_TECHNICAL_ERROR_CODES:
+        return 503
+    return 422
 
 
 def _build_engine_diff(
@@ -187,11 +202,13 @@ def prepare_natal(request: Request, payload: dict[str, Any]) -> Any:
         prepared = NatalPreparationService.prepare(parsed_payload)
 
         eph_version = None
+        eph_hash = None
         engine_name = "simplified"
         if settings.swisseph_enabled:
             result = ephemeris.get_bootstrap_result()
             if result and result.success:
                 eph_version = result.path_version
+                eph_hash = result.path_hash or None
                 engine_name = "swisseph"
 
         return {
@@ -200,6 +217,7 @@ def prepare_natal(request: Request, payload: dict[str, Any]) -> Any:
                 "request_id": request_id,
                 "engine": engine_name,
                 "ephemeris_path_version": eph_version,
+                "ephemeris_path_hash": eph_hash,
             },
         }
     except ValidationError as error:
@@ -223,7 +241,11 @@ def prepare_natal(request: Request, payload: dict[str, Any]) -> Any:
 @router.post(
     "/natal/calculate",
     response_model=NatalCalculateResponse,
-    responses={404: {"model": ErrorEnvelope}, 422: {"model": ErrorEnvelope}},
+    responses={
+        404: {"model": ErrorEnvelope},
+        422: {"model": ErrorEnvelope},
+        503: {"model": ErrorEnvelope},
+    },
 )
 def calculate_natal(
     request: Request,
@@ -251,6 +273,7 @@ def calculate_natal(
             ayanamsa=parsed_payload.ayanamsa,
             frame=parsed_payload.frame,
             altitude_m=parsed_payload.altitude_m,
+            request_id=request_id,
         )
         chart_id = ChartResultService.persist_trace(
             db=db,
@@ -260,10 +283,12 @@ def calculate_natal(
         db.commit()
 
         eph_version = None
+        eph_hash = None
         if result.engine == "swisseph":
             eph_res = ephemeris.get_bootstrap_result()
             if eph_res and eph_res.success:
                 eph_version = eph_res.path_version
+                eph_hash = eph_res.path_hash or None
 
         return {
             "data": {"chart_id": chart_id, "result": result.model_dump()},
@@ -271,6 +296,7 @@ def calculate_natal(
                 "request_id": request_id,
                 "engine": result.engine,
                 "ephemeris_path_version": eph_version,
+                "ephemeris_path_hash": eph_hash,
             },
         }
     except ValidationError as error:
@@ -293,9 +319,8 @@ def calculate_natal(
         )
     except NatalCalculationError as error:
         db.rollback()
-        status_code = 404 if error.code == "reference_version_not_found" else 422
         return _error_response(
-            status_code=status_code,
+            status_code=_status_code_for_natal_error(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -400,11 +425,13 @@ def compare_natal_engines(
                     "engine": swisseph_dump.get("engine"),
                     "house_system": swisseph_dump.get("house_system"),
                     "ephemeris_path_version": swisseph_dump.get("ephemeris_path_version"),
+                    "ephemeris_path_hash": swisseph_dump.get("ephemeris_path_hash"),
                 },
                 "simplified": {
                     "engine": simplified_dump.get("engine"),
                     "house_system": simplified_dump.get("house_system"),
                     "ephemeris_path_version": simplified_dump.get("ephemeris_path_version"),
+                    "ephemeris_path_hash": simplified_dump.get("ephemeris_path_hash"),
                 },
                 "simplified_vs_swisseph": diff,
             },
@@ -420,7 +447,7 @@ def compare_natal_engines(
         )
     except NatalCalculationError as error:
         return _error_response(
-            status_code=422,
+            status_code=_status_code_for_natal_error(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,

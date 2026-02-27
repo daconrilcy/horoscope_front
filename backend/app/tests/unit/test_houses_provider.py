@@ -9,7 +9,7 @@ Couvre :
 - Test géocentrique — set_topo non appelé (AC3 négatif)
 - Test erreur 422 unsupported_house_system (AC4)
 - Tests erreurs HousesCalcError normalisées (robustesse)
-- Test métrique swisseph_houses_calc_duration_ms
+- Test métrique swisseph_houses_latency_ms
 
 Note : pyswisseph peut ne pas être installé dans l'environnement de test.
       Les tests utilisent patch.dict(sys.modules, ...) pour injecter un mock
@@ -454,7 +454,7 @@ class TestMetrics:
         reset_metrics()
 
     def test_metric_recorded_after_successful_calc(self) -> None:
-        """observe_duration pour swisseph_houses_calc_duration_ms doit être appelé."""
+        """observe_duration pour swisseph_houses_latency_ms doit être appelé."""
         mock_swe = _make_swe_mock()
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
             with patch(
@@ -463,7 +463,7 @@ class TestMetrics:
                 calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS)
         mock_observe.assert_called_once()
         metric_name, duration_ms = mock_observe.call_args[0]
-        assert metric_name == "swisseph_houses_calc_duration_ms"
+        assert metric_name == "swisseph_houses_latency_ms"
         assert isinstance(duration_ms, float)
         assert duration_ms >= 0.0
 

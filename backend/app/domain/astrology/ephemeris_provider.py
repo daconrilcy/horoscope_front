@@ -18,16 +18,21 @@ Usage::
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass
 from types import ModuleType
 from typing import TYPE_CHECKING
 
 from app.core.ephemeris import SWISSEPH_LOCK
+from app.infra.observability.metrics import increment_counter, observe_duration
 
 if TYPE_CHECKING:
     pass
 
 logger = logging.getLogger(__name__)
+
+METRIC_CALC_LATENCY = "swisseph_calc_latency_ms"
+METRIC_ERRORS = "swisseph_errors_total"
 
 # Mapping stable : id planète interne → constante entière SwissEph.
 # swe.SUN=0, swe.MOON=1, swe.MERCURY=2, swe.VENUS=3, swe.MARS=4,
@@ -125,91 +130,101 @@ def calculate_planets(
         EphemerisCalcError: Si pyswisseph est absent, si ``calc_ut`` échoue,
             ou si lat/lon manquent pour le mode topocentrique.
     """
-    swe = _get_swe_module()
+    start = time.monotonic()
+    try:
+        swe = _get_swe_module()
 
-    is_sidereal = zodiac == "sidereal"
-    effective_ayanamsa = (ayanamsa or "lahiri") if is_sidereal else None
-    is_topocentric = frame == "topocentric"
+        is_sidereal = zodiac == "sidereal"
+        effective_ayanamsa = (ayanamsa or "lahiri") if is_sidereal else None
+        is_topocentric = frame == "topocentric"
 
-    # Resolve flags from module if possible, otherwise use hardcoded stable defaults
-    flg_swieph = getattr(swe, "FLG_SWIEPH", _FLG_SWIEPH)
-    flg_speed = getattr(swe, "FLG_SPEED", _FLG_SPEED)
-    flg_sidereal = getattr(swe, "FLG_SIDEREAL", _FLG_SIDEREAL)
-    flg_topocentric = getattr(swe, "FLG_TOPOCENTRIC", 32768)  # swe.FLG_TOPOCENTRIC
-    sidm_reset = getattr(swe, "SIDM_FAGAN_BRADLEY", SIDM_RESET)
+        # Resolve flags from module if possible, otherwise use hardcoded stable defaults
+        flg_swieph = getattr(swe, "FLG_SWIEPH", _FLG_SWIEPH)
+        flg_speed = getattr(swe, "FLG_SPEED", _FLG_SPEED)
+        flg_sidereal = getattr(swe, "FLG_SIDEREAL", _FLG_SIDEREAL)
+        flg_topocentric = getattr(swe, "FLG_TOPOCENTRIC", 32768)  # swe.FLG_TOPOCENTRIC
+        sidm_reset = getattr(swe, "SIDM_FAGAN_BRADLEY", SIDM_RESET)
 
-    flags = flg_swieph | flg_speed
-    topo_set = False
+        flags = flg_swieph | flg_speed
+        topo_set = False
 
-    results: list[PlanetData] = []
+        results: list[PlanetData] = []
 
-    with SWISSEPH_LOCK:
-        if is_sidereal:
-            flags |= flg_sidereal
-            ayanamsa_id = _AYANAMSA_IDS.get(effective_ayanamsa or "lahiri")
-            if ayanamsa_id is None:
-                raise EphemerisCalcError(f"Unknown ayanamsa: {effective_ayanamsa}")
-            try:
-                swe.set_sid_mode(ayanamsa_id)
-            except Exception as exc:
-                raise EphemerisCalcError(
-                    f"Failed to set sidereal mode: {type(exc).__name__}"
-                ) from exc
-
-        if is_topocentric:
-            if lat is None or lon is None:
-                raise EphemerisCalcError("lat/lon are required for topocentric frame")
-            flags |= flg_topocentric
-            try:
-                swe.set_topo(lon, lat, altitude_m or 0.0)
-                topo_set = True
-            except Exception as exc:
-                raise EphemerisCalcError(
-                    f"Failed to set topocentric position: {type(exc).__name__}"
-                ) from exc
-
-        try:
-            for planet_id, swe_id in _PLANET_IDS.items():
+        with SWISSEPH_LOCK:
+            if is_sidereal:
+                flags |= flg_sidereal
+                ayanamsa_id = _AYANAMSA_IDS.get(effective_ayanamsa or "lahiri")
+                if ayanamsa_id is None:
+                    raise EphemerisCalcError(f"Unknown ayanamsa: {effective_ayanamsa}")
                 try:
-                    xx, retflag = swe.calc_ut(jdut, swe_id, flags)
+                    swe.set_sid_mode(ayanamsa_id)
                 except Exception as exc:
                     raise EphemerisCalcError(
-                        f"calc_ut failed for {planet_id}: {type(exc).__name__}"
+                        f"Failed to set sidereal mode: {type(exc).__name__}"
                     ) from exc
 
-                if retflag < 0:
-                    raise EphemerisCalcError(f"calc_ut returned error flag for planet {planet_id}")
-
-                speed_lon = float(xx[3])
-                results.append(
-                    PlanetData(
-                        planet_id=planet_id,
-                        longitude=_normalize_longitude(float(xx[0])),
-                        latitude=float(xx[1]),
-                        speed_longitude=speed_lon,
-                        is_retrograde=speed_lon < 0.0,
-                    )
-                )
-        finally:
-            if is_sidereal:
-                # Réinitialise le mode sidéral pour éviter un état global permanent.
+            if is_topocentric:
+                if lat is None or lon is None:
+                    raise EphemerisCalcError("lat/lon are required for topocentric frame")
+                flags |= flg_topocentric
                 try:
-                    swe.set_sid_mode(sidm_reset)
+                    swe.set_topo(lon, lat, altitude_m or 0.0)
+                    topo_set = True
                 except Exception as exc:
-                    # Ne pas masquer les exceptions d'origine, mais logger.
-                    logger.error(
-                        "failed_to_reset_sidereal_mode error_type=%s",
-                        type(exc).__name__,
-                    )
-            if topo_set:
-                try:
-                    swe.set_topo(0.0, 0.0, 0.0)
-                except Exception as exc:
-                    logger.error(
-                        "failed_to_reset_topocentric_position error_type=%s",
-                        type(exc).__name__,
-                    )
+                    raise EphemerisCalcError(
+                        f"Failed to set topocentric position: {type(exc).__name__}"
+                    ) from exc
 
+            try:
+                for planet_id, swe_id in _PLANET_IDS.items():
+                    try:
+                        xx, retflag = swe.calc_ut(jdut, swe_id, flags)
+                    except Exception as exc:
+                        raise EphemerisCalcError(
+                            f"calc_ut failed for {planet_id}: {type(exc).__name__}"
+                        ) from exc
+
+                    if retflag < 0:
+                        raise EphemerisCalcError(
+                            f"calc_ut returned error flag for planet {planet_id}"
+                        )
+
+                    speed_lon = float(xx[3])
+                    results.append(
+                        PlanetData(
+                            planet_id=planet_id,
+                            longitude=_normalize_longitude(float(xx[0])),
+                            latitude=float(xx[1]),
+                            speed_longitude=speed_lon,
+                            is_retrograde=speed_lon < 0.0,
+                        )
+                    )
+            finally:
+                if is_sidereal:
+                    # Réinitialise le mode sidéral pour éviter un état global permanent.
+                    try:
+                        swe.set_sid_mode(sidm_reset)
+                    except Exception as exc:
+                        # Ne pas masquer les exceptions d'origine, mais logger.
+                        logger.error(
+                            "failed_to_reset_sidereal_mode error_type=%s",
+                            type(exc).__name__,
+                        )
+                if topo_set:
+                    try:
+                        swe.set_topo(0.0, 0.0, 0.0)
+                    except Exception as exc:
+                        logger.error(
+                            "failed_to_reset_topocentric_position error_type=%s",
+                            type(exc).__name__,
+                        )
+
+    except EphemerisCalcError:
+        increment_counter(f"{METRIC_ERRORS}|code=ephemeris_calc_failed")
+        raise
+
+    elapsed_ms = (time.monotonic() - start) * 1000.0
+    observe_duration(METRIC_CALC_LATENCY, elapsed_ms)
     logger.debug(
         "ephemeris_planets_calculated jdut=%.4f zodiac=%s ayanamsa=%s frame=%s planet_count=%d",
         jdut,
