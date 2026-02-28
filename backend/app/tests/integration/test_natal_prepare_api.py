@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from app.core.config import settings
 from app.main import app
 
 client = TestClient(app)
@@ -85,7 +86,7 @@ def test_prepare_natal_missing_birth_timezone() -> None:
 
     assert response.status_code == 422
     payload = response.json()
-    assert payload["error"]["code"] == "invalid_birth_input"
+    assert payload["error"]["code"] == "missing_timezone"
 
 
 # ---------------------------------------------------------------------------
@@ -128,6 +129,47 @@ def test_prepare_natal_returns_timezone_used_field() -> None:
     data = response.json()["data"]
     assert "timezone_used" in data
     assert data["timezone_used"] == "America/New_York"
+
+
+def test_prepare_natal_returns_timezone_source_in_meta_for_user_provided() -> None:
+    """Story 26.1 AC1: meta expose timezone_source=user_provided."""
+    response = client.post(
+        "/v1/astrology-engine/natal/prepare",
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["meta"]["timezone_used"] == "Europe/Paris"
+    assert payload["meta"]["timezone_source"] == "user_provided"
+
+
+def test_prepare_natal_derives_timezone_when_enabled(monkeypatch: object) -> None:
+    """Story 26.1 AC2: sans timezone user, la source devient derived si l'option est active."""
+    monkeypatch.setattr(settings, "timezone_derived_enabled", True)
+    response = client.post(
+        "/v1/astrology-engine/natal/prepare",
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_lat": 48.8566,
+            "birth_lon": 2.3522,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    data = payload["data"]
+    assert data["timezone_source"] == "derived"
+    assert data["timezone_iana"] is not None
+    assert payload["meta"]["timezone_source"] == "derived"
+    assert payload["meta"]["timezone_used"] == data["timezone_iana"]
 
 
 def test_prepare_natal_all_required_temporal_fields_present() -> None:

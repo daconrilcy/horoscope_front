@@ -20,15 +20,22 @@ class NatalPreparationService:
     """
 
     @staticmethod
-    def prepare(payload: BirthInput, *, tt_enabled: bool = False) -> BirthPreparedData:
+    def prepare(
+        payload: BirthInput,
+        *,
+        tt_enabled: bool = False,
+        derive_enabled: bool = False,
+    ) -> BirthPreparedData:
         """
         Prépare les données de naissance pour le calcul.
 
         Args:
             payload: Données de naissance brutes.
             tt_enabled: Si True, calcule ΔT et JD TT (story 22.2).
+            derive_enabled: Si True, dérive la timezone depuis lat/lon
+                si birth_timezone absent (story 26.1).
 
         Returns:
             Données préparées et validées.
         """
-        return prepare_birth_data(payload, tt_enabled=tt_enabled)
+        return prepare_birth_data(payload, tt_enabled=tt_enabled, derive_enabled=derive_enabled)

@@ -41,8 +41,12 @@ from app.core.ephemeris import EphemerisDataMissingError, SwissEphInitError
 from app.core.request_id import resolve_request_id
 from app.domain.astrology.ephemeris_provider import EphemerisCalcError
 from app.domain.astrology.houses_provider import HousesCalcError, UnsupportedHouseSystemError
+from app.domain.astrology.natal_preparation import (
+    BirthPreparationError,
+    warmup_timezone_finder,
+)
+from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter, observe_duration
-from app.services.pricing_experiment_service import PricingExperimentService
 
 
 @asynccontextmanager
@@ -51,6 +55,10 @@ async def _app_lifespan(_: FastAPI):
         enabled=PricingExperimentService.is_enabled(),
         request_id=None,
     )
+    if settings.timezone_derived_enabled:
+        # Pre-load timezone polygon data to avoid first-request latency spike.
+        warmup_timezone_finder()
+
     if settings.swisseph_enabled:
         try:
             _eph.bootstrap_swisseph(

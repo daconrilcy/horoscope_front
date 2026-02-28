@@ -189,6 +189,10 @@ class Settings:
         )
         self.swisseph_enabled = self._parse_bool_env("SWISSEPH_ENABLED", default=False)
         self.swisseph_pro_mode = self._parse_bool_env("SWISSEPH_PRO_MODE", default=False)
+        # Story 26.1: offline timezone derivation from lat/lon (SWISSEPH_PRO_MODE phase 3).
+        self.timezone_derived_enabled = self._parse_bool_env(
+            "TIMEZONE_DERIVED_ENABLED", default=False
+        )
         self.ephemeris_path = os.getenv(
             "EPHEMERIS_PATH", os.getenv("SWISSEPH_DATA_PATH", "")
         ).strip()

@@ -31,6 +31,11 @@ class ResponseMeta(BaseModel):
     time_scale: str = "UT"
     delta_t_sec: float | None = None
     jd_tt: float | None = None
+    # Story 26.1 — Timezone traceability fields.
+    # timezone_used: IANA identifier of the timezone effectively applied.
+    # timezone_source: provenance — "user_provided" or "derived".
+    timezone_used: str | None = None
+    timezone_source: str | None = None
 
 
 class ErrorPayload(BaseModel):
@@ -221,7 +226,11 @@ def prepare_natal(request: Request, payload: dict[str, Any]) -> Any:
             birth_lon=parsed_payload.birth_lon,
         )
         tt_enabled = parsed_payload.tt_enabled or settings.swisseph_pro_mode
-        prepared = NatalPreparationService.prepare(birth_input, tt_enabled=tt_enabled)
+        prepared = NatalPreparationService.prepare(
+            birth_input,
+            tt_enabled=tt_enabled,
+            derive_enabled=settings.timezone_derived_enabled,
+        )
 
         eph_version = None
         eph_hash = None
@@ -243,6 +252,8 @@ def prepare_natal(request: Request, payload: dict[str, Any]) -> Any:
                 "time_scale": prepared.time_scale,
                 "delta_t_sec": prepared.delta_t_sec,
                 "jd_tt": prepared.jd_tt,
+                "timezone_used": prepared.timezone_iana,
+                "timezone_source": prepared.timezone_source,
             },
         }
     except ValidationError as error:
@@ -302,6 +313,7 @@ def calculate_natal(
             altitude_m=parsed_payload.altitude_m,
             request_id=request_id,
             tt_enabled=effective_tt_enabled,
+            derive_enabled=settings.timezone_derived_enabled,
         )
         chart_id = ChartResultService.persist_trace(
             db=db,
@@ -329,6 +341,8 @@ def calculate_natal(
                 "time_scale": result.time_scale,
                 "delta_t_sec": prepared.delta_t_sec,
                 "jd_tt": prepared.jd_tt,
+                "timezone_used": prepared.timezone_iana,
+                "timezone_source": prepared.timezone_source,
             },
         }
     except ValidationError as error:

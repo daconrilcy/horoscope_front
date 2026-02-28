@@ -48,7 +48,7 @@ Passer le calcul natal au niveau "pro" avec reproductibilite, tracabilite forte 
 - 24.2 Calcul aspects avec orbs et overrides
 - 25.1 Dataset Golden Pro 50-200 cas
 - 25.2 Script cross-tool report (dev-only)
-- 26.1 Timezone IANA derivee + source de verite
+- [x] 26.1 Timezone IANA derivee + source de verite
 - 26.2 Gestion des dates historiques ambiguës (DST/fold)
 - 27.1 Sortie API audit-grade standardisee
 - 27.2 Documentation dev + endpoints + validation

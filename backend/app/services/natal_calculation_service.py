@@ -197,7 +197,8 @@ class NatalCalculationService:
         resolved_ayanamsa: str | None = None
         if resolved_zodiac == ZodiacType.SIDEREAL:
             # AC 2: sidereal WITHOUT ayanamsa must return 422 if explicitly requested.
-            # If zodiac was None, it took default. If default is sidereal, it might also need ayanamsa.
+            # If zodiac was None, it took default. If default is sidereal,
+            # it might also need ayanamsa.
             resolved_ayanamsa = (ayanamsa or "").strip().lower() or None
             if resolved_ayanamsa and resolved_ayanamsa not in SUPPORTED_AYANAMSAS:
                 increment_counter("natal_ruleset_invalid_total|code=invalid_ayanamsa")
@@ -238,6 +239,7 @@ class NatalCalculationService:
         altitude_m: float | None = None,
         request_id: str | None = None,
         tt_enabled: bool = False,
+        derive_enabled: bool = False,
         aspect_school: str | None = None,
     ) -> NatalResult:
         """
@@ -399,6 +401,7 @@ class NatalCalculationService:
                 ephemeris_path_version=ephemeris_path_version,
                 ephemeris_path_hash=ephemeris_path_hash,
                 tt_enabled=tt_enabled,
+                derive_enabled=derive_enabled,
                 aspect_school=resolved_aspect_school,
                 aspect_rules_version=aspect_rules_version,
             )

@@ -12,6 +12,65 @@ logger = logging.getLogger(__name__)
 
 METRIC_TIMEZONE_ERRORS = "natal_preparation_timezone_errors_total"
 METRIC_TT_ENABLED = "time_pipeline_tt_enabled_total"
+# Story 26.1 — source metrics: timezone_source_{source}_total
+METRIC_TIMEZONE_SOURCE_USER_PROVIDED = "timezone_source_user_provided_total"
+METRIC_TIMEZONE_SOURCE_DERIVED = "timezone_source_derived_total"
+METRIC_TIMEZONE_DERIVATION_ERRORS = "timezone_derivation_errors_total"
+
+# ---------------------------------------------------------------------------
+# Offline timezone derivation from lat/lon (Story 26.1)
+# Uses timezonefinder for deterministic, offline resolution.
+# ---------------------------------------------------------------------------
+
+_timezone_finder_instance = None
+
+
+def warmup_timezone_finder() -> None:
+    """Ensure timezonefinder is installed and warmed up (pre-loads polygon data).
+
+    Called at application startup to avoid latency spikes on first request
+    and to fail fast if the library is missing.
+    """
+    global _timezone_finder_instance
+    try:
+        from timezonefinder import TimezoneFinder
+
+        if _timezone_finder_instance is None:
+            logger.info("natal_preparation_timezone_finder_warmup_start")
+            _timezone_finder_instance = TimezoneFinder()
+            # Accessing any property or calling a method can trigger data load,
+            # but usually instantiation is enough for most data files in newer versions.
+            logger.info("natal_preparation_timezone_finder_warmup_complete")
+    except ImportError as e:
+        logger.error("natal_preparation_timezonefinder_library_missing")
+        raise RuntimeError("timezonefinder library is required but not installed") from e
+    except Exception:
+        logger.exception("natal_preparation_timezone_finder_warmup_failed")
+        raise
+
+
+def _get_timezone_finder():  # type: ignore[return]
+    """Return a cached TimezoneFinder instance (lazy initialisation)."""
+    global _timezone_finder_instance
+    if _timezone_finder_instance is None:
+        warmup_timezone_finder()
+    return _timezone_finder_instance
+
+
+def _derive_timezone_from_coords(lat: float, lon: float) -> str | None:
+    """Derive IANA timezone from coordinates using offline polygon lookup.
+
+    Returns None if derivation fails (e.g. coordinates in international waters).
+    Never raises: errors are logged and return None.
+    """
+    try:
+        tf = _get_timezone_finder()
+        return tf.timezone_at(lng=lon, lat=lat)
+    except Exception:
+        logger.exception(
+            "natal_preparation_timezone_derivation_failed lat=%s lon=%s", lat, lon
+        )
+        return None
 
 # ---------------------------------------------------------------------------
 # DeltaT polynomial approximation (Espenak & Meeus)
@@ -108,9 +167,11 @@ class BirthInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     birth_date: date
-    birth_time: str | None = Field(default=None, min_length=5, max_length=15)
+    birth_time: str | None = Field(default=None, min_length=4, max_length=15)
     birth_place: str = Field(min_length=1, max_length=255)
-    birth_timezone: str = Field(min_length=1, max_length=64)
+    # Story 26.1: birth_timezone is optional — can be None when offline derivation
+    # from lat/lon is enabled via TIMEZONE_DERIVED_ENABLED feature flag.
+    birth_timezone: str | None = Field(default=None, min_length=1, max_length=64)
     place_resolved_id: int | None = Field(default=None, gt=0)
     # Optional geo/context fields accepted from frontend payloads.
     # They are currently not required by the natal engine pipeline.
@@ -119,11 +180,20 @@ class BirthInput(BaseModel):
     birth_lat: float | None = None
     birth_lon: float | None = None
 
-    @field_validator("birth_place", "birth_timezone")
+    @field_validator("birth_place")
     @classmethod
     def validate_non_blank(cls, value: str, info: ValidationInfo) -> str:
         if not value.strip():
             raise ValueError(f"{info.field_name} must not be blank")
+        return value.strip()
+
+    @field_validator("birth_timezone")
+    @classmethod
+    def validate_birth_timezone_non_blank(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if not value.strip():
+            raise ValueError("birth_timezone must not be blank")
         return value.strip()
 
     @field_validator("birth_city", "birth_country")
@@ -163,6 +233,12 @@ class BirthPreparedData(BaseModel):
     delta_t_sec: float | None = None
     jd_tt: float | None = None
     time_scale: str = "UT"
+    # Story 26.1 — Timezone IANA derivée + source de tracabilité.
+    # timezone_iana: IANA identifier of the timezone effectively applied (user-provided or derived).
+    # timezone_source: provenance — "user_provided" when supplied by caller, "derived" when
+    #   resolved offline from lat/lon coordinates (requires TIMEZONE_DERIVED_ENABLED flag).
+    timezone_iana: str | None = None
+    timezone_source: str | None = None  # "user_provided" | "derived"
 
     @model_validator(mode="after")
     def _fill_canonical_temporal_fields(self) -> BirthPreparedData:
@@ -170,6 +246,9 @@ class BirthPreparedData(BaseModel):
             self.jd_ut = self.julian_day
         if self.timezone_used is None:
             self.timezone_used = self.birth_timezone
+        # Story 26.1: fill timezone_iana from timezone_used for legacy payloads.
+        if self.timezone_iana is None and self.timezone_used is not None:
+            self.timezone_iana = self.timezone_used
         return self
 
 
@@ -200,20 +279,72 @@ def _julian_day_from_timestamp(timestamp_utc: float) -> float:
     return (timestamp_utc / 86400.0) + 2440587.5
 
 
-def prepare_birth_data(payload: BirthInput, *, tt_enabled: bool = False) -> BirthPreparedData:
+def prepare_birth_data(
+    payload: BirthInput,
+    *,
+    tt_enabled: bool = False,
+    derive_enabled: bool = False,
+) -> BirthPreparedData:
+    # ---------------------------------------------------------------------------
+    # Story 26.1 — Resolve effective timezone with source precedence:
+    #   1. user_provided: birth_timezone is explicitly set by the caller.
+    #   2. derived: offline derivation from lat/lon (requires derive_enabled=True).
+    # ---------------------------------------------------------------------------
+    if payload.birth_timezone is not None:
+        effective_timezone_iana = payload.birth_timezone
+        timezone_source = "user_provided"
+    elif derive_enabled:
+        if payload.birth_lat is None or payload.birth_lon is None:
+            raise BirthPreparationError(
+                code="missing_coordinates",
+                message="birth_lat and birth_lon are required for timezone derivation",
+                details={"field": "birth_lat/birth_lon"},
+            )
+        derived = _derive_timezone_from_coords(payload.birth_lat, payload.birth_lon)
+        if derived is None:
+            increment_counter(METRIC_TIMEZONE_DERIVATION_ERRORS)
+            raise BirthPreparationError(
+                code="timezone_derivation_failed",
+                message="Could not derive timezone from coordinates",
+                details={
+                    "lat": str(payload.birth_lat),
+                    "lon": str(payload.birth_lon),
+                },
+            )
+        logger.debug(
+            "natal_preparation_timezone_derived lat=%s lon=%s timezone=%s",
+            payload.birth_lat,
+            payload.birth_lon,
+            derived,
+        )
+        effective_timezone_iana = derived
+        timezone_source = "derived"
+    else:
+        raise BirthPreparationError(
+            code="missing_timezone",
+            message="birth_timezone is required when timezone derivation is not enabled",
+            details={"field": "birth_timezone"},
+        )
+
     try:
-        timezone = ZoneInfo(payload.birth_timezone)
+        timezone = ZoneInfo(effective_timezone_iana)
     except ZoneInfoNotFoundError as error:
         increment_counter(METRIC_TIMEZONE_ERRORS)
         logger.warning(
             "natal_preparation_invalid_timezone timezone=%s",
-            payload.birth_timezone,
+            effective_timezone_iana,
         )
         raise BirthPreparationError(
             code="invalid_timezone",
             message="birth_timezone is invalid",
-            details={"field": "birth_timezone", "value": payload.birth_timezone},
+            details={"field": "birth_timezone", "value": effective_timezone_iana},
         ) from error
+
+    # Track timezone source metric (Story 26.1 observability).
+    if timezone_source == "user_provided":
+        increment_counter(METRIC_TIMEZONE_SOURCE_USER_PROVIDED)
+    else:
+        increment_counter(METRIC_TIMEZONE_SOURCE_DERIVED)
 
     if payload.birth_time is not None:
         parsed_time = _parse_birth_time(payload.birth_time)
@@ -257,8 +388,12 @@ def prepare_birth_data(payload: BirthInput, *, tt_enabled: bool = False) -> Birt
         increment_counter(METRIC_TT_ENABLED)
 
     logger.debug(
-        "natal_preparation_time_conversion timezone=%s jd_ut=%.9f ts_full=%.6f time_scale=%s",
-        payload.birth_timezone,
+        (
+            "natal_preparation_time_conversion timezone=%s source=%s "
+            "jd_ut=%.9f ts_full=%.6f time_scale=%s"
+        ),
+        effective_timezone_iana,
+        timezone_source,
         julian_day,
         ts_full,
         time_scale,
@@ -269,9 +404,11 @@ def prepare_birth_data(payload: BirthInput, *, tt_enabled: bool = False) -> Birt
         birth_datetime_utc=utc_datetime.isoformat(),
         timestamp_utc=timestamp_utc,
         julian_day=julian_day,
-        birth_timezone=payload.birth_timezone,
+        birth_timezone=effective_timezone_iana,
         jd_ut=julian_day,
-        timezone_used=payload.birth_timezone,
+        timezone_used=effective_timezone_iana,
+        timezone_iana=effective_timezone_iana,
+        timezone_source=timezone_source,
         delta_t_sec=delta_t_sec,
         jd_tt=jd_tt,
         time_scale=time_scale,

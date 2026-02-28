@@ -260,3 +260,210 @@ def test_prepare_birth_data_supports_fractional_seconds() -> None:
     assert abs(result.timestamp_utc - int(expected_ts)) == 0
     expected_jd = (expected_ts / 86400.0) + 2440587.5
     assert abs(result.jd_ut - expected_jd) < 1e-9
+
+
+def test_prepare_birth_data_supports_4_char_time() -> None:
+    """Review Fix: Support du format 'H:MM' (ex: '9:00')."""
+    result = prepare_birth_data(
+        BirthInput(
+            birth_date="1990-06-15",
+            birth_time="9:00",
+            birth_place="Paris",
+            birth_timezone="Europe/Paris",
+        )
+    )
+
+    assert "09:00:00" in result.birth_datetime_local
+
+
+# ---------------------------------------------------------------------------
+# Story 26.1 — timezone_iana + timezone_source tracabilite
+# ---------------------------------------------------------------------------
+
+
+def test_prepare_birth_data_timezone_source_user_provided() -> None:
+    """AC1: Quand birth_timezone est fourni, timezone_source='user_provided'."""
+    result = prepare_birth_data(
+        BirthInput(
+            birth_date="1990-06-15",
+            birth_time="10:30",
+            birth_place="Paris",
+            birth_timezone="Europe/Paris",
+        )
+    )
+
+    assert result.timezone_source == "user_provided"
+    assert result.timezone_iana == "Europe/Paris"
+
+
+def test_prepare_birth_data_timezone_iana_equals_birth_timezone() -> None:
+    """AC1: timezone_iana reflète le fuseau utilisateur, pas écrasé."""
+    result = prepare_birth_data(
+        BirthInput(
+            birth_date="2000-01-01",
+            birth_time="12:00",
+            birth_place="New York",
+            birth_timezone="America/New_York",
+        )
+    )
+
+    assert result.timezone_iana == "America/New_York"
+    assert result.timezone_used == "America/New_York"
+    assert result.timezone_source == "user_provided"
+
+
+def test_prepare_birth_data_timezone_source_user_provided_not_overwritten() -> None:
+    """AC1: La valeur user_provided ne doit pas être écrasée par dérivation."""
+    result = prepare_birth_data(
+        BirthInput(
+            birth_date="1990-06-15",
+            birth_time="10:30",
+            birth_place="Paris",
+            birth_timezone="Europe/Paris",
+            # lat/lon présents mais timezone explicite → source reste user_provided
+            birth_lat=48.8566,
+            birth_lon=2.3522,
+        ),
+        derive_enabled=True,
+    )
+
+    assert result.timezone_source == "user_provided"
+    assert result.timezone_iana == "Europe/Paris"
+
+
+def test_prepare_birth_data_derive_timezone_from_latlon(monkeypatch: object) -> None:
+    """AC2: Sans birth_timezone et derive_enabled=True, timezone est dérivée depuis lat/lon."""
+    from app.domain.astrology import natal_preparation
+
+    # Mock derivation to avoid brittleness and dependency on timezonefinder data files in unit tests.
+    monkeypatch.setattr(
+        natal_preparation, "_derive_timezone_from_coords", lambda lat, lon: "Europe/Paris"
+    )
+
+    result = prepare_birth_data(
+        BirthInput(
+            birth_date="1990-06-15",
+            birth_time="10:30",
+            birth_place="Paris",
+            birth_timezone=None,
+            birth_lat=48.8566,
+            birth_lon=2.3522,
+        ),
+        derive_enabled=True,
+    )
+
+    assert result.timezone_source == "derived"
+    assert result.timezone_iana == "Europe/Paris"
+
+
+def test_prepare_birth_data_no_timezone_no_derive_raises() -> None:
+    """AC1: Sans birth_timezone et derive_enabled=False, erreur missing_timezone."""
+    with pytest.raises(BirthPreparationError) as exc_info:
+        prepare_birth_data(
+            BirthInput(
+                birth_date="1990-06-15",
+                birth_time="10:30",
+                birth_place="Paris",
+                birth_timezone=None,
+            ),
+            derive_enabled=False,
+        )
+
+    assert exc_info.value.code == "missing_timezone"
+
+
+def test_prepare_birth_data_derive_enabled_no_latlon_raises() -> None:
+    """AC2: derive_enabled=True mais sans lat/lon → erreur missing_coordinates."""
+    with pytest.raises(BirthPreparationError) as exc_info:
+        prepare_birth_data(
+            BirthInput(
+                birth_date="1990-06-15",
+                birth_time="10:30",
+                birth_place="Paris",
+                birth_timezone=None,
+                birth_lat=None,
+                birth_lon=None,
+            ),
+            derive_enabled=True,
+        )
+
+    assert exc_info.value.code == "missing_coordinates"
+
+
+def test_prepare_birth_data_timezone_iana_consistent_with_timezone_used() -> None:
+    """AC3: timezone_iana et timezone_used reflètent la même source effective."""
+    result = prepare_birth_data(
+        BirthInput(
+            birth_date="1990-06-15",
+            birth_time="10:30",
+            birth_place="Paris",
+            birth_timezone="Europe/Paris",
+        )
+    )
+
+    assert result.timezone_iana == result.timezone_used
+
+
+def test_prepare_birth_data_timezone_source_metric_incremented() -> None:
+    """Observabilité: le compteur timezone_source est incrémenté selon la source."""
+    from datetime import timedelta
+
+    from app.infra.observability.metrics import get_counter_sum_in_window, reset_metrics
+
+    reset_metrics()
+
+    prepare_birth_data(
+        BirthInput(
+            birth_date="1990-06-15",
+            birth_time="10:30",
+            birth_place="Paris",
+            birth_timezone="Europe/Paris",
+        )
+    )
+
+    count = get_counter_sum_in_window("timezone_source_user_provided_total", timedelta(minutes=1))
+    assert count == 1.0
+
+
+def test_prepare_birth_data_derive_timezone_metric_incremented(monkeypatch: object) -> None:
+    """Observabilité: le compteur timezone_source_derived est incrémenté lors d'une dérivation."""
+    from datetime import timedelta
+
+    from app.domain.astrology import natal_preparation
+    from app.infra.observability.metrics import get_counter_sum_in_window, reset_metrics
+
+    # Mock derivation to avoid dependency on timezonefinder data files.
+    monkeypatch.setattr(
+        natal_preparation, "_derive_timezone_from_coords", lambda lat, lon: "Europe/Paris"
+    )
+
+    reset_metrics()
+
+    prepare_birth_data(
+        BirthInput(
+            birth_date="1990-06-15",
+            birth_time="10:30",
+            birth_place="Paris",
+            birth_timezone=None,
+            birth_lat=48.8566,
+            birth_lon=2.3522,
+        ),
+        derive_enabled=True,
+    )
+
+    count = get_counter_sum_in_window("timezone_source_derived_total", timedelta(minutes=1))
+    assert count == 1.0
+
+
+def test_birth_prepared_data_legacy_compat_fills_timezone_iana() -> None:
+    """Rétrocompatibilité: un payload legacy sans timezone_iana est complété par le validator."""
+    legacy = BirthPreparedData(
+        birth_datetime_local="1990-06-15T12:00:00+02:00",
+        birth_datetime_utc="1990-06-15T10:00:00+00:00",
+        timestamp_utc=645350400,
+        julian_day=2448057.0,
+        birth_timezone="Europe/Paris",
+        # timezone_iana et timezone_source absents → timezone_iana rempli par le validator
+    )
+
+    assert legacy.timezone_iana == "Europe/Paris"  # dérivé de timezone_used

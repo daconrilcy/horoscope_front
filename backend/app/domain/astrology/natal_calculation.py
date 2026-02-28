@@ -231,6 +231,7 @@ def build_natal_result(
     ephemeris_path_version: str | None = None,
     ephemeris_path_hash: str | None = None,
     tt_enabled: bool = False,
+    derive_enabled: bool = False,
     aspect_school: str = "modern",
     aspect_rules_version: str = "1.0.0",
 ) -> NatalResult:
@@ -259,7 +260,9 @@ def build_natal_result(
     if not isinstance(aspects_data, list) or not aspects_data:
         _raise_invalid_reference(version, "aspects", "missing_or_empty")
 
-    prepared = prepare_birth_data(birth_input, tt_enabled=tt_enabled)
+    prepared = prepare_birth_data(
+        birth_input, tt_enabled=tt_enabled, derive_enabled=derive_enabled
+    )
     if timeout_check is not None:
         timeout_check()
     planet_codes = [

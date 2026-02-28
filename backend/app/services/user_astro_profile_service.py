@@ -91,22 +91,12 @@ class UserAstroProfileService:
                 db, birth_input=birth_input, accurate=True
             )
         except NatalCalculationError as error:
-            # Fallback to non-accurate (simplified) if SwissEph is unavailable or explicitly required by the error.
+            # Fallback to non-accurate (simplified) if SwissEph is unavailable.
             is_unavailable = error.code in ("natal_engine_unavailable", "swisseph_calc_failed")
-            should_auto_seed = (
-                error.code == "reference_version_not_found" and settings.active_reference_version
-            )
 
             if is_unavailable:
                 natal_result = NatalCalculationService.calculate(
                     db, birth_input=birth_input, accurate=False
-                )
-            elif should_auto_seed:
-                ReferenceDataService.seed_reference_version(
-                    db, version=settings.active_reference_version
-                )
-                natal_result = NatalCalculationService.calculate(
-                    db, birth_input=birth_input, accurate=True
                 )
             else:
                 raise UserAstroProfileServiceError(
