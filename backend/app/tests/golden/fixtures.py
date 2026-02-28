@@ -1,5 +1,9 @@
 """Fixtures golden de référence pour le moteur SwissEph.
 
+DEPRECATED: Ce système basé sur Python est en cours de remplacement par le dataset
+JSON audit-grade `pro_dataset_v1.json`. Utiliser `GoldenProDataset` pour les 
+nouveaux tests pro.
+
 Origine des valeurs : pyswisseph>=2.10.0 avec l'éphéméride Moshier intégrée
 (sans fichiers .se1 externes). Les valeurs sont deterministes et reproductibles
 sans données SwissEph additionnelles.

@@ -2,7 +2,7 @@
   "dataset_id": "golden-pro-v1",
   "description": "Dataset golden pro externe, statique et versionne pour validation swisseph.",
   "generated_on": "2026-02-28",
-  "case_count": 50,
+  "case_count": 52,
   "tolerances": {
     "planets_deg": 0.01,
     "angles_deg": 0.05
@@ -1556,6 +1556,68 @@
         "mc": 102.84526,
         "cusp_1": 201.167882,
         "cusp_10": 102.84526
+      }
+    },
+    {
+      "case_id": "golden-pro-051",
+      "datetime": {
+        "birth_date": "2024-06-21",
+        "birth_time": "12:00",
+        "birth_timezone": "Europe/Oslo",
+        "expected_jd_ut": 2460482.916667
+      },
+      "place_resolved": {
+        "name": "Tromso, NO",
+        "lat": 69.6492,
+        "lon": 18.9553,
+        "altitude_m": 20.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "equal"
+      },
+      "expected": {
+        "sun": 90.522673,
+        "moon": 262.627396,
+        "mercury": 98.648128,
+        "asc": 174.500761,
+        "mc": 79.933356,
+        "cusp_1": 174.500761,
+        "cusp_10": 84.5007
+      }
+    },
+    {
+      "case_id": "golden-pro-052",
+      "datetime": {
+        "birth_date": "2024-02-29",
+        "birth_time": "12:00",
+        "birth_timezone": "UTC",
+        "expected_jd_ut": 2460370.0
+      },
+      "place_resolved": {
+        "name": "Greenwich, UK",
+        "lat": 51.4769,
+        "lon": 0.0,
+        "altitude_m": 46.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 340.387626,
+        "moon": 214.432302,
+        "mercury": 341.380194,
+        "asc": 100.204585,
+        "mc": 337.080749,
+        "cusp_1": 100.204585,
+        "cusp_10": 337.080749
       }
     }
   ]
