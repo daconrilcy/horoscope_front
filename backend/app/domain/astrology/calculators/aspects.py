@@ -49,7 +49,7 @@ def _normalize_aspect_definition(
     default_orb = float(definition.get("default_orb_deg", fallback_orb))
     orb_luminaries_raw = definition.get("orb_luminaries")
     orb_luminaries = float(orb_luminaries_raw) if orb_luminaries_raw is not None else None
-    
+
     # Prioritize 'orb_pair_overrides' then 'orb_pairs' then 'orb_overrides'
     pair_overrides_raw = (
         definition.get("orb_pair_overrides")
@@ -73,7 +73,7 @@ def calculate_major_aspects(
     max_orb: float = DEFAULT_FALLBACK_ORB,
 ) -> list[dict[str, object]]:
     """Calculate aspects between planet positions using hierarchical orb resolution.
-    
+
     Resolution Priority:
     1. Pair-specific override (e.g. 'sun-mercury')
     2. Luminary override (if either planet is Sun or Moon)
@@ -82,16 +82,18 @@ def calculate_major_aspects(
     normalized_definitions = [
         _normalize_aspect_definition(definition, max_orb) for definition in aspect_definitions
     ]
-    
+
     # Pre-normalize planet data to avoid repeated work in the hot loop
     prepared_positions = []
     for pos in positions:
         code = str(pos["planet_code"]).strip().lower()
-        prepared_positions.append({
-            "planet_code": code,
-            "longitude": float(pos["longitude"]),
-            "is_luminary": code in LUMINARIES
-        })
+        prepared_positions.append(
+            {
+                "planet_code": code,
+                "longitude": float(pos["longitude"]),
+                "is_luminary": code in LUMINARIES,
+            }
+        )
 
     aspects: list[dict[str, object]] = []
     for left, right in combinations(prepared_positions, 2):
@@ -99,13 +101,13 @@ def calculate_major_aspects(
         planet_b = right["planet_code"]
         is_any_luminary = left["is_luminary"] or right["is_luminary"]
         pair_key = f"{planet_a}-{planet_b}" if planet_a < planet_b else f"{planet_b}-{planet_a}"
-        
+
         distance = _angular_distance(left["longitude"], right["longitude"])
-        
+
         for aspect_def in normalized_definitions:
             angle = float(aspect_def["angle"])
             orb = abs(distance - angle)
-            
+
             # Resolve the threshold limit for this pair
             overrides = aspect_def["orb_pair_overrides"]
             if pair_key in overrides:
@@ -114,7 +116,7 @@ def calculate_major_aspects(
                 orb_limit = aspect_def["orb_luminaries"]
             else:
                 orb_limit = aspect_def["default_orb"]
-                
+
             if orb <= orb_limit:
                 # Standardize planet order (alphabetical) for stable API output
                 p_a, p_b = sorted((planet_a, planet_b))
@@ -124,12 +126,12 @@ def calculate_major_aspects(
                         "planet_a": p_a,
                         "planet_b": p_b,
                         "angle": round(angle, 6),
-                        "orb": round(orb, 6),        # backward compat: actual angular deviation
-                        "orb_used": round(orb, 6),   # story 24-2: actual angular deviation
-                        "orb_max": round(orb_limit, 6), # story 24-2: resolved max threshold
+                        "orb": round(orb, 6),  # backward compat: actual angular deviation
+                        "orb_used": round(orb, 6),  # story 24-2: actual angular deviation
+                        "orb_max": round(orb_limit, 6),  # story 24-2: resolved max threshold
                     }
                 )
-    
+
     aspects.sort(
         key=lambda item: (
             str(item["aspect_code"]),

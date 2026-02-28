@@ -13,10 +13,13 @@ from app.infra.db.base import Base
 @pytest.fixture(autouse=True)
 def _mock_swisseph(monkeypatch: object) -> None:
     from app.core import ephemeris
+
     monkeypatch.setattr("app.services.natal_calculation_service.settings.swisseph_enabled", True)
-    
+
     mock_result = ephemeris._BootstrapResult(success=True, path_version="test-v1")
     monkeypatch.setattr("app.core.ephemeris.get_bootstrap_result", lambda: mock_result)
+
+
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.reference import (
@@ -523,7 +526,9 @@ def test_generate_natal_chart_sidereal_without_ayanamsa_returns_422_missing_ayan
     assert response.json()["error"]["code"] == "missing_ayanamsa"
 
 
-def test_generate_natal_chart_topocentric_without_altitude_exposes_zero_altitude(_mock_swisseph: None) -> None:
+def test_generate_natal_chart_topocentric_without_altitude_exposes_zero_altitude(
+    _mock_swisseph: None,
+) -> None:
     _cleanup_tables()
     _seed_reference_data()
     place_id = _seed_resolved_place()
@@ -701,9 +706,11 @@ def test_generate_natal_chart_sidereal_with_simplified_override_fails(monkeypatc
 
     from app.services.natal_calculation_service import NatalCalculationService
     from app.domain.astrology.natal_preparation import BirthInput
-    
+
     # Mock settings to allow simplified engine for internal requests
-    monkeypatch.setattr("app.services.natal_calculation_service.settings.natal_engine_simplified_enabled", True)
+    monkeypatch.setattr(
+        "app.services.natal_calculation_service.settings.natal_engine_simplified_enabled", True
+    )
     monkeypatch.setattr("app.services.natal_calculation_service.settings.app_env", "test")
 
     with SessionLocal() as db:
@@ -725,7 +732,8 @@ def test_generate_natal_chart_sidereal_with_simplified_override_fails(monkeypatc
             pytest.fail("Should have raised NatalCalculationError")
         except Exception as e:
             assert getattr(e, "code", "") == "natal_engine_option_unsupported"
-    
+
+
 def test_get_natal_chart_consistency_requires_token() -> None:
     _cleanup_tables()
     response = client.get("/v1/users/1/natal-chart/consistency")
@@ -1024,6 +1032,7 @@ def test_get_latest_natal_chart_returns_200_when_astro_profile_service_error(
         headers={"Authorization": f"Bearer {access_token}"},
         json={"reference_version": "1.0.0", "accurate": True},
     )
+
     def _raise_service_error(*args: object, **kwargs: object) -> object:
         raise UserAstroProfileServiceError(
             code="reference_version_not_found",
@@ -1067,6 +1076,7 @@ def test_get_latest_natal_chart_returns_500_on_unexpected_astro_profile_error(
         headers={"Authorization": f"Bearer {access_token}"},
         json={"reference_version": "1.0.0", "accurate": True},
     )
+
     def _raise_runtime_error(*args: object, **kwargs: object) -> object:
         raise RuntimeError("boom")
 

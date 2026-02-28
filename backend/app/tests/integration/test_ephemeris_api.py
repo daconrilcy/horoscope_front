@@ -67,9 +67,7 @@ def test_status_disabled_when_swisseph_not_enabled(monkeypatch: pytest.MonkeyPat
 # ---------------------------------------------------------------------------
 
 
-def test_status_ok_after_successful_bootstrap(
-    monkeypatch: pytest.MonkeyPatch, tmp_path
-) -> None:
+def test_status_ok_after_successful_bootstrap(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     """Bootstrap réussi → 200 {"status": "ok", "path_version": "..."}."""
     monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
 
@@ -120,9 +118,7 @@ def test_status_503_when_data_path_empty(monkeypatch: pytest.MonkeyPatch) -> Non
     assert count == 1.0
 
 
-def test_status_503_when_data_path_nonexistent(
-    monkeypatch: pytest.MonkeyPatch, tmp_path
-) -> None:
+def test_status_503_when_data_path_nonexistent(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     """SWISSEPH_DATA_PATH inexistant → 503 code=ephemeris_data_missing."""
     monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
     bad_path = str(tmp_path / "no_such_dir")
@@ -164,9 +160,7 @@ def test_status_503_response_does_not_contain_filesystem_path(
 # ---------------------------------------------------------------------------
 
 
-def test_status_503_when_swisseph_init_fails(
-    monkeypatch: pytest.MonkeyPatch, tmp_path
-) -> None:
+def test_status_503_when_swisseph_init_fails(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     """Échec d'initialisation pyswisseph → 503 code=swisseph_init_failed."""
     monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
 
@@ -238,7 +232,7 @@ def test_natal_calculate_includes_ephemeris_version_in_meta(
     """AC4: metadata.ephemeris_path_version est présent dans les réponses engine."""
     monkeypatch.setattr("app.api.v1.routers.astrology_engine.settings.swisseph_enabled", True)
     monkeypatch.setattr("app.api.v1.routers.astrology_engine.settings.swisseph_pro_mode", True)
-    
+
     # Mock successful bootstrap
     mock_swe = _make_swe_mock()
     required_file = tmp_path / "sepl_18.se1"
@@ -256,11 +250,11 @@ def test_natal_calculate_includes_ephemeris_version_in_meta(
         "birth_date": "1990-01-01",
         "birth_time": "12:00:00",
         "birth_place": "Paris",
-        "birth_timezone": "Europe/Paris"
+        "birth_timezone": "Europe/Paris",
     }
-    
+
     response = client.post("/v1/astrology-engine/natal/prepare", json=payload)
-    
+
     assert response.status_code == 200
     meta = response.json()["meta"]
     assert meta["ephemeris_path_version"] == "se-2024-test"
@@ -273,16 +267,16 @@ def test_natal_calculate_metadata_is_none_when_disabled(
 ) -> None:
     """metadata.ephemeris_path_version est null quand SwissEph est désactivé."""
     monkeypatch.setattr("app.api.v1.routers.astrology_engine.settings.swisseph_enabled", False)
-    
+
     payload = {
         "birth_date": "1990-01-01",
         "birth_time": "12:00:00",
         "birth_place": "Paris",
-        "birth_timezone": "Europe/Paris"
+        "birth_timezone": "Europe/Paris",
     }
-    
+
     response = client.post("/v1/astrology-engine/natal/prepare", json=payload)
-    
+
     assert response.status_code == 200
     meta = response.json()["meta"]
     assert meta["ephemeris_path_version"] is None
@@ -345,9 +339,7 @@ def test_exception_handler_ephemeris_data_missing_includes_details() -> None:
 
     @app.get("/test-ephemeris-data-missing-details")
     def _raise_data_missing_with_file():
-        raise EphemerisDataMissingError(
-            "required file missing", missing_file="sepl_18.se1"
-        )
+        raise EphemerisDataMissingError("required file missing", missing_file="sepl_18.se1")
 
     try:
         response = client.get("/test-ephemeris-data-missing-details")
@@ -406,9 +398,7 @@ def test_exception_handler_swisseph_init_error_includes_details() -> None:
         assert "request_id" in error
     finally:
         app.routes[:] = [
-            r
-            for r in app.routes
-            if getattr(r, "path", None) != "/test-swisseph-init-error-details"
+            r for r in app.routes if getattr(r, "path", None) != "/test-swisseph-init-error-details"
         ]
 
 
@@ -516,9 +506,7 @@ def test_natal_endpoint_returns_503_when_swisseph_init_failed() -> None:
         assert "message" in error
     finally:
         app.routes[:] = [
-            r
-            for r in app.routes
-            if getattr(r, "path", None) != "/test-natal-swisseph-init-error"
+            r for r in app.routes if getattr(r, "path", None) != "/test-natal-swisseph-init-error"
         ]
 
 

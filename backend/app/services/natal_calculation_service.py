@@ -81,7 +81,9 @@ class NatalCalculationService:
                     or frame != FrameType.GEOCENTRIC
                     or house_system != HouseSystemType.EQUAL
                 ):
-                    increment_counter("natal_ruleset_invalid_total|code=natal_engine_option_unsupported")
+                    increment_counter(
+                        "natal_ruleset_invalid_total|code=natal_engine_option_unsupported"
+                    )
                     raise NatalCalculationError(
                         code="natal_engine_option_unsupported",
                         message="simplified engine only supports tropical/geocentric/equal",
@@ -173,10 +175,7 @@ class NatalCalculationService:
             # Let's check the zodiac/frame to guess if we'll need SwissEph.
             zodiac_str = (zodiac or "").strip().lower()
             frame_str = (frame or "").strip().lower()
-            requires_accurate = (
-                zodiac_str == "sidereal"
-                or frame_str == "topocentric"
-            )
+            requires_accurate = zodiac_str == "sidereal" or frame_str == "topocentric"
             if not requires_accurate and settings.natal_engine_default == "simplified":
                 resolved_house_system = HouseSystemType.EQUAL
             else:
@@ -301,7 +300,9 @@ class NatalCalculationService:
         # Story 23-3: topocentric frame requires lat/lon to avoid provider-level 503
         if resolved_frame == FrameType.TOPOCENTRIC:
             if birth_input.birth_lat is None or birth_input.birth_lon is None:
-                increment_counter("natal_ruleset_invalid_total|code=missing_topocentric_coordinates")
+                increment_counter(
+                    "natal_ruleset_invalid_total|code=missing_topocentric_coordinates"
+                )
                 raise NatalCalculationError(
                     code="missing_topocentric_coordinates",
                     message="lat/lon are required for topocentric frame",
@@ -360,6 +361,7 @@ class NatalCalculationService:
 
         # Story 24-1: aspect school and versioned rules identifier.
         from app.core.config import AspectSchoolType
+
         aspect_school_str = (aspect_school or "").strip().lower()
         if not aspect_school_str:
             resolved_aspect_school = settings.natal_ruleset_default_aspect_school

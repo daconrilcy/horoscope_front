@@ -1,0 +1,1562 @@
+{
+  "dataset_id": "golden-pro-v1",
+  "description": "Dataset golden pro externe, statique et versionne pour validation swisseph.",
+  "generated_on": "2026-02-28",
+  "case_count": 50,
+  "tolerances": {
+    "planets_deg": 0.01,
+    "angles_deg": 0.05
+  },
+  "cases": [
+    {
+      "case_id": "golden-pro-001",
+      "datetime": {
+        "birth_date": "1973-07-04",
+        "birth_time": "09:00",
+        "birth_timezone": "Europe/Paris",
+        "expected_jd_ut": 2441867.833333
+      },
+      "place_resolved": {
+        "name": "Paris, FR",
+        "lat": 48.8566,
+        "lon": 2.3522,
+        "altitude_m": 35.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 102.200902,
+        "moon": 154.960685,
+        "mercury": 123.125606,
+        "asc": 147.033682,
+        "mc": 47.009905,
+        "cusp_1": 147.033682,
+        "cusp_10": 47.009905
+      }
+    },
+    {
+      "case_id": "golden-pro-002",
+      "datetime": {
+        "birth_date": "1980-03-21",
+        "birth_time": "12:00",
+        "birth_timezone": "Europe/Paris",
+        "expected_jd_ut": 2444319.958333
+      },
+      "place_resolved": {
+        "name": "Paris, FR",
+        "lat": 48.8566,
+        "lon": 2.3522,
+        "altitude_m": 35.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 0.986544,
+        "moon": 65.366095,
+        "mercury": 337.577891,
+        "asc": 103.899862,
+        "mc": 345.300643,
+        "cusp_1": 103.899862,
+        "cusp_10": 345.300643
+      }
+    },
+    {
+      "case_id": "golden-pro-003",
+      "datetime": {
+        "birth_date": "1990-06-15",
+        "birth_time": "12:00",
+        "birth_timezone": "Europe/Paris",
+        "expected_jd_ut": 2448057.916667
+      },
+      "place_resolved": {
+        "name": "Paris, FR",
+        "lat": 48.8566,
+        "lon": 2.3522,
+        "altitude_m": 35.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 84.049975,
+        "moon": 344.245696,
+        "mercury": 65.54787,
+        "asc": 155.145207,
+        "mc": 58.038391,
+        "cusp_1": 155.145207,
+        "cusp_10": 58.038391
+      }
+    },
+    {
+      "case_id": "golden-pro-004",
+      "datetime": {
+        "birth_date": "2000-01-01",
+        "birth_time": "12:00",
+        "birth_timezone": "Europe/Paris",
+        "expected_jd_ut": 2451544.958333
+      },
+      "place_resolved": {
+        "name": "Paris, FR",
+        "lat": 48.8566,
+        "lon": 2.3522,
+        "altitude_m": 35.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 280.326443,
+        "moon": 222.822762,
+        "mercury": 271.824436,
+        "asc": 355.177135,
+        "mc": 267.952178,
+        "cusp_1": 355.177135,
+        "cusp_10": 267.952178
+      }
+    },
+    {
+      "case_id": "golden-pro-005",
+      "datetime": {
+        "birth_date": "2000-07-17",
+        "birth_time": "12:00",
+        "birth_timezone": "Europe/Paris",
+        "expected_jd_ut": 2451742.916667
+      },
+      "place_resolved": {
+        "name": "Paris, FR",
+        "lat": 48.8566,
+        "lon": 2.3522,
+        "altitude_m": 35.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 115.121502,
+        "moon": 304.222761,
+        "mercury": 100.387169,
+        "asc": 178.459409,
+        "mc": 88.059481,
+        "cusp_1": 178.459409,
+        "cusp_10": 88.059481
+      }
+    },
+    {
+      "case_id": "golden-pro-006",
+      "datetime": {
+        "birth_date": "1973-07-04",
+        "birth_time": "09:00",
+        "birth_timezone": "America/New_York",
+        "expected_jd_ut": 2441868.041667
+      },
+      "place_resolved": {
+        "name": "New York, US",
+        "lat": 40.7128,
+        "lon": -74.006,
+        "altitude_m": 10.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 102.399564,
+        "moon": 157.856961,
+        "mercury": 123.162517,
+        "asc": 143.234794,
+        "mc": 45.857741,
+        "cusp_1": 143.234794,
+        "cusp_10": 45.857741
+      }
+    },
+    {
+      "case_id": "golden-pro-007",
+      "datetime": {
+        "birth_date": "1980-03-21",
+        "birth_time": "12:00",
+        "birth_timezone": "America/New_York",
+        "expected_jd_ut": 2444320.208333
+      },
+      "place_resolved": {
+        "name": "New York, US",
+        "lat": 40.7128,
+        "lon": -74.006,
+        "altitude_m": 10.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 1.23475,
+        "moon": 68.822855,
+        "mercury": 337.625447,
+        "asc": 109.187987,
+        "mc": 0.387342,
+        "cusp_1": 109.187987,
+        "cusp_10": 0.387342
+      }
+    },
+    {
+      "case_id": "golden-pro-008",
+      "datetime": {
+        "birth_date": "1990-06-15",
+        "birth_time": "12:00",
+        "birth_timezone": "America/New_York",
+        "expected_jd_ut": 2448058.166667
+      },
+      "place_resolved": {
+        "name": "New York, US",
+        "lat": 40.7128,
+        "lon": -74.006,
+        "altitude_m": 10.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 84.288749,
+        "moon": 347.589885,
+        "mercury": 65.977333,
+        "asc": 163.886627,
+        "mc": 71.225582,
+        "cusp_1": 163.886627,
+        "cusp_10": 71.225582
+      }
+    },
+    {
+      "case_id": "golden-pro-009",
+      "datetime": {
+        "birth_date": "2000-01-01",
+        "birth_time": "12:00",
+        "birth_timezone": "America/New_York",
+        "expected_jd_ut": 2451545.208333
+      },
+      "place_resolved": {
+        "name": "New York, US",
+        "lat": 40.7128,
+        "lon": -74.006,
+        "altitude_m": 10.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 280.581304,
+        "moon": 225.825076,
+        "mercury": 272.21361,
+        "asc": 19.960596,
+        "mc": 280.717924,
+        "cusp_1": 19.960596,
+        "cusp_10": 280.717924
+      }
+    },
+    {
+      "case_id": "golden-pro-010",
+      "datetime": {
+        "birth_date": "2000-07-17",
+        "birth_time": "12:00",
+        "birth_timezone": "America/New_York",
+        "expected_jd_ut": 2451743.166667
+      },
+      "place_resolved": {
+        "name": "New York, US",
+        "lat": 40.7128,
+        "lon": -74.006,
+        "altitude_m": 10.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 115.359944,
+        "moon": 307.188909,
+        "mercury": 100.386854,
+        "asc": 189.340748,
+        "mc": 100.825874,
+        "cusp_1": 189.340748,
+        "cusp_10": 100.825874
+      }
+    },
+    {
+      "case_id": "golden-pro-011",
+      "datetime": {
+        "birth_date": "1973-07-04",
+        "birth_time": "09:00",
+        "birth_timezone": "Asia/Tokyo",
+        "expected_jd_ut": 2441867.5
+      },
+      "place_resolved": {
+        "name": "Tokyo, JP",
+        "lat": 35.6762,
+        "lon": 139.6503,
+        "altitude_m": 40.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 101.883035,
+        "moon": 150.28651,
+        "mercury": 123.059605,
+        "asc": 156.405533,
+        "mc": 63.532827,
+        "cusp_1": 156.405533,
+        "cusp_10": 63.532827
+      }
+    },
+    {
+      "case_id": "golden-pro-012",
+      "datetime": {
+        "birth_date": "1980-03-21",
+        "birth_time": "12:00",
+        "birth_timezone": "Asia/Tokyo",
+        "expected_jd_ut": 2444319.625
+      },
+      "place_resolved": {
+        "name": "Tokyo, JP",
+        "lat": 35.6762,
+        "lon": 139.6503,
+        "altitude_m": 40.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 0.65554,
+        "moon": 60.710809,
+        "mercury": 337.523384,
+        "asc": 108.839668,
+        "mc": 3.744986,
+        "cusp_1": 108.839668,
+        "cusp_10": 3.744986
+      }
+    },
+    {
+      "case_id": "golden-pro-013",
+      "datetime": {
+        "birth_date": "1990-06-15",
+        "birth_time": "12:00",
+        "birth_timezone": "Asia/Tokyo",
+        "expected_jd_ut": 2448057.625
+      },
+      "place_resolved": {
+        "name": "Tokyo, JP",
+        "lat": 35.6762,
+        "lon": 139.6503,
+        "altitude_m": 40.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 83.771396,
+        "moon": 340.372015,
+        "mercury": 65.050454,
+        "asc": 178.164931,
+        "mc": 87.974286,
+        "cusp_1": 178.164931,
+        "cusp_10": 87.974286
+      }
+    },
+    {
+      "case_id": "golden-pro-014",
+      "datetime": {
+        "birth_date": "2000-01-01",
+        "birth_time": "12:00",
+        "birth_timezone": "Asia/Tokyo",
+        "expected_jd_ut": 2451544.625
+      },
+      "place_resolved": {
+        "name": "Tokyo, JP",
+        "lat": 35.6762,
+        "lon": 139.6503,
+        "altitude_m": 40.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 279.986639,
+        "moon": 218.804865,
+        "mercury": 271.30605,
+        "asc": 22.916817,
+        "mc": 283.568639,
+        "cusp_1": 22.916817,
+        "cusp_10": 283.568639
+      }
+    },
+    {
+      "case_id": "golden-pro-015",
+      "datetime": {
+        "birth_date": "2000-07-17",
+        "birth_time": "12:00",
+        "birth_timezone": "Asia/Tokyo",
+        "expected_jd_ut": 2451742.625
+      },
+      "place_resolved": {
+        "name": "Tokyo, JP",
+        "lat": 35.6762,
+        "lon": 139.6503,
+        "altitude_m": 40.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 114.843329,
+        "moon": 300.767538,
+        "mercury": 100.394611,
+        "asc": 204.753886,
+        "mc": 117.811188,
+        "cusp_1": 204.753886,
+        "cusp_10": 117.811188
+      }
+    },
+    {
+      "case_id": "golden-pro-016",
+      "datetime": {
+        "birth_date": "1973-07-04",
+        "birth_time": "09:00",
+        "birth_timezone": "Australia/Sydney",
+        "expected_jd_ut": 2441867.458333
+      },
+      "place_resolved": {
+        "name": "Sydney, AU",
+        "lat": -33.8688,
+        "lon": 151.2093,
+        "altitude_m": 58.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 101.843301,
+        "moon": 149.698796,
+        "mercury": 123.050756,
+        "asc": 133.999839,
+        "mc": 60.204568,
+        "cusp_1": 133.999839,
+        "cusp_10": 60.204568
+      }
+    },
+    {
+      "case_id": "golden-pro-017",
+      "datetime": {
+        "birth_date": "1980-03-21",
+        "birth_time": "12:00",
+        "birth_timezone": "Australia/Sydney",
+        "expected_jd_ut": 2444319.583333
+      },
+      "place_resolved": {
+        "name": "Sydney, AU",
+        "lat": -33.8688,
+        "lon": 151.2093,
+        "altitude_m": 58.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 0.61416,
+        "moon": 60.12519,
+        "mercury": 337.517293,
+        "asc": 75.012626,
+        "mc": 359.95057,
+        "cusp_1": 75.012626,
+        "cusp_10": 359.95057
+      }
+    },
+    {
+      "case_id": "golden-pro-018",
+      "datetime": {
+        "birth_date": "1990-06-15",
+        "birth_time": "12:00",
+        "birth_timezone": "Australia/Sydney",
+        "expected_jd_ut": 2448057.583333
+      },
+      "place_resolved": {
+        "name": "Sydney, AU",
+        "lat": -33.8688,
+        "lon": 151.2093,
+        "altitude_m": 58.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 83.731599,
+        "moon": 339.821025,
+        "mercury": 64.979714,
+        "asc": 171.273839,
+        "mc": 84.777063,
+        "cusp_1": 171.273839,
+        "cusp_10": 84.777063
+      }
+    },
+    {
+      "case_id": "golden-pro-019",
+      "datetime": {
+        "birth_date": "2000-01-01",
+        "birth_time": "12:00",
+        "birth_timezone": "Australia/Sydney",
+        "expected_jd_ut": 2451544.541667
+      },
+      "place_resolved": {
+        "name": "Sydney, AU",
+        "lat": -33.8688,
+        "lon": 151.2093,
+        "altitude_m": 58.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 279.90169,
+        "moon": 217.797505,
+        "mercury": 271.176544,
+        "asc": 356.804355,
+        "mc": 266.526138,
+        "cusp_1": 356.804355,
+        "cusp_10": 266.526138
+      }
+    },
+    {
+      "case_id": "golden-pro-020",
+      "datetime": {
+        "birth_date": "2000-07-17",
+        "birth_time": "12:00",
+        "birth_timezone": "Australia/Sydney",
+        "expected_jd_ut": 2451742.583333
+      },
+      "place_resolved": {
+        "name": "Sydney, AU",
+        "lat": -33.8688,
+        "lon": 151.2093,
+        "altitude_m": 58.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 114.803591,
+        "moon": 300.274348,
+        "mercury": 100.396292,
+        "asc": 218.726185,
+        "mc": 114.499666,
+        "cusp_1": 218.726185,
+        "cusp_10": 114.499666
+      }
+    },
+    {
+      "case_id": "golden-pro-021",
+      "datetime": {
+        "birth_date": "1973-07-04",
+        "birth_time": "09:00",
+        "birth_timezone": "America/Sao_Paulo",
+        "expected_jd_ut": 2441868.0
+      },
+      "place_resolved": {
+        "name": "Sao Paulo, BR",
+        "lat": -23.5505,
+        "lon": -46.6333,
+        "altitude_m": 760.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 102.359832,
+        "moon": 157.279258,
+        "mercury": 123.155402,
+        "asc": 136.073286,
+        "mc": 57.981327,
+        "cusp_1": 136.073286,
+        "cusp_10": 57.981327
+      }
+    },
+    {
+      "case_id": "golden-pro-022",
+      "datetime": {
+        "birth_date": "1980-03-21",
+        "birth_time": "12:00",
+        "birth_timezone": "America/Sao_Paulo",
+        "expected_jd_ut": 2444320.125
+      },
+      "place_resolved": {
+        "name": "Sao Paulo, BR",
+        "lat": -23.5505,
+        "lon": -46.6333,
+        "altitude_m": 760.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 1.152019,
+        "moon": 67.673907,
+        "mercury": 337.608965,
+        "asc": 78.072054,
+        "mc": 357.434479,
+        "cusp_1": 78.072054,
+        "cusp_10": 357.434479
+      }
+    },
+    {
+      "case_id": "golden-pro-023",
+      "datetime": {
+        "birth_date": "1990-06-15",
+        "birth_time": "12:00",
+        "birth_timezone": "America/Sao_Paulo",
+        "expected_jd_ut": 2448058.125
+      },
+      "place_resolved": {
+        "name": "Sao Paulo, BR",
+        "lat": -23.5505,
+        "lon": -46.6333,
+        "altitude_m": 760.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 84.248954,
+        "moon": 347.030959,
+        "mercury": 65.905557,
+        "asc": 169.281824,
+        "mc": 82.654087,
+        "cusp_1": 169.281824,
+        "cusp_10": 82.654087
+      }
+    },
+    {
+      "case_id": "golden-pro-024",
+      "datetime": {
+        "birth_date": "2000-01-01",
+        "birth_time": "12:00",
+        "birth_timezone": "America/Sao_Paulo",
+        "expected_jd_ut": 2451545.083333
+      },
+      "place_resolved": {
+        "name": "Sao Paulo, BR",
+        "lat": -23.5505,
+        "lon": -46.6333,
+        "altitude_m": 760.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 280.453873,
+        "moon": 224.325036,
+        "mercury": 272.018981,
+        "asc": 354.41514,
+        "mc": 264.405382,
+        "cusp_1": 354.41514,
+        "cusp_10": 264.405382
+      }
+    },
+    {
+      "case_id": "golden-pro-025",
+      "datetime": {
+        "birth_date": "2000-07-17",
+        "birth_time": "12:00",
+        "birth_timezone": "America/Sao_Paulo",
+        "expected_jd_ut": 2451743.125
+      },
+      "place_resolved": {
+        "name": "Sao Paulo, BR",
+        "lat": -23.5505,
+        "lon": -46.6333,
+        "altitude_m": 760.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 115.320203,
+        "moon": 306.694234,
+        "mercury": 100.386515,
+        "asc": 211.590099,
+        "mc": 112.318587,
+        "cusp_1": 211.590099,
+        "cusp_10": 112.318587
+      }
+    },
+    {
+      "case_id": "golden-pro-026",
+      "datetime": {
+        "birth_date": "1973-07-04",
+        "birth_time": "09:00",
+        "birth_timezone": "Africa/Cairo",
+        "expected_jd_ut": 2441867.75
+      },
+      "place_resolved": {
+        "name": "Cairo, EG",
+        "lat": 30.0444,
+        "lon": 31.2357,
+        "altitude_m": 23.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 102.121436,
+        "moon": 153.796755,
+        "mercury": 123.109905,
+        "asc": 139.775948,
+        "mc": 45.811909,
+        "cusp_1": 139.775948,
+        "cusp_10": 45.811909
+      }
+    },
+    {
+      "case_id": "golden-pro-027",
+      "datetime": {
+        "birth_date": "1980-03-21",
+        "birth_time": "12:00",
+        "birth_timezone": "Africa/Cairo",
+        "expected_jd_ut": 2444319.916667
+      },
+      "place_resolved": {
+        "name": "Cairo, EG",
+        "lat": 30.0444,
+        "lon": 31.2357,
+        "altitude_m": 23.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 0.945172,
+        "moon": 64.787075,
+        "mercury": 337.570519,
+        "asc": 103.226395,
+        "mc": 0.337443,
+        "cusp_1": 103.226395,
+        "cusp_10": 0.337443
+      }
+    },
+    {
+      "case_id": "golden-pro-028",
+      "datetime": {
+        "birth_date": "1990-06-15",
+        "birth_time": "12:00",
+        "birth_timezone": "Africa/Cairo",
+        "expected_jd_ut": 2448057.875
+      },
+      "place_resolved": {
+        "name": "Cairo, EG",
+        "lat": 30.0444,
+        "lon": 31.2357,
+        "altitude_m": 23.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 84.010178,
+        "moon": 343.690496,
+        "mercury": 65.476572,
+        "asc": 162.287217,
+        "mc": 71.182764,
+        "cusp_1": 162.287217,
+        "cusp_10": 71.182764
+      }
+    },
+    {
+      "case_id": "golden-pro-029",
+      "datetime": {
+        "birth_date": "2000-01-01",
+        "birth_time": "12:00",
+        "birth_timezone": "Africa/Cairo",
+        "expected_jd_ut": 2451544.916667
+      },
+      "place_resolved": {
+        "name": "Cairo, EG",
+        "lat": 30.0444,
+        "lon": 31.2357,
+        "altitude_m": 23.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 280.283967,
+        "moon": 222.321487,
+        "mercury": 271.759605,
+        "asc": 16.751099,
+        "mc": 280.675648,
+        "cusp_1": 16.751099,
+        "cusp_10": 280.675648
+      }
+    },
+    {
+      "case_id": "golden-pro-030",
+      "datetime": {
+        "birth_date": "2000-07-17",
+        "birth_time": "12:00",
+        "birth_timezone": "Africa/Cairo",
+        "expected_jd_ut": 2451742.875
+      },
+      "place_resolved": {
+        "name": "Cairo, EG",
+        "lat": 30.0444,
+        "lon": 31.2357,
+        "altitude_m": 23.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 115.081762,
+        "moon": 303.728828,
+        "mercury": 100.387767,
+        "asc": 190.211211,
+        "mc": 100.78359,
+        "cusp_1": 190.211211,
+        "cusp_10": 100.78359
+      }
+    },
+    {
+      "case_id": "golden-pro-031",
+      "datetime": {
+        "birth_date": "1973-07-04",
+        "birth_time": "09:00",
+        "birth_timezone": "Atlantic/Reykjavik",
+        "expected_jd_ut": 2441867.875
+      },
+      "place_resolved": {
+        "name": "Reykjavik, IS",
+        "lat": 64.1466,
+        "lon": -21.9426,
+        "altitude_m": 61.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 102.240635,
+        "moon": 155.541491,
+        "mercury": 123.133255,
+        "asc": 148.861357,
+        "mc": 37.648432,
+        "cusp_1": 148.861357,
+        "cusp_10": 37.648432
+      }
+    },
+    {
+      "case_id": "golden-pro-032",
+      "datetime": {
+        "birth_date": "1980-03-21",
+        "birth_time": "12:00",
+        "birth_timezone": "Atlantic/Reykjavik",
+        "expected_jd_ut": 2444320.0
+      },
+      "place_resolved": {
+        "name": "Reykjavik, IS",
+        "lat": 64.1466,
+        "lon": -21.9426,
+        "altitude_m": 61.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 1.027914,
+        "moon": 65.944288,
+        "mercury": 337.585422,
+        "asc": 116.792814,
+        "mc": 335.398397,
+        "cusp_1": 116.792814,
+        "cusp_10": 335.398397
+      }
+    },
+    {
+      "case_id": "golden-pro-033",
+      "datetime": {
+        "birth_date": "1990-06-15",
+        "birth_time": "12:00",
+        "birth_timezone": "Atlantic/Reykjavik",
+        "expected_jd_ut": 2448058.0
+      },
+      "place_resolved": {
+        "name": "Reykjavik, IS",
+        "lat": 64.1466,
+        "lon": -21.9426,
+        "altitude_m": 61.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 84.129567,
+        "moon": 345.35794,
+        "mercury": 65.690706,
+        "asc": 163.696667,
+        "mc": 63.585791,
+        "cusp_1": 163.696667,
+        "cusp_10": 63.585791
+      }
+    },
+    {
+      "case_id": "golden-pro-034",
+      "datetime": {
+        "birth_date": "2000-01-01",
+        "birth_time": "12:00",
+        "birth_timezone": "Atlantic/Reykjavik",
+        "expected_jd_ut": 2451545.0
+      },
+      "place_resolved": {
+        "name": "Reykjavik, IS",
+        "lat": 64.1466,
+        "lon": -21.9426,
+        "altitude_m": 61.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 280.36892,
+        "moon": 223.323775,
+        "mercury": 271.889275,
+        "asc": 291.462632,
+        "mc": 259.439869,
+        "cusp_1": 291.462632,
+        "cusp_10": 259.439869
+      }
+    },
+    {
+      "case_id": "golden-pro-035",
+      "datetime": {
+        "birth_date": "2000-07-17",
+        "birth_time": "12:00",
+        "birth_timezone": "Atlantic/Reykjavik",
+        "expected_jd_ut": 2451743.0
+      },
+      "place_resolved": {
+        "name": "Reykjavik, IS",
+        "lat": 64.1466,
+        "lon": -21.9426,
+        "altitude_m": 61.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 115.200982,
+        "moon": 305.21098,
+        "mercury": 100.386439,
+        "asc": 182.112515,
+        "mc": 93.370179,
+        "cusp_1": 182.112515,
+        "cusp_10": 93.370179
+      }
+    },
+    {
+      "case_id": "golden-pro-036",
+      "datetime": {
+        "birth_date": "1973-07-04",
+        "birth_time": "09:00",
+        "birth_timezone": "Asia/Kolkata",
+        "expected_jd_ut": 2441867.645833
+      },
+      "place_resolved": {
+        "name": "Mumbai, IN",
+        "lat": 19.076,
+        "lon": 72.8777,
+        "altitude_m": 14.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 102.022103,
+        "moon": 152.337506,
+        "mercury": 123.08953,
+        "asc": 140.203061,
+        "mc": 49.831951,
+        "cusp_1": 140.203061,
+        "cusp_10": 49.831951
+      }
+    },
+    {
+      "case_id": "golden-pro-037",
+      "datetime": {
+        "birth_date": "1980-03-21",
+        "birth_time": "12:00",
+        "birth_timezone": "Asia/Kolkata",
+        "expected_jd_ut": 2444319.770833
+      },
+      "place_resolved": {
+        "name": "Mumbai, IN",
+        "lat": 19.076,
+        "lon": 72.8777,
+        "altitude_m": 14.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 0.800363,
+        "moon": 62.753995,
+        "mercury": 337.545971,
+        "asc": 88.096223,
+        "mc": 348.371318,
+        "cusp_1": 88.096223,
+        "cusp_10": 348.371318
+      }
+    },
+    {
+      "case_id": "golden-pro-038",
+      "datetime": {
+        "birth_date": "1990-06-15",
+        "birth_time": "12:00",
+        "birth_timezone": "Asia/Kolkata",
+        "expected_jd_ut": 2448057.770833
+      },
+      "place_resolved": {
+        "name": "Mumbai, IN",
+        "lat": 19.076,
+        "lon": 72.8777,
+        "altitude_m": 14.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 83.910687,
+        "moon": 342.305162,
+        "mercury": 65.298674,
+        "asc": 164.554045,
+        "mc": 74.948011,
+        "cusp_1": 164.554045,
+        "cusp_10": 74.948011
+      }
+    },
+    {
+      "case_id": "golden-pro-039",
+      "datetime": {
+        "birth_date": "2000-01-01",
+        "birth_time": "12:00",
+        "birth_timezone": "Asia/Kolkata",
+        "expected_jd_ut": 2451544.770833
+      },
+      "place_resolved": {
+        "name": "Mumbai, IN",
+        "lat": 19.076,
+        "lon": 72.8777,
+        "altitude_m": 14.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 280.135302,
+        "moon": 220.564901,
+        "mercury": 271.532772,
+        "asc": 0.780677,
+        "mc": 270.55866,
+        "cusp_1": 0.780677,
+        "cusp_10": 270.55866
+      }
+    },
+    {
+      "case_id": "golden-pro-040",
+      "datetime": {
+        "birth_date": "2000-07-17",
+        "birth_time": "12:00",
+        "birth_timezone": "Asia/Kolkata",
+        "expected_jd_ut": 2451742.770833
+      },
+      "place_resolved": {
+        "name": "Mumbai, IN",
+        "lat": 19.076,
+        "lon": 72.8777,
+        "altitude_m": 14.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 114.982414,
+        "moon": 302.494491,
+        "mercury": 100.389942,
+        "asc": 194.909687,
+        "mc": 104.523273,
+        "cusp_1": 194.909687,
+        "cusp_10": 104.523273
+      }
+    },
+    {
+      "case_id": "golden-pro-041",
+      "datetime": {
+        "birth_date": "1973-07-04",
+        "birth_time": "09:00",
+        "birth_timezone": "Pacific/Honolulu",
+        "expected_jd_ut": 2441868.291667
+      },
+      "place_resolved": {
+        "name": "Honolulu, US",
+        "lat": 21.3069,
+        "lon": -157.8583,
+        "altitude_m": 5.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 102.637954,
+        "moon": 161.306839,
+        "mercury": 123.202386,
+        "asc": 142.965827,
+        "mc": 52.198266,
+        "cusp_1": 142.965827,
+        "cusp_10": 52.198266
+      }
+    },
+    {
+      "case_id": "golden-pro-042",
+      "datetime": {
+        "birth_date": "1980-03-21",
+        "birth_time": "12:00",
+        "birth_timezone": "Pacific/Honolulu",
+        "expected_jd_ut": 2444320.416667
+      },
+      "place_resolved": {
+        "name": "Honolulu, US",
+        "lat": 21.3069,
+        "lon": -157.8583,
+        "altitude_m": 5.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 1.441558,
+        "moon": 71.680804,
+        "mercury": 337.669394,
+        "asc": 91.321945,
+        "mc": 350.974427,
+        "cusp_1": 91.321945,
+        "cusp_10": 350.974427
+      }
+    },
+    {
+      "case_id": "golden-pro-043",
+      "datetime": {
+        "birth_date": "1990-06-15",
+        "birth_time": "12:00",
+        "birth_timezone": "Pacific/Honolulu",
+        "expected_jd_ut": 2448058.416667
+      },
+      "place_resolved": {
+        "name": "Honolulu, US",
+        "lat": 21.3069,
+        "lon": -157.8583,
+        "altitude_m": 5.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 84.527518,
+        "moon": 350.95677,
+        "mercury": 66.409654,
+        "asc": 167.029149,
+        "mc": 77.174503,
+        "cusp_1": 167.029149,
+        "cusp_10": 77.174503
+      }
+    },
+    {
+      "case_id": "golden-pro-044",
+      "datetime": {
+        "birth_date": "2000-01-01",
+        "birth_time": "12:00",
+        "birth_timezone": "Pacific/Honolulu",
+        "expected_jd_ut": 2451545.416667
+      },
+      "place_resolved": {
+        "name": "Honolulu, US",
+        "lat": 21.3069,
+        "lon": -157.8583,
+        "altitude_m": 5.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 280.793692,
+        "moon": 228.320495,
+        "mercury": 272.538175,
+        "asc": 3.946045,
+        "mc": 272.761561,
+        "cusp_1": 3.946045,
+        "cusp_10": 272.761561
+      }
+    },
+    {
+      "case_id": "golden-pro-045",
+      "datetime": {
+        "birth_date": "2000-07-17",
+        "birth_time": "12:00",
+        "birth_timezone": "Pacific/Honolulu",
+        "expected_jd_ut": 2451743.416667
+      },
+      "place_resolved": {
+        "name": "Honolulu, US",
+        "lat": 21.3069,
+        "lon": -157.8583,
+        "altitude_m": 5.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 115.598393,
+        "moon": 310.159862,
+        "mercury": 100.392183,
+        "asc": 196.889936,
+        "mc": 106.7559,
+        "cusp_1": 196.889936,
+        "cusp_10": 106.7559
+      }
+    },
+    {
+      "case_id": "golden-pro-046",
+      "datetime": {
+        "birth_date": "1973-07-04",
+        "birth_time": "09:00",
+        "birth_timezone": "Africa/Johannesburg",
+        "expected_jd_ut": 2441867.791667
+      },
+      "place_resolved": {
+        "name": "Cape Town, ZA",
+        "lat": -33.9249,
+        "lon": 18.4241,
+        "altitude_m": 25.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 102.161169,
+        "moon": 154.379106,
+        "mercury": 123.117822,
+        "asc": 118.976097,
+        "mc": 48.036743,
+        "cusp_1": 118.976097,
+        "cusp_10": 48.036743
+      }
+    },
+    {
+      "case_id": "golden-pro-047",
+      "datetime": {
+        "birth_date": "1980-03-21",
+        "birth_time": "12:00",
+        "birth_timezone": "Africa/Johannesburg",
+        "expected_jd_ut": 2444319.916667
+      },
+      "place_resolved": {
+        "name": "Cape Town, ZA",
+        "lat": -33.9249,
+        "lon": 18.4241,
+        "altitude_m": 25.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 0.945172,
+        "moon": 64.787075,
+        "mercury": 337.570519,
+        "asc": 64.476278,
+        "mc": 346.413572,
+        "cusp_1": 64.476278,
+        "cusp_10": 346.413572
+      }
+    },
+    {
+      "case_id": "golden-pro-048",
+      "datetime": {
+        "birth_date": "1990-06-15",
+        "birth_time": "12:00",
+        "birth_timezone": "Africa/Johannesburg",
+        "expected_jd_ut": 2448057.916667
+      },
+      "place_resolved": {
+        "name": "Cape Town, ZA",
+        "lat": -33.9249,
+        "lon": 18.4241,
+        "altitude_m": 25.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 84.049975,
+        "moon": 344.245696,
+        "mercury": 65.54787,
+        "asc": 152.732342,
+        "mc": 73.264098,
+        "cusp_1": 152.732342,
+        "cusp_10": 73.264098
+      }
+    },
+    {
+      "case_id": "golden-pro-049",
+      "datetime": {
+        "birth_date": "2000-01-01",
+        "birth_time": "12:00",
+        "birth_timezone": "Africa/Johannesburg",
+        "expected_jd_ut": 2451544.916667
+      },
+      "place_resolved": {
+        "name": "Cape Town, ZA",
+        "lat": -33.9249,
+        "lon": 18.4241,
+        "altitude_m": 25.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 280.283967,
+        "moon": 222.321487,
+        "mercury": 271.759605,
+        "asc": 358.986554,
+        "mc": 268.898097,
+        "cusp_1": 358.986554,
+        "cusp_10": 268.898097
+      }
+    },
+    {
+      "case_id": "golden-pro-050",
+      "datetime": {
+        "birth_date": "2000-07-17",
+        "birth_time": "12:00",
+        "birth_timezone": "Africa/Johannesburg",
+        "expected_jd_ut": 2451742.916667
+      },
+      "place_resolved": {
+        "name": "Cape Town, ZA",
+        "lat": -33.9249,
+        "lon": 18.4241,
+        "altitude_m": 25.0
+      },
+      "settings": {
+        "engine": "swisseph",
+        "ephe": "swisseph-moshier-integrated",
+        "frame": "geocentric",
+        "zodiac": "tropical",
+        "house_system": "placidus"
+      },
+      "expected": {
+        "sun": 115.121502,
+        "moon": 304.222761,
+        "mercury": 100.387169,
+        "asc": 201.167882,
+        "mc": 102.84526,
+        "cusp_1": 201.167882,
+        "cusp_10": 102.84526
+      }
+    }
+  ]
+}

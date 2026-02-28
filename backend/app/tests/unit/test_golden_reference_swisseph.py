@@ -58,10 +58,12 @@ JD_TOLERANCE: float = 0.000001
 # Détection disponibilité pyswisseph
 # ---------------------------------------------------------------------------
 
+
 def _is_swisseph_available() -> bool:
     """Retourne True si pyswisseph est importable dans l'environnement courant."""
     try:
         import swisseph  # noqa: F401
+
         return True
     except ImportError:
         return False
@@ -76,6 +78,7 @@ requires_swisseph = pytest.mark.skipif(
 # ---------------------------------------------------------------------------
 # Helpers de vérification
 # ---------------------------------------------------------------------------
+
 
 def _make_birth_input(case: GoldenCase) -> BirthInput:
     """Construit un BirthInput depuis un GoldenCase."""
@@ -131,6 +134,7 @@ def _assert_speed_tolerance(
 # (aucune dépendance à pyswisseph)
 # ---------------------------------------------------------------------------
 
+
 class TestDateConversionGolden:
     """Vérifie que prepare_birth_data() produit le JDUT attendu pour chaque cas golden.
 
@@ -139,9 +143,7 @@ class TestDateConversionGolden:
     """
 
     @pytest.mark.golden
-    @pytest.mark.parametrize(
-        "case", GOLDEN_THREE_CASES, ids=[c.label for c in GOLDEN_THREE_CASES]
-    )
+    @pytest.mark.parametrize("case", GOLDEN_THREE_CASES, ids=[c.label for c in GOLDEN_THREE_CASES])
     def test_jd_matches_golden_value(self, case: GoldenCase) -> None:
         """Le JDUT calculé depuis la date/heure/timezone doit correspondre à la valeur golden."""
         prepared = prepare_birth_data(_make_birth_input(case))
@@ -204,6 +206,7 @@ class TestDateConversionGolden:
 # Catégorie 2 : Tests golden d'intégration moteur (pyswisseph réel)
 # ---------------------------------------------------------------------------
 
+
 class TestGoldenPlanetPositions:
     """Tests d'intégration golden via appels réels à ephemeris_provider.calculate_planets().
 
@@ -214,9 +217,7 @@ class TestGoldenPlanetPositions:
 
     @pytest.mark.golden
     @requires_swisseph
-    @pytest.mark.parametrize(
-        "case", GOLDEN_THREE_CASES, ids=[c.label for c in GOLDEN_THREE_CASES]
-    )
+    @pytest.mark.parametrize("case", GOLDEN_THREE_CASES, ids=[c.label for c in GOLDEN_THREE_CASES])
     def test_sun_moon_mercury_within_tolerance(self, case: GoldenCase) -> None:
         """AC1 : Sun, Moon et Mercury respectent une tolérance absolue de 0.01°."""
         from app.domain.astrology.ephemeris_provider import calculate_planets
@@ -319,9 +320,7 @@ class TestGoldenPlanetPositions:
 
     @pytest.mark.golden
     @requires_swisseph
-    @pytest.mark.parametrize(
-        "case", ALL_GOLDEN_CASES, ids=[c.label for c in ALL_GOLDEN_CASES]
-    )
+    @pytest.mark.parametrize("case", ALL_GOLDEN_CASES, ids=[c.label for c in ALL_GOLDEN_CASES])
     def test_all_golden_cases_sun_in_tolerance(self, case: GoldenCase) -> None:
         """AC4 : Pour chaque cas golden contenant sun, la longitude est dans ± 0.01°.
 
@@ -337,6 +336,4 @@ class TestGoldenPlanetPositions:
         results = calculate_planets(case.expected_jd).planets
         result_map = {p.planet_id: p for p in results}
 
-        _assert_longitude_tolerance(
-            "sun", result_map["sun"].longitude, golden_map["sun"].longitude
-        )
+        _assert_longitude_tolerance("sun", result_map["sun"].longitude, golden_map["sun"].longitude)

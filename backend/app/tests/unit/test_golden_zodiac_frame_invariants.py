@@ -104,7 +104,9 @@ class TestGoldenTropicalVsSidereal:
     ) -> None:
         """AC1 : Check structurel — (tropical_lon - sidereal_lon) mod 360 ≈ swe.get_ayanamsa_ut()."""
         tropical_planets = calculate_planets(JDUT_J2000).planets
-        sidereal_planets = calculate_planets(JDUT_J2000, zodiac="sidereal", ayanamsa=ayanamsa).planets
+        sidereal_planets = calculate_planets(
+            JDUT_J2000, zodiac="sidereal", ayanamsa=ayanamsa
+        ).planets
 
         actual_ayanamsa = _get_effective_ayanamsa_ut(ayanamsa, JDUT_J2000)
 
@@ -126,7 +128,9 @@ class TestGoldenTropicalVsSidereal:
     def test_lahiri_and_fagan_bradley_produce_distinct_longitudes(self) -> None:
         """AC1 : Lahiri et Fagan-Bradley produisent des longitudes solaires différentes."""
         lahiri_planets = calculate_planets(JDUT_J2000, zodiac="sidereal", ayanamsa="lahiri").planets
-        fagan_planets = calculate_planets(JDUT_J2000, zodiac="sidereal", ayanamsa="fagan_bradley").planets
+        fagan_planets = calculate_planets(
+            JDUT_J2000, zodiac="sidereal", ayanamsa="fagan_bradley"
+        ).planets
 
         sun_lahiri = next(p for p in lahiri_planets if p.planet_id == "sun").longitude
         sun_fagan = next(p for p in fagan_planets if p.planet_id == "sun").longitude
@@ -242,7 +246,9 @@ class TestMetadataResultInvariants:
         assert metadata.ephemeris_path_version == result.ephemeris_path_version
 
     @pytest.mark.parametrize("ayanamsa_val", [None, "lahiri", "fagan_bradley"])
-    def test_get_latest_for_user_metadata_mirrors_result_after_roundtrip(self, ayanamsa_val: str | None) -> None:
+    def test_get_latest_for_user_metadata_mirrors_result_after_roundtrip(
+        self, ayanamsa_val: str | None
+    ) -> None:
         """AC3 : Après get_latest_for_user, metadata.*==result.* (couverture None + sidereal)."""
         zodiac_val = "tropical" if ayanamsa_val is None else "sidereal"
         stored_payload = {

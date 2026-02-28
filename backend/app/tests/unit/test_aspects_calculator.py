@@ -5,6 +5,7 @@ Couvre:
 - Résolution prioritaire: pair_override > luminary_override > default_orb [story 24-2 AC1]
 - Serialisation AspectResult [story 24-1, 24-2]
 """
+
 from app.domain.astrology.calculators.aspects import calculate_major_aspects
 from app.domain.astrology.natal_calculation import AspectResult
 
@@ -23,9 +24,9 @@ def test_calculate_major_aspects_uses_default_orb_and_exposes_orb_used_and_orb_m
 
     assert len(result) == 1
     assert result[0]["aspect_code"] == "square"
-    assert result[0]["orb"] == 5.5       # backward compat: déviation réelle
+    assert result[0]["orb"] == 5.5  # backward compat: déviation réelle
     assert result[0]["orb_used"] == 5.5  # story 24-2: déviation réelle (renommé)
-    assert result[0]["orb_max"] == 6.0   # story 24-2: seuil résolu (priorité)
+    assert result[0]["orb_max"] == 6.0  # story 24-2: seuil résolu (priorité)
 
 
 def test_calculate_major_aspects_applies_luminaries_override() -> None:
@@ -46,9 +47,9 @@ def test_calculate_major_aspects_applies_luminaries_override() -> None:
     result = calculate_major_aspects(positions, aspect_definitions)
 
     assert len(result) == 1
-    assert result[0]["orb"] == 7.0       # backward compat: déviation réelle
+    assert result[0]["orb"] == 7.0  # backward compat: déviation réelle
     assert result[0]["orb_used"] == 7.0  # déviation réelle
-    assert result[0]["orb_max"] == 8.0   # seuil = luminary override
+    assert result[0]["orb_max"] == 8.0  # seuil = luminary override
 
 
 def test_calculate_major_aspects_applies_pair_override_with_priority() -> None:
@@ -73,9 +74,9 @@ def test_calculate_major_aspects_applies_pair_override_with_priority() -> None:
     # mercury-sun normalized to mercury-sun (alphabetical)
     assert result[0]["planet_a"] == "mercury"
     assert result[0]["planet_b"] == "sun"
-    assert result[0]["orb"] == 8.5       # backward compat: déviation réelle
-    assert result[0]["orb_used"] == 8.5  # déviation réelle  
-    assert result[0]["orb_max"] == 9.0   # seuil = pair override (priorité maximale)
+    assert result[0]["orb"] == 8.5  # backward compat: déviation réelle
+    assert result[0]["orb_used"] == 8.5  # déviation réelle
+    assert result[0]["orb_max"] == 9.0  # seuil = pair override (priorité maximale)
 
 
 def test_aspect_result_serialization_exposes_orb_orb_used_and_orb_max() -> None:

@@ -56,9 +56,7 @@ class SwissEphInitError(Exception):
 
     code = "swisseph_init_failed"
 
-    def __init__(
-        self, message: str = "Swiss Ephemeris runtime initialization failed"
-    ) -> None:
+    def __init__(self, message: str = "Swiss Ephemeris runtime initialization failed") -> None:
         self.message = message
         super().__init__(message)
 
@@ -265,9 +263,7 @@ def bootstrap_swisseph(
             type(exc).__name__,
             path_version,
         )
-        err = SwissEphInitError(
-            f"Swiss Ephemeris initialization failed: {type(exc).__name__}"
-        )
+        err = SwissEphInitError(f"Swiss Ephemeris initialization failed: {type(exc).__name__}")
         _result = _BootstrapResult(
             success=False, path_version=path_version, path_hash=computed_path_hash, error=err
         )

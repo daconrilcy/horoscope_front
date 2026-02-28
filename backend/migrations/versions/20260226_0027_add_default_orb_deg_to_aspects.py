@@ -35,11 +35,11 @@ def upgrade() -> None:
             f"""
             UPDATE aspects
             SET default_orb_deg = CASE code
-                WHEN 'conjunction' THEN {DEFAULT_ASPECT_ORBS['conjunction']}
-                WHEN 'sextile' THEN {DEFAULT_ASPECT_ORBS['sextile']}
-                WHEN 'square' THEN {DEFAULT_ASPECT_ORBS['square']}
-                WHEN 'trine' THEN {DEFAULT_ASPECT_ORBS['trine']}
-                WHEN 'opposition' THEN {DEFAULT_ASPECT_ORBS['opposition']}
+                WHEN 'conjunction' THEN {DEFAULT_ASPECT_ORBS["conjunction"]}
+                WHEN 'sextile' THEN {DEFAULT_ASPECT_ORBS["sextile"]}
+                WHEN 'square' THEN {DEFAULT_ASPECT_ORBS["square"]}
+                WHEN 'trine' THEN {DEFAULT_ASPECT_ORBS["trine"]}
+                WHEN 'opposition' THEN {DEFAULT_ASPECT_ORBS["opposition"]}
                 ELSE {DEFAULT_FALLBACK_ORB}
             END
             """

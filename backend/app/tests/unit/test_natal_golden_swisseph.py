@@ -26,6 +26,7 @@ ANGLE_TOLERANCE_DEG = 0.05
 def _is_swisseph_available() -> bool:
     try:
         import swisseph  # noqa: F401
+
         return True
     except ImportError:
         return False

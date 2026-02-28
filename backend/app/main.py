@@ -227,9 +227,7 @@ def handle_ephemeris_data_missing_error(
 
 
 @app.exception_handler(SwissEphInitError)
-def handle_swisseph_init_error(
-    request: Request, error: SwissEphInitError
-) -> JSONResponse:
+def handle_swisseph_init_error(request: Request, error: SwissEphInitError) -> JSONResponse:
     logger.error(
         "swisseph_error_handled code=%s request_id=%s",
         error.code,
@@ -249,9 +247,7 @@ def handle_swisseph_init_error(
 
 
 @app.exception_handler(EphemerisCalcError)
-def handle_ephemeris_calc_error(
-    request: Request, error: EphemerisCalcError
-) -> JSONResponse:
+def handle_ephemeris_calc_error(request: Request, error: EphemerisCalcError) -> JSONResponse:
     return JSONResponse(
         status_code=503,
         content={
@@ -266,9 +262,7 @@ def handle_ephemeris_calc_error(
 
 
 @app.exception_handler(HousesCalcError)
-def handle_houses_calc_error(
-    request: Request, error: HousesCalcError
-) -> JSONResponse:
+def handle_houses_calc_error(request: Request, error: HousesCalcError) -> JSONResponse:
     return JSONResponse(
         status_code=503,
         content={

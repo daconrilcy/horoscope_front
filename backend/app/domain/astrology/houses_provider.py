@@ -41,7 +41,7 @@ METRIC_ERRORS = "swisseph_errors_total"
 # Reference: pyswisseph houses_ex hsys parameter.
 _HOUSE_SYSTEM_CODES: dict[str, bytes] = {
     "placidus": b"P",
-    "equal": b"E",       # Exposé public API depuis story 23.2
+    "equal": b"E",  # Exposé public API depuis story 23.2
     "whole_sign": b"W",  # Exposé public API depuis story 23.2
 }
 
@@ -56,10 +56,10 @@ _DEFAULT_FRAME = "geocentric"
 class HouseData:
     """Résultat du calcul des maisons natales via SwissEph."""
 
-    cusps: tuple[float, ...]    # Cuspides maisons 1..12, normalisées [0, 360)
+    cusps: tuple[float, ...]  # Cuspides maisons 1..12, normalisées [0, 360)
     ascendant_longitude: float  # Longitude ASC, normalisée [0, 360)
-    mc_longitude: float         # Longitude MC, normalisée [0, 360)
-    house_system: str           # Système de maisons appliqué
+    mc_longitude: float  # Longitude MC, normalisée [0, 360)
+    house_system: str  # Système de maisons appliqué
 
 
 class HousesCalcError(Exception):
@@ -114,9 +114,7 @@ def _extract_cusps(cusps_raw: tuple[object, ...]) -> tuple[float, ...]:
     elif len(cusps_raw) == 12:
         source = cusps_raw
     else:
-        raise HousesCalcError(
-            f"houses_ex returned invalid cusp array length: {len(cusps_raw)}"
-        )
+        raise HousesCalcError(f"houses_ex returned invalid cusp array length: {len(cusps_raw)}")
     return tuple(_normalize_longitude(float(value)) for value in source)
 
 
@@ -183,9 +181,7 @@ def calculate_houses(
                 try:
                     cusps_raw, ascmc_raw = swe.houses_ex(jdut, lat, lon, hsys_code)
                 except Exception as exc:
-                    raise HousesCalcError(
-                        f"houses_ex failed: {type(exc).__name__}"
-                    ) from exc
+                    raise HousesCalcError(f"houses_ex failed: {type(exc).__name__}") from exc
 
             finally:
                 if topo_set:

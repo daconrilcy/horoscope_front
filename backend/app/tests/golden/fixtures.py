@@ -79,8 +79,9 @@ GOLDEN_J2000 = GoldenCase(
     planets=(
         PlanetGolden("sun", longitude=280.368920, speed_longitude=1.019432, is_retrograde=False),
         PlanetGolden("moon", longitude=223.323775, speed_longitude=12.021183, is_retrograde=False),
-        PlanetGolden("mercury", longitude=271.889275, speed_longitude=1.556254,
-                     is_retrograde=False),
+        PlanetGolden(
+            "mercury", longitude=271.889275, speed_longitude=1.556254, is_retrograde=False
+        ),
         PlanetGolden("saturn", longitude=40.395639, speed_longitude=-0.019945, is_retrograde=True),
     ),
 )
@@ -119,8 +120,9 @@ GOLDEN_1980 = GoldenCase(
     planets=(
         PlanetGolden("sun", longitude=1.027914, speed_longitude=0.992876, is_retrograde=False),
         PlanetGolden("moon", longitude=65.944288, speed_longitude=13.866655, is_retrograde=False),
-        PlanetGolden("mercury", longitude=337.585422, speed_longitude=0.182641,
-                     is_retrograde=False),
+        PlanetGolden(
+            "mercury", longitude=337.585422, speed_longitude=0.182641, is_retrograde=False
+        ),
         PlanetGolden("mars", longitude=147.471070, speed_longitude=-0.203976, is_retrograde=True),
     ),
 )
@@ -145,8 +147,9 @@ GOLDEN_1973_EUROPE_PARIS = GoldenCase(
     planets=(
         PlanetGolden("sun", longitude=102.200902, speed_longitude=0.953584, is_retrograde=False),
         PlanetGolden("moon", longitude=154.960685, speed_longitude=13.948549, is_retrograde=False),
-        PlanetGolden("mercury", longitude=123.125606, speed_longitude=0.185201,
-                     is_retrograde=False),
+        PlanetGolden(
+            "mercury", longitude=123.125606, speed_longitude=0.185201, is_retrograde=False
+        ),
     ),
 )
 
@@ -164,8 +167,9 @@ GOLDEN_MERCURY_RETROGRADE = GoldenCase(
     birth_timezone="UTC",
     expected_jd=2451743.0,
     planets=(
-        PlanetGolden("mercury", longitude=100.386439, speed_longitude=-0.005020,
-                     is_retrograde=True),
+        PlanetGolden(
+            "mercury", longitude=100.386439, speed_longitude=-0.005020, is_retrograde=True
+        ),
     ),
 )
 

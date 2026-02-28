@@ -120,8 +120,7 @@ class TestPlanetDataFields:
             planet_map = {p.planet_id: p for p in results}
             lon = planet_map[planet_id].longitude
             assert 0.0 <= lon < 360.0, (
-                f"Longitude {lon} hors [0, 360) pour planète {planet_id} "
-                f"(valeur brute: {raw_lon})"
+                f"Longitude {lon} hors [0, 360) pour planète {planet_id} (valeur brute: {raw_lon})"
             )
 
 
@@ -278,9 +277,7 @@ class TestErrorHandling:
 
     def test_calc_ut_exception_raises_ephemeris_calc_error(self) -> None:
         """Exception dans calc_ut → EphemerisCalcError (pas de stack brute)."""
-        mock_swe = _make_swe_mock(
-            calc_ut_side_effect=RuntimeError("internal swe error")
-        )
+        mock_swe = _make_swe_mock(calc_ut_side_effect=RuntimeError("internal swe error"))
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
             with pytest.raises(EphemerisCalcError) as exc_info:
                 calculate_planets(JDUT_J2000)
@@ -297,9 +294,7 @@ class TestErrorHandling:
 
     def test_set_sid_mode_exception_raises_ephemeris_calc_error(self) -> None:
         """Exception dans set_sid_mode → EphemerisCalcError."""
-        mock_swe = _make_swe_mock(
-            set_sid_mode_side_effect=RuntimeError("sid error")
-        )
+        mock_swe = _make_swe_mock(set_sid_mode_side_effect=RuntimeError("sid error"))
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
             with pytest.raises(EphemerisCalcError) as exc_info:
                 calculate_planets(JDUT_J2000, zodiac="sidereal")
@@ -328,6 +323,7 @@ class TestErrorHandling:
 # ---------------------------------------------------------------------------
 # Smoke Test (Real library interaction)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.skipif(find_spec("swisseph") is None, reason="swisseph not installed")
 def test_swisseph_smoke_test() -> None:

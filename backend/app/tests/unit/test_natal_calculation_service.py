@@ -427,6 +427,7 @@ def test_calculate_natal_sidereal_requested_without_ayanamsa_fails_ac2() -> None
         assert exc.value.code == "missing_ayanamsa"
 
         from datetime import timedelta
+
         count = get_counter_sum_in_window(
             "natal_ruleset_invalid_total|code=missing_ayanamsa", timedelta(minutes=1)
         )
@@ -448,6 +449,7 @@ def test_calculate_natal_invalid_zodiac_increments_metric() -> None:
         assert exc.value.code == "invalid_zodiac"
 
         from datetime import timedelta
+
         count = get_counter_sum_in_window(
             "natal_ruleset_invalid_total|code=invalid_zodiac", timedelta(minutes=1)
         )
@@ -518,9 +520,7 @@ def test_calculate_natal_topocentric_without_coordinates_fails_422(
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         with pytest.raises(NatalCalculationError) as exc:
-            NatalCalculationService.calculate(
-                db, payload, frame="topocentric", accurate=True
-            )
+            NatalCalculationService.calculate(db, payload, frame="topocentric", accurate=True)
         assert exc.value.code == "missing_topocentric_coordinates"
 
 
@@ -529,8 +529,9 @@ def test_calculate_natal_topocentric_vs_geocentric_asc_mc_diff_ac2(
 ) -> None:
     """Story 23-3 AC2: ASC ou MC doit différer (> 0.001deg) entre geo et topo."""
     monkeypatch.setattr("app.services.natal_calculation_service.settings.swisseph_enabled", True)
-    
+
     from unittest.mock import MagicMock
+
     mock_bootstrap = MagicMock()
     mock_bootstrap.success = True
     mock_bootstrap.path_version = "se2_2.10"
@@ -546,15 +547,15 @@ def test_calculate_natal_topocentric_vs_geocentric_asc_mc_diff_ac2(
         is_topo = kwargs.get("frame") == FrameType.TOPOCENTRIC
         # Simulate AC2: difference in MC (House 10 cusp)
         mc_long = 270.01 if is_topo else 270.0
-        
+
         prepared = BirthPreparedData(
             birth_datetime_local="1990-06-15T10:30:00+02:00",
             birth_datetime_utc="1990-06-15T08:30:00Z",
             timestamp_utc=645438600,
             julian_day=2448057.8541666665,
-            birth_timezone="Europe/Paris"
+            birth_timezone="Europe/Paris",
         )
-        
+
         return NatalResult(
             reference_version="1.0.0",
             ruleset_version="1.0.0",
@@ -571,7 +572,9 @@ def test_calculate_natal_topocentric_vs_geocentric_asc_mc_diff_ac2(
             aspects=[],
         )
 
-    monkeypatch.setattr("app.services.natal_calculation_service.build_natal_result", _mock_build_natal_result)
+    monkeypatch.setattr(
+        "app.services.natal_calculation_service.build_natal_result", _mock_build_natal_result
+    )
 
     _cleanup_reference_tables()
     payload = BirthInput(
@@ -584,12 +587,8 @@ def test_calculate_natal_topocentric_vs_geocentric_asc_mc_diff_ac2(
     )
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
-        geo = NatalCalculationService.calculate(
-            db, payload, frame="geocentric", accurate=True
-        )
-        topo = NatalCalculationService.calculate(
-            db, payload, frame="topocentric", accurate=True
-        )
+        geo = NatalCalculationService.calculate(db, payload, frame="geocentric", accurate=True)
+        topo = NatalCalculationService.calculate(db, payload, frame="topocentric", accurate=True)
 
     def _angular_diff(a: float, b: float) -> float:
         diff = abs(a - b)
@@ -597,19 +596,19 @@ def test_calculate_natal_topocentric_vs_geocentric_asc_mc_diff_ac2(
 
     geo_asc = next(h.cusp_longitude for h in geo.houses if h.number == 1)
     topo_asc = next(h.cusp_longitude for h in topo.houses if h.number == 1)
-    
+
     # Note: On search for ANY difference on ASC or MC as per AC2
     # In some cases ASC diff might be very small, but MC or Moon will differ.
     # AC2 specifically mentions ASC/MC.
     asc_diff = _angular_diff(geo_asc, topo_asc)
-    
+
     # If ASC diff is too small, check MC (which is house 10 cusp usually, or MC angle if separate)
-    # Our HouseResult doesn't expose MC directly if it's not a house cusp, 
+    # Our HouseResult doesn't expose MC directly if it's not a house cusp,
     # but in Placidus/Equal it's usually House 10 cusp.
     geo_mc = next(h.cusp_longitude for h in geo.houses if h.number == 10)
     topo_mc = next(h.cusp_longitude for h in topo.houses if h.number == 10)
     mc_diff = _angular_diff(geo_mc, topo_mc)
-    
+
     max_diff = max(asc_diff, mc_diff)
     assert max_diff > 0.0001, f"ASC/MC difference too small: {max_diff}"
 
@@ -618,7 +617,9 @@ def test_calculate_natal_simplified_engine_rejects_non_equal_house_system(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _cleanup_reference_tables()
-    monkeypatch.setattr("app.services.natal_calculation_service.settings.natal_engine_default", "simplified")
+    monkeypatch.setattr(
+        "app.services.natal_calculation_service.settings.natal_engine_default", "simplified"
+    )
     payload = BirthInput(
         birth_date="1990-06-15",
         birth_time="10:30",
@@ -630,7 +631,5 @@ def test_calculate_natal_simplified_engine_rejects_non_equal_house_system(
         # accurate=False -> tries simplified by default (if not overridden)
         # but if we ask for Placidus, it should require accurate=True
         with pytest.raises(NatalCalculationError) as exc:
-            NatalCalculationService.calculate(
-                db, payload, house_system="placidus", accurate=False
-            )
+            NatalCalculationService.calculate(db, payload, house_system="placidus", accurate=False)
         assert exc.value.code == "accurate_mode_required"

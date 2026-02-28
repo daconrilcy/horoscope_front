@@ -233,9 +233,7 @@ class TestBootstrapSwisseph:
 
     def test_ephemeris_data_missing_error_accepts_missing_file_kwarg(self) -> None:
         """EphemerisDataMissingError accepte missing_file comme kwarg."""
-        err = ephemeris.EphemerisDataMissingError(
-            "test message", missing_file="sepl_18.se1"
-        )
+        err = ephemeris.EphemerisDataMissingError("test message", missing_file="sepl_18.se1")
         assert err.missing_file == "sepl_18.se1"
         assert err.code == "ephemeris_data_missing"
 
@@ -326,9 +324,7 @@ class TestEphemerisMetrics:
         except ephemeris.EphemerisDataMissingError:
             pass
 
-        count = get_counter_sum_in_window(
-            ephemeris.METRIC_DATA_MISSING, timedelta(minutes=1)
-        )
+        count = get_counter_sum_in_window(ephemeris.METRIC_DATA_MISSING, timedelta(minutes=1))
         assert count == 1.0
 
     def test_data_missing_metric_incremented_on_missing_dir(self, tmp_path) -> None:
@@ -338,9 +334,7 @@ class TestEphemerisMetrics:
         except ephemeris.EphemerisDataMissingError:
             pass
 
-        count = get_counter_sum_in_window(
-            ephemeris.METRIC_DATA_MISSING, timedelta(minutes=1)
-        )
+        count = get_counter_sum_in_window(ephemeris.METRIC_DATA_MISSING, timedelta(minutes=1))
         assert count == 1.0
 
     def test_init_errors_metric_incremented_on_swe_failure(self, tmp_path) -> None:
@@ -351,9 +345,7 @@ class TestEphemerisMetrics:
             except ephemeris.SwissEphInitError:
                 pass
 
-        count = get_counter_sum_in_window(
-            ephemeris.METRIC_INIT_ERRORS, timedelta(minutes=1)
-        )
+        count = get_counter_sum_in_window(ephemeris.METRIC_INIT_ERRORS, timedelta(minutes=1))
         assert count == 1.0
 
     def test_no_metrics_on_success(self, tmp_path) -> None:

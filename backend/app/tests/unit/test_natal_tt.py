@@ -372,7 +372,7 @@ def test_build_natal_result_time_scale_tt_disabled(monkeypatch: pytest.MonkeyPat
 # ---------------------------------------------------------------------------
 
 
-def test_natal_result_time_scale_default_is_ut() -> None: 
+def test_natal_result_time_scale_default_is_ut() -> None:
     """NatalResult sans time_scale explicite → time_scale='UT' (rétrocompat)."""
     from app.domain.astrology.natal_calculation import NatalResult
     from app.core.config import HouseSystemType

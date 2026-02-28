@@ -9,6 +9,7 @@ Couvre:
 - Rétrocompatibilité: NatalResult.model_validate() accepte anciens payloads
 - Champs historiques préservés
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -21,6 +22,7 @@ from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_reference_data(planet_codes: list[str] | None = None) -> dict[str, object]:
     codes = planet_codes or ["sun"]
@@ -81,6 +83,7 @@ def _swisseph_houses_mock(
 # Task 4.1 — NatalResult defaults backward-compat
 # ---------------------------------------------------------------------------
 
+
 def test_natal_result_defaults() -> None:
     """NatalResult créé avec les seuls champs requis doit avoir les bons defaults."""
     result = NatalResult(
@@ -140,6 +143,7 @@ def test_natal_result_model_validate_legacy_payload() -> None:
 # ---------------------------------------------------------------------------
 # Task 4.2 — build_natal_result avec engine=swisseph: champs metadata propagés
 # ---------------------------------------------------------------------------
+
 
 def test_build_natal_result_swisseph_engine_metadata(
     monkeypatch: pytest.MonkeyPatch,
@@ -222,6 +226,7 @@ def test_build_natal_result_aspect_school_propagated(
     )
 
     from app.core.config import AspectSchoolType
+
     result = build_natal_result(
         birth_input=birth_input,
         reference_data=ref_data,
@@ -289,6 +294,7 @@ def test_build_natal_result_simplified_engine_metadata() -> None:
 # ---------------------------------------------------------------------------
 # Task 4.3 — metadata sidereal: zodiac=sidereal, ayanamsa=lahiri
 # ---------------------------------------------------------------------------
+
 
 def test_build_natal_result_sidereal_zodiac_metadata(
     monkeypatch: pytest.MonkeyPatch,
@@ -366,6 +372,7 @@ def test_build_natal_result_sidereal_default_ayanamsa_lahiri(
 # ---------------------------------------------------------------------------
 # Task 4.4 — metadata topocentric: frame=topocentric propagé
 # ---------------------------------------------------------------------------
+
 
 def test_build_natal_result_topocentric_frame_metadata(
     monkeypatch: pytest.MonkeyPatch,
@@ -493,6 +500,7 @@ def test_build_natal_result_topocentric_propagates_frame_and_coordinates_to_plan
 # Task 4.5 — UserNatalChartMetadata: timezone_used depuis prepared_input
 # ---------------------------------------------------------------------------
 
+
 def test_user_natal_chart_metadata_timezone_used() -> None:
     """UserNatalChartMetadata.timezone_used est dérivé de prepared_input.birth_timezone."""
     from app.services.user_natal_chart_service import UserNatalChartMetadata
@@ -539,6 +547,7 @@ def test_user_natal_chart_metadata_timezone_used() -> None:
 # Task 4.6 — ephemeris_path_version: None pour simplified, string pour swisseph
 # ---------------------------------------------------------------------------
 
+
 def test_user_natal_chart_metadata_ephemeris_path_version_none_for_simplified() -> None:
     """ephemeris_path_version=None pour le moteur simplified."""
     from app.services.user_natal_chart_service import UserNatalChartMetadata
@@ -577,6 +586,7 @@ def test_user_natal_chart_metadata_ephemeris_path_version_none_for_simplified() 
 # Task 4.7 — Rétrocompatibilité: champs historiques préservés dans metadata
 # ---------------------------------------------------------------------------
 
+
 def test_user_natal_chart_metadata_historical_fields_preserved() -> None:
     """reference_version, ruleset_version, house_system toujours présents (champs historiques)."""
     from app.services.user_natal_chart_service import UserNatalChartMetadata
@@ -604,6 +614,7 @@ def test_user_natal_chart_metadata_historical_fields_preserved() -> None:
 # ---------------------------------------------------------------------------
 # Task 4.8 — NatalCalculationService extrait ephemeris_path_version du bootstrap
 # ---------------------------------------------------------------------------
+
 
 def test_natal_calculation_service_extracts_ephemeris_path_version(
     monkeypatch: pytest.MonkeyPatch,
@@ -654,6 +665,7 @@ def test_natal_calculation_service_extracts_ephemeris_path_version(
     assert captured_kwargs.get("ephemeris_path_version") == "se2_2.10"
     assert captured_kwargs.get("ephemeris_path_hash") == "hash-se2"
     from app.core.config import AspectSchoolType
+
     assert captured_kwargs.get("aspect_school") == AspectSchoolType.STRICT
     assert captured_kwargs.get("aspect_rules_version") == "strict-1.0.0"
 

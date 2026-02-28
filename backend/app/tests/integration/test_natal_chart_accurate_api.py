@@ -2,6 +2,7 @@
 
 Couvre les AC 2, 3, 4 (erreurs 422) et la non-regression du mode simplified.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -54,8 +55,7 @@ def mock_swisseph(monkeypatch: pytest.MonkeyPatch) -> None:
         **kwargs: object,
     ) -> list[dict[str, object]]:
         return [
-            {"planet_code": code, "longitude": 0.0, "sign_code": "aries"}
-            for code in planet_codes
+            {"planet_code": code, "longitude": 0.0, "sign_code": "aries"} for code in planet_codes
         ]
 
     def _mock_houses(
@@ -224,6 +224,7 @@ def test_accurate_mode_swisseph_disabled_raises_error(
 # ---------------------------------------------------------------------------
 # Story 20-5: Tests metadata complète
 # ---------------------------------------------------------------------------
+
 
 def test_metadata_always_present_in_generated_chart() -> None:
     """AC4: metadata contient toujours reference_version, ruleset_version, timezone_used."""

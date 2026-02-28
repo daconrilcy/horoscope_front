@@ -159,15 +159,16 @@ def test_engine_selection_swisseph_when_accurate_and_enabled(
     from app.core.config import FrameType, HouseSystemType, ZodiacType
 
     def _mock_build_natal_result(**kwargs: object) -> NatalResult:
-        captured_engine.append(str(kwargs.get("engine"))) 
+        captured_engine.append(str(kwargs.get("engine")))
         return NatalResult(
             reference_version="1.0.0",
             ruleset_version="1.0.0",
-            house_system=HouseSystemType.PLACIDUS if kwargs.get("engine") == "swisseph" else HouseSystemType.EQUAL,
+            house_system=HouseSystemType.PLACIDUS
+            if kwargs.get("engine") == "swisseph"
+            else HouseSystemType.EQUAL,
             engine=str(kwargs.get("engine", "simplified")),
             zodiac=ZodiacType.TROPICAL,
             frame=FrameType.GEOCENTRIC,
-    
             ayanamsa=str(kwargs.get("ayanamsa")) if kwargs.get("ayanamsa") else None,
             ephemeris_path_version=str(kwargs.get("ephemeris_path_version"))
             if kwargs.get("ephemeris_path_version")
@@ -219,15 +220,16 @@ def test_engine_selection_simplified_when_not_accurate(
     from app.core.config import FrameType, HouseSystemType, ZodiacType
 
     def _mock_build_natal_result(**kwargs: object) -> NatalResult:
-        captured_engine.append(str(kwargs.get("engine"))) 
+        captured_engine.append(str(kwargs.get("engine")))
         return NatalResult(
             reference_version="1.0.0",
             ruleset_version="1.0.0",
-            house_system=HouseSystemType.PLACIDUS if kwargs.get("engine") == "swisseph" else HouseSystemType.EQUAL,
+            house_system=HouseSystemType.PLACIDUS
+            if kwargs.get("engine") == "swisseph"
+            else HouseSystemType.EQUAL,
             engine=str(kwargs.get("engine", "simplified")),
             zodiac=ZodiacType.TROPICAL,
             frame=FrameType.GEOCENTRIC,
-    
             ayanamsa=str(kwargs.get("ayanamsa")) if kwargs.get("ayanamsa") else None,
             ephemeris_path_version=str(kwargs.get("ephemeris_path_version"))
             if kwargs.get("ephemeris_path_version")
@@ -305,7 +307,7 @@ def test_engine_selection_internal_override_simplified_when_enabled(
     from app.core.config import FrameType, HouseSystemType, ZodiacType
 
     def _mock_build_natal_result(**kwargs: object) -> NatalResult:
-        captured_engine.append(str(kwargs.get("engine"))) 
+        captured_engine.append(str(kwargs.get("engine")))
         return NatalResult(
             reference_version="1.0.0",
             ruleset_version="1.0.0",
@@ -313,7 +315,6 @@ def test_engine_selection_internal_override_simplified_when_enabled(
             engine=str(kwargs.get("engine", "simplified")),
             zodiac=ZodiacType.TROPICAL,
             frame=FrameType.GEOCENTRIC,
-    
             ayanamsa=str(kwargs.get("ayanamsa")) if kwargs.get("ayanamsa") else None,
             ephemeris_path_version=str(kwargs.get("ephemeris_path_version"))
             if kwargs.get("ephemeris_path_version")

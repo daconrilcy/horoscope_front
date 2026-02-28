@@ -9,6 +9,7 @@ Couvre:
 - AC3: test golden — cas contrôlé avec aspect précis attendu
 - Task 3: seuls les aspects majeurs sont calculés (aspects mineurs filtrés)
 """
+
 from __future__ import annotations
 
 import pytest
@@ -21,6 +22,7 @@ from app.domain.astrology.natal_preparation import BirthInput
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_birth_input() -> BirthInput:
     return BirthInput(
@@ -79,6 +81,7 @@ def _make_reference_two_planets(aspects: list[dict[str, object]]) -> dict[str, o
 # AC1 — Résolution prioritaire: pair_override > luminary_override > default_orb
 # ---------------------------------------------------------------------------
 
+
 class TestOrbPriorityResolution:
     """orb_max suit la chaîne de priorité: pair_override > luminary > default."""
 
@@ -121,8 +124,8 @@ class TestOrbPriorityResolution:
     def test_pair_override_takes_precedence_over_luminary_override(self) -> None:
         """pair_override prend la priorité maximale même sur luminary_override."""
         positions = [
-            {"planet_code": "sun", "longitude": 0.0},   # luminaire
-            {"planet_code": "moon", "longitude": 93.0}, # luminaire
+            {"planet_code": "sun", "longitude": 0.0},  # luminaire
+            {"planet_code": "moon", "longitude": 93.0},  # luminaire
         ]
         aspect_definitions = [
             {
@@ -188,6 +191,7 @@ class TestOrbPriorityResolution:
 # AC2 — orb_used <= orb_max et code dans les aspects majeurs
 # ---------------------------------------------------------------------------
 
+
 class TestOrbUsedLteOrbMax:
     """Pour tout aspect détecté: orb_used <= orb_max ET code dans les majeurs."""
 
@@ -231,10 +235,10 @@ class TestOrbUsedLteOrbMax:
         """Les codes d'aspects détectés appartiennent à l'ensemble des aspects majeurs."""
         positions = [
             {"planet_code": "sun", "longitude": 0.0},
-            {"planet_code": "moon", "longitude": 60.0},   # sextile exact
-            {"planet_code": "mars", "longitude": 90.0},   # square exact
-            {"planet_code": "jupiter", "longitude": 120.0}, # trine exact
-            {"planet_code": "saturn", "longitude": 180.0}, # opposition exact
+            {"planet_code": "moon", "longitude": 60.0},  # sextile exact
+            {"planet_code": "mars", "longitude": 90.0},  # square exact
+            {"planet_code": "jupiter", "longitude": 120.0},  # trine exact
+            {"planet_code": "saturn", "longitude": 180.0},  # opposition exact
         ]
         aspect_definitions = [
             {"code": "conjunction", "angle": 0.0, "default_orb_deg": 6.0},
@@ -256,6 +260,7 @@ class TestOrbUsedLteOrbMax:
 # Task 3 — Seuls les aspects majeurs sont calculés
 # ---------------------------------------------------------------------------
 
+
 class TestMajorAspectsFilter:
     """build_natal_result ne calcule que les aspects majeurs (filtre les mineurs)."""
 
@@ -263,15 +268,15 @@ class TestMajorAspectsFilter:
         """MAJOR_ASPECT_CODES contient exactement les 5 aspects majeurs."""
         assert MAJOR_ASPECT_CODES == {"conjunction", "sextile", "square", "trine", "opposition"}
 
-    def test_minor_aspects_ignored_in_calculation(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_minor_aspects_ignored_in_calculation(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Les aspects mineurs dans le ruleset sont ignorés — seuls les majeurs sont calculés."""
-        ref = _make_reference_two_planets(aspects=[
-            {"code": "square", "angle": 90.0, "default_orb_deg": 6.0},
-            {"code": "semisquare", "angle": 45.0, "default_orb_deg": 2.0},  # aspect mineur
-            {"code": "sesquisquare", "angle": 135.0, "default_orb_deg": 2.0},  # aspect mineur
-        ])
+        ref = _make_reference_two_planets(
+            aspects=[
+                {"code": "square", "angle": 90.0, "default_orb_deg": 6.0},
+                {"code": "semisquare", "angle": 45.0, "default_orb_deg": 2.0},  # aspect mineur
+                {"code": "sesquisquare", "angle": 135.0, "default_orb_deg": 2.0},  # aspect mineur
+            ]
+        )
         monkeypatch.setattr(
             "app.domain.astrology.natal_calculation._build_swisseph_positions",
             _swisseph_positions_mock_two_planets,
@@ -299,9 +304,11 @@ class TestMajorAspectsFilter:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Aucun aspect calculé si le ruleset ne contient que des aspects mineurs."""
-        ref = _make_reference_two_planets(aspects=[
-            {"code": "semisquare", "angle": 45.0, "default_orb_deg": 2.0},
-        ])
+        ref = _make_reference_two_planets(
+            aspects=[
+                {"code": "semisquare", "angle": 45.0, "default_orb_deg": 2.0},
+            ]
+        )
         monkeypatch.setattr(
             "app.domain.astrology.natal_calculation._build_swisseph_positions",
             _swisseph_positions_mock_two_planets,
@@ -327,6 +334,7 @@ class TestMajorAspectsFilter:
 # AC3 — Test golden: cas contrôlé avec aspect précis attendu
 # ---------------------------------------------------------------------------
 
+
 class TestGoldenAspectDetection:
     """Golden test: cas contrôlé avec positions fixes et aspects attendus précis."""
 
@@ -348,9 +356,9 @@ class TestGoldenAspectDetection:
         # Alphabetical sort: mars < sun
         assert aspect["planet_a"] == "mars"
         assert aspect["planet_b"] == "sun"
-        assert aspect["orb"] == 3.0          # déviation exacte: |93 - 0 - 90| = 3
-        assert aspect["orb_used"] == 3.0     # AC2: orb_used = déviation réelle
-        assert aspect["orb_max"] == 6.0      # AC2: orb_max = seuil résolu
+        assert aspect["orb"] == 3.0  # déviation exacte: |93 - 0 - 90| = 3
+        assert aspect["orb_used"] == 3.0  # AC2: orb_used = déviation réelle
+        assert aspect["orb_max"] == 6.0  # AC2: orb_max = seuil résolu
         assert aspect["orb_used"] <= aspect["orb_max"]  # AC2 invariant
 
     def test_golden_square_not_detected_when_orb_exceeds_threshold(self) -> None:
@@ -399,9 +407,11 @@ class TestGoldenAspectDetection:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Golden via build_natal_result: Sun 0°, Mars 93° → square avec orb=3°, orb_max=6°."""
-        ref = _make_reference_two_planets(aspects=[
-            {"code": "square", "angle": 90.0, "default_orb_deg": 6.0},
-        ])
+        ref = _make_reference_two_planets(
+            aspects=[
+                {"code": "square", "angle": 90.0, "default_orb_deg": 6.0},
+            ]
+        )
         monkeypatch.setattr(
             "app.domain.astrology.natal_calculation._build_swisseph_positions",
             _swisseph_positions_mock_two_planets,
@@ -436,7 +446,7 @@ class TestGoldenAspectDetection:
         positions = [
             {"planet_code": "sun", "longitude": 0.0},
             {"planet_code": "moon", "longitude": 180.0},  # opposition exacte
-            {"planet_code": "mars", "longitude": 90.0},   # square exact avec sun
+            {"planet_code": "mars", "longitude": 90.0},  # square exact avec sun
         ]
         aspect_definitions = [
             {"code": "square", "angle": 90.0, "default_orb_deg": 6.0},
@@ -446,7 +456,5 @@ class TestGoldenAspectDetection:
         result = calculate_major_aspects(positions, aspect_definitions)
 
         # Vérifier l'ordre déterministe: (aspect_code, planet_a, planet_b) alphabétique
-        aspect_tuples = [
-            (r["aspect_code"], r["planet_a"], r["planet_b"]) for r in result
-        ]
+        aspect_tuples = [(r["aspect_code"], r["planet_a"], r["planet_b"]) for r in result]
         assert aspect_tuples == sorted(aspect_tuples)

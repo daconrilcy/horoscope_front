@@ -120,8 +120,8 @@ class UserAstroProfileService:
                     db, version=settings.active_reference_version
                 )
                 natal_result = NatalCalculationService.calculate(
-                db, birth_input=birth_input, accurate=True
-            )
+                    db, birth_input=birth_input, accurate=True
+                )
             else:
                 raise UserAstroProfileServiceError(
                     code=error.code,

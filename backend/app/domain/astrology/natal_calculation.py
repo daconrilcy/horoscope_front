@@ -38,9 +38,9 @@ class AspectResult(BaseModel):
     planet_a: str
     planet_b: str
     angle: float
-    orb: float                    # actual angular deviation (backward compat)
-    orb_used: float               # actual angular deviation, story 24-2 (same as orb)
-    orb_max: float                # resolved max threshold by priority chain, story 24-2
+    orb: float  # actual angular deviation (backward compat)
+    orb_used: float  # actual angular deviation, story 24-2 (same as orb)
+    orb_max: float  # resolved max threshold by priority chain, story 24-2
 
 
 class NatalResult(BaseModel):
@@ -462,7 +462,8 @@ def build_natal_result(
 
     # story 24-2 Task 3: limit to major aspects only
     major_aspect_definitions = [
-        d for d in aspect_definitions
+        d
+        for d in aspect_definitions
         if str(d.get("code", "")).strip().lower() in MAJOR_ASPECT_CODES
     ]
 

@@ -224,7 +224,9 @@ class TestHousesCalcLatency:
             calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS)
 
         # story 23.2: la métrique inclut le label house_system → cherche par préfixe
-        by_key = get_duration_values_by_prefix_in_window(METRIC_HOUSES_LATENCY, timedelta(minutes=1))
+        by_key = get_duration_values_by_prefix_in_window(
+            METRIC_HOUSES_LATENCY, timedelta(minutes=1)
+        )
         all_values = [v for vals in by_key.values() for v in vals]
         assert len(all_values) == 1, "Une seule observation de latence attendue"
         assert all_values[0] >= 0.0
@@ -236,7 +238,9 @@ class TestHousesCalcLatency:
             with pytest.raises(HousesCalcError):
                 calculate_houses(JDUT_J2000, LAT_PARIS, LON_PARIS)
 
-        by_key = get_duration_values_by_prefix_in_window(METRIC_HOUSES_LATENCY, timedelta(minutes=1))
+        by_key = get_duration_values_by_prefix_in_window(
+            METRIC_HOUSES_LATENCY, timedelta(minutes=1)
+        )
         all_values = [v for vals in by_key.values() for v in vals]
         assert len(all_values) == 0
 
