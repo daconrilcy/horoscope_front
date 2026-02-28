@@ -22,6 +22,12 @@ class HouseSystemType(str, Enum):
     EQUAL = "equal"
 
 
+class AspectSchoolType(str, Enum):
+    MODERN = "modern"
+    CLASSIC = "classic"
+    STRICT = "strict"
+
+
 class Settings:
     @staticmethod
     def _parse_secret_list(env_name: str) -> list[str]:
@@ -96,6 +102,14 @@ class Settings:
             self.natal_ruleset_default_house_system = HouseSystemType(default_house_system)
         except ValueError:
             self.natal_ruleset_default_house_system = HouseSystemType.PLACIDUS
+
+        default_aspect_school = os.getenv(
+            "NATAL_RULESET_DEFAULT_ASPECT_SCHOOL", AspectSchoolType.MODERN
+        ).strip().lower()
+        try:
+            self.natal_ruleset_default_aspect_school = AspectSchoolType(default_aspect_school)
+        except ValueError:
+            self.natal_ruleset_default_aspect_school = AspectSchoolType.MODERN
 
         self.jwt_secret_key = os.getenv("JWT_SECRET_KEY", "").strip()
         if self.app_env == "production" and not self.jwt_secret_key:

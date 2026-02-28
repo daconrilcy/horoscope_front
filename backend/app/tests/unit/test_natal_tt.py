@@ -275,7 +275,7 @@ def test_build_natal_result_time_scale_tt_enabled(monkeypatch: pytest.MonkeyPatc
             {"code": "pisces"},
         ],
         "houses": [{"number": n} for n in range(1, 13)],
-        "aspects": [{"code": "conjunction", "angle": 0}],
+        "aspects": [{"code": "conjunction", "angle": 0, "default_orb_deg": 8.0}],
     }
     birth_input = BirthInput(
         birth_date="1990-06-15",
@@ -341,7 +341,7 @@ def test_build_natal_result_time_scale_tt_disabled(monkeypatch: pytest.MonkeyPat
             {"code": "pisces"},
         ],
         "houses": [{"number": n} for n in range(1, 13)],
-        "aspects": [{"code": "conjunction", "angle": 0}],
+        "aspects": [{"code": "conjunction", "angle": 0, "default_orb_deg": 8.0}],
     }
     birth_input = BirthInput(
         birth_date="1990-06-15",
@@ -372,14 +372,15 @@ def test_build_natal_result_time_scale_tt_disabled(monkeypatch: pytest.MonkeyPat
 # ---------------------------------------------------------------------------
 
 
-def test_natal_result_time_scale_default_is_ut() -> None:
+def test_natal_result_time_scale_default_is_ut() -> None: 
     """NatalResult sans time_scale explicite → time_scale='UT' (rétrocompat)."""
     from app.domain.astrology.natal_calculation import NatalResult
+    from app.core.config import HouseSystemType
 
     result = NatalResult(
         reference_version="1.0.0",
         ruleset_version="1.0.0",
-        house_system="equal_house",
+        house_system=HouseSystemType.EQUAL,
         prepared_input=BirthPreparedData(
             birth_datetime_local="1990-06-15T12:00:00+02:00",
             birth_datetime_utc="1990-06-15T10:00:00Z",
@@ -398,11 +399,12 @@ def test_natal_result_time_scale_default_is_ut() -> None:
 def test_natal_result_model_validate_legacy_without_time_scale() -> None:
     """NatalResult.model_validate() accepte payload sans time_scale (rétrocompat)."""
     from app.domain.astrology.natal_calculation import NatalResult
+    from app.core.config import HouseSystemType
 
     legacy = {
         "reference_version": "1.0.0",
         "ruleset_version": "1.0.0",
-        "house_system": "equal_house",
+        "house_system": HouseSystemType.EQUAL.value,
         "prepared_input": {
             "birth_datetime_local": "1990-06-15T12:00:00+02:00",
             "birth_datetime_utc": "1990-06-15T10:00:00Z",

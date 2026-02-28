@@ -167,7 +167,20 @@ class NatalCalculationService:
 
         hs_str = (house_system or "").strip().lower()
         if not hs_str:
-            resolved_house_system = settings.natal_ruleset_default_house_system
+            # If no house system provided, we need to know if we are heading to simplified
+            # but we don't know the engine yet.
+            # Simplified engine ONLY supports EQUAL.
+            # Let's check the zodiac/frame to guess if we'll need SwissEph.
+            zodiac_str = (zodiac or "").strip().lower()
+            frame_str = (frame or "").strip().lower()
+            requires_accurate = (
+                zodiac_str == "sidereal"
+                or frame_str == "topocentric"
+            )
+            if not requires_accurate and settings.natal_engine_default == "simplified":
+                resolved_house_system = HouseSystemType.EQUAL
+            else:
+                resolved_house_system = settings.natal_ruleset_default_house_system
         else:
             try:
                 resolved_house_system = HouseSystemType(hs_str)
@@ -226,6 +239,7 @@ class NatalCalculationService:
         altitude_m: float | None = None,
         request_id: str | None = None,
         tt_enabled: bool = False,
+        aspect_school: str | None = None,
     ) -> NatalResult:
         """
         Calcule un thème natal complet.
@@ -344,6 +358,27 @@ class NatalCalculationService:
             ephemeris_path_version = bootstrap.path_version
             ephemeris_path_hash = getattr(bootstrap, "path_hash", "") or None
 
+        # Story 24-1: aspect school and versioned rules identifier.
+        from app.core.config import AspectSchoolType
+        aspect_school_str = (aspect_school or "").strip().lower()
+        if not aspect_school_str:
+            resolved_aspect_school = settings.natal_ruleset_default_aspect_school
+        else:
+            try:
+                resolved_aspect_school = AspectSchoolType(aspect_school_str)
+            except ValueError:
+                increment_counter("natal_ruleset_invalid_total|code=invalid_aspect_school")
+                raise NatalCalculationError(
+                    code="invalid_aspect_school",
+                    message="invalid aspect_school parameter",
+                    details={
+                        "allowed": ",".join(s.value for s in AspectSchoolType),
+                        "actual": aspect_school or "",
+                    },
+                )
+
+        aspect_rules_version = f"{resolved_aspect_school.value}-{settings.ruleset_version}"
+
         try:
             return build_natal_result(
                 birth_input=birth_input,
@@ -361,6 +396,8 @@ class NatalCalculationService:
                 ephemeris_path_version=ephemeris_path_version,
                 ephemeris_path_hash=ephemeris_path_hash,
                 tt_enabled=tt_enabled,
+                aspect_school=resolved_aspect_school,
+                aspect_rules_version=aspect_rules_version,
             )
         except Exception as error:
             if not NatalCalculationService._is_swisseph_provider_error(error):

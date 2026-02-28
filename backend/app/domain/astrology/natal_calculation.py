@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from enum import Enum
 from math import isfinite
 
 from pydantic import BaseModel
 
-from app.core.config import FrameType, HouseSystemType, ZodiacType
-from app.core.constants import DEFAULT_FALLBACK_ORB
+from app.core.config import AspectSchoolType, FrameType, HouseSystemType, ZodiacType
+from app.core.constants import MAX_ORB_DEG, MIN_ORB_DEG
 from app.domain.astrology.angle_utils import contains_angle
 from app.domain.astrology.calculators import (
     calculate_houses,
@@ -54,6 +53,9 @@ class NatalResult(BaseModel):
     ephemeris_path_hash: str | None = None
     # time_scale: "TT" when Terrestrial Time fields are present, "UT" otherwise (story 22.2).
     time_scale: str = "UT"
+    # aspect school and versioned rules identifier (story 24-1).
+    aspect_school: AspectSchoolType = AspectSchoolType.MODERN
+    aspect_rules_version: str = "1.0.0"
     prepared_input: BirthPreparedData
     planet_positions: list[PlanetPosition]
     houses: list[HouseResult]
@@ -217,6 +219,8 @@ def build_natal_result(
     ephemeris_path_version: str | None = None,
     ephemeris_path_hash: str | None = None,
     tt_enabled: bool = False,
+    aspect_school: str = "modern",
+    aspect_rules_version: str = "1.0.0",
 ) -> NatalResult:
     if timeout_check is not None:
         timeout_check()
@@ -392,10 +396,19 @@ def build_natal_result(
             angle_value = float(item["angle"])
         except (TypeError, ValueError):
             _raise_invalid_reference(version, "aspects", "invalid_angle")
-        default_orb_raw = item.get("default_orb_deg", DEFAULT_FALLBACK_ORB)
+
+        # AC1 story 24-1: default_orb_deg is required and must be within strict bounds.
+        if "default_orb_deg" not in item:
+            _raise_invalid_reference(version, "aspects", "missing_default_orb_deg")
         try:
-            default_orb_value = float(default_orb_raw)
+            default_orb_value = float(item["default_orb_deg"])
         except (TypeError, ValueError):
+            _raise_invalid_reference(version, "aspects", "invalid_default_orb_deg")
+        # Fix: Allow 0.0 for exact aspects (MIN_ORB_DEG is 0.0).
+        orb_in_bounds = (
+            isfinite(default_orb_value) and MIN_ORB_DEG <= default_orb_value <= MAX_ORB_DEG
+        )
+        if not orb_in_bounds:
             _raise_invalid_reference(version, "aspects", "invalid_default_orb_deg")
 
         aspect_definition: dict[str, object] = {
@@ -403,14 +416,42 @@ def build_natal_result(
             "angle": angle_value,
             "default_orb_deg": default_orb_value,
         }
-        if "orb_luminaries" in item:
-            aspect_definition["orb_luminaries"] = item.get("orb_luminaries")
-        if "orb_pair_overrides" in item:
-            aspect_definition["orb_pair_overrides"] = item.get("orb_pair_overrides")
-        if "orb_pairs" in item:
-            aspect_definition["orb_pairs"] = item.get("orb_pairs")
-        if "orb_overrides" in item:
-            aspect_definition["orb_overrides"] = item.get("orb_overrides")
+
+        # story 24-1: support orb_luminaries_override_deg (new) and orb_luminaries (legacy).
+        # Validate bounds when provided.
+        if "orb_luminaries_override_deg" in item:
+            orb_lum_raw = item.get("orb_luminaries_override_deg")
+        else:
+            orb_lum_raw = item.get("orb_luminaries")
+        if orb_lum_raw is not None:
+            try:
+                orb_lum_value = float(orb_lum_raw)
+            except (TypeError, ValueError):
+                _raise_invalid_reference(version, "aspects", "invalid_orb_luminaries_override_deg")
+            lum_in_bounds = isfinite(orb_lum_value) and MIN_ORB_DEG <= orb_lum_value <= MAX_ORB_DEG
+            if not lum_in_bounds:
+                _raise_invalid_reference(version, "aspects", "invalid_orb_luminaries_override_deg")
+            aspect_definition["orb_luminaries"] = orb_lum_value
+
+        # AC1 story 24-1: validate orb_pair_overrides values within bounds.
+        # Prioritize 'orb_pair_overrides' then 'orb_pairs' then 'orb_overrides'.
+        pair_overrides_raw = item.get("orb_pair_overrides")
+        if pair_overrides_raw is None:
+            pair_overrides_raw = item.get("orb_pairs") or item.get("orb_overrides")
+
+        if pair_overrides_raw is not None:
+            if not isinstance(pair_overrides_raw, dict):
+                _raise_invalid_reference(version, "aspects", "invalid_orb_pair_overrides")
+            for pair_val in pair_overrides_raw.values():
+                try:
+                    pair_orb = float(pair_val)
+                except (TypeError, ValueError):
+                    _raise_invalid_reference(version, "aspects", "invalid_orb_pair_override_value")
+                pair_in_bounds = isfinite(pair_orb) and MIN_ORB_DEG <= pair_orb <= MAX_ORB_DEG
+                if not pair_in_bounds:
+                    _raise_invalid_reference(version, "aspects", "invalid_orb_pair_override_value")
+            aspect_definition["orb_pair_overrides"] = pair_overrides_raw
+
         aspect_definitions.append(aspect_definition)
     if not aspect_definitions:
         _raise_invalid_reference(version, "aspects", "missing_code_or_angle")
@@ -435,6 +476,8 @@ def build_natal_result(
         ephemeris_path_version=ephemeris_path_version,
         ephemeris_path_hash=ephemeris_path_hash,
         time_scale=prepared.time_scale,
+        aspect_school=aspect_school,
+        aspect_rules_version=aspect_rules_version,
         prepared_input=prepared,
         planet_positions=positions,
         houses=houses,

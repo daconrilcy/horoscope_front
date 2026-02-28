@@ -27,7 +27,7 @@ def _make_reference_data(planet_codes: list[str] | None = None) -> dict[str, obj
     planets = [{"code": c, "name": c.capitalize()} for c in codes]
     signs = [{"code": "aries", "name": "Aries"}, {"code": "taurus", "name": "Taurus"}]
     houses = [{"number": n, "name": f"House {n}"} for n in range(1, 13)]
-    aspects = [{"code": "conjunction", "name": "Conjunction", "angle": 0}]
+    aspects = [{"code": "conjunction", "name": "Conjunction", "angle": 0, "default_orb_deg": 8.0}]
     return {
         "version": "1.0.0",
         "planets": planets,
@@ -99,6 +99,8 @@ def test_natal_result_defaults() -> None:
     assert result.ayanamsa is None
     assert result.ephemeris_path_version is None
     assert result.ephemeris_path_hash is None
+    assert result.aspect_school == "modern"
+    assert result.aspect_rules_version == "1.0.0"
 
 
 def test_natal_result_model_validate_legacy_payload() -> None:
@@ -118,7 +120,7 @@ def test_natal_result_model_validate_legacy_payload() -> None:
         "planet_positions": [],
         "houses": [],
         "aspects": [],
-        # Pas de engine, zodiac, frame, ayanamsa, ephemeris_path_version
+        # Pas de engine, zodiac, frame, ayanamsa, ephemeris_path_version, aspect_school
     }
     result = NatalResult.model_validate(legacy_payload)
 
@@ -128,6 +130,7 @@ def test_natal_result_model_validate_legacy_payload() -> None:
     assert result.ayanamsa is None
     assert result.ephemeris_path_version is None
     assert result.ephemeris_path_hash is None
+    assert result.aspect_school == "modern"
     # Champs historiques préservés
     assert result.reference_version == "1.0.0"
     assert result.ruleset_version == "1.0.0"
@@ -199,6 +202,39 @@ def test_build_natal_result_ephemeris_path_version_propagated(
 
     assert result.ephemeris_path_version == "se2_2.10"
     assert result.ephemeris_path_hash is None
+    assert result.aspect_school == "modern"
+
+
+def test_build_natal_result_aspect_school_propagated(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """aspect_school passé en paramètre est présent dans NatalResult."""
+    ref_data = _make_reference_data()
+    birth_input = _make_birth_input()
+
+    monkeypatch.setattr(
+        "app.domain.astrology.natal_calculation._build_swisseph_positions",
+        _swisseph_positions_mock,
+    )
+    monkeypatch.setattr(
+        "app.domain.astrology.natal_calculation._build_swisseph_houses",
+        _swisseph_houses_mock,
+    )
+
+    from app.core.config import AspectSchoolType
+    result = build_natal_result(
+        birth_input=birth_input,
+        reference_data=ref_data,
+        ruleset_version="1.0.0",
+        engine="swisseph",
+        birth_lat=48.85,
+        birth_lon=2.35,
+        aspect_school=AspectSchoolType.STRICT,
+        aspect_rules_version="strict-1.0.0",
+    )
+
+    assert result.aspect_school == AspectSchoolType.STRICT
+    assert result.aspect_rules_version == "strict-1.0.0"
 
 
 def test_build_natal_result_ephemeris_path_hash_propagated(
@@ -612,11 +648,14 @@ def test_natal_calculation_service_extracts_ephemeris_path_version(
     ):
         with patch("app.core.ephemeris.get_bootstrap_result", return_value=mock_bootstrap):
             natal_calculation_service.NatalCalculationService.calculate(
-                db=db, birth_input=birth_input, accurate=True
+                db=db, birth_input=birth_input, accurate=True, aspect_school="strict"
             )
 
     assert captured_kwargs.get("ephemeris_path_version") == "se2_2.10"
     assert captured_kwargs.get("ephemeris_path_hash") == "hash-se2"
+    from app.core.config import AspectSchoolType
+    assert captured_kwargs.get("aspect_school") == AspectSchoolType.STRICT
+    assert captured_kwargs.get("aspect_rules_version") == "strict-1.0.0"
 
 
 def test_natal_calculation_service_ephemeris_path_version_none_for_simplified(
