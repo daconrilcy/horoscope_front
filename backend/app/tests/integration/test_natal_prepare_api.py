@@ -41,6 +41,43 @@ def test_prepare_natal_invalid_timezone() -> None:
     assert payload["error"]["message"] == "birth_timezone is invalid"
 
 
+def test_prepare_natal_ambiguous_local_time_returns_422() -> None:
+    response = client.post(
+        "/v1/astrology-engine/natal/prepare",
+        json={
+            "birth_date": "2024-11-03",
+            "birth_time": "01:30",
+            "birth_place": "New York",
+            "birth_timezone": "America/New_York",
+        },
+    )
+
+    assert response.status_code == 422
+    payload = response.json()
+    assert payload["error"]["code"] == "ambiguous_local_time"
+    assert payload["error"]["details"]["timezone"] == "America/New_York"
+    assert payload["error"]["details"]["local_datetime"] == "2024-11-03T01:30:00"
+    assert payload["error"]["details"]["candidate_offsets"] == ["-04:00", "-05:00"]
+
+
+def test_prepare_natal_nonexistent_local_time_returns_422() -> None:
+    response = client.post(
+        "/v1/astrology-engine/natal/prepare",
+        json={
+            "birth_date": "2024-03-10",
+            "birth_time": "02:30",
+            "birth_place": "New York",
+            "birth_timezone": "America/New_York",
+        },
+    )
+
+    assert response.status_code == 422
+    payload = response.json()
+    assert payload["error"]["code"] == "nonexistent_local_time"
+    assert payload["error"]["details"]["timezone"] == "America/New_York"
+    assert payload["error"]["details"]["local_datetime"] == "2024-03-10T02:30:00"
+
+
 def test_prepare_natal_invalid_birth_time_format() -> None:
     response = client.post(
         "/v1/astrology-engine/natal/prepare",

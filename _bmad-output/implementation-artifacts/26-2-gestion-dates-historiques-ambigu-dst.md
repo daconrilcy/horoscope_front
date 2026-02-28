@@ -1,6 +1,6 @@
 # Story 26.2: Gestion des dates historiques ambiguës (DST/fold)
 
-Status: ready-for-dev
+Status: done
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
 ## Story
@@ -16,16 +16,16 @@ so that le calcul natal pro reste fiable, reproductible et auditable.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 (AC: 1-2)
-  - [ ] Implementer: Detecter local times `ambiguous` et `non-existent`.
-- [ ] Task 2 (AC: 1-2)
-  - [ ] Implementer: Retourner `422 ambiguous_local_time` avec details actionnables.
-- [ ] Task 3 (AC: 1-2)
-  - [ ] Implementer: Documenter strategie (confirmation utilisateur/fallback explicite).
-- [ ] Task 4 (AC: 1-2)
-  - [ ] Ajouter/mettre a jour les tests definis dans la section Tests
-- [ ] Task 5 (AC: 1-2)
-  - [ ] Mettre a jour la documentation technique et la tracabilite de la story
+- [x] Task 1 (AC: 1-2)
+  - [x] Implementer: Detecter local times `ambiguous` et `non-existent`.
+- [x] Task 2 (AC: 1-2)
+  - [x] Implementer: Retourner `422 ambiguous_local_time` avec details actionnables.
+- [x] Task 3 (AC: 1-2)
+  - [x] Implementer: Documenter strategie (confirmation utilisateur/fallback explicite).
+- [x] Task 4 (AC: 1-2)
+  - [x] Ajouter/mettre a jour les tests definis dans la section Tests
+- [x] Task 5 (AC: 1-2)
+  - [x] Mettre a jour la documentation technique et la tracabilite de la story
 
 ## Dev Notes
 
@@ -87,11 +87,43 @@ GPT-5 Codex
 
 - _bmad/bmm/workflows/4-implementation/create-story/workflow.yaml
 - _bmad/bmm/workflows/4-implementation/create-story/instructions.xml
+- _bmad/bmm/workflows/4-implementation/dev-story/workflow.yaml
+- _bmad/bmm/workflows/4-implementation/dev-story/instructions.xml
+
+### Implementation Plan
+
+- Ajouter une validation fold/gap deterministic dans `prepare_birth_data` avant conversion locale->UTC.
+- Retourner des erreurs metier explicites (`ambiguous_local_time`, `nonexistent_local_time`) avec details actionnables.
+- Instrumenter l'observabilite via `time_ambiguity_total_{type}` et logs structures.
+- Couvrir les cas DST en tests unitaires + integration.
+- Mettre a jour la documentation contrat API.
 
 ### Completion Notes List
 
-- Story reformatee pour alignement strict create-story.
+- Detection DST fold/gap ajoutee dans `natal_preparation` via round-trip fold-aware (`fold=0/1`) pour differencier local time ambigu vs non-existant.
+- Erreurs metier explicites retournees en `422` avec codes:
+  - `ambiguous_local_time` + details (`timezone`, `local_datetime`, `candidate_offsets`, `resolution_hint`)
+  - `nonexistent_local_time` + details (`timezone`, `local_datetime`, `resolution_hint`)
+- Observabilite ajoutee:
+  - compteurs `time_ambiguity_total_ambiguous` et `time_ambiguity_total_nonexistent`
+  - logs structures `natal_preparation_local_time_ambiguous/nonexistent` sans PII adresse.
+- Contrat API documente pour `/v1/astrology-engine/natal/prepare` sur les erreurs DST.
+- Validation locale executee dans le venv:
+  - `pytest -q app/tests/unit/test_natal_preparation.py app/tests/integration/test_natal_prepare_api.py` -> 41 passed
+  - `ruff check app/main.py app/domain/astrology/natal_preparation.py app/tests/unit/test_natal_preparation.py app/tests/integration/test_natal_prepare_api.py` -> OK
+  - `pytest -q` -> 1189 passed, 3 skipped
+  - smoke import app -> `horoscope-backend`
 
 ### File List
 
-- C:\dev\horoscope_front\_bmad-output\implementation-artifacts\26-2-gestion-dates-historiques-ambigu-dst.md
+- _bmad-output/implementation-artifacts/26-2-gestion-dates-historiques-ambigu-dst.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- backend/app/domain/astrology/natal_preparation.py
+- backend/app/tests/unit/test_natal_preparation.py
+- backend/app/tests/integration/test_natal_prepare_api.py
+- backend/app/main.py
+- docs/api-contracts-backend.md
+
+## Change Log
+
+- 2026-02-28: Story 26.2 completee (Tasks 1-5), statut passe a `review`.

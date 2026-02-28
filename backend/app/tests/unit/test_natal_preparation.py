@@ -277,6 +277,104 @@ def test_prepare_birth_data_supports_4_char_time() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Story 26.2 — DST ambiguity and non-existent local times
+# ---------------------------------------------------------------------------
+
+
+def test_prepare_birth_data_rejects_ambiguous_local_time() -> None:
+    """AC1: Heure locale ambiguë -> erreur métier explicite."""
+    with pytest.raises(BirthPreparationError) as exc_info:
+        prepare_birth_data(
+            BirthInput(
+                birth_date="2024-11-03",
+                birth_time="01:30",
+                birth_place="New York",
+                birth_timezone="America/New_York",
+            )
+        )
+
+    error = exc_info.value
+    assert error.code == "ambiguous_local_time"
+    assert error.details["timezone"] == "America/New_York"
+    assert error.details["local_datetime"] == "2024-11-03T01:30:00"
+    assert error.details["candidate_offsets"] == ["-04:00", "-05:00"]
+
+
+def test_prepare_birth_data_rejects_nonexistent_local_time() -> None:
+    """AC2: Heure locale non-existante -> erreur métier explicite."""
+    with pytest.raises(BirthPreparationError) as exc_info:
+        prepare_birth_data(
+            BirthInput(
+                birth_date="2024-03-10",
+                birth_time="02:30",
+                birth_place="New York",
+                birth_timezone="America/New_York",
+            )
+        )
+
+    error = exc_info.value
+    assert error.code == "nonexistent_local_time"
+    assert error.details["timezone"] == "America/New_York"
+    assert error.details["local_datetime"] == "2024-03-10T02:30:00"
+
+
+def test_prepare_birth_data_midnight_dst_transition() -> None:
+    """Edge case: DST transition with non-hour offset (Australia/Lord_Howe)."""
+    # Lord Howe Island has a 30-minute DST transition.
+    # On 2024-04-07, 02:00:00 local time jumped back to 01:30:00.
+    # So 01:45:00 local time is ambiguous (fold).
+    with pytest.raises(BirthPreparationError) as exc_info:
+        prepare_birth_data(
+            BirthInput(
+                birth_date="2024-04-07",
+                birth_time="01:45",
+                birth_place="Lord Howe",
+                birth_timezone="Australia/Lord_Howe",
+            )
+        )
+    assert exc_info.value.code == "ambiguous_local_time"
+    assert exc_info.value.details["candidate_offsets"] == ["+11:00", "+10:30"]
+
+
+def test_prepare_birth_data_ambiguity_metrics_incremented() -> None:
+    """Observabilité: time_ambiguity_total|type=... incrémenté selon le cas."""
+    from datetime import timedelta
+
+    from app.infra.observability.metrics import get_counter_sum_in_window, reset_metrics
+
+    reset_metrics()
+
+    with pytest.raises(BirthPreparationError):
+        prepare_birth_data(
+            BirthInput(
+                birth_date="2024-11-03",
+                birth_time="01:30",
+                birth_place="New York",
+                birth_timezone="America/New_York",
+            )
+        )
+
+    with pytest.raises(BirthPreparationError):
+        prepare_birth_data(
+            BirthInput(
+                birth_date="2024-03-10",
+                birth_time="02:30",
+                birth_place="New York",
+                birth_timezone="America/New_York",
+            )
+        )
+
+    ambiguous_count = get_counter_sum_in_window(
+        "time_ambiguity_total|type=ambiguous", timedelta(minutes=1)
+    )
+    nonexistent_count = get_counter_sum_in_window(
+        "time_ambiguity_total|type=nonexistent", timedelta(minutes=1)
+    )
+    assert ambiguous_count == 1.0
+    assert nonexistent_count == 1.0
+
+
+# ---------------------------------------------------------------------------
 # Story 26.1 — timezone_iana + timezone_source tracabilite
 # ---------------------------------------------------------------------------
 
@@ -335,7 +433,8 @@ def test_prepare_birth_data_derive_timezone_from_latlon(monkeypatch: object) -> 
     """AC2: Sans birth_timezone et derive_enabled=True, timezone est dérivée depuis lat/lon."""
     from app.domain.astrology import natal_preparation
 
-    # Mock derivation to avoid brittleness and dependency on timezonefinder data files in unit tests.
+    # Mock derivation to avoid brittleness and dependency on timezonefinder
+    # data files in unit tests.
     monkeypatch.setattr(
         natal_preparation, "_derive_timezone_from_coords", lambda lat, lon: "Europe/Paris"
     )

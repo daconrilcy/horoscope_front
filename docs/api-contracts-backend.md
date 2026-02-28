@@ -37,3 +37,12 @@
 ## Contract Source of Truth
 - FastAPI OpenAPI schema generated from router definitions and Pydantic models.
 - Endpoint decorators located in `backend/app/api/v1/routers/`.
+
+## `/v1/astrology-engine/natal/prepare` - DST Local Time Errors
+- Ambiguous local time during DST fold returns `422` with `error.code = ambiguous_local_time`.
+- Non-existent local time during DST gap returns `422` with `error.code = nonexistent_local_time`.
+- Error details include:
+  - `timezone` (IANA timezone used for conversion)
+  - `local_datetime` (local date-time rejected)
+  - `candidate_offsets` (list of possible UTC offsets for ambiguous times)
+  - `resolution_hint` (actionable fallback guidance)

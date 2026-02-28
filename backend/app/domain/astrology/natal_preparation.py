@@ -16,6 +16,7 @@ METRIC_TT_ENABLED = "time_pipeline_tt_enabled_total"
 METRIC_TIMEZONE_SOURCE_USER_PROVIDED = "timezone_source_user_provided_total"
 METRIC_TIMEZONE_SOURCE_DERIVED = "timezone_source_derived_total"
 METRIC_TIMEZONE_DERIVATION_ERRORS = "timezone_derivation_errors_total"
+METRIC_TIME_AMBIGUITY_TOTAL_PREFIX = "time_ambiguity_total"
 
 # ---------------------------------------------------------------------------
 # Offline timezone derivation from lat/lon (Story 26.1)
@@ -253,7 +254,7 @@ class BirthPreparedData(BaseModel):
 
 
 class BirthPreparationError(Exception):
-    def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+    def __init__(self, code: str, message: str, details: dict[str, object] | None = None) -> None:
         self.code = code
         self.message = message
         self.details = details or {}
@@ -277,6 +278,84 @@ def _parse_birth_time(raw_value: str) -> time:
 
 def _julian_day_from_timestamp(timestamp_utc: float) -> float:
     return (timestamp_utc / 86400.0) + 2440587.5
+
+
+def _format_iso_offset(offset: timedelta | None) -> str:
+    """Format a timedelta offset as an ISO 8601 string (e.g., +01:00)."""
+    if offset is None:
+        return "Z"
+    total_seconds = int(offset.total_seconds())
+    sign = "+" if total_seconds >= 0 else "-"
+    total_seconds = abs(total_seconds)
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, _ = divmod(remainder, 60)
+    return f"{sign}{hours:02d}:{minutes:02d}"
+
+
+def _increment_time_ambiguity_metric(kind: str) -> None:
+    # Project convention (app/main.py): base|label=value
+    increment_counter(f"{METRIC_TIME_AMBIGUITY_TOTAL_PREFIX}|type={kind}")
+
+
+def _assert_local_time_is_valid(*, naive_local: datetime, timezone: ZoneInfo) -> None:
+    """Detect ambiguous and non-existent local datetimes using fold-aware round-trips."""
+    utc_zone = ZoneInfo("UTC")
+    local_fold0 = naive_local.replace(tzinfo=timezone, fold=0)
+    local_fold1 = naive_local.replace(tzinfo=timezone, fold=1)
+
+    roundtrip_fold0 = local_fold0.astimezone(utc_zone).astimezone(timezone).replace(tzinfo=None)
+    roundtrip_fold1 = local_fold1.astimezone(utc_zone).astimezone(timezone).replace(tzinfo=None)
+
+    fold0_valid = roundtrip_fold0 == naive_local
+    fold1_valid = roundtrip_fold1 == naive_local
+    offset_fold0 = local_fold0.utcoffset()
+    offset_fold1 = local_fold1.utcoffset()
+
+    if fold0_valid and fold1_valid and offset_fold0 != offset_fold1:
+        _increment_time_ambiguity_metric("ambiguous")
+        logger.warning(
+            "natal_preparation_local_time_ambiguous timezone=%s local_datetime=%s",
+            timezone.key,
+            naive_local.isoformat(),
+        )
+        raise BirthPreparationError(
+            code="ambiguous_local_time",
+            message="Local birth time is ambiguous due to DST transition",
+            details={
+                "field": "birth_date/birth_time",
+                "timezone": timezone.key,
+                "local_datetime": naive_local.isoformat(timespec="seconds"),
+                "candidate_offsets": [
+                    _format_iso_offset(offset_fold0),
+                    _format_iso_offset(offset_fold1),
+                ],
+                "resolution_hint": (
+                    "Confirm the exact UTC time or use a slightly different "
+                    "local time (pre/post-DST transition)"
+                ),
+            },
+        )
+
+    if not fold0_valid and not fold1_valid:
+        _increment_time_ambiguity_metric("nonexistent")
+        logger.warning(
+            "natal_preparation_local_time_nonexistent timezone=%s local_datetime=%s",
+            timezone.key,
+            naive_local.isoformat(),
+        )
+        raise BirthPreparationError(
+            code="nonexistent_local_time",
+            message="Local birth time does not exist due to DST transition",
+            details={
+                "field": "birth_date/birth_time",
+                "timezone": timezone.key,
+                "local_datetime": naive_local.isoformat(timespec="seconds"),
+                "resolution_hint": (
+                    "Provide a valid local time outside DST gap "
+                    "or confirm corrected time"
+                ),
+            },
+        )
 
 
 def prepare_birth_data(
@@ -348,11 +427,15 @@ def prepare_birth_data(
 
     if payload.birth_time is not None:
         parsed_time = _parse_birth_time(payload.birth_time)
-        local_datetime = datetime.combine(payload.birth_date, parsed_time, tzinfo=timezone)
+        local_datetime_naive = datetime.combine(payload.birth_date, parsed_time)
+        _assert_local_time_is_valid(naive_local=local_datetime_naive, timezone=timezone)
+        local_datetime = local_datetime_naive.replace(tzinfo=timezone, fold=0)
     else:
         # Improved consistency (Story 22.1 review): use midnight LOCAL when time is missing
         # but timezone is known.
-        local_datetime = datetime.combine(payload.birth_date, time(0, 0), tzinfo=timezone)
+        local_datetime_naive = datetime.combine(payload.birth_date, time(0, 0))
+        _assert_local_time_is_valid(naive_local=local_datetime_naive, timezone=timezone)
+        local_datetime = local_datetime_naive.replace(tzinfo=timezone, fold=0)
 
     utc_datetime = local_datetime.astimezone(ZoneInfo("UTC"))
 

@@ -230,7 +230,7 @@ development_status:
 
   epic-26: in-progress
   26-1-timezone-iana-derived-source-tracabilite: done
-  26-2-gestion-dates-historiques-ambigu-dst: ready-for-dev
+  26-2-gestion-dates-historiques-ambigu-dst: done
   epic-26-retrospective: optional
 
   epic-27: in-progress

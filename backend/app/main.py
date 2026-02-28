@@ -42,11 +42,10 @@ from app.core.request_id import resolve_request_id
 from app.domain.astrology.ephemeris_provider import EphemerisCalcError
 from app.domain.astrology.houses_provider import HousesCalcError, UnsupportedHouseSystemError
 from app.domain.astrology.natal_preparation import (
-    BirthPreparationError,
     warmup_timezone_finder,
 )
-from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter, observe_duration
+from app.services.pricing_experiment_service import PricingExperimentService
 
 
 @asynccontextmanager
