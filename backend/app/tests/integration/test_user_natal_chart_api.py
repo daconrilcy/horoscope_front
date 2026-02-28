@@ -203,6 +203,21 @@ def test_generate_natal_chart_success() -> None:
     assert data["metadata"]["reference_version"] == "1.0.0"
     assert data["metadata"]["ruleset_version"] == data["result"]["ruleset_version"]
     assert data["metadata"]["house_system"] == "placidus"
+    assert data["metadata"]["engine"] == data["result"]["engine"]
+    assert data["metadata"]["zodiac"] == data["result"]["zodiac"]
+    assert data["metadata"]["frame"] == data["result"]["frame"]
+    assert data["metadata"]["ayanamsa"] == data["result"]["ayanamsa"]
+    assert data["metadata"]["aspect_school"] == data["result"]["aspect_school"]
+    assert data["metadata"]["timezone_used"] == data["result"]["prepared_input"]["timezone_used"]
+    assert data["metadata"]["jd_ut"] == data["result"]["prepared_input"]["jd_ut"]
+    assert data["metadata"]["jd_tt"] == data["result"]["prepared_input"]["jd_tt"]
+    assert (
+        data["metadata"]["place_resolved_id"]
+        == data["result"]["prepared_input"]["place_resolved_id"]
+    )
+    assert "birth_place" not in data["result"]["prepared_input"]
+    assert "birth_city" not in data["result"]["prepared_input"]
+    assert "birth_country" not in data["result"]["prepared_input"]
 
 
 def test_get_latest_natal_chart_success() -> None:

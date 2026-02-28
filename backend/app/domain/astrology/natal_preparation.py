@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
@@ -68,10 +68,9 @@ def _derive_timezone_from_coords(lat: float, lon: float) -> str | None:
         tf = _get_timezone_finder()
         return tf.timezone_at(lng=lon, lat=lat)
     except Exception:
-        logger.exception(
-            "natal_preparation_timezone_derivation_failed lat=%s lon=%s", lat, lon
-        )
+        logger.exception("natal_preparation_timezone_derivation_failed lat=%s lon=%s", lat, lon)
         return None
+
 
 # ---------------------------------------------------------------------------
 # DeltaT polynomial approximation (Espenak & Meeus)
@@ -234,6 +233,13 @@ class BirthPreparedData(BaseModel):
     delta_t_sec: float | None = None
     jd_tt: float | None = None
     time_scale: str = "UT"
+    # Story 27.1 — canonical aliases for API contract stability.
+    local: str | None = None
+    utc: str | None = None
+    timestamp: int | None = None
+    delta_t: float | None = None
+    # Privacy-safe location traceability.
+    place_resolved_id: int | None = Field(default=None, gt=0)
     # Story 26.1 — Timezone IANA derivée + source de tracabilité.
     # timezone_iana: IANA identifier of the timezone effectively applied (user-provided or derived).
     # timezone_source: provenance — "user_provided" when supplied by caller, "derived" when
@@ -247,6 +253,16 @@ class BirthPreparedData(BaseModel):
             self.jd_ut = self.julian_day
         if self.timezone_used is None:
             self.timezone_used = self.birth_timezone
+        if self.local is None:
+            self.local = self.birth_datetime_local
+        if self.utc is None:
+            self.utc = self.birth_datetime_utc
+        if self.timestamp is None:
+            self.timestamp = self.timestamp_utc
+        if self.delta_t is None:
+            self.delta_t = self.delta_t_sec
+        if self.delta_t_sec is None:
+            self.delta_t_sec = self.delta_t
         # Story 26.1: fill timezone_iana from timezone_used for legacy payloads.
         if self.timezone_iana is None and self.timezone_used is not None:
             self.timezone_iana = self.timezone_used
@@ -351,8 +367,7 @@ def _assert_local_time_is_valid(*, naive_local: datetime, timezone: ZoneInfo) ->
                 "timezone": timezone.key,
                 "local_datetime": naive_local.isoformat(timespec="seconds"),
                 "resolution_hint": (
-                    "Provide a valid local time outside DST gap "
-                    "or confirm corrected time"
+                    "Provide a valid local time outside DST gap or confirm corrected time"
                 ),
             },
         )
@@ -493,6 +508,11 @@ def prepare_birth_data(
         timezone_iana=effective_timezone_iana,
         timezone_source=timezone_source,
         delta_t_sec=delta_t_sec,
+        delta_t=delta_t_sec,
         jd_tt=jd_tt,
         time_scale=time_scale,
+        local=local_datetime.isoformat(),
+        utc=utc_datetime.isoformat(),
+        timestamp=timestamp_utc,
+        place_resolved_id=payload.place_resolved_id,
     )

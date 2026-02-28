@@ -611,6 +611,67 @@ def test_user_natal_chart_metadata_historical_fields_preserved() -> None:
     assert metadata.ephemeris_path_hash is None
 
 
+def test_user_natal_chart_metadata_audit_grade_fields_present_and_consistent() -> None:
+    """Story 27.1: metadata audit-grade inclut tous les champs requis."""
+    from app.services.user_natal_chart_service import UserNatalChartMetadata
+
+    prepared = BirthPreparedData(
+        birth_datetime_local="1990-06-15T12:00:00+02:00",
+        birth_datetime_utc="1990-06-15T10:00:00Z",
+        timestamp_utc=645350400,
+        julian_day=2448057.0,
+        birth_timezone="Europe/Paris",
+        jd_ut=2448057.0,
+        jd_tt=2448057.0008,
+        timezone_used="Europe/Paris",
+        place_resolved_id=321,
+    )
+    result = NatalResult(
+        reference_version="1.0.0",
+        ruleset_version="1.0.0",
+        house_system="placidus",
+        engine="swisseph",
+        zodiac="sidereal",
+        frame="topocentric",
+        ayanamsa="lahiri",
+        aspect_school="strict",
+        ephemeris_path_version="se2_2.10",
+        ephemeris_path_hash="hash-v1",
+        prepared_input=prepared,
+        planet_positions=[],
+        houses=[],
+        aspects=[],
+    )
+
+    metadata = UserNatalChartMetadata(
+        reference_version=result.reference_version,
+        ruleset_version=result.ruleset_version,
+        house_system=result.house_system,
+        engine=result.engine,
+        zodiac=result.zodiac,
+        frame=result.frame,
+        ayanamsa=result.ayanamsa,
+        aspect_school=result.aspect_school,
+        timezone_used=result.prepared_input.timezone_used or "",
+        jd_ut=result.prepared_input.jd_ut,
+        jd_tt=result.prepared_input.jd_tt,
+        place_resolved_id=result.prepared_input.place_resolved_id,
+        ephemeris_path_version=result.ephemeris_path_version,
+        ephemeris_path_hash=result.ephemeris_path_hash,
+    )
+
+    assert metadata.engine == result.engine
+    assert metadata.zodiac == result.zodiac
+    assert metadata.frame == result.frame
+    assert metadata.ayanamsa == result.ayanamsa
+    assert metadata.house_system == result.house_system
+    assert metadata.aspect_school == result.aspect_school
+    assert metadata.timezone_used == (result.prepared_input.timezone_used or "")
+    assert metadata.jd_ut == result.prepared_input.jd_ut
+    assert metadata.jd_tt == result.prepared_input.jd_tt
+    assert metadata.place_resolved_id == result.prepared_input.place_resolved_id
+
+
 # ---------------------------------------------------------------------------
 # Task 4.8 — NatalCalculationService extrait ephemeris_path_version du bootstrap
 # ---------------------------------------------------------------------------

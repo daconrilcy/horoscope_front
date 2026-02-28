@@ -8,6 +8,7 @@ cohérence des thèmes natals des utilisateurs.
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime
 from time import perf_counter
 
@@ -20,6 +21,7 @@ from app.domain.astrology.natal_calculation import NatalCalculationError, NatalR
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.repositories.chart_result_repository import ChartResultRepository
 from app.infra.db.repositories.user_birth_profile_repository import UserBirthProfileRepository
+from app.infra.observability.metrics import increment_counter
 from app.services.chart_result_service import ChartResultService, ChartResultServiceError
 from app.services.natal_calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
@@ -57,8 +59,12 @@ class UserNatalChartMetadata(BaseModel):
     zodiac: str = "tropical"
     frame: str = "geocentric"
     ayanamsa: str | None = None
+    aspect_school: str = ""
     altitude_m: float | None = None
     timezone_used: str = ""
+    jd_ut: float | None = None
+    jd_tt: float | None = None
+    place_resolved_id: int | None = None
     ephemeris_path_version: str | None = None
     ephemeris_path_hash: str | None = None
 
@@ -218,11 +224,14 @@ class UserNatalChartService:
             )
 
         if accurate and not profile.birth_timezone:
-            raise UserNatalChartServiceError(
-                code="missing_timezone",
-                message="birth_timezone is required for accurate calculation",
-                details={"user_id": str(user_id)},
-            )
+            # Story 26.1: accurate mode allows missing birth_timezone if coordinates
+            # are present and offline derivation is enabled in settings.
+            if not settings.timezone_derived_enabled or resolved_fk is None:
+                raise UserNatalChartServiceError(
+                    code="missing_timezone",
+                    message="birth_timezone is required for accurate calculation",
+                    details={"user_id": str(user_id)},
+                )
 
         birth_input = BirthInput(
             birth_date=profile.birth_date,
@@ -252,6 +261,7 @@ class UserNatalChartService:
                 frame=frame,
                 house_system=house_system,
                 altitude_m=altitude_m,
+                derive_enabled=settings.timezone_derived_enabled,
             )
         except NatalCalculationError as error:
             # Local/dev safeguard: if reference data is missing, seed once and retry.
@@ -271,6 +281,7 @@ class UserNatalChartService:
                     frame=frame,
                     house_system=house_system,
                     altitude_m=altitude_m,
+                    derive_enabled=settings.timezone_derived_enabled,
                 )
             else:
                 raise UserNatalChartServiceError(
@@ -319,19 +330,7 @@ class UserNatalChartService:
         return UserNatalChartGenerationData(
             chart_id=chart_id,
             result=result,
-            metadata=UserNatalChartMetadata(
-                reference_version=result.reference_version,
-                ruleset_version=result.ruleset_version,
-                house_system=result.house_system,
-                engine=result.engine,
-                zodiac=result.zodiac,
-                frame=result.frame,
-                ayanamsa=result.ayanamsa,
-                altitude_m=result.altitude_m,
-                timezone_used=result.prepared_input.birth_timezone,
-                ephemeris_path_version=result.ephemeris_path_version,
-                ephemeris_path_hash=result.ephemeris_path_hash,
-            ),
+            metadata=UserNatalChartService._build_metadata_from_result(result),
         )
 
     @staticmethod
@@ -390,22 +389,40 @@ class UserNatalChartService:
                 message="stored chart payload is invalid",
                 details={"chart_id": model.chart_id},
             ) from error
+        if model.reference_version != result.reference_version:
+            UserNatalChartService._record_metadata_contract_mismatch(
+                chart_id=model.chart_id,
+                field_name="reference_version",
+                metadata_value=model.reference_version,
+                result_value=result.reference_version,
+            )
+        if model.ruleset_version != result.ruleset_version:
+            UserNatalChartService._record_metadata_contract_mismatch(
+                chart_id=model.chart_id,
+                field_name="ruleset_version",
+                metadata_value=model.ruleset_version,
+                result_value=result.ruleset_version,
+            )
+        # Story 27.1: Check other standardized fields for silent corruption detection.
+        if model.result_payload.get("house_system") != result.house_system:
+            UserNatalChartService._record_metadata_contract_mismatch(
+                chart_id=model.chart_id,
+                field_name="house_system",
+                metadata_value=str(model.result_payload.get("house_system")),
+                result_value=str(result.house_system),
+            )
+        if model.result_payload.get("engine") != result.engine:
+            UserNatalChartService._record_metadata_contract_mismatch(
+                chart_id=model.chart_id,
+                field_name="engine",
+                metadata_value=str(model.result_payload.get("engine")),
+                result_value=str(result.engine),
+            )
+
         return UserNatalChartReadData(
             chart_id=model.chart_id,
             result=result,
-            metadata=UserNatalChartMetadata(
-                reference_version=model.reference_version,
-                ruleset_version=model.ruleset_version,
-                house_system=result.house_system,
-                engine=result.engine,
-                zodiac=result.zodiac,
-                frame=result.frame,
-                ayanamsa=result.ayanamsa,
-                altitude_m=result.altitude_m,
-                timezone_used=result.prepared_input.birth_timezone,
-                ephemeris_path_version=result.ephemeris_path_version,
-                ephemeris_path_hash=result.ephemeris_path_hash,
-            ),
+            metadata=UserNatalChartService._build_metadata_from_result(result),
             created_at=model.created_at,
         )
 
@@ -527,4 +544,45 @@ class UserNatalChartService:
             reference_version=latest.reference_version,
             ruleset_version=latest.ruleset_version,
             input_hash=latest.input_hash,
+        )
+
+    _CONTRACT_VALIDATION_FAILED_METRIC = "natal_contract_validation_failed_total"
+    _logger = logging.getLogger(__name__)
+
+    @staticmethod
+    def _build_metadata_from_result(result: NatalResult) -> UserNatalChartMetadata:
+        prepared = result.prepared_input
+        return UserNatalChartMetadata(
+            reference_version=result.reference_version,
+            ruleset_version=result.ruleset_version,
+            house_system=result.house_system,
+            engine=result.engine,
+            zodiac=result.zodiac,
+            frame=result.frame,
+            ayanamsa=result.ayanamsa,
+            aspect_school=getattr(result.aspect_school, "value", str(result.aspect_school)),
+            altitude_m=result.altitude_m,
+            timezone_used=prepared.timezone_used or "",
+            jd_ut=prepared.jd_ut,
+            jd_tt=prepared.jd_tt,
+            place_resolved_id=prepared.place_resolved_id,
+            ephemeris_path_version=result.ephemeris_path_version,
+            ephemeris_path_hash=result.ephemeris_path_hash,
+        )
+
+    @staticmethod
+    def _record_metadata_contract_mismatch(
+        *,
+        chart_id: str,
+        field_name: str,
+        metadata_value: str,
+        result_value: str,
+    ) -> None:
+        increment_counter(UserNatalChartService._CONTRACT_VALIDATION_FAILED_METRIC, 1.0)
+        UserNatalChartService._logger.warning(
+            "natal_metadata_result_mismatch_detected chart_id=%s field=%s metadata=%s result=%s",
+            chart_id,
+            field_name,
+            metadata_value,
+            result_value,
         )

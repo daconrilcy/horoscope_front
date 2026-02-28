@@ -233,7 +233,7 @@ development_status:
   26-2-gestion-dates-historiques-ambigu-dst: done
   epic-26-retrospective: optional
 
-  epic-27: in-progress
-  27-1-standardiser-sortie-api-audit-grade: ready-for-dev
+  epic-27: done
+  27-1-standardiser-sortie-api-audit-grade: done
   27-2-documentation-dev-reglages-erreurs-validation: ready-for-dev
   epic-27-retrospective: optional
