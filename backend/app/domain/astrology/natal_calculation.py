@@ -4,7 +4,7 @@ import math
 from collections.abc import Callable
 from math import isfinite
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from app.core.config import AspectSchoolType, FrameType, HouseSystemType, ZodiacType
 from app.core.constants import MAJOR_ASPECT_CODES, MAX_ORB_DEG, MIN_ORB_DEG
@@ -39,8 +39,17 @@ class AspectResult(BaseModel):
     planet_b: str
     angle: float
     orb: float  # actual angular deviation (backward compat)
-    orb_used: float  # actual angular deviation, story 24-2 (same as orb)
-    orb_max: float  # resolved max threshold by priority chain, story 24-2
+    orb_used: float | None = None  # actual angular deviation, story 24-2 (same as orb)
+    orb_max: float | None = None  # resolved max threshold by priority chain, story 24-2
+
+    @model_validator(mode="after")
+    def _fill_orb_fields(self) -> AspectResult:
+        if self.orb_used is None:
+            self.orb_used = self.orb
+        if self.orb_max is None:
+            # Backward compatibility for legacy payloads that only carried `orb`.
+            self.orb_max = self.orb_used
+        return self
 
 
 class NatalResult(BaseModel):
@@ -94,7 +103,7 @@ def _normalize_360(value: float) -> float:
     return normalized if normalized >= 0 else normalized + 360.0
 
 
-def _sign_from_longitude(longitude: float) -> str:
+def sign_from_longitude(longitude: float) -> str:
     normalized = _normalize_360(longitude)
     index = int(normalized // 30.0) % 12
     return ZODIAC_SIGNS[index]
@@ -166,7 +175,7 @@ def _build_swisseph_positions(
             {
                 "planet_code": code,
                 "longitude": longitude,
-                "sign_code": _sign_from_longitude(longitude),
+                "sign_code": sign_from_longitude(longitude),
                 "speed_longitude": pd.speed_longitude,
                 "is_retrograde": pd.is_retrograde,
             }
@@ -328,7 +337,7 @@ def build_natal_result(
     for position in positions_raw:
         longitude = float(position["longitude"])
         position["house_number"] = assign_house_number(longitude, houses_raw)
-        expected_sign = _sign_from_longitude(longitude)
+        expected_sign = sign_from_longitude(longitude)
         if str(position.get("sign_code")) != expected_sign:
             raise NatalCalculationError(
                 code="inconsistent_natal_result",

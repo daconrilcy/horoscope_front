@@ -132,6 +132,7 @@ class NatalCalculationService:
         frame: str | None,
         house_system: str | None,
         altitude_m: float | None,
+        prefer_simplified_defaults: bool = False,
     ) -> tuple[ZodiacType, str | None, FrameType, HouseSystemType, float | None]:
         zodiac_str = (zodiac or "").strip().lower()
         if not zodiac_str:
@@ -169,14 +170,13 @@ class NatalCalculationService:
 
         hs_str = (house_system or "").strip().lower()
         if not hs_str:
-            # If no house system provided, we need to know if we are heading to simplified
-            # but we don't know the engine yet.
-            # Simplified engine ONLY supports EQUAL.
-            # Let's check the zodiac/frame to guess if we'll need SwissEph.
+            # Runtime compatibility: when caller indicates simplified defaults are preferred
+            # and no explicit house_system is provided, default to EQUAL for non-accurate
+            # tropical/geocentric requests.
             zodiac_str = (zodiac or "").strip().lower()
             frame_str = (frame or "").strip().lower()
             requires_accurate = zodiac_str == "sidereal" or frame_str == "topocentric"
-            if not requires_accurate and settings.natal_engine_default == "simplified":
+            if prefer_simplified_defaults and not requires_accurate:
                 resolved_house_system = HouseSystemType.EQUAL
             else:
                 resolved_house_system = settings.natal_ruleset_default_house_system
@@ -295,19 +295,8 @@ class NatalCalculationService:
             frame=frame,
             house_system=house_system,
             altitude_m=altitude_m,
+            prefer_simplified_defaults=not accurate and not engine_override,
         )
-
-        # Story 23-3: topocentric frame requires lat/lon to avoid provider-level 503
-        if resolved_frame == FrameType.TOPOCENTRIC:
-            if birth_input.birth_lat is None or birth_input.birth_lon is None:
-                increment_counter(
-                    "natal_ruleset_invalid_total|code=missing_topocentric_coordinates"
-                )
-                raise NatalCalculationError(
-                    code="missing_topocentric_coordinates",
-                    message="lat/lon are required for topocentric frame",
-                    details={"frame": "topocentric"},
-                )
 
         # AC 2: Given zodiac=sidereal sans ayanamsa -> 422 missing_ayanamsa
         # This applies when zodiac is explicitly requested as sidereal.
@@ -338,6 +327,18 @@ class NatalCalculationService:
             frame=resolved_frame,
             house_system=resolved_house_system,
         )
+
+        # Story 23-3: topocentric frame requires lat/lon to avoid provider-level 503
+        if resolved_frame == FrameType.TOPOCENTRIC:
+            if birth_input.birth_lat is None or birth_input.birth_lon is None:
+                increment_counter(
+                    "natal_ruleset_invalid_total|code=missing_topocentric_coordinates"
+                )
+                raise NatalCalculationError(
+                    code="missing_topocentric_coordinates",
+                    message="lat/lon are required for topocentric frame",
+                    details={"frame": "topocentric"},
+                )
 
         ephemeris_path_version: str | None = None
         ephemeris_path_hash: str | None = None

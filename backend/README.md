@@ -194,6 +194,27 @@ Traçabilité temporelle optionnelle (story 22.2):
 - La valeur de ΔT est calculée via les approximations polynomiales de la NASA (Espenak & Meeus) couvrant les périodes historiques (-500 à 2150+) avec une précision adaptée à l'audit astrologique.
 - Quand `tt_enabled=false`, `delta_t_sec` et `jd_tt` valent `null` et `time_scale="UT"`.
 
+## Cross-Tool Drift Report (dev-only)
+
+Script local de comparaison externe (hors CI), base sur le dataset golden pro:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python .\scripts\natal-cross-tool-report-dev.py --format both --output-dir .\artifacts\cross-tool
+```
+
+Options utiles:
+- `--limit 10` pour un run rapide local.
+- `--format json|markdown|both`.
+
+Sorties:
+- `artifacts/cross-tool/cross-tool-drift-report.json`
+- `artifacts/cross-tool/cross-tool-drift-report.md`
+
+Important:
+- Outil strictement **dev-only**.
+- Refuse de s'executer si une variable CI est detectee (`CI=true`, `GITHUB_ACTIONS=true`, etc.).
+
 ## Secrets Rotation
 
 Secrets minimum requis hors environnements locaux/test (staging, production):

@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.domain.astrology.natal_calculation import NatalCalculationError
+from app.domain.astrology.natal_calculation import NatalCalculationError, sign_from_longitude
 from app.domain.astrology.natal_preparation import BirthInput
 from app.services.natal_calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
@@ -38,28 +38,6 @@ class UserAstroProfileData(BaseModel):
     sun_sign_code: str | None
     ascendant_sign_code: str | None
     missing_birth_time: bool
-
-
-ZODIAC_ORDER = [
-    "aries",
-    "taurus",
-    "gemini",
-    "cancer",
-    "leo",
-    "virgo",
-    "libra",
-    "scorpio",
-    "sagittarius",
-    "capricorn",
-    "aquarius",
-    "pisces",
-]
-
-
-def _sign_from_longitude(longitude: float) -> str:
-    normalized = longitude % 360.0
-    sign_index = int(normalized // 30.0) % 12
-    return ZODIAC_ORDER[sign_index]
 
 
 class UserAstroProfileService:
@@ -108,14 +86,22 @@ class UserAstroProfileService:
         )
 
         try:
+            # Attempt accurate calculation (SwissEph) first for maximum quality.
             natal_result = NatalCalculationService.calculate(
                 db, birth_input=birth_input, accurate=True
             )
         except NatalCalculationError as error:
+            # Fallback to non-accurate (simplified) if SwissEph is unavailable or explicitly required by the error.
+            is_unavailable = error.code in ("natal_engine_unavailable", "swisseph_calc_failed")
             should_auto_seed = (
                 error.code == "reference_version_not_found" and settings.active_reference_version
             )
-            if should_auto_seed:
+
+            if is_unavailable:
+                natal_result = NatalCalculationService.calculate(
+                    db, birth_input=birth_input, accurate=False
+                )
+            elif should_auto_seed:
                 ReferenceDataService.seed_reference_version(
                     db, version=settings.active_reference_version
                 )
@@ -134,7 +120,7 @@ class UserAstroProfileService:
             None,
         )
         sun_sign_code = (
-            _sign_from_longitude(sun_position.longitude) if sun_position is not None else None
+            sign_from_longitude(sun_position.longitude) if sun_position is not None else None
         )
 
         if profile.birth_time is None:
@@ -149,7 +135,7 @@ class UserAstroProfileService:
             None,
         )
         ascendant_sign_code = (
-            _sign_from_longitude(first_house.cusp_longitude) if first_house is not None else None
+            sign_from_longitude(first_house.cusp_longitude) if first_house is not None else None
         )
         return UserAstroProfileData(
             sun_sign_code=sun_sign_code,

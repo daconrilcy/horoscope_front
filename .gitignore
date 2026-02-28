@@ -25,3 +25,6 @@ frontend/dist/
 .env
 backend/.env
 frontend/.env
+
+# Cross-tool drift reports
+artifacts/cross-tool/

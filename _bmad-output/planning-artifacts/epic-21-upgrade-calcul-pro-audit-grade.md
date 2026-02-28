@@ -1,5 +1,7 @@
 # Epic 21-27: Upgrade "Calcul Pro" (audit-grade)
 
+Status: done
+
 ## Objectif
 
 Passer le calcul natal au niveau "pro" avec reproductibilite, tracabilite forte et comparabilite externe.

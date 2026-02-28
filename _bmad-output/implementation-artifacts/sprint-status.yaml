@@ -225,7 +225,7 @@ development_status:
 
   epic-25: in-progress
   25-1-dataset-golden-pro-50-200-cas: done
-  25-2-script-cross-tool-report-dev-only: ready-for-dev
+  25-2-script-cross-tool-report-dev-only: done
   epic-25-retrospective: optional
 
   epic-26: in-progress
