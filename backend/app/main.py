@@ -164,7 +164,7 @@ def handle_request_validation_error(
         status_code=422,
         content={
             "error": {
-                "code": "invalid_request_payload",
+                "code": "invalid_birth_input",
                 "message": "request payload validation failed",
                 "details": {"errors": error.errors()},
                 "request_id": resolve_request_id(request),

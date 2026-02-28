@@ -27,6 +27,7 @@
 - [Data Models - Backend](./data-models-backend.md)
 - [Component Inventory - Frontend](./component-inventory-frontend.md)
 - [Development Guide - Backend](./development-guide-backend.md)
+- [Natal Pro Dev Guide](./natal-pro-dev-guide.md)
 - [Development Guide - Frontend](./development-guide-frontend.md)
 - [Deployment Guide](./deployment-guide.md)
 - [Project Parts Metadata](./project-parts.json)

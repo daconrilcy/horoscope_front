@@ -30,6 +30,8 @@ python -m uvicorn app.main:app --reload
 
 ## Quality
 
+**🚀 [Natal Pro Dev Guide](../docs/natal-pro-dev-guide.md) (Settings, Errors, Validation)** — *Reference for audit-grade astrology calculation.*
+
 ```powershell
 .\.venv\Scripts\Activate.ps1
 cd backend
@@ -179,6 +181,9 @@ Le backend est defini via `pyproject.toml`.
 Pour les environnements conteneurises, l image installe le package local avec `pip install .`.
 
 ## Swiss Ephemeris (prod)
+
+Guide dev pro (settings, erreurs 422/503, validation Golden Pro):
+- [docs/natal-pro-dev-guide.md](../docs/natal-pro-dev-guide.md)
 
 Variables de packaging/runtime:
 - `SWISSEPH_ENABLED`
