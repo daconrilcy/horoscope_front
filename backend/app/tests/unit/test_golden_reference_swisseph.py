@@ -221,7 +221,7 @@ class TestGoldenPlanetPositions:
         """AC1 : Sun, Moon et Mercury respectent une tolérance absolue de 0.01°."""
         from app.domain.astrology.ephemeris_provider import calculate_planets
 
-        results = calculate_planets(case.expected_jd)
+        results = calculate_planets(case.expected_jd).planets
         result_map = {p.planet_id: p for p in results}
         golden_map = {pg.planet_id: pg for pg in case.planets}
 
@@ -240,7 +240,7 @@ class TestGoldenPlanetPositions:
         from app.domain.astrology.ephemeris_provider import calculate_planets
 
         case = GOLDEN_1973_EUROPE_PARIS
-        results = calculate_planets(case.expected_jd)
+        results = calculate_planets(case.expected_jd).planets
         result_map = {p.planet_id: p for p in results}
         golden_map = {pg.planet_id: pg for pg in case.planets}
 
@@ -259,7 +259,7 @@ class TestGoldenPlanetPositions:
         from app.domain.astrology.ephemeris_provider import calculate_planets
 
         case = GOLDEN_MERCURY_RETROGRADE
-        results = calculate_planets(case.expected_jd)
+        results = calculate_planets(case.expected_jd).planets
         result_map = {p.planet_id: p for p in results}
 
         mercury = result_map["mercury"]
@@ -282,7 +282,7 @@ class TestGoldenPlanetPositions:
         from app.domain.astrology.ephemeris_provider import calculate_planets
 
         case = GOLDEN_J2000
-        results = calculate_planets(case.expected_jd)
+        results = calculate_planets(case.expected_jd).planets
         result_map = {p.planet_id: p for p in results}
 
         saturn = result_map["saturn"]
@@ -303,7 +303,7 @@ class TestGoldenPlanetPositions:
         from app.domain.astrology.ephemeris_provider import calculate_planets
 
         case = GOLDEN_1980
-        results = calculate_planets(case.expected_jd)
+        results = calculate_planets(case.expected_jd).planets
         result_map = {p.planet_id: p for p in results}
 
         mars = result_map["mars"]
@@ -334,7 +334,7 @@ class TestGoldenPlanetPositions:
         if "sun" not in golden_map:
             pytest.skip(f"Cas {case.label!r} n'inclut pas de valeur golden pour 'sun'")
 
-        results = calculate_planets(case.expected_jd)
+        results = calculate_planets(case.expected_jd).planets
         result_map = {p.planet_id: p for p in results}
 
         _assert_longitude_tolerance(

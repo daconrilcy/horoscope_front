@@ -140,7 +140,7 @@ def _build_swisseph_positions(
     """Build positions_raw list from SwissEph ephemeris provider."""
     from app.domain.astrology.ephemeris_provider import calculate_planets
 
-    planet_data_list = calculate_planets(
+    ephem_result = calculate_planets(
         jdut,
         lat=lat,
         lon=lon,
@@ -149,7 +149,7 @@ def _build_swisseph_positions(
         frame=frame,
         altitude_m=altitude_m,
     )
-    planet_data_by_id = {pd.planet_id: pd for pd in planet_data_list}
+    planet_data_by_id = {pd.planet_id: pd for pd in ephem_result.planets}
 
     positions_raw: list[dict[str, object]] = []
     for code in planet_codes:

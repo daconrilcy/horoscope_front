@@ -69,6 +69,7 @@ def _make_swe_mock(
         )
     if set_sid_mode_side_effect is not None:
         mock_swe.set_sid_mode.side_effect = set_sid_mode_side_effect
+    mock_swe.get_ayanamsa_ut.return_value = 23.85
     return mock_swe
 
 
@@ -83,7 +84,7 @@ class TestPlanetDataFields:
         """Chaque planète doit être retournée avec les 4 champs requis."""
         mock_swe = _make_swe_mock(lon=180.0, lat=0.5, speed_lon=1.2)
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
-            results = calculate_planets(JDUT_J2000)
+            results = calculate_planets(JDUT_J2000).planets
 
         planet_map = {p.planet_id: p for p in results}
         assert planet_id in planet_map, f"Planète {planet_id} absente du résultat"
@@ -98,14 +99,14 @@ class TestPlanetDataFields:
         """Le résultat doit contenir exactement 10 corps."""
         mock_swe = _make_swe_mock()
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
-            results = calculate_planets(JDUT_J2000)
+            results = calculate_planets(JDUT_J2000).planets
         assert len(results) == 10
 
     def test_planets_order_matches_definition(self) -> None:
         """L'ordre des planètes dans le résultat doit correspondre à _PLANET_IDS."""
         mock_swe = _make_swe_mock()
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
-            results = calculate_planets(JDUT_J2000)
+            results = calculate_planets(JDUT_J2000).planets
         assert [p.planet_id for p in results] == ALL_PLANETS
 
     @pytest.mark.parametrize("planet_id", ALL_PLANETS)
@@ -115,7 +116,7 @@ class TestPlanetDataFields:
         for raw_lon in [-10.0, 0.0, 90.0, 359.99, 370.0, 720.5]:
             mock_swe = _make_swe_mock(lon=raw_lon)
             with patch.dict("sys.modules", {"swisseph": mock_swe}):
-                results = calculate_planets(JDUT_J2000)
+                results = calculate_planets(JDUT_J2000).planets
             planet_map = {p.planet_id: p for p in results}
             lon = planet_map[planet_id].longitude
             assert 0.0 <= lon < 360.0, (
@@ -187,17 +188,28 @@ class TestSiderealMode:
         assert first_call_arg == 1
 
     def test_sidereal_calc_ut_called_for_each_planet(self) -> None:
-        """calc_ut est appelé une fois par planète en mode sidéral."""
+        """calc_ut est appelé 20 fois en mode sidéral (10 sidereal + 10 tropical pour invariant)."""
         mock_swe = _make_swe_mock()
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
             calculate_planets(JDUT_J2000, zodiac="sidereal")
-        assert mock_swe.calc_ut.call_count == 10
+        # 10 calls for tropical (invariant check) + 10 calls for sidereal
+        assert mock_swe.calc_ut.call_count == 20
 
     def test_sidereal_reset_called_even_on_calc_error(self) -> None:
         """Le reset set_sid_mode(0) est appelé même en cas d'erreur calc_ut."""
-        mock_swe = _make_swe_mock(
-            calc_ut_side_effect=RuntimeError("swe error")
-        )
+
+        # On fait échouer seulement après les 10 premiers appels (les appels tropicaux de l'invariant)
+        # pour s'assurer que l'erreur arrive pendant le calcul sidéral principal.
+        call_count = 0
+
+        def _side_effect(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count > 10:
+                raise RuntimeError("swe error")
+            return ([123.45, 0.0, 1.0, 0.98, 0.0, 0.0], 258)
+
+        mock_swe = _make_swe_mock(calc_ut_side_effect=_side_effect)
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
             with pytest.raises(EphemerisCalcError):
                 calculate_planets(JDUT_J2000, zodiac="sidereal")
@@ -216,7 +228,7 @@ class TestRetrograde:
         """speed_longitude < 0 → is_retrograde=True."""
         mock_swe = _make_swe_mock(speed_lon=-0.5)
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
-            results = calculate_planets(JDUT_J2000)
+            results = calculate_planets(JDUT_J2000).planets
         for p in results:
             assert p.is_retrograde is True
             assert p.speed_longitude == -0.5
@@ -225,7 +237,7 @@ class TestRetrograde:
         """speed_longitude > 0 → is_retrograde=False."""
         mock_swe = _make_swe_mock(speed_lon=1.5)
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
-            results = calculate_planets(JDUT_J2000)
+            results = calculate_planets(JDUT_J2000).planets
         for p in results:
             assert p.is_retrograde is False
 
@@ -233,7 +245,7 @@ class TestRetrograde:
         """speed_longitude = 0 → is_retrograde=False (stationnaire)."""
         mock_swe = _make_swe_mock(speed_lon=0.0)
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
-            results = calculate_planets(JDUT_J2000)
+            results = calculate_planets(JDUT_J2000).planets
         for p in results:
             assert p.is_retrograde is False
 
@@ -242,7 +254,7 @@ class TestRetrograde:
         expected_speed = -1.234
         mock_swe = _make_swe_mock(speed_lon=expected_speed)
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
-            results = calculate_planets(JDUT_J2000)
+            results = calculate_planets(JDUT_J2000).planets
         for p in results:
             assert p.speed_longitude == expected_speed
 
@@ -321,7 +333,7 @@ class TestErrorHandling:
 def test_swisseph_smoke_test() -> None:
     """Basic smoke test to ensure we can at least call the real library if present."""
     try:
-        results = calculate_planets(JDUT_J2000)
+        results = calculate_planets(JDUT_J2000).planets
         assert len(results) == 10
     except (ImportError, EphemerisCalcError):
         pytest.skip("swisseph not fully configured or data files missing")

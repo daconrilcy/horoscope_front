@@ -103,8 +103,8 @@ class TestGoldenTropicalVsSidereal:
         self, planet_id: str, ayanamsa: str
     ) -> None:
         """AC1 : Check structurel — (tropical_lon - sidereal_lon) mod 360 ≈ swe.get_ayanamsa_ut()."""
-        tropical_planets = calculate_planets(JDUT_J2000)
-        sidereal_planets = calculate_planets(JDUT_J2000, zodiac="sidereal", ayanamsa=ayanamsa)
+        tropical_planets = calculate_planets(JDUT_J2000).planets
+        sidereal_planets = calculate_planets(JDUT_J2000, zodiac="sidereal", ayanamsa=ayanamsa).planets
 
         actual_ayanamsa = _get_effective_ayanamsa_ut(ayanamsa, JDUT_J2000)
 
@@ -125,8 +125,8 @@ class TestGoldenTropicalVsSidereal:
     @requires_swisseph
     def test_lahiri_and_fagan_bradley_produce_distinct_longitudes(self) -> None:
         """AC1 : Lahiri et Fagan-Bradley produisent des longitudes solaires différentes."""
-        lahiri_planets = calculate_planets(JDUT_J2000, zodiac="sidereal", ayanamsa="lahiri")
-        fagan_planets = calculate_planets(JDUT_J2000, zodiac="sidereal", ayanamsa="fagan_bradley")
+        lahiri_planets = calculate_planets(JDUT_J2000, zodiac="sidereal", ayanamsa="lahiri").planets
+        fagan_planets = calculate_planets(JDUT_J2000, zodiac="sidereal", ayanamsa="fagan_bradley").planets
 
         sun_lahiri = next(p for p in lahiri_planets if p.planet_id == "sun").longitude
         sun_fagan = next(p for p in fagan_planets if p.planet_id == "sun").longitude
@@ -147,10 +147,10 @@ class TestGoldenGeoVsTopocentric:
     @requires_swisseph
     def test_geocentric_vs_topocentric_moon_parallax_is_significant(self) -> None:
         """AC2 : La position topocentrique de la Lune doit différer du géocentrique (parallaxe)."""
-        geo_planets = calculate_planets(JDUT_J2000, frame="geocentric")
+        geo_planets = calculate_planets(JDUT_J2000, frame="geocentric").planets
         topo_planets = calculate_planets(
             JDUT_J2000, LAT_PARIS, LON_PARIS, frame="topocentric"
-        )
+        ).planets
 
         geo_moon = next(p for p in geo_planets if p.planet_id == "moon").longitude
         topo_moon = next(p for p in topo_planets if p.planet_id == "moon").longitude

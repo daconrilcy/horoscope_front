@@ -76,6 +76,14 @@ class PlanetData:
     is_retrograde: bool  # True quand speed_longitude < 0
 
 
+@dataclass(frozen=True)
+class EphemerisResult:
+    """Résultat complet du calcul éphéméride avec métadonnées de calcul."""
+
+    planets: list[PlanetData]
+    ayanamsa_value: float | None = None  # Valeur numérique de l'ayanamsa au JDUT (sidéral)
+
+
 class EphemerisCalcError(Exception):
     """Levée quand swe.calc_ut échoue ou pyswisseph est indisponible."""
 
@@ -110,7 +118,7 @@ def calculate_planets(
     ayanamsa: str | None = None,
     frame: str = "geocentric",
     altitude_m: float | None = None,
-) -> list[PlanetData]:
+) -> EphemerisResult:
     """Calcule les positions de Sun..Pluto via swe.calc_ut.
 
     Args:
@@ -124,7 +132,7 @@ def calculate_planets(
         altitude_m: Altitude en mètres. Défaut ``0.0`` si topocentrique.
 
     Returns:
-        Liste de :class:`PlanetData` dans l'ordre de définition.
+        :class:`EphemerisResult` contenant les planètes et l'ayanamsa effective.
 
     Raises:
         EphemerisCalcError: Si pyswisseph est absent, si ``calc_ut`` échoue,
@@ -149,15 +157,18 @@ def calculate_planets(
         topo_set = False
 
         results: list[PlanetData] = []
+        effective_ayanamsa_value: float | None = None
 
         with SWISSEPH_LOCK:
             if is_sidereal:
                 flags |= flg_sidereal
                 ayanamsa_id = _AYANAMSA_IDS.get(effective_ayanamsa or "lahiri")
                 if ayanamsa_id is None:
+                    increment_counter(f"{METRIC_ERRORS}|code=invalid_ayanamsa")
                     raise EphemerisCalcError(f"Unknown ayanamsa: {effective_ayanamsa}")
                 try:
                     swe.set_sid_mode(ayanamsa_id)
+                    effective_ayanamsa_value = float(swe.get_ayanamsa_ut(jdut))
                 except Exception as exc:
                     raise EphemerisCalcError(
                         f"Failed to set sidereal mode: {type(exc).__name__}"
@@ -176,6 +187,16 @@ def calculate_planets(
                     ) from exc
 
             try:
+                # Calcul des positions tropicales temporaires pour l'invariant si sidéral
+                tropical_longitudes: dict[int, float] = {}
+                if is_sidereal and effective_ayanamsa_value != 0.0:
+                    trop_flags = flg_swieph | flg_speed
+                    if is_topocentric:
+                        trop_flags |= flg_topocentric
+                    for _, swe_id in _PLANET_IDS.items():
+                        xx_trop, _ = swe.calc_ut(jdut, swe_id, trop_flags)
+                        tropical_longitudes[swe_id] = float(xx_trop[0])
+
                 for planet_id, swe_id in _PLANET_IDS.items():
                     try:
                         xx, retflag = swe.calc_ut(jdut, swe_id, flags)
@@ -189,11 +210,27 @@ def calculate_planets(
                             f"calc_ut returned error flag for planet {planet_id}"
                         )
 
+                    lon = _normalize_longitude(float(xx[0]))
                     speed_lon = float(xx[3])
+
+                    # Vérification de l'invariant structurel (Lt - Ls) mod 360 ~= ayanamsa
+                    if is_sidereal and effective_ayanamsa_value is not None:
+                        lt = tropical_longitudes[swe_id]
+                        diff = (lt - lon) % 360.0
+                        # Tolérance 0.01° (36 arcsec) pour l'audit runtime
+                        if abs(diff - effective_ayanamsa_value) > 0.01:
+                            logger.warning(
+                                "sidereal_invariant_violation planet=%s jdut=%.4f diff=%.6f ayanamsa=%.6f",
+                                planet_id,
+                                jdut,
+                                diff,
+                                effective_ayanamsa_value,
+                            )
+
                     results.append(
                         PlanetData(
                             planet_id=planet_id,
-                            longitude=_normalize_longitude(float(xx[0])),
+                            longitude=lon,
                             latitude=float(xx[1]),
                             speed_longitude=speed_lon,
                             is_retrograde=speed_lon < 0.0,
@@ -226,11 +263,12 @@ def calculate_planets(
     elapsed_ms = (time.monotonic() - start) * 1000.0
     observe_duration(METRIC_CALC_LATENCY, elapsed_ms)
     logger.debug(
-        "ephemeris_planets_calculated jdut=%.4f zodiac=%s ayanamsa=%s frame=%s planet_count=%d",
+        "ephemeris_planets_calculated jdut=%.4f zodiac_effective=%s ayanamsa_effective=%s ayanamsa_value=%.6f frame=%s planet_count=%d",
         jdut,
         zodiac,
         effective_ayanamsa or "n/a",
+        effective_ayanamsa_value or 0.0,
         frame,
         len(results),
     )
-    return results
+    return EphemerisResult(planets=results, ayanamsa_value=effective_ayanamsa_value)
