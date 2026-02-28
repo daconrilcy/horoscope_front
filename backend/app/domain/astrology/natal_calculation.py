@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 from math import isfinite
 
 from pydantic import BaseModel
 
 from app.core.config import AspectSchoolType, FrameType, HouseSystemType, ZodiacType
-from app.core.constants import MAX_ORB_DEG, MIN_ORB_DEG
+from app.core.constants import MAJOR_ASPECT_CODES, MAX_ORB_DEG, MIN_ORB_DEG
 from app.domain.astrology.angle_utils import contains_angle
 from app.domain.astrology.calculators import (
     calculate_houses,
@@ -15,6 +16,7 @@ from app.domain.astrology.calculators import (
 )
 from app.domain.astrology.calculators.houses import HOUSE_SYSTEM_CODE, assign_house_number
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData, prepare_birth_data
+from app.infra.observability.metrics import increment_counter
 
 
 class PlanetPosition(BaseModel):
@@ -36,8 +38,9 @@ class AspectResult(BaseModel):
     planet_a: str
     planet_b: str
     angle: float
-    orb: float
-    orb_used: float | None = None
+    orb: float                    # actual angular deviation (backward compat)
+    orb_used: float               # actual angular deviation, story 24-2 (same as orb)
+    orb_max: float                # resolved max threshold by priority chain, story 24-2
 
 
 class NatalResult(BaseModel):
@@ -456,9 +459,23 @@ def build_natal_result(
     if not aspect_definitions:
         _raise_invalid_reference(version, "aspects", "missing_code_or_angle")
     aspect_definitions.sort(key=lambda item: (float(item["angle"]), str(item["code"])))
-    aspects_raw = calculate_major_aspects(positions_raw, aspect_definitions)
+
+    # story 24-2 Task 3: limit to major aspects only
+    major_aspect_definitions = [
+        d for d in aspect_definitions
+        if str(d.get("code", "")).strip().lower() in MAJOR_ASPECT_CODES
+    ]
+
+    aspects_raw = calculate_major_aspects(positions_raw, major_aspect_definitions)
     if timeout_check is not None:
         timeout_check()
+
+    # story 24-2 Observability: track aspects calculated and rejected by orb
+    increment_counter(f"aspects_calculated_total_{aspect_school}", float(len(aspects_raw)))
+    _total_checks = math.comb(len(positions_raw), 2) * len(major_aspect_definitions)
+    _rejected = _total_checks - len(aspects_raw)
+    if _rejected > 0:
+        increment_counter("aspects_rejected_orb_total", float(_rejected))
 
     positions = [PlanetPosition.model_validate(item) for item in positions_raw]
     houses = [HouseResult.model_validate(item) for item in houses_raw]

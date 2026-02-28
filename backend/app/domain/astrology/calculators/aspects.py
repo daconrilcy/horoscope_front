@@ -106,24 +106,27 @@ def calculate_major_aspects(
             angle = float(aspect_def["angle"])
             orb = abs(distance - angle)
             
-            # Resolve orb_used
+            # Resolve the threshold limit for this pair
             overrides = aspect_def["orb_pair_overrides"]
             if pair_key in overrides:
-                orb_used = overrides[pair_key]
+                orb_limit = overrides[pair_key]
             elif is_any_luminary and aspect_def["orb_luminaries"] is not None:
-                orb_used = aspect_def["orb_luminaries"]
+                orb_limit = aspect_def["orb_luminaries"]
             else:
-                orb_used = aspect_def["default_orb"]
+                orb_limit = aspect_def["default_orb"]
                 
-            if orb <= orb_used:
+            if orb <= orb_limit:
+                # Standardize planet order (alphabetical) for stable API output
+                p_a, p_b = sorted((planet_a, planet_b))
                 aspects.append(
                     {
                         "aspect_code": aspect_def["aspect_code"],
-                        "planet_a": planet_a,
-                        "planet_b": planet_b,
+                        "planet_a": p_a,
+                        "planet_b": p_b,
                         "angle": round(angle, 6),
-                        "orb": round(orb, 6),
-                        "orb_used": round(orb_used, 6),
+                        "orb": round(orb, 6),        # backward compat: actual angular deviation
+                        "orb_used": round(orb, 6),   # story 24-2: actual angular deviation
+                        "orb_max": round(orb_limit, 6), # story 24-2: resolved max threshold
                     }
                 )
     

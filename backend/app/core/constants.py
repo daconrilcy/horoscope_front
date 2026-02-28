@@ -18,3 +18,8 @@ MAX_ORB_DEG = 15.0
 
 # Corps célestes considérés comme luminaires
 LUMINARIES = {"sun", "moon"}
+
+# Aspects majeurs supportés (story 24-2 Task 3) — seuls ces aspects sont calculés
+MAJOR_ASPECT_CODES: frozenset[str] = frozenset(
+    {"conjunction", "sextile", "square", "trine", "opposition"}
+)

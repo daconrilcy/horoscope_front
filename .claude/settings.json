@@ -12,7 +12,10 @@
       "Bash(grep:*)",
       "Bash(.venv/Scripts/Activate.ps1:*)",
       "Bash(.venv/Scripts/python.exe:*)",
-      "Bash(edit:*)"
+      "Bash(edit:*)",
+      "Bash(.venv/Scripts/python -m pytest backend/app/tests/unit/ --tb=short -q)",
+      "Bash(.venv/Scripts/python -m pytest:*)",
+      "Bash(.venv/Scripts/python:*)"
     ],
     "additionalDirectories": [
       "c:\\dev\\horoscope_front\\_bmad-output\\implementation-artifacts"
