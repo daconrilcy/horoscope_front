@@ -92,6 +92,7 @@ class ModuleExecutionPayload(BaseModel):
     question: str
     situation: str | None = None
     conversation_id: int | None = None
+    persona_id: str | None = None
 
 
 class ModuleExecutionData(BaseModel):
@@ -386,7 +387,7 @@ class FeatureFlagService:
         )
 
     @staticmethod
-    def execute_module(
+    async def execute_module(
         db: Session,
         *,
         module: str,
@@ -394,6 +395,8 @@ class FeatureFlagService:
         user_role: str,
         payload: ModuleExecutionPayload,
         skip_availability_check: bool = False,
+        request_id: str = "n/a",
+        trace_id: str | None = None,
     ) -> ModuleExecutionData:
         """
         Exécute un module (tarot, runes) pour un utilisateur.
@@ -405,6 +408,8 @@ class FeatureFlagService:
             user_role: Rôle de l'utilisateur.
             payload: Données d'entrée pour le module.
             skip_availability_check: Ignorer la vérification d'accès.
+            request_id: Identifiant de requête pour le logging.
+            trace_id: Identifiant de trace.
 
         Returns:
             Résultat de l'interprétation du module.
@@ -444,22 +449,50 @@ class FeatureFlagService:
         started = monotonic()
         increment_counter(f"module_activation_total|module={normalized_module}", 1.0)
 
+        # Story 28.5+: Support gateway v2
+        from app.ai_engine.config import ai_engine_settings
+        from app.services.ai_engine_adapter import AIEngineAdapter
+        
         persona = PersonaConfigService.get_active(db)
-        if normalized_module == "tarot":
-            interpretation = (
-                "Tirage tarot (3 cartes):\n"
-                f"- Contexte: {payload.situation.strip() if payload.situation else 'non precise'}\n"
-                f"- Message central: {question}\n"
-                "- Lecture: avancez par petites decisions concretes, verifiez vos priorites "
-                "avant tout engagement important."
+        persona_profile_code = persona.profile_code
+
+        if ai_engine_settings.llm_orchestration_v2:
+            use_case = "tarot_reading" if normalized_module == "tarot" else "guidance_daily"
+            context = {
+                "situation": payload.situation,
+                "persona_id": payload.persona_id,
+                # For tarot we might need cards_json, but let's use a simple mock for now or pass if available
+                "cards_json": [], 
+            }
+            if normalized_module == "tarot":
+                context["question"] = question
+            else:
+                context["situation"] = f"Question: {question}. Context: {payload.situation or ''}"
+
+            interpretation = await AIEngineAdapter.generate_guidance(
+                use_case=use_case,
+                context=context,
+                user_id=user_id,
+                request_id=request_id,
+                trace_id=trace_id or request_id,
+                db=db,
             )
         else:
-            interpretation = (
-                "Lecture runique:\n"
-                f"- Intention: {question}\n"
-                "- Lecture: phase de clarification; posez un cadre simple, puis agissez "
-                "de facon progressive et mesurable."
-            )
+            if normalized_module == "tarot":
+                interpretation = (
+                    "Tirage tarot (3 cartes):\n"
+                    f"- Contexte: {payload.situation.strip() if payload.situation else 'non precise'}\n"
+                    f"- Message central: {question}\n"
+                    "- Lecture: avancez par petites decisions concretes, verifiez vos priorites "
+                    "avant tout engagement important."
+                )
+            else:
+                interpretation = (
+                    "Lecture runique:\n"
+                    f"- Intention: {question}\n"
+                    "- Lecture: phase de clarification; posez un cadre simple, puis agissez "
+                    "de facon progressive et mesurable."
+                )
 
         conversation_id = payload.conversation_id
         if conversation_id is not None:
@@ -492,7 +525,7 @@ class FeatureFlagService:
                 metadata_payload={
                     "module": normalized_module,
                     "module_status": "completed",
-                    "persona_profile_code": persona.profile_code,
+                    "persona_profile_code": persona_profile_code,
                 },
             )
 
@@ -502,6 +535,6 @@ class FeatureFlagService:
             module=normalized_module,
             status="completed",
             interpretation=interpretation,
-            persona_profile_code=persona.profile_code,
+            persona_profile_code=persona_profile_code,
             conversation_id=conversation_id,
         )

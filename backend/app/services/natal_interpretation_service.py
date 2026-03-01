@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from app.ai_engine.schemas import GenerateContext, GenerateInput, GenerateRequest
-from app.ai_engine.services.generate_service import generate_text
+from app.services.ai_engine_adapter import AIEngineAdapter, AIEngineAdapterError
 from app.services.user_birth_profile_service import UserBirthProfileData
 from app.services.user_natal_chart_service import UserNatalChartReadData
 
@@ -305,6 +305,8 @@ class NatalInterpretationService:
         user_id: int,
         request_id: str,
         trace_id: str | None = None,
+        persona_id: str | None = None,
+        db: Session | None = None,
     ) -> NatalInterpretationData:
         """
         Génère une interprétation textuelle du thème natal.
@@ -355,13 +357,51 @@ class NatalInterpretationService:
         )
 
         try:
-            response = await generate_text(
-                request=generate_request,
-                request_id=request_id,
-                trace_id=trace_id or request_id,
-                user_id=user_id,
-            )
-        except TimeoutError as error:
+            from app.ai_engine.config import ai_engine_settings
+
+            if ai_engine_settings.llm_orchestration_v2:
+                # Support gateway v2
+                response_text = await AIEngineAdapter.generate_guidance(
+                    use_case="natal_interpretation",
+                    context={
+                        "natal_chart_summary": natal_chart_summary,
+                        "birth_date": birth_data["date"],
+                        "birth_time": birth_data["time"],
+                        "birth_place": birth_data["place"],
+                        "locale": "fr-FR",
+                        "persona_id": persona_id,
+                    },
+                    user_id=user_id,
+                    request_id=request_id,
+                    trace_id=trace_id or request_id,
+                    locale="fr-FR",
+                    db=db,
+                )
+
+                # Mock response for compatibility with existing parsing logic
+                class MockMeta:
+                    cached = False
+                    latency_ms = 0
+
+                class MockUsage:
+                    total_tokens = 0
+
+                class MockResponse:
+                    text = response_text
+                    meta = MockMeta()
+                    usage = MockUsage()
+
+                response = MockResponse()
+            else:
+                from app.ai_engine.services.generate_service import generate_text
+
+                response = await generate_text(
+                    request=generate_request,
+                    request_id=request_id,
+                    trace_id=trace_id or request_id,
+                    user_id=user_id,
+                )
+        except (AIEngineAdapterError, TimeoutError) as error:
             raise NatalInterpretationServiceError(
                 code="ai_engine_timeout",
                 message="AI Engine timeout during interpretation",

@@ -46,6 +46,7 @@ type SendChatResponse = {
 type SendChatPayload = {
   message: string
   conversation_id?: number
+  persona_id?: string
 }
 
 type ChatConversationSummary = {
@@ -92,6 +93,7 @@ type ExecuteModulePayload = {
   question: string
   situation?: string
   conversation_id?: number
+  persona_id?: string
 }
 
 type ExecuteModuleResponse = {

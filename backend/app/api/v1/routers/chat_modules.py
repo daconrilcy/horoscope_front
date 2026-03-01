@@ -114,7 +114,7 @@ def get_module_availability(
         429: {"model": ErrorEnvelope},
     },
 )
-def execute_module(
+async def execute_module(
     module_key: str,
     request: Request,
     payload: Any = Body(...),
@@ -122,6 +122,7 @@ def execute_module(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
+    trace_id = request.headers.get("X-Trace-Id", request_id)
     role_error = _ensure_user_role(current_user, request_id)
     if role_error is not None:
         return role_error
@@ -150,13 +151,15 @@ def execute_module(
             user_id=current_user.id,
             request_id=request_id,
         )
-        data = FeatureFlagService.execute_module(
+        data = await FeatureFlagService.execute_module(
             db,
             module=module_key,
             user_id=current_user.id,
             user_role=current_user.role,
             payload=parsed,
             skip_availability_check=True,
+            request_id=request_id,
+            trace_id=trace_id,
         )
         db.commit()
         return {"data": data.model_dump(mode="json"), "meta": {"request_id": request_id}}

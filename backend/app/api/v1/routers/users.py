@@ -257,6 +257,7 @@ def get_me_birth_data(
 async def get_me_latest_natal_chart(
     request: Request,
     include_interpretation: bool = False,
+    persona_id: str | None = None,
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
@@ -291,6 +292,8 @@ async def get_me_latest_natal_chart(
                 user_id=current_user.id,
                 request_id=request_id,
                 trace_id=trace_id,
+                persona_id=persona_id,
+                db=db,
             )
             response_data["interpretation"] = interpretation.model_dump(mode="json")
         except (
@@ -341,6 +344,7 @@ async def get_me_latest_natal_chart(
 )
 async def get_me_natal_chart_interpretation(
     request: Request,
+    persona_id: str | None = None,
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
@@ -388,6 +392,8 @@ async def get_me_natal_chart_interpretation(
             user_id=current_user.id,
             request_id=request_id,
             trace_id=trace_id,
+            persona_id=persona_id,
+            db=db,
         )
         return {
             "data": interpretation.model_dump(mode="json"),

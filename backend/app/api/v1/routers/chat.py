@@ -38,6 +38,7 @@ class ErrorEnvelope(BaseModel):
 class ChatMessageRequest(BaseModel):
     message: str
     conversation_id: int | None = None
+    persona_id: str | None = None
 
 
 class ChatMessageApiResponse(BaseModel):
@@ -103,6 +104,7 @@ def send_chat_message(
             message=parsed_payload.message,
             conversation_id=parsed_payload.conversation_id,
             request_id=request_id,
+            persona_id=parsed_payload.persona_id,
         )
         db.commit()
         return {"data": response.model_dump(mode="json"), "meta": {"request_id": request_id}}

@@ -72,7 +72,7 @@ export function ConsultationResultPage() {
       if (draftDrawingOption !== "none") {
         const moduleResult = await executeModule.mutateAsync({
           module: draftDrawingOption as "tarot" | "runes",
-          payload: { question: draftContext },
+          payload: { question: draftContext, persona_id: draftAstrologerId },
         })
         interpretation = moduleResult.interpretation
         const drawingLabel = t("drawing_completed", lang)
@@ -81,7 +81,17 @@ export function ConsultationResultPage() {
             ? { cards: [drawingLabel] }
             : { runes: [drawingLabel] }
       } else {
-        interpretation = generateSimpleInterpretation(draftContext, lang)
+        // Real interpretation API call
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/v1/users/me/natal-chart/latest?include_interpretation=true&persona_id=${draftAstrologerId}`, {
+          headers: {
+            "Authorization": `Bearer ${sessionStorage.getItem("access_token")}`
+          }
+        })
+        const result = await response.json()
+        if (result.error) {
+          throw new Error(result.error.message)
+        }
+        interpretation = result.data.interpretation.text
       }
 
       const result: ConsultationResult = {
@@ -122,7 +132,10 @@ export function ConsultationResultPage() {
       const message = `[Consultation ${t(typeConfig?.labelKey ?? "", lang)}]\n\n${currentResult.context}\n\n${t("interpretation_label", lang)}:\n${currentResult.interpretation}`
       sessionStorage.setItem(CHAT_PREFILL_KEY, message)
       reset()
-      navigate("/chat")
+      const astrologerParam = currentResult.astrologerId !== AUTO_ASTROLOGER_ID
+        ? `?astrologerId=${currentResult.astrologerId}`
+        : ""
+      navigate(`/chat${astrologerParam}`)
     }
   }, [currentResult, typeConfig, reset, navigate, lang])
 

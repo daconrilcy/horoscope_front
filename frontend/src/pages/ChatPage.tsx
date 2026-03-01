@@ -115,6 +115,7 @@ export function ChatPage() {
           ...(selectedConversationId
             ? { conversation_id: selectedConversationId }
             : {}),
+          ...(astrologerIdFromUrl ? { persona_id: astrologerIdFromUrl } : {}),
         })
 
         if (!selectedConversationId) {

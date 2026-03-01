@@ -434,6 +434,7 @@ class ChatGuidanceService:
         message: str,
         conversation_id: int | None = None,
         request_id: str = "n/a",
+        persona_id: str | None = None,
     ) -> ChatReplyData:
         """
         Envoie un message et obtient une réponse de l'assistant.
@@ -446,6 +447,7 @@ class ChatGuidanceService:
             message: Contenu du message.
             conversation_id: ID de conversation existante (optionnel).
             request_id: Identifiant de requête pour le logging.
+            persona_id: ID de persona spécifique (optionnel).
 
         Returns:
             Réponse complète avec métadonnées de contexte et récupération.
@@ -460,6 +462,7 @@ class ChatGuidanceService:
                 message=message,
                 conversation_id=conversation_id,
                 request_id=request_id,
+                persona_id=persona_id,
             )
         )
 
