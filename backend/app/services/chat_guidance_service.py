@@ -265,6 +265,7 @@ class ChatGuidanceService:
     @staticmethod
     async def _apply_off_scope_recovery_async(
         *,
+        db: Session,
         messages: list[dict[str, str]],
         context: dict[str, str | None],
         user_id: int,
@@ -330,6 +331,7 @@ class ChatGuidanceService:
                 user_id=user_id,
                 request_id=f"{request_id}-recovery-1",
                 trace_id=trace_id,
+                db=db,
             )
             reformulate_off_scope, _, _ = ChatGuidanceService._assess_off_scope(reformulated)
             if not reformulate_off_scope:
@@ -378,6 +380,7 @@ class ChatGuidanceService:
                 user_id=user_id,
                 request_id=f"{request_id}-recovery-2",
                 trace_id=trace_id,
+                db=db,
             )
             retry_off_scope, _, _ = ChatGuidanceService._assess_off_scope(retried)
             if not retry_off_scope:
@@ -594,12 +597,14 @@ class ChatGuidanceService:
                     user_id=user_id,
                     request_id=request_id,
                     trace_id=trace_id,
+                    db=db,
                 )
                 (
                     assistant_content,
                     fallback_used,
                     recovery_metadata,
                 ) = await ChatGuidanceService._apply_off_scope_recovery_async(
+                    db=db,
                     messages=chat_messages,
                     context=context,
                     user_id=user_id,

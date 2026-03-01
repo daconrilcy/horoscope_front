@@ -13,6 +13,7 @@ from app.ai_engine.routes import router as ai_engine_router
 from app.api.dependencies.auth import UserAuthenticationError
 from app.api.dependencies.b2b_auth import EnterpriseApiKeyAuthenticationError
 from app.api.health import router as health_router
+from app.api.v1.routers.admin_llm import router as admin_llm_router
 from app.api.v1.routers.astrology_engine import router as astrology_engine_router
 from app.api.v1.routers.audit import router as audit_router
 from app.api.v1.routers.auth import router as auth_router
@@ -45,6 +46,7 @@ from app.domain.astrology.natal_preparation import (
     warmup_timezone_finder,
 )
 from app.infra.observability.metrics import increment_counter, observe_duration
+from app.llm_orchestration.models import InputValidationError
 from app.services.pricing_experiment_service import PricingExperimentService
 
 
@@ -283,6 +285,21 @@ def handle_houses_calc_error(request: Request, error: HousesCalcError) -> JSONRe
     )
 
 
+@app.exception_handler(InputValidationError)
+def handle_input_validation_error(request: Request, error: InputValidationError) -> JSONResponse:
+    return JSONResponse(
+        status_code=400,
+        content={
+            "error": {
+                "code": "input_validation_failed",
+                "message": error.message,
+                "details": error.details,
+                "request_id": resolve_request_id(request),
+            }
+        },
+    )
+
+
 @app.exception_handler(UnsupportedHouseSystemError)
 def handle_unsupported_house_system_error(
     request: Request, error: UnsupportedHouseSystemError
@@ -310,6 +327,7 @@ app.add_middleware(
 )
 
 app.include_router(health_router)
+app.include_router(admin_llm_router)
 app.include_router(ephemeris_router)
 app.include_router(auth_router)
 app.include_router(audit_router)

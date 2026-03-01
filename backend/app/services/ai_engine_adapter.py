@@ -20,8 +20,11 @@ __all__ = [
 ]
 
 import logging
-from typing import TYPE_CHECKING, Awaitable, Callable, NoReturn
+from typing import TYPE_CHECKING, Awaitable, Callable, NoReturn, Optional
 
+from sqlalchemy.orm import Session
+
+from app.ai_engine.config import ai_engine_settings
 from app.ai_engine.exceptions import (
     AIEngineError,
     ContextTooLargeError,
@@ -99,18 +102,21 @@ def _handle_ai_engine_error(
         raise AIEngineAdapterError(
             code="rate_limit_exceeded",
             message="rate limit exceeded",
+            status_code=429,
             details={"retry_after_ms": str(err.retry_after_ms or 60000)},
         ) from err
     if isinstance(err, ContextTooLargeError):
         raise AIEngineAdapterError(
             code="context_too_large",
             message="context exceeds maximum tokens",
+            status_code=400,
             details=err.details,
         ) from err
     if isinstance(err, AIEngineValidationError):
         raise AIEngineAdapterError(
             code=f"invalid_{error_code_prefix}_input",
             message=err.message,
+            status_code=400,
             details=err.details,
         ) from err
     logger.error(
@@ -119,6 +125,73 @@ def _handle_ai_engine_error(
         str(err),
     )
     raise ConnectionError("llm provider unavailable") from err
+
+
+def _handle_gateway_error(
+    err: Exception,
+    request_id: str,
+    use_case: str,
+) -> NoReturn:
+    """Handle LLM Gateway errors and map them to adapter exceptions."""
+    from app.llm_orchestration.models import (
+        GatewayConfigError,
+        GatewayError,
+        PromptRenderError,
+        UnknownUseCaseError,
+    )
+
+    if not isinstance(err, GatewayError):
+        # Should not happen if used correctly, but safeguard
+        raise ConnectionError(
+            f"llm provider unavailable (v2: unexpected error type {type(err)})"
+        ) from err
+
+    if isinstance(err, PromptRenderError):
+        raise AIEngineAdapterError(
+            code="prompt_render_error",
+            message=f"failed to render prompt for {use_case}",
+            status_code=400,
+            details=err.details,
+        ) from err
+    if isinstance(err, UnknownUseCaseError):
+        raise AIEngineAdapterError(
+            code="unknown_use_case",
+            message=f"use case {use_case} is not configured",
+            status_code=400,
+            details=err.details,
+        ) from err
+    if isinstance(err, GatewayConfigError):
+        raise AIEngineAdapterError(
+            code="gateway_config_error",
+            message=str(err),
+            status_code=500,
+            details=err.details,
+        ) from err
+
+    # Map provider-originated GatewayError kinds
+    kind = err.details.get("kind")
+    if kind == "timeout":
+        # Raise as standard TimeoutError or map to 504
+        raise AIEngineAdapterError(
+            code="upstream_timeout",
+            message="llm provider timeout",
+            status_code=504,
+        ) from err
+    if kind == "rate_limit":
+        raise AIEngineAdapterError(
+            code="rate_limit_exceeded",
+            message="rate limit exceeded",
+            status_code=429,
+            details={"retry_after_ms": "60000"},
+        ) from err
+
+    logger.error(
+        "ai_engine_adapter_gateway_error use_case=%s request_id=%s error=%s",
+        use_case,
+        request_id,
+        str(err),
+    )
+    raise ConnectionError(f"llm provider unavailable (v2: {use_case})") from err
 
 
 def assess_off_scope(content: str) -> tuple[bool, float, str | None]:
@@ -206,14 +279,20 @@ def get_test_generators_state() -> tuple[bool, bool]:
     return (_test_chat_generator is not None, _test_guidance_generator is not None)
 
 
-class AIEngineAdapterError(Exception):
+class AIEngineAdapterError(AIEngineError):
     """Exception raised by the AI Engine adapter."""
 
-    def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+    def __init__(
+        self, code: str, message: str, status_code: int = 400, details: dict[str, str] | None = None
+    ) -> None:
         self.code = code
-        self.message = message
-        self.details = details or {}
-        super().__init__(message)
+        self.message = message  # Compatibility with map_adapter_error_to_codes
+        super().__init__(
+            error_type=f"ADAPTER_{code.upper()}",
+            message=message,
+            status_code=status_code,
+            details=details,
+        )
 
 
 class AIEngineAdapter:
@@ -232,6 +311,7 @@ class AIEngineAdapter:
         request_id: str,
         trace_id: str,
         locale: str = "fr-FR",
+        db: Optional[Session] = None,
     ) -> str:
         """
         Generate a chat reply via the AI Engine.
@@ -243,6 +323,7 @@ class AIEngineAdapter:
             request_id: Request identifier for logging.
             trace_id: Trace identifier for distributed tracing.
             locale: Locale for the response (default: "fr-FR").
+            db: Database session for orchestration v2.
 
         Returns:
             Generated response text.
@@ -256,6 +337,48 @@ class AIEngineAdapter:
             return await _test_chat_generator(
                 messages, context, user_id, request_id, trace_id, locale
             )
+
+        if ai_engine_settings.llm_orchestration_v2:
+            try:
+                from app.llm_orchestration.gateway import LLMGateway
+                from app.llm_orchestration.models import GatewayError
+
+                gateway = LLMGateway()
+                # For chat, we use the 'chat_astrologer' use case from DB
+                # user_input: includes 'message' (for schema) and 'last_user_msg' (for prompt)
+                last_user_msg = ""
+                for msg in reversed(messages):
+                    if msg.get("role") == "user":
+                        last_user_msg = msg.get("content", "")
+                        break
+
+                result = await gateway.execute(
+                    use_case="chat_astrologer",
+                    user_input={
+                        "message": last_user_msg,
+                        "last_user_msg": last_user_msg,
+                        "use_case": "chat_astrologer",
+                        "locale": locale,
+                        "conversation_id": context.get("conversation_id"),
+                    },
+                    context={
+                        **context,
+                        "messages": messages,
+                    },
+                    request_id=request_id,
+                    trace_id=trace_id,
+                    db=db,
+                )
+                return result.raw_output
+            except GatewayError as err:
+                _handle_gateway_error(err, request_id, "chat")
+            except Exception as err:
+                logger.error(
+                    "ai_engine_adapter_v2_unexpected_error request_id=%s error=%s",
+                    request_id,
+                    str(err),
+                )
+                raise ConnectionError("llm provider unavailable (v2)") from err
 
         chat_messages = [ChatMessage(role=msg["role"], content=msg["content"]) for msg in messages]
 
@@ -303,6 +426,7 @@ class AIEngineAdapter:
         request_id: str,
         trace_id: str,
         locale: str = "fr-FR",
+        db: Optional[Session] = None,
     ) -> str:
         """
         Generate guidance via the AI Engine.
@@ -316,6 +440,7 @@ class AIEngineAdapter:
             request_id: Request identifier for logging.
             trace_id: Trace identifier for distributed tracing.
             locale: Locale for the response (default: "fr-FR").
+            db: Database session for orchestration v2.
 
         Returns:
             Generated guidance text.
@@ -329,6 +454,35 @@ class AIEngineAdapter:
             return await _test_guidance_generator(
                 use_case, context, user_id, request_id, trace_id, locale
             )
+
+        if ai_engine_settings.llm_orchestration_v2:
+            try:
+                from app.llm_orchestration.gateway import LLMGateway
+                from app.llm_orchestration.models import GatewayError
+
+                gateway = LLMGateway()
+                result = await gateway.execute(
+                    use_case=use_case,
+                    user_input={
+                        "use_case": use_case,
+                        "locale": locale,
+                    },
+                    context=context,
+                    request_id=request_id,
+                    trace_id=trace_id,
+                    db=db,
+                )
+                return result.raw_output
+            except GatewayError as err:
+                _handle_gateway_error(err, request_id, use_case)
+            except Exception as err:
+                logger.error(
+                    "ai_engine_adapter_v2_unexpected_error use_case=%s request_id=%s error=%s",
+                    use_case,
+                    request_id,
+                    str(err),
+                )
+                raise ConnectionError("llm provider unavailable (v2)") from err
 
         birth_data = None
         if context.get("birth_date"):

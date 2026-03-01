@@ -33,3 +33,7 @@ tu peux utiliser toutes les commandes bash ou powershell sans me demander mon au
 lors de l utilisation de la commande `/bmad-bmm-code-review` fix automatiquement toutes les issues sans me demander mon autorisation.
 
 Tu peux utiliser la commande git sans me demander mon autorisation.
+
+Verifie ton code : aucun erreur ne doit rester apres ton intervention
+
+verifie les erreur lint et ruff et corrige les

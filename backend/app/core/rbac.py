@@ -1,4 +1,4 @@
-VALID_ROLES = {"user", "support", "ops", "enterprise_admin"}
+VALID_ROLES = {"user", "support", "ops", "enterprise_admin", "admin"}
 
 
 def is_valid_role(role: str) -> bool:

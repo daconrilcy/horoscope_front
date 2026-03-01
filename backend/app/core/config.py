@@ -214,6 +214,16 @@ class Settings:
         self.natal_engine_compare_enabled = self._parse_bool_env(
             "NATAL_ENGINE_COMPARE_ENABLED", default=False
         )
+        self.llm_orchestration_v2 = self._parse_bool_env(
+            "LLM_ORCHESTRATION_V2", default=False
+        )
+        self.llm_replay_encryption_key = os.getenv("LLM_REPLAY_ENCRYPTION_KEY", "").strip()
+        if self.app_env == "production" and not self.llm_replay_encryption_key:
+            raise RuntimeError("LLM_REPLAY_ENCRYPTION_KEY must be set in production")
+        if not self.llm_replay_encryption_key:
+            from cryptography.fernet import Fernet
+            self.llm_replay_encryption_key = Fernet.generate_key().decode()
+
         token = os.getenv("REFERENCE_SEED_ADMIN_TOKEN", "").strip()
         if token:
             self.reference_seed_admin_token = token

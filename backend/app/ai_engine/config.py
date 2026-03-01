@@ -37,6 +37,17 @@ class AIEngineSettings(BaseSettings):
     cache_enabled: bool = Field(default=False, alias="AI_ENGINE_CACHE_ENABLED")
     cache_ttl_seconds: int = Field(default=3600, alias="AI_ENGINE_CACHE_TTL_SECONDS")
 
+    llm_orchestration_v2: bool = Field(default=False, alias="LLM_ORCHESTRATION_V2")
+    llm_prompt_forbidden_words: list[str] = Field(
+        default_factory=lambda: [
+            "ignore all",
+            "disregard previous",
+            "forget previous",
+            "stop instruction",
+        ],
+        alias="LLM_PROMPT_FORBIDDEN_WORDS",
+    )
+
     redis_url: str | None = Field(default=None, alias="REDIS_URL")
 
     @property

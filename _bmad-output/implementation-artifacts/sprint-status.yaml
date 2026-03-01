@@ -228,7 +228,7 @@ development_status:
   25-2-script-cross-tool-report-dev-only: done
   epic-25-retrospective: optional
 
-  epic-26: in-progress
+  epic-26: done
   26-1-timezone-iana-derived-source-tracabilite: done
   26-2-gestion-dates-historiques-ambigu-dst: done
   epic-26-retrospective: optional
@@ -237,3 +237,12 @@ development_status:
   27-1-standardiser-sortie-api-audit-grade: done
   27-2-documentation-dev-reglages-erreurs-validation: done
   epic-27-retrospective: optional
+
+  epic-28: in-progress
+  28-1-llm-gateway-point-entree-unique: done
+  28-2-prompt-registry-v2-versioning-db-admin: done
+  28-3-persona-system-profils-parametriques: done
+  28-4-structured-outputs-hard-policy: done
+  28-5-usecase-contract-catalogue: review
+  28-6-observabilite-evaluation-harness: done
+  epic-28-retrospective: optional
