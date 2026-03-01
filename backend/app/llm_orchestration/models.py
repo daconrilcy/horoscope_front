@@ -11,6 +11,7 @@ class UseCaseConfig(BaseModel):
     model: str
     temperature: float = 0.7
     max_output_tokens: int = 1000
+    timeout_seconds: int = 30
     system_core_key: str = "default_v1"
     developer_prompt: str
     prompt_version_id: str = "hardcoded-v1"
@@ -55,6 +56,7 @@ class GatewayMeta(BaseModel):
     prompt_version_id: str = "hardcoded-v1"
     persona_id: Optional[str] = None
     model: str
+    model_override_active: bool = False
     output_schema_id: Optional[str] = None
     validation_status: str = "valid"  # valid, repair_success, fallback, error, omitted
     repair_attempted: bool = False

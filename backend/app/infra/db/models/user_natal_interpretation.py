@@ -1,0 +1,59 @@
+from __future__ import annotations
+
+import uuid
+from datetime import datetime, timezone
+from enum import Enum
+
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Boolean, UUID
+from sqlalchemy import Enum as SqlEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.infra.db.base import Base
+
+
+class InterpretationLevel(str, Enum):
+    SHORT = "short"
+    COMPLETE = "complete"
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+class UserNatalInterpretationModel(Base):
+    """
+    Stores persisted natal interpretations for users.
+    Allows avoiding re-generating the free (short) interpretation every time.
+    """
+
+    __tablename__ = "user_natal_interpretations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
+    chart_id: Mapped[str] = mapped_column(String(36), index=True, nullable=False)
+    
+    level: Mapped[InterpretationLevel] = mapped_column(
+        SqlEnum(InterpretationLevel), nullable=False, index=True
+    )
+    
+    use_case: Mapped[str] = mapped_column(String(100), nullable=False)
+    persona_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    persona_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    
+    prompt_version_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    
+    # The actual structured AstroResponseV1 content
+    interpretation_payload: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
+    
+    # Metadata for UI
+    was_fallback: Mapped[bool] = mapped_column(Boolean, default=False)
+    degraded_mode: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utc_now,
+        index=True,
+    )
+
+    # Relationships
+    user = relationship("UserModel")

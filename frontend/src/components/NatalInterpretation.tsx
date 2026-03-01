@@ -21,18 +21,26 @@ export function NatalInterpretationSection({ chartLoaded, lang }: Props) {
   const [useCaseLevel, setUseCaseLevel] = useState<"short" | "complete">("short");
   const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null);
   const [isUpsellOpen, setIsUpsellOpen] = useState(false);
+  const [forceRefresh, setForceRefresh] = useState(false);
 
   const { data, isLoading, error, refetch } = useNatalInterpretation({
     enabled: chartLoaded,
     useCaseLevel,
     personaId: selectedPersonaId,
     locale: lang === "fr" ? "fr-FR" : lang === "en" ? "en-US" : "es-ES",
+    forceRefresh,
   });
 
   const handleUpgrade = (personaId: string) => {
     setSelectedPersonaId(personaId);
     setUseCaseLevel("complete");
     setIsUpsellOpen(false);
+    setForceRefresh(false); // Reset force refresh when upgrading
+  };
+
+  const handleRegenerate = () => {
+    setForceRefresh(true);
+    // refetch is handled by queryKey change due to forceRefresh in queryKey
   };
 
   if (!chartLoaded) return null;
@@ -40,14 +48,32 @@ export function NatalInterpretationSection({ chartLoaded, lang }: Props) {
   return (
     <section className="mt-8 border-t pt-8 border-gray-200 dark:border-gray-800">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white uppercase tracking-wide">
-          {t.title}
-        </h2>
-        {data?.meta.level === "complete" && (
-          <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-purple-900 dark:text-purple-300 border border-purple-400">
-            {t.completeBadge}
-          </span>
-        )}
+        <div className="flex flex-col">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white uppercase tracking-wide">
+            {t.title}
+          </h2>
+          {data?.meta.persisted_at && (
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
+              Généré le {new Date(data.meta.persisted_at).toLocaleDateString(lang)}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {useCaseLevel === "short" && data && !isLoading && (
+            <button 
+              onClick={handleRegenerate}
+              title={t.regenerate}
+              className="p-2 text-gray-400 hover:text-purple-500 transition-colors rounded-full hover:bg-purple-50 dark:hover:bg-purple-900/20"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          )}
+          {data?.meta.level === "complete" && (
+            <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-purple-900 dark:text-purple-300 border border-purple-400">
+              {t.completeBadge}
+            </span>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
@@ -162,79 +188,129 @@ function InterpretationContent({ data, lang }: { data: NatalInterpretationResult
         </div>
       )}
 
-      <EvidenceTags evidence={interpretation.evidence} title={t.evidenceTitle} />
+      <EvidenceTags evidence={interpretation.evidence} title={t.evidenceTitle} t={t} />
     </div>
   );
 }
 
 function HighlightsChips({ highlights }: { highlights: string[] }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="grid grid-cols-1 gap-3">
       {highlights.map((h, i) => (
-        <span key={i} className="px-3 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-gray-700 dark:text-gray-300 shadow-sm">
-          {h}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function SectionAccordion({ sections, sectionsMap }: { sections: AstroSection[], sectionsMap: Record<string, string> }) {
-  const [openKey, setOpenKey] = useState<string | null>(sections[0]?.key || null);
-
-  return (
-    <div className="space-y-2">
-      {sections.map((section) => (
-        <div key={section.key} className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm">
-          <button
-            onClick={() => setOpenKey(openKey === section.key ? null : section.key)}
-            className="w-full flex items-center justify-between p-4 text-left bg-gray-50/50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          >
-            <span className="font-semibold text-gray-800 dark:text-gray-200">
-              {sectionsMap[section.key] || section.heading}
-            </span>
-            {openKey === section.key ? <ChevronUp className="w-5 h-4" /> : <ChevronDown className="w-5 h-4" />}
-          </button>
-          {openKey === section.key && (
-            <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                {section.content}
-              </p>
-            </div>
-          )}
+        <div 
+          key={i} 
+          className="flex items-center p-3 bg-purple-50/30 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+        >
+          <div className="flex-shrink-0 w-8 h-8 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center mr-3 shadow-sm border border-purple-100 dark:border-purple-800">
+            <Star className="w-4 h-4 text-purple-500 fill-current" />
+          </div>
+          <p className="text-gray-700 dark:text-gray-300 text-sm leading-snug font-medium">
+            {h.replace(/^[\d\-\.\s]+/, "")}
+          </p>
         </div>
       ))}
     </div>
   );
 }
 
-function AdviceList({ advice }: { advice: string[] }) {
+function SectionAccordion({ sections, sectionsMap }: { sections: AstroSection[], sectionsMap: Record<string, string> }) {
+  const [openKeys, setOpenKeys] = useState<string[]>(sections[0] ? [sections[0].key] : []);
+
+  const toggleSection = (key: string) => {
+    setOpenKeys(prev => 
+      prev.includes(key) 
+        ? prev.filter(k => k !== key) 
+        : [...prev, key]
+    );
+  };
+
   return (
-    <ol className="space-y-3">
-      {advice.map((item, i) => (
-        <li key={i} className="flex items-start text-gray-700 dark:text-gray-300 leading-snug">
-          <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5">
-            {i + 1}
-          </span>
-          {item}
-        </li>
-      ))}
-    </ol>
+    <div className="space-y-3">
+      {sections.map((section) => {
+        const isOpen = openKeys.includes(section.key);
+        return (
+          <div key={section.key} className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm bg-white dark:bg-gray-900">
+            <button
+              onClick={() => toggleSection(section.key)}
+              className="w-full flex items-center justify-between p-4 text-left bg-gray-50/30 dark:bg-gray-800/30 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              <span className="font-bold text-gray-800 dark:text-gray-200">
+                {sectionsMap[section.key] || section.heading}
+              </span>
+              {isOpen ? <ChevronUp className="w-5 h-4 text-purple-500" /> : <ChevronDown className="w-5 h-4 text-gray-400" />}
+            </button>
+            {isOpen && (
+              <div className="p-4 border-t border-gray-100 dark:border-gray-800 animate-in fade-in duration-300">
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
+                  {section.content}
+                </p>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
-function EvidenceTags({ evidence, title }: { evidence: string[], title: string }) {
+function AdviceList({ advice }: { advice: string[] }) {
   return (
-    <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-600 mb-2">
-        {title}
-      </p>
-      <div className="flex flex-wrap gap-1.5 opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-300">
-        {evidence.map((e, i) => (
-          <span key={i} className="text-[9px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-mono rounded border border-gray-200 dark:border-gray-700">
-            {e}
-          </span>
-        ))}
+    <div className="space-y-4">
+      {advice.map((item, i) => (
+        <div key={i} className="flex items-start gap-3">
+          <div className="flex-shrink-0 mt-0.5">
+            <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center">
+              <Star className="w-3 h-3 text-blue-600 dark:text-blue-400 fill-current" />
+            </div>
+          </div>
+          <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed m-0">
+            {item.replace(/^\d+[\.\s]*/, "")}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function formatEvidenceId(eid: string): string {
+  const parts = eid.split("_");
+  const map: Record<string, string> = {
+    SUN: "Soleil", MOON: "Lune", MERCURY: "Mercure", VENUS: "Vénus", MARS: "Mars",
+    JUPITER: "Jupiter", SATURN: "Saturne", URANUS: "Uranus", NEPTUNE: "Neptune",
+    PLUTO: "Pluton", CHIRON: "Chiron", LILITH: "Lune Noire", NODE: "Nœud Nord",
+    ASC: "Ascendant", MC: "Milieu du Ciel", DSC: "Descendant", IC: "Fond du Ciel",
+    ARIES: "Bélier", TAURUS: "Taureau", GEMINI: "Gémeaux", CANCER: "Cancer",
+    LEO: "Lion", VIRGO: "Vierge", LIBRA: "Balance", SCORPIO: "Scorpion",
+    SAGITTARIUS: "Sagittaire", CAPRICORN: "Capricorne", AQUARIUS: "Verseau", PISCES: "Poissons",
+    CONJUNCTION: "conjonction", SEXTILE: "sextile", SQUARE: "carré", TRINE: "trigone", OPPOSITION: "opposition",
+    RETROGRADE: "rétrograde"
+  };
+
+  return parts.map(p => {
+    if (p.startsWith("H") && p.length <= 3) return `(M${p.substring(1)})`;
+    if (p.startsWith("ORB")) return "";
+    return map[p] || p;
+  }).filter(Boolean).join(" ");
+}
+
+function EvidenceTags({ evidence, title }: { evidence: string[], title: string, t: InterpretationTranslations }) {
+  return (
+    <div className="evidence-tags">
+      <p className="evidence-tags__title">{title}</p>
+      <div className="evidence-tags__list">
+        {evidence.map((e, i) => {
+          const humanText = formatEvidenceId(e);
+          const isAspect = e.startsWith("ASPECT_");
+          const isAngle = ["ASC", "MC", "DSC", "IC"].some(a => e.includes(a));
+          const modifier = isAspect ? "aspect" : isAngle ? "angle" : "planet";
+
+          return (
+            <span key={i} title={e} className={`evidence-pill evidence-pill--${modifier}`}>
+              <span className="evidence-pill__dot" />
+              {humanText}
+            </span>
+          );
+        })}
       </div>
     </div>
   );

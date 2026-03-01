@@ -64,14 +64,31 @@ class ResponsesClient:
 
         async def do_create() -> "Response":
             # The Responses API uses 'input' for the conversation history.
-            params = {
+            params: Dict[str, Any] = {
                 "model": model,
                 "input": messages,  # type: ignore
-                "temperature": temperature,
                 "max_output_tokens": max_output_tokens,
             }
+            
+            # Certain models (o1, o3, gpt-5) do not support the temperature parameter.
+            # We omit it for these models to avoid BadRequestError.
+            supports_temperature = not (
+                model.startswith(("o1-", "o3-", "gpt-5-")) 
+                or model in ["o1", "o3"]
+            )
+            if supports_temperature:
+                params["temperature"] = temperature
+
             if response_format:
-                params["response_format"] = response_format
+                # Responses API uses `text.format` with a flat structure, whereas
+                # Chat Completions API nests details under `json_schema`.
+                # Transform: {"type": "json_schema", "json_schema": {"name": ..., "schema": ..., "strict": ...}}
+                #        →   {"type": "json_schema", "name": ..., "schema": ..., "strict": ...}
+                fmt = dict(response_format)
+                if fmt.get("type") == "json_schema" and "json_schema" in fmt:
+                    nested = fmt.pop("json_schema")
+                    fmt.update(nested)
+                params["text"] = {"format": fmt}
 
             return await client.responses.create(**params)
 
@@ -88,18 +105,8 @@ class ResponsesClient:
 
         latency_ms = int((time.monotonic() - start_time) * 1000)
 
-        # Extract content from response.
-        # Response object structure for Responses API:
-        # response.output is a list of items. We want the text content.
-        output_text = ""
-        if hasattr(response, "output") and response.output:
-            for item in response.output:
-                if item.type == "message" and hasattr(item, "content"):
-                    for part in item.content:
-                        if part.type == "text":
-                            output_text += part.text
-                elif item.type == "text":  # Some items might be direct text
-                    output_text += item.text
+        # Use the SDK convenience property which handles all output_text aggregation.
+        output_text = response.output_text if hasattr(response, "output_text") else ""
 
         usage = UsageInfo(
             input_tokens=response.usage.input_tokens if response.usage else 0,

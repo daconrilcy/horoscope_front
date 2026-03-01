@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
@@ -16,6 +17,7 @@ class NatalInterpretationRequest(BaseModel):
     )
     locale: str = Field(default="fr-FR", pattern=r"^[a-z]{2}-[A-Z]{2}$")
     question: Optional[str] = Field(default=None, max_length=500)
+    force_refresh: bool = Field(default=False, description="If True, re-generate even if already exists.")
 
 
 class InterpretationMeta(BaseModel):
@@ -30,6 +32,8 @@ class InterpretationMeta(BaseModel):
     was_fallback: bool = False  # Story 29.2 requirement
     latency_ms: Optional[int] = None
     request_id: Optional[str] = None
+    cached: bool = False
+    persisted_at: Optional[datetime] = None
 
 
 class NatalInterpretationData(BaseModel):

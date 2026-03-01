@@ -189,6 +189,10 @@ Permettre a l utilisateur de renseigner ses donnees de naissance depuis le front
 Brancher le parcours d'interprétation natale sur l'infrastructure LLMGateway avec gestion des personas, validation AstroResponse_v1 et observabilité.
 **FRs covered:** FR15, FR22, FR23, FR35, FR36
 
+### Epic 30: Configuration Flexible des Modèles LLM
+Permettre de surcharger les modèles LLM utilisés par chaque service via des variables d'environnement pour faciliter le testing et l'optimisation des coûts/qualité sans modifier la base de données.
+**FRs covered:** FR36, FR37, NFR16
+
 ## Epic 1: Fondation pour des calculs astrologiques fiables et tracables
 
 Fournir un moteur astrologique central, tracable et gouvernable, capable de produire des resultats coherents a partir des donnees natales.

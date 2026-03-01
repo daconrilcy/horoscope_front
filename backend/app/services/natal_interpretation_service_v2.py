@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import json
 import logging
+import uuid
 from typing import Literal, Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.orm import Session
 
 from app.api.v1.schemas.natal_interpretation import (
@@ -14,6 +15,10 @@ from app.api.v1.schemas.natal_interpretation import (
 )
 from app.domain.astrology.natal_calculation import NatalResult
 from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.user_natal_interpretation import (
+    InterpretationLevel,
+    UserNatalInterpretationModel,
+)
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import InputValidationError
 from app.llm_orchestration.schemas import AstroResponseV1
@@ -31,6 +36,7 @@ class NatalInterpretationServiceV2:
     @staticmethod
     async def interpret(
         db: Session,
+        user_id: int,
         chart_id: str,
         natal_result: NatalResult,
         birth_profile: UserBirthProfileData,
@@ -40,7 +46,50 @@ class NatalInterpretationServiceV2:
         question: Optional[str],
         request_id: str,
         trace_id: str,
+        force_refresh: bool = False,
     ) -> NatalInterpretationResponse:
+        # 0. Check for existing persisted interpretation
+        if not force_refresh:
+            db_level = InterpretationLevel.SHORT if level == "short" else InterpretationLevel.COMPLETE
+            stmt = select(UserNatalInterpretationModel).where(
+                UserNatalInterpretationModel.user_id == user_id,
+                UserNatalInterpretationModel.chart_id == chart_id,
+                UserNatalInterpretationModel.level == db_level,
+            )
+            # For complete, we also check persona
+            if level == "complete" and persona_id:
+                try:
+                    stmt = stmt.where(UserNatalInterpretationModel.persona_id == uuid.UUID(persona_id))
+                except (ValueError, TypeError):
+                    pass
+
+            existing = db.execute(stmt).scalar_one_or_none()
+            if existing:
+                interpretation = AstroResponseV1(**existing.interpretation_payload)
+                meta = InterpretationMeta(
+                    level=level,
+                    use_case=existing.use_case,
+                    persona_id=str(existing.persona_id) if existing.persona_id else None,
+                    persona_name=existing.persona_name,
+                    prompt_version_id=str(existing.prompt_version_id)
+                    if existing.prompt_version_id
+                    else None,
+                    validation_status="valid",
+                    was_fallback=existing.was_fallback,
+                    request_id=request_id,
+                    cached=True,
+                    persisted_at=existing.created_at,
+                )
+                return NatalInterpretationResponse(
+                    data=NatalInterpretationData(
+                        chart_id=chart_id,
+                        use_case=existing.use_case,
+                        interpretation=interpretation,
+                        meta=meta,
+                        degraded_mode=existing.degraded_mode,
+                    )
+                )
+
         # 1. Normalization (N1)
         # Determine degraded mode from birth_profile
         no_time = birth_profile.birth_time is None
@@ -76,9 +125,6 @@ class NatalInterpretationServiceV2:
                     persona_name = persona.name
                 else:
                     logger.warning(f"Persona {persona_id} not found in DB")
-                    # We strictly require the persona for 'complete' level
-                    # For 'short' level, we might allow falling back if needed, 
-                    # but it's cleaner to be strict if an ID was provided.
                     raise InputValidationError(f"Persona {persona_id} not found.")
             except InputValidationError:
                 raise
@@ -87,7 +133,6 @@ class NatalInterpretationServiceV2:
                 raise
 
         # 4. Build user_input vs context (AC4)
-        # Always include question and locale in user_input for stability
         user_input = {
             "chart_json": chart_json_dict,
             "question": question or "Interprète mon thème natal.",
@@ -96,7 +141,7 @@ class NatalInterpretationServiceV2:
 
         context = {
             "locale": locale,
-            "chart_json": json.dumps(chart_json_dict, ensure_ascii=False),  # STRING for Jinja
+            "chart_json": json.dumps(chart_json_dict, ensure_ascii=False),
             "evidence_catalog": evidence_catalog,
             "use_case": use_case_key,
         }
@@ -134,10 +179,47 @@ class NatalInterpretationServiceV2:
             was_fallback=gateway_result.meta.fallback_triggered,
             latency_ms=gateway_result.meta.latency_ms,
             request_id=request_id,
+            cached=False,
         )
 
         # Mapping structured_output to AstroResponseV1
         interpretation = AstroResponseV1(**gateway_result.structured_output)
+
+        # 7. Persist interpretation
+        db_level = InterpretationLevel.SHORT if level == "short" else InterpretationLevel.COMPLETE
+        
+        # If force_refresh, delete old one if exists
+        if force_refresh:
+            stmt_del = delete(UserNatalInterpretationModel).where(
+                UserNatalInterpretationModel.user_id == user_id,
+                UserNatalInterpretationModel.chart_id == chart_id,
+                UserNatalInterpretationModel.level == db_level,
+            )
+            if level == "complete" and persona_id:
+                try:
+                    stmt_del = stmt_del.where(UserNatalInterpretationModel.persona_id == uuid.UUID(persona_id))
+                except (ValueError, TypeError):
+                    pass
+            db.execute(stmt_del)
+
+        new_persisted = UserNatalInterpretationModel(
+            user_id=user_id,
+            chart_id=chart_id,
+            level=db_level,
+            use_case=gateway_result.use_case,
+            persona_id=uuid.UUID(persona_id) if persona_id else None,
+            persona_name=persona_name,
+            prompt_version_id=uuid.UUID(gateway_result.meta.prompt_version_id)
+            if gateway_result.meta.prompt_version_id
+            else None,
+            interpretation_payload=gateway_result.structured_output,
+            was_fallback=gateway_result.meta.fallback_triggered,
+            degraded_mode=degraded_mode_str,
+        )
+        db.add(new_persisted)
+        db.commit()
+        db.refresh(new_persisted)
+        meta.persisted_at = new_persisted.created_at
 
         return NatalInterpretationResponse(
             data=NatalInterpretationData(

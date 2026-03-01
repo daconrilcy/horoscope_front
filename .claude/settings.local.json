@@ -12,7 +12,8 @@
       "Bash(grep:*)",
       "Bash(ls:*)",
       "Bash(.\\.venv\\Scripts\\python.exe:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(../.venv/Scripts/python.exe -m alembic:*)"
     ]
   }
 }

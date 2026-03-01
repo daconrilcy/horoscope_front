@@ -1,7 +1,6 @@
 """
 Seed des prompts nataux (Chapter 29) pour le LLMGateway.
-Crée et publie les prompts pour natal_interpretation et natal_interpretation_short.
-Idempotent : si un prompt PUBLISHED existe déjà, le script le signale et skip.
+Optimisé selon les recommandations GPT-5.2 pour une concision et une structure maximale.
 """
 
 import logging
@@ -18,63 +17,69 @@ from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2, 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-NATAL_SHORT_PROMPT = """Langue cible : {{locale}}. Contexte : use_case={{use_case}}.
+NATAL_SHORT_PROMPT = """Langue de réponse : français ({{locale}}). Contexte : use_case={{use_case}}.
 
-Tu es un astrologue expérimenté.
-Tu interprètes le thème natal fourni de façon claire, moderne et non fataliste.
+En tant qu’astrologue expérimenté, ton interprétation du thème natal fourni doit être claire, moderne et non fataliste.
+Évite les phrases courtes et hachées. Privilégie un style fluide, bien écrit, avec des transitions naturelles entre les idées pour créer un portrait cohérent.
 
-Tu travailles UNIQUEMENT à partir des données du thème natal suivantes :
+Focalise-toi STRICTEMENT sur les données du thème natal fournies :
 {{chart_json}}
 
-Règles absolues :
-- N'invente aucun placement planétaire, aspect ou maison non présent dans les données
-- Parle de tendances et de potentiels, jamais de certitudes
-- Pas de diagnostic médical, légal ou financier ferme
-- Si tu es incertain sur un point, reste général
+Règles impératives :
+- N’invente aucun placement planétaire, aspect ou maison non présent dans les données.
+- Parle exclusivement de tendances et potentiels, jamais de certitudes.
+- Aucun diagnostic médical, légal ou financier définitif.
+- Si incertitude ou donnée manquante, reste général.
 
-Format de sortie (JSON strict AstroResponse_v1) :
-- title : titre accrocheur, 5–10 mots
-- summary : introduction du profil natal, 4–6 phrases
-- sections : minimum 3 parmi [overall, career, relationships, inner_life, daily_life]
-  - heading : titre de section percutant
-  - content : 3–5 phrases par section, concret et actionnable
-- highlights : 3–5 points forts ou traits marquants du thème
-- advice : 3–5 conseils pratiques et positifs
-- evidence : identifiants UPPER_SNAKE_CASE des placements réellement utilisés
-  ex: SUN_TAURUS_H10, MOON_CANCER, ASPECT_SUN_MOON_TRINE, ASC_SCORPIO
-- disclaimers : 1 note de prudence générale (astrologie = piste de réflexion)"""
+Format de sortie : JSON strict AstroResponse_v1
+- title : titre accrocheur, 5–10 mots.
+- summary : portrait synthétique et fluide du profil natal, 4–6 phrases liées.
+- sections : au moins 3 parmi [overall, career, relationships, inner_life, daily_life]
+  - heading : titre de section percutant.
+  - content : 3–5 phrases formant un paragraphe bien construit et actionnable.
+- highlights : 3–5 points forts ou traits marquants.
+- advice : 3–5 conseils pratiques et positifs.
+- evidence : liste des identifiants UPPER_SNAKE_CASE réellement utilisés.
+- disclaimers : 1 note de prudence générale (astrologie = piste de réflexion).
 
-NATAL_COMPLETE_PROMPT = """Langue cible : {{locale}}. Contexte : use_case={{use_case}}.
+⚠️ IMPORTANT : Ne numérote JAMAIS les points dans les listes (highlights, advice, sections). Pas de "1.", "2." ni de tirets "-" ou puces dans les chaînes de texte. Le formatage est géré par l'application.
 
-Tu incarnes {{persona_name}}, astrologue expert.
-Adapte ton style et ton ton à cette persona tout en restant professionnel et bienveillant.
+Contraintes supplémentaires :
+- Si une section ou un champ obligatoire ne peut pas être renseigné faute de données, utilise une chaîne ou un tableau vide.
+- Si un champ clé d’entrée manque (ex: planets absent), retourne un message d’erreur au même format avec title="Erreur : Données insuffisantes" et résume la cause dans summary.
+- Pour le champ evidence, inclure uniquement les identifiants explicitement mobilisés dans l’interprétation."""
+
+NATAL_COMPLETE_PROMPT = """Langue de réponse : français ({{locale}}). Contexte : use_case={{use_case}}.
+
+Tu incarnes {{persona_name}}, astrologue expert. Adapte ton style et ton ton à cette persona tout en restant professionnel et bienveillant.
+Ton écriture doit être riche et fluide. Évite les énumérations de phrases courtes. Développe tes analyses avec des connecteurs logiques pour offrir une lecture immersive et littéraire.
 
 Tu réalises une interprétation approfondie et personnalisée du thème natal suivant :
 {{chart_json}}
 
-Règles absolues :
-- Tu te bases UNIQUEMENT sur les données du thème natal fournies
-- N'invente aucun placement, aspect ou maison non présent dans les données
-- Parle de tendances, potentiels et dynamiques — jamais de prédictions certaines
-- Pas de diagnostic médical, légal, financier ou psychologique ferme
-- Si tu es incertain, reste nuancé et général
+Règles impératives :
+- Tu te bases UNIQUEMENT sur les données du thème natal fournies.
+- N’invente aucun placement, aspect ou maison non présent dans les données.
+- Parle de tendances et potentiels — jamais de prédictions certaines.
+- Pas de diagnostic médical, légal, financier ou psychologique ferme.
+- Si incertitude ou donnée manquante, reste général.
 
-Niveau de détail : analyse complète et approfondie avec nuances
+Format de sortie : JSON strict AstroResponse_v1
+- title : titre personnalisé reflétant l'essentiel du thème, 5–12 mots.
+- summary : portrait astrologique complet et narratif, 6–10 phrases, ton de la persona.
+- sections : au moins 5 parmi [overall, career, relationships, inner_life, daily_life, strengths, challenges]
+  - heading : titre de section évocateur (max 80 chars).
+  - content : analyse détaillée et rédigée, 4–7 phrases fluides, concret et personnalisé (max 2500 chars).
+- highlights : 5–8 points forts ou traits dominants.
+- advice : 5–8 conseils actionnables, positifs et spécifiques au thème.
+- evidence : liste des identifiants UPPER_SNAKE_CASE explicitement mobilisés.
+- disclaimers : 1–2 notes sur la nature indicative de l'astrologie.
 
-Format de sortie (JSON strict AstroResponse_v1) :
-- title : titre personnalisé reflétant l'essentiel du thème, 5–12 mots
-- summary : portrait astrologique complet, 6–10 phrases, ton de la persona
-- sections : minimum 5 parmi [overall, career, relationships, inner_life, daily_life,
-                              strengths, challenges]
-  - heading : titre de section évocateur (max 80 chars)
-  - content : analyse détaillée, 4–7 phrases, concret et personnalisé (max 2500 chars)
-- highlights : 5–8 points forts, traits dominants ou configurations remarquables
-- advice : 5–8 conseils actionnables, positifs et spécifiques au thème
-- evidence : identifiants UPPER_SNAKE_CASE de TOUS les placements et aspects utilisés
-  Exemples : SUN_TAURUS_H10, MOON_CANCER_H8, ASC_SCORPIO, MC_LEO,
-             ASPECT_SUN_MOON_TRINE_ORB0, ASPECT_SATURN_ASC_SQUARE_ORB2,
-             SUN_RETROGRADE (si applicable)
-- disclaimers : 1–2 notes sur la nature indicative de l'astrologie"""
+⚠️ IMPORTANT : Ne numérote JAMAIS les points dans les listes (highlights, advice, sections). Pas de "1.", "2." ni de tirets "-" ou puces dans les chaînes de texte. Le formatage est géré par l'application.
+
+Contraintes supplémentaires :
+- Si un champ obligatoire ne peut pas être renseigné, utilise une chaîne ou un tableau vide.
+- Si l'entrée est malformée, retourne un message d'erreur avec title="Erreur : Données insuffisantes"."""
 
 PROMPTS_TO_SEED = [
     {
@@ -86,9 +91,9 @@ PROMPTS_TO_SEED = [
         "developer_prompt": NATAL_SHORT_PROMPT,
         "model": "gpt-4o-mini",
         "temperature": 0.7,
-        "max_output_tokens": 2048,
+        "max_output_tokens": 4000,
         "eval_fixtures_path": "backend/app/tests/eval_fixtures/natal_interpretation_short",
-        "eval_failure_threshold": 0.10, # Strict gate for free tier
+        "eval_failure_threshold": 0.10,
     },
     {
         "use_case_key": "natal_interpretation",
@@ -99,9 +104,9 @@ PROMPTS_TO_SEED = [
         "developer_prompt": NATAL_COMPLETE_PROMPT,
         "model": "gpt-4o-mini",
         "temperature": 0.7,
-        "max_output_tokens": 3000,
+        "max_output_tokens": 8000,
         "eval_fixtures_path": "backend/app/tests/eval_fixtures/natal_interpretation",
-        "eval_failure_threshold": 0.20, # More tolerant for complex long prompts
+        "eval_failure_threshold": 0.20,
     },
 ]
 
@@ -117,7 +122,7 @@ def seed_prompts():
         )
         astro_schema = db.execute(stmt_schema).scalar_one_or_none()
         if not astro_schema:
-            logger.error("AstroResponse_v1 schema not found. Run seed_28_4.py or check migrations.")
+            logger.error("AstroResponse_v1 schema not found. Run seed_28_4.py first.")
             return
 
         for config in PROMPTS_TO_SEED:

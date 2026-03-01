@@ -83,9 +83,12 @@ type NatalChartTranslations = {
     highlightsTitle: string
     adviceTitle: string
     evidenceTitle: string
+    showEvidence: string
+    hideEvidence: string
     disclaimerTitle: string
     error: string
     retry: string
+    regenerate: string
     degradedNotice: string
     requestingComplete: string
     personaSelectorTitle: string
@@ -146,10 +149,13 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       completeBadge: "Complet",
       highlightsTitle: "Points clés",
       adviceTitle: "Conseils",
-      evidenceTitle: "Sources astrologiques",
+      evidenceTitle: "Données principales analysées",
+      showEvidence: "Afficher les sources astrologiques utilisées",
+      hideEvidence: "Masquer les sources",
       disclaimerTitle: "Note",
       error: "L'interprétation n'est pas disponible pour le moment.",
       retry: "Réessayer",
+      regenerate: "Nouvelle interprétation",
       degradedNotice: "Interprétation partielle (données de naissance incomplètes)",
       requestingComplete: "Votre astrologue interprète votre thème...",
       personaSelectorTitle: "Choisissez votre astrologue",
@@ -293,10 +299,13 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       completeBadge: "Complete",
       highlightsTitle: "Key Points",
       adviceTitle: "Advice",
-      evidenceTitle: "Astrological Sources",
+      evidenceTitle: "Main data analyzed",
+      showEvidence: "Show astrological sources used",
+      hideEvidence: "Hide sources",
       disclaimerTitle: "Note",
       error: "Interpretation is not available at the moment.",
       retry: "Retry",
+      regenerate: "New interpretation",
       degradedNotice: "Partial interpretation (incomplete birth data)",
       requestingComplete: "Your astrologer is interpreting your chart...",
       personaSelectorTitle: "Choose your astrologer",
@@ -439,10 +448,13 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       completeBadge: "Completo",
       highlightsTitle: "Puntos clave",
       adviceTitle: "Consejos",
-      evidenceTitle: "Fuentes astrológicas",
+      evidenceTitle: "Datos principales analizados",
+      showEvidence: "Mostrar fuentes astrológicas utilizadas",
+      hideEvidence: "Ocultar fuentes",
       disclaimerTitle: "Nota",
       error: "La interpretación no está disponible en este momento.",
       retry: "Reintentar",
+      regenerate: "Nueva interpretación",
       degradedNotice: "Interpretación parcial (datos de nacimiento incompletos)",
       requestingComplete: "Tu astrólogo está interpretando tu carta...",
       personaSelectorTitle: "Elige a tu astrólogo",

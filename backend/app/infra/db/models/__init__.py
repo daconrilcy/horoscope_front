@@ -38,6 +38,10 @@ from app.infra.db.models.reference import (
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
+from app.infra.db.models.user_natal_interpretation import (
+    InterpretationLevel,
+    UserNatalInterpretationModel,
+)
 from app.infra.db.models.user_refresh_token import UserRefreshTokenModel
 
 __all__ = [
@@ -52,6 +56,8 @@ __all__ = [
     "UserDailyQuotaUsageModel",
     "UserModel",
     "UserBirthProfileModel",
+    "UserNatalInterpretationModel",
+    "InterpretationLevel",
     "UserRefreshTokenModel",
     "EnterpriseAccountModel",
     "EnterpriseApiCredentialModel",

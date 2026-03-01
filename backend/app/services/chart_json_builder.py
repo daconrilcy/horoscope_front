@@ -23,7 +23,7 @@ def _longitude_to_sign(longitude: float) -> str:
 
 def _longitude_in_sign(longitude: float) -> float:
     """Returns the longitude within the sign (0-30)."""
-    return longitude % 30.0
+    return round(longitude % 30.0, 2)
 
 def build_chart_json(
     natal_result: NatalResult,
@@ -91,11 +91,11 @@ def build_chart_json(
         planets.append({
             "code": p.planet_code,
             "sign": p.sign_code,
-            "longitude": p.longitude,
+            "longitude": round(p.longitude, 2),
             "longitude_in_sign": _longitude_in_sign(p.longitude),
             "house": None if is_no_time else p.house_number,
             "is_retrograde": p.is_retrograde,
-            "speed": p.speed_longitude,
+            "speed": round(p.speed_longitude, 2),
         })
 
     # Houses
@@ -104,7 +104,7 @@ def build_chart_json(
         for h in natal_result.houses:
             houses.append({
                 "number": h.number,
-                "cusp_longitude": h.cusp_longitude,
+                "cusp_longitude": round(h.cusp_longitude, 2),
                 "sign": _longitude_to_sign(h.cusp_longitude),
             })
 
@@ -118,8 +118,8 @@ def build_chart_json(
                 "type": a.aspect_code,
                 "planet_a": a.planet_a,
                 "planet_b": a.planet_b,
-                "angle": a.angle,
-                "orb": a.orb_used,
+                "angle": round(a.angle, 2),
+                "orb": round(a.orb_used, 2),
                 "applying": None, # Unknown status
             })
 
@@ -143,7 +143,7 @@ def build_chart_json(
             h = house_dict.get(house_num)
             if h:
                 angles[angle_key] = {
-                    "longitude": h.cusp_longitude,
+                    "longitude": round(h.cusp_longitude, 2),
                     "sign": _longitude_to_sign(h.cusp_longitude)
                 }
 

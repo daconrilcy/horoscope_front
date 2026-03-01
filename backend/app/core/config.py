@@ -4,6 +4,15 @@ import os
 import secrets
 from enum import Enum
 from hashlib import sha256
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Load .env file from backend root if it exists
+backend_root = Path(__file__).parent.parent.parent
+env_path = backend_root / ".env"
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
 
 
 class ZodiacType(str, Enum):

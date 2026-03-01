@@ -110,6 +110,7 @@ async def interpret_natal_chart(
         # Step B to F: Orchestration via Service V2
         response = await NatalInterpretationServiceV2.interpret(
             db=db,
+            user_id=current_user.id,
             chart_id=chart.chart_id,
             natal_result=chart.result,
             birth_profile=profile,
@@ -119,6 +120,7 @@ async def interpret_natal_chart(
             question=body.question,
             request_id=request_id,
             trace_id=trace_id,
+            force_refresh=body.force_refresh,
         )
 
         return response

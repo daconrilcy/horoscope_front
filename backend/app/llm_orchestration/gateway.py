@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 import logging
+import os
 import re
 import uuid
 from typing import Any, Dict, Optional
@@ -51,17 +50,25 @@ USE_CASE_STUBS = {
     "natal_interpretation": UseCaseConfig(
         model="gpt-4o-mini",
         temperature=0.7,
-        max_output_tokens=1800,
+        max_output_tokens=4000,
         system_core_key="default_v1",
         developer_prompt="Analyse le thème natal pour un utilisateur né le {{birth_date}}. "
         "Utilise les positions planétaires suivantes: {{chart_json}}.",
         required_prompt_placeholders=["birth_date", "chart_json"],
         fallback_use_case="natal_interpretation_short",
     ),
+    "natal_interpretation_short": UseCaseConfig(
+        model="gpt-4o-mini",
+        temperature=0.7,
+        max_output_tokens=4000,
+        system_core_key="default_v1",
+        developer_prompt="Analyse rapide du thème natal: {{chart_json}}.",
+        required_prompt_placeholders=["chart_json"],
+    ),
     "chat": UseCaseConfig(
         model="gpt-4o-mini",
         temperature=0.7,
-        max_output_tokens=1000,
+        max_output_tokens=2000,
         system_core_key="default_v1",
         developer_prompt="Réponds à la conversation suivante: {{last_user_msg}}.",
         required_prompt_placeholders=["last_user_msg"],
@@ -69,7 +76,7 @@ USE_CASE_STUBS = {
     "guidance_daily": UseCaseConfig(
         model="gpt-4o-mini",
         temperature=0.7,
-        max_output_tokens=1000,
+        max_output_tokens=2000,
         system_core_key="default_v1",
         developer_prompt="Génère une guidance quotidienne basée sur le contexte: {{situation}}.",
         required_prompt_placeholders=["situation"],
@@ -203,6 +210,42 @@ class LLMGateway:
 
             if not config:
                 raise UnknownUseCaseError(f"Use case '{use_case}' not found in registry.")
+
+            # 1.1 Model override from environment (Story 30.1)
+            # Robust normalization: replace non-alphanumeric with underscore
+            safe_uc_key = re.sub(r"[^a-zA-Z0-9_]", "_", use_case).upper()
+            env_override_key = f"LLM_MODEL_OVERRIDE_{safe_uc_key}"
+            env_override_model = os.getenv(env_override_key)
+            model_overridden = False
+            if env_override_model:
+                update: dict = {"model": env_override_model}
+                # Reasoning models (o-series, gpt-5) spend tokens on thinking before
+                # producing output. If max_output_tokens is too low the response is
+                # incomplete (status=incomplete, only reasoning in output).
+                # Ensure a minimum of 16k tokens for these models.
+                _REASONING_PREFIXES = ("o1-", "o3-", "o4-", "gpt-5-")
+                _REASONING_EXACT = {"o1", "o3", "o4"}
+                _is_reasoning = env_override_model.startswith(_REASONING_PREFIXES) or env_override_model in _REASONING_EXACT
+                if _is_reasoning:
+                    if config.max_output_tokens < 16384:
+                        update["max_output_tokens"] = 16384
+                    if config.timeout_seconds < 180:
+                        update["timeout_seconds"] = 180
+                    logger.info(
+                        "gateway_model_override_reasoning use_case=%s model=%s tokens->%d timeout->%ds",
+                        use_case, env_override_model,
+                        update.get("max_output_tokens", config.max_output_tokens),
+                        update.get("timeout_seconds", config.timeout_seconds),
+                    )
+                logger.info(
+                    "gateway_model_override use_case=%s model=%s -> %s max_output_tokens=%d",
+                    use_case,
+                    config.model,
+                    env_override_model,
+                    update.get("max_output_tokens", config.max_output_tokens),
+                )
+                config = config.model_copy(update=update)
+                model_overridden = True
 
             # 2. Log start
             if not is_repair_call:
@@ -364,13 +407,22 @@ class LLMGateway:
             user_data_block = context.get("user_data_block")
             if not user_data_block:
                 parts = []
+                if "question" in user_input:
+                    parts.append(user_input["question"])
+                elif "last_user_msg" in user_input:
+                    parts.append(user_input["last_user_msg"])
+                
                 if "natal_chart_summary" in context:
-                    parts.append(f"Natal Chart: {context['natal_chart_summary']}")
+                    parts.append(f"Natal Chart Summary: {context['natal_chart_summary']}")
                 if "situation" in context:
-                    parts.append(f"Situation: {context['situation']}")
-                if "chart_json" in context:
-                    parts.append(f"Chart Data: {context['chart_json']}")
-                user_data_block = "\n".join(parts) if parts else "User context data provided."
+                    parts.append(f"Context: {context['situation']}")
+                
+                # Only include chart_json here if it was NOT already rendered into
+                # the developer prompt (to avoid sending it twice and wasting tokens).
+                if "chart_json" in context and "chart_json" not in config.required_prompt_placeholders:
+                    parts.append(f"Technical Data: {context['chart_json']}")
+                
+                user_data_block = "\n".join(parts) if parts else "Analyze the provided astrological data."
 
             # 8. Compose Messages
             messages = [
@@ -401,6 +453,7 @@ class LLMGateway:
                     model=config.model,
                     temperature=config.temperature,
                     max_output_tokens=config.max_output_tokens,
+                    timeout_seconds=config.timeout_seconds,
                     request_id=request_id,
                     trace_id=trace_id,
                     use_case=use_case,
@@ -432,6 +485,7 @@ class LLMGateway:
             result.meta.prompt_version_id = config.prompt_version_id
             result.meta.persona_id = resolved_persona_id if persona_block else None
             result.meta.output_schema_id = config.output_schema_id
+            result.meta.model_override_active = model_overridden
             result.usage.estimated_cost_usd = calculate_cost(
                 result.usage.input_tokens, result.usage.output_tokens
             )

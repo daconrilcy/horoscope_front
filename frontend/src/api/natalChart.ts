@@ -205,6 +205,7 @@ export type InterpretationMeta = {
   was_fallback: boolean
   latency_ms: number | null
   request_id: string | null
+  persisted_at: string | null
 }
 
 export type NatalInterpretationResult = {
@@ -221,6 +222,7 @@ async function fetchNatalInterpretation(
   personaId?: string | null,
   locale?: string,
   question?: string,
+  forceRefresh?: boolean,
 ): Promise<NatalInterpretationResult> {
   const response = await apiFetch(`${API_BASE_URL}/v1/natal/interpretation`, {
     method: "POST",
@@ -233,6 +235,7 @@ async function fetchNatalInterpretation(
       persona_id: personaId,
       locale: locale || "fr-FR",
       question: question,
+      force_refresh: forceRefresh || false,
     }),
   })
 
@@ -245,6 +248,7 @@ export function useNatalInterpretation(options: {
   personaId?: string | null
   locale?: string
   question?: string
+  forceRefresh?: boolean
 }) {
   const accessToken = useAccessTokenSnapshot()
   const tokenSubject = getSubjectFromAccessToken(accessToken) ?? ANONYMOUS_SUBJECT
@@ -256,6 +260,7 @@ export function useNatalInterpretation(options: {
       options.useCaseLevel,
       options.personaId,
       options.locale,
+      options.forceRefresh || false,
     ],
     queryFn: async () => {
       if (!accessToken) {
@@ -267,6 +272,7 @@ export function useNatalInterpretation(options: {
         options.personaId,
         options.locale,
         options.question,
+        options.forceRefresh,
       )
     },
     enabled: options.enabled && Boolean(accessToken),
