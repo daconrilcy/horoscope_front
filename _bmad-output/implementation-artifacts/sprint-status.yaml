@@ -149,7 +149,7 @@ development_status:
   16-8-correction-parcours-theme-natal: done
   epic-16-retrospective: done
 
-  epic-17: in-progress
+  epic-17: done
   17-1-fondations-ui-tokens-typo-lucide: done
   17-2-fond-premium-gradient-noise-starfield: done
   17-3-header-composant: done
@@ -182,7 +182,7 @@ development_status:
   19-6-rattachement-birth-profile-place-resolved: done
   epic-19-retrospective: done
 
-  epic-20: in-progress
+  epic-20: done
   20-1-installation-configuration-swiss-ephemeris: done
   20-2-ephemeris-provider-swiss-calc-ut: done
   20-3-houses-provider-swiss-placidus-extensible: done
@@ -223,7 +223,7 @@ development_status:
   24-2-calcul-aspects-orbs-overrides: done
   epic-24-retrospective: optional
 
-  epic-25: in-progress
+  epic-25: done
   25-1-dataset-golden-pro-50-200-cas: done
   25-2-script-cross-tool-report-dev-only: done
   epic-25-retrospective: optional
@@ -238,11 +238,11 @@ development_status:
   27-2-documentation-dev-reglages-erreurs-validation: done
   epic-27-retrospective: optional
 
-  epic-28: in-progress
+  epic-28: done
   28-1-llm-gateway-point-entree-unique: done
   28-2-prompt-registry-v2-versioning-db-admin: done
   28-3-persona-system-profils-parametriques: done
   28-4-structured-outputs-hard-policy: done
-  28-5-usecase-contract-catalogue: review
+  28-5-usecase-contract-catalogue: done
   28-6-observabilite-evaluation-harness: done
   epic-28-retrospective: optional

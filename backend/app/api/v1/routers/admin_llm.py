@@ -44,6 +44,7 @@ router = APIRouter(prefix="/v1/admin/llm", tags=["admin-llm"])
 
 class ResponseMeta(BaseModel):
     request_id: str
+    warnings: List[str] = Field(default_factory=list)
 
 
 class LlmUseCaseListResponse(BaseModel):
@@ -577,6 +578,21 @@ def update_use_case_config(
     )
     db.commit()
 
+    # H2: Check for coverage warning
+    warnings = []
+    if uc.persona_strategy == "required":
+        has_active = False
+        if uc.allowed_persona_ids:
+            p_uuids = [uuid.UUID(pid) for pid in uc.allowed_persona_ids]
+            active_stmt = select(func.count(LlmPersonaModel.id)).where(
+                and_(LlmPersonaModel.id.in_(p_uuids), LlmPersonaModel.enabled)
+            )
+            count = db.execute(active_stmt).scalar() or 0
+            has_active = count > 0
+
+        if not has_active:
+            warnings.append("use_case_persona_coverage_broken")
+
     active_prompt = PromptRegistryV2.get_active_prompt(db, uc.key)
     uc_data = LlmUseCaseConfig(
         key=uc.key,
@@ -590,7 +606,94 @@ def update_use_case_config(
         active_prompt_version_id=active_prompt.id if active_prompt else None,
     )
 
-    return {"data": [uc_data], "meta": {"request_id": request_id}}
+    return {"data": [uc_data], "meta": {"request_id": request_id, "warnings": warnings}}
+
+
+@router.patch("/use-cases/{key}/persona", response_model=LlmUseCaseListResponse)
+def associate_persona(
+    key: str,
+    request: Request,
+    payload: PersonaAssociationPayload,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    """
+    Spec 28.3 Task 4: Separate endpoint for persona association.
+    """
+    request_id = resolve_request_id(request)
+    role_error = _ensure_admin_role(current_user, request_id)
+    if role_error:
+        return role_error
+
+    uc = db.get(LlmUseCaseConfigModel, key)
+    if not uc:
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="use_case_not_found",
+            message=f"use case {key} not found",
+            details={},
+        )
+
+    if payload.persona_id:
+        persona_uuid = uuid.UUID(payload.persona_id)
+        if not db.get(LlmPersonaModel, persona_uuid):
+            return _error_response(
+                status_code=404,
+                request_id=request_id,
+                code="persona_not_found",
+                message=f"persona {payload.persona_id} not found",
+                details={},
+            )
+        uc.allowed_persona_ids = [payload.persona_id]
+    else:
+        uc.allowed_persona_ids = []
+
+    db.commit()
+    db.refresh(uc)
+
+    _record_audit_event(
+        db,
+        request_id=request_id,
+        actor=current_user,
+        action="llm_use_case_associate_persona",
+        target_type="llm_use_case",
+        target_id=key,
+        status="success",
+        details={"persona_id": payload.persona_id},
+    )
+    db.commit()
+
+    # H2: Check for coverage warning
+    warnings = []
+    if uc.persona_strategy == "required":
+        # Check if any allowed persona is actually enabled
+        has_active = False
+        if uc.allowed_persona_ids:
+            p_uuids = [uuid.UUID(pid) for pid in uc.allowed_persona_ids]
+            active_stmt = select(func.count(LlmPersonaModel.id)).where(
+                and_(LlmPersonaModel.id.in_(p_uuids), LlmPersonaModel.enabled)
+            )
+            count = db.execute(active_stmt).scalar() or 0
+            has_active = count > 0
+
+        if not has_active:
+            warnings.append("use_case_persona_coverage_broken")
+
+    active_prompt = PromptRegistryV2.get_active_prompt(db, uc.key)
+    uc_data = LlmUseCaseConfig(
+        key=uc.key,
+        display_name=uc.display_name,
+        description=uc.description,
+        output_schema_id=uc.output_schema_id,
+        persona_strategy=uc.persona_strategy,
+        safety_profile=uc.safety_profile,
+        fallback_use_case_key=uc.fallback_use_case_key,
+        allowed_persona_ids=uc.allowed_persona_ids,
+        active_prompt_version_id=active_prompt.id if active_prompt else None,
+    )
+
+    return {"data": [uc_data], "meta": {"request_id": request_id, "warnings": warnings}}
 
 
 @router.get("/use-cases/{key}/contract", response_model=LlmUseCaseContractResponse)
@@ -945,13 +1048,23 @@ def get_dashboard(
         dist_res = db.execute(dist_stmt).all()
         distribution = {status: (c / count) * 100 for status, c in dist_res}
 
-        latencies_stmt = (
-            select(LlmCallLogModel.latency_ms)
-            .where(and_(LlmCallLogModel.use_case == uc, LlmCallLogModel.timestamp >= since))
-            .order_by(LlmCallLogModel.latency_ms)
-        )
-        latencies = db.execute(latencies_stmt).scalars().all()
-        p95 = latencies[int(len(latencies) * 0.95)] if latencies else 0
+        # M2: Use SQL percentile if supported (PostgreSQL)
+        is_sqlite = db.bind.dialect.name == "sqlite"
+        if not is_sqlite:
+            # PostgreSQL implementation
+            p95_stmt = select(
+                func.percentile_cont(0.95).within_group(LlmCallLogModel.latency_ms)
+            ).where(and_(LlmCallLogModel.use_case == uc, LlmCallLogModel.timestamp >= since))
+            p95 = db.execute(p95_stmt).scalar() or 0
+        else:
+            # SQLite fallback (in-memory)
+            latencies_stmt = (
+                select(LlmCallLogModel.latency_ms)
+                .where(and_(LlmCallLogModel.use_case == uc, LlmCallLogModel.timestamp >= since))
+                .order_by(LlmCallLogModel.latency_ms)
+            )
+            latencies = db.execute(latencies_stmt).scalars().all()
+            p95 = latencies[int(len(latencies) * 0.95)] if latencies else 0
 
         metrics_list.append(
             LlmDashboardMetrics(

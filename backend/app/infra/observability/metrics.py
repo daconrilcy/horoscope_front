@@ -59,23 +59,34 @@ def _cleanup_stale_metric_names() -> None:
         _HISTOGRAMS.pop(metric_name, None)
 
 
-def increment_counter(name: str, value: float = 1.0) -> None:
+def _format_metric_name(name: str, labels: dict[str, str] | None = None) -> str:
+    if not labels:
+        return name
+    label_str = ",".join(f"{k}={v}" for k, v in sorted(labels.items()))
+    return f"{name}{{{label_str}}}"
+
+
+def increment_counter(name: str, value: float = 1.0, labels: dict[str, str] | None = None) -> None:
     now = _utc_now()
+    full_name = _format_metric_name(name, labels)
     with _LOCK:
-        _COUNTERS[name] += value
-        metric_events = _COUNTER_EVENTS[name]
+        _COUNTERS[full_name] += value
+        metric_events = _COUNTER_EVENTS[full_name]
         metric_events.append(CounterEvent(timestamp=now, value=value))
         _prune_events(metric_events, now=now)
         _cleanup_stale_metric_names()
 
 
-def observe_duration(name: str, duration_seconds: float) -> None:
+def observe_duration(
+    name: str, duration_seconds: float, labels: dict[str, str] | None = None
+) -> None:
     now = _utc_now()
+    full_name = _format_metric_name(name, labels)
     with _LOCK:
-        histogram_values = _HISTOGRAMS[name]
+        histogram_values = _HISTOGRAMS[full_name]
         histogram_values.append(duration_seconds)
         _prune_histogram_values(histogram_values)
-        metric_events = _HISTOGRAM_EVENTS[name]
+        metric_events = _HISTOGRAM_EVENTS[full_name]
         metric_events.append(HistogramEvent(timestamp=now, value=duration_seconds))
         _prune_events(metric_events, now=now)
         _cleanup_stale_metric_names()

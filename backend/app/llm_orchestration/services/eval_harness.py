@@ -54,7 +54,8 @@ async def run_eval(
 
     for fixture in fixtures:
         fixture_id = fixture.get("id", "unknown")
-        user_input = fixture.get("input", {})
+        # M5: Avoid mutating the original fixture dict
+        user_input = dict(fixture.get("input", {}))
         expected_schema_valid = fixture.get("expected_schema_valid", True)
         expected_fields = fixture.get("expected_fields", {})
 
@@ -82,7 +83,7 @@ async def run_eval(
             field_mismatches = []
 
             # Check schema validity
-            is_valid = result.meta.validation_status in ["valid", "repaired"]
+            is_valid = result.meta.validation_status in ["valid", "repair_success"]
             if is_valid != expected_schema_valid:
                 validation_errors.append(
                     f"Schema validity mismatch: expected {expected_schema_valid}, got {is_valid} ({result.meta.validation_status})"  # noqa: E501

@@ -11,6 +11,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.infra.observability.metrics import increment_counter
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +36,14 @@ class PromptRegistryV2:
             if use_case_key in _prompt_cache:
                 data, expiry = _prompt_cache[use_case_key]
                 if now < expiry:
+                    increment_counter(
+                        "prompt_registry_cache_hits_total", labels={"status": "hit"}
+                    )
                     # Return a detached model instance for gateway usage
                     # Note: this instance is not attached to the DB session
                     return LlmPromptVersionModel(**data)
 
+        increment_counter("prompt_registry_cache_hits_total", labels={"status": "miss"})
         stmt = (
             select(LlmPromptVersionModel)
             .where(

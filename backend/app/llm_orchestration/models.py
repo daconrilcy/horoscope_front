@@ -56,7 +56,7 @@ class GatewayMeta(BaseModel):
     persona_id: Optional[str] = None
     model: str
     output_schema_id: Optional[str] = None
-    validation_status: str = "valid"  # valid, repaired, fallback, error, omitted
+    validation_status: str = "valid"  # valid, repair_success, fallback, error, omitted
     repair_attempted: bool = False
     fallback_triggered: bool = False
     validation_errors: Optional[List[str]] = None

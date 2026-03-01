@@ -17,6 +17,7 @@ from app.ai_engine.services.log_sanitizer import sanitize_request_for_logging
 from app.ai_engine.services.utils import calculate_cost
 from app.core.config import settings
 from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmUseCaseConfigModel
+from app.infra.observability.metrics import increment_counter
 from app.llm_orchestration.models import (
     GatewayConfigError,
     GatewayError,
@@ -221,12 +222,19 @@ class LLMGateway:
             # Point 2: Validation runtime locale/use_case
             for req_var in ["locale", "use_case"]:
                 if req_var not in merged_vars:
+                    increment_counter(
+                        "llm_gateway_config_error_total",
+                        labels={"use_case": use_case, "reason": f"missing_{req_var}"},
+                    )
                     raise GatewayConfigError(f"Missing mandatory platform variable: '{req_var}'")
 
             # AC 8: Input validation
             if config.input_schema:
                 input_val = validate_input(user_input, config.input_schema)
                 if not input_val.valid:
+                    increment_counter(
+                        "llm_input_validation_errors_total", labels={"use_case": use_case}
+                    )
                     raise InputValidationError(
                         f"Input validation failed for '{use_case}'",
                         details={"errors": input_val.errors},
@@ -235,6 +243,9 @@ class LLMGateway:
             render_vars = {
                 k: v for k, v in merged_vars.items() if k in config.required_prompt_placeholders
             }
+            # C1 Fix: Always include platform variables required by lint
+            render_vars["locale"] = merged_vars["locale"]
+            render_vars["use_case"] = merged_vars["use_case"]
 
             # 4. Render developer prompt
             try:
@@ -252,6 +263,7 @@ class LLMGateway:
                         required_variables=config.required_prompt_placeholders,
                     )
             except PromptRenderError as err:
+                increment_counter("llm_prompt_render_error_total", labels={"use_case": use_case})
                 logger.error(
                     "gateway_prompt_render_error use_case=%s request_id=%s error=%s",
                     use_case,
@@ -317,6 +329,9 @@ class LLMGateway:
                             else:
                                 applied_id = None
 
+                            increment_counter(
+                                "llm_persona_override_rejected_total", labels={"use_case": use_case}
+                            )
                             logger.warning(
                                 "persona_override_rejected use_case=%s requested=%s applied=%s",
                                 use_case,
@@ -334,6 +349,10 @@ class LLMGateway:
                                 break
 
             if not persona_block and config.persona_strategy == "required":
+                increment_counter(
+                    "llm_gateway_config_error_total",
+                    labels={"use_case": use_case, "reason": "no_persona"},
+                )
                 raise GatewayConfigError(
                     f"No active persona available for required use case '{use_case}'"
                 )
@@ -385,7 +404,14 @@ class LLMGateway:
                     request_id=request_id,
                     trace_id=trace_id,
                     use_case=use_case,
-                    response_format={"type": "json_schema", "json_schema": schema_dict}
+                    response_format={
+                        "type": "json_schema",
+                        "json_schema": {
+                            "name": use_case,
+                            "schema": schema_dict,
+                            "strict": True,
+                        },
+                    }
                     if schema_dict
                     else None,
                 )
@@ -413,9 +439,16 @@ class LLMGateway:
             # 10. Validation & Repair Loop (Point 4: Une seule tentative)
             if schema_dict:
                 val_result = validate_output(result.raw_output, schema_dict)
+                increment_counter(
+                    "llm_output_validation_total",
+                    labels={
+                        "use_case": use_case,
+                        "status": "valid" if val_result.valid else "invalid",
+                    },
+                )
                 if val_result.valid:
                     result.structured_output = val_result.parsed
-                    result.meta.validation_status = "repaired" if is_repair_call else "valid"
+                    result.meta.validation_status = "repair_success" if is_repair_call else "valid"
                 else:
                     # 10a. Automatic Repair (Point 4: une seule fois)
                     if not is_repair_call:
@@ -492,6 +525,24 @@ class LLMGateway:
             raise
         finally:
             if db and not is_repair_call:
+                # M3: Add Prometheus metrics
+                final_status = "error"
+                model_name = "unknown"
+                if result:
+                    final_status = result.meta.validation_status
+                    model_name = result.meta.model or "unknown"
+                elif error:
+                    final_status = "error"
+
+                increment_counter(
+                    "llm_gateway_requests_total",
+                    labels={
+                        "use_case": use_case,
+                        "model": model_name,
+                        "status": final_status,
+                    },
+                )
+
                 await log_call(
                     db=db,
                     use_case=use_case,

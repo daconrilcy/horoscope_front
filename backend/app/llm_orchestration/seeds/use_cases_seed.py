@@ -168,10 +168,10 @@ def seed_use_cases(db: Session) -> None:
         default_persona = LlmPersonaModel(
             name="Astrologue Standard",
             description="Persona par défaut pour les services d'astrologie.",
-            tone="Bienveillant et professionnel",
+            tone="warm",  # Valid PersonaTone
             verbosity="medium",
             style_markers=["précis", "empathique"],
-            boundaries="Ne donne pas de conseils médicaux ou financiers fermes.",
+            boundaries=["Ne donne pas de conseils médicaux ou financiers fermes."],
             enabled=True,
         )
         db.add(default_persona)

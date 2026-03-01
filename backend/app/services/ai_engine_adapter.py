@@ -150,7 +150,7 @@ def _handle_gateway_error(
         raise AIEngineAdapterError(
             code="prompt_render_error",
             message=f"failed to render prompt for {use_case}",
-            status_code=400,
+            status_code=500,
             details=err.details,
         ) from err
     if isinstance(err, UnknownUseCaseError):
