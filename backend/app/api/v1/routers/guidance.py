@@ -76,14 +76,14 @@ def request_guidance(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    if current_user.role != "user":
+    if current_user.role not in {"user", "admin"}:
         return JSONResponse(
             status_code=403,
             content={
                 "error": {
                     "code": "insufficient_role",
                     "message": "role is not allowed",
-                    "details": {"required_roles": "user"},
+                    "details": {"required_roles": "user, admin"},
                     "request_id": request_id,
                 }
             },
@@ -154,14 +154,14 @@ def request_contextual_guidance(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    if current_user.role != "user":
+    if current_user.role not in {"user", "admin"}:
         return JSONResponse(
             status_code=403,
             content={
                 "error": {
                     "code": "insufficient_role",
                     "message": "role is not allowed",
-                    "details": {"required_roles": "user"},
+                    "details": {"required_roles": "user, admin"},
                     "request_id": request_id,
                 }
             },

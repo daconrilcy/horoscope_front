@@ -65,13 +65,13 @@ def _error_response(
 
 
 def _ensure_allowed_role(user: AuthenticatedUser, request_id: str) -> JSONResponse | None:
-    if user.role not in {"support", "ops"}:
+    if user.role not in {"support", "ops", "admin"}:
         return _error_response(
             status_code=403,
             request_id=request_id,
             code="audit_forbidden",
             message="role is not allowed for audit events",
-            details={"required_roles": "support,ops", "actual_role": user.role},
+            details={"required_roles": "support,ops,admin", "actual_role": user.role},
         )
     return None
 

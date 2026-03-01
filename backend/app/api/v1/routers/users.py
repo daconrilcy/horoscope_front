@@ -430,14 +430,14 @@ def get_natal_chart_consistency(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    if current_user.role not in {"support", "ops"}:
+    if current_user.role not in {"support", "ops", "admin"}:
         return JSONResponse(
             status_code=403,
             content={
                 "error": {
                     "code": "insufficient_role",
                     "message": "role is not allowed",
-                    "details": {"required_roles": "support,ops"},
+                    "details": {"required_roles": "support,ops,admin"},
                     "request_id": request_id,
                 }
             },

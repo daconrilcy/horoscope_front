@@ -96,13 +96,13 @@ def _validate_seed_access(
     x_admin_token: str | None,
     current_user: AuthenticatedUser | None,
 ) -> ReferenceDataServiceError | None:
-    if current_user is not None and current_user.role == "ops":
+    if current_user is not None and current_user.role in {"ops", "admin"}:
         return None
-    if current_user is not None and current_user.role != "ops":
+    if current_user is not None and current_user.role not in {"ops", "admin"}:
         return ReferenceDataServiceError(
             code="insufficient_role",
             message="role is not allowed",
-            details={"required_role": "ops", "actual_role": current_user.role},
+            details={"required_role": "ops, admin", "actual_role": current_user.role},
         )
     if _can_use_seed_token_fallback() and x_admin_token == settings.reference_seed_admin_token:
         return None

@@ -180,13 +180,13 @@ def _error_response(
 
 
 def _ensure_user_role(current_user: AuthenticatedUser, request_id: str) -> JSONResponse | None:
-    if current_user.role != "user":
+    if current_user.role not in {"user", "admin"}:
         return _error_response(
             status_code=403,
             request_id=request_id,
             code="insufficient_role",
             message="role is not allowed for billing subscription",
-            details={"required_role": "user", "actual_role": current_user.role},
+            details={"required_role": "user, admin", "actual_role": current_user.role},
         )
     return None
 

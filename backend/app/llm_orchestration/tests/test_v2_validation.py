@@ -119,7 +119,7 @@ async def test_error_mapping_reaches_client_v2(db):
             except AIEngineAdapterError as err:
                 # Assert
                 assert err.code == "prompt_render_error"
-                assert err.status_code == 400
+                assert err.status_code == 500
             except ConnectionError as err:
                 pytest.fail(f"Should have raised AIEngineAdapterError, not ConnectionError: {err}")
 

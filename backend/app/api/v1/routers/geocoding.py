@@ -123,14 +123,14 @@ def _validate_nocache_access(
 ) -> tuple[bool, str, str, dict[str, Any]]:
     if not nocache:
         return True, "", "", {}
-    if current_user is not None and current_user.role in {"support", "ops"}:
+    if current_user is not None and current_user.role in {"support", "ops", "admin"}:
         return True, "", "", {}
-    if current_user is not None and current_user.role not in {"support", "ops"}:
+    if current_user is not None and current_user.role not in {"support", "ops", "admin"}:
         return (
             False,
             "insufficient_role",
             "role is not allowed",
-            {"required_roles": "support,ops", "actual_role": current_user.role},
+            {"required_roles": "support,ops,admin", "actual_role": current_user.role},
         )
     if _can_use_seed_token_fallback() and x_admin_token == settings.reference_seed_admin_token:
         return True, "", "", {}

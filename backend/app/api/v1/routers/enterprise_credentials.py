@@ -70,13 +70,13 @@ def _error_response(
 
 
 def _ensure_enterprise_admin_role(user: AuthenticatedUser, request_id: str) -> JSONResponse | None:
-    if user.role != "enterprise_admin":
+    if user.role not in {"enterprise_admin", "admin"}:
         return _error_response(
             status_code=403,
             request_id=request_id,
             code="insufficient_role",
             message="role is not allowed",
-            details={"required_roles": "enterprise_admin", "actual_role": user.role},
+            details={"required_roles": "enterprise_admin, admin", "actual_role": user.role},
         )
     return None
 

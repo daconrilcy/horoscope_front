@@ -120,7 +120,7 @@ class FeatureFlagService:
         "tarot": "tarot_enabled",
         "runes": "runes_enabled",
     }
-    _ALLOWED_ROLES = {"user", "support", "ops", "enterprise_admin"}
+    _ALLOWED_ROLES = {"user", "support", "ops", "enterprise_admin", "admin"}
 
     @staticmethod
     def _parse_roles(csv_value: str | None) -> list[str]:

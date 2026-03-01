@@ -401,13 +401,13 @@ def compare_natal_engines(
 ) -> Any:
     request_id = resolve_request_id(request)
 
-    if current_user.role not in {"support", "ops"}:
+    if current_user.role not in {"support", "ops", "admin"}:
         return _error_response(
             status_code=status.HTTP_403_FORBIDDEN,
             request_id=request_id,
             code="insufficient_role",
             message="role is not allowed",
-            details={"required_roles": "support,ops", "actual_role": current_user.role},
+            details={"required_roles": "support,ops,admin", "actual_role": current_user.role},
         )
 
     if settings.app_env == "production" or not settings.natal_engine_compare_enabled:
@@ -513,13 +513,13 @@ def get_chart_result(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    if current_user.role not in {"support", "ops"}:
+    if current_user.role not in {"support", "ops", "admin"}:
         return _error_response(
             status_code=status.HTTP_403_FORBIDDEN,
             request_id=request_id,
             code="insufficient_role",
             message="role is not allowed",
-            details={"required_roles": "support,ops", "actual_role": current_user.role},
+            details={"required_roles": "support,ops,admin", "actual_role": current_user.role},
         )
     try:
         audit_record = ChartResultService.get_audit_record(db, chart_id=chart_id)
