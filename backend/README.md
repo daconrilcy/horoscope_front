@@ -64,7 +64,7 @@ Generate RGPD operational evidence dossier (export/delete/audit):
 
 ```powershell
 .\scripts\generate-rgpd-evidence.ps1 `
-  -BaseUrl "http://127.0.0.1:8000" `
+  -BaseUrl "http://127.0.0.1:8001" `
   -AccessToken "<SUPPORT_OR_OPS_ACCESS_TOKEN>" `
   -TargetUserId 42
 ```
@@ -106,7 +106,7 @@ Restore complet (DB + runtime + verification health):
   -BackupFile .\backups\db\<backup_file> `
   -RuntimeBackupFile .\backups\runtime\<runtime_backup_file> `
   -Mode auto `
-  -PostRestoreHealthUrl "http://127.0.0.1:8000/health"
+  -PostRestoreHealthUrl "http://127.0.0.1:8001/health"
 ```
 
 ## Load Testing (Story 8.4)
@@ -114,7 +114,7 @@ Restore complet (DB + runtime + verification health):
 Run a short critical-flow load campaign against a running backend:
 
 ```powershell
-.\scripts\load-test-critical.ps1 -BaseUrl "http://127.0.0.1:8000" -Profile smoke -OutputPath "artifacts/load-test-report.json"
+.\scripts\load-test-critical.ps1 -BaseUrl "http://127.0.0.1:8001" -Profile smoke -OutputPath "artifacts/load-test-report.json"
 ```
 
 Le runner execute des phases `ramp_up`, `plateau`, `spike` et mesure aussi le throughput (req/s).
@@ -140,7 +140,7 @@ Require B2B scenario (fail if key missing):
 Run full matrix (`smoke` + `nominal` + `stress`):
 
 ```powershell
-.\scripts\load-test-critical-matrix.ps1 -BaseUrl "http://127.0.0.1:8000" -OutputDir "artifacts/load-test-matrix"
+.\scripts\load-test-critical-matrix.ps1 -BaseUrl "http://127.0.0.1:8001" -OutputDir "artifacts/load-test-matrix"
 ```
 
 Short automated smoke check (non-destructive) in test suite:

@@ -38,7 +38,7 @@ Variables minimales a verifier cote backend:
 Verifier l etat runtime:
 
 ```powershell
-curl -sS http://127.0.0.1:8000/v1/ephemeris/status
+curl -sS http://127.0.0.1:8001/v1/ephemeris/status
 ```
 
 Resultat attendu en mode OK:
@@ -52,7 +52,7 @@ Resultat attendu en mode OK:
 ### 3.1 Prepare (normalisation temps + trace timezone)
 
 ```bash
-curl -sS -X POST "http://127.0.0.1:8000/v1/astrology-engine/natal/prepare" \
+curl -sS -X POST "http://127.0.0.1:8001/v1/astrology-engine/natal/prepare" \
   -H "Content-Type: application/json" \
   --max-time 30 \
   -d '{
@@ -67,7 +67,7 @@ curl -sS -X POST "http://127.0.0.1:8000/v1/astrology-engine/natal/prepare" \
 ### 3.2 Calculate (profil pro audit-grade)
 
 ```bash
-curl -sS -X POST "http://127.0.0.1:8000/v1/astrology-engine/natal/calculate" \
+curl -sS -X POST "http://127.0.0.1:8001/v1/astrology-engine/natal/calculate" \
   -H "Content-Type: application/json" \
   --max-time 60 \
   -d '{

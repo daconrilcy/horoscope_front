@@ -47,8 +47,8 @@ def test_natal_pro_doc_local_markdown_links_are_resolvable() -> None:
 def test_natal_pro_doc_contains_executable_style_curl_examples() -> None:
     content = DOC_PATH.read_text(encoding="utf-8")
 
-    assert 'curl -sS -X POST "http://127.0.0.1:8000/v1/astrology-engine/natal/prepare"' in content
-    assert 'curl -sS -X POST "http://127.0.0.1:8000/v1/astrology-engine/natal/calculate"' in content
+    assert 'curl -sS -X POST "http://127.0.0.1:8001/v1/astrology-engine/natal/prepare"' in content
+    assert 'curl -sS -X POST "http://127.0.0.1:8001/v1/astrology-engine/natal/calculate"' in content
     assert "--max-time 30" in content
     assert "--max-time 60" in content
 

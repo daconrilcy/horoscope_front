@@ -49,7 +49,7 @@ Restore complet avec assets runtime + healthcheck:
   -BackupFile .\backups\db\<backup_file> `
   -RuntimeBackupFile .\backups\runtime\<runtime_backup_file> `
   -Mode auto `
-  -PostRestoreHealthUrl "http://127.0.0.1:8000/health"
+  -PostRestoreHealthUrl "http://127.0.0.1:8001/health"
 ```
 
 Mode non interactif (CI/exercice):
@@ -63,7 +63,7 @@ $env:RESTORE_ALLOW_NONINTERACTIVE="1"
 
 1. Health backend:
 ```powershell
-Invoke-WebRequest http://127.0.0.1:8000/health
+Invoke-WebRequest http://127.0.0.1:8001/health
 ```
 2. Smoke front/back:
 ```powershell

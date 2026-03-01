@@ -5,14 +5,14 @@ services:
       dockerfile: Dockerfile
     container_name: horoscope-backend
     ports:
-      - "8000:8000"
+      - "8001:8001"
     healthcheck:
       test:
         [
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8001/health', timeout=2)",
         ]
       interval: 10s
       timeout: 3s

@@ -51,7 +51,7 @@ describe("b2b billing api", () => {
     const data = await mutationFn("b2b_billing_key")
     expect(data?.total_amount_cents).toBe(9000)
     expect(fetch).toHaveBeenCalledWith(
-      "http://localhost:8000/v1/b2b/billing/cycles/latest",
+      "http://localhost:8001/v1/b2b/billing/cycles/latest",
       expect.objectContaining({
         method: "GET",
         headers: { "X-API-Key": "b2b_billing_key" },
@@ -81,7 +81,7 @@ describe("b2b billing api", () => {
     const data = await mutationFn({ apiKey: "b2b_billing_key", limit: 10, offset: 5 })
     expect(data.total).toBe(0)
     expect(fetch).toHaveBeenCalledWith(
-      "http://localhost:8000/v1/b2b/billing/cycles?limit=10&offset=5",
+      "http://localhost:8001/v1/b2b/billing/cycles?limit=10&offset=5",
       expect.objectContaining({
         method: "GET",
         headers: { "X-API-Key": "b2b_billing_key" },

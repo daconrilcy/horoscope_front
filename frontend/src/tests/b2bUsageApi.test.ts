@@ -43,7 +43,7 @@ describe("b2b usage api", () => {
     const data = await mutationFn("b2b_usage_key")
     expect(data.daily_consumed).toBe(2)
     expect(fetch).toHaveBeenCalledWith(
-      "http://localhost:8000/v1/b2b/usage/summary",
+      "http://localhost:8001/v1/b2b/usage/summary",
       expect.objectContaining({
         method: "GET",
         headers: { "X-API-Key": "b2b_usage_key" },

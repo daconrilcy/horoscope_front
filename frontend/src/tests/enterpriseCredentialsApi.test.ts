@@ -42,7 +42,7 @@ describe("enterprise credentials api", () => {
     const data = await queryFn()
     expect(data.company_name).toBe("Acme Media")
     expect(fetch).toHaveBeenCalledWith(
-      "http://localhost:8000/v1/b2b/credentials",
+      "http://localhost:8001/v1/b2b/credentials",
       expect.objectContaining({
         method: "GET",
         headers: { Authorization: "Bearer test.token.value" },
@@ -94,7 +94,7 @@ describe("enterprise credentials api", () => {
     expect(rotated.api_key).toBe("b2b_secret_2")
     expect(fetch).toHaveBeenNthCalledWith(
       1,
-      "http://localhost:8000/v1/b2b/credentials/generate",
+      "http://localhost:8001/v1/b2b/credentials/generate",
       expect.objectContaining({
         method: "POST",
         headers: { Authorization: "Bearer test.token.value" },
@@ -102,7 +102,7 @@ describe("enterprise credentials api", () => {
     )
     expect(fetch).toHaveBeenNthCalledWith(
       2,
-      "http://localhost:8000/v1/b2b/credentials/rotate",
+      "http://localhost:8001/v1/b2b/credentials/rotate",
       expect.objectContaining({
         method: "POST",
         headers: { Authorization: "Bearer test.token.value" },

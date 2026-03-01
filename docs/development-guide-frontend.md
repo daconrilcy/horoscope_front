@@ -31,6 +31,6 @@ npm run test:b2b
 ```
 
 ## Front/Back Integration
-- Backend expected locally on `http://localhost:8000`
+- Backend expected locally on `http://localhost:8001`
 - Frontend dev server default `http://localhost:5173`
 - API domain clients are centralized in `frontend/src/api/`

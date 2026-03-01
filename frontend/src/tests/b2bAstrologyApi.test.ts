@@ -33,7 +33,7 @@ describe("b2b astrology api", () => {
     const data = await mutationFn("b2b_demo_key")
     expect(data.api_version).toBe("v1")
     expect(fetch).toHaveBeenCalledWith(
-      "http://localhost:8000/v1/b2b/astrology/weekly-by-sign",
+      "http://localhost:8001/v1/b2b/astrology/weekly-by-sign",
       expect.objectContaining({
         method: "GET",
         headers: { "X-API-Key": "b2b_demo_key" },

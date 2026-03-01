@@ -37,7 +37,7 @@ function Wait-HttpReady {
 
 try {
   $shellExecutable = Get-ShellExecutable
-  $backendCmd = ".\.venv\Scripts\Activate.ps1; Set-Location backend; python -m uvicorn app.main:app --host 127.0.0.1 --port 8000"
+  $backendCmd = ".\.venv\Scripts\Activate.ps1; Set-Location backend; python -m uvicorn app.main:app --host 127.0.0.1 --port 8001"
   $backendProcess = Start-Process $shellExecutable -ArgumentList "-NoProfile", "-Command", $backendCmd -PassThru
 
   Set-Location frontend
@@ -52,7 +52,7 @@ try {
     $timeoutSeconds = [int]$env:STARTUP_SMOKE_TIMEOUT_SECONDS
   }
 
-  Wait-HttpReady -Uri "http://127.0.0.1:8000/health" -Label "Backend health endpoint" -TimeoutSeconds $timeoutSeconds
+  Wait-HttpReady -Uri "http://127.0.0.1:8001/health" -Label "Backend health endpoint" -TimeoutSeconds $timeoutSeconds
   Wait-HttpReady -Uri "http://127.0.0.1:5173" -Label "Frontend root endpoint" -TimeoutSeconds $timeoutSeconds
 
   Write-Output "startup_smoke_ok"

@@ -4,7 +4,7 @@
 
 - Date: 2026-02-20
 - Environment: local dev (single host)
-- Base URL: `http://127.0.0.1:8000`
+- Base URL: `http://127.0.0.1:8001`
 - Profile: `smoke` with phased load (`ramp_up`/`plateau`/`spike`)
 - Iterations per scenario: 24
 - Concurrency baseline: 6 (phase peak concurrency: 9)

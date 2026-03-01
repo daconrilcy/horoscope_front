@@ -10,7 +10,7 @@ Generate a reproducible evidence dossier proving that RGPD privacy flows are ope
 
 ## Preconditions
 
-- Backend running on `http://127.0.0.1:8000`.
+- Backend running on `http://127.0.0.1:8001`.
 - A `support` or `ops` access token is available.
 - Target user has already triggered export and delete privacy flows.
 
@@ -18,7 +18,7 @@ Generate a reproducible evidence dossier proving that RGPD privacy flows are ope
 
 ```powershell
 .\scripts\generate-rgpd-evidence.ps1 `
-  -BaseUrl "http://127.0.0.1:8000" `
+  -BaseUrl "http://127.0.0.1:8001" `
   -AccessToken "<SUPPORT_OR_OPS_ACCESS_TOKEN>" `
   -TargetUserId 42
 ```

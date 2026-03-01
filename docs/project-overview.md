@@ -30,7 +30,7 @@
 ## Architecture Type
 - Backend: layered API/service/infra architecture.
 - Frontend: page + component architecture with central API client modules.
-- Cross-part integration: HTTP/JSON over local dev endpoints (`localhost:5173` -> `localhost:8000`).
+- Cross-part integration: HTTP/JSON over local dev endpoints (`localhost:5173` -> `localhost:8001`).
 
 ## Key Documentation
 - [Architecture - Backend](./architecture-backend.md)

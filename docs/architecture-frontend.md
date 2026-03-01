@@ -22,7 +22,7 @@ Project type: `web`
 - Token-based auth state via utility helpers (`src/utils/authToken.ts`)
 
 ## Integration Contract
-- Backend consumed via `http://localhost:8000/v1/*` in local dev
+- Backend consumed via `http://localhost:8001/v1/*` in local dev
 - API modules provide typed wrappers for endpoints and errors
 
 ## Quality Strategy

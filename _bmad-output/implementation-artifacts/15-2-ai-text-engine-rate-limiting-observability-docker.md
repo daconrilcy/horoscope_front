@@ -189,7 +189,7 @@ Le cache n'est PAS utilisé pour :
 
 ```
 docker-compose.prod.yml
-├── api (backend:8000)        # Internal network only
+├── api (backend:8001)        # Internal network only
 ├── web (nginx:80/443)        # External facing
 ├── db (postgres:5432)        # Internal only
 └── redis (redis:6379)        # Internal only

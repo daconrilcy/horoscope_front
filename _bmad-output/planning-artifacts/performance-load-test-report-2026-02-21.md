@@ -4,7 +4,7 @@
 
 - Date: 2026-02-21
 - Environment: local dev (single host)
-- Base URL: `http://127.0.0.1:8000`
+- Base URL: `http://127.0.0.1:8001`
 - Profiles executed: `smoke`, `nominal`, `stress` (phased load `ramp_up/plateau/spike`)
 - Raw reports:
   - `artifacts/load-test-matrix/load-test-smoke.json`

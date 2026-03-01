@@ -36,7 +36,7 @@ describe("b2b reconciliation api", () => {
     const payload = await queryFn()
     expect(payload.total).toBe(0)
     expect(fetch).toHaveBeenCalledWith(
-      "http://localhost:8000/v1/ops/b2b/reconciliation/issues?account_id=9&severity=major&limit=50&offset=0",
+      "http://localhost:8001/v1/ops/b2b/reconciliation/issues?account_id=9&severity=major&limit=50&offset=0",
       expect.objectContaining({
         method: "GET",
         headers: { Authorization: "Bearer token" },

@@ -1,5 +1,5 @@
 param(
-  [string]$BaseUrl = "http://127.0.0.1:8000",
+  [string]$BaseUrl = "http://127.0.0.1:8001",
   [ValidateSet("smoke", "nominal", "stress")][string]$Profile = "smoke",
   [int]$Iterations = -1,
   [int]$Concurrency = -1,

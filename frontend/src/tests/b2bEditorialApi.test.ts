@@ -45,7 +45,7 @@ describe("b2b editorial api", () => {
     const data = await mutationFn("b2b_editorial_key")
     expect(data.version_number).toBe(1)
     expect(fetch).toHaveBeenCalledWith(
-      "http://localhost:8000/v1/b2b/editorial/config",
+      "http://localhost:8001/v1/b2b/editorial/config",
       expect.objectContaining({
         method: "GET",
         headers: { "X-API-Key": "b2b_editorial_key" },
@@ -90,7 +90,7 @@ describe("b2b editorial api", () => {
     const data = await mutationFn({ apiKey: "b2b_editorial_key", payload })
     expect(data.tone).toBe("friendly")
     expect(fetch).toHaveBeenCalledWith(
-      "http://localhost:8000/v1/b2b/editorial/config",
+      "http://localhost:8001/v1/b2b/editorial/config",
       expect.objectContaining({
         method: "PUT",
         headers: {

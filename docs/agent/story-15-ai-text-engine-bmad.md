@@ -63,7 +63,7 @@ Deux options d’intégration (choisir 1) :
 A) **Module interne** dans le backend (recommandé si monolith API)  
    Les services appellent `ai_engine.generate(...)` directement (pas de réseau inter-service).
 B) **Microservice dédié** `ai-engine` en HTTP interne  
-   Les services appellent `http://ai-engine:8000/v1/ai/generate`.
+   Les services appellent `http://ai-engine:8001/v1/ai/generate`.
 
 Pour BMAD, la version B est souvent plus simple à isoler/déployer, mais la A est plus simple à développer.
 
@@ -392,7 +392,7 @@ Subtask 15.6 — Docker prod + doc
 ## 15) Commandes d’exploitation (cheat sheet)
 
 Local (exemple) :
-- `uvicorn ai_engine.main:app --reload --port 8000`
+- `uvicorn ai_engine.main:app --reload --port 8001`
 - `npm run dev` (Vite)
 
 Prod (VPS) :
