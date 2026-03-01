@@ -8,7 +8,6 @@ import { detectLang } from "../i18n/astrology"
 import { t } from "../i18n/consultations"
 import { AUTO_ASTROLOGER_ID, WIZARD_STEP_LABELS, getConsultationTypeConfig, getDrawingOptionConfig, type ConsultationResult } from "../types/consultation"
 import { generateUniqueId } from "../utils/generateUniqueId"
-import { generateSimpleInterpretation } from "../utils/generateSimpleInterpretation"
 import { classNames } from "../utils/classNames"
 
 export function ConsultationResultPage() {

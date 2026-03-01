@@ -72,6 +72,27 @@ type NatalChartTranslations = {
   orb: string
   orbUsed: string
   wrapConnector: string
+  interpretation: {
+    loading: string
+    title: string
+    upsellTitle: string
+    upsellCta: string
+    upsellDescription: string
+    completeBy: string
+    completeBadge: string
+    highlightsTitle: string
+    adviceTitle: string
+    evidenceTitle: string
+    disclaimerTitle: string
+    error: string
+    retry: string
+    degradedNotice: string
+    requestingComplete: string
+    personaSelectorTitle: string
+    personaSelectorConfirm: string
+    cancel: string
+    sectionsMap: Record<string, string>
+  }
   guide: NatalChartGuideTranslations
 }
 
@@ -115,6 +136,37 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
     orb: "orbe",
     orbUsed: "orbe eff.",
     wrapConnector: "puis 0°",
+    interpretation: {
+      loading: "L'IA analyse votre thème natal...",
+      title: "Interprétation de votre thème",
+      upsellTitle: "Interprétation complète",
+      upsellCta: "Choisir mon astrologue",
+      upsellDescription: "Débloquez une analyse approfondie et personnalisée par l'un de nos experts.",
+      completeBy: "Interprétation par",
+      completeBadge: "Complet",
+      highlightsTitle: "Points clés",
+      adviceTitle: "Conseils",
+      evidenceTitle: "Sources astrologiques",
+      disclaimerTitle: "Note",
+      error: "L'interprétation n'est pas disponible pour le moment.",
+      retry: "Réessayer",
+      degradedNotice: "Interprétation partielle (données de naissance incomplètes)",
+      requestingComplete: "Votre astrologue interprète votre thème...",
+      personaSelectorTitle: "Choisissez votre astrologue",
+      personaSelectorConfirm: "Demander l'interprétation complète",
+      cancel: "Annuler",
+      sectionsMap: {
+        overall: "Vue d'ensemble",
+        career: "Carrière et vocation",
+        relationships: "Relations et amour",
+        inner_life: "Vie intérieure",
+        daily_life: "Vie quotidienne",
+        strengths: "Forces",
+        challenges: "Défis",
+        tarot_spread: "Tirage",
+        event_context: "Contexte événementiel",
+      },
+    },
     guide: {
       title: "Comment lire ton thème natal",
       intro:
@@ -231,6 +283,37 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
     orb: "orb",
     orbUsed: "eff. orb",
     wrapConnector: "then 0°",
+    interpretation: {
+      loading: "AI is analyzing your natal chart...",
+      title: "Chart Interpretation",
+      upsellTitle: "Complete Interpretation",
+      upsellCta: "Choose my astrologer",
+      upsellDescription: "Unlock an in-depth and personalized analysis by one of our experts.",
+      completeBy: "Interpretation by",
+      completeBadge: "Complete",
+      highlightsTitle: "Key Points",
+      adviceTitle: "Advice",
+      evidenceTitle: "Astrological Sources",
+      disclaimerTitle: "Note",
+      error: "Interpretation is not available at the moment.",
+      retry: "Retry",
+      degradedNotice: "Partial interpretation (incomplete birth data)",
+      requestingComplete: "Your astrologer is interpreting your chart...",
+      personaSelectorTitle: "Choose your astrologer",
+      personaSelectorConfirm: "Request complete interpretation",
+      cancel: "Cancel",
+      sectionsMap: {
+        overall: "Overall Overview",
+        career: "Career and Vocation",
+        relationships: "Relationships and Love",
+        inner_life: "Inner Life",
+        daily_life: "Daily Life",
+        strengths: "Strengths",
+        challenges: "Challenges",
+        tarot_spread: "Tarot Spread",
+        event_context: "Event Context",
+      },
+    },
     guide: {
       title: "How to read your natal chart",
       intro:
@@ -338,7 +421,7 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
     sections: {
       planets: "Planetas",
       houses: "Casas",
-      aspects: "Los aspectos",
+      aspects: "Los aspects",
     },
     noAspects: "No se detectaron aspectos mayores para este cálculo.",
     cuspide: "cúspide",
@@ -346,17 +429,48 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
     orb: "orbe",
     orbUsed: "orbe efec.",
     wrapConnector: "luego 0°",
+    interpretation: {
+      loading: "La IA está analizando tu carta natal...",
+      title: "Interpretación de tu carta",
+      upsellTitle: "Interpretación completa",
+      upsellCta: "Elegir mi astrólogo",
+      upsellDescription: "Desbloquea un análisis profundo y personalizado por uno de nuestros expertos.",
+      completeBy: "Interpretación por",
+      completeBadge: "Completo",
+      highlightsTitle: "Puntos clave",
+      adviceTitle: "Consejos",
+      evidenceTitle: "Fuentes astrológicas",
+      disclaimerTitle: "Nota",
+      error: "La interpretación no está disponible en este momento.",
+      retry: "Reintentar",
+      degradedNotice: "Interpretación parcial (datos de nacimiento incompletos)",
+      requestingComplete: "Tu astrólogo está interpretando tu carta...",
+      personaSelectorTitle: "Elige a tu astrólogo",
+      personaSelectorConfirm: "Solicitar interpretación completa",
+      cancel: "Cancelar",
+      sectionsMap: {
+        overall: "Visión general",
+        career: "Carrera y vocación",
+        relationships: "Relaciones et amor",
+        inner_life: "Vida interior",
+        daily_life: "Vida diaria",
+        strengths: "Fortalezas",
+        challenges: "Desafíos",
+        tarot_spread: "Tirada de Tarot",
+        event_context: "Contexto del evento",
+      },
+    },
     guide: {
       title: "Cómo leer tu carta natal",
       intro:
         "Tu carta natal es una representación geométrica del cielo en el momento y lugar de tu nacimiento. Los cálculos sitúan puntos (planetas) en un círculo de 360°. Luego, estas posiciones se traducen en referencias legibles: signos, casas, ángulos y aspectos.",
       signsTitle: "Los signos zodiacales",
       signsDesc:
-        "El zodíaco está dividido en 12 signos de 30° cada uno. Un signo no es un planeta: es una zona del círculo que sirve de cuadrícula para expresar una posición. Cada posición astronómica es primero una longitud eclíptica entre 0° y 360°, que luego se convierte en un signo (en qué segmento de 30°) y un grado dentro del signo (de 0°00' a 29°59').",
+        "El zodíaco está dividido en 12 signos de 30° cada uno. Un signo no es un planeta: es una zona del círculo que sirve de cuadrícula para expresar una posición. Cada posición astronómica es primero una longitud eclíptica entre 0° et 360°, que luego se convierte en un signo (en qué segmento de 30°) et un grado dentro del signo (de 0°00' a 29°59').",
       signExample: "Sol 34,08° → Tauro 4°05′ (Tauro comienza en 30°)",
       planetsTitle: "Los planetas",
       planetsDesc:
-        "Los planetas (y, en astrología, el Sol y la Luna) son puntos situados en el círculo zodiacal a una longitud precisa. Para cada planeta, se muestra: su posición en signo + grado (lectura humana), su longitud bruta (valor de cálculo) y la casa en la que se encuentra (sector del tema).",
+        "Los planetas (y, en astrología, el Sol y la Luna) sont puntos situados en el círculo zodiacal a una longitud precisa. Para cada planeta, se muestra: su posición en signo + grado (lectura humana), su longitud bruta (valor de cálculo) y la casa en la que se encuentra (sector del tema).",
       planetsRetrogradeTip:
         "El símbolo ℞ indica que el planeta está en movimiento retrógrado aparente: visto desde la Tierra, parece retroceder temporalmente en el zodíaco. Es un estado de movimiento aparente, no un objeto adicional.",
       housesTitle: "Las casas",
@@ -392,7 +506,7 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
         {
           question: "¿Qué es una longitud bruta?",
           answer:
-            "Es el valor numérico (0-360°) utilizado para los cálculos. La representación signo + grado es una conversión más legible de ese mismo valor.",
+            "Es el valor numérique (0-360°) utilizado para los cálculos. La representación signo + grado es una conversión más legible de ese mismo valor.",
         },
         {
           question: "¿Qué es una cúspide?",
@@ -402,7 +516,7 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
         {
           question: "¿Por qué algunas casas parecen extrañas o cruzan el 0°?",
           answer:
-            "Porque el círculo no tiene un inicio real: 360° y 0° son el mismo punto. Si una casa empieza cerca del final del círculo, puede continuar después del 0°.",
+            "Porque el círculo no tiene un inicio real: 360° y 0° sont el mismo punto. Si una casa empieza cerca del final del círculo, puede continuar después del 0°.",
         },
         {
           question: "¿Para qué sirve el orbe en los aspectos?",
@@ -412,12 +526,12 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
         {
           question: "¿Qué significa el símbolo ℞?",
           answer:
-            "℞ indica un movimiento retrógrado aparente: desde la Tierra, el planeta parece retroceder temporalmente en el zodíaco. Es información de movimiento aparente procedente de las efemérides.",
+            "℞ indica un movimiento retrógrado aparente: visto desde la Tierra, el planeta parece retroceder temporalmente en el zodíaco. Es información de movimiento aparente procedente de las efemérides.",
         },
         {
           question: "¿Por qué se destacan el signo solar y el ascendente?",
           answer:
-            "Porque son dos referencias muy usadas: una es la posición del Sol (un punto), la otra es un ángulo de las casas (una cúspide). Resumen elementos diferentes de la estructura de la carta, sin ser interpretaciones por sí solos.",
+            "Porque son dos referencias muy usadas: una es la posición del Sol (un punto), la otra es un ángulo de las casas (una cúspide). Resumen elementos differentes de la estructura de la carta, sin ser interpretaciones por sí solos.",
         },
       ],
     },
@@ -430,5 +544,7 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
  * Cela garantit qu'aucune section du guide ne peut être vide ou provoquer un crash.
  */
 export function getGuideTranslations(lang: AstrologyLang): NatalChartGuideTranslations {
-  return natalChartTranslations[lang]?.guide ?? natalChartTranslations[DEFAULT_ASTRO_LANG].guide
+  return (
+    natalChartTranslations[lang]?.guide ?? natalChartTranslations[DEFAULT_ASTRO_LANG].guide
+  )
 }

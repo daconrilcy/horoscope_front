@@ -8,6 +8,7 @@ import { logSupportRequestId } from "../utils/constants"
 import { formatDateTime } from "../utils/formatDate"
 import { useAccessTokenSnapshot } from "../utils/authToken"
 import { NatalChartGuide } from "../components/NatalChartGuide"
+import { NatalInterpretationSection } from "../components/NatalInterpretation"
 
 function shouldLogSupportForApiError(error: ApiError): boolean {
   return error.status >= 500
@@ -264,6 +265,7 @@ export function NatalChartPage() {
       </article>
 
       <NatalChartGuide lang={lang} missingBirthTime={missingBirthTime} />
+      <NatalInterpretationSection chartLoaded={Boolean(chart)} lang={lang} />
     </section>
   )
 }

@@ -246,3 +246,11 @@ development_status:
   28-5-usecase-contract-catalogue: done
   28-6-observabilite-evaluation-harness: done
   epic-28-retrospective: optional
+
+  epic-29: done
+  29-1-n1-chart-json-canon-evidence-catalog: done
+  29-2-n2-natal-interpretation-service-v2-endpoint: done
+  29-3-n3-prompts-db-lint-publish: done
+  29-4-n4-ui-astroresponse-v1-upsell: done
+  29-5-n5-eval-fixtures-gate: done
+  epic-29-retrospective: optional

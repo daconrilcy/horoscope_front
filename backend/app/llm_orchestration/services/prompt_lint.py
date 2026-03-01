@@ -1,8 +1,11 @@
-from __future__ import annotations
-
+import logging
 from dataclasses import dataclass, field
 
+from jinja2 import Environment, TemplateSyntaxError
+
 from app.ai_engine.config import ai_engine_settings
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -17,32 +20,36 @@ class PromptLint:
     def lint_prompt(
         text: str, use_case_required_placeholders: list[str] | None = None
     ) -> LintResult:
+        """
+        Validates a prompt for syntax, length, and mandatory placeholders.
+        """
         errors = []
         warnings = []
 
-        # 1. Size rules
+        # 1. Jinja2 Syntax Validation
+        env = Environment()
+        try:
+            env.parse(text)
+        except TemplateSyntaxError as e:
+            errors.append(f"Jinja2 Syntax Error at line {e.lineno}: {e.message}")
+
+        # 2. Size rules
         if len(text) > 8000:
             errors.append("Prompt is too long (max 8,000 characters).")
         elif len(text) > 4000:
             warnings.append("Prompt is quite long (> 4,000 characters).")
 
-        # 2. Mandatory placeholders (Global)
-        if "{{locale}}" not in text:
-            errors.append("Mandatory placeholder '{{locale}}' is missing.")
-        if "{{use_case}}" not in text:
-            errors.append("Mandatory placeholder '{{use_case}}' is missing.")
-
-        # 3. Mandatory placeholders (Use-case specific)
+        # 3. Combined placeholders (Platform + Use-case specific)
+        required = {"locale", "use_case"}
         if use_case_required_placeholders:
-            for placeholder in use_case_required_placeholders:
-                # Add braces for check if missing
-                full_p = (
-                    f"{{{{{placeholder}}}}}"
-                    if not (placeholder.startswith("{{") and placeholder.endswith("}}"))
-                    else placeholder
-                )
-                if full_p not in text:
-                    errors.append(f"Use-case specific placeholder '{full_p}' is missing.")
+            required.update(use_case_required_placeholders)
+
+        for p in sorted(list(required)):
+            # Normalize placeholder name (remove braces if provided in config)
+            clean_p = p.replace("{", "").replace("}", "")
+            full_p = f"{{{{{clean_p}}}}}"
+            if full_p not in text:
+                errors.append(f"Mandatory placeholder '{full_p}' is missing.")
 
         # 4. Forbidden words (configurable via AI_ENGINE_LLM_PROMPT_FORBIDDEN_WORDS)
         forbidden_words = ai_engine_settings.llm_prompt_forbidden_words

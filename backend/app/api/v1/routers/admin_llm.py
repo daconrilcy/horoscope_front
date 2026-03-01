@@ -871,7 +871,7 @@ async def publish_prompt(
         if eval_report.failure_rate > uc.eval_failure_threshold:
             eval_report.blocked_publication = True
             return _error_response(
-                status_code=422,
+                status_code=409,
                 request_id=request_id,
                 code="eval_failed",
                 message=f"Evaluation failure rate ({eval_report.failure_rate:.2%}) exceeds threshold ({uc.eval_failure_threshold:.2%})",  # noqa: E501

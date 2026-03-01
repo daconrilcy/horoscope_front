@@ -174,3 +174,108 @@ export function useLatestNatalChart() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }
+
+// --- Interpretation ---
+
+export type AstroSection = {
+  key: string
+  heading: string
+  content: string
+}
+
+export type AstroInterpretation = {
+  title: string
+  summary: string
+  sections: AstroSection[]
+  highlights: string[]
+  advice: string[]
+  evidence: string[]
+  disclaimers: string[]
+}
+
+export type InterpretationMeta = {
+  level: "short" | "complete"
+  use_case: string
+  persona_id: string | null
+  persona_name: string | null
+  prompt_version_id: string | null
+  validation_status: string
+  repair_attempted: boolean
+  fallback_triggered: boolean
+  was_fallback: boolean
+  latency_ms: number | null
+  request_id: string | null
+}
+
+export type NatalInterpretationResult = {
+  chart_id: string
+  use_case: string
+  interpretation: AstroInterpretation
+  meta: InterpretationMeta
+  degraded_mode: string | null
+}
+
+async function fetchNatalInterpretation(
+  accessToken: string,
+  useCaseLevel: "short" | "complete",
+  personaId?: string | null,
+  locale?: string,
+  question?: string,
+): Promise<NatalInterpretationResult> {
+  const response = await apiFetch(`${API_BASE_URL}/v1/natal/interpretation`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      use_case_level: useCaseLevel,
+      persona_id: personaId,
+      locale: locale || "fr-FR",
+      question: question,
+    }),
+  })
+
+  return handleResponse<NatalInterpretationResult>(response)
+}
+
+export function useNatalInterpretation(options: {
+  enabled: boolean
+  useCaseLevel: "short" | "complete"
+  personaId?: string | null
+  locale?: string
+  question?: string
+}) {
+  const accessToken = useAccessTokenSnapshot()
+  const tokenSubject = getSubjectFromAccessToken(accessToken) ?? ANONYMOUS_SUBJECT
+
+  return useQuery({
+    queryKey: [
+      "natal-interpretation",
+      tokenSubject,
+      options.useCaseLevel,
+      options.personaId,
+      options.locale,
+    ],
+    queryFn: async () => {
+      if (!accessToken) {
+        throw new ApiError("unauthorized", "access token is required", 401)
+      }
+      return fetchNatalInterpretation(
+        accessToken,
+        options.useCaseLevel,
+        options.personaId,
+        options.locale,
+        options.question,
+      )
+    },
+    enabled: options.enabled && Boolean(accessToken),
+    retry: (failureCount, error) => {
+      if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+        return false
+      }
+      return failureCount < 1
+    },
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  })
+}

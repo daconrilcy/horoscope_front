@@ -1,0 +1,61 @@
+- id: "complete_01_full"
+  description: "Interprétation complète avec persona"
+  input:
+    chart_json:
+      meta:
+        birth_date: "1985-04-15"
+        birth_time: "14:30"
+        birth_place: "Paris, France"
+        birth_timezone: "Europe/Paris"
+        degraded_mode: null
+        engine: "swisseph"
+        zodiac: "tropical"
+        house_system: "placidus"
+        reference_version: "v1.2"
+        ruleset_version: "1.0.0"
+        chart_json_version: "1"
+      planets:
+        - {code: sun, sign: taurus, longitude: 25.4, longitude_in_sign: 25.4, house: 10, is_retrograde: false, speed: 0.98}
+        - {code: moon, sign: cancer, longitude: 94.7, longitude_in_sign: 4.7, house: 2, is_retrograde: false, speed: 13.1}
+        - {code: mercury, sign: aries, longitude: 15.2, longitude_in_sign: 15.2, house: 9, is_retrograde: false, speed: 1.5}
+        - {code: venus, sign: gemini, longitude: 70.3, longitude_in_sign: 10.3, house: 11, is_retrograde: false, speed: 1.2}
+        - {code: mars, sign: capricorn, longitude: 284.8, longitude_in_sign: 14.8, house: 6, is_retrograde: false, speed: 0.7}
+        - {code: jupiter, sign: aquarius, longitude: 318.5, longitude_in_sign: 18.5, house: 7, is_retrograde: false, speed: 0.1}
+        - {code: saturn, sign: scorpio, longitude: 224.3, longitude_in_sign: 14.3, house: 4, is_retrograde: true, speed: -0.04}
+        - {code: uranus, sign: sagittarius, longitude: 258.1, longitude_in_sign: 18.1, house: 5, is_retrograde: false, speed: 0.06}
+        - {code: neptune, sign: capricorn, longitude: 272.4, longitude_in_sign: 2.4, house: 6, is_retrograde: false, speed: 0.02}
+        - {code: pluto, sign: scorpio, longitude: 213.7, longitude_in_sign: 3.7, house: 4, is_retrograde: false, speed: 0.02}
+      houses:
+        - {number: 1, cusp_longitude: 284.5, sign: capricorn}
+        - {number: 2, cusp_longitude: 314.2, sign: aquarius}
+        - {number: 3, cusp_longitude: 344.8, sign: pisces}
+        - {number: 4, cusp_longitude: 14.2, sign: aries}
+        - {number: 5, cusp_longitude: 44.6, sign: taurus}
+        - {number: 6, cusp_longitude: 74.1, sign: gemini}
+        - {number: 7, cusp_longitude: 104.5, sign: cancer}
+        - {number: 8, cusp_longitude: 134.2, sign: leo}
+        - {number: 9, cusp_longitude: 164.8, sign: virgo}
+        - {number: 10, cusp_longitude: 194.2, sign: libra}
+        - {number: 11, cusp_longitude: 224.6, sign: scorpio}
+        - {number: 12, cusp_longitude: 254.1, sign: sagittarius}
+      aspects:
+        - {type: trine, planet_a: sun, planet_b: moon, angle: 120.3, orb: 0.3, applying: false}
+        - {type: square, planet_a: sun, planet_b: saturn, angle: 91.1, orb: 1.1, applying: true}
+        - {type: conjunction, planet_a: neptune, planet_b: mars, angle: 1.4, orb: 1.4, applying: false}
+        - {type: sextile, planet_a: moon, planet_b: venus, angle: 59.6, orb: 0.4, applying: true}
+        - {type: opposition, planet_a: jupiter, planet_b: sun, angle: 176.9, orb: 3.1, applying: false}
+      angles:
+        ASC: {longitude: 284.5, sign: capricorn}
+        MC: {longitude: 194.2, sign: libra}
+        DSC: {longitude: 104.5, sign: cancer}
+        IC: {longitude: 14.2, sign: aries}
+    question: "Interprète mon thème natal de façon approfondie"
+    locale: "fr-FR"
+  expected_schema_valid: true
+  expected_fields:
+    title: {min_length: 5}
+    summary: {min_length: 100}
+    sections: {min_items: 4}
+    highlights: {min_items: 4}
+    advice: {min_items: 4}
+    evidence: {min_items: 3}

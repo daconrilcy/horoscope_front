@@ -1,0 +1,32 @@
+- id: "complete_02_no_time"
+  description: "Thème sans heure de naissance pour l'interprétation complète"
+  input:
+    chart_json:
+      meta:
+        birth_date: "1990-07-22"
+        birth_time: null
+        birth_place: "Berlin, Germany"
+        birth_timezone: "Europe/Berlin"
+        degraded_mode: "no_time"
+        engine: "swisseph"
+        zodiac: "tropical"
+        house_system: "placidus"
+        reference_version: "v1.2"
+        ruleset_version: "1.0.0"
+        chart_json_version: "1"
+      planets:
+        - {code: sun, sign: cancer, longitude: 120.1, longitude_in_sign: 0.1, house: null, is_retrograde: false, speed: 0.95}
+        - {code: moon, sign: leo, longitude: 145.5, longitude_in_sign: 25.5, house: null, is_retrograde: false, speed: 12.5}
+      houses: []
+      aspects:
+        - {type: conjunction, planet_a: sun, planet_b: mercury, angle: 2.5, orb: 2.5, applying: false}
+      angles:
+        ASC: null
+        MC: null
+        DSC: null
+        IC: null
+    question: "Interprète mon thème"
+    locale: "fr-FR"
+  expected_schema_valid: true
+  expected_fields:
+    sections: {min_items: 2}

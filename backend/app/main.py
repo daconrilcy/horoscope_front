@@ -30,6 +30,7 @@ from app.api.v1.routers.enterprise_credentials import router as enterprise_crede
 from app.api.v1.routers.ephemeris import router as ephemeris_router
 from app.api.v1.routers.geocoding import router as geocoding_router
 from app.api.v1.routers.guidance import router as guidance_router
+from app.api.v1.routers.natal_interpretation import router as natal_interpretation_router
 from app.api.v1.routers.ops_feature_flags import router as ops_feature_flags_router
 from app.api.v1.routers.ops_monitoring import router as ops_monitoring_router
 from app.api.v1.routers.ops_persona import router as ops_persona_router
@@ -345,6 +346,7 @@ app.include_router(chat_modules_router)
 app.include_router(geocoding_router)
 app.include_router(enterprise_credentials_router)
 app.include_router(guidance_router)
+app.include_router(natal_interpretation_router)
 app.include_router(ops_monitoring_router)
 app.include_router(ops_feature_flags_router)
 app.include_router(ops_persona_router)

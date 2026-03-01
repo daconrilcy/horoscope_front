@@ -185,6 +185,10 @@ Permettre aux clients entreprise de consommer le moteur via API, gerer leurs acc
 Permettre a l utilisateur de renseigner ses donnees de naissance depuis le frontend et de declencher la generation de son theme natal, avec feedback adequat pendant le calcul.
 **FRs covered:** FR10, FR11, FR14
 
+### Epic 29: Interprétation Natale via LLMGateway
+Brancher le parcours d'interprétation natale sur l'infrastructure LLMGateway avec gestion des personas, validation AstroResponse_v1 et observabilité.
+**FRs covered:** FR15, FR22, FR23, FR35, FR36
+
 ## Epic 1: Fondation pour des calculs astrologiques fiables et tracables
 
 Fournir un moteur astrologique central, tracable et gouvernable, capable de produire des resultats coherents a partir des donnees natales.
@@ -1383,3 +1387,81 @@ So that je comprenne pourquoi chaque planète est affichée dans un signe et une
 - Cohérence visuelle et métier entre liste des planètes et roue des maisons
 
 [Source: _bmad-output/implementation-artifacts/19-1-comment-lire-ton-theme-natal-dans-l-app.md]
+
+## Epic 29: Interprétation Natale via LLMGateway
+
+Brancher le parcours d'interprétation natale sur l'infrastructure LLMGateway avec gestion des personas, validation AstroResponse_v1 et observabilité.
+
+### Story 29.1: N1 — chart_json canonique + evidence_catalog
+
+As a service d'interprétation,
+I want disposer d'un export JSON stable et d'un catalogue de preuves astrologiques,
+So that le gateway LLM reçoive des données structurées et ancrées pour l'interprétation.
+
+**Acceptance Criteria:**
+- Fonction `build_chart_json` produit un dictionnaire stable avec meta, planets, houses, aspects, angles.
+- Mode dégradé (no_time, no_location) géré avec angles null.
+- `longitude_in_sign` et `sign` calculés correctement pour chaque corps.
+- Fonction `build_evidence_catalog` produit des IDs UPPER_SNAKE_CASE conformes au pattern regex.
+- Couverture de tests unitaires >= 90%.
+
+[Source: docs/agent/story-29-N1-chart-json-canon.md]
+
+### Story 29.2: N2 — NatalInterpretationServiceV2 + Endpoint
+
+As a utilisateur,
+I want demander une interprétation natale (SIMPLE ou COMPLETE) via un nouvel endpoint,
+So that je bénéficie de l'orchestration LLMGateway avec gestion des personas et fallbacks.
+
+**Acceptance Criteria:**
+- Endpoint `POST /v1/natal/interpretation` implémenté.
+- Support des niveaux `short` (SIMPLE) et `complete` (COMPLETE).
+- Résolution du persona_name en DB avant appel Gateway pour le mode COMPLETE.
+- Injection automatique du `chart_json` et `evidence_catalog` dans l'appel Gateway.
+- Fallback automatique COMPLETE -> SHORT géré par le gateway.
+- Tests d'intégration validant les contrats API.
+
+[Source: docs/agent/story-29-N2-natal-interpretation-gateway.md]
+
+### Story 29.3: N3 — Prompts DB + lint + publish
+
+As a product owner,
+I want gérer les prompts d'interprétation natale en base de données,
+So that je puisse itérer sur le contenu sans redéployer le code.
+
+**Acceptance Criteria:**
+- Script de seed pour les contrats et prompts `natal_interpretation` et `short`.
+- Linting des prompts natals (vérification des placeholders {{chart_json}}, etc.).
+- Publication en DB via script d'admin.
+- Validation des contrats avec `AstroResponse_v1`.
+
+[Source: docs/agent/story-29-N3-prompts-db-publish.md]
+
+### Story 29.4: N4 — UI AstroResponse_v1 + upsell
+
+As a utilisateur,
+I want voir mon interprétation natale structurée dans l'UI avec une option d'upgrade,
+So that je profite d'une lecture claire et je découvre les avantages du mode Premium.
+
+**Acceptance Criteria:**
+- Composant `NatalInterpretation` affichant titre, résumé, sections, highlights et conseils.
+- Gestion du chargement avec Skeleton.
+- CTA Upsell visible après une interprétation SHORT.
+- Sélectionneur de persona pour le passage en mode COMPLETE.
+- Navigation fluide entre le thème brut et l'interprétation.
+
+[Source: docs/agent/story-29-N4-ui-rendu-upsell.md]
+
+### Story 29.5: N5 — Eval fixtures + publish gate
+
+As a QA engineer,
+I want valider la qualité de l'interprétation via des fixtures de test et une gate de publication,
+So that aucune régression qualitative n'atteigne la production.
+
+**Acceptance Criteria:**
+- Jeu de fixtures YAML couvrant les cas (full chart, no time, no location, minimal).
+- Test de validation via `eval_harness.py` sur les sorties LLM.
+- Gate de publication bloquant si le taux de succès < 80%.
+- Traces d'évaluation disponibles pour analyse.
+
+[Source: docs/agent/story-29-N5-eval-fixtures-gate.md]

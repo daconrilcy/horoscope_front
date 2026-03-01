@@ -1,0 +1,35 @@
+- id: "short_03_minimal"
+  description: "Thème avec très peu d'aspects (edge case)"
+  input:
+    chart_json:
+      meta:
+        birth_date: "2000-01-01"
+        birth_time: "12:00"
+        birth_place: "London, UK"
+        birth_timezone: "Europe/London"
+        degraded_mode: null
+        engine: "swisseph"
+        zodiac: "tropical"
+        house_system: "placidus"
+        reference_version: "v1.2"
+        ruleset_version: "1.0.0"
+        chart_json_version: "1"
+      planets:
+        - {code: sun, sign: capricorn, longitude: 280.5, longitude_in_sign: 10.5, house: 10, is_retrograde: false, speed: 1.01}
+        - {code: moon, sign: scorpio, longitude: 210.2, longitude_in_sign: 0.2, house: 8, is_retrograde: false, speed: 11.8}
+        - {code: mercury, sign: sagittarius, longitude: 265.4, longitude_in_sign: 25.4, house: 9, is_retrograde: false, speed: 1.2}
+      houses:
+        - {number: 1, cusp_longitude: 15.2, sign: aries}
+        - {number: 10, cusp_longitude: 280.1, sign: capricorn}
+      aspects:
+        - {type: sextile, planet_a: sun, planet_b: moon, angle: 60.1, orb: 0.1, applying: false}
+      angles:
+        ASC: {longitude: 15.2, sign: aries}
+        MC: {longitude: 280.1, sign: capricorn}
+        DSC: null
+        IC: null
+    locale: "fr-FR"
+  expected_schema_valid: true
+  expected_fields:
+    sections: {min_items: 2}
+    evidence: {min_items: 1}

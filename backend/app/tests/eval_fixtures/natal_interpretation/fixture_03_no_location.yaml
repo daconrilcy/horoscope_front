@@ -1,0 +1,32 @@
+- id: "complete_03_no_location"
+  description: "Thème sans lieu de naissance"
+  input:
+    chart_json:
+      meta:
+        birth_date: "1985-04-15"
+        birth_time: "14:30"
+        birth_place: null
+        birth_timezone: "UTC"
+        degraded_mode: "no_location"
+        engine: "swisseph"
+        zodiac: "tropical"
+        house_system: "placidus"
+        reference_version: "v1.2"
+        ruleset_version: "1.0.0"
+        chart_json_version: "1"
+      planets:
+        - {code: sun, sign: taurus, longitude: 25.4, longitude_in_sign: 25.4, house: null, is_retrograde: false, speed: 0.98}
+        - {code: moon, sign: cancer, longitude: 94.7, longitude_in_sign: 4.7, house: null, is_retrograde: false, speed: 13.1}
+      houses: []
+      aspects:
+        - {type: trine, planet_a: sun, planet_b: moon, angle: 120.3, orb: 0.3, applying: false}
+      angles:
+        ASC: null
+        MC: null
+        DSC: null
+        IC: null
+    question: "Interprète mon thème"
+    locale: "fr-FR"
+  expected_schema_valid: true
+  expected_fields:
+    sections: {min_items: 2}

@@ -1,7 +1,8 @@
-"""Tests d'intégration pour les endpoints d'interprétation du thème natal."""
+"""Tests d'intégration pour les endpoints d'interprétation du thème natal V2."""
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -17,13 +18,8 @@ from app.domain.astrology.natal_calculation import (
 )
 from app.domain.astrology.natal_preparation import BirthPreparedData
 from app.infra.db.session import get_db_session
+from app.llm_orchestration.models import GatewayConfigError, GatewayMeta, GatewayResult, UsageInfo
 from app.main import app
-from app.services.natal_interpretation_service import (
-    NatalInterpretationData,
-    NatalInterpretationMetadata,
-    NatalInterpretationServiceError,
-)
-from app.services.user_astro_profile_service import UserAstroProfileServiceError
 from app.services.user_birth_profile_service import UserBirthProfileData
 from app.services.user_natal_chart_service import (
     UserNatalChartMetadata,
@@ -52,9 +48,9 @@ def _make_natal_result() -> NatalResult:
         ],
         houses=[
             HouseResult(number=1, cusp_longitude=195.5),
-            HouseResult(number=4, cusp_longitude=285.2),
-            HouseResult(number=7, cusp_longitude=15.5),
             HouseResult(number=10, cusp_longitude=105.3),
+            HouseResult(number=7, cusp_longitude=15.5),
+            HouseResult(number=4, cusp_longitude=285.2),
         ],
         aspects=[
             AspectResult(
@@ -83,25 +79,48 @@ def _make_birth_profile() -> UserBirthProfileData:
         birth_date="1990-06-15",
         birth_time="14:30",
         birth_place="Paris, France",
+        birth_lat=48.8566,
+        birth_lon=2.3522,
         birth_timezone="Europe/Paris",
     )
 
 
-def _make_interpretation() -> NatalInterpretationData:
-    """Crée un NatalInterpretationData de test."""
-    return NatalInterpretationData(
-        chart_id="chart-test-123",
-        text="1. Synthèse\n2. Points clés\n3. Conseils\n4. Disclaimer",
-        summary="Synthèse",
-        key_points=["Point A", "Point B"],
-        advice=["Conseil A"],
-        disclaimer="Disclaimer important",
-        metadata=NatalInterpretationMetadata(
-            generated_at=datetime(2026, 2, 22, 10, 0, 0, tzinfo=timezone.utc),
+def _make_gateway_result(use_case: str, persona_id: str | None = None) -> GatewayResult:
+    """Crée un GatewayResult de test."""
+    raw_output = (
+        '{"title": "Test", "summary": "...", "sections": [], '
+        '"highlights": [], "advice": [], "evidence": []}'
+    )
+    return GatewayResult(
+        use_case=use_case,
+        request_id="test-req-id",
+        trace_id="test-trace-id",
+        raw_output=raw_output,
+        structured_output={
+            "title": "Thème natal test",
+            "summary": "Résumé de test...",
+            "sections": [
+                {"key": "overall", "heading": "Vue d'ensemble", "content": "Contenu..."},
+                {"key": "career", "heading": "Carrière", "content": "Contenu..."},
+            ],
+            "highlights": ["Point 1", "Point 2", "Point 3"],
+            "advice": ["Conseil 1", "Conseil 2", "Conseil 3"],
+            "evidence": ["SUN_TAURUS", "MOON_SCORPIO"],
+            "disclaimers": [],
+        },
+        usage=UsageInfo(
+            input_tokens=100, output_tokens=200, total_tokens=300, estimated_cost_usd=0.001
+        ),
+        meta=GatewayMeta(
+            latency_ms=500,
             cached=False,
-            degraded_mode=None,
-            tokens_used=500,
-            latency_ms=1200,
+            prompt_version_id="uuid-v1",
+            persona_id=persona_id,
+            model="gpt-4o-mini",
+            output_schema_id="uuid-s1",
+            validation_status="valid",
+            repair_attempted=False,
+            fallback_triggered=False,
         ),
     )
 
@@ -116,224 +135,194 @@ def _override_auth() -> AuthenticatedUser:
     )
 
 
-def _override_db() -> MagicMock:
-    """Override de la session DB pour les tests."""
+@pytest.fixture
+def mock_db():
     return MagicMock()
 
 
 @pytest.fixture
-def test_client():
+def test_client(mock_db):
     """Client de test avec dépendances mockées."""
     app.dependency_overrides[require_authenticated_user] = _override_auth
-    app.dependency_overrides[get_db_session] = _override_db
+    app.dependency_overrides[get_db_session] = lambda: mock_db
     client = TestClient(app)
-    yield client
+    with patch("app.core.config.settings.llm_orchestration_v2", True):
+        yield client
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
-def unauthenticated_client():
-    """Client de test sans authentification."""
-    app.dependency_overrides[get_db_session] = _override_db
-    client = TestClient(app)
-    yield client
-    app.dependency_overrides.clear()
+class TestNatalInterpretationEndpointV2:
+    """Tests pour POST /v1/natal/interpretation."""
 
-
-@pytest.fixture(autouse=True)
-def _mock_astro_profile_service():
-    """Évite les appels réels au calcul astro dans ce module de tests d'interprétation."""
-    with patch(
-        "app.api.v1.routers.users.UserAstroProfileService.get_for_user",
-        side_effect=UserAstroProfileServiceError(
-            code="astro_profile_unavailable",
-            message="astro profile unavailable in test scope",
-        ),
-    ):
-        yield
-
-
-class TestGetMeNatalChartInterpretationAuth:
-    """Tests d'authentification pour GET /v1/users/me/natal-chart/interpretation."""
-
-    def test_unauthenticated_returns_401(self, unauthenticated_client) -> None:
-        """Vérifie que l'endpoint retourne 401 sans authentification."""
-        response = unauthenticated_client.get("/v1/users/me/natal-chart/interpretation")
-        assert response.status_code == 401
-
-
-class TestGetMeNatalChartInterpretation:
-    """Tests pour GET /v1/users/me/natal-chart/interpretation."""
-
-    def test_success(self, test_client) -> None:
+    def test_short_success(self, test_client) -> None:
+        use_case = "natal_interpretation_short"
         with (
             patch(
-                "app.api.v1.routers.users.UserNatalChartService.get_latest_for_user",
+                "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
                 return_value=_make_chart_read_data(),
             ),
             patch(
-                "app.api.v1.routers.users.UserBirthProfileService.get_for_user",
+                "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.api.v1.routers.users.NatalInterpretationService.interpret_chart",
+                "app.llm_orchestration.gateway.LLMGateway.execute",
                 new_callable=AsyncMock,
-                return_value=_make_interpretation(),
+                return_value=_make_gateway_result(use_case),
             ),
         ):
-            response = test_client.get("/v1/users/me/natal-chart/interpretation")
+            response = test_client.post(
+                "/v1/natal/interpretation", json={"use_case_level": "short", "locale": "fr-FR"}
+            )
 
         assert response.status_code == 200
-        data = response.json()
-        assert "data" in data
-        assert data["data"]["chart_id"] == "chart-test-123"
-        assert "summary" in data["data"]
-        assert "key_points" in data["data"]
-        assert "meta" in data
+        data = response.json()["data"]
+        assert data["use_case"] == use_case
+        assert data["interpretation"]["title"] == "Thème natal test"
+        assert data["meta"]["level"] == "short"
+
+    def test_complete_success(self, test_client, mock_db) -> None:
+        use_case = "natal_interpretation"
+        persona_id = str(uuid.uuid4())
+        persona_mock = MagicMock()
+        persona_mock.name = "Test Persona"
+        
+        # Robust mocking of DB execution
+        mock_db.execute.return_value.scalar_one_or_none.return_value = persona_mock
+
+        with (
+            patch(
+                "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
+                return_value=_make_chart_read_data(),
+            ),
+            patch(
+                "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
+                return_value=_make_birth_profile(),
+            ),
+            patch(
+                "app.llm_orchestration.gateway.LLMGateway.execute",
+                new_callable=AsyncMock,
+                return_value=_make_gateway_result(use_case, persona_id=persona_id),
+            ),
+        ):
+            response = test_client.post(
+                "/v1/natal/interpretation",
+                json={
+                    "use_case_level": "complete",
+                    "persona_id": persona_id,
+                    "question": "Quelle est ma mission de vie ?",
+                },
+            )
+
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert data["use_case"] == use_case
+        assert data["meta"]["level"] == "complete"
+        assert data["meta"]["persona_name"] == "Test Persona"
+        assert data["meta"]["persona_id"] == persona_id
+
+    def test_complete_persona_missing(self, test_client) -> None:
+        with (
+            patch(
+                "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
+                return_value=_make_chart_read_data(),
+            ),
+            patch(
+                "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
+                return_value=_make_birth_profile(),
+            ),
+        ):
+            response = test_client.post(
+                "/v1/natal/interpretation",
+                json={"use_case_level": "complete"}
+            )
+        assert response.status_code == 422
+        assert response.json()["error"]["code"] == "natal_input_invalid"
 
     def test_chart_not_found(self, test_client) -> None:
         from app.services.user_natal_chart_service import UserNatalChartServiceError
 
         with patch(
-            "app.api.v1.routers.users.UserNatalChartService.get_latest_for_user",
+            "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
             side_effect=UserNatalChartServiceError(
-                code="natal_chart_not_found",
-                message="natal chart not found",
+                code="natal_chart_not_found", message="not found"
             ),
         ):
-            response = test_client.get("/v1/users/me/natal-chart/interpretation")
-
+            response = test_client.post(
+                "/v1/natal/interpretation", json={"use_case_level": "short"}
+            )
         assert response.status_code == 404
         assert response.json()["error"]["code"] == "natal_chart_not_found"
 
-    def test_ai_engine_timeout(self, test_client) -> None:
+    def test_gateway_config_error(self, test_client) -> None:
         with (
             patch(
-                "app.api.v1.routers.users.UserNatalChartService.get_latest_for_user",
+                "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
                 return_value=_make_chart_read_data(),
             ),
             patch(
-                "app.api.v1.routers.users.UserBirthProfileService.get_for_user",
+                "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.api.v1.routers.users.NatalInterpretationService.interpret_chart",
-                new_callable=AsyncMock,
-                side_effect=NatalInterpretationServiceError(
-                    code="ai_engine_timeout",
-                    message="AI Engine timeout",
-                ),
+                "app.llm_orchestration.gateway.LLMGateway.execute",
+                side_effect=GatewayConfigError("Invalid gateway config"),
             ),
         ):
-            response = test_client.get("/v1/users/me/natal-chart/interpretation")
-
-        assert response.status_code == 503
-        assert response.json()["error"]["code"] == "ai_engine_timeout"
-
-    def test_rate_limit(self, test_client) -> None:
-        with (
-            patch(
-                "app.api.v1.routers.users.UserNatalChartService.get_latest_for_user",
-                return_value=_make_chart_read_data(),
-            ),
-            patch(
-                "app.api.v1.routers.users.UserBirthProfileService.get_for_user",
-                return_value=_make_birth_profile(),
-            ),
-            patch(
-                "app.api.v1.routers.users.NatalInterpretationService.interpret_chart",
-                new_callable=AsyncMock,
-                side_effect=NatalInterpretationServiceError(
-                    code="rate_limit_exceeded",
-                    message="Rate limit exceeded",
-                ),
-            ),
-        ):
-            response = test_client.get("/v1/users/me/natal-chart/interpretation")
-
-        assert response.status_code == 429
-        assert response.json()["error"]["code"] == "rate_limit_exceeded"
-
-
-class TestGetMeLatestNatalChartWithInterpretation:
-    """Tests pour GET /v1/users/me/natal-chart/latest avec include_interpretation."""
-
-    def test_without_interpretation(self, test_client) -> None:
-        with patch(
-            "app.api.v1.routers.users.UserNatalChartService.get_latest_for_user",
-            return_value=_make_chart_read_data(),
-        ):
-            response = test_client.get("/v1/users/me/natal-chart/latest")
-
-        assert response.status_code == 200
-        data = response.json()
-        assert "data" in data
-        assert data["data"]["interpretation"] is None
-
-    def test_with_interpretation_calls_service(self, test_client) -> None:
-        """Vérifie que le service d'interprétation est appelé avec include_interpretation=true."""
-        mock_interpret = AsyncMock(return_value=_make_interpretation())
-
-        with (
-            patch(
-                "app.api.v1.routers.users.UserNatalChartService.get_latest_for_user",
-                return_value=_make_chart_read_data(),
-            ),
-            patch(
-                "app.api.v1.routers.users.UserBirthProfileService.get_for_user",
-                return_value=_make_birth_profile(),
-            ),
-            patch(
-                "app.api.v1.routers.users.NatalInterpretationService.interpret_chart",
-                mock_interpret,
-            ),
-        ):
-            response = test_client.get(
-                "/v1/users/me/natal-chart/latest?include_interpretation=true"
+            response = test_client.post(
+                "/v1/natal/interpretation", json={"use_case_level": "short"}
             )
+        assert response.status_code == 500
+        assert response.json()["error"]["code"] == "gateway_config_error"
 
-        assert response.status_code == 200
-        mock_interpret.assert_called_once()
-        call_args = mock_interpret.call_args
-        assert call_args.kwargs["natal_chart"].chart_id == "chart-test-123"
-        assert call_args.kwargs["user_id"] == 1
-
-    def test_interpretation_error_graceful(self, test_client) -> None:
+    def test_unknown_use_case(self, test_client) -> None:
+        from app.llm_orchestration.models import UnknownUseCaseError
         with (
             patch(
-                "app.api.v1.routers.users.UserNatalChartService.get_latest_for_user",
+                "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
                 return_value=_make_chart_read_data(),
             ),
             patch(
-                "app.api.v1.routers.users.UserBirthProfileService.get_for_user",
+                "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.api.v1.routers.users.NatalInterpretationService.interpret_chart",
-                new_callable=AsyncMock,
-                side_effect=NatalInterpretationServiceError(
-                    code="ai_engine_timeout",
-                    message="Timeout",
-                ),
+                "app.llm_orchestration.gateway.LLMGateway.execute",
+                side_effect=UnknownUseCaseError("Unknown use case"),
             ),
         ):
-            response = test_client.get(
-                "/v1/users/me/natal-chart/latest?include_interpretation=true"
+            response = test_client.post(
+                "/v1/natal/interpretation", json={"use_case_level": "short"}
             )
+        assert response.status_code == 404
+        assert response.json()["error"]["code"] == "unknown_use_case"
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["data"]["interpretation"] is None
-
-    def test_include_interpretation_false(self, test_client) -> None:
-        with patch(
-            "app.api.v1.routers.users.UserNatalChartService.get_latest_for_user",
-            return_value=_make_chart_read_data(),
+    def test_upstream_timeout(self, test_client) -> None:
+        from app.ai_engine.exceptions import UpstreamTimeoutError
+        with (
+            patch(
+                "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
+                return_value=_make_chart_read_data(),
+            ),
+            patch(
+                "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
+                return_value=_make_birth_profile(),
+            ),
+            patch(
+                "app.llm_orchestration.gateway.LLMGateway.execute",
+                side_effect=UpstreamTimeoutError("LLM Timeout"),
+            ),
         ):
-            response = test_client.get(
-                "/v1/users/me/natal-chart/latest?include_interpretation=false"
+            response = test_client.post(
+                "/v1/natal/interpretation", json={"use_case_level": "short"}
             )
+        assert response.status_code == 504
+        assert response.json()["error"]["code"] == "llm_upstream_timeout"
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["data"]["interpretation"] is None
+    def test_feature_disabled(self, test_client) -> None:
+        with patch("app.core.config.settings.llm_orchestration_v2", False):
+            response = test_client.post(
+                "/v1/natal/interpretation", json={"use_case_level": "short"}
+            )
+        assert response.status_code == 501
+        assert response.json()["error"]["code"] == "feature_disabled"
