@@ -195,7 +195,20 @@ FIXED_SCHEMAS = {
                 "maxItems": 8,
                 "items": {"type": "string", "minLength": 1, "maxLength": 120},
             },
-            "intent": {"type": ["string", "null"]},
+            "intent": {
+                "type": ["string", "null"],
+                "enum": [
+                    "clarify_question",
+                    "ask_birth_data",
+                    "explain_natal_basics",
+                    "offer_natal_interpretation",
+                    "offer_tarot_reading",
+                    "offer_event_guidance",
+                    "handoff_to_support",
+                    "close_conversation",
+                    None,
+                ],
+            },
             "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
             "safety_notes": {
                 "type": "array",

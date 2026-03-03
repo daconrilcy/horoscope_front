@@ -16,6 +16,17 @@ _SECTION_KEYS = Literal[
     "event_context",
 ]
 
+_CHAT_INTENTS = Literal[
+    "clarify_question",
+    "ask_birth_data",
+    "explain_natal_basics",
+    "offer_natal_interpretation",
+    "offer_tarot_reading",
+    "offer_event_guidance",
+    "handoff_to_support",
+    "close_conversation",
+]
+
 # Shared constrained types
 _EvidenceItem = Annotated[str, Field(pattern=r"^[A-Z0-9_\.:-]{3,80}$")]
 _HighlightItem = Annotated[str, Field(max_length=360)]
@@ -70,18 +81,7 @@ class ChatResponseV1(BaseModel):
 
     message: str = Field(..., min_length=1, max_length=2500)
     suggested_replies: List[_SuggestedReplyItemV1] = Field(..., max_length=5)
-    intent: Optional[
-        Literal[
-            "clarify_question",
-            "ask_birth_data",
-            "explain_natal_basics",
-            "offer_natal_interpretation",
-            "offer_tarot_reading",
-            "offer_event_guidance",
-            "handoff_to_support",
-            "close_conversation",
-        ]
-    ] = None
+    intent: Optional[_CHAT_INTENTS] = None
     confidence: Optional[float] = Field(None, ge=0, le=1)
     safety_notes: List[_SafetyNoteItem] = Field(default_factory=list, max_length=3)
 
@@ -91,6 +91,6 @@ class ChatResponseV2(BaseModel):
 
     message: str = Field(..., min_length=1, max_length=4000)
     suggested_replies: List[_SuggestedReplyItemV2] = Field(..., max_length=8)
-    intent: Optional[str] = None
+    intent: Optional[_CHAT_INTENTS] = None
     confidence: Optional[float] = Field(None, ge=0, le=1)
     safety_notes: List[_SafetyNoteItem] = Field(default_factory=list, max_length=5)
