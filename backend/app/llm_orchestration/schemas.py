@@ -2,9 +2,21 @@ from __future__ import annotations
 
 from typing import Annotated, List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.llm_orchestration.models import EVIDENCE_ID_REGEX
+
+_SECTION_KEY_VALUES = (
+    "overall",
+    "career",
+    "relationships",
+    "inner_life",
+    "daily_life",
+    "strengths",
+    "challenges",
+    "tarot_spread",
+    "event_context",
+)
 
 _SECTION_KEYS = Literal[
     "overall",
@@ -76,6 +88,51 @@ class AstroResponseV2(BaseModel):
     advice: List[_AdviceItem] = Field(..., min_length=3, max_length=12)
     evidence: List[_EvidenceItem] = Field(..., max_length=80)
     disclaimers: List[_DisclaimerItemV2] = Field(..., max_length=3)
+
+
+class AstroSectionV3(BaseModel):
+    """Section premium v3 — contenu obligatoirement substantiel (min 280 chars)."""
+
+    key: _SECTION_KEYS
+    heading: str = Field(..., min_length=1, max_length=100)
+    content: str = Field(..., min_length=280, max_length=6500)
+
+
+class AstroSectionErrorV3(BaseModel):
+    """Section mode erreur v3 — pas de contrainte de densité premium."""
+
+    key: _SECTION_KEYS
+    heading: str = Field(..., min_length=1, max_length=100)
+    content: str = Field(..., min_length=1, max_length=6500)
+
+
+class AstroResponseV3(BaseModel):
+    """Réponse structurée v3 — sans disclaimers LLM, densité premium obligatoire (Story 30-8)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field(..., min_length=1, max_length=160)
+    summary: str = Field(..., min_length=900, max_length=2800)
+    sections: List[AstroSectionV3] = Field(..., min_length=5, max_length=10)
+    highlights: List[_HighlightItem] = Field(..., min_length=5, max_length=12)
+    advice: List[_AdviceItem] = Field(..., min_length=5, max_length=12)
+    evidence: List[_EvidenceItem] = Field(..., max_length=80)
+    # Pas de champ disclaimers — gérés côté application via DisclaimerRegistry
+
+
+class AstroErrorResponseV3(BaseModel):
+    """Structure dédiée pour le mode erreur v3 — strictement valide, sans contraintes de densité premium."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    error_code: Literal["insufficient_data", "calculation_failed"]
+    message: str = Field(..., min_length=1, max_length=500)
+    title: str = Field(..., min_length=1, max_length=160)
+    summary: str = Field(..., min_length=1, max_length=500)
+    sections: List[AstroSectionErrorV3] = Field(default_factory=list, max_length=2)
+    highlights: List[_HighlightItem] = Field(default_factory=list, max_length=3)
+    advice: List[_AdviceItem] = Field(default_factory=list, max_length=3)
+    evidence: List[_EvidenceItem] = Field(default_factory=list, max_length=5)
 
 
 class ChatResponseV1(BaseModel):

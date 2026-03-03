@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import unicodedata
 from typing import Any, List, Optional
 
 from jsonschema import Draft7Validator
 from pydantic import BaseModel
+
+from app.infra.observability.metrics import increment_counter
+
+logger = logging.getLogger(__name__)
 
 
 class ValidationResult(BaseModel):
@@ -145,6 +150,8 @@ def validate_output(
     json_schema: dict[str, Any],
     evidence_catalog: Optional[list[str] | dict[str, list[str]]] = None,
     strict: bool = False,
+    use_case: str = "",
+    schema_version: str = "v1",
 ) -> ValidationResult:
     """
     Validates LLM output against a JSON Schema.
@@ -157,12 +164,22 @@ def validate_output(
                           Can be a list of IDs or a mapping of ID -> natural labels.
         strict: If True, evidence catalog misses or bidirectional rule violations
                 are treated as errors instead of warnings.
+        schema_version: The version of the schema being validated (v1, v2, v3).
     """
     try:
         # 1. Parse JSON
         try:
             data = json.loads(raw_output)
         except json.JSONDecodeError as e:
+            if use_case.startswith("natal"):
+                increment_counter(
+                    "natal_validation_fail_total",
+                    labels={
+                        "use_case": use_case,
+                        "reason": "json_error",
+                        "schema_version": schema_version,
+                    },
+                )
             return ValidationResult(valid=False, errors=[f"JSON syntax error: {str(e)}"])
 
         # 2. Validate against schema
@@ -175,6 +192,15 @@ def validate_output(
             error_messages.append(f"[{path}] {error.message}")
 
         if error_messages:
+            if use_case.startswith("natal"):
+                increment_counter(
+                    "natal_validation_fail_total",
+                    labels={
+                        "use_case": use_case,
+                        "reason": "schema_error",
+                        "schema_version": schema_version,
+                    },
+                )
             return ValidationResult(valid=False, parsed=data, errors=error_messages)
 
         # 3. Specific validation for 'evidence' (pattern check + catalog + bidirectional)
@@ -199,11 +225,9 @@ def validate_output(
                     normalized_item = _normalize_evidence_item(item, catalog_set, catalog_map)
                     normalized_evidence.append(normalized_item)
                     if normalized_item not in catalog_set:
+                        # Story 30-8 T4: Always warn (never error) — secure filter below handles removal.
                         msg = f"Hallucinated evidence: '{item}' not in catalog."
-                        if strict:
-                            error_messages.append(msg)
-                        else:
-                            warnings.append(msg)
+                        warnings.append(msg)
                 data["evidence"] = normalized_evidence
                 evidence = normalized_evidence
 
@@ -246,7 +270,27 @@ def validate_output(
                         msg = f"Orphan evidence: '{item}' present in evidence but never mentioned in text."  # noqa: E501
                         warnings.append(msg)
 
-            # 3.3 Space check (historical constraint)
+            # 3.3 Secure filter — guarantee evidence ⊆ allowed_evidence (Story 30-8 T4)
+            # Non-blocking: silently removes non-catalog IDs after normalization.
+            if evidence_catalog is not None:
+                original_count = len(data["evidence"])
+                data["evidence"] = [e for e in data["evidence"] if e in catalog_set]
+                evidence = data["evidence"]
+                filtered_count = original_count - len(data["evidence"])
+                if filtered_count > 0:
+                    logger.warning(
+                        "evidence_secure_filter removed=%d use_case=%s",
+                        filtered_count,
+                        use_case or "unknown",
+                    )
+                    if use_case.startswith("natal"):
+                        increment_counter(
+                            "natal_invalid_evidence_total",
+                            value=float(filtered_count),
+                            labels={"use_case": use_case, "schema_version": schema_version},
+                        )
+
+            # 3.4 Space check (historical constraint)
             for i, item in enumerate(evidence):
                 if not isinstance(item, str):
                     continue
@@ -255,6 +299,12 @@ def validate_output(
 
         if error_messages:
             return ValidationResult(valid=False, parsed=data, errors=error_messages)
+
+        if use_case.startswith("natal"):
+            increment_counter(
+                "natal_validation_pass_total",
+                labels={"use_case": use_case, "schema_version": schema_version},
+            )
 
         return ValidationResult(valid=True, parsed=data, warnings=warnings)
 

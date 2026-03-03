@@ -5,7 +5,12 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
-from app.llm_orchestration.schemas import AstroResponseV1, AstroResponseV2
+from app.llm_orchestration.schemas import (
+    AstroErrorResponseV3,
+    AstroResponseV1,
+    AstroResponseV2,
+    AstroResponseV3,
+)
 
 
 class NatalInterpretationRequest(BaseModel):
@@ -28,7 +33,7 @@ class InterpretationMeta(BaseModel):
     persona_id: Optional[str] = None
     persona_name: Optional[str] = None
     prompt_version_id: Optional[str] = None
-    schema_version: str = "v1"  # v1 or v2
+    schema_version: str = "v1"  # v1, v2 or v3
     validation_status: str
     repair_attempted: bool = False
     fallback_triggered: bool = False
@@ -42,10 +47,11 @@ class InterpretationMeta(BaseModel):
 class NatalInterpretationData(BaseModel):
     chart_id: str
     use_case: str
-    interpretation: AstroResponseV2 | AstroResponseV1
+    interpretation: AstroResponseV3 | AstroErrorResponseV3 | AstroResponseV2 | AstroResponseV1
     meta: InterpretationMeta
     degraded_mode: Optional[str] = None
 
 
 class NatalInterpretationResponse(BaseModel):
     data: NatalInterpretationData
+    disclaimers: list[str] = Field(default_factory=list)

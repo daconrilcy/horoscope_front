@@ -19,9 +19,11 @@ from app.infra.db.models.user_natal_interpretation import (
     InterpretationLevel,
     UserNatalInterpretationModel,
 )
+from app.core.config import settings
+from app.infra.observability.metrics import observe_duration
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import InputValidationError
-from app.llm_orchestration.schemas import AstroResponseV1, AstroResponseV2
+from app.llm_orchestration.schemas import AstroResponseV1, AstroResponseV2, AstroResponseV3
 from app.services.chart_json_builder import (
     build_chart_json,
     build_enriched_evidence_catalog,
@@ -73,17 +75,35 @@ class NatalInterpretationServiceV2:
             existing = db.execute(stmt).scalar_one_or_none()
             if existing:
                 schema_version = "v1"
+                payload = existing.interpretation_payload
                 if level == "complete":
-                    try:
-                        interpretation: AstroResponseV1 | AstroResponseV2 = AstroResponseV2(
-                            **existing.interpretation_payload
-                        )
-                        schema_version = "v2"
-                    except Exception:
-                        # Fallback for old persisted v1 interpretations
-                        interpretation = AstroResponseV1(**existing.interpretation_payload)
+                    use_v3 = settings.natal_schema_version == "v3"
+                    if use_v3:
+                        # Attempt V3 (premium)
+                        try:
+                            interpretation = AstroResponseV3(**payload)
+                            schema_version = "v3"
+                        except Exception:
+                            # Attempt V3 Error mode
+                            try:
+                                interpretation = AstroErrorResponseV3(**payload)
+                                schema_version = "v3_error"
+                            except Exception:
+                                # Fallback to older versions if V3 attempt fails for legacy data
+                                try:
+                                    interpretation = AstroResponseV2(**payload)
+                                    schema_version = "v2"
+                                except Exception:
+                                    interpretation = AstroResponseV1(**payload)
+                    else:
+                        # V2 mode
+                        try:
+                            interpretation = AstroResponseV2(**payload)
+                            schema_version = "v2"
+                        except Exception:
+                            interpretation = AstroResponseV1(**payload)
                 else:
-                    interpretation = AstroResponseV1(**existing.interpretation_payload)
+                    interpretation = AstroResponseV1(**payload)
 
                 meta = InterpretationMeta(
                     level=level,
@@ -191,25 +211,55 @@ class NatalInterpretationServiceV2:
             logger.error(f"Gateway returned no structured output for {use_case_key}")
             raise RuntimeError("Gateway returned no structured output")
 
-        # Mapping structured_output to AstroResponseV1/V2
+        # Mapping structured_output to AstroResponseV1/V2/V3 (Story 30-8 T7.4)
         schema_version = "v1"
+        use_v3 = settings.natal_schema_version == "v3"
         if level == "complete" and not gateway_result.meta.fallback_triggered:
-            # complete (payant) → schéma v2 étendu
-            try:
-                interpretation: AstroResponseV1 | AstroResponseV2 = AstroResponseV2(
-                    **gateway_result.structured_output
-                )
-                schema_version = "v2"
-            except Exception as exc:
-                logger.warning(
-                    "V2 deserialization failed (%s), falling back to V1 for request_id=%s",
-                    exc,
-                    request_id,
-                )
-                interpretation = AstroResponseV1(**gateway_result.structured_output)
+            if use_v3:
+                # complete + v3 flag → try v3 first, then v3_error, then v2, then v1
+                try:
+                    interpretation: AstroResponseV3 | AstroErrorResponseV3 | AstroResponseV2 | AstroResponseV1 = (
+                        AstroResponseV3(**gateway_result.structured_output)
+                    )
+                    schema_version = "v3"
+                except Exception:
+                    try:
+                        interpretation = AstroErrorResponseV3(**gateway_result.structured_output)
+                        schema_version = "v3_error"
+                    except Exception as exc:
+                        logger.warning(
+                            "V3 deserialization failed (%s), falling back to V2 for request_id=%s",
+                            exc,
+                            request_id,
+                        )
+                        try:
+                            interpretation = AstroResponseV2(**gateway_result.structured_output)
+                            schema_version = "v2"
+                        except Exception:
+                            interpretation = AstroResponseV1(**gateway_result.structured_output)
+            else:
+                # complete (payant) → schéma v2
+                try:
+                    interpretation = AstroResponseV2(**gateway_result.structured_output)
+                    schema_version = "v2"
+                except Exception as exc:
+                    logger.warning(
+                        "V2 deserialization failed (%s), falling back to V1 for request_id=%s",
+                        exc,
+                        request_id,
+                    )
+                    interpretation = AstroResponseV1(**gateway_result.structured_output)
         else:
             # short (gratuit) ou fallback vers short → schéma v1
             interpretation = AstroResponseV1(**gateway_result.structured_output)
+
+        # T8.3: Observe natal density metrics (summary_len, section_len)
+        if hasattr(interpretation, "summary"):
+            observe_duration("natal_summary_len", float(len(interpretation.summary)))
+        if hasattr(interpretation, "sections"):
+            for _section in interpretation.sections:
+                if hasattr(_section, "content"):
+                    observe_duration("natal_section_len", float(len(_section.content)))
 
         # Gateway meta to our InterpretationMeta
         meta = InterpretationMeta(

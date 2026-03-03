@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmUseCaseConfigModel
 from app.infra.db.session import SessionLocal
+from app.llm_orchestration.models import EVIDENCE_ID_REGEX
+from app.llm_orchestration.schemas import _SECTION_KEY_VALUES
 
 
 class SeedValidationError(Exception):
@@ -40,13 +42,99 @@ CHAT_RESPONSE_V1 = {
     },
 }
 
+ASTRO_RESPONSE_V3_JSON_SCHEMA = {
+    "oneOf": [
+        {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["title", "summary", "sections", "highlights", "advice", "evidence"],
+            "properties": {
+                "title": {"type": "string", "minLength": 1, "maxLength": 160},
+                "summary": {"type": "string", "minLength": 900, "maxLength": 2800},
+                "sections": {
+                    "type": "array",
+                    "minItems": 5,
+                    "maxItems": 10,
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "required": ["key", "heading", "content"],
+                        "properties": {
+                            "key": {"type": "string", "enum": list(_SECTION_KEY_VALUES)},
+                            "heading": {"type": "string", "minLength": 1, "maxLength": 100},
+                            "content": {"type": "string", "minLength": 280, "maxLength": 6500},
+                        },
+                    },
+                },
+                "highlights": {
+                    "type": "array",
+                    "minItems": 5,
+                    "maxItems": 12,
+                    "items": {"type": "string", "maxLength": 360},
+                },
+                "advice": {
+                    "type": "array",
+                    "minItems": 5,
+                    "maxItems": 12,
+                    "items": {"type": "string", "maxLength": 360},
+                },
+                "evidence": {
+                    "type": "array",
+                    "maxItems": 80,
+                    "items": {"type": "string", "pattern": EVIDENCE_ID_REGEX},
+                },
+            },
+        },
+        {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["error_code", "message", "title", "summary"],
+            "properties": {
+                "error_code": {"type": "string", "enum": ["insufficient_data", "calculation_failed"]},
+                "message": {"type": "string", "minLength": 1, "maxLength": 500},
+                "title": {"type": "string", "minLength": 1, "maxLength": 160},
+                "summary": {"type": "string", "minLength": 1, "maxLength": 500},
+                "sections": {
+                    "type": "array",
+                    "maxItems": 2,
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "required": ["key", "heading", "content"],
+                        "properties": {
+                            "key": {"type": "string", "enum": list(_SECTION_KEY_VALUES)},
+                            "heading": {"type": "string", "minLength": 1, "maxLength": 100},
+                            "content": {"type": "string", "minLength": 1, "maxLength": 6500},
+                        },
+                    },
+                },
+                "highlights": {
+                    "type": "array",
+                    "maxItems": 3,
+                    "items": {"type": "string", "maxLength": 360},
+                },
+                "advice": {
+                    "type": "array",
+                    "maxItems": 3,
+                    "items": {"type": "string", "maxLength": 360},
+                },
+                "evidence": {
+                    "type": "array",
+                    "maxItems": 5,
+                    "items": {"type": "string", "pattern": EVIDENCE_ID_REGEX},
+                },
+            },
+        },
+    ]
+}
+
 # The 7 canonical use cases
 USE_CASES_CONTRACTS = [
     {
         "key": "natal_interpretation",
         "display_name": "Interprétation Natale",
         "description": "Analyse approfondie du thème de naissance.",
-        "output_schema_name": "AstroResponse_v1",
+        "output_schema_name": "AstroResponse_v3",  # Story 30-8 T7.2: migrated from v1
         "persona_strategy": "required",
         "safety_profile": "astrology",
         "fallback_use_case_key": "natal_interpretation_short",
@@ -55,9 +143,8 @@ USE_CASES_CONTRACTS = [
         "user_question_policy": "none",
         "input_schema": {
             "type": "object",
-            "required": ["question", "chart_json"],
+            "required": ["chart_json"],
             "properties": {
-                "question": {"type": "string", "maxLength": 500},
                 "chart_json": {"type": "object"},
                 "locale": {"type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$"},
             },
@@ -210,8 +297,24 @@ def seed_use_cases(db: Session) -> None:
     stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.name == "AstroResponse_v1")
     astro_schema = db.execute(stmt).scalar_one_or_none()
 
+    # Upsert AstroResponse_v3 (Story 30-8 T7.1)
+    stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.name == "AstroResponse_v3")
+    astro_v3_schema = db.execute(stmt).scalar_one_or_none()
+    if not astro_v3_schema:
+        astro_v3_schema = LlmOutputSchemaModel(
+            name="AstroResponse_v3", json_schema=ASTRO_RESPONSE_V3_JSON_SCHEMA, version=3
+        )
+        db.add(astro_v3_schema)
+        db.flush()
+    else:
+        astro_v3_schema.json_schema = ASTRO_RESPONSE_V3_JSON_SCHEMA
+
     # 2. Upsert Use Cases
-    schema_map = {"ChatResponse_v1": chat_schema, "AstroResponse_v1": astro_schema}
+    schema_map = {
+        "ChatResponse_v1": chat_schema,
+        "AstroResponse_v1": astro_schema,
+        "AstroResponse_v3": astro_v3_schema,
+    }
 
     for contract in USE_CASES_CONTRACTS:
         stmt = select(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == contract["key"])

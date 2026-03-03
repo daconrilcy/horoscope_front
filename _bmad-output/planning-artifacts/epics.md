@@ -193,6 +193,22 @@ Brancher le parcours d'interprétation natale sur l'infrastructure LLMGateway av
 Permettre de surcharger les modèles LLM utilisés par chaque service via des variables d'environnement pour faciliter le testing et l'optimisation des coûts/qualité sans modifier la base de données.
 **FRs covered:** FR36, FR37, NFR16
 
+### Story 30.8: Mise à niveau globale de l’interprétation thème natal (GPT-5 / Responses API / Structured Outputs)
+
+As a product and tech team,
+I want industrialiser le flux `natal_interpretation` avec un contrat strict Structured Outputs, une gestion des disclaimers hors LLM et un contrôle evidence côté serveur,
+So that la qualité premium augmente, les coûts tokens baissent et les erreurs de validation disparaissent en production.
+
+**Acceptance Criteria:**
+- Aucune réponse LLM ne contient de disclaimer textuel généré; le disclaimer est géré côté application.
+- Tous les appels `natal_interpretation` utilisent un payload Responses conforme au format JSON Schema strict.
+- Les réponses finales passent la validation schéma en mode strict.
+- Le mode erreur renvoie une structure valide strictement compatible avec le schéma.
+- Les réponses complètes respectent des minima de densité (summary, sections, highlights, advice).
+- Le champ `evidence` final est un sous-ensemble strict de `allowed_evidence` calculé côté serveur.
+
+[Source: _bmad-output/implementation-artifacts/30-8-mise-a-niveau-globale-interpretation-theme-natal-gpt5-responses-structured-outputs.md]
+
 ## Epic 1: Fondation pour des calculs astrologiques fiables et tracables
 
 Fournir un moteur astrologique central, tracable et gouvernable, capable de produire des resultats coherents a partir des donnees natales.

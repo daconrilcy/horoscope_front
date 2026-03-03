@@ -469,8 +469,13 @@ class LLMGateway:
                 if schema_model:
                     schema_dict = schema_model.json_schema
                     schema_name = re.sub(r"[^a-z0-9_-]", "_", schema_model.name.lower())
-                    if "v2" in schema_name or "v2" in schema_model.name.lower():
+                    # Story 30-8: Robust version detection from schema name or model version
+                    if schema_model.version == 3 or "v3" in schema_name:
+                        schema_version = "v3"
+                    elif schema_model.version == 2 or "v2" in schema_name:
                         schema_version = "v2"
+                    else:
+                        schema_version = f"v{schema_model.version}"
             except (ValueError, TypeError):
                 logger.error("gateway_invalid_schema_id schema_id=%s", config.output_schema_id)
 
@@ -512,6 +517,8 @@ class LLMGateway:
             schema_dict,
             evidence_catalog=evidence_catalog,
             strict=val_strict,
+            use_case=use_case,
+            schema_version=result.meta.schema_version,
         )
 
         increment_counter(
@@ -519,6 +526,7 @@ class LLMGateway:
             labels={
                 "use_case": use_case,
                 "status": "valid" if val_result.valid else "invalid",
+                "schema_version": result.meta.schema_version,
             },
         )
 
@@ -534,7 +542,15 @@ class LLMGateway:
                 use_case,
                 val_result.errors,
             )
-            increment_counter("llm_repair_invoked_total", labels={"use_case": use_case})
+            increment_counter(
+                "llm_repair_invoked_total",
+                labels={"use_case": use_case, "schema_version": result.meta.schema_version},
+            )
+            if use_case.startswith("natal"):
+                increment_counter(
+                    "natal_repair_total",
+                    labels={"use_case": use_case, "schema_version": result.meta.schema_version},
+                )
             repair_prompt = build_repair_prompt(result.raw_output, val_result.errors, schema_dict)
 
             repair_context = {
@@ -556,6 +572,11 @@ class LLMGateway:
             return repair_result
 
         # Repair call failed or already a repair call
+        if is_repair_call and use_case.startswith("natal"):
+            increment_counter(
+                "natal_repair_fail_total",
+                labels={"use_case": use_case, "schema_version": result.meta.schema_version},
+            )
         # Fallback support
         config = await self._resolve_config(
             db, use_case, context, getattr(settings, "llm_orchestration_v2", False)
@@ -566,7 +587,10 @@ class LLMGateway:
                 use_case,
                 config.fallback_use_case,
             )
-            increment_counter("llm_fallback_invoked_total", labels={"use_case": use_case})
+            increment_counter(
+                "llm_fallback_invoked_total",
+                labels={"use_case": use_case, "schema_version": result.meta.schema_version},
+            )
             new_visited = visited + [use_case]
             fallback_context = {**context, "_visited_use_cases": new_visited}
             fallback_result = await self.execute(
@@ -590,7 +614,7 @@ class LLMGateway:
         )
 
     def _adjust_reasoning_config(self, config: UseCaseConfig) -> UseCaseConfig:
-        """Auto-adjusts tokens and timeout for reasoning models (o-series, gpt-5)."""
+        """Auto-adjusts tokens, timeout, and reasoning_effort for reasoning models (o-series, gpt-5)."""
         _REASONING_PREFIXES = ("o1-", "o3-", "o4-", "gpt-5")
         _REASONING_EXACT = {"o1", "o3", "o4"}
 
@@ -604,6 +628,10 @@ class LLMGateway:
                 updates["max_output_tokens"] = 16384
             if config.timeout_seconds < 180:
                 updates["timeout_seconds"] = 180
+            # AC7 (Story 30-8): reasoning.effort must always be set for GPT-5/o-series.
+            # Default to "medium" to ensure high-quality premium outputs.
+            if not config.reasoning_effort:
+                updates["reasoning_effort"] = "medium"
             if updates:
                 return config.model_copy(update=updates)
         return config

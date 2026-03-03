@@ -27,6 +27,7 @@ from app.llm_orchestration.models import (
     OutputValidationError,
     UnknownUseCaseError,
 )
+from app.services.disclaimer_registry import get_disclaimers
 from app.services.natal_interpretation_service_v2 import NatalInterpretationServiceV2
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
@@ -123,6 +124,7 @@ async def interpret_natal_chart(
             force_refresh=body.force_refresh,
         )
 
+        response.disclaimers = get_disclaimers(body.locale)
         return response
 
     except UnknownUseCaseError as e:

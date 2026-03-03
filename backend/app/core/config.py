@@ -224,6 +224,7 @@ class Settings:
             "NATAL_ENGINE_COMPARE_ENABLED", default=False
         )
         self.llm_orchestration_v2 = self._parse_bool_env("LLM_ORCHESTRATION_V2", default=False)
+        self.natal_schema_version = os.getenv("NATAL_SCHEMA_VERSION", "v3").strip().lower()
         self.llm_replay_encryption_key = os.getenv("LLM_REPLAY_ENCRYPTION_KEY", "").strip()
         if self.app_env == "production" and not self.llm_replay_encryption_key:
             raise RuntimeError("LLM_REPLAY_ENCRYPTION_KEY must be set in production")
