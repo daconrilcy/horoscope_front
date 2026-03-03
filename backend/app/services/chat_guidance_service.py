@@ -475,6 +475,7 @@ class ChatGuidanceService:
         conversation_id: int | None = None,
         request_id: str = "n/a",
         trace_id: str | None = None,
+        persona_id: str | None = None,
     ) -> ChatReplyData:
         """
         Envoie un message et obtient une réponse de l'assistant (async).

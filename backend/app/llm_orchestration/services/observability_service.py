@@ -153,6 +153,10 @@ async def log_call(
     except Exception as e:
         # Observability should not break the main flow
         logger.error("observability_log_call_failed request_id=%s error=%s", request_id, str(e))
+        try:
+            db.rollback()
+        except Exception:
+            pass
 
 
 async def purge_expired_logs(db: Session) -> int:

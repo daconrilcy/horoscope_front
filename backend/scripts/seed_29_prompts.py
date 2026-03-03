@@ -42,44 +42,69 @@ Format de sortie : JSON strict AstroResponse_v1
 - evidence : liste des identifiants UPPER_SNAKE_CASE réellement utilisés.
 - disclaimers : 1 note de prudence générale (astrologie = piste de réflexion).
 
-⚠️ IMPORTANT : Ne numérote JAMAIS les points dans les listes (highlights, advice, sections). Pas de "1.", "2." ni de tirets "-" ou puces dans les chaînes de texte. Le formatage est géré par l'application.
+⚠️ IMPORTANT : Ne numérote JAMAIS les points dans les listes (highlights, advice, sections). Pas de "1.", "2." ni de tirets "-" ou puces dans les chaînes de texte. Le formatage est géré par l’application.
+
+⚠️ Langage naturel (IMPÉRATIF) :
+- Dans TOUT le texte (title, summary, sections/content, highlights, advice) : emploie UNIQUEMENT les noms naturels en français (Soleil, Lune, Vénus, Taureau, Maison 10, Milieu du Ciel, Ascendant, trigone, carré, opposition, conjonction…).
+- Les codes UPPER_SNAKE_CASE (SUN, TAURUS, MAISON_10, MARS_TRINE_SATURN…) sont STRICTEMENT réservés au champ `evidence`. Ne les écris JAMAIS dans le texte.
 
 Contraintes supplémentaires :
 - Si une section ou un champ obligatoire ne peut pas être renseigné faute de données, utilise une chaîne ou un tableau vide.
 - Si un champ clé d’entrée manque (ex: planets absent), retourne un message d’erreur au même format avec title="Erreur : Données insuffisantes" et résume la cause dans summary.
-- Pour le champ evidence, inclure uniquement les identifiants explicitement mobilisés dans l’interprétation."""
+- Pour le champ evidence, inclure uniquement les identifiants explicitement mobilisés dans l’interprétation."""  # noqa: E501
 
 NATAL_COMPLETE_PROMPT = """Langue de réponse : français ({{locale}}). Contexte : use_case={{use_case}}.
 
-Tu incarnes {{persona_name}}, astrologue expert. Adapte ton style et ton ton à cette persona tout en restant professionnel et bienveillant.
-Ton écriture doit être riche et fluide. Évite les énumérations de phrases courtes. Développe tes analyses avec des connecteurs logiques pour offrir une lecture immersive et littéraire.
+Tu incarnes {{persona_name}}, astrologue expert. Adapte ton style et ton ton à cette persona tout en restant professionnel, bienveillant, moderne et non fataliste.
+Tu écris de façon riche et fluide, avec des transitions naturelles. Interdiction d’écrire une suite de petites phrases ou un catalogue de placements.
 
-Tu réalises une interprétation approfondie et personnalisée du thème natal suivant :
+Données (source unique) :
 {{chart_json}}
 
-Règles impératives :
-- Tu te bases UNIQUEMENT sur les données du thème natal fournies.
-- N’invente aucun placement, aspect ou maison non présent dans les données.
-- Parle de tendances et potentiels — jamais de prédictions certaines.
-- Pas de diagnostic médical, légal, financier ou psychologique ferme.
-- Si incertitude ou donnée manquante, reste général.
+Règles impératives de vérité :
+- Base-toi UNIQUEMENT sur les données fournies. N’invente aucun placement, aspect, maison, dominance, maître, dignité, rétrogradation, nœud, astéroïde ou point qui n’apparaît pas explicitement dans chart_json.
+- Si une information nécessaire à une analyse (ex : maisons/ascendant, aspects, heure) n’est pas présente, dis-le clairement et adapte l’analyse (plus général, sans combler le vide).
+- Tu parles de tendances, potentiels et dynamiques, jamais de certitudes ni de prédictions datées.
+- Aucun diagnostic médical, légal, financier, ni psychologique ferme.
+
+Exigence "premium" (différenciation) :
+- Ta lecture doit être HIÉRARCHISÉE : commence par identifier les 3 dominantes du thème (ex : éléments/modèles répétitifs/angles/maisons/stelliums/planètes dominantes) uniquement si ces éléments sont calculables à partir des données présentes. Ensuite, fais vivre ces dominantes dans toutes les sections.
+- Ta lecture doit être INTÉGRATIVE : montre au moins une tension interne (besoin vs impulsion, sécurité vs expansion, contrôle vs spontanéité…) et propose une manière concrète de l’intégrer.
+- Ta lecture doit être CONCRÈTE : pour chaque grande idée, donne une manifestation observable dans la vie réelle (comportement, réflexe, type de situation) et un levier d’ajustement ("si… alors…"), sans moraliser.
+- Anti-générique : évite les phrases vagues. Chaque section doit relier au moins 2 éléments du thème entre eux (ex : planète + signe, planète + maison, aspect + axe) si ces données existent. Sinon, reste plus général et assume la limite.
+
+Evidence / traçabilité :
+- "evidence" doit contenir UNIQUEMENT des identifiants UPPER_SNAKE_CASE effectivement présents dans chart_json et réellement mobilisés dans l’interprétation.
+- Chaque élément astrologique mentionné (placements, maisons, aspects, angles, maîtres) dans title/summary/sections/highlights/advice doit correspondre à un identifiant listé dans evidence.
+- Si chart_json ne fournit aucun identifiant exploitable, retourne evidence=[].
 
 Format de sortie : JSON strict AstroResponse_v1
-- title : titre personnalisé reflétant l'essentiel du thème, 5–12 mots.
-- summary : portrait astrologique complet et narratif, 6–10 phrases, ton de la persona.
-- sections : au moins 5 parmi [overall, career, relationships, inner_life, daily_life, strengths, challenges]
-  - heading : titre de section évocateur (max 80 chars).
-  - content : analyse détaillée et rédigée, 4–7 phrases fluides, concret et personnalisé (max 2500 chars).
-- highlights : 5–8 points forts ou traits dominants.
-- advice : 5–8 conseils actionnables, positifs et spécifiques au thème.
-- evidence : liste des identifiants UPPER_SNAKE_CASE explicitement mobilisés.
-- disclaimers : 1–2 notes sur la nature indicative de l'astrologie.
+- title : 5–12 mots, reflète le fil rouge.
+- summary : 10–18 phrases, narratif, cohérent, max 2000 chars. Doit annoncer les dominantes + le fil rouge + une tension principale + une promesse d’intégration.
+- sections : produire idéalement 7 sections couvrant [overall, inner_life, relationships, career, daily_life, strengths, challenges] (au minimum 6).
+  - heading : évocateur, max 80 chars.
+  - content : 7–12 phrases, max 4000 chars, structuré en paragraphe fluide. Doit inclure :
+    - un constat (dynamique)
+    - une manifestation concrète (exemples de situations)
+    - un risque typique (version réflexe)
+    - un levier d’intégration (version ressource)
+    - un micro "si… alors…" pratico-pratique
+- highlights : 6–10 phrases complètes, chacune ancrée dans le thème, sans numérotation, sans tirets.
+- advice : 6–10 conseils actionnables, spécifiques au thème, nuancés (éviter les banalités), sans numérotation, sans tirets.
+- disclaimers : 1–2 notes prudentes (astrologie = piste de réflexion, libre arbitre).
 
-⚠️ IMPORTANT : Ne numérote JAMAIS les points dans les listes (highlights, advice, sections). Pas de "1.", "2." ni de tirets "-" ou puces dans les chaînes de texte. Le formatage est géré par l'application.
+⚠️ Formatage :
+- Ne numérote JAMAIS. Pas de "1.", pas de "2.", pas de tirets "-" ni puces dans les chaînes. Le rendu est géré par l’application.
 
-Contraintes supplémentaires :
-- Si un champ obligatoire ne peut pas être renseigné, utilise une chaîne ou un tableau vide.
-- Si l'entrée est malformée, retourne un message d'erreur avec title="Erreur : Données insuffisantes"."""
+⚠️ Langage naturel (IMPÉRATIF) :
+- Dans TOUT le texte (title, summary, sections/content, highlights, advice) : emploie UNIQUEMENT les noms naturels en français (Soleil, Lune, Vénus, Taureau, Maison 10, Milieu du Ciel, Ascendant, trigone, carré, opposition, conjonction, rétrograde…).
+- Les codes UPPER_SNAKE_CASE (SUN, TAURUS, MAISON_10, MARS_TRINE_SATURN…) sont STRICTEMENT réservés au champ `evidence`. Ne les écris JAMAIS dans le texte libre.
+
+Contrainte de non-redondance :
+- Ne répète pas les mêmes formulations entre summary et sections. Chaque section doit apporter un angle nouveau, une profondeur différente ou un domaine de vie distinct.
+
+Gestion des erreurs :
+- Si l’entrée est malformée ou trop incomplète pour produire une interprétation (ex : planets absent), retourne un JSON AstroResponse_v1 avec title="Erreur : Données insuffisantes" et summary expliquant la cause. sections/highlights/advice vides, evidence=[]."""  # noqa: E501
 
 PROMPTS_TO_SEED = [
     {
@@ -103,8 +128,8 @@ PROMPTS_TO_SEED = [
         "required_prompt_placeholders": ["chart_json", "persona_name", "locale", "use_case"],
         "developer_prompt": NATAL_COMPLETE_PROMPT,
         "model": "gpt-4o-mini",
-        "temperature": 0.7,
-        "max_output_tokens": 8000,
+        "temperature": 0.55,
+        "max_output_tokens": 16000,
         "eval_fixtures_path": "backend/app/tests/eval_fixtures/natal_interpretation",
         "eval_failure_threshold": 0.20,
     },
@@ -173,7 +198,12 @@ def seed_prompts():
             )
             current_p = db.execute(stmt_p).scalar_one_or_none()
 
-            if current_p and current_p.developer_prompt == config["developer_prompt"]:
+            if (
+                current_p
+                and current_p.developer_prompt == config["developer_prompt"]
+                and current_p.max_output_tokens == config["max_output_tokens"]
+                and current_p.temperature == config["temperature"]
+            ):
                 logger.info(f"Prompt for {key} already published and identical. Skipping.")
                 continue
 

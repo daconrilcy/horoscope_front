@@ -5,7 +5,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
-from app.llm_orchestration.schemas import AstroResponseV1
+from app.llm_orchestration.schemas import AstroResponseV1, AstroResponseV2
 
 
 class NatalInterpretationRequest(BaseModel):
@@ -39,7 +39,7 @@ class InterpretationMeta(BaseModel):
 class NatalInterpretationData(BaseModel):
     chart_id: str
     use_case: str
-    interpretation: AstroResponseV1
+    interpretation: AstroResponseV2 | AstroResponseV1
     meta: InterpretationMeta
     degraded_mode: Optional[str] = None
 

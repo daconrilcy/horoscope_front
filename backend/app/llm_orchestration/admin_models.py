@@ -17,7 +17,6 @@ class LlmUseCaseConfigBase(BaseModel):
     persona_strategy: str = "optional"
     safety_profile: str = "astrology"
     fallback_use_case_key: Optional[str] = None
-    required_prompt_placeholders: List[str] = Field(default_factory=list)
     allowed_persona_ids: List[str] = Field(default_factory=list)
 
 
@@ -92,14 +91,6 @@ class LlmPromptVersionBase(BaseModel):
 
 class LlmPromptVersionCreate(LlmPromptVersionBase):
     pass
-
-
-class LlmPromptVersionUpdate(BaseModel):
-    developer_prompt: Optional[str] = None
-    model: Optional[str] = None
-    temperature: Optional[float] = None
-    max_output_tokens: Optional[int] = None
-    fallback_use_case_key: Optional[str] = None
 
 
 class LlmPromptVersion(LlmPromptVersionBase):

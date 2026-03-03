@@ -39,6 +39,15 @@ from app.llm_orchestration.services.repair_prompter import build_repair_prompt
 
 logger = logging.getLogger(__name__)
 
+# Use cases that MUST have a valid output schema (premium paid features)
+PAID_USE_CASES = {"natal_interpretation", "tarot_reading", "event_guidance"}
+
+# Locale-aware fallback messages for structured-data-only calls
+_FALLBACK_USER_MSG = {
+    "fr": "Interprète les données astrologiques fournies.",
+    "en": "Analyze the provided astrological data.",
+}
+
 # Stub system cores (fallback if V2 disabled)
 SYSTEM_CORES = {
     "default_v1": "Tu es un assistant astrologique expert, éthique et précis. "
@@ -108,6 +117,7 @@ class LLMGateway:
         """
         result: GatewayResult | None = None
         error: Exception | None = None
+        config: UseCaseConfig | None = None
 
         try:
             # 0. Anti-loop protection (circuit breaker)
@@ -195,6 +205,14 @@ class LLMGateway:
                             else "astrology",
                             output_schema_id=db_use_case.output_schema_id if db_use_case else None,
                             input_schema=db_use_case.input_schema if db_use_case else None,
+                            reasoning_effort=db_prompt.reasoning_effort,
+                            verbosity=db_prompt.verbosity,
+                            interaction_mode=db_use_case.interaction_mode
+                            if db_use_case
+                            else "structured",
+                            user_question_policy=db_use_case.user_question_policy
+                            if db_use_case
+                            else "none",
                         )
                         if db_use_case and "allowed_persona_ids" not in context:
                             context["allowed_persona_ids"] = db_use_case.allowed_persona_ids
@@ -223,17 +241,21 @@ class LLMGateway:
                 # producing output. If max_output_tokens is too low the response is
                 # incomplete (status=incomplete, only reasoning in output).
                 # Ensure a minimum of 16k tokens for these models.
-                _REASONING_PREFIXES = ("o1-", "o3-", "o4-", "gpt-5-")
+                _REASONING_PREFIXES = ("o1-", "o3-", "o4-", "gpt-5")
                 _REASONING_EXACT = {"o1", "o3", "o4"}
-                _is_reasoning = env_override_model.startswith(_REASONING_PREFIXES) or env_override_model in _REASONING_EXACT
+                _is_reasoning = (
+                    env_override_model.startswith(_REASONING_PREFIXES)
+                    or env_override_model in _REASONING_EXACT
+                )
                 if _is_reasoning:
                     if config.max_output_tokens < 16384:
                         update["max_output_tokens"] = 16384
                     if config.timeout_seconds < 180:
                         update["timeout_seconds"] = 180
                     logger.info(
-                        "gateway_model_override_reasoning use_case=%s model=%s tokens->%d timeout->%ds",
-                        use_case, env_override_model,
+                        "gateway_model_override_reasoning use_case=%s model=%s tokens->%d timeout->%ds",  # noqa: E501
+                        use_case,
+                        env_override_model,
                         update.get("max_output_tokens", config.max_output_tokens),
                         update.get("timeout_seconds", config.timeout_seconds),
                     )
@@ -246,6 +268,27 @@ class LLMGateway:
                 )
                 config = config.model_copy(update=update)
                 model_overridden = True
+
+            # 1.2 Reasoning model auto-adjustment (Point 4c)
+            _REASONING_PREFIXES = ("o1-", "o3-", "o4-", "gpt-5")
+            _is_db_reasoning = config.model.startswith(_REASONING_PREFIXES) or config.model in {
+                "o1",
+                "o3",
+                "o4",
+            }
+            if _is_db_reasoning:
+                updates = {}
+                if config.max_output_tokens < 16384:
+                    updates["max_output_tokens"] = 16384
+                if config.timeout_seconds < 180:
+                    updates["timeout_seconds"] = 180
+                if updates:
+                    config = config.model_copy(update=updates)
+                    logger.info(
+                        "gateway_reasoning_model_auto_adjust model=%s updates=%s",
+                        config.model,
+                        updates,
+                    )
 
             # 2. Log start
             if not is_repair_call:
@@ -403,26 +446,41 @@ class LLMGateway:
             if not persona_block and not llm_v2_enabled:
                 persona_block = context.get("persona_block") or context.get("persona_line")
 
-            # 7. Layer 4 (User Data)
+            # 7. Layer 4 (User Data) — governed by interaction_mode & user_question_policy
             user_data_block = context.get("user_data_block")
             if not user_data_block:
-                parts = []
-                if "question" in user_input:
-                    parts.append(user_input["question"])
-                elif "last_user_msg" in user_input:
-                    parts.append(user_input["last_user_msg"])
-                
+                locale = merged_vars.get("locale", "en")
+                fallback_msg = _FALLBACK_USER_MSG.get(locale, _FALLBACK_USER_MSG["en"])
+                question = user_input.get("question") or user_input.get("last_user_msg")
+
+                # Enforce user_question_policy
+                if config.user_question_policy == "required" and not question:
+                    raise InputValidationError(
+                        "User question is required for this use case",
+                        details={"use_case": use_case},
+                    )
+
+                if config.user_question_policy == "none":
+                    # Structured data only — ignore user question
+                    parts: list[str] = []
+                else:
+                    # optional or required: include question if present
+                    parts = [question] if question else []
+
                 if "natal_chart_summary" in context:
                     parts.append(f"Natal Chart Summary: {context['natal_chart_summary']}")
                 if "situation" in context:
                     parts.append(f"Context: {context['situation']}")
-                
+
                 # Only include chart_json here if it was NOT already rendered into
                 # the developer prompt (to avoid sending it twice and wasting tokens).
-                if "chart_json" in context and "chart_json" not in config.required_prompt_placeholders:
+                if (
+                    "chart_json" in context
+                    and "chart_json" not in config.required_prompt_placeholders
+                ):
                     parts.append(f"Technical Data: {context['chart_json']}")
-                
-                user_data_block = "\n".join(parts) if parts else "Analyze the provided astrological data."
+
+                user_data_block = "\n".join(parts) if parts else fallback_msg
 
             # 8. Compose Messages
             messages = [
@@ -431,11 +489,17 @@ class LLMGateway:
             ]
             if persona_block:
                 messages.append({"role": "developer", "content": persona_block})
+            if config.interaction_mode == "chat":
+                # Inject conversation history before current user message
+                history = context.get("history", [])
+                for h in history:
+                    messages.append({"role": h["role"], "content": h["content"]})
             messages.append({"role": "user", "content": user_data_block})
 
             # 9. Call Provider
             try:
                 schema_dict = None
+                schema_name = use_case  # fallback name
                 if db and config.output_schema_id:
                     try:
                         schema_model = db.get(
@@ -443,10 +507,18 @@ class LLMGateway:
                         )
                         if schema_model:
                             schema_dict = schema_model.json_schema
+                            schema_name = schema_model.name
                     except (ValueError, TypeError):
                         logger.error(
                             "gateway_invalid_schema_id schema_id=%s", config.output_schema_id
                         )
+
+                # Point 0.2: Block paid use cases that are missing their mandatory schema
+                if use_case in PAID_USE_CASES and not schema_dict:
+                    raise GatewayConfigError(
+                        f"Mandatory output schema missing for '{use_case}'. "
+                        "Ensure the use case has a valid output_schema_id.",
+                    )
 
                 result = await self.client.execute(
                     messages=messages,
@@ -457,10 +529,12 @@ class LLMGateway:
                     request_id=request_id,
                     trace_id=trace_id,
                     use_case=use_case,
+                    reasoning_effort=config.reasoning_effort,
+                    verbosity=config.verbosity,
                     response_format={
                         "type": "json_schema",
                         "json_schema": {
-                            "name": use_case,
+                            "name": schema_name,
                             "schema": schema_dict,
                             "strict": True,
                         },
@@ -485,6 +559,9 @@ class LLMGateway:
             result.meta.prompt_version_id = config.prompt_version_id
             result.meta.persona_id = resolved_persona_id if persona_block else None
             result.meta.output_schema_id = config.output_schema_id
+            # Ensure boolean meta fields are proper Python booleans (not MagicMock in tests)
+            result.meta.repair_attempted = False
+            result.meta.fallback_triggered = False
             result.meta.model_override_active = model_overridden
             result.usage.estimated_cost_usd = calculate_cost(
                 result.usage.input_tokens, result.usage.output_tokens
@@ -510,6 +587,9 @@ class LLMGateway:
                             "gateway_validation_failed_starting_repair use_case=%s errors=%s",
                             use_case,
                             val_result.errors,
+                        )
+                        increment_counter(
+                            "llm_repair_invoked_total", labels={"use_case": use_case}
                         )
                         repair_prompt = build_repair_prompt(
                             result.raw_output, val_result.errors, schema_dict
@@ -541,6 +621,9 @@ class LLMGateway:
                                 "gateway_validation_failed_triggering_fallback use_case=%s fallback=%s",  # noqa: E501
                                 use_case,
                                 config.fallback_use_case,
+                            )
+                            increment_counter(
+                                "llm_fallback_invoked_total", labels={"use_case": use_case}
                             )
                             # Track visited to prevent loops
                             new_visited = visited + [use_case]
@@ -594,6 +677,7 @@ class LLMGateway:
                         "use_case": use_case,
                         "model": model_name,
                         "status": final_status,
+                        "mode": config.interaction_mode if config else "unknown",
                     },
                 )
 

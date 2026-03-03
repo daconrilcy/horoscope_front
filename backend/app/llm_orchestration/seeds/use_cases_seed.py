@@ -159,72 +159,25 @@ USE_CASES_CONTRACTS = [
 ]
 
 
-# Personas definition
-PERSONAS = [
-    {
-        "name": "Astrologue Standard",
-        "description": "Persona par défaut pour les services d'astrologie.",
-        "tone": "warm",
-        "verbosity": "medium",
-        "style_markers": ["précis", "empathique"],
-        "boundaries": ["Ne donne pas de conseils médicaux ou financiers fermes."],
-    },
-    {
-        "name": "Luna Céleste",
-        "description": "Astrologue depuis 15 ans, spécialisée en astrologie relationnelle.",
-        "tone": "warm",
-        "verbosity": "medium",
-        "style_markers": ["bienveillant", "direct"],
-        "boundaries": ["Se concentre sur les relations et le développement personnel."],
-    },
-    {
-        "name": "Orion Mystique",
-        "description": "Expert en astrologie prévisionnelle et choix de carrière.",
-        "tone": "mystical",
-        "verbosity": "high",
-        "style_markers": ["analytique", "précis"],
-        "boundaries": ["Évite les prédictions fatidiques, privilégie le conseil de carrière."],
-    },
-    {
-        "name": "Stella Nova",
-        "description": "Guide spirituel utilisant l'astrologie comme outil d'éveil.",
-        "tone": "warm",
-        "verbosity": "medium",
-        "style_markers": ["doux", "intuitif"],
-        "boundaries": ["Ne remplace pas un suivi psychologique."],
-    },
-    {
-        "name": "Atlas Cosmos",
-        "description": "Spécialiste de l'astrologie financière et des cycles planétaires.",
-        "tone": "rational",
-        "verbosity": "medium",
-        "style_markers": ["pragmatique", "factuel"],
-        "boundaries": ["Conseils basés sur les cycles, pas de garantie de profit."],
-    },
-]
-
-
 def seed_use_cases(db: Session) -> None:
-    # 0. Ensure personas exist
-    persona_ids = []
-    for p_data in PERSONAS:
-        stmt_persona = select(LlmPersonaModel).where(LlmPersonaModel.name == p_data["name"])
-        persona = db.execute(stmt_persona).scalar_one_or_none()
+    # 0. Ensure a default persona exists for 'required' use cases
+    stmt_persona = select(LlmPersonaModel).where(LlmPersonaModel.name == "Astrologue Standard")
+    default_persona = db.execute(stmt_persona).scalar_one_or_none()
 
-        if not persona:
-            persona = LlmPersonaModel(
-                name=p_data["name"],
-                description=p_data["description"],
-                tone=p_data["tone"],
-                verbosity=p_data["verbosity"],
-                style_markers=p_data["style_markers"],
-                boundaries=p_data["boundaries"],
-                enabled=True,
-            )
-            db.add(persona)
-            db.flush()  # Generate ID
-        
-        persona_ids.append(str(persona.id))
+    if not default_persona:
+        default_persona = LlmPersonaModel(
+            name="Astrologue Standard",
+            description="Persona par défaut pour les services d'astrologie.",
+            tone="Bienveillant et professionnel",
+            verbosity="medium",
+            style_markers=["précis", "empathique"],
+            boundaries="Ne donne pas de conseils médicaux ou financiers fermes.",
+            enabled=True,
+        )
+        db.add(default_persona)
+        db.flush()  # Generate ID
+
+    default_persona_id = str(default_persona.id)
 
     # 1. Upsert Output Schemas
     # Check if ChatResponse_v1 exists
@@ -281,14 +234,9 @@ def seed_use_cases(db: Session) -> None:
             uc.required_prompt_placeholders = contract["required_prompt_placeholders"]
             uc.fallback_use_case_key = contract["fallback_use_case_key"]
 
-        # AC 5 / Issue B: Ensure all seeded personas are allowed if strategy is required
-        if uc.persona_strategy == "required":
-            # In development, we allow all seeded personas
-            # We use a set to avoid duplicates and ensure all current persona_ids are present
-            current_allowed = set(uc.allowed_persona_ids or [])
-            for pid in persona_ids:
-                current_allowed.add(pid)
-            uc.allowed_persona_ids = list(current_allowed)
+        # AC 5 / Issue B: Ensure at least one persona if strategy is required
+        if uc.persona_strategy == "required" and not uc.allowed_persona_ids:
+            uc.allowed_persona_ids = [default_persona_id]
 
     db.commit()
 

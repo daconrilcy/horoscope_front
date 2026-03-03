@@ -5,7 +5,7 @@ import logging
 import uuid
 from typing import Literal, Optional
 
-from sqlalchemy import select, delete
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.api.v1.schemas.natal_interpretation import (
@@ -21,7 +21,7 @@ from app.infra.db.models.user_natal_interpretation import (
 )
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import InputValidationError
-from app.llm_orchestration.schemas import AstroResponseV1
+from app.llm_orchestration.schemas import AstroResponseV1, AstroResponseV2
 from app.services.chart_json_builder import build_chart_json, build_evidence_catalog
 from app.services.user_birth_profile_service import UserBirthProfileData
 
@@ -50,7 +50,9 @@ class NatalInterpretationServiceV2:
     ) -> NatalInterpretationResponse:
         # 0. Check for existing persisted interpretation
         if not force_refresh:
-            db_level = InterpretationLevel.SHORT if level == "short" else InterpretationLevel.COMPLETE
+            db_level = (
+                InterpretationLevel.SHORT if level == "short" else InterpretationLevel.COMPLETE
+            )
             stmt = select(UserNatalInterpretationModel).where(
                 UserNatalInterpretationModel.user_id == user_id,
                 UserNatalInterpretationModel.chart_id == chart_id,
@@ -59,13 +61,25 @@ class NatalInterpretationServiceV2:
             # For complete, we also check persona
             if level == "complete" and persona_id:
                 try:
-                    stmt = stmt.where(UserNatalInterpretationModel.persona_id == uuid.UUID(persona_id))
+                    stmt = stmt.where(
+                        UserNatalInterpretationModel.persona_id == uuid.UUID(persona_id)
+                    )
                 except (ValueError, TypeError):
                     pass
 
             existing = db.execute(stmt).scalar_one_or_none()
             if existing:
-                interpretation = AstroResponseV1(**existing.interpretation_payload)
+                if level == "complete":
+                    try:
+                        interpretation: AstroResponseV1 | AstroResponseV2 = AstroResponseV2(
+                            **existing.interpretation_payload
+                        )
+                    except Exception:
+                        # Fallback for old persisted v1 interpretations
+                        interpretation = AstroResponseV1(**existing.interpretation_payload)
+                else:
+                    interpretation = AstroResponseV1(**existing.interpretation_payload)
+
                 meta = InterpretationMeta(
                     level=level,
                     use_case=existing.use_case,
@@ -119,7 +133,7 @@ class NatalInterpretationServiceV2:
         if persona_id:
             try:
                 persona = db.execute(
-                    select(LlmPersonaModel).where(LlmPersonaModel.id == persona_id)
+                    select(LlmPersonaModel).where(LlmPersonaModel.id == uuid.UUID(persona_id))
                 ).scalar_one_or_none()
                 if persona:
                     persona_name = persona.name
@@ -133,11 +147,15 @@ class NatalInterpretationServiceV2:
                 raise
 
         # 4. Build user_input vs context (AC4)
-        user_input = {
+        # C1 (story 30-5): 'complete' is purely descriptive (user_question_policy=none)
+        # — do NOT pass 'question' to the gateway for complete level.
+        # For 'short', question is optional and passed through.
+        user_input: dict = {
             "chart_json": chart_json_dict,
-            "question": question or "Interprète mon thème natal.",
             "locale": locale,
         }
+        if level == "short":
+            user_input["question"] = question or "Interprète mon thème natal."
 
         context = {
             "locale": locale,
@@ -182,12 +200,27 @@ class NatalInterpretationServiceV2:
             cached=False,
         )
 
-        # Mapping structured_output to AstroResponseV1
-        interpretation = AstroResponseV1(**gateway_result.structured_output)
+        # Mapping structured_output to AstroResponseV1/V2
+        if level == "complete" and not gateway_result.meta.fallback_triggered:
+            # complete (payant) → schéma v2 étendu
+            try:
+                interpretation: AstroResponseV1 | AstroResponseV2 = AstroResponseV2(
+                    **gateway_result.structured_output
+                )
+            except Exception as exc:
+                logger.warning(
+                    "V2 deserialization failed (%s), falling back to V1 for request_id=%s",
+                    exc,
+                    request_id,
+                )
+                interpretation = AstroResponseV1(**gateway_result.structured_output)
+        else:
+            # short (gratuit) ou fallback vers short → schéma v1
+            interpretation = AstroResponseV1(**gateway_result.structured_output)
 
         # 7. Persist interpretation
         db_level = InterpretationLevel.SHORT if level == "short" else InterpretationLevel.COMPLETE
-        
+
         # If force_refresh, delete old one if exists
         if force_refresh:
             stmt_del = delete(UserNatalInterpretationModel).where(
@@ -197,7 +230,9 @@ class NatalInterpretationServiceV2:
             )
             if level == "complete" and persona_id:
                 try:
-                    stmt_del = stmt_del.where(UserNatalInterpretationModel.persona_id == uuid.UUID(persona_id))
+                    stmt_del = stmt_del.where(
+                        UserNatalInterpretationModel.persona_id == uuid.UUID(persona_id)
+                    )
                 except (ValueError, TypeError):
                     pass
             db.execute(stmt_del)

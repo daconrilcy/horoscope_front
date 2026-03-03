@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from app.ai_engine.schemas import GenerateContext, GenerateInput, GenerateRequest
+from app.ai_engine.services.generate_service import generate_text
 from app.services.ai_engine_adapter import AIEngineAdapter, AIEngineAdapterError
 from app.services.user_birth_profile_service import UserBirthProfileData
 from app.services.user_natal_chart_service import UserNatalChartReadData
@@ -393,8 +394,6 @@ class NatalInterpretationService:
 
                 response = MockResponse()
             else:
-                from app.ai_engine.services.generate_service import generate_text
-
                 response = await generate_text(
                     request=generate_request,
                     request_id=request_id,

@@ -1,24 +1,34 @@
 from __future__ import annotations
 
-from typing import List, Literal, Optional
+from typing import Annotated, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
+_SECTION_KEYS = Literal[
+    "overall",
+    "career",
+    "relationships",
+    "inner_life",
+    "daily_life",
+    "strengths",
+    "challenges",
+    "tarot_spread",
+    "event_context",
+]
+
 
 class AstroSection(BaseModel):
-    key: Literal[
-        "overall",
-        "career",
-        "relationships",
-        "inner_life",
-        "daily_life",
-        "strengths",
-        "challenges",
-        "tarot_spread",
-        "event_context",
-    ]
+    key: _SECTION_KEYS
     heading: str = Field(..., min_length=1, max_length=80)
     content: str = Field(..., min_length=1, max_length=2500)
+
+
+class AstroSectionV2(BaseModel):
+    """Extended section with wider content limit for premium interpretations."""
+    key: _SECTION_KEYS
+    heading: str = Field(..., min_length=1, max_length=80)
+    content: str = Field(..., min_length=1, max_length=6500)
+
 
 class AstroResponseV1(BaseModel):
     """Canonical structured response for astrological interpretations."""
@@ -28,6 +38,22 @@ class AstroResponseV1(BaseModel):
     highlights: List[str] = Field(..., min_length=3, max_length=10)
     advice: List[str] = Field(..., min_length=3, max_length=10)
     evidence: List[str] = Field(..., min_length=2, max_length=40)
+    disclaimers: List[str] = Field(default_factory=list)
+
+
+_EvidenceItem = Annotated[str, Field(pattern=r"^[A-Z0-9_\.:-]{3,80}$")]
+_HighlightItem = Annotated[str, Field(max_length=360)]
+_AdviceItem = Annotated[str, Field(max_length=360)]
+
+
+class AstroResponseV2(BaseModel):
+    """Extended structured response for premium complete interpretations (Story 30-2)."""
+    title: str = Field(..., min_length=1, max_length=120)
+    summary: str = Field(..., min_length=1, max_length=2800)
+    sections: List[AstroSectionV2] = Field(..., min_length=2, max_length=8)
+    highlights: List[_HighlightItem] = Field(..., min_length=3, max_length=10)
+    advice: List[_AdviceItem] = Field(..., min_length=3, max_length=10)
+    evidence: List[_EvidenceItem] = Field(default_factory=list, max_length=40)
     disclaimers: List[str] = Field(default_factory=list)
 
 class ChatResponseV1(BaseModel):

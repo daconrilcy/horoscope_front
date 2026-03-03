@@ -39,17 +39,21 @@ class PromptLint:
         elif len(text) > 4000:
             warnings.append("Prompt is quite long (> 4,000 characters).")
 
-        # 3. Combined placeholders (Platform + Use-case specific)
-        required = {"locale", "use_case"}
-        if use_case_required_placeholders:
-            required.update(use_case_required_placeholders)
-
-        for p in sorted(list(required)):
-            # Normalize placeholder name (remove braces if provided in config)
+        # 3a. Platform-mandatory placeholders
+        platform_required = {"locale", "use_case"}
+        for p in sorted(list(platform_required)):
             clean_p = p.replace("{", "").replace("}", "")
             full_p = f"{{{{{clean_p}}}}}"
             if full_p not in text:
                 errors.append(f"Mandatory placeholder '{full_p}' is missing.")
+
+        # 3b. Use-case-specific placeholders (separate error message)
+        if use_case_required_placeholders:
+            for p in sorted(list(use_case_required_placeholders)):
+                clean_p = p.replace("{", "").replace("}", "")
+                full_p = f"{{{{{clean_p}}}}}"
+                if full_p not in text:
+                    errors.append(f"Use-case specific placeholder '{full_p}' is missing.")
 
         # 4. Forbidden words (configurable via AI_ENGINE_LLM_PROMPT_FORBIDDEN_WORDS)
         forbidden_words = ai_engine_settings.llm_prompt_forbidden_words

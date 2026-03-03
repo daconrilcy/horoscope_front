@@ -42,6 +42,14 @@ class LlmUseCaseConfigModel(Base):
         String(16),
         default="optional",  # optional, required, forbidden
     )
+    interaction_mode: Mapped[str] = mapped_column(
+        String(16),
+        default="structured",  # structured, chat
+    )
+    user_question_policy: Mapped[str] = mapped_column(
+        String(16),
+        default="none",  # none, optional, required
+    )
     safety_profile: Mapped[str] = mapped_column(
         String(32),
         default="astrology",  # astrology, support, transactional
@@ -66,6 +74,16 @@ class LlmPromptVersionModel(Base):
     temperature: Mapped[float] = mapped_column(Float, default=0.7)
     max_output_tokens: Mapped[int] = mapped_column(Integer, default=2048)
     fallback_use_case_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    reasoning_effort: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        default=None,
+    )
+    verbosity: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        default=None,
+    )
     created_by: Mapped[str] = mapped_column(String(255))  # user_id
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

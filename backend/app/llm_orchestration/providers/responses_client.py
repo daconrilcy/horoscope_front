@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import random
 import time
@@ -44,6 +45,24 @@ class ResponsesClient:
             self._async_client = AsyncOpenAI(api_key=ai_engine_settings.openai_api_key)
         return self._async_client
 
+    @staticmethod
+    def _to_typed_content_blocks(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Convert simple role/content messages to typed content blocks required by GPT-5.
+        Format: {"role": "...", "content": [{"type": "input_text", "text": "..."}]}
+
+        Idempotent: if content is already a list (typed blocks), returns as-is.
+        Preserves all extra fields present on the message dict.
+        """
+        result = []
+        for msg in messages:
+            content = msg.get("content", "")
+            if isinstance(content, str):
+                result.append({**msg, "content": [{"type": "input_text", "text": content}]})
+            else:
+                result.append(msg)
+        return result
+
     async def execute(
         self,
         messages: List[Dict[str, str]],
@@ -54,6 +73,8 @@ class ResponsesClient:
         request_id: str = "",
         trace_id: str = "",
         use_case: str = "",
+        reasoning_effort: Optional[str] = None,
+        verbosity: Optional[str] = None,
         response_format: Optional[Dict[str, Any]] = None,
     ) -> GatewayResult:
         """Execute a request via the Responses API with retry logic."""
@@ -63,32 +84,55 @@ class ResponsesClient:
         start_time = time.monotonic()
 
         async def do_create() -> "Response":
-            # The Responses API uses 'input' for the conversation history.
+            # 1. GPT-5 requires typed content blocks.
+            is_gpt5 = model.startswith("gpt-5")
+            effective_input = self._to_typed_content_blocks(messages) if is_gpt5 else messages
+
+            # 2. Base parameters
             params: Dict[str, Any] = {
                 "model": model,
-                "input": messages,  # type: ignore
+                "input": effective_input,  # type: ignore
                 "max_output_tokens": max_output_tokens,
             }
-            
-            # Certain models (o1, o3, gpt-5) do not support the temperature parameter.
-            # We omit it for these models to avoid BadRequestError.
-            supports_temperature = not (
-                model.startswith(("o1-", "o3-", "gpt-5-")) 
-                or model in ["o1", "o3"]
+
+            # 3. Reasoning and Temperature
+            # GPT-5 and o-series (o1, o3, o4) use reasoning_effort instead of temperature.
+            # NOTE on API format: the OpenAI Responses API uses a flat `reasoning_effort`
+            # top-level parameter (not the nested `reasoning: {effort: ...}` form from the
+            # Chat Completions API). See: https://platform.openai.com/docs/api-reference/responses
+            is_reasoning = (
+                is_gpt5 or model.startswith(("o1-", "o3-", "o4-")) or model in {"o1", "o3", "o4"}
             )
-            if supports_temperature:
+
+            if is_reasoning:
+                if reasoning_effort:
+                    params["reasoning_effort"] = reasoning_effort
+                if is_gpt5 and verbosity:
+                    params["verbosity"] = verbosity
+            else:
                 params["temperature"] = temperature
 
             if response_format:
                 # Responses API uses `text.format` with a flat structure, whereas
                 # Chat Completions API nests details under `json_schema`.
-                # Transform: {"type": "json_schema", "json_schema": {"name": ..., "schema": ..., "strict": ...}}
+                # Transform: {"type": "json_schema", "json_schema": {"name": ..., "schema": ..., "strict": ...}}  # noqa: E501
                 #        →   {"type": "json_schema", "name": ..., "schema": ..., "strict": ...}
                 fmt = dict(response_format)
                 if fmt.get("type") == "json_schema" and "json_schema" in fmt:
                     nested = fmt.pop("json_schema")
                     fmt.update(nested)
                 params["text"] = {"format": fmt}
+
+            # Add tracing headers for observability
+            headers: Dict[str, str] = {}
+            if request_id:
+                headers["x-request-id"] = request_id
+            if trace_id:
+                headers["x-trace-id"] = trace_id
+            if use_case:
+                headers["x-use-case"] = use_case
+            if headers:
+                params["extra_headers"] = headers
 
             return await client.responses.create(**params)
 
@@ -115,11 +159,20 @@ class ResponsesClient:
             estimated_cost_usd=0.0,  # Will be calculated in gateway or service
         )
 
+        # Parse structured output when response_format was requested
+        structured_output: Any = None
+        if response_format is not None and output_text:
+            try:
+                structured_output = json.loads(output_text)
+            except (json.JSONDecodeError, ValueError):
+                pass
+
         return GatewayResult(
             use_case=use_case,
             request_id=request_id,
             trace_id=trace_id,
             raw_output=output_text,
+            structured_output=structured_output,
             usage=usage,
             meta=GatewayMeta(
                 latency_ms=latency_ms,
@@ -153,6 +206,22 @@ class ResponsesClient:
                 )
                 last_error = err
             except Exception as err:
+                # Handle OpenAI SDK-specific exceptions first (non-retryable)
+                try:
+                    from openai import APIConnectionError, APITimeoutError, RateLimitError
+
+                    if isinstance(err, RateLimitError):
+                        raise UpstreamRateLimitError() from err
+                    if isinstance(err, APITimeoutError):
+                        raise UpstreamTimeoutError(timeout_seconds) from err
+                    if isinstance(err, APIConnectionError):
+                        raise UpstreamError(
+                            f"Connection error: {str(err)}",
+                            details={"kind": "connection_error"},
+                        ) from err
+                except ImportError:
+                    pass
+
                 error_msg = str(err).lower()
                 if "rate_limit" in error_msg or "429" in error_msg:
                     raise UpstreamRateLimitError() from err

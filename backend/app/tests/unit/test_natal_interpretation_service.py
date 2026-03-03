@@ -331,6 +331,9 @@ class TestNatalInterpretationService:
         mock_response.usage.total_tokens = 500
 
         with patch(
+            "app.ai_engine.config.ai_engine_settings",
+            MagicMock(llm_orchestration_v2=False),
+        ), patch(
             "app.services.natal_interpretation_service.generate_text",
             new_callable=AsyncMock,
             return_value=mock_response,
@@ -366,6 +369,9 @@ class TestNatalInterpretationService:
         mock_response.usage.total_tokens = 300
 
         with patch(
+            "app.ai_engine.config.ai_engine_settings",
+            MagicMock(llm_orchestration_v2=False),
+        ), patch(
             "app.services.natal_interpretation_service.generate_text",
             new_callable=AsyncMock,
             return_value=mock_response,
@@ -391,6 +397,9 @@ class TestNatalInterpretationService:
         mock_response.usage.total_tokens = 0
 
         with patch(
+            "app.ai_engine.config.ai_engine_settings",
+            MagicMock(llm_orchestration_v2=False),
+        ), patch(
             "app.services.natal_interpretation_service.generate_text",
             new_callable=AsyncMock,
             return_value=mock_response,
@@ -410,6 +419,9 @@ class TestNatalInterpretationService:
         birth_profile = _make_birth_profile()
 
         with patch(
+            "app.ai_engine.config.ai_engine_settings",
+            MagicMock(llm_orchestration_v2=False),
+        ), patch(
             "app.services.natal_interpretation_service.generate_text",
             new_callable=AsyncMock,
             side_effect=TimeoutError("AI Engine timeout"),
@@ -433,6 +445,9 @@ class TestNatalInterpretationService:
             code = "provider_error"
 
         with patch(
+            "app.ai_engine.config.ai_engine_settings",
+            MagicMock(llm_orchestration_v2=False),
+        ), patch(
             "app.services.natal_interpretation_service.generate_text",
             new_callable=AsyncMock,
             side_effect=AIError("Provider failure"),

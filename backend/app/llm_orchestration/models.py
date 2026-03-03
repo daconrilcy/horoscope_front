@@ -16,17 +16,22 @@ class UseCaseConfig(BaseModel):
     developer_prompt: str
     prompt_version_id: str = "hardcoded-v1"
     persona_strategy: str = "optional"
+    interaction_mode: str = "structured"
+    user_question_policy: str = "none"
     safety_profile: str = "astrology"
     input_schema: Optional[Dict[str, Any]] = None
     output_schema_id: Optional[str] = None
     required_prompt_placeholders: List[str] = Field(default_factory=list)
     fallback_use_case: Optional[str] = None
+    reasoning_effort: Optional[str] = None
+    verbosity: Optional[str] = None
 
 
 class ComposedMessages(BaseModel):
     """The 4-layer composed messages for the Responses API."""
 
-    messages: List[Dict[str, str]]
+    # Dict[str, Any] : content peut être str (gpt-4o) ou List[TypedBlock] (gpt-5)
+    messages: List[Dict[str, Any]]
 
 
 class GatewayRequest(BaseModel):
