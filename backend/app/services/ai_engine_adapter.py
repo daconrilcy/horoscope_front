@@ -390,6 +390,11 @@ class AIEngineAdapter:
                     trace_id=trace_id,
                     db=db,
                 )
+
+                # If structured output is available (canonical ChatResponse_v1), return the message
+                if result.structured_output and "message" in result.structured_output:
+                    return result.structured_output["message"]
+
                 return result.raw_output
             except Exception as err:
                 if _can_use_test_fallback(err):

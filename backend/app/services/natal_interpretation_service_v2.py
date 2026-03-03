@@ -22,7 +22,10 @@ from app.infra.db.models.user_natal_interpretation import (
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import InputValidationError
 from app.llm_orchestration.schemas import AstroResponseV1, AstroResponseV2
-from app.services.chart_json_builder import build_chart_json, build_evidence_catalog
+from app.services.chart_json_builder import (
+    build_chart_json,
+    build_enriched_evidence_catalog,
+)
 from app.services.user_birth_profile_service import UserBirthProfileData
 
 logger = logging.getLogger(__name__)
@@ -69,11 +72,13 @@ class NatalInterpretationServiceV2:
 
             existing = db.execute(stmt).scalar_one_or_none()
             if existing:
+                schema_version = "v1"
                 if level == "complete":
                     try:
                         interpretation: AstroResponseV1 | AstroResponseV2 = AstroResponseV2(
                             **existing.interpretation_payload
                         )
+                        schema_version = "v2"
                     except Exception:
                         # Fallback for old persisted v1 interpretations
                         interpretation = AstroResponseV1(**existing.interpretation_payload)
@@ -88,7 +93,7 @@ class NatalInterpretationServiceV2:
                     prompt_version_id=str(existing.prompt_version_id)
                     if existing.prompt_version_id
                     else None,
-                    schema_version="v2" if level == "complete" else "v1",
+                    schema_version=schema_version,
                     validation_status="valid",
                     was_fallback=existing.was_fallback,
                     request_id=request_id,
@@ -119,7 +124,7 @@ class NatalInterpretationServiceV2:
             degraded_mode_str = "no_location"
 
         chart_json_dict = build_chart_json(natal_result, birth_profile, degraded_mode_str)
-        evidence_catalog = build_evidence_catalog(chart_json_dict)
+        evidence_catalog = build_enriched_evidence_catalog(chart_json_dict)
 
         # 2. Use case selection
         use_case_key = (

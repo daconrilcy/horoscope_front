@@ -17,7 +17,7 @@ class ValidationResult(BaseModel):
 def validate_output(
     raw_output: str,
     json_schema: dict[str, Any],
-    evidence_catalog: Optional[List[str]] = None,
+    evidence_catalog: Optional[list[str] | dict[str, list[str]]] = None,
     strict: bool = False,
 ) -> ValidationResult:
     """
@@ -27,7 +27,8 @@ def validate_output(
     Args:
         raw_output: The raw JSON string from LLM.
         json_schema: The schema to validate against.
-        evidence_catalog: Optional list of authorized identifiers for 'evidence'.
+        evidence_catalog: Authorized identifiers for 'evidence'.
+                          Can be a list of IDs or a mapping of ID -> natural labels.
         strict: If True, evidence catalog misses or bidirectional rule violations
                 are treated as errors instead of warnings.
     """
@@ -56,7 +57,12 @@ def validate_output(
         if isinstance(evidence, list):
             # 3.1 Catalog check (hallucination detection)
             if evidence_catalog is not None:
-                catalog_set = set(evidence_catalog)
+                # If list, convert to set for speed. If dict, use keys.
+                catalog_set = (
+                    set(evidence_catalog.keys())
+                    if isinstance(evidence_catalog, dict)
+                    else set(evidence_catalog)
+                )
                 for item in evidence:
                     if not isinstance(item, str):
                         continue
@@ -69,7 +75,6 @@ def validate_output(
 
             # 3.2 Bidirectional Rule (Story 30.5 M4)
             # Every evidence item must be mentioned in text fields.
-            # We search in: summary, highlights, advice, and sections[].content
             text_blobs = []
             if "summary" in data:
                 text_blobs.append(data["summary"])
@@ -83,21 +88,25 @@ def validate_output(
                         text_blobs.append(s["content"])
 
             full_text = "\n".join(text_blobs).lower()
-            # Most evidence are UPPER_SNAKE_CASE in evidence, but can be natural in text
-            # However, the rule says "mentioned", and for some models they use codes.
-            # If the prompt says "mention identifiers", we check for them.
+
             for item in evidence:
                 if not isinstance(item, str):
                     continue
-                # For natal, we often have SUN_LEO but text says "Soleil en Lion".
-                # But GPT-5 rules say "Identifier mentioned".
-                # To be safe and avoid false positives, we check for identifier presence
-                # OR natural mapping if possible.
-                # Here we implement strict identifier presence check if strict=True.
-                if item.lower() not in full_text:
+
+                # Check for mention: either the ID itself or any of its natural labels
+                found = False
+                if item.lower() in full_text:
+                    found = True
+                elif isinstance(evidence_catalog, dict) and item in evidence_catalog:
+                    labels = evidence_catalog[item]
+                    for label in labels:
+                        if label.lower() in full_text:
+                            found = True
+                            break
+
+                if not found:
                     msg = f"Orphan evidence: '{item}' present in evidence but never mentioned in text."  # noqa: E501
                     if strict:
-                        # Only fail if strict, as this rule is experimental
                         error_messages.append(msg)
                     else:
                         warnings.append(msg)

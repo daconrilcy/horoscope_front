@@ -23,6 +23,45 @@ SIGNS = [
 ]
 MAJOR_ASPECTS = {"conjunction", "opposition", "trine", "square", "sextile"}
 
+PLANET_NAMES_FR = {
+    "sun": "Soleil",
+    "moon": "Lune",
+    "mercury": "Mercure",
+    "venus": "Vénus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturne",
+    "uranus": "Uranus",
+    "neptune": "Neptune",
+    "pluto": "Pluton",
+    "chiron": "Chiron",
+    "lilith": "Lune Noire",
+    "node": "Nœud Nord",
+}
+
+SIGN_NAMES_FR = {
+    "aries": "Bélier",
+    "taurus": "Taureau",
+    "gemini": "Gémeaux",
+    "cancer": "Cancer",
+    "leo": "Lion",
+    "virgo": "Vierge",
+    "libra": "Balance",
+    "scorpio": "Scorpion",
+    "sagittarius": "Sagittaire",
+    "capricorn": "Capricorne",
+    "aquarius": "Verseau",
+    "pisces": "Poissons",
+}
+
+ASPECT_NAMES_FR = {
+    "conjunction": "conjonction",
+    "opposition": "opposition",
+    "trine": "trigone",
+    "square": "carré",
+    "sextile": "sextile",
+}
+
 # Regex for evidence IDs as per Story 29.1 AC4
 EVIDENCE_ID_PATTERN = re.compile(r"^[A-Z0-9_\.:-]{3,60}$")
 
@@ -199,76 +238,98 @@ def _get_evidence_priority(eid: str) -> int:
 
 
 def build_evidence_catalog(chart_json: dict[str, Any]) -> list[str]:
+    """Backward compatibility wrapper. Returns a sorted list of evidence IDs."""
+    enriched = build_enriched_evidence_catalog(chart_json)
+    return sorted(list(enriched.keys()), key=lambda x: (_get_evidence_priority(x), x))
+
+
+def build_enriched_evidence_catalog(chart_json: dict[str, Any]) -> dict[str, list[str]]:
     r"""
-    Produces a list of evidence identifiers in UPPER_SNAKE_CASE.
+    Produces a mapping of evidence identifiers to natural language labels.
+    Used for bidirectional validation (IDs in evidence field, labels in text).
 
-    Evidence IDs follow the pattern: ^[A-Z0-9_\.:-]{3,60}$
+    Returns:
+        Dict mapping UPPER_SNAKE_CASE IDs to list of allowed natural language labels.
     """
-    evidence = []
+    # Map of ID -> list of labels
+    catalog: dict[str, list[str]] = {}
 
-    # Planets
+    def add(eid: str, labels: list[str]):
+        clean_id = eid.replace(" ", "_").upper()
+        if EVIDENCE_ID_PATTERN.match(clean_id):
+            if clean_id not in catalog:
+                catalog[clean_id] = []
+            for label in labels:
+                if label and label not in catalog[clean_id]:
+                    catalog[clean_id].append(label)
+
+    # 1. Planets
     for p in chart_json.get("planets", []):
-        planet = str(p["code"]).upper()
-        sign = str(p["sign"]).upper()
-        # PLANET_SIGN
-        evidence.append(f"{planet}_{sign}")
+        p_code = p["code"]
+        s_code = p["sign"]
+        p_name = PLANET_NAMES_FR.get(p_code, p_code.capitalize())
+        s_name = SIGN_NAMES_FR.get(s_code, s_code.capitalize())
 
+        # PLANET_SIGN
+        add(f"{p_code.upper()}_{s_code.upper()}", [f"{p_name} en {s_name}", p_name, s_name])
+
+        # PLANET_H{house}
         house = p.get("house")
         if house is not None:
-            # PLANET_H{house}
-            evidence.append(f"{planet}_H{house}")
-            # PLANET_SIGN_H{house}
-            evidence.append(f"{planet}_{sign}_H{house}")
+            add(f"{p_code.upper()}_H{house}", [f"{p_name} en Maison {house}", f"Maison {house}"])
+            add(
+                f"{p_code.upper()}_{s_code.upper()}_H{house}",
+                [f"{p_name} en {s_name} en Maison {house}"],
+            )
 
         if p.get("is_retrograde"):
-            evidence.append(f"{planet}_RETROGRADE")
+            add(f"{p_code.upper()}_RETROGRADE", [f"{p_name} rétrograde", "rétrograde"])
 
-    # Aspects
+    # 2. Aspects
     for a in chart_json.get("aspects", []):
-        p1 = str(a["planet_a"]).upper()
-        p2 = str(a["planet_b"]).upper()
-        aspect_type = str(a["type"]).upper()
+        p1 = a["planet_a"]
+        p2 = a["planet_b"]
+        asp_type = a["type"]
+        p1_name = PLANET_NAMES_FR.get(p1, p1.capitalize())
+        p2_name = PLANET_NAMES_FR.get(p2, p2.capitalize())
+        asp_name = ASPECT_NAMES_FR.get(asp_type, asp_type)
 
-        # ASPECT_PA_PB_TYPE (sorted PA, PB for stability)
-        pair = sorted([p1, p2])
-        base_id = f"ASPECT_{pair[0]}_{pair[1]}_{aspect_type}"
-        evidence.append(base_id)
+        pair = sorted([p1.upper(), p2.upper()])
+        base_id = f"ASPECT_{pair[0]}_{pair[1]}_{asp_type.upper()}"
 
-        # ASPECT_PA_PB_TYPE_ORB{int_orb}
+        labels = [
+            f"{asp_name} entre {p1_name} et {p2_name}",
+            f"{p1_name} {asp_name} {p2_name}",
+            asp_name,
+        ]
+        add(base_id, labels)
+
         orb = a.get("orb")
         if orb is not None:
             orb_int = int(round(orb))
-            evidence.append(f"{base_id}_ORB{orb_int}")
+            add(f"{base_id}_ORB{orb_int}", labels)
 
-    # Angles
+    # 3. Angles
     angles = chart_json.get("angles", {})
+    angle_names = {
+        "ASC": "Ascendant",
+        "MC": "Milieu du Ciel",
+        "DSC": "Descendant",
+        "IC": "Fond du Ciel",
+    }  # noqa: E501
     if angles:
         for angle_key, data in angles.items():
             if data and data.get("sign"):
-                sign = str(data["sign"]).upper()
-                evidence.append(f"{angle_key}_{sign}")
+                s_code = data["sign"]
+                s_name = SIGN_NAMES_FR.get(s_code, s_code.capitalize())
+                a_name = angle_names.get(angle_key, angle_key)
+                add(f"{angle_key}_{s_code.upper()}", [f"{a_name} en {s_name}", a_name])
 
-    # House cusps in signs
+    # 4. Houses
     for h in chart_json.get("houses", []):
         num = h["number"]
-        sign = h["sign"].upper()
-        evidence.append(f"HOUSE_{num}_IN_{sign}")
+        s_code = h["sign"]
+        s_name = SIGN_NAMES_FR.get(s_code, s_code.capitalize())
+        add(f"HOUSE_{num}_IN_{s_code.upper()}", [f"Maison {num} en {s_name}"])
 
-    # Clean and validate against pattern
-    # Use list(set(...)) to deduplicate
-    unique_evidence = set()
-    for eid in evidence:
-        # Basic cleanup: uppercase, replace spaces/hyphens with underscore if needed
-        # but the logic above already uses UPPER and underscores.
-        clean_id = eid.replace(" ", "_").upper()
-        if EVIDENCE_ID_PATTERN.match(clean_id):
-            unique_evidence.add(clean_id)
-
-    # Sort by priority then alpha
-    sorted_evidence = sorted(list(unique_evidence), key=lambda x: (_get_evidence_priority(x), x))
-
-    if len(sorted_evidence) > 40:
-        # Truncate keeping the most important ones (priority based)
-        return sorted_evidence[:40]
-
-    return sorted_evidence
+    return catalog
