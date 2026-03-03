@@ -101,7 +101,7 @@ FIXED_SCHEMAS = {
             "sections": {
                 "type": "array",
                 "minItems": 2,
-                "maxItems": 8,
+                "maxItems": 10,
                 "items": {
                     "type": "object",
                     "additionalProperties": False,
@@ -129,13 +129,13 @@ FIXED_SCHEMAS = {
             "highlights": {
                 "type": "array",
                 "minItems": 3,
-                "maxItems": 10,
+                "maxItems": 12,
                 "items": {"type": "string", "minLength": 1, "maxLength": 360},
             },
             "advice": {
                 "type": "array",
                 "minItems": 3,
-                "maxItems": 10,
+                "maxItems": 12,
                 "items": {"type": "string", "minLength": 1, "maxLength": 360},
             },
             "evidence": {
@@ -147,7 +147,7 @@ FIXED_SCHEMAS = {
             "disclaimers": {
                 "type": "array",
                 "maxItems": 3,
-                "items": {"type": "string", "maxLength": 200},
+                "items": {"type": "string", "maxLength": 300},
             },
         },
     },

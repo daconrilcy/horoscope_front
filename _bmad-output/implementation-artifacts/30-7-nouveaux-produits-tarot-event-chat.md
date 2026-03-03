@@ -15,14 +15,16 @@ Lancement des produits Tarot/Event et durcissement de l'observabilité sur les v
 ### 2.2 LLM Gateway
 - **Refactor Reasoning** : Unification de l'auto-ajustement des tokens/timeout pour les modèles `o1`/`gpt-5`.
 - **Métriques** : Inclusion du label `mode` dans Prometheus.
+- **Parité Totale** : Alignement final de `schemas.py` et `fix_schemas_strict.py` sur les limites Premium V2 (title=160, sections=10, disclaimers=300).
 
 ## 3. Fichiers Modifiés
 - `backend/app/llm_orchestration/gateway.py`
+- `backend/app/llm_orchestration/schemas.py`
 - `backend/app/services/natal_interpretation_service_v2.py`
 - `backend/app/services/ai_engine_adapter.py`
-- `backend/app/api/v1/schemas/natal_interpretation.py`
+- `backend/scripts/fix_schemas_strict.py`
 
 ## 4. Validation
 - [x] Test de population de `schema_version` : 2/2 passent.
-- [x] Test strict validation automatique : validé par inspection du code gateway.
+- [x] Test strict validation automatique : validé par inspection.
 - [x] Intégration Tarot/Event : 100% fonctionnelle via gateway v2.

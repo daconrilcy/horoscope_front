@@ -46,18 +46,19 @@ class AstroResponseV1(BaseModel):
 _EvidenceItem = Annotated[str, Field(pattern=r"^[A-Z0-9_\.:-]{3,80}$")]
 _HighlightItem = Annotated[str, Field(max_length=360)]
 _AdviceItem = Annotated[str, Field(max_length=360)]
+_DisclaimerItem = Annotated[str, Field(max_length=300)]
 
 
 class AstroResponseV2(BaseModel):
     """Extended structured response for premium complete interpretations (Story 30-2)."""
 
-    title: str = Field(..., min_length=1, max_length=120)
+    title: str = Field(..., min_length=1, max_length=160)
     summary: str = Field(..., min_length=1, max_length=2800)
-    sections: List[AstroSectionV2] = Field(..., min_length=2, max_length=8)
-    highlights: List[_HighlightItem] = Field(..., min_length=3, max_length=10)
-    advice: List[_AdviceItem] = Field(..., min_length=3, max_length=10)
+    sections: List[AstroSectionV2] = Field(..., min_length=2, max_length=10)
+    highlights: List[_HighlightItem] = Field(..., min_length=3, max_length=12)
+    advice: List[_AdviceItem] = Field(..., min_length=3, max_length=12)
     evidence: List[_EvidenceItem] = Field(default_factory=list, max_length=80)
-    disclaimers: List[str] = Field(default_factory=list)
+    disclaimers: List[_DisclaimerItem] = Field(default_factory=list)
 
 
 class ChatResponseV1(BaseModel):
