@@ -42,90 +42,93 @@ CHAT_RESPONSE_V1 = {
     },
 }
 
+ASTRO_RESPONSE_V1_JSON_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["title", "summary", "sections", "highlights", "advice", "evidence", "disclaimers"],
+    "properties": {
+        "title": {"type": "string", "minLength": 1, "maxLength": 120},
+        "summary": {"type": "string", "minLength": 1, "maxLength": 1200},
+        "sections": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 8,
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["key", "heading", "content"],
+                "properties": {
+                    "key": {"type": "string", "enum": list(_SECTION_KEY_VALUES)},
+                    "heading": {"type": "string", "minLength": 1, "maxLength": 80},
+                    "content": {"type": "string", "minLength": 1, "maxLength": 2500},
+                },
+            },
+        },
+        "highlights": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 10,
+            "items": {"type": "string", "maxLength": 360},
+        },
+        "advice": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 10,
+            "items": {"type": "string", "maxLength": 360},
+        },
+        "evidence": {
+            "type": "array",
+            "maxItems": 40,
+            "items": {"type": "string", "pattern": EVIDENCE_ID_REGEX},
+        },
+        "disclaimers": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {"type": "string", "maxLength": 200},
+        },
+    },
+}
+
 ASTRO_RESPONSE_V3_JSON_SCHEMA = {
-    "oneOf": [
-        {
-            "type": "object",
-            "additionalProperties": False,
-            "required": ["title", "summary", "sections", "highlights", "advice", "evidence"],
-            "properties": {
-                "title": {"type": "string", "minLength": 1, "maxLength": 160},
-                "summary": {"type": "string", "minLength": 900, "maxLength": 2800},
-                "sections": {
-                    "type": "array",
-                    "minItems": 5,
-                    "maxItems": 10,
-                    "items": {
-                        "type": "object",
-                        "additionalProperties": False,
-                        "required": ["key", "heading", "content"],
-                        "properties": {
-                            "key": {"type": "string", "enum": list(_SECTION_KEY_VALUES)},
-                            "heading": {"type": "string", "minLength": 1, "maxLength": 100},
-                            "content": {"type": "string", "minLength": 280, "maxLength": 6500},
-                        },
-                    },
-                },
-                "highlights": {
-                    "type": "array",
-                    "minItems": 5,
-                    "maxItems": 12,
-                    "items": {"type": "string", "maxLength": 360},
-                },
-                "advice": {
-                    "type": "array",
-                    "minItems": 5,
-                    "maxItems": 12,
-                    "items": {"type": "string", "maxLength": 360},
-                },
-                "evidence": {
-                    "type": "array",
-                    "maxItems": 80,
-                    "items": {"type": "string", "pattern": EVIDENCE_ID_REGEX},
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["title", "summary", "sections", "highlights", "advice", "evidence"],
+    "properties": {
+        "title": {"type": "string", "minLength": 1, "maxLength": 160},
+        "summary": {"type": "string", "minLength": 900, "maxLength": 2800},
+        "sections": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 10,
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["key", "heading", "content"],
+                "properties": {
+                    "key": {"type": "string", "enum": list(_SECTION_KEY_VALUES)},
+                    "heading": {"type": "string", "minLength": 1, "maxLength": 100},
+                    "content": {"type": "string", "minLength": 280, "maxLength": 6500},
                 },
             },
         },
-        {
-            "type": "object",
-            "additionalProperties": False,
-            "required": ["error_code", "message", "title", "summary"],
-            "properties": {
-                "error_code": {"type": "string", "enum": ["insufficient_data", "calculation_failed"]},
-                "message": {"type": "string", "minLength": 1, "maxLength": 500},
-                "title": {"type": "string", "minLength": 1, "maxLength": 160},
-                "summary": {"type": "string", "minLength": 1, "maxLength": 500},
-                "sections": {
-                    "type": "array",
-                    "maxItems": 2,
-                    "items": {
-                        "type": "object",
-                        "additionalProperties": False,
-                        "required": ["key", "heading", "content"],
-                        "properties": {
-                            "key": {"type": "string", "enum": list(_SECTION_KEY_VALUES)},
-                            "heading": {"type": "string", "minLength": 1, "maxLength": 100},
-                            "content": {"type": "string", "minLength": 1, "maxLength": 6500},
-                        },
-                    },
-                },
-                "highlights": {
-                    "type": "array",
-                    "maxItems": 3,
-                    "items": {"type": "string", "maxLength": 360},
-                },
-                "advice": {
-                    "type": "array",
-                    "maxItems": 3,
-                    "items": {"type": "string", "maxLength": 360},
-                },
-                "evidence": {
-                    "type": "array",
-                    "maxItems": 5,
-                    "items": {"type": "string", "pattern": EVIDENCE_ID_REGEX},
-                },
-            },
+        "highlights": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 12,
+            "items": {"type": "string", "maxLength": 360},
         },
-    ]
+        "advice": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 12,
+            "items": {"type": "string", "maxLength": 360},
+        },
+        "evidence": {
+            "type": "array",
+            "maxItems": 80,
+            "items": {"type": "string", "pattern": EVIDENCE_ID_REGEX},
+        },
+    },
 }
 
 # The 7 canonical use cases
@@ -263,7 +266,7 @@ USE_CASES_CONTRACTS = [
 def seed_use_cases(db: Session) -> None:
     # 0. Ensure a default persona exists for 'required' use cases
     stmt_persona = select(LlmPersonaModel).where(LlmPersonaModel.name == "Astrologue Standard")
-    default_persona = db.execute(stmt_persona).scalar_one_or_none()
+    default_persona = db.execute(stmt_persona).scalars().first()
 
     if not default_persona:
         default_persona = LlmPersonaModel(
@@ -293,9 +296,17 @@ def seed_use_cases(db: Session) -> None:
     else:
         chat_schema.json_schema = CHAT_RESPONSE_V1
 
-    # Get AstroResponse_v1
+    # Upsert AstroResponse_v1
     stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.name == "AstroResponse_v1")
     astro_schema = db.execute(stmt).scalar_one_or_none()
+    if not astro_schema:
+        astro_schema = LlmOutputSchemaModel(
+            name="AstroResponse_v1", json_schema=ASTRO_RESPONSE_V1_JSON_SCHEMA, version=1
+        )
+        db.add(astro_schema)
+        db.flush()
+    else:
+        astro_schema.json_schema = ASTRO_RESPONSE_V1_JSON_SCHEMA
 
     # Upsert AstroResponse_v3 (Story 30-8 T7.1)
     stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.name == "AstroResponse_v3")

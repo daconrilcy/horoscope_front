@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import json
 
-import pytest
-
-from app.infra.observability.metrics import get_metrics_snapshot, increment_counter
+from app.infra.observability.metrics import get_metrics_snapshot
 from app.llm_orchestration.services.output_validator import validate_output
 
 _SIMPLE_SCHEMA = {
@@ -58,15 +56,23 @@ class TestNatalValidationPassCounter:
 class TestNatalValidationFailCounter:
     def test_fail_counter_incremented_on_json_error(self):
         """natal_validation_fail_total should increment when JSON parse fails."""
-        key = "natal_validation_fail_total{reason=json_error,schema_version=v1,use_case=natal_interpretation}"
+        key = (
+            "natal_validation_fail_total{reason=json_error,"
+            "schema_version=v1,use_case=natal_interpretation}"
+        )
         before = get_metrics_snapshot()["counters"].get(key, 0.0)
-        validate_output("INVALID JSON", _SIMPLE_SCHEMA, use_case="natal_interpretation", schema_version="v1")
+        validate_output(
+            "INVALID JSON", _SIMPLE_SCHEMA, use_case="natal_interpretation", schema_version="v1"
+        )
         after = get_metrics_snapshot()["counters"].get(key, 0.0)
         assert after == before + 1.0
 
     def test_fail_counter_incremented_on_schema_error(self):
         """natal_validation_fail_total should increment when schema validation fails."""
-        key = "natal_validation_fail_total{reason=schema_error,schema_version=v1,use_case=natal_interpretation}"
+        key = (
+            "natal_validation_fail_total{reason=schema_error,"
+            "schema_version=v1,use_case=natal_interpretation}"
+        )
         before = get_metrics_snapshot()["counters"].get(key, 0.0)
         raw = json.dumps({"wrong_field": 123})  # missing required "message"
         validate_output(raw, _SIMPLE_SCHEMA, use_case="natal_interpretation", schema_version="v1")
@@ -96,7 +102,13 @@ class TestNatalInvalidEvidenceCounter:
         }
         catalog = {"SUN_GEMINI_H10": ["Soleil Gémeaux maison 10"]}
         raw = json.dumps({"evidence": ["SUN_GEMINI_H10", "HALLUCINATED_ID"]})
-        validate_output(raw, schema, evidence_catalog=catalog, use_case="natal_interpretation", schema_version="v1")
+        validate_output(
+            raw,
+            schema,
+            evidence_catalog=catalog,
+            use_case="natal_interpretation",
+            schema_version="v1",
+        )
 
         after = get_metrics_snapshot()["counters"].get(key, 0.0)
         assert after == before + 1.0  # 1 filtered

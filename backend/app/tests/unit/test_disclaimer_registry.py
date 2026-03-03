@@ -1,8 +1,8 @@
-"""Tests unitaires pour disclaimer_registry et injection dans NatalInterpretationResponse (Story 30-8 T5)."""
+"""Tests unitaires pour disclaimer_registry et injection dans NatalInterpretationResponse.
+Story 30-8 T5.
+"""
 
 from __future__ import annotations
-
-import pytest
 
 from app.services.disclaimer_registry import get_disclaimers
 

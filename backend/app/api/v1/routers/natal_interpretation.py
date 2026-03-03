@@ -129,9 +129,7 @@ async def interpret_natal_chart(
 
     except UnknownUseCaseError as e:
         logger.error(f"Unknown use case error: {e}")
-        return _create_error_response(
-            404, "unknown_use_case", str(e), request_id
-        )
+        return _create_error_response(404, "unknown_use_case", str(e), request_id)
     except GatewayConfigError as e:
         logger.error(f"Gateway configuration error: {e}")
         return _create_error_response(500, "gateway_config_error", str(e), request_id)
@@ -145,9 +143,7 @@ async def interpret_natal_chart(
         )
     except RuntimeError as e:
         if "no structured output" in str(e):
-            return _create_error_response(
-                502, "interpretation_failed", str(e), request_id
-            )
+            return _create_error_response(502, "interpretation_failed", str(e), request_id)
         raise
     except UpstreamRateLimitError:
         return _create_error_response(

@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from app.ai_engine.exceptions import UpstreamTimeoutError
 from app.llm_orchestration.gateway import LLMGateway

@@ -35,7 +35,9 @@ class TestSecureEvidenceFilter:
         """ID hors catalog → filtré, réponse valide."""
         raw = _raw(summary="Soleil en Taureau.", evidence=["SUN_TAURUS", "FAKE_PLANET_H99"])
         catalog = {"SUN_TAURUS": ["Soleil en Taureau"]}
-        result = validate_output(raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3")
+        result = validate_output(
+            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+        )
         assert result.valid is True
         assert "FAKE_PLANET_H99" not in result.parsed["evidence"]
         assert "SUN_TAURUS" in result.parsed["evidence"]
@@ -44,7 +46,9 @@ class TestSecureEvidenceFilter:
         """ID hors catalog → filtré aussi en mode non-strict."""
         raw = _raw(summary="Soleil en Taureau.", evidence=["SUN_TAURUS", "FAKE_PLANET_H99"])
         catalog = {"SUN_TAURUS": ["Soleil en Taureau"]}
-        result = validate_output(raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=False, schema_version="v3")
+        result = validate_output(
+            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=False, schema_version="v3"
+        )
         assert result.valid is True
         assert "FAKE_PLANET_H99" not in result.parsed["evidence"]
 
@@ -52,7 +56,9 @@ class TestSecureEvidenceFilter:
         """Tous les IDs hors catalog → evidence vide, réponse valide."""
         raw = _raw(evidence=["FAKE1", "FAKE2", "FAKE3"])
         catalog = {"SUN_TAURUS": ["Soleil en Taureau"]}
-        result = validate_output(raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3")
+        result = validate_output(
+            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+        )
         assert result.valid is True
         assert result.parsed["evidence"] == []
 
@@ -66,7 +72,9 @@ class TestSecureEvidenceFilter:
             "SUN_TAURUS": ["Soleil en Taureau"],
             "MOON_CANCER": ["Lune en Cancer"],
         }
-        result = validate_output(raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3")
+        result = validate_output(
+            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+        )
         assert result.valid is True
         assert set(result.parsed["evidence"]) == {"SUN_TAURUS", "MOON_CANCER"}
 
@@ -77,14 +85,18 @@ class TestSecureEvidenceFilter:
             evidence=["CONJUNCTION_SUN_VENUS"],
         )
         catalog = {"ASPECT_SUN_VENUS_CONJUNCTION": ["aspect entre Soleil et Venus"]}
-        result = validate_output(raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3")
+        result = validate_output(
+            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+        )
         assert result.valid is True
         assert "ASPECT_SUN_VENUS_CONJUNCTION" in result.parsed["evidence"]
 
     def test_no_catalog_no_filtering(self):
         """Sans catalog → aucun filtrage appliqué."""
         raw = _raw(evidence=["RANDOM_ID", "ANOTHER_ID"])
-        result = validate_output(raw, _BASE_SCHEMA, evidence_catalog=None, strict=True, schema_version="v3")
+        result = validate_output(
+            raw, _BASE_SCHEMA, evidence_catalog=None, strict=True, schema_version="v3"
+        )
         assert result.valid is True
         assert "RANDOM_ID" in result.parsed["evidence"]
         assert "ANOTHER_ID" in result.parsed["evidence"]
@@ -92,7 +104,9 @@ class TestSecureEvidenceFilter:
     def test_empty_catalog_filters_everything(self):
         """Catalog vide → tous les IDs sont filtrés."""
         raw = _raw(evidence=["SUN_TAURUS"])
-        result = validate_output(raw, _BASE_SCHEMA, evidence_catalog={}, strict=True, schema_version="v3")
+        result = validate_output(
+            raw, _BASE_SCHEMA, evidence_catalog={}, strict=True, schema_version="v3"
+        )
         assert result.valid is True
         assert result.parsed["evidence"] == []
 
@@ -100,7 +114,9 @@ class TestSecureEvidenceFilter:
         """ID hors catalog → warning généré (pas une erreur)."""
         raw = _raw(evidence=["HALLUCINATED_ID"])
         catalog = {"SUN_TAURUS": ["Soleil en Taureau"]}
-        result = validate_output(raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3")
+        result = validate_output(
+            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+        )
         assert result.valid is True
         assert any("Hallucinated" in w for w in result.warnings)
 
@@ -111,7 +127,9 @@ class TestSecureEvidenceFilter:
             evidence=["SUN_TAURUS", "INVALID_1", "INVALID_2"],
         )
         catalog = {"SUN_TAURUS": ["Soleil en Taureau"]}
-        result = validate_output(raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3")
+        result = validate_output(
+            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+        )
         assert result.valid is True
         assert result.parsed["evidence"] == ["SUN_TAURUS"]
         # 2 hallucination warnings expected
@@ -130,6 +148,8 @@ class TestSecureEvidenceFilter:
         }
         raw = json.dumps({"evidence": []})  # missing required 'title'
         catalog = {"SUN_TAURUS": ["Soleil en Taureau"]}
-        result = validate_output(raw, schema, evidence_catalog=catalog, strict=True, schema_version="v3")
+        result = validate_output(
+            raw, schema, evidence_catalog=catalog, strict=True, schema_version="v3"
+        )
         assert result.valid is False
         assert any("title" in e for e in result.errors)

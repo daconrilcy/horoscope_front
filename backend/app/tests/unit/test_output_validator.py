@@ -56,7 +56,9 @@ def test_validate_output_evidence_aliases_strict_mode():
         "ASPECT_SUN_VENUS_CONJUNCTION": ["aspect entre Soleil et Venus"],
     }
 
-    result = validate_output(raw, schema, evidence_catalog=catalog, strict=True, schema_version="v1")
+    result = validate_output(
+        raw, schema, evidence_catalog=catalog, strict=True, schema_version="v1"
+    )
     assert result.valid is True
     assert result.parsed["evidence"] == ["SUN_TAURUS", "SUN_TAURUS", "ASPECT_SUN_VENUS_CONJUNCTION"]
 
@@ -72,7 +74,13 @@ def test_validate_output_evidence_unknown_strict_mode_filters():
         },
     }
     raw = '{"summary":"Texte neutre","evidence":["UNKNOWN_EVIDENCE"]}'
-    result = validate_output(raw, schema, evidence_catalog={"SUN_TAURUS": ["Soleil en Taureau"]}, strict=True, schema_version="v1")  # noqa: E501
+    result = validate_output(
+        raw,
+        schema,
+        evidence_catalog={"SUN_TAURUS": ["Soleil en Taureau"]},
+        strict=True,
+        schema_version="v1",
+    )  # noqa: E501
     assert result.valid is True  # No longer fails — evidence is filtered
     assert "UNKNOWN_EVIDENCE" not in result.parsed["evidence"]  # Filtered out
     assert any("Hallucinated evidence" in w for w in result.warnings)  # Becomes a warning
@@ -89,7 +97,9 @@ def test_validate_output_evidence_alias_conjunction_prefix_strict_mode():
     }
     raw = '{"summary":"Aspect entre Soleil et Venus.","evidence":["CONJUNCTION_SUN_VENUS"]}'
     catalog = {"ASPECT_SUN_VENUS_CONJUNCTION": ["aspect entre Soleil et Venus"]}
-    result = validate_output(raw, schema, evidence_catalog=catalog, strict=True, schema_version="v1")
+    result = validate_output(
+        raw, schema, evidence_catalog=catalog, strict=True, schema_version="v1"
+    )
     assert result.valid is True
     assert result.parsed["evidence"] == ["ASPECT_SUN_VENUS_CONJUNCTION"]
 
@@ -105,6 +115,8 @@ def test_validate_output_orphan_is_warning_even_in_strict():
     }
     raw = '{"summary":"Texte sans mention directe.","evidence":["SUN_TAURUS"]}'
     catalog = {"SUN_TAURUS": ["Soleil en Taureau"]}
-    result = validate_output(raw, schema, evidence_catalog=catalog, strict=True, schema_version="v1")
+    result = validate_output(
+        raw, schema, evidence_catalog=catalog, strict=True, schema_version="v1"
+    )
     assert result.valid is True
     assert any("Orphan evidence" in w for w in result.warnings)

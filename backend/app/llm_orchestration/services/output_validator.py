@@ -94,7 +94,12 @@ def _normalize_evidence_item(
 
     # Aspect alias: SUN_CONJUNCTION_VENUS -> ASPECT_SUN_VENUS_CONJUNCTION
     parts = cleaned.split("_")
-    if len(parts) == 3 and parts[0] in _PLANET_CODES and parts[1] in _ASPECT_CODES and parts[2] in _PLANET_CODES:  # noqa: E501
+    if (
+        len(parts) == 3
+        and parts[0] in _PLANET_CODES
+        and parts[1] in _ASPECT_CODES
+        and parts[2] in _PLANET_CODES
+    ):  # noqa: E501
         p1, aspect, p2 = parts
         pair = sorted([p1, p2])
         canonical = f"ASPECT_{pair[0]}_{pair[1]}_{aspect}"
@@ -102,7 +107,12 @@ def _normalize_evidence_item(
             return canonical
 
     # Aspect alias: CONJUNCTION_SUN_VENUS -> ASPECT_SUN_VENUS_CONJUNCTION
-    if len(parts) == 3 and parts[0] in _ASPECT_CODES and parts[1] in _PLANET_CODES and parts[2] in _PLANET_CODES:  # noqa: E501
+    if (
+        len(parts) == 3
+        and parts[0] in _ASPECT_CODES
+        and parts[1] in _PLANET_CODES
+        and parts[2] in _PLANET_CODES
+    ):  # noqa: E501
         aspect, p1, p2 = parts
         pair = sorted([p1, p2])
         canonical = f"ASPECT_{pair[0]}_{pair[1]}_{aspect}"
@@ -110,7 +120,12 @@ def _normalize_evidence_item(
             return canonical
 
     # Planet/sign alias: SUN_IN_TAURUS -> any matching SUN_TAURUS*
-    if len(parts) == 3 and parts[0] in _PLANET_CODES and parts[1] == "IN" and parts[2] in _SIGN_CODES:  # noqa: E501
+    if (
+        len(parts) == 3
+        and parts[0] in _PLANET_CODES
+        and parts[1] == "IN"
+        and parts[2] in _SIGN_CODES
+    ):  # noqa: E501
         p, _, s = parts
         prefix = f"{p}_{s}"
         for key in catalog_set:

@@ -16,15 +16,9 @@ _DISCLAIMERS: dict[str, list[str]] = {
     "fr-CH": [
         "L'astrologie est un outil de réflexion personnelle, pas une science prédictive certifiée."
     ],
-    "en-US": [
-        "Astrology is a tool for personal reflection, not a certified predictive science."
-    ],
-    "en-GB": [
-        "Astrology is a tool for personal reflection, not a certified predictive science."
-    ],
-    "en-AU": [
-        "Astrology is a tool for personal reflection, not a certified predictive science."
-    ],
+    "en-US": ["Astrology is a tool for personal reflection, not a certified predictive science."],
+    "en-GB": ["Astrology is a tool for personal reflection, not a certified predictive science."],
+    "en-AU": ["Astrology is a tool for personal reflection, not a certified predictive science."],
     "_default": [
         "L'astrologie est un outil de réflexion personnelle, pas une science prédictive certifiée."
     ],
