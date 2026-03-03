@@ -15,8 +15,8 @@ Lancement des produits Tarot/Event, durcissement de l'observabilité sur les ver
 ### 2.2 LLM Gateway & Schémas
 - **Refactor Reasoning** : Unification de l'auto-ajustement des tokens/timeout pour les modèles `o1`/`gpt-5`.
 - **Métriques** : Inclusion du label `mode` dans Prometheus.
-- **Architecture Chat V2** : Création de `ChatResponseV2` dans `schemas.py` et `fix_schemas_strict.py` avec des limites étendues et maintien de l'énumération des intentions pour une robustesse maximale.
-- **Parité Totale (Astro & Chat)** : Alignement final de toutes les limites DB (items max, longueurs des items de liste, énumérations) avec les modèles Pydantic.
+- **Architecture Chat V2** : Création de `ChatResponseV2` dans `schemas.py` et `fix_schemas_strict.py` avec des limites étendues (message 4000, suggestions 8) et maintien de l'énumération des intentions pour une robustesse maximale.
+- **Parité Totale (Astro & Chat)** : Alignement final de toutes les limites DB (items max, longueurs des items de liste, énumérations) avec les modèles Pydantic. Tous les champs structurels sont désormais obligatoires (`Field(...)`) pour correspondre au mode `strict: true` d'OpenAI.
 
 ## 3. Fichiers Modifiés
 - `backend/app/llm_orchestration/gateway.py`
@@ -29,4 +29,4 @@ Lancement des produits Tarot/Event, durcissement de l'observabilité sur les ver
 - [x] Test de population de `schema_version` : 2/2 passent.
 - [x] Test strict validation automatique : validé par inspection.
 - [x] Intégration Tarot/Event : 100% fonctionnelle via gateway v2 avec validation stricte.
-- [x] Parité des types Pydantic (Astro + Chat) : validée par inspection et tests unitaires.
+- [x] Parité des types Pydantic (Astro + Chat) : validée par inspection et tests unitaires (mandatory check inclus).

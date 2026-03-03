@@ -13,8 +13,9 @@ Stabilisation du Gateway et des schémas Premium (GPT-5) avec un focus sur la ro
 - **Regex Alignée** : Extension de `EVIDENCE_ID_PATTERN` à 80 caractères.
 - **Clarification Prompt** : Les IDs doivent être justifiés en langage naturel dans le texte libre (mise à jour `seed_30_3`).
 
-### 2.2 Robustesse & Schémas (Parité 100%)
+### 2.2 Robustesse & Schémas (Parité 100% Strict)
 - **Alignement Total V1 & V2** : Unification des contraintes entre `schemas.py`, `fix_schemas_strict.py` et les seeds canoniques.
+- **Enforcement Pydantic** : Tous les champs marqués `required` en DB (incluant `evidence`, `disclaimers`, `intent`, `confidence`, `safety_notes`) sont désormais obligatoires dans Pydantic (`Field(...)`). Cela garantit une conformité parfaite avec le mode `strict: true` d'OpenAI.
 - **Contraintes V2 (Premium)** :
     - `title` : 160 caractères.
     - `heading` : 100 caractères.
@@ -26,8 +27,6 @@ Stabilisation du Gateway et des schémas Premium (GPT-5) avec un focus sur la ro
 - **Contraintes V1 (Standard)** :
     - `disclaimers` : 3 items max, 200 caractères par item.
     - `suggested_replies` (Chat V1) : 5 items max, 80 caractères par item.
-- **Contraintes Communes Chat** :
-    - `safety_notes` : 200 caractères max par item.
 - **UI Error Boundary** : Ajout d'un composant `ErrorBoundary` dans le frontend pour isoler les erreurs de rendu.
 
 ## 3. Fichiers Modifiés
@@ -41,5 +40,5 @@ Stabilisation du Gateway et des schémas Premium (GPT-5) avec un focus sur la ro
 
 ## 4. Validation
 - [x] Tests unitaires robustesse evidence : 14/14 passent.
-- [x] Tests parité schémas V1/V2 : 100% alignés.
+- [x] Tests parité schémas V1/V2 : 100% alignés (incluant mandatory check).
 - [x] Tests non-régression service natal V2 : 5/5 passent.
