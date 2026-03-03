@@ -3,7 +3,7 @@
 **Status:** done
 
 ## 1. Contexte et Objectifs
-Stabilisation du Gateway et des schémas Premium (GPT-5) avec un focus sur la robustesse de l'evidence et la parité totale des contraintes DB/Pydantic pour toutes les versions.
+Stabilisation du Gateway et des schémas Premium (GPT-5) avec un focus sur la robustesse de l'evidence et la parité totale des contraintes DB/Pydantic pour toutes les versions (Astro et Chat).
 
 ## 2. Modifications Réalisées
 
@@ -20,11 +20,11 @@ Stabilisation du Gateway et des schémas Premium (GPT-5) avec un focus sur la ro
     - `heading` : 100 caractères.
     - `sections.maxItems` : 10.
     - `highlights`/`advice.maxItems` : 12.
-    - `disclaimers` : **3 items max**, **300 caractères** par item.
+    - `disclaimers` : 3 items max, 300 caractères par item.
+    - `suggested_replies` (Chat V2) : 8 items max, 120 caractères par item.
 - **Contraintes V1 (Standard)** :
-    - `disclaimers` : **3 items max**, **200 caractères** par item.
-- **Contraintes Chat** :
-    - `safety_notes` : **200 caractères** max par item.
+    - `disclaimers` : 3 items max, 200 caractères par item.
+    - `suggested_replies` (Chat V1) : 5 items max, 80 caractères par item.
 - **UI Error Boundary** : Ajout d'un composant `ErrorBoundary` dans le frontend pour isoler les erreurs de rendu.
 
 ## 3. Fichiers Modifiés

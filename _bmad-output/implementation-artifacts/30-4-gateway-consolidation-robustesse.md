@@ -15,11 +15,11 @@ so that les appels GPT-5 sont corrects, traçables, et moins fragiles en cas de 
 - **Gestion des Exceptions** : Utilisation d'exceptions typées et suppression du string-match.
 - **Headers de Tracing** : Transmission de `x-request-id`, `x-trace-id` et `x-use-case`.
 - **Test Fallbacks V2** : Support des modes dégradés en test dans `AIEngineAdapter`.
-- **Alignement Historique** : Correction de `ai_engine_adapter.py` pour transmettre l'historique (`history`) au lieu de la liste complète des messages au gateway.
+- **Correction Historique** : Refactor de la transmission de l'historique (`history`) au lieu de la liste complète des messages, évitant la redondance du dernier message.
 
 ### 2. Architecture 3-Rôles
 - **Refactor `chart_json`** : Passage des données techniques dans le rôle `user` (Technical Data).
-- **Mise à jour des Seeds** : Alignement de `seed_28_4.py` sur les standards stricts (evidence `min_items=0`, limites à 360 caractères).
+- **Mise à jour des Seeds** : Alignement de `seed_28_4.py` sur les standards stricts actuels (evidence `min_items=0`, limites à 360 caractères).
 
 ## Fichiers Modifiés
 - `backend/pyproject.toml`
@@ -27,7 +27,6 @@ so that les appels GPT-5 sont corrects, traçables, et moins fragiles en cas de 
 - `backend/app/llm_orchestration/gateway.py`
 - `backend/app/services/ai_engine_adapter.py`
 - `backend/scripts/seed_28_4.py`
-- `backend/scripts/seed_29_prompts.py`
 
 ## Validation
 - [x] Tests unitaires exceptions provider : 3/3 passent.
