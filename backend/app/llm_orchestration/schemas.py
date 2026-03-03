@@ -23,6 +23,8 @@ _AdviceItem = Annotated[str, Field(max_length=360)]
 _DisclaimerItemV1 = Annotated[str, Field(max_length=200)]
 _DisclaimerItemV2 = Annotated[str, Field(max_length=300)]
 _SafetyNoteItem = Annotated[str, Field(max_length=200)]
+_SuggestedReplyItemV1 = Annotated[str, Field(min_length=1, max_length=80)]
+_SuggestedReplyItemV2 = Annotated[str, Field(min_length=1, max_length=120)]
 
 
 class AstroSection(BaseModel):
@@ -67,7 +69,7 @@ class ChatResponseV1(BaseModel):
     """Canonical structured response for interactive chat."""
 
     message: str = Field(..., min_length=1, max_length=2500)
-    suggested_replies: List[str] = Field(..., max_length=5)
+    suggested_replies: List[_SuggestedReplyItemV1] = Field(..., max_length=5)
     intent: Optional[
         Literal[
             "clarify_question",
@@ -82,3 +84,13 @@ class ChatResponseV1(BaseModel):
     ] = None
     confidence: Optional[float] = Field(None, ge=0, le=1)
     safety_notes: List[_SafetyNoteItem] = Field(default_factory=list, max_length=3)
+
+
+class ChatResponseV2(BaseModel):
+    """Extended structured response for premium chat (GPT-5 optimization)."""
+
+    message: str = Field(..., min_length=1, max_length=4000)
+    suggested_replies: List[_SuggestedReplyItemV2] = Field(..., max_length=8)
+    intent: Optional[str] = None
+    confidence: Optional[float] = Field(None, ge=0, le=1)
+    safety_notes: List[_SafetyNoteItem] = Field(default_factory=list, max_length=5)

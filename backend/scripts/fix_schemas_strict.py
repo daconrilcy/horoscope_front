@@ -184,6 +184,26 @@ FIXED_SCHEMAS = {
             },
         },
     },
+    "ChatResponse_v2": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["message", "suggested_replies", "intent", "confidence", "safety_notes"],
+        "properties": {
+            "message": {"type": "string", "minLength": 1, "maxLength": 4000},
+            "suggested_replies": {
+                "type": "array",
+                "maxItems": 8,
+                "items": {"type": "string", "minLength": 1, "maxLength": 120},
+            },
+            "intent": {"type": ["string", "null"]},
+            "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+            "safety_notes": {
+                "type": "array",
+                "maxItems": 5,
+                "items": {"type": "string", "maxLength": 200},
+            },
+        },
+    },
 }
 
 
