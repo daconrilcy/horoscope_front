@@ -308,3 +308,101 @@ class TestNatalInterpretationServiceV2UserInput:
 
         user_input_sent = mock_gw_instance.execute.call_args.kwargs["user_input"]
         assert user_input_sent["question"] == "Interpr\u00e8te mon th\u00e8me natal."
+
+
+class TestNatalInterpretationServiceV2SchemaVersion:
+    """Verifie la population du champ schema_version dans la meta."""
+
+    @pytest.mark.asyncio
+    async def test_complete_level_sets_v2(self):
+        natal_result = _make_natal_result()
+        birth_profile = _make_birth_profile()
+        gw_result = _make_gateway_result("natal_interpretation")
+        db = _make_db_mock(has_persona=True)
+
+        mock_gw_instance = MagicMock()
+        mock_gw_instance.execute = AsyncMock(return_value=gw_result)
+        mock_persisted = MagicMock()
+        mock_persisted.created_at = None
+
+        with (
+            patch("app.services.natal_interpretation_service_v2.select"),
+            patch(
+                "app.services.natal_interpretation_service_v2.build_chart_json",
+                return_value={"planets": []},
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.build_evidence_catalog",
+                return_value="catalog",
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.LLMGateway",
+                return_value=mock_gw_instance,
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.UserNatalInterpretationModel",
+                return_value=mock_persisted,
+            ),
+        ):
+            resp = await NatalInterpretationServiceV2.interpret(
+                db=db,
+                user_id=1,
+                chart_id="chart-abc",
+                natal_result=natal_result,
+                birth_profile=birth_profile,
+                level="complete",
+                persona_id=PERSONA_ID,
+                locale="fr",
+                question=None,
+                request_id="req-test",
+                trace_id="trace-test",
+            )
+
+        assert resp.data.meta.schema_version == "v2"
+
+    @pytest.mark.asyncio
+    async def test_short_level_sets_v1(self):
+        natal_result = _make_natal_result()
+        birth_profile = _make_birth_profile()
+        gw_result = _make_gateway_result("natal_interpretation_short")
+        db = _make_db_mock(has_persona=False)
+
+        mock_gw_instance = MagicMock()
+        mock_gw_instance.execute = AsyncMock(return_value=gw_result)
+        mock_persisted = MagicMock()
+        mock_persisted.created_at = None
+
+        with (
+            patch("app.services.natal_interpretation_service_v2.select"),
+            patch(
+                "app.services.natal_interpretation_service_v2.build_chart_json",
+                return_value={"planets": []},
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.build_evidence_catalog",
+                return_value="catalog",
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.LLMGateway",
+                return_value=mock_gw_instance,
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.UserNatalInterpretationModel",
+                return_value=mock_persisted,
+            ),
+        ):
+            resp = await NatalInterpretationServiceV2.interpret(
+                db=db,
+                user_id=1,
+                chart_id="chart-abc",
+                natal_result=natal_result,
+                birth_profile=birth_profile,
+                level="short",
+                persona_id=None,
+                locale="fr",
+                question=None,
+                request_id="req-test",
+                trace_id="trace-test",
+            )
+
+        assert resp.data.meta.schema_version == "v1"

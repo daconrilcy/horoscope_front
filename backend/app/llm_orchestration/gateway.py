@@ -261,6 +261,25 @@ class LLMGateway:
         messages.append({"role": "user", "content": user_payload})
         return messages
 
+    def _adjust_reasoning_config(self, config: UseCaseConfig) -> UseCaseConfig:
+        """Auto-adjusts tokens and timeout for reasoning models (o-series, gpt-5)."""
+        _REASONING_PREFIXES = ("o1-", "o3-", "o4-", "gpt-5")
+        _REASONING_EXACT = {"o1", "o3", "o4"}
+
+        is_reasoning = (
+            config.model.startswith(_REASONING_PREFIXES) or config.model in _REASONING_EXACT
+        )
+
+        if is_reasoning:
+            updates = {}
+            if config.max_output_tokens < 16384:
+                updates["max_output_tokens"] = 16384
+            if config.timeout_seconds < 180:
+                updates["timeout_seconds"] = 180
+            if updates:
+                return config.model_copy(update=updates)
+        return config
+
     async def execute(
         self,
         use_case: str,
@@ -395,59 +414,19 @@ class LLMGateway:
             env_override_model = os.getenv(env_override_key)
             model_overridden = False
             if env_override_model:
-                update: dict = {"model": env_override_model}
-                # Reasoning models (o-series, gpt-5) spend tokens on thinking before
-                # producing output. If max_output_tokens is too low the response is
-                # incomplete (status=incomplete, only reasoning in output).
-                # Ensure a minimum of 16k tokens for these models.
-                _REASONING_PREFIXES = ("o1-", "o3-", "o4-", "gpt-5")
-                _REASONING_EXACT = {"o1", "o3", "o4"}
-                _is_reasoning = (
-                    env_override_model.startswith(_REASONING_PREFIXES)
-                    or env_override_model in _REASONING_EXACT
-                )
-                if _is_reasoning:
-                    if config.max_output_tokens < 16384:
-                        update["max_output_tokens"] = 16384
-                    if config.timeout_seconds < 180:
-                        update["timeout_seconds"] = 180
-                    logger.info(
-                        "gateway_model_override_reasoning use_case=%s model=%s tokens->%d timeout->%ds",  # noqa: E501
-                        use_case,
-                        env_override_model,
-                        update.get("max_output_tokens", config.max_output_tokens),
-                        update.get("timeout_seconds", config.timeout_seconds),
-                    )
+                config = config.model_copy(update={"model": env_override_model})
+                config = self._adjust_reasoning_config(config)
+                model_overridden = True
                 logger.info(
-                    "gateway_model_override use_case=%s model=%s -> %s max_output_tokens=%d",
+                    "gateway_model_override use_case=%s model=%s -> %s",
                     use_case,
                     config.model,
                     env_override_model,
-                    update.get("max_output_tokens", config.max_output_tokens),
                 )
-                config = config.model_copy(update=update)
-                model_overridden = True
 
             # 1.2 Reasoning model auto-adjustment (Point 4c)
-            _REASONING_PREFIXES = ("o1-", "o3-", "o4-", "gpt-5")
-            _is_db_reasoning = config.model.startswith(_REASONING_PREFIXES) or config.model in {
-                "o1",
-                "o3",
-                "o4",
-            }
-            if _is_db_reasoning:
-                updates = {}
-                if config.max_output_tokens < 16384:
-                    updates["max_output_tokens"] = 16384
-                if config.timeout_seconds < 180:
-                    updates["timeout_seconds"] = 180
-                if updates:
-                    config = config.model_copy(update=updates)
-                    logger.info(
-                        "gateway_reasoning_model_auto_adjust model=%s updates=%s",
-                        config.model,
-                        updates,
-                    )
+            if not model_overridden:
+                config = self._adjust_reasoning_config(config)
 
             # 2. Log start
             if not is_repair_call:

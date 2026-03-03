@@ -88,6 +88,7 @@ class NatalInterpretationServiceV2:
                     prompt_version_id=str(existing.prompt_version_id)
                     if existing.prompt_version_id
                     else None,
+                    schema_version="v2" if level == "complete" else "v1",
                     validation_status="valid",
                     was_fallback=existing.was_fallback,
                     request_id=request_id,
@@ -185,29 +186,15 @@ class NatalInterpretationServiceV2:
             logger.error(f"Gateway returned no structured output for {use_case_key}")
             raise RuntimeError("Gateway returned no structured output")
 
-        # Gateway meta to our InterpretationMeta
-        meta = InterpretationMeta(
-            level=level,
-            use_case=gateway_result.use_case,
-            persona_id=persona_id or gateway_result.meta.persona_id,
-            persona_name=persona_name,
-            prompt_version_id=gateway_result.meta.prompt_version_id,
-            validation_status=gateway_result.meta.validation_status,
-            repair_attempted=gateway_result.meta.repair_attempted,
-            fallback_triggered=gateway_result.meta.fallback_triggered,
-            was_fallback=gateway_result.meta.fallback_triggered,
-            latency_ms=gateway_result.meta.latency_ms,
-            request_id=request_id,
-            cached=False,
-        )
-
         # Mapping structured_output to AstroResponseV1/V2
+        schema_version = "v1"
         if level == "complete" and not gateway_result.meta.fallback_triggered:
             # complete (payant) → schéma v2 étendu
             try:
                 interpretation: AstroResponseV1 | AstroResponseV2 = AstroResponseV2(
                     **gateway_result.structured_output
                 )
+                schema_version = "v2"
             except Exception as exc:
                 logger.warning(
                     "V2 deserialization failed (%s), falling back to V1 for request_id=%s",
@@ -218,6 +205,23 @@ class NatalInterpretationServiceV2:
         else:
             # short (gratuit) ou fallback vers short → schéma v1
             interpretation = AstroResponseV1(**gateway_result.structured_output)
+
+        # Gateway meta to our InterpretationMeta
+        meta = InterpretationMeta(
+            level=level,
+            use_case=gateway_result.use_case,
+            persona_id=persona_id or gateway_result.meta.persona_id,
+            persona_name=persona_name,
+            prompt_version_id=gateway_result.meta.prompt_version_id,
+            schema_version=schema_version,
+            validation_status=gateway_result.meta.validation_status,
+            repair_attempted=gateway_result.meta.repair_attempted,
+            fallback_triggered=gateway_result.meta.fallback_triggered,
+            was_fallback=gateway_result.meta.fallback_triggered,
+            latency_ms=gateway_result.meta.latency_ms,
+            request_id=request_id,
+            cached=False,
+        )
 
         # 7. Persist interpretation
         db_level = InterpretationLevel.SHORT if level == "short" else InterpretationLevel.COMPLETE

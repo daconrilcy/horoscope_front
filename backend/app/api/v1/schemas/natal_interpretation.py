@@ -28,6 +28,7 @@ class InterpretationMeta(BaseModel):
     persona_id: Optional[str] = None
     persona_name: Optional[str] = None
     prompt_version_id: Optional[str] = None
+    schema_version: str = "v1"  # v1 or v2
     validation_status: str
     repair_attempted: bool = False
     fallback_triggered: bool = False
