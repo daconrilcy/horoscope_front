@@ -1,12 +1,15 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
-from app.llm_orchestration.gateway import LLMGateway
+
 from app.infra.db.base import Base
 from app.infra.db.models import LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.llm_prompt import PromptStatus
-from app.llm_orchestration.models import UsageInfo, GatewayMeta, GatewayResult
+from app.llm_orchestration.gateway import LLMGateway
+from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+
 
 @pytest.fixture
 def db_session():
@@ -19,6 +22,7 @@ def db_session():
     finally:
         session.close()
         Base.metadata.drop_all(bind=test_engine)
+
 
 def _make_result(use_case: str) -> GatewayResult:
     return GatewayResult(
@@ -80,11 +84,11 @@ async def test_chart_json_in_user_message_not_developer(db_session: Session, mon
 
     _, kwargs = mock_client.execute.call_args
     messages = kwargs["messages"]
-    
+
     # Role developer should NOT contain chart_data
     developer_msg = next(m for m in messages if m["role"] == "developer")
     assert chart_data not in developer_msg["content"]
-    
+
     # Role user SHOULD contain chart_data (in Technical Data)
     user_msg = next(m for m in messages if m["role"] == "user")
     assert chart_data in user_msg["content"]

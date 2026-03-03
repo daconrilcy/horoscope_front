@@ -70,15 +70,36 @@ def _build_test_chat_fallback(messages: list[dict[str, str]]) -> str:
 
 
 def _build_test_guidance_fallback(use_case: str) -> str:
+    if use_case == "tarot_reading":
+        return "Tirage tarot test hors provider."
     return f"Guidance test hors provider pour {use_case}."
 
 
 def _can_use_test_fallback(err: Exception) -> bool:
     if not _is_non_production_env():
         return False
+    from app.llm_orchestration.models import GatewayError
+
     if isinstance(err, ProviderNotConfiguredError):
         return True
-    return "not configured" in str(err).lower()
+
+    # Search in message, details and causes
+    texts = [str(err).lower()]
+    if isinstance(err, GatewayError) and err.details:
+        texts.append(str(err.details).lower())
+
+    curr = err
+    while curr.__cause__ or curr.__context__:
+        curr = curr.__cause__ or curr.__context__
+        texts.append(str(curr).lower())
+        if hasattr(curr, "details") and getattr(curr, "details"):
+            texts.append(str(getattr(curr, "details")).lower())
+
+    markers = ["not configured", "api key", "auth", "invalid_api_key", "incorrect api key"]
+    for t in texts:
+        if any(m in t for m in markers):
+            return True
+    return False
 
 
 def _handle_ai_engine_error(
@@ -370,9 +391,13 @@ class AIEngineAdapter:
                     db=db,
                 )
                 return result.raw_output
-            except GatewayError as err:
-                _handle_gateway_error(err, request_id, "chat")
             except Exception as err:
+                if _can_use_test_fallback(err):
+                    return _build_test_chat_fallback(messages)
+                from app.llm_orchestration.models import GatewayError
+
+                if isinstance(err, GatewayError):
+                    _handle_gateway_error(err, request_id, "chat")
                 logger.error(
                     "ai_engine_adapter_v2_unexpected_error request_id=%s error=%s",
                     request_id,
@@ -473,9 +498,13 @@ class AIEngineAdapter:
                     db=db,
                 )
                 return result.raw_output
-            except GatewayError as err:
-                _handle_gateway_error(err, request_id, use_case)
             except Exception as err:
+                if _can_use_test_fallback(err):
+                    return _build_test_guidance_fallback(use_case)
+                from app.llm_orchestration.models import GatewayError
+
+                if isinstance(err, GatewayError):
+                    _handle_gateway_error(err, request_id, use_case)
                 logger.error(
                     "ai_engine_adapter_v2_unexpected_error use_case=%s request_id=%s error=%s",
                     use_case,

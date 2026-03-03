@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
+
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 DOC_PATH = REPO_ROOT / "docs" / "natal-pro-dev-guide.md"
@@ -53,7 +56,6 @@ def test_natal_pro_doc_contains_executable_style_curl_examples() -> None:
     assert "--max-time 60" in content
 
     # Basic JSON validity check for examples (simplified extraction)
-    import json
 
     json_blocks = re.findall(r"-d '({.*?})'", content, re.DOTALL)
     for block in json_blocks:

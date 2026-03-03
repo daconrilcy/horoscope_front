@@ -144,18 +144,19 @@ class TestAdminLlmNatalPrompts:
 
     def test_publish_prompt_blocked_by_eval(self, test_client, mock_db):
         from app.llm_orchestration.models import EvalReport
+
         key = "natal_interpretation_short"
         version_id = str(uuid.uuid4())
         uc_mock = LlmUseCaseConfigModel(
-            key=key, 
-            display_name="Natal", 
+            key=key,
+            display_name="Natal",
             description="...",
             eval_fixtures_path="path/to/fixtures",
-            eval_failure_threshold=0.20
+            eval_failure_threshold=0.20,
         )
-        
+
         mock_db.get.return_value = uc_mock
-        
+
         # Mock a report with 50% failure
         report = EvalReport(
             use_case=key,
@@ -165,16 +166,15 @@ class TestAdminLlmNatalPrompts:
             failed=5,
             failure_rate=0.5,
             blocked_publication=False,
-            results=[]
+            results=[],
         )
-        
+
         with patch("app.api.v1.routers.admin_llm.run_eval") as mock_run_eval:
             mock_run_eval.return_value = report
-            
+
             url = f"/v1/admin/llm/use-cases/{key}/prompts/{version_id}/publish"
             response = test_client.patch(url)
-            
+
         assert response.status_code == 409
         assert response.json()["error"]["code"] == "eval_failed"
         assert response.json()["error"]["details"]["failure_rate"] == 0.5
-

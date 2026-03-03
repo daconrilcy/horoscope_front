@@ -12,7 +12,9 @@ Run with:
 """
 
 import logging
+
 from sqlalchemy import select
+
 from app.infra.db.models import LlmOutputSchemaModel, LlmUseCaseConfigModel
 from app.infra.db.session import SessionLocal
 
@@ -38,41 +40,47 @@ ASTRO_RESPONSE_V2_SCHEMA = {
                     "key": {
                         "type": "string",
                         "enum": [
-                            "overall", "career", "relationships", "inner_life",
-                            "daily_life", "strengths", "challenges",
-                            "tarot_spread", "event_context"
-                        ]
+                            "overall",
+                            "career",
+                            "relationships",
+                            "inner_life",
+                            "daily_life",
+                            "strengths",
+                            "challenges",
+                            "tarot_spread",
+                            "event_context",
+                        ],
                     },
                     "heading": {"type": "string", "minLength": 1, "maxLength": 100},
-                    "content": {"type": "string", "minLength": 1, "maxLength": 6500}
-                }
-            }
+                    "content": {"type": "string", "minLength": 1, "maxLength": 6500},
+                },
+            },
         },
         "highlights": {
             "type": "array",
             "minItems": 3,
             "maxItems": 12,
-            "items": {"type": "string", "minLength": 1, "maxLength": 360}
+            "items": {"type": "string", "minLength": 1, "maxLength": 360},
         },
         "advice": {
             "type": "array",
             "minItems": 3,
             "maxItems": 12,
-            "items": {"type": "string", "minLength": 1, "maxLength": 360}
+            "items": {"type": "string", "minLength": 1, "maxLength": 360},
         },
         "evidence": {
             "type": "array",
             "minItems": 0,
             "maxItems": 80,
-            "items": {"type": "string", "pattern": r"^[A-Z0-9_\.:-]{3,80}$"}
+            "items": {"type": "string", "pattern": r"^[A-Z0-9_\.:-]{3,80}$"},
         },
         "disclaimers": {
             "type": "array",
             "minItems": 0,
             "maxItems": 3,
-            "items": {"type": "string", "minLength": 1, "maxLength": 300}
-        }
-    }
+            "items": {"type": "string", "minLength": 1, "maxLength": 300},
+        },
+    },
 }
 
 
@@ -104,14 +112,13 @@ def seed():
         )
         uc = db.execute(stmt_uc).scalar_one_or_none()
         if uc is None:
-            logger.warning("Use case 'natal_interpretation' not found. Run seed_29_prompts.py first.")
+            logger.warning(
+                "Use case 'natal_interpretation' not found. Run seed_29_prompts.py first."
+            )
         else:
             old_id = uc.output_schema_id
             uc.output_schema_id = v2_id
-            logger.info(
-                "Updated natal_interpretation.output_schema_id: %s → %s",
-                old_id, v2_id
-            )
+            logger.info("Updated natal_interpretation.output_schema_id: %s → %s", old_id, v2_id)
 
         # 3. Verify natal_interpretation_short stays on v1
         stmt_short = select(LlmUseCaseConfigModel).where(
@@ -121,7 +128,7 @@ def seed():
         if uc_short:
             logger.info(
                 "natal_interpretation_short remains on schema_id=%s (v1, unchanged)",
-                uc_short.output_schema_id
+                uc_short.output_schema_id,
             )
 
         db.commit()
@@ -129,6 +136,7 @@ def seed():
     except Exception:
         db.rollback()
         import traceback
+
         traceback.print_exc()
     finally:
         db.close()

@@ -186,7 +186,7 @@ class TestNatalInterpretationEndpointV2:
         persona_id = str(uuid.uuid4())
         persona_mock = MagicMock()
         persona_mock.name = "Test Persona"
-        
+
         # Robust mocking of DB execution
         mock_db.execute.return_value.scalar_one_or_none.return_value = persona_mock
 
@@ -233,8 +233,7 @@ class TestNatalInterpretationEndpointV2:
             ),
         ):
             response = test_client.post(
-                "/v1/natal/interpretation",
-                json={"use_case_level": "complete"}
+                "/v1/natal/interpretation", json={"use_case_level": "complete"}
             )
         assert response.status_code == 422
         assert response.json()["error"]["code"] == "natal_input_invalid"
@@ -277,6 +276,7 @@ class TestNatalInterpretationEndpointV2:
 
     def test_unknown_use_case(self, test_client) -> None:
         from app.llm_orchestration.models import UnknownUseCaseError
+
         with (
             patch(
                 "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
@@ -299,6 +299,7 @@ class TestNatalInterpretationEndpointV2:
 
     def test_upstream_timeout(self, test_client) -> None:
         from app.ai_engine.exceptions import UpstreamTimeoutError
+
         with (
             patch(
                 "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",

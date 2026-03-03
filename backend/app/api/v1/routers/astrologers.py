@@ -72,8 +72,12 @@ def list_astrologers(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    
-    stmt = select(LlmPersonaModel).where(LlmPersonaModel.enabled == True).order_by(LlmPersonaModel.name)
+
+    stmt = (
+        select(LlmPersonaModel)
+        .where(LlmPersonaModel.enabled == True)
+        .order_by(LlmPersonaModel.name)
+    )
     personas = db.execute(stmt).scalars().all()
 
     result_data = []
@@ -82,7 +86,7 @@ def list_astrologers(
             Astrologer(
                 id=str(p.id),
                 name=p.name,
-                avatar_url=None, # Personas don't have avatar_url in DB yet
+                avatar_url=None,  # Personas don't have avatar_url in DB yet
                 specialties=p.allowed_topics or [],
                 style=p.tone,
                 bio_short=p.description,
@@ -99,7 +103,7 @@ def get_astrologer(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    
+
     try:
         persona_uuid = uuid.UUID(id)
     except (ValueError, TypeError):
@@ -129,9 +133,9 @@ def get_astrologer(
             specialties=persona.allowed_topics or [],
             style=persona.tone,
             bio_short=persona.description,
-            bio_full=persona.description, # Same as bio_short for now
+            bio_full=persona.description,  # Same as bio_short for now
             languages=["Français"],
             experience_years=10,
         ),
-        "meta": {"request_id": request_id}
+        "meta": {"request_id": request_id},
     }

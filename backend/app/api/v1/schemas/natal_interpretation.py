@@ -17,7 +17,9 @@ class NatalInterpretationRequest(BaseModel):
     )
     locale: str = Field(default="fr-FR", pattern=r"^[a-z]{2}-[A-Z]{2}$")
     question: Optional[str] = Field(default=None, max_length=500)
-    force_refresh: bool = Field(default=False, description="If True, re-generate even if already exists.")
+    force_refresh: bool = Field(
+        default=False, description="If True, re-generate even if already exists."
+    )
 
 
 class InterpretationMeta(BaseModel):

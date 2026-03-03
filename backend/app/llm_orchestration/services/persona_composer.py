@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+
 from app.infra.db.models.llm_persona import LlmPersonaModel
 
 logger = logging.getLogger(__name__)
@@ -113,8 +114,7 @@ def compose_persona_block(persona: LlmPersonaModel) -> str:
     block_len = len(block)
     if block_len > 1500:
         logger.warning(
-            "persona_block_large_warning persona_id=%s length=%d",
-            str(persona.id), block_len
+            "persona_block_large_warning persona_id=%s length=%d", str(persona.id), block_len
         )
 
     if block_len > 2000:

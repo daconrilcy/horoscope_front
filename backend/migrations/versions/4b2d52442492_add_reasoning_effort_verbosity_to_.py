@@ -4,15 +4,15 @@ Revision ID: 4b2d52442492
 Revises: 12216bc815ed
 Create Date: 2026-03-02 13:56:18.572176
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = '4b2d52442492'
-down_revision: Union[str, Sequence[str], None] = '12216bc815ed'
+revision: str = "4b2d52442492"
+down_revision: Union[str, Sequence[str], None] = "12216bc815ed"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

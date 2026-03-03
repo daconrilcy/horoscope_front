@@ -13,10 +13,12 @@ def mock_gateway():
         instance.execute = AsyncMock()
         yield instance
 
+
 @pytest.fixture
 def fixtures_path():
     # Use the real fixtures path for testing the logic with real files
     return "app/tests/eval_fixtures/natal_interpretation_short"
+
 
 @pytest.mark.asyncio
 async def test_eval_harness_short_all_pass(mock_gateway, fixtures_path):
@@ -47,22 +49,23 @@ async def test_eval_harness_short_all_pass(mock_gateway, fixtures_path):
             cached=False,
             prompt_version_id="v1",
             model="gpt-4o-mini",
-            validation_status="valid"
-        )
+            validation_status="valid",
+        ),
     )
 
     db = MagicMock()
     report = await run_eval("natal_interpretation_short", "v1", fixtures_path, db)
-    
+
     assert report.total > 0
     assert report.passed == report.total
     assert report.failure_rate == 0.0
     assert not report.blocked_publication
 
+
 @pytest.mark.asyncio
 async def test_eval_harness_partial_failure(mock_gateway, fixtures_path):
     """Teste le taux d'échec quand certains résultats sont invalides."""
-    
+
     valid_res = GatewayResult(
         use_case="natal_interpretation_short",
         request_id="test",
@@ -76,7 +79,7 @@ async def test_eval_harness_partial_failure(mock_gateway, fixtures_path):
             ),
             "sections": [
                 {"key": "overall", "heading": "H", "content": "C"},
-                {"key": "career", "heading": "H2", "content": "C2"}
+                {"key": "career", "heading": "H2", "content": "C2"},
             ],
             "highlights": ["1", "2", "3"],
             "advice": ["1", "2", "3"],
@@ -84,21 +87,21 @@ async def test_eval_harness_partial_failure(mock_gateway, fixtures_path):
         },
         usage=UsageInfo(input_tokens=0, output_tokens=0, total_tokens=0, estimated_cost_usd=0),
         meta=GatewayMeta(
-            latency_ms=0, 
-            cached=False, 
-            prompt_version_id="v1", 
-            model="gpt-4o-mini", 
-            validation_status="valid"
-        )
+            latency_ms=0,
+            cached=False,
+            prompt_version_id="v1",
+            model="gpt-4o-mini",
+            validation_status="valid",
+        ),
     )
-    
+
     invalid_res = GatewayResult(
         use_case="natal_interpretation_short",
         request_id="test",
         trace_id="test",
         raw_output="{}",
         structured_output={
-            "title": "Short", # Too short
+            "title": "Short",  # Too short
             "summary": "Too short",
             "sections": [],
             "highlights": [],
@@ -107,21 +110,22 @@ async def test_eval_harness_partial_failure(mock_gateway, fixtures_path):
         },
         usage=UsageInfo(input_tokens=0, output_tokens=0, total_tokens=0, estimated_cost_usd=0),
         meta=GatewayMeta(
-            latency_ms=0, 
-            cached=False, 
-            prompt_version_id="v1", 
-            model="gpt-4o-mini", 
-            validation_status="invalid"
-        )
+            latency_ms=0,
+            cached=False,
+            prompt_version_id="v1",
+            model="gpt-4o-mini",
+            validation_status="invalid",
+        ),
     )
 
     # Return valid then invalid then valid...
     from itertools import cycle
+
     mock_gateway.execute.side_effect = cycle([valid_res, invalid_res])
 
     db = MagicMock()
     report = await run_eval("natal_interpretation_short", "v1", fixtures_path, db)
-    
+
     assert report.total > 0
     # failure_rate should be > 0 because cycle alternates valid/invalid
     assert 0.0 < report.failure_rate < 1.0

@@ -1,11 +1,13 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
-from app.llm_orchestration.gateway import LLMGateway
+
 from app.infra.db.base import Base
 from app.infra.db.models import LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.llm_prompt import PromptStatus
+from app.llm_orchestration.gateway import LLMGateway
 
 
 @pytest.fixture
@@ -69,6 +71,7 @@ async def test_gateway_transmits_gpt5_params_from_db(db_session: Session):
     gateway = LLMGateway(responses_client=mock_client)
 
     from app.core.config import settings
+
     original_v2 = settings.llm_orchestration_v2
     settings.llm_orchestration_v2 = True
 
@@ -125,6 +128,7 @@ async def test_gateway_does_not_pass_reasoning_for_gpt4o(db_session: Session):
     gateway = LLMGateway(responses_client=mock_client)
 
     from app.core.config import settings
+
     original_v2 = settings.llm_orchestration_v2
     settings.llm_orchestration_v2 = True
 

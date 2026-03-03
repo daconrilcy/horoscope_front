@@ -39,12 +39,12 @@ def test_lint_configurable_forbidden_words():
     # Mock settings to test configurability
     with patch("app.llm_orchestration.services.prompt_lint.ai_engine_settings") as mock_settings:
         mock_settings.llm_prompt_forbidden_words = ["pineapple", "banana"]
-        
+
         text = "I love pineapple and {{locale}} {{use_case}}"
         result = PromptLint.lint_prompt(text)
         assert not result.passed
         assert any("Forbidden word sequence found: 'pineapple'" in e for e in result.errors)
-        
+
         text_safe = "I love apple and {{locale}} {{use_case}}"
         result_safe = PromptLint.lint_prompt(text_safe)
         assert result_safe.passed

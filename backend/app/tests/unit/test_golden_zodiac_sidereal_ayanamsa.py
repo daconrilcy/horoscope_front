@@ -24,8 +24,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.domain.astrology.ephemeris_provider import (
-    SUPPORTED_AYANAMSAS,
     _AYANAMSA_IDS,
+    SUPPORTED_AYANAMSAS,
     EphemerisCalcError,
     calculate_planets,
 )

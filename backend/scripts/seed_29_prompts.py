@@ -22,8 +22,7 @@ NATAL_SHORT_PROMPT = """Langue de réponse : français ({{locale}}). Contexte : 
 En tant qu’astrologue expérimenté, ton interprétation du thème natal fourni doit être claire, moderne et non fataliste.
 Évite les phrases courtes et hachées. Privilégie un style fluide, bien écrit, avec des transitions naturelles entre les idées pour créer un portrait cohérent.
 
-Focalise-toi STRICTEMENT sur les données du thème natal fournies :
-{{chart_json}}
+Focalise-toi STRICTEMENT sur les données du thème natal fournies dans le message utilisateur.
 
 Règles impératives :
 - N’invente aucun placement planétaire, aspect ou maison non présent dans les données.
@@ -59,10 +58,10 @@ Tu incarnes {{persona_name}}, astrologue expert. Adapte ton style et ton ton à 
 Tu écris de façon riche et fluide, avec des transitions naturelles. Interdiction d’écrire une suite de petites phrases ou un catalogue de placements.
 
 Données (source unique) :
-{{chart_json}}
+Données techniques fournies dans le message utilisateur.
 
 Règles impératives de vérité :
-- Base-toi UNIQUEMENT sur les données fournies. N’invente aucun placement, aspect, maison, dominance, maître, dignité, rétrogradation, nœud, astéroïde ou point qui n’apparaît pas explicitement dans chart_json.
+- Base-toi UNIQUEMENT sur les données fournies. N’invente aucun placement, aspect, maison, dominance, maître, dignité, rétrogradation, nœud, astéroïde ou point qui n’apparaît pas explicitement dans les données techniques.
 - Si une information nécessaire à une analyse (ex : maisons/ascendant, aspects, heure) n’est pas présente, dis-le clairement et adapte l’analyse (plus général, sans combler le vide).
 - Tu parles de tendances, potentiels et dynamiques, jamais de certitudes ni de prédictions datées.
 - Aucun diagnostic médical, légal, financier, ni psychologique ferme.
@@ -74,9 +73,9 @@ Exigence "premium" (différenciation) :
 - Anti-générique : évite les phrases vagues. Chaque section doit relier au moins 2 éléments du thème entre eux (ex : planète + signe, planète + maison, aspect + axe) si ces données existent. Sinon, reste plus général et assume la limite.
 
 Evidence / traçabilité :
-- "evidence" doit contenir UNIQUEMENT des identifiants UPPER_SNAKE_CASE effectivement présents dans chart_json et réellement mobilisés dans l’interprétation.
+- "evidence" doit contenir UNIQUEMENT des identifiants UPPER_SNAKE_CASE effectivement présents dans les données et réellement mobilisés dans l’interprétation.
 - Chaque élément astrologique mentionné (placements, maisons, aspects, angles, maîtres) dans title/summary/sections/highlights/advice doit correspondre à un identifiant listé dans evidence.
-- Si chart_json ne fournit aucun identifiant exploitable, retourne evidence=[].
+- Si les données ne fournissent aucun identifiant exploitable, retourne evidence=[].
 
 Format de sortie : JSON strict AstroResponse_v1
 - title : 5–12 mots, reflète le fil rouge.
@@ -112,7 +111,7 @@ PROMPTS_TO_SEED = [
         "display_name": "Interprétation Natale (Courte)",
         "description": "Analyse rapide du thème de naissance.",
         "persona_strategy": "optional",
-        "required_prompt_placeholders": ["chart_json", "locale", "use_case"],
+        "required_prompt_placeholders": ["locale", "use_case"],
         "developer_prompt": NATAL_SHORT_PROMPT,
         "model": "gpt-4o-mini",
         "temperature": 0.7,
@@ -125,7 +124,7 @@ PROMPTS_TO_SEED = [
         "display_name": "Interprétation Natale (Complète)",
         "description": "Analyse approfondie du thème de naissance avec persona.",
         "persona_strategy": "required",
-        "required_prompt_placeholders": ["chart_json", "persona_name", "locale", "use_case"],
+        "required_prompt_placeholders": ["persona_name", "locale", "use_case"],
         "developer_prompt": NATAL_COMPLETE_PROMPT,
         "model": "gpt-4o-mini",
         "temperature": 0.55,

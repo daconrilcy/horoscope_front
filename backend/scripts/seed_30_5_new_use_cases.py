@@ -1,16 +1,19 @@
 import logging
-import uuid
+from datetime import datetime, timezone
+
 from sqlalchemy import select
+
 from app.infra.db.models import LlmOutputSchemaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.infra.db.session import SessionLocal
-from datetime import datetime, timezone
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
+
 def utc_now():
     return datetime.now(timezone.utc)
+
 
 EVENT_GUIDANCE_PROMPT = """Langue de réponse : français ({{locale}}). Contexte : use_case={{use_case}}.
 
@@ -90,6 +93,7 @@ PROMPTS_TO_SEED = [
 # Schema names that are mandatory for these use cases to function correctly
 _REQUIRED_SCHEMAS = {"AstroResponse_v2", "ChatResponse_v1"}
 
+
 def seed():
     db = SessionLocal()
     try:
@@ -157,7 +161,7 @@ def seed():
                 published_at=utc_now(),
             )
             db.add(new_v)
-            
+
         db.commit()
         logger.info("New use cases seed completed successfully.")
     except Exception as e:
@@ -165,6 +169,7 @@ def seed():
         logger.exception(f"Seed failed: {e}")
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     seed()

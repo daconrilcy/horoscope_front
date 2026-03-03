@@ -1,4 +1,5 @@
 from sqlalchemy import select
+
 from app.infra.db.models import LlmOutputSchemaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.infra.db.session import SessionLocal
@@ -14,7 +15,13 @@ def seed():
                 "additionalProperties": False,
                 # strict=true requires ALL properties in required.
                 # Nullable fields use {"type": ["string", "null"]} pattern.
-                "required": ["message", "suggested_replies", "intent", "confidence", "safety_notes"],
+                "required": [
+                    "message",
+                    "suggested_replies",
+                    "intent",
+                    "confidence",
+                    "safety_notes",
+                ],
                 "properties": {
                     "message": {"type": "string", "minLength": 1, "maxLength": 2500},
                     "suggested_replies": {
@@ -49,7 +56,15 @@ def seed():
                 "additionalProperties": False,
                 # strict=true requires ALL properties to be listed in required.
                 # Optional arrays must be required but can be empty (no minItems).
-                "required": ["title", "summary", "sections", "highlights", "advice", "evidence", "disclaimers"],
+                "required": [
+                    "title",
+                    "summary",
+                    "sections",
+                    "highlights",
+                    "advice",
+                    "evidence",
+                    "disclaimers",
+                ],
                 "properties": {
                     "title": {"type": "string", "minLength": 1, "maxLength": 120},
                     "summary": {"type": "string", "minLength": 1, "maxLength": 1200},
@@ -105,7 +120,7 @@ def seed():
                         "items": {"type": "string", "maxLength": 200},
                     },
                 },
-            }
+            },
         }
 
         schema_instances = {}
@@ -145,7 +160,7 @@ def seed():
                     display_name=uc_data["display_name"],
                     description=uc_data["description"],
                     output_schema_id=uc_data["output_schema_id"],
-                    safety_profile="astrology"
+                    safety_profile="astrology",
                 )
                 db.add(existing)
                 db.flush()
@@ -164,7 +179,7 @@ def seed():
                     "- suggested_replies : 3 à 5 propositions courtes, actionnables.\n"
                     "Si des données de naissance manquent et qu’elles sont nécessaires : intent='ask_birth_data'.\n"
                     "Sinon choisis l’intent le plus pertinent, ou omets-le."
-                )
+                ),
             },
             {
                 "use_case_key": "natal_interpretation",
@@ -181,14 +196,14 @@ def seed():
                     "- highlights : 5–8 points.\n"
                     "- advice : 5–8 conseils pratiques.\n"
                     "- evidence : liste d’identifiants UPPER_SNAKE_CASE des placements/aspects réellement utilisés."
-                )
-            }
+                ),
+            },
         ]
 
         for p_data in prompts_to_seed:
             stmt = select(LlmPromptVersionModel).where(
                 LlmPromptVersionModel.use_case_key == p_data["use_case_key"],
-                LlmPromptVersionModel.status == PromptStatus.PUBLISHED
+                LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
             )
             existing = db.execute(stmt).scalar_one_or_none()
             if not existing:
@@ -207,6 +222,7 @@ def seed():
     except Exception as e:
         db.rollback()
         import traceback
+
         traceback.print_exc()
         print(f"Seed failed: {e}")
     finally:

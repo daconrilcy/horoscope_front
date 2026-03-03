@@ -36,9 +36,7 @@ def _make_natal_result() -> NatalResult:
             birth_timezone="Europe/Paris",
         ),
         planet_positions=[
-            PlanetPosition(
-                planet_code="sun", longitude=84.5, sign_code="gemini", house_number=10
-            ),
+            PlanetPosition(planet_code="sun", longitude=84.5, sign_code="gemini", house_number=10),
             PlanetPosition(
                 planet_code="moon", longitude=112.3, sign_code="cancer", house_number=11
             ),

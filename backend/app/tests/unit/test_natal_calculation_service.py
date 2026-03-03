@@ -540,7 +540,7 @@ def test_calculate_natal_topocentric_vs_geocentric_asc_mc_diff_ac2(
 
     # We mock build_natal_result to return slightly different values for geo/topo
     # to simulate the real engine behavior and verify AC2 logic.
-    from app.domain.astrology.natal_calculation import NatalResult, HouseResult
+    from app.domain.astrology.natal_calculation import HouseResult, NatalResult
     from app.domain.astrology.natal_preparation import BirthPreparedData
 
     def _mock_build_natal_result(**kwargs: object) -> NatalResult:

@@ -6,6 +6,7 @@ its active prompt version. It reuses the existing `AstroResponse_v1` schema.
 Run:
     python backend/scripts/seed_natal_short.py
 """
+
 from sqlalchemy import select
 
 from app.infra.db.models import LlmOutputSchemaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
@@ -87,6 +88,7 @@ def seed():
     except Exception as e:
         db.rollback()
         import traceback
+
         traceback.print_exc()
         print(f"Migration failed: {e}")
     finally:

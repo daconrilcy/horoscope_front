@@ -330,13 +330,16 @@ class TestNatalInterpretationService:
         mock_response.meta.latency_ms = 1200
         mock_response.usage.total_tokens = 500
 
-        with patch(
-            "app.ai_engine.config.ai_engine_settings",
-            MagicMock(llm_orchestration_v2=False),
-        ), patch(
-            "app.services.natal_interpretation_service.generate_text",
-            new_callable=AsyncMock,
-            return_value=mock_response,
+        with (
+            patch(
+                "app.ai_engine.config.ai_engine_settings",
+                MagicMock(llm_orchestration_v2=False),
+            ),
+            patch(
+                "app.services.natal_interpretation_service.generate_text",
+                new_callable=AsyncMock,
+                return_value=mock_response,
+            ),
         ):
             result = await NatalInterpretationService.interpret_chart(
                 natal_chart=natal_chart,
@@ -368,13 +371,16 @@ class TestNatalInterpretationService:
         mock_response.meta.latency_ms = 1000
         mock_response.usage.total_tokens = 300
 
-        with patch(
-            "app.ai_engine.config.ai_engine_settings",
-            MagicMock(llm_orchestration_v2=False),
-        ), patch(
-            "app.services.natal_interpretation_service.generate_text",
-            new_callable=AsyncMock,
-            return_value=mock_response,
+        with (
+            patch(
+                "app.ai_engine.config.ai_engine_settings",
+                MagicMock(llm_orchestration_v2=False),
+            ),
+            patch(
+                "app.services.natal_interpretation_service.generate_text",
+                new_callable=AsyncMock,
+                return_value=mock_response,
+            ),
         ):
             result = await NatalInterpretationService.interpret_chart(
                 natal_chart=natal_chart,
@@ -396,13 +402,16 @@ class TestNatalInterpretationService:
         mock_response.meta.latency_ms = 50
         mock_response.usage.total_tokens = 0
 
-        with patch(
-            "app.ai_engine.config.ai_engine_settings",
-            MagicMock(llm_orchestration_v2=False),
-        ), patch(
-            "app.services.natal_interpretation_service.generate_text",
-            new_callable=AsyncMock,
-            return_value=mock_response,
+        with (
+            patch(
+                "app.ai_engine.config.ai_engine_settings",
+                MagicMock(llm_orchestration_v2=False),
+            ),
+            patch(
+                "app.services.natal_interpretation_service.generate_text",
+                new_callable=AsyncMock,
+                return_value=mock_response,
+            ),
         ):
             result = await NatalInterpretationService.interpret_chart(
                 natal_chart=natal_chart,
@@ -418,13 +427,16 @@ class TestNatalInterpretationService:
         natal_chart = _make_natal_chart_read_data()
         birth_profile = _make_birth_profile()
 
-        with patch(
-            "app.ai_engine.config.ai_engine_settings",
-            MagicMock(llm_orchestration_v2=False),
-        ), patch(
-            "app.services.natal_interpretation_service.generate_text",
-            new_callable=AsyncMock,
-            side_effect=TimeoutError("AI Engine timeout"),
+        with (
+            patch(
+                "app.ai_engine.config.ai_engine_settings",
+                MagicMock(llm_orchestration_v2=False),
+            ),
+            patch(
+                "app.services.natal_interpretation_service.generate_text",
+                new_callable=AsyncMock,
+                side_effect=TimeoutError("AI Engine timeout"),
+            ),
         ):
             with pytest.raises(NatalInterpretationServiceError) as exc_info:
                 await NatalInterpretationService.interpret_chart(
@@ -444,13 +456,16 @@ class TestNatalInterpretationService:
         class AIError(Exception):
             code = "provider_error"
 
-        with patch(
-            "app.ai_engine.config.ai_engine_settings",
-            MagicMock(llm_orchestration_v2=False),
-        ), patch(
-            "app.services.natal_interpretation_service.generate_text",
-            new_callable=AsyncMock,
-            side_effect=AIError("Provider failure"),
+        with (
+            patch(
+                "app.ai_engine.config.ai_engine_settings",
+                MagicMock(llm_orchestration_v2=False),
+            ),
+            patch(
+                "app.services.natal_interpretation_service.generate_text",
+                new_callable=AsyncMock,
+                side_effect=AIError("Provider failure"),
+            ),
         ):
             with pytest.raises(NatalInterpretationServiceError) as exc_info:
                 await NatalInterpretationService.interpret_chart(

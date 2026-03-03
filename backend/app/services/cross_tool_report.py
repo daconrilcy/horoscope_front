@@ -144,9 +144,7 @@ def render_markdown_report(report: Mapping[str, object]) -> str:
         raise ValueError("invalid report.cases")
 
     failing_cases = [
-        case
-        for case in cases
-        if isinstance(case, Mapping) and case.get("status") == "failed"
+        case for case in cases if isinstance(case, Mapping) and case.get("status") == "failed"
     ]
     if not failing_cases:
         lines.append("No failures detected.")

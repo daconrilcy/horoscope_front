@@ -8,22 +8,35 @@ if TYPE_CHECKING:
     from app.services.user_birth_profile_service import UserBirthProfileData
 
 SIGNS = [
-    "aries", "taurus", "gemini", "cancer", "leo", "virgo",
-    "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"
+    "aries",
+    "taurus",
+    "gemini",
+    "cancer",
+    "leo",
+    "virgo",
+    "libra",
+    "scorpio",
+    "sagittarius",
+    "capricorn",
+    "aquarius",
+    "pisces",
 ]
 MAJOR_ASPECTS = {"conjunction", "opposition", "trine", "square", "sextile"}
 
 # Regex for evidence IDs as per Story 29.1 AC4
 EVIDENCE_ID_PATTERN = re.compile(r"^[A-Z0-9_\.:-]{3,60}$")
 
+
 def _longitude_to_sign(longitude: float) -> str:
     """Returns the sign name for a given longitude."""
     index = int((longitude % 360.0) // 30.0) % 12
     return SIGNS[index]
 
+
 def _longitude_in_sign(longitude: float) -> float:
     """Returns the longitude within the sign (0-30)."""
     return round(longitude % 30.0, 2)
+
 
 def build_chart_json(
     natal_result: NatalResult,
@@ -32,14 +45,14 @@ def build_chart_json(
 ) -> dict[str, Any]:
     """
     Builds the canonical chart_json payload for LLMGateway.
-    
+
     Args:
         natal_result: The calculated natal result.
         birth_profile: The user's birth profile data.
         degraded_mode: Optional string indicating degraded modes:
                        "no_time", "no_location", "no_location_no_time".
                        If None, it is derived from birth_profile.
-        
+
     Returns:
         A dictionary with keys: meta, planets, houses, aspects, angles.
     """
@@ -88,25 +101,29 @@ def build_chart_json(
     # Planets
     planets = []
     for p in natal_result.planet_positions:
-        planets.append({
-            "code": p.planet_code,
-            "sign": p.sign_code,
-            "longitude": round(p.longitude, 2),
-            "longitude_in_sign": _longitude_in_sign(p.longitude),
-            "house": None if is_no_time else p.house_number,
-            "is_retrograde": p.is_retrograde,
-            "speed": round(p.speed_longitude, 2),
-        })
+        planets.append(
+            {
+                "code": p.planet_code,
+                "sign": p.sign_code,
+                "longitude": round(p.longitude, 2),
+                "longitude_in_sign": _longitude_in_sign(p.longitude),
+                "house": None if is_no_time else p.house_number,
+                "is_retrograde": p.is_retrograde,
+                "speed": round(p.speed_longitude, 2),
+            }
+        )
 
     # Houses
     houses = []
     if not is_no_time:
         for h in natal_result.houses:
-            houses.append({
-                "number": h.number,
-                "cusp_longitude": round(h.cusp_longitude, 2),
-                "sign": _longitude_to_sign(h.cusp_longitude),
-            })
+            houses.append(
+                {
+                    "number": h.number,
+                    "cusp_longitude": round(h.cusp_longitude, 2),
+                    "sign": _longitude_to_sign(h.cusp_longitude),
+                }
+            )
 
     # Aspects
     aspects = []
@@ -114,14 +131,16 @@ def build_chart_json(
         # Filter for major aspects only as per Epic 29 requirements.
         # Minor aspects are currently calculated by the engine but not supported by the JSON contract.
         if a.aspect_code in MAJOR_ASPECTS:
-            aspects.append({
-                "type": a.aspect_code,
-                "planet_a": a.planet_a,
-                "planet_b": a.planet_b,
-                "angle": round(a.angle, 2),
-                "orb": round(a.orb_used, 2),
-                "applying": None, # Unknown status
-            })
+            aspects.append(
+                {
+                    "type": a.aspect_code,
+                    "planet_a": a.planet_a,
+                    "planet_b": a.planet_b,
+                    "angle": round(a.angle, 2),
+                    "orb": round(a.orb_used, 2),
+                    "applying": None,  # Unknown status
+                }
+            )
 
     # Angles
     angles = {
@@ -133,18 +152,13 @@ def build_chart_json(
 
     if not (is_no_time or is_no_location):
         house_dict = {h.number: h for h in natal_result.houses}
-        map_angles = {
-            "ASC": 1,
-            "MC": 10,
-            "DSC": 7,
-            "IC": 4
-        }
+        map_angles = {"ASC": 1, "MC": 10, "DSC": 7, "IC": 4}
         for angle_key, house_num in map_angles.items():
             h = house_dict.get(house_num)
             if h:
                 angles[angle_key] = {
                     "longitude": round(h.cusp_longitude, 2),
-                    "sign": _longitude_to_sign(h.cusp_longitude)
+                    "sign": _longitude_to_sign(h.cusp_longitude),
                 }
 
     return {
@@ -155,6 +169,7 @@ def build_chart_json(
         "angles": angles,
     }
 
+
 def _get_evidence_priority(eid: str) -> int:
     """Helper to determine sorting priority for evidence IDs."""
     # Priority 0: Luminaries and Angles
@@ -162,8 +177,17 @@ def _get_evidence_priority(eid: str) -> int:
         return 0
     # Priority 1: Positions (Signs, Houses, Retrograde)
     planets = [
-        "MERCURY_", "VENUS_", "MARS_", "JUPITER_", "SATURN_", "URANUS_",
-        "NEPTUNE_", "PLUTO_", "CHIRON_", "LILITH_", "NODE_"
+        "MERCURY_",
+        "VENUS_",
+        "MARS_",
+        "JUPITER_",
+        "SATURN_",
+        "URANUS_",
+        "NEPTUNE_",
+        "PLUTO_",
+        "CHIRON_",
+        "LILITH_",
+        "NODE_",
     ]
     if any(eid.startswith(p) for p in planets):
         return 1
@@ -173,10 +197,11 @@ def _get_evidence_priority(eid: str) -> int:
     # Priority 3: Others (House cusps in signs, etc.)
     return 3
 
+
 def build_evidence_catalog(chart_json: dict[str, Any]) -> list[str]:
     r"""
     Produces a list of evidence identifiers in UPPER_SNAKE_CASE.
-    
+
     Evidence IDs follow the pattern: ^[A-Z0-9_\.:-]{3,60}$
     """
     evidence = []
@@ -187,14 +212,14 @@ def build_evidence_catalog(chart_json: dict[str, Any]) -> list[str]:
         sign = str(p["sign"]).upper()
         # PLANET_SIGN
         evidence.append(f"{planet}_{sign}")
-        
+
         house = p.get("house")
         if house is not None:
             # PLANET_H{house}
             evidence.append(f"{planet}_H{house}")
             # PLANET_SIGN_H{house}
             evidence.append(f"{planet}_{sign}_H{house}")
-            
+
         if p.get("is_retrograde"):
             evidence.append(f"{planet}_RETROGRADE")
 
@@ -203,12 +228,12 @@ def build_evidence_catalog(chart_json: dict[str, Any]) -> list[str]:
         p1 = str(a["planet_a"]).upper()
         p2 = str(a["planet_b"]).upper()
         aspect_type = str(a["type"]).upper()
-        
+
         # ASPECT_PA_PB_TYPE (sorted PA, PB for stability)
         pair = sorted([p1, p2])
         base_id = f"ASPECT_{pair[0]}_{pair[1]}_{aspect_type}"
         evidence.append(base_id)
-        
+
         # ASPECT_PA_PB_TYPE_ORB{int_orb}
         orb = a.get("orb")
         if orb is not None:
@@ -238,15 +263,12 @@ def build_evidence_catalog(chart_json: dict[str, Any]) -> list[str]:
         clean_id = eid.replace(" ", "_").upper()
         if EVIDENCE_ID_PATTERN.match(clean_id):
             unique_evidence.add(clean_id)
-            
+
     # Sort by priority then alpha
-    sorted_evidence = sorted(
-        list(unique_evidence), 
-        key=lambda x: (_get_evidence_priority(x), x)
-    )
+    sorted_evidence = sorted(list(unique_evidence), key=lambda x: (_get_evidence_priority(x), x))
 
     if len(sorted_evidence) > 40:
         # Truncate keeping the most important ones (priority based)
         return sorted_evidence[:40]
-        
+
     return sorted_evidence

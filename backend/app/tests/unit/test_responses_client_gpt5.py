@@ -1,11 +1,13 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
-from app.llm_orchestration.providers.responses_client import ResponsesClient
 
+import pytest
+
+from app.llm_orchestration.providers.responses_client import ResponsesClient
 
 # ---------------------------------------------------------------------------
 # Tests _to_typed_content_blocks
 # ---------------------------------------------------------------------------
+
 
 def test_to_typed_content_blocks_converts_strings():
     """Vérifie la conversion en blocs de contenu typés pour GPT-5."""
@@ -61,6 +63,7 @@ def test_to_typed_content_blocks_preserves_roles():
 # ---------------------------------------------------------------------------
 # Tests execute() — paramètres GPT-5
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_execute_gpt5_params():

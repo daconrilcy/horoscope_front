@@ -16,6 +16,7 @@ Run with:
 """
 
 import logging
+
 from sqlalchemy import select
 
 from app.infra.db.models import LlmOutputSchemaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
@@ -104,7 +105,7 @@ GPT5_CONFIG = {
     "use_case_key": "natal_interpretation",
     "developer_prompt": NATAL_COMPLETE_PROMPT_V2,
     "model": "gpt-5",
-    "temperature": 0.5,        # Ignoré par GPT-5 si reasoning actif, mais stocké
+    "temperature": 0.5,  # Ignoré par GPT-5 si reasoning actif, mais stocké
     "max_output_tokens": 32000,
     "reasoning_effort": "low",  # Équilibre performance/coût pour les interprétations
     "verbosity": "high",

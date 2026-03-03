@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 from app.ai_engine.schemas import GenerateContext, GenerateInput, GenerateRequest
 from app.ai_engine.services.generate_service import generate_text

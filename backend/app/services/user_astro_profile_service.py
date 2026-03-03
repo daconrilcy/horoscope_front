@@ -11,11 +11,9 @@ from __future__ import annotations
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.domain.astrology.natal_calculation import NatalCalculationError, sign_from_longitude
 from app.domain.astrology.natal_preparation import BirthInput
 from app.services.natal_calculation_service import NatalCalculationService
-from app.services.reference_data_service import ReferenceDataService
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,

@@ -13,32 +13,37 @@ Alembic SQLite artefacts — Alembic misdetects UUID types when diffing against 
 Those columns are already properly typed as UUID in PostgreSQL (production). They have
 been removed from this migration to avoid accidental data corruption on production.
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = 'ee2645ed1a1c'
-down_revision: Union[str, Sequence[str], None] = '4b2d52442492'
+revision: str = "ee2645ed1a1c"
+down_revision: Union[str, Sequence[str], None] = "4b2d52442492"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table('llm_use_case_configs', schema=None) as batch_op:
-        batch_op.add_column(sa.Column(
-            'interaction_mode', sa.String(length=16),
-            nullable=False, server_default='structured'
-        ))
-        batch_op.add_column(sa.Column(
-            'user_question_policy', sa.String(length=16),
-            nullable=False, server_default='none'
-        ))
+    with op.batch_alter_table("llm_use_case_configs", schema=None) as batch_op:
+        batch_op.add_column(
+            sa.Column(
+                "interaction_mode",
+                sa.String(length=16),
+                nullable=False,
+                server_default="structured",
+            )
+        )
+        batch_op.add_column(
+            sa.Column(
+                "user_question_policy", sa.String(length=16), nullable=False, server_default="none"
+            )
+        )
 
 
 def downgrade() -> None:
-    with op.batch_alter_table('llm_use_case_configs', schema=None) as batch_op:
-        batch_op.drop_column('user_question_policy')
-        batch_op.drop_column('interaction_mode')
+    with op.batch_alter_table("llm_use_case_configs", schema=None) as batch_op:
+        batch_op.drop_column("user_question_policy")
+        batch_op.drop_column("interaction_mode")

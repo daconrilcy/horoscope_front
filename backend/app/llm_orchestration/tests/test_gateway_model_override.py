@@ -115,10 +115,9 @@ async def test_gateway_model_override_with_robust_normalization():
     )
 
     from app.llm_orchestration.models import UseCaseConfig
+
     stub_config = UseCaseConfig(
-        model="gpt-default",
-        developer_prompt="test",
-        required_prompt_placeholders=[]
+        model="gpt-default", developer_prompt="test", required_prompt_placeholders=[]
     )
 
     with patch("app.llm_orchestration.gateway.USE_CASE_STUBS", {use_case: stub_config}):

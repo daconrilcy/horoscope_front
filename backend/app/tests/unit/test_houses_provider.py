@@ -26,6 +26,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.domain.astrology.calculators.houses import assign_house_number
 from app.domain.astrology.houses_provider import (
     _HOUSE_SYSTEM_CODES,
     _SUPPORTED_HOUSE_SYSTEMS,
@@ -33,7 +34,6 @@ from app.domain.astrology.houses_provider import (
     UnsupportedHouseSystemError,
     calculate_houses,
 )
-from app.domain.astrology.calculators.houses import assign_house_number
 from app.infra.observability.metrics import reset_metrics
 
 # ---------------------------------------------------------------------------

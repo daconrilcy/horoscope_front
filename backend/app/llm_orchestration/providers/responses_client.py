@@ -7,6 +7,8 @@ import random
 import time
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from openai import APIConnectionError, APITimeoutError, RateLimitError
+
 from app.ai_engine.config import ai_engine_settings
 from app.ai_engine.exceptions import (
     ProviderNotConfiguredError,
@@ -206,25 +208,17 @@ class ResponsesClient:
                 )
                 last_error = err
             except Exception as err:
-                # Handle OpenAI SDK-specific exceptions first (non-retryable)
-                try:
-                    from openai import APIConnectionError, APITimeoutError, RateLimitError
-
-                    if isinstance(err, RateLimitError):
-                        raise UpstreamRateLimitError() from err
-                    if isinstance(err, APITimeoutError):
-                        raise UpstreamTimeoutError(timeout_seconds) from err
-                    if isinstance(err, APIConnectionError):
-                        raise UpstreamError(
-                            f"Connection error: {str(err)}",
-                            details={"kind": "connection_error"},
-                        ) from err
-                except ImportError:
-                    pass
-
-                error_msg = str(err).lower()
-                if "rate_limit" in error_msg or "429" in error_msg:
+                # Handle OpenAI SDK-specific exceptions (non-retryable)
+                if isinstance(err, RateLimitError):
                     raise UpstreamRateLimitError() from err
+                if isinstance(err, APITimeoutError):
+                    raise UpstreamTimeoutError(timeout_seconds) from err
+                if isinstance(err, APIConnectionError):
+                    raise UpstreamError(
+                        f"Connection error: {str(err)}",
+                        details={"kind": "connection_error"},
+                    ) from err
+
                 logger.warning(
                     "responses_error operation=%s attempt=%d error=%s",
                     operation,

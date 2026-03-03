@@ -8,8 +8,9 @@ Optional scalar fields become nullable using {"type": ["string", "null"]}.
 Run with:
     python -m scripts.fix_schemas_strict
 """
-import json
+
 from sqlalchemy import select
+
 from app.infra.db.models import LlmOutputSchemaModel
 from app.infra.db.session import SessionLocal
 
@@ -17,7 +18,15 @@ FIXED_SCHEMAS = {
     "AstroResponse_v1": {
         "type": "object",
         "additionalProperties": False,
-        "required": ["title", "summary", "sections", "highlights", "advice", "evidence", "disclaimers"],
+        "required": [
+            "title",
+            "summary",
+            "sections",
+            "highlights",
+            "advice",
+            "evidence",
+            "disclaimers",
+        ],
         "properties": {
             "title": {"type": "string", "minLength": 1, "maxLength": 120},
             "summary": {"type": "string", "minLength": 1, "maxLength": 1200},
@@ -127,6 +136,7 @@ def run():
     except Exception:
         db.rollback()
         import traceback
+
         traceback.print_exc()
     finally:
         db.close()

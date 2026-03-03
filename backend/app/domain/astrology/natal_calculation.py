@@ -260,9 +260,7 @@ def build_natal_result(
     if not isinstance(aspects_data, list) or not aspects_data:
         _raise_invalid_reference(version, "aspects", "missing_or_empty")
 
-    prepared = prepare_birth_data(
-        birth_input, tt_enabled=tt_enabled, derive_enabled=derive_enabled
-    )
+    prepared = prepare_birth_data(birth_input, tt_enabled=tt_enabled, derive_enabled=derive_enabled)
     if timeout_check is not None:
         timeout_check()
     planet_codes = [

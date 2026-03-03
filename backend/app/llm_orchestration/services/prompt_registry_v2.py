@@ -36,9 +36,7 @@ class PromptRegistryV2:
             if use_case_key in _prompt_cache:
                 data, expiry = _prompt_cache[use_case_key]
                 if now < expiry:
-                    increment_counter(
-                        "prompt_registry_cache_hits_total", labels={"status": "hit"}
-                    )
+                    increment_counter("prompt_registry_cache_hits_total", labels={"status": "hit"})
                     # Return a detached model instance for gateway usage
                     # Note: this instance is not attached to the DB session
                     return LlmPromptVersionModel(**data)

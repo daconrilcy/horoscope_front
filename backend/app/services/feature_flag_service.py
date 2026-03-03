@@ -452,7 +452,7 @@ class FeatureFlagService:
         # Story 28.5+: Support gateway v2
         from app.ai_engine.config import ai_engine_settings
         from app.services.ai_engine_adapter import AIEngineAdapter
-        
+
         persona = PersonaConfigService.get_active(db)
         persona_profile_code = persona.profile_code
 
@@ -462,7 +462,7 @@ class FeatureFlagService:
                 "situation": payload.situation,
                 "persona_id": payload.persona_id,
                 # For tarot we might need cards_json, but let's use a simple mock for now or pass if available
-                "cards_json": [], 
+                "cards_json": [],
             }
             if normalized_module == "tarot":
                 context["question"] = question

@@ -25,6 +25,7 @@ class AstroSection(BaseModel):
 
 class AstroSectionV2(BaseModel):
     """Extended section with wider content limit for premium interpretations."""
+
     key: _SECTION_KEYS
     heading: str = Field(..., min_length=1, max_length=80)
     content: str = Field(..., min_length=1, max_length=6500)
@@ -32,6 +33,7 @@ class AstroSectionV2(BaseModel):
 
 class AstroResponseV1(BaseModel):
     """Canonical structured response for astrological interpretations."""
+
     title: str = Field(..., min_length=1, max_length=120)
     summary: str = Field(..., min_length=1, max_length=1200)
     sections: List[AstroSection] = Field(..., min_length=2, max_length=8)
@@ -48,6 +50,7 @@ _AdviceItem = Annotated[str, Field(max_length=360)]
 
 class AstroResponseV2(BaseModel):
     """Extended structured response for premium complete interpretations (Story 30-2)."""
+
     title: str = Field(..., min_length=1, max_length=120)
     summary: str = Field(..., min_length=1, max_length=2800)
     sections: List[AstroSectionV2] = Field(..., min_length=2, max_length=8)
@@ -56,19 +59,23 @@ class AstroResponseV2(BaseModel):
     evidence: List[_EvidenceItem] = Field(default_factory=list, max_length=40)
     disclaimers: List[str] = Field(default_factory=list)
 
+
 class ChatResponseV1(BaseModel):
     """Canonical structured response for interactive chat."""
+
     message: str = Field(..., min_length=1, max_length=2500)
     suggested_replies: List[str] = Field(..., max_length=5)
-    intent: Optional[Literal[
-        "clarify_question",
-        "ask_birth_data",
-        "explain_natal_basics",
-        "offer_natal_interpretation",
-        "offer_tarot_reading",
-        "offer_event_guidance",
-        "handoff_to_support",
-        "close_conversation",
-    ]] = None
+    intent: Optional[
+        Literal[
+            "clarify_question",
+            "ask_birth_data",
+            "explain_natal_basics",
+            "offer_natal_interpretation",
+            "offer_tarot_reading",
+            "offer_event_guidance",
+            "handoff_to_support",
+            "close_conversation",
+        ]
+    ] = None
     confidence: Optional[float] = Field(None, ge=0, le=1)
     safety_notes: List[str] = Field(default_factory=list, max_length=3)
