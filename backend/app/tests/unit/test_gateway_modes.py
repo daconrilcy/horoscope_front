@@ -295,4 +295,4 @@ async def test_schema_name_in_payload(db_session, monkeypatch):
 
     args = mock_client.execute.call_args.kwargs
     resp_format = args["response_format"]
-    assert resp_format["json_schema"]["name"] == "AstroResponse_v2"
+    assert resp_format["json_schema"]["name"] == "astroresponse_v2"

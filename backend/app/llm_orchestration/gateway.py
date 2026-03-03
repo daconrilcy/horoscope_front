@@ -546,7 +546,10 @@ class LLMGateway:
                         )
                         if schema_model:
                             schema_dict = schema_model.json_schema
-                            schema_name = schema_model.name
+                            # Responses API v2 requires name to match ^[a-z0-9_-]+$
+                            schema_name = re.sub(r"[^a-z0-9_-]", "_", schema_model.name.lower())
+                        if schema_dict:
+                            schema_name = re.sub(r"[^a-z0-9_-]", "_", schema_name.lower())
                     except (ValueError, TypeError):
                         logger.error(
                             "gateway_invalid_schema_id schema_id=%s", config.output_schema_id
@@ -611,7 +614,14 @@ class LLMGateway:
 
             # 10. Validation & Repair Loop (Point 4: Une seule tentative)
             if schema_dict:
-                val_result = validate_output(result.raw_output, schema_dict)
+                evidence_catalog = context.get("evidence_catalog")
+                val_strict = context.get("validation_strict", False)
+                val_result = validate_output(
+                    result.raw_output,
+                    schema_dict,
+                    evidence_catalog=evidence_catalog,
+                    strict=val_strict,
+                )
                 increment_counter(
                     "llm_output_validation_total",
                     labels={

@@ -8,6 +8,7 @@ import { useAstrologers } from "../api/astrologers";
 import { natalChartTranslations } from "../i18n/natalChart";
 import { type AstrologyLang } from "../i18n/astrology";
 import { ChevronDown, ChevronUp, Lock, RefreshCw, Star, User, AlertCircle } from "lucide-react";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 interface Props {
   chartLoaded: boolean;
@@ -76,28 +77,30 @@ export function NatalInterpretationSection({ chartLoaded, lang }: Props) {
         </div>
       </div>
 
-      {isLoading ? (
-        <InterpretationSkeleton t={t} isComplete={useCaseLevel === "complete"} />
-      ) : error ? (
-        <InterpretationError t={t} onRetry={() => refetch()} />
-      ) : data ? (
-        <>
-          <InterpretationContent data={data} lang={lang} />
-          
-          {useCaseLevel === "short" && !isUpsellOpen && (
-            <UpsellBlock t={t} onOpenSelector={() => setIsUpsellOpen(true)} />
-          )}
+      <ErrorBoundary onReset={() => refetch()}>
+        {isLoading ? (
+          <InterpretationSkeleton t={t} isComplete={useCaseLevel === "complete"} />
+        ) : error ? (
+          <InterpretationError t={t} onRetry={() => refetch()} />
+        ) : data ? (
+          <>
+            <InterpretationContent data={data} lang={lang} />
+            
+            {useCaseLevel === "short" && !isUpsellOpen && (
+              <UpsellBlock t={t} onOpenSelector={() => setIsUpsellOpen(true)} />
+            )}
 
-          {isUpsellOpen && (
-            <PersonaSelector 
-              t={t} 
-              onConfirm={handleUpgrade} 
-              onCancel={() => setIsUpsellOpen(false)} 
-              isSubmitting={isLoading && useCaseLevel === "complete"}
-            />
-          )}
-        </>
-      ) : null}
+            {isUpsellOpen && (
+              <PersonaSelector 
+                t={t} 
+                onConfirm={handleUpgrade} 
+                onCancel={() => setIsUpsellOpen(false)} 
+                isSubmitting={isLoading && useCaseLevel === "complete"}
+              />
+            )}
+          </>
+        ) : null}
+      </ErrorBoundary>
     </section>
   );
 }

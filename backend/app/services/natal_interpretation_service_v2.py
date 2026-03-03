@@ -162,6 +162,7 @@ class NatalInterpretationServiceV2:
             "chart_json": json.dumps(chart_json_dict, ensure_ascii=False),
             "evidence_catalog": evidence_catalog,
             "use_case": use_case_key,
+            "validation_strict": level == "complete",
         }
         if persona_id:
             context["persona_id"] = persona_id
