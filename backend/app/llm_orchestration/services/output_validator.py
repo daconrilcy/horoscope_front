@@ -87,20 +87,25 @@ def validate_output(
                     if "content" in s:
                         text_blobs.append(s["content"])
 
+            import re
+
             full_text = "\n".join(text_blobs).lower()
 
             for item in evidence:
                 if not isinstance(item, str):
                     continue
 
-                # Check for mention: either the ID itself or any of its natural labels
+                # Check for mention: either the ID itself or any of its natural labels.
+                # Use regex with word boundaries to avoid false positives (e.g. 'sun' in 'sunday').
                 found = False
-                if item.lower() in full_text:
+                pattern = rf"\b{re.escape(item.lower())}\b"
+                if re.search(pattern, full_text):
                     found = True
                 elif isinstance(evidence_catalog, dict) and item in evidence_catalog:
                     labels = evidence_catalog[item]
                     for label in labels:
-                        if label.lower() in full_text:
+                        label_pattern = rf"\b{re.escape(label.lower())}\b"
+                        if re.search(label_pattern, full_text):
                             found = True
                             break
 

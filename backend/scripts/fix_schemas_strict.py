@@ -13,6 +13,7 @@ from sqlalchemy import select
 
 from app.infra.db.models import LlmOutputSchemaModel
 from app.infra.db.session import SessionLocal
+from app.llm_orchestration.models import EVIDENCE_ID_REGEX
 
 FIXED_SCHEMAS = {
     "AstroResponse_v1": {
@@ -74,7 +75,7 @@ FIXED_SCHEMAS = {
                 "type": "array",
                 "minItems": 0,
                 "maxItems": 40,
-                "items": {"type": "string", "pattern": r"^[A-Z0-9_\.:-]{3,80}$"},
+                "items": {"type": "string", "pattern": EVIDENCE_ID_REGEX},
             },
             "disclaimers": {
                 "type": "array",
@@ -142,7 +143,7 @@ FIXED_SCHEMAS = {
                 "type": "array",
                 "minItems": 0,
                 "maxItems": 80,
-                "items": {"type": "string", "pattern": r"^[A-Z0-9_\.:-]{3,80}$"},
+                "items": {"type": "string", "pattern": EVIDENCE_ID_REGEX},
             },
             "disclaimers": {
                 "type": "array",
@@ -159,6 +160,7 @@ FIXED_SCHEMAS = {
             "message": {"type": "string", "minLength": 1, "maxLength": 2500},
             "suggested_replies": {
                 "type": "array",
+                "minItems": 1,
                 "maxItems": 5,
                 "items": {"type": "string", "minLength": 1, "maxLength": 80},
             },
@@ -192,6 +194,7 @@ FIXED_SCHEMAS = {
             "message": {"type": "string", "minLength": 1, "maxLength": 4000},
             "suggested_replies": {
                 "type": "array",
+                "minItems": 1,
                 "maxItems": 8,
                 "items": {"type": "string", "minLength": 1, "maxLength": 120},
             },

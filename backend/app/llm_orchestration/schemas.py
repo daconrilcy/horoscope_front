@@ -4,6 +4,8 @@ from typing import Annotated, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
+from app.llm_orchestration.models import EVIDENCE_ID_REGEX
+
 _SECTION_KEYS = Literal[
     "overall",
     "career",
@@ -28,7 +30,7 @@ _CHAT_INTENTS = Literal[
 ]
 
 # Shared constrained types
-_EvidenceItem = Annotated[str, Field(pattern=r"^[A-Z0-9_\.:-]{3,80}$")]
+_EvidenceItem = Annotated[str, Field(pattern=EVIDENCE_ID_REGEX)]
 _HighlightItem = Annotated[str, Field(max_length=360)]
 _AdviceItem = Annotated[str, Field(max_length=360)]
 _DisclaimerItemV1 = Annotated[str, Field(max_length=200)]
@@ -80,17 +82,17 @@ class ChatResponseV1(BaseModel):
     """Canonical structured response for interactive chat."""
 
     message: str = Field(..., min_length=1, max_length=2500)
-    suggested_replies: List[_SuggestedReplyItemV1] = Field(..., max_length=5)
+    suggested_replies: List[_SuggestedReplyItemV1] = Field(..., min_length=1, max_length=5)
     intent: Optional[_CHAT_INTENTS] = Field(...)
     confidence: Optional[float] = Field(..., ge=0, le=1)
-    safety_notes: List[_SafetyNoteItem] = Field(..., max_length=3)
+    safety_notes: List[_SafetyNoteItem] = Field(default_factory=list, max_length=3)
 
 
 class ChatResponseV2(BaseModel):
     """Extended structured response for premium chat (GPT-5 optimization)."""
 
     message: str = Field(..., min_length=1, max_length=4000)
-    suggested_replies: List[_SuggestedReplyItemV2] = Field(..., max_length=8)
+    suggested_replies: List[_SuggestedReplyItemV2] = Field(..., min_length=1, max_length=8)
     intent: Optional[_CHAT_INTENTS] = Field(...)
     confidence: Optional[float] = Field(..., ge=0, le=1)
-    safety_notes: List[_SafetyNoteItem] = Field(..., max_length=5)
+    safety_notes: List[_SafetyNoteItem] = Field(default_factory=list, max_length=5)

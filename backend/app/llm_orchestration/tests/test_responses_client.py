@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from openai import RateLimitError
 
 from app.ai_engine.exceptions import UpstreamRateLimitError
 from app.llm_orchestration.providers.responses_client import ResponsesClient
@@ -17,15 +18,9 @@ async def test_responses_client_execute_success():
     # Arrange
     mock_response = MagicMock()
     mock_response.model = "gpt-4o-mini"
-
-    # Mock output items
-    mock_item = MagicMock()
-    mock_item.type = "message"
-    mock_part = MagicMock()
-    mock_part.type = "text"
-    mock_part.text = "Hello from Responses API"
-    mock_item.content = [mock_part]
-    mock_response.output = [mock_item]
+    # raw_output in GatewayResult expects a string.
+    # ResponsesClient uses response.output_text if it has it.
+    mock_response.output_text = "Hello from Responses API"
 
     mock_response.usage.input_tokens = 5
     mock_response.usage.output_tokens = 10
@@ -58,11 +53,21 @@ async def test_responses_client_raises_rate_limit_immediately():
     # Arrange
     with patch("openai.AsyncOpenAI") as mock_openai_class:
         mock_client_instance = mock_openai_class.return_value
+
+        # Create a proper RateLimitError
+        # Parameters: message, response (HTTPResponse), body
+        err = RateLimitError(
+            message="Rate limit reached",
+            response=MagicMock(),
+            body={"error": {"message": "Rate limit reached", "code": "rate_limit_exceeded"}},
+        )
+
         # Fail with rate limit
-        mock_client_instance.responses.create = AsyncMock(side_effect=Exception("Rate limit 429"))
+        mock_client_instance.responses.create = AsyncMock(side_effect=err)
 
         client = ResponsesClient()
         with pytest.raises(UpstreamRateLimitError):
-            await client.execute(messages=[], model="m")
+            await client.execute(messages=[{"role": "user", "content": "hi"}], model="m")
 
+        # RateLimitError is non-retryable in our implementation (direct raise)
         assert mock_client_instance.responses.create.call_count == 1

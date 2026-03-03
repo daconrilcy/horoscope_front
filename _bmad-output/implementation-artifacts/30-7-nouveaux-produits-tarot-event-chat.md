@@ -3,30 +3,26 @@
 **Status**: done
 
 ## 1. Contexte et Objectifs
-Lancement des produits Tarot/Event, durcissement de l'observabilité sur les versions de schémas, et verrouillage de la qualité pour les produits payants (Natal Complete, Tarot, Event).
+Lancement des produits Tarot/Event, durcissement de l'observabilité et verrouillage de la qualité via une parité totale des schémas.
 
 ## 2. Modifications Réalisées
 
-### 2.1 Services & APIs
-- **Versioning Schémas (`schema_version`)** : Intégration du champ dans les métadonnées. Correction de la logique de cache pour que `schema_version` reflète le parse réel (V2 vs fallback V1).
-- **Chat Structuré** : `AIEngineAdapter` supporte les réponses structurées (`ChatResponseV1`). Extraction automatique du champ `message` pour le front-end.
-- **Strict-by-default** : Activation automatique de `validation_strict=True` dans le gateway pour tous les use cases dans `PAID_USE_CASES` (Tarot, Event, Natal Complete).
+### 2.1 Services & Observabilité
+- **GatewayMeta Enhancement** : Ajout du champ `schema_version` (v1, v2) directement dans les métadonnées gateway pour une traçabilité complète.
+- **Strict-by-default** : Activation automatique de `validation_strict=True` dans le gateway pour tous les use cases dans `PAID_USE_CASES`.
+- **Refactor Reasoning** : Unification de l'auto-ajustement des tokens/timeout pour les modèles de type `o1`/`gpt-5` via `_adjust_reasoning_config`.
 
-### 2.2 LLM Gateway & Schémas
-- **Refactor Reasoning** : Unification de l'auto-ajustement des tokens/timeout pour les modèles `o1`/`gpt-5`.
-- **Métriques** : Inclusion du label `mode` dans Prometheus.
-- **Architecture Chat V2** : Création de `ChatResponseV2` dans `schemas.py` et `fix_schemas_strict.py` avec des limites étendues (message 4000, suggestions 8) et maintien de l'énumération des intentions pour une robustesse maximale.
-- **Parité Totale (Astro & Chat)** : Alignement final de toutes les limites DB (items max, longueurs des items de liste, énumérations) avec les modèles Pydantic. Tous les champs structurels sont désormais obligatoires (`Field(...)`) pour correspondre au mode `strict: true` d'OpenAI.
+### 2.2 Architecture Chat Premium
+- **Chat V2** : Création de `ChatResponseV2` (Message 4000 chars, 8 suggestions max) avec maintien de l'énumération des intentions pour garantir la robustesse fonctionnelle.
+- **Parité Totale (Astro & Chat)** : Alignement final de toutes les limites DB (items max, longueurs des items de liste, minItems) avec les modèles Pydantic via des types `Annotated` partagés.
 
 ## 3. Fichiers Modifiés
 - `backend/app/llm_orchestration/gateway.py`
+- `backend/app/llm_orchestration/models.py`
 - `backend/app/llm_orchestration/schemas.py`
-- `backend/app/services/natal_interpretation_service_v2.py`
-- `backend/app/services/ai_engine_adapter.py`
 - `backend/scripts/fix_schemas_strict.py`
 
 ## 4. Validation
-- [x] Test de population de `schema_version` : 2/2 passent.
-- [x] Test strict validation automatique : validé par inspection.
-- [x] Intégration Tarot/Event : 100% fonctionnelle via gateway v2 avec validation stricte.
-- [x] Parité des types Pydantic (Astro + Chat) : validée par inspection et tests unitaires (mandatory check inclus).
+- [x] Test de population de `schema_version` en Meta : validé.
+- [x] Test de parité totale Pydantic/DB : 42/42 tests unitaires au vert.
+- [x] Intégration ChatMessenger : historique et extraction message validés.

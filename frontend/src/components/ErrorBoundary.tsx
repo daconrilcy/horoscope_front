@@ -36,21 +36,58 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
-            <AlertCircle className="w-6 h-6 text-red-600" />
+        <div style={{
+          padding: "1.5rem",
+          backgroundColor: "rgba(254, 242, 242, 1)",
+          border: "1px solid rgba(252, 165, 165, 1)",
+          borderRadius: "0.75rem",
+          textAlign: "center",
+          margin: "1rem 0"
+        }}>
+          <div style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "3rem",
+            height: "3rem",
+            borderRadius: "9999px",
+            backgroundColor: "rgba(254, 226, 226, 1)",
+            marginBottom: "1rem"
+          }}>
+            <AlertCircle style={{ width: "1.5rem", height: "1.5rem", color: "rgba(220, 38, 38, 1)" }} />
           </div>
-          <h3 className="text-lg font-bold text-red-900 dark:text-red-400 mb-2">
+          <h3 style={{
+            fontSize: "1.125rem",
+            fontWeight: "bold",
+            color: "rgba(127, 29, 29, 1)",
+            marginBottom: "0.5rem",
+            marginTop: "0"
+          }}>
             Une erreur est survenue
           </h3>
-          <p className="text-sm text-red-700 dark:text-red-300 mb-4">
+          <p style={{
+            fontSize: "0.875rem",
+            color: "rgba(185, 28, 28, 1)",
+            marginBottom: "1rem"
+          }}>
             L'affichage de cette section a échoué.
           </p>
           <button
             onClick={this.handleReset}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              padding: "0.5rem 1rem",
+              borderRadius: "0.375rem",
+              backgroundColor: "rgba(220, 38, 38, 1)",
+              color: "white",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.875rem",
+              fontWeight: "500"
+            }}
           >
-            <RefreshCw className="w-4 h-4 mr-2" />
+            <RefreshCw style={{ width: "1rem", height: "1rem", marginRight: "0.5rem" }} />
             Réessayer
           </button>
         </div>

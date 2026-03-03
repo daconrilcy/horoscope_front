@@ -3,42 +3,32 @@
 **Status:** done
 
 ## 1. Contexte et Objectifs
-Stabilisation du Gateway et des schémas Premium (GPT-5) avec un focus sur la robustesse de l'evidence et la parité totale des contraintes DB/Pydantic pour toutes les versions (Astro et Chat).
+Stabilisation du Gateway et des schémas Premium (GPT-5) avec un focus sur la robustesse de l'evidence, la parité totale des contraintes DB/Pydantic, et le refactor pour la maintenabilité.
 
 ## 2. Modifications Réalisées
 
-### 2.1 Backend - Evidence Hardening
-- **Normalisation des Noms** : `json_schema.name` est désormais lowercase et alphanumérique (conformité SDK).
-- **Zéro Faux Positif** : Raffinement du catalogue d'evidence pour exclure les labels trop génériques. La validation exige désormais des mentions composées (ex: "Soleil en Lion") pour justifier une evidence technique.
-- **Regex Alignée** : Extension de `EVIDENCE_ID_PATTERN` à 80 caractères.
-- **Clarification Prompt** : Les IDs doivent être justifiés en langage naturel dans le texte libre (mise à jour `seed_30_3`).
+### 2.1 Backend - Gateway & Validation
+- **Refactor `execute()`** : Décomposition de la méthode massive en helpers spécialisés (`_resolve_config`, `_resolve_persona`, `_resolve_schema`, `_handle_validation`) pour réduire la complexité cyclomatique.
+- **Evidence Hardening** : Utilisation de regex avec word boundaries (`\b`) pour la validation bidirectionnelle, évitant les faux positifs sur les termes courts (ex: "sun" dans "sunday").
+- **Centralisation Regex** : Unification du pattern d'evidence via `EVIDENCE_ID_REGEX` dans `models.py`.
+- **Logging UUID** : Ajout de logs explicites pour les UUIDs de personas malformés.
 
 ### 2.2 Robustesse & Schémas (Parité 100% Strict)
-- **Alignement Total V1 & V2** : Unification des contraintes entre `schemas.py`, `fix_schemas_strict.py` et les seeds canoniques.
-- **Enforcement Pydantic** : Tous les champs marqués `required` en DB (incluant `evidence`, `disclaimers`, `intent`, `confidence`, `safety_notes`) sont désormais obligatoires dans Pydantic (`Field(...)`). Cela garantit une conformité parfaite avec le mode `strict: true` d'OpenAI.
-- **Contraintes V2 (Premium)** :
-    - `title` : 160 caractères.
-    - `heading` : 100 caractères.
-    - `sections.maxItems` : 10.
-    - `highlights`/`advice.maxItems` : 12.
-    - `disclaimers` : 3 items max, 300 caractères par item.
-    - `suggested_replies` (Chat V2) : 8 items max, 120 caractères par item.
-    - `intent` : Énumération stricte identique à V1.
-- **Contraintes V1 (Standard)** :
-    - `disclaimers` : 3 items max, 200 caractères par item.
-    - `suggested_replies` (Chat V1) : 5 items max, 80 caractères par item.
-- **UI Error Boundary** : Ajout d'un composant `ErrorBoundary` dans le frontend pour isoler les erreurs de rendu.
+- **Enforcement Pydantic** : Tous les champs marqués `required` en DB sont désormais obligatoires dans Pydantic (`Field(...)`).
+- **Astro V2 (Premium)** : Title (160), Heading (100), Sections (10), Highlights/Advice (12), Disclaimers (3 max, 300 chars).
+- **Astro V1 (Standard)** : Evidence obligatoire, Disclaimers (3 max, 200 chars).
+- **Chat V1/V2** : `suggested_replies` (min 1), `intent` (enum stricte en V2), `safety_notes` (200 chars max).
+- **UI Error Boundary** : Remplacement des classes Tailwind par du CSS Vanilla (inline styles) dans `ErrorBoundary.tsx` pour compatibilité avec le projet.
 
 ## 3. Fichiers Modifiés
 - `backend/app/llm_orchestration/gateway.py`
-- `backend/app/llm_orchestration/services/output_validator.py`
+- `backend/app/llm_orchestration/models.py`
 - `backend/app/llm_orchestration/schemas.py`
-- `backend/app/services/chart_json_builder.py`
-- `backend/scripts/fix_schemas_strict.py`
-- `backend/scripts/seed_30_3_gpt5_prompts.py`
+- `backend/app/llm_orchestration/services/output_validator.py`
+- `backend/app/llm_orchestration/tests/test_responses_client.py`
 - `frontend/src/components/ErrorBoundary.tsx`
 
 ## 4. Validation
 - [x] Tests unitaires robustesse evidence : 14/14 passent.
-- [x] Tests parité schémas V1/V2 : 100% alignés (incluant mandatory check).
-- [x] Tests non-régression service natal V2 : 5/5 passent.
+- [x] Tests parité schémas V1/V2 : 100% alignés.
+- [x] Tests ResponsesClient : 2/2 passent (mocks OpenAI corrigés).

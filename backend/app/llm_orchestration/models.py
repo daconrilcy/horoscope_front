@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
+EVIDENCE_ID_REGEX = r"^[A-Z0-9_\.:-]{3,80}$"
+
 
 class UseCaseConfig(BaseModel):
     """Configuration for a specific LLM use case."""
@@ -63,6 +65,7 @@ class GatewayMeta(BaseModel):
     model: str
     model_override_active: bool = False
     output_schema_id: Optional[str] = None
+    schema_version: Optional[str] = "v1"  # v1, v2
     validation_status: str = "valid"  # valid, repair_success, fallback, error, omitted
     repair_attempted: bool = False
     fallback_triggered: bool = False
