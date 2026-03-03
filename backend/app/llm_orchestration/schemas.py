@@ -16,6 +16,13 @@ _SECTION_KEYS = Literal[
     "event_context",
 ]
 
+# Shared constrained types
+_EvidenceItem = Annotated[str, Field(pattern=r"^[A-Z0-9_\.:-]{3,80}$")]
+_HighlightItem = Annotated[str, Field(max_length=360)]
+_AdviceItem = Annotated[str, Field(max_length=360)]
+_DisclaimerItemV1 = Annotated[str, Field(max_length=200)]
+_DisclaimerItemV2 = Annotated[str, Field(max_length=300)]
+
 
 class AstroSection(BaseModel):
     key: _SECTION_KEYS
@@ -37,16 +44,10 @@ class AstroResponseV1(BaseModel):
     title: str = Field(..., min_length=1, max_length=120)
     summary: str = Field(..., min_length=1, max_length=1200)
     sections: List[AstroSection] = Field(..., min_length=2, max_length=8)
-    highlights: List[str] = Field(..., min_length=3, max_length=10)
-    advice: List[str] = Field(..., min_length=3, max_length=10)
-    evidence: List[str] = Field(default_factory=list, max_length=40)
-    disclaimers: List[str] = Field(default_factory=list)
-
-
-_EvidenceItem = Annotated[str, Field(pattern=r"^[A-Z0-9_\.:-]{3,80}$")]
-_HighlightItem = Annotated[str, Field(max_length=360)]
-_AdviceItem = Annotated[str, Field(max_length=360)]
-_DisclaimerItem = Annotated[str, Field(max_length=300)]
+    highlights: List[_HighlightItem] = Field(..., min_length=3, max_length=10)
+    advice: List[_AdviceItem] = Field(..., min_length=3, max_length=10)
+    evidence: List[_EvidenceItem] = Field(default_factory=list, max_length=40)
+    disclaimers: List[_DisclaimerItemV1] = Field(default_factory=list)
 
 
 class AstroResponseV2(BaseModel):
@@ -58,7 +59,7 @@ class AstroResponseV2(BaseModel):
     highlights: List[_HighlightItem] = Field(..., min_length=3, max_length=12)
     advice: List[_AdviceItem] = Field(..., min_length=3, max_length=12)
     evidence: List[_EvidenceItem] = Field(default_factory=list, max_length=80)
-    disclaimers: List[_DisclaimerItem] = Field(default_factory=list)
+    disclaimers: List[_DisclaimerItemV2] = Field(default_factory=list)
 
 
 class ChatResponseV1(BaseModel):
