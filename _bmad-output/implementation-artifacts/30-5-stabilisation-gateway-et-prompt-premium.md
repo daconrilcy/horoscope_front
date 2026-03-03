@@ -20,9 +20,11 @@ Stabilisation du Gateway et des schémas Premium (GPT-5) avec un focus sur la ro
     - `heading` : 100 caractères.
     - `sections.maxItems` : 10.
     - `highlights`/`advice.maxItems` : 12.
-    - `disclaimers.maxLength` : **300 caractères**.
+    - `disclaimers` : **3 items max**, **300 caractères** par item.
 - **Contraintes V1 (Standard)** :
-    - Aligné `disclaimers.maxLength` à **200 caractères** dans Pydantic via `Annotated` pour parité avec la DB.
+    - `disclaimers` : **3 items max**, **200 caractères** par item.
+- **Contraintes Chat** :
+    - `safety_notes` : **200 caractères** max par item.
 - **UI Error Boundary** : Ajout d'un composant `ErrorBoundary` dans le frontend pour isoler les erreurs de rendu.
 
 ## 3. Fichiers Modifiés
