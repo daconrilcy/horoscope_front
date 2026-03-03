@@ -64,11 +64,9 @@ USE_CASE_STUBS = {
         temperature=0.7,
         max_output_tokens=4000,
         system_core_key="default_v1",
-        developer_prompt="Analyse le thème natal pour un utilisateur né le {{birth_date}}.",
-        required_prompt_placeholders=["birth_date"],
-        fallback_use_case="natal_interpretation_short",
-        interaction_mode="structured",
-        user_question_policy="none",
+        developer_prompt="Analyse le thème natal pour un utilisateur né le {{birth_date}}. "
+        "Données: {{chart_json}}.",
+        required_prompt_placeholders=["birth_date", "chart_json"],
     ),
     "natal_interpretation_short": UseCaseConfig(
         model="gpt-4o-mini",
@@ -105,8 +103,8 @@ USE_CASE_STUBS = {
         temperature=0.7,
         max_output_tokens=2000,
         system_core_key="default_v1",
-        developer_prompt="Génère une guidance quotidienne.",
-        required_prompt_placeholders=[],
+        developer_prompt="Génère une guidance quotidienne basée sur le contexte: {{situation}}.",
+        required_prompt_placeholders=["situation"],
         interaction_mode="chat",
         user_question_policy="optional",
     ),
@@ -396,7 +394,9 @@ class LLMGateway:
                 try:
                     uuid_ids.append(uuid.UUID(pid))
                 except (ValueError, TypeError):
-                    logger.warning("gateway_malformed_persona_uuid pid=%s use_case=%s", pid, use_case)  # noqa: E501
+                    logger.warning(
+                        "gateway_malformed_persona_uuid pid=%s use_case=%s", pid, use_case
+                    )  # noqa: E501
                     continue
 
             if uuid_ids:
@@ -446,7 +446,9 @@ class LLMGateway:
                 "llm_gateway_config_error_total",
                 labels={"use_case": use_case, "reason": "no_persona"},
             )
-            raise GatewayConfigError(f"No active persona available for required use case '{use_case}'")  # noqa: E501
+            raise GatewayConfigError(
+                f"No active persona available for required use case '{use_case}'"
+            )  # noqa: E501
 
         if not persona_block and not llm_v2_enabled:
             persona_block = context.get("persona_block") or context.get("persona_line")

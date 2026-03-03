@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -7,8 +7,12 @@ from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 
 
 @pytest.mark.asyncio
-async def test_gateway_composes_4_layers():
+async def test_gateway_composes_4_layers(monkeypatch):
     # Arrange
+    monkeypatch.setattr(
+        "app.llm_orchestration.gateway.settings",
+        MagicMock(llm_orchestration_v2=True),
+    )
     mock_client = AsyncMock()
     # Mock result
     mock_result = GatewayResult(
@@ -41,6 +45,13 @@ async def test_gateway_composes_4_layers():
     args, kwargs = mock_client.execute.call_args
     messages = kwargs["messages"]
 
+    # In the current implementation, persona_block from context is used to build
+    # the developer messages. compose_structured_messages creates:
+    # 1. system
+    # 2. developer (dev_prompt)
+    # 3. developer (persona_block) if persona_block is present
+    # 4. user (user_payload)
+    # Total = 4 layers if persona_block is provided.
     assert len(messages) == 4
     assert messages[0]["role"] == "system"
     assert "assistant astrologique expert" in messages[0]["content"]
@@ -53,7 +64,8 @@ async def test_gateway_composes_4_layers():
     assert "[persona: default]" in messages[2]["content"]
 
     assert messages[3]["role"] == "user"
-    assert "Chart Data" in messages[3]["content"]
+    # Technical Data is included in user message when not in developer prompt
+    assert "Technical Data:" in messages[3]["content"]
 
 
 @pytest.mark.asyncio
