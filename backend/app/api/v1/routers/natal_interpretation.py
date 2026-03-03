@@ -130,7 +130,7 @@ async def interpret_natal_chart(
     except UnknownUseCaseError as e:
         logger.error(f"Unknown use case error: {e}")
         return _create_error_response(
-            404, "unknown_use_case", "The requested use case does not exist.", request_id
+            404, "unknown_use_case", str(e), request_id
         )
     except GatewayConfigError as e:
         logger.error(f"Gateway configuration error: {e}")
@@ -143,13 +143,19 @@ async def interpret_natal_chart(
         return _create_error_response(
             502, "interpretation_failed", "Failed to generate a valid interpretation.", request_id
         )
+    except RuntimeError as e:
+        if "no structured output" in str(e):
+            return _create_error_response(
+                502, "interpretation_failed", str(e), request_id
+            )
+        raise
     except UpstreamRateLimitError:
         return _create_error_response(
-            429, "llm_rate_limited", "Too many requests to LLM provider.", request_id
+            429, "llm_rate_limit", "Upstream rate limit reached.", request_id
         )
     except UpstreamTimeoutError:
         return _create_error_response(
-            504, "llm_upstream_timeout", "LLM provider timed out.", request_id
+            504, "llm_upstream_timeout", "Upstream request timed out.", request_id
         )
     except UpstreamError:
         return _create_error_response(

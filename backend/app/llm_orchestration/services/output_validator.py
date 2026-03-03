@@ -110,7 +110,7 @@ def _normalize_evidence_item(
             return canonical
 
     # Planet/sign alias: SUN_IN_TAURUS -> any matching SUN_TAURUS*
-    if len(parts) == 3 and parts[0] in _PLANET_CODES and parts[1] == "IN" and parts[2] in _SIGN_CODES:
+    if len(parts) == 3 and parts[0] in _PLANET_CODES and parts[1] == "IN" and parts[2] in _SIGN_CODES:  # noqa: E501
         p, _, s = parts
         prefix = f"{p}_{s}"
         for key in catalog_set:
@@ -225,7 +225,7 @@ def validate_output(
                     normalized_item = _normalize_evidence_item(item, catalog_set, catalog_map)
                     normalized_evidence.append(normalized_item)
                     if normalized_item not in catalog_set:
-                        # Story 30-8 T4: Always warn (never error) — secure filter below handles removal.
+                        # Story 30-8 T4: Always warn (never error) — secure filter handles removal.
                         msg = f"Hallucinated evidence: '{item}' not in catalog."
                         warnings.append(msg)
                 data["evidence"] = normalized_evidence
@@ -253,7 +253,7 @@ def validate_output(
                         continue
 
                     # Check for mention: either the ID itself or any of its natural labels.
-                    # Use regex with word boundaries to avoid false positives (e.g. 'sun' in 'sunday').
+                    # Use regex with word boundaries to avoid false positives (e.g. 'sun' in 'sunday').  # noqa: E501
                     found = False
                     pattern = rf"\b{re.escape(_normalize_for_matching(item))}\b"
                     if re.search(pattern, full_text):

@@ -614,7 +614,7 @@ class LLMGateway:
         )
 
     def _adjust_reasoning_config(self, config: UseCaseConfig) -> UseCaseConfig:
-        """Auto-adjusts tokens, timeout, and reasoning_effort for reasoning models (o-series, gpt-5)."""
+        """Auto-adjusts tokens, timeout, and reasoning_effort for reasoning models."""
         _REASONING_PREFIXES = ("o1-", "o3-", "o4-", "gpt-5")
         _REASONING_EXACT = {"o1", "o3", "o4"}
 

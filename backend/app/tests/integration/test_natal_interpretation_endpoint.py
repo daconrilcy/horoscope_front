@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -87,37 +88,38 @@ def _make_birth_profile() -> UserBirthProfileData:
 
 def _make_gateway_result(use_case: str, persona_id: str | None = None) -> GatewayResult:
     """Crée un GatewayResult de test."""
-    raw_output = (
-        '{"title": "Test", "summary": "...", "sections": [], '
-        '"highlights": [], "advice": [], "evidence": []}'
-    )
+    structured_output = {
+        "title": "Thème natal test",
+        "summary": "Résumé de test..." * 10,
+        "sections": [
+            {"key": "overall", "heading": "Vue d'ensemble", "content": "Contenu..." * 50},
+            {"key": "career", "heading": "Carrière", "content": "Contenu..." * 50},
+            {"key": "relationships", "heading": "Relations", "content": "Contenu..." * 50},
+            {"key": "inner_life", "heading": "Vie intérieure", "content": "Contenu..." * 50},
+            {"key": "daily_life", "heading": "Vie quotidienne", "content": "Contenu..." * 50},
+        ],
+        "highlights": ["Point 1", "Point 2", "Point 3", "Point 4", "Point 5"],
+        "advice": ["Conseil 1", "Conseil 2", "Conseil 3", "Conseil 4", "Conseil 5"],
+        "evidence": ["SUN_TAURUS", "MOON_SCORPIO"],
+        "disclaimers": ["Mock disclaimer"],
+    }
+    raw_output = json.dumps(structured_output)
     return GatewayResult(
         use_case=use_case,
         request_id="test-req-id",
         trace_id="test-trace-id",
         raw_output=raw_output,
-        structured_output={
-            "title": "Thème natal test",
-            "summary": "Résumé de test...",
-            "sections": [
-                {"key": "overall", "heading": "Vue d'ensemble", "content": "Contenu..."},
-                {"key": "career", "heading": "Carrière", "content": "Contenu..."},
-            ],
-            "highlights": ["Point 1", "Point 2", "Point 3"],
-            "advice": ["Conseil 1", "Conseil 2", "Conseil 3"],
-            "evidence": ["SUN_TAURUS", "MOON_SCORPIO"],
-            "disclaimers": [],
-        },
+        structured_output=structured_output,
         usage=UsageInfo(
             input_tokens=100, output_tokens=200, total_tokens=300, estimated_cost_usd=0.001
         ),
         meta=GatewayMeta(
             latency_ms=500,
             cached=False,
-            prompt_version_id="uuid-v1",
+            prompt_version_id=str(uuid.uuid4()),
             persona_id=persona_id,
             model="gpt-4o-mini",
-            output_schema_id="uuid-s1",
+            output_schema_id=str(uuid.uuid4()),
             validation_status="valid",
             repair_attempted=False,
             fallback_triggered=False,
@@ -137,7 +139,10 @@ def _override_auth() -> AuthenticatedUser:
 
 @pytest.fixture
 def mock_db():
-    return MagicMock()
+    mock = MagicMock()
+    # Ensure it returns None by default for all scalar_one_or_none calls
+    mock.execute.return_value.scalar_one_or_none.return_value = None
+    return mock
 
 
 @pytest.fixture
@@ -154,8 +159,10 @@ def test_client(mock_db):
 class TestNatalInterpretationEndpointV2:
     """Tests pour POST /v1/natal/interpretation."""
 
-    def test_short_success(self, test_client) -> None:
+    def test_short_success(self, test_client, mock_db) -> None:
         use_case = "natal_interpretation_short"
+        # 1st call: cache check -> None (default from fixture)
+
         with (
             patch(
                 "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
@@ -187,8 +194,8 @@ class TestNatalInterpretationEndpointV2:
         persona_mock = MagicMock()
         persona_mock.name = "Test Persona"
 
-        # Robust mocking of DB execution
-        mock_db.execute.return_value.scalar_one_or_none.return_value = persona_mock
+        # Side effect: 1st call (cache check) -> None, 2nd call (persona) -> persona_mock
+        mock_db.execute.return_value.scalar_one_or_none.side_effect = [None, persona_mock]
 
         with (
             patch(
@@ -221,7 +228,8 @@ class TestNatalInterpretationEndpointV2:
         assert data["meta"]["persona_name"] == "Test Persona"
         assert data["meta"]["persona_id"] == persona_id
 
-    def test_complete_persona_missing(self, test_client) -> None:
+    def test_complete_persona_missing(self, test_client, mock_db) -> None:
+        # mock_db.execute.return_value.scalar_one_or_none.return_value = None (from fixture)
         with (
             patch(
                 "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
@@ -253,7 +261,8 @@ class TestNatalInterpretationEndpointV2:
         assert response.status_code == 404
         assert response.json()["error"]["code"] == "natal_chart_not_found"
 
-    def test_gateway_config_error(self, test_client) -> None:
+    def test_gateway_config_error(self, test_client, mock_db) -> None:
+        mock_db.execute.return_value.scalar_one_or_none.return_value = None
         with (
             patch(
                 "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
@@ -274,9 +283,10 @@ class TestNatalInterpretationEndpointV2:
         assert response.status_code == 500
         assert response.json()["error"]["code"] == "gateway_config_error"
 
-    def test_unknown_use_case(self, test_client) -> None:
+    def test_unknown_use_case(self, test_client, mock_db) -> None:
         from app.llm_orchestration.models import UnknownUseCaseError
 
+        mock_db.execute.return_value.scalar_one_or_none.return_value = None
         with (
             patch(
                 "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
@@ -297,9 +307,10 @@ class TestNatalInterpretationEndpointV2:
         assert response.status_code == 404
         assert response.json()["error"]["code"] == "unknown_use_case"
 
-    def test_upstream_timeout(self, test_client) -> None:
+    def test_upstream_timeout(self, test_client, mock_db) -> None:
         from app.ai_engine.exceptions import UpstreamTimeoutError
 
+        mock_db.execute.return_value.scalar_one_or_none.return_value = None
         with (
             patch(
                 "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",

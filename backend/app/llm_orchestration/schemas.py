@@ -74,7 +74,7 @@ class AstroResponseV1(BaseModel):
     sections: List[AstroSection] = Field(..., min_length=2, max_length=8)
     highlights: List[_HighlightItem] = Field(..., min_length=3, max_length=10)
     advice: List[_AdviceItem] = Field(..., min_length=3, max_length=10)
-    evidence: List[_EvidenceItem] = Field(..., max_length=40)
+    evidence: List[_EvidenceItem] = Field(default_factory=list, max_length=40)
     disclaimers: List[_DisclaimerItemV1] = Field(..., max_length=3)
 
 
@@ -86,7 +86,7 @@ class AstroResponseV2(BaseModel):
     sections: List[AstroSectionV2] = Field(..., min_length=2, max_length=10)
     highlights: List[_HighlightItem] = Field(..., min_length=3, max_length=12)
     advice: List[_AdviceItem] = Field(..., min_length=3, max_length=12)
-    evidence: List[_EvidenceItem] = Field(..., max_length=80)
+    evidence: List[_EvidenceItem] = Field(default_factory=list, max_length=80)
     disclaimers: List[_DisclaimerItemV2] = Field(..., max_length=3)
 
 
@@ -121,7 +121,7 @@ class AstroResponseV3(BaseModel):
 
 
 class AstroErrorResponseV3(BaseModel):
-    """Structure dédiée pour le mode erreur v3 — strictement valide, sans contraintes de densité premium."""
+    """Structure mode erreur v3 — valide, sans contraintes de densité premium."""
 
     model_config = ConfigDict(extra="forbid")
 
