@@ -1,5 +1,7 @@
 import pytest
+from unittest.mock import AsyncMock, MagicMock
 
+from app.ai_engine.exceptions import UpstreamTimeoutError
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import PromptRenderError, UnknownUseCaseError
 
@@ -42,3 +44,19 @@ async def test_renderer_raises_error_when_required_variable_missing():
     with pytest.raises(PromptRenderError) as exc:
         renderer.render("Hello {{name}}", {"age": 20}, required_variables=["name"])
     assert "name" in str(exc.value)
+
+
+@pytest.mark.asyncio
+async def test_propagates_upstream_timeout_error():
+    mock_client = MagicMock()
+    mock_client.execute = AsyncMock(side_effect=UpstreamTimeoutError("timeout"))
+    gateway = LLMGateway(responses_client=mock_client)
+
+    with pytest.raises(UpstreamTimeoutError):
+        await gateway.execute(
+            use_case="natal_interpretation_short",
+            user_input={},
+            context={"locale": "fr-FR", "use_case": "natal_interpretation_short"},
+            request_id="r",
+            trace_id="t",
+        )

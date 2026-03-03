@@ -786,18 +786,10 @@ class LLMGateway:
                     if schema_dict
                     else None,
                 )
-            except (UpstreamRateLimitError, UpstreamTimeoutError, UpstreamError) as err:
-                kind = (
-                    "rate_limit"
-                    if isinstance(err, UpstreamRateLimitError)
-                    else "timeout"
-                    if isinstance(err, UpstreamTimeoutError)
-                    else "provider_error"
-                )
-                raise GatewayError(
-                    f"LLM provider error: {str(err)}",
-                    details={"kind": kind, "upstream_error": type(err).__name__},
-                ) from err
+            except (UpstreamRateLimitError, UpstreamTimeoutError, UpstreamError):
+                # Preserve upstream exception types so API routers can map
+                # precise HTTP status codes (429/503/504).
+                raise
 
             # 11. Finalize Metadata
             result.meta.prompt_version_id = config.prompt_version_id

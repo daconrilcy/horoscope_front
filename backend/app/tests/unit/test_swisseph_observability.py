@@ -247,7 +247,7 @@ class TestHousesCalcLatency:
 
 class TestHousesCalcErrors:
     def test_error_counter_incremented_on_houses_ex_exception(self) -> None:
-        """swisseph_errors_total|code=houses_calc_failed|house_system=X incrémenté sur erreur houses_ex."""
+        """swisseph_errors_total|code=houses_calc_failed|house_system=X incrémenté."""
         mock_swe = _make_houses_mock(houses_ex_side_effect=RuntimeError("swe error"))
         with patch.dict("sys.modules", {"swisseph": mock_swe}):
             with pytest.raises(HousesCalcError):
@@ -262,7 +262,7 @@ class TestHousesCalcErrors:
         assert total == 1.0
 
     def test_error_counter_incremented_on_import_error(self) -> None:
-        """swisseph_errors_total|code=houses_calc_failed|house_system=X incrémenté si module absent."""
+        """swisseph_errors_total|code=houses_calc_failed|house_system=X si module absent."""
         with patch(
             "app.domain.astrology.houses_provider._get_swe_module",
             side_effect=HousesCalcError("pyswisseph module is not installed"),

@@ -197,7 +197,8 @@ class TestSiderealMode:
     def test_sidereal_reset_called_even_on_calc_error(self) -> None:
         """Le reset set_sid_mode(0) est appelé même en cas d'erreur calc_ut."""
 
-        # On fait échouer seulement après les 10 premiers appels (les appels tropicaux de l'invariant)
+        # On fait échouer seulement après les 10 premiers appels
+        # (les appels tropicaux de l'invariant)
         # pour s'assurer que l'erreur arrive pendant le calcul sidéral principal.
         call_count = 0
 

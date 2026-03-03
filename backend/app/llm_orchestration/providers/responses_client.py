@@ -98,21 +98,20 @@ class ResponsesClient:
             }
 
             # 3. Reasoning and Temperature
-            # GPT-5 and o-series (o1, o3, o4) use reasoning_effort instead of temperature.
-            # NOTE on API format: the OpenAI Responses API uses a flat `reasoning_effort`
-            # top-level parameter (not the nested `reasoning: {effort: ...}` form from the
-            # Chat Completions API). See: https://platform.openai.com/docs/api-reference/responses
+            # GPT-5 and o-series (o1, o3, o4) use reasoning config instead of temperature.
             is_reasoning = (
                 is_gpt5 or model.startswith(("o1-", "o3-", "o4-")) or model in {"o1", "o3", "o4"}
             )
 
             if is_reasoning:
                 if reasoning_effort:
-                    params["reasoning_effort"] = reasoning_effort
-                if is_gpt5 and verbosity:
-                    params["verbosity"] = verbosity
+                    params["reasoning"] = {"effort": reasoning_effort}
             else:
                 params["temperature"] = temperature
+
+            text_config: Dict[str, Any] = {}
+            if is_gpt5 and verbosity:
+                text_config["verbosity"] = verbosity
 
             if response_format:
                 # Responses API uses `text.format` with a flat structure, whereas
@@ -123,7 +122,10 @@ class ResponsesClient:
                 if fmt.get("type") == "json_schema" and "json_schema" in fmt:
                     nested = fmt.pop("json_schema")
                     fmt.update(nested)
-                params["text"] = {"format": fmt}
+                text_config["format"] = fmt
+
+            if text_config:
+                params["text"] = text_config
 
             # Add tracing headers for observability
             headers: Dict[str, str] = {}

@@ -9,7 +9,7 @@ import { getGuideTranslations, natalChartTranslations } from "../i18n/natalChart
  * ApiError est importé pour créer des instances dans les tests (new ApiError(...)).
  * vi.mock remplace la classe réelle par notre mock défini ci-dessous.
  */
-import { ApiError, useLatestNatalChart, generateNatalChart } from "../api/natalChart"
+import { ApiError, useLatestNatalChart, generateNatalChart, useNatalInterpretation } from "../api/natalChart"
 
 /**
  * Mock de ApiError pour les tests.
@@ -29,9 +29,11 @@ vi.mock("../api/natalChart", () => ({
   },
   useLatestNatalChart: vi.fn(),
   generateNatalChart: vi.fn(),
+  useNatalInterpretation: vi.fn(),
 }))
 
 const mockUseLatestNatalChart: ReturnType<typeof vi.mocked<typeof useLatestNatalChart>> = vi.mocked(useLatestNatalChart)
+const mockUseNatalInterpretation: ReturnType<typeof vi.mocked<typeof useNatalInterpretation>> = vi.mocked(useNatalInterpretation)
 
 const TEST_REFERENCE_VERSION = "1.0"
 const TEST_RULESET_VERSION = "1.0"
@@ -68,6 +70,12 @@ const CHART_BASE = {
 beforeEach(() => {
   vi.stubGlobal("navigator", { ...navigator, language: "fr-FR" })
   localStorage.clear()
+  mockUseNatalInterpretation.mockReturnValue({
+    isLoading: false,
+    isError: false,
+    data: null,
+    refetch: vi.fn(),
+  })
 })
 
 afterEach(() => {

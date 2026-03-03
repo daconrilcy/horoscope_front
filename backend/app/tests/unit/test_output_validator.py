@@ -39,3 +39,70 @@ def test_validate_output_evidence_warning():
     assert result.valid is True  # valid against schema
     assert len(result.warnings) == 1
     assert "contains spaces" in result.warnings[0]
+
+
+def test_validate_output_evidence_aliases_strict_mode():
+    schema = {
+        "type": "object",
+        "required": ["summary", "evidence"],
+        "properties": {
+            "summary": {"type": "string"},
+            "evidence": {"type": "array", "items": {"type": "string"}},
+        },
+    }
+    raw = '{"summary":"Soleil en Taureau. Aspect entre Soleil et Venus.","evidence":["SUN","TAURUS","SUN_CONJUNCTION_VENUS"]}'  # noqa: E501
+    catalog = {
+        "SUN_TAURUS": ["Soleil en Taureau"],
+        "ASPECT_SUN_VENUS_CONJUNCTION": ["aspect entre Soleil et Venus"],
+    }
+
+    result = validate_output(raw, schema, evidence_catalog=catalog, strict=True)
+    assert result.valid is True
+    assert result.parsed["evidence"] == ["SUN_TAURUS", "SUN_TAURUS", "ASPECT_SUN_VENUS_CONJUNCTION"]
+
+
+def test_validate_output_evidence_unknown_strict_mode_fails():
+    schema = {
+        "type": "object",
+        "required": ["summary", "evidence"],
+        "properties": {
+            "summary": {"type": "string"},
+            "evidence": {"type": "array", "items": {"type": "string"}},
+        },
+    }
+    raw = '{"summary":"Texte neutre","evidence":["UNKNOWN_EVIDENCE"]}'
+    result = validate_output(raw, schema, evidence_catalog={"SUN_TAURUS": ["Soleil en Taureau"]}, strict=True)  # noqa: E501
+    assert result.valid is False
+    assert any("Hallucinated evidence" in err for err in result.errors)
+
+
+def test_validate_output_evidence_alias_conjunction_prefix_strict_mode():
+    schema = {
+        "type": "object",
+        "required": ["summary", "evidence"],
+        "properties": {
+            "summary": {"type": "string"},
+            "evidence": {"type": "array", "items": {"type": "string"}},
+        },
+    }
+    raw = '{"summary":"Aspect entre Soleil et Venus.","evidence":["CONJUNCTION_SUN_VENUS"]}'
+    catalog = {"ASPECT_SUN_VENUS_CONJUNCTION": ["aspect entre Soleil et Venus"]}
+    result = validate_output(raw, schema, evidence_catalog=catalog, strict=True)
+    assert result.valid is True
+    assert result.parsed["evidence"] == ["ASPECT_SUN_VENUS_CONJUNCTION"]
+
+
+def test_validate_output_orphan_is_warning_even_in_strict():
+    schema = {
+        "type": "object",
+        "required": ["summary", "evidence"],
+        "properties": {
+            "summary": {"type": "string"},
+            "evidence": {"type": "array", "items": {"type": "string"}},
+        },
+    }
+    raw = '{"summary":"Texte sans mention directe.","evidence":["SUN_TAURUS"]}'
+    catalog = {"SUN_TAURUS": ["Soleil en Taureau"]}
+    result = validate_output(raw, schema, evidence_catalog=catalog, strict=True)
+    assert result.valid is True
+    assert any("Orphan evidence" in w for w in result.warnings)

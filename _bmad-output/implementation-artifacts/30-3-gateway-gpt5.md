@@ -110,6 +110,10 @@ Gemini 2.0 Flash
 - [M2] Tests ajoutés : idempotence typed blocks, préservation des champs, o4- sans temperature, gpt4o sans reasoning
 - [M3] Détection reasoning models dans client alignée avec gateway : ajout `o4-` et `o4`
 
+### Runtime Fixes (2026-03-03)
+- [R1] `seed_30_3_gpt5_prompts.py`: correction du chargement de `output_schema_id` avec conversion explicite en `UUID` avant `db.get(...)` pour fiabiliser l'association prompt/schema en base locale.
+- [R2] `responses_client.py`: compatibilité SDK OpenAI local restaurée (`reasoning_effort` top-level -> `reasoning: { effort: ... }`, `verbosity` déplacé dans `text.verbosity`), suppression des `503 llm_upstream_error` liés à l'argument invalide.
+
 ### File List
 - `backend/migrations/versions/4b2d52442492_add_reasoning_effort_verbosity_to_.py` (Nouveau)
 - `backend/app/infra/db/models/llm_prompt.py` (Modifié)

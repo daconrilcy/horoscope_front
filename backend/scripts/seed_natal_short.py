@@ -57,10 +57,13 @@ def seed():
                 description="Analyse synthétique du thème de naissance.",
                 output_schema_id=str(schema.id),
                 safety_profile="astrology",
+                interaction_mode="structured",
+                user_question_policy="optional",
+                required_prompt_placeholders=["chart_json"],
             )
             db.add(existing_uc)
             db.flush()
-            print(f"  Created use case id={existing_uc.id}")
+            print(f"  Created use case key={existing_uc.key}")
 
         # 3. Create or skip active prompt version
         existing_prompt = db.execute(

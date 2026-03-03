@@ -189,8 +189,10 @@ Gemini 2.0 Flash
 - `backend/app/tests/unit/test_persona_composer.py`
 - `backend/app/tests/unit/test_persona_injection.py`
 - `backend/app/tests/integration/test_admin_persona_endpoints.py`
+- `backend/scripts/seed_astrologers_6_profiles.py`
 
 ## Change Log
 
 - 2026-03-01: Story créée (Epic 28, LLM Orchestration Layer).
 - 2026-03-01: Implementation complète: LlmPersonaModel, persona_composer, LLMGateway integration, admin endpoints.
+- 2026-03-03: Ajout d'un seed idempotent de 6 profils astrologues (dont un profil neutre `Ariane Standard`) et association auto au use-case `natal_interpretation`.

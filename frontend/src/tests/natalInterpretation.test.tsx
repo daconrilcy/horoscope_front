@@ -137,8 +137,9 @@ describe("NatalInterpretationSection", () => {
     renderSection();
     fireEvent.click(screen.getByRole("button", { name: /choisir mon astrologue/i }));
 
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText("Luna Céleste")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /demander l'interprétation complète/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /annuler/i })).toBeInTheDocument();
   });
 
   it("ferme le sélecteur au clic sur annuler", () => {
@@ -176,16 +177,31 @@ describe("NatalInterpretationSection", () => {
     // Ouvrir selector
     fireEvent.click(screen.getByRole("button", { name: /choisir mon astrologue/i }));
     
-    // Sélectionner persona
+    // Sélectionner persona: le clic déclenche immédiatement l'upgrade
     fireEvent.click(screen.getByText("Luna Céleste"));
-    
-    // Confirmer
-    fireEvent.click(screen.getByRole("button", { name: /demander l'interprétation complète/i }));
 
     // Vérifier que le hook a été appelé avec les bons paramètres au prochain render
     expect(useNatalInterpretation).toHaveBeenCalledWith(expect.objectContaining({
       useCaseLevel: "complete",
       personaId: "1"
     }));
+  });
+
+  it("affiche un état vide quand aucun astrologue n'est disponible", () => {
+    (useNatalInterpretation as any).mockReturnValue({
+      isLoading: false,
+      data: mockInterpretationData,
+      refetch: vi.fn(),
+    });
+    (useAstrologers as any).mockReturnValue({
+      isLoading: false,
+      data: [],
+    });
+
+    renderSection();
+    fireEvent.click(screen.getByRole("button", { name: /choisir mon astrologue/i }));
+
+    expect(screen.getByText(/aucun astrologue disponible|no astrologers available/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /demander l'interprétation complète/i })).not.toBeInTheDocument();
   });
 });

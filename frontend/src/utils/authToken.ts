@@ -54,6 +54,15 @@ export function getSubjectFromAccessToken(token: string | null): string | null {
   return typeof payload?.sub === "string" ? payload.sub : null
 }
 
+export function isAccessTokenExpired(token: string | null, skewSeconds = 5): boolean {
+  const payload = parseJwtPayload(token)
+  if (!payload || typeof payload.exp !== "number") {
+    return false
+  }
+  const nowSeconds = Math.floor(Date.now() / 1000)
+  return payload.exp <= nowSeconds + skewSeconds
+}
+
 export function getAccessTokenAuthHeader(): Record<string, string> {
   const token = getAccessTokenSnapshot()
   return token ? { Authorization: `Bearer ${token}` } : {}

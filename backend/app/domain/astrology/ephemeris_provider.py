@@ -220,10 +220,9 @@ def calculate_planets(
                         # Tolérance 0.01° (36 arcsec) pour l'audit runtime
                         if abs(diff - effective_ayanamsa_value) > 0.01:
                             logger.warning(
-                                "sidereal_invariant_violation planet=%s jdut=%.4f diff=%.6f ayanamsa=%.6f",
+                                "sid_inv_violation p=%s jdut=%.4f diff=%.6f ayan=%s",
                                 planet_id,
                                 jdut,
-                                diff,
                                 effective_ayanamsa_value,
                             )
 
@@ -263,7 +262,7 @@ def calculate_planets(
     elapsed_ms = (time.monotonic() - start) * 1000.0
     observe_duration(METRIC_CALC_LATENCY, elapsed_ms)
     logger.debug(
-        "ephemeris_planets_calculated jdut=%.4f zodiac_effective=%s ayanamsa_effective=%s ayanamsa_value=%.6f frame=%s planet_count=%d",
+        "ephemeris_calc jdut=%.4f z=%s ayan_eff=%s ayan_val=%.6f f=%s count=%d",
         jdut,
         zodiac,
         effective_ayanamsa or "n/a",

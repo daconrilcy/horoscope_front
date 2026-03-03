@@ -461,7 +461,8 @@ class FeatureFlagService:
             context = {
                 "situation": payload.situation,
                 "persona_id": payload.persona_id,
-                # For tarot we might need cards_json, but let's use a simple mock for now or pass if available
+                # For tarot we might need cards_json, but let's use a simple mock for now
+                # or pass if available
                 "cards_json": [],
             }
             if normalized_module == "tarot":
@@ -479,9 +480,10 @@ class FeatureFlagService:
             )
         else:
             if normalized_module == "tarot":
+                ctx_txt = payload.situation.strip() if payload.situation else "non precise"
                 interpretation = (
                     "Tirage tarot (3 cartes):\n"
-                    f"- Contexte: {payload.situation.strip() if payload.situation else 'non precise'}\n"
+                    f"- Contexte: {ctx_txt}\n"
                     f"- Message central: {question}\n"
                     "- Lecture: avancez par petites decisions concretes, verifiez vos priorites "
                     "avant tout engagement important."

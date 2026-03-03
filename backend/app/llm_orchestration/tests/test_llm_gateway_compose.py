@@ -16,7 +16,7 @@ async def test_gateway_composes_4_layers(monkeypatch):
     mock_client = AsyncMock()
     # Mock result
     mock_result = GatewayResult(
-        use_case="natal_interpretation",
+        use_case="natal_interpretation_short",
         request_id="req-123",
         trace_id="trace-456",
         raw_output="Interprétation natale stub",
@@ -26,16 +26,19 @@ async def test_gateway_composes_4_layers(monkeypatch):
     mock_client.execute.return_value = mock_result
 
     gateway = LLMGateway(responses_client=mock_client)
+    # Mock _resolve_persona to bypass DB lookup and return our test block
+    gateway._resolve_persona = AsyncMock(return_value=("[persona: default]", None))
 
     # Act
     await gateway.execute(
-        use_case="natal_interpretation",
+        use_case="natal_interpretation_short",
         user_input={
             "birth_date": "1990-01-01",
             "locale": "fr-FR",
-            "use_case": "natal_interpretation",
+            "use_case": "natal_interpretation_short",
+            "question": "Quelle est ma synthèse ?",
         },  # noqa: E501
-        context={"chart_json": '{"sun": "Aries"}', "persona_block": "[persona: default]"},
+        context={"chart_json": '{"sun": "Aries"}', "persona_id": "p-123"},
         request_id="req-123",
         trace_id="trace-456",
     )
@@ -54,18 +57,19 @@ async def test_gateway_composes_4_layers(monkeypatch):
     # Total = 4 layers if persona_block is provided.
     assert len(messages) == 4
     assert messages[0]["role"] == "system"
-    assert "assistant astrologique expert" in messages[0]["content"]
+    assert "assistant d’interprétation astrologique" in messages[0]["content"]
 
     assert messages[1]["role"] == "developer"
-    assert "1990-01-01" in messages[1]["content"]
-    assert '{"sun": "Aries"}' in messages[1]["content"]
+    assert "Analyse rapide" in messages[1]["content"]
 
     assert messages[2]["role"] == "developer"
     assert "[persona: default]" in messages[2]["content"]
 
     assert messages[3]["role"] == "user"
-    # Technical Data is included in user message when not in developer prompt
+    assert "Quelle est ma synthèse ?" in messages[3]["content"]
+    # Technical Data is included in user message because it's NOT in developer prompt
     assert "Technical Data:" in messages[3]["content"]
+    assert '{"sun": "Aries"}' in messages[3]["content"]
 
 
 @pytest.mark.asyncio

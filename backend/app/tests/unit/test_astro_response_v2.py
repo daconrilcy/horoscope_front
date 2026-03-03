@@ -50,7 +50,9 @@ def test_summary_exceeds_v1_but_valid_v2():
 
 
 def test_content_exceeds_v1_pydantic_but_valid_v2():
-    """Un section.content de 5000 chars est rejeté par v1 (max=4000) mais accepté par v2 (max=6500)."""
+    """Un section.content de 5000 chars est rejeté par v1
+    (max=4000) mais accepté par v2 (max=6500).
+    """
     big_content = "C" * 5000
     with pytest.raises(ValidationError):
         AstroResponseV1(
@@ -137,7 +139,7 @@ def test_routing_logic(level, fallback_triggered, expected_class):
 
 
 def test_v2_deserialization_failure_falls_back_to_v1():
-    """Un payload V2 invalide (summary > 2800) ne doit pas passer V2, mais peut passer V1 si dans ses limites."""
+    """Un payload V2 invalide (> 2800) échoue en V2 mais peut passer V1."""
     invalid_v2_payload = {**VALID_V2_PAYLOAD, "summary": "X" * 2801}
     with pytest.raises(ValidationError):
         AstroResponseV2(**invalid_v2_payload)

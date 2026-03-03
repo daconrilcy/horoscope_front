@@ -98,8 +98,8 @@ async def test_execute_gpt5_params():
     _, kwargs = mock_openai.responses.create.call_args
     assert kwargs["model"] == "gpt-5"
     assert "temperature" not in kwargs
-    assert kwargs["reasoning_effort"] == "low"
-    assert kwargs["verbosity"] == "high"
+    assert kwargs["reasoning"]["effort"] == "low"
+    assert kwargs["text"]["verbosity"] == "high"
     assert kwargs["extra_headers"] == {
         "x-request-id": "req_123",
         "x-trace-id": "trace_456",
@@ -138,8 +138,8 @@ async def test_execute_non_reasoning_params():
     _, kwargs = mock_openai.responses.create.call_args
     assert kwargs["model"] == "gpt-4o-mini"
     assert kwargs["temperature"] == 0.5
-    assert "reasoning_effort" not in kwargs
-    assert "verbosity" not in kwargs
+    assert "reasoning" not in kwargs
+    assert "text" not in kwargs
     # Input doit rester en format string (pas de typed blocks)
     assert kwargs["input"][0]["content"] == "Hello"
 
@@ -167,7 +167,7 @@ async def test_execute_o4_reasoning_no_temperature():
 
     _, kwargs = mock_openai.responses.create.call_args
     assert "temperature" not in kwargs
-    assert kwargs["reasoning_effort"] == "medium"
+    assert kwargs["reasoning"]["effort"] == "medium"
 
 
 @pytest.mark.asyncio
@@ -192,7 +192,7 @@ async def test_execute_gpt5_no_verbosity_when_none():
     )
 
     _, kwargs = mock_openai.responses.create.call_args
-    assert "verbosity" not in kwargs
+    assert "text" not in kwargs
 
 
 @pytest.mark.asyncio

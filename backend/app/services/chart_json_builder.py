@@ -148,7 +148,7 @@ def build_chart_json(
                 "longitude_in_sign": _longitude_in_sign(p.longitude),
                 "house": None if is_no_time else p.house_number,
                 "is_retrograde": p.is_retrograde,
-                "speed": round(p.speed_longitude, 2),
+                "speed": round(p.speed_longitude, 2) if p.speed_longitude is not None else None,
             }
         )
 
@@ -168,15 +168,17 @@ def build_chart_json(
     aspects = []
     for a in natal_result.aspects:
         # Filter for major aspects only as per Epic 29 requirements.
-        # Minor aspects are currently calculated by the engine but not supported by the JSON contract.
+        # Minor aspects are currently calculated by the engine
+        # but not supported by the JSON contract.
         if a.aspect_code in MAJOR_ASPECTS:
+            orb_value = a.orb_used if a.orb_used is not None else a.orb
             aspects.append(
                 {
                     "type": a.aspect_code,
                     "planet_a": a.planet_a,
                     "planet_b": a.planet_b,
                     "angle": round(a.angle, 2),
-                    "orb": round(a.orb_used, 2),
+                    "orb": round(orb_value, 2) if orb_value is not None else None,
                     "applying": None,  # Unknown status
                 }
             )

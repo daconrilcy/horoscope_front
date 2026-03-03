@@ -260,7 +260,7 @@ class TestNatalInterpretationServiceV2UserInput:
 
     @pytest.mark.asyncio
     async def test_short_level_default_question_when_none(self):
-        """Pour level='short' avec question=None, le fallback 'Interprete mon theme natal.' est utilise."""
+        """Pour level='short' avec question=None, on utilise le fallback par défaut."""
         natal_result = _make_natal_result()
         birth_profile = _make_birth_profile()
         gw_result = _make_gateway_result("natal_interpretation_short")

@@ -4,10 +4,11 @@ import {
   type NatalInterpretationResult, 
   type AstroSection 
 } from "../api/natalChart";
-import { useAstrologers } from "../api/astrologers";
+import { useAstrologers, type Astrologer } from "../api/astrologers";
+import { AstrologerGrid } from "../features/astrologers";
 import { natalChartTranslations } from "../i18n/natalChart";
 import { type AstrologyLang } from "../i18n/astrology";
-import { ChevronDown, ChevronUp, Lock, RefreshCw, Star, User, AlertCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, Lock, RefreshCw, Star, AlertCircle } from "lucide-react";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 interface Props {
@@ -353,87 +354,59 @@ function PersonaSelector({
   isSubmitting?: boolean
 }) {
   const { data: astrologers, isLoading, isError, refetch } = useAstrologers();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   return (
-    <div className="mt-8 p-6 bg-white dark:bg-gray-800 border border-purple-200 dark:border-purple-900 rounded-3xl shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-6 text-center" id="persona-selector-title">
-        {t.personaSelectorTitle}
-      </h4>
+    <div
+      className="modal-overlay"
+      onClick={onCancel}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="persona-selector-title"
+    >
+      <div
+        className="modal-content"
+        style={{ width: "min(980px, 92vw)", maxHeight: "88vh", overflowY: "auto" }}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h4 className="modal-title" id="persona-selector-title">
+          {t.personaSelectorTitle}
+        </h4>
 
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <RefreshCw className="w-8 h-8 animate-spin text-purple-600" />
-        </div>
-      ) : isError ? (
-        <div className="py-8 text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
-            <AlertCircle className="w-6 h-6 text-red-600" />
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <RefreshCw className="w-8 h-8 animate-spin text-purple-600" />
           </div>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">{t.error}</p>
-          <button 
-            onClick={() => refetch()}
-            className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+        ) : isError ? (
+          <div className="py-8 text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">{t.error}</p>
+            <button 
+              onClick={() => refetch()}
+              className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+            >
+              {t.retry}
+            </button>
+          </div>
+        ) : (
+          <AstrologerGrid
+            astrologers={astrologers ?? []}
+            onSelectAstrologer={(astrologer: Astrologer) => {
+              if (isSubmitting) return;
+              onConfirm(astrologer.id);
+            }}
+          />
+        )}
+
+        <div className="modal-actions">
+          <button
+            onClick={onCancel}
+            disabled={isSubmitting}
           >
-            {t.retry}
+            {t.cancel}
           </button>
         </div>
-      ) : (
-        <div 
-          className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
-          role="radiogroup"
-          aria-labelledby="persona-selector-title"
-        >
-          {astrologers?.map((astrologer) => (
-            <button 
-              key={astrologer.id}
-              onClick={() => setSelectedId(astrologer.id)}
-              disabled={isSubmitting}
-              aria-checked={selectedId === astrologer.id}
-              role="radio"
-              className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start text-left gap-4 ${
-                selectedId === astrologer.id 
-                  ? "border-purple-600 bg-purple-50 dark:bg-purple-900/20" 
-                  : "border-gray-100 dark:border-gray-700 hover:border-purple-200"
-              } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
-            >
-              <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center flex-shrink-0">
-                <User className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <p className="font-bold text-gray-900 dark:text-white">{astrologer.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                  {astrologer.bio_short}
-                </p>
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {astrologer.specialties.slice(0, 2).map(s => (
-                    <span key={s} className="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="flex flex-col sm:flex-row gap-3">
-        <button
-          disabled={!selectedId || isSubmitting}
-          onClick={() => selectedId && onConfirm(selectedId)}
-          className="flex-1 px-6 py-3 bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-md flex items-center justify-center"
-        >
-          {isSubmitting && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
-          {t.personaSelectorConfirm}
-        </button>
-        <button
-          onClick={onCancel}
-          disabled={isSubmitting}
-          className="px-6 py-3 bg-gray-100 dark:bg-gray-700 disabled:opacity-50 text-gray-600 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-        >
-          {t.cancel}
-        </button>
       </div>
     </div>
   );

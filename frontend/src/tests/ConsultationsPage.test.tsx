@@ -876,7 +876,7 @@ describe("ConsultationResultPage", () => {
       const openChatBtn = screen.getByRole("button", { name: /Ouvrir dans le chat/i })
       fireEvent.click(openChatBtn)
 
-      expect(mockNavigate).toHaveBeenCalledWith("/chat")
+      expect(mockNavigate).toHaveBeenCalledWith("/chat?astrologerId=1")
 
       const prefill = sessionStorage.getItem(CHAT_PREFILL_KEY)
       expect(prefill).toBeTruthy()

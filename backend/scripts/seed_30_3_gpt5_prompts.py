@@ -16,6 +16,7 @@ Run with:
 """
 
 import logging
+import uuid
 
 from sqlalchemy import select
 
@@ -34,9 +35,10 @@ logger = logging.getLogger(__name__)
 # — c'est le schema v2 et verbosity="high" qui gouvernent la densité.
 # Inclut : règles de vérité inviolables, auto-check evidence, persona, locale.
 # ---------------------------------------------------------------------------
-NATAL_COMPLETE_PROMPT_V2 = """Langue de réponse : français ({{locale}}). Contexte : use_case={{use_case}}.
+NATAL_COMPLETE_PROMPT_V2 = """Langue : fr ({{locale}}). Context : use_case={{use_case}}.
 
-Tu incarnes {{persona_name}}, astrologue expert. Adapte ton style à cette persona tout en restant
+Tu incarnes {{persona_name}}, astrologue expert. Adapte ton style à cette persona
+tout en restant moderne, clair et encourageant.
 professionnel, bienveillant, moderne et non fataliste. Tu écris en prose fluide avec des
 transitions naturelles entre les idées. Interdiction de lister des placements sans les relier.
 
@@ -71,7 +73,8 @@ Avant de finaliser ta réponse, effectue ce contrôle en trois étapes :
    aux éléments réellement utilisés dans l'interprétation.
 - Si les données ne fournissent aucun identifiant exploitable → evidence = []
 - Ne cite dans le texte AUCUN élément qui ne figure pas dans evidence.
-- TOUT IDENTIFIANT PRÉSENT DANS evidence DOIT ÊTRE JUSTIFIÉ dans le texte par une mention en langage naturel (ex: 'Soleil en Lion', 'trigone entre...', 'Maison 10', etc.).
+- TOUT IDENTIFIANT PRÉSENT DANS evidence DOIT ÊTRE JUSTIFIÉ dans le texte par une mention
+  en langage naturel (ex: 'Soleil en Lion', 'trigone entre...', 'Maison 10', etc.).
 
 ═══ FORMAT DE SORTIE : JSON strict AstroResponse_v2 ═══
 - title : reflète le fil rouge du thème.
@@ -128,7 +131,12 @@ def seed() -> None:
             return
 
         # 2. Vérifier que AstroResponse_v2 est le schema pointé
-        schema = db.get(LlmOutputSchemaModel, uc.output_schema_id) if uc.output_schema_id else None
+        schema = None
+        if uc.output_schema_id:
+            try:
+                schema = db.get(LlmOutputSchemaModel, uuid.UUID(uc.output_schema_id))
+            except (ValueError, TypeError):
+                logger.warning("Invalid output_schema_id for %s: %s", key, uc.output_schema_id)
         if not schema or schema.name != "AstroResponse_v2":
             logger.warning(
                 "use case '%s' ne pointe pas sur AstroResponse_v2 (actuel: %s). "

@@ -15,27 +15,18 @@ def utc_now():
     return datetime.now(timezone.utc)
 
 
-EVENT_GUIDANCE_PROMPT = """Langue de réponse : français ({{locale}}). Contexte : use_case={{use_case}}.
+EVENT_GUIDANCE_PROMPT = """Langue : français ({{locale}}). Contexte : use_case={{use_case}}.
 
-Tu es un astrologue expert. Ton rôle est d'analyser un événement spécifique décrit par l'utilisateur à la lumière de son thème natal.
+Tu es un astrologue expert. Ton rôle est d'analyser un événement spécifique
+décrit par l'utilisateur à la lumière de son thème natal.
 Événement : {{event_description}}
-
-Règles :
-- Analyse comment les transits ou le thème natal influencent cet événement.
-- Sois constructif et donne des pistes d'action.
-- Utilise AstroResponse_v2.
-
-Format de sortie : JSON strict AstroResponse_v2
-- key "event_context" OBLIGATOIRE dans les sections.
 """
 
-TAROT_READING_PROMPT = """Langue de réponse : français ({{locale}}). Contexte : use_case={{use_case}}.
+TAROT_READING_PROMPT = """Langue : français ({{locale}}). Contexte : use_case={{use_case}}.
 
-Tu es un tarologue et astrologue. Interprète le tirage de tarot suivant en lien avec le thème natal si possible.
+Tu es un tarologue et astrologue. Interprète le tirage de tarot suivant en lien
+avec le thème natal si possible.
 Cartes : {{cards_json}}
-
-Format de sortie : JSON strict AstroResponse_v2
-- key "tarot_spread" OBLIGATOIRE dans les sections.
 """
 
 CHAT_ASTROLOGER_PROMPT = """Tu es {{persona_name}}, un astrologue professionnel et bienveillant. 

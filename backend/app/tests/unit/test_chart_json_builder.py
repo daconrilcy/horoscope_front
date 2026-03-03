@@ -206,3 +206,14 @@ def test_longitude_conversions():
     assert _longitude_to_sign(35.4) == "taurus"
     assert _longitude_in_sign(35.4) == pytest.approx(5.4)
     assert _longitude_to_sign(359.9) == "pisces"
+
+
+def test_build_chart_json_handles_none_speed_and_orb_used(mock_natal_result, mock_birth_profile):
+    mock_natal_result.planet_positions[0].speed_longitude = None
+    mock_natal_result.aspects[0].orb_used = None
+    mock_natal_result.aspects[0].orb = 1.25
+
+    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+
+    assert chart["planets"][0]["speed"] is None
+    assert chart["aspects"][0]["orb"] == pytest.approx(1.25)

@@ -102,7 +102,7 @@ class TestGoldenTropicalVsSidereal:
     def test_sidereal_longitude_consistent_with_get_ayanamsa_ut(
         self, planet_id: str, ayanamsa: str
     ) -> None:
-        """AC1 : Check structurel — (tropical_lon - sidereal_lon) mod 360 ≈ swe.get_ayanamsa_ut()."""
+        """AC1 : Check structurel — (trop_lon - sid_lon) mod 360 ≈ swe.get_ayanamsa_ut()."""
         tropical_planets = calculate_planets(JDUT_J2000).planets
         sidereal_planets = calculate_planets(
             JDUT_J2000, zodiac="sidereal", ayanamsa=ayanamsa

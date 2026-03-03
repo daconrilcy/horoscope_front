@@ -65,3 +65,24 @@ so that je profite d'une lecture claire et je découvre les avantages du mode Pr
 
 - Epic/Story source: `_bmad-output/planning-artifacts/epics.md` (Epic 29, Story 29.4)
 - Context documentation: `docs/agent/story-29-N4-ui-rendu-upsell.md`
+
+## Post-Delivery Fixes
+
+### Correctif UX `/natal` (2026-03-03)
+- Problème observé: dans le sélecteur d'astrologue (upgrade interprétation complète), aucune option disponible => bouton principal grisé => parcours bloqué.
+- Correctif frontend:
+  - remplacement du sélecteur inline par une superposition `modal` (mode card) réutilisant la grille catalogue (`AstrologerGrid`) de la page `/astrologers`
+  - sélection d'un astrologue par clic sur sa carte, ce qui lance immédiatement l'interprétation complète avec `persona_id=<id>`
+  - conservation d'un état vide explicite si aucun astrologue n'est disponible.
+- Correctif auth connexe:
+  - nettoyage automatique du token expiré (`token_expired`) côté client,
+  - redirection explicite vers `/login` quand le JWT local est expiré (guards),
+  - évite les boucles d'appels API 401 silencieuses depuis `/natal`.
+- Fichiers:
+  - `frontend/src/components/NatalInterpretation.tsx`
+  - `frontend/src/api/client.ts`
+  - `frontend/src/app/guards/AuthGuard.tsx`
+  - `frontend/src/app/guards/RootRedirect.tsx`
+  - `frontend/src/utils/authToken.ts`
+  - `frontend/src/tests/natalInterpretation.test.tsx`
+  - `frontend/src/tests/authToken.test.ts`

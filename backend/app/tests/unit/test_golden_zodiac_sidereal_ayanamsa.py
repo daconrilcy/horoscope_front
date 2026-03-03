@@ -174,7 +174,8 @@ class TestInvalidAyanamsaCounter:
                 calculate_planets(JDUT_J2000, zodiac="sidereal", ayanamsa="lahiri")
 
         assert not any("invalid_ayanamsa" in c for c in counter_calls), (
-            f"Compteur invalid_ayanamsa ne doit pas être incrémenté. Compteurs reçus : {counter_calls}"
+            "Compteur invalid_ayanamsa ne doit pas être incrémenté. "
+            f"Compteurs reçus : {counter_calls}"
         )
 
 
