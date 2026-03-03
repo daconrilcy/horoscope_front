@@ -71,7 +71,7 @@ Avant de finaliser ta réponse, effectue ce contrôle en trois étapes :
    aux éléments réellement utilisés dans l'interprétation.
 - Si les données ne fournissent aucun identifiant exploitable → evidence = []
 - Ne cite dans le texte AUCUN élément qui ne figure pas dans evidence.
-- TOUT IDENTIFIANT PRÉSENT DANS evidence DOIT ÊTRE MENTIONNÉ AU MOINS UNE FOIS DANS summary/sections/highlights/advice.
+- TOUT IDENTIFIANT PRÉSENT DANS evidence DOIT ÊTRE JUSTIFIÉ dans le texte par une mention en langage naturel (ex: 'Soleil en Lion', 'trigone entre...', 'Maison 10', etc.).
 
 ═══ FORMAT DE SORTIE : JSON strict AstroResponse_v2 ═══
 - title : reflète le fil rouge du thème.

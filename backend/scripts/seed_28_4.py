@@ -100,19 +100,19 @@ def seed():
                         "type": "array",
                         "minItems": 3,
                         "maxItems": 10,
-                        "items": {"type": "string", "minLength": 1, "maxLength": 160},
+                        "items": {"type": "string", "minLength": 1, "maxLength": 360},
                     },
                     "advice": {
                         "type": "array",
                         "minItems": 3,
                         "maxItems": 10,
-                        "items": {"type": "string", "minLength": 1, "maxLength": 160},
+                        "items": {"type": "string", "minLength": 1, "maxLength": 360},
                     },
                     "evidence": {
                         "type": "array",
-                        "minItems": 2,
+                        "minItems": 0,
                         "maxItems": 40,
-                        "items": {"type": "string", "pattern": r"^[A-Z0-9_\.:-]{3,60}$"},
+                        "items": {"type": "string", "pattern": r"^[A-Z0-9_\.:-]{3,80}$"},
                     },
                     "disclaimers": {
                         "type": "array",

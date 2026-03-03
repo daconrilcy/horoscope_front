@@ -163,8 +163,8 @@ class TestNatalInterpretationServiceV2UserInput:
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.natal_interpretation_service_v2.build_evidence_catalog",
-                return_value="catalog",
+                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
                 "app.services.natal_interpretation_service_v2.LLMGateway",
@@ -226,8 +226,8 @@ class TestNatalInterpretationServiceV2UserInput:
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.natal_interpretation_service_v2.build_evidence_catalog",
-                return_value="catalog",
+                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
                 "app.services.natal_interpretation_service_v2.LLMGateway",
@@ -280,8 +280,8 @@ class TestNatalInterpretationServiceV2UserInput:
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.natal_interpretation_service_v2.build_evidence_catalog",
-                return_value="catalog",
+                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
                 "app.services.natal_interpretation_service_v2.LLMGateway",
@@ -332,8 +332,8 @@ class TestNatalInterpretationServiceV2SchemaVersion:
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.natal_interpretation_service_v2.build_evidence_catalog",
-                return_value="catalog",
+                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
                 "app.services.natal_interpretation_service_v2.LLMGateway",
@@ -379,8 +379,8 @@ class TestNatalInterpretationServiceV2SchemaVersion:
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.natal_interpretation_service_v2.build_evidence_catalog",
-                return_value="catalog",
+                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
                 "app.services.natal_interpretation_service_v2.LLMGateway",

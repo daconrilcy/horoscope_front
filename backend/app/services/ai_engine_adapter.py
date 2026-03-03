@@ -384,7 +384,7 @@ class AIEngineAdapter:
                     },
                     context={
                         **context,
-                        "messages": messages,
+                        "history": messages[:-1],  # Exclude the last message which is sent as user_input
                     },
                     request_id=request_id,
                     trace_id=trace_id,

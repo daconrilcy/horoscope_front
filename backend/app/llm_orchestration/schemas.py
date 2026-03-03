@@ -27,7 +27,7 @@ class AstroSectionV2(BaseModel):
     """Extended section with wider content limit for premium interpretations."""
 
     key: _SECTION_KEYS
-    heading: str = Field(..., min_length=1, max_length=80)
+    heading: str = Field(..., min_length=1, max_length=100)
     content: str = Field(..., min_length=1, max_length=6500)
 
 

@@ -710,7 +710,11 @@ class LLMGateway:
             # 10. Validation & Repair Loop (Point 4: Une seule tentative)
             if schema_dict:
                 evidence_catalog = context.get("evidence_catalog")
-                val_strict = context.get("validation_strict", False)
+                # Default to strict for paid products if not specified
+                val_strict = context.get("validation_strict")
+                if val_strict is None:
+                    val_strict = use_case in PAID_USE_CASES
+
                 val_result = validate_output(
                     result.raw_output,
                     schema_dict,

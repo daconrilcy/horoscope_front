@@ -63,7 +63,7 @@ ASPECT_NAMES_FR = {
 }
 
 # Regex for evidence IDs as per Story 29.1 AC4
-EVIDENCE_ID_PATTERN = re.compile(r"^[A-Z0-9_\.:-]{3,60}$")
+EVIDENCE_ID_PATTERN = re.compile(r"^[A-Z0-9_\.:-]{3,80}$")
 
 
 def _longitude_to_sign(longitude: float) -> str:
@@ -271,19 +271,19 @@ def build_enriched_evidence_catalog(chart_json: dict[str, Any]) -> dict[str, lis
         s_name = SIGN_NAMES_FR.get(s_code, s_code.capitalize())
 
         # PLANET_SIGN
-        add(f"{p_code.upper()}_{s_code.upper()}", [f"{p_name} en {s_name}", p_name, s_name])
+        add(f"{p_code.upper()}_{s_code.upper()}", [f"{p_name} en {s_name}", f"{p_name} en signe du {s_name}"])  # noqa: E501
 
         # PLANET_H{house}
         house = p.get("house")
         if house is not None:
-            add(f"{p_code.upper()}_H{house}", [f"{p_name} en Maison {house}", f"Maison {house}"])
+            add(f"{p_code.upper()}_H{house}", [f"{p_name} en Maison {house}"])
             add(
                 f"{p_code.upper()}_{s_code.upper()}_H{house}",
                 [f"{p_name} en {s_name} en Maison {house}"],
             )
 
         if p.get("is_retrograde"):
-            add(f"{p_code.upper()}_RETROGRADE", [f"{p_name} rétrograde", "rétrograde"])
+            add(f"{p_code.upper()}_RETROGRADE", [f"{p_name} rétrograde"])
 
     # 2. Aspects
     for a in chart_json.get("aspects", []):
@@ -300,7 +300,6 @@ def build_enriched_evidence_catalog(chart_json: dict[str, Any]) -> dict[str, lis
         labels = [
             f"{asp_name} entre {p1_name} et {p2_name}",
             f"{p1_name} {asp_name} {p2_name}",
-            asp_name,
         ]
         add(base_id, labels)
 
@@ -323,7 +322,7 @@ def build_enriched_evidence_catalog(chart_json: dict[str, Any]) -> dict[str, lis
                 s_code = data["sign"]
                 s_name = SIGN_NAMES_FR.get(s_code, s_code.capitalize())
                 a_name = angle_names.get(angle_key, angle_key)
-                add(f"{angle_key}_{s_code.upper()}", [f"{a_name} en {s_name}", a_name])
+                add(f"{angle_key}_{s_code.upper()}", [f"{a_name} en {s_name}"])
 
     # 4. Houses
     for h in chart_json.get("houses", []):
