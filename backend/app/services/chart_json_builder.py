@@ -271,7 +271,10 @@ def build_enriched_evidence_catalog(chart_json: dict[str, Any]) -> dict[str, lis
         s_name = SIGN_NAMES_FR.get(s_code, s_code.capitalize())
 
         # PLANET_SIGN
-        add(f"{p_code.upper()}_{s_code.upper()}", [f"{p_name} en {s_name}", f"{p_name} en signe du {s_name}"])  # noqa: E501
+        add(
+            f"{p_code.upper()}_{s_code.upper()}",
+            [f"{p_name} en {s_name}", f"{p_name} en signe du {s_name}"],
+        )  # noqa: E501
 
         # PLANET_H{house}
         house = p.get("house")

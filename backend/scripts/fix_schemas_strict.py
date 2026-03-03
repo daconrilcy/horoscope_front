@@ -96,7 +96,7 @@ FIXED_SCHEMAS = {
             "disclaimers",
         ],
         "properties": {
-            "title": {"type": "string", "minLength": 1, "maxLength": 120},
+            "title": {"type": "string", "minLength": 1, "maxLength": 160},
             "summary": {"type": "string", "minLength": 1, "maxLength": 2800},
             "sections": {
                 "type": "array",
@@ -121,7 +121,7 @@ FIXED_SCHEMAS = {
                                 "event_context",
                             ],
                         },
-                        "heading": {"type": "string", "minLength": 1, "maxLength": 80},
+                        "heading": {"type": "string", "minLength": 1, "maxLength": 100},
                         "content": {"type": "string", "minLength": 1, "maxLength": 6500},
                     },
                 },
