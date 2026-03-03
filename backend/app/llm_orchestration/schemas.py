@@ -22,6 +22,7 @@ _HighlightItem = Annotated[str, Field(max_length=360)]
 _AdviceItem = Annotated[str, Field(max_length=360)]
 _DisclaimerItemV1 = Annotated[str, Field(max_length=200)]
 _DisclaimerItemV2 = Annotated[str, Field(max_length=300)]
+_SafetyNoteItem = Annotated[str, Field(max_length=200)]
 
 
 class AstroSection(BaseModel):
@@ -47,7 +48,7 @@ class AstroResponseV1(BaseModel):
     highlights: List[_HighlightItem] = Field(..., min_length=3, max_length=10)
     advice: List[_AdviceItem] = Field(..., min_length=3, max_length=10)
     evidence: List[_EvidenceItem] = Field(default_factory=list, max_length=40)
-    disclaimers: List[_DisclaimerItemV1] = Field(default_factory=list)
+    disclaimers: List[_DisclaimerItemV1] = Field(default_factory=list, max_length=3)
 
 
 class AstroResponseV2(BaseModel):
@@ -59,7 +60,7 @@ class AstroResponseV2(BaseModel):
     highlights: List[_HighlightItem] = Field(..., min_length=3, max_length=12)
     advice: List[_AdviceItem] = Field(..., min_length=3, max_length=12)
     evidence: List[_EvidenceItem] = Field(default_factory=list, max_length=80)
-    disclaimers: List[_DisclaimerItemV2] = Field(default_factory=list)
+    disclaimers: List[_DisclaimerItemV2] = Field(default_factory=list, max_length=3)
 
 
 class ChatResponseV1(BaseModel):
@@ -80,4 +81,4 @@ class ChatResponseV1(BaseModel):
         ]
     ] = None
     confidence: Optional[float] = Field(None, ge=0, le=1)
-    safety_notes: List[str] = Field(default_factory=list, max_length=3)
+    safety_notes: List[_SafetyNoteItem] = Field(default_factory=list, max_length=3)
