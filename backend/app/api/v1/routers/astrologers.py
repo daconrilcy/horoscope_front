@@ -73,11 +73,7 @@ def list_astrologers(
 ) -> Any:
     request_id = resolve_request_id(request)
 
-    stmt = (
-        select(LlmPersonaModel)
-        .where(LlmPersonaModel.enabled == True)
-        .order_by(LlmPersonaModel.name)
-    )
+    stmt = select(LlmPersonaModel).where(LlmPersonaModel.enabled).order_by(LlmPersonaModel.name)
     personas = db.execute(stmt).scalars().all()
 
     result_data = []

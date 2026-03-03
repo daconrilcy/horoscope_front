@@ -51,6 +51,8 @@ USE_CASES_CONTRACTS = [
         "safety_profile": "astrology",
         "fallback_use_case_key": "natal_interpretation_short",
         "required_prompt_placeholders": ["chart_json", "persona_name"],
+        "interaction_mode": "structured",
+        "user_question_policy": "none",
         "input_schema": {
             "type": "object",
             "required": ["question", "chart_json"],
@@ -70,6 +72,8 @@ USE_CASES_CONTRACTS = [
         "safety_profile": "astrology",
         "fallback_use_case_key": None,
         "required_prompt_placeholders": ["chart_json"],
+        "interaction_mode": "structured",
+        "user_question_policy": "optional",
         "input_schema": {
             "type": "object",
             "required": ["chart_json"],
@@ -88,6 +92,8 @@ USE_CASES_CONTRACTS = [
         "safety_profile": "astrology",
         "fallback_use_case_key": None,
         "required_prompt_placeholders": ["persona_name"],
+        "interaction_mode": "chat",
+        "user_question_policy": "required",
         "input_schema": {
             "type": "object",
             "required": ["message"],
@@ -107,6 +113,8 @@ USE_CASES_CONTRACTS = [
         "safety_profile": "astrology",
         "fallback_use_case_key": "natal_interpretation_short",
         "required_prompt_placeholders": ["cards_json"],
+        "interaction_mode": "structured",
+        "user_question_policy": "optional",
         "input_schema": {
             "type": "object",
             "required": ["cards_json"],
@@ -125,6 +133,8 @@ USE_CASES_CONTRACTS = [
         "safety_profile": "astrology",
         "fallback_use_case_key": "natal_interpretation_short",
         "required_prompt_placeholders": ["chart_json", "event_description"],
+        "interaction_mode": "chat",
+        "user_question_policy": "required",
         "input_schema": {
             "type": "object",
             "required": ["chart_json", "event_description"],
@@ -143,6 +153,8 @@ USE_CASES_CONTRACTS = [
         "safety_profile": "support",
         "fallback_use_case_key": None,
         "required_prompt_placeholders": [],
+        "interaction_mode": "chat",
+        "user_question_policy": "required",
         "input_schema": None,
     },
     {
@@ -154,6 +166,8 @@ USE_CASES_CONTRACTS = [
         "safety_profile": "support",
         "fallback_use_case_key": None,
         "required_prompt_placeholders": [],
+        "interaction_mode": "chat",
+        "user_question_policy": "required",
         "input_schema": None,
     },
 ]
@@ -221,6 +235,8 @@ def seed_use_cases(db: Session) -> None:
                 safety_profile=contract["safety_profile"],
                 required_prompt_placeholders=contract["required_prompt_placeholders"],
                 fallback_use_case_key=contract["fallback_use_case_key"],
+                interaction_mode=contract.get("interaction_mode", "structured"),
+                user_question_policy=contract.get("user_question_policy", "none"),
                 allowed_persona_ids=[],
             )
             db.add(uc)
@@ -233,6 +249,8 @@ def seed_use_cases(db: Session) -> None:
             uc.safety_profile = contract["safety_profile"]
             uc.required_prompt_placeholders = contract["required_prompt_placeholders"]
             uc.fallback_use_case_key = contract["fallback_use_case_key"]
+            uc.interaction_mode = contract.get("interaction_mode", "structured")
+            uc.user_question_policy = contract.get("user_question_policy", "none")
 
         # AC 5 / Issue B: Ensure at least one persona if strategy is required
         if uc.persona_strategy == "required" and not uc.allowed_persona_ids:

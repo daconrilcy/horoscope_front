@@ -2,7 +2,7 @@ import logging
 import os
 import re
 import uuid
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -42,6 +42,9 @@ logger = logging.getLogger(__name__)
 # Use cases that MUST have a valid output schema (premium paid features)
 PAID_USE_CASES = {"natal_interpretation", "tarot_reading", "event_guidance"}
 
+_VALID_INTERACTION_MODES = {"structured", "chat"}
+_VALID_QUESTION_POLICIES = {"none", "optional", "required"}
+
 # Locale-aware fallback messages for structured-data-only calls
 _FALLBACK_USER_MSG = {
     "fr": "Interprète les données astrologiques fournies.",
@@ -64,6 +67,8 @@ USE_CASE_STUBS = {
         developer_prompt="Analyse le thème natal pour un utilisateur né le {{birth_date}}.",
         required_prompt_placeholders=["birth_date"],
         fallback_use_case="natal_interpretation_short",
+        interaction_mode="structured",
+        user_question_policy="none",
     ),
     "natal_interpretation_short": UseCaseConfig(
         model="gpt-4o-mini",
@@ -72,6 +77,8 @@ USE_CASE_STUBS = {
         system_core_key="default_v1",
         developer_prompt="Analyse rapide du thème natal.",
         required_prompt_placeholders=[],
+        interaction_mode="structured",
+        user_question_policy="optional",
     ),
     "chat": UseCaseConfig(
         model="gpt-4o-mini",
@@ -80,6 +87,8 @@ USE_CASE_STUBS = {
         system_core_key="default_v1",
         developer_prompt="Réponds à la conversation suivante: {{last_user_msg}}.",
         required_prompt_placeholders=["last_user_msg"],
+        interaction_mode="chat",
+        user_question_policy="required",
     ),
     "chat_astrologer": UseCaseConfig(
         model="gpt-4o-mini",
@@ -88,6 +97,8 @@ USE_CASE_STUBS = {
         system_core_key="default_v1",
         developer_prompt="Réponds à la conversation suivante: {{last_user_msg}}.",
         required_prompt_placeholders=["last_user_msg"],
+        interaction_mode="chat",
+        user_question_policy="required",
     ),
     "guidance_daily": UseCaseConfig(
         model="gpt-4o-mini",
@@ -96,6 +107,8 @@ USE_CASE_STUBS = {
         system_core_key="default_v1",
         developer_prompt="Génère une guidance quotidienne.",
         required_prompt_placeholders=[],
+        interaction_mode="chat",
+        user_question_policy="optional",
     ),
     "guidance_weekly": UseCaseConfig(
         model="gpt-4o-mini",
@@ -104,6 +117,8 @@ USE_CASE_STUBS = {
         system_core_key="default_v1",
         developer_prompt="Génère une guidance hebdomadaire.",
         required_prompt_placeholders=[],
+        interaction_mode="chat",
+        user_question_policy="none",
     ),
     "guidance_contextual": UseCaseConfig(
         model="gpt-4o-mini",
@@ -112,6 +127,8 @@ USE_CASE_STUBS = {
         system_core_key="default_v1",
         developer_prompt="Génère une guidance contextuelle pour: {{situation}}.",
         required_prompt_placeholders=["situation"],
+        interaction_mode="chat",
+        user_question_policy="required",
     ),
     "tarot_reading": UseCaseConfig(
         model="gpt-4o-mini",
@@ -120,6 +137,8 @@ USE_CASE_STUBS = {
         system_core_key="default_v1",
         developer_prompt="Tirage de tarot.",
         required_prompt_placeholders=[],
+        interaction_mode="structured",
+        user_question_policy="optional",
     ),
     "event_guidance": UseCaseConfig(
         model="gpt-4o-mini",
@@ -128,6 +147,8 @@ USE_CASE_STUBS = {
         system_core_key="default_v1",
         developer_prompt="Guidance pour un événement: {{event_description}}.",
         required_prompt_placeholders=["event_description"],
+        interaction_mode="chat",
+        user_question_policy="required",
     ),
 }
 
@@ -140,6 +161,105 @@ class LLMGateway:
     def __init__(self, responses_client: Optional[ResponsesClient] = None) -> None:
         self.client = responses_client or ResponsesClient()
         self.renderer = PromptRenderer()
+
+    def build_user_payload(
+        self,
+        use_case: str,
+        user_input: Dict[str, Any],
+        context: Dict[str, Any],
+        policy: str,
+        locale: str,
+    ) -> str:
+        """
+        Centralizes the construction of the user data block (Layer 4).
+        Validates user question presence according to the policy.
+        """
+        # Search for question in multiple fields
+        question = (
+            user_input.get("question")
+            or user_input.get("message")
+            or user_input.get("last_user_msg")
+            or context.get("last_user_msg")
+        )
+
+        # 1. Enforce user_question_policy
+        if policy == "required" and not question:
+            raise InputValidationError(
+                f"User question is required for use case '{use_case}'",
+                details={"policy": policy},
+            )
+
+        # 2. Build parts
+        parts: List[str] = []
+
+        if policy != "none" and question:
+            parts.append(question)
+
+        if "natal_chart_summary" in context:
+            parts.append(f"Natal Chart Summary: {context['natal_chart_summary']}")
+        if "situation" in context:
+            parts.append(f"Context: {context['situation']}")
+
+        # Important : chart_json is included in user message ONLY if it was NOT
+        # already rendered into the developer prompt (redundancy protection).
+        if "chart_json" in context:
+            # We check if it's in required_prompt_placeholders of the config via context
+            # but usually config is known by the caller.
+            # For simplicity, if caller passed it here, we add it.
+            if context.get("_chart_json_in_prompt") is not True:
+                parts.append(f"Technical Data: {context['chart_json']}")
+
+        if not parts:
+            return _FALLBACK_USER_MSG.get(locale, _FALLBACK_USER_MSG["fr"])
+
+        return "\n".join(parts)
+
+    def compose_chat_messages(
+        self,
+        system_core: str,
+        dev_prompt: str,
+        persona_block: Optional[str],
+        history: List[Dict[str, Any]],
+        user_payload: str,
+        locale: str,
+    ) -> List[Dict[str, Any]]:
+        """Composition layer for 'chat' mode (Layer 1+2+3 + History + 4)."""
+        messages = [
+            {"role": "system", "content": system_core},
+            {"role": "developer", "content": dev_prompt},
+        ]
+        if persona_block:
+            messages.append({"role": "developer", "content": persona_block})
+
+        # Inject conversation history
+        for msg in history:
+            if "role" in msg and "content" in msg:
+                messages.append({"role": msg["role"], "content": msg["content"]})
+            else:
+                logger.warning("gateway_malformed_history_item msg=%s", msg)
+
+        # If user_payload was built from empty parts, use locale-aware fallback
+        effective_user = user_payload or _FALLBACK_USER_MSG.get(locale, _FALLBACK_USER_MSG["fr"])
+        messages.append({"role": "user", "content": effective_user})
+        return messages
+
+    def compose_structured_messages(
+        self,
+        system_core: str,
+        dev_prompt: str,
+        persona_block: Optional[str],
+        user_payload: str,
+    ) -> List[Dict[str, Any]]:
+        """Composition layer for 'structured' mode (Layer 1+2+3+4)."""
+        messages = [
+            {"role": "system", "content": system_core},
+            {"role": "developer", "content": dev_prompt},
+        ]
+        if persona_block:
+            messages.append({"role": "developer", "content": persona_block})
+
+        messages.append({"role": "user", "content": user_payload})
+        return messages
 
     async def execute(
         self,
@@ -353,6 +473,19 @@ class LLMGateway:
                     )
                     raise GatewayConfigError(f"Missing mandatory platform variable: '{req_var}'")
 
+            locale = merged_vars["locale"]
+
+            # M1: Enum validation
+            if config.interaction_mode not in _VALID_INTERACTION_MODES:
+                raise GatewayConfigError(
+                    f"Invalid interaction_mode '{config.interaction_mode}' "
+                    f"for use case '{use_case}'"
+                )
+            if config.user_question_policy not in _VALID_QUESTION_POLICIES:
+                raise GatewayConfigError(
+                    f"Invalid user_question_policy '{config.user_question_policy}' for '{use_case}'"
+                )
+
             # AC 8: Input validation
             if config.input_schema:
                 input_val = validate_input(user_input, config.input_schema)
@@ -369,7 +502,7 @@ class LLMGateway:
                 k: v for k, v in merged_vars.items() if k in config.required_prompt_placeholders
             }
             # C1 Fix: Always include platform variables required by lint
-            render_vars["locale"] = merged_vars["locale"]
+            render_vars["locale"] = locale
             render_vars["use_case"] = merged_vars["use_case"]
 
             # 4. Render developer prompt
@@ -485,55 +618,38 @@ class LLMGateway:
             if not persona_block and not llm_v2_enabled:
                 persona_block = context.get("persona_block") or context.get("persona_line")
 
-            # 7. Layer 4 (User Data) — governed by interaction_mode & user_question_policy
+            # 7. Layer 4 (User Data) & Composition (8)
             user_data_block = context.get("user_data_block")
             if not user_data_block:
-                locale = merged_vars.get("locale", "en")
-                fallback_msg = _FALLBACK_USER_MSG.get(locale, _FALLBACK_USER_MSG["en"])
-                question = user_input.get("question") or user_input.get("last_user_msg")
+                # Add hint for redundancy protection
+                context_with_hint = {
+                    **context,
+                    "_chart_json_in_prompt": "chart_json" in config.required_prompt_placeholders,
+                }
+                user_data_block = self.build_user_payload(
+                    use_case=use_case,
+                    user_input=user_input,
+                    context=context_with_hint,
+                    policy=config.user_question_policy,
+                    locale=locale,
+                )
 
-                # Enforce user_question_policy
-                if config.user_question_policy == "required" and not question:
-                    raise InputValidationError(
-                        "User question is required for this use case",
-                        details={"use_case": use_case},
-                    )
-
-                if config.user_question_policy == "none":
-                    # Structured data only — ignore user question
-                    parts: list[str] = []
-                else:
-                    # optional or required: include question if present
-                    parts = [question] if question else []
-
-                if "natal_chart_summary" in context:
-                    parts.append(f"Natal Chart Summary: {context['natal_chart_summary']}")
-                if "situation" in context:
-                    parts.append(f"Context: {context['situation']}")
-
-                # Only include chart_json here if it was NOT already rendered into
-                # the developer prompt (to avoid sending it twice and wasting tokens).
-                if (
-                    "chart_json" in context
-                    and "chart_json" not in config.required_prompt_placeholders
-                ):
-                    parts.append(f"Technical Data: {context['chart_json']}")
-
-                user_data_block = "\n".join(parts) if parts else fallback_msg
-
-            # 8. Compose Messages
-            messages = [
-                {"role": "system", "content": system_core},
-                {"role": "developer", "content": rendered_developer_prompt},
-            ]
-            if persona_block:
-                messages.append({"role": "developer", "content": persona_block})
             if config.interaction_mode == "chat":
-                # Inject conversation history before current user message
-                history = context.get("history", [])
-                for h in history:
-                    messages.append({"role": h["role"], "content": h["content"]})
-            messages.append({"role": "user", "content": user_data_block})
+                messages = self.compose_chat_messages(
+                    system_core=system_core,
+                    dev_prompt=rendered_developer_prompt,
+                    persona_block=persona_block,
+                    history=context.get("history", []),
+                    user_payload=user_data_block,
+                    locale=locale,
+                )
+            else:
+                messages = self.compose_structured_messages(
+                    system_core=system_core,
+                    dev_prompt=rendered_developer_prompt,
+                    persona_block=persona_block,
+                    user_payload=user_data_block,
+                )
 
             # 9. Call Provider
             try:
