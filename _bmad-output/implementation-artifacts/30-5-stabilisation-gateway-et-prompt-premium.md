@@ -3,35 +3,29 @@
 **Status:** done
 
 ## 1. Contexte et Objectifs
-Cette story traite de la stabilisation critique du Gateway et des schémas de sortie pour les produits Premium (GPT-5), avec un focus sur la conformité aux APIs de production et la robustesse de l'UI.
+Stabilisation du Gateway et des schémas Premium (GPT-5) avec un focus sur la robustesse de l'evidence et la parité des contraintes DB/Pydantic.
 
 ## 2. Modifications Réalisées
 
-### 2.1 Backend - LLM Gateway & Validation
-- **Normalisation `schema.name`** : Correction du champ `name` envoyé au provider (lowercase + underscores uniquement, ex: `astroresponse_v2`) pour conformité stricte avec l'API Responses v2.
-- **Evidence Catalog Enrichi** : `build_enriched_evidence_catalog` génère maintenant un dictionnaire de labels naturels (ex: `{"SUN_LEO": ["Soleil en Lion", "Soleil", "Lion"]}`).
-- **Règle Bidirectionnelle Robuste** : Le validateur d'output vérifie la présence soit de l'ID technique, soit d'un label naturel dans le texte de l'interprétation. Cela permet d'interdire les IDs techniques dans le texte libre (exigence Premium) tout en garantissant la traçabilité.
-- **Validation Stricte** : Activation du mode `strict` pour les interprétations complètes, bloquant les réponses avec des évidences "orphelines" ou hallucinées.
+### 2.1 Backend - Evidence Hardening
+- **Normalisation des Noms** : `json_schema.name` est désormais lowercase et alphanumérique (conformité SDK).
+- **Zéro Faux Positif** : Raffinement du catalogue d'evidence pour exclure les labels trop génériques (ex: "Lion", "carré"). La validation exige désormais des mentions composées (ex: "Soleil en Lion") pour justifier une evidence technique.
+- **Regex Alignée** : Extension de `EVIDENCE_ID_PATTERN` à 80 caractères pour correspondre aux schémas de production.
+- **Clarification Prompt** : Mise à jour de `seed_30_3_gpt5_prompts.py` : les IDs doivent être justifiés en langage naturel dans le texte libre.
 
-### 2.2 Frontend - Robustesse UI
-- **Composant `ErrorBoundary`** : Création d'un périmètre de sécurité React pour isoler les erreurs de rendu des interprétations.
-- **Protection de Page** : Le plantage d'un rendu d'interprétation (ex: JSON malformé non capturé) n'entraîne plus le plantage de toute l'application.
-
-### 2.3 Alignement des Schémas
-- **Unicité de la Source de Vérité** : Alignement des modèles Pydantic (`schemas.py`) avec les contraintes DB et les scripts de migration (`fix_schemas_strict.py`).
-- **Flexibilité Evidence** : Passage de `min_items=0` pour supporter les cas d'erreur sans forcer l'IA à inventer des placements.
+### 2.2 Robustesse & Schémas
+- **Parité DB/Pydantic** : Aligné `AstroSectionV2.heading` à **100 caractères** (était 80) pour correspondre à la définition de la base de données.
+- **UI Error Boundary** : Ajout d'un composant `ErrorBoundary` dans le frontend pour isoler les erreurs de rendu des interprétations.
 
 ## 3. Fichiers Modifiés
 - `backend/app/llm_orchestration/gateway.py`
 - `backend/app/llm_orchestration/services/output_validator.py`
 - `backend/app/llm_orchestration/schemas.py`
 - `backend/app/services/chart_json_builder.py`
-- `backend/app/services/natal_interpretation_service_v2.py`
-- `backend/scripts/fix_schemas_strict.py`
-- `frontend/src/components/ErrorBoundary.tsx` (Nouveau)
-- `frontend/src/components/NatalInterpretation.tsx`
+- `backend/scripts/seed_30_3_gpt5_prompts.py`
+- `frontend/src/components/ErrorBoundary.tsx`
 
 ## 4. Validation
-- [x] Tests unitaires schémas et validation : 14/14 passent.
-- [x] Tests de non-régression service natal V2 : 5/5 passent.
-- [x] Test de normalisation des noms de schémas : 1/1 passe.
+- [x] Tests unitaires robustesse evidence : 14/14 passent.
+- [x] Tests parité schémas : validés par parse Pydantic.
+- [x] Tests non-régression service natal V2 : 5/5 passent.
