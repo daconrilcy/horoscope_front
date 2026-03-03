@@ -22,9 +22,12 @@ Stabilisation du Gateway et des schémas Premium (GPT-5) avec un focus sur la ro
     - `highlights`/`advice.maxItems` : 12.
     - `disclaimers` : 3 items max, 300 caractères par item.
     - `suggested_replies` (Chat V2) : 8 items max, 120 caractères par item.
+    - `intent` : Énumération stricte identique à V1.
 - **Contraintes V1 (Standard)** :
     - `disclaimers` : 3 items max, 200 caractères par item.
     - `suggested_replies` (Chat V1) : 5 items max, 80 caractères par item.
+- **Contraintes Communes Chat** :
+    - `safety_notes` : 200 caractères max par item.
 - **UI Error Boundary** : Ajout d'un composant `ErrorBoundary` dans le frontend pour isoler les erreurs de rendu.
 
 ## 3. Fichiers Modifiés

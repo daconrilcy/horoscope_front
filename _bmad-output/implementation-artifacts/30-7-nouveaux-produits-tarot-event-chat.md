@@ -15,8 +15,8 @@ Lancement des produits Tarot/Event, durcissement de l'observabilité sur les ver
 ### 2.2 LLM Gateway & Schémas
 - **Refactor Reasoning** : Unification de l'auto-ajustement des tokens/timeout pour les modèles `o1`/`gpt-5`.
 - **Métriques** : Inclusion du label `mode` dans Prometheus.
-- **Architecture Chat V2** : Création de `ChatResponseV2` dans `schemas.py` et `fix_schemas_strict.py` (message max 4000, 8 suggestions max) pour le futur mode premium.
-- **Parité Totale (Astro & Chat)** : Alignement final de toutes les limites DB (items max, longueurs des items de liste) avec les modèles Pydantic pour garantir une validation cohérente sur toute la chaîne.
+- **Architecture Chat V2** : Création de `ChatResponseV2` dans `schemas.py` et `fix_schemas_strict.py` avec des limites étendues et maintien de l'énumération des intentions pour une robustesse maximale.
+- **Parité Totale (Astro & Chat)** : Alignement final de toutes les limites DB (items max, longueurs des items de liste, énumérations) avec les modèles Pydantic.
 
 ## 3. Fichiers Modifiés
 - `backend/app/llm_orchestration/gateway.py`
