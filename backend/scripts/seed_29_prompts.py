@@ -4,6 +4,7 @@ Optimisé selon les recommandations GPT-5.2 pour une concision et une structure 
 """
 
 import logging
+import uuid
 
 from sqlalchemy import select
 
@@ -174,7 +175,20 @@ def seed_prompts():
                 logger.info(f"Updating use case config for {key}...")
                 uc.display_name = config["display_name"]
                 uc.description = config["description"]
-                uc.output_schema_id = str(astro_schema.id)
+                # Story 30-8: Only update output_schema_id if NOT already at version 3
+                # This prevents old seeds from downgrading the schema.
+                current_schema = None
+                if uc.output_schema_id:
+                    try:
+                        current_schema = db.get(LlmOutputSchemaModel, uuid.UUID(uc.output_schema_id))
+                    except (ValueError, TypeError):
+                        pass
+                
+                if not current_schema or current_schema.version < 3:
+                    uc.output_schema_id = str(astro_schema.id)
+                else:
+                    logger.info(f"Schema for {key} is already at version {current_schema.version}. Skipping schema update.")
+
                 uc.persona_strategy = config["persona_strategy"]
                 uc.required_prompt_placeholders = config["required_prompt_placeholders"]
                 uc.eval_fixtures_path = config["eval_fixtures_path"]
