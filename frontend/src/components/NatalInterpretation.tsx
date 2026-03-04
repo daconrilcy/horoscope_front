@@ -145,6 +145,15 @@ function InterpretationError({ t, onRetry }: { t: InterpretationTranslations, on
 function InterpretationContent({ data, lang }: { data: NatalInterpretationResult, lang: AstrologyLang }) {
   const t = natalChartTranslations[lang].interpretation;
   const { interpretation, meta, degraded_mode } = data;
+  const highlights = Array.isArray(interpretation.highlights) ? interpretation.highlights : [];
+  const sections = Array.isArray(interpretation.sections) ? interpretation.sections : [];
+  const advice = Array.isArray(interpretation.advice) ? interpretation.advice : [];
+  const evidence = Array.isArray(interpretation.evidence) ? interpretation.evidence : [];
+  const disclaimers = Array.isArray(data.disclaimers)
+    ? data.disclaimers
+    : Array.isArray(interpretation.disclaimers)
+      ? interpretation.disclaimers
+      : [];
 
   return (
     <div className="space-y-8">
@@ -173,26 +182,26 @@ function InterpretationContent({ data, lang }: { data: NatalInterpretationResult
         <h4 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4">
           {t.highlightsTitle}
         </h4>
-        <HighlightsChips highlights={interpretation.highlights} />
+        <HighlightsChips highlights={highlights} />
       </div>
 
-      <SectionAccordion sections={interpretation.sections} sectionsMap={t.sectionsMap} />
+      <SectionAccordion sections={sections} sectionsMap={t.sectionsMap} />
 
       <div className="bg-blue-50 dark:bg-blue-900/10 p-6 rounded-2xl">
         <h4 className="text-lg font-bold text-blue-900 dark:text-blue-300 mb-4">
           {t.adviceTitle}
         </h4>
-        <AdviceList advice={interpretation.advice} />
+        <AdviceList advice={advice} />
       </div>
 
-      {interpretation.disclaimers.length > 0 && (
+      {disclaimers.length > 0 && (
         <div className="text-xs text-gray-400 dark:text-gray-500 italic space-y-1">
           <p className="font-bold uppercase tracking-tight">{t.disclaimerTitle}</p>
-          {interpretation.disclaimers.map((d, i) => <p key={i}>{d}</p>)}
+          {disclaimers.map((d, i) => <p key={i}>{d}</p>)}
         </div>
       )}
 
-      <EvidenceTags evidence={interpretation.evidence} title={t.evidenceTitle} t={t} />
+      <EvidenceTags evidence={evidence} title={t.evidenceTitle} t={t} />
     </div>
   );
 }

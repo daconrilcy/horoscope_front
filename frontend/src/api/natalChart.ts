@@ -190,7 +190,7 @@ export type AstroInterpretation = {
   highlights: string[]
   advice: string[]
   evidence: string[]
-  disclaimers: string[]
+  disclaimers?: string[]
 }
 
 export type InterpretationMeta = {
@@ -214,6 +214,7 @@ export type NatalInterpretationResult = {
   interpretation: AstroInterpretation
   meta: InterpretationMeta
   degraded_mode: string | null
+  disclaimers?: string[]
 }
 
 async function fetchNatalInterpretation(
@@ -239,7 +240,43 @@ async function fetchNatalInterpretation(
     }),
   })
 
-  return handleResponse<NatalInterpretationResult>(response)
+  if (!response.ok) {
+    let payload: ErrorEnvelope | null = null
+    try {
+      const raw = (await response.json()) as Record<string, unknown>
+      if (raw?.error) {
+        payload = raw as unknown as ErrorEnvelope
+      } else if (Array.isArray(raw?.detail)) {
+        const firstDetail = (raw.detail as Array<{ msg?: string }>)[0]
+        payload = {
+          error: {
+            code: "unprocessable_entity",
+            message: firstDetail?.msg || "Données invalides",
+          },
+        }
+      }
+    } catch {
+      payload = null
+    }
+    throw new ApiError(
+      payload?.error?.code ?? "unknown_error",
+      payload?.error?.message ?? `Request failed with status ${response.status}`,
+      response.status,
+      payload?.error?.request_id,
+    )
+  }
+
+  const payload = (await response.json()) as {
+    data: NatalInterpretationResult
+    disclaimers?: string[]
+  }
+
+  // Story 30-8: for V3, disclaimers are API-level, not LLM payload-level.
+  if (!payload.data.disclaimers && Array.isArray(payload.disclaimers)) {
+    payload.data.disclaimers = payload.disclaimers
+  }
+
+  return payload.data
 }
 
 export function useNatalInterpretation(options: {

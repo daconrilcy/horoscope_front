@@ -204,4 +204,28 @@ describe("NatalInterpretationSection", () => {
     expect(screen.getByText(/aucun astrologue disponible|no astrologers available/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /demander l'interprétation complète/i })).not.toBeInTheDocument();
   });
+
+  it("n'échoue pas en mode complete quand interpretation.disclaimers est absent", () => {
+    (useNatalInterpretation as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        ...mockInterpretationData,
+        use_case: "natal_interpretation",
+        interpretation: {
+          ...mockInterpretationData.interpretation,
+          disclaimers: undefined,
+        },
+        meta: {
+          ...mockInterpretationData.meta,
+          level: "complete",
+          persona_name: "Astrologue Standard",
+        },
+        disclaimers: ["Disclaimer API"],
+      },
+    });
+
+    renderSection();
+    expect(screen.getByText("Votre Thème Test")).toBeInTheDocument();
+    expect(screen.getByText("Disclaimer API")).toBeInTheDocument();
+  });
 });
