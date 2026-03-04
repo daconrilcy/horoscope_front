@@ -393,6 +393,8 @@ claude-sonnet-4-6
 - T8 (post-review): toutes les métriques natal portent le label `schema_version` pour permettre le filtrage Prometheus par version de schéma.
 - Rollback: `NATAL_SCHEMA_VERSION=v2` dans `.env` bascule vers `AstroResponseV2` sans redéploiement.
 - Disclaimers (post-review): `get_disclaimers()` supporte un fallback langue de base (`fr-CA → fr-FR`) avant le `_default`, couvrant les locales régionaux non listés explicitement.
+- Post-prod fix (frontend, 2026-03-04): le rendu `complete` pouvait crasher si `interpretation.disclaimers` était absent (v3). Le front utilise désormais un fallback défensif vers `data.disclaimers` (top-level API), puis `[]`.
+- Post-prod fix (frontend, 2026-03-04): homogénéisation de l'affichage `evidence` (ex: `ASPECT_*`, `HOUSE_*_IN_*`, `SUN_TAURUS_H10`) pour éviter des libellés hétérogènes en UI.
 
 ### File List
 
@@ -408,6 +410,9 @@ claude-sonnet-4-6
 - `backend/app/api/v1/routers/natal_interpretation.py` — get_disclaimers injection
 - `backend/app/tests/unit/test_output_validator.py` — updated test name/assertions for secure filter behavior
 - `backend/app/tests/unit/test_repair_prompter.py` — added v3 density tests
+- `frontend/src/api/natalChart.ts` — `disclaimers` optionnel sur `interpretation`, support `disclaimers` top-level API pour V3 (fallback défensif)
+- `frontend/src/components/NatalInterpretation.tsx` — rendu robuste sans `interpretation.disclaimers`; normalisation homogène des libellés `evidence`
+- `frontend/src/tests/natalInterpretation.test.tsx` — non-régression crash `complete` sans `interpretation.disclaimers`; test de formatage homogène `evidence`
 - `_bmad-output/planning-artifacts/epics.md` — updated epic status
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — synced status
 
@@ -429,3 +434,4 @@ claude-sonnet-4-6
 | 2026-03-03 | Post-review hardening: Fix #1 — question retiré du required de l'input_schema natal_interpretation; Fix #3 — AstroSectionErrorV3 introduit, AstroErrorResponseV3.sections migré vers type sans contrainte densité; Polish B — guard liste vide dans get_disclaimers(). 60 tests au vert (60/60) | claude-sonnet-4-6 |
 | 2026-03-03 | **Architecture note (ne pas revenir en arrière)** : les disclaimers légaux ne sont plus générés par le LLM — ils sont injectés statiquement côté app via `disclaimer_registry.py` selon le locale. Économie de ~50–100 tokens/appel, texte légal stable et versionnée en code, i18n fiable. `AstroResponseV3` rejette tout champ `disclaimers` via `extra="forbid"`. Pour modifier les textes ou ajouter un locale, éditer uniquement `_DISCLAIMERS` dans `disclaimer_registry.py`. | claude-sonnet-4-6 |
 | 2026-03-03 | Hardening final (5 fixes post-implémentation) : [High] use_cases_seed — correction des tableaux du branch erreur dans ASTRO_RESPONSE_V3_JSON_SCHEMA ; [Medium] gateway — schema_version detection robuste via `schema_model.version` (entier), reasoning_effort default → `"medium"`, label `schema_version` ajouté sur tous les compteurs natal ; [Medium] output_validator — paramètre `schema_version` propagé dans les métriques ; [Medium] natal_interpretation_service_v2 — cascade v3→v3_error→v2→v1 robustifiée sur les deux chemins (cache + live) ; [Low] disclaimer_registry — fallback langue de base `fr-CA → fr-FR` avant `_default`. 60/60 tests au vert. | Gemini-CLI |
+| 2026-03-04 | Stabilisation frontend post-validation réelle : correction crash `TypeError` en mode `complete` quand `interpretation.disclaimers` est absent, fallback vers `data.disclaimers` (API-level) et normalisation homogène des libellés `evidence` (`ASPECT_*`, `HOUSE_*_IN_*`, `*_Hn`). Tests UI ciblés verts. | Codex |

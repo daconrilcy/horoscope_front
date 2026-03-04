@@ -228,4 +228,26 @@ describe("NatalInterpretationSection", () => {
     expect(screen.getByText("Votre Thème Test")).toBeInTheDocument();
     expect(screen.getByText("Disclaimer API")).toBeInTheDocument();
   });
+
+  it("affiche les evidences avec une formulation homogène", () => {
+    (useNatalInterpretation as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        ...mockInterpretationData,
+        interpretation: {
+          ...mockInterpretationData.interpretation,
+          evidence: [
+            "ASPECT_JUPITER_MERCURY_SEXTILE",
+            "HOUSE_10_IN_ARIES",
+            "SUN_TAURUS_H10",
+          ],
+        },
+      },
+    });
+
+    renderSection();
+    expect(screen.getByText("Aspect Jupiter - Mercure (sextile)")).toBeInTheDocument();
+    expect(screen.getByText("Maison 10 en Bélier")).toBeInTheDocument();
+    expect(screen.getByText("Soleil Taureau (M10)")).toBeInTheDocument();
+  });
 });

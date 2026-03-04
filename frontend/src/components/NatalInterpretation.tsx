@@ -286,7 +286,6 @@ function AdviceList({ advice }: { advice: string[] }) {
 }
 
 function formatEvidenceId(eid: string): string {
-  const parts = eid.split("_");
   const map: Record<string, string> = {
     SUN: "Soleil", MOON: "Lune", MERCURY: "Mercure", VENUS: "Vénus", MARS: "Mars",
     JUPITER: "Jupiter", SATURN: "Saturne", URANUS: "Uranus", NEPTUNE: "Neptune",
@@ -299,11 +298,51 @@ function formatEvidenceId(eid: string): string {
     RETROGRADE: "rétrograde"
   };
 
-  return parts.map(p => {
-    if (p.startsWith("H") && p.length <= 3) return `(M${p.substring(1)})`;
-    if (p.startsWith("ORB")) return "";
-    return map[p] || p;
-  }).filter(Boolean).join(" ");
+  const label = (token: string): string => map[token] || token;
+  const planetSignHouse = eid.match(/^([A-Z]+)_([A-Z]+)_H(\d{1,2})$/);
+  if (planetSignHouse) {
+    const [, planet, sign, house] = planetSignHouse;
+    return `${label(planet)} ${label(sign)} (M${house})`;
+  }
+
+  const planetSign = eid.match(/^([A-Z]+)_([A-Z]+)$/);
+  if (planetSign) {
+    const [, planet, sign] = planetSign;
+    if (["ASC", "MC", "DSC", "IC"].includes(planet)) {
+      return `${label(planet)} ${label(sign)}`;
+    }
+    if (map[planet] && map[sign]) {
+      return `${label(planet)} ${label(sign)}`;
+    }
+  }
+
+  const houseInSign = eid.match(/^HOUSE_(\d{1,2})_IN_([A-Z]+)$/);
+  if (houseInSign) {
+    const [, house, sign] = houseInSign;
+    return `Maison ${house} en ${label(sign)}`;
+  }
+
+  const aspectPrefixed = eid.match(/^ASPECT_([A-Z]+)_([A-Z]+)_([A-Z]+)$/);
+  if (aspectPrefixed) {
+    const [, a, b, kind] = aspectPrefixed;
+    return `Aspect ${label(a)} - ${label(b)} (${label(kind)})`;
+  }
+
+  const aspectLegacy = eid.match(/^(CONJUNCTION|SEXTILE|SQUARE|TRINE|OPPOSITION)_([A-Z]+)_([A-Z]+)$/);
+  if (aspectLegacy) {
+    const [, kind, a, b] = aspectLegacy;
+    return `Aspect ${label(a)} - ${label(b)} (${label(kind)})`;
+  }
+
+  const parts = eid.split("_");
+  return parts
+    .map((p) => {
+      if (p.startsWith("H") && p.length <= 3) return `(M${p.substring(1)})`;
+      if (p.startsWith("ORB")) return "";
+      return label(p);
+    })
+    .filter(Boolean)
+    .join(" ");
 }
 
 function EvidenceTags({ evidence, title }: { evidence: string[], title: string, t: InterpretationTranslations }) {
