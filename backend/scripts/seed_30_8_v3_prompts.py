@@ -146,27 +146,30 @@ def seed() -> None:
         logger.info("Lint passed for %s", key)
 
         # 3. Vérifier idempotence : si le PUBLISHED existant est déjà identique, skip
-        current_p = db.execute(
+        published_versions = db.execute(
             select(LlmPromptVersionModel).where(
                 LlmPromptVersionModel.use_case_key == key,
                 LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
             )
-        ).scalar_one_or_none()
+        ).scalars().all()
 
-        if (
-            current_p
-            and current_p.developer_prompt == GPT5_V3_CONFIG["developer_prompt"]
-            and current_p.model == GPT5_V3_CONFIG["model"]
-            and current_p.reasoning_effort == GPT5_V3_CONFIG["reasoning_effort"]
-            and current_p.verbosity == GPT5_V3_CONFIG["verbosity"]
-        ):
-            logger.info("Prompt v3 for %s already published and identical. Skipping.", key)
-            return
+        if published_versions:
+            # Check if any published version is already identical
+            for p in published_versions:
+                if (
+                    p.developer_prompt == GPT5_V3_CONFIG["developer_prompt"]
+                    and p.model == GPT5_V3_CONFIG["model"]
+                    and p.reasoning_effort == GPT5_V3_CONFIG["reasoning_effort"]
+                    and p.verbosity == GPT5_V3_CONFIG["verbosity"]
+                ):
+                    logger.info("Prompt v3 for %s already published and identical. Skipping.", key)
+                    return
 
-        # 4. Archiver l'ancienne version PUBLISHED
-        if current_p:
-            current_p.status = PromptStatus.ARCHIVED
-            logger.info("Archived previous prompt version for %s (id=%s)", key, current_p.id)
+        # 4. Archiver TOUTES les anciennes versions PUBLISHED pour ce use case
+        # (Indispensable si contrainte UNIQUE sur use_case_key + status)
+        for p in published_versions:
+            p.status = PromptStatus.ARCHIVED
+            logger.info("Archived previous prompt version for %s (id=%s)", key, p.id)
 
         # 5. Créer et publier la nouvelle version v3
         new_v = LlmPromptVersionModel(

@@ -88,21 +88,57 @@ def _make_birth_profile() -> UserBirthProfileData:
 
 def _make_gateway_result(use_case: str, persona_id: str | None = None) -> GatewayResult:
     """Crée un GatewayResult de test."""
-    structured_output = {
-        "title": "Thème natal test",
-        "summary": "Résumé de test..." * 10,
-        "sections": [
-            {"key": "overall", "heading": "Vue d'ensemble", "content": "Contenu..." * 50},
-            {"key": "career", "heading": "Carrière", "content": "Contenu..." * 50},
-            {"key": "relationships", "heading": "Relations", "content": "Contenu..." * 50},
-            {"key": "inner_life", "heading": "Vie intérieure", "content": "Contenu..." * 50},
-            {"key": "daily_life", "heading": "Vie quotidienne", "content": "Contenu..." * 50},
-        ],
-        "highlights": ["Point 1", "Point 2", "Point 3", "Point 4", "Point 5"],
-        "advice": ["Conseil 1", "Conseil 2", "Conseil 3", "Conseil 4", "Conseil 5"],
-        "evidence": ["SUN_TAURUS", "MOON_SCORPIO"],
-        "disclaimers": ["Mock disclaimer"],
-    }
+    if use_case == "natal_interpretation":
+        # Story 30-8: Premium V3 data
+        structured_output = {
+            "title": "Thème natal test V3",
+            "summary": "Résumé de test long..." * 100,  # > 900 chars
+            "sections": [
+                {
+                    "key": "overall",
+                    "heading": "Vue d'ensemble",
+                    "content": "Contenu très long et dense pour la section overall..." * 50,
+                },
+                {
+                    "key": "career",
+                    "heading": "Carrière",
+                    "content": "Contenu très long et dense pour la section career..." * 50,
+                },
+                {
+                    "key": "relationships",
+                    "heading": "Relations",
+                    "content": "Contenu très long et dense pour la section relationships..." * 50,
+                },
+                {
+                    "key": "inner_life",
+                    "heading": "Vie intérieure",
+                    "content": "Contenu très long et dense pour la section inner_life..." * 50,
+                },
+                {
+                    "key": "daily_life",
+                    "heading": "Vie quotidienne",
+                    "content": "Contenu très long et dense pour la section daily_life..." * 50,
+                },
+            ],
+            "highlights": ["Point 1", "Point 2", "Point 3", "Point 4", "Point 5"],
+            "advice": ["Conseil 1", "Conseil 2", "Conseil 3", "Conseil 4", "Conseil 5"],
+            "evidence": ["SUN_TAURUS", "MOON_SCORPIO"],
+            # NB: AstroResponseV3 DOES NOT have disclaimers
+        }
+    else:
+        # AstroResponseV1
+        structured_output = {
+            "title": "Thème natal test",
+            "summary": "Résumé de test concis.",
+            "sections": [
+                {"key": "overall", "heading": "Vue d'ensemble", "content": "Contenu..."},
+                {"key": "career", "heading": "Carrière", "content": "Contenu..."},
+            ],
+            "highlights": ["Point 1", "Point 2", "Point 3"],
+            "advice": ["Conseil 1", "Conseil 2", "Conseil 3"],
+            "evidence": ["SUN_TAURUS", "MOON_SCORPIO"],
+            "disclaimers": ["Mock disclaimer"],
+        }
     raw_output = json.dumps(structured_output)
     return GatewayResult(
         use_case=use_case,

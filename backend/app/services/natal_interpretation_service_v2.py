@@ -238,14 +238,15 @@ class NatalInterpretationServiceV2:
                         AstroResponseV3 | AstroErrorResponseV3 | AstroResponseV2 | AstroResponseV1
                     ) = AstroResponseV3(**base_output)
                     schema_version = "v3"
-                except Exception:
+                except Exception as exc:
+                    logger.debug(f"AstroResponseV3 deserialization failed: {exc}")
                     try:
                         interpretation = AstroErrorResponseV3(**base_output)
                         schema_version = "v3_error"
-                    except Exception as exc:
+                    except Exception as exc2:
+                        logger.debug(f"AstroErrorResponseV3 deserialization failed: {exc2}")
                         logger.warning(
-                            "V3 deserialization failed (%s), falling back to V2 for request_id=%s",
-                            exc,
+                            "V3 deserialization failed, falling back to V2 for request_id=%s",
                             request_id,
                         )
                         try:
@@ -297,6 +298,17 @@ class NatalInterpretationServiceV2:
         # 7. Persist interpretation
         db_level = InterpretationLevel.SHORT if level == "short" else InterpretationLevel.COMPLETE
 
+        # Story 30-8 T7.4: Ensure persisted payload does NOT contain disclaimers if it's V3
+        # (The gateway structured_output shouldn't have them, but we sanitize to be sure)
+        persist_payload = (
+            gateway_result.structured_output
+            if isinstance(gateway_result.structured_output, dict)
+            else {}
+        )
+        if schema_version.startswith("v3") and "disclaimers" in persist_payload:
+            persist_payload = persist_payload.copy()
+            persist_payload.pop("disclaimers", None)
+
         if force_refresh:
             stmt_del = delete(UserNatalInterpretationModel).where(
                 UserNatalInterpretationModel.user_id == user_id,
@@ -322,7 +334,7 @@ class NatalInterpretationServiceV2:
             prompt_version_id=uuid.UUID(gateway_result.meta.prompt_version_id)
             if gateway_result.meta.prompt_version_id
             else None,
-            interpretation_payload=gateway_result.structured_output,
+            interpretation_payload=persist_payload,
             was_fallback=gateway_result.meta.fallback_triggered,
             degraded_mode=degraded_mode_str,
         )
