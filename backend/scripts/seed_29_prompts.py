@@ -180,14 +180,19 @@ def seed_prompts():
                 current_schema = None
                 if uc.output_schema_id:
                     try:
-                        current_schema = db.get(LlmOutputSchemaModel, uuid.UUID(uc.output_schema_id))
+                        current_schema = db.get(
+                            LlmOutputSchemaModel, uuid.UUID(uc.output_schema_id)
+                        )
                     except (ValueError, TypeError):
                         pass
-                
+
                 if not current_schema or current_schema.version < 3:
                     uc.output_schema_id = str(astro_schema.id)
                 else:
-                    logger.info(f"Schema for {key} is already at version {current_schema.version}. Skipping schema update.")
+                    logger.info(
+                        f"Schema for {key} is already at version {current_schema.version}. "
+                        "Skipping schema update."
+                    )
 
                 uc.persona_strategy = config["persona_strategy"]
                 uc.required_prompt_placeholders = config["required_prompt_placeholders"]
