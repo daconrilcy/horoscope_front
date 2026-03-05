@@ -8,19 +8,107 @@ from __future__ import annotations
 
 _DISCLAIMERS: dict[str, list[str]] = {
     "fr-FR": [
-        "L'astrologie est un outil de réflexion personnelle, pas une science prédictive certifiée."
+        (
+            "Cette interprétation astrologique est un contenu de réflexion personnelle, "
+            "non scientifique et non prédictif."
+        ),
+        (
+            "Ce contenu ne constitue pas un conseil médical, psychologique, juridique, "
+            "fiscal ou financier, et ne remplace pas un professionnel qualifié."
+        ),
+        (
+            "Aucune garantie de résultat n'est fournie ; vos décisions relèvent de votre "
+            "responsabilité et de votre libre arbitre."
+        ),
     ],
     "fr-BE": [
-        "L'astrologie est un outil de réflexion personnelle, pas une science prédictive certifiée."
+        (
+            "Cette interprétation astrologique est un contenu de réflexion personnelle, "
+            "non scientifique et non prédictif."
+        ),
+        (
+            "Ce contenu ne constitue pas un conseil médical, psychologique, juridique, "
+            "fiscal ou financier, et ne remplace pas un professionnel qualifié."
+        ),
+        (
+            "Aucune garantie de résultat n'est fournie ; vos décisions relèvent de votre "
+            "responsabilité et de votre libre arbitre."
+        ),
     ],
     "fr-CH": [
-        "L'astrologie est un outil de réflexion personnelle, pas une science prédictive certifiée."
+        (
+            "Cette interprétation astrologique est un contenu de réflexion personnelle, "
+            "non scientifique et non prédictif."
+        ),
+        (
+            "Ce contenu ne constitue pas un conseil médical, psychologique, juridique, "
+            "fiscal ou financier, et ne remplace pas un professionnel qualifié."
+        ),
+        (
+            "Aucune garantie de résultat n'est fournie ; vos décisions relèvent de votre "
+            "responsabilité et de votre libre arbitre."
+        ),
     ],
-    "en-US": ["Astrology is a tool for personal reflection, not a certified predictive science."],
-    "en-GB": ["Astrology is a tool for personal reflection, not a certified predictive science."],
-    "en-AU": ["Astrology is a tool for personal reflection, not a certified predictive science."],
+    "es-ES": [
+        (
+            "Esta interpretación astrológica es un contenido de reflexión personal, "
+            "no científico y no predictivo."
+        ),
+        (
+            "Este contenido no constituye asesoramiento médico, psicológico, legal, fiscal "
+            "o financiero y no sustituye a un profesional cualificado."
+        ),
+        (
+            "No se ofrece ninguna garantía de resultados; tus decisiones son tu "
+            "responsabilidad y dependen de tu libre albedrío."
+        ),
+    ],
+    "en-US": [
+        (
+            "This astrological interpretation is for personal reflection only and is not "
+            "scientific or predictive."
+        ),
+        (
+            "It does not constitute medical, psychological, legal, tax, or financial "
+            "advice and does not replace a licensed professional."
+        ),
+        "No outcome is guaranteed; your decisions remain your responsibility and free will.",
+    ],
+    "en-GB": [
+        (
+            "This astrological interpretation is for personal reflection only and is not "
+            "scientific or predictive."
+        ),
+        (
+            "It does not constitute medical, psychological, legal, tax, or financial "
+            "advice and does not replace a licensed professional."
+        ),
+        "No outcome is guaranteed; your decisions remain your responsibility and free will.",
+    ],
+    "en-AU": [
+        (
+            "This astrological interpretation is for personal reflection only and is not "
+            "scientific or predictive."
+        ),
+        (
+            "It does not constitute medical, psychological, legal, tax, or financial "
+            "advice and does not replace a licensed professional."
+        ),
+        "No outcome is guaranteed; your decisions remain your responsibility and free will.",
+    ],
     "_default": [
-        "L'astrologie est un outil de réflexion personnelle, pas une science prédictive certifiée."
+        (
+            "Cette interprétation astrologique est un contenu de réflexion personnelle, "
+            "non scientifique et non prédictif."
+        ),
+        (
+            "Ce contenu ne constitue pas un conseil médical, psychologique, juridique, "
+            "fiscal ou financier, et ne remplace pas un professionnel qualifié."
+        ),
+        (
+            "Aucune garantie de résultat n'est fournie ; vos décisions relèvent de votre "
+            "responsabilité et de votre libre arbitre."
+        ),
     ],
 }
 

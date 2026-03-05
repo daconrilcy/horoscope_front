@@ -25,6 +25,7 @@ from app.infra.db.models.llm_observability import LlmCallLogModel, LlmReplaySnap
 from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
+from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
 from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.privacy import UserPrivacyRequestModel
 from app.infra.db.models.reference import (
@@ -75,6 +76,8 @@ __all__ = [
     "LlmOutputSchemaModel",
     "LlmCallLogModel",
     "LlmReplaySnapshotModel",
+    "PdfTemplateModel",
+    "PdfTemplateStatus",
     "PersonaConfigModel",
     "UserPrivacyRequestModel",
     "ReferenceVersionModel",

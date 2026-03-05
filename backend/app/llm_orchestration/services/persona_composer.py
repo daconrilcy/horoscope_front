@@ -14,9 +14,9 @@ TONE_MAPPINGS = {
 }
 
 VERBOSITY_MAPPINGS = {
-    "short": "courte (1-2 paragraphes)",
-    "medium": "modérée (3-5 paragraphes)",
-    "long": "détaillée (plus de 5 paragraphes)",
+    "short": "synthétique",
+    "medium": "équilibrée",
+    "long": "approfondie",
 }
 
 STYLE_MARKER_MAP = {
@@ -78,9 +78,12 @@ def compose_persona_block(persona: LlmPersonaModel) -> str:
         lines.append(f"Style : {', '.join(markers)}.")
 
     # Boundaries
-    if persona.boundaries:
+    boundaries = persona.boundaries
+    if isinstance(boundaries, str):
+        boundaries = [b.strip() for b in boundaries.splitlines() if b.strip()]
+    if boundaries:
         lines.append("Contraintes éditoriales :")
-        for boundary in persona.boundaries:
+        for boundary in boundaries:
             lines.append(f"- {_sanitize_string(boundary)}")
 
     # Topics
@@ -96,7 +99,7 @@ def compose_persona_block(persona: LlmPersonaModel) -> str:
         lines.append(f"Topics exclus (ne jamais aborder) : {', '.join(sanitized_disallowed)}.")
 
     # Formatting
-    f = persona.formatting
+    f = persona.formatting if isinstance(persona.formatting, dict) else {}
     formatting_parts = []
     if f.get("sections"):
         formatting_parts.append("Structure les réponses en sections claires.")

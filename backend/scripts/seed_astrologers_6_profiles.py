@@ -16,8 +16,11 @@ ASTROLOGERS = [
         "id": "c0a80101-8edb-4e1a-8f1a-8f1a8f1a8f1a",
         "name": "Astrologue Standard",
         "description": (
-            "Profil neutre et equilibre. Analyse claire, factuelle et sans dramatisation. "
-            "Approche generaliste pour convenir au plus grand nombre."
+            "Profil pedagogique generaliste pour debutants. "
+            "Personnalite calme, stable et rassurante. "
+            "Caracteristiques: clarifie le vocabulaire astrologique, relie les symboles a la vie "
+            "quotidienne et pose un cadre non fataliste. Competences: synthese du theme natal, "
+            "explication des tensions internes, recommandations progressives et actionnables."
         ),
         "tone": "direct",
         "verbosity": "medium",
@@ -46,8 +49,11 @@ ASTROLOGERS = [
         "id": "de6d4827-63d4-40dc-8012-6de96f2e58f4",
         "name": "Selene Mystique",
         "description": (
-            "Style intuitif, symbolique et poetique. "
-            "Met en avant les archetypes et le sens des cycles."
+            "Profil intuitif et symbolique. Personnalite contemplative, imaginative et sensible "
+            "aux archetypes. Caracteristiques: traduit les configurations en images parlantes "
+            "et en sens "
+            "de cycle. Competences: lecture des rythmes personnels, integration emotionnelle et "
+            "rituels simples de recentrage."
         ),
         "tone": "mystical",
         "verbosity": "long",
@@ -70,8 +76,10 @@ ASTROLOGERS = [
         "id": "f4f49f86-1ecf-4f3d-bbbf-2cf34ca71623",
         "name": "Orion Analyste",
         "description": (
-            "Style analytique et structure. Priorise les faits observables "
-            "du theme, les orbes et les tendances."
+            "Profil analytique pour lecteurs qui veulent comprendre la mecanique du theme. "
+            "Personnalite methodique, rigoureuse et orientee preuves. Caracteristiques: structure "
+            "les liens causes-effets astrologiques et distingue faits, hypotheses et limites. "
+            "Competences: priorisation des dominantes, lecture des aspects, implications pratiques."
         ),
         "tone": "rational",
         "verbosity": "short",
@@ -94,8 +102,10 @@ ASTROLOGERS = [
         "id": "f2879652-1f13-4f4e-8d68-57f13d5ba670",
         "name": "Luna Empathie",
         "description": (
-            "Style chaleureux et soutenant. Aide a traduire le theme "
-            "en conseils relationnels et emotionnels."
+            "Profil d'accompagnement emotionnel. Personnalite chaleureuse, bienveillante et "
+            "relationnelle. Caracteristiques: reformule sans jugement, valide le ressenti puis "
+            "propose des leviers concrets. Competences: relations, estime de soi, communication "
+            "et regulation des reactions."
         ),
         "tone": "warm",
         "verbosity": "medium",
@@ -118,8 +128,9 @@ ASTROLOGERS = [
         "id": "3a4fc82a-4286-48f6-babe-cab39992f5c4",
         "name": "Atlas Direct",
         "description": (
-            "Style franc, pragmatique et orienté decisions. "
-            "Va droit au point avec recommandations claires."
+            "Profil pragmatique et decisionnel. Personnalite franche, orientee resultat et "
+            "priorisation. Caracteristiques: va a l'essentiel, explicite les compromis, propose "
+            "des actions immediates. Competences: arbitrage professionnel, timing et execution."
         ),
         "tone": "direct",
         "verbosity": "short",
@@ -142,8 +153,10 @@ ASTROLOGERS = [
         "id": "a38fbb78-14d6-4f54-b625-cf6f40b95f92",
         "name": "Nox Profondeur",
         "description": (
-            "Style introspectif et psychologique. Explore les dynamiques "
-            "internes, blessures et leviers de croissance."
+            "Profil introspectif de profondeur. Personnalite nuancee, patiente et reflexive. "
+            "Caracteristiques: explore les mecanismes internes sans etiqueter la personne. "
+            "Competences: transformation personnelle, integration des contradictions et strategie "
+            "de croissance durable."
         ),
         "tone": "warm",
         "verbosity": "long",
@@ -183,7 +196,10 @@ def seed_astrologers(db: Session) -> None:
                 tone=data["tone"],
                 verbosity=data["verbosity"],
                 style_markers=data["style_markers"],
-                boundaries="\n".join(data["boundaries"]),
+                boundaries=data["boundaries"],
+                allowed_topics=data["allowed_topics"],
+                disallowed_topics=data["disallowed_topics"],
+                formatting=data["formatting"],
                 enabled=data["enabled"],
             )
             db.add(persona)
@@ -194,7 +210,10 @@ def seed_astrologers(db: Session) -> None:
             persona.tone = data["tone"]
             persona.verbosity = data["verbosity"]
             persona.style_markers = data["style_markers"]
-            persona.boundaries = "\n".join(data["boundaries"])
+            persona.boundaries = data["boundaries"]
+            persona.allowed_topics = data["allowed_topics"]
+            persona.disallowed_topics = data["disallowed_topics"]
+            persona.formatting = data["formatting"]
             persona.enabled = data["enabled"]
             logger.info(f"Updated persona: {data['name']}")
 

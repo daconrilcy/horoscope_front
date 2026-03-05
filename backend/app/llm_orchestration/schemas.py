@@ -16,6 +16,55 @@ _SECTION_KEY_VALUES = (
     "challenges",
     "tarot_spread",
     "event_context",
+    "self_image",
+    "emotions",
+    "mind_communication",
+    "motivations",
+    "stress_patterns",
+    "growth_levers",
+    "patterns",
+    "triggers",
+    "protection_strategies",
+    "integration_path",
+    "repair_plan",
+    "leadership_signature",
+    "motivation_drivers",
+    "team_dynamics",
+    "decision_style",
+    "work_environment",
+    "pitfalls",
+    "practical_playbook",
+    "creative_engine",
+    "inspiration_sources",
+    "blockers",
+    "joy_practices",
+    "romance_vibe",
+    "integration",
+    "needs_in_love",
+    "attraction_style",
+    "conflict_style",
+    "intimacy_boundaries",
+    "relationship_growth",
+    "partner_archetype",
+    "emotional_fit",
+    "communication_fit",
+    "commitment_style",
+    "red_flags",
+    "selection_criteria",
+    "tribe_signature",
+    "collaboration_mode",
+    "social_energy",
+    "recognition_needs",
+    "actions",
+    "values_core",
+    "security_needs",
+    "sharing_boundaries",
+    "decision_hygiene",
+    "practical_rules",
+    "comfort_zone",
+    "growth_direction",
+    "integration_steps",
+    "weekly_practice",
 )
 
 _SECTION_KEYS = Literal[
@@ -28,6 +77,55 @@ _SECTION_KEYS = Literal[
     "challenges",
     "tarot_spread",
     "event_context",
+    "self_image",
+    "emotions",
+    "mind_communication",
+    "motivations",
+    "stress_patterns",
+    "growth_levers",
+    "patterns",
+    "triggers",
+    "protection_strategies",
+    "integration_path",
+    "repair_plan",
+    "leadership_signature",
+    "motivation_drivers",
+    "team_dynamics",
+    "decision_style",
+    "work_environment",
+    "pitfalls",
+    "practical_playbook",
+    "creative_engine",
+    "inspiration_sources",
+    "blockers",
+    "joy_practices",
+    "romance_vibe",
+    "integration",
+    "needs_in_love",
+    "attraction_style",
+    "conflict_style",
+    "intimacy_boundaries",
+    "relationship_growth",
+    "partner_archetype",
+    "emotional_fit",
+    "communication_fit",
+    "commitment_style",
+    "red_flags",
+    "selection_criteria",
+    "tribe_signature",
+    "collaboration_mode",
+    "social_energy",
+    "recognition_needs",
+    "actions",
+    "values_core",
+    "security_needs",
+    "sharing_boundaries",
+    "decision_hygiene",
+    "practical_rules",
+    "comfort_zone",
+    "growth_direction",
+    "integration_steps",
+    "weekly_practice",
 ]
 
 _CHAT_INTENTS = Literal[
@@ -103,7 +201,7 @@ class AstroSectionErrorV3(BaseModel):
 
     key: _SECTION_KEYS
     heading: str = Field(..., min_length=1, max_length=100)
-    content: str = Field(..., min_length=1, max_length=6500)
+    content: str = Field(..., min_length=1, max_length=12000)
 
 
 class AstroResponseV3(BaseModel):
@@ -113,7 +211,7 @@ class AstroResponseV3(BaseModel):
 
     title: str = Field(..., min_length=1, max_length=160)
     summary: str = Field(..., min_length=900, max_length=2800)
-    sections: List[AstroSectionV3] = Field(..., min_length=5, max_length=10)
+    sections: List[AstroSectionV3] = Field(..., min_length=5, max_length=20)
     highlights: List[_HighlightItem] = Field(..., min_length=5, max_length=12)
     advice: List[_AdviceItem] = Field(..., min_length=5, max_length=12)
     evidence: List[_EvidenceItem] = Field(..., max_length=80)

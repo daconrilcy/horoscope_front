@@ -104,7 +104,11 @@ const HOUSES: Record<number, Record<AstrologyLang, string>> = {
   3: { fr: "Maison III — Communication", en: "House III — Communication", es: "Casa III — Comunicación" },
   4: { fr: "Maison IV — Foyer", en: "House IV — Home", es: "Casa IV — Hogar" },
   5: { fr: "Maison V — Créativité", en: "House V — Creativity", es: "Casa V — Creatividad" },
-  6: { fr: "Maison VI — Santé", en: "House VI — Health", es: "Casa VI — Salud" },
+  6: {
+    fr: "Maison VI — Routines / hygiène de vie",
+    en: "House VI — Routines / lifestyle hygiene",
+    es: "Casa VI — Rutinas / higiene de vida",
+  },
   7: { fr: "Maison VII — Relations", en: "House VII — Relationships", es: "Casa VII — Relaciones" },
   8: { fr: "Maison VIII — Transformation", en: "House VIII — Transformation", es: "Casa VIII — Transformación" },
   9: { fr: "Maison IX — Philosophie", en: "House IX — Philosophy", es: "Casa IX — Filosofía" },

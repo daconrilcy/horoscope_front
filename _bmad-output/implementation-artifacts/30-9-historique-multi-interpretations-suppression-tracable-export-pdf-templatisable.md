@@ -75,8 +75,8 @@ so that je pilote mon historique et je peux conserver/partager un rendu propre s
 
 ### Review Follow-ups (AI)
 
-- [ ] [AI-Review][HIGH] Corriger le contrat de parsing front pour `GET /v1/natal/interpretations` et `GET /v1/natal/interpretations/{id}`: le backend renvoie un payload direct tandis que `handleResponse` exige `{ data: ... }`. [frontend/src/api/natalChart.ts:124]
-- [ ] [AI-Review][HIGH] Implémenter un vrai sélecteur de style/template PDF en UI et transmettre `template_key` au téléchargement (aujourd'hui `undefined` hardcodé). [frontend/src/components/NatalInterpretation.tsx:134]
+- [x] [AI-Review][HIGH] Corriger le contrat de parsing front pour `GET /v1/natal/interpretations` et `GET /v1/natal/interpretations/{id}`: le backend renvoie un payload direct tandis que `handleResponse` exige `{ data: ... }`. [frontend/src/api/natalChart.ts:124]
+- [x] [AI-Review][HIGH] Implémenter un vrai sélecteur de style/template PDF en UI et transmettre `template_key` au téléchargement (aujourd'hui `undefined` hardcodé). [frontend/src/components/NatalInterpretation.tsx:134]
 - [ ] [AI-Review][HIGH] Ajouter un switch UI explicite `short | complete` tel que requis par AC1, pas uniquement un état interne. [frontend/src/components/NatalInterpretation.tsx:42]
 - [ ] [AI-Review][HIGH] Compléter le label de version historique avec le `module` (date + persona/module + niveau requis AC1). [frontend/src/components/NatalInterpretation.tsx:291]
 - [ ] [AI-Review][HIGH] Compléter T6.1 avec des tests d'intégration backend pour endpoint PDF user et endpoints admin templates (actuellement absents). [backend/app/tests/integration/test_natal_interpretations_history.py:41]
@@ -183,6 +183,25 @@ GPT-5 Codex
 
 - Story créée avec contexte exhaustif backend/frontend, sécurité, audit et non-régression.
 - Scope découpé pour implémentation incrémentale sans casser le flux 30-8.
+- Correctif UI historique: sélection d'interprétation rendue fiable (clic item + fermeture outside-click), suppression utilisable sur desktop/mobile.
+- Export PDF frontend: ajout d'un mode aperçu dans un nouvel onglet en plus du téléchargement.
+- Sélecteur de template PDF branché sur un endpoint utilisateur listant les templates actifs (`/v1/natal/pdf-templates`), appliqué à l'aperçu et au téléchargement.
+- Export PDF backend enrichi: injection du signe solaire et de l'ascendant depuis `chart_results.result_payload`, avec labels localisés (`fr/en/es`) dans les métadonnées template.
+- Résilience frontend renforcée: fallback téléchargement si popup d'aperçu bloquée et arrêt des retries/refetch agressifs sur `GET /v1/natal/pdf-templates` quand backend renvoie `4xx`.
+- Parcours premium corrigé: si short + complete existent déjà, le bouton d'action ouvre directement le sélecteur d'astrologue (sans régénération intermédiaire du short).
+- Unicité métier renforcée côté service: une seule interprétation `short` par utilisateur, et une seule interprétation `complete` par duo `(utilisateur, astrologue)` avec déduplication défensive des doublons legacy.
+- Export PDF stabilisé en profondeur (itérations 2026-03-05):
+  - pagination explicite au niveau bloc/paragraphe (`section.blocks` + `force_page_break` par bloc),
+  - suppression du double moteur de pagination (section + bloc) pour éviter le mode "1 section/par page",
+  - calibration runtime configurable (`page_budget_lines`, `section_head_extra_lines`, `paragraph_spacing_lines`, `section_tail_spacing_lines`),
+  - mode `sections_start_new_page` en "best effort" avec seuil `sections_start_new_page_min_remaining_lines`,
+  - debug pagination activable (`pagination_debug`) avec marqueurs `rem/cost/pb`,
+  - sanitization renforcée pour supprimer les artefacts JSON résiduels en fin de paragraphes (`\"}]`, `”}],`, `}]`, `]`),
+  - ajustements template/CSS (single `section-content`, marges `h2/section-head`, footer allégé) pour réduire les blancs et rapprocher estimation/rendu réel.
+- Industrialisation templates prod:
+  - ajout des profils `prod_premium` (default) et `prod_compact` en DB,
+  - seed idempotent dédié (`seed_pdf_templates_prod.py`) avec upsert + reset `is_default` limité au scope des clés seedées,
+  - documentation admin enrichie sur le comportement "best effort" de `sections_start_new_page`.
 
 ### Senior Developer Review (AI)
 
@@ -206,9 +225,11 @@ GPT-5 Codex
 - `backend/app/infra/db/models/user_natal_interpretation.py`
 - `backend/app/services/natal_interpretation_service_v2.py`
 - `backend/app/services/natal_pdf_export_service.py`
+- `backend/app/resources/templates/pdf/natal_default.html`
 - `backend/migrations/versions/fd1d41d35808_add_pdf_templates_and_interpretation_.py`
 - `backend/app/tests/integration/test_natal_interpretations_history.py`
 - `backend/app/tests/unit/test_natal_pdf_export_service.py`
+- `backend/scripts/seed_pdf_templates_prod.py`
 - `frontend/src/api/natalChart.ts`
 - `frontend/src/components/NatalInterpretation.tsx`
 - `frontend/src/i18n/natalChart.ts`
@@ -220,3 +241,13 @@ GPT-5 Codex
 
 - 2026-03-04: Revue adversariale 30-9 effectuée, follow-ups AI ajoutés, statut passé à `in-progress`, synchronisation sprint-status demandée.
 - 2026-03-04: Deuxième passe code-review BMAD exécutée en mode continu; nouveaux action items ajoutés (contrat API front/back, UX AC1/AC10, couverture tests, observabilité).
+- 2026-03-04: Correctifs frontend appliqués: parsing liste non encapsulée, fiabilisation menu historique/suppression, ajout bouton `Aperçu PDF` + tests associés.
+- 2026-03-04: Ajout sélecteur template PDF côté Natal Chart + endpoint backend de listing templates actifs + propagation `template_key` sur aperçu/téléchargement.
+- 2026-03-04: Correctif PDF metadata: affichage signe solaire/ascendant dans le template par défaut + extraction robuste (payload natal brut ou chart_json), avec tests unitaires dédiés.
+- 2026-03-04: Correctif UX erreurs console: `useNatalPdfTemplates` ne retry plus les `4xx` et ne refetch plus au focus/reconnect; aperçu PDF fallback auto en téléchargement si popup bloquée.
+- 2026-03-05: Parcours génération revu pour éviter le retour forcé au `short` avant nouvelle version astrologue; bouton `Nouvelle interprétation` ouvre directement le sélecteur quand short+complete existent.
+- 2026-03-05: Règles d'unicité appliquées dans `NatalInterpretationServiceV2` (short unique user, complete unique user+persona) + test unitaire de non-régression cache doublons adapté.
+- 2026-03-05: Refonte pagination PDF en mode bloc/paragraphe + suppression du moteur section-level; stabilisation rendering `xhtml2pdf` (sections multiples/page, anti-coupe paragraphe, anti-sauts intempestifs).
+- 2026-03-05: Ajout d'un système de calibration runtime PDF (budget/spacing/head/footer) avec clés admin normalisées et `sections_start_new_page` conditionné au reste après intro.
+- 2026-03-05: Nettoyage artefacts texte fin de payload (`\"}]`/`”}],`) + amélioration chunking long token sans espaces.
+- 2026-03-05: Seed prod PDF templates ajouté/exécuté (`prod_premium` default, `prod_compact`), idempotent et scope-safe sur reset des defaults.

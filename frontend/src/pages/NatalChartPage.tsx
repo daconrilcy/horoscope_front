@@ -265,7 +265,11 @@ export function NatalChartPage() {
       </article>
 
       <NatalChartGuide lang={lang} missingBirthTime={missingBirthTime} />
-      <NatalInterpretationSection chartLoaded={Boolean(chart)} lang={lang} />
+      <NatalInterpretationSection 
+        chartLoaded={Boolean(chart)} 
+        chartId={chart.chart_id}
+        lang={lang} 
+      />
     </section>
   )
 }

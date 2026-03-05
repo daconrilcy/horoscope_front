@@ -761,7 +761,9 @@ class LLMGateway:
             if not user_data_block:
                 context_with_hint = {
                     **context,
-                    "_chart_json_in_prompt": "chart_json" in config.required_prompt_placeholders,
+                    # Only suppress user-layer chart_json when the prompt template
+                    # actually references {{chart_json}}.
+                    "_chart_json_in_prompt": "{{chart_json}}" in config.developer_prompt,
                 }
                 user_data_block = self.build_user_payload(
                     use_case=use_case,

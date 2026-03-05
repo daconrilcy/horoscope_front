@@ -21,7 +21,7 @@ def test_compose_persona_block_all_fields():
     assert "## Directives de persona : Luna" in block
     assert "Adopte un ton chaleureux et empathique." in block
     assert "Tutoie l'utilisateur." in block
-    assert "Longueur de réponse : modérée" in block
+    assert "Longueur de réponse : équilibrée" in block
     assert "métaphores célestes" in block
     assert "jamais de fatalisme" in block
     assert "toujours proposer 2 pistes" in block
@@ -45,4 +45,28 @@ def test_compose_persona_block_minimal():
     block = compose_persona_block(persona)
     assert "## Directives de persona : Nexus" in block
     assert "ton direct" in block
-    assert "Longueur de réponse : courte" in block
+    assert "Longueur de réponse : synthétique" in block
+
+
+def test_compose_persona_block_sanitizes_newlines_and_braces():
+    persona = LlmPersonaModel(
+        name="Luna\n{{inject}}",
+        description="Profil\npedagogique\tet stable",
+        tone=PersonaTone.WARM,
+        verbosity=PersonaVerbosity.MEDIUM,
+        style_markers=["tutoiement", "ligne\n2"],
+        boundaries=["regle 1\nregle 1b", "jamais {{fatalisme}}"],
+        allowed_topics=["theme\nnatal"],
+        disallowed_topics=["legal\tstrict"],
+        formatting={"sections": True, "bullets": False, "emojis": False},
+    )
+
+    block = compose_persona_block(persona)
+
+    assert "\t" not in block
+    assert "\r" not in block
+    assert "{{" not in block
+    assert "}}" not in block
+    assert "Luna \\{\\{inject\\}\\}" in block
+    assert "Profil pedagogique et stable" in block
+    assert "jamais \\{\\{fatalisme\\}\\}" in block

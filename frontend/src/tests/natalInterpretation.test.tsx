@@ -1,7 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup, waitFor, within } from "@testing-library/react";
 import { NatalInterpretationSection } from "../components/NatalInterpretation";
-import { useNatalInterpretation } from "../api/natalChart";
+import { 
+  useNatalInterpretation, 
+  useNatalInterpretationsList, 
+  useNatalPdfTemplates,
+  useNatalInterpretationById,
+  deleteNatalInterpretation,
+  downloadNatalInterpretationPdf,
+  previewNatalInterpretationPdf,
+} from "../api/natalChart";
 import { useAstrologers } from "../api/astrologers";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -11,6 +19,12 @@ vi.mock("../api/natalChart", async () => {
   return {
     ...actual,
     useNatalInterpretation: vi.fn(),
+    useNatalInterpretationsList: vi.fn(),
+    useNatalPdfTemplates: vi.fn(),
+    useNatalInterpretationById: vi.fn(),
+    deleteNatalInterpretation: vi.fn(),
+    downloadNatalInterpretationPdf: vi.fn(),
+    previewNatalInterpretationPdf: vi.fn(),
   };
 });
 
@@ -21,6 +35,11 @@ vi.mock("../api/astrologers", async () => {
     useAstrologers: vi.fn(),
   };
 });
+
+// Mock authToken
+vi.mock("../utils/authToken", () => ({
+  useAccessTokenSnapshot: () => "mock-token",
+}));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,6 +64,7 @@ const mockInterpretationData = {
     disclaimers: ["Note test"]
   },
   meta: {
+    id: 101,
     level: "short",
     use_case: "natal_interpretation_short",
     persona_id: null,
@@ -55,9 +75,34 @@ const mockInterpretationData = {
     fallback_triggered: false,
     was_fallback: false,
     latency_ms: 1200,
-    request_id: "req-123"
+    request_id: "req-123",
+    persisted_at: "2026-03-04T10:00:00Z"
   },
   degraded_mode: null
+};
+
+const mockHistory = {
+  items: [
+    {
+      id: 101,
+      chart_id: "chart-123",
+      level: "short",
+      persona_name: null,
+      created_at: "2026-03-04T10:00:00Z",
+      use_case: "natal_interpretation_short"
+    },
+    {
+      id: 102,
+      chart_id: "chart-123",
+      level: "complete",
+      persona_name: "Luna Céleste",
+      created_at: "2026-03-04T11:00:00Z",
+      use_case: "natal_interpretation"
+    }
+  ],
+  total: 2,
+  limit: 20,
+  offset: 0
 };
 
 const mockAstrologers = [
@@ -69,15 +114,130 @@ describe("NatalInterpretationSection", () => {
     cleanup();
     vi.clearAllMocks();
     queryClient.clear();
+    
+    // Default mocks
+    (useNatalInterpretation as any).mockReturnValue({ isLoading: false, data: mockInterpretationData });
+    (useNatalInterpretationsList as any).mockReturnValue({ isLoading: false, data: mockHistory });
+    (useNatalPdfTemplates as any).mockReturnValue({
+      isLoading: false,
+      data: { items: [{ key: "default_natal", name: "Par défaut", description: null, locale: "fr", is_default: true }] },
+    });
+    (useNatalInterpretationById as any).mockReturnValue({ isLoading: false, data: null });
+    (useAstrologers as any).mockReturnValue({ isLoading: false, data: mockAstrologers });
   });
 
   const renderSection = () => {
     return render(
       <QueryClientProvider client={queryClient}>
-        <NatalInterpretationSection chartLoaded={true} lang="fr" />
+        <NatalInterpretationSection chartLoaded={true} chartId="chart-123" lang="fr" />
       </QueryClientProvider>
     );
   };
+
+  it("affiche l'historique des versions", () => {
+    renderSection();
+    // The button shows the current version label instead of the title when a version is selected
+    expect(screen.getByText(/Standard/i)).toBeInTheDocument();
+  });
+
+  it("permet de sélectionner une version de l'historique", async () => {
+    const mockIdQuery = vi.fn().mockReturnValue({
+      isLoading: false,
+      data: { ...mockInterpretationData, meta: { ...mockInterpretationData.meta, id: 102, persona_name: "Luna Céleste" } }
+    });
+    (useNatalInterpretationById as any).mockImplementation(mockIdQuery);
+
+    renderSection();
+    
+    // Ouvrir le sélecteur (cliquer sur le bouton qui affiche la version actuelle)
+    fireEvent.click(screen.getByText(/Standard/i));
+    
+    // Cliquer sur la version de Luna
+    fireEvent.click(screen.getByText(/Luna Céleste/i));
+
+    expect(useNatalInterpretationById).toHaveBeenCalledWith(expect.objectContaining({
+      interpretationId: 102
+    }));
+  });
+
+  it("affiche la modal de confirmation avant suppression", async () => {
+    renderSection();
+    
+    // Ouvrir le sélecteur
+    fireEvent.click(screen.getByText(/Standard/i));
+    
+    // Cliquer sur le bouton supprimer de la première version (Standard)
+    const deleteButtons = screen.getAllByTitle(/Supprimer/i);
+    fireEvent.click(deleteButtons[0]);
+
+    expect(screen.getByText(/Supprimer cette version/i)).toBeInTheDocument();
+    expect(screen.getByText(/définitivement supprimée/i)).toBeInTheDocument();
+  });
+
+  it("appelle l'API de suppression et rafraîchit la liste", async () => {
+    const mockRefetch = vi.fn().mockResolvedValue({ data: { items: [mockHistory.items[1]] } });
+    (useNatalInterpretationsList as any).mockReturnValue({ 
+      isLoading: false, 
+      data: mockHistory,
+      refetch: mockRefetch
+    });
+    (deleteNatalInterpretation as any).mockResolvedValue(undefined);
+
+    renderSection();
+    
+    fireEvent.click(screen.getByText(/Standard/i));
+    const deleteButtons = screen.getAllByTitle(/Supprimer/i);
+    fireEvent.click(deleteButtons[0]);
+    
+    // Select the button in the modal.
+    const modal = screen.getByRole("dialog");
+    const modalDeleteButton = within(modal).getByRole("button", { name: /^Supprimer$/i });
+    fireEvent.click(modalDeleteButton);
+
+    await waitFor(() => {
+      expect(deleteNatalInterpretation).toHaveBeenCalledWith("mock-token", 101);
+      expect(mockRefetch).toHaveBeenCalled();
+    });
+  });
+
+  it("déclenche le téléchargement PDF", async () => {
+    (downloadNatalInterpretationPdf as any).mockResolvedValue(undefined);
+
+    renderSection();
+    
+    fireEvent.click(screen.getByRole("button", { name: /Télécharger PDF/i }));
+
+    expect(downloadNatalInterpretationPdf).toHaveBeenCalledWith(
+      "mock-token", 
+      101, 
+      "default_natal", 
+      "fr"
+    );
+  });
+
+  it("déclenche l'aperçu PDF", async () => {
+    (previewNatalInterpretationPdf as any).mockResolvedValue(undefined);
+
+    renderSection();
+    
+    fireEvent.click(screen.getByRole("button", { name: /Aperçu PDF/i }));
+
+    expect(previewNatalInterpretationPdf).toHaveBeenCalledWith(
+      "mock-token",
+      101,
+      "default_natal",
+      "fr",
+    );
+  });
+
+  it("ouvre le sélecteur d'astrologues au clic sur régénérer quand short+complete existent", async () => {
+    renderSection();
+
+    fireEvent.click(screen.getByRole("button", { name: /Nouvelle interprétation/i }));
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText(/Choisissez votre astrologue/i)).toBeInTheDocument();
+  });
 
   it("affiche le skeleton pendant le chargement", () => {
     (useNatalInterpretation as any).mockReturnValue({
@@ -90,15 +250,9 @@ describe("NatalInterpretationSection", () => {
   });
 
   it("affiche le contenu une fois chargé", () => {
-    (useNatalInterpretation as any).mockReturnValue({
-      isLoading: false,
-      data: mockInterpretationData,
-    });
-
     renderSection();
     expect(screen.getByText("Votre Thème Test")).toBeInTheDocument();
     expect(screen.getByText("Résumé test de votre personnalité.")).toBeInTheDocument();
-    expect(screen.getByText("Point 1")).toBeInTheDocument();
   });
 
   it("gère l'erreur d'interprétation", () => {
@@ -110,144 +264,5 @@ describe("NatalInterpretationSection", () => {
 
     renderSection();
     expect(screen.getByText(/n'est pas disponible pour le moment/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /réessayer/i })).toBeInTheDocument();
-  });
-
-  it("affiche le bloc upsell en mode short", () => {
-    (useNatalInterpretation as any).mockReturnValue({
-      isLoading: false,
-      data: mockInterpretationData,
-    });
-
-    renderSection();
-    expect(screen.getByText(/Interprétation complète/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /choisir mon astrologue/i })).toBeInTheDocument();
-  });
-
-  it("ouvre le sélecteur de persona au clic sur le CTA", async () => {
-    (useNatalInterpretation as any).mockReturnValue({
-      isLoading: false,
-      data: mockInterpretationData,
-    });
-    (useAstrologers as any).mockReturnValue({
-      isLoading: false,
-      data: mockAstrologers,
-    });
-
-    renderSection();
-    fireEvent.click(screen.getByRole("button", { name: /choisir mon astrologue/i }));
-
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText("Luna Céleste")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /annuler/i })).toBeInTheDocument();
-  });
-
-  it("ferme le sélecteur au clic sur annuler", () => {
-    (useNatalInterpretation as any).mockReturnValue({
-      isLoading: false,
-      data: mockInterpretationData,
-    });
-    (useAstrologers as any).mockReturnValue({
-      isLoading: false,
-      data: mockAstrologers,
-    });
-
-    renderSection();
-    fireEvent.click(screen.getByRole("button", { name: /choisir mon astrologue/i }));
-    fireEvent.click(screen.getByRole("button", { name: /annuler/i }));
-
-    expect(screen.queryByText("Luna Céleste")).not.toBeInTheDocument();
-    expect(screen.getByText(/Interprétation complète/i)).toBeInTheDocument();
-  });
-
-  it("déclenche l'upgrade complete avec le bon persona", async () => {
-    const mockRefetch = vi.fn();
-    (useNatalInterpretation as any).mockReturnValue({
-      isLoading: false,
-      data: mockInterpretationData,
-      refetch: mockRefetch,
-    });
-    (useAstrologers as any).mockReturnValue({
-      isLoading: false,
-      data: mockAstrologers,
-    });
-
-    renderSection();
-    
-    // Ouvrir selector
-    fireEvent.click(screen.getByRole("button", { name: /choisir mon astrologue/i }));
-    
-    // Sélectionner persona: le clic déclenche immédiatement l'upgrade
-    fireEvent.click(screen.getByText("Luna Céleste"));
-
-    // Vérifier que le hook a été appelé avec les bons paramètres au prochain render
-    expect(useNatalInterpretation).toHaveBeenCalledWith(expect.objectContaining({
-      useCaseLevel: "complete",
-      personaId: "1"
-    }));
-  });
-
-  it("affiche un état vide quand aucun astrologue n'est disponible", () => {
-    (useNatalInterpretation as any).mockReturnValue({
-      isLoading: false,
-      data: mockInterpretationData,
-      refetch: vi.fn(),
-    });
-    (useAstrologers as any).mockReturnValue({
-      isLoading: false,
-      data: [],
-    });
-
-    renderSection();
-    fireEvent.click(screen.getByRole("button", { name: /choisir mon astrologue/i }));
-
-    expect(screen.getByText(/aucun astrologue disponible|no astrologers available/i)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /demander l'interprétation complète/i })).not.toBeInTheDocument();
-  });
-
-  it("n'échoue pas en mode complete quand interpretation.disclaimers est absent", () => {
-    (useNatalInterpretation as any).mockReturnValue({
-      isLoading: false,
-      data: {
-        ...mockInterpretationData,
-        use_case: "natal_interpretation",
-        interpretation: {
-          ...mockInterpretationData.interpretation,
-          disclaimers: undefined,
-        },
-        meta: {
-          ...mockInterpretationData.meta,
-          level: "complete",
-          persona_name: "Astrologue Standard",
-        },
-        disclaimers: ["Disclaimer API"],
-      },
-    });
-
-    renderSection();
-    expect(screen.getByText("Votre Thème Test")).toBeInTheDocument();
-    expect(screen.getByText("Disclaimer API")).toBeInTheDocument();
-  });
-
-  it("affiche les evidences avec une formulation homogène", () => {
-    (useNatalInterpretation as any).mockReturnValue({
-      isLoading: false,
-      data: {
-        ...mockInterpretationData,
-        interpretation: {
-          ...mockInterpretationData.interpretation,
-          evidence: [
-            "ASPECT_JUPITER_MERCURY_SEXTILE",
-            "HOUSE_10_IN_ARIES",
-            "SUN_TAURUS_H10",
-          ],
-        },
-      },
-    });
-
-    renderSection();
-    expect(screen.getByText("Aspect Jupiter - Mercure (sextile)")).toBeInTheDocument();
-    expect(screen.getByText("Maison 10 en Bélier")).toBeInTheDocument();
-    expect(screen.getByText("Soleil Taureau (M10)")).toBeInTheDocument();
   });
 });

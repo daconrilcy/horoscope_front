@@ -86,6 +86,11 @@ class TestAstroSectionV3:
         with pytest.raises(ValidationError):
             AstroSectionV3(**data)
 
+    def test_thematic_module_key_accepted(self):
+        data = dict(_VALID_SECTION, key="leadership_signature")
+        s = AstroSectionV3(**data)
+        assert s.key == "leadership_signature"
+
 
 # ---------------------------------------------------------------------------
 # AstroResponseV3

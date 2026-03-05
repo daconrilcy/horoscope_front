@@ -1,75 +1,274 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { 
   useNatalInterpretation, 
+  useNatalInterpretationsList,
+  useNatalPdfTemplates,
+  useNatalInterpretationById,
+  deleteNatalInterpretation,
+  downloadNatalInterpretationPdf,
+  previewNatalInterpretationPdf,
   type NatalInterpretationResult, 
-  type AstroSection 
+  type AstroSection,
+  type NatalInterpretationListItem
 } from "../api/natalChart";
 import { useAstrologers, type Astrologer } from "../api/astrologers";
 import { AstrologerGrid } from "../features/astrologers";
 import { natalChartTranslations } from "../i18n/natalChart";
 import { type AstrologyLang } from "../i18n/astrology";
-import { ChevronDown, ChevronUp, Lock, RefreshCw, Star, AlertCircle } from "lucide-react";
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  Lock, 
+  RefreshCw, 
+  Star, 
+  AlertCircle, 
+  Trash2, 
+  History,
+  Download,
+  Eye
+} from "lucide-react";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { useAccessTokenSnapshot } from "../utils/authToken";
 
 interface Props {
   chartLoaded: boolean;
+  chartId?: string;
   lang: AstrologyLang;
 }
 
 type InterpretationTranslations = typeof natalChartTranslations['fr']['interpretation'];
 
-export function NatalInterpretationSection({ chartLoaded, lang }: Props) {
+export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props) {
   const t = natalChartTranslations[lang].interpretation;
+  const accessToken = useAccessTokenSnapshot();
+  
   const [useCaseLevel, setUseCaseLevel] = useState<"short" | "complete">("short");
   const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null);
   const [isUpsellOpen, setIsUpsellOpen] = useState(false);
   const [forceRefresh, setForceRefresh] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  
+  // New state for history
+  const [selectedInterpretationId, setSelectedInterpretationId] = useState<number | null>(null);
+  const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const { data, isLoading, error, refetch } = useNatalInterpretation({
+  // 1. Fetch versions list
+  const historyQuery = useNatalInterpretationsList({
+    enabled: chartLoaded && !!chartId,
+    chartId,
+  });
+  const pdfTemplatesQuery = useNatalPdfTemplates({
     enabled: chartLoaded,
+    locale: lang === "fr" ? "fr" : lang,
+  });
+
+  // 2. Main interpretation query (POST) - used for auto-load/generate
+  const mainQuery = useNatalInterpretation({
+    enabled: chartLoaded && !selectedInterpretationId,
     useCaseLevel,
     personaId: selectedPersonaId,
     locale: lang === "fr" ? "fr-FR" : lang === "en" ? "en-US" : "es-ES",
     forceRefresh,
+    refreshKey,
   });
+
+  // 3. Specific interpretation query (GET by ID) - used when selecting from history
+  const idQuery = useNatalInterpretationById({
+    enabled: !!selectedInterpretationId,
+    interpretationId: selectedInterpretationId ?? undefined,
+    locale: lang === "fr" ? "fr-FR" : lang === "en" ? "en-US" : "es-ES",
+  });
+
+  // Determine which data to show
+  const activeQuery = selectedInterpretationId ? idQuery : mainQuery;
+  const { data, isLoading, error, refetch } = activeQuery;
+
+  useEffect(() => {
+    if (selectedTemplateKey) return;
+    const defaultTemplate = pdfTemplatesQuery.data?.items.find((item) => item.is_default);
+    if (defaultTemplate) {
+      setSelectedTemplateKey(defaultTemplate.key);
+    }
+  }, [pdfTemplatesQuery.data, selectedTemplateKey]);
 
   const handleUpgrade = (personaId: string) => {
     setSelectedPersonaId(personaId);
     setUseCaseLevel("complete");
     setIsUpsellOpen(false);
-    setForceRefresh(false); // Reset force refresh when upgrading
+    setSelectedInterpretationId(null); // Clear selected ID to trigger new generation
+    setForceRefresh(false);
+    setRefreshKey(0);
   };
 
   const handleRegenerate = () => {
+    const historyItems = historyQuery.data?.items ?? [];
+    const hasShortInterpretation = historyItems.some((item) => item.level === "short");
+    const hasCompleteInterpretation = historyItems.some((item) => item.level === "complete");
+    if (hasShortInterpretation && hasCompleteInterpretation) {
+      setSelectedInterpretationId(null);
+      setForceRefresh(false);
+      setIsUpsellOpen(true);
+      return;
+    }
+    setSelectedInterpretationId(null);
     setForceRefresh(true);
-    // refetch is handled by queryKey change due to forceRefresh in queryKey
+    setRefreshKey((previous) => previous + 1);
+  };
+
+  const handleSelectVersion = (id: number | null) => {
+    setSelectedInterpretationId(id);
+    if (id === null) {
+      // Reset to default latest behavior
+      setUseCaseLevel("short");
+      setSelectedPersonaId(null);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!accessToken) return;
+    setIsDeleting(true);
+    try {
+      await deleteNatalInterpretation(accessToken, id);
+      const updatedHistory = await historyQuery.refetch();
+      
+      if (selectedInterpretationId === id) {
+        // Find next available version if any
+        const remaining = updatedHistory.data?.items || [];
+        if (remaining.length > 0) {
+          setSelectedInterpretationId(remaining[0].id);
+        } else {
+          setSelectedInterpretationId(null);
+        }
+      }
+      setShowDeleteConfirm(null);
+    } catch (err) {
+      console.error("Failed to delete interpretation", err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const currentInterpretationId =
+    selectedInterpretationId ??
+    data?.meta.id ??
+    historyQuery.data?.items.find((i) => i.created_at === data?.meta.persisted_at)?.id ??
+    historyQuery.data?.items[0]?.id;
+  const usedPersonaIds = new Set(
+    (historyQuery.data?.items ?? [])
+      .filter((item) => item.level === "complete" && Boolean(item.persona_id))
+      .map((item) => item.persona_id as string),
+  );
+
+  const handlePreviewPdf = async () => {
+    if (!accessToken || !currentInterpretationId) return;
+    try {
+      await previewNatalInterpretationPdf(
+        accessToken,
+        currentInterpretationId,
+        selectedTemplateKey || undefined,
+        lang === "fr" ? "fr" : lang,
+      );
+    } catch (err) {
+      console.error("Failed to preview PDF", err);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    
+    if (!accessToken || !currentInterpretationId) return;
+    try {
+      await downloadNatalInterpretationPdf(
+        accessToken,
+        currentInterpretationId,
+        selectedTemplateKey || undefined,
+        lang === "fr" ? "fr" : lang,
+      );
+    } catch (err) {
+      console.error("Failed to download PDF", err);
+    }
   };
 
   if (!chartLoaded) return null;
 
   return (
     <section className="mt-8 border-t pt-8 border-gray-200 dark:border-gray-800">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
         <div className="flex flex-col">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white uppercase tracking-wide">
             {t.title}
           </h2>
           {data?.meta.persisted_at && (
             <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
-              Généré le {new Date(data.meta.persisted_at).toLocaleDateString(lang)}
+              Généré le {new Date(data.meta.persisted_at).toLocaleDateString(lang, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          {useCaseLevel === "short" && data && !isLoading && (
-            <button 
-              onClick={handleRegenerate}
-              title={t.regenerate}
-              className="p-2 text-gray-400 hover:text-purple-500 transition-colors rounded-full hover:bg-purple-50 dark:hover:bg-purple-900/20"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
+        
+        <div className="flex flex-wrap items-center gap-2">
+          {/* History Selector */}
+          {historyQuery.data && historyQuery.data.items.length > 0 && (
+            <VersionSelector 
+              items={historyQuery.data.items} 
+              selectedId={selectedInterpretationId || (historyQuery.data.items.find(i => i.created_at === data?.meta.persisted_at)?.id ?? null)}
+              onSelect={handleSelectVersion}
+              onDeleteRequest={(id) => setShowDeleteConfirm(id)}
+              t={t}
+              lang={lang}
+            />
           )}
+
+          {data && !isLoading && (
+            <>
+              <label className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-full dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700">
+                <span>{t.templateLabel}</span>
+                <select
+                  className="bg-transparent border-none focus:outline-none text-xs"
+                  value={selectedTemplateKey}
+                  onChange={(event) => setSelectedTemplateKey(event.target.value)}
+                  aria-label={t.templateLabel}
+                >
+                  {pdfTemplatesQuery.data?.items.map((template) => (
+                    <option key={template.key} value={template.key}>
+                      {template.name}
+                    </option>
+                  ))}
+                  {!pdfTemplatesQuery.data?.items.length && (
+                    <option value="default_natal">default_natal</option>
+                  )}
+                </select>
+              </label>
+
+              <button 
+                onClick={handlePreviewPdf}
+                title={t.previewPdf}
+                className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-full hover:bg-slate-100 transition-colors dark:bg-slate-900/20 dark:text-slate-300 dark:border-slate-700"
+              >
+                <Eye className="w-4 h-4" />
+                <span className="hidden sm:inline">{t.previewPdf}</span>
+              </button>
+
+              <button 
+                onClick={handleDownloadPdf}
+                title={t.downloadPdf}
+                className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-full hover:bg-blue-100 transition-colors dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">{t.downloadPdf}</span>
+              </button>
+
+              <button 
+                onClick={handleRegenerate}
+                title={t.regenerate}
+                className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-full hover:bg-purple-100 transition-colors dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span className="hidden sm:inline">{t.regenerate}</span>
+              </button>
+            </>
+          )}
+          
           {data?.meta.level === "complete" && (
             <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-purple-900 dark:text-purple-300 border border-purple-400">
               {t.completeBadge}
@@ -87,7 +286,7 @@ export function NatalInterpretationSection({ chartLoaded, lang }: Props) {
           <>
             <InterpretationContent data={data} lang={lang} />
             
-            {useCaseLevel === "short" && !isUpsellOpen && (
+            {useCaseLevel === "short" && !isUpsellOpen && !selectedInterpretationId && (
               <UpsellBlock t={t} onOpenSelector={() => setIsUpsellOpen(true)} />
             )}
 
@@ -97,12 +296,161 @@ export function NatalInterpretationSection({ chartLoaded, lang }: Props) {
                 onConfirm={handleUpgrade} 
                 onCancel={() => setIsUpsellOpen(false)} 
                 isSubmitting={isLoading && useCaseLevel === "complete"}
+                excludedPersonaIds={usedPersonaIds}
               />
             )}
           </>
         ) : null}
       </ErrorBoundary>
+
+      {showDeleteConfirm && (
+        <ConfirmDeleteModal 
+          t={t} 
+          onConfirm={() => handleDelete(showDeleteConfirm)} 
+          onCancel={() => setShowDeleteConfirm(null)}
+          isDeleting={isDeleting}
+        />
+      )}
     </section>
+  );
+}
+
+function VersionSelector({ 
+  items, 
+  selectedId, 
+  onSelect, 
+  onDeleteRequest,
+  t,
+  lang 
+}: { 
+  items: NatalInterpretationListItem[], 
+  selectedId: number | null, 
+  onSelect: (id: number | null) => void,
+  onDeleteRequest: (id: number) => void,
+  t: InterpretationTranslations,
+  lang: string
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const selectedItem = items.find(i => i.id === selectedId);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (containerRef.current && !containerRef.current.contains(target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 shadow-sm"
+      >
+        <History className="w-4 h-4 text-purple-500" />
+        <span>
+          {selectedItem 
+            ? `${new Date(selectedItem.created_at).toLocaleDateString(lang)} - ${selectedItem.persona_name || 'Standard'}` 
+            : t.historyTitle}
+        </span>
+        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+          <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-40 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+            <div className="p-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {t.historyTitle}
+              </span>
+            </div>
+            <div className="max-h-64 overflow-y-auto">
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className={`group flex items-center justify-between p-3 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors ${selectedId === item.id ? 'bg-purple-50/50 dark:bg-purple-900/10' : ''}`}
+                >
+                  <button
+                    type="button"
+                    className="flex flex-col min-w-0 text-left flex-1"
+                    onClick={() => {
+                      onSelect(item.id);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <span className={`text-xs font-medium truncate ${selectedId === item.id ? 'text-purple-700 dark:text-purple-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                      {item.persona_name || 'Standard'}
+                    </span>
+                    <span className="text-[10px] text-gray-500 dark:text-gray-500">
+                      {new Date(item.created_at).toLocaleString(lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} · {item.level === 'complete' ? t.completeBadge : 'Short'}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onDeleteRequest(item.id); }}
+                    className="opacity-70 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-500 transition-all rounded-md hover:bg-red-50 dark:hover:bg-red-900/30"
+                    title={t.deleteCta}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+      )}
+    </div>
+  );
+}
+
+function ConfirmDeleteModal({ t, onConfirm, onCancel, isDeleting }: { t: InterpretationTranslations, onConfirm: () => void, onCancel: () => void, isDeleting: boolean }) {
+  return (
+    <div 
+      className="modal-overlay" 
+      onClick={onCancel}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-confirm-title"
+    >
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+        <div className="flex items-center gap-3 text-red-600 mb-4">
+          <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <h4 className="text-lg font-bold m-0" id="delete-confirm-title">{t.deleteConfirm}</h4>
+        </div>
+        <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
+          {t.deleteConfirmSub}
+        </p>
+        <div className="flex justify-end gap-3">
+          <button 
+            onClick={onCancel}
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            disabled={isDeleting}
+          >
+            {t.cancel}
+          </button>
+          <button 
+            onClick={onConfirm}
+            className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-2"
+            disabled={isDeleting}
+          >
+            {isDeleting && <RefreshCw className="w-3 h-3 animate-spin" />}
+            {t.deleteCta}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -194,14 +542,23 @@ function InterpretationContent({ data, lang }: { data: NatalInterpretationResult
         <AdviceList advice={advice} />
       </div>
 
-      {disclaimers.length > 0 && (
-        <div className="text-xs text-gray-400 dark:text-gray-500 italic space-y-1">
-          <p className="font-bold uppercase tracking-tight">{t.disclaimerTitle}</p>
-          {disclaimers.map((d, i) => <p key={i}>{d}</p>)}
-        </div>
-      )}
-
       <EvidenceTags evidence={evidence} title={t.evidenceTitle} t={t} />
+
+      {disclaimers.length > 0 && (
+        <footer className="mt-2 border-t border-gray-200 dark:border-gray-800 pt-4">
+          <div className="rounded-xl bg-amber-50/70 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4">
+            <p className="font-bold uppercase tracking-tight text-[11px] text-amber-900 dark:text-amber-300 mb-2 flex items-center gap-2">
+              <AlertCircle className="w-3.5 h-3.5" />
+              {t.disclaimerTitle}
+            </p>
+            <div className="space-y-2 text-xs text-amber-900/90 dark:text-amber-200/90">
+              {disclaimers.map((d, i) => (
+                <p key={i}>{d}</p>
+              ))}
+            </div>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
@@ -345,25 +702,147 @@ function formatEvidenceId(eid: string): string {
     .join(" ");
 }
 
-function EvidenceTags({ evidence, title }: { evidence: string[], title: string, t: InterpretationTranslations }) {
-  return (
-    <div className="evidence-tags">
-      <p className="evidence-tags__title">{title}</p>
-      <div className="evidence-tags__list">
-        {evidence.map((e, i) => {
-          const humanText = formatEvidenceId(e);
-          const isAspect = e.startsWith("ASPECT_");
-          const isAngle = ["ASC", "MC", "DSC", "IC"].some(a => e.includes(a));
-          const modifier = isAspect ? "aspect" : isAngle ? "angle" : "planet";
+type EvidenceCategoryKey =
+  | "angles"
+  | "personal_planets"
+  | "slow_planets"
+  | "dominant_houses"
+  | "major_aspects"
+  | "other"
 
-          return (
-            <span key={i} title={e} className={`evidence-pill evidence-pill--${modifier}`}>
-              <span className="evidence-pill__dot" />
-              {humanText}
-            </span>
-          );
-        })}
-      </div>
+function _categorizeEvidence(eid: string): EvidenceCategoryKey {
+  if (
+    eid.startsWith("ASPECT_") ||
+    /^(CONJUNCTION|SEXTILE|SQUARE|TRINE|OPPOSITION)_/.test(eid)
+  ) {
+    return "major_aspects";
+  }
+  if (/^(ASC|MC|DSC|IC)_/.test(eid) || /(ASC|MC|DSC|IC)/.test(eid)) {
+    return "angles";
+  }
+  if (/^HOUSE_\d{1,2}_IN_/.test(eid) || /_H\d{1,2}$/.test(eid)) {
+    return "dominant_houses";
+  }
+  if (/^(SUN|MOON|MERCURY|VENUS|MARS)(_|$)/.test(eid)) {
+    return "personal_planets";
+  }
+  if (/^(JUPITER|SATURN|URANUS|NEPTUNE|PLUTO)(_|$)/.test(eid)) {
+    return "slow_planets";
+  }
+  return "other";
+}
+
+function EvidenceTags({
+  evidence,
+  title,
+  t,
+}: {
+  evidence: string[]
+  title: string
+  t: InterpretationTranslations
+}) {
+  const [open, setOpen] = useState(false);
+  const categoryLabels: Record<EvidenceCategoryKey, string> = {
+    angles: t.evidenceCategories.angles,
+    personal_planets: t.evidenceCategories.personalPlanets,
+    slow_planets: t.evidenceCategories.slowPlanets,
+    dominant_houses: t.evidenceCategories.dominantHouses,
+    major_aspects: t.evidenceCategories.majorAspects,
+    other: t.evidenceCategories.other,
+  };
+
+  const deduped = Array.from(
+    new Map(
+      evidence.map((eid) => {
+        const humanText = formatEvidenceId(eid);
+        return [humanText.toLowerCase(), { eid, humanText }];
+      }),
+    ).values(),
+  );
+
+  const grouped = deduped.reduce(
+    (acc, item) => {
+      const key = _categorizeEvidence(item.eid);
+      acc[key].push(item);
+      return acc;
+    },
+    {
+      angles: [] as Array<{ eid: string; humanText: string }>,
+      personal_planets: [] as Array<{ eid: string; humanText: string }>,
+      slow_planets: [] as Array<{ eid: string; humanText: string }>,
+      dominant_houses: [] as Array<{ eid: string; humanText: string }>,
+      major_aspects: [] as Array<{ eid: string; humanText: string }>,
+      other: [] as Array<{ eid: string; humanText: string }>,
+    },
+  );
+
+  const orderedKeys: EvidenceCategoryKey[] = [
+    "angles",
+    "personal_planets",
+    "slow_planets",
+    "dominant_houses",
+    "major_aspects",
+    "other",
+  ];
+
+  const totalCount = deduped.length;
+
+  return (
+    <div className="evidence-tags border border-gray-200 dark:border-gray-800 rounded-2xl p-4 bg-gray-50/50 dark:bg-gray-900/30">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="w-full flex items-center justify-between gap-3 text-left"
+      >
+        <div>
+          <p className="evidence-tags__title font-semibold text-sm text-gray-700 dark:text-gray-200">
+            {title}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t.evidenceIntro}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {totalCount} élément{totalCount > 1 ? "s" : ""} dédupliqué{totalCount > 1 ? "s" : ""}
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-2 text-xs font-medium text-purple-700 dark:text-purple-300">
+          {open ? t.hideEvidence : t.showEvidence}
+          {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </span>
+      </button>
+
+      {open && (
+        <div className="mt-4 space-y-4">
+          {orderedKeys.map((key) => {
+            const items = grouped[key];
+            if (items.length === 0) return null;
+            return (
+              <div key={key}>
+                <p className="text-[11px] uppercase tracking-wide font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                  {categoryLabels[key]}
+                </p>
+                <div className="evidence-tags__list">
+                  {items.map((item, i) => {
+                    const isAspect = item.eid.startsWith("ASPECT_");
+                    const isAngle = ["ASC", "MC", "DSC", "IC"].some((a) =>
+                      item.eid.includes(a),
+                    );
+                    const modifier = isAspect ? "aspect" : isAngle ? "angle" : "planet";
+                    return (
+                      <span
+                        key={`${item.eid}-${i}`}
+                        title={item.eid}
+                        className={`evidence-pill evidence-pill--${modifier}`}
+                      >
+                        <span className="evidence-pill__dot" />
+                        {item.humanText}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -394,14 +873,19 @@ function PersonaSelector({
   t, 
   onConfirm, 
   onCancel,
-  isSubmitting
+  isSubmitting,
+  excludedPersonaIds,
 }: { 
   t: InterpretationTranslations, 
   onConfirm: (id: string) => void, 
   onCancel: () => void,
-  isSubmitting?: boolean
+  isSubmitting?: boolean,
+  excludedPersonaIds?: Set<string>,
 }) {
   const { data: astrologers, isLoading, isError, refetch } = useAstrologers();
+  const availableAstrologers = (astrologers ?? []).filter(
+    (astrologer) => !excludedPersonaIds?.has(astrologer.id),
+  );
 
   return (
     <div
@@ -437,14 +921,18 @@ function PersonaSelector({
               {t.retry}
             </button>
           </div>
-        ) : (
+        ) : availableAstrologers.length > 0 ? (
           <AstrologerGrid
-            astrologers={astrologers ?? []}
+            astrologers={availableAstrologers}
             onSelectAstrologer={(astrologer: Astrologer) => {
               if (isSubmitting) return;
               onConfirm(astrologer.id);
             }}
           />
+        ) : (
+          <div className="py-8 text-center text-sm text-gray-600 dark:text-gray-400">
+            Tous les astrologues disponibles ont deja une interpretation.
+          </div>
         )}
 
         <div className="modal-actions">

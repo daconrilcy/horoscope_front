@@ -12,6 +12,17 @@ from app.llm_orchestration.schemas import (
     AstroResponseV3,
 )
 
+NatalInterpretationModule = Literal[
+    "NATAL_PSY_PROFILE",
+    "NATAL_SHADOW_INTEGRATION",
+    "NATAL_LEADERSHIP_WORKSTYLE",
+    "NATAL_CREATIVITY_JOY",
+    "NATAL_RELATIONSHIP_STYLE",
+    "NATAL_COMMUNITY_NETWORKS",
+    "NATAL_VALUES_SECURITY",
+    "NATAL_EVOLUTION_PATH",
+]
+
 
 class NatalInterpretationRequest(BaseModel):
     use_case_level: Literal["short", "complete"] = Field(
@@ -25,9 +36,14 @@ class NatalInterpretationRequest(BaseModel):
     force_refresh: bool = Field(
         default=False, description="If True, re-generate even if already exists."
     )
+    module: Optional[NatalInterpretationModule] = Field(
+        default=None,
+        description="Optional thematic module for complete natal interpretation.",
+    )
 
 
 class InterpretationMeta(BaseModel):
+    id: Optional[int] = None
     level: Literal["short", "complete"]
     use_case: str
     persona_id: Optional[str] = None
@@ -42,6 +58,7 @@ class InterpretationMeta(BaseModel):
     request_id: Optional[str] = None
     cached: bool = False
     persisted_at: Optional[datetime] = None
+    module: Optional[NatalInterpretationModule] = None
 
 
 class NatalInterpretationData(BaseModel):
@@ -55,3 +72,35 @@ class NatalInterpretationData(BaseModel):
 class NatalInterpretationResponse(BaseModel):
     data: NatalInterpretationData
     disclaimers: list[str] = Field(default_factory=list)
+
+
+class NatalInterpretationListItem(BaseModel):
+    id: int
+    chart_id: str
+    level: Literal["short", "complete"]
+    persona_id: Optional[str] = None
+    persona_name: Optional[str] = None
+    module: Optional[str] = None
+    created_at: datetime
+    use_case: str
+    prompt_version_id: Optional[str] = None
+    was_fallback: bool = False
+
+
+class NatalInterpretationListResponse(BaseModel):
+    items: list[NatalInterpretationListItem]
+    total: int
+    limit: int
+    offset: int
+
+
+class NatalPdfTemplateItem(BaseModel):
+    key: str
+    name: str
+    description: Optional[str] = None
+    locale: str
+    is_default: bool
+
+
+class NatalPdfTemplateListResponse(BaseModel):
+    items: list[NatalPdfTemplateItem]

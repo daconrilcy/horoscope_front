@@ -59,6 +59,18 @@ so that la qualité premium augmente, les coûts tokens baissent et les erreurs 
   - [x] T8.3: Ajouter histograms `natal_summary_len` et `natal_section_len` dans le service v2
   - [x] T8.4: Ajouter compteur `natal_invalid_evidence_total` lors du filtrage sécurisé (T4.1)
   - [x] T8.5: Écrire tests unitaires vérifiant que les métriques sont bien incrémentées
+- [x] T9: Hardening post-go-live (stabilité runtime + data integrity)
+  - [x] T9.1: Corriger le crash `MultipleResultsFound` dans `NatalInterpretationServiceV2` en cas de doublons historiques
+  - [x] T9.2: Ajouter migration de nettoyage + index uniques partiels sur `user_natal_interpretations`
+  - [x] T9.3: Ajouter script d'audit pré-migration pour lister les doublons potentiels (staging/prod)
+- [x] T10: Industrialisation UX et conformité légale d'affichage
+  - [x] T10.1: Déplacer les disclaimers en footer dédié (hors panneau audit)
+  - [x] T10.2: Enrichir les disclaimers statiques multi-locale (non médical/juridique/financier, non prédictif, libre arbitre)
+  - [x] T10.3: Transformer "Données principales analysées" en panneau audit pliable, dédupliqué et groupé par catégories
+  - [x] T10.4: Renommer Maison VI en "Routines / hygiène de vie" côté UI pour réduire le risque de perception médicale
+- [x] T11: Non-régression prompt v3 et contrats de seed
+  - [x] T11.1: Renforcer les règles rédactionnelles du prompt (anti-redondance, exemples observables bénéfice/risque, leviers actionnables avec durée/fréquence)
+  - [x] T11.2: Ajouter assertions de contrat prompt + lint dans les tests unitaires dédiés
 
 ## Dev Notes
 
@@ -91,6 +103,26 @@ API endpoint (natal_interpretation.py)
 | `backend/app/api/v1/routers/natal_interpretation.py` | Injecter disclaimers dans réponse |
 | `backend/app/api/v1/schemas/natal_interpretation.py` | Ajouter champ `disclaimers: list[str]` dans `NatalInterpretationResponse` |
 | `backend/app/core/config.py` | Ajouter `NATAL_SCHEMA_VERSION: str = "v3"` |
+| `backend/migrations/versions/20260304_0028_dedupe_and_unique_user_natal_interpretations.py` | **Nouveau** — déduplication + index uniques partiels |
+| `backend/scripts/diagnose_natal_interpretation_duplicates.py` | **Nouveau** — audit des doublons avant migration |
+| `backend/app/infra/db/models/user_natal_interpretation.py` | Aligner `__table_args__` avec index uniques partiels |
+| `frontend/src/components/NatalInterpretation.tsx` | Footer legal dédié + panneau audit pliable/dédupliqué |
+| `frontend/src/i18n/natalChart.ts` | Libellés i18n audit/disclaimer (intro, catégories, labels toggle) |
+| `frontend/src/i18n/astrology.ts` | Renommer Maison VI (FR/EN/ES) en formulation non médicale |
+
+### Addendum post-go-live (2026-03-04)
+
+- Incident observé: erreurs 500 `internal_error` côté frontend après reconnexion/retry.
+- Cause racine: lecture cache via `scalar_one_or_none()` sur `user_natal_interpretations` alors que des doublons historiques existaient.
+- Correctif applicatif immédiat:
+  - `NatalInterpretationServiceV2` capture `MultipleResultsFound` et récupère la ligne la plus récente (`ORDER BY created_at DESC, id DESC`).
+- Correctif structurel:
+  - migration de nettoyage (keep latest row par clé logique) + contraintes uniques partielles pour empêcher la recréation.
+- Outil d'exploitation:
+  - script de diagnostic pré-migration pour inventorier les doublons en staging/prod.
+- Renforcement qualité:
+  - tests unitaires ajoutés pour le cas `MultipleResultsFound`.
+  - tests de contrat prompt v3 renforcés (lint + assertions règles rédactionnelles).
 
 ### Schéma v3 — Design exact à implémenter
 
@@ -395,30 +427,38 @@ claude-sonnet-4-6
 - Disclaimers (post-review): `get_disclaimers()` supporte un fallback langue de base (`fr-CA → fr-FR`) avant le `_default`, couvrant les locales régionaux non listés explicitement.
 - Post-prod fix (frontend, 2026-03-04): le rendu `complete` pouvait crasher si `interpretation.disclaimers` était absent (v3). Le front utilise désormais un fallback défensif vers `data.disclaimers` (top-level API), puis `[]`.
 - Post-prod fix (frontend, 2026-03-04): homogénéisation de l'affichage `evidence` (ex: `ASPECT_*`, `HOUSE_*_IN_*`, `SUN_TAURUS_H10`) pour éviter des libellés hétérogènes en UI.
+- UX fix (frontend, 2026-03-04): ajout d'un bouton de régénération aussi pour le mode `complete` (pas seulement `short`) avec déclenchement répétable via `refreshKey` pour forcer `force_refresh=true` à chaque clic.
+- Prompt extension (backend, 2026-03-04): enrichissement du prompt v3 avec un catalogue de modules thématiques `NATAL_*` (psy profile, shadow integration, leadership/workstyle, creativity/joy, relationship style, community/networks, values/security, evolution path) et règle d'erreur dédiée `insufficient_data_for_module` pour `NATAL_EVOLUTION_PATH` en absence de nœuds lunaires.
+- Correctif runtime modules (backend, 2026-03-04): ajout du champ `module` à l'endpoint natal, injection `MODULE=<NATAL_...>` dans le contexte LLM, bypass cache et non-persistance des réponses modulaires pour éviter les retours génériques `cached=true`.
+- Correctif schéma modules (backend, 2026-03-04): extension de l'enum `_SECTION_KEYS` (Pydantic + JSON schema DB) pour autoriser les nouvelles clés de sections thématiques (`leadership_signature`, `patterns`, `values_core`, etc.), sans quoi le modèle restait contraint aux clés standard.
+- Correctif pipeline données (backend, 2026-03-04): réintroduction explicite de `{{chart_json}}` dans le prompt publié `natal_interpretation` et ajout au lint requis pour garantir l'injection effective des données techniques (évite les réponses "données manquantes" alors que le thème existe).
 
 ### File List
 
 **Modifiés:**
 - `backend/app/llm_orchestration/schemas.py` — AstroSectionV3, **AstroSectionErrorV3** (new), AstroResponseV3, AstroErrorResponseV3 (sections → AstroSectionErrorV3), _SECTION_KEY_VALUES, model_config strict
+- `backend/app/llm_orchestration/schemas.py` — extension `_SECTION_KEY_VALUES` / `_SECTION_KEYS` avec les clés modules `NATAL_*`
 - `backend/app/llm_orchestration/seeds/use_cases_seed.py` — ASTRO_RESPONSE_V3_JSON_SCHEMA (oneOf), upsert AstroResponse_v3, natal_interpretation → v3, **question retiré de required (Fix #1)**
 - `backend/app/llm_orchestration/gateway.py` — reasoning.effort default `"medium"` (post-review: was `"low"`), schema_version detection robustifiée (via `schema_model.version` entier), natal_repair/fail counters + label `schema_version`, use_case param to validate_output
 - `backend/app/llm_orchestration/services/output_validator.py` — secure filter (after bidirectional check), natal metrics avec label `schema_version`, params `use_case` + `schema_version`
 - `backend/app/llm_orchestration/services/repair_prompter.py` — v3 density guidance block
 - `backend/app/core/config.py` — natal_schema_version setting
 - `backend/app/services/natal_interpretation_service_v2.py` — cascade v3→v3_error→v2→v1 robustifiée sur les deux chemins (cache + nouveau), observe_duration metrics
-- `backend/app/api/v1/schemas/natal_interpretation.py` — disclaimers field, AstroResponseV3/AstroErrorResponseV3 in union
-- `backend/app/api/v1/routers/natal_interpretation.py` — get_disclaimers injection
+- `backend/app/api/v1/schemas/natal_interpretation.py` — disclaimers field, AstroResponseV3/AstroErrorResponseV3 in union, ajout `module` (enum `NATAL_*`) dans la request
+- `backend/app/api/v1/routers/natal_interpretation.py` — get_disclaimers injection, propagation `module` vers le service
 - `backend/app/tests/unit/test_output_validator.py` — updated test name/assertions for secure filter behavior
 - `backend/app/tests/unit/test_repair_prompter.py` — added v3 density tests
 - `frontend/src/api/natalChart.ts` — `disclaimers` optionnel sur `interpretation`, support `disclaimers` top-level API pour V3 (fallback défensif)
-- `frontend/src/components/NatalInterpretation.tsx` — rendu robuste sans `interpretation.disclaimers`; normalisation homogène des libellés `evidence`
-- `frontend/src/tests/natalInterpretation.test.tsx` — non-régression crash `complete` sans `interpretation.disclaimers`; test de formatage homogène `evidence`
+- `frontend/src/components/NatalInterpretation.tsx` — rendu robuste sans `interpretation.disclaimers`; normalisation homogène des libellés `evidence`; bouton de régénération disponible en `short` et `complete`
+- `frontend/src/tests/natalInterpretation.test.tsx` — non-régression crash `complete` sans `interpretation.disclaimers`; test de formatage homogène `evidence`; test bouton régénération `complete`
 - `_bmad-output/planning-artifacts/epics.md` — updated epic status
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — synced status
 
 **Créés:**
 - `backend/app/services/disclaimer_registry.py`
 - `backend/scripts/seed_30_8_v3_prompts.py`
+- `backend/scripts/seed_30_8_v3_prompts.py` — prompt injecte explicitement `{{chart_json}}` + lint requis mis à jour
+- `backend/app/tests/unit/test_seed_30_8_v3_prompt_contract.py`
 - `backend/app/tests/unit/test_schemas_v3.py` (27 tests — +2 post-review: error section densité, type AstroSectionErrorV3)
 - `backend/app/tests/unit/test_output_validator_v3.py` (10 tests)
 - `backend/app/tests/unit/test_disclaimer_registry.py` (10 tests)
@@ -435,3 +475,8 @@ claude-sonnet-4-6
 | 2026-03-03 | **Architecture note (ne pas revenir en arrière)** : les disclaimers légaux ne sont plus générés par le LLM — ils sont injectés statiquement côté app via `disclaimer_registry.py` selon le locale. Économie de ~50–100 tokens/appel, texte légal stable et versionnée en code, i18n fiable. `AstroResponseV3` rejette tout champ `disclaimers` via `extra="forbid"`. Pour modifier les textes ou ajouter un locale, éditer uniquement `_DISCLAIMERS` dans `disclaimer_registry.py`. | claude-sonnet-4-6 |
 | 2026-03-03 | Hardening final (5 fixes post-implémentation) : [High] use_cases_seed — correction des tableaux du branch erreur dans ASTRO_RESPONSE_V3_JSON_SCHEMA ; [Medium] gateway — schema_version detection robuste via `schema_model.version` (entier), reasoning_effort default → `"medium"`, label `schema_version` ajouté sur tous les compteurs natal ; [Medium] output_validator — paramètre `schema_version` propagé dans les métriques ; [Medium] natal_interpretation_service_v2 — cascade v3→v3_error→v2→v1 robustifiée sur les deux chemins (cache + live) ; [Low] disclaimer_registry — fallback langue de base `fr-CA → fr-FR` avant `_default`. 60/60 tests au vert. | Gemini-CLI |
 | 2026-03-04 | Stabilisation frontend post-validation réelle : correction crash `TypeError` en mode `complete` quand `interpretation.disclaimers` est absent, fallback vers `data.disclaimers` (API-level) et normalisation homogène des libellés `evidence` (`ASPECT_*`, `HOUSE_*_IN_*`, `*_Hn`). Tests UI ciblés verts. | Codex |
+| 2026-03-04 | UX runtime: ajout du bouton de régénération en mode `complete` et mécanisme de refresh répétable (`refreshKey`) dans le hook `useNatalInterpretation` pour garantir une nouvelle requête `force_refresh=true` à chaque clic. Test frontend dédié ajouté. | Codex |
+| 2026-03-04 | Prompt v3 étendu avec modules thématiques `NATAL_*` et objectifs éditoriaux dédiés (profil psycho, intégration de l'ombre, leadership, créativité, style relationnel, collectif, valeurs/sécurité, évolution). Ajout de la règle d'erreur module `insufficient_data_for_module` pour `NATAL_EVOLUTION_PATH` si les nœuds lunaires sont absents. Tests contrat prompt mis à jour. | Codex |
+| 2026-03-04 | Activation runtime des modules thématiques: endpoint natal enrichi avec `module`, signal module injecté en contexte gateway (`MODULE=<...>`), bypass cache + skip persistence pour les interprétations modulaires afin d'éviter la réutilisation d'un payload complet standard en cache. | Codex |
+| 2026-03-04 | Déblocage sections thématiques: mise à jour de l'enum des `section.key` dans les schémas applicatifs et le schema DB seedé (`AstroResponse_v3`) pour autoriser les clés modules (ex: `leadership_signature`, `patterns`, `values_core`, `comfort_zone`). Ajout de `meta.module` pour tracer le module appliqué côté réponse API. | Codex |
+| 2026-03-04 | Fix pipeline données natal: le prompt v3 `natal_interpretation` inclut désormais `{{chart_json}}` explicitement (et lint obligatoire), supprimant le défaut où le gateway n'envoyait pas les données techniques au modèle et provoquait des réponses "insufficient data" quasi vides. | Codex |

@@ -65,26 +65,36 @@ def seed():
             db.flush()
             print(f"  Created use case key={existing_uc.key}")
 
-        # 3. Create or skip active prompt version
-        existing_prompt = db.execute(
-            select(LlmPromptVersionModel).where(
-                LlmPromptVersionModel.use_case_key == USE_CASE_KEY,
-                LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
+        # 3. Upsert active prompt version (archive old published first)
+        existing_prompts = (
+            db.execute(
+                select(LlmPromptVersionModel).where(
+                    LlmPromptVersionModel.use_case_key == USE_CASE_KEY,
+                    LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
+                )
             )
-        ).scalar_one_or_none()
-        if existing_prompt:
-            print(f"Active prompt for '{USE_CASE_KEY}' already exists — skipping.")
-        else:
-            print(f"Creating prompt for '{USE_CASE_KEY}'...")
-            prompt = LlmPromptVersionModel(
-                use_case_key=USE_CASE_KEY,
-                status=PromptStatus.PUBLISHED,
-                model="gpt-4o-mini",
-                developer_prompt=DEVELOPER_PROMPT,
-                created_by="system",
-            )
-            db.add(prompt)
-            print("  Created prompt.")
+            .scalars()
+            .all()
+        )
+
+        for p in existing_prompts:
+            if p.developer_prompt == DEVELOPER_PROMPT and p.model == "gpt-4o-mini":
+                print(f"Active prompt for '{USE_CASE_KEY}' already up to date — skipping.")
+                db.commit()
+                print(f"\nMigration complete: '{USE_CASE_KEY}' is now available.")
+                return
+            p.status = PromptStatus.ARCHIVED
+
+        print(f"Publishing refreshed prompt for '{USE_CASE_KEY}'...")
+        prompt = LlmPromptVersionModel(
+            use_case_key=USE_CASE_KEY,
+            status=PromptStatus.PUBLISHED,
+            model="gpt-4o-mini",
+            developer_prompt=DEVELOPER_PROMPT,
+            created_by="system",
+        )
+        db.add(prompt)
+        print("  Published prompt.")
 
         db.commit()
         print(f"\nMigration complete: '{USE_CASE_KEY}' is now available.")

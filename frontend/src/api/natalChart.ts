@@ -125,6 +125,45 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return payload.data
 }
 
+async function handleResponsePossiblyUnwrapped<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    let payload: ErrorEnvelope | null = null
+    try {
+      const raw = (await response.json()) as Record<string, unknown>
+      if (raw?.error) {
+        payload = raw as unknown as ErrorEnvelope
+      } else if (Array.isArray(raw?.detail)) {
+        const firstDetail = (raw.detail as Array<{ msg?: string }>)[0]
+        payload = {
+          error: {
+            code: "unprocessable_entity",
+            message: firstDetail?.msg || "Données invalides",
+          },
+        }
+      }
+    } catch {
+      payload = null
+    }
+    throw new ApiError(
+      payload?.error?.code ?? "unknown_error",
+      payload?.error?.message ?? `Request failed with status ${response.status}`,
+      response.status,
+      payload?.error?.request_id,
+    )
+  }
+
+  const payload = (await response.json()) as T | { data: T }
+  if (
+    payload !== null &&
+    typeof payload === "object" &&
+    "data" in payload &&
+    (payload as { data?: T }).data !== undefined
+  ) {
+    return (payload as { data: T }).data
+  }
+  return payload as T
+}
+
 async function fetchLatestNatalChart(accessToken: string): Promise<LatestNatalChart> {
   const response = await apiFetch(`${API_BASE_URL}/v1/users/me/natal-chart/latest`, {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -194,6 +233,7 @@ export type AstroInterpretation = {
 }
 
 export type InterpretationMeta = {
+  id?: number | null
   level: "short" | "complete"
   use_case: string
   persona_id: string | null
@@ -208,6 +248,16 @@ export type InterpretationMeta = {
   persisted_at: string | null
 }
 
+export type NatalInterpretationModule =
+  | "NATAL_PSY_PROFILE"
+  | "NATAL_SHADOW_INTEGRATION"
+  | "NATAL_LEADERSHIP_WORKSTYLE"
+  | "NATAL_CREATIVITY_JOY"
+  | "NATAL_RELATIONSHIP_STYLE"
+  | "NATAL_COMMUNITY_NETWORKS"
+  | "NATAL_VALUES_SECURITY"
+  | "NATAL_EVOLUTION_PATH"
+
 export type NatalInterpretationResult = {
   chart_id: string
   use_case: string
@@ -217,6 +267,38 @@ export type NatalInterpretationResult = {
   disclaimers?: string[]
 }
 
+export type NatalInterpretationListItem = {
+  id: number
+  chart_id: string
+  level: "short" | "complete"
+  persona_id: string | null
+  persona_name: string | null
+  module: string | null
+  created_at: string
+  use_case: string
+  prompt_version_id: string | null
+  was_fallback: boolean
+}
+
+export type NatalInterpretationListResponse = {
+  items: NatalInterpretationListItem[]
+  total: number
+  limit: number
+  offset: number
+}
+
+export type NatalPdfTemplateItem = {
+  key: string
+  name: string
+  description: string | null
+  locale: string
+  is_default: boolean
+}
+
+export type NatalPdfTemplateListResponse = {
+  items: NatalPdfTemplateItem[]
+}
+
 async function fetchNatalInterpretation(
   accessToken: string,
   useCaseLevel: "short" | "complete",
@@ -224,6 +306,7 @@ async function fetchNatalInterpretation(
   locale?: string,
   question?: string,
   forceRefresh?: boolean,
+  module?: NatalInterpretationModule,
 ): Promise<NatalInterpretationResult> {
   const response = await apiFetch(`${API_BASE_URL}/v1/natal/interpretation`, {
     method: "POST",
@@ -237,6 +320,7 @@ async function fetchNatalInterpretation(
       locale: locale || "fr-FR",
       question: question,
       force_refresh: forceRefresh || false,
+      module: module || null,
     }),
   })
 
@@ -279,6 +363,207 @@ async function fetchNatalInterpretation(
   return payload.data
 }
 
+export async function deleteNatalInterpretation(
+  accessToken: string,
+  interpretationId: number,
+): Promise<void> {
+  const response = await apiFetch(`${API_BASE_URL}/v1/natal/interpretations/${interpretationId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+
+  if (!response.ok && response.status !== 204) {
+    throw new ApiError("delete_failed", "Failed to delete interpretation", response.status)
+  }
+}
+
+export async function downloadNatalInterpretationPdf(
+  accessToken: string,
+  interpretationId: number,
+  templateKey?: string,
+  locale?: string,
+): Promise<void> {
+  const params = new URLSearchParams()
+  if (templateKey) params.append("template_key", templateKey)
+  if (locale) params.append("locale", locale)
+
+  const response = await apiFetch(
+    `${API_BASE_URL}/v1/natal/interpretations/${interpretationId}/pdf?${params.toString()}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  )
+
+  if (!response.ok) {
+    throw new ApiError("download_failed", "Failed to download PDF", response.status)
+  }
+
+  const blob = await response.blob()
+  const contentDisposition = response.headers.get("Content-Disposition")
+  triggerBlobDownload(blob, `natal-interpretation-${interpretationId}.pdf`, contentDisposition)
+}
+
+function triggerBlobDownload(
+  blob: Blob,
+  defaultFilename: string,
+  contentDisposition?: string | null,
+): void {
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  // Extract filename from header if possible, else default
+  let filename = defaultFilename
+  if (contentDisposition && contentDisposition.includes("filename=")) {
+    filename = contentDisposition.split("filename=")[1].replace(/"/g, "")
+  }
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  window.URL.revokeObjectURL(url)
+  document.body.removeChild(a)
+}
+
+export async function previewNatalInterpretationPdf(
+  accessToken: string,
+  interpretationId: number,
+  templateKey?: string,
+  locale?: string,
+): Promise<void> {
+  const params = new URLSearchParams()
+  if (templateKey) params.append("template_key", templateKey)
+  if (locale) params.append("locale", locale)
+
+  const response = await apiFetch(
+    `${API_BASE_URL}/v1/natal/interpretations/${interpretationId}/pdf?${params.toString()}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  )
+
+  if (!response.ok) {
+    throw new ApiError("preview_failed", "Failed to preview PDF", response.status)
+  }
+
+  const blob = await response.blob()
+  const url = window.URL.createObjectURL(blob)
+  const opened = window.open(url, "_blank", "noopener,noreferrer")
+  if (!opened) {
+    window.URL.revokeObjectURL(url)
+    throw new ApiError("preview_blocked", "Popup blocked while opening PDF preview", 0)
+  }
+
+  // Leave enough time for the new tab to load the object URL before cleanup.
+  window.setTimeout(() => {
+    window.URL.revokeObjectURL(url)
+  }, 60_000)
+}
+
+export function useNatalInterpretationsList(options: {
+  enabled: boolean
+  chartId?: string
+  level?: "short" | "complete"
+  limit?: number
+  offset?: number
+}) {
+  const accessToken = useAccessTokenSnapshot()
+  const tokenSubject = getSubjectFromAccessToken(accessToken) ?? ANONYMOUS_SUBJECT
+
+  return useQuery({
+    queryKey: [
+      "natal-interpretations-list",
+      tokenSubject,
+      options.chartId,
+      options.level,
+      options.limit,
+      options.offset,
+    ],
+    queryFn: async () => {
+      if (!accessToken) {
+        throw new ApiError("unauthorized", "access token is required", 401)
+      }
+      const params = new URLSearchParams()
+      if (options.chartId) params.append("chart_id", options.chartId)
+      if (options.level) params.append("level", options.level)
+      if (options.limit) params.append("limit", options.limit.toString())
+      if (options.offset) params.append("offset", options.offset.toString())
+
+      const response = await apiFetch(
+        `${API_BASE_URL}/v1/natal/interpretations?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        },
+      )
+
+      return handleResponsePossiblyUnwrapped<NatalInterpretationListResponse>(response)
+    },
+    enabled: options.enabled && Boolean(accessToken),
+    staleTime: 1000 * 60 * 5,
+  })
+}
+
+export function useNatalPdfTemplates(options: { enabled: boolean; locale?: string }) {
+  const accessToken = useAccessTokenSnapshot()
+  const tokenSubject = getSubjectFromAccessToken(accessToken) ?? ANONYMOUS_SUBJECT
+  return useQuery({
+    queryKey: ["natal-pdf-templates", tokenSubject, options.locale],
+    queryFn: async () => {
+      if (!accessToken) {
+        throw new ApiError("unauthorized", "access token is required", 401)
+      }
+      const params = new URLSearchParams()
+      if (options.locale) params.append("locale", options.locale)
+      const response = await apiFetch(`${API_BASE_URL}/v1/natal/pdf-templates?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      return handleResponsePossiblyUnwrapped<NatalPdfTemplateListResponse>(response)
+    },
+    enabled: options.enabled && Boolean(accessToken),
+    staleTime: 1000 * 60 * 10,
+    retry: (failureCount, error) => {
+      if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+        return false
+      }
+      return failureCount < 1
+    },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  })
+}
+
+export function useNatalInterpretationById(options: {
+  enabled: boolean
+  interpretationId?: number
+  locale?: string
+}) {
+  const accessToken = useAccessTokenSnapshot()
+  const tokenSubject = getSubjectFromAccessToken(accessToken) ?? ANONYMOUS_SUBJECT
+
+  return useQuery({
+    queryKey: ["natal-interpretation-by-id", tokenSubject, options.interpretationId, options.locale],
+    queryFn: async () => {
+      if (!accessToken) {
+        throw new ApiError("unauthorized", "access token is required", 401)
+      }
+      if (!options.interpretationId) {
+        throw new Error("interpretationId is required")
+      }
+      const params = new URLSearchParams()
+      if (options.locale) params.append("locale", options.locale)
+
+      const response = await apiFetch(
+        `${API_BASE_URL}/v1/natal/interpretations/${options.interpretationId}?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        },
+      )
+
+      return handleResponse<NatalInterpretationResult>(response)
+    },
+    enabled: options.enabled && Boolean(accessToken) && Boolean(options.interpretationId),
+    staleTime: 1000 * 60 * 10,
+  })
+}
+
 export function useNatalInterpretation(options: {
   enabled: boolean
   useCaseLevel: "short" | "complete"
@@ -286,6 +571,8 @@ export function useNatalInterpretation(options: {
   locale?: string
   question?: string
   forceRefresh?: boolean
+  refreshKey?: number
+  module?: NatalInterpretationModule
 }) {
   const accessToken = useAccessTokenSnapshot()
   const tokenSubject = getSubjectFromAccessToken(accessToken) ?? ANONYMOUS_SUBJECT
@@ -298,6 +585,8 @@ export function useNatalInterpretation(options: {
       options.personaId,
       options.locale,
       options.forceRefresh || false,
+      options.refreshKey || 0,
+      options.module || null,
     ],
     queryFn: async () => {
       if (!accessToken) {
@@ -310,6 +599,7 @@ export function useNatalInterpretation(options: {
         options.locale,
         options.question,
         options.forceRefresh,
+        options.module,
       )
     },
     enabled: options.enabled && Boolean(accessToken),

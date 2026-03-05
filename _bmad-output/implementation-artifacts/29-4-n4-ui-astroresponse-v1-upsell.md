@@ -86,3 +86,18 @@ so that je profite d'une lecture claire et je découvre les avantages du mode Pr
   - `frontend/src/utils/authToken.ts`
   - `frontend/src/tests/natalInterpretation.test.tsx`
   - `frontend/src/tests/authToken.test.ts`
+
+### Correctif UX interprétation premium (2026-03-04)
+- Problème observé: mélange conceptuel entre "traçabilité evidence" et "mentions légales", plus rendu evidence trop brut (doublons, faible lisibilité).
+- Correctif frontend:
+  - déplacement des mentions légales dans un footer dédié de l'interprétation (hors panneau audit).
+  - transformation du bloc evidence en panneau audit pliable "Ce qui a été utilisé pour écrire cette interprétation".
+  - déduplication automatique des éléments evidence, puis regroupement par catégories (angles, planètes personnelles, planètes lentes, maisons dominantes, aspects majeurs, autres).
+  - ajout d'une micro-explication de transparence dans le panneau audit.
+  - renommage du label Maison VI en "Routines / hygiène de vie" (FR/EN/ES) pour éviter la connotation médicale.
+- Fichiers:
+  - `frontend/src/components/NatalInterpretation.tsx`
+  - `frontend/src/i18n/natalChart.ts`
+  - `frontend/src/i18n/astrology.ts`
+  - `frontend/src/tests/natalInterpretation.test.tsx`
+  - `frontend/src/tests/astrology-i18n.test.ts`

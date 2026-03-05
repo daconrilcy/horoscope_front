@@ -78,7 +78,12 @@ const ALL_HOUSES = [
   [3, "Maison III — Communication", "House III — Communication", "Casa III — Comunicación"],
   [4, "Maison IV — Foyer", "House IV — Home", "Casa IV — Hogar"],
   [5, "Maison V — Créativité", "House V — Creativity", "Casa V — Creatividad"],
-  [6, "Maison VI — Santé", "House VI — Health", "Casa VI — Salud"],
+  [
+    6,
+    "Maison VI — Routines / hygiène de vie",
+    "House VI — Routines / lifestyle hygiene",
+    "Casa VI — Rutinas / higiene de vida",
+  ],
   [7, "Maison VII — Relations", "House VII — Relationships", "Casa VII — Relaciones"],
   [8, "Maison VIII — Transformation", "House VIII — Transformation", "Casa VIII — Transformación"],
   [9, "Maison IX — Philosophie", "House IX — Philosophy", "Casa IX — Filosofía"],

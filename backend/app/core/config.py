@@ -39,6 +39,16 @@ class AspectSchoolType(str, Enum):
 
 class Settings:
     @staticmethod
+    def _normalize_database_url(database_url: str) -> str:
+        # Prevent cwd-dependent sqlite DB selection.
+        # Example: root/horoscope.db vs backend/horoscope.db.
+        if database_url.startswith("sqlite:///./"):
+            rel = database_url.removeprefix("sqlite:///./")
+            abs_path = (backend_root / rel).resolve()
+            return f"sqlite:///{abs_path.as_posix()}"
+        return database_url
+
+    @staticmethod
     def _parse_secret_list(env_name: str) -> list[str]:
         raw = os.getenv(env_name, "")
         values = [item.strip() for item in raw.split(",")]
@@ -56,7 +66,8 @@ class Settings:
     @staticmethod
     def _is_local_sqlite_database_url(database_url: str) -> bool:
         normalized = database_url.strip().lower()
-        return normalized.startswith("sqlite:///./") or normalized.startswith("sqlite:///:memory:")
+        # SQLite URLs are always local filesystem or in-memory databases.
+        return normalized.startswith("sqlite:///")
 
     @staticmethod
     def _parse_bool_env(env_name: str, default: bool = False) -> bool:
@@ -85,7 +96,9 @@ class Settings:
 
     def __init__(self) -> None:
         self.app_env = os.getenv("APP_ENV", "development").strip().lower()
-        self.database_url = os.getenv("DATABASE_URL", "sqlite:///./horoscope.db")
+        self.database_url = self._normalize_database_url(
+            os.getenv("DATABASE_URL", "sqlite:///./horoscope.db")
+        )
         self.active_reference_version = os.getenv("ACTIVE_REFERENCE_VERSION", "1.0.0")
         self.ruleset_version = os.getenv("RULESET_VERSION", "1.0.0")
 

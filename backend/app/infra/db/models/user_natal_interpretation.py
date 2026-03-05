@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timezone
 from enum import Enum
 
-from sqlalchemy import JSON, UUID, Boolean, DateTime, ForeignKey, Integer, String
+from sqlalchemy import JSON, UUID, Boolean, DateTime, ForeignKey, Index, Integer, String, text
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -27,6 +27,34 @@ class UserNatalInterpretationModel(Base):
     """
 
     __tablename__ = "user_natal_interpretations"
+    __table_args__ = (
+        Index(
+            "uq_user_natal_interpretations_null_persona",
+            "user_id",
+            "chart_id",
+            "level",
+            unique=True,
+            postgresql_where=text("persona_id IS NULL"),
+            sqlite_where=text("persona_id IS NULL"),
+        ),
+        Index(
+            "uq_user_natal_interpretations_with_persona",
+            "user_id",
+            "chart_id",
+            "level",
+            "persona_id",
+            unique=True,
+            postgresql_where=text("persona_id IS NOT NULL"),
+            sqlite_where=text("persona_id IS NOT NULL"),
+        ),
+        Index(
+            "idx_user_natal_interpretations_listing",
+            "user_id",
+            "chart_id",
+            "level",
+            "created_at",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)

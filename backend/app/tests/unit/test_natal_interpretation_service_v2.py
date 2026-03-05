@@ -119,6 +119,12 @@ def _make_db_mock(has_persona: bool = True) -> MagicMock:
     """
     mock_persona = MagicMock()
     mock_persona.name = "Luna"
+    mock_persona.description = "Profil pedagogique et bienveillant."
+    mock_persona.tone = "warm"
+    mock_persona.verbosity = "medium"
+    mock_persona.style_markers = ["langage clair", "nuance"]
+    mock_persona.boundaries = ["ne pas etre fataliste"]
+    mock_persona.allowed_topics = ["theme natal", "relations"]
     call_count = 0
 
     def _execute(stmt):
@@ -191,6 +197,7 @@ class TestNatalInterpretationServiceV2UserInput:
 
         assert mock_gw_instance.execute.called, "Le gateway doit avoir ete appele"
         user_input_sent = mock_gw_instance.execute.call_args.kwargs["user_input"]
+        context_sent = mock_gw_instance.execute.call_args.kwargs["context"]
 
         # Assertion principale C1 (story 30-5)
         assert "question" not in user_input_sent, (
@@ -201,6 +208,9 @@ class TestNatalInterpretationServiceV2UserInput:
         assert "chart_json" in user_input_sent
         assert "locale" in user_input_sent
         assert user_input_sent["locale"] == "fr"
+        assert "persona_name" in context_sent
+        assert "Astrologue sélectionné : Luna." in context_sent["persona_name"]
+        assert "Profil pedagogique et bienveillant." in context_sent["persona_name"]
 
     @pytest.mark.asyncio
     async def test_short_level_includes_question(self):
@@ -406,3 +416,123 @@ class TestNatalInterpretationServiceV2SchemaVersion:
             )
 
         assert resp.data.meta.schema_version == "v1"
+
+
+class TestNatalInterpretationServiceV2Modules:
+    @pytest.mark.asyncio
+    async def test_complete_module_bypasses_persistence_and_injects_module_context(self):
+        natal_result = _make_natal_result()
+        birth_profile = _make_birth_profile()
+        gw_result = _make_gateway_result("natal_psy_profile")
+
+        mock_persona = MagicMock()
+        mock_persona.name = "Luna"
+        mock_persona.description = "Profil pedagogique et bienveillant."
+        mock_persona.tone = "warm"
+        mock_persona.verbosity = "medium"
+        mock_persona.style_markers = ["langage clair"]
+        mock_persona.boundaries = ["ne pas etre fataliste"]
+        mock_persona.allowed_topics = ["theme natal"]
+
+        db = MagicMock()
+        db.execute.return_value.scalar_one_or_none.return_value = mock_persona
+
+        mock_gw_instance = MagicMock()
+        mock_gw_instance.execute = AsyncMock(return_value=gw_result)
+
+        with (
+            patch("app.services.natal_interpretation_service_v2.select"),
+            patch(
+                "app.services.natal_interpretation_service_v2.build_chart_json",
+                return_value={"planets": []},
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                return_value={"SUN_LEO": ["Soleil en Lion"]},
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.LLMGateway",
+                return_value=mock_gw_instance,
+            ),
+        ):
+            resp = await NatalInterpretationServiceV2.interpret(
+                db=db,
+                user_id=1,
+                chart_id="chart-abc",
+                natal_result=natal_result,
+                birth_profile=birth_profile,
+                level="complete",
+                persona_id=PERSONA_ID,
+                locale="fr",
+                question=None,
+                request_id="req-test",
+                trace_id="trace-test",
+                module="NATAL_PSY_PROFILE",
+            )
+
+        context_sent = mock_gw_instance.execute.call_args.kwargs["context"]
+        assert "situation" not in context_sent
+        assert mock_gw_instance.execute.call_args.kwargs["use_case"] == "natal_psy_profile"
+        assert resp.data.meta.cached is False
+        db.add.assert_not_called()
+        db.commit.assert_not_called()
+
+
+class TestNatalInterpretationServiceV2CacheDuplicates:
+    @pytest.mark.asyncio
+    async def test_cache_duplicate_rows_selects_latest_instead_of_crashing(self):
+        natal_result = _make_natal_result()
+        birth_profile = _make_birth_profile()
+        cached_payload = _make_gateway_result("natal_interpretation_short").structured_output
+
+        persisted = MagicMock()
+        persisted.interpretation_payload = cached_payload
+        persisted.use_case = "natal_interpretation_short"
+        persisted.prompt_version_id = None
+        persisted.persona_id = None
+        persisted.persona_name = None
+        persisted.was_fallback = False
+        persisted.degraded_mode = None
+        persisted.created_at = None
+        persisted.chart_id = "chart-abc"
+        persisted.id = 10
+        persisted.level = "short"
+
+        duplicate = MagicMock()
+        duplicate.interpretation_payload = cached_payload
+        duplicate.use_case = "natal_interpretation_short"
+        duplicate.prompt_version_id = None
+        duplicate.persona_id = None
+        duplicate.persona_name = None
+        duplicate.was_fallback = False
+        duplicate.degraded_mode = None
+        duplicate.created_at = None
+        duplicate.chart_id = "chart-older"
+        duplicate.id = 11
+        duplicate.level = "short"
+
+        first_result = MagicMock()
+        first_result.scalars.return_value.all.return_value = [persisted, duplicate]
+        db = MagicMock()
+        db.execute.return_value = first_result
+
+        with patch(
+            "app.services.natal_interpretation_service_v2.PromptRegistryV2.get_active_prompt",
+            return_value=None,
+        ):
+            resp = await NatalInterpretationServiceV2.interpret(
+                db=db,
+                user_id=1,
+                chart_id="chart-abc",
+                natal_result=natal_result,
+                birth_profile=birth_profile,
+                level="short",
+                persona_id=None,
+                locale="fr",
+                question=None,
+                request_id="req-test",
+                trace_id="trace-test",
+            )
+
+        assert resp.data.meta.cached is True
+        assert resp.data.interpretation.title == cached_payload["title"]

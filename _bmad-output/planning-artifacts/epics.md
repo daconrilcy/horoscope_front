@@ -209,6 +209,24 @@ So that la qualité premium augmente, les coûts tokens baissent et les erreurs 
 
 [Source: _bmad-output/implementation-artifacts/30-8-mise-a-niveau-globale-interpretation-theme-natal-gpt5-responses-structured-outputs.md]
 
+### Story 30.9: Historique multi-interprétations, suppression traçable et export PDF templatisable
+
+As a utilisateur,
+I want pouvoir basculer entre mes interprétations SHORT/COMPLETE, sélectionner une version précise, supprimer une interprétation et télécharger un PDF personnalisable,
+So that je garde le contrôle de mon historique et je peux exporter un rendu premium adapté à mes besoins.
+
+**Acceptance Criteria:**
+- Si plusieurs interprétations existent pour un même thème natal, l’UI affiche un sélecteur de niveau (short/complete) et un menu listant les versions disponibles (horodatées, persona, module éventuel).
+- L’utilisateur peut afficher n’importe quelle interprétation existante sans regénération LLM et sans perte de contexte de page.
+- L’UI propose un bouton de suppression de l’interprétation affichée avec confirmation explicite; la suppression est effective en backend et la liste est rafraîchie.
+- Chaque suppression est journalisée avec traçabilité opérationnelle: acteur, ressource, horodatage, type d’action, request_id.
+- Le backend expose un moteur d’export PDF pour une interprétation sélectionnée avec au moins un template actif.
+- Les templates PDF sont administrables (CRUD + activation/désactivation + version), et l’utilisateur peut choisir un style/template avant téléchargement.
+- Le bouton de téléchargement PDF est disponible sur la page Natal; le fichier généré contient les sections d’interprétation visibles et les mentions légales applicatives.
+- Le flux respecte les garde-fous sécurité/privacy existants (auth obligatoire, RBAC admin pour gestion templates, pas de fuite de données inter-utilisateurs).
+
+[Source: user requirements 2026-03-04]
+
 ## Epic 1: Fondation pour des calculs astrologiques fiables et tracables
 
 Fournir un moteur astrologique central, tracable et gouvernable, capable de produire des resultats coherents a partir des donnees natales.

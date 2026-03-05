@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Literal, Optional
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.ai_engine.exceptions import (
@@ -15,12 +16,15 @@ from app.ai_engine.exceptions import (
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.v1.routers.users import ErrorEnvelope
 from app.api.v1.schemas.natal_interpretation import (
+    NatalPdfTemplateListResponse,
+    NatalInterpretationListResponse,
     NatalInterpretationRequest,
     NatalInterpretationResponse,
 )
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
+from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
 from app.llm_orchestration.models import (
     GatewayConfigError,
     InputValidationError,
@@ -83,6 +87,8 @@ async def interpret_natal_chart(
 ) -> Any:
     request_id = resolve_request_id(request)
     trace_id = request_id
+    current_step = "init"
+    debug_errors_enabled = request.headers.get("x-debug-errors") == "1"
 
     # AC7 — Feature flag check
     if not getattr(settings, "llm_orchestration_v2", False):
@@ -95,6 +101,7 @@ async def interpret_natal_chart(
 
     try:
         # Step A: Load last natal chart and profile
+        current_step = "load_chart_and_profile"
         try:
             chart = UserNatalChartService.get_latest_for_user(db, current_user.id)
             profile = UserBirthProfileService.get_for_user(db, current_user.id)
@@ -109,6 +116,7 @@ async def interpret_natal_chart(
             raise
 
         # Step B to F: Orchestration via Service V2
+        current_step = "service_interpret"
         response = await NatalInterpretationServiceV2.interpret(
             db=db,
             user_id=current_user.id,
@@ -122,9 +130,12 @@ async def interpret_natal_chart(
             request_id=request_id,
             trace_id=trace_id,
             force_refresh=body.force_refresh,
+            module=body.module,
         )
 
+        current_step = "apply_disclaimers"
         response.disclaimers = get_disclaimers(body.locale)
+        current_step = "return_response"
         return response
 
     except UnknownUseCaseError as e:
@@ -158,7 +169,317 @@ async def interpret_natal_chart(
             503, "llm_upstream_error", "LLM provider is currently unavailable.", request_id
         )
     except Exception as e:
-        logger.exception(f"Unexpected error during natal interpretation: {e}")
-        return _create_error_response(
-            500, "internal_error", "An unexpected error occurred.", request_id
+        logger.exception(
+            "Unexpected error during natal interpretation request_id=%s step=%s error=%s",
+            request_id,
+            current_step,
+            e,
         )
+        details: dict[str, Any] = {"step": current_step}
+        if settings.app_env in {"development", "dev", "local", "test", "testing"} or (
+            debug_errors_enabled
+        ):
+            details = {
+                "step": current_step,
+                "exception_type": type(e).__name__,
+                "exception_message": str(e),
+            }
+        return _create_error_response(
+            500, "internal_error", "An unexpected error occurred.", request_id, details=details
+        )
+
+
+@router.get(
+    "/pdf-templates",
+    response_model=NatalPdfTemplateListResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+    },
+)
+async def list_natal_pdf_templates(
+    request: Request,
+    locale: Optional[str] = None,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    try:
+        stmt = select(PdfTemplateModel).where(PdfTemplateModel.status == PdfTemplateStatus.ACTIVE)
+        if locale:
+            stmt = stmt.where(PdfTemplateModel.locale == locale)
+        stmt = stmt.order_by(PdfTemplateModel.is_default.desc(), PdfTemplateModel.key.asc())
+        templates = db.execute(stmt).scalars().all()
+        logger.info(
+            "Listed active natal PDF templates user_id=%s locale=%s count=%s",
+            current_user.id,
+            locale,
+            len(templates),
+        )
+        return {
+            "items": [
+                {
+                    "key": item.key,
+                    "name": item.name,
+                    "description": item.description,
+                    "locale": item.locale,
+                    "is_default": item.is_default,
+                }
+                for item in templates
+            ]
+        }
+    except Exception as e:
+        logger.exception("Error listing natal PDF templates request_id=%s error=%s", request_id, e)
+        return _create_error_response(
+            500, "internal_error", "Failed to list PDF templates", request_id
+        )
+
+
+@router.get(
+    "/interpretations",
+    response_model=NatalInterpretationListResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+    },
+)
+async def list_natal_interpretations(
+    request: Request,
+    chart_id: Optional[str] = None,
+    level: Optional[Literal["short", "complete"]] = None,
+    persona_id: Optional[str] = None,
+    module: Optional[str] = None,
+    limit: int = 20,
+    offset: int = 0,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    from time import monotonic
+
+    from app.infra.observability.metrics import observe_duration
+    start_time = monotonic()
+    try:
+        items, total = NatalInterpretationServiceV2.list_interpretations(
+            db=db,
+            user_id=current_user.id,
+            chart_id=chart_id,
+            level=level,
+            persona_id=persona_id,
+            module=module,
+            limit=limit,
+            offset=offset,
+        )
+
+        observe_duration("natal_interpretations_list_latency", (monotonic() - start_time) * 1000)
+        logger.info(
+            "Listed natal interpretations user_id=%s chart_id=%s count=%s total=%s",
+            current_user.id,
+            chart_id,
+            len(items),
+            total,
+        )
+
+        return {
+            "items": [
+                {
+                    "id": item.id,
+                    "chart_id": item.chart_id,
+                    "level": item.level.value,
+                    "persona_id": str(item.persona_id) if item.persona_id else None,
+                    "persona_name": item.persona_name,
+                    "module": (
+                        item.use_case
+                        if item.use_case.startswith("natal_")
+                        and item.use_case
+                        not in {"natal_interpretation", "natal_interpretation_short"}
+                        else None
+                    ),
+                    "created_at": item.created_at,
+                    "use_case": item.use_case,
+                    "prompt_version_id": str(item.prompt_version_id)
+                    if item.prompt_version_id
+                    else None,
+                    "was_fallback": item.was_fallback,
+                }
+                for item in items
+            ],
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+        }
+    except Exception as e:
+        logger.exception(f"Error listing interpretations: {e}")
+        return _create_error_response(
+            500, "internal_error", "Failed to list interpretations", request_id
+        )
+
+
+@router.get(
+    "/interpretations/{interpretation_id}",
+    response_model=NatalInterpretationResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+    },
+)
+async def get_natal_interpretation(
+    request: Request,
+    interpretation_id: int,
+    locale: str = "fr-FR",
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    from time import monotonic
+
+    from app.infra.observability.metrics import observe_duration
+    start_time = monotonic()
+    
+    item = NatalInterpretationServiceV2.get_interpretation_by_id(
+        db=db,
+        user_id=current_user.id,
+        interpretation_id=interpretation_id,
+    )
+    if not item:
+        return _create_error_response(
+            404, "interpretation_not_found", "Interpretation not found or access denied", request_id
+        )
+
+    from app.api.v1.schemas.natal_interpretation import InterpretationMeta
+    from app.infra.db.models.user_natal_interpretation import InterpretationLevel
+
+    meta = InterpretationMeta(
+        level="short" if item.level == InterpretationLevel.SHORT else "complete",
+        use_case=item.use_case,
+        persona_id=str(item.persona_id) if item.persona_id else None,
+        persona_name=item.persona_name,
+        prompt_version_id=str(item.prompt_version_id) if item.prompt_version_id else None,
+        schema_version="unknown",
+        validation_status="valid",
+        was_fallback=item.was_fallback,
+        request_id=request_id,
+        cached=True,
+        persisted_at=item.created_at,
+    )
+
+    result = NatalInterpretationServiceV2.format_interpretation_response(item, meta, locale)
+    observe_duration("natal_interpretation_get_latency", (monotonic() - start_time) * 1000)
+    logger.info(
+        "Fetched natal interpretation user_id=%s id=%s chart_id=%s",
+        current_user.id,
+        interpretation_id,
+        item.chart_id,
+    )
+    return result
+@router.delete(
+    "/interpretations/{interpretation_id}",
+    status_code=204,
+    response_class=Response,
+    response_model=None,
+)
+async def delete_natal_interpretation(
+    request: Request,
+    interpretation_id: int,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    from time import monotonic
+
+    from app.infra.observability.metrics import observe_duration
+    start_time = monotonic()
+    
+    success = NatalInterpretationServiceV2.delete_interpretation(
+        db=db,
+        user_id=current_user.id,
+        interpretation_id=interpretation_id,
+        request_id=request_id,
+        actor_role=current_user.role,
+    )
+    if not success:
+        logger.warning(
+            "Failed to delete interpretation user_id=%s id=%s (not found or denied)",
+            current_user.id,
+            interpretation_id,
+        )
+        return _create_error_response(
+            404, "interpretation_not_found", "Interpretation not found or access denied", request_id
+        )
+
+    observe_duration("natal_interpretation_delete_latency", (monotonic() - start_time) * 1000)
+    logger.info(
+        "Deleted natal interpretation user_id=%s id=%s request_id=%s",
+        current_user.id,
+        interpretation_id,
+        request_id,
+    )
+    return Response(status_code=204)
+
+
+@router.get(
+    "/interpretations/{interpretation_id}/pdf",
+    responses={
+        200: {
+            "content": {"application/pdf": {}},
+            "description": "The generated PDF file",
+        },
+        401: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+    },
+)
+async def download_natal_interpretation_pdf(
+    request: Request,
+    interpretation_id: int,
+    template_key: Optional[str] = None,
+    locale: str = "fr-FR",
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    from time import monotonic
+
+    from app.infra.observability.metrics import observe_duration
+    start_time = monotonic()
+    
+    item = NatalInterpretationServiceV2.get_interpretation_by_id(
+        db=db,
+        user_id=current_user.id,
+        interpretation_id=interpretation_id,
+    )
+    if not item:
+        return _create_error_response(
+            404, "interpretation_not_found", "Interpretation not found or access denied", request_id
+        )
+
+    try:
+        from app.services.natal_pdf_export_service import NatalPdfExportService
+
+        pdf_bytes = NatalPdfExportService.generate_pdf(
+            db=db,
+            interpretation=item,
+            template_key=template_key,
+            locale=locale,
+        )
+
+        filename = f"natal-{item.chart_id}-{item.created_at.strftime('%Y%m%d')}.pdf"
+
+        observe_duration("natal_pdf_export_latency", (monotonic() - start_time) * 1000)
+        logger.info(
+            "Exported natal PDF user_id=%s id=%s chart_id=%s template=%s size=%s",
+            current_user.id,
+            interpretation_id,
+            item.chart_id,
+            template_key,
+            len(pdf_bytes),
+        )
+
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except Exception as e:
+        logger.exception(f"Error generating PDF: {e}")
+        return _create_error_response(
+            500, "pdf_generation_failed", "Failed to generate PDF", request_id
+        )
+

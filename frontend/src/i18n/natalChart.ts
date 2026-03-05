@@ -83,6 +83,7 @@ type NatalChartTranslations = {
     highlightsTitle: string
     adviceTitle: string
     evidenceTitle: string
+    evidenceIntro: string
     showEvidence: string
     hideEvidence: string
     disclaimerTitle: string
@@ -94,7 +95,24 @@ type NatalChartTranslations = {
     personaSelectorTitle: string
     personaSelectorConfirm: string
     cancel: string
+    historyTitle: string
+    deleteConfirm: string
+    deleteConfirmSub: string
+    deleteCta: string
+    templateLabel: string
+    previewPdf: string
+    downloadPdf: string
+    versionLabel: string
+    noHistory: string
     sectionsMap: Record<string, string>
+    evidenceCategories: {
+      angles: string
+      personalPlanets: string
+      slowPlanets: string
+      dominantHouses: string
+      majorAspects: string
+      other: string
+    }
   }
   guide: NatalChartGuideTranslations
 }
@@ -149,10 +167,11 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       completeBadge: "Complet",
       highlightsTitle: "Points clés",
       adviceTitle: "Conseils",
-      evidenceTitle: "Données principales analysées",
-      showEvidence: "Afficher les sources astrologiques utilisées",
-      hideEvidence: "Masquer les sources",
-      disclaimerTitle: "Note",
+      evidenceTitle: "Ce que j’ai utilisé pour écrire cette interprétation",
+      evidenceIntro: "Transparence : voici les éléments utilisés pour générer ce texte.",
+      showEvidence: "Afficher le panneau d’audit",
+      hideEvidence: "Masquer le panneau d’audit",
+      disclaimerTitle: "Mentions légales",
       error: "L'interprétation n'est pas disponible pour le moment.",
       retry: "Réessayer",
       regenerate: "Nouvelle interprétation",
@@ -161,6 +180,15 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       personaSelectorTitle: "Choisissez votre astrologue",
       personaSelectorConfirm: "Demander l'interprétation complète",
       cancel: "Annuler",
+      historyTitle: "Versions disponibles",
+      deleteConfirm: "Supprimer cette version ?",
+      deleteConfirmSub: "Cette interprétation sera définitivement supprimée de votre historique.",
+      deleteCta: "Supprimer",
+      templateLabel: "Style",
+      previewPdf: "Aperçu PDF",
+      downloadPdf: "Télécharger PDF",
+      versionLabel: "Version du",
+      noHistory: "Aucune autre version disponible.",
       sectionsMap: {
         overall: "Vue d'ensemble",
         career: "Carrière et vocation",
@@ -171,6 +199,14 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
         challenges: "Défis",
         tarot_spread: "Tirage",
         event_context: "Contexte événementiel",
+      },
+      evidenceCategories: {
+        angles: "Angles",
+        personalPlanets: "Planètes personnelles",
+        slowPlanets: "Planètes lentes",
+        dominantHouses: "Maisons dominantes",
+        majorAspects: "Aspects majeurs",
+        other: "Autres repères",
       },
     },
     guide: {
@@ -299,10 +335,11 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       completeBadge: "Complete",
       highlightsTitle: "Key Points",
       adviceTitle: "Advice",
-      evidenceTitle: "Main data analyzed",
-      showEvidence: "Show astrological sources used",
-      hideEvidence: "Hide sources",
-      disclaimerTitle: "Note",
+      evidenceTitle: "What I used to write this interpretation",
+      evidenceIntro: "Transparency: here is what was used to generate this text.",
+      showEvidence: "Show audit panel",
+      hideEvidence: "Hide audit panel",
+      disclaimerTitle: "Legal Notice",
       error: "Interpretation is not available at the moment.",
       retry: "Retry",
       regenerate: "New interpretation",
@@ -311,6 +348,15 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       personaSelectorTitle: "Choose your astrologer",
       personaSelectorConfirm: "Request complete interpretation",
       cancel: "Cancel",
+      historyTitle: "Available versions",
+      deleteConfirm: "Delete this version?",
+      deleteConfirmSub: "This interpretation will be permanently removed from your history.",
+      deleteCta: "Delete",
+      templateLabel: "Style",
+      previewPdf: "Preview PDF",
+      downloadPdf: "Download PDF",
+      versionLabel: "Version from",
+      noHistory: "No other versions available.",
       sectionsMap: {
         overall: "Overall Overview",
         career: "Career and Vocation",
@@ -321,6 +367,14 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
         challenges: "Challenges",
         tarot_spread: "Tarot Spread",
         event_context: "Event Context",
+      },
+      evidenceCategories: {
+        angles: "Angles",
+        personalPlanets: "Personal planets",
+        slowPlanets: "Slow-moving planets",
+        dominantHouses: "Dominant houses",
+        majorAspects: "Major aspects",
+        other: "Other markers",
       },
     },
     guide: {
@@ -448,10 +502,11 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       completeBadge: "Completo",
       highlightsTitle: "Puntos clave",
       adviceTitle: "Consejos",
-      evidenceTitle: "Datos principales analizados",
-      showEvidence: "Mostrar fuentes astrológicas utilizadas",
-      hideEvidence: "Ocultar fuentes",
-      disclaimerTitle: "Nota",
+      evidenceTitle: "Lo que utilicé para redactar esta interpretación",
+      evidenceIntro: "Transparencia: aquí tienes lo utilizado para generar este texto.",
+      showEvidence: "Mostrar panel de auditoría",
+      hideEvidence: "Ocultar panel de auditoría",
+      disclaimerTitle: "Aviso legal",
       error: "La interpretación no está disponible en este momento.",
       retry: "Reintentar",
       regenerate: "Nueva interpretación",
@@ -460,6 +515,15 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       personaSelectorTitle: "Elige a tu astrólogo",
       personaSelectorConfirm: "Solicitar interpretación completa",
       cancel: "Cancelar",
+      historyTitle: "Versiones disponibles",
+      deleteConfirm: "¿Eliminar esta versión?",
+      deleteConfirmSub: "Esta interpretación se eliminará permanentemente de tu historial.",
+      deleteCta: "Eliminar",
+      templateLabel: "Estilo",
+      previewPdf: "Vista previa PDF",
+      downloadPdf: "Descargar PDF",
+      versionLabel: "Versión del",
+      noHistory: "No hay otras versiones disponibles.",
       sectionsMap: {
         overall: "Visión general",
         career: "Carrera y vocación",
@@ -470,6 +534,14 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
         challenges: "Desafíos",
         tarot_spread: "Tirada de Tarot",
         event_context: "Contexto del evento",
+      },
+      evidenceCategories: {
+        angles: "Ángulos",
+        personalPlanets: "Planetas personales",
+        slowPlanets: "Planetas lentos",
+        dominantHouses: "Casas dominantes",
+        majorAspects: "Aspectos mayores",
+        other: "Otros indicadores",
       },
     },
     guide: {
