@@ -1,4 +1,6 @@
 import type { ReactNode } from "react"
+import { detectLang } from "../../../i18n/astrology"
+import { t } from "../../../i18n/astrologers"
 
 type MobileView = "list" | "chat"
 
@@ -21,6 +23,7 @@ export function ChatLayout({
   hasConversation,
   isMobile,
 }: ChatLayoutProps) {
+  const lang = detectLang()
 
   if (isMobile) {
     return (
@@ -33,9 +36,9 @@ export function ChatLayout({
                 type="button"
                 className="chat-layout-mobile-action"
                 onClick={() => onMobileViewChange("chat")}
-                aria-label="Reprendre la conversation en cours"
+                aria-label={t("chat_resume_conversation", lang)}
               >
-                Reprendre la conversation
+                {t("chat_resume_conversation", lang)}
               </button>
             )}
           </div>

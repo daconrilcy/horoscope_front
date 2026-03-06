@@ -54,6 +54,15 @@ type ChatConversationSummary = {
   status: string
   updated_at: string
   last_message_preview: string
+  persona_name?: string
+  avatar_url?: string
+  last_message_at?: string
+}
+
+type CreateConversationByPersonaResponse = {
+  conversation_id: number
+  persona_id: string
+  created: boolean
 }
 
 type ChatConversationListResponse = {
@@ -329,10 +338,52 @@ export function useExecuteModule() {
   })
 }
 
+async function createConversationByPersona(personaId: string): Promise<CreateConversationByPersonaResponse> {
+  try {
+    const response = await apiFetch(
+      `${API_BASE_URL}/v1/chat/conversations/by-persona/${encodeURIComponent(personaId)}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAccessTokenAuthHeader(),
+        },
+      },
+    )
+
+    if (!response.ok) {
+      let payload: ErrorEnvelope | null = null
+      try {
+        payload = (await response.json()) as ErrorEnvelope
+      } catch {
+        payload = null
+      }
+      throw new ChatApiError(
+        payload?.error?.code ?? "unknown_error",
+        payload?.error?.message ?? `Request failed with status ${response.status}`,
+        response.status,
+        payload?.error?.details ?? {},
+      )
+    }
+
+    const payload = (await response.json()) as { data: CreateConversationByPersonaResponse }
+    return payload.data
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
+export function useCreateConversationByPersona() {
+  return useMutation({
+    mutationFn: (personaId: string) => createConversationByPersona(personaId),
+  })
+}
+
 export type {
   ChatConversationHistoryResponse,
   ChatConversationListResponse,
   ChatConversationSummary,
+  CreateConversationByPersonaResponse,
   ExecuteModulePayload,
   ExecuteModuleResponse,
   ModuleAvailabilityItem,

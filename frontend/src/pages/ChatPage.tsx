@@ -3,12 +3,13 @@ import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom"
 
 import { useBillingQuota } from "../api/billing"
 import { CHAT_PREFILL_KEY } from "../state/consultationStore"
-import { useAstrologer } from "../api/astrologers"
+import { useAstrologer, useAstrologers } from "../api/astrologers"
 import {
   ChatApiError,
   useChatConversationHistory,
   useChatConversations,
   useSendChatMessage,
+  useCreateConversationByPersona,
 } from "../api/chat"
 import {
   ChatLayout,
@@ -18,6 +19,8 @@ import {
   useIsMobile,
 } from "../features/chat"
 import type { MobileView } from "../features/chat"
+import { AstrologerPickerModal } from "../features/chat/components/AstrologerPickerModal"
+import { ChatEmptyState } from "../features/chat/components/ChatEmptyState"
 import { detectLang } from "../i18n/astrology"
 import { t } from "../i18n/astrologers"
 
@@ -42,10 +45,13 @@ export function ChatPage() {
   const sendMessage = useSendChatMessage()
   const conversations = useChatConversations(20, 0)
   const selectedAstrologer = useAstrologer(astrologerIdFromUrl || undefined)
+  const astrologers = useAstrologers()
+  const createConversation = useCreateConversationByPersona()
 
   const [localMessages, setLocalMessages] = useState<ChatUiMessage[]>([])
   const [mobileView, setMobileView] = useState<MobileView>("list")
   const [prefillMessage, setPrefillMessage] = useState<string | null>(null)
+  const [showAstrologerPicker, setShowAstrologerPicker] = useState(false)
 
   useEffect(() => {
     const prefill = sessionStorage.getItem(CHAT_PREFILL_KEY)
@@ -93,6 +99,21 @@ export function ChatPage() {
       }
     },
     [navigate, isMobile]
+  )
+
+  const handlePickAstrologer = useCallback(
+    async (astrologerId: string) => {
+      try {
+        const result = await createConversation.mutateAsync(astrologerId)
+        setShowAstrologerPicker(false)
+        void conversations.refetch()
+        navigate(`/chat/${result.conversation_id}`)
+        if (isMobile) setMobileView("chat")
+      } catch {
+        // silently fail — l'API est idempotente, l'état loading se ré-active naturellement
+      }
+    },
+    [createConversation, conversations, navigate, isMobile]
   )
 
   const handleSendMessage = useCallback(
@@ -190,74 +211,68 @@ export function ChatPage() {
     conversations.data &&
     !selectedConversationExists
 
-  if (!hasConversations && !conversations.isPending) {
-    const astrologerName = selectedAstrologer.data?.name
-    const description = astrologerName
-      ? t("chat_no_conversation_with_astrologer", lang).replace("{name}", astrologerName)
-      : t("chat_no_conversation_description", lang)
-
-    return (
-      <div className="chat-empty-state">
-        <span className="chat-empty-state-icon" role="img" aria-label={t("aria_chat_bubble", lang)}>💬</span>
-        <h2 className="chat-empty-state-title">{t("chat_no_conversation", lang)}</h2>
-        <p className="chat-empty-state-description">{description}</p>
-        <Link to="/astrologers" className="chat-empty-state-cta btn">
-          {t("choose_astrologer", lang)}
-        </Link>
-      </div>
-    )
-  }
-
-  if (isInvalidConversationUrl) {
-    return (
-      <div className="chat-empty-state">
-        <span className="chat-empty-state-icon" role="img" aria-label={t("aria_search", lang)}>🔍</span>
-        <h2 className="chat-empty-state-title">{t("chat_not_found", lang)}</h2>
-        <p className="chat-empty-state-description">
-          {t("chat_not_found_description", lang).replace("{id}", String(selectedConversationId))}
-        </p>
-        <Link to="/chat" className="chat-empty-state-cta btn">
-          {t("back_to_conversations", lang)}
-        </Link>
-      </div>
-    )
-  }
-
   return (
-    <ChatLayout
-      mobileView={mobileView}
-      onMobileViewChange={setMobileView}
-      hasConversation={hasSelectedConversation}
-      isMobile={isMobile}
-      leftPanel={
-        <ConversationList
-          conversations={conversations.data?.conversations ?? []}
-          selectedId={selectedConversationId}
-          onSelect={handleSelectConversation}
-          isLoading={conversations.isPending}
-          error={conversations.error as Error | null}
+    <>
+      <ChatLayout
+        mobileView={mobileView}
+        onMobileViewChange={setMobileView}
+        hasConversation={hasSelectedConversation}
+        isMobile={isMobile}
+        leftPanel={
+          <ConversationList
+            conversations={conversations.data?.conversations ?? []}
+            selectedId={selectedConversationId}
+            onSelect={handleSelectConversation}
+            onNewConversation={() => setShowAstrologerPicker(true)}
+            isLoading={conversations.isPending}
+            error={conversations.error as Error | null}
+          />
+        }
+        centerPanel={
+          !hasConversations && !conversations.isPending ? (
+            <ChatEmptyState onStartConversation={() => setShowAstrologerPicker(true)} />
+          ) : isInvalidConversationUrl ? (
+            <div className="chat-empty-state">
+              <span className="chat-empty-state-icon" role="img" aria-label={t("aria_search", lang)}>🔍</span>
+              <h2 className="chat-empty-state-title">{t("chat_not_found", lang)}</h2>
+              <p className="chat-empty-state-description">
+                {t("chat_not_found_description", lang).replace("{id}", String(selectedConversationId))}
+              </p>
+              <Link to="/chat" className="chat-empty-state-cta btn">
+                {t("back_to_conversations", lang)}
+              </Link>
+            </div>
+          ) : (
+            <ChatWindow
+              messages={displayedMessages}
+              onSendMessage={handleSendMessage}
+              isTyping={sendMessage.isPending}
+              isSending={sendMessage.isPending}
+              error={conversationError}
+              quotaBlocked={quotaBlocked}
+              showBackButton={isMobile}
+              onBack={handleBackToList}
+              initialMessage={prefillMessage}
+              onInitialMessageConsumed={() => setPrefillMessage(null)}
+            />
+          )
+        }
+        rightPanel={
+          <AstrologerDetailPanel
+            conversationId={selectedConversationId}
+            selectedAstrologer={selectedAstrologer.data}
+          />
+        }
+      />
+      {showAstrologerPicker && (
+        <AstrologerPickerModal
+          astrologers={astrologers.data ?? []}
+          isLoading={astrologers.isPending}
+          isCreating={createConversation.isPending}
+          onSelect={handlePickAstrologer}
+          onClose={() => setShowAstrologerPicker(false)}
         />
-      }
-      centerPanel={
-        <ChatWindow
-          messages={displayedMessages}
-          onSendMessage={handleSendMessage}
-          isTyping={sendMessage.isPending}
-          isSending={sendMessage.isPending}
-          error={conversationError}
-          quotaBlocked={quotaBlocked}
-          showBackButton={isMobile}
-          onBack={handleBackToList}
-          initialMessage={prefillMessage}
-          onInitialMessageConsumed={() => setPrefillMessage(null)}
-        />
-      }
-      rightPanel={
-        <AstrologerDetailPanel
-          conversationId={selectedConversationId}
-          selectedAstrologer={selectedAstrologer.data}
-        />
-      }
-    />
+      )}
+    </>
   )
 }

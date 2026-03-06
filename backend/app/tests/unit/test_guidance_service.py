@@ -1,12 +1,12 @@
-import pytest
 import uuid
 from datetime import date
+
+import pytest
 from sqlalchemy import select
 
 from app.core.config import settings
 from app.infra.db.base import Base
 from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine

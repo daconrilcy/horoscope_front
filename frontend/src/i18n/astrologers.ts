@@ -206,6 +206,11 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Message",
     es: "Mensaje",
   },
+  chat_resume_conversation: {
+    fr: "Reprendre la conversation",
+    en: "Resume conversation",
+    es: "Reanudar conversación",
+  },
   conversations_title: {
     fr: "Conversations",
     en: "Conversations",
@@ -245,6 +250,31 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     fr: "L'astrologue écrit...",
     en: "The astrologer is typing...",
     es: "El astrólogo está escribiendo...",
+  },
+  new_conversation: {
+    fr: "Nouvelle discussion",
+    en: "New conversation",
+    es: "Nueva conversación",
+  },
+  chat_empty_state_title: {
+    fr: "Bienvenue dans vos discussions",
+    en: "Welcome to your conversations",
+    es: "Bienvenido a sus conversaciones",
+  },
+  chat_empty_state_description: {
+    fr: "Démarrez une discussion avec l'astrologue de votre choix pour recevoir des conseils personnalisés basés sur votre thème natal.",
+    en: "Start a conversation with the astrologer of your choice to receive personalized advice based on your birth chart.",
+    es: "Inicie una conversación con el astrólogo de su elección para recibir consejos personalizados basados en su carta natal.",
+  },
+  chat_empty_state_cta: {
+    fr: "Démarrer ma première discussion",
+    en: "Start my first conversation",
+    es: "Iniciar mi primera conversación",
+  },
+  close: {
+    fr: "Fermer",
+    en: "Close",
+    es: "Cerrar",
   },
 }
 
