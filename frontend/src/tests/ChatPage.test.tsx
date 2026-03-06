@@ -8,6 +8,7 @@ const mockUseSendChatMessage = vi.fn()
 const mockUseChatConversations = vi.fn()
 const mockUseChatConversationHistory = vi.fn()
 const mockUseBillingQuota = vi.fn()
+const mockUseCreateConversationByPersona = vi.fn()
 const mockNavigate = vi.fn()
 
 vi.mock("react-router-dom", async () => {
@@ -34,6 +35,7 @@ vi.mock("../api/chat", () => ({
   useSendChatMessage: () => mockUseSendChatMessage(),
   useChatConversations: (limit?: number, offset?: number) => mockUseChatConversations(limit, offset),
   useChatConversationHistory: (id: number | null) => mockUseChatConversationHistory(id),
+  useCreateConversationByPersona: () => mockUseCreateConversationByPersona(),
 }))
 
 vi.mock("../api/billing", () => ({
@@ -55,6 +57,11 @@ vi.mock("../api/billing", () => ({
 vi.mock("../api/astrologers", () => ({
   useAstrologer: () => ({
     data: null,
+    isPending: false,
+    error: null,
+  }),
+  useAstrologers: () => ({
+    data: [],
     isPending: false,
     error: null,
   }),
@@ -80,6 +87,7 @@ afterEach(() => {
   mockUseChatConversations.mockReset()
   mockUseChatConversationHistory.mockReset()
   mockUseBillingQuota.mockReset()
+  mockUseCreateConversationByPersona.mockReset()
   mockNavigate.mockReset()
 })
 
@@ -119,11 +127,19 @@ describe("ChatPage", () => {
     mutateAsync: vi.fn(),
   }
 
+  const baseCreateConversationState = {
+    isPending: false,
+    isError: false,
+    error: null,
+    mutateAsync: vi.fn(),
+  }
+
   beforeEach(() => {
     localStorage.setItem("lang", "fr")
     mockUseBillingQuota.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue(baseSendMessageState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
+    mockUseCreateConversationByPersona.mockReturnValue(baseCreateConversationState)
   })
 
   describe("Empty State (AC6)", () => {
@@ -132,9 +148,9 @@ describe("ChatPage", () => {
 
       renderWithRouter()
 
-      expect(screen.getByText(/Aucune conversation|No conversation/)).toBeInTheDocument()
-      expect(screen.getByText(/Commencez une nouvelle conversation|Start a new conversation/)).toBeInTheDocument()
-      expect(screen.getByRole("link", { name: /Choisir un astrologue|Choose an astrologer/ })).toBeInTheDocument()
+      expect(screen.getByText(/Bienvenue dans vos discussions|Welcome to your conversations/)).toBeInTheDocument()
+      expect(screen.getByText(/Démarrez une discussion|Start a conversation/)).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /Démarrer ma première discussion|Start my first conversation/ })).toBeInTheDocument()
     })
 
     it("shows loading state while conversations are loading", () => {
@@ -146,7 +162,9 @@ describe("ChatPage", () => {
 
       renderWithRouter()
 
-      expect(screen.getByText("Chargement...")).toBeInTheDocument()
+      // Skeleton items are rendered while loading (aria-hidden, no visible text "Chargement...")
+      expect(screen.queryByText(/Aucune conversation|No conversation/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Bienvenue dans vos discussions|Welcome/)).not.toBeInTheDocument()
     })
   })
 
@@ -231,7 +249,7 @@ describe("ChatPage", () => {
     })
   })
 
-  describe("Deep Link (AC7)", () => {
+  describe("Deep Link (AC1)", () => {
     it("loads conversation from URL parameter /chat/123", () => {
       mockUseChatConversations.mockReturnValue({
         ...baseConversationsState,
@@ -285,8 +303,138 @@ describe("ChatPage", () => {
       renderWithRouter("/chat/999999")
 
       expect(screen.getByText(/Conversation introuvable|Conversation not found/)).toBeInTheDocument()
-      expect(screen.getByText(/999999/)).toBeInTheDocument()
+      // 999999 appears in both the error description and the astrologer panel — use getAllByText
+      expect(screen.getAllByText(/999999/).length).toBeGreaterThanOrEqual(1)
       expect(screen.getByRole("link", { name: /Retour aux conversations|Back to conversations/ })).toBeInTheDocument()
+    })
+  })
+
+  describe("Redirection by personaId (AC2)", () => {
+    it("calls createConversationByPersona and navigates when ?personaId is present", async () => {
+      const mutateAsync = vi.fn().mockResolvedValue({
+        conversation_id: 77,
+        persona_id: "luna",
+        created: true,
+      })
+      mockUseCreateConversationByPersona.mockReturnValue({
+        ...baseCreateConversationState,
+        mutateAsync,
+      })
+      mockUseChatConversations.mockReturnValue(baseConversationsState)
+
+      renderWithRouter("/chat?personaId=luna")
+
+      await waitFor(() => {
+        expect(mutateAsync).toHaveBeenCalledWith("luna")
+        expect(mockNavigate).toHaveBeenCalledWith("/chat/77", { replace: true })
+      })
+    })
+
+    it("redirects to /astrologers when personaId is unknown (API error)", async () => {
+      const mutateAsync = vi.fn().mockRejectedValue(new Error("Not found"))
+      mockUseCreateConversationByPersona.mockReturnValue({
+        ...baseCreateConversationState,
+        mutateAsync,
+      })
+      mockUseChatConversations.mockReturnValue(baseConversationsState)
+
+      renderWithRouter("/chat?personaId=unknown-persona")
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith("/astrologers", { replace: true })
+      })
+    })
+  })
+
+  describe("Auto-redirect to last conversation (AC3)", () => {
+    it("redirects to last conversation when navigating to /chat without ID", async () => {
+      mockUseChatConversations.mockReturnValue({
+        ...baseConversationsState,
+        data: {
+          conversations: [
+            { conversation_id: 5, status: "active", updated_at: "2026-02-22T10:00:00Z", last_message_preview: "Latest" },
+            { conversation_id: 3, status: "active", updated_at: "2026-02-21T10:00:00Z", last_message_preview: "Older" },
+          ],
+          total: 2,
+          limit: 20,
+          offset: 0,
+        },
+      })
+
+      renderWithRouter("/chat")
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith("/chat/5", { replace: true })
+      })
+    })
+
+    it("does not redirect when conversations are still loading", () => {
+      mockUseChatConversations.mockReturnValue({
+        ...baseConversationsState,
+        isPending: true,
+        data: null,
+      })
+
+      renderWithRouter("/chat")
+
+      expect(mockNavigate).not.toHaveBeenCalledWith(
+        expect.stringMatching(/^\/chat\/\d+/),
+        expect.any(Object)
+      )
+    })
+
+    it("does not redirect to last conversation if conversationId already in URL", () => {
+      mockUseChatConversations.mockReturnValue({
+        ...baseConversationsState,
+        data: {
+          conversations: [
+            { conversation_id: 5, status: "active", updated_at: "2026-02-22T10:00:00Z", last_message_preview: "Latest" },
+          ],
+          total: 1,
+          limit: 20,
+          offset: 0,
+        },
+      })
+
+      renderWithRouter("/chat/5")
+
+      expect(mockNavigate).not.toHaveBeenCalledWith("/chat/5", { replace: true })
+    })
+  })
+
+  describe("Empty Chat State with Persona (AC5)", () => {
+    it("displays persona name in empty conversation state", () => {
+      mockUseChatConversations.mockReturnValue({
+        ...baseConversationsState,
+        data: {
+          conversations: [
+            {
+              conversation_id: 10,
+              status: "active",
+              updated_at: "2026-02-22T10:00:00Z",
+              last_message_preview: "",
+              persona_name: "Luna",
+              avatar_url: undefined,
+            },
+          ],
+          total: 1,
+          limit: 20,
+          offset: 0,
+        },
+      })
+      mockUseChatConversationHistory.mockReturnValue({
+        ...baseHistoryState,
+        data: { conversation_id: 10, status: "active", updated_at: "2026-02-22T10:00:00Z", messages: [] },
+      })
+
+      renderWithRouter("/chat/10")
+
+      // "Luna" appears in both the conversation list item and the empty state persona — use getAllByText
+      const lunaElements = screen.getAllByText("Luna")
+      expect(lunaElements.length).toBeGreaterThanOrEqual(1)
+      // The persona name should appear in the chat-window-empty-persona element
+      expect(lunaElements.some((el) => el.className === "chat-window-empty-persona")).toBe(true)
+      expect(screen.getByText(/Commencez une conversation/)).toBeInTheDocument()
     })
   })
 
@@ -368,6 +516,9 @@ describe("ChatPage", () => {
         mutateAsync,
       })
 
+      // Has conversations — so ChatWindow is rendered (not ChatEmptyState)
+      // AC3 auto-redirect will call navigate("/chat/1", {replace:true}) but since
+      // navigate is mocked it doesn't actually change the URL in MemoryRouter.
       mockUseChatConversations.mockReturnValue({
         ...baseConversationsState,
         data: {

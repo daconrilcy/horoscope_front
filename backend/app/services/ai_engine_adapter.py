@@ -414,11 +414,21 @@ class AIEngineAdapter:
 
         chat_messages = [ChatMessage(role=msg["role"], content=msg["content"]) for msg in messages]
 
+        persona_memory: dict[str, str] = {}
+        for key in (
+            "persona_name",
+            "persona_tone",
+            "persona_verbosity",
+            "persona_style_markers",
+            "persona_boundaries",
+            "persona_line",  # backward-compat si présent
+        ):
+            val = context.get(key)
+            if val:
+                persona_memory[key] = str(val)
         chat_context = ChatContext(
             natal_chart_summary=context.get("natal_chart_summary"),
-            memory={"persona_line": context["persona_line"]}
-            if context.get("persona_line")
-            else None,
+            memory=persona_memory if persona_memory else None,
         )
 
         request = ChatRequest(

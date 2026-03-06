@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useEffect } from "react"
+import { useMemo, useState, useCallback, useEffect, useRef } from "react"
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom"
 
 import { useBillingQuota } from "../api/billing"
@@ -36,6 +36,9 @@ export function ChatPage() {
     conversationId: string
   }>()
   const [searchParams] = useSearchParams()
+  // AC2: support ?personaId=xxx for get-or-create redirect
+  const personaIdFromUrl = searchParams.get("personaId")
+  // Deprecated: astrologerId kept for backwards compatibility
   const astrologerIdFromUrl = searchParams.get("astrologerId")
   const navigate = useNavigate()
   const isMobile = useIsMobile()
@@ -52,6 +55,11 @@ export function ChatPage() {
   const [mobileView, setMobileView] = useState<MobileView>("list")
   const [prefillMessage, setPrefillMessage] = useState<string | null>(null)
   const [showAstrologerPicker, setShowAstrologerPicker] = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
+
+  // Track the last personaId we attempted to redirect for to avoid infinite loops
+  // but allow switching to a different personaId in the same session.
+  const lastRedirectedPersonaId = useRef<string | null>(null)
 
   useEffect(() => {
     const prefill = sessionStorage.getItem(CHAT_PREFILL_KEY)
@@ -61,9 +69,55 @@ export function ChatPage() {
     }
   }, [])
 
+  // AC2: Redirect ?personaId=xxx → POST by-persona → /chat/:conversationId
+  useEffect(() => {
+    if (!personaIdFromUrl || lastRedirectedPersonaId.current === personaIdFromUrl)
+      return
+
+    lastRedirectedPersonaId.current = personaIdFromUrl
+    setIsRedirecting(true)
+
+    createConversation
+      .mutateAsync(personaIdFromUrl)
+      .then((result) => {
+        navigate(`/chat/${result.conversation_id}`, { replace: true })
+      })
+      .catch((err) => {
+        console.error("Failed to redirect by personaId:", err)
+        // AC4: unknown personaId → redirect to /astrologers
+        // We skip the toast since no toast library is available in this project
+        navigate("/astrologers", { replace: true })
+      })
+      .finally(() => {
+        setIsRedirecting(false)
+      })
+  }, [personaIdFromUrl, navigate, createConversation])
+
   const parsedId = urlConversationId ? parseInt(urlConversationId, 10) : null
   const selectedConversationId =
     parsedId !== null && !Number.isNaN(parsedId) ? parsedId : null
+
+  // AC3: Auto-redirect to last active conversation when navigating to /chat without ID
+  useEffect(() => {
+    if (
+      !urlConversationId &&
+      !personaIdFromUrl &&
+      !conversations.isPending &&
+      conversations.data &&
+      conversations.data.conversations.length > 0
+    ) {
+      navigate(
+        `/chat/${conversations.data.conversations[0].conversation_id}`,
+        { replace: true }
+      )
+    }
+  }, [
+    urlConversationId,
+    personaIdFromUrl,
+    conversations.isPending,
+    conversations.data,
+    navigate,
+  ])
 
   const history = useChatConversationHistory(selectedConversationId)
   const quotaBlocked = quota.data?.blocked === true
@@ -183,6 +237,7 @@ export function ChatPage() {
       conversations,
       quota,
       history,
+      astrologerIdFromUrl,
     ]
   )
 
@@ -205,14 +260,32 @@ export function ChatPage() {
       (c) => c.conversation_id === selectedConversationId
     )
 
+  // AC4: Detect 404 from history API (conversation deleted or truly invalid)
+  const isHistoryNotFound =
+    history.error instanceof ChatApiError && history.error.status === 404
+
   const isInvalidConversationUrl =
-    hasSelectedConversation &&
-    !conversations.isPending &&
-    conversations.data &&
-    !selectedConversationExists
+    (hasSelectedConversation &&
+      !conversations.isPending &&
+      conversations.data &&
+      !selectedConversationExists) ||
+    isHistoryNotFound
+
+  // AC5: Persona details for empty conversation welcome state
+  const selectedConversationSummary =
+    selectedConversationId !== null
+      ? conversations.data?.conversations.find(
+          (c) => c.conversation_id === selectedConversationId
+        )
+      : undefined
 
   return (
     <>
+      {isRedirecting && (
+        <div className="chat-window-loading-overlay">
+          <div className="spinner" />
+        </div>
+      )}
       <ChatLayout
         mobileView={mobileView}
         onMobileViewChange={setMobileView}
@@ -254,6 +327,8 @@ export function ChatPage() {
               onBack={handleBackToList}
               initialMessage={prefillMessage}
               onInitialMessageConsumed={() => setPrefillMessage(null)}
+              personaName={selectedConversationSummary?.persona_name}
+              personaAvatarUrl={selectedConversationSummary?.avatar_url}
             />
           )
         }

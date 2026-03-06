@@ -28,7 +28,15 @@ from app.services.ai_engine_adapter import (
     assess_off_scope,
     map_adapter_error_to_codes,
 )
-from app.services.persona_config_service import PersonaConfigService
+from app.services.natal_interpretation_service import (
+    _detect_degraded_mode,
+    build_natal_chart_summary,
+)
+from app.services.user_birth_profile_service import (
+    UserBirthProfileService,
+    UserBirthProfileServiceError,
+)
+from app.services.user_natal_chart_service import UserNatalChartService, UserNatalChartServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -198,60 +206,6 @@ class ChatGuidanceService:
                 details={"field": "offset"},
             )
         return limit, offset
-
-    @staticmethod
-    def _build_prompt_and_context_metadata(
-        *,
-        repo: ChatRepository,
-        conversation_id: int,
-        persona_line: str,
-    ) -> tuple[str, ChatContextMetadata]:
-        """Construit le prompt LLM avec le contexte de conversation."""
-        window_messages, max_characters = ChatGuidanceService._validate_context_config()
-        recent_messages = repo.get_recent_messages(
-            conversation_id=conversation_id,
-            limit=window_messages,
-        )
-
-        selected: list[tuple[int, str, str]] = []
-        total_chars = 0
-        for message in reversed(recent_messages):
-            try:
-                normalized_content = anonymize_text(message.content.strip())
-            except LLMAnonymizationError as error:
-                raise ChatGuidanceServiceError(
-                    code="llm_anonymization_failed",
-                    message="llm payload anonymization failed",
-                    details={},
-                ) from error
-            message_chars = len(normalized_content)
-            if selected and total_chars + message_chars > max_characters:
-                break
-            if not selected and message_chars > max_characters:
-                normalized_content = normalized_content[:max_characters]
-                message_chars = len(normalized_content)
-            selected.append((message.id, message.role, normalized_content))
-            total_chars += message_chars
-
-        if not selected:
-            raise ChatGuidanceServiceError(
-                code="chat_context_unavailable",
-                message="chat context could not be built",
-                details={"conversation_id": str(conversation_id)},
-            )
-
-        selected.reverse()
-        prompt_lines = [f"{role}: {content}" for _, role, content in selected]
-        prompt = f"[prompt_version:{settings.chat_prompt_version}]\n{persona_line}\n" + "\n".join(
-            prompt_lines
-        )
-        context_metadata = ChatContextMetadata(
-            message_ids=[item[0] for item in selected],
-            message_count=len(selected),
-            context_characters=total_chars,
-            prompt_version=settings.chat_prompt_version,
-        )
-        return prompt, context_metadata
 
     @staticmethod
     def _assess_off_scope(content: str) -> tuple[bool, float, str | None]:
@@ -510,6 +464,57 @@ class ChatGuidanceService:
         )
 
     @staticmethod
+    def _load_persona_sync(db: Session, persona_id: uuid.UUID | None) -> object:
+        """
+        Charge le LlmPersonaModel correspondant au persona_id de la conversation.
+
+        Si persona_id est None (conversation legacy), log un warning et retourne le persona
+        par défaut pour permettre un backfill ultérieur (AC4).
+        """
+        from app.infra.db.models.llm_persona import LlmPersonaModel
+
+        if persona_id is not None:
+            stmt = select(LlmPersonaModel).where(LlmPersonaModel.id == persona_id).limit(1)
+            persona = db.scalar(stmt)
+            if persona is not None:
+                return persona
+            logger.warning(
+                "chat_persona_not_found persona_id=%s fallback=default", persona_id
+            )
+        else:
+            logger.warning(
+                "chat_persona_missing persona_id=None fallback=default (backfill required)"
+            )
+
+        # Fallback: Astrologue Standard ou premier persona activé
+        stmt = (
+            select(LlmPersonaModel).where(LlmPersonaModel.name == "Astrologue Standard").limit(1)
+        )
+        persona = db.scalar(stmt)
+        if persona:
+            return persona
+
+        stmt = (
+            select(LlmPersonaModel)
+            .where(LlmPersonaModel.enabled)
+            .order_by(LlmPersonaModel.created_at)
+            .limit(1)
+        )
+        persona = db.scalar(stmt)
+        if persona:
+            return persona
+
+        stmt = select(LlmPersonaModel).limit(1)
+        persona = db.scalar(stmt)
+        if persona:
+            return persona
+
+        raise ChatGuidanceServiceError(
+            code="no_persona_available",
+            message="no LLM persona available in database",
+        )
+
+    @staticmethod
     async def send_message_async(
         db: Session,
         *,
@@ -602,13 +607,14 @@ class ChatGuidanceService:
             content=normalized_message,
         )
 
-        persona_config = PersonaConfigService.get_active(db)
+        persona = ChatGuidanceService._load_persona_sync(db, conversation.persona_id)
+        persona_profile_code = persona.name.lower().replace(" ", "-")
         increment_counter(
-            f"conversation_messages_total|persona_profile={persona_config.profile_code}",
+            f"conversation_messages_total|persona_profile={persona_profile_code}",
             1.0,
         )
         increment_counter(
-            f"conversation_chat_messages_total|persona_profile={persona_config.profile_code}",
+            f"conversation_chat_messages_total|persona_profile={persona_profile_code}",
             1.0,
         )
 
@@ -656,10 +662,34 @@ class ChatGuidanceService:
             prompt_version=settings.chat_prompt_version,
         )
 
-        # natal_chart_summary: placeholder for future NatalChartService integration
+        # Construit le contexte avec les champs dynamiques du persona (AC1, AC2, AC3)
+        style_markers_str = "; ".join(persona.style_markers) if persona.style_markers else ""
+        boundaries_str = "; ".join(persona.boundaries) if persona.boundaries else ""
+
+        # Récupération du résumé du thème natal de l'utilisateur (si disponible)
+        natal_summary = None
+        try:
+            birth_profile = UserBirthProfileService.get_for_user(db, user_id=user_id)
+            natal_chart = UserNatalChartService.get_latest_for_user(db, user_id=user_id)
+            degraded_mode = _detect_degraded_mode(birth_profile)
+            natal_summary = build_natal_chart_summary(
+                natal_result=natal_chart.result,
+                birth_place=birth_profile.birth_place,
+                birth_date=birth_profile.birth_date,
+                birth_time=birth_profile.birth_time,
+                degraded_mode=degraded_mode,
+            )
+        except (UserBirthProfileServiceError, UserNatalChartServiceError):
+            # Optionnel : le chat fonctionne même sans thème natal
+            logger.debug("chat_natal_summary_not_available user_id=%d", user_id)
+
         context: dict[str, str | None] = {
-            "persona_line": persona_config.to_prompt_line(),
-            "natal_chart_summary": None,
+            "persona_name": persona.name,
+            "persona_tone": str(persona.tone),
+            "persona_verbosity": str(persona.verbosity),
+            "persona_style_markers": style_markers_str or None,
+            "persona_boundaries": boundaries_str or None,
+            "natal_chart_summary": natal_summary,
         }
 
         attempts = 0
@@ -692,7 +722,7 @@ class ChatGuidanceService:
                     request_id=request_id,
                     trace_id=trace_id,
                     assistant_content=assistant_content,
-                    persona_profile_code=persona_config.profile_code,
+                    persona_profile_code=persona_profile_code,
                 )
                 assistant_message = repo.create_message(
                     conversation_id=conversation.id,
@@ -701,7 +731,7 @@ class ChatGuidanceService:
                     metadata_payload={
                         "attempts": attempts,
                         "fallback_used": fallback_used,
-                        "persona_profile_code": persona_config.profile_code,
+                        "persona_profile_code": persona_profile_code,
                         "context": context_metadata.model_dump(mode="json"),
                         "recovery": recovery_metadata.model_dump(mode="json"),
                     },
@@ -709,7 +739,7 @@ class ChatGuidanceService:
                 elapsed_seconds = monotonic() - start
                 observe_duration("conversation_latency_seconds", elapsed_seconds)
                 observe_duration(
-                    f"conversation_latency_seconds|persona_profile={persona_config.profile_code}",
+                    f"conversation_latency_seconds|persona_profile={persona_profile_code}",
                     elapsed_seconds,
                 )
                 return ChatReplyData(
@@ -735,7 +765,7 @@ class ChatGuidanceService:
                 last_error_code, last_error_message = map_adapter_error_to_codes(err)
                 increment_counter("conversation_llm_errors_total", 1.0)
                 increment_counter(
-                    f"conversation_llm_errors_total|persona_profile={persona_config.profile_code}",
+                    f"conversation_llm_errors_total|persona_profile={persona_profile_code}",
                     1.0,
                 )
                 logger.warning(

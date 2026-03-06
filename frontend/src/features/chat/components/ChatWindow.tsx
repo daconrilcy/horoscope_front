@@ -25,6 +25,9 @@ type ChatWindowProps = {
   showBackButton?: boolean
   initialMessage?: string | null
   onInitialMessageConsumed?: () => void
+  // AC5: Persona details for empty conversation welcome state
+  personaName?: string
+  personaAvatarUrl?: string
 }
 
 export function ChatWindow({
@@ -39,6 +42,8 @@ export function ChatWindow({
   showBackButton = false,
   initialMessage = null,
   onInitialMessageConsumed,
+  personaName,
+  personaAvatarUrl,
 }: ChatWindowProps) {
   const lang = detectLang()
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -79,8 +84,29 @@ export function ChatWindow({
       >
         {isEmpty && !isTyping && (
           <div className="chat-window-empty">
+            {personaAvatarUrl && (
+              <img
+                src={personaAvatarUrl}
+                alt={personaName ?? ""}
+                className="chat-window-empty-avatar"
+              />
+            )}
+            {personaName && (
+              <p className="chat-window-empty-persona">{personaName}</p>
+            )}
             <p>{t("chat_empty_title", lang)}</p>
             <p>{t("chat_empty_subtitle", lang)}</p>
+            <button
+              type="button"
+              className="btn btn--cta"
+              style={{ marginTop: "1rem" }}
+              onClick={() => {
+                const textarea = document.querySelector(".chat-composer-input") as HTMLTextAreaElement
+                if (textarea) textarea.focus()
+              }}
+            >
+              {t("chat_empty_state_cta", lang)}
+            </button>
           </div>
         )}
 
