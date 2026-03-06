@@ -549,7 +549,7 @@ def test_create_message_updates_conversation_updated_at_for_latest_selection() -
         repo = ChatRepository(db)
         conversation_1 = repo.create_conversation(user_id=user_id, persona_id=persona_id)
         conversation_2 = repo.create_conversation(user_id=user_id, persona_id=persona_2_id)
-        
+
         # We need to test ordering when user_id is the same.
         # But wait, get_latest_active_conversation_by_user_id(user_id) returns the latest overall.
         latest_before = repo.get_latest_active_conversation_by_user_id(user_id)

@@ -32,16 +32,16 @@ class PdfTemplateModel(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
     locale: Mapped[str] = mapped_column(String(10), default="fr", index=True)
-    
+
     status: Mapped[PdfTemplateStatus] = mapped_column(
         SqlEnum(PdfTemplateStatus), default=PdfTemplateStatus.DRAFT, index=True
     )
-    
+
     version: Mapped[str] = mapped_column(String(20), default="1.0.0")
-    
+
     # JSON configuration for the template (e.g., fonts, colors, layout options)
     config_json: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
-    
+
     is_default: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
 
     created_at: Mapped[datetime] = mapped_column(
@@ -53,5 +53,5 @@ class PdfTemplateModel(Base):
         default=utc_now,
         onupdate=utc_now,
     )
-    
+
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)

@@ -65,8 +65,8 @@ class TestNatalPdfExportService:
     def test_generate_pdf_integration(self):
         # Mock DB session
         mock_db = MagicMock()
-        mock_db.execute.return_value.scalar_one_or_none.return_value = None # No custom template
-        
+        mock_db.execute.return_value.scalar_one_or_none.return_value = None  # No custom template
+
         interpretation = UserNatalInterpretationModel(
             chart_id="test-chart",
             level=InterpretationLevel.SHORT,
@@ -78,10 +78,10 @@ class TestNatalPdfExportService:
                 "highlights": ["Hi"],
                 "advice": ["Ad"],
             },
-            created_at=MagicMock()
+            created_at=MagicMock(),
         )
         interpretation.created_at.strftime.return_value = "01/01/2026"
-        
+
         pdf_bytes = NatalPdfExportService.generate_pdf(mock_db, interpretation)
         assert len(pdf_bytes) > 0
         assert pdf_bytes.startswith(b"%PDF-")

@@ -185,7 +185,7 @@ def validate_output(
         # 1. Parse JSON
         try:
             data = json.loads(raw_output)
-            # Story 30-8: V3 strictly forbids 'disclaimers'. 
+            # Story 30-8: V3 strictly forbids 'disclaimers'.
             # If the LLM included them, we remove them here to pass validation
             # and let the application layer inject the static ones.
             if schema_version.startswith("v3") and isinstance(data, dict):

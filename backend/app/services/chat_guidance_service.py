@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import urllib.parse
 import uuid
 from datetime import datetime
 from time import monotonic
@@ -96,8 +97,11 @@ class ChatConversationSummaryData(BaseModel):
 
     conversation_id: int
     persona_id: uuid.UUID
+    persona_name: str | None
+    avatar_url: str | None
     status: str
     updated_at: datetime
+    last_message_at: datetime | None
     last_message_preview: str
 
 
@@ -477,9 +481,7 @@ class ChatGuidanceService:
 
         # Tenter de trouver "Astrologue Standard"
         stmt = (
-            select(LlmPersonaModel.id)
-            .where(LlmPersonaModel.name == "Astrologue Standard")
-            .limit(1)
+            select(LlmPersonaModel.id).where(LlmPersonaModel.name == "Astrologue Standard").limit(1)
         )
         persona_id = db.scalar(stmt)
         if persona_id:
@@ -555,7 +557,8 @@ class ChatGuidanceService:
                 else:
                     resolved_persona_id = persona_id
             else:
-                resolved_persona_id = None  # Will be taken from conversation if conversation_id is set
+                # Will be taken from conversation if conversation_id is set
+                resolved_persona_id = None
         except ValueError:
             raise ChatGuidanceServiceError(
                 code="invalid_persona_id",
@@ -788,14 +791,22 @@ class ChatGuidanceService:
         )
         total = repo.count_conversations_by_user_id(user_id)
         items: list[ChatConversationSummaryData] = []
-        for conversation, preview in conversations:
+        for conversation, preview, persona_name, last_message_at in conversations:
+            # URL encode persona_name for safety in Dicebear URL
+            encoded_name = urllib.parse.quote(persona_name) if persona_name else "default"
+            avatar_url = f"https://api.dicebear.com/7.x/bottts/svg?seed={encoded_name}"
+
             items.append(
                 ChatConversationSummaryData(
                     conversation_id=conversation.id,
                     persona_id=conversation.persona_id,
+                    persona_name=persona_name,
+                    avatar_url=avatar_url,
                     status=conversation.status,
                     updated_at=conversation.updated_at,
-                    last_message_preview=(preview or "")[:120],
+                    last_message_at=last_message_at,
+                    # preview is already truncated to 120 in SQL, but we ensure string type
+                    last_message_preview=preview or "",
                 )
             )
         return ChatConversationListData(
@@ -804,6 +815,30 @@ class ChatGuidanceService:
             limit=validated_limit,
             offset=validated_offset,
         )
+
+    @staticmethod
+    def get_or_create_conversation_by_persona(
+        db: Session,
+        *,
+        user_id: int,
+        persona_id: uuid.UUID,
+    ) -> int:
+        """
+        Retourne l'ID de la conversation active pour (user, persona), ou en crée une nouvelle.
+
+        Args:
+            db: Session de base de données.
+            user_id: Identifiant de l'utilisateur.
+            persona_id: Identifiant du persona.
+
+        Returns:
+            L'ID de la conversation (existante ou nouvellement créée).
+        """
+        repo = ChatRepository(db)
+        conversation = repo.get_or_create_conversation_by_persona(
+            user_id=user_id, persona_id=persona_id
+        )
+        return conversation.id
 
     @staticmethod
     def get_conversation_history(

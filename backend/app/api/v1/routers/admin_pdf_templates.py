@@ -131,8 +131,7 @@ def _normalize_pdf_template_config(config: dict[str, Any]) -> dict[str, Any]:
             normalized[key] = bool(raw)
             continue
         raise ValueError(
-            f"config_json.{key} must be a boolean "
-            "(accepted: true/false, 1/0, yes/no, on/off)"
+            f"config_json.{key} must be a boolean (accepted: true/false, 1/0, yes/no, on/off)"
         )
 
     return normalized
@@ -199,6 +198,7 @@ def create_template(
     if body.is_default:
         # Reset other defaults
         from sqlalchemy import update
+
         db.execute(update(PdfTemplateModel).values(is_default=False))
 
     item = PdfTemplateModel(
@@ -268,6 +268,7 @@ def update_template(
     if body.is_default is not None:
         if body.is_default:
             from sqlalchemy import update
+
             db.execute(update(PdfTemplateModel).values(is_default=False))
         item.is_default = body.is_default
 

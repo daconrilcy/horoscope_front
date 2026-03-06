@@ -25,10 +25,12 @@ def _override_auth() -> AuthenticatedUser:
         created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
     )
 
+
 @pytest.fixture
 def mock_db():
     mock = MagicMock()
     return mock
+
 
 @pytest.fixture
 def test_client(mock_db):
@@ -38,11 +40,12 @@ def test_client(mock_db):
     yield client
     app.dependency_overrides.clear()
 
+
 class TestNatalInterpretationsHistory:
     def test_list_interpretations_empty(self, test_client, mock_db):
         mock_db.execute.return_value.scalars.return_value.all.return_value = []
         mock_db.scalar.return_value = 0
-        
+
         response = test_client.get("/v1/natal/interpretations")
         assert response.status_code == 200
         data = response.json()
@@ -58,11 +61,11 @@ class TestNatalInterpretationsHistory:
             use_case="natal_interpretation_short",
             interpretation_payload={"title": "Test"},
             created_at=datetime.now(timezone.utc),
-            was_fallback=False
+            was_fallback=False,
         )
         mock_db.execute.return_value.scalars.return_value.all.return_value = [item]
         mock_db.scalar.return_value = 1
-        
+
         response = test_client.get("/v1/natal/interpretations", params={"chart_id": "chart-1"})
         assert response.status_code == 200
         data = response.json()
@@ -115,7 +118,7 @@ class TestNatalInterpretationsHistory:
             was_fallback=False,
         )
         mock_db.execute.return_value.scalar_one_or_none.return_value = item
-        
+
         response = test_client.get("/v1/natal/interpretations/123")
         assert response.status_code == 200
         data = response.json()
@@ -124,7 +127,7 @@ class TestNatalInterpretationsHistory:
 
     def test_get_interpretation_not_found(self, test_client, mock_db):
         mock_db.execute.return_value.scalar_one_or_none.return_value = None
-        
+
         response = test_client.get("/v1/natal/interpretations/999")
         assert response.status_code == 404
         assert response.json()["error"]["code"] == "interpretation_not_found"
@@ -136,10 +139,10 @@ class TestNatalInterpretationsHistory:
             chart_id="chart-1",
             level=InterpretationLevel.SHORT,
             use_case="natal_interpretation_short",
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
         mock_db.execute.return_value.scalar_one_or_none.return_value = item
-        
+
         with patch("app.services.audit_service.AuditService.record_event") as mock_audit:
             response = test_client.delete("/v1/natal/interpretations/123")
             assert response.status_code == 204
@@ -149,7 +152,7 @@ class TestNatalInterpretationsHistory:
 
     def test_delete_interpretation_not_found(self, test_client, mock_db):
         mock_db.execute.return_value.scalar_one_or_none.return_value = None
-        
+
         response = test_client.delete("/v1/natal/interpretations/999")
         assert response.status_code == 404
         assert response.json()["error"]["code"] == "interpretation_not_found"

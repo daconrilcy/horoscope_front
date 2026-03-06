@@ -95,14 +95,13 @@ class NatalPdfExportService:
         if template_key:
             stmt = select(PdfTemplateModel).where(
                 PdfTemplateModel.key == template_key,
-                PdfTemplateModel.status == PdfTemplateStatus.ACTIVE
+                PdfTemplateModel.status == PdfTemplateStatus.ACTIVE,
             )
             template_model = db.execute(stmt).scalar_one_or_none()
-        
+
         if not template_model:
             stmt = select(PdfTemplateModel).where(
-                PdfTemplateModel.is_default,
-                PdfTemplateModel.status == PdfTemplateStatus.ACTIVE
+                PdfTemplateModel.is_default, PdfTemplateModel.status == PdfTemplateStatus.ACTIVE
             )
             template_model = db.execute(stmt).scalar_one_or_none()
         template_config = (
@@ -192,8 +191,8 @@ class NatalPdfExportService:
             if chart_result and isinstance(chart_result.result_payload, dict)
             else {}
         )
-        sun_sign_code, ascendant_sign_code = (
-            NatalPdfExportService._extract_sun_and_ascendant_signs(chart_payload)
+        sun_sign_code, ascendant_sign_code = NatalPdfExportService._extract_sun_and_ascendant_signs(
+            chart_payload
         )
 
         normalized_locale = (locale or "fr").split("-")[0].lower()
@@ -278,10 +277,10 @@ class NatalPdfExportService:
             f"natal_{template_model.key}.html" if template_model else "natal_default.html"
         )
         html_content = NatalPdfExportService._render_html(data, locale, template_name)
-        
+
         # 4. Convert to PDF
         pdf_bytes = NatalPdfExportService._convert_html_to_pdf(html_content)
-        
+
         return pdf_bytes
 
     @staticmethod
@@ -292,7 +291,7 @@ class NatalPdfExportService:
         template_dir = Path(__file__).parent.parent / "resources" / "templates" / "pdf"
         if not template_dir.exists():
             template_dir.mkdir(parents=True, exist_ok=True)
-            
+
         # Create default template file if not exists
         default_template_path = template_dir / "natal_default.html"
         if not default_template_path.exists():
@@ -300,9 +299,9 @@ class NatalPdfExportService:
 
         env = Environment(
             loader=FileSystemLoader(str(template_dir)),
-            autoescape=select_autoescape(['html', 'xml'])
+            autoescape=select_autoescape(["html", "xml"]),
         )
-        
+
         try:
             template = env.get_template(template_name)
         except Exception:
@@ -310,16 +309,13 @@ class NatalPdfExportService:
                 "Template %s not found, falling back to natal_default.html", template_name
             )
             template = env.get_template("natal_default.html")
-            
+
         return template.render(**data)
 
     @staticmethod
     def _convert_html_to_pdf(html_content: str) -> bytes:
         result = io.BytesIO()
-        pisa_status = pisa.CreatePDF(
-            io.StringIO(html_content),
-            dest=result
-        )
+        pisa_status = pisa.CreatePDF(io.StringIO(html_content), dest=result)
         if pisa_status.err:
             logger.error(f"Error generating PDF: {pisa_status.err}")
             raise RuntimeError("PDF generation failed")
@@ -568,11 +564,14 @@ class NatalPdfExportService:
 
     @staticmethod
     def _estimate_paragraph_lines(text: str, spacing_lines: int) -> int:
-        return max(
-            1,
-            (len(text) + NatalPdfExportService.ESTIMATED_CONTENT_CHARS_PER_LINE - 1)
-            // NatalPdfExportService.ESTIMATED_CONTENT_CHARS_PER_LINE,
-        ) + spacing_lines
+        return (
+            max(
+                1,
+                (len(text) + NatalPdfExportService.ESTIMATED_CONTENT_CHARS_PER_LINE - 1)
+                // NatalPdfExportService.ESTIMATED_CONTENT_CHARS_PER_LINE,
+            )
+            + spacing_lines
+        )
 
     @staticmethod
     def _consume_page_budget(
@@ -594,7 +593,7 @@ class NatalPdfExportService:
         # Artifacts sometimes returned by model JSON glue and then persisted as text.
         replacements = {
             "”},{": " ",
-            "\"},{": " ",
+            '"},{': " ",
             "}, {": " ",
             "": "- ",
         }
@@ -622,7 +621,7 @@ class NatalPdfExportService:
 
         replacements = {
             "”},{": "\n\n",
-            "\"},{": "\n\n",
+            '"},{': "\n\n",
             "}, {": "\n\n",
             "": "- ",
         }
@@ -669,7 +668,7 @@ class NatalPdfExportService:
                         current = []
                         current_len = 0
                     for start in range(0, len(word), max_chars):
-                        chunks.append(word[start:start + max_chars])
+                        chunks.append(word[start : start + max_chars])
                     continue
                 next_len = current_len + (1 if current else 0) + len(word)
                 if current and next_len > max_chars:
@@ -815,9 +814,7 @@ class NatalPdfExportService:
                 else 0
             )
             section_head_lines = (
-                heading_lines
-                + first_paragraph_lines
-                + resolved_section_head_extra_lines
+                heading_lines + first_paragraph_lines + resolved_section_head_extra_lines
             )
             if first_paragraph:
                 section_head_lines = max(
@@ -903,9 +900,9 @@ class NatalPdfExportService:
     def _localize_sign_label(sign_code: str | None, locale: str) -> str | None:
         if not sign_code:
             return None
-        labels = NatalPdfExportService.SIGN_LABELS.get(
-            locale
-        ) or NatalPdfExportService.SIGN_LABELS["fr"]
+        labels = (
+            NatalPdfExportService.SIGN_LABELS.get(locale) or NatalPdfExportService.SIGN_LABELS["fr"]
+        )
         return labels.get(sign_code.lower(), sign_code)
 
     @staticmethod

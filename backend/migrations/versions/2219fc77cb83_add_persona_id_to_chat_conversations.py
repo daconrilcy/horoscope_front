@@ -4,6 +4,7 @@ Revision ID: 2219fc77cb83
 Revises: fd1d41d35808
 Create Date: 2026-03-05 17:57:51.743853
 """
+
 import uuid
 from typing import Sequence, Union
 
@@ -11,8 +12,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = '2219fc77cb83'
-down_revision: Union[str, Sequence[str], None] = 'fd1d41d35808'
+revision: str = "2219fc77cb83"
+down_revision: Union[str, Sequence[str], None] = "fd1d41d35808"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -20,18 +21,18 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     # 1. Add persona_id to chat_conversations as nullable
     op.add_column(
-        'chat_conversations',
+        "chat_conversations",
         sa.Column(
-            'persona_id',
+            "persona_id",
             sa.UUID(),
-            sa.ForeignKey('llm_personas.id', name='fk_chat_conversations_persona'),
-            nullable=True
-        )
+            sa.ForeignKey("llm_personas.id", name="fk_chat_conversations_persona"),
+            nullable=True,
+        ),
     )
 
     # 2. Backfill existing conversations
     conn = op.get_bind()
-    
+
     # Try to find a default persona
     # Preference: "Astrologue Standard"
     res = conn.execute(
@@ -45,17 +46,16 @@ def upgrade() -> None:
     if not res:
         # Fallback: any persona
         res = conn.execute(sa.text("SELECT id FROM llm_personas LIMIT 1")).fetchone()
-    
+
     default_persona_id = res[0] if res else None
-    
+
     if default_persona_id:
         # Update existing rows
         conn.execute(
             sa.text(
-                "UPDATE chat_conversations SET persona_id = :persona_id "
-                "WHERE persona_id IS NULL"
+                "UPDATE chat_conversations SET persona_id = :persona_id WHERE persona_id IS NULL"
             ),
-            {"persona_id": default_persona_id}
+            {"persona_id": default_persona_id},
         )
     else:
         # If no persona at all exists, we might need to create a legacy one
@@ -75,30 +75,30 @@ def upgrade() -> None:
                     (:id, :name, 'direct', 'medium', '[]', '[]', '[]', '[]', 
                      '{}', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 """),
-                {"id": legacy_id, "name": "Legacy Default"}
+                {"id": legacy_id, "name": "Legacy Default"},
             )
             conn.execute(
                 sa.text(
                     "UPDATE chat_conversations SET persona_id = :persona_id "
                     "WHERE persona_id IS NULL"
                 ),
-                {"persona_id": legacy_id}
+                {"persona_id": legacy_id},
             )
 
     # 3. Make persona_id NOT NULL and add unique partial index
-    with op.batch_alter_table('chat_conversations', schema=None) as batch_op:
-        batch_op.alter_column('persona_id', existing_type=sa.UUID(), nullable=False)
+    with op.batch_alter_table("chat_conversations", schema=None) as batch_op:
+        batch_op.alter_column("persona_id", existing_type=sa.UUID(), nullable=False)
         batch_op.create_index(
-            'ix_chat_conversations_user_persona_active',
-            ['user_id', 'persona_id'],
+            "ix_chat_conversations_user_persona_active",
+            ["user_id", "persona_id"],
             unique=True,
             sqlite_where=sa.text("status = 'active'"),
-            postgresql_where=sa.text("status = 'active'")
+            postgresql_where=sa.text("status = 'active'"),
         )
 
 
 def downgrade() -> None:
-    with op.batch_alter_table('chat_conversations', schema=None) as batch_op:
-        batch_op.drop_index('ix_chat_conversations_user_persona_active')
-        batch_op.drop_constraint('fk_chat_conversations_persona', type_='foreignkey')
-        batch_op.drop_column('persona_id')
+    with op.batch_alter_table("chat_conversations", schema=None) as batch_op:
+        batch_op.drop_index("ix_chat_conversations_user_persona_active")
+        batch_op.drop_constraint("fk_chat_conversations_persona", type_="foreignkey")
+        batch_op.drop_column("persona_id")

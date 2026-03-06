@@ -98,4 +98,3 @@ def downgrade() -> None:
         "uq_user_natal_interpretations_null_persona",
         table_name="user_natal_interpretations",
     )
-

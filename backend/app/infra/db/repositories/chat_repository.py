@@ -4,10 +4,12 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import desc, func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
+from app.infra.db.models.llm_persona import LlmPersonaModel
 
 
 class ChatRepository:
@@ -28,9 +30,9 @@ class ChatRepository:
             query = query.where(ChatConversationModel.persona_id == persona_id)
 
         return self.db.scalar(
-            query.order_by(desc(ChatConversationModel.updated_at), desc(ChatConversationModel.id)).limit(
-                1
-            )
+            query.order_by(
+                desc(ChatConversationModel.updated_at), desc(ChatConversationModel.id)
+            ).limit(1)
         )
 
     def get_active_conversation(
@@ -55,16 +57,20 @@ class ChatRepository:
         if existing:
             return existing
 
-        from sqlalchemy.exc import IntegrityError
-
         # Use a savepoint to handle the rare case where someone inserted it
         # between our SELECT and INSERT.
         try:
             with self.db.begin_nested():
-                return self.create_conversation(user_id, persona_id)
+                model = self.create_conversation(user_id, persona_id)
+                return model
         except IntegrityError:
-            # Another process inserted it first
-            return self.get_active_conversation(user_id, persona_id)  # type: ignore
+            # Another process inserted it first (or another constraint failed)
+            # We retry getting it to be sure.
+            found = self.get_active_conversation(user_id, persona_id)
+            if found:
+                return found
+            # If still not found, it might be a foreign key error or other constraint, re-raise
+            raise
 
     def create_conversation(self, user_id: int, persona_id: uuid.UUID) -> ChatConversationModel:
         model = ChatConversationModel(user_id=user_id, persona_id=persona_id, status="active")
@@ -127,22 +133,47 @@ class ChatRepository:
         *,
         limit: int,
         offset: int,
-    ) -> list[tuple[ChatConversationModel, str | None]]:
-        last_message_preview = (
-            select(ChatMessageModel.content)
+    ) -> list[tuple[ChatConversationModel, str | None, str | None, datetime | None]]:
+        # Truncate to 120 directly in DB
+        last_message_subq = (
+            select(func.substr(ChatMessageModel.content, 1, 120))
             .where(ChatMessageModel.conversation_id == ChatConversationModel.id)
             .order_by(desc(ChatMessageModel.created_at), desc(ChatMessageModel.id))
             .limit(1)
             .scalar_subquery()
         )
+        last_message_at_subq = (
+            select(ChatMessageModel.created_at)
+            .where(ChatMessageModel.conversation_id == ChatConversationModel.id)
+            .order_by(desc(ChatMessageModel.created_at), desc(ChatMessageModel.id))
+            .limit(1)
+            .scalar_subquery()
+        )
+        # Sort by last_message_at if available, otherwise fall back to updated_at
+        sort_key = func.coalesce(last_message_at_subq, ChatConversationModel.updated_at)
         rows = self.db.execute(
-            select(ChatConversationModel, last_message_preview.label("last_message_preview"))
+            select(
+                ChatConversationModel,
+                last_message_subq.label("last_message_preview"),
+                LlmPersonaModel.name.label("persona_name"),
+                last_message_at_subq.label("last_message_at"),
+            )
+            .join(LlmPersonaModel, LlmPersonaModel.id == ChatConversationModel.persona_id)
             .where(ChatConversationModel.user_id == user_id)
-            .order_by(desc(ChatConversationModel.updated_at), desc(ChatConversationModel.id))
+            .order_by(desc(sort_key), desc(ChatConversationModel.id))
             .limit(limit)
             .offset(offset)
         )
-        return [(conversation, preview) for conversation, preview in rows.all()]
+        return [
+            (conversation, preview, persona_name, last_message_at)
+            for conversation, preview, persona_name, last_message_at in rows.all()
+        ]
+
+    def get_or_create_conversation_by_persona(
+        self, user_id: int, persona_id: uuid.UUID
+    ) -> ChatConversationModel:
+        """Get or create the active conversation for a user/persona pair."""
+        return self.get_or_create_active_conversation(user_id=user_id, persona_id=persona_id)
 
     def count_conversations_by_user_id(self, user_id: int) -> int:
         return int(

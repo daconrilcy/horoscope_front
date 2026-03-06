@@ -83,14 +83,10 @@ def _build_persona_prompt_profile(persona: LlmPersonaModel) -> str:
 
     style_fragment = ", ".join(style_markers) if style_markers else "pédagogie claire et concrète"
     boundaries_fragment = (
-        "; ".join(boundaries)
-        if boundaries
-        else "pas de fatalisme et pas de promesse absolue"
+        "; ".join(boundaries) if boundaries else "pas de fatalisme et pas de promesse absolue"
     )
     topics_fragment = (
-        ", ".join(allowed_topics)
-        if allowed_topics
-        else "thème natal et dynamiques de vie"
+        ", ".join(allowed_topics) if allowed_topics else "thème natal et dynamiques de vie"
     )
     description = (persona.description or "").strip()
     if not description:
@@ -248,7 +244,7 @@ class NatalInterpretationServiceV2:
                     prompt_version_id=str(existing.prompt_version_id)
                     if existing.prompt_version_id
                     else None,
-                    schema_version="unknown", # Will be set by format method
+                    schema_version="unknown",  # Will be set by format method
                     validation_status="valid",
                     was_fallback=existing.was_fallback,
                     request_id=request_id,
@@ -629,9 +625,7 @@ class NatalInterpretationServiceV2:
         meta.id = model.id
         disclaimers = get_disclaimers(locale)
         base_payload = (
-            model.interpretation_payload
-            if isinstance(model.interpretation_payload, dict)
-            else {}
+            model.interpretation_payload if isinstance(model.interpretation_payload, dict) else {}
         )
         full_payload = {**base_payload, "disclaimers": disclaimers}
 

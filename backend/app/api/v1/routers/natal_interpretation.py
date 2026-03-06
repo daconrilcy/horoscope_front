@@ -256,6 +256,7 @@ async def list_natal_interpretations(
     from time import monotonic
 
     from app.infra.observability.metrics import observe_duration
+
     start_time = monotonic()
     try:
         items, total = NatalInterpretationServiceV2.list_interpretations(
@@ -332,8 +333,9 @@ async def get_natal_interpretation(
     from time import monotonic
 
     from app.infra.observability.metrics import observe_duration
+
     start_time = monotonic()
-    
+
     item = NatalInterpretationServiceV2.get_interpretation_by_id(
         db=db,
         user_id=current_user.id,
@@ -370,6 +372,8 @@ async def get_natal_interpretation(
         item.chart_id,
     )
     return result
+
+
 @router.delete(
     "/interpretations/{interpretation_id}",
     status_code=204,
@@ -386,8 +390,9 @@ async def delete_natal_interpretation(
     from time import monotonic
 
     from app.infra.observability.metrics import observe_duration
+
     start_time = monotonic()
-    
+
     success = NatalInterpretationServiceV2.delete_interpretation(
         db=db,
         user_id=current_user.id,
@@ -438,8 +443,9 @@ async def download_natal_interpretation_pdf(
     from time import monotonic
 
     from app.infra.observability.metrics import observe_duration
+
     start_time = monotonic()
-    
+
     item = NatalInterpretationServiceV2.get_interpretation_by_id(
         db=db,
         user_id=current_user.id,
@@ -482,4 +488,3 @@ async def download_natal_interpretation_pdf(
         return _create_error_response(
             500, "pdf_generation_failed", "Failed to generate PDF", request_id
         )
-

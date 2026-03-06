@@ -266,7 +266,7 @@ development_status:
   30-8-mise-a-niveau-globale-interpretation-theme-natal-gpt5-responses-structured-outputs: done
   30-9-historique-multi-interpretations-suppression-tracable-export-pdf-templatisable: in-progress
   30-10-chat-multi-astrologue-persistence-invariant-anti-doublon: done
-  30-11-chat-api-enrichment-get-or-create: ready-for-dev
+  30-11-chat-api-enrichment-get-or-create: done
   30-12-chat-ui-messenger-identity-search-new: ready-for-dev
   30-13-chat-navigation-conversation-deep-links-redirection: ready-for-dev
   30-14-chat-ai-dynamic-prompting-persona-config: ready-for-dev

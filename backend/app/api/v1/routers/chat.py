@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, Request
@@ -53,6 +54,15 @@ class ChatConversationListApiResponse(BaseModel):
 
 class ChatConversationHistoryApiResponse(BaseModel):
     data: ChatConversationHistoryData
+    meta: ResponseMeta
+
+
+class GetOrCreateConversationData(BaseModel):
+    conversation_id: int
+
+
+class GetOrCreateConversationApiResponse(BaseModel):
+    data: GetOrCreateConversationData
     meta: ResponseMeta
 
 
@@ -257,6 +267,61 @@ def get_chat_conversation_history(
         status_code = 404 if error.code == "conversation_not_found" else 403
         return JSONResponse(
             status_code=status_code,
+            content={
+                "error": {
+                    "code": error.code,
+                    "message": error.message,
+                    "details": error.details,
+                    "request_id": request_id,
+                }
+            },
+        )
+
+
+@router.post(
+    "/conversations/by-persona/{persona_id}",
+    response_model=GetOrCreateConversationApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        422: {"model": ErrorEnvelope},
+    },
+)
+def get_or_create_conversation_by_persona(
+    request: Request,
+    persona_id: uuid.UUID,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    if current_user.role not in {"user", "admin"}:
+        return JSONResponse(
+            status_code=403,
+            content={
+                "error": {
+                    "code": "insufficient_role",
+                    "message": "role is not allowed",
+                    "details": {"required_roles": "user, admin"},
+                    "request_id": request_id,
+                }
+            },
+        )
+
+    try:
+        conversation_id = ChatGuidanceService.get_or_create_conversation_by_persona(
+            db=db,
+            user_id=current_user.id,
+            persona_id=persona_id,
+        )
+        db.commit()
+        return {
+            "data": {"conversation_id": conversation_id},
+            "meta": {"request_id": request_id},
+        }
+    except ChatGuidanceServiceError as error:
+        db.rollback()
+        return JSONResponse(
+            status_code=422,
             content={
                 "error": {
                     "code": error.code,

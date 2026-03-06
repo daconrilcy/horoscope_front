@@ -1,182 +1,164 @@
-import uuid
-
 import pytest
-from sqlalchemy import delete, select
+import uuid
+from datetime import date
+from sqlalchemy import select
 
 from app.core.config import settings
-from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.base import Base
-from app.infra.db.models.chart_result import ChartResultModel
-from app.infra.db.models.chat_conversation import ChatConversationModel
-from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.reference import (
-    AspectModel,
-    AstroCharacteristicModel,
-    HouseModel,
-    PlanetModel,
-    ReferenceVersionModel,
-    SignModel,
-)
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
-from app.services.ai_engine_adapter import (
-    reset_test_generators,
-    set_test_guidance_generator,
-)
 from app.services.auth_service import AuthService
 from app.services.guidance_service import GuidanceService, GuidanceServiceError
 from app.services.persona_config_service import PersonaConfigService, PersonaConfigUpdatePayload
-from app.services.user_birth_profile_service import UserBirthProfileService
 
 
 def _cleanup_tables() -> None:
-    reset_test_generators()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+
+
+def _create_user_id(email: str = "guidance-user@example.com") -> int:
     with SessionLocal() as db:
-        for model in (
-            ChatMessageModel,
-            ChatConversationModel,
-            ChartResultModel,
-            UserBirthProfileModel,
-            UserModel,
-            AstroCharacteristicModel,
-            AspectModel,
-            HouseModel,
-            SignModel,
-            PlanetModel,
-            ReferenceVersionModel,
-        ):
-            db.execute(delete(model))
-        # Seed default persona
-        default_persona = LlmPersonaModel(
-            name="Astrologue Standard",
-            enabled=True,
-            tone="direct",
-            verbosity="medium",
-            style_markers=[],
-            boundaries=[],
-            allowed_topics=[],
-            disallowed_topics=[],
-            formatting={},
-        )
-        db.add(default_persona)
+        auth = AuthService.register(db, email=email, password="strong-pass-123")
         db.commit()
+        return auth.user.id
 
 
-def _create_user_id() -> int:
+def _create_ops_user_id(email: str = "ops-user@example.com") -> int:
     with SessionLocal() as db:
-        auth = AuthService.register(
-            db,
-            email="guidance-user@example.com",
-            password="strong-pass-123",
-        )
+        auth = AuthService.register(db, email=email, password="strong-pass-123", role="ops")
         db.commit()
         return auth.user.id
 
 
 def _seed_birth_profile(user_id: int) -> None:
     with SessionLocal() as db:
-        UserBirthProfileService.upsert_for_user(
-            db,
+        profile = UserBirthProfileModel(
             user_id=user_id,
-            payload=BirthInput(
-                birth_date="1990-06-15",
-                birth_time="10:30",
-                birth_place="Paris",
-                birth_timezone="Europe/Paris",
-            ),
+            birth_date=date(1990, 1, 1),
+            birth_time="12:00:00",
+            birth_place="Paris, France",
+            birth_timezone="Europe/Paris",
+            birth_lat=48.8566,
+            birth_lon=2.3522,
         )
+        db.add(profile)
         db.commit()
-
-
-def _create_ops_user_id(email: str) -> int:
-    with SessionLocal() as db:
-        auth = AuthService.register(
-            db,
-            email=email,
-            password="strong-pass-123",
-            role="ops",
-        )
-        db.commit()
-        return auth.user.id
 
 
 class RecordingGenerator:
-    """Generator that records all calls and returns a simple guidance response."""
-
     def __init__(self) -> None:
+        self.messages: list[list[dict[str, str]]] = []
         self.contexts: list[dict[str, str | None]] = []
         self.use_cases: list[str] = []
 
     async def __call__(
         self,
-        use_case: str,
+        messages: list[dict[str, str]],
         context: dict[str, str | None],
-        user_id: int,
-        request_id: str,
-        trace_id: str,
-        locale: str,
+        use_case: str,
+        *args: object,
+        **kwargs: object,
     ) -> str:
+        self.messages.append(messages)
+        self.contexts.append(context)
+        self.use_cases.append(use_case)
+        return (
+            "**Guidance du jour**\n\n* Points cles: Energie haute.\n* Conseil: Agissez.\n\n"
+            "Attention: Ceci n'est pas un conseil medical."
+        )
+
+    async def generate_chat(self, *args, **kwargs) -> str:
+        return "Chat response"
+
+    async def generate_guidance(self, use_case, context, *args, **kwargs) -> str:
         self.use_cases.append(use_case)
         self.contexts.append(context)
-        return "guidance-ok:30"
-
-
-class TimeoutGenerator:
-    """Generator that raises TimeoutError."""
-
-    async def __call__(self, *args, **kwargs) -> str:
-        raise TimeoutError("timeout")
-
-
-class UnavailableGenerator:
-    """Generator that raises ConnectionError."""
-
-    async def __call__(self, *args, **kwargs) -> str:
-        raise ConnectionError("unavailable")
+        return (
+            "**Guidance du jour**\n\n* Points cles: Energie haute.\n* Conseil: Agissez.\n\n"
+            "Attention: Ceci n'est pas un conseil medical."
+        )
 
 
 class EchoPromptGenerator:
-    """Generator that echoes part of the context."""
-
     async def __call__(
         self,
-        use_case: str,
+        messages: list[dict[str, str]],
         context: dict[str, str | None],
-        user_id: int,
-        request_id: str,
-        trace_id: str,
-        locale: str,
+        *args: object,
+        **kwargs: object,
     ) -> str:
-        return f"Guidance astrologique: {use_case}"
+        return "[guidance_prompt_version:v1]\nSummary: Success."
+
+    async def generate_guidance(self, use_case, context, *args, **kwargs) -> str:
+        return "[guidance_prompt_version:v1]\nSummary: Success."
+
+
+class TimeoutGenerator:
+    async def __call__(self, *args: object, **kwargs: object) -> str:
+        raise TimeoutError("LLM Timeout")
+
+
+class UnavailableGenerator:
+    async def __call__(self, *args: object, **kwargs: object) -> str:
+        raise ConnectionError("LLM Provider Down")
 
 
 class OffScopeThenRecoveredGenerator:
-    """Generator that returns off-scope on first call, then recovers."""
-
     def __init__(self) -> None:
         self.calls = 0
 
-    async def __call__(self, *args, **kwargs) -> str:
+    async def __call__(self, *args: object, **kwargs: object) -> str:
         self.calls += 1
         if self.calls == 1:
-            return "[off_scope] guidance incoherente"
-        return "Guidance reformulee et pertinente"
+            return "[off_scope] Je ne sais pas."
+        return "**Guidance recalibre**\n\nPoints cles: Tout va bien."
 
 
 class AlwaysOffScopeGenerator:
-    """Generator that always returns off-scope."""
+    async def __call__(self, *args: object, **kwargs: object) -> str:
+        return "[off_scope] Erreur fatale."
 
-    async def __call__(self, *args, **kwargs) -> str:
-        return "[off_scope] guidance toujours incoherente"
+
+def set_test_generators(generator: object) -> None:
+    from app.services.ai_engine_adapter import set_test_chat_generator, set_test_guidance_generator
+
+    if hasattr(generator, "generate_chat"):
+        set_test_chat_generator(generator.generate_chat)  # type: ignore
+    elif callable(generator):
+        set_test_chat_generator(generator)  # type: ignore
+    else:
+        set_test_chat_generator(None)
+
+    if hasattr(generator, "generate_guidance"):
+        set_test_guidance_generator(generator.generate_guidance)  # type: ignore
+    elif callable(generator):
+        set_test_guidance_generator(generator)  # type: ignore
+    else:
+        set_test_guidance_generator(None)
 
 
 def _get_default_persona_id() -> uuid.UUID:
     with SessionLocal() as db:
+        # Create persona if not exists
+        persona = db.scalar(select(LlmPersonaModel).limit(1))
+        if not persona:
+            persona = LlmPersonaModel(
+                name="Astrologue Standard",
+                enabled=True,
+                tone="direct",
+                verbosity="medium",
+                style_markers=[],
+                boundaries=[],
+                allowed_topics=[],
+                disallowed_topics=[],
+                formatting={},
+            )
+            db.add(persona)
+            db.commit()
         return db.scalar(select(LlmPersonaModel.id).limit(1))
 
 
@@ -185,12 +167,13 @@ def test_request_guidance_daily_success() -> None:
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
     generator = RecordingGenerator()
-    set_test_guidance_generator(generator)
+    set_test_generators(generator)
     persona_id = _get_default_persona_id()
 
     with SessionLocal() as db:
-        conversation = ChatRepository(db).create_conversation(user_id=user_id, persona_id=persona_id)
-        ChatRepository(db).create_message(
+        repo = ChatRepository(db)
+        conversation = repo.create_conversation(user_id=user_id, persona_id=persona_id)
+        repo.create_message(
             conversation.id,
             "user",
             "Que dois-je surveiller aujourd hui ?",
@@ -220,12 +203,13 @@ def test_request_guidance_weekly_success() -> None:
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
     generator = RecordingGenerator()
-    set_test_guidance_generator(generator)
+    set_test_generators(generator)
 
     persona_id = _get_default_persona_id()
     with SessionLocal() as db:
-        conversation = ChatRepository(db).create_conversation(user_id=user_id, persona_id=persona_id)
-        ChatRepository(db).create_message(
+        repo = ChatRepository(db)
+        conversation = repo.create_conversation(user_id=user_id, persona_id=persona_id)
+        repo.create_message(
             conversation.id,
             "user",
             "Quels sont les themes majeurs de ma semaine ?",
@@ -255,7 +239,7 @@ def test_request_guidance_uses_active_persona_policy_in_prompt() -> None:
     _seed_birth_profile(user_id)
     ops_user_id = _create_ops_user_id("guidance-ops@example.com")
     generator = RecordingGenerator()
-    set_test_guidance_generator(generator)
+    set_test_generators(generator)
 
     with SessionLocal() as db:
         PersonaConfigService.update_active(
@@ -308,7 +292,7 @@ def test_request_guidance_timeout_and_unavailable_are_retryable() -> None:
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
 
-    set_test_guidance_generator(TimeoutGenerator())
+    set_test_generators(TimeoutGenerator())
     with SessionLocal() as db:
         with pytest.raises(GuidanceServiceError) as timeout_error:
             GuidanceService.request_guidance(
@@ -319,7 +303,7 @@ def test_request_guidance_timeout_and_unavailable_are_retryable() -> None:
     assert timeout_error.value.code == "llm_timeout"
     assert timeout_error.value.details["retryable"] == "true"
 
-    set_test_guidance_generator(UnavailableGenerator())
+    set_test_generators(UnavailableGenerator())
     with SessionLocal() as db:
         with pytest.raises(GuidanceServiceError) as unavailable_error:
             GuidanceService.request_guidance(
@@ -338,7 +322,7 @@ def test_request_guidance_applies_retry_backoff_when_configured(
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
     delays: list[float] = []
-    set_test_guidance_generator(TimeoutGenerator())
+    set_test_generators(TimeoutGenerator())
 
     async def fake_sleep(delay: float) -> None:
         delays.append(delay)
@@ -366,12 +350,13 @@ def test_request_guidance_never_leaks_internal_prompt_in_summary() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
-    set_test_guidance_generator(EchoPromptGenerator())
+    set_test_generators(EchoPromptGenerator())
 
     persona_id = _get_default_persona_id()
     with SessionLocal() as db:
-        conversation = ChatRepository(db).create_conversation(user_id=user_id, persona_id=persona_id)
-        ChatRepository(db).create_message(conversation.id, "user", "Question sensible")
+        repo = ChatRepository(db)
+        conversation = repo.create_conversation(user_id=user_id, persona_id=persona_id)
+        repo.create_message(conversation.id, "user", "Question sensible")
         response = GuidanceService.request_guidance(
             db=db,
             user_id=user_id,
@@ -387,7 +372,7 @@ def test_request_guidance_rejects_unknown_or_foreign_conversation_id() -> None:
     _cleanup_tables()
     owner_user_id = _create_user_id()
     _seed_birth_profile(owner_user_id)
-    set_test_guidance_generator(RecordingGenerator())
+    set_test_generators(RecordingGenerator())
     with SessionLocal() as db:
         foreign_user = AuthService.register(
             db,
@@ -400,8 +385,9 @@ def test_request_guidance_rejects_unknown_or_foreign_conversation_id() -> None:
 
     persona_id = _get_default_persona_id()
     with SessionLocal() as db:
-        owner_conversation = ChatRepository(db).create_conversation(user_id=owner_user_id, persona_id=persona_id)
-        ChatRepository(db).create_message(owner_conversation.id, "user", "Thread owner")
+        repo = ChatRepository(db)
+        owner_conversation = repo.create_conversation(user_id=owner_user_id, persona_id=persona_id)
+        repo.create_message(owner_conversation.id, "user", "Thread owner")
         owner_conversation_id = owner_conversation.id
         db.commit()
 
@@ -431,12 +417,13 @@ def test_request_contextual_guidance_success() -> None:
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
     generator = RecordingGenerator()
-    set_test_guidance_generator(generator)
+    set_test_generators(generator)
 
     persona_id = _get_default_persona_id()
     with SessionLocal() as db:
-        conversation = ChatRepository(db).create_conversation(user_id=user_id, persona_id=persona_id)
-        ChatRepository(db).create_message(conversation.id, "user", "Contexte personnel")
+        repo = ChatRepository(db)
+        conversation = repo.create_conversation(user_id=user_id, persona_id=persona_id)
+        repo.create_message(conversation.id, "user", "Contexte personnel")
         response = GuidanceService.request_contextual_guidance(
             db=db,
             user_id=user_id,
@@ -462,7 +449,7 @@ def test_request_guidance_applies_recovery_when_off_scope_detected() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
-    set_test_guidance_generator(OffScopeThenRecoveredGenerator())
+    set_test_generators(OffScopeThenRecoveredGenerator())
 
     with SessionLocal() as db:
         response = GuidanceService.request_guidance(
@@ -482,7 +469,7 @@ def test_request_contextual_guidance_uses_safe_fallback_when_recovery_fails() ->
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
-    set_test_guidance_generator(AlwaysOffScopeGenerator())
+    set_test_generators(AlwaysOffScopeGenerator())
 
     with SessionLocal() as db:
         response = GuidanceService.request_contextual_guidance(
@@ -503,7 +490,7 @@ def test_request_contextual_guidance_normalizes_blank_time_horizon_to_none() -> 
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
-    set_test_guidance_generator(RecordingGenerator())
+    set_test_generators(RecordingGenerator())
 
     with SessionLocal() as db:
         response = GuidanceService.request_contextual_guidance(
@@ -522,12 +509,13 @@ def test_request_contextual_guidance_never_leaks_internal_prompt_in_summary() ->
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
-    set_test_guidance_generator(EchoPromptGenerator())
+    set_test_generators(EchoPromptGenerator())
 
     persona_id = _get_default_persona_id()
     with SessionLocal() as db:
-        conversation = ChatRepository(db).create_conversation(user_id=user_id, persona_id=persona_id)
-        ChatRepository(db).create_message(conversation.id, "user", "Question sensible contextual")
+        repo = ChatRepository(db)
+        conversation = repo.create_conversation(user_id=user_id, persona_id=persona_id)
+        repo.create_message(conversation.id, "user", "Question sensible contextual")
         response = GuidanceService.request_contextual_guidance(
             db=db,
             user_id=user_id,
@@ -545,7 +533,7 @@ def test_request_contextual_guidance_invalid_context_rejected() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
-    set_test_guidance_generator(RecordingGenerator())
+    set_test_generators(RecordingGenerator())
 
     with SessionLocal() as db:
         with pytest.raises(GuidanceServiceError) as error:
@@ -561,7 +549,7 @@ def test_request_contextual_guidance_invalid_context_rejected() -> None:
 def test_request_contextual_guidance_missing_birth_profile() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
-    set_test_guidance_generator(RecordingGenerator())
+    set_test_generators(RecordingGenerator())
 
     with SessionLocal() as db:
         with pytest.raises(GuidanceServiceError) as error:
@@ -578,7 +566,7 @@ def test_request_contextual_guidance_rejects_unknown_or_foreign_conversation_id(
     _cleanup_tables()
     owner_user_id = _create_user_id()
     _seed_birth_profile(owner_user_id)
-    set_test_guidance_generator(RecordingGenerator())
+    set_test_generators(RecordingGenerator())
     with SessionLocal() as db:
         foreign_user = AuthService.register(
             db,
@@ -591,8 +579,9 @@ def test_request_contextual_guidance_rejects_unknown_or_foreign_conversation_id(
 
     persona_id = _get_default_persona_id()
     with SessionLocal() as db:
-        owner_conversation = ChatRepository(db).create_conversation(user_id=owner_user_id, persona_id=persona_id)
-        ChatRepository(db).create_message(owner_conversation.id, "user", "Thread owner contextual")
+        repo = ChatRepository(db)
+        owner_conversation = repo.create_conversation(user_id=owner_user_id, persona_id=persona_id)
+        repo.create_message(owner_conversation.id, "user", "Thread owner contextual")
         owner_conversation_id = owner_conversation.id
         db.commit()
 

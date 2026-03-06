@@ -1,6 +1,6 @@
 # Story 30.11: Chat API: Conversations list enrichie + endpoint get-or-create par astrologue
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -25,20 +25,20 @@ so that l'expérience ressemble à WhatsApp.
 
 ## Tasks / Subtasks
 
-- [ ] **Data Access Layer (Repository)** (AC: 1, 2, 3)
-  - [ ] Étendre `list_conversations_with_last_preview_by_user_id` pour inclure les jointures avec `LlmPersonaModel`.
-  - [ ] Inclure `last_message_at` (created_at du dernier message) via subquery.
-  - [ ] Implémenter `get_or_create_conversation_by_persona(user_id, persona_id)`.
-- [ ] **Schemas & DTOs** (AC: 1)
-  - [ ] Mettre à jour `ChatConversationSummaryData` dans `backend/app/services/chat_guidance_service.py` ou `schemas.py`.
-- [ ] **API Router** (AC: 1, 3)
-  - [ ] Mettre à jour `GET /v1/chat/conversations` pour utiliser le repo enrichi.
-  - [ ] Ajouter `POST /v1/chat/conversations/by-persona/{persona_id}`.
-- [ ] **Business Logic (Service)** (AC: 1, 3)
-  - [ ] Adapter `ChatGuidanceService` pour orchestrer ces appels et fournir les métadonnées de persona.
-- [ ] **Validation & Tests** (AC: 5)
-  - [ ] Mettre à jour `backend/app/ai_engine/tests/test_chat_endpoint.py`.
-  - [ ] Vérifier les performances de la subquery (éviter le N+1).
+- [x] **Data Access Layer (Repository)** (AC: 1, 2, 3)
+  - [x] Étendre `list_conversations_with_last_preview_by_user_id` pour inclure les jointures avec `LlmPersonaModel`.
+  - [x] Inclure `last_message_at` (created_at du dernier message) via subquery.
+  - [x] Implémenter `get_or_create_conversation_by_persona(user_id, persona_id)`.
+- [x] **Schemas & DTOs** (AC: 1)
+  - [x] Mettre à jour `ChatConversationSummaryData` dans `backend/app/services/chat_guidance_service.py` ou `schemas.py`.
+- [x] **API Router** (AC: 1, 3)
+  - [x] Mettre à jour `GET /v1/chat/conversations` pour utiliser le repo enrichi.
+  - [x] Ajouter `POST /v1/chat/conversations/by-persona/{persona_id}`.
+- [x] **Business Logic (Service)** (AC: 1, 3)
+  - [x] Adapter `ChatGuidanceService` pour orchestrer ces appels et fournir les métadonnées de persona.
+- [x] **Validation & Tests** (AC: 5)
+  - [x] Mettre à jour `backend/app/tests/integration/test_chat_api.py`.
+  - [x] Vérifier les performances de la subquery (éviter le N+1).
 
 ## Dev Notes
 
@@ -64,10 +64,30 @@ so that l'expérience ressemble à WhatsApp.
 
 ### Agent Model Used
 
-gemini-2.0-flash-exp
+claude-sonnet-4-6
 
 ### Debug Log References
 
+Aucun blocage rencontré.
+
 ### Completion Notes List
 
+- **Repository**: Étendu `list_conversations_with_last_preview_by_user_id` avec jointure INNER JOIN sur `LlmPersonaModel` et deux scalar_subqueries pour `last_message_preview` et `last_message_at`. Tri par `COALESCE(last_message_at, updated_at) DESC` pour respecter AC2. Ajout de `get_or_create_conversation_by_persona` (wrapper sur `get_or_create_active_conversation`).
+- **DTO**: `ChatConversationSummaryData` enrichi avec `persona_name: str | None`, `avatar_url: str | None`, `last_message_at: datetime | None`.
+- **Service**: `list_conversations` mis à jour pour déstructurer le tuple étendu (4 éléments) et construire l'`avatar_url` via dicebear. Nouvelle méthode statique `get_or_create_conversation_by_persona` ajoutée.
+- **Router**: Import `uuid` déplacé en position standard. Nouveaux modèles `GetOrCreateConversationData` et `GetOrCreateConversationApiResponse`. Endpoint `POST /v1/chat/conversations/by-persona/{persona_id}` ajouté.
+- **Tests**: 7 nouveaux tests d'intégration couvrant AC1 (champs enrichis), AC2 (tri par `last_message_at`), AC3 (create, idempotence, auth, rôle, request_id). Concurrence couverte par `test_chat_multi_persona.py`.
+- **Résultats**: 61 tests passent (37 intégration + 21 unitaires + 3 multi-persona). Aucune régression.
+
 ### File List
+
+- `backend/app/infra/db/repositories/chat_repository.py`
+- `backend/app/services/chat_guidance_service.py`
+- `backend/app/api/v1/routers/chat.py`
+- `backend/app/tests/integration/test_chat_api.py`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `_bmad-output/implementation-artifacts/30-11-chat-api-enrichment-get-or-create.md`
+
+## Change Log
+
+- 2026-03-05: Implémentation complète story 30-11 — liste enrichie (persona_name/avatar_url/last_message_at), tri COALESCE, endpoint POST get-or-create par persona, 7 nouveaux tests d'intégration.

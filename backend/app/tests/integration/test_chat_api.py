@@ -43,6 +43,7 @@ client = TestClient(app)
 def _cleanup_tables() -> None:
     # Ensure v2 is disabled and no API key is present for these tests to use stubs
     from app.ai_engine.config import ai_engine_settings
+
     ai_engine_settings.llm_orchestration_v2 = False
     ai_engine_settings.openai_api_key = ""
 
@@ -854,12 +855,14 @@ def test_chat_module_execute_forbidden_conversation_returns_403() -> None:
         assert other_user is not None
         user_id = user.id
         persona_id = db.scalar(select(LlmPersonaModel.id))
-        foreign_conversation = ChatRepository(db).create_conversation(other_user.id, persona_id=persona_id)
-        ChatRepository(db).create_message(
+        repo = ChatRepository(db)
+        foreign_conversation = repo.create_conversation(other_user.id, persona_id=persona_id)
+        repo.create_message(
             conversation_id=foreign_conversation.id,
             role="user",
             content="Conversation externe",
         )
+
         db.commit()
         foreign_conversation_id = foreign_conversation.id
 
@@ -906,3 +909,184 @@ def test_chat_module_user_override_takes_precedence_over_role_segment() -> None:
     )
     assert tarot["status"] == "module-ready"
     assert tarot["available"] is True
+
+
+# --- AC1 & AC2: Enriched conversations list ---
+
+
+def test_list_chat_conversations_returns_enriched_fields() -> None:
+    """AC1: La liste des conversations contient les champs enrichis."""
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    _activate_entry_plan(access_token, "chat-checkout-enriched-fields-1")
+
+    send = client.post(
+        "/v1/chat/messages",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"message": "Test enrichissement"},
+    )
+    assert send.status_code == 200
+
+    response = client.get(
+        "/v1/chat/conversations?limit=10&offset=0",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert response.status_code == 200
+    conversations = response.json()["data"]["conversations"]
+    assert len(conversations) >= 1
+
+    first = conversations[0]
+    assert "conversation_id" in first
+    assert "persona_id" in first
+    assert "persona_name" in first
+    assert "avatar_url" in first
+    assert "last_message_at" in first
+    assert "updated_at" in first
+    assert "last_message_preview" in first
+
+    assert first["persona_name"] == "Astrologue Standard"
+    assert first["avatar_url"] is not None
+    assert "Astrologue" in first["avatar_url"]
+    assert first["last_message_at"] is not None
+    assert len(first["last_message_preview"]) <= 120
+
+
+def test_list_chat_conversations_sorted_by_last_message_at() -> None:
+    """AC2: La liste est triée par last_message_at DESC."""
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    _activate_entry_plan(access_token, "chat-checkout-sorted-last-msg-1")
+
+    first_send = client.post(
+        "/v1/chat/messages",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"message": "Premier message"},
+    )
+    assert first_send.status_code == 200
+    first_conv_id = first_send.json()["data"]["conversation_id"]
+
+    with SessionLocal() as db:
+        user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
+        assert user is not None
+        first_conv = db.scalar(
+            select(ChatConversationModel).where(ChatConversationModel.id == first_conv_id)
+        )
+        if first_conv:
+            first_conv.status = "archived"
+            db.flush()
+        persona_id = db.scalar(select(LlmPersonaModel.id))
+        second_conv = ChatRepository(db).create_conversation(user.id, persona_id=persona_id)
+        ChatRepository(db).create_message(
+            conversation_id=second_conv.id,
+            role="user",
+            content="Second message plus recent",
+        )
+        db.commit()
+        second_conv_id = second_conv.id
+
+    response = client.get(
+        "/v1/chat/conversations?limit=10&offset=0",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert response.status_code == 200
+    conversations = response.json()["data"]["conversations"]
+    ids = [c["conversation_id"] for c in conversations]
+    assert ids[0] == second_conv_id
+    assert first_conv_id in ids
+
+
+# --- AC3: Endpoint get-or-create ---
+
+
+def test_get_or_create_conversation_by_persona_creates_new_conversation() -> None:
+    """AC3: L'endpoint crée une nouvelle conversation si aucune n'existe."""
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+
+    with SessionLocal() as db:
+        persona_id = db.scalar(select(LlmPersonaModel.id))
+        assert persona_id is not None
+
+    response = client.post(
+        f"/v1/chat/conversations/by-persona/{persona_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert "data" in payload
+    assert "conversation_id" in payload["data"]
+    assert payload["data"]["conversation_id"] > 0
+
+
+def test_get_or_create_conversation_by_persona_returns_existing_conversation() -> None:
+    """AC3: L'endpoint retourne la conversation existante sans en créer une nouvelle."""
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+
+    with SessionLocal() as db:
+        persona_id = db.scalar(select(LlmPersonaModel.id))
+        assert persona_id is not None
+
+    first = client.post(
+        f"/v1/chat/conversations/by-persona/{persona_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert first.status_code == 200
+    first_conv_id = first.json()["data"]["conversation_id"]
+
+    second = client.post(
+        f"/v1/chat/conversations/by-persona/{persona_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert second.status_code == 200
+    second_conv_id = second.json()["data"]["conversation_id"]
+
+    assert first_conv_id == second_conv_id
+
+
+def test_get_or_create_conversation_by_persona_requires_auth() -> None:
+    """AC3: L'endpoint exige une authentification."""
+    _cleanup_tables()
+    import uuid as uuid_module
+
+    fake_persona_id = str(uuid_module.uuid4())
+
+    response = client.post(f"/v1/chat/conversations/by-persona/{fake_persona_id}")
+    assert response.status_code == 401
+
+
+def test_get_or_create_conversation_by_persona_forbidden_for_non_user_role() -> None:
+    """AC3: L'endpoint est interdit pour les rôles non autorisés."""
+    _cleanup_tables()
+    support_token = _register_user_with_role_and_token("chat-goc-support@example.com", "support")
+
+    with SessionLocal() as db:
+        persona_id = db.scalar(select(LlmPersonaModel.id))
+        assert persona_id is not None
+
+    response = client.post(
+        f"/v1/chat/conversations/by-persona/{persona_id}",
+        headers={"Authorization": f"Bearer {support_token}"},
+    )
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "insufficient_role"
+
+
+def test_get_or_create_conversation_by_persona_propagates_request_id() -> None:
+    """AC3: L'endpoint propage le request_id dans la réponse."""
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+
+    with SessionLocal() as db:
+        persona_id = db.scalar(select(LlmPersonaModel.id))
+        assert persona_id is not None
+
+    response = client.post(
+        f"/v1/chat/conversations/by-persona/{persona_id}",
+        headers={
+            "Authorization": f"Bearer {access_token}",
+            "X-Request-Id": "rid-goc-persona-1",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["meta"]["request_id"] == "rid-goc-persona-1"
