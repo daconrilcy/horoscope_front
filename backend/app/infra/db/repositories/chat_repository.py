@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import desc, func, select
@@ -16,17 +17,57 @@ class ChatRepository:
     def get_latest_active_conversation_by_user_id(
         self,
         user_id: int,
+        persona_id: uuid.UUID | None = None,
     ) -> ChatConversationModel | None:
-        return self.db.scalar(
+        query = (
             select(ChatConversationModel)
             .where(ChatConversationModel.user_id == user_id)
             .where(ChatConversationModel.status == "active")
-            .order_by(desc(ChatConversationModel.updated_at), desc(ChatConversationModel.id))
-            .limit(1)
+        )
+        if persona_id is not None:
+            query = query.where(ChatConversationModel.persona_id == persona_id)
+
+        return self.db.scalar(
+            query.order_by(desc(ChatConversationModel.updated_at), desc(ChatConversationModel.id)).limit(
+                1
+            )
         )
 
-    def create_conversation(self, user_id: int) -> ChatConversationModel:
-        model = ChatConversationModel(user_id=user_id, status="active")
+    def get_active_conversation(
+        self, user_id: int, persona_id: uuid.UUID
+    ) -> ChatConversationModel | None:
+        """Get the active conversation for a user and persona."""
+        return self.db.scalar(
+            select(ChatConversationModel)
+            .where(ChatConversationModel.user_id == user_id)
+            .where(ChatConversationModel.persona_id == persona_id)
+            .where(ChatConversationModel.status == "active")
+        )
+
+    def get_or_create_active_conversation(
+        self, user_id: int, persona_id: uuid.UUID
+    ) -> ChatConversationModel:
+        """
+        Get existing active conversation for user/persona or create a new one.
+        Uses a savepoint to handle potential race conditions between select and insert.
+        """
+        existing = self.get_active_conversation(user_id, persona_id)
+        if existing:
+            return existing
+
+        from sqlalchemy.exc import IntegrityError
+
+        # Use a savepoint to handle the rare case where someone inserted it
+        # between our SELECT and INSERT.
+        try:
+            with self.db.begin_nested():
+                return self.create_conversation(user_id, persona_id)
+        except IntegrityError:
+            # Another process inserted it first
+            return self.get_active_conversation(user_id, persona_id)  # type: ignore
+
+    def create_conversation(self, user_id: int, persona_id: uuid.UUID) -> ChatConversationModel:
+        model = ChatConversationModel(user_id=user_id, persona_id=persona_id, status="active")
         self.db.add(model)
         self.db.flush()
         return model

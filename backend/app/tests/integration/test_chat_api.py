@@ -15,6 +15,7 @@ from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.feature_flag import FeatureFlagModel
+from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.reference import (
     AspectModel,
     AstroCharacteristicModel,
@@ -40,6 +41,11 @@ client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
+    # Ensure v2 is disabled and no API key is present for these tests to use stubs
+    from app.ai_engine.config import ai_engine_settings
+    ai_engine_settings.llm_orchestration_v2 = False
+    ai_engine_settings.openai_api_key = ""
+
     BillingService.reset_subscription_status_cache()
     reset_test_generators()
     Base.metadata.drop_all(bind=engine)
@@ -64,6 +70,19 @@ def _cleanup_tables() -> None:
             ReferenceVersionModel,
         ):
             db.execute(delete(model))
+        # Seed default persona
+        default_persona = LlmPersonaModel(
+            name="Astrologue Standard",
+            enabled=True,
+            tone="direct",
+            verbosity="medium",
+            style_markers=[],
+            boundaries=[],
+            allowed_topics=[],
+            disallowed_topics=[],
+            formatting={},
+        )
+        db.add(default_persona)
         db.commit()
 
 
@@ -374,7 +393,18 @@ def test_list_chat_conversations_returns_user_history_sorted() -> None:
     with SessionLocal() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
         assert user is not None
-        second_conversation = ChatRepository(db).create_conversation(user.id)
+        # Deactivate previous active conversation created by API
+        prev_active = db.scalar(
+            select(ChatConversationModel)
+            .where(ChatConversationModel.user_id == user.id)
+            .where(ChatConversationModel.status == "active")
+        )
+        if prev_active:
+            prev_active.status = "archived"
+            db.flush()
+
+        persona_id = db.scalar(select(LlmPersonaModel.id))
+        second_conversation = ChatRepository(db).create_conversation(user.id, persona_id=persona_id)
         ChatRepository(db).create_message(
             conversation_id=second_conversation.id,
             role="user",
@@ -405,16 +435,20 @@ def test_list_chat_conversations_paginates_with_limit_and_offset() -> None:
     with SessionLocal() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
         assert user is not None
+        persona_id = db.scalar(select(LlmPersonaModel.id))
         repo = ChatRepository(db)
         conversation_ids: list[int] = []
         for index in range(5):
-            conversation = repo.create_conversation(user.id)
+            conversation = repo.create_conversation(user.id, persona_id=persona_id)
             repo.create_message(
                 conversation_id=conversation.id,
                 role="user",
                 content=f"Conversation {index}",
             )
             conversation_ids.append(conversation.id)
+            # Deactivate to allow creating next one for same persona
+            conversation.status = "archived"
+            db.flush()
         db.commit()
 
     response = client.get(
@@ -439,14 +473,19 @@ def test_list_chat_conversations_uses_id_tiebreak_when_updated_at_is_equal() -> 
     with SessionLocal() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
         assert user is not None
+        persona_id = db.scalar(select(LlmPersonaModel.id))
         repo = ChatRepository(db)
-        conversation_a = repo.create_conversation(user.id)
+        conversation_a = repo.create_conversation(user.id, persona_id=persona_id)
         repo.create_message(
             conversation_id=conversation_a.id,
             role="user",
             content="Conversation A",
         )
-        conversation_b = repo.create_conversation(user.id)
+        # Deactivate A to allow creating B for same persona
+        conversation_a.status = "archived"
+        db.flush()
+
+        conversation_b = repo.create_conversation(user.id, persona_id=persona_id)
         repo.create_message(
             conversation_id=conversation_b.id,
             role="user",
@@ -476,14 +515,18 @@ def test_list_chat_conversations_pagination_pages_do_not_overlap() -> None:
     with SessionLocal() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
         assert user is not None
+        persona_id = db.scalar(select(LlmPersonaModel.id))
         repo = ChatRepository(db)
         for index in range(6):
-            conversation = repo.create_conversation(user.id)
+            conversation = repo.create_conversation(user.id, persona_id=persona_id)
             repo.create_message(
                 conversation_id=conversation.id,
                 role="user",
                 content=f"Conversation page {index}",
             )
+            # Deactivate to allow creating next one for same persona
+            conversation.status = "archived"
+            db.flush()
         db.commit()
 
     first_page = client.get(
@@ -605,7 +648,19 @@ def test_send_chat_message_with_conversation_id_targets_selected_thread() -> Non
     with SessionLocal() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
         assert user is not None
-        conversation_b = ChatRepository(db).create_conversation(user.id)
+        # We need a different persona or just deactivate the previous conversation (Thread A)
+        # Thread A was created via API, so it's active.
+        prev_active = db.scalar(
+            select(ChatConversationModel)
+            .where(ChatConversationModel.user_id == user.id)
+            .where(ChatConversationModel.status == "active")
+        )
+        if prev_active:
+            prev_active.status = "archived"
+            db.flush()
+
+        persona_id = db.scalar(select(LlmPersonaModel.id))
+        conversation_b = ChatRepository(db).create_conversation(user.id, persona_id=persona_id)
         ChatRepository(db).create_message(
             conversation_id=conversation_b.id,
             role="user",
@@ -798,7 +853,8 @@ def test_chat_module_execute_forbidden_conversation_returns_403() -> None:
         assert user is not None
         assert other_user is not None
         user_id = user.id
-        foreign_conversation = ChatRepository(db).create_conversation(other_user.id)
+        persona_id = db.scalar(select(LlmPersonaModel.id))
+        foreign_conversation = ChatRepository(db).create_conversation(other_user.id, persona_id=persona_id)
         ChatRepository(db).create_message(
             conversation_id=foreign_conversation.id,
             role="user",

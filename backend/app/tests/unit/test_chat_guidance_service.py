@@ -6,6 +6,7 @@ from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
+from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.reference import (
     AspectModel,
     AstroCharacteristicModel,
@@ -48,6 +49,19 @@ def _cleanup_tables() -> None:
             ReferenceVersionModel,
         ):
             db.execute(delete(model))
+        # Seed default persona
+        default_persona = LlmPersonaModel(
+            name="Astrologue Standard",
+            enabled=True,
+            tone="direct",
+            verbosity="medium",
+            style_markers=[],
+            boundaries=[],
+            allowed_topics=[],
+            disallowed_topics=[],
+            formatting={},
+        )
+        db.add(default_persona)
         db.commit()
 
 
@@ -502,9 +516,42 @@ def test_create_message_updates_conversation_updated_at_for_latest_selection() -
     user_id = _create_user_id()
 
     with SessionLocal() as db:
+        persona = LlmPersonaModel(
+            name="Test Persona",
+            enabled=True,
+            tone="direct",
+            verbosity="medium",
+            style_markers=[],
+            boundaries=[],
+            allowed_topics=[],
+            disallowed_topics=[],
+            formatting={},
+        )
+        db.add(persona)
+        db.flush()
+        persona_id = persona.id
+
+        persona_2 = LlmPersonaModel(
+            name="Test Persona 2",
+            enabled=True,
+            tone="direct",
+            verbosity="medium",
+            style_markers=[],
+            boundaries=[],
+            allowed_topics=[],
+            disallowed_topics=[],
+            formatting={},
+        )
+        db.add(persona_2)
+        db.flush()
+        persona_2_id = persona_2.id
+
         repo = ChatRepository(db)
-        conversation_1 = repo.create_conversation(user_id=user_id)
-        conversation_2 = repo.create_conversation(user_id=user_id)
+        conversation_1 = repo.create_conversation(user_id=user_id, persona_id=persona_id)
+        conversation_2 = repo.create_conversation(user_id=user_id, persona_id=persona_2_id)
+        
+        # We need to test ordering when user_id is the same.
+        # But wait, get_latest_active_conversation_by_user_id(user_id) returns the latest overall.
         latest_before = repo.get_latest_active_conversation_by_user_id(user_id)
         assert latest_before is not None
         assert latest_before.id == conversation_2.id
@@ -525,21 +572,35 @@ def test_list_conversations_returns_user_scoped_history() -> None:
     other_user_id = _create_user_id_with_email("chat-other-user@example.com")
 
     with SessionLocal() as db:
+        persona = LlmPersonaModel(
+            name="Test Persona",
+            enabled=True,
+            tone="direct",
+            verbosity="medium",
+            style_markers=[],
+            boundaries=[],
+            allowed_topics=[],
+            disallowed_topics=[],
+            formatting={},
+        )
+        db.add(persona)
+        db.flush()
+        persona_id = persona.id
+
         repo = ChatRepository(db)
-        own_conversation = repo.create_conversation(user_id=user_id)
+        own_conversation = repo.create_conversation(user_id=user_id, persona_id=persona_id)
         repo.create_message(
             conversation_id=own_conversation.id,
             role="user",
             content="Mon historique",
         )
-        other_conversation = repo.create_conversation(user_id=other_user_id)
+        other_conversation = repo.create_conversation(user_id=other_user_id, persona_id=persona_id)
         repo.create_message(
             conversation_id=other_conversation.id,
             role="user",
             content="Historique autre user",
         )
         db.commit()
-
     with SessionLocal() as db:
         result = ChatGuidanceService.list_conversations(
             db=db,

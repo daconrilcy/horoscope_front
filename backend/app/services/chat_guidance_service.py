@@ -9,10 +9,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import uuid
 from datetime import datetime
 from time import monotonic
 
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -93,6 +95,7 @@ class ChatConversationSummaryData(BaseModel):
     """Summary of a conversation for list display."""
 
     conversation_id: int
+    persona_id: uuid.UUID
     status: str
     updated_at: datetime
     last_message_preview: str
@@ -111,6 +114,7 @@ class ChatConversationHistoryData(BaseModel):
     """Complete history of a conversation."""
 
     conversation_id: int
+    persona_id: uuid.UUID
     status: str
     updated_at: datetime
     messages: list[ChatMessageData]
@@ -467,6 +471,43 @@ class ChatGuidanceService:
         )
 
     @staticmethod
+    async def _get_default_persona_id(db: Session) -> uuid.UUID:
+        """Récupère l'ID du persona par défaut (Astrologue Standard)."""
+        from app.infra.db.models.llm_persona import LlmPersonaModel
+
+        # Tenter de trouver "Astrologue Standard"
+        stmt = (
+            select(LlmPersonaModel.id)
+            .where(LlmPersonaModel.name == "Astrologue Standard")
+            .limit(1)
+        )
+        persona_id = db.scalar(stmt)
+        if persona_id:
+            return persona_id
+
+        # Fallback: premier persona activé
+        stmt = (
+            select(LlmPersonaModel.id)
+            .where(LlmPersonaModel.enabled)
+            .order_by(LlmPersonaModel.created_at)
+            .limit(1)
+        )
+        persona_id = db.scalar(stmt)
+        if persona_id:
+            return persona_id
+
+        # Hard fallback: n'importe quel persona
+        stmt = select(LlmPersonaModel.id).limit(1)
+        persona_id = db.scalar(stmt)
+        if persona_id:
+            return persona_id
+
+        raise ChatGuidanceServiceError(
+            code="no_persona_available",
+            message="no LLM persona available in database",
+        )
+
+    @staticmethod
     async def send_message_async(
         db: Session,
         *,
@@ -475,7 +516,7 @@ class ChatGuidanceService:
         conversation_id: int | None = None,
         request_id: str = "n/a",
         trace_id: str | None = None,
-        persona_id: str | None = None,
+        persona_id: str | uuid.UUID | None = None,
     ) -> ChatReplyData:
         """
         Envoie un message et obtient une réponse de l'assistant (async).
@@ -487,6 +528,7 @@ class ChatGuidanceService:
             conversation_id: ID de conversation existante (optionnel).
             request_id: Identifiant de requête pour le logging.
             trace_id: Identifiant de trace pour le tracing distribué.
+            persona_id: ID de persona spécifique (optionnel).
 
         Returns:
             Réponse complète avec métadonnées de contexte et récupération.
@@ -494,12 +536,33 @@ class ChatGuidanceService:
         Raises:
             ChatGuidanceServiceError: Si la conversation n'existe pas ou en cas d'erreur LLM.
         """
+        import uuid as uuid_module
+
         start = monotonic()
         trace_id = trace_id or request_id
         normalized_message = ChatGuidanceService._validate_user_message(message)
         increment_counter("conversation_messages_total", 1.0)
         increment_counter("conversation_chat_messages_total", 1.0)
         repo = ChatRepository(db)
+
+        # Resolve persona_id if not provided
+        try:
+            if persona_id is None and conversation_id is None:
+                resolved_persona_id = await ChatGuidanceService._get_default_persona_id(db)
+            elif persona_id is not None:
+                if isinstance(persona_id, str):
+                    resolved_persona_id = uuid_module.UUID(persona_id)
+                else:
+                    resolved_persona_id = persona_id
+            else:
+                resolved_persona_id = None  # Will be taken from conversation if conversation_id is set
+        except ValueError:
+            raise ChatGuidanceServiceError(
+                code="invalid_persona_id",
+                message="persona_id is not a valid UUID",
+                details={"persona_id": str(persona_id)},
+            )
+
         if conversation_id is not None:
             conversation = repo.get_conversation_by_id(conversation_id)
             if conversation is None:
@@ -514,10 +577,21 @@ class ChatGuidanceService:
                     message="conversation does not belong to user",
                     details={"conversation_id": str(conversation_id)},
                 )
+            # Ensure persona_id matches if provided
+            if resolved_persona_id and conversation.persona_id != resolved_persona_id:
+                raise ChatGuidanceServiceError(
+                    code="conversation_persona_mismatch",
+                    message="conversation does not match requested persona",
+                    details={
+                        "conversation_id": str(conversation_id),
+                        "requested_persona_id": str(resolved_persona_id),
+                    },
+                )
         else:
-            conversation = repo.get_latest_active_conversation_by_user_id(user_id)
-            if conversation is None:
-                conversation = repo.create_conversation(user_id=user_id)
+            # Multi-persona routing: find or create active conversation for this user + persona
+            conversation = repo.get_or_create_active_conversation(
+                user_id=user_id, persona_id=resolved_persona_id
+            )
 
         user_message = repo.create_message(
             conversation_id=conversation.id,
@@ -718,6 +792,7 @@ class ChatGuidanceService:
             items.append(
                 ChatConversationSummaryData(
                     conversation_id=conversation.id,
+                    persona_id=conversation.persona_id,
                     status=conversation.status,
                     updated_at=conversation.updated_at,
                     last_message_preview=(preview or "")[:120],
@@ -769,6 +844,7 @@ class ChatGuidanceService:
         messages = repo.get_messages_by_conversation_id(conversation_id)
         return ChatConversationHistoryData(
             conversation_id=conversation.id,
+            persona_id=conversation.persona_id,
             status=conversation.status,
             updated_at=conversation.updated_at,
             messages=[

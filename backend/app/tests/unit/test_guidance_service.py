@@ -1,5 +1,7 @@
+import uuid
+
 import pytest
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 
 from app.core.config import settings
 from app.domain.astrology.natal_preparation import BirthInput
@@ -7,6 +9,7 @@ from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
+from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.reference import (
     AspectModel,
     AstroCharacteristicModel,
@@ -48,6 +51,19 @@ def _cleanup_tables() -> None:
             ReferenceVersionModel,
         ):
             db.execute(delete(model))
+        # Seed default persona
+        default_persona = LlmPersonaModel(
+            name="Astrologue Standard",
+            enabled=True,
+            tone="direct",
+            verbosity="medium",
+            style_markers=[],
+            boundaries=[],
+            allowed_topics=[],
+            disallowed_topics=[],
+            formatting={},
+        )
+        db.add(default_persona)
         db.commit()
 
 
@@ -159,15 +175,21 @@ class AlwaysOffScopeGenerator:
         return "[off_scope] guidance toujours incoherente"
 
 
+def _get_default_persona_id() -> uuid.UUID:
+    with SessionLocal() as db:
+        return db.scalar(select(LlmPersonaModel.id).limit(1))
+
+
 def test_request_guidance_daily_success() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
     generator = RecordingGenerator()
     set_test_guidance_generator(generator)
+    persona_id = _get_default_persona_id()
 
     with SessionLocal() as db:
-        conversation = ChatRepository(db).create_conversation(user_id=user_id)
+        conversation = ChatRepository(db).create_conversation(user_id=user_id, persona_id=persona_id)
         ChatRepository(db).create_message(
             conversation.id,
             "user",
@@ -200,8 +222,9 @@ def test_request_guidance_weekly_success() -> None:
     generator = RecordingGenerator()
     set_test_guidance_generator(generator)
 
+    persona_id = _get_default_persona_id()
     with SessionLocal() as db:
-        conversation = ChatRepository(db).create_conversation(user_id=user_id)
+        conversation = ChatRepository(db).create_conversation(user_id=user_id, persona_id=persona_id)
         ChatRepository(db).create_message(
             conversation.id,
             "user",
@@ -345,8 +368,9 @@ def test_request_guidance_never_leaks_internal_prompt_in_summary() -> None:
     _seed_birth_profile(user_id)
     set_test_guidance_generator(EchoPromptGenerator())
 
+    persona_id = _get_default_persona_id()
     with SessionLocal() as db:
-        conversation = ChatRepository(db).create_conversation(user_id=user_id)
+        conversation = ChatRepository(db).create_conversation(user_id=user_id, persona_id=persona_id)
         ChatRepository(db).create_message(conversation.id, "user", "Question sensible")
         response = GuidanceService.request_guidance(
             db=db,
@@ -374,8 +398,9 @@ def test_request_guidance_rejects_unknown_or_foreign_conversation_id() -> None:
         foreign_user_id = foreign_user.id
     _seed_birth_profile(foreign_user_id)
 
+    persona_id = _get_default_persona_id()
     with SessionLocal() as db:
-        owner_conversation = ChatRepository(db).create_conversation(user_id=owner_user_id)
+        owner_conversation = ChatRepository(db).create_conversation(user_id=owner_user_id, persona_id=persona_id)
         ChatRepository(db).create_message(owner_conversation.id, "user", "Thread owner")
         owner_conversation_id = owner_conversation.id
         db.commit()
@@ -408,8 +433,9 @@ def test_request_contextual_guidance_success() -> None:
     generator = RecordingGenerator()
     set_test_guidance_generator(generator)
 
+    persona_id = _get_default_persona_id()
     with SessionLocal() as db:
-        conversation = ChatRepository(db).create_conversation(user_id=user_id)
+        conversation = ChatRepository(db).create_conversation(user_id=user_id, persona_id=persona_id)
         ChatRepository(db).create_message(conversation.id, "user", "Contexte personnel")
         response = GuidanceService.request_contextual_guidance(
             db=db,
@@ -498,8 +524,9 @@ def test_request_contextual_guidance_never_leaks_internal_prompt_in_summary() ->
     _seed_birth_profile(user_id)
     set_test_guidance_generator(EchoPromptGenerator())
 
+    persona_id = _get_default_persona_id()
     with SessionLocal() as db:
-        conversation = ChatRepository(db).create_conversation(user_id=user_id)
+        conversation = ChatRepository(db).create_conversation(user_id=user_id, persona_id=persona_id)
         ChatRepository(db).create_message(conversation.id, "user", "Question sensible contextual")
         response = GuidanceService.request_contextual_guidance(
             db=db,
@@ -562,8 +589,9 @@ def test_request_contextual_guidance_rejects_unknown_or_foreign_conversation_id(
         foreign_user_id = foreign_user.id
     _seed_birth_profile(foreign_user_id)
 
+    persona_id = _get_default_persona_id()
     with SessionLocal() as db:
-        owner_conversation = ChatRepository(db).create_conversation(user_id=owner_user_id)
+        owner_conversation = ChatRepository(db).create_conversation(user_id=owner_user_id, persona_id=persona_id)
         ChatRepository(db).create_message(owner_conversation.id, "user", "Thread owner contextual")
         owner_conversation_id = owner_conversation.id
         db.commit()
