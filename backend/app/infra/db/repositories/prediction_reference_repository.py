@@ -122,7 +122,10 @@ class PredictionReferenceRepository:
                 PredictionCategoryModel,
                 PlanetCategoryWeightModel.category_id == PredictionCategoryModel.id,
             )
-            .where(PlanetModel.reference_version_id == reference_version_id)
+            .where(
+                PlanetModel.reference_version_id == reference_version_id,
+                PredictionCategoryModel.reference_version_id == reference_version_id,
+            )
             .order_by(PlanetModel.code, PredictionCategoryModel.code)
         ).all()
 
@@ -148,16 +151,17 @@ class PredictionReferenceRepository:
                 HouseCategoryWeightModel.category_id,
                 PredictionCategoryModel.code.label("category_code"),
                 HouseCategoryWeightModel.weight,
-                HouseCategoryWeightModel.routing_role.label(
-                    "influence_role"
-                ),  # DB col named routing_role; aliased to match planet_category_weights interface
+                HouseCategoryWeightModel.routing_role,
             )
             .join(HouseModel, HouseCategoryWeightModel.house_id == HouseModel.id)
             .join(
                 PredictionCategoryModel,
                 HouseCategoryWeightModel.category_id == PredictionCategoryModel.id,
             )
-            .where(HouseModel.reference_version_id == reference_version_id)
+            .where(
+                HouseModel.reference_version_id == reference_version_id,
+                PredictionCategoryModel.reference_version_id == reference_version_id,
+            )
             .order_by(HouseModel.number, PredictionCategoryModel.code)
         ).all()
 
@@ -168,7 +172,7 @@ class PredictionReferenceRepository:
                 category_id=row.category_id,
                 category_code=row.category_code,
                 weight=row.weight,
-                influence_role=row.influence_role,
+                routing_role=row.routing_role,
             )
             for row in rows
         ]
@@ -244,7 +248,10 @@ class PredictionReferenceRepository:
                 PredictionCategoryModel,
                 PointCategoryWeightModel.category_id == PredictionCategoryModel.id,
             )
-            .where(AstroPointModel.reference_version_id == reference_version_id)
+            .where(
+                AstroPointModel.reference_version_id == reference_version_id,
+                PredictionCategoryModel.reference_version_id == reference_version_id,
+            )
             .order_by(AstroPointModel.code, PredictionCategoryModel.code)
         ).all()
 

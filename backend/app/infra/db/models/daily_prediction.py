@@ -3,15 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, ClassVar
 
-from sqlalchemy import (
-    DateTime,
-    Float,
-    ForeignKey,
-    Integer,
-    String,
-    Text,
-    UniqueConstraint,
-)
+from sqlalchemy import DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infra.db.base import Base
@@ -40,11 +32,12 @@ class DailyPredictionRunModel(Base):
             "ruleset_id",
             name="uq_daily_prediction_runs_user_date_ruleset",
         ),
+        Index("ix_daily_prediction_runs_user_id_local_date", "user_id", "local_date"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     local_date: Mapped[date] = mapped_column(nullable=False)
     timezone: Mapped[str] = mapped_column(String(64), nullable=False)

@@ -64,7 +64,7 @@ def _setup_engine(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, db_name: str)
     database_url = f"sqlite:///{db_path.as_posix()}"
     monkeypatch.setattr(settings, "database_url", database_url)
     config = _alembic_config()
-    command.upgrade(config, "20260307_0034")
+    command.upgrade(config, "20260307_0035")
     return _sqlite_engine(database_url)
 
 
@@ -118,6 +118,32 @@ def test_migration_c_tables_exist(
     engine.dispose()
 
 
+def test_migration_0035_adds_missing_user_id_index(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    db_path = tmp_path / "test-c-0035-index-fix.db"
+    database_url = f"sqlite:///{db_path.as_posix()}"
+    monkeypatch.setattr(settings, "database_url", database_url)
+    config = _alembic_config()
+
+    command.upgrade(config, "20260307_0034")
+    engine_before = _sqlite_engine(database_url)
+    before_indexes = {
+        index["name"] for index in inspect(engine_before).get_indexes("daily_prediction_runs")
+    }
+    assert "ix_daily_prediction_runs_user_id" not in before_indexes
+    engine_before.dispose()
+
+    command.upgrade(config, "20260307_0035")
+    engine_after = _sqlite_engine(database_url)
+    after_indexes = {
+        index["name"] for index in inspect(engine_after).get_indexes("daily_prediction_runs")
+    }
+    assert "ix_daily_prediction_runs_user_id" in after_indexes
+    engine_after.dispose()
+
+
 def test_daily_prediction_repository_basic_flow(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -150,6 +176,7 @@ def test_daily_prediction_repository_basic_flow(
         )
         assert not created
         assert run2.id == run.id
+        assert run2.needs_recompute is False
 
         # 3. add some children
         repo.upsert_category_scores(run.id, [{"category_id": category.id, "note_20": 15}])
@@ -175,6 +202,18 @@ def test_daily_prediction_repository_basic_flow(
         assert run3.id == run.id
         assert run3.input_hash == "hash2"
         assert run3.needs_recompute is True
+
+        run4, created = repo.get_or_create_run(
+            user_id=user.id,
+            local_date=date(2026, 3, 7),
+            timezone="Europe/Paris",
+            reference_version_id=ref_v.id,
+            ruleset_id=ruleset.id,
+            input_hash="hash2",
+        )
+        assert not created
+        assert run4.id == run.id
+        assert run4.needs_recompute is False
 
         # Children should be gone
         full_run_after = repo.get_full_run(run.id)
@@ -377,7 +416,7 @@ def test_migration_c_downgrade(
     monkeypatch.setattr(settings, "database_url", database_url)
     config = _alembic_config()
 
-    command.upgrade(config, "20260307_0034")
+    command.upgrade(config, "20260307_0035")
     command.downgrade(config, "20260307_0033")
 
     engine = _sqlite_engine(database_url)

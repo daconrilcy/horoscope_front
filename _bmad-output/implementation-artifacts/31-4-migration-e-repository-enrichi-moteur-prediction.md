@@ -266,6 +266,18 @@ Des tests couvrent :
 - `get_sign_rulerships()` retourne 12 entrées `sign_code → planet_code`
 - `load_prediction_context()` retourne un objet complet non vide
 
+### AC9 — Durcissement post-review des repositories
+
+Le chargement des matrices versionnées filtre aussi `prediction_categories.reference_version_id == reference_version_id` dans :
+- `get_planet_category_weights()`
+- `get_house_category_weights()`
+- `get_point_category_weights()`
+
+La conversion des paramètres de ruleset est stricte :
+- une valeur invalide pour `float`, `int`, `bool` ou `json` lève une exception explicite
+- aucun fallback silencieux à `0`, `0.0`, `{}` ou `False` n'est autorisé
+- tout `data_type` inconnu est refusé par la contrainte de schéma, et reste rejeté côté repository si jamais il contourne la DB
+
 ## Tasks / Subtasks
 
 ### T1 — Module des schemas de données (AC5)
@@ -319,6 +331,9 @@ Des tests couvrent :
   - [x] Test `get_parameters()` : `float` converti en float, `int` en int, `bool` en bool
   - [x] Test `get_ruleset("1.0.0")` retourne le ruleset
   - [x] Test `get_active_ruleset_context("1.0.0")` retourne un `RulesetContext` complet
+  - [x] Test `get_parameters()` lève une erreur explicite sur valeur invalide
+  - [x] Test la contrainte de schéma refuse un `data_type` inconnu
+  - [x] Test les requêtes de matrices ignorent les catégories d'une autre `reference_version`
 
 ## Dev Notes
 
@@ -420,6 +435,8 @@ Gemini 2.0 Flash
 - Implémentation du `PredictionReferenceRepository` avec méthodes optimisées pour le chargement sémantique (AC1, AC3).
 - Implémentation du `PredictionRulesetRepository` gérant les rulesets, paramètres typés et calibrations (AC2, AC4).
 - Les repositories utilisent SQLAlchemy 2.0 (select, scalars, join).
+- Durcissement post-review : filtrage explicite des catégories joinées par `reference_version_id` dans les méthodes de matrices.
+- Durcissement post-review : conversion stricte des paramètres `ruleset_parameters` avec échec explicite en cas de valeur invalide, et rejet des `data_type` inconnus par la contrainte de schéma.
 - Validation via tests unitaires dédiés et passage de l'intégralité de la suite de tests unitaires (927 tests).
 
 ### File List

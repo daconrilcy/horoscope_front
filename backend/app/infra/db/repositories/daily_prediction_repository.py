@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import Any
 
 from sqlalchemy import delete, select
@@ -40,7 +40,7 @@ class DailyPredictionRepository:
             overall_summary=overall_summary,
             overall_tone=overall_tone,
             main_turning_point_at=main_turning_point_at,
-            computed_at=datetime.now(timezone.utc),
+            computed_at=datetime.now(UTC),
         )
         self.db.add(run)
         self.db.flush()
@@ -73,30 +73,42 @@ class DailyPredictionRepository:
     ) -> tuple[DailyPredictionRunModel, bool]:
         run = self.get_run(user_id, local_date, reference_version_id, ruleset_id)
         if run is None:
-            return (
-                self.create_run(
-                    user_id=user_id,
-                    local_date=local_date,
-                    timezone=timezone,
-                    reference_version_id=reference_version_id,
-                    ruleset_id=ruleset_id,
-                    input_hash=input_hash,
-                ),
-                True,
+            created_run = self.create_run(
+                user_id=user_id,
+                local_date=local_date,
+                timezone=timezone,
+                reference_version_id=reference_version_id,
+                ruleset_id=ruleset_id,
+                input_hash=input_hash,
             )
+            created_run.needs_recompute = False
+            return (created_run, True)
 
         # Policy: if input_hash is provided and different, invalidate children
         if input_hash is not None and run.input_hash != input_hash:
-            # Clear collections to trigger delete-orphan cascade
-            run.category_scores = []
-            run.turning_points = []
-            run.time_blocks = []
+            self.db.execute(
+                delete(DailyPredictionCategoryScoreModel).where(
+                    DailyPredictionCategoryScoreModel.run_id == run.id
+                )
+            )
+            self.db.execute(
+                delete(DailyPredictionTurningPointModel).where(
+                    DailyPredictionTurningPointModel.run_id == run.id
+                )
+            )
+            self.db.execute(
+                delete(DailyPredictionTimeBlockModel).where(
+                    DailyPredictionTimeBlockModel.run_id == run.id
+                )
+            )
 
-            # Update parent
             run.input_hash = input_hash
-            run.computed_at = datetime.now(timezone.utc)
+            run.computed_at = datetime.now(UTC)
             run.needs_recompute = True
             self.db.flush()
+            self.db.expire(run, ["category_scores", "turning_points", "time_blocks"])
+        else:
+            run.needs_recompute = False
 
         return (run, False)
 
@@ -111,6 +123,7 @@ class DailyPredictionRepository:
             score = DailyPredictionCategoryScoreModel(run_id=run_id, **score_data)
             self.db.add(score)
         self.db.flush()
+        self.db.expire_all()
 
     def upsert_turning_points(self, run_id: int, turning_points: list[dict[str, Any]]) -> None:
         self.db.execute(
@@ -122,6 +135,7 @@ class DailyPredictionRepository:
             tp = DailyPredictionTurningPointModel(run_id=run_id, **tp_data)
             self.db.add(tp)
         self.db.flush()
+        self.db.expire_all()
 
     def upsert_time_blocks(self, run_id: int, blocks: list[dict[str, Any]]) -> None:
         self.db.execute(
@@ -133,10 +147,12 @@ class DailyPredictionRepository:
             block = DailyPredictionTimeBlockModel(run_id=run_id, **block_data)
             self.db.add(block)
         self.db.flush()
+        self.db.expire_all()
 
     def get_full_run(self, run_id: int) -> dict[str, Any] | None:
         run = self.db.scalar(
             select(DailyPredictionRunModel)
+            .execution_options(populate_existing=True)
             .options(
                 selectinload(DailyPredictionRunModel.category_scores),
                 selectinload(DailyPredictionRunModel.turning_points),

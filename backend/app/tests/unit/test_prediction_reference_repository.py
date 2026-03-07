@@ -3,8 +3,12 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.prediction_reference import (
+    AstroPointModel,
+    HouseCategoryWeightModel,
     HouseProfileModel,
+    PlanetCategoryWeightModel,
     PlanetProfileModel,
+    PointCategoryWeightModel,
     PredictionCategoryModel,
     SignRulershipModel,
 )
@@ -227,3 +231,90 @@ def test_load_prediction_context(db_session: Session):
     assert len(context.house_profiles) >= 1
     assert "sun" in context.planet_profiles
     assert 1 in context.house_profiles
+
+
+def test_category_weight_queries_filter_joined_categories_by_reference_version(db_session: Session):
+    repo = PredictionReferenceRepository(db_session)
+
+    version_a = ReferenceVersionModel(version="1.0.0")
+    version_b = ReferenceVersionModel(version="2.0.0")
+    db_session.add_all([version_a, version_b])
+    db_session.flush()
+
+    planet = PlanetModel(reference_version_id=version_a.id, code="sun", name="Sun")
+    house = HouseModel(reference_version_id=version_a.id, number=1, name="House 1")
+    db_session.add_all([planet, house])
+    db_session.flush()
+
+    category_a = PredictionCategoryModel(
+        reference_version_id=version_a.id,
+        code="love",
+        name="Love",
+        display_name="Love",
+        sort_order=1,
+        is_enabled=True,
+    )
+    category_b = PredictionCategoryModel(
+        reference_version_id=version_b.id,
+        code="foreign",
+        name="Foreign",
+        display_name="Foreign",
+        sort_order=1,
+        is_enabled=True,
+    )
+    point = AstroPointModel(
+        reference_version_id=version_a.id,
+        code="asc",
+        name="Asc",
+        point_type="angle",
+    )
+    db_session.add_all([category_a, category_b, point])
+    db_session.flush()
+
+    db_session.add_all(
+        [
+            PlanetCategoryWeightModel(
+                planet_id=planet.id,
+                category_id=category_a.id,
+                weight=0.8,
+                influence_role="primary",
+            ),
+            PlanetCategoryWeightModel(
+                planet_id=planet.id,
+                category_id=category_b.id,
+                weight=0.2,
+                influence_role="secondary",
+            ),
+            HouseCategoryWeightModel(
+                house_id=house.id,
+                category_id=category_a.id,
+                weight=0.7,
+                routing_role="primary",
+            ),
+            HouseCategoryWeightModel(
+                house_id=house.id,
+                category_id=category_b.id,
+                weight=0.1,
+                routing_role="secondary",
+            ),
+            PointCategoryWeightModel(
+                point_id=point.id,
+                category_id=category_a.id,
+                weight=0.6,
+            ),
+            PointCategoryWeightModel(
+                point_id=point.id,
+                category_id=category_b.id,
+                weight=0.2,
+            ),
+        ]
+    )
+    db_session.commit()
+
+    planet_weights = repo.get_planet_category_weights(version_a.id)
+    house_weights = repo.get_house_category_weights(version_a.id)
+    point_weights = repo.get_point_category_weights(version_a.id)
+
+    assert [weight.category_code for weight in planet_weights] == ["love"]
+    assert [weight.category_code for weight in house_weights] == ["love"]
+    assert [weight.category_code for weight in point_weights] == ["love"]

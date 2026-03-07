@@ -56,7 +56,7 @@ class HouseCategoryWeightData:
     category_id: int
     category_code: str
     weight: float
-    influence_role: str
+    routing_role: str
 
 
 @dataclass

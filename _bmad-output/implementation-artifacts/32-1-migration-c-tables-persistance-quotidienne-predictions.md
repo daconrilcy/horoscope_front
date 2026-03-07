@@ -156,6 +156,14 @@ Un test d'intégration vérifie :
 - `upsert_turning_points()` supprime et recrée les turning points
 - `get_full_run()` retourne toutes les données
 
+### AC10 — Durcissement post-review de persistance
+
+Le modèle ORM déclare explicitement l'index composite `(user_id, local_date)` pour rester aligné avec le schéma SQL et éviter les diffs Alembic parasites.
+
+Dans `get_or_create_run()` :
+- l'invalidation sur changement de `input_hash` utilise des `DELETE` explicites sur les tables filles
+- `run.needs_recompute` est réinitialisé à `False` sur les chemins nominaux pour éviter un état transient stale en session longue
+
 ## Tasks / Subtasks
 
 ### T1 — Migration Alembic (AC5)
@@ -174,6 +182,7 @@ Un test d'intégration vérifie :
   - [x] `DailyPredictionCategoryScoreModel` avec tous les champs (AC2) et `ondelete="CASCADE"`
   - [x] `DailyPredictionTurningPointModel` avec tous les champs (AC3) et `ondelete="CASCADE"`
   - [x] `DailyPredictionTimeBlockModel` avec tous les champs (AC4) et `ondelete="CASCADE"`
+  - [x] Déclarer aussi l'index composite `(user_id, local_date)` dans `__table_args__`
 - [x] Importer ces modèles dans le point d'entrée Alembic
 
 ### T3 — Repository (AC7)
@@ -182,6 +191,8 @@ Un test d'intégration vérifie :
   - [x] `create_run()` — INSERT + flush + return model
   - [x] `get_run()` — SELECT avec filtre 4 colonnes
   - [x] `get_or_create_run()` — implémenter la politique à 3 cas (inexistant / même hash / hash différent) décrite en AC7
+  - [x] Invalidation `input_hash` via `DELETE` explicites sur les tables filles
+  - [x] Réinitialiser `needs_recompute` à `False` hors chemin de recompute
   - [x] `upsert_category_scores()` — DELETE existants + INSERT (ou INSERT ON CONFLICT UPDATE)
   - [x] `upsert_turning_points()` — DELETE existants pour `run_id` + INSERT
   - [x] `upsert_time_blocks()` — DELETE existants pour `run_id` + INSERT
@@ -195,6 +206,7 @@ Un test d'intégration vérifie :
   - [x] Test : `create_run()` → run créé
   - [x] Test : `get_or_create_run()` × 2 avec même hash → `created=False` au 2ème appel, données filles intactes
   - [x] Test : `get_or_create_run()` avec hash différent → `created=False`, données filles supprimées
+  - [x] Test : `needs_recompute` repasse à `False` si le hash ne change plus
   - [x] Test : doublon `(run_id, category_id)` → IntegrityError
   - [x] Test : `upsert_category_scores()` → update sans doublon (appel double, vérification anti-doublon)
   - [x] Test : `upsert_turning_points()` → remplace les existants (appel double, vérification remplacement)
@@ -333,6 +345,8 @@ Gemini 2.0 Flash
 - Création de la migration Alembic 0034 avec les 4 tables de persistance quotidienne.
 - Implémentation des modèles SQLAlchemy avec cascades de suppression (CASCADE DELETE).
 - Développement du repository `DailyPredictionRepository` avec gestion intelligente du cache (invalidation par `input_hash`).
+- Durcissement post-review : alignement ORM ↔ schéma avec index composite `(user_id, local_date)` déclaré côté modèle.
+- Durcissement post-review : invalidation `input_hash` rendue explicite via `DELETE` SQL et réinitialisation de `needs_recompute`.
 - Couverture de tests d'intégration complète (migration, repository, contraintes).
 - Validation ruff et formatage du code.
 

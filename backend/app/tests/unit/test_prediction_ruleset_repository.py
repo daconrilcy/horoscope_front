@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.prediction_ruleset import (
@@ -102,3 +104,63 @@ def test_get_active_ruleset_context(db_session: Session):
     assert result.ruleset.version == "1.0.0"
     assert isinstance(result.parameters, dict)
     assert isinstance(result.event_types, dict)
+
+
+@pytest.mark.parametrize(
+    ("data_type", "raw_value"),
+    [
+        ("float", "not-a-float"),
+        ("int", "not-an-int"),
+        ("bool", "not-a-bool"),
+        ("json", "{bad json}"),
+    ],
+)
+def test_get_parameters_fails_fast_on_invalid_typed_value(
+    db_session: Session,
+    data_type: str,
+    raw_value: str,
+):
+    repo = PredictionRulesetRepository(db_session)
+
+    version = ReferenceVersionModel(version="1.0.0")
+    db_session.add(version)
+    db_session.flush()
+
+    ruleset = PredictionRulesetModel(version="1.0.0", reference_version_id=version.id)
+    db_session.add(ruleset)
+    db_session.flush()
+
+    db_session.add(
+        RulesetParameterModel(
+            ruleset_id=ruleset.id,
+            param_key="broken",
+            param_value=raw_value,
+            data_type=data_type,
+        )
+    )
+    db_session.commit()
+
+    with pytest.raises(ValueError):
+        repo.get_parameters(ruleset.id)
+
+
+def test_unknown_ruleset_parameter_data_type_is_blocked_by_schema(db_session: Session):
+    version = ReferenceVersionModel(version="1.0.0")
+    db_session.add(version)
+    db_session.flush()
+
+    ruleset = PredictionRulesetModel(version="1.0.0", reference_version_id=version.id)
+    db_session.add(ruleset)
+    db_session.flush()
+
+    db_session.add(
+        RulesetParameterModel(
+            ruleset_id=ruleset.id,
+            param_key="broken",
+            param_value="some-value",
+            data_type="yaml",
+        )
+    )
+
+    with pytest.raises(IntegrityError):
+        db_session.commit()

@@ -125,19 +125,28 @@ class PredictionRulesetRepository:
             case "float":
                 try:
                     return float(value)
-                except (ValueError, TypeError):
-                    return 0.0
+                except (ValueError, TypeError) as exc:
+                    raise ValueError(f"Invalid float ruleset parameter value: {value!r}") from exc
             case "int":
                 try:
                     return int(value)
-                except (ValueError, TypeError):
-                    return 0
+                except (ValueError, TypeError) as exc:
+                    raise ValueError(f"Invalid int ruleset parameter value: {value!r}") from exc
             case "bool":
-                return str(value).lower() in ("true", "1", "yes") if value is not None else False
+                if value is None:
+                    raise ValueError("Invalid bool ruleset parameter value: None")
+                normalized = str(value).strip().lower()
+                if normalized in {"true", "1", "yes"}:
+                    return True
+                if normalized in {"false", "0", "no"}:
+                    return False
+                raise ValueError(f"Invalid bool ruleset parameter value: {value!r}")
             case "json":
                 try:
                     return json.loads(value)
-                except (json.JSONDecodeError, TypeError):
-                    return {}
+                except (json.JSONDecodeError, TypeError) as exc:
+                    raise ValueError(f"Invalid json ruleset parameter value: {value!r}") from exc
             case _:
-                return value
+                if data_type == "string":
+                    return value
+                raise ValueError(f"Unsupported ruleset parameter data_type: {data_type!r}")
