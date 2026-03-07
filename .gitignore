@@ -9,6 +9,7 @@ venv/
 # Local databases and runtime artifacts
 horoscope.db
 backend/horoscope.db
+*.bak_*
 *.sqlite
 *.sqlite3
 
