@@ -278,7 +278,7 @@ development_status:
   epic-30-retrospective: optional
 
   epic-31: in-progress
-  31-1-migration-a-tables-profils-matrices-prediction: ready-for-dev
+  31-1-migration-a-tables-profils-matrices-prediction: review
   31-2-migration-b-ruleset-parametres-calibrations: ready-for-dev
   31-3-migration-d-reference-version-2-seed-lock: ready-for-dev
   31-4-migration-e-repository-enrichi-moteur-prediction: ready-for-dev

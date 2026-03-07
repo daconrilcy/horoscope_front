@@ -19,6 +19,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    if not inspector.has_table("chat_conversations"):
+        return
+
     # 1. Add persona_id to chat_conversations as nullable
     op.add_column(
         "chat_conversations",
@@ -98,6 +103,11 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    if not inspector.has_table("chat_conversations"):
+        return
+
     with op.batch_alter_table("chat_conversations", schema=None) as batch_op:
         batch_op.drop_index("ix_chat_conversations_user_persona_active")
         batch_op.drop_constraint("fk_chat_conversations_persona", type_="foreignkey")

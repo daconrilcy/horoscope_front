@@ -18,17 +18,18 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "reference_versions",
-        sa.Column(
-            "is_locked",
-            sa.Boolean(),
-            nullable=False,
-            server_default=sa.true(),
-        ),
-    )
-    op.alter_column("reference_versions", "is_locked", server_default=None)
+    with op.batch_alter_table("reference_versions", schema=None) as batch_op:
+        batch_op.add_column(
+            sa.Column(
+                "is_locked",
+                sa.Boolean(),
+                nullable=False,
+                server_default=sa.true(),
+            )
+        )
+        batch_op.alter_column("is_locked", server_default=None)
 
 
 def downgrade() -> None:
-    op.drop_column("reference_versions", "is_locked")
+    with op.batch_alter_table("reference_versions", schema=None) as batch_op:
+        batch_op.drop_column("is_locked")

@@ -57,6 +57,48 @@ DEFAULT_MODEL = "AUTO"
 DEFAULT_PROVIDER = "openai"
 
 
+def _build_guidance_gateway_payload(
+    use_case: str,
+    context: dict[str, str | None],
+    locale: str,
+) -> tuple[dict[str, str], dict[str, str | None]]:
+    """Normalize guidance inputs for Gateway V2 contracts."""
+    normalized_context = dict(context)
+    user_input: dict[str, str] = {
+        "use_case": use_case,
+        "locale": locale,
+    }
+
+    situation = (normalized_context.get("situation") or "").strip()
+    objective = (normalized_context.get("objective") or "").strip()
+    time_horizon = (normalized_context.get("time_horizon") or "").strip()
+
+    if use_case == "guidance_daily" and not situation:
+        situation = "Lecture astrologique quotidienne basee sur le profil natal du jour."
+        normalized_context["situation"] = situation
+    elif use_case == "guidance_weekly" and not situation:
+        situation = "Lecture astrologique hebdomadaire basee sur le profil natal de la semaine."
+        normalized_context["situation"] = situation
+
+    if use_case == "guidance_contextual":
+        if objective and time_horizon:
+            question = f"{objective} Horizon: {time_horizon}."
+        elif objective:
+            question = objective
+        else:
+            question = situation or "Proposer une guidance contextuelle prudente."
+    elif use_case == "guidance_weekly":
+        question = "Quelle guidance astrologique ressort pour cette semaine ?"
+    else:
+        question = "Quelle guidance astrologique ressort pour aujourd hui ?"
+
+    user_input["question"] = question
+    if situation:
+        user_input["situation"] = situation
+
+    return user_input, normalized_context
+
+
 def _is_non_production_env() -> bool:
     return settings.app_env not in {"production", "prod"}
 
@@ -555,13 +597,15 @@ class AIEngineAdapter:
                 from app.llm_orchestration.models import GatewayError
 
                 gateway = LLMGateway()
+                gateway_user_input, gateway_context = _build_guidance_gateway_payload(
+                    use_case,
+                    context,
+                    locale,
+                )
                 result = await gateway.execute(
                     use_case=use_case,
-                    user_input={
-                        "use_case": use_case,
-                        "locale": locale,
-                    },
-                    context=context,
+                    user_input=gateway_user_input,
+                    context=gateway_context,
                     request_id=request_id,
                     trace_id=trace_id,
                     db=db,

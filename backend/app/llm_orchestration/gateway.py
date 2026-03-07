@@ -480,7 +480,7 @@ class LLMGateway:
                 logger.error("gateway_invalid_schema_id schema_id=%s", config.output_schema_id)
 
         is_stub = config.prompt_version_id == "hardcoded-v1"
-        is_prod = settings.app_env in {"production", "prod"}
+        is_prod = getattr(settings, "app_env", "development") in {"production", "prod"}
         if use_case in PAID_USE_CASES and not schema_dict and (not is_stub or is_prod):
             raise GatewayConfigError(
                 f"Mandatory output schema missing for '{use_case}'. "

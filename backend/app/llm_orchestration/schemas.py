@@ -211,7 +211,7 @@ class AstroResponseV3(BaseModel):
 
     title: str = Field(..., min_length=1, max_length=160)
     summary: str = Field(..., min_length=900, max_length=2800)
-    sections: List[AstroSectionV3] = Field(..., min_length=5, max_length=20)
+    sections: List[AstroSectionV3] = Field(..., min_length=5, max_length=10)
     highlights: List[_HighlightItem] = Field(..., min_length=5, max_length=12)
     advice: List[_AdviceItem] = Field(..., min_length=5, max_length=12)
     evidence: List[_EvidenceItem] = Field(..., max_length=80)

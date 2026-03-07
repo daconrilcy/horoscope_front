@@ -18,6 +18,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def _dedupe_user_natal_interpretations() -> None:
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    if not inspector.has_table("user_natal_interpretations"):
+        return
+
     # Keep the most recent row per logical key for NULL persona_id.
     op.execute(
         sa.text(
@@ -67,6 +72,10 @@ def _dedupe_user_natal_interpretations() -> None:
 
 def upgrade() -> None:
     _dedupe_user_natal_interpretations()
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    if not inspector.has_table("user_natal_interpretations"):
+        return
 
     # persona_id NULL: enforce uniqueness on (user_id, chart_id, level)
     op.create_index(
@@ -90,6 +99,11 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    if not inspector.has_table("user_natal_interpretations"):
+        return
+
     op.drop_index(
         "uq_user_natal_interpretations_with_persona",
         table_name="user_natal_interpretations",

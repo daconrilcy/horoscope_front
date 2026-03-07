@@ -1,5 +1,3 @@
-import logging
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
@@ -394,16 +392,19 @@ def test_calculate_natal_sanitizes_request_id_header() -> None:
 
 def test_calculate_natal_logs_structured_swisseph_error_fields(
     monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     _cleanup_reference_tables()
     _seed_reference_data()
+    captured_messages: list[str] = []
 
     class _Bootstrap:
         success = True
         path_version = "se-test-v1"
         path_hash = "abc123"
         error = None
+
+    def _capture_error(message: str, *args: object, **kwargs: object) -> None:
+        captured_messages.append(message % args if args else message)
 
     monkeypatch.setattr("app.services.natal_calculation_service.settings.swisseph_enabled", True)
     monkeypatch.setattr(
@@ -414,28 +415,25 @@ def test_calculate_natal_logs_structured_swisseph_error_fields(
         "app.services.natal_calculation_service.build_natal_result",
         lambda *args, **kwargs: (_ for _ in ()).throw(EphemerisCalcError("calc failed")),
     )
+    monkeypatch.setattr("app.services.natal_calculation_service.logger.error", _capture_error)
 
-    with caplog.at_level(logging.ERROR, logger="app.services.natal_calculation_service"):
-        response = client.post(
-            "/v1/astrology-engine/natal/calculate",
-            json={
-                "birth_date": "1990-06-15",
-                "birth_time": "10:30",
-                "birth_place": "Paris",
-                "birth_timezone": "Europe/Paris",
-                "reference_version": "1.0.0",
-                "accurate": True,
-                "birth_lat": 48.8566,
-                "birth_lon": 2.3522,
-            },
-            headers={"x-request-id": "rid-structured-log"},
-        )
+    response = client.post(
+        "/v1/astrology-engine/natal/calculate",
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+            "reference_version": "1.0.0",
+            "accurate": True,
+            "birth_lat": 48.8566,
+            "birth_lon": 2.3522,
+        },
+        headers={"x-request-id": "rid-structured-log"},
+    )
 
     assert response.status_code == 503
-    log_messages = [
-        record.getMessage() for record in caplog.records if record.levelno == logging.ERROR
-    ]
-    assert any("request_id=rid-structured-log" in msg for msg in log_messages)
-    assert any("engine=swisseph" in msg for msg in log_messages)
-    assert any("ephe_version=se-test-v1" in msg for msg in log_messages)
-    assert any("ephe_hash=abc123" in msg for msg in log_messages)
+    assert any("request_id=rid-structured-log" in msg for msg in captured_messages)
+    assert any("engine=swisseph" in msg for msg in captured_messages)
+    assert any("ephe_version=se-test-v1" in msg for msg in captured_messages)
+    assert any("ephe_hash=abc123" in msg for msg in captured_messages)

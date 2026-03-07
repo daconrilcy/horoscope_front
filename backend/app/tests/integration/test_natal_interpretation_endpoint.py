@@ -176,7 +176,9 @@ def _override_auth() -> AuthenticatedUser:
 @pytest.fixture
 def mock_db():
     mock = MagicMock()
-    # Ensure it returns None by default for all scalar_one_or_none calls
+    # Cache lookup path uses db.execute(...).scalars().all(); default to no cache hit.
+    mock.execute.return_value.scalars.return_value.all.return_value = []
+    # Persona lookup path still uses scalar_one_or_none().
     mock.execute.return_value.scalar_one_or_none.return_value = None
     return mock
 
@@ -230,8 +232,7 @@ class TestNatalInterpretationEndpointV2:
         persona_mock = MagicMock()
         persona_mock.name = "Test Persona"
 
-        # Side effect: 1st call (cache check) -> None, 2nd call (persona) -> persona_mock
-        mock_db.execute.return_value.scalar_one_or_none.side_effect = [None, persona_mock]
+        mock_db.execute.return_value.scalar_one_or_none.return_value = persona_mock
 
         with (
             patch(

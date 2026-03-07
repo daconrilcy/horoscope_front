@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
 
 import yaml
 from sqlalchemy.orm import Session
@@ -10,6 +11,19 @@ from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import EvalFixtureResult, EvalReport
 
 logger = logging.getLogger(__name__)
+
+
+def _resolve_fixtures_path(fixtures_path: str) -> Path:
+    candidate = Path(fixtures_path)
+    if candidate.exists():
+        return candidate
+
+    backend_root = Path(__file__).resolve().parents[3]
+    backend_relative = backend_root / candidate
+    if backend_relative.exists():
+        return backend_relative
+
+    return candidate
 
 
 async def run_eval(
@@ -21,7 +35,9 @@ async def run_eval(
     """
     Runs an evaluation harness for a specific prompt version using offline fixtures.
     """
-    if not os.path.exists(fixtures_path):
+    resolved_fixtures_path = _resolve_fixtures_path(fixtures_path)
+
+    if not resolved_fixtures_path.exists():
         # Return empty report if no fixtures found
         return EvalReport(
             use_case=use_case_key,
@@ -35,17 +51,17 @@ async def run_eval(
         )
 
     fixtures = []
-    if os.path.isdir(fixtures_path):
-        for filename in os.listdir(fixtures_path):
+    if resolved_fixtures_path.is_dir():
+        for filename in os.listdir(resolved_fixtures_path):
             if filename.endswith(".yaml") or filename.endswith(".yml"):
-                with open(os.path.join(fixtures_path, filename), "r", encoding="utf-8") as f:
+                with (resolved_fixtures_path / filename).open("r", encoding="utf-8") as f:
                     data = yaml.safe_load(f)
                     if isinstance(data, list):
                         fixtures.extend(data)
                     else:
                         fixtures.append(data)
     else:
-        with open(fixtures_path, "r", encoding="utf-8") as f:
+        with resolved_fixtures_path.open("r", encoding="utf-8") as f:
             fixtures = yaml.safe_load(f)
 
     gateway = LLMGateway()

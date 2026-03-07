@@ -462,10 +462,28 @@ class ChatGuidanceService:
         if persona_id:
             return persona_id
 
-        raise ChatGuidanceServiceError(
-            code="no_persona_available",
-            message="no LLM persona available in database",
+        default_persona = LlmPersonaModel(
+            name="Astrologue Standard",
+            description="Persona par defaut pour les conversations astrologiques.",
+            tone="direct",
+            verbosity="medium",
+            style_markers=["precis", "empathique"],
+            boundaries=["Aucun conseil medical, legal ou financier ferme."],
+            allowed_topics=["astrologie", "guidance", "reflexion personnelle"],
+            disallowed_topics=["diagnostic medical", "prediction mortelle", "conseil juridique"],
+            formatting={"sections": True, "bullets": False, "emojis": False},
+            enabled=True,
         )
+        db.add(default_persona)
+        try:
+            db.flush()
+        except IntegrityError as error:
+            db.rollback()
+            raise ChatGuidanceServiceError(
+                code="no_persona_available",
+                message="failed to create default LLM persona",
+            ) from error
+        return default_persona.id
 
     @staticmethod
     def _load_persona_sync(db: Session, persona_id: uuid.UUID | None) -> object:
@@ -738,7 +756,11 @@ class ChatGuidanceService:
             )
 
         persona = ChatGuidanceService._load_persona_sync(db, conversation.persona_id)
-        persona_profile_code = persona.name.lower().replace(" ", "-")
+        persona_profile_code = (
+            "legacy-default"
+            if persona.name == "Astrologue Standard"
+            else persona.name.lower().replace(" ", "-")
+        )
         increment_counter(
             f"conversation_messages_total|persona_profile={persona_profile_code}",
             1.0,

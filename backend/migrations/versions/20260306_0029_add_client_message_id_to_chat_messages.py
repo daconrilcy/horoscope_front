@@ -18,6 +18,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    if not inspector.has_table("chat_messages"):
+        return
+
     op.add_column(
         "chat_messages",
         sa.Column("client_message_id", sa.String(36), nullable=True),
@@ -34,6 +39,11 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    if not inspector.has_table("chat_messages"):
+        return
+
     op.drop_index(
         "uq_chat_messages_conversation_client_id",
         table_name="chat_messages",

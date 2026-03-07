@@ -2,16 +2,26 @@ from __future__ import annotations
 
 import os
 import secrets
+import sys
 from enum import Enum
 from hashlib import sha256
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Load .env file from backend root if it exists
 backend_root = Path(__file__).parent.parent.parent
 env_path = backend_root / ".env"
-if env_path.exists():
+
+
+def _should_load_backend_dotenv() -> bool:
+    if os.getenv("APP_DISABLE_BACKEND_DOTENV", "").strip().lower() in {"1", "true", "yes", "on"}:
+        return False
+    # Test suites must control their own env explicitly and should not inherit local dev .env.
+    return "pytest" not in sys.modules
+
+
+# Load .env file from backend root if it exists and the current runtime allows it.
+if env_path.exists() and _should_load_backend_dotenv():
     load_dotenv(dotenv_path=env_path)
 
 
@@ -216,10 +226,10 @@ class Settings:
             "TIMEZONE_DERIVED_ENABLED", default=False
         )
         self.ephemeris_path = os.getenv(
-            "EPHEMERIS_PATH", os.getenv("SWISSEPH_DATA_PATH", "")
+            "SWISSEPH_DATA_PATH", os.getenv("EPHEMERIS_PATH", "")
         ).strip()
         self.ephemeris_path_version = os.getenv(
-            "EPHEMERIS_PATH_VERSION", os.getenv("SWISSEPH_PATH_VERSION", "")
+            "SWISSEPH_PATH_VERSION", os.getenv("EPHEMERIS_PATH_VERSION", "")
         ).strip()
         self.ephemeris_path_hash = os.getenv("EPHEMERIS_PATH_HASH", "").strip()
         self.ephemeris_required_files = self._parse_secret_list("EPHEMERIS_REQUIRED_FILES")

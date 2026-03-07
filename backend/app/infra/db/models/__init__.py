@@ -27,6 +27,23 @@ from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
 from app.infra.db.models.persona_config import PersonaConfigModel
+from app.infra.db.models.prediction_reference import (
+    AspectProfileModel,
+    AstroPointModel,
+    HouseCategoryWeightModel,
+    HouseProfileModel,
+    PlanetCategoryWeightModel,
+    PlanetProfileModel,
+    PointCategoryWeightModel,
+    PredictionCategoryModel,
+    SignRulershipModel,
+)
+from app.infra.db.models.prediction_ruleset import (
+    CategoryCalibrationModel,
+    PredictionRulesetModel,
+    RulesetEventTypeModel,
+    RulesetParameterModel,
+)
 from app.infra.db.models.privacy import UserPrivacyRequestModel
 from app.infra.db.models.reference import (
     AspectModel,
@@ -87,4 +104,17 @@ __all__ = [
     "AspectModel",
     "AstroCharacteristicModel",
     "SupportIncidentModel",
+    "PredictionCategoryModel",
+    "PlanetProfileModel",
+    "HouseProfileModel",
+    "PlanetCategoryWeightModel",
+    "HouseCategoryWeightModel",
+    "AstroPointModel",
+    "PointCategoryWeightModel",
+    "SignRulershipModel",
+    "AspectProfileModel",
+    "PredictionRulesetModel",
+    "RulesetEventTypeModel",
+    "RulesetParameterModel",
+    "CategoryCalibrationModel",
 ]

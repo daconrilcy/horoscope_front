@@ -47,6 +47,21 @@ class NatalCalculationService:
         return error.__class__.__name__ in {"EphemerisCalcError", "HousesCalcError"}
 
     @staticmethod
+    def _allows_simplified_fallback(
+        *,
+        accurate: bool,
+        zodiac: ZodiacType,
+        frame: FrameType,
+        house_system: HouseSystemType,
+    ) -> bool:
+        return (
+            not accurate
+            and zodiac == ZodiacType.TROPICAL
+            and frame == FrameType.GEOCENTRIC
+            and house_system == HouseSystemType.EQUAL
+        )
+
+    @staticmethod
     def _resolve_engine(
         *,
         accurate: bool,
@@ -352,15 +367,32 @@ class NatalCalculationService:
 
             bootstrap = get_bootstrap_result()
             if bootstrap is None:
-                raise SwissEphInitError("SwissEph bootstrap was not called at startup")
-            if not bootstrap.success:
+                if NatalCalculationService._allows_simplified_fallback(
+                    accurate=accurate,
+                    zodiac=resolved_zodiac,
+                    frame=resolved_frame,
+                    house_system=resolved_house_system,
+                ):
+                    engine = "simplified"
+                else:
+                    raise SwissEphInitError("SwissEph bootstrap was not called at startup")
+            elif not bootstrap.success:
                 # Re-raise the stored bootstrap error
-                if bootstrap.error is not None:
-                    raise bootstrap.error
-                raise SwissEphInitError("SwissEph bootstrap failed with unknown error")
-            engine = "swisseph"
-            ephemeris_path_version = bootstrap.path_version
-            ephemeris_path_hash = getattr(bootstrap, "path_hash", "") or None
+                if NatalCalculationService._allows_simplified_fallback(
+                    accurate=accurate,
+                    zodiac=resolved_zodiac,
+                    frame=resolved_frame,
+                    house_system=resolved_house_system,
+                ):
+                    engine = "simplified"
+                else:
+                    if bootstrap.error is not None:
+                        raise bootstrap.error
+                    raise SwissEphInitError("SwissEph bootstrap failed with unknown error")
+            else:
+                engine = "swisseph"
+                ephemeris_path_version = bootstrap.path_version
+                ephemeris_path_hash = getattr(bootstrap, "path_hash", "") or None
 
         # Story 24-1: aspect school and versioned rules identifier.
         from app.core.config import AspectSchoolType

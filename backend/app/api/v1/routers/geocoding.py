@@ -125,8 +125,8 @@ def _validate_resolve_snapshot(snapshot: GeocodingSearchResult) -> None:
         raise ValueError("snapshot lon must be within [-180, 180]")
 
 
-def _can_use_seed_token_fallback() -> bool:
-    return settings.enable_reference_seed_admin_fallback and settings.app_env in {
+def _can_use_seed_token() -> bool:
+    return settings.app_env in {
         "development",
         "dev",
         "local",
@@ -152,7 +152,7 @@ def _validate_nocache_access(
             "role is not allowed",
             {"required_roles": "support,ops,admin", "actual_role": current_user.role},
         )
-    if _can_use_seed_token_fallback() and x_admin_token == settings.reference_seed_admin_token:
+    if _can_use_seed_token() and x_admin_token == settings.reference_seed_admin_token:
         return True, "", "", {}
     return False, "unauthorized_nocache_access", "invalid admin token", {}
 
@@ -202,7 +202,7 @@ def search_places(
     normalized = _normalize_query(q)
     if len(normalized) < 2:
         return _error_response(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             request_id=request_id,
             code="invalid_geocoding_query",
             message="Query must be at least 2 characters",
@@ -330,7 +330,7 @@ def resolve_place(
         _validate_resolve_snapshot(snapshot)
     except ValueError as err:
         return _error_response(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             request_id=request_id,
             code="invalid_geocoding_resolve_payload",
             message="resolve payload validation failed",

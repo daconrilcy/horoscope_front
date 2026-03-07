@@ -238,8 +238,6 @@ def test_search_sends_jsonv2_and_addressdetails():
 
 
 def test_reverse_returns_expected_payload_for_authenticated_user(monkeypatch):
-    from app.core.security import create_token
-
     captured_urls: list[str] = []
 
     def fake_urlopen(req, timeout):
@@ -247,12 +245,12 @@ def test_reverse_returns_expected_payload_for_authenticated_user(monkeypatch):
         return _mock_nominatim_response(NOMINATIM_PARIS)
 
     monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
-    access_token = create_token(
-        subject="1",
-        role="user",
-        token_type="access",
-        expires_minutes=15,
+    register = client.post(
+        "/v1/auth/register",
+        json={"email": "geocoding-reverse-user@example.com", "password": "strong-pass-123"},
     )
+    assert register.status_code == 200
+    access_token = register.json()["data"]["tokens"]["access_token"]
 
     response = client.post(
         "/v1/geocoding/reverse",

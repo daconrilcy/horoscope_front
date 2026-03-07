@@ -82,8 +82,8 @@ def _record_reference_audit(
     )
 
 
-def _can_use_seed_token_fallback() -> bool:
-    return settings.enable_reference_seed_admin_fallback and settings.app_env in {
+def _can_use_seed_token() -> bool:
+    return settings.app_env in {
         "development",
         "dev",
         "local",
@@ -104,7 +104,7 @@ def _validate_seed_access(
             message="role is not allowed",
             details={"required_role": "ops, admin", "actual_role": current_user.role},
         )
-    if _can_use_seed_token_fallback() and x_admin_token == settings.reference_seed_admin_token:
+    if _can_use_seed_token() and x_admin_token == settings.reference_seed_admin_token:
         return None
     return ReferenceDataServiceError(
         code="unauthorized_seed_access",
@@ -182,7 +182,7 @@ def seed_reference_data(
         status_code = (
             status.HTTP_401_UNAUTHORIZED
             if error.code == "unauthorized_seed_access"
-            else status.HTTP_422_UNPROCESSABLE_ENTITY
+            else status.HTTP_422_UNPROCESSABLE_CONTENT
         )
         return _error_response(
             status_code=status_code,
@@ -315,7 +315,7 @@ def clone_reference_version(
         status_code = (
             status.HTTP_401_UNAUTHORIZED
             if error.code == "unauthorized_seed_access"
-            else status.HTTP_422_UNPROCESSABLE_ENTITY
+            else status.HTTP_422_UNPROCESSABLE_CONTENT
         )
         return _error_response(
             status_code=status_code,

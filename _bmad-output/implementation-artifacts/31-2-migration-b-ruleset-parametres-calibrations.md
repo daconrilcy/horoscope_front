@@ -1,6 +1,6 @@
 # Story 31.2 : Migration B — Ruleset, paramètres du moteur et table de calibrations percentiles
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -105,29 +105,29 @@ Un test d'intégration vérifie que :
 
 ### T1 — Migration Alembic (AC5)
 
-- [ ] Créer `backend/migrations/versions/{date}_0033_migration_b_prediction_ruleset_tables.py`
-  - [ ] Créer `prediction_rulesets` : colonnes + UNIQUE version
-  - [ ] Créer `ruleset_event_types` : colonnes + UNIQUE `(ruleset_id, code)`
-  - [ ] Créer `ruleset_parameters` : colonnes + UNIQUE `(ruleset_id, param_key)`
-  - [ ] Créer `category_calibrations` : colonnes + UNIQUE `(ruleset_id, category_id, valid_from)`
-  - [ ] `downgrade()` dans l'ordre inverse
+- [x] Créer `backend/migrations/versions/20260307_0033_migration_b_prediction_ruleset_tables.py`
+  - [x] Créer `prediction_rulesets` : colonnes + UNIQUE version
+  - [x] Créer `ruleset_event_types` : colonnes + UNIQUE `(ruleset_id, code)`
+  - [x] Créer `ruleset_parameters` : colonnes + UNIQUE `(ruleset_id, param_key)`
+  - [x] Créer `category_calibrations` : colonnes + UNIQUE `(ruleset_id, category_id, valid_from)`
+  - [x] `downgrade()` dans l'ordre inverse
 
 ### T2 — Modèles SQLAlchemy (AC6)
 
-- [ ] Créer `backend/app/infra/db/models/prediction_ruleset.py`
-  - [ ] `PredictionRulesetModel` avec tous les champs (AC1)
-  - [ ] `RulesetEventTypeModel` avec tous les champs (AC2)
-  - [ ] `RulesetParameterModel` avec tous les champs (AC3)
-  - [ ] `CategoryCalibrationModel` avec tous les champs (AC4) — FK vers `prediction_categories`
-- [ ] Importer ces modèles dans le point d'entrée Alembic
+- [x] Créer `backend/app/infra/db/models/prediction_ruleset.py`
+  - [x] `PredictionRulesetModel` avec tous les champs (AC1)
+  - [x] `RulesetEventTypeModel` avec tous les champs (AC2)
+  - [x] `RulesetParameterModel` avec tous les champs (AC3)
+  - [x] `CategoryCalibrationModel` avec tous les champs (AC4) — FK vers `prediction_categories`
+- [x] Importer ces modèles dans le point d'entrée Alembic
 
 ### T3 — Tests (AC8)
 
-- [ ] Créer `backend/app/tests/integration/test_migration_b_ruleset_tables.py`
-  - [ ] Test : les 4 tables existent
-  - [ ] Test : doublon dans `ruleset_parameters` → IntegrityError
-  - [ ] Test : doublon dans `ruleset_event_types` → IntegrityError
-  - [ ] Test : doublon dans `category_calibrations` → IntegrityError
+- [x] Créer `backend/app/tests/integration/test_migration_b_ruleset_tables.py`
+  - [x] Test : les 4 tables existent
+  - [x] Test : doublon dans `ruleset_parameters` → IntegrityError
+  - [x] Test : doublon dans `ruleset_event_types` → IntegrityError
+  - [x] Test : doublon dans `category_calibrations` → IntegrityError
 
 ## Dev Notes
 
@@ -190,12 +190,21 @@ Pattern de nommage : `{YYYYMMDD}_0033_migration_b_prediction_ruleset_tables.py`
 
 ### Agent Model Used
 
-_à remplir_
+Gemini 2.0 Flash
 
 ### Completion Notes List
 
-_à remplir_
+- Created migration `0033` for Migration B tables.
+- Implemented SQLAlchemy models in `prediction_ruleset.py`.
+- Registered models in `app/infra/db/models/__init__.py`.
+- Added integration tests verifying table creation and unique constraints.
+- Verified both new and previous migration tests pass.
+- Cleaned up linting issues with `ruff`.
 
 ### File List
 
-_à remplir_
+- `backend/migrations/versions/20260307_0033_migration_b_prediction_ruleset_tables.py`
+- `backend/app/infra/db/models/prediction_ruleset.py`
+- `backend/app/infra/db/models/__init__.py`
+- `backend/app/infra/db/base.py`
+- `backend/app/tests/integration/test_migration_b_ruleset_tables.py`

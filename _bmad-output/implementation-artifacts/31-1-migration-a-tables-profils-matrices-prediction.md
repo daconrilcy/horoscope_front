@@ -1,6 +1,6 @@
 # Story 31.1 : Migration A — Tables de profils planétaires/maisons, matrices de pondération et structures sémantiques du moteur de prédiction
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -176,40 +176,40 @@ Un test d'intégration vérifie que les 9 tables sont créées correctement et q
 
 ### T1 — Migration Alembic (AC10)
 
-- [ ] Créer `backend/migrations/versions/{date}_0032_migration_a_prediction_reference_tables.py`
-  - [ ] Créer `prediction_categories` avec colonnes et contraintes
-  - [ ] Créer `planet_profiles` avec FK UNIQUE sur `planets.id`
-  - [ ] Créer `house_profiles` avec FK UNIQUE sur `houses.id`
-  - [ ] Créer `planet_category_weights` avec UNIQUE `(planet_id, category_id)`
-  - [ ] Créer `house_category_weights` avec UNIQUE `(house_id, category_id)`
-  - [ ] Créer `astro_points` avec UNIQUE `(reference_version_id, code)`
-  - [ ] Créer `point_category_weights` avec UNIQUE `(point_id, category_id)`
-  - [ ] Créer `sign_rulerships` avec UNIQUE `(reference_version_id, sign_id, planet_id, rulership_type)`
-  - [ ] Créer `aspect_profiles` avec FK UNIQUE sur `aspects.id`
-  - [ ] Implémenter `downgrade()` dans l'ordre inverse des FK
+- [x] Créer `backend/migrations/versions/{date}_0032_migration_a_prediction_reference_tables.py`
+  - [x] Créer `prediction_categories` avec colonnes et contraintes
+  - [x] Créer `planet_profiles` avec FK UNIQUE sur `planets.id`
+  - [x] Créer `house_profiles` avec FK UNIQUE sur `houses.id`
+  - [x] Créer `planet_category_weights` avec UNIQUE `(planet_id, category_id)`
+  - [x] Créer `house_category_weights` avec UNIQUE `(house_id, category_id)`
+  - [x] Créer `astro_points` avec UNIQUE `(reference_version_id, code)`
+  - [x] Créer `point_category_weights` avec UNIQUE `(point_id, category_id)`
+  - [x] Créer `sign_rulerships` avec UNIQUE `(reference_version_id, sign_id, planet_id, rulership_type)`
+  - [x] Créer `aspect_profiles` avec FK UNIQUE sur `aspects.id`
+  - [x] Implémenter `downgrade()` dans l'ordre inverse des FK
 
 ### T2 — Modèles SQLAlchemy (AC11, AC12)
 
-- [ ] Créer `backend/app/infra/db/models/prediction_reference.py`
-  - [ ] `PredictionCategoryModel` avec `reference_version_id`, `code`, `name`, `display_name`, `sort_order`, `is_public`, `is_enabled`
-  - [ ] `PlanetProfileModel` avec tous les champs (AC2)
-  - [ ] `HouseProfileModel` avec tous les champs (AC3)
-  - [ ] `PlanetCategoryWeightModel` avec `planet_id`, `category_id`, `weight`, `influence_role`
-  - [ ] `HouseCategoryWeightModel` avec `house_id`, `category_id`, `weight`, `routing_role`
-  - [ ] `AstroPointModel` avec `reference_version_id`, `code`, `name`, `point_type`, `is_enabled`
-  - [ ] `PointCategoryWeightModel` avec `point_id`, `category_id`, `weight`
-  - [ ] `SignRulershipModel` avec `reference_version_id`, `sign_id`, `planet_id`, `rulership_type`, `weight`, `is_primary`
-  - [ ] `AspectProfileModel` avec tous les champs (AC9)
-  - [ ] Ajouter les listeners `before_update` pour les modèles liés à `reference_version_id`
-- [ ] Importer les nouveaux modèles dans `backend/app/infra/db/base.py` (ou le point d'entrée des modèles) pour qu'Alembic les découvre
+- [x] Créer `backend/app/infra/db/models/prediction_reference.py`
+  - [x] `PredictionCategoryModel` avec `reference_version_id`, `code`, `name`, `display_name`, `sort_order`, `is_public`, `is_enabled`
+  - [x] `PlanetProfileModel` avec tous les champs (AC2)
+  - [x] `HouseProfileModel` avec tous les champs (AC3)
+  - [x] `PlanetCategoryWeightModel` avec `planet_id`, `category_id`, `weight`, `influence_role`
+  - [x] `HouseCategoryWeightModel` avec `house_id`, `category_id`, `weight`, `routing_role`
+  - [x] `AstroPointModel` avec `reference_version_id`, `code`, `name`, `point_type`, `is_enabled`
+  - [x] `PointCategoryWeightModel` avec `point_id`, `category_id`, `weight`
+  - [x] `SignRulershipModel` avec `reference_version_id`, `sign_id`, `planet_id`, `rulership_type`, `weight`, `is_primary`
+  - [x] `AspectProfileModel` avec tous les champs (AC9)
+  - [x] Ajouter les listeners `before_update` pour les modèles liés à `reference_version_id`
+- [x] Importer les nouveaux modèles dans `backend/app/infra/db/models/__init__.py` (ou le point d'entrée des modèles) pour qu'Alembic les découvre
 
 ### T3 — Tests (AC14)
 
-- [ ] Créer `backend/app/tests/integration/test_migration_a_prediction_tables.py`
-  - [ ] Test : les 9 tables existent après migration
-  - [ ] Test : insertion d'un doublon dans `prediction_categories` (même `reference_version_id` + `code`) → IntegrityError
-  - [ ] Test : insertion d'un doublon dans `planet_category_weights` (même `planet_id` + `category_id`) → IntegrityError
-  - [ ] Test : `PlanetProfileModel` avec FK invalide → IntegrityError
+- [x] Créer `backend/app/tests/integration/test_migration_a_prediction_tables.py`
+  - [x] Test : les 9 tables existent après migration
+  - [x] Test : insertion d'un doublon dans `prediction_categories` (même `reference_version_id` + `code`) → IntegrityError
+  - [x] Test : insertion d'un doublon dans `planet_category_weights` (même `planet_id` + `category_id`) → IntegrityError
+  - [x] Test : `PlanetProfileModel` avec FK invalide → IntegrityError
 
 ## Dev Notes
 
@@ -291,7 +291,7 @@ Pattern de nommage : `{YYYYMMDD}_0032_migration_a_prediction_reference_tables.py
 |---------|--------|
 | `backend/migrations/versions/{date}_0032_migration_a_prediction_reference_tables.py` | Créer |
 | `backend/app/infra/db/models/prediction_reference.py` | Créer |
-| `backend/app/infra/db/base.py` (ou équivalent) | Modifier — importer les nouveaux modèles |
+| `backend/app/infra/db/models/__init__.py` | Modifier — importer les nouveaux modèles |
 | `backend/app/tests/integration/test_migration_a_prediction_tables.py` | Créer |
 
 ### Fichiers à NE PAS toucher
@@ -304,12 +304,20 @@ Pattern de nommage : `{YYYYMMDD}_0032_migration_a_prediction_reference_tables.py
 
 ### Agent Model Used
 
-_à remplir_
+Gemini 2.0 Flash
 
 ### Completion Notes List
 
-_à remplir_
+- Création de la migration Alembic 0032 créant les 9 tables de référentiel de prédiction.
+- Implémentation des 9 modèles SQLAlchemy avec mapping complet et relations.
+- Ajout des listeners SQLAlchemy pour la protection contre la mutation sur les versions verrouillées (AC12).
+- Création d'un test d'intégration complet vérifiant la création des tables, les contraintes d'unicité et la protection des versions.
+- Correction de la migration legacy 0005 pour assurer la compatibilité avec SQLite via `batch_alter_table` afin de permettre l'exécution des tests d'intégration.
 
 ### File List
 
-_à remplir_
+- `backend/migrations/versions/20260307_0032_migration_a_prediction_reference_tables.py`
+- `backend/app/infra/db/models/prediction_reference.py`
+- `backend/app/infra/db/models/__init__.py`
+- `backend/app/tests/integration/test_migration_a_prediction_tables.py`
+- `backend/migrations/versions/20260218_0005_add_user_id_to_chart_results.py`

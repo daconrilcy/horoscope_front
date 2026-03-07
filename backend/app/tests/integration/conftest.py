@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 
 import pytest
@@ -16,3 +17,9 @@ def _reset_in_memory_rate_limits() -> None:
     # Integration tests share the same process-wide in-memory limiter.
     # Reset between tests to avoid cross-test 429 leakage.
     reset_rate_limits()
+
+
+@pytest.fixture(autouse=True)
+def _reset_global_logging_disable() -> None:
+    # Some unit suites disable logging globally; restore it for integration suites.
+    logging.disable(logging.NOTSET)

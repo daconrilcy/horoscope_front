@@ -18,18 +18,19 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column("chart_results", sa.Column("user_id", sa.Integer(), nullable=True))
-    op.create_index("ix_chart_results_user_id", "chart_results", ["user_id"], unique=False)
-    op.create_foreign_key(
-        "fk_chart_results_user_id_users",
-        "chart_results",
-        "users",
-        ["user_id"],
-        ["id"],
-    )
+    with op.batch_alter_table("chart_results", schema=None) as batch_op:
+        batch_op.add_column(sa.Column("user_id", sa.Integer(), nullable=True))
+        batch_op.create_index("ix_chart_results_user_id", ["user_id"], unique=False)
+        batch_op.create_foreign_key(
+            "fk_chart_results_user_id_users",
+            "users",
+            ["user_id"],
+            ["id"],
+        )
 
 
 def downgrade() -> None:
-    op.drop_constraint("fk_chart_results_user_id_users", "chart_results", type_="foreignkey")
-    op.drop_index("ix_chart_results_user_id", table_name="chart_results")
-    op.drop_column("chart_results", "user_id")
+    with op.batch_alter_table("chart_results", schema=None) as batch_op:
+        batch_op.drop_constraint("fk_chart_results_user_id_users", type_="foreignkey")
+        batch_op.drop_index("ix_chart_results_user_id")
+        batch_op.drop_column("user_id")
