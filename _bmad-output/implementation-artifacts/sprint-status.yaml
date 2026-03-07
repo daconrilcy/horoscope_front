@@ -288,3 +288,27 @@ development_status:
   epic-32: done
   32-1-migration-c-tables-persistance-quotidienne-predictions: done
   epic-32-retrospective: optional
+
+  epic-33: in-progress
+  33-1-engine-contract-orchestrateur: done
+  33-2-context-loader: ready-for-dev
+  33-3-temporal-sampler: ready-for-dev
+  33-4-astro-calculator: ready-for-dev
+  33-5-event-detector: ready-for-dev
+  33-6-natal-sensitivity: ready-for-dev
+  epic-33-retrospective: optional
+
+  epic-34: backlog
+  34-1-domain-routing: backlog
+  34-2-contribution-calculator: backlog
+  34-3-aggregateur-raw-day: backlog
+  34-4-calibrateur-note-20: backlog
+  34-5-turning-points-blocs-ux: backlog
+  epic-34-retrospective: optional
+
+  epic-35: backlog
+  35-1-persistance-run: backlog
+  35-2-explicabilite-debug: backlog
+  35-3-non-regression: backlog
+  35-4-couche-editoriale: backlog
+  epic-35-retrospective: optional
