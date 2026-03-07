@@ -4,6 +4,15 @@ from typing import Any
 
 
 @dataclass(frozen=True)
+class NatalChart:
+    """Internal representation of a natal chart for sensitivity calculations."""
+
+    planet_positions: dict[str, float]
+    planet_houses: dict[str, int]
+    house_sign_rulers: dict[int, str]
+
+
+@dataclass(frozen=True)
 class EngineInput:
     """Canonical input for the prediction engine."""
 
