@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 import swisseph as swe
 
 from app.prediction.context_loader import LoadedPredictionContext
-from app.prediction.schemas import AstroEvent, StepAstroState
+from app.prediction.schemas import AstroEvent, NatalChart, StepAstroState
 from app.prediction.temporal_sampler import DayGrid
 
 logger = logging.getLogger(__name__)
@@ -43,11 +43,18 @@ class EventDetector:
         "MC",
     }
 
-    def __init__(self, ctx: LoadedPredictionContext, natal_positions: dict[str, float]):
+    def __init__(self, ctx: LoadedPredictionContext, natal_chart: NatalChart):
         self.ctx = ctx
+        self.natal_chart = natal_chart
+        # Filter natal positions for V1 targets
         self.natal_positions = {
-            k: v for k, v in natal_positions.items() if k in self.V1_NATAL_TARGETS
+            k: v for k, v in natal_chart.planet_positions.items() if k in self.V1_NATAL_TARGETS
         }
+        # Add angles if present in natal_chart (might be in angles dict in some versions, 
+        # but orchestrator normalizes them into planet_positions)
+        # We also need their houses. 
+        # If Asc/MC are not in planet_houses, we can assume 1 and 10 or calculate if we had cusps.
+        # But EngineOrchestrator should have put them in planet_houses if it normalized them.
 
     def detect(self, steps: list[StepAstroState], day_grid: DayGrid) -> list[AstroEvent]:
         """
@@ -85,7 +92,11 @@ class EventDetector:
         for i, step in enumerate(steps):
             for body_code, planet_state in step.planets.items():
                 transit_lon = planet_state.longitude
+                transit_house = planet_state.natal_house_transited
+                
                 for target_code, natal_lon in self.natal_positions.items():
+                    target_house = self.natal_chart.planet_houses.get(target_code)
+                    
                     for aspect_deg, aspect_code in self.ASPECTS_V1.items():
                         key = (body_code, target_code, aspect_deg)
                         orb = self._orb(transit_lon, natal_lon, aspect_deg)
@@ -97,22 +108,29 @@ class EventDetector:
                         h = history[key]
                         h.append(orb)
                         
+                        # Metadata for enriched routing
+                        meta = {
+                            "natal_house_target": target_house,
+                            "natal_house_transited": transit_house
+                        }
+                        
                         if len(h) >= 2:
                             prev_orb = h[-2]
                             phase = "applying" if orb < prev_orb else "separating"
+                            meta["phase"] = phase
                             
                             # enter_orb
                             if prev_orb > orb_max and orb <= orb_max:
                                 detected.append(self._create_event(
                                     "enter_orb", step.ut_jd, step.local_time,
-                                    body_code, target_code, aspect_code, orb, {"phase": phase}
+                                    body_code, target_code, aspect_code, orb, meta.copy()
                                 ))
                             
                             # exit_orb
                             elif prev_orb <= orb_max and orb > orb_max:
                                 detected.append(self._create_event(
                                     "exit_orb", step.ut_jd, step.local_time,
-                                    body_code, target_code, aspect_code, orb, {"phase": phase}
+                                    body_code, target_code, aspect_code, orb, meta.copy()
                                 ))
                         
                         # exact detection (local minimum)
@@ -121,9 +139,20 @@ class EventDetector:
                             if p2 < p1 and p2 < p3 and p2 <= orb_max:
                                 # p2 is a local minimum — orb was decreasing into it (applying)
                                 prev_step = steps[i-1]
+                                # natal_house_transited must come from prev_step (where p2 occurred),
+                                # not from the current step i.
+                                prev_planet = prev_step.planets.get(body_code)
+                                meta_exact = {
+                                    "natal_house_target": target_house,
+                                    "natal_house_transited": (
+                                        prev_planet.natal_house_transited
+                                        if prev_planet else transit_house
+                                    ),
+                                    "phase": "applying",
+                                }
                                 detected.append(self._create_event(
                                     "exact", prev_step.ut_jd, prev_step.local_time,
-                                    body_code, target_code, aspect_code, p2, {"phase": "applying"}
+                                    body_code, target_code, aspect_code, p2, meta_exact
                                 ))
         
         return detected

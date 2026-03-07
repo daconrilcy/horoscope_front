@@ -65,7 +65,7 @@ class EngineOrchestrator:
             Callable[[list[float], float, float], AstroCalculator] | None
         ) = None,
         event_detector_factory: (
-            Callable[[LoadedPredictionContext, dict[str, float]], EventDetector] | None
+            Callable[[LoadedPredictionContext, NatalChart], EventDetector] | None
         ) = None,
         natal_sensitivity_calculator: NatalSensitivityCalculator | None = None,
     ) -> None:
@@ -103,7 +103,6 @@ class EngineOrchestrator:
         )
 
         natal_cusps = self._extract_house_cusps(engine_input.natal_chart)
-        natal_positions = self._extract_natal_positions(engine_input.natal_chart)
         natal_chart = self._build_natal_chart(engine_input.natal_chart, natal_cusps)
 
         day_grid = self._temporal_sampler.build_day_grid(
@@ -121,7 +120,7 @@ class EngineOrchestrator:
             astro_calculator.compute_step(sample.ut_time, sample.local_time)
             for sample in day_grid.samples
         ]
-        event_detector = self._event_detector_factory(loaded_context, natal_positions)
+        event_detector = self._event_detector_factory(loaded_context, natal_chart)
         detected_events = event_detector.detect(astro_states, day_grid)
         natal_sensitivity = self._natal_sensitivity_calculator.compute(
             natal_chart,
@@ -290,29 +289,36 @@ class EngineOrchestrator:
         except (TypeError, ValueError) as exc:
             raise PredictionContextError("Natal house cusps must be numeric") from exc
 
-    def _extract_natal_positions(self, natal_chart: dict) -> dict[str, float]:
-        positions = self._extract_named_longitudes(natal_chart.get("planets"), code_key="code")
-        normalized_positions: dict[str, float] = {}
-        for code, longitude in positions.items():
-            canonical = self._canonical_planet_name(code)
-            if canonical is not None:
-                normalized_positions[canonical] = longitude
-
-        for angle_code, longitude in self._extract_angle_longitudes(natal_chart).items():
-            normalized_positions[angle_code] = longitude
-
-        return normalized_positions
-
     def _build_natal_chart(self, natal_chart: dict, natal_cusps: list[float]) -> NatalChart:
         planet_positions = self._extract_named_longitudes(
             natal_chart.get("planets"),
             code_key="code",
         )
-        planet_houses = self._extract_planet_houses(natal_chart, planet_positions, natal_cusps)
+        
+        # Normalize planet names
+        normalized_positions: dict[str, float] = {}
+        for code, longitude in planet_positions.items():
+            canonical = self._canonical_planet_name(code)
+            if canonical is not None:
+                normalized_positions[canonical] = longitude
+            else:
+                normalized_positions[code] = longitude # Keep original if not a planet (e.g. angle)
+                
+        # Include angles
+        for angle_code, longitude in self._extract_angle_longitudes(natal_chart).items():
+            normalized_positions[angle_code] = longitude
+
+        # Calculate houses for ALL positions (planets + angles)
+        point_houses = {
+            code: self._house_for_longitude(lon, natal_cusps)
+            for code, lon in normalized_positions.items()
+        }
+        
         house_sign_rulers = self._extract_house_sign_rulers(natal_chart, natal_cusps)
+        
         return NatalChart(
-            planet_positions=planet_positions,
-            planet_houses=planet_houses,
+            planet_positions=normalized_positions,
+            planet_houses=point_houses,
             house_sign_rulers=house_sign_rulers,
         )
 
@@ -355,31 +361,6 @@ class EngineOrchestrator:
                 longitude_value
             )
         return angle_positions
-
-    def _extract_planet_houses(
-        self,
-        natal_chart: dict,
-        planet_positions: dict[str, float],
-        natal_cusps: list[float],
-    ) -> dict[str, int]:
-        raw_planets = natal_chart.get("planets")
-        if isinstance(raw_planets, dict):
-            return {
-                code: self._house_for_longitude(longitude, natal_cusps)
-                for code, longitude in planet_positions.items()
-            }
-
-        if isinstance(raw_planets, list):
-            planet_houses: dict[str, int] = {}
-            for item in raw_planets:
-                code = str(item["code"])
-                house_number = item.get("house")
-                if house_number is None:
-                    house_number = self._house_for_longitude(planet_positions[code], natal_cusps)
-                planet_houses[code] = int(house_number)
-            return planet_houses
-
-        raise PredictionContextError("EngineInput.natal_chart must provide planet positions")
 
     def _extract_house_sign_rulers(
         self,
