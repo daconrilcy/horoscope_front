@@ -249,15 +249,12 @@ def test_persona_prompt_rendering_contains_all_fields() -> None:
             "persona_verbosity": "minimale",
             "persona_style_markers": "sarcastique, bref",
             "persona_boundaries": "Pas de compassion",
-            "persona_line": "LIGNE_LEGACY_TEST"
-        }
+            "persona_line": "LIGNE_LEGACY_TEST",
+        },
     )
 
     rendered = PromptRegistry.render_prompt(
-        use_case="chat",
-        locale="fr-FR",
-        input_data=GenerateInput(),
-        context=context
+        use_case="chat", locale="fr-FR", input_data=GenerateInput(), context=context
     )
 
     assert "Astrologue Test" in rendered

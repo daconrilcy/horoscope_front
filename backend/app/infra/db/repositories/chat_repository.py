@@ -108,9 +108,7 @@ class ChatRepository:
         return self.db.scalar(
             select(ChatMessageModel)
             .where(ChatMessageModel.conversation_id == conversation_id)
-            .where(
-                ChatMessageModel.reply_to_client_message_id == reply_to_client_message_id
-            )
+            .where(ChatMessageModel.reply_to_client_message_id == reply_to_client_message_id)
         )
 
     def get_message_by_client_id(

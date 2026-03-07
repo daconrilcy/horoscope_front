@@ -113,11 +113,7 @@ def _ensure_llm_registry_seeded() -> None:
             or not short_use_case
             or "chart_json" not in (short_use_case.required_prompt_placeholders or [])
         )
-        missing_registry = (
-            use_case_count == 0
-            or prompt_count == 0
-            or active_short_prompt is None
-        )
+        missing_registry = use_case_count == 0 or prompt_count == 0 or active_short_prompt is None
         degraded_registry = (
             enabled_personas < 6
             or has_persona_lock

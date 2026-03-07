@@ -451,11 +451,15 @@ def seed_use_cases(db: Session) -> None:
     default_persona_id = str(default_persona.id)
 
     # Build the list of enabled personas after ensuring at least one exists.
-    enabled_personas = db.execute(
-        select(LlmPersonaModel)
-        .where(LlmPersonaModel.enabled == True)  # noqa: E712
-        .order_by(LlmPersonaModel.name)
-    ).scalars().all()
+    enabled_personas = (
+        db.execute(
+            select(LlmPersonaModel)
+            .where(LlmPersonaModel.enabled == True)  # noqa: E712
+            .order_by(LlmPersonaModel.name)
+        )
+        .scalars()
+        .all()
+    )
     enabled_persona_ids = [str(persona.id) for persona in enabled_personas]
     if not enabled_persona_ids:
         enabled_persona_ids = [default_persona_id]

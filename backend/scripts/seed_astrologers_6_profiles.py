@@ -221,9 +221,9 @@ def seed_astrologers(db: Session) -> None:
 
     # Disable duplicate legacy personas that share a seeded canonical name.
     for name, canonical_id in canonical_ids_by_name.items():
-        duplicates = db.execute(
-            select(LlmPersonaModel).where(LlmPersonaModel.name == name)
-        ).scalars().all()
+        duplicates = (
+            db.execute(select(LlmPersonaModel).where(LlmPersonaModel.name == name)).scalars().all()
+        )
         for duplicate in duplicates:
             if duplicate.id != canonical_id and duplicate.enabled:
                 duplicate.enabled = False

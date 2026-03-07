@@ -40,9 +40,7 @@ def seed() -> None:
 
         current = schema.json_schema or {}
         current_min_items = (
-            current.get("properties", {})
-            .get("suggested_replies", {})
-            .get("minItems")
+            current.get("properties", {}).get("suggested_replies", {}).get("minItems")
         )
 
         if current_min_items is None:
