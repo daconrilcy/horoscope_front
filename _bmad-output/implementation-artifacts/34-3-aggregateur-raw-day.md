@@ -1,6 +1,6 @@
 # Story 34.3 : Agrégateur temporel `RawStep` / `RawDay`
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -46,34 +46,34 @@ Tous deux = 0.0 si aucun événement.
 
 ### T1 — `TemporalAggregator` (AC1–AC7)
 
-- [ ] Créer `backend/app/prediction/aggregator.py`
-  - [ ] Dataclasses `CategoryAggregation` et `DayAggregation`
-  - [ ] Constantes `RAW_STEP_MAX = 3.0`, `RAW_DAY_MAX = 2.0`, `PEAK90_WINDOW = 6`, `CLOSE_WINDOW = 8`
-  - [ ] Classe `TemporalAggregator`
-  - [ ] `aggregate(contributions_by_step: list[dict[str, float]], category_codes: list[str]) -> DayAggregation`
-    - [ ] Pour chaque catégorie, construire la liste des `RawStep` (un par pas, clamped)
-    - [ ] Calculer `mean` via `statistics.mean`
-    - [ ] Calculer `peak90` via `_peak90(steps)`
-    - [ ] Calculer `close` via moyenne des `CLOSE_WINDOW` derniers pas
-    - [ ] Calculer `raw_day` avec formule V1, clamp `[-2, +2]`
-    - [ ] Calculer `power` et `volatility`
-  - [ ] `_peak90(steps: list[float]) -> float`
+- [x] Créer `backend/app/prediction/aggregator.py`
+  - [x] Dataclasses `CategoryAggregation` et `DayAggregation`
+  - [x] Constantes `RAW_STEP_MAX = 3.0`, `RAW_DAY_MAX = 2.0`, `PEAK90_WINDOW = 6`, `CLOSE_WINDOW = 8`
+  - [x] Classe `TemporalAggregator`
+  - [x] `aggregate(contributions_by_step: list[dict[str, float]], category_codes: list[str]) -> DayAggregation`
+    - [x] Pour chaque catégorie, construire la liste des `RawStep` (un par pas, clamped)
+    - [x] Calculer `mean` via `statistics.mean`
+    - [x] Calculer `peak90` via `_peak90(steps)`
+    - [x] Calculer `close` via moyenne des `CLOSE_WINDOW` derniers pas
+    - [x] Calculer `raw_day` avec formule V1, clamp `[-2, +2]`
+    - [x] Calculer `power` et `volatility`
+  - [x] `_peak90(steps: list[float]) -> float`
 
 ### T2 — Tests unitaires (AC1–AC7)
 
-- [ ] Créer `backend/app/tests/unit/test_aggregator.py`
-  - [ ] `test_raw_step_sum_correct` — 3 contributions au même pas → somme correcte
-  - [ ] `test_raw_step_clamped_max` — somme > 3.0 → 3.0
-  - [ ] `test_raw_step_clamped_min` — somme < -3.0 → -3.0
-  - [ ] `test_mean_correct` — série simple → mean attendu
-  - [ ] `test_peak90_identifies_peak` — pic de 6 pas dans une série → identifié
-  - [ ] `test_close_last_2h` — `close` = moyenne des 8 derniers pas
-  - [ ] `test_raw_day_formula` — valeurs connues Mean/Peak90/Close → `0.70×M + 0.20×P + 0.10×C`
-  - [ ] `test_raw_day_clamped_max` — RawDay > 2.0 → 2.0
-  - [ ] `test_raw_day_clamped_min` — RawDay < -2.0 → -2.0
-  - [ ] `test_power_max_abs` — Power = max(abs(steps))
-  - [ ] `test_volatility_nonzero` — série avec variance → Vol > 0
-  - [ ] `test_no_events_zero` — aucun événement → Power=0, Vol=0, RawDay≈0
+- [x] Créer `backend/app/tests/unit/test_aggregator.py`
+  - [x] `test_raw_step_sum_correct` — 3 contributions au même pas → somme correcte
+  - [x] `test_raw_step_clamped_max` — somme > 3.0 → 3.0
+  - [x] `test_raw_step_clamped_min` — somme < -3.0 → -3.0
+  - [x] `test_mean_correct` — série simple → mean attendu
+  - [x] `test_peak90_identifies_peak` — pic de 6 pas dans une série → identifié
+  - [x] `test_close_last_2h` — `close` = moyenne des 8 derniers pas
+  - [x] `test_raw_day_formula` — valeurs connues Mean/Peak90/Close → `0.70×M + 0.20×P + 0.10×C`
+  - [x] `test_raw_day_clamped_max` — RawDay > 2.0 → 2.0
+  - [x] `test_raw_day_clamped_min` — RawDay < -2.0 → -2.0
+  - [x] `test_power_max_abs` — Power = max(abs(steps))
+  - [x] `test_volatility_nonzero` — série avec variance → Vol > 0
+  - [x] `test_no_events_zero` — aucun événement → Power=0, Vol=0, RawDay≈0
 
 ## Dev Notes
 
@@ -131,10 +131,23 @@ volatility = statistics.stdev(steps) if len(steps) > 1 else 0.0
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+gemini-2.0-flash
 
 ### Debug Log References
 
+- Floating point precision issue in `test_raw_day_formula` (0.999... != 1.0) fixed with `pytest.approx`.
+- PowerShell `&&` syntax issue fixed by running commands separately.
+
 ### Completion Notes List
 
+- Service `TemporalAggregator` implémenté selon AC1-AC7.
+- Dataclasses `CategoryAggregation` et `DayAggregation` créées pour structurer les sorties.
+- Formule `RawDay` V1 implémentée avec coefficients 0.70/0.20/0.10 et clamp [-2, 2].
+- `Peak90` implémenté via une fenêtre glissante de 6 pas (90 min).
+- `Close` implémenté comme moyenne des 8 derniers pas (2h).
+- Tests unitaires complets couvrant tous les cas limites et calculs de métriques.
+
 ### File List
+
+- `backend/app/prediction/aggregator.py`
+- `backend/app/tests/unit/test_aggregator.py`
