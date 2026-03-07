@@ -300,8 +300,9 @@ development_status:
 
   epic-34: in-progress
   34-1-domain-routing: done
-  34-2-contribution-calculator: backlog
+  34-2-contribution-calculator: done
   34-3-aggregateur-raw-day: backlog
+
   34-4-calibrateur-note-20: backlog
   34-5-turning-points-blocs-ux: backlog
   epic-34-retrospective: optional

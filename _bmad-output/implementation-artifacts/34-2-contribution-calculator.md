@@ -1,6 +1,7 @@
 # Story 34.2 : Service de contribution `Contribution(e,c,t)`
 
-Status: ready-for-dev
+Status: done
+
 
 ## Story
 
@@ -54,34 +55,34 @@ Toutes les valeurs clampées après calcul.
 
 ### T1 — `ContributionCalculator` (AC1–AC8)
 
-- [ ] Créer `backend/app/prediction/contribution_calculator.py`
-  - [ ] Constante `TARGET_CLASS_WEIGHTS: dict[str, float]` = mapping classe → f_target
-  - [ ] Constante `TARGET_CLASS_MAP: dict[str, str]` = mapping planet_code → classe
-  - [ ] Classe `ContributionCalculator`
-  - [ ] `compute(event, ns_map, d_map, ctx) -> dict[str, float]`
-    - [ ] `_w_event(event, ctx) -> float` — depuis `EventTypeData.base_weight`
-    - [ ] `_w_planet(planet_code, ctx) -> float` — depuis `PlanetProfileData.weight_intraday`
-    - [ ] `_w_aspect(aspect_code, ctx) -> float` — depuis `AspectProfileData.intensity_weight`
-    - [ ] `_f_orb(event, ctx) -> float` — parabolique, 0 si hors orbe
-    - [ ] `_f_phase(event) -> float` — depuis `event.metadata["phase"]`
-    - [ ] `_f_target(target_code) -> float` — depuis `TARGET_CLASS_WEIGHTS`
-    - [ ] `_pol(event, cat_code, ctx) -> float` — valence contextuelle
-    - [ ] Clamp final `[-1, +1]`
-    - [ ] Si `f_orb == 0` → retourner dict avec 0.0 pour toutes les catégories
+- [x] Créer `backend/app/prediction/contribution_calculator.py`
+  - [x] Constante `TARGET_CLASS_WEIGHTS: dict[str, float]` = mapping classe → f_target
+  - [x] Constante `TARGET_CLASS_MAP: dict[str, str]` = mapping planet_code → classe
+  - [x] Classe `ContributionCalculator`
+  - [x] `compute(event, ns_map, d_map, ctx) -> dict[str, float]`
+    - [x] `_w_event(event, ctx) -> float` — depuis `EventTypeData.base_weight`
+    - [x] `_w_planet(planet_code, ctx) -> float` — depuis `PlanetProfileData.weight_intraday`
+    - [x] `_w_aspect(aspect_code, ctx) -> float` — depuis `AspectProfileData.intensity_weight`
+    - [x] `_f_orb(event, ctx) -> float` — parabolique, 0 si hors orbe
+    - [x] `_f_phase(event) -> float` — depuis `event.metadata["phase"]`
+    - [x] `_f_target(target_code) -> float` — depuis `TARGET_CLASS_WEIGHTS`
+    - [x] `_pol(event, cat_code, ctx) -> float` — valence contextuelle
+    - [x] Clamp final `[-1, +1]`
+    - [x] Si `f_orb == 0` → retourner dict avec 0.0 pour toutes les catégories
 
 ### T2 — Tests unitaires (AC1–AC8)
 
-- [ ] Créer `backend/app/tests/unit/test_contribution_calculator.py`
-  - [ ] `test_out_of_orb_all_zero` — `orb_deg > orb_max` → toutes contributions = 0.0
-  - [ ] `test_exact_orb_max_f_orb` — `orb_deg = 0` → `f_orb = 1.0`
-  - [ ] `test_f_phase_applying` — `phase="applying"` → `f_phase = 1.05`
-  - [ ] `test_f_phase_exact` — `phase="exact"` → `f_phase = 1.15`
-  - [ ] `test_f_phase_separating` — `phase="separating"` → `f_phase = 0.95`
-  - [ ] `test_saturn_conjunction_mc_negative` — Saturne conjonction MC natal → contribution négative
-  - [ ] `test_moon_trine_sun_positive` — Lune trigone Soleil natal → contribution positive
-  - [ ] `test_mars_square_mercury_negative` — Mars carré Mercure natal → contribution négative
-  - [ ] `test_clamped_to_plus_minus_1` — cas extrême → résultat ∈ `[-1, +1]`
-  - [ ] `test_f_target_angle_1_30` — cible = Asc ou MC → `f_target = 1.30`
+- [x] Créer `backend/app/tests/unit/test_contribution_calculator.py`
+  - [x] `test_out_of_orb_all_zero` — `orb_deg > orb_max` → toutes contributions = 0.0
+  - [x] `test_exact_orb_max_f_orb` — `orb_deg = 0` → `f_orb = 1.0`
+  - [x] `test_f_phase_applying` — `phase="applying"` → `f_phase = 1.05` (fonction dédiée)
+  - [x] `test_f_phase_exact` — `phase="exact"` → `f_phase = 1.15` (fonction dédiée)
+  - [x] `test_f_phase_separating` — `phase="separating"` → `f_phase = 0.95` (fonction dédiée)
+  - [x] `test_saturn_conjunction_mc_negative` — Saturne conjonction MC natal → contribution négative
+  - [x] `test_moon_trine_sun_positive` — Lune trigone Soleil natal → contribution positive
+  - [x] `test_mars_square_mercury_negative` — Mars carré Mercure natal → contribution négative
+  - [x] `test_clamped_to_plus_minus_1` — cas extrême → résultat ∈ `[-1, +1]`
+  - [x] `test_f_target_angle_1_30` — cible = Asc ou MC → `f_target = 1.30`
 
 ## Dev Notes
 
@@ -154,14 +155,41 @@ def _f_orb(self, event: AstroEvent, ctx) -> float:
 - [Source: docs/model_de_calcul_journalier.md — Architecture de scoring, Contribution(e,c,t)]
 - [Source: backend/app/infra/db/repositories/prediction_schemas.py — AspectProfileData, PlanetProfileData, EventTypeData]
 
+## Change Log
+
+- Initial implementation of `ContributionCalculator` (AC1-AC8) (Date: 2026-03-07)
+- Unit tests added covering all acceptance criteria (Date: 2026-03-07)
+- Code review fixes applied (Date: 2026-03-07):
+  - H1: Ajout commentaire V1 sur `cat_code` non utilisé dans `_pol()` (intentionnel per AC6)
+  - H2: `_w_event()` utilise désormais `event.base_weight` directement (suppression re-lookup redondant)
+  - M1: Ajout `logger.warning()` dans `_get_orb_max()` pour le fallback silencieux `orb_max=10.0`
+  - M2: `_pol()` retourne `0.0` (au lieu de `1.0`) pour les aspects inconnus
+  - M3: Tests de phase scindés en 3 fonctions dédiées (`test_f_phase_applying/exact/separating`)
+  - M4: `_f_target()` retourne `1.0` (neutre) pour les cibles inconnues au lieu de "personal"
+  - L1: Commentaire `test_clamped_to_plus_minus_1` mis à jour (base_weight=10.0 est désormais utilisé via H2)
+  - L2: Nouveau test `test_orb_max_from_metadata` couvrant le chemin metadata
+  - L3: Nouveau test `test_unknown_aspect_pol_returns_zero`
+  - L4: Comparaison `f_orb == 0.0` remplacée par `f_orb < 1e-9`
+
 ## Dev Agent Record
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+gemini-2.0-flash
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Implemented `ContributionCalculator` with all factors: w_event, w_planet, w_aspect, f_orb, f_phase, f_target, NS(c), D(e,c), Pol(e,c).
+- Implemented contextual valence `_pol` logic based on aspect and planet profiles.
+- Implemented parabolic orb factor `_f_orb` with automated `orb_max` discovery.
+- Added comprehensive unit tests covering all ACs and edge cases.
+- All tests passed and code follows project standards (Ruff/formatting).
+
 ### File List
+
+- `backend/app/prediction/contribution_calculator.py`
+- `backend/app/tests/unit/test_contribution_calculator.py`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+
