@@ -14,6 +14,13 @@ type MessageBubbleProps = {
   timestamp?: string
 }
 
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*{1,3}([^*\n]+)\*{1,3}/g, "$1")
+    .replace(/_{1,3}([^_\n]+)_{1,3}/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+}
+
 export function MessageBubble({
   role,
   content,
@@ -21,6 +28,7 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const isUser = role === "user"
   const lang = detectLang()
+  const displayContent = isUser ? content : stripMarkdown(content)
 
   return (
     <div
@@ -32,7 +40,7 @@ export function MessageBubble({
           {isUser ? t("message_you", lang) : t("message_astrologer", lang)}
         </span>
         <p className="message-bubble-text" data-testid="chat-message-content">
-          {content}
+          {displayContent}
         </p>
         {timestamp && (
           <span className="message-bubble-time">

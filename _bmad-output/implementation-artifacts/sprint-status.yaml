@@ -271,4 +271,7 @@ development_status:
   30-13-chat-navigation-conversation-deep-links-redirection: done
   30-14-chat-ai-dynamic-prompting-persona-config: done
   30-15-chat-naturalite-prompt-natal-silencieux: done
+  30-16-chat-idempotence-double-post-client-message-id: done
+  30-17-chat-schema-minItems-raw-fallback-fix: done
+  30-18-chat-ux-header-chip-layout: done
   epic-30-retrospective: optional

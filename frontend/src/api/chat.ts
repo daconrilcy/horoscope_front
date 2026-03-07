@@ -47,6 +47,7 @@ type SendChatPayload = {
   message: string
   conversation_id?: number
   persona_id?: string
+  client_message_id?: string
 }
 
 type ChatConversationSummary = {
@@ -321,6 +322,10 @@ export function useChatConversationHistory(conversationId: number | null) {
     queryKey: ["chat-conversation", conversationId],
     queryFn: () => getChatConversationHistory(conversationId as number),
     enabled: conversationId !== null,
+    retry: (failureCount, error) => {
+      if (error instanceof ChatApiError && error.status === 404) return false
+      return failureCount < 3
+    },
   })
 }
 

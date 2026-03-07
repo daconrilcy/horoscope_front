@@ -276,6 +276,11 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Close",
     es: "Cerrar",
   },
+  chat_opening_message: {
+    fr: "Bonjour, que puis-je faire pour vous ?",
+    en: "Hello, how can I help you?",
+    es: "Hola, ¿en qué puedo ayudarle?",
+  },
 }
 
 export function t(key: string, lang: AstrologyLang): string {

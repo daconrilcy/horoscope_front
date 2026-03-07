@@ -98,8 +98,8 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
     setUseCaseLevel("complete");
     setIsUpsellOpen(false);
     setSelectedInterpretationId(null); // Clear selected ID to trigger new generation
-    setForceRefresh(false);
-    setRefreshKey(0);
+    setForceRefresh(true);
+    setRefreshKey((previous) => previous + 1);
   };
 
   const handleRegenerate = () => {
@@ -584,24 +584,25 @@ function HighlightsChips({ highlights }: { highlights: string[] }) {
 }
 
 function SectionAccordion({ sections, sectionsMap }: { sections: AstroSection[], sectionsMap: Record<string, string> }) {
-  const [openKeys, setOpenKeys] = useState<string[]>(sections[0] ? [sections[0].key] : []);
+  const [openIds, setOpenIds] = useState<string[]>(sections[0] ? [`${sections[0].key}-0`] : []);
 
-  const toggleSection = (key: string) => {
-    setOpenKeys(prev => 
-      prev.includes(key) 
-        ? prev.filter(k => k !== key) 
-        : [...prev, key]
+  const toggleSection = (sectionId: string) => {
+    setOpenIds(prev =>
+      prev.includes(sectionId)
+        ? prev.filter(id => id !== sectionId)
+        : [...prev, sectionId]
     );
   };
 
   return (
     <div className="space-y-3">
-      {sections.map((section) => {
-        const isOpen = openKeys.includes(section.key);
+      {sections.map((section, index) => {
+        const sectionId = `${section.key}-${index}`;
+        const isOpen = openIds.includes(sectionId);
         return (
-          <div key={section.key} className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm bg-white dark:bg-gray-900">
+          <div key={sectionId} className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm bg-white dark:bg-gray-900">
             <button
-              onClick={() => toggleSection(section.key)}
+              onClick={() => toggleSection(sectionId)}
               className="w-full flex items-center justify-between p-4 text-left bg-gray-50/30 dark:bg-gray-800/30 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               <span className="font-bold text-gray-800 dark:text-gray-200">

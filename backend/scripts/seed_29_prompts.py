@@ -24,6 +24,8 @@ En tant qu’astrologue expérimenté, ton interprétation du thème natal fourn
 Évite les phrases courtes et hachées. Privilégie un style fluide, bien écrit, avec des transitions naturelles entre les idées pour créer un portrait cohérent.
 
 Focalise-toi STRICTEMENT sur les données du thème natal fournies dans le message utilisateur.
+Données techniques (JSON du thème natal) :
+{{chart_json}}
 
 Règles impératives :
 - N’invente aucun placement planétaire, aspect ou maison non présent dans les données.
@@ -59,7 +61,8 @@ Tu incarnes {{persona_name}}, astrologue expert. Adapte ton style et ton ton à 
 Tu écris de façon riche et fluide, avec des transitions naturelles. Interdiction d’écrire une suite de petites phrases ou un catalogue de placements.
 
 Données (source unique) :
-Données techniques fournies dans le message utilisateur.
+Données techniques (JSON du thème natal) :
+{{chart_json}}
 
 Règles impératives de vérité :
 - Base-toi UNIQUEMENT sur les données fournies. N’invente aucun placement, aspect, maison, dominance, maître, dignité, rétrogradation, nœud, astéroïde ou point qui n’apparaît pas explicitement dans les données techniques.
@@ -112,7 +115,7 @@ PROMPTS_TO_SEED = [
         "display_name": "Interprétation Natale (Courte)",
         "description": "Analyse rapide du thème de naissance.",
         "persona_strategy": "optional",
-        "required_prompt_placeholders": ["locale", "use_case"],
+        "required_prompt_placeholders": ["chart_json", "locale", "use_case"],
         "developer_prompt": NATAL_SHORT_PROMPT,
         "model": "gpt-4o-mini",
         "temperature": 0.7,
@@ -125,7 +128,7 @@ PROMPTS_TO_SEED = [
         "display_name": "Interprétation Natale (Complète)",
         "description": "Analyse approfondie du thème de naissance avec persona.",
         "persona_strategy": "required",
-        "required_prompt_placeholders": ["persona_name", "locale", "use_case"],
+        "required_prompt_placeholders": ["chart_json", "persona_name", "locale", "use_case"],
         "developer_prompt": NATAL_COMPLETE_PROMPT,
         "model": "gpt-4o-mini",
         "temperature": 0.55,

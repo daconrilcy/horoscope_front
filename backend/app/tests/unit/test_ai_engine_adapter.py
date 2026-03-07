@@ -1,5 +1,7 @@
 """Tests for the AI Engine Adapter."""
 
+from types import SimpleNamespace
+
 import pytest
 
 from app.services.ai_engine_adapter import (
@@ -351,3 +353,77 @@ def test_map_adapter_error_to_codes_other_adapter_error() -> None:
     code, message = map_adapter_error_to_codes(err)
     assert code == "invalid_chat_input"
     assert message == "messages cannot be empty"
+
+
+@pytest.mark.asyncio
+async def test_generate_chat_reply_v2_omits_none_conversation_id(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeGateway:
+        async def execute(self, **kwargs):  # type: ignore[no-untyped-def]
+            captured.update(kwargs)
+            return SimpleNamespace(
+                structured_output={"message": "ok"},
+                raw_output="ok",
+            )
+
+    monkeypatch.setattr("app.ai_engine.config.ai_engine_settings.llm_orchestration_v2", True)
+    monkeypatch.setattr("app.llm_orchestration.gateway.LLMGateway", FakeGateway)
+
+    result = await AIEngineAdapter.generate_chat_reply(
+        messages=[{"role": "user", "content": "bonjour"}],
+        context={"conversation_id": None},
+        user_id=1,
+        request_id="req-chat-none",
+        trace_id="trace-chat-none",
+    )
+
+    assert result == "ok"
+    user_input = captured["user_input"]
+    assert isinstance(user_input, dict)
+    assert "conversation_id" not in user_input
+
+
+@pytest.mark.asyncio
+async def test_generate_chat_reply_v2_converts_conversation_id_to_string(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeGateway:
+        async def execute(self, **kwargs):  # type: ignore[no-untyped-def]
+            captured.update(kwargs)
+            return SimpleNamespace(
+                structured_output={"message": "ok"},
+                raw_output="ok",
+            )
+
+    monkeypatch.setattr("app.ai_engine.config.ai_engine_settings.llm_orchestration_v2", True)
+    monkeypatch.setattr("app.llm_orchestration.gateway.LLMGateway", FakeGateway)
+
+    result = await AIEngineAdapter.generate_chat_reply(
+        messages=[{"role": "user", "content": "bonjour"}],
+        context={"conversation_id": 42},
+        user_id=1,
+        request_id="req-chat-id",
+        trace_id="trace-chat-id",
+    )
+
+    assert result == "ok"
+    user_input = captured["user_input"]
+    assert isinstance(user_input, dict)
+    assert user_input.get("conversation_id") == "42"
+
+
+def test_map_adapter_error_to_codes_gateway_input_validation_passthrough() -> None:
+    err = AIEngineAdapterError(
+        code="invalid_chat_astrologer_input",
+        message="Input validation failed for 'chat_astrologer'",
+        status_code=422,
+        details={"errors": ["[conversation_id] None is not of type 'string'"]},
+    )
+    code, message = map_adapter_error_to_codes(err)
+    assert code == "invalid_chat_astrologer_input"
+    assert message == "Input validation failed for 'chat_astrologer'"

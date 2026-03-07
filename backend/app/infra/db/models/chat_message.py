@@ -29,3 +29,5 @@ class ChatMessageModel(Base):
     content: Mapped[str] = mapped_column(Text)
     metadata_payload: Mapped[dict[str, object]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    client_message_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    reply_to_client_message_id: Mapped[str | None] = mapped_column(String(36), nullable=True)

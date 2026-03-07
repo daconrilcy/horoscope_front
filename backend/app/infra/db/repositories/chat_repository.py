@@ -84,12 +84,16 @@ class ChatRepository:
         role: str,
         content: str,
         metadata_payload: dict[str, object] | None = None,
+        client_message_id: str | None = None,
+        reply_to_client_message_id: str | None = None,
     ) -> ChatMessageModel:
         model = ChatMessageModel(
             conversation_id=conversation_id,
             role=role,
             content=content,
             metadata_payload=metadata_payload or {},
+            client_message_id=client_message_id,
+            reply_to_client_message_id=reply_to_client_message_id,
         )
         self.db.add(model)
         conversation = self.db.get(ChatConversationModel, conversation_id)
@@ -97,6 +101,38 @@ class ChatRepository:
             conversation.updated_at = datetime.now(timezone.utc)
         self.db.flush()
         return model
+
+    def get_assistant_by_reply_client_id(
+        self, conversation_id: int, reply_to_client_message_id: str
+    ) -> ChatMessageModel | None:
+        return self.db.scalar(
+            select(ChatMessageModel)
+            .where(ChatMessageModel.conversation_id == conversation_id)
+            .where(
+                ChatMessageModel.reply_to_client_message_id == reply_to_client_message_id
+            )
+        )
+
+    def get_message_by_client_id(
+        self, conversation_id: int, client_message_id: str
+    ) -> ChatMessageModel | None:
+        return self.db.scalar(
+            select(ChatMessageModel)
+            .where(ChatMessageModel.conversation_id == conversation_id)
+            .where(ChatMessageModel.client_message_id == client_message_id)
+        )
+
+    def get_next_assistant_message(
+        self, conversation_id: int, after_id: int
+    ) -> ChatMessageModel | None:
+        return self.db.scalar(
+            select(ChatMessageModel)
+            .where(ChatMessageModel.conversation_id == conversation_id)
+            .where(ChatMessageModel.role == "assistant")
+            .where(ChatMessageModel.id > after_id)
+            .order_by(ChatMessageModel.id)
+            .limit(1)
+        )
 
     def get_recent_messages(self, conversation_id: int, limit: int) -> list[ChatMessageModel]:
         rows = list(

@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom"
 
 import { useBillingQuota } from "../api/billing"
 import { CHAT_PREFILL_KEY } from "../state/consultationStore"
-import { useAstrologer, useAstrologers } from "../api/astrologers"
+import { useAstrologers } from "../api/astrologers"
 import {
   ChatApiError,
   useChatConversationHistory,
@@ -15,7 +15,6 @@ import {
   ChatLayout,
   ConversationList,
   ChatWindow,
-  AstrologerDetailPanel,
   useIsMobile,
 } from "../features/chat"
 import type { MobileView } from "../features/chat"
@@ -47,7 +46,6 @@ export function ChatPage() {
   const quota = useBillingQuota()
   const sendMessage = useSendChatMessage()
   const conversations = useChatConversations(20, 0)
-  const selectedAstrologer = useAstrologer(astrologerIdFromUrl || undefined)
   const astrologers = useAstrologers()
   const createConversation = useCreateConversationByPersona()
 
@@ -119,7 +117,14 @@ export function ChatPage() {
     navigate,
   ])
 
-  const history = useChatConversationHistory(selectedConversationId)
+  const conversationExistsInList =
+    selectedConversationId !== null &&
+    conversations.data?.conversations.some(
+      (c) => c.conversation_id === selectedConversationId
+    ) === true
+  const history = useChatConversationHistory(
+    conversationExistsInList ? selectedConversationId : null
+  )
   const quotaBlocked = quota.data?.blocked === true
 
   useEffect(() => {
@@ -170,14 +175,27 @@ export function ChatPage() {
     [createConversation, conversations, navigate, isMobile]
   )
 
+  const [lastClientMessageId, setLastClientMessageId] = useState<{content: string, id: string} | null>(null)
+
   const handleSendMessage = useCallback(
     async (content: string) => {
       if (!content.trim() || sendMessage.isPending || quotaBlocked) {
         return
       }
 
+      // AC1: Generate or reuse idempotency key for retries of the same content.
+      // If the user sends the EXACT SAME content immediately after a failure,
+      // we reuse the previous UUID to hit the backend idempotence cache.
+      let clientMessageId: string
+      if (lastClientMessageId && lastClientMessageId.content === content) {
+        clientMessageId = lastClientMessageId.id
+      } else {
+        clientMessageId = crypto.randomUUID()
+        setLastClientMessageId({ content, id: clientMessageId })
+      }
+
       const optimisticUserMsg: ChatUiMessage = {
-        id: `optimistic-user-${Date.now()}`,
+        id: `optimistic-${clientMessageId}`,
         role: "user",
         content,
         timestamp: new Date().toISOString(),
@@ -187,6 +205,7 @@ export function ChatPage() {
       try {
         const response = await sendMessage.mutateAsync({
           message: content,
+          client_message_id: clientMessageId,
           ...(selectedConversationId
             ? { conversation_id: selectedConversationId }
             : {}),
@@ -197,6 +216,8 @@ export function ChatPage() {
           navigate(`/chat/${response.conversation_id}`, { replace: true })
         }
 
+        setLastClientMessageId(null)
+
         setLocalMessages((current) => {
           const filtered = current.filter(
             (m) => m.id !== optimisticUserMsg.id
@@ -204,13 +225,13 @@ export function ChatPage() {
           return [
             ...filtered,
             {
-              id: `u-${response.user_message.message_id}`,
+              id: `user-${response.user_message.message_id}`,
               role: "user" as const,
               content: response.user_message.content,
               timestamp: response.user_message.created_at,
             },
             {
-              id: `a-${response.assistant_message.message_id}`,
+              id: `assistant-${response.assistant_message.message_id}`,
               role: "assistant" as const,
               content: response.assistant_message.content,
               timestamp: response.assistant_message.created_at,
@@ -238,6 +259,7 @@ export function ChatPage() {
       quota,
       history,
       astrologerIdFromUrl,
+      lastClientMessageId,
     ]
   )
 
@@ -278,6 +300,10 @@ export function ChatPage() {
           (c) => c.conversation_id === selectedConversationId
         )
       : undefined
+
+  const currentAstrologer = astrologers.data?.find(
+    (a) => a.name === selectedConversationSummary?.persona_name
+  )
 
   return (
     <>
@@ -329,14 +355,11 @@ export function ChatPage() {
               onInitialMessageConsumed={() => setPrefillMessage(null)}
               personaName={selectedConversationSummary?.persona_name}
               personaAvatarUrl={selectedConversationSummary?.avatar_url}
+              personaBio={currentAstrologer?.bio_short}
+              personaSpecialties={currentAstrologer?.specialties}
+              onNewConversation={() => setShowAstrologerPicker(true)}
             />
           )
-        }
-        rightPanel={
-          <AstrologerDetailPanel
-            conversationId={selectedConversationId}
-            selectedAstrologer={selectedAstrologer.data}
-          />
         }
       />
       {showAstrologerPicker && (

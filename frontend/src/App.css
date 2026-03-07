@@ -440,7 +440,7 @@ textarea:focus-visible {
 
 .chat-layout--desktop {
   display: grid;
-  grid-template-columns: 280px 1fr 280px;
+  grid-template-columns: 280px 1fr;
   gap: 0;
   background: var(--glass);
   backdrop-filter: blur(var(--glass-blur));
@@ -571,13 +571,134 @@ textarea:focus-visible {
 }
 
 .chat-window-header {
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 1rem;
   border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 52px;
 }
 
 .chat-window-back {
   padding: 0.4rem 0.75rem;
   font-size: 0.9rem;
+}
+
+/* Astrologer chip in chat header */
+.astrologer-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  cursor: default;
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  transition: background 0.15s;
+}
+
+.astrologer-chip:hover {
+  background: rgba(134, 108, 208, 0.1);
+}
+
+.astrologer-chip-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.astrologer-chip-fallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--glass-2);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.astrologer-chip-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-1);
+  white-space: nowrap;
+}
+
+.astrologer-chip-card {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 240px;
+  max-width: 300px;
+  background: var(--glass-2);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 0.875rem 1rem;
+  z-index: 100;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.15s, visibility 0.15s;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+.astrologer-chip:hover .astrologer-chip-card,
+.astrologer-chip:focus-within .astrologer-chip-card {
+  visibility: visible;
+  opacity: 1;
+}
+
+.astrologer-chip-card-bio {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  color: var(--text-2);
+  line-height: 1.45;
+}
+
+.astrologer-chip-card-specialties {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.astrologer-chip-card-specialties li {
+  font-size: 0.82rem;
+  color: var(--text-2);
+  padding: 0.2rem 0;
+}
+
+.astrologer-chip-card-specialties li::before {
+  content: "✦ ";
+  color: var(--primary);
+}
+
+/* New conversation button in chat header */
+.chat-window-new-btn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid var(--primary);
+  background: rgba(102, 230, 255, 0.12);
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.chat-window-new-btn:hover {
+  background: rgba(102, 230, 255, 0.22);
 }
 
 .chat-window-messages {
@@ -1187,7 +1308,7 @@ textarea:focus-visible {
 /* Responsive adjustments for chat */
 @media (max-width: 1024px) {
   .chat-layout--desktop {
-    grid-template-columns: 240px 1fr 240px;
+    grid-template-columns: 240px 1fr;
   }
 }
 
@@ -2763,4 +2884,30 @@ textarea:focus-visible {
   border-color: rgba(245, 158, 11, 0.25);
 }
 
-`n/* Code Review Fixes */`n.chat-window-loading-overlay {`n  position: absolute;`n  inset: 0;`n  background: rgba(0, 0, 0, 0.3);`n  backdrop-filter: blur(2px);`n  display: flex;`n  align-items: center;`n  justify-content: center;`n  z-index: 50;`n}`n`n.chat-window-empty-avatar {`n  width: 80px;`n  height: 80px;`n  border-radius: 50%;`n  border: 2px solid var(--primary);`n  margin-bottom: 1rem;`n  object-fit: cover;`n}`n`n.chat-window-empty-persona {`n  font-weight: 700;`n  font-size: 1.1rem;`n  color: var(--text-1);`n  margin-bottom: 0.5rem;`n}
+/* Code Review Fixes */
+.chat-window-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.chat-window-empty-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  margin-bottom: 1rem;
+  object-fit: cover;
+}
+
+.chat-window-empty-persona {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-1);
+  margin-bottom: 0.5rem;
+}

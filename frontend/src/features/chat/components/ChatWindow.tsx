@@ -1,4 +1,5 @@
 import { useRef, useEffect } from "react"
+import { Plus } from "lucide-react"
 import { MessageBubble } from "./MessageBubble"
 import { TypingIndicator } from "./TypingIndicator"
 import { ChatComposer } from "./ChatComposer"
@@ -25,9 +26,11 @@ type ChatWindowProps = {
   showBackButton?: boolean
   initialMessage?: string | null
   onInitialMessageConsumed?: () => void
-  // AC5: Persona details for empty conversation welcome state
+  onNewConversation?: () => void
   personaName?: string
   personaAvatarUrl?: string
+  personaBio?: string
+  personaSpecialties?: string[]
 }
 
 export function ChatWindow({
@@ -42,8 +45,11 @@ export function ChatWindow({
   showBackButton = false,
   initialMessage = null,
   onInitialMessageConsumed,
+  onNewConversation,
   personaName,
   personaAvatarUrl,
+  personaBio,
+  personaSpecialties,
 }: ChatWindowProps) {
   const lang = detectLang()
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -63,8 +69,8 @@ export function ChatWindow({
 
   return (
     <div className="chat-window">
-      {showBackButton && onBack && (
-        <div className="chat-window-header">
+      <div className="chat-window-header">
+        {showBackButton && onBack && (
           <button
             type="button"
             className="chat-window-back"
@@ -73,8 +79,47 @@ export function ChatWindow({
           >
             ← {t("chat_back", lang)}
           </button>
-        </div>
-      )}
+        )}
+        {personaName && (
+          <div className="astrologer-chip">
+            {personaAvatarUrl ? (
+              <img
+                src={personaAvatarUrl}
+                alt={personaName}
+                className="astrologer-chip-avatar"
+              />
+            ) : (
+              <span className="astrologer-chip-fallback" aria-hidden="true">✨</span>
+            )}
+            <span className="astrologer-chip-name">{personaName}</span>
+            {(personaBio || (personaSpecialties && personaSpecialties.length > 0)) && (
+              <div className="astrologer-chip-card" role="tooltip">
+                {personaBio && (
+                  <p className="astrologer-chip-card-bio">{personaBio}</p>
+                )}
+                {personaSpecialties && personaSpecialties.length > 0 && (
+                  <ul className="astrologer-chip-card-specialties">
+                    {personaSpecialties.map((s) => (
+                      <li key={s}>{s}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+        {onNewConversation && (
+          <button
+            type="button"
+            className="chat-window-new-btn"
+            onClick={onNewConversation}
+            aria-label={t("new_conversation", lang)}
+          >
+            <Plus size={14} />
+            {t("new_conversation", lang)}
+          </button>
+        )}
+      </div>
 
       <div
         ref={messagesContainerRef}
@@ -83,31 +128,10 @@ export function ChatWindow({
         aria-live="polite"
       >
         {isEmpty && !isTyping && (
-          <div className="chat-window-empty">
-            {personaAvatarUrl && (
-              <img
-                src={personaAvatarUrl}
-                alt={personaName ?? ""}
-                className="chat-window-empty-avatar"
-              />
-            )}
-            {personaName && (
-              <p className="chat-window-empty-persona">{personaName}</p>
-            )}
-            <p>{t("chat_empty_title", lang)}</p>
-            <p>{t("chat_empty_subtitle", lang)}</p>
-            <button
-              type="button"
-              className="btn btn--cta"
-              style={{ marginTop: "1rem" }}
-              onClick={() => {
-                const textarea = document.querySelector(".chat-composer-input") as HTMLTextAreaElement
-                if (textarea) textarea.focus()
-              }}
-            >
-              {t("chat_empty_state_cta", lang)}
-            </button>
-          </div>
+          <MessageBubble
+            role="assistant"
+            content={t("chat_opening_message", lang)}
+          />
         )}
 
         {messages.map((msg) => (

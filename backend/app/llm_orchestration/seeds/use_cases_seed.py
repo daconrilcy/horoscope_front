@@ -17,28 +17,35 @@ class SeedValidationError(Exception):
 
 CHAT_RESPONSE_V1 = {
     "type": "object",
-    "required": ["message"],
+    "required": ["message", "suggested_replies", "intent", "confidence", "safety_notes"],
     "additionalProperties": False,
     "properties": {
-        "message": {"type": "string", "minLength": 1},
+        "message": {"type": "string", "minLength": 1, "maxLength": 2500},
         "suggested_replies": {
             "type": "array",
-            "items": {"type": "string"},
             "maxItems": 5,
-            "default": [],
+            "items": {"type": "string", "minLength": 1, "maxLength": 80},
         },
         "intent": {
-            "type": "string",
+            "type": ["string", "null"],
             "enum": [
-                "ask_birthdata",
-                "explain_aspect",
-                "offer_tarot",
-                "offer_guidance",
-                "general",
+                "clarify_question",
+                "ask_birth_data",
+                "explain_natal_basics",
+                "offer_natal_interpretation",
+                "offer_tarot_reading",
+                "offer_event_guidance",
+                "handoff_to_support",
+                "close_conversation",
                 None,
-            ],  # noqa: E501
+            ],
         },
-        "safety_notes": {"type": "array", "items": {"type": "string"}, "default": []},
+        "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "safety_notes": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {"type": "string", "maxLength": 200},
+        },
     },
 }
 
@@ -189,8 +196,8 @@ USE_CASES_CONTRACTS = [
             "required": ["message"],
             "properties": {
                 "message": {"type": "string", "maxLength": 1000},
-                "conversation_id": {"type": "string"},
-                "persona_id": {"type": "string"},
+                "conversation_id": {"type": ["integer", "string", "null"]},
+                "persona_id": {"type": ["string", "null"]},
             },
         },
     },
@@ -443,6 +450,16 @@ def seed_use_cases(db: Session) -> None:
 
     default_persona_id = str(default_persona.id)
 
+    # Build the list of enabled personas after ensuring at least one exists.
+    enabled_personas = db.execute(
+        select(LlmPersonaModel)
+        .where(LlmPersonaModel.enabled == True)  # noqa: E712
+        .order_by(LlmPersonaModel.name)
+    ).scalars().all()
+    enabled_persona_ids = [str(persona.id) for persona in enabled_personas]
+    if not enabled_persona_ids:
+        enabled_persona_ids = [default_persona_id]
+
     # 1. Upsert Output Schemas
     # Check if ChatResponse_v1 exists
     stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.name == "ChatResponse_v1")
@@ -526,9 +543,10 @@ def seed_use_cases(db: Session) -> None:
             uc.interaction_mode = contract.get("interaction_mode", "structured")
             uc.user_question_policy = contract.get("user_question_policy", "none")
 
-        # AC 5 / Issue B: Ensure at least one persona if strategy is required
-        if uc.persona_strategy == "required" and not uc.allowed_persona_ids:
-            uc.allowed_persona_ids = [default_persona_id]
+        # Keep required persona use cases aligned with the active persona catalog.
+        # This preserves multi-astrologer routing for chat and complete natal flows.
+        if uc.persona_strategy == "required":
+            uc.allowed_persona_ids = enabled_persona_ids
 
     db.commit()
 

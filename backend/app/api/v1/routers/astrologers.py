@@ -35,6 +35,10 @@ class AstrologerProfile(Astrologer):
     experience_years: int
 
 
+def _safe_bio(value: str | None) -> str:
+    return value or ""
+
+
 class AstrologerListResponse(BaseModel):
     data: List[Astrologer]
     meta: ResponseMeta
@@ -73,7 +77,11 @@ def list_astrologers(
 ) -> Any:
     request_id = resolve_request_id(request)
 
-    stmt = select(LlmPersonaModel).where(LlmPersonaModel.enabled).order_by(LlmPersonaModel.name)
+    stmt = (
+        select(LlmPersonaModel)
+        .where(LlmPersonaModel.enabled == True)  # noqa: E712
+        .order_by(LlmPersonaModel.name)
+    )
     personas = db.execute(stmt).scalars().all()
 
     result_data = []
@@ -85,7 +93,7 @@ def list_astrologers(
                 avatar_url=None,  # Personas don't have avatar_url in DB yet
                 specialties=p.allowed_topics or [],
                 style=p.tone,
-                bio_short=p.description,
+                bio_short=_safe_bio(p.description),
             )
         )
 
@@ -128,8 +136,8 @@ def get_astrologer(
             avatar_url=None,
             specialties=persona.allowed_topics or [],
             style=persona.tone,
-            bio_short=persona.description,
-            bio_full=persona.description,  # Same as bio_short for now
+            bio_short=_safe_bio(persona.description),
+            bio_full=_safe_bio(persona.description),  # Same as bio_short for now
             languages=["Français"],
             experience_years=10,
         ),

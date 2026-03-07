@@ -74,10 +74,9 @@ Le LLM ouvre chaque réponse par une liste de transits/aspects (Jupiter sextile 
 | `backend/scripts/seed_30_15_chat_naturalite.py` | Script | CRÉER — nouveau prompt v2 |
 | `backend/app/tests/unit/test_chat_naturalite_prompt.py` | Tests | CRÉER — vérifications AC5 |
 
-**Ne pas modifier** :
-- `backend/app/services/chat_guidance_service.py` — la logique d'injection du natal est correcte, c'est le prompt que doit guider l'usage
-- `backend/app/services/ai_engine_adapter.py` — pas de changement d'architecture nécessaire
-- Le schema `ChatResponse_v1` — pas d'impact
+**Fichiers supplémentaires modifiés (post-audit technique 30-16/30-17)** :
+- `backend/app/services/chat_guidance_service.py` — remplacement de `build_natal_chart_summary` par `build_chat_natal_hint` (~150 chars vs ~800 chars), ajout de `context["conversation_id"]` pour corrélation logs
+- `backend/app/services/natal_interpretation_service.py` — ajout de la fonction `build_chat_natal_hint` (3 piliers Soleil/Lune/Asc + 3 aspects les plus serrés, format ·-séparé)
 
 ### Prompt v2 cible (section à ajouter/remplacer)
 
@@ -171,9 +170,17 @@ gemini-2.0-flash-thinking-exp
 - **L2 fixed** : `test_persona_injection.py` — ajout de `database_url` dans `MockSettings` des tests `test_persona_injection_disabled` et `test_persona_required_but_missing`.
 - **L3 fixed** : `seed_30_15_chat_naturalite.py` — `temperature=0.5` documenté comme choix intentionnel (cohérence, réduction verbosité).
 
+### Post-Audit Fixes (audit technique stories 30-16/30-17)
+
+- **`build_chat_natal_hint`** : `chat_guidance_service.py` remplace `build_natal_chart_summary` (~800 chars, tous aspects + maisons angulaires) par `build_chat_natal_hint` (~150-200 chars : Soleil/Lune/Asc + 3 aspects les plus serrés). Réduit drastiquement la tentation du LLM de "présenter" un natal trop détaillé.
+- **Log correlation** : `context["conversation_id"]` ajouté dans le dict de contexte transmis à l'adapter, permettant la corrélation des logs par conversation.
+- **`natal_interpretation_service.py`** : fonction `build_chat_natal_hint` créée, utilise les mêmes constantes `MAJOR_ASPECTS` que le service existant.
+
 ### File List
 
 - `backend/app/ai_engine/prompts/chat_system.jinja2`
 - `backend/scripts/seed_30_15_chat_naturalite.py`
 - `backend/app/tests/unit/test_chat_naturalite_prompt.py`
 - `backend/app/tests/unit/test_persona_injection.py`
+- `backend/app/services/chat_guidance_service.py` (post-audit: build_chat_natal_hint + conversation_id log)
+- `backend/app/services/natal_interpretation_service.py` (post-audit: ajout build_chat_natal_hint)

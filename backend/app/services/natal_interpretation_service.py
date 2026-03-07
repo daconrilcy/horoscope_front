@@ -238,6 +238,56 @@ def build_natal_chart_summary(
     return "\n".join(lines)
 
 
+def build_chat_natal_hint(
+    natal_result: "NatalResult",
+    degraded_mode: str | None = None,
+) -> str:
+    """Résumé ultra-court (≤ 600 chars) du thème natal pour le contexte de chat.
+
+    Contient uniquement les 3 piliers (Soleil, Lune, Ascendant) et les 3 aspects
+    les plus serrés (orbe minimal). N'expose PAS les détails de maisons angulaires
+    ni tous les aspects — ceux-ci restent réservés au use-case d'interprétation natal.
+
+    Args:
+        natal_result: Résultat du calcul natal.
+        degraded_mode: Mode dégradé éventuel (no_time, no_location, etc.).
+
+    Returns:
+        Hint compact séparé par " · ", ex:
+        "Soleil en Bélier (Maison 1) · Lune en Taureau · Ascendant Capricorne
+         · Soleil conjonction Vénus · Jupiter trigone Lune · Mars carré Saturne"
+    """
+    parts: list[str] = []
+
+    sun = next((p for p in natal_result.planet_positions if p.planet_code == "sun"), None)
+    moon = next((p for p in natal_result.planet_positions if p.planet_code == "moon"), None)
+    house1 = next((h for h in natal_result.houses if h.number == 1), None)
+
+    if sun:
+        sign_name = SIGN_NAMES_FR.get(sun.sign_code, sun.sign_code)
+        parts.append(f"Soleil en {sign_name} (Maison {sun.house_number})")
+    if moon:
+        sign_name = SIGN_NAMES_FR.get(moon.sign_code, moon.sign_code)
+        parts.append(f"Lune en {sign_name} (Maison {moon.house_number})")
+    if house1 and degraded_mode not in ("no_location", "no_location_no_time"):
+        asc_sign = _longitude_to_sign(house1.cusp_longitude)
+        asc_name = SIGN_NAMES_FR.get(asc_sign, asc_sign)
+        parts.append(f"Ascendant {asc_name}")
+
+    # Top 3 major aspects by tightest orb
+    major = sorted(
+        [a for a in natal_result.aspects if a.aspect_code in MAJOR_ASPECTS],
+        key=lambda a: a.orb,
+    )[:3]
+    for asp in major:
+        pa = PLANET_NAMES_FR.get(asp.planet_a, asp.planet_a)
+        pb = PLANET_NAMES_FR.get(asp.planet_b, asp.planet_b)
+        asp_name = ASPECT_NAMES_FR.get(asp.aspect_code, asp.aspect_code)
+        parts.append(f"{pa} {asp_name} {pb}")
+
+    return " · ".join(parts)
+
+
 def _parse_interpretation_sections(text: str) -> tuple[str, list[str], list[str], str]:
     """
     Parse le texte structuré retourné par l'IA.

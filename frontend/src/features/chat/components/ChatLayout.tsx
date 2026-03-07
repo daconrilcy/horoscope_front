@@ -7,7 +7,6 @@ type MobileView = "list" | "chat"
 type ChatLayoutProps = {
   leftPanel: ReactNode
   centerPanel: ReactNode
-  rightPanel: ReactNode
   mobileView: MobileView
   onMobileViewChange: (view: MobileView) => void
   hasConversation: boolean
@@ -17,7 +16,6 @@ type ChatLayoutProps = {
 export function ChatLayout({
   leftPanel,
   centerPanel,
-  rightPanel,
   mobileView,
   onMobileViewChange,
   hasConversation,
@@ -59,9 +57,6 @@ export function ChatLayout({
       </div>
       <div className="chat-layout-panel chat-layout-panel--center">
         {centerPanel}
-      </div>
-      <div className="chat-layout-panel chat-layout-panel--right">
-        {rightPanel}
       </div>
     </div>
   )

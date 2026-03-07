@@ -184,6 +184,8 @@ ASTROLOGERS = [
 
 
 def seed_astrologers(db: Session) -> None:
+    canonical_ids_by_name = {item["name"]: uuid.UUID(item["id"]) for item in ASTROLOGERS}
+
     for data in ASTROLOGERS:
         stmt = select(LlmPersonaModel).where(LlmPersonaModel.id == uuid.UUID(data["id"]))
         persona = db.execute(stmt).scalar_one_or_none()
@@ -216,6 +218,16 @@ def seed_astrologers(db: Session) -> None:
             persona.formatting = data["formatting"]
             persona.enabled = data["enabled"]
             logger.info(f"Updated persona: {data['name']}")
+
+    # Disable duplicate legacy personas that share a seeded canonical name.
+    for name, canonical_id in canonical_ids_by_name.items():
+        duplicates = db.execute(
+            select(LlmPersonaModel).where(LlmPersonaModel.name == name)
+        ).scalars().all()
+        for duplicate in duplicates:
+            if duplicate.id != canonical_id and duplicate.enabled:
+                duplicate.enabled = False
+                logger.info("Disabled duplicate persona: %s (%s)", duplicate.name, duplicate.id)
 
     db.commit()
 

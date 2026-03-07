@@ -157,6 +157,8 @@ def _handle_gateway_error(
     from app.llm_orchestration.models import (
         GatewayConfigError,
         GatewayError,
+        InputValidationError,
+        OutputValidationError,
         PromptRenderError,
         UnknownUseCaseError,
     )
@@ -186,6 +188,20 @@ def _handle_gateway_error(
             code="gateway_config_error",
             message=str(err),
             status_code=500,
+            details=err.details,
+        ) from err
+    if isinstance(err, InputValidationError):
+        raise AIEngineAdapterError(
+            code=f"invalid_{use_case}_input",
+            message=str(err),
+            status_code=422,
+            details=err.details,
+        ) from err
+    if isinstance(err, OutputValidationError):
+        raise AIEngineAdapterError(
+            code=f"invalid_{use_case}_output",
+            message=str(err),
+            status_code=502,
             details=err.details,
         ) from err
 
@@ -359,6 +375,15 @@ class AIEngineAdapter:
                 messages, context, user_id, request_id, trace_id, locale
             )
 
+        logger.info(
+            "chat_reply_path request_id=%s path=%s history_count=%d has_natal=%s conversation_id=%s",  # noqa: E501
+            request_id,
+            "v2_gateway" if ai_engine_settings.llm_orchestration_v2 else "v1_jinja2",
+            len(messages),
+            bool(context.get("natal_chart_summary")),
+            context.get("conversation_id", "none"),
+        )
+
         if ai_engine_settings.llm_orchestration_v2:
             try:
                 from app.llm_orchestration.gateway import LLMGateway
@@ -373,15 +398,19 @@ class AIEngineAdapter:
                         last_user_msg = msg.get("content", "")
                         break
 
+                gateway_user_input = {
+                    "message": last_user_msg,
+                    "last_user_msg": last_user_msg,
+                    "use_case": "chat_astrologer",
+                    "locale": locale,
+                }
+                conversation_id = context.get("conversation_id")
+                if conversation_id is not None:
+                    gateway_user_input["conversation_id"] = str(conversation_id)
+
                 result = await gateway.execute(
                     use_case="chat_astrologer",
-                    user_input={
-                        "message": last_user_msg,
-                        "last_user_msg": last_user_msg,
-                        "use_case": "chat_astrologer",
-                        "locale": locale,
-                        "conversation_id": context.get("conversation_id"),
-                    },
+                    user_input=gateway_user_input,
                     context={
                         **context,
                         "history": messages[
@@ -395,8 +424,28 @@ class AIEngineAdapter:
 
                 # If structured output is available (canonical ChatResponse_v1), return the message
                 if result.structured_output and "message" in result.structured_output:
+                    validation_status = getattr(
+                        getattr(result, "meta", None), "validation_status", "unknown"
+                    )
+                    logger.info(
+                        "chat_reply_v2_output request_id=%s output=structured validation=%s",
+                        request_id,
+                        validation_status,
+                    )
                     return result.structured_output["message"]
 
+                meta = getattr(result, "meta", None)
+                validation_status = getattr(meta, "validation_status", "unknown")
+                validation_errors = getattr(meta, "validation_errors", None) or []
+                raw_snippet = (result.raw_output or "")[:120].replace("\n", " ")
+                logger.warning(
+                    "chat_reply_v2_output request_id=%s output=raw_fallback "
+                    "validation=%s errors=%s raw_snippet=%r",
+                    request_id,
+                    validation_status,
+                    validation_errors,
+                    raw_snippet,
+                )
                 return result.raw_output
             except Exception as err:
                 if _can_use_test_fallback(err):

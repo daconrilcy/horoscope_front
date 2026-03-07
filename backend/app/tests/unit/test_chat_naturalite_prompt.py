@@ -42,14 +42,15 @@ def test_chat_system_jinja2_naturalite_instructions():
         context=context
     )
     
-    # Vérifications AC2
-    assert "[CONTEXTE INTERNE — NE PAS RÉCITER]" in rendered
-    assert "Thème natal de l'utilisateur (utilise de façon transparente et silencieuse" in rendered
-    assert "[FIN CONTEXTE INTERNE]" in rendered
-    
-    # Vérifications AC3
-    assert "Sur un message d'ouverture court" in rendered
-    assert "pose UNE seule question de clarification ciblée" in rendered
+    # Vérifications AC2 — les règles précèdent le natal dans le template restructuré
+    assert "RÈGLES ABSOLUES" in rendered
+    assert "DONNÉES CONTEXTUELLES PRIVÉES" in rendered
+    assert "NE PAS PRÉSENTER À L'UTILISATEUR" in rendered
+    assert "Soleil en Bélier, Lune en Taureau" in rendered  # natal bien injecté
+
+    # Vérifications AC3 — instruction d'ouverture présente
+    assert "INTERDICTION STRICTE" in rendered
+    assert "UNE question de clarification" in rendered
 
 def test_prompt_v3_naturalite_instructions():
     """

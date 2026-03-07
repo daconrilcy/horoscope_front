@@ -16,6 +16,7 @@ from time import monotonic
 
 from pydantic import BaseModel
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -30,7 +31,7 @@ from app.services.ai_engine_adapter import (
 )
 from app.services.natal_interpretation_service import (
     _detect_degraded_mode,
-    build_natal_chart_summary,
+    build_chat_natal_hint,
 )
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
@@ -66,6 +67,8 @@ class ChatMessageData(BaseModel):
     role: str
     content: str
     created_at: datetime
+    client_message_id: str | None = None
+    reply_to_client_message_id: str | None = None
 
 
 class ChatReplyData(BaseModel):
@@ -397,6 +400,7 @@ class ChatGuidanceService:
         conversation_id: int | None = None,
         request_id: str = "n/a",
         persona_id: str | None = None,
+        client_message_id: str | None = None,
     ) -> ChatReplyData:
         """
         Envoie un message et obtient une réponse de l'assistant.
@@ -410,6 +414,7 @@ class ChatGuidanceService:
             conversation_id: ID de conversation existante (optionnel).
             request_id: Identifiant de requête pour le logging.
             persona_id: ID de persona spécifique (optionnel).
+            client_message_id: UUID d'idempotence généré côté client (optionnel).
 
         Returns:
             Réponse complète avec métadonnées de contexte et récupération.
@@ -425,6 +430,7 @@ class ChatGuidanceService:
                 conversation_id=conversation_id,
                 request_id=request_id,
                 persona_id=persona_id,
+                client_message_id=client_message_id,
             )
         )
 
@@ -478,18 +484,14 @@ class ChatGuidanceService:
             persona = db.scalar(stmt)
             if persona is not None:
                 return persona
-            logger.warning(
-                "chat_persona_not_found persona_id=%s fallback=default", persona_id
-            )
+            logger.warning("chat_persona_not_found persona_id=%s fallback=default", persona_id)
         else:
             logger.warning(
                 "chat_persona_missing persona_id=None fallback=default (backfill required)"
             )
 
         # Fallback: Astrologue Standard ou premier persona activé
-        stmt = (
-            select(LlmPersonaModel).where(LlmPersonaModel.name == "Astrologue Standard").limit(1)
-        )
+        stmt = select(LlmPersonaModel).where(LlmPersonaModel.name == "Astrologue Standard").limit(1)
         persona = db.scalar(stmt)
         if persona:
             return persona
@@ -524,6 +526,7 @@ class ChatGuidanceService:
         request_id: str = "n/a",
         trace_id: str | None = None,
         persona_id: str | uuid.UUID | None = None,
+        client_message_id: str | None = None,
     ) -> ChatReplyData:
         """
         Envoie un message et obtient une réponse de l'assistant (async).
@@ -601,11 +604,140 @@ class ChatGuidanceService:
                 user_id=user_id, persona_id=resolved_persona_id
             )
 
-        user_message = repo.create_message(
-            conversation_id=conversation.id,
-            role="user",
-            content=normalized_message,
-        )
+        # Idempotency check: if client_message_id provided and this exact message was already
+        # processed (e.g. network timeout on previous attempt), return the cached response.
+        if client_message_id:
+            existing_user_msg = repo.get_message_by_client_id(conversation.id, client_message_id)
+            if existing_user_msg:
+                existing_assistant_msg = repo.get_next_assistant_message(
+                    conversation.id, existing_user_msg.id
+                )
+                if existing_assistant_msg:
+                    logger.info(
+                        "chat_idempotent_hit request_id=%s client_message_id=%s",
+                        request_id,
+                        client_message_id,
+                    )
+                    stored_meta = existing_assistant_msg.metadata_payload
+                    stored_context = stored_meta.get("context") or {}
+                    stored_recovery = stored_meta.get("recovery") or {}
+                    return ChatReplyData(
+                        conversation_id=conversation.id,
+                        attempts=int(stored_meta.get("attempts", 1)),
+                        user_message=ChatMessageData(
+                            message_id=existing_user_msg.id,
+                            role=existing_user_msg.role,
+                            content=existing_user_msg.content,
+                            created_at=existing_user_msg.created_at,
+                            client_message_id=existing_user_msg.client_message_id,
+                        ),
+                        assistant_message=ChatMessageData(
+                            message_id=existing_assistant_msg.id,
+                            role=existing_assistant_msg.role,
+                            content=existing_assistant_msg.content,
+                            created_at=existing_assistant_msg.created_at,
+                            reply_to_client_message_id=existing_assistant_msg.reply_to_client_message_id,
+                        ),
+                        fallback_used=bool(stored_meta.get("fallback_used", False)),
+                        context=ChatContextMetadata(**stored_context)
+                        if stored_context
+                        else ChatContextMetadata(
+                            message_ids=[],
+                            message_count=0,
+                            context_characters=0,
+                            prompt_version=settings.chat_prompt_version,
+                        ),
+                        recovery=ChatRecoveryMetadata(**stored_recovery)
+                        if stored_recovery
+                        else ChatRecoveryMetadata(
+                            off_scope_detected=False,
+                            off_scope_score=0.0,
+                            recovery_strategy="none",
+                            recovery_applied=False,
+                            recovery_attempts=0,
+                            recovery_reason=None,
+                        ),
+                    )
+                # User message exists but no assistant yet (race condition):
+                # skip creating a duplicate user message, proceed to run LLM.
+                user_message = existing_user_msg
+            else:
+                # Use a savepoint to handle the race where two concurrent requests
+                # carry the same client_message_id and both see no existing message.
+                try:
+                    with db.begin_nested():
+                        user_message = repo.create_message(
+                            conversation_id=conversation.id,
+                            role="user",
+                            content=normalized_message,
+                            client_message_id=client_message_id,
+                        )
+                except IntegrityError:
+                    # Another request just won the race and created this user message.
+                    # Re-fetch and reuse it; the winner will create the assistant message.
+                    existing_user_msg = repo.get_message_by_client_id(
+                        conversation.id, client_message_id
+                    )
+                    if existing_user_msg:
+                        existing_assistant_msg = repo.get_next_assistant_message(
+                            conversation.id, existing_user_msg.id
+                        )
+                        if existing_assistant_msg:
+                            logger.info(
+                                "chat_idempotent_hit_race request_id=%s client_message_id=%s",
+                                request_id,
+                                client_message_id,
+                            )
+                            stored_meta = existing_assistant_msg.metadata_payload
+                            stored_context = stored_meta.get("context") or {}
+                            stored_recovery = stored_meta.get("recovery") or {}
+                            return ChatReplyData(
+                                conversation_id=conversation.id,
+                                attempts=int(stored_meta.get("attempts", 1)),
+                                user_message=ChatMessageData(
+                                    message_id=existing_user_msg.id,
+                                    role=existing_user_msg.role,
+                                    content=existing_user_msg.content,
+                                    created_at=existing_user_msg.created_at,
+                                    client_message_id=existing_user_msg.client_message_id,
+                                ),
+                                assistant_message=ChatMessageData(
+                                    message_id=existing_assistant_msg.id,
+                                    role=existing_assistant_msg.role,
+                                    content=existing_assistant_msg.content,
+                                    created_at=existing_assistant_msg.created_at,
+                                    reply_to_client_message_id=existing_assistant_msg.reply_to_client_message_id,
+                                ),
+                                fallback_used=bool(stored_meta.get("fallback_used", False)),
+                                context=ChatContextMetadata(**stored_context)
+                                if stored_context
+                                else ChatContextMetadata(
+                                    message_ids=[],
+                                    message_count=0,
+                                    context_characters=0,
+                                    prompt_version=settings.chat_prompt_version,
+                                ),
+                                recovery=ChatRecoveryMetadata(**stored_recovery)
+                                if stored_recovery
+                                else ChatRecoveryMetadata(
+                                    off_scope_detected=False,
+                                    off_scope_score=0.0,
+                                    recovery_strategy="none",
+                                    recovery_applied=False,
+                                    recovery_attempts=0,
+                                    recovery_reason=None,
+                                ),
+                            )
+                        # User message exists but no assistant yet; reuse it.
+                        user_message = existing_user_msg
+                    else:
+                        raise
+        else:
+            user_message = repo.create_message(
+                conversation_id=conversation.id,
+                role="user",
+                content=normalized_message,
+            )
 
         persona = ChatGuidanceService._load_persona_sync(db, conversation.persona_id)
         persona_profile_code = persona.name.lower().replace(" ", "-")
@@ -672,11 +804,8 @@ class ChatGuidanceService:
             birth_profile = UserBirthProfileService.get_for_user(db, user_id=user_id)
             natal_chart = UserNatalChartService.get_latest_for_user(db, user_id=user_id)
             degraded_mode = _detect_degraded_mode(birth_profile)
-            natal_summary = build_natal_chart_summary(
+            natal_summary = build_chat_natal_hint(
                 natal_result=natal_chart.result,
-                birth_place=birth_profile.birth_place,
-                birth_date=birth_profile.birth_date,
-                birth_time=birth_profile.birth_time,
                 degraded_mode=degraded_mode,
             )
         except (UserBirthProfileServiceError, UserNatalChartServiceError):
@@ -690,6 +819,7 @@ class ChatGuidanceService:
             "persona_style_markers": style_markers_str or None,
             "persona_boundaries": boundaries_str or None,
             "natal_chart_summary": natal_summary,
+            "conversation_id": str(conversation.id),
         }
 
         attempts = 0
@@ -724,18 +854,39 @@ class ChatGuidanceService:
                     assistant_content=assistant_content,
                     persona_profile_code=persona_profile_code,
                 )
-                assistant_message = repo.create_message(
-                    conversation_id=conversation.id,
-                    role="assistant",
-                    content=assistant_content,
-                    metadata_payload={
-                        "attempts": attempts,
-                        "fallback_used": fallback_used,
-                        "persona_profile_code": persona_profile_code,
-                        "context": context_metadata.model_dump(mode="json"),
-                        "recovery": recovery_metadata.model_dump(mode="json"),
-                    },
-                )
+                # Use a savepoint so concurrent workers carrying the same
+                # client_message_id cannot each insert a separate assistant message.
+                try:
+                    with db.begin_nested():
+                        assistant_message = repo.create_message(
+                            conversation_id=conversation.id,
+                            role="assistant",
+                            content=assistant_content,
+                            metadata_payload={
+                                "attempts": attempts,
+                                "fallback_used": fallback_used,
+                                "persona_profile_code": persona_profile_code,
+                                "context": context_metadata.model_dump(mode="json"),
+                                "recovery": recovery_metadata.model_dump(mode="json"),
+                            },
+                            reply_to_client_message_id=client_message_id,
+                        )
+                except IntegrityError:
+                    # Another concurrent worker already created the assistant message.
+                    cached = (
+                        repo.get_assistant_by_reply_client_id(conversation.id, client_message_id)
+                        if client_message_id
+                        else None
+                    )
+                    if cached:
+                        logger.info(
+                            "chat_assistant_idempotent_hit request_id=%s client_message_id=%s",
+                            request_id,
+                            client_message_id,
+                        )
+                        assistant_message = cached
+                    else:
+                        raise
                 elapsed_seconds = monotonic() - start
                 observe_duration("conversation_latency_seconds", elapsed_seconds)
                 observe_duration(
@@ -750,12 +901,14 @@ class ChatGuidanceService:
                         role=user_message.role,
                         content=user_message.content,
                         created_at=user_message.created_at,
+                        client_message_id=user_message.client_message_id,
                     ),
                     assistant_message=ChatMessageData(
                         message_id=assistant_message.id,
                         role=assistant_message.role,
                         content=assistant_message.content,
                         created_at=assistant_message.created_at,
+                        reply_to_client_message_id=assistant_message.reply_to_client_message_id,
                     ),
                     fallback_used=fallback_used,
                     context=context_metadata,
