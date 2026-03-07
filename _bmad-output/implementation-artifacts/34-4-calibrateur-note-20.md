@@ -1,6 +1,6 @@
 # Story 34.4 : Calibrateur percentile → note 1–20
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -43,31 +43,31 @@ Même input → même note (pas d'aléatoire).
 
 ### T1 — `PercentileCalibrator` (AC1–AC7)
 
-- [ ] Créer `backend/app/prediction/calibrator.py`
-  - [ ] Constante `DEFAULT_CALIBRATION: CalibrationData`
-  - [ ] Constante `PERCENTILE_TARGETS = [(p05, 2), (p25, 6), (p50, 10), (p75, 14), (p95, 19)]`
-  - [ ] Classe `PercentileCalibrator`
-  - [ ] `calibrate(raw_day: float, calibration: CalibrationData | None) -> int`
-    - [ ] Si `None` → utiliser `DEFAULT_CALIBRATION`
-    - [ ] Si `raw_day ≤ p05` → retourner `1`
-    - [ ] Si `raw_day ≥ p95` → retourner `20`
-    - [ ] Sinon interpoler sur le bon segment
-    - [ ] `round()` + clamp `[1, 20]`
-  - [ ] Méthode `calibrate_all(day_aggregation: DayAggregation, calibrations: dict[str, CalibrationData | None]) -> dict[str, int]`
+- [x] Créer `backend/app/prediction/calibrator.py`
+  - [x] Constante `DEFAULT_CALIBRATION: CalibrationData`
+  - [x] Constante `PERCENTILE_TARGETS = [(p05, 2), (p25, 6), (p50, 10), (p75, 14), (p95, 19)]`
+  - [x] Classe `PercentileCalibrator`
+  - [x] `calibrate(raw_day: float, calibration: CalibrationData | None) -> int`
+    - [x] Si `None` → utiliser `DEFAULT_CALIBRATION`
+    - [x] Si `raw_day ≤ p05` → retourner `1`
+    - [x] Si `raw_day ≥ p95` → retourner `20`
+    - [x] Sinon interpoler sur le bon segment
+    - [x] `round()` + clamp `[1, 20]`
+  - [x] Méthode `calibrate_all(day_aggregation: DayAggregation, calibrations: dict[str, CalibrationData | None]) -> dict[str, int]`
 
 ### T2 — Tests unitaires (AC1–AC7)
 
-- [ ] Créer `backend/app/tests/unit/test_calibrator.py`
-  - [ ] `test_at_p5_returns_2` — `raw_day = P5` → note = 2
-  - [ ] `test_below_p5_returns_1` — `raw_day < P5` → note = 1
-  - [ ] `test_at_p95_returns_19` — `raw_day = P95` → note = 19
-  - [ ] `test_above_p95_returns_20` — `raw_day > P95` → note = 20
-  - [ ] `test_midpoint_p5_p25` — `raw_day = (P5+P25)/2` → note = 4
-  - [ ] `test_midpoint_p50_p75` — `raw_day = (P50+P75)/2` → note = 12
-  - [ ] `test_all_4_segments` — tester un point dans chacun des 4 segments
-  - [ ] `test_none_calibration_uses_default` — `None` → calibration par défaut, pas d'exception
-  - [ ] `test_note_range` — pour tout `raw_day ∈ [-3, +3]` → note ∈ `[1, 20]` (100 valeurs)
-  - [ ] `test_deterministic` — même input × 10 → même note
+- [x] Créer `backend/app/tests/unit/test_calibrator.py`
+  - [x] `test_at_p5_returns_2` — `raw_day = P5` → note = 2 (Note: AC2 override to return 1)
+  - [x] `test_below_p5_returns_1` — `raw_day < P5` → note = 1
+  - [x] `test_at_p95_returns_19` — `raw_day = P95` → note = 19 (Note: AC3 override to return 20)
+  - [x] `test_above_p95_returns_20` — `raw_day > P95` → note = 20
+  - [x] `test_midpoint_p5_p25` — `raw_day = (P5+P25)/2` → note = 4
+  - [x] `test_midpoint_p50_p75` — `raw_day = (P50+P75)/2` → note = 12
+  - [x] `test_all_4_segments` — tester un point dans chacun des 4 segments
+  - [x] `test_none_calibration_uses_default` — `None` → calibration par défaut, pas d'exception
+  - [x] `test_note_range` — pour tout `raw_day ∈ [-3, +3]` → note ∈ `[1, 20]` (100 valeurs)
+  - [x] `test_deterministic` — même input × 10 → même note
 
 ## Dev Notes
 
@@ -132,10 +132,23 @@ def calibrate(self, raw_day: float, calibration: CalibrationData | None) -> int:
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+gemini-2.0-flash
 
 ### Debug Log References
 
+- [x] Implementation of PercentileCalibrator with piecewise linear interpolation.
+- [x] Unit tests covering all segments, edge cases, and deterministic behavior.
+- [x] Verified AC2 and AC3 (saturation at P5 and P95).
+
 ### Completion Notes List
 
+- ✅ `PercentileCalibrator` implemented in `backend/app/prediction/calibrator.py`.
+- ✅ Comprehensive unit tests in `backend/app/tests/unit/test_calibrator.py`.
+- ✅ Verified saturation logic: `raw_day <= p5` returns 1, `raw_day >= p95` returns 20.
+- ✅ Verified interpolation logic between points (P5, P25, P50, P75, P95).
+- ✅ Batch processing with `calibrate_all` implemented and tested.
+
 ### File List
+
+- `backend/app/prediction/calibrator.py`
+- `backend/app/tests/unit/test_calibrator.py`
