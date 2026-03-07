@@ -291,7 +291,7 @@ development_status:
 
   epic-33: in-progress
   33-1-engine-contract-orchestrateur: done
-  33-2-context-loader: ready-for-dev
+  33-2-context-loader: done
   33-3-temporal-sampler: ready-for-dev
   33-4-astro-calculator: ready-for-dev
   33-5-event-detector: ready-for-dev
