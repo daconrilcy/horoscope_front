@@ -36,6 +36,30 @@ class SamplePoint:
 
 
 @dataclass(frozen=True)
+class PlanetState:
+    """State of a planet at a specific time."""
+
+    code: str
+    longitude: float
+    speed_lon: float
+    is_retrograde: bool
+    sign_code: int
+    natal_house_transited: int
+
+
+@dataclass(frozen=True)
+class StepAstroState:
+    """Complete astrological state at a specific time."""
+
+    ut_jd: float
+    ascendant_deg: float
+    mc_deg: float
+    house_cusps: list[float]
+    house_system_effective: str
+    planets: dict[str, PlanetState]
+
+
+@dataclass(frozen=True)
 class AstroEvent:
     """A detected astrological event."""
 

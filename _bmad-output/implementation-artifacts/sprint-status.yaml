@@ -293,7 +293,7 @@ development_status:
   33-1-engine-contract-orchestrateur: done
   33-2-context-loader: done
   33-3-temporal-sampler: done
-  33-4-astro-calculator: ready-for-dev
+  33-4-astro-calculator: done
   33-5-event-detector: ready-for-dev
   33-6-natal-sensitivity: ready-for-dev
   epic-33-retrospective: optional

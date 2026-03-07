@@ -42,30 +42,30 @@ Demander un corps non V1 → `PredictionEngineError` claire.
 
 ### T1 — `AstroCalculator` (AC1–AC7)
 
-- [ ] Créer `backend/app/prediction/astro_calculator.py`
-  - [ ] Dataclass `PlanetState` (fields: `code`, `longitude`, `speed_lon`, `is_retrograde`, `sign_code`, `natal_house_transited`)
-  - [ ] Dataclass `StepAstroState` (fields: `ut_jd`, `ascendant_deg`, `mc_deg`, `house_cusps: list[float]`, `house_system_effective: str`, `planets: dict[str, PlanetState]`)
-  - [ ] Classe `AstroCalculator(natal_cusps: list[float], latitude: float, longitude: float)`
-  - [ ] `compute_step(ut_jd: float) -> StepAstroState`
-    - [ ] Calculer les 10 planètes via `swe.calc_ut(jd, swe.SUN, swe.FLG_SPEED)` etc.
-    - [ ] `_compute_houses(ut_jd)` → `(cusps, asc, mc, effective_system)`
-    - [ ] `_natal_house_for_longitude(lon)` → int 1–12
-    - [ ] Construire `PlanetState` pour chaque planète V1
-  - [ ] `V1_PLANETS: dict[str, int]` = mapping nom → constante `swe.*`
-  - [ ] Repli Porphyre si Placidus échoue (AC6)
+- [x] Créer `backend/app/prediction/astro_calculator.py`
+  - [x] Dataclass `PlanetState` (fields: `code`, `longitude`, `speed_lon`, `is_retrograde`, `sign_code`, `natal_house_transited`)
+  - [x] Dataclass `StepAstroState` (fields: `ut_jd`, `ascendant_deg`, `mc_deg`, `house_cusps: list[float]`, `house_system_effective: str`, `planets: dict[str, PlanetState]`)
+  - [x] Classe `AstroCalculator(natal_cusps: list[float], latitude: float, longitude: float)`
+  - [x] `compute_step(ut_jd: float) -> StepAstroState`
+    - [x] Calculer les 10 planètes via `swe.calc_ut(jd, swe.SUN, swe.FLG_SPEED)` etc.
+    - [x] `_compute_houses(ut_jd)` → `(cusps, asc, mc, effective_system)`
+    - [x] `_natal_house_for_longitude(lon)` → int 1–12
+    - [x] Construire `PlanetState` pour chaque planète V1
+  - [x] `V1_PLANETS: dict[str, int]` = mapping nom → constante `swe.*`
+  - [x] Repli Porphyre si Placidus échoue (AC6)
 
 ### T2 — Tests unitaires (AC1–AC7)
 
-- [ ] Créer `backend/app/tests/unit/test_astro_calculator.py`
-  - [ ] `test_all_v1_planets_present` — 10 clés exactes dans `StepAstroState.planets`
-  - [ ] `test_asc_mc_in_range` — `ascendant_deg` et `mc_deg` dans `[0, 360)`
-  - [ ] `test_longitude_in_range` — toutes longitudes dans `[0, 360)`
-  - [ ] `test_sign_code_from_longitude` — `sign_code == floor(longitude / 30)` pour le Soleil
-  - [ ] `test_retrograde_detection` — utiliser JD connu de Mercure rétrograde (ex. 2026-03-15) → `is_retrograde=True`
-  - [ ] `test_direct_detection` — JD Mercure direct → `is_retrograde=False`
-  - [ ] `test_natal_house_boundary` — longitude 30.1° avec cuspide maison 2 à 30° → maison 2
-  - [ ] `test_fallback_porphyre` — latitude 89°N → `house_system_effective` ≠ `"Placidus"`
-  - [ ] `test_unknown_planet_raises` — demander `"Chiron"` → `PredictionEngineError`
+- [x] Créer `backend/app/tests/unit/test_astro_calculator.py`
+  - [x] `test_all_v1_planets_present` — 10 clés exactes dans `StepAstroState.planets`
+  - [x] `test_asc_mc_in_range` — `ascendant_deg` et `mc_deg` dans `[0, 360)`
+  - [x] `test_longitude_in_range` — toutes longitudes dans `[0, 360)`
+  - [x] `test_sign_code_from_longitude` — `sign_code == floor(longitude / 30)` pour le Soleil
+  - [x] `test_retrograde_detection` — utiliser JD connu de Mercure rétrograde (ex. 2026-03-15) → `is_retrograde=True`
+  - [x] `test_direct_detection` — JD Mercure direct → `is_retrograde=False`
+  - [x] `test_natal_house_boundary` — longitude 30.1° avec cuspide maison 2 à 30° → maison 2
+  - [x] `test_fallback_porphyre` — latitude 89°N → `house_system_effective` ≠ `"Placidus"`
+  - [x] `test_unknown_planet_raises` — demander `"Chiron"` → `PredictionEngineError`
 
 ## Dev Notes
 
@@ -143,10 +143,27 @@ Note : cette logique simple ignore le cas de cuspides qui traversent 0°/360°. 
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+gemini-2.0-flash-001
 
 ### Debug Log References
 
+- [AstroCalculator passed 10 unit tests]
+- [Ruff linting passed for all modified files]
+
 ### Completion Notes List
 
+- Service `AstroCalculator` implémenté avec support des 10 planètes V1.
+- Calcul de l'Ascendant et du MC à chaque pas.
+- Détection du statut rétrograde via la vitesse longitudinale.
+- Calcul de la maison natale traversée avec gestion du wrap-around (0/360°).
+- Repli automatique sur le système de maisons Porphyre en cas d'échec de Placidus (latitudes extrêmes).
+- Validation via 10 tests unitaires couvrant les AC1 à AC7.
+- Déplacement des dataclasses `PlanetState` et `StepAstroState` vers `schemas.py` pour une meilleure réutilisation.
+
 ### File List
+
+- `backend/app/prediction/astro_calculator.py`
+- `backend/app/prediction/schemas.py`
+- `backend/app/tests/unit/test_astro_calculator.py`
+
+Status: done
