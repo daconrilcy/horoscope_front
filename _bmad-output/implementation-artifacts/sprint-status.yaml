@@ -277,11 +277,12 @@ development_status:
   30-19-localisation-courante-consentement-injection-contexte-prompts: done
   epic-30-retrospective: optional
 
-  epic-31: in-progress
-  31-1-migration-a-tables-profils-matrices-prediction: review
-  31-2-migration-b-ruleset-parametres-calibrations: ready-for-dev
-  31-3-migration-d-reference-version-2-seed-lock: ready-for-dev
-  31-4-migration-e-repository-enrichi-moteur-prediction: ready-for-dev
+  epic-31: done
+  31-1-migration-a-tables-profils-matrices-prediction: done
+  31-2-migration-b-ruleset-parametres-calibrations: done
+  31-3-migration-d-reference-version-2-seed-lock: done
+  31-4-migration-e-repository-enrichi-moteur-prediction: done
+
   epic-31-retrospective: optional
 
   epic-32: backlog

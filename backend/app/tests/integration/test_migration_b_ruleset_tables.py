@@ -57,9 +57,7 @@ def _sqlite_engine(database_url: str) -> Engine:
     return engine
 
 
-def _setup_engine(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, db_name: str
-) -> Engine:
+def _setup_engine(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, db_name: str) -> Engine:
     db_path = tmp_path / db_name
     database_url = f"sqlite:///{db_path.as_posix()}"
     monkeypatch.setattr(settings, "database_url", database_url)
@@ -146,9 +144,11 @@ def test_migration_b_event_type_unique_code(
         ref_version = _seed_reference_version(session, version="1.0.0", is_locked=False)
         ruleset = _seed_ruleset(session, ref_version)
 
-        session.add(RulesetEventTypeModel(
-            ruleset_id=ruleset.id, code="aspect_exact", name="Aspect Exact", base_weight=2.0
-        ))
+        session.add(
+            RulesetEventTypeModel(
+                ruleset_id=ruleset.id, code="aspect_exact", name="Aspect Exact", base_weight=2.0
+            )
+        )
         session.commit()
 
         duplicate = RulesetEventTypeModel(
@@ -172,9 +172,14 @@ def test_migration_b_parameter_unique_key(
         ref_version = _seed_reference_version(session, version="1.0.0", is_locked=False)
         ruleset = _seed_ruleset(session, ref_version)
 
-        session.add(RulesetParameterModel(
-            ruleset_id=ruleset.id, param_key="orb_multiplier", param_value="1.2", data_type="float"
-        ))
+        session.add(
+            RulesetParameterModel(
+                ruleset_id=ruleset.id,
+                param_key="orb_multiplier",
+                param_value="1.2",
+                data_type="float",
+            )
+        )
         session.commit()
 
         duplicate = RulesetParameterModel(
@@ -231,12 +236,14 @@ def test_migration_b_calibration_unique_constraint(
         session.add(category)
         session.commit()
 
-        session.add(CategoryCalibrationModel(
-            ruleset_id=ruleset.id,
-            category_id=category.id,
-            p50=50.0,
-            valid_from=date(2024, 1, 1),
-        ))
+        session.add(
+            CategoryCalibrationModel(
+                ruleset_id=ruleset.id,
+                category_id=category.id,
+                p50=50.0,
+                valid_from=date(2024, 1, 1),
+            )
+        )
         session.commit()
 
         duplicate = CategoryCalibrationModel(

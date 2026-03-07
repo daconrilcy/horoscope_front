@@ -1,6 +1,6 @@
 # Story 31.3 : Migration D — Reference version 2.0.0, seed complet des tables de prédiction et verrouillage
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -161,6 +161,7 @@ Les 4 points angulaires sont créés pour `reference_version_id = 2.0.0` :
 | `mc` | Midheaven (MC) | angle |
 | `ic` | Imum Coeli (IC) | angle |
 
+
 Avec les pondérations `point_category_weights` :
 
 | point | category | weight |
@@ -242,7 +243,7 @@ Ce comportement évite de masquer un état corrompu issu d'un seed partiellement
 
 ### AC16 — Tests du script
 
-Un test d'intégration exécute le script sur une DB de test propre et vérifie :
+Un test d'integration exécute le script sur une DB de test propre et vérifie :
 - `prediction_categories` : 12 lignes pour `2.0.0`
 - `planet_profiles` : 10 lignes
 - `house_profiles` : 12 lignes
@@ -260,41 +261,41 @@ Un test d'intégration exécute le script sur une DB de test propre et vérifie 
 
 ### T1 — Script de seed (AC1–AC14)
 
-- [ ] Créer `backend/scripts/seed_31_prediction_reference_v2.py`
-  - [ ] Vérifier existence de `1.0.0` et `2.0.0`
-  - [ ] Si `2.0.0` n'existe pas → seed complet
-  - [ ] Si `2.0.0` existe + complète + verrouillée → log "already seeded and locked" + exit 0
-  - [ ] Si `2.0.0` existe mais incomplète ou non verrouillée → log erreur détaillé (counts attendus vs réels) + exit 1 sans modification
-  - [ ] Créer `2.0.0` avec `is_locked = False`
-  - [ ] Cloner `1.0.0` → `2.0.0` via `ReferenceRepository.clone_version_data()`
-  - [ ] Seeder `prediction_categories` (12 catégories — AC3)
-  - [ ] Seeder `planet_profiles` (10 profils — AC4)
-  - [ ] Seeder `house_profiles` (12 profils — AC5)
-  - [ ] Seeder `planet_category_weights` (AC6) — résoudre les IDs planètes/catégories depuis la DB
-  - [ ] Seeder `house_category_weights` (AC7) — résoudre les IDs maisons/catégories depuis la DB
-  - [ ] Seeder `astro_points` (4 points — AC8)
-  - [ ] Seeder `point_category_weights` — résoudre les IDs points/catégories
-  - [ ] Seeder `sign_rulerships` (12 domiciles — AC9)
-  - [ ] Seeder `aspect_profiles` (5 profils — AC10)
-  - [ ] Créer le ruleset `1.0.0` dans `prediction_rulesets` (AC11)
-  - [ ] Seeder `ruleset_event_types` (8 types — AC12)
-  - [ ] Seeder `ruleset_parameters` (8 params — AC13)
-  - [ ] Verrouiller `2.0.0` (AC14)
+- [x] Créer `backend/scripts/seed_31_prediction_reference_v2.py`
+  - [x] Vérifier existence de `1.0.0` et `2.0.0`
+  - [x] Si `2.0.0` n'existe pas → seed complet
+  - [x] Si `2.0.0` existe + complète + verrouillée → log "already seeded and locked" + exit 0
+  - [x] Si `2.0.0` existe mais incomplète ou non verrouillée → log erreur détaillé (counts attendus vs réels) + exit 1 sans modification
+  - [x] Créer `2.0.0` avec `is_locked = False`
+  - [x] Cloner `1.0.0` → `2.0.0` via `ReferenceRepository.clone_version_data()`
+  - [x] Seeder `prediction_categories` (12 catégories — AC3)
+  - [x] Seeder `planet_profiles` (10 profils — AC4)
+  - [x] Seeder `house_profiles` (12 profils — AC5)
+  - [x] Seeder `planet_category_weights` (AC6) — résoudre les IDs planètes/catégories depuis la DB
+  - [x] Seeder `house_category_weights` (AC7) — résoudre les IDs maisons/catégories depuis la DB
+  - [x] Seeder `astro_points` (4 points — AC8)
+  - [x] Seeder `point_category_weights` — résoudre les IDs points/catégories
+  - [x] Seeder `sign_rulerships` (12 domiciles — AC9)
+  - [x] Seeder `aspect_profiles` (5 profils — AC10)
+  - [x] Créer le ruleset `1.0.0` dans `prediction_rulesets` (AC11)
+  - [x] Seeder `ruleset_event_types` (8 types — AC12)
+  - [x] Seeder `ruleset_parameters` (8 params — AC13)
+  - [x] Verrouiller `2.0.0` (AC14)
 
 ### T2 — Validation count dans le script (AC14)
 
-- [ ] Ajouter une phase de validation dans le script avant le lock :
-  - [ ] `assert db.scalar(select(func.count()).select_from(PredictionCategoryModel).where(...)) == 12`
-  - [ ] Idem pour chaque table seedée
-  - [ ] En cas d'assertion failure → rollback + log erreur + exit 1
+- [x] Ajouter une phase de validation dans le script avant le lock :
+  - [x] `assert db.scalar(select(func.count()).select_from(PredictionCategoryModel).where(...)) == 12`
+  - [x] Idem pour chaque table seedée
+  - [x] En cas d'assertion failure → rollback + log erreur + exit 1
 
 ### T3 — Tests d'intégration (AC15, AC16)
 
-- [ ] Créer `backend/app/tests/integration/test_seed_31_prediction_v2.py`
-  - [ ] Exécuter le script sur DB de test propre (après migrations 0032 et 0033)
-  - [ ] Vérifier les counts attendus (AC16)
-  - [ ] Exécuter le script une seconde fois → pas d'erreur (idempotence)
-  - [ ] Vérifier `is_locked == True` pour `2.0.0`
+- [x] Créer `backend/app/tests/integration/test_seed_31_prediction_v2.py`
+  - [x] Exécuter le script sur DB de test propre (après migrations 0032 et 0033)
+  - [x] Vérifier les counts attendus (AC16)
+  - [x] Exécuter le script une seconde fois → pas d'erreur (idempotence)
+  - [x] Vérifier `is_locked == True` pour `2.0.0`
 
 ## Dev Notes
 
@@ -403,6 +404,7 @@ Ce script ne peut tourner qu'après l'application des migrations `0032` et `0033
 |---------|--------|
 | `backend/scripts/seed_31_prediction_reference_v2.py` | Créer |
 | `backend/app/tests/integration/test_seed_31_prediction_v2.py` | Créer |
+| `backend/scripts/__init__.py` | Créer |
 
 ### Fichiers à NE PAS toucher
 
@@ -414,12 +416,19 @@ Ce script ne peut tourner qu'après l'application des migrations `0032` et `0033
 
 ### Agent Model Used
 
-_à remplir_
+Gemini 2.0 Flash
 
 ### Completion Notes List
 
-_à remplir_
+- Created `backend/scripts/seed_31_prediction_reference_v2.py` with full astrological semantic seeding for reference version 2.0.0.
+- Implemented idempotence logic with explicit error reporting for corrupted states.
+- Handled cloning from 1.0.0 and enrichment with prediction-specific tables (categories, profiles, weights, points, rulerships, aspects, ruleset).
+- Fixed issues with models not having `reference_version_id` by joining with parent tables in count checks.
+- Created `backend/app/tests/integration/test_seed_31_prediction_v2.py` verifying full flow and idempotence.
+- All tests passing.
 
 ### File List
 
-_à remplir_
+- `backend/scripts/seed_31_prediction_reference_v2.py`
+- `backend/app/tests/integration/test_seed_31_prediction_v2.py`
+- `backend/scripts/__init__.py`

@@ -24,15 +24,11 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("version", sa.String(length=32), nullable=False),
         sa.Column("reference_version_id", sa.Integer(), nullable=False),
-        sa.Column(
-            "zodiac_type", sa.String(length=16), server_default="tropical", nullable=False
-        ),
+        sa.Column("zodiac_type", sa.String(length=16), server_default="tropical", nullable=False),
         sa.Column(
             "coordinate_mode", sa.String(length=16), server_default="geocentric", nullable=False
         ),
-        sa.Column(
-            "house_system", sa.String(length=16), server_default="placidus", nullable=False
-        ),
+        sa.Column("house_system", sa.String(length=16), server_default="placidus", nullable=False),
         sa.Column("time_step_minutes", sa.Integer(), server_default="30", nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("is_locked", sa.Boolean(), server_default=sa.false(), nullable=False),
@@ -66,9 +62,7 @@ def upgrade() -> None:
         sa.Column("priority", sa.Integer(), server_default="0", nullable=False),
         sa.Column("base_weight", sa.Float(), server_default="1.0", nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["ruleset_id"], ["prediction_rulesets.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["ruleset_id"], ["prediction_rulesets.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("ruleset_id", "code"),
     )
@@ -91,9 +85,7 @@ def upgrade() -> None:
             "data_type IN ('string', 'float', 'int', 'bool', 'json')",
             name="ck_ruleset_parameters_data_type",
         ),
-        sa.ForeignKeyConstraint(
-            ["ruleset_id"], ["prediction_rulesets.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["ruleset_id"], ["prediction_rulesets.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("ruleset_id", "param_key"),
     )
@@ -118,12 +110,8 @@ def upgrade() -> None:
         sa.Column("sample_size", sa.Integer(), nullable=True),
         sa.Column("valid_from", sa.Date(), nullable=False),
         sa.Column("valid_to", sa.Date(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["category_id"], ["prediction_categories.id"], ondelete="RESTRICT"
-        ),
-        sa.ForeignKeyConstraint(
-            ["ruleset_id"], ["prediction_rulesets.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["category_id"], ["prediction_categories.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["ruleset_id"], ["prediction_rulesets.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("ruleset_id", "category_id", "valid_from"),
     )
