@@ -86,7 +86,7 @@ class ContributionCalculator:
         """AC1 - weight_intraday from PlanetProfileData."""
         if not planet_code:
             return 1.0
-        profile = ctx.prediction_context.planet_profiles.get(planet_code)
+        profile = self._lookup_mapping_value(ctx.prediction_context.planet_profiles, planet_code)
         if profile:
             return profile.weight_intraday
         return 1.0
@@ -95,7 +95,7 @@ class ContributionCalculator:
         """AC2 - intensity_weight from AspectProfileData."""
         if not aspect_code:
             return 1.0
-        profile = ctx.prediction_context.aspect_profiles.get(aspect_code)
+        profile = self._lookup_mapping_value(ctx.prediction_context.aspect_profiles, aspect_code)
         if profile:
             return profile.intensity_weight
         return 1.0
@@ -151,7 +151,10 @@ class ContributionCalculator:
         and planet type). cat_code is accepted for API compatibility and future category-specific
         valence support.
         """
-        aspect_profile = ctx.prediction_context.aspect_profiles.get(event.aspect or "")
+        aspect_profile = self._lookup_mapping_value(
+            ctx.prediction_context.aspect_profiles,
+            event.aspect or "",
+        )
         if aspect_profile is None:
             return 0.0  # Unknown aspect: no signal
 
@@ -163,10 +166,20 @@ class ContributionCalculator:
         elif valence == "neutral":
             return 0.0
         else:  # "contextual" — use planet profile
-            planet_profile = ctx.prediction_context.planet_profiles.get(event.body or "")
+            planet_profile = self._lookup_mapping_value(
+                ctx.prediction_context.planet_profiles,
+                event.body or "",
+            )
             if planet_profile:
                 if planet_profile.typical_polarity == "negative":
                     return -0.5
                 elif planet_profile.typical_polarity == "positive":
                     return 0.5
             return 0.0
+
+    def _lookup_mapping_value(self, mapping: dict, key: str) -> object | None:
+        candidates = (key, key.lower(), key.upper(), key.title())
+        for candidate in candidates:
+            if candidate in mapping:
+                return mapping[candidate]
+        return None

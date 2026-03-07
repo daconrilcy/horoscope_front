@@ -147,8 +147,12 @@ gemini-2.0-flash
 - ✅ Verified saturation logic: `raw_day <= p5` returns 1, `raw_day >= p95` returns 20.
 - ✅ Verified interpolation logic between points (P5, P25, P50, P75, P95).
 - ✅ Batch processing with `calibrate_all` implemented and tested.
+- ✅ Post-review: `PercentileCalibrator` branché dans `EngineOrchestrator` pour les scores journaliers et les notes par pas.
+- ✅ Post-review: validation d'intégration ajoutée pour garantir des notes `1..20` en sortie moteur.
 
 ### File List
 
 - `backend/app/prediction/calibrator.py`
 - `backend/app/tests/unit/test_calibrator.py`
+- `backend/app/prediction/engine_orchestrator.py`
+- `backend/app/tests/unit/test_engine_orchestrator.py`

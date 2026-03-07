@@ -146,8 +146,12 @@ gemini-2.0-flash
 - `Peak90` implémenté via une fenêtre glissante de 6 pas (90 min).
 - `Close` implémenté comme moyenne des 8 derniers pas (2h).
 - Tests unitaires complets couvrant tous les cas limites et calculs de métriques.
+- Correctif post-review: agrégation journalière désormais branchée dans `EngineOrchestrator` pour produire les scores du jour réels.
+- Correctif post-review: tests d'intégration orchestrateur mis à jour pour vérifier des notes calibrées et des blocs générés.
 
 ### File List
 
 - `backend/app/prediction/aggregator.py`
 - `backend/app/tests/unit/test_aggregator.py`
+- `backend/app/prediction/engine_orchestrator.py`
+- `backend/app/tests/unit/test_engine_orchestrator.py`

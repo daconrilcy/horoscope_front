@@ -1,4 +1,5 @@
 from typing import Mapping
+
 from app.infra.db.repositories.prediction_schemas import CalibrationData
 from app.prediction.aggregator import DayAggregation
 

@@ -26,7 +26,11 @@ class DomainRouter:
             # routing via planet blend only.
             return planet_blend
 
-        house_projection = self._project_houses_to_categories(house_vector, house_to_cat, active_categories)
+        house_projection = self._project_houses_to_categories(
+            house_vector,
+            house_to_cat,
+            active_categories,
+        )
 
         # Combine: D(e,c) = house_projection[c] * planet_blend[c]
         return {cat: house_projection[cat] * planet_blend[cat] for cat in active_categories}

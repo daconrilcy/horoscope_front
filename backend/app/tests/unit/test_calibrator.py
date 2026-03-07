@@ -1,7 +1,9 @@
 import pytest
-from app.prediction.calibrator import PercentileCalibrator
-from app.prediction.aggregator import DayAggregation, CategoryAggregation
+
 from app.infra.db.repositories.prediction_schemas import CalibrationData
+from app.prediction.aggregator import CategoryAggregation, DayAggregation
+from app.prediction.calibrator import PercentileCalibrator
+
 
 @pytest.fixture
 def calibrator():

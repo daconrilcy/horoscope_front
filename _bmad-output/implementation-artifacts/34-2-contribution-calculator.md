@@ -170,6 +170,10 @@ def _f_orb(self, event: AstroEvent, ctx) -> float:
   - L2: Nouveau test `test_orb_max_from_metadata` couvrant le chemin metadata
   - L3: Nouveau test `test_unknown_aspect_pol_returns_zero`
   - L4: Comparaison `f_orb == 0.0` remplacée par `f_orb < 1e-9`
+- Post-review fixes applied (Date: 2026-03-08):
+  - H5: normalisation robuste des lookups planète/aspect pour compatibilité avec les codes DB en minuscules et les `AstroEvent` en `TitleCase`
+  - H6: intégration effective de `ContributionCalculator` dans `EngineOrchestrator`
+  - M5: test d'intégration orchestrateur ajouté pour verrouiller le runtime réel avec profils référentiels lowercase
 
 ## Dev Agent Record
 
@@ -186,10 +190,14 @@ gemini-2.0-flash
 - Implemented parabolic orb factor `_f_orb` with automated `orb_max` discovery.
 - Added comprehensive unit tests covering all ACs and edge cases.
 - All tests passed and code follows project standards (Ruff/formatting).
+- Runtime now handles lowercase reference codes and `TitleCase` event bodies consistently.
+- `ContributionCalculator` is now exercised through the real prediction pipeline, not only in isolation.
 
 ### File List
 
 - `backend/app/prediction/contribution_calculator.py`
 - `backend/app/tests/unit/test_contribution_calculator.py`
+- `backend/app/prediction/engine_orchestrator.py`
+- `backend/app/tests/unit/test_engine_orchestrator.py`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
 

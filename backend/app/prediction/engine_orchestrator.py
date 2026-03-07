@@ -9,18 +9,26 @@ import swisseph as swe
 
 from app.infra.db.repositories.prediction_schemas import RulesetContext
 
+from .aggregator import TemporalAggregator
 from .astro_calculator import AstroCalculator
+from .block_generator import BlockGenerator
+from .calibrator import PercentileCalibrator
 from .context_loader import LoadedPredictionContext
+from .contribution_calculator import ContributionCalculator
+from .domain_router import DomainRouter
 from .event_detector import EventDetector
 from .exceptions import PredictionContextError
 from .natal_sensitivity import NatalSensitivityCalculator
 from .schemas import (
+    AstroEvent,
     EffectiveContext,
     EngineInput,
     EngineOutput,
     NatalChart,
+    SamplePoint,
 )
 from .temporal_sampler import TemporalSampler
+from .turning_point_detector import TurningPointDetector
 
 _ZODIAC_SIGNS = (
     "aries",
@@ -68,6 +76,12 @@ class EngineOrchestrator:
             Callable[[LoadedPredictionContext, NatalChart], EventDetector] | None
         ) = None,
         natal_sensitivity_calculator: NatalSensitivityCalculator | None = None,
+        domain_router: DomainRouter | None = None,
+        contribution_calculator: ContributionCalculator | None = None,
+        temporal_aggregator: TemporalAggregator | None = None,
+        percentile_calibrator: PercentileCalibrator | None = None,
+        turning_point_detector: TurningPointDetector | None = None,
+        block_generator: BlockGenerator | None = None,
     ) -> None:
         self._ruleset_context_loader = ruleset_context_loader
         self._prediction_context_loader = prediction_context_loader
@@ -77,6 +91,12 @@ class EngineOrchestrator:
         self._natal_sensitivity_calculator = (
             natal_sensitivity_calculator or NatalSensitivityCalculator()
         )
+        self._domain_router = domain_router or DomainRouter()
+        self._contribution_calculator = contribution_calculator or ContributionCalculator()
+        self._temporal_aggregator = temporal_aggregator or TemporalAggregator()
+        self._percentile_calibrator = percentile_calibrator or PercentileCalibrator()
+        self._turning_point_detector = turning_point_detector or TurningPointDetector()
+        self._block_generator = block_generator or BlockGenerator()
 
     def run(self, engine_input: EngineInput) -> EngineOutput:
         """
@@ -126,6 +146,30 @@ class EngineOrchestrator:
             natal_chart,
             loaded_context,
         )
+        (
+            category_scores,
+            notes_by_step,
+            events_by_step,
+            contributions_by_step,
+        ) = self._build_prediction_outputs(
+            detected_events,
+            day_grid.samples,
+            natal_sensitivity,
+            loaded_context,
+        )
+        step_times = [sample.local_time for sample in day_grid.samples]
+        turning_points = self._turning_point_detector.detect(
+            notes_by_step,
+            events_by_step,
+            step_times,
+        )
+        time_blocks = self._block_generator.generate(
+            turning_points,
+            notes_by_step,
+            events_by_step,
+            step_times,
+            contributions_by_step,
+        )
         house_system_effective = self._resolve_effective_house_system(
             house_system_requested,
             astro_states,
@@ -153,9 +197,79 @@ class EngineOrchestrator:
             effective_context=effective_context,
             sampling_timeline=list(day_grid.samples),
             detected_events=detected_events,
-            category_scores=natal_sensitivity,
-            time_blocks=[],
-            turning_points=[],
+            category_scores=category_scores,
+            time_blocks=time_blocks,
+            turning_points=turning_points,
+        )
+
+    def _build_prediction_outputs(
+        self,
+        detected_events: list[AstroEvent],
+        samples: list[SamplePoint],
+        ns_map: dict[str, float],
+        loaded_context: LoadedPredictionContext,
+    ) -> tuple[
+        dict[str, int],
+        list[dict[str, int]],
+        list[list[AstroEvent]],
+        list[list[tuple[AstroEvent, dict[str, float]]]],
+    ]:
+        category_codes = [
+            category.code
+            for category in loaded_context.prediction_context.categories
+            if category.is_enabled
+        ]
+        events_by_step: list[list[AstroEvent]] = [[] for _ in samples]
+        contributions_by_step: list[list[tuple[AstroEvent, dict[str, float]]]] = [
+            [] for _ in samples
+        ]
+        contribution_totals_by_step: list[dict[str, float]] = [{} for _ in samples]
+
+        for event in detected_events:
+            if not samples:
+                break
+
+            step_index = self._nearest_step_index(event.ut_time, samples)
+            routed_categories = self._domain_router.route(event, loaded_context)
+            contributions = self._contribution_calculator.compute(
+                event,
+                ns_map,
+                routed_categories,
+                loaded_context,
+            )
+
+            events_by_step[step_index].append(event)
+            contributions_by_step[step_index].append((event, contributions))
+            for category_code, contribution in contributions.items():
+                contribution_totals_by_step[step_index][category_code] = (
+                    contribution_totals_by_step[step_index].get(category_code, 0.0) + contribution
+                )
+
+        day_aggregation = self._temporal_aggregator.aggregate(
+            contribution_totals_by_step,
+            category_codes,
+        )
+        category_scores = self._percentile_calibrator.calibrate_all(
+            day_aggregation,
+            loaded_context.calibrations,
+        )
+        notes_by_step = [
+            {
+                category_code: self._percentile_calibrator.calibrate(
+                    step_contributions.get(category_code, 0.0),
+                    loaded_context.calibrations.get(category_code),
+                )
+                for category_code in category_codes
+            }
+            for step_contributions in contribution_totals_by_step
+        ]
+
+        return category_scores, notes_by_step, events_by_step, contributions_by_step
+
+    def _nearest_step_index(self, ut_time: float, samples: list[SamplePoint]) -> int:
+        return min(
+            range(len(samples)),
+            key=lambda index: abs(samples[index].ut_time - ut_time),
         )
 
     def _compute_hash(self, engine_input: EngineInput) -> str:

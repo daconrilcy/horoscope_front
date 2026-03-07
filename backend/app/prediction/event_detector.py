@@ -139,7 +139,7 @@ class EventDetector:
                             if p2 < p1 and p2 < p3 and p2 <= orb_max:
                                 # p2 is a local minimum — orb was decreasing into it (applying)
                                 prev_step = steps[i-1]
-                                # natal_house_transited must come from prev_step (where p2 occurred),
+                                # natal_house_transited must come from prev_step,
                                 # not from the current step i.
                                 prev_planet = prev_step.planets.get(body_code)
                                 meta_exact = {

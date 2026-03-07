@@ -152,16 +152,22 @@ gemini-cli
 - Implemented `BlockGenerator` with adaptive timeline splitting.
 - Added comprehensive unit tests in `test_turning_points.py`.
 - Verified all 7 unit tests pass.
+- Post-review fixes: `TurningPointDetector` et `BlockGenerator` sont maintenant utilisés par `EngineOrchestrator`.
+- Post-review fixes: agrégation des `driver_events` durcie par signature logique au lieu de l'identité objet Python.
+- Post-review fixes: couverture orchestrateur ajoutée pour verrouiller la génération réelle des pivots et blocs UX.
 
 ### File List
 
 - `backend/app/prediction/turning_point_detector.py`
 - `backend/app/prediction/block_generator.py`
 - `backend/app/tests/unit/test_turning_points.py`
+- `backend/app/prediction/engine_orchestrator.py`
+- `backend/app/tests/unit/test_engine_orchestrator.py`
 
 ### Change Log
 
 - 2026-03-07: Initial implementation of turning point detection and block generation services.
+- 2026-03-08: Post-review integration into orchestrator, driver grouping hardening, and regression coverage update.
 
 ### Status
 

@@ -188,7 +188,11 @@ def test_exact_metadata_uses_prev_step_house(mock_ctx, natal_chart):
     steps = [
         make_step(2460000.0, 358.5, 1),  # orb=1.5, house=1
         make_step(2460000.1, 359.9, 1),  # orb=0.1, house=1  ← exact ici
-        make_step(2460000.2, 1.5,   2),  # orb=1.5, house=2  ← step courant au moment de la détection
+        make_step(
+            2460000.2,
+            1.5,
+            2,
+        ),  # orb=1.5, house=2  ← step courant au moment de la détection
     ]
     day_grid = DayGrid([], 2460000.0, 2460000.3, None, None, date(2024, 1, 1), "UTC")
 

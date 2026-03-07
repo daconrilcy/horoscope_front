@@ -127,6 +127,8 @@ gemini-2.0-flash-exp
 - Mise à jour de `EngineOrchestrator` pour passer le `NatalChart` complet au `EventDetector`.
 - Tests unitaires complets validant les AC1-AC5.
 - Tests de régression sur `EventDetector` et `EngineOrchestrator` validés.
+- Correctif post-review: intégration effective du routage domaine dans le pipeline réel de `EngineOrchestrator`.
+- Correctif post-review: validation backend relancée après intégration et qualité remise au vert.
 
 ### File List
 
@@ -135,3 +137,4 @@ gemini-2.0-flash-exp
 - `backend/app/prediction/event_detector.py`
 - `backend/app/tests/unit/test_event_detector.py`
 - `backend/app/prediction/engine_orchestrator.py`
+- `backend/app/tests/unit/test_engine_orchestrator.py`

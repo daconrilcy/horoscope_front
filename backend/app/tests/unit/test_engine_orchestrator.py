@@ -1,10 +1,14 @@
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
+from types import SimpleNamespace
 
 import pytest
 
 from app.infra.db.repositories.prediction_schemas import (
+    AspectProfileData,
     CategoryData,
+    EventTypeData,
     HouseCategoryWeightData,
+    HouseProfileData,
     PlanetCategoryWeightData,
     PlanetProfileData,
     PredictionContext,
@@ -14,7 +18,8 @@ from app.infra.db.repositories.prediction_schemas import (
 from app.prediction.context_loader import LoadedPredictionContext
 from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.exceptions import PredictionContextError
-from app.prediction.schemas import EngineInput, EngineOutput
+from app.prediction.schemas import AstroEvent, EngineInput, EngineOutput, SamplePoint
+from app.prediction.temporal_sampler import DayGrid
 
 
 def _build_loaded_context() -> LoadedPredictionContext:
@@ -222,7 +227,8 @@ def test_output_has_mandatory_fields(orchestrator, base_input):
     assert isinstance(output.turning_points, list)
     assert len(output.sampling_timeline) == 96
     assert len(output.detected_events) >= 24
-    assert output.category_scores["work"] > 0.0
+    assert 1 <= output.category_scores["work"] <= 20
+    assert len(output.time_blocks) == 24
 
 
 def test_house_system_fields_present(orchestrator, base_input):
@@ -293,3 +299,177 @@ def test_run_integrates_chapter_33_components(orchestrator, base_input):
     ]
     assert len(planetary_hours) == 24
     assert output.effective_context.house_system_effective == "placidus"
+
+
+def test_run_integrates_prediction_scoring_pipeline_with_lowercase_reference_codes(base_input):
+    profile = PlanetProfileData(
+        planet_id=1,
+        code="sun",
+        name="Sun",
+        class_code="planet",
+        speed_rank=1,
+        speed_class="variable",
+        weight_intraday=1.2,
+        weight_day_climate=1.0,
+        typical_polarity="positive",
+        orb_active_deg=5.0,
+        orb_peak_deg=1.5,
+        keywords=("sun",),
+    )
+    loaded_context = LoadedPredictionContext(
+        prediction_context=PredictionContext(
+            categories=(
+                CategoryData(
+                    id=1,
+                    code="work",
+                    name="Work",
+                    display_name="Work",
+                    sort_order=1,
+                    is_enabled=True,
+                ),
+            ),
+            planet_profiles={"sun": profile},
+            house_profiles={
+                10: HouseProfileData(
+                    house_id=10,
+                    number=10,
+                    name="Career",
+                    house_kind="angular",
+                    visibility_weight=1.0,
+                    base_priority=5,
+                    keywords=("career",),
+                ),
+            },
+            planet_category_weights=(
+                PlanetCategoryWeightData(
+                    planet_id=1,
+                    planet_code="sun",
+                    category_id=1,
+                    category_code="work",
+                    weight=1.0,
+                    influence_role="driver",
+                ),
+            ),
+            house_category_weights=(
+                HouseCategoryWeightData(
+                    house_id=10,
+                    house_number=10,
+                    category_id=1,
+                    category_code="work",
+                    weight=1.0,
+                    routing_role="primary",
+                ),
+            ),
+            sign_rulerships={"leo": "sun"},
+            aspect_profiles={
+                "conjunction": AspectProfileData(
+                    aspect_id=1,
+                    code="conjunction",
+                    intensity_weight=1.0,
+                    default_valence="positive",
+                    orb_multiplier=1.0,
+                    phase_sensitive=True,
+                ),
+            },
+            astro_points={},
+            point_category_weights=(),
+        ),
+        ruleset_context=RulesetContext(
+            ruleset=RulesetData(
+                id=1,
+                version="1.0.0",
+                reference_version_id=1,
+                zodiac_type="tropical",
+                coordinate_mode="geocentric",
+                house_system="whole_sign",
+                time_step_minutes=15,
+                is_locked=True,
+            ),
+            parameters={
+                "ns_weight_occ": 0.0,
+                "ns_weight_rul": 0.0,
+                "ns_weight_ang": 0.0,
+                "ns_weight_dom": 0.0,
+            },
+            event_types={
+                "exact": EventTypeData(
+                    id=1,
+                    code="exact",
+                    name="Exact",
+                    event_group="aspect",
+                    priority=90,
+                    base_weight=1.0,
+                )
+            },
+        ),
+        calibrations={"work": None},
+        is_provisional_calibration=True,
+    )
+    samples = [
+        SamplePoint(
+            ut_time=float(index),
+            local_time=datetime(2026, 3, 7, 0, 0, tzinfo=timezone.utc)
+            + timedelta(minutes=15 * index),
+        )
+        for index in range(4)
+    ]
+
+    class StubTemporalSampler:
+        def build_day_grid(self, *_args):
+            return DayGrid(
+                samples=samples,
+                ut_start=0.0,
+                ut_end=3.0,
+                sunrise_ut=None,
+                sunset_ut=None,
+                local_date=date(2026, 3, 7),
+                timezone="UTC",
+            )
+
+    class StubAstroCalculator:
+        def __init__(self, *_args):
+            pass
+
+        def compute_step(self, ut_time: float, local_time: datetime):
+            return SimpleNamespace(
+                ut_jd=ut_time,
+                local_time=local_time,
+                house_system_effective="placidus",
+            )
+
+    class StubEventDetector:
+        def __init__(self, *_args):
+            pass
+
+        def detect(self, *_args):
+            return [
+                AstroEvent(
+                    event_type="exact",
+                    ut_time=0.0,
+                    local_time=samples[0].local_time,
+                    body="Sun",
+                    target="MC",
+                    aspect="conjunction",
+                    orb_deg=0.0,
+                    priority=90,
+                    base_weight=1.0,
+                    metadata={
+                        "phase": "exact",
+                        "natal_house_target": 10,
+                        "natal_house_transited": 10,
+                    },
+                )
+            ]
+
+    orchestrator = EngineOrchestrator(
+        prediction_context_loader=lambda *_: loaded_context,
+        temporal_sampler=StubTemporalSampler(),
+        astro_calculator_factory=lambda *_: StubAstroCalculator(),
+        event_detector_factory=lambda *_: StubEventDetector(),
+    )
+
+    output = orchestrator.run(base_input)
+
+    assert output.category_scores["work"] > 10
+    assert len(output.turning_points) == 1
+    assert len(output.time_blocks) == 2
