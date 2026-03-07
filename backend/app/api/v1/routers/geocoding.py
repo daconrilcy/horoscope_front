@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 import re
 from typing import Any, Literal
@@ -10,7 +11,11 @@ from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import AuthenticatedUser, get_optional_authenticated_user
+from app.api.dependencies.auth import (
+    AuthenticatedUser,
+    get_optional_authenticated_user,
+    require_authenticated_user,
+)
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
 from app.infra.db.repositories.geo_place_resolved_repository import (
@@ -23,6 +28,16 @@ from app.services.geocoding_service import (
     GeocodingService,
     GeocodingServiceError,
 )
+
+logger = logging.getLogger(__name__)
+
+try:
+    from timezonefinder import TimezoneFinder as _TimezoneFinder
+
+    _TF: _TimezoneFinder | None = _TimezoneFinder()
+except Exception:
+    logger.warning("timezonefinder not available — reverse geocoding timezone resolution disabled")
+    _TF = None
 
 router = APIRouter(prefix="/v1/geocoding", tags=["geocoding"])
 
@@ -42,6 +57,11 @@ class GeocodingResolveRequest(BaseModel):
     provider: Literal["nominatim"]
     provider_place_id: int = Field(gt=0)
     snapshot: GeocodingSearchResult | None = None
+
+
+class ReverseGeocodingRequest(BaseModel):
+    lat: float = Field(ge=-90, le=90)
+    lon: float = Field(ge=-180, le=180)
 
 
 def _error_response(
@@ -182,7 +202,7 @@ def search_places(
     normalized = _normalize_query(q)
     if len(normalized) < 2:
         return _error_response(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             request_id=request_id,
             code="invalid_geocoding_query",
             message="Query must be at least 2 characters",
@@ -310,7 +330,7 @@ def resolve_place(
         _validate_resolve_snapshot(snapshot)
     except ValueError as err:
         return _error_response(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             request_id=request_id,
             code="invalid_geocoding_resolve_payload",
             message="resolve payload validation failed",
@@ -353,3 +373,66 @@ def resolve_place(
         )
 
     return {"data": _resolved_place_to_dict(resolved), "meta": {"request_id": request_id}}
+
+
+@router.post(
+    "/reverse",
+    response_model=None,
+    responses={
+        200: {"model": dict[str, Any]},
+        401: {"model": ErrorEnvelope},
+        422: {"model": ErrorEnvelope},
+        503: {"model": ErrorEnvelope},
+    },
+)
+def reverse_geocode(
+    request: Request,
+    payload: ReverseGeocodingRequest,
+    lang: str | None = Query(default=None, description="Langue de réponse (ex: fr, en)"),
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+) -> dict[str, Any] | JSONResponse:
+    request_id = resolve_request_id(request)
+    normalized_lang = lang.strip().lower() if lang else None
+
+    try:
+        result = GeocodingService.reverse(
+            lat=payload.lat,
+            lon=payload.lon,
+            lang=normalized_lang,
+        )
+    except GeocodingServiceError as err:
+        if err.code == "geocoding_rate_limited":
+            return _error_response(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                request_id=request_id,
+                code=err.code,
+                message=err.message,
+                details=err.details,
+            )
+        return _error_response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            request_id=request_id,
+            code=err.code,
+            message=err.message,
+            details=err.details,
+        )
+
+    # Resolution timezone IANA via timezonefinder (singleton initialisé au démarrage du module)
+    timezone_iana: str | None = None
+    if _TF is not None:
+        try:
+            timezone_iana = _TF.timezone_at(lng=payload.lon, lat=payload.lat)
+        except Exception:
+            logger.exception("timezone_resolution_failed_in_reverse")
+
+    return {
+        "data": {
+            "display_name": result.display_name,
+            "city": result.address.city,
+            "country": result.address.country,
+            "lat": result.lat,
+            "lon": result.lon,
+            "timezone_iana": timezone_iana,
+        },
+        "meta": {"request_id": request_id},
+    }

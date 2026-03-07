@@ -5,9 +5,9 @@ import { z } from "zod"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
 
-import { getBirthData, saveBirthData, BirthProfileApiError } from "../api/birthProfile"
+import { getBirthData, saveBirthData, BirthProfileApiError, type BirthProfileData } from "../api/birthProfile"
 import { generateNatalChart, ApiError, type LatestNatalChart } from "../api/natalChart"
-import { geocodeCity, GeocodingError } from "../api/geocoding"
+import { geocodeCity, GeocodingError, reverseGeocode } from "../api/geocoding"
 import { useAccessTokenSnapshot, getSubjectFromAccessToken } from "../utils/authToken"
 import { ANONYMOUS_SUBJECT, GENERATION_TIMEOUT_LABEL, logSupportRequestId, formatBirthPlace } from "../utils/constants"
 import { TimezoneSelect } from "../components/TimezoneSelect"
@@ -43,14 +43,24 @@ function createBirthProfileSchema(v: BirthProfileValidation) {
       .max(64),
     birth_city: z.string().trim().min(1, v.cityRequired).max(255),
     birth_country: z.string().trim().min(1, v.countryRequired).max(100),
+    geolocation_consent: z.boolean(),
+    current_city: z.string().trim().max(255).optional(),
+    current_country: z.string().trim().max(100).optional(),
   })
 }
 
 type BirthProfileFormData = z.infer<ReturnType<typeof createBirthProfileSchema>>
 
 type GeocodingState = "idle" | "loading" | "success" | "error_not_found" | "error_unavailable"
+type CurrentLocationState = "idle" | "detecting" | "resolving" | "success" | "error"
 
-type GeoResult = { place_resolved_id: number; lat: number; lon: number; display_name: string } | null
+type GeoResult = {
+  place_resolved_id: number
+  lat: number
+  lon: number
+  display_name: string
+  timezone_iana?: string | null
+} | null
 
 function shouldLogSupportForApiError(error: { status: number }): boolean {
   return error.status >= 500
@@ -85,7 +95,13 @@ export function BirthProfilePage() {
   const [geocodingState, setGeocodingState] = useState<GeocodingState>("idle")
   const [resolvedGeoLabel, setResolvedGeoLabel] = useState<string | null>(null)
   const geocodeAbortRef = useRef<AbortController | null>(null)
+  const autoLocationRefreshAttemptedRef = useRef(false)
   const [birthTimeUnknown, setBirthTimeUnknown] = useState(false)
+  
+  // Story 30.19: Current location states
+  const [currentLocationState, setCurrentLocationState] = useState<CurrentLocationState>("idle")
+  const [currentLocationLabel, setCurrentLocationLabel] = useState<string | null>(null)
+  const [currentLocationError, setCurrentLocationError] = useState<string | null>(null)
 
   const schema = useMemo(
     () => createBirthProfileSchema(birthProfileTranslations[lang].validation),
@@ -140,25 +156,40 @@ export function BirthProfilePage() {
     setError,
     setValue,
     control,
+    watch,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<BirthProfileFormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       birth_timezone: getUserTimezone(),
+      geolocation_consent: false,
+      current_city: "",
+      current_country: "",
     },
   })
+
+  const geolocationConsent = watch("geolocation_consent")
 
   useEffect(() => {
     return () => { geocodeAbortRef.current?.abort() }
   }, [])
 
+  useEffect(() => {
+    autoLocationRefreshAttemptedRef.current = false
+  }, [tokenSubject])
+
+  useEffect(() => {
+    if (!geolocationConsent && currentLocationState !== "error") {
+      setCurrentLocationState("idle")
+      setCurrentLocationError(null)
+    }
+  }, [currentLocationState, geolocationConsent])
+
   /**
    * Synchronise le formulaire avec les données du profil API.
-   * useCallback requis car utilisé comme dépendance du useEffect suivant,
-   * évitant des appels reset() superflus lors de re-renders.
    */
   const syncFormWithProfileData = useCallback(
-    (profileData: NonNullable<typeof data>) => {
+    (profileData: BirthProfileData) => {
       const isTimeUnknown = profileData.birth_time === null
       const inferred = inferCityCountryFromBirthPlace(profileData.birth_place)
       reset({
@@ -168,8 +199,23 @@ export function BirthProfilePage() {
         birth_timezone: profileData.birth_timezone || getUserTimezone(),
         birth_city: profileData.birth_city ?? inferred.city,
         birth_country: profileData.birth_country ?? inferred.country,
+        geolocation_consent: profileData.geolocation_consent ?? false,
+        current_city: profileData.current_city ?? "",
+        current_country: profileData.current_country ?? "",
       })
       setBirthTimeUnknown(isTimeUnknown)
+      if (profileData.current_location_display) {
+        setCurrentLocationLabel(
+          profileData.current_timezone
+            ? `${profileData.current_location_display} (${profileData.current_timezone})`
+            : profileData.current_location_display,
+        )
+        setCurrentLocationState("success")
+      } else {
+        setCurrentLocationLabel(null)
+        setCurrentLocationState("idle")
+      }
+      setCurrentLocationError(null)
     },
     [reset],
   )
@@ -200,8 +246,6 @@ export function BirthProfilePage() {
 
   /**
    * Exécute le géocodage avec gestion d'annulation.
-   * Le controller externe permet d'annuler la requête au démontage du composant.
-   * geocodeCity gère son propre timeout interne et chaîne le signal externe.
    */
   async function performGeocode(city: string, country: string): Promise<{ result: GeoResult; isServiceUnavailable: boolean }> {
     if (!city || !country) return { result: null, isServiceUnavailable: false }
@@ -217,6 +261,184 @@ export function BirthProfilePage() {
     }
   }
 
+  async function resolveCurrentLocation(
+    city: string,
+    country: string,
+  ): Promise<{
+    current_city: string | null
+    current_country: string | null
+    current_lat: number | null
+    current_lon: number | null
+    current_location_display: string | null
+    current_timezone: string | null
+  }> {
+    const trimmedCity = city.trim()
+    const trimmedCountry = country.trim()
+    if (!trimmedCity || !trimmedCountry || !accessToken) {
+      return {
+        current_city: null,
+        current_country: null,
+        current_lat: null,
+        current_lon: null,
+        current_location_display: null,
+        current_timezone: null,
+      }
+    }
+
+    const { result, isServiceUnavailable } = await performGeocode(trimmedCity, trimmedCountry)
+    if (result === null) {
+      throw new GeocodingError(
+        "Current location could not be resolved",
+        isServiceUnavailable ? "service_unavailable" : "not_found",
+      )
+    }
+
+    // Si le forward geocoding a résolu la timezone, on l'utilise directement.
+    // Sinon, on tente un reverse geocoding pour l'obtenir (fallback).
+    if (result.timezone_iana) {
+      return {
+        current_city: trimmedCity,
+        current_country: trimmedCountry,
+        current_lat: result.lat,
+        current_lon: result.lon,
+        current_location_display: result.display_name,
+        current_timezone: result.timezone_iana,
+      }
+    }
+
+    const reverseResult = await reverseGeocode(result.lat, result.lon, accessToken, lang)
+    return {
+      current_city: reverseResult.city ?? trimmedCity,
+      current_country: reverseResult.country ?? trimmedCountry,
+      current_lat: reverseResult.lat,
+      current_lon: reverseResult.lon,
+      current_location_display: reverseResult.display_name,
+      current_timezone: reverseResult.timezone_iana,
+    }
+  }
+
+  async function persistDetectedCurrentLocation(
+    profileData: BirthProfileData | null,
+    latitude: number,
+    longitude: number,
+    result: Awaited<ReturnType<typeof reverseGeocode>>,
+  ): Promise<void> {
+    if (!accessToken || !profileData) {
+      return
+    }
+    const updatedPayload: BirthProfileData = {
+      ...profileData,
+      geolocation_consent: true,
+      current_lat: latitude,
+      current_lon: longitude,
+      current_city: result.city,
+      current_country: result.country,
+      current_location_display: result.display_name,
+      current_timezone: result.timezone_iana,
+    }
+    const updated = await saveBirthData(accessToken, updatedPayload)
+    queryClient.setQueryData(["birth-profile", tokenSubject], updated)
+    syncFormWithProfileData(updated)
+  }
+
+  function applyDetectedCurrentLocation(
+    result: Awaited<ReturnType<typeof reverseGeocode>>,
+    options: { markDirty: boolean },
+  ) {
+    setCurrentLocationState("success")
+    setCurrentLocationLabel(
+      result.timezone_iana
+        ? `${result.display_name} (${result.timezone_iana})`
+        : result.display_name,
+    )
+    setCurrentLocationError(null)
+    setValue("current_city", result.city ?? "", { shouldDirty: options.markDirty })
+    setValue("current_country", result.country ?? "", { shouldDirty: options.markDirty })
+  }
+
+  function handleLocationFailure(options: {
+    preserveSavedLocation: boolean
+    message: string
+  }) {
+    if (options.preserveSavedLocation && currentLocationLabel) {
+      setCurrentLocationState("success")
+      setCurrentLocationError(null)
+      return
+    }
+    setCurrentLocationState("error")
+    setCurrentLocationError(options.message)
+  }
+
+  async function detectLocation(options: {
+    markDirty: boolean
+    preserveSavedLocationOnError: boolean
+  }): Promise<void> {
+    if (!accessToken) return
+    if (!navigator.geolocation) {
+      handleLocationFailure({
+        preserveSavedLocation: options.preserveSavedLocationOnError,
+        message: t.errors.geolocationUnavailable,
+      })
+      return
+    }
+    setCurrentLocationState("detecting")
+    setCurrentLocationError(null)
+
+    await new Promise<void>((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords
+          setCurrentLocationState("resolving")
+
+          try {
+            const result = await reverseGeocode(latitude, longitude, accessToken, lang)
+            applyDetectedCurrentLocation(result, { markDirty: options.markDirty })
+            await persistDetectedCurrentLocation(data ?? null, latitude, longitude, result)
+          } catch {
+            handleLocationFailure({
+              preserveSavedLocation: options.preserveSavedLocationOnError,
+              message: t.errors.locationFailed,
+            })
+          } finally {
+            resolve()
+          }
+        },
+        (err) => {
+          handleLocationFailure({
+            preserveSavedLocation: options.preserveSavedLocationOnError,
+            message:
+              err.code === err.PERMISSION_DENIED
+                ? t.errors.geolocationDenied
+                : t.errors.locationFailed,
+          })
+          resolve()
+        },
+        { timeout: 10000, maximumAge: 300_000 }
+      )
+    })
+  }
+
+  const handleDetectLocation = () => {
+    void detectLocation({
+      markDirty: true,
+      preserveSavedLocationOnError: false,
+    })
+  }
+
+  useEffect(() => {
+    if (!accessToken || !data || !data.geolocation_consent) {
+      return
+    }
+    if (isSubmitting || isDirty || autoLocationRefreshAttemptedRef.current) {
+      return
+    }
+    autoLocationRefreshAttemptedRef.current = true
+    void detectLocation({
+      markDirty: false,
+      preserveSavedLocationOnError: Boolean(data.current_location_display),
+    })
+  }, [accessToken, data, isDirty, isSubmitting])
+
   async function onSubmit(formData: BirthProfileFormData) {
     if (!accessToken) return
     setSaveSuccess(false)
@@ -226,6 +448,8 @@ export function BirthProfilePage() {
 
     const city = formData.birth_city.trim()
     const country = formData.birth_country.trim()
+    const currentCity = formData.current_city?.trim() ?? ""
+    const currentCountry = formData.current_country?.trim() ?? ""
 
     setGeocodingState("loading")
     const { result: geoResult, isServiceUnavailable } = await performGeocode(city, country)
@@ -245,7 +469,41 @@ export function BirthProfilePage() {
     }
 
     try {
-      const payload = {
+      let currentLocationPayload: Pick<
+        BirthProfileData,
+        | "current_city"
+        | "current_country"
+        | "current_lat"
+        | "current_lon"
+        | "current_location_display"
+        | "current_timezone"
+      >
+
+      if (!formData.geolocation_consent) {
+        if (currentCity && currentCountry) {
+          currentLocationPayload = await resolveCurrentLocation(currentCity, currentCountry)
+        } else {
+          currentLocationPayload = {
+            current_city: null,
+            current_country: null,
+            current_lat: null,
+            current_lon: null,
+            current_location_display: null,
+            current_timezone: null,
+          }
+        }
+      } else {
+        currentLocationPayload = {
+          current_city: data?.current_city ?? (currentCity || null),
+          current_country: data?.current_country ?? (currentCountry || null),
+          current_lat: data?.current_lat ?? null,
+          current_lon: data?.current_lon ?? null,
+          current_location_display: data?.current_location_display ?? null,
+          current_timezone: data?.current_timezone ?? null,
+        }
+      }
+
+      const payload: BirthProfileData = {
         ...formData,
         birth_time: (birthTimeUnknown || !formData.birth_time) ? null : formData.birth_time,
         birth_place: resolvedPlace || formatBirthPlace(city, country),
@@ -253,13 +511,22 @@ export function BirthProfilePage() {
         birth_country: country,
         ...(resolvedPlaceId !== null ? { place_resolved_id: resolvedPlaceId } : {}),
         ...(coords ? { birth_lat: coords.lat, birth_lon: coords.lon } : {}),
+        current_city: currentLocationPayload.current_city,
+        current_country: currentLocationPayload.current_country,
+        current_lat: currentLocationPayload.current_lat,
+        current_lon: currentLocationPayload.current_lon,
+        current_location_display: currentLocationPayload.current_location_display,
+        current_timezone: currentLocationPayload.current_timezone,
       }
       const updatedData = await saveBirthData(accessToken, payload)
       queryClient.setQueryData(["birth-profile", tokenSubject], updatedData)
       syncFormWithProfileData(updatedData)
       setSaveSuccess(true)
     } catch (err) {
-      if (err instanceof BirthProfileApiError) {
+      if (err instanceof GeocodingError) {
+        setCurrentLocationError(t.errors.locationFailed)
+        setGlobalError(t.errors.locationFailed)
+      } else if (err instanceof BirthProfileApiError) {
         if (shouldLogSupportForApiError(err)) {
           logSupportRequestId(err)
         }
@@ -306,6 +573,10 @@ export function BirthProfilePage() {
           noValidate
           aria-labelledby="birth-profile-title"
         >
+          <div className="section-header">
+            <h3>{t.labels.birthInfo || "Informations de naissance"}</h3>
+          </div>
+
           <div>
             <label htmlFor="birth-date">{t.labels.birthDate}</label>
             <input
@@ -440,6 +711,86 @@ export function BirthProfilePage() {
               <span id="birth-timezone-error" className="chat-error" role="alert">
                 {errors.birth_timezone.message}
               </span>
+            )}
+          </div>
+
+          <div className="section-divider">
+            <h3 id="current-location-title">{t.labels.currentLocation || "Localisation actuelle"}</h3>
+            <p className="help-text">
+              {t.labels.locationHelp || "La localisation actuelle permet de personnaliser vos guidances avec les énergies du lieu où vous vous trouvez."}
+            </p>
+            
+            <div className="consent-field">
+              <label htmlFor="geolocation-consent" className="consent-label">
+                <input
+                  id="geolocation-consent"
+                  type="checkbox"
+                  {...register("geolocation_consent")}
+                />
+                {t.labels.allowGeolocation || "Autoriser la géolocalisation pour personnaliser mes guidances"}
+              </label>
+            </div>
+
+            {geolocationConsent && (
+              <div className="current-location-controls">
+                {currentLocationLabel ? (
+                  <p className="state-line state-success">
+                    ✓ {t.labels.locationDetected || "Lieu détecté"} : {currentLocationLabel}
+                  </p>
+                ) : (
+                  <p className="state-line">
+                    {t.labels.noLocation || "Aucun lieu détecté"}
+                  </p>
+                )}
+                
+                <button
+                  type="button"
+                  onClick={handleDetectLocation}
+                  disabled={currentLocationState === "detecting" || currentLocationState === "resolving"}
+                  className="secondary-button"
+                >
+                  {currentLocationState === "detecting" || currentLocationState === "resolving" ? (
+                    <span className="state-line">
+                      <span className="state-loading" aria-hidden="true" />
+                      {t.labels.detecting || "Détection..."}
+                    </span>
+                  ) : (
+                    t.labels.detectNow || "Me localiser maintenant"
+                  )}
+                </button>
+                
+                {currentLocationState === "error" && (
+                  <p className="chat-error">{currentLocationError ?? t.errors.locationFailed}</p>
+                )}
+              </div>
+            )}
+
+            {(!geolocationConsent || currentLocationState === "error") && (
+              <div className="current-location-controls">
+                <p className="help-text">
+                  {t.labels.manualLocationHelp}
+                </p>
+                <div className="birth-location-row">
+                  <div className="birth-location-field">
+                    <label htmlFor="current-city">{t.labels.currentCity}</label>
+                    <input
+                      id="current-city"
+                      type="text"
+                      placeholder="Paris"
+                      {...register("current_city")}
+                    />
+                  </div>
+                  <div className="birth-location-field">
+                    <label htmlFor="current-country">{t.labels.currentCountry}</label>
+                    <input
+                      id="current-country"
+                      type="text"
+                      placeholder="France"
+                      {...register("current_country")}
+                    />
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 

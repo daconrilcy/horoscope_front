@@ -237,6 +237,39 @@ def test_search_sends_jsonv2_and_addressdetails():
     assert "addressdetails=1" in url
 
 
+def test_reverse_returns_expected_payload_for_authenticated_user(monkeypatch):
+    from app.core.security import create_token
+
+    captured_urls: list[str] = []
+
+    def fake_urlopen(req, timeout):
+        captured_urls.append(req.full_url)
+        return _mock_nominatim_response(NOMINATIM_PARIS)
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    access_token = create_token(
+        subject="1",
+        role="user",
+        token_type="access",
+        expires_minutes=15,
+    )
+
+    response = client.post(
+        "/v1/geocoding/reverse",
+        params={"lang": "fr"},
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"lat": 48.8566, "lon": 2.3522},
+    )
+
+    assert response.status_code == 200
+    assert len(captured_urls) == 1
+    assert "/search/reverse?" not in captured_urls[0]
+    data = response.json()["data"]
+    assert data["display_name"] == "Paris, Île-de-France, France"
+    assert data["city"] == "Paris"
+    assert data["country"] == "France"
+
+
 # ---------------------------------------------------------------------------
 # Tests validation input
 # ---------------------------------------------------------------------------

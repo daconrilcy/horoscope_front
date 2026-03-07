@@ -92,6 +92,43 @@ async def test_generate_chat_reply_uses_test_generator() -> None:
 
 
 @pytest.mark.asyncio
+async def test_generate_chat_reply_passes_current_context_fields() -> None:
+    captured_context: list[object] = []
+
+    async def mock_chat(*args, **kwargs) -> str:
+        request = args[0]
+        captured_context.append(request.context)
+        return SimpleNamespace(text="ok")
+
+    import app.services.ai_engine_adapter as ai_engine_adapter_module
+
+    original_chat = ai_engine_adapter_module.chat_service.chat
+    original_v2_flag = ai_engine_adapter_module.ai_engine_settings.llm_orchestration_v2
+    ai_engine_adapter_module.chat_service.chat = mock_chat
+    ai_engine_adapter_module.ai_engine_settings.llm_orchestration_v2 = False
+    try:
+        result = await AIEngineAdapter.generate_chat_reply(
+            messages=[{"role": "user", "content": "Hello"}],
+            context={
+                "current_datetime": "07 mars 2026 a 15h30 (Europe/Paris)",
+                "current_timezone": "Europe/Paris",
+                "current_location": "Paris, France",
+            },
+            user_id=1,
+            request_id="req-chat",
+            trace_id="trace-chat",
+        )
+    finally:
+        ai_engine_adapter_module.chat_service.chat = original_chat
+        ai_engine_adapter_module.ai_engine_settings.llm_orchestration_v2 = original_v2_flag
+
+    assert result == "ok"
+    assert captured_context[0].current_datetime == "07 mars 2026 a 15h30 (Europe/Paris)"
+    assert captured_context[0].current_timezone == "Europe/Paris"
+    assert captured_context[0].current_location == "Paris, France"
+
+
+@pytest.mark.asyncio
 async def test_generate_chat_reply_timeout_raises_timeout_error() -> None:
     """Test that TimeoutError is raised on timeout."""
 
@@ -163,6 +200,46 @@ async def test_generate_guidance_uses_test_generator() -> None:
     assert len(call_args) == 1
     assert call_args[0][0] == "guidance_daily"
     assert call_args[0][2] == 456
+
+
+@pytest.mark.asyncio
+async def test_generate_guidance_passes_current_context_fields() -> None:
+    captured_context: list[object] = []
+
+    async def mock_generate(*args, **kwargs) -> object:
+        request = args[0]
+        captured_context.append(request.context)
+        return SimpleNamespace(text="guidance")
+
+    import app.services.ai_engine_adapter as ai_engine_adapter_module
+
+    original_generate = ai_engine_adapter_module.generate_service.generate_text
+    original_v2_flag = ai_engine_adapter_module.ai_engine_settings.llm_orchestration_v2
+    ai_engine_adapter_module.generate_service.generate_text = mock_generate
+    ai_engine_adapter_module.ai_engine_settings.llm_orchestration_v2 = False
+    try:
+        result = await AIEngineAdapter.generate_guidance(
+            use_case="guidance_daily",
+            context={
+                "birth_date": "1990-01-15",
+                "birth_time": "10:30",
+                "birth_timezone": "Europe/Paris",
+                "current_datetime": "07 mars 2026 a 15h30 (Europe/Paris)",
+                "current_timezone": "Europe/Paris",
+                "current_location": "Paris, France",
+            },
+            user_id=1,
+            request_id="req-guidance",
+            trace_id="trace-guidance",
+        )
+    finally:
+        ai_engine_adapter_module.generate_service.generate_text = original_generate
+        ai_engine_adapter_module.ai_engine_settings.llm_orchestration_v2 = original_v2_flag
+
+    assert result == "guidance"
+    assert captured_context[0].current_datetime == "07 mars 2026 a 15h30 (Europe/Paris)"
+    assert captured_context[0].current_timezone == "Europe/Paris"
+    assert captured_context[0].current_location == "Paris, France"
 
 
 @pytest.mark.asyncio

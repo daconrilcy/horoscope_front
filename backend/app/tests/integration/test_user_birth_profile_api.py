@@ -99,6 +99,43 @@ def test_put_and_get_birth_data_persists_city_country_and_coordinates() -> None:
     assert data["birth_lon"] == 2.3522
 
 
+def test_put_and_get_birth_data_persists_current_location_fields() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    headers = {"Authorization": f"Bearer {access_token}"}
+    put_response = client.put(
+        "/v1/users/me/birth-data",
+        headers=headers,
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris, Ile-de-France, France",
+            "birth_timezone": "Europe/Paris",
+            "birth_city": "Paris",
+            "birth_country": "France",
+            "geolocation_consent": True,
+            "current_city": "Lyon",
+            "current_country": "France",
+            "current_lat": 45.764,
+            "current_lon": 4.8357,
+            "current_location_display": "Lyon, Auvergne-Rhone-Alpes, France",
+            "current_timezone": "Europe/Paris",
+        },
+    )
+    get_response = client.get("/v1/users/me/birth-data", headers=headers)
+
+    assert put_response.status_code == 200
+    assert get_response.status_code == 200
+    data = get_response.json()["data"]
+    assert data["geolocation_consent"] is True
+    assert data["current_city"] == "Lyon"
+    assert data["current_country"] == "France"
+    assert data["current_lat"] == 45.764
+    assert data["current_lon"] == 4.8357
+    assert data["current_location_display"] == "Lyon, Auvergne-Rhone-Alpes, France"
+    assert data["current_timezone"] == "Europe/Paris"
+
+
 def test_put_birth_data_invalid_timezone_returns_explicit_error() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()

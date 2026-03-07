@@ -32,6 +32,17 @@ const SUCCESS_PUT_RESPONSE = {
   json: async () => ({ data: VALID_PROFILE, meta: { request_id: "r2" } }),
 }
 
+const PROFILE_WITH_GEOLOCATION = {
+  ...VALID_PROFILE,
+  geolocation_consent: true,
+  current_city: "Paris",
+  current_country: "France",
+  current_lat: 48.8566,
+  current_lon: 2.3522,
+  current_location_display: "Paris, France",
+  current_timezone: "Europe/Paris",
+}
+
 function geocodingSearchAndResolveSuccess(
   displayName: string,
   lat: number,
@@ -166,6 +177,87 @@ describe("BirthProfilePage", () => {
       expect(screen.getByLabelText(/Ville de naissance/i)).toHaveValue("Paris")
     })
     expect(screen.getByLabelText(/Pays de naissance/i)).toHaveValue("France")
+  })
+
+  it("refreshes and persists current location automatically when consent is already stored", async () => {
+    setupToken()
+    const getCurrentPosition = vi.fn((success: PositionCallback) => {
+      success({
+        coords: {
+          latitude: 45.764,
+          longitude: 4.8357,
+          accuracy: 10,
+          altitude: null,
+          altitudeAccuracy: null,
+          heading: null,
+          speed: null,
+        },
+        timestamp: Date.now(),
+      } as GeolocationPosition)
+    })
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: { getCurrentPosition },
+    })
+
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes("/v1/users/me/birth-data") && !init?.method) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ data: PROFILE_WITH_GEOLOCATION, meta: { request_id: "r1" } }),
+        }
+      }
+      if (url.includes("/v1/geocoding/reverse")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: {
+              display_name: "Lyon, Auvergne-Rhone-Alpes, France",
+              city: "Lyon",
+              country: "France",
+              lat: 45.764,
+              lon: 4.8357,
+              timezone_iana: "Europe/Paris",
+            },
+            meta: { request_id: "geo-1" },
+          }),
+        }
+      }
+      if (url.includes("/v1/users/me/birth-data") && init?.method === "PUT") {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }),
+        }
+      }
+      return SUCCESS_GET_RESPONSE
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    renderBirthProfilePage()
+
+    await waitFor(() => {
+      expect(getCurrentPosition).toHaveBeenCalledTimes(1)
+    })
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Lieu détecté : Lyon, Auvergne-Rhone-Alpes, France \(Europe\/Paris\)/i),
+      ).toBeInTheDocument()
+    })
+
+    const putCall = fetchMock.mock.calls.find((call) => {
+      const [, init] = call as [RequestInfo | URL, RequestInit]
+      return init?.method === "PUT"
+    })
+    expect(putCall).toBeDefined()
+    const body = JSON.parse((putCall![1] as RequestInit).body as string)
+    expect(body.geolocation_consent).toBe(true)
+    expect(body.current_city).toBe("Lyon")
+    expect(body.current_location_display).toBe("Lyon, Auvergne-Rhone-Alpes, France")
+    expect(body.current_timezone).toBe("Europe/Paris")
   })
 
   it("shows the generation button only if birth data exists", async () => {
@@ -788,8 +880,8 @@ describe("BirthProfilePage", () => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "" } })
-    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "" } })
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "" } })
+    fireEvent.change(screen.getByLabelText(/Pays de naissance/i), { target: { value: "" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     await waitFor(() => {
@@ -807,8 +899,8 @@ describe("BirthProfilePage", () => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Paris" } })
-    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "France" } })
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "Paris" } })
+    fireEvent.change(screen.getByLabelText(/Pays de naissance/i), { target: { value: "France" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     expect(await screen.findByText(/Lieu résolu : Paris, Île-de-France, France/i)).toBeInTheDocument()
@@ -833,8 +925,11 @@ describe("BirthProfilePage", () => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "XyzUnknown" } })
-    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "ZZ" } })
+    fireEvent.change(
+      screen.getByLabelText(/Ville de naissance/i),
+      { target: { value: "XyzUnknown" } },
+    )
+    fireEvent.change(screen.getByLabelText(/Pays de naissance/i), { target: { value: "ZZ" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     expect(
@@ -861,8 +956,8 @@ describe("BirthProfilePage", () => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Paris" } })
-    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "France" } })
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "Paris" } })
+    fireEvent.change(screen.getByLabelText(/Pays de naissance/i), { target: { value: "France" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     await waitFor(() => {
@@ -890,8 +985,8 @@ describe("BirthProfilePage", () => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Paris" } })
-    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "France" } })
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "Paris" } })
+    fireEvent.change(screen.getByLabelText(/Pays de naissance/i), { target: { value: "France" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     await waitFor(() => {
@@ -919,8 +1014,8 @@ describe("BirthProfilePage", () => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Unknown" } })
-    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "ZZ" } })
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "Unknown" } })
+    fireEvent.change(screen.getByLabelText(/Pays de naissance/i), { target: { value: "ZZ" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
     await screen.findByText(/Profil natal sauvegardé/i)
 
@@ -944,12 +1039,12 @@ describe("BirthProfilePage", () => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Paris" } })
-    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "France" } })
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "Paris" } })
+    fireEvent.change(screen.getByLabelText(/Pays de naissance/i), { target: { value: "France" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
     await screen.findByText(/Lieu résolu : Paris, Île-de-France, France/i)
 
-    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Lyon" } })
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "Lyon" } })
     await waitFor(() => {
       expect(screen.queryByText(/Lieu résolu/i)).not.toBeInTheDocument()
     })
@@ -965,8 +1060,8 @@ describe("BirthProfilePage", () => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Paris" } })
-    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "France" } })
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "Paris" } })
+    fireEvent.change(screen.getByLabelText(/Pays de naissance/i), { target: { value: "France" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
     await screen.findByText(/Profil natal sauvegardé/i)
 
@@ -1029,8 +1124,8 @@ describe("BirthProfilePage", () => {
       expect(screen.getByLabelText(/Date de naissance/i)).toHaveValue("1990-01-15")
     })
 
-    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "Paris" } })
-    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "France" } })
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "Paris" } })
+    fireEvent.change(screen.getByLabelText(/Pays de naissance/i), { target: { value: "France" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
     await screen.findByText(/Profil natal sauvegardé/i)
 
@@ -1151,8 +1246,11 @@ describe("BirthProfilePage", () => {
     await waitFor(() => expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument())
 
     // Step 1: Try saving with unknown location (geocoding happens during save)
-    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "UnknownCity" } })
-    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "ZZ" } })
+    fireEvent.change(
+      screen.getByLabelText(/Ville de naissance/i),
+      { target: { value: "UnknownCity" } },
+    )
+    fireEvent.change(screen.getByLabelText(/Pays de naissance/i), { target: { value: "ZZ" } })
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
     
     // Should show geocoding warning but still save
@@ -1207,8 +1305,11 @@ describe("BirthProfilePage", () => {
     await waitFor(() => expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument())
 
     // Trigger geocoding by changing city and country
-    fireEvent.change(screen.getByLabelText(/Ville/i), { target: { value: "TestCity" } })
-    fireEvent.change(screen.getByLabelText(/Pays/i), { target: { value: "TestCountry" } })
+    fireEvent.change(screen.getByLabelText(/Ville de naissance/i), { target: { value: "TestCity" } })
+    fireEvent.change(
+      screen.getByLabelText(/Pays de naissance/i),
+      { target: { value: "TestCountry" } },
+    )
     fireEvent.click(screen.getByRole("button", { name: /Sauvegarder/i }))
 
     // Wait for geocode fetch to actually start

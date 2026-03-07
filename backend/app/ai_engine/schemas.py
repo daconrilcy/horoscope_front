@@ -43,6 +43,9 @@ class GenerateContext(BaseModel):
 
     natal_chart_summary: str | None = Field(default=None, description="Natal chart summary")
     birth_data: dict[str, str] | None = Field(default=None, description="Birth data")
+    current_datetime: str | None = Field(default=None, description="Current date and time")
+    current_timezone: str | None = Field(default=None, description="Current timezone IANA")
+    current_location: str | None = Field(default=None, description="Current location display name")
     extra: dict[str, str] | None = Field(default=None, description="Extra context")
 
 
@@ -98,6 +101,9 @@ class ChatContext(BaseModel):
     """Context for chat requests."""
 
     natal_chart_summary: str | None = Field(default=None, description="Natal chart summary")
+    current_datetime: str | None = Field(default=None, description="Current date and time")
+    current_timezone: str | None = Field(default=None, description="Current timezone IANA")
+    current_location: str | None = Field(default=None, description="Current location display name")
     memory: dict[str, str] | None = Field(default=None, description="Memory/style preferences")
 
 

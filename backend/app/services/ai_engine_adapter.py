@@ -477,6 +477,9 @@ class AIEngineAdapter:
                 persona_memory[key] = str(val)
         chat_context = ChatContext(
             natal_chart_summary=context.get("natal_chart_summary"),
+            current_datetime=context.get("current_datetime"),
+            current_timezone=context.get("current_timezone"),
+            current_location=context.get("current_location"),
             memory=persona_memory if persona_memory else None,
         )
 
@@ -602,6 +605,9 @@ class AIEngineAdapter:
         generate_context = GenerateContext(
             natal_chart_summary=context.get("natal_chart_summary"),
             birth_data=birth_data,
+            current_datetime=context.get("current_datetime"),
+            current_timezone=context.get("current_timezone"),
+            current_location=context.get("current_location"),
             extra=extra_context if extra_context else None,
         )
 

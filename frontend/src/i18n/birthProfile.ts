@@ -24,6 +24,17 @@ type BirthProfileTranslations = {
     birthCity: string
     birthCountry: string
     birthTimezone: string
+    birthInfo: string
+    currentLocation: string
+    currentCity: string
+    currentCountry: string
+    locationHelp: string
+    allowGeolocation: string
+    detectNow: string
+    detecting: string
+    locationDetected: string
+    noLocation: string
+    manualLocationHelp: string
   }
   buttons: {
     save: string
@@ -43,6 +54,9 @@ type BirthProfileTranslations = {
     generationGeneric: string
     saveNetwork: string
     saveInvalidData: string
+    locationFailed: string
+    geolocationUnavailable: string
+    geolocationDenied: string
   }
   validation: BirthProfileValidation
 }
@@ -60,6 +74,17 @@ export const birthProfileTranslations: Record<AstrologyLang, BirthProfileTransla
       birthCity: "Ville de naissance",
       birthCountry: "Pays de naissance",
       birthTimezone: "Fuseau horaire",
+      birthInfo: "Informations de naissance",
+      currentLocation: "Localisation actuelle",
+      currentCity: "Ville actuelle",
+      currentCountry: "Pays actuel",
+      locationHelp: "La localisation actuelle permet de personnaliser vos guidances avec les énergies du lieu où vous vous trouvez.",
+      allowGeolocation: "Autoriser la géolocalisation pour personnaliser mes guidances",
+      detectNow: "Me localiser maintenant",
+      detecting: "Détection...",
+      locationDetected: "Lieu détecté",
+      noLocation: "Aucun lieu détecté",
+      manualLocationHelp: "Si vous refusez la geolocalisation ou si elle echoue, indiquez votre lieu actuel pour ancrer les interpretations dans votre ciel local.",
     },
     buttons: {
       save: "Sauvegarder",
@@ -79,6 +104,9 @@ export const birthProfileTranslations: Record<AstrologyLang, BirthProfileTransla
       generationGeneric: "Une erreur est survenue. Veuillez réessayer.",
       saveNetwork: "Erreur lors de la sauvegarde. Veuillez réessayer.",
       saveInvalidData: "Données invalides. Vérifiez les champs.",
+      locationFailed: "La détection de la localisation a échoué.",
+      geolocationUnavailable: "La geolocalisation n'est pas disponible dans ce navigateur ou cette page n'est pas securisee.",
+      geolocationDenied: "L'autorisation de geolocalisation a ete refusee.",
     },
     validation: {
       dateRequired: "La date de naissance est indispensable pour calculer votre thème natal.",
@@ -105,6 +133,17 @@ export const birthProfileTranslations: Record<AstrologyLang, BirthProfileTransla
       birthCity: "City of birth",
       birthCountry: "Country of birth",
       birthTimezone: "Time zone",
+      birthInfo: "Birth information",
+      currentLocation: "Current location",
+      currentCity: "Current city",
+      currentCountry: "Current country",
+      locationHelp: "Current location allows personalizing your guidance with the energies of where you are.",
+      allowGeolocation: "Allow geolocation to personalize my guidance",
+      detectNow: "Locate me now",
+      detecting: "Detecting...",
+      locationDetected: "Location detected",
+      noLocation: "No location detected",
+      manualLocationHelp: "If you refuse geolocation or it fails, enter your current location to anchor interpretations in your local sky.",
     },
     buttons: {
       save: "Save",
@@ -124,6 +163,9 @@ export const birthProfileTranslations: Record<AstrologyLang, BirthProfileTransla
       generationGeneric: "An error occurred. Please try again.",
       saveNetwork: "Error while saving. Please try again.",
       saveInvalidData: "Invalid data. Check the fields.",
+      locationFailed: "Location detection failed.",
+      geolocationUnavailable: "Geolocation is unavailable in this browser or the page is not secure.",
+      geolocationDenied: "Geolocation permission was denied.",
     },
     validation: {
       dateRequired: "Date of birth is required to calculate your natal chart.",
@@ -150,7 +192,18 @@ export const birthProfileTranslations: Record<AstrologyLang, BirthProfileTransla
       birthCity: "Ciudad de nacimiento",
       birthCountry: "País de nacimiento",
       birthTimezone: "Zona horaria",
-    },
+      birthInfo: "Información de nacimiento",
+      currentLocation: "Ubicación actual",
+      currentCity: "Ciudad actual",
+      currentCountry: "País actual",
+      locationHelp: "La ubicación actual permite personalizar tus orientaciones con las energías del lugar donde te encuentras.",
+      allowGeolocation: "Permitir geolocalización para personalizar mis orientaciones",
+      detectNow: "Localizarme ahora",
+      detecting: "Detectando...",
+      locationDetected: "Ubicación detectada",
+      noLocation: "No se detectó ubicación",
+      manualLocationHelp: "Si rechazas la geolocalización o falla, indica tu ubicación actual para anclar las interpretaciones en tu cielo local.",
+      },
     buttons: {
       save: "Guardar",
       saving: "Guardando...",
@@ -169,7 +222,10 @@ export const birthProfileTranslations: Record<AstrologyLang, BirthProfileTransla
       generationGeneric: "Ocurrió un error. Por favor, inténtalo de nuevo.",
       saveNetwork: "Error al guardar. Por favor, inténtalo de nuevo.",
       saveInvalidData: "Datos inválidos. Verifica los campos.",
-    },
+      locationFailed: "La detección de la ubicación falló.",
+      geolocationUnavailable: "La geolocalización no está disponible en este navegador o la página no es segura.",
+      geolocationDenied: "Se rechazó el permiso de geolocalización.",
+      },
     validation: {
       dateRequired: "La fecha de nacimiento es indispensable para calcular tu carta natal.",
       dateFormat: "Formato YYYY-MM-DD requerido (ej: 1990-01-15)",

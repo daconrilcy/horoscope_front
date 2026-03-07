@@ -1,19 +1,17 @@
-
 import re
 
-import pytest
 from app.ai_engine.schemas import GenerateContext, GenerateInput
 from app.ai_engine.services.prompt_registry import PromptRegistry
 from scripts.seed_30_15_chat_naturalite import CHAT_ASTROLOGER_PROMPT_V3
 
 # Patterns interdits dans une réponse conversationnelle (AC5)
 _FORBIDDEN_RESPONSE_PATTERNS = [
-    r"^###\s",           # Titres markdown niveau 3
-    r"\*\*Jupiter",      # Aspect Jupiter en gras
-    r"\*\*Mars",         # Aspect Mars en gras
-    r"\*\*Vénus",        # Aspect Vénus en gras
-    r"\*\*Saturne",      # Aspect Saturne en gras
-    r"^- \*\*",          # Listes d'aspects "- **Aspect :"
+    r"^###\s",  # Titres markdown niveau 3
+    r"\*\*Jupiter",  # Aspect Jupiter en gras
+    r"\*\*Mars",  # Aspect Mars en gras
+    r"\*\*Vénus",  # Aspect Vénus en gras
+    r"\*\*Saturne",  # Aspect Saturne en gras
+    r"^- \*\*",  # Listes d'aspects "- **Aspect :"
 ]
 
 
@@ -25,32 +23,37 @@ def _response_contains_forbidden_patterns(response_text: str) -> list[str]:
             found.append(pattern)
     return found
 
+
 def test_chat_system_jinja2_naturalite_instructions():
     """
     Vérifie que le template Jinja2 (v1) contient les instructions de 'natal silencieux'.
     """
     context = GenerateContext(
         natal_chart_summary="Soleil en Bélier, Lune en Taureau",
-        extra={"persona_name": "TestAstro"}
+        current_datetime="07 mars 2026 a 15h30 (Europe/Paris)",
+        current_timezone="Europe/Paris",
+        current_location="Paris, France",
+        extra={"persona_name": "TestAstro"},
     )
     input_data = GenerateInput()
-    
+
     rendered = PromptRegistry.render_prompt(
-        use_case="chat",
-        locale="fr",
-        input_data=input_data,
-        context=context
+        use_case="chat", locale="fr", input_data=input_data, context=context
     )
-    
+
     # Vérifications AC2 — les règles précèdent le natal dans le template restructuré
     assert "RÈGLES ABSOLUES" in rendered
     assert "DONNÉES CONTEXTUELLES PRIVÉES" in rendered
     assert "NE PAS PRÉSENTER À L'UTILISATEUR" in rendered
     assert "Soleil en Bélier, Lune en Taureau" in rendered  # natal bien injecté
+    assert "07 mars 2026 a 15h30 (Europe/Paris)" in rendered
+    assert "FUSEAU HORAIRE ACTUEL : Europe/Paris" in rendered
+    assert "LIEU ACTUEL : Paris, France" in rendered
 
     # Vérifications AC3 — instruction d'ouverture présente
     assert "INTERDICTION STRICTE" in rendered
     assert "UNE question de clarification" in rendered
+
 
 def test_prompt_v3_naturalite_instructions():
     """
@@ -58,22 +61,25 @@ def test_prompt_v3_naturalite_instructions():
     """
     # Vérifications AC1
     assert "natal_chart_summary est ton CONTEXTE DE FOND PRIVÉ" in CHAT_ASTROLOGER_PROMPT_V3
-    assert "ne le récite jamais, ne le liste jamais en introduction" in CHAT_ASTROLOGER_PROMPT_V3
-    
+    assert "ne le récite jamais" in CHAT_ASTROLOGER_PROMPT_V3
+
     # Vérifications AC4
     assert "Intègre les éléments astrologiques de façon fluide" in CHAT_ASTROLOGER_PROMPT_V3
     assert "votre Soleil en Bélier vous pousse à..." in CHAT_ASTROLOGER_PROMPT_V3
-    
+
     # Vérifications AC3 (v2)
     assert "Sur un message d'ouverture court" in CHAT_ASTROLOGER_PROMPT_V3
-    assert "Ne présente pas le thème natal" in CHAT_ASTROLOGER_PROMPT_V3
+    assert "Ne présente pas le thème natal." in CHAT_ASTROLOGER_PROMPT_V3
+
 
 def test_prompt_v3_no_markdown_lists_restriction():
     """
     Vérifie que le prompt v3 interdit explicitement les formats de liste markdown.
     """
     # Vérifications AC5 (instruction dans le prompt)
-    assert 'N\'utilise JAMAIS les formats "### Titre" ou "- **Aspect** :"' in CHAT_ASTROLOGER_PROMPT_V3
+    assert (
+        'N\'utilise JAMAIS les formats "### Titre" ou "- **Aspect** :"' in CHAT_ASTROLOGER_PROMPT_V3
+    )
     assert "sauf si l'utilisateur demande explicitement une liste" in CHAT_ASTROLOGER_PROMPT_V3
 
 

@@ -59,6 +59,15 @@ class UserBirthProfileData(BaseModel):
     birth_place_resolved_id: int | None = None
     birth_place_resolved: dict[str, Any] | None = None
 
+    # Story 30.19: Current location and geolocation consent.
+    geolocation_consent: bool = False
+    current_city: str | None = None
+    current_country: str | None = None
+    current_lat: float | None = None
+    current_lon: float | None = None
+    current_location_display: str | None = None
+    current_timezone: str | None = None
+
 
 @dataclass(frozen=True, slots=True)
 class ResolvedBirthCoordinates:
@@ -182,6 +191,13 @@ class UserBirthProfileService:
             birth_lon=model.birth_lon,
             birth_place_resolved_id=model.birth_place_resolved_id,
             birth_place_resolved=resolved_place,
+            geolocation_consent=model.geolocation_consent,
+            current_city=model.current_city,
+            current_country=model.current_country,
+            current_lat=model.current_lat,
+            current_lon=model.current_lon,
+            current_location_display=model.current_location_display,
+            current_timezone=model.current_timezone,
         )
 
     @staticmethod
@@ -229,6 +245,13 @@ class UserBirthProfileService:
             birth_lat=payload.birth_lat,
             birth_lon=payload.birth_lon,
             birth_place_resolved_id=payload.place_resolved_id,
+            geolocation_consent=payload.geolocation_consent,
+            current_city=payload.current_city,
+            current_country=payload.current_country,
+            current_lat=payload.current_lat,
+            current_lon=payload.current_lon,
+            current_location_display=payload.current_location_display,
+            current_timezone=payload.current_timezone,
         )
         resolved_place = None
         if model.birth_place_resolved_id is not None:
@@ -258,4 +281,11 @@ class UserBirthProfileService:
             birth_lon=model.birth_lon,
             birth_place_resolved_id=model.birth_place_resolved_id,
             birth_place_resolved=resolved_place,
+            geolocation_consent=model.geolocation_consent,
+            current_city=model.current_city,
+            current_country=model.current_country,
+            current_lat=model.current_lat,
+            current_lon=model.current_lon,
+            current_location_display=model.current_location_display,
+            current_timezone=model.current_timezone,
         )

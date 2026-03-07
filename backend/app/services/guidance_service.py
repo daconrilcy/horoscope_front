@@ -26,6 +26,7 @@ from app.services.ai_engine_adapter import (
     assess_off_scope,
     map_adapter_error_to_codes,
 )
+from app.services.current_context import build_current_prompt_context
 from app.services.persona_config_service import PersonaConfigService
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
@@ -499,6 +500,8 @@ class GuidanceService:
             1.0,
         )
 
+        current_context = build_current_prompt_context(profile)
+
         # natal_chart_summary: placeholder for future NatalChartService integration.
         # Templates conditionally render it via {% if context.natal_chart_summary %}.
         context: dict[str, str | None] = {
@@ -508,6 +511,9 @@ class GuidanceService:
             "persona_line": persona_config.to_prompt_line(),
             "context_lines": "\n".join(context_lines),
             "natal_chart_summary": None,
+            "current_datetime": current_context.current_datetime,
+            "current_timezone": current_context.current_timezone,
+            "current_location": current_context.current_location,
         }
 
         attempts = 0
@@ -731,6 +737,8 @@ class GuidanceService:
             1.0,
         )
 
+        current_context = build_current_prompt_context(profile)
+
         # natal_chart_summary: placeholder for future NatalChartService integration
         context: dict[str, str | None] = {
             "birth_date": profile.birth_date,
@@ -742,6 +750,9 @@ class GuidanceService:
             "objective": normalized_objective,
             "time_horizon": normalized_horizon,
             "natal_chart_summary": None,
+            "current_datetime": current_context.current_datetime,
+            "current_timezone": current_context.current_timezone,
+            "current_location": current_context.current_location,
         }
 
         attempts = 0

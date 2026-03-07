@@ -30,6 +30,9 @@ def _build_system_prompt(request: "ChatRequest") -> str:
 
     context = GenerateContext(
         natal_chart_summary=request.context.natal_chart_summary,
+        current_datetime=request.context.current_datetime,
+        current_timezone=request.context.current_timezone,
+        current_location=request.context.current_location,
         extra=dict(request.context.memory) if request.context.memory else None,
     )
     input_data = GenerateInput()

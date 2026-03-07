@@ -9,6 +9,13 @@ Profil natal de l'utilisateur:
 - Fuseau horaire: {{ context.birth_data.birth_timezone|default('non renseigné') }}
 {% endif %}
 
+{% if context.current_datetime or context.current_location or context.current_timezone %}
+Contexte actuel de l'utilisateur:
+{% if context.current_datetime %}- Date et heure actuelle: {{ context.current_datetime }}{% endif %}
+{% if context.current_timezone %}- Fuseau horaire actuel: {{ context.current_timezone }}{% endif %}
+{% if context.current_location %}- Lieu actuel: {{ context.current_location }}{% endif %}
+{% endif %}
+
 {% if context.natal_chart_summary %}
 Résumé du thème natal:
 {{ context.natal_chart_summary }}

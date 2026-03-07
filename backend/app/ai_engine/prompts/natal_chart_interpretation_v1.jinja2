@@ -18,6 +18,13 @@ Données de naissance:
 - Lieu: {{ context.birth_data.place|default('Non spécifié', true) }}
 {% endif %}
 
+{% if context.current_datetime or context.current_location or context.current_timezone %}
+Contexte actuel de l'utilisateur:
+{% if context.current_datetime %}- Date et heure actuelle: {{ context.current_datetime }}{% endif %}
+{% if context.current_timezone %}- Fuseau horaire actuel: {{ context.current_timezone }}{% endif %}
+{% if context.current_location %}- Lieu actuel: {{ context.current_location }}{% endif %}
+{% endif %}
+
 {% if input.question %}
 Question de l'utilisateur:
 {{ input.question }}

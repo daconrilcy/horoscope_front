@@ -22,3 +22,57 @@
   cursor: pointer;
   border-radius: 0.25rem;
 }
+
+.section-header {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color, #eee);
+  padding-bottom: 0.5rem;
+}
+
+.help-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #666);
+  margin-bottom: 1rem;
+}
+
+.consent-field {
+  margin-bottom: 1rem;
+}
+
+.consent-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.current-location-controls {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: var(--bg-secondary, #f9f9f9);
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.secondary-button {
+  background-color: var(--bg-button-secondary, #eee);
+  color: var(--text-button-secondary, #333);
+  border: 1px solid var(--border-color, #ccc);
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background-color: var(--bg-button-secondary-hover, #ddd);
+}
+
+.secondary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+

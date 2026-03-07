@@ -17,6 +17,15 @@ export type BirthProfileData = {
   birth_lat?: number
   birth_lon?: number
   astro_profile?: AstroProfile
+
+  // Story 30.19: Geolocation consent and current location.
+  geolocation_consent: boolean
+  current_city?: string | null
+  current_country?: string | null
+  current_lat?: number | null
+  current_lon?: number | null
+  current_location_display?: string | null
+  current_timezone?: string | null
 }
 
 export class BirthProfileApiError extends Error {

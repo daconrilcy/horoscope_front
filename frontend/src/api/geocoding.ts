@@ -8,6 +8,7 @@ export type GeocodingResult = {
   lat: number
   lon: number
   display_name: string
+  timezone_iana?: string | null
 }
 
 export class GeocodingError extends Error {
@@ -17,6 +18,65 @@ export class GeocodingError extends Error {
     super(message)
     this.name = "GeocodingError"
     this.code = code ?? "service_unavailable"
+  }
+}
+
+export type ReverseGeocodingResult = {
+  display_name: string
+  city: string | null
+  country: string | null
+  lat: number
+  lon: number
+  timezone_iana: string | null
+}
+
+/**
+ * Inverse le géocodage (coordonnées -> lieu) via le backend.
+ */
+export async function reverseGeocode(
+  lat: number,
+  lon: number,
+  accessToken: string,
+  lang?: string,
+): Promise<ReverseGeocodingResult> {
+  const url = lang
+    ? `${API_BASE_URL}/v1/geocoding/reverse?lang=${lang}`
+    : `${API_BASE_URL}/v1/geocoding/reverse`
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), GEOCODING_TIMEOUT_MS)
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ lat, lon }),
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      let errorCode = "service_unavailable"
+      try {
+        const errPayload = (await response.json()) as { error?: { code?: string } }
+        errorCode = errPayload.error?.code ?? "service_unavailable"
+      } catch {
+        // ignore
+      }
+      throw new GeocodingError(`Reverse geocoding backend error: ${response.status}`, errorCode)
+    }
+
+    const payload = (await response.json()) as { data: ReverseGeocodingResult }
+    return payload.data
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new GeocodingError("Reverse geocoding timed out", "service_unavailable")
+    }
+    throw err
+  } finally {
+    clearTimeout(timeoutId)
   }
 }
 
@@ -107,7 +167,7 @@ export async function geocodeCity(
     }
 
     const resolvePayload = (await resolveResponse.json()) as {
-      data: { id: number; latitude: number; longitude: number; display_name: string }
+      data: { id: number; latitude: number; longitude: number; display_name: string; timezone_iana?: string | null }
     }
     const resolved = resolvePayload.data
     if (
@@ -121,6 +181,7 @@ export async function geocodeCity(
         lat: resolved.latitude,
         lon: resolved.longitude,
         display_name: resolved.display_name,
+        timezone_iana: resolved.timezone_iana ?? null,
       }
     }
     

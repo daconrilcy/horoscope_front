@@ -180,6 +180,15 @@ class BirthInput(BaseModel):
     birth_lat: float | None = None
     birth_lon: float | None = None
 
+    # Story 30.19: Current location and geolocation consent.
+    geolocation_consent: bool = Field(default=False)
+    current_city: str | None = Field(default=None, max_length=255)
+    current_country: str | None = Field(default=None, max_length=100)
+    current_lat: float | None = None
+    current_lon: float | None = None
+    current_location_display: str | None = Field(default=None, max_length=255)
+    current_timezone: str | None = Field(default=None, max_length=64)
+
     @field_validator("birth_place")
     @classmethod
     def validate_non_blank(cls, value: str, info: ValidationInfo) -> str:

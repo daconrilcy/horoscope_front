@@ -16,6 +16,7 @@ from app.services.geocoding_service import (
     GeocodingServiceError,
     _extract_city,
     _map_nominatim_result,
+    _normalize_nominatim_base_url,
 )
 
 # ---------------------------------------------------------------------------
@@ -326,3 +327,25 @@ def test_search_respects_limit_parameter(monkeypatch):
     GeocodingService.search("Lyon", 7)
 
     assert "limit=7" in captured[0]
+
+
+def test_normalize_nominatim_base_url_accepts_search_endpoint() -> None:
+    assert (
+        _normalize_nominatim_base_url("https://nominatim.openstreetmap.org/search")
+        == "https://nominatim.openstreetmap.org"
+    )
+
+
+def test_reverse_uses_normalized_base_url(monkeypatch):
+    captured_urls: list[str] = []
+
+    def fake_urlopen(req: urllib.request.Request, timeout: int):
+        captured_urls.append(req.full_url)
+        return _make_urlopen_response(NOMINATIM_RESULT_FULL)
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    GeocodingService.reverse(48.8566, 2.3522, "fr")
+
+    assert len(captured_urls) == 1
+    assert captured_urls[0].startswith("https://nominatim.openstreetmap.org/reverse?")
+    assert "/search/reverse?" not in captured_urls[0]

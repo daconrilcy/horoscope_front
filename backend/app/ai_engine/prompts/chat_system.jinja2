@@ -29,6 +29,9 @@ Style et marqueurs : {{ context.extra.persona_style_markers }}
 5. Si l'utilisateur demande EXPLICITEMENT "quels sont mes transits / aspects" : tu peux alors les lister.
 
 [DONNÉES CONTEXTUELLES PRIVÉES — NE PAS PRÉSENTER À L'UTILISATEUR]
+{% if context.current_datetime %}DATE ET HEURE ACTUELLE : {{ context.current_datetime }}{% endif %}
+{% if context.current_timezone %}FUSEAU HORAIRE ACTUEL : {{ context.current_timezone }}{% endif %}
+{% if context.current_location %}LIEU ACTUEL : {{ context.current_location }}{% endif %}
 {{ context.natal_chart_summary }}
 [/DONNÉES CONTEXTUELLES]
 {% endif %}

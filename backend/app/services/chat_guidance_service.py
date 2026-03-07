@@ -29,10 +29,8 @@ from app.services.ai_engine_adapter import (
     assess_off_scope,
     map_adapter_error_to_codes,
 )
-from app.services.natal_interpretation_service import (
-    _detect_degraded_mode,
-    build_chat_natal_hint,
-)
+from app.services.current_context import build_current_prompt_context
+from app.services.natal_interpretation_service import _detect_degraded_mode, build_chat_natal_hint
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,
@@ -800,6 +798,9 @@ class ChatGuidanceService:
 
         # Récupération du résumé du thème natal de l'utilisateur (si disponible)
         natal_summary = None
+        current_datetime_str = None
+        current_timezone_str = None
+        current_location_str = None
         try:
             birth_profile = UserBirthProfileService.get_for_user(db, user_id=user_id)
             natal_chart = UserNatalChartService.get_latest_for_user(db, user_id=user_id)
@@ -808,6 +809,10 @@ class ChatGuidanceService:
                 natal_result=natal_chart.result,
                 degraded_mode=degraded_mode,
             )
+            current_context = build_current_prompt_context(birth_profile)
+            current_datetime_str = current_context.current_datetime
+            current_timezone_str = current_context.current_timezone
+            current_location_str = current_context.current_location
         except (UserBirthProfileServiceError, UserNatalChartServiceError):
             # Optionnel : le chat fonctionne même sans thème natal
             logger.debug("chat_natal_summary_not_available user_id=%d", user_id)
@@ -820,6 +825,9 @@ class ChatGuidanceService:
             "persona_boundaries": boundaries_str or None,
             "natal_chart_summary": natal_summary,
             "conversation_id": str(conversation.id),
+            "current_datetime": current_datetime_str,
+            "current_timezone": current_timezone_str,
+            "current_location": current_location_str,
         }
 
         attempts = 0

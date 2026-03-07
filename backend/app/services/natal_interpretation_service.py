@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app.ai_engine.schemas import GenerateContext, GenerateInput, GenerateRequest
 from app.ai_engine.services.generate_service import generate_text
 from app.services.ai_engine_adapter import AIEngineAdapter, AIEngineAdapterError
+from app.services.current_context import build_current_prompt_context
 from app.services.user_birth_profile_service import UserBirthProfileData
 from app.services.user_natal_chart_service import UserNatalChartReadData
 
@@ -386,6 +387,8 @@ class NatalInterpretationService:
             degraded_mode=degraded_mode,
         )
 
+        current_context = build_current_prompt_context(birth_profile)
+
         birth_data = {
             "date": birth_profile.birth_date,
             "time": birth_profile.birth_time
@@ -405,6 +408,9 @@ class NatalInterpretationService:
             context=GenerateContext(
                 natal_chart_summary=natal_chart_summary,
                 birth_data=birth_data,
+                current_datetime=current_context.current_datetime,
+                current_timezone=current_context.current_timezone,
+                current_location=current_context.current_location,
             ),
         )
 
@@ -420,6 +426,9 @@ class NatalInterpretationService:
                         "birth_date": birth_data["date"],
                         "birth_time": birth_data["time"],
                         "birth_place": birth_data["place"],
+                        "current_datetime": current_context.current_datetime,
+                        "current_timezone": current_context.current_timezone,
+                        "current_location": current_context.current_location,
                         "locale": "fr-FR",
                         "persona_id": persona_id,
                     },

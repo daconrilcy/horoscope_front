@@ -74,6 +74,13 @@ class UserBirthProfileWithAstroData(BaseModel):
     birth_lon: float | None = None
     birth_place_resolved_id: int | None = None
     birth_place_resolved: dict[str, Any] | None = None
+    geolocation_consent: bool = False
+    current_city: str | None = None
+    current_country: str | None = None
+    current_lat: float | None = None
+    current_lon: float | None = None
+    current_location_display: str | None = None
+    current_timezone: str | None = None
     astro_profile: UserAstroProfileData | None = None
 
 
@@ -237,6 +244,13 @@ def get_me_birth_data(
         birth_lon=profile.birth_lon,
         birth_place_resolved_id=profile.birth_place_resolved_id,
         birth_place_resolved=profile.birth_place_resolved,
+        geolocation_consent=profile.geolocation_consent,
+        current_city=profile.current_city,
+        current_country=profile.current_country,
+        current_lat=profile.current_lat,
+        current_lon=profile.current_lon,
+        current_location_display=profile.current_location_display,
+        current_timezone=profile.current_timezone,
         astro_profile=astro_profile,
     )
     return {"data": data.model_dump(), "meta": {"request_id": request_id}}

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 
-from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.infra.db.base import Base
@@ -30,6 +30,13 @@ class UserBirthProfileModel(Base):
         nullable=True,
         index=True,
     )
+    geolocation_consent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    current_city: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    current_country: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    current_lat: Mapped[float | None] = mapped_column(Float, nullable=True)
+    current_lon: Mapped[float | None] = mapped_column(Float, nullable=True)
+    current_location_display: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    current_timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

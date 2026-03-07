@@ -20,6 +20,21 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _normalize_nominatim_base_url(raw_url: str) -> str:
+    """Normalise la base Nominatim.
+
+    Accepte historiquement :
+    - une base: https://nominatim.openstreetmap.org
+    - un endpoint search: https://nominatim.openstreetmap.org/search
+    - un endpoint reverse/details.php
+    """
+    normalized = raw_url.strip().rstrip("/")
+    for suffix in ("/search", "/reverse", "/details.php"):
+        if normalized.endswith(suffix):
+            return normalized[: -len(suffix)]
+    return normalized
+
+
 class GeocodingServiceError(Exception):
     """Exception levée lors d'erreurs de géocodage."""
 
@@ -179,6 +194,78 @@ def _build_query_key(
 class GeocodingService:
     """Client Nominatim côté serveur — proxy géocodage."""
 
+    @staticmethod
+    def _build_nominatim_search_url(params: str) -> str:
+        base_url = _normalize_nominatim_base_url(settings.nominatim_url)
+        return f"{base_url}/search?{params}"
+
+    @staticmethod
+    def _build_nominatim_reverse_url(params: str) -> str:
+        base_url = _normalize_nominatim_base_url(settings.nominatim_url)
+        return f"{base_url}/reverse?{params}"
+
+    @classmethod
+    def reverse(
+        cls,
+        lat: float,
+        lon: float,
+        lang: str | None = None,
+    ) -> GeocodingSearchResult:
+        """Inverse le géocodage (lat/lon -> lieu) via Nominatim.
+
+        Args:
+            lat: Latitude.
+            lon: Longitude.
+            lang: Langue de réponse optionnelle.
+
+        Raises:
+            GeocodingServiceError: rate_limited, provider_unavailable, ou réponse invalide.
+        """
+        payload = {
+            "lat": str(lat),
+            "lon": str(lon),
+            "format": "jsonv2",
+            "addressdetails": "1",
+        }
+        if lang:
+            payload["accept-language"] = lang
+        params = urllib.parse.urlencode(payload)
+        url = cls._build_nominatim_reverse_url(params)
+        user_agent = f"{settings.nominatim_user_agent} (contact: {settings.nominatim_contact})"
+
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": user_agent, "Accept": "application/json"},
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=settings.nominatim_timeout_seconds) as resp:
+                raw_bytes = resp.read()
+        except urllib.error.HTTPError as err:
+            if err.code == 429:
+                raise GeocodingServiceError(
+                    code="geocoding_rate_limited",
+                    message="Nominatim rate limit exceeded",
+                ) from err
+            raise GeocodingServiceError(
+                code="geocoding_provider_unavailable",
+                message=f"Nominatim returned HTTP {err.code}",
+            ) from err
+        except urllib.error.URLError as err:
+            raise GeocodingServiceError(
+                code="geocoding_provider_unavailable",
+                message="Nominatim service unavailable",
+            ) from err
+
+        try:
+            raw_data = json.loads(raw_bytes.decode("utf-8"))
+            return _map_nominatim_result(raw_data)
+        except (KeyError, ValueError, TypeError) as err:
+            raise GeocodingServiceError(
+                code="geocoding_provider_unavailable",
+                message="Invalid response from Nominatim reverse API",
+            ) from err
+
     @classmethod
     def search(
         cls,
@@ -207,7 +294,7 @@ class GeocodingService:
         if lang:
             payload["accept-language"] = lang
         params = urllib.parse.urlencode(payload)
-        url = f"{settings.nominatim_url}?{params}"
+        url = cls._build_nominatim_search_url(params)
         user_agent = f"{settings.nominatim_user_agent} (contact: {settings.nominatim_contact})"
 
         # AC4: Timeout strict et retries=0. urllib.request.Request n'implémente
@@ -340,7 +427,7 @@ class GeocodingService:
 
     @staticmethod
     def _build_nominatim_details_url() -> str:
-        parsed = urllib.parse.urlparse(settings.nominatim_url)
+        parsed = urllib.parse.urlparse(_normalize_nominatim_base_url(settings.nominatim_url))
         if not parsed.scheme or not parsed.netloc:
             raise GeocodingServiceError(
                 code="geocoding_provider_unavailable",
