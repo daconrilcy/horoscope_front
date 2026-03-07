@@ -1,4 +1,5 @@
 import math
+from datetime import datetime
 
 import pytest
 import swisseph as swe
@@ -25,7 +26,7 @@ def calculator():
 def test_all_v1_planets_present(calculator):
     # J2000.0
     jd = 2451545.0
-    state = calculator.compute_step(jd)
+    state = calculator.compute_step(jd, datetime.now())
 
     assert isinstance(state, StepAstroState)
     assert len(state.planets) == 10
@@ -36,7 +37,7 @@ def test_all_v1_planets_present(calculator):
 
 def test_asc_mc_in_range(calculator):
     jd = 2451545.0
-    state = calculator.compute_step(jd)
+    state = calculator.compute_step(jd, datetime.now())
 
     assert 0 <= state.ascendant_deg < 360
     assert 0 <= state.mc_deg < 360
@@ -45,7 +46,7 @@ def test_asc_mc_in_range(calculator):
 
 def test_longitude_in_range(calculator):
     jd = 2451545.0
-    state = calculator.compute_step(jd)
+    state = calculator.compute_step(jd, datetime.now())
 
     for p in state.planets.values():
         assert 0 <= p.longitude < 360
@@ -53,7 +54,7 @@ def test_longitude_in_range(calculator):
 
 def test_sign_code_from_longitude(calculator):
     jd = 2451545.0
-    state = calculator.compute_step(jd)
+    state = calculator.compute_step(jd, datetime.now())
 
     sun = state.planets["Sun"]
     expected_sign = int(math.floor(sun.longitude / 30.0))
@@ -63,7 +64,7 @@ def test_sign_code_from_longitude(calculator):
 def test_retrograde_detection(calculator):
     # Mercury retrograde: 2026-03-15
     jd = swe.julday(2026, 3, 15, 12.0)
-    state = calculator.compute_step(jd)
+    state = calculator.compute_step(jd, datetime.now())
 
     mercury = state.planets["Mercury"]
     assert mercury.speed_lon < 0
@@ -72,7 +73,7 @@ def test_retrograde_detection(calculator):
 
 def test_direct_detection(calculator):
     jd = swe.julday(2026, 4, 15, 12.0)
-    state = calculator.compute_step(jd)
+    state = calculator.compute_step(jd, datetime.now())
 
     mercury = state.planets["Mercury"]
     assert mercury.speed_lon > 0
@@ -106,7 +107,7 @@ def test_fallback_porphyre():
         longitude=0.0,
     )
     jd = 2451545.0
-    state = calc_extreme.compute_step(jd)
+    state = calc_extreme.compute_step(jd, datetime.now())
 
     assert state.house_system_effective == "porphyre"
 
@@ -154,7 +155,7 @@ def test_invalid_placidus_output_falls_back_to_porphyre(monkeypatch: pytest.Monk
     monkeypatch.setattr(astro_calculator.swe, "houses", fake_houses)
 
     calc = AstroCalculator(natal_cusps=MOCK_NATAL_CUSPS, latitude=48.8566, longitude=2.3522)
-    state = calc.compute_step(2451545.0)
+    state = calc.compute_step(2451545.0, datetime.now())
 
     assert state.house_system_effective == "porphyre"
     assert state.house_cusps == [
@@ -204,7 +205,7 @@ def test_houses_are_normalized_and_support_13_cusp_binding(monkeypatch: pytest.M
     monkeypatch.setattr(astro_calculator.swe, "houses", fake_houses)
 
     calc = AstroCalculator(natal_cusps=MOCK_NATAL_CUSPS, latitude=48.8566, longitude=2.3522)
-    state = calc.compute_step(2451545.0)
+    state = calc.compute_step(2451545.0, datetime.now())
 
     assert state.house_system_effective == "placidus"
     assert state.house_cusps == [

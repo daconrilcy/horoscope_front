@@ -52,6 +52,7 @@ class StepAstroState:
     """Complete astrological state at a specific time."""
 
     ut_jd: float
+    local_time: datetime
     ascendant_deg: float
     mc_deg: float
     house_cusps: list[float]
@@ -72,6 +73,7 @@ class AstroEvent:
     orb_deg: float | None
     priority: int
     base_weight: float
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

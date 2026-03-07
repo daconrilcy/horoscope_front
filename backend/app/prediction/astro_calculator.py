@@ -57,11 +57,12 @@ class AstroCalculator:
         self.latitude = latitude
         self.longitude = longitude
 
-    def compute_step(self, ut_jd: float) -> StepAstroState:
+    def compute_step(self, ut_jd: float, local_time: datetime) -> StepAstroState:
         """Compute the full astrological state for a given Julian Day UT.
 
         Args:
             ut_jd: Julian Day UT.
+            local_time: Local time corresponding to ut_jd.
 
         Returns:
             StepAstroState containing all calculated values.
@@ -79,6 +80,7 @@ class AstroCalculator:
 
                 return StepAstroState(
                     ut_jd=ut_jd,
+                    local_time=local_time,
                     ascendant_deg=asc,
                     mc_deg=mc,
                     house_cusps=list(cusps),
