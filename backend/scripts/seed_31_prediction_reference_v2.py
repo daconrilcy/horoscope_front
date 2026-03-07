@@ -222,6 +222,8 @@ def run_seed(db: Session):
             0.6,
             1.0,
             "positive",
+            5.0,
+            1.5,
             ["identité", "vitalité", "volonté", "ego", "créativité"],
         ),
         (
@@ -232,6 +234,8 @@ def run_seed(db: Session):
             1.0,
             0.8,
             "neutral",
+            4.5,
+            1.2,
             ["émotions", "instinct", "humeur", "inconscient", "réceptivité"],
         ),
         (
@@ -242,6 +246,8 @@ def run_seed(db: Session):
             0.9,
             0.7,
             "neutral",
+            3.0,
+            1.0,
             ["pensée", "communication", "analyse", "adaptation", "arbitrage"],
         ),
         (
@@ -252,6 +258,8 @@ def run_seed(db: Session):
             0.7,
             0.8,
             "positive",
+            3.0,
+            1.0,
             ["amour", "beauté", "harmonie", "plaisir", "relation"],
         ),
         (
@@ -262,6 +270,8 @@ def run_seed(db: Session):
             0.8,
             0.9,
             "negative",
+            3.0,
+            1.0,
             ["action", "énergie", "désir", "conflits", "sexualité"],
         ),
         (
@@ -272,6 +282,8 @@ def run_seed(db: Session):
             0.4,
             1.0,
             "positive",
+            2.5,
+            0.8,
             ["expansion", "chance", "philosophie", "sagesse", "optimisme"],
         ),
         (
@@ -282,6 +294,8 @@ def run_seed(db: Session):
             0.3,
             1.0,
             "negative",
+            2.5,
+            0.8,
             ["structure", "discipline", "limites", "responsabilité", "karma"],
         ),
         (
@@ -292,6 +306,8 @@ def run_seed(db: Session):
             0.1,
             0.5,
             "neutral",
+            2.0,
+            0.6,
             ["rupture", "originalité", "innovation", "liberté", "révolution"],
         ),
         (
@@ -302,6 +318,8 @@ def run_seed(db: Session):
             0.1,
             0.4,
             "neutral",
+            2.0,
+            0.6,
             ["dissolution", "spiritualité", "illusion", "idéal", "compassion"],
         ),
         (
@@ -312,10 +330,23 @@ def run_seed(db: Session):
             0.1,
             0.3,
             "neutral",
+            2.0,
+            0.6,
             ["transformation", "pouvoir", "mort-renaissance", "profondeur", "obsession"],
         ),
     ]
-    for code, class_code, rank, speed, w_intra, w_climate, pol, kws in planet_profiles_data:
+    for (
+        code,
+        class_code,
+        rank,
+        speed,
+        w_intra,
+        w_climate,
+        pol,
+        orb_active,
+        orb_peak,
+        kws,
+    ) in planet_profiles_data:
         db.add(
             PlanetProfileModel(
                 planet_id=planets[code],
@@ -325,6 +356,8 @@ def run_seed(db: Session):
                 weight_intraday=w_intra,
                 weight_day_climate=w_climate,
                 typical_polarity=pol,
+                orb_active_deg=orb_active,
+                orb_peak_deg=orb_peak,
                 keywords_json=json.dumps(kws),
             )
         )

@@ -83,9 +83,12 @@ gemini-2.0-flash
 
 ### Completion Notes List
 
+- Correction post-review : `Rul(c)` résout désormais le maître via `ctx.prediction_context.sign_rulerships` à partir du signe de cuspide.
 - Implémentation du service `NatalSensitivityCalculator` avec les 4 piliers de sensibilité : Occupation, Rulership, Angularité et Domination (V1: stub).
 - Respect strict des bornes [0.75, 1.25].
 - Tests unitaires complets validant les interactions complexes entre maisons, planètes et catégories.
+- Intégration réelle dans l'orchestrateur : `category_scores` est désormais alimenté par `NS(c)` dans le run quotidien.
+- Validation finale en smoke test réel : `category_scores` contient les 12 catégories actives attendues.
 
 ### File List
 

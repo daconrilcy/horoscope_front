@@ -1,6 +1,6 @@
 # Story 33.4 : Calculateur astro intraday V1
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -159,6 +159,7 @@ gemini-2.0-flash-001
 - Repli automatique sur le système de maisons Porphyre en cas d'échec de Placidus (latitudes extrêmes).
 - Validation via 10 tests unitaires couvrant les AC1 à AC7.
 - Déplacement des dataclasses `PlanetState` et `StepAstroState` vers `schemas.py` pour une meilleure réutilisation.
+- Validation finale en pipeline réel via `EngineOrchestrator.run()` sur un `chart_json` canonique et une journée complète (`samples=96`).
 
 ### File List
 

@@ -2,36 +2,158 @@ from datetime import date
 
 import pytest
 
-from app.infra.db.repositories.prediction_schemas import RulesetContext, RulesetData
+from app.infra.db.repositories.prediction_schemas import (
+    CategoryData,
+    HouseCategoryWeightData,
+    PlanetCategoryWeightData,
+    PlanetProfileData,
+    PredictionContext,
+    RulesetContext,
+    RulesetData,
+)
+from app.prediction.context_loader import LoadedPredictionContext
 from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.exceptions import PredictionContextError
 from app.prediction.schemas import EngineInput, EngineOutput
 
 
+def _build_loaded_context() -> LoadedPredictionContext:
+    all_planet_profiles: dict[str, PlanetProfileData] = {}
+    for planet_id, name in enumerate(
+        (
+            "Sun",
+            "Moon",
+            "Mercury",
+            "Venus",
+            "Mars",
+            "Jupiter",
+            "Saturn",
+            "Uranus",
+            "Neptune",
+            "Pluto",
+        ),
+        start=1,
+    ):
+        profile = PlanetProfileData(
+            planet_id=planet_id,
+            code=name.lower(),
+            name=name,
+            class_code="planet",
+            speed_rank=planet_id,
+            speed_class="variable",
+            weight_intraday=1.0,
+            weight_day_climate=1.0,
+            typical_polarity=None,
+            orb_active_deg=5.0,
+            orb_peak_deg=1.5,
+            keywords=(name.lower(),),
+        )
+        all_planet_profiles[name] = profile
+        all_planet_profiles[name.lower()] = profile
+
+    prediction_context = PredictionContext(
+        categories=(
+            CategoryData(
+                id=1,
+                code="work",
+                name="Work",
+                display_name="Work",
+                sort_order=1,
+                is_enabled=True,
+            ),
+        ),
+        planet_profiles=all_planet_profiles,
+        house_profiles={},
+        planet_category_weights=(
+            PlanetCategoryWeightData(
+                planet_id=1,
+                planet_code="sun",
+                category_id=1,
+                category_code="work",
+                weight=0.5,
+                influence_role="driver",
+            ),
+        ),
+        house_category_weights=(
+            HouseCategoryWeightData(
+                house_id=1,
+                house_number=10,
+                category_id=1,
+                category_code="work",
+                weight=1.0,
+                routing_role="primary",
+            ),
+        ),
+        sign_rulerships={
+            "aries": "mars",
+            "taurus": "venus",
+            "gemini": "mercury",
+            "cancer": "moon",
+            "leo": "sun",
+            "virgo": "mercury",
+            "libra": "venus",
+            "scorpio": "mars",
+            "sagittarius": "jupiter",
+            "capricorn": "saturn",
+            "aquarius": "saturn",
+            "pisces": "jupiter",
+        },
+        aspect_profiles={},
+        astro_points={},
+        point_category_weights=(),
+    )
+    ruleset_context = RulesetContext(
+        ruleset=RulesetData(
+            id=1,
+            version="1.0.0",
+            reference_version_id=1,
+            zodiac_type="tropical",
+            coordinate_mode="geocentric",
+            house_system="whole_sign",
+            time_step_minutes=60,
+            is_locked=True,
+        ),
+        parameters={
+            "ns_weight_occ": 0.1,
+            "ns_weight_rul": 0.1,
+            "ns_weight_ang": 0.1,
+            "ns_weight_dom": 0.0,
+        },
+        event_types={},
+    )
+    return LoadedPredictionContext(
+        prediction_context=prediction_context,
+        ruleset_context=ruleset_context,
+        calibrations={"work": None},
+        is_provisional_calibration=True,
+    )
+
+
 @pytest.fixture
 def orchestrator():
     return EngineOrchestrator(
-        ruleset_context_loader=lambda _: RulesetContext(
-            ruleset=RulesetData(
-                id=1,
-                version="1.0.0",
-                reference_version_id=1,
-                zodiac_type="tropical",
-                coordinate_mode="geocentric",
-                house_system="whole_sign",
-                time_step_minutes=60,
-                is_locked=True,
-            ),
-            parameters={},
-            event_types={},
-        )
+        prediction_context_loader=lambda *_: _build_loaded_context()
     )
 
 
 @pytest.fixture
 def base_input():
     return EngineInput(
-        natal_chart={"planets": {"sun": 80.5, "moon": 120.2}},
+        natal_chart={
+            "planets": [
+                {"code": "sun", "longitude": 80.5, "house": 3},
+                {"code": "moon", "longitude": 120.2, "house": 5},
+                {"code": "saturn", "longitude": 275.0, "house": 1},
+            ],
+            "houses": [
+                {"number": house_number, "cusp_longitude": float((house_number - 1) * 30)}
+                for house_number in range(1, 13)
+            ],
+            "angles": {
+                "ASC": {"longitude": 0.0},
+                "MC": {"longitude": 270.0},
+            },
+        },
         local_date=date(2026, 3, 7),
         timezone="Europe/Paris",
         latitude=48.8566,
@@ -82,11 +204,12 @@ def test_local_to_ut_paris(orchestrator):
 
 
 def test_output_has_mandatory_fields(orchestrator, base_input):
-    """AC2 - All EngineOutput fields present."""
+    """Integrated run returns the mandatory EngineOutput fields."""
     output = orchestrator.run(base_input)
     assert isinstance(output, EngineOutput)
     assert "run_metadata" in output.__dict__
     assert output.run_metadata["computed_at"] == "2026-03-06T23:00:00+00:00"
+    assert output.run_metadata["is_provisional_calibration"] is True
     assert output.run_metadata["jd_interval"] == [
         pytest.approx(2461106.4583333335, abs=1e-6),
         pytest.approx(2461107.4583333335, abs=1e-6),
@@ -97,6 +220,9 @@ def test_output_has_mandatory_fields(orchestrator, base_input):
     assert isinstance(output.category_scores, dict)
     assert isinstance(output.time_blocks, list)
     assert isinstance(output.turning_points, list)
+    assert len(output.sampling_timeline) == 96
+    assert len(output.detected_events) >= 24
+    assert output.category_scores["work"] > 0.0
 
 
 def test_house_system_fields_present(orchestrator, base_input):
@@ -104,7 +230,7 @@ def test_house_system_fields_present(orchestrator, base_input):
     output = orchestrator.run(base_input)
     ctx = output.effective_context
     assert ctx.house_system_requested == "whole_sign"
-    assert ctx.house_system_effective == "whole_sign"
+    assert ctx.house_system_effective == "placidus"
 
 
 def test_determinism(orchestrator, base_input):
@@ -150,9 +276,20 @@ def test_invalid_timezone_raises_prediction_context_error(orchestrator, base_inp
         orchestrator.run(invalid_input)
 
 
-def test_missing_ruleset_context_raises_prediction_context_error(base_input):
-    """Un ruleset introuvable doit lever une erreur métier stable."""
-    orchestrator = EngineOrchestrator(ruleset_context_loader=lambda _: None)
+def test_missing_prediction_context_raises_prediction_context_error(base_input):
+    """Un contexte introuvable doit lever une erreur métier stable."""
+    orchestrator = EngineOrchestrator(prediction_context_loader=lambda *_: None)
 
-    with pytest.raises(PredictionContextError, match="Ruleset context not found"):
+    with pytest.raises(PredictionContextError, match="Prediction context not found"):
         orchestrator.run(base_input)
+
+
+def test_run_integrates_chapter_33_components(orchestrator, base_input):
+    """The orchestrator wires the chapter 33 components into a real pipeline."""
+    output = orchestrator.run(base_input)
+
+    planetary_hours = [
+        event for event in output.detected_events if event.event_type == "planetary_hour_change"
+    ]
+    assert len(planetary_hours) == 24
+    assert output.effective_context.house_system_effective == "placidus"

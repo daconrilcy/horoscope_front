@@ -1,10 +1,11 @@
-import pytest
 from datetime import date, datetime
 from unittest.mock import MagicMock
 
+import pytest
+
 from app.prediction.event_detector import EventDetector
-from app.prediction.schemas import StepAstroState, PlanetState, AstroEvent
-from app.prediction.temporal_sampler import DayGrid, SamplePoint
+from app.prediction.schemas import PlanetState, StepAstroState
+from app.prediction.temporal_sampler import DayGrid
 
 
 @pytest.fixture
@@ -17,26 +18,35 @@ def mock_ctx():
         "Mars": MagicMock(orb_active_deg=2.0),
     }
     ctx.prediction_context.planet_profiles = planet_profiles
-    
+
     # Mock aspect profiles for orb_multiplier
     aspect_profiles = {
         "conjunction": MagicMock(orb_multiplier=1.0),
         "square": MagicMock(orb_multiplier=1.0),
     }
     ctx.prediction_context.aspect_profiles = aspect_profiles
-    
+
     # Mock event types for priority/weight
     ctx.ruleset_context.event_types = {}
-    
+
     return ctx
+
 
 @pytest.fixture
 def natal_positions():
     return {"Sun": 0.0}
 
+
 def create_step(ut_jd, planets, asc_deg=0.0):
     planet_states = {
-        code: PlanetState(code=code, longitude=lon, speed_lon=1.0, is_retrograde=False, sign_code=int(lon//30), natal_house_transited=1)
+        code: PlanetState(
+            code=code,
+            longitude=lon,
+            speed_lon=1.0,
+            is_retrograde=False,
+            sign_code=int(lon // 30),
+            natal_house_transited=1,
+        )
         for code, lon in planets.items()
     }
     return StepAstroState(
@@ -44,9 +54,9 @@ def create_step(ut_jd, planets, asc_deg=0.0):
         local_time=datetime.now(),
         ascendant_deg=asc_deg,
         mc_deg=0.0,
-        house_cusps=[0.0]*12,
+        house_cusps=[0.0] * 12,
         house_system_effective="placidus",
-        planets=planet_states
+        planets=planet_states,
     )
 
 def test_enter_orb_detected(mock_ctx, natal_positions):
@@ -204,3 +214,31 @@ def test_separating_true_on_increasing_orb(mock_ctx, natal_positions):
     exit_evts = [e for e in events if e.event_type == "exit_orb"]
     assert len(exit_evts) == 1
     assert exit_evts[0].metadata["phase"] == "separating"
+
+
+def test_orb_max_resolves_lowercase_profiles_without_fallback(mock_ctx):
+    mock_ctx.prediction_context.planet_profiles = {
+        "sun": MagicMock(orb_active_deg=3.0),
+    }
+    mock_ctx.prediction_context.aspect_profiles = {
+        "conjunction": MagicMock(orb_multiplier=1.5),
+    }
+    detector = EventDetector(mock_ctx, {"Sun": 0.0})
+
+    orb_max = detector._orb_max("Sun", "conjunction")
+
+    assert orb_max == pytest.approx(4.5)
+
+
+def test_orb_max_falls_back_when_profile_value_is_none(mock_ctx):
+    mock_ctx.prediction_context.planet_profiles = {
+        "sun": MagicMock(orb_active_deg=None),
+    }
+    mock_ctx.prediction_context.aspect_profiles = {
+        "conjunction": MagicMock(orb_multiplier=1.5),
+    }
+    detector = EventDetector(mock_ctx, {"Sun": 0.0})
+
+    orb_max = detector._orb_max("Sun", "conjunction")
+
+    assert orb_max == pytest.approx(3.0)

@@ -101,6 +101,9 @@ gemini-2.0-flash
 - `EventDetector` implémenté avec détection d'aspects (enter, exact, exit), ingress lunaire, changement de signe Asc et heures planétaires.
 - Tests unitaires complets passant à 100%.
 - Régression évitée sur `AstroCalculator` via mise à jour des tests.
+- Durcissement post-validation applicative : lookup des `planet_profiles` et `aspect_profiles` rendu insensible à la casse (`Sun`/`sun`).
+- Durcissement post-validation applicative : fallback sûr sur `orb_active_deg` / `orb_multiplier` quand la donnée référentielle est absente ou `NULL`, sans blocage du moteur.
+- Validation finale en smoke test réel : `RUN OK`, `events=48`, plus de crash lié aux orbes.
 
 ### File List
 
@@ -109,3 +112,5 @@ gemini-2.0-flash
 - `backend/app/prediction/schemas.py` (Modifié)
 - `backend/app/prediction/astro_calculator.py` (Modifié)
 - `backend/app/tests/unit/test_astro_calculator.py` (Modifié)
+- `backend/scripts/seed_31_prediction_reference_v2.py` (Modifié)
+- `backend/migrations/versions/20260307_0036_backfill_prediction_planet_profile_orbs.py` (Nouveau)

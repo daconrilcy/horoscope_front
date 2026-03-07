@@ -10,7 +10,7 @@ so that toutes les stories suivantes (sampler, calculateur, détecteur, scorer) 
 
 ## Contexte métier
 
-L'epic 33 pose les fondations du moteur de prédiction astrologique journalier. Cette première story fige le contrat d'API interne : entrée canonique (`EngineInput`), sortie structurée (`EngineOutput`), calcul du `input_hash` et conversion local → UT. L'orchestrateur créé ici est le point d'entrée unique du moteur ; il sera enrichi au fil des stories suivantes (stubs pour l'instant).
+L'epic 33 pose les fondations du moteur de prédiction astrologique journalier. Cette première story fige le contrat d'API interne : entrée canonique (`EngineInput`), sortie structurée (`EngineOutput`), calcul du `input_hash` et conversion local → UT. L'orchestrateur créé ici est le point d'entrée unique du moteur ; il a ensuite été branché réellement sur les stories 33-2 à 33-6 et sert désormais de point d'entrée exécutable du pipeline quotidien.
 
 Les repositories DB (epic 31-32) sont déjà stables et peuvent être utilisés.
 
@@ -171,6 +171,10 @@ gemini-2.0-flash
 - Durcissement post-review : `AstroEvent` aligné sur la spec annexe, résolution du `house_system` depuis un contexte de ruleset injectable, et erreurs métier stables pour timezone/ruleset invalides.
 - Durcissement post-review : `computed_at` rendu déterministe à partir du début UTC du jour local évalué, ce qui rend `EngineOutput` strictement reproductible pour une même entrée.
 - Validation via tests unitaires renforcés sur le déterminisme complet, la propagation de `debug_mode`, le contrat temporel exact et les erreurs métier.
+- Intégration réelle du pipeline `33-2 -> 33-6` dans `EngineOrchestrator.run()` avec production effective de `sampling_timeline`, `detected_events` et `category_scores`.
+- Support du format `chart_json` canonique pour `natal_chart` (`planets`, `houses`, `angles`) avec erreur métier explicite si les 12 cuspides ne sont pas disponibles.
+- Validation applicative finale via smoke test réel sur DB seedée (`reference_version=2.0.0`, `ruleset_version=1.0.0`) : `RUN OK`, `samples=96`, `events=48`, catégories non vides.
+- Correction industrialisée du référentiel prediction via migration de data `20260307_0036` et mise à jour du script de seed `31.3`.
 
 ### Senior Developer Review (AI)
 
@@ -184,3 +188,5 @@ gemini-2.0-flash
 - `backend/app/prediction/exceptions.py`
 - `backend/app/prediction/engine_orchestrator.py`
 - `backend/app/tests/unit/test_engine_orchestrator.py`
+- `backend/scripts/seed_31_prediction_reference_v2.py`
+- `backend/migrations/versions/20260307_0036_backfill_prediction_planet_profile_orbs.py`

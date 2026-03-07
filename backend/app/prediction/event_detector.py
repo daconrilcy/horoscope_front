@@ -1,6 +1,6 @@
 import logging
-from datetime import datetime, timedelta, timezone as dt_tz
-from typing import Dict, List, Optional, Tuple
+from datetime import datetime, timedelta
+from datetime import timezone as dt_tz
 from zoneinfo import ZoneInfo
 
 import swisseph as swe
@@ -18,7 +18,7 @@ class EventDetector:
     Transforms StepAstroState sequence into a list of enriched AstroEvents.
     """
 
-    ASPECTS_V1: Dict[int, str] = {
+    ASPECTS_V1: dict[int, str] = {
         0: "conjunction",
         60: "sextile",
         90: "square",
@@ -29,22 +29,32 @@ class EventDetector:
     CHALDEAN_ORDER = ["Saturn", "Jupiter", "Mars", "Sun", "Venus", "Mercury", "Moon"]
 
     V1_NATAL_TARGETS = {
-        "Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", 
-        "Uranus", "Neptune", "Pluto", "Asc", "MC"
+        "Sun",
+        "Moon",
+        "Mercury",
+        "Venus",
+        "Mars",
+        "Jupiter",
+        "Saturn",
+        "Uranus",
+        "Neptune",
+        "Pluto",
+        "Asc",
+        "MC",
     }
 
-    def __init__(self, ctx: LoadedPredictionContext, natal_positions: Dict[str, float]):
+    def __init__(self, ctx: LoadedPredictionContext, natal_positions: dict[str, float]):
         self.ctx = ctx
         self.natal_positions = {
             k: v for k, v in natal_positions.items() if k in self.V1_NATAL_TARGETS
         }
 
-    def detect(self, steps: List[StepAstroState], day_grid: DayGrid) -> List[AstroEvent]:
+    def detect(self, steps: list[StepAstroState], day_grid: DayGrid) -> list[AstroEvent]:
         """
         Main detection loop for all event types.
         Returns a list of AstroEvent sorted by ut_time.
         """
-        events: List[AstroEvent] = []
+        events: list[AstroEvent] = []
 
         # 1. Aspects (enter_orb, exact, exit_orb)
         if steps:
@@ -65,12 +75,12 @@ class EventDetector:
         events.sort(key=lambda e: e.ut_time)
         return events
 
-    def _detect_aspects(self, steps: List[StepAstroState]) -> List[AstroEvent]:
-        detected: List[AstroEvent] = []
+    def _detect_aspects(self, steps: list[StepAstroState]) -> list[AstroEvent]:
+        detected: list[AstroEvent] = []
         
         # Track history for each (transit, target, aspect)
         # key -> list of orbs
-        history: Dict[Tuple[str, str, int], List[float]] = {}
+        history: dict[tuple[str, str, int], list[float]] = {}
         
         for i, step in enumerate(steps):
             for body_code, planet_state in step.planets.items():
@@ -118,8 +128,8 @@ class EventDetector:
         
         return detected
 
-    def _detect_moon_ingress(self, steps: List[StepAstroState]) -> List[AstroEvent]:
-        detected: List[AstroEvent] = []
+    def _detect_moon_ingress(self, steps: list[StepAstroState]) -> list[AstroEvent]:
+        detected: list[AstroEvent] = []
         prev_sign = None
         
         for step in steps:
@@ -137,8 +147,8 @@ class EventDetector:
             
         return detected
 
-    def _detect_asc_sign_change(self, steps: List[StepAstroState]) -> List[AstroEvent]:
-        detected: List[AstroEvent] = []
+    def _detect_asc_sign_change(self, steps: list[StepAstroState]) -> list[AstroEvent]:
+        detected: list[AstroEvent] = []
         prev_sign = None
         
         for step in steps:
@@ -155,8 +165,8 @@ class EventDetector:
             
         return detected
 
-    def _detect_planetary_hours(self, day_grid: DayGrid) -> List[AstroEvent]:
-        detected: List[AstroEvent] = []
+    def _detect_planetary_hours(self, day_grid: DayGrid) -> list[AstroEvent]:
+        detected: list[AstroEvent] = []
         if day_grid.sunrise_ut is None or day_grid.sunset_ut is None:
             return detected
 
@@ -191,7 +201,9 @@ class EventDetector:
         first_ruler_idx = self.CHALDEAN_ORDER.index(DAY_RULERS[day_of_week])
         return self.CHALDEAN_ORDER[(first_ruler_idx + hour_index) % 7]
 
-    def _create_planetary_hour_event(self, ut_time: float, ruler: str, hour_num: int, tz_name: str) -> AstroEvent:
+    def _create_planetary_hour_event(
+        self, ut_time: float, ruler: str, hour_num: int, tz_name: str
+    ) -> AstroEvent:
         local_time = self._jd_to_local_datetime(ut_time, tz_name)
         return self._create_event(
             "planetary_hour_change", ut_time, local_time,
@@ -219,24 +231,41 @@ class EventDetector:
         return abs(diff - aspect_deg)
 
     def _orb_max(self, planet_code: str, aspect_code: str) -> float:
-        planet_profile = self.ctx.prediction_context.planet_profiles.get(planet_code)
-        if planet_profile is None:
-            logger.warning("orb_max_fallback planet=%s aspect=%s default=2.0", planet_code, aspect_code)
-        orb_active = planet_profile.orb_active_deg if planet_profile else 2.0
-        aspect_profile = self.ctx.prediction_context.aspect_profiles.get(aspect_code)
-        multiplier = aspect_profile.orb_multiplier if aspect_profile else 1.0
+        planet_profile = self._lookup_mapping_value(
+            self.ctx.prediction_context.planet_profiles,
+            planet_code,
+        )
+        orb_active_raw = getattr(planet_profile, "orb_active_deg", None) if planet_profile else None
+        if orb_active_raw is None:
+            logger.warning(
+                "orb_max_fallback planet=%s aspect=%s default=2.0", planet_code, aspect_code
+            )
+        orb_active = float(orb_active_raw) if orb_active_raw is not None else 2.0
+        aspect_profile = self._lookup_mapping_value(
+            self.ctx.prediction_context.aspect_profiles,
+            aspect_code,
+        )
+        multiplier_raw = getattr(aspect_profile, "orb_multiplier", None) if aspect_profile else None
+        multiplier = float(multiplier_raw) if multiplier_raw is not None else 1.0
         return orb_active * multiplier
 
+    def _lookup_mapping_value(self, mapping: dict, key: str) -> object | None:
+        candidates = (key, key.lower(), key.upper(), key.title())
+        for candidate in candidates:
+            if candidate in mapping:
+                return mapping[candidate]
+        return None
+
     def _create_event(
-        self, 
-        event_type: str, 
-        ut_time: float, 
+        self,
+        event_type: str,
+        ut_time: float,
         local_time: datetime,
-        body: Optional[str], 
-        target: Optional[str], 
-        aspect: Optional[str], 
+        body: str | None,
+        target: str | None,
+        aspect: str | None,
         orb_deg: float,
-        metadata: dict
+        metadata: dict,
     ) -> AstroEvent:
         et_data = self.ctx.ruleset_context.event_types.get(event_type)
         priority = et_data.priority if et_data else 50
@@ -252,5 +281,5 @@ class EventDetector:
             orb_deg=orb_deg,
             priority=priority,
             base_weight=base_weight,
-            metadata=metadata
+            metadata=metadata,
         )
