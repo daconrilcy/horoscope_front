@@ -112,8 +112,8 @@ def test_get_planet_profiles(db_session: Session):
     sun_profile = result["sun"]
     assert isinstance(sun_profile, PlanetProfileData)
     assert sun_profile.code == "sun"
-    assert sun_profile.keywords == ["vitality", "ego", "purpose"]
-    assert isinstance(result["moon"].keywords, list)
+    assert sun_profile.keywords == ("vitality", "ego", "purpose")
+    assert isinstance(result["moon"].keywords, tuple)
 
 
 SIGN_RULERSHIPS = [

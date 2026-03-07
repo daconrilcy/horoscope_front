@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Mapping
 
 
-@dataclass
+@dataclass(frozen=True)
 class CategoryData:
     id: int
     code: str
@@ -12,7 +12,7 @@ class CategoryData:
     is_enabled: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlanetProfileData:
     planet_id: int
     code: str
@@ -25,10 +25,10 @@ class PlanetProfileData:
     typical_polarity: str | None
     orb_active_deg: float | None
     orb_peak_deg: float | None
-    keywords: list[str]
+    keywords: tuple[str, ...]
 
 
-@dataclass
+@dataclass(frozen=True)
 class HouseProfileData:
     house_id: int
     number: int
@@ -36,10 +36,10 @@ class HouseProfileData:
     house_kind: str
     visibility_weight: float
     base_priority: int
-    keywords: list[str]
+    keywords: tuple[str, ...]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlanetCategoryWeightData:
     planet_id: int
     planet_code: str
@@ -49,7 +49,7 @@ class PlanetCategoryWeightData:
     influence_role: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class HouseCategoryWeightData:
     house_id: int
     house_number: int
@@ -59,7 +59,7 @@ class HouseCategoryWeightData:
     routing_role: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class AstroPointData:
     point_id: int
     code: str
@@ -67,7 +67,7 @@ class AstroPointData:
     point_type: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class PointCategoryWeightData:
     point_id: int
     point_code: str
@@ -76,7 +76,7 @@ class PointCategoryWeightData:
     weight: float
 
 
-@dataclass
+@dataclass(frozen=True)
 class AspectProfileData:
     aspect_id: int
     code: str
@@ -86,7 +86,7 @@ class AspectProfileData:
     phase_sensitive: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class RulesetData:
     id: int
     version: str
@@ -98,7 +98,7 @@ class RulesetData:
     is_locked: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class EventTypeData:
     id: int
     code: str
@@ -108,7 +108,7 @@ class EventTypeData:
     base_weight: float
 
 
-@dataclass
+@dataclass(frozen=True)
 class CalibrationData:
     p05: float | None
     p25: float | None
@@ -118,21 +118,21 @@ class CalibrationData:
     sample_size: int | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class PredictionContext:
-    categories: list[CategoryData]
-    planet_profiles: dict[str, PlanetProfileData]
-    house_profiles: dict[int, HouseProfileData]
-    planet_category_weights: list[PlanetCategoryWeightData]
-    house_category_weights: list[HouseCategoryWeightData]
-    sign_rulerships: dict[str, str]
-    aspect_profiles: dict[str, AspectProfileData]
-    astro_points: dict[str, AstroPointData]
-    point_category_weights: list[PointCategoryWeightData]
+    categories: tuple[CategoryData, ...]
+    planet_profiles: Mapping[str, PlanetProfileData]
+    house_profiles: Mapping[int, HouseProfileData]
+    planet_category_weights: tuple[PlanetCategoryWeightData, ...]
+    house_category_weights: tuple[HouseCategoryWeightData, ...]
+    sign_rulerships: Mapping[str, str]
+    aspect_profiles: Mapping[str, AspectProfileData]
+    astro_points: Mapping[str, AstroPointData]
+    point_category_weights: tuple[PointCategoryWeightData, ...]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RulesetContext:
     ruleset: RulesetData
-    parameters: dict[str, Any]
-    event_types: dict[str, EventTypeData]
+    parameters: Mapping[str, Any]
+    event_types: Mapping[str, EventTypeData]

@@ -34,7 +34,7 @@ class PredictionReferenceRepository:
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def get_categories(self, reference_version_id: int) -> list[CategoryData]:
+    def get_categories(self, reference_version_id: int) -> tuple[CategoryData, ...]:
         rows = (
             self.db.execute(
                 select(PredictionCategoryModel)
@@ -48,7 +48,7 @@ class PredictionReferenceRepository:
             .all()
         )
 
-        return [
+        return tuple(
             CategoryData(
                 id=row.id,
                 code=row.code,
@@ -58,7 +58,7 @@ class PredictionReferenceRepository:
                 is_enabled=row.is_enabled,
             )
             for row in rows
-        ]
+        )
 
     def get_planet_profiles(self, reference_version_id: int) -> dict[str, PlanetProfileData]:
         rows = self.db.execute(
@@ -107,7 +107,7 @@ class PredictionReferenceRepository:
 
     def get_planet_category_weights(
         self, reference_version_id: int
-    ) -> list[PlanetCategoryWeightData]:
+    ) -> tuple[PlanetCategoryWeightData, ...]:
         rows = self.db.execute(
             select(
                 PlanetCategoryWeightModel.planet_id,
@@ -129,7 +129,7 @@ class PredictionReferenceRepository:
             .order_by(PlanetModel.code, PredictionCategoryModel.code)
         ).all()
 
-        return [
+        return tuple(
             PlanetCategoryWeightData(
                 planet_id=row.planet_id,
                 planet_code=row.planet_code,
@@ -139,11 +139,11 @@ class PredictionReferenceRepository:
                 influence_role=row.influence_role,
             )
             for row in rows
-        ]
+        )
 
     def get_house_category_weights(
         self, reference_version_id: int
-    ) -> list[HouseCategoryWeightData]:
+    ) -> tuple[HouseCategoryWeightData, ...]:
         rows = self.db.execute(
             select(
                 HouseCategoryWeightModel.house_id,
@@ -165,7 +165,7 @@ class PredictionReferenceRepository:
             .order_by(HouseModel.number, PredictionCategoryModel.code)
         ).all()
 
-        return [
+        return tuple(
             HouseCategoryWeightData(
                 house_id=row.house_id,
                 house_number=row.house_number,
@@ -175,7 +175,7 @@ class PredictionReferenceRepository:
                 routing_role=row.routing_role,
             )
             for row in rows
-        ]
+        )
 
     def get_sign_rulerships(self, reference_version_id: int) -> dict[str, str]:
         rows = self.db.execute(
@@ -234,7 +234,7 @@ class PredictionReferenceRepository:
 
     def get_point_category_weights(
         self, reference_version_id: int
-    ) -> list[PointCategoryWeightData]:
+    ) -> tuple[PointCategoryWeightData, ...]:
         rows = self.db.execute(
             select(
                 PointCategoryWeightModel.point_id,
@@ -255,7 +255,7 @@ class PredictionReferenceRepository:
             .order_by(AstroPointModel.code, PredictionCategoryModel.code)
         ).all()
 
-        return [
+        return tuple(
             PointCategoryWeightData(
                 point_id=row.point_id,
                 point_code=row.point_code,
@@ -264,7 +264,7 @@ class PredictionReferenceRepository:
                 weight=row.weight,
             )
             for row in rows
-        ]
+        )
 
     def load_prediction_context(self, reference_version_id: int) -> PredictionContext:
         return PredictionContext(
@@ -279,13 +279,13 @@ class PredictionReferenceRepository:
             point_category_weights=self.get_point_category_weights(reference_version_id),
         )
 
-    def _parse_keywords(self, raw: str | None) -> list[str]:
+    def _parse_keywords(self, raw: str | None) -> tuple[str, ...]:
         if not raw:
-            return []
+            return ()
         try:
             parsed = json.loads(raw)
             if isinstance(parsed, list):
-                return [str(k) for k in parsed]
+                return tuple(str(k) for k in parsed)
         except (json.JSONDecodeError, TypeError):
             pass
-        return []
+        return ()
