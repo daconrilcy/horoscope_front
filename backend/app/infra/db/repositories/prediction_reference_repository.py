@@ -148,7 +148,9 @@ class PredictionReferenceRepository:
                 HouseCategoryWeightModel.category_id,
                 PredictionCategoryModel.code.label("category_code"),
                 HouseCategoryWeightModel.weight,
-                HouseCategoryWeightModel.routing_role.label("influence_role"),  # DB col named routing_role; aliased to match planet_category_weights interface
+                HouseCategoryWeightModel.routing_role.label(
+                    "influence_role"
+                ),  # DB col named routing_role; aliased to match planet_category_weights interface
             )
             .join(HouseModel, HouseCategoryWeightModel.house_id == HouseModel.id)
             .join(

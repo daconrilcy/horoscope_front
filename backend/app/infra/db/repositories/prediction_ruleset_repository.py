@@ -106,7 +106,9 @@ class PredictionRulesetRepository:
             sample_size=row.sample_size,
         )
 
-    def get_active_ruleset_context(self, version: str, reference_date: date | None = None) -> RulesetContext | None:
+    def get_active_ruleset_context(
+        self, version: str, reference_date: date | None = None
+    ) -> RulesetContext | None:
         del reference_date  # reserved for future calibration filtering
         ruleset = self.get_ruleset(version)
         if not ruleset:

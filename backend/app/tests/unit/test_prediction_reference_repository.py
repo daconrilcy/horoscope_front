@@ -1,21 +1,14 @@
 from __future__ import annotations
 
-import pytest
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.prediction_reference import (
-    AspectProfileModel,
-    AstroPointModel,
-    HouseCategoryWeightModel,
     HouseProfileModel,
-    PlanetCategoryWeightModel,
     PlanetProfileModel,
-    PointCategoryWeightModel,
     PredictionCategoryModel,
     SignRulershipModel,
 )
 from app.infra.db.models.reference import (
-    AspectModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -25,25 +18,20 @@ from app.infra.db.repositories.prediction_reference_repository import (
     PredictionReferenceRepository,
 )
 from app.infra.db.repositories.prediction_schemas import (
-    AspectProfileData,
-    AstroPointData,
     CategoryData,
-    HouseCategoryWeightData,
-    HouseProfileData,
-    PlanetCategoryWeightData,
     PlanetProfileData,
-    PointCategoryWeightData,
     PredictionContext,
 )
 
+
 def test_get_categories(db_session: Session):
     repo = PredictionReferenceRepository(db_session)
-    
+
     # Seed
     version = ReferenceVersionModel(version="1.0.0")
     db_session.add(version)
     db_session.flush()
-    
+
     categories = [
         PredictionCategoryModel(
             reference_version_id=version.id,
@@ -51,7 +39,7 @@ def test_get_categories(db_session: Session):
             name=f"Category {i}",
             display_name=f"Cat {i}",
             sort_order=i,
-            is_enabled=True
+            is_enabled=True,
         )
         for i in range(12)
     ]
@@ -63,19 +51,31 @@ def test_get_categories(db_session: Session):
             name="Disabled",
             display_name="Disabled",
             sort_order=100,
-            is_enabled=False
+            is_enabled=False,
         )
     )
     db_session.add_all(categories)
     db_session.commit()
-    
+
     result = repo.get_categories(version.id)
-    
+
     assert len(result) == 12
     assert [c.code for c in result] == [f"cat_{i}" for i in range(12)]
     assert isinstance(result[0], CategoryData)
 
-PLANET_CODES = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
+
+PLANET_CODES = [
+    "sun",
+    "moon",
+    "mercury",
+    "venus",
+    "mars",
+    "jupiter",
+    "saturn",
+    "uranus",
+    "neptune",
+    "pluto",
+]
 
 
 def test_get_planet_profiles(db_session: Session):
@@ -111,10 +111,20 @@ def test_get_planet_profiles(db_session: Session):
     assert sun_profile.keywords == ["vitality", "ego", "purpose"]
     assert isinstance(result["moon"].keywords, list)
 
+
 SIGN_RULERSHIPS = [
-    ("aries", "mars"), ("taurus", "venus"), ("gemini", "mercury"), ("cancer", "moon"),
-    ("leo", "sun"), ("virgo", "mercury"), ("libra", "venus"), ("scorpio", "mars"),
-    ("sagittarius", "jupiter"), ("capricorn", "saturn"), ("aquarius", "saturn"), ("pisces", "jupiter"),
+    ("aries", "mars"),
+    ("taurus", "venus"),
+    ("gemini", "mercury"),
+    ("cancer", "moon"),
+    ("leo", "sun"),
+    ("virgo", "mercury"),
+    ("libra", "venus"),
+    ("scorpio", "mars"),
+    ("sagittarius", "jupiter"),
+    ("capricorn", "saturn"),
+    ("aquarius", "saturn"),
+    ("pisces", "jupiter"),
 ]
 
 
@@ -159,6 +169,7 @@ def test_get_sign_rulerships(db_session: Session):
     assert result["aries"] == "mars"
     assert result["leo"] == "sun"
 
+
 def test_load_prediction_context(db_session: Session):
     repo = PredictionReferenceRepository(db_session)
 
@@ -167,27 +178,44 @@ def test_load_prediction_context(db_session: Session):
     db_session.flush()
 
     # Seed one category
-    db_session.add(PredictionCategoryModel(
-        reference_version_id=version.id, code="love", name="Love",
-        display_name="Love", sort_order=1, is_enabled=True,
-    ))
+    db_session.add(
+        PredictionCategoryModel(
+            reference_version_id=version.id,
+            code="love",
+            name="Love",
+            display_name="Love",
+            sort_order=1,
+            is_enabled=True,
+        )
+    )
 
     # Seed one planet with profile
     planet = PlanetModel(reference_version_id=version.id, code="sun", name="Sun")
     db_session.add(planet)
     db_session.flush()
-    db_session.add(PlanetProfileModel(
-        planet_id=planet.id, class_code="luminary", speed_rank=1,
-        speed_class="fast", weight_intraday=1.5, weight_day_climate=1.2,
-    ))
+    db_session.add(
+        PlanetProfileModel(
+            planet_id=planet.id,
+            class_code="luminary",
+            speed_rank=1,
+            speed_class="fast",
+            weight_intraday=1.5,
+            weight_day_climate=1.2,
+        )
+    )
 
     # Seed one house with profile
     house = HouseModel(reference_version_id=version.id, number=1, name="House 1")
     db_session.add(house)
     db_session.flush()
-    db_session.add(HouseProfileModel(
-        house_id=house.id, house_kind="angular", visibility_weight=1.0, base_priority=1,
-    ))
+    db_session.add(
+        HouseProfileModel(
+            house_id=house.id,
+            house_kind="angular",
+            visibility_weight=1.0,
+            base_priority=1,
+        )
+    )
 
     db_session.commit()
 

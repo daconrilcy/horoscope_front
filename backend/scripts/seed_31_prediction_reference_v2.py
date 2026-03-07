@@ -26,6 +26,7 @@ from app.infra.db.models import (
 from app.infra.db.repositories import ReferenceRepository
 from app.infra.db.session import SessionLocal
 
+
 class SeedAbortError(RuntimeError):
     pass
 
@@ -134,7 +135,9 @@ def run_seed(db: Session):
             return
 
         # State corrupted or incomplete
-        lines = ["ERROR: 2.0.0 exists but is incomplete or unlocked. Manual investigation required."]
+        lines = [
+            "ERROR: 2.0.0 exists but is incomplete or unlocked. Manual investigation required."
+        ]
         for k, expected in EXPECTED_COUNTS.items():
             got = actual.get(k, 0)
             status = "OK" if got == expected else f"MISMATCH (expected {expected}, got {got})"
