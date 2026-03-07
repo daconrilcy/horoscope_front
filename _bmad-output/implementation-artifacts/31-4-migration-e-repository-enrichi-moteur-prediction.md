@@ -1,6 +1,6 @@
 # Story 31.4 : Migration E — Repository enrichi avec méthodes de lecture pour le moteur de prédiction
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -270,55 +270,55 @@ Des tests couvrent :
 
 ### T1 — Module des schemas de données (AC5)
 
-- [ ] Créer `backend/app/infra/db/repositories/prediction_schemas.py`
-  - [ ] `CategoryData`
-  - [ ] `PlanetProfileData` (avec `keywords: list[str]`)
-  - [ ] `HouseProfileData`
-  - [ ] `PlanetCategoryWeightData`
-  - [ ] `HouseCategoryWeightData`
-  - [ ] `AstroPointData`
-  - [ ] `PointCategoryWeightData`
-  - [ ] `AspectProfileData`
-  - [ ] `RulesetData`
-  - [ ] `EventTypeData`
-  - [ ] `CalibrationData`
-  - [ ] `PredictionContext`
-  - [ ] `RulesetContext`
+- [x] Créer `backend/app/infra/db/repositories/prediction_schemas.py`
+  - [x] `CategoryData`
+  - [x] `PlanetProfileData` (avec `keywords: list[str]`)
+  - [x] `HouseProfileData`
+  - [x] `PlanetCategoryWeightData`
+  - [x] `HouseCategoryWeightData`
+  - [x] `AstroPointData`
+  - [x] `PointCategoryWeightData`
+  - [x] `AspectProfileData`
+  - [x] `RulesetData`
+  - [x] `EventTypeData`
+  - [x] `CalibrationData`
+  - [x] `PredictionContext`
+  - [x] `RulesetContext`
 
 ### T2 — `PredictionReferenceRepository` (AC1, AC3)
 
-- [ ] Créer `backend/app/infra/db/repositories/prediction_reference_repository.py`
-  - [ ] `get_categories()` — SELECT avec filter `is_enabled = True`, ORDER BY `sort_order`
-  - [ ] `get_planet_profiles()` — JOIN `planets` + `planet_profiles`, retourner dict
-  - [ ] `get_house_profiles()` — JOIN `houses` + `house_profiles`, retourner dict
-  - [ ] `get_planet_category_weights()` — JOIN `planet_category_weights` + `planets` + `prediction_categories`
-  - [ ] `get_house_category_weights()` — JOIN `house_category_weights` + `houses` + `prediction_categories`
-  - [ ] `get_sign_rulerships()` — filter `rulership_type = 'domicile'`, `is_primary = True`
-  - [ ] `get_aspect_profiles()` — JOIN `aspects` + `aspect_profiles`
-  - [ ] `get_astro_points()` — filter `is_enabled = True`
-  - [ ] `get_point_category_weights()` — JOIN `point_category_weights` + `astro_points` + `prediction_categories`
-  - [ ] `load_prediction_context()` — agrège toutes les méthodes ci-dessus
+- [x] Créer `backend/app/infra/db/repositories/prediction_reference_repository.py`
+  - [x] `get_categories()` — SELECT avec filter `is_enabled = True`, ORDER BY `sort_order`
+  - [x] `get_planet_profiles()` — JOIN `planets` + `planet_profiles`, retourner dict
+  - [x] `get_house_profiles()` — JOIN `houses` + `house_profiles`, retourner dict
+  - [x] `get_planet_category_weights()` — JOIN `planet_category_weights` + `planets` + `prediction_categories`
+  - [x] `get_house_category_weights()` — JOIN `house_category_weights` + `houses` + `prediction_categories`
+  - [x] `get_sign_rulerships()` — filter `rulership_type = 'domicile'`, `is_primary = True`
+  - [x] `get_aspect_profiles()` — JOIN `aspects` + `aspect_profiles`
+  - [x] `get_astro_points()` — filter `is_enabled = True`
+  - [x] `get_point_category_weights()` — JOIN `point_category_weights` + `astro_points` + `prediction_categories`
+  - [x] `load_prediction_context()` — agrège toutes les méthodes ci-dessus
 
 ### T3 — `PredictionRulesetRepository` (AC2, AC4)
 
-- [ ] Créer `backend/app/infra/db/repositories/prediction_ruleset_repository.py`
-  - [ ] `get_ruleset()` — SELECT par version
-  - [ ] `get_parameters()` — SELECT + conversion de types selon `data_type`
-  - [ ] `get_event_types()` — SELECT, retourner dict `code → EventTypeData`
-  - [ ] `get_calibrations()` — SELECT avec filtre date range, ORDER BY `valid_from DESC`, LIMIT 1
-  - [ ] `get_active_ruleset_context()` — agrège `get_ruleset()` + `get_parameters()` + `get_event_types()`
+- [x] Créer `backend/app/infra/db/repositories/prediction_ruleset_repository.py`
+  - [x] `get_ruleset()` — SELECT par version
+  - [x] `get_parameters()` — SELECT + conversion de types selon `data_type`
+  - [x] `get_event_types()` — SELECT, retourner dict `code → EventTypeData`
+  - [x] `get_calibrations()` — SELECT avec filtre date range, ORDER BY `valid_from DESC`, LIMIT 1
+  - [x] `get_active_ruleset_context()` — agrège `get_ruleset()` + `get_parameters()` + `get_event_types()`
 
 ### T4 — Tests (AC8)
 
-- [ ] Créer `backend/app/tests/unit/test_prediction_reference_repository.py`
-  - [ ] Test `get_categories()` retourne 12 items (sur DB de test avec seed 31.3)
-  - [ ] Test `get_planet_profiles()` : `keywords` est `list[str]`, pas `str`
-  - [ ] Test `get_sign_rulerships()` : 12 entrées, `"aries" → "mars"` correct
-  - [ ] Test `load_prediction_context()` : objet non vide, tous les champs peuplés
-- [ ] Créer `backend/app/tests/unit/test_prediction_ruleset_repository.py`
-  - [ ] Test `get_parameters()` : `float` converti en float, `int` en int, `bool` en bool
-  - [ ] Test `get_ruleset("1.0.0")` retourne le ruleset
-  - [ ] Test `get_active_ruleset_context("1.0.0")` retourne un `RulesetContext` complet
+- [x] Créer `backend/app/tests/unit/test_prediction_reference_repository.py`
+  - [x] Test `get_categories()` retourne 12 items (sur DB de test avec seed 31.3)
+  - [x] Test `get_planet_profiles()` : `keywords` est `list[str]`, pas `str`
+  - [x] Test `get_sign_rulerships()` : 12 entrées, `"aries" → "mars"` correct
+  - [x] Test `load_prediction_context()` : objet non vide, tous les champs peuplés
+- [x] Créer `backend/app/tests/unit/test_prediction_ruleset_repository.py`
+  - [x] Test `get_parameters()` : `float` converti en float, `int` en int, `bool` en bool
+  - [x] Test `get_ruleset("1.0.0")` retourne le ruleset
+  - [x] Test `get_active_ruleset_context("1.0.0")` retourne un `RulesetContext` complet
 
 ## Dev Notes
 
@@ -412,12 +412,20 @@ Les nouveaux repositories seront injectés via les dépendances FastAPI dans les
 
 ### Agent Model Used
 
-_à remplir_
+Gemini 2.0 Flash
 
 ### Completion Notes List
 
-_à remplir_
+- Création du module `prediction_schemas.py` contenant les dataclasses pour le moteur de prédiction.
+- Implémentation du `PredictionReferenceRepository` avec méthodes optimisées pour le chargement sémantique (AC1, AC3).
+- Implémentation du `PredictionRulesetRepository` gérant les rulesets, paramètres typés et calibrations (AC2, AC4).
+- Les repositories utilisent SQLAlchemy 2.0 (select, scalars, join).
+- Validation via tests unitaires dédiés et passage de l'intégralité de la suite de tests unitaires (927 tests).
 
 ### File List
 
-_à remplir_
+- backend/app/infra/db/repositories/prediction_schemas.py
+- backend/app/infra/db/repositories/prediction_reference_repository.py
+- backend/app/infra/db/repositories/prediction_ruleset_repository.py
+- backend/app/tests/unit/test_prediction_reference_repository.py
+- backend/app/tests/unit/test_prediction_ruleset_repository.py
