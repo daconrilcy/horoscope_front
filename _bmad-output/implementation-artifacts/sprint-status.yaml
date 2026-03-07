@@ -286,5 +286,5 @@ development_status:
   epic-31-retrospective: optional
 
   epic-32: backlog
-  32-1-migration-c-tables-persistance-quotidienne-predictions: ready-for-dev
+  32-1-migration-c-tables-persistance-quotidienne-predictions: done
   epic-32-retrospective: optional

@@ -9,6 +9,12 @@ from app.infra.db.models.billing import (
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
+from app.infra.db.models.daily_prediction import (
+    DailyPredictionCategoryScoreModel,
+    DailyPredictionRunModel,
+    DailyPredictionTimeBlockModel,
+    DailyPredictionTurningPointModel,
+)
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentialModel
 from app.infra.db.models.enterprise_billing import (
@@ -84,6 +90,10 @@ __all__ = [
     "EnterpriseBillingCycleModel",
     "EnterpriseEditorialConfigModel",
     "EnterpriseDailyUsageModel",
+    "DailyPredictionRunModel",
+    "DailyPredictionCategoryScoreModel",
+    "DailyPredictionTurningPointModel",
+    "DailyPredictionTimeBlockModel",
     "FeatureFlagModel",
     "GeoPlaceResolvedModel",
     "GeocodingQueryCacheModel",

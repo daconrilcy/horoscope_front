@@ -1,6 +1,6 @@
 # Story 32.1 : Migration C — Tables de persistance quotidienne des prédictions (runs, scores par catégorie, turning points, blocs horaires)
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -160,45 +160,47 @@ Un test d'intégration vérifie :
 
 ### T1 — Migration Alembic (AC5)
 
-- [ ] Créer `backend/migrations/versions/{date}_0034_migration_c_daily_prediction_tables.py`
-  - [ ] Créer `daily_prediction_runs` avec index composite `(user_id, local_date)` et UNIQUE `(user_id, local_date, reference_version_id, ruleset_id)`
-  - [ ] Créer `daily_prediction_category_scores` avec UNIQUE `(run_id, category_id)` et CASCADE DELETE
-  - [ ] Créer `daily_prediction_turning_points` avec CASCADE DELETE
-  - [ ] Créer `daily_prediction_time_blocks` avec UNIQUE `(run_id, block_index)` et CASCADE DELETE
-  - [ ] `downgrade()` dans l'ordre inverse
+- [x] Créer `backend/migrations/versions/{date}_0034_migration_c_daily_prediction_tables.py`
+  - [x] Créer `daily_prediction_runs` avec index composite `(user_id, local_date)` et UNIQUE `(user_id, local_date, reference_version_id, ruleset_id)`
+  - [x] Créer `daily_prediction_category_scores` avec UNIQUE `(run_id, category_id)` et CASCADE DELETE
+  - [x] Créer `daily_prediction_turning_points` avec CASCADE DELETE
+  - [x] Créer `daily_prediction_time_blocks` avec UNIQUE `(run_id, block_index)` et CASCADE DELETE
+  - [x] `downgrade()` dans l'ordre inverse
 
 ### T2 — Modèles SQLAlchemy (AC6)
 
-- [ ] Créer `backend/app/infra/db/models/daily_prediction.py`
-  - [ ] `DailyPredictionRunModel` avec tous les champs (AC1) et relationships vers les tables filles
-  - [ ] `DailyPredictionCategoryScoreModel` avec tous les champs (AC2) et `ondelete="CASCADE"`
-  - [ ] `DailyPredictionTurningPointModel` avec tous les champs (AC3) et `ondelete="CASCADE"`
-  - [ ] `DailyPredictionTimeBlockModel` avec tous les champs (AC4) et `ondelete="CASCADE"`
-- [ ] Importer ces modèles dans le point d'entrée Alembic
+- [x] Créer `backend/app/infra/db/models/daily_prediction.py`
+  - [x] `DailyPredictionRunModel` avec tous les champs (AC1) et relationships vers les tables filles
+  - [x] `DailyPredictionCategoryScoreModel` avec tous les champs (AC2) et `ondelete="CASCADE"`
+  - [x] `DailyPredictionTurningPointModel` avec tous les champs (AC3) et `ondelete="CASCADE"`
+  - [x] `DailyPredictionTimeBlockModel` avec tous les champs (AC4) et `ondelete="CASCADE"`
+- [x] Importer ces modèles dans le point d'entrée Alembic
 
 ### T3 — Repository (AC7)
 
-- [ ] Créer `backend/app/infra/db/repositories/daily_prediction_repository.py`
-  - [ ] `create_run()` — INSERT + flush + return model
-  - [ ] `get_run()` — SELECT avec filtre 4 colonnes
-  - [ ] `get_or_create_run()` — implémenter la politique à 3 cas (inexistant / même hash / hash différent) décrite en AC7
-  - [ ] `upsert_category_scores()` — DELETE existants + INSERT (ou INSERT ON CONFLICT UPDATE)
-  - [ ] `upsert_turning_points()` — DELETE existants pour `run_id` + INSERT
-  - [ ] `upsert_time_blocks()` — DELETE existants pour `run_id` + INSERT
-  - [ ] `get_full_run()` — SELECT avec eager loading des relations
-  - [ ] `get_user_history()` — SELECT avec filtre `user_id`, `local_date BETWEEN from_date AND to_date`
+- [x] Créer `backend/app/infra/db/repositories/daily_prediction_repository.py`
+  - [x] `create_run()` — INSERT + flush + return model
+  - [x] `get_run()` — SELECT avec filtre 4 colonnes
+  - [x] `get_or_create_run()` — implémenter la politique à 3 cas (inexistant / même hash / hash différent) décrite en AC7
+  - [x] `upsert_category_scores()` — DELETE existants + INSERT (ou INSERT ON CONFLICT UPDATE)
+  - [x] `upsert_turning_points()` — DELETE existants pour `run_id` + INSERT
+  - [x] `upsert_time_blocks()` — DELETE existants pour `run_id` + INSERT
+  - [x] `get_full_run()` — SELECT avec eager loading des relations
+  - [x] `get_user_history()` — SELECT avec filtre `user_id`, `local_date BETWEEN from_date AND to_date`
 
 ### T4 — Tests (AC9)
 
-- [ ] Créer `backend/app/tests/integration/test_migration_c_daily_prediction.py`
-  - [ ] Test : les 4 tables existent
-  - [ ] Test : `create_run()` → run créé
-  - [ ] Test : `get_or_create_run()` × 2 avec même hash → `created=False` au 2ème appel, données filles intactes
-  - [ ] Test : `get_or_create_run()` avec hash différent → `created=False`, données filles supprimées
-  - [ ] Test : doublon `(run_id, category_id)` → IntegrityError
-  - [ ] Test : `upsert_category_scores()` → update sans doublon
-  - [ ] Test : `upsert_turning_points()` → remplace les existants
-  - [ ] Test : `get_full_run()` → dict complet avec scores, turning_points, time_blocks
+- [x] Créer `backend/app/tests/integration/test_migration_c_daily_prediction.py`
+  - [x] Test : les 4 tables existent
+  - [x] Test : `create_run()` → run créé
+  - [x] Test : `get_or_create_run()` × 2 avec même hash → `created=False` au 2ème appel, données filles intactes
+  - [x] Test : `get_or_create_run()` avec hash différent → `created=False`, données filles supprimées
+  - [x] Test : doublon `(run_id, category_id)` → IntegrityError
+  - [x] Test : `upsert_category_scores()` → update sans doublon (appel double, vérification anti-doublon)
+  - [x] Test : `upsert_turning_points()` → remplace les existants (appel double, vérification remplacement)
+  - [x] Test : `get_full_run()` → dict complet avec scores, turning_points, time_blocks
+  - [x] Test : `get_full_run()` → None pour run inexistant
+  - [x] Test : `get_user_history()` → filtre par plage de dates, ordre chronologique
 
 ## Dev Notes
 
@@ -324,12 +326,20 @@ Pattern : `{YYYYMMDD}_0034_migration_c_daily_prediction_tables.py`
 
 ### Agent Model Used
 
-_à remplir_
+Gemini 2.0 Flash
 
 ### Completion Notes List
 
-_à remplir_
+- Création de la migration Alembic 0034 avec les 4 tables de persistance quotidienne.
+- Implémentation des modèles SQLAlchemy avec cascades de suppression (CASCADE DELETE).
+- Développement du repository `DailyPredictionRepository` avec gestion intelligente du cache (invalidation par `input_hash`).
+- Couverture de tests d'intégration complète (migration, repository, contraintes).
+- Validation ruff et formatage du code.
 
 ### File List
 
-_à remplir_
+- `backend/migrations/versions/20260307_0034_migration_c_daily_prediction_tables.py`
+- `backend/app/infra/db/models/daily_prediction.py`
+- `backend/app/infra/db/models/__init__.py`
+- `backend/app/infra/db/repositories/daily_prediction_repository.py`
+- `backend/app/tests/integration/test_migration_c_daily_prediction.py`
