@@ -10,9 +10,10 @@ import {
 interface Props {
   turningPoints: DailyPredictionTurningPoint[];
   lang: Lang;
+  onTurningPointClick?: (severity: number) => void;
 }
 
-export const TurningPointsList: React.FC<Props> = ({ turningPoints, lang }) => {
+export const TurningPointsList: React.FC<Props> = ({ turningPoints, lang, onTurningPointClick }) => {
   if (turningPoints.length === 0) return null;
 
   const locale = getLocale(lang);
@@ -32,11 +33,13 @@ export const TurningPointsList: React.FC<Props> = ({ turningPoints, lang }) => {
           <div 
             key={idx} 
             className="panel" 
+            onClick={() => onTurningPointClick?.(Number(tp.severity))}
             style={{ 
               padding: "1rem",
               border: "1px solid var(--primary)",
               position: "relative",
-              overflow: "hidden"
+              overflow: "hidden",
+              cursor: onTurningPointClick ? "pointer" : "default"
             }}
           >
             <div style={{ 
@@ -53,7 +56,7 @@ export const TurningPointsList: React.FC<Props> = ({ turningPoints, lang }) => {
                 {formatTime(tp.occurred_at_local)}
               </span>
               <span style={{ fontSize: "0.8rem", color: "var(--text-3)", textTransform: "uppercase" }}>
-                {getPredictionMessage("intensity", lang)} : {getPivotSeverityLabel(tp.severity, lang)}
+                {getPredictionMessage("intensity", lang)} : {getPivotSeverityLabel(Number(tp.severity), lang)}
               </span>
             </div>
             

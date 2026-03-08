@@ -26,6 +26,7 @@ def seed():
                     "message": {"type": "string", "minLength": 1, "maxLength": 2500},
                     "suggested_replies": {
                         "type": "array",
+                        "minItems": 0,
                         "maxItems": 5,
                         "items": {"type": "string", "minLength": 1, "maxLength": 80},
                     },
@@ -116,6 +117,7 @@ def seed():
                     },
                     "disclaimers": {
                         "type": "array",
+                        "minItems": 0,
                         "maxItems": 3,
                         "items": {"type": "string", "maxLength": 200},
                     },

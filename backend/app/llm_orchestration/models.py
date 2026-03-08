@@ -6,6 +6,16 @@ from pydantic import BaseModel, Field
 
 EVIDENCE_ID_REGEX = r"^[A-Z0-9_\.:-]{3,80}$"
 
+# Shared reasoning-model detection — single source of truth for gateway and provider.
+# L1 fix: "gpt-5-" prefix (with dash) avoids false match on hypothetical "gpt-50", "gpt-500".
+_REASONING_MODEL_PREFIXES = ("o1-", "o3-", "o4-", "gpt-5-")
+_REASONING_MODEL_EXACT = {"o1", "o3", "o4", "gpt-5"}
+
+
+def is_reasoning_model(model: str) -> bool:
+    """Return True if model uses reasoning config (o-series or GPT-5) instead of temperature."""
+    return model in _REASONING_MODEL_EXACT or model.startswith(_REASONING_MODEL_PREFIXES)
+
 
 class UseCaseConfig(BaseModel):
     """Configuration for a specific LLM use case."""

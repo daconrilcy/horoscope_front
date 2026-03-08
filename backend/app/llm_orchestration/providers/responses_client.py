@@ -16,7 +16,7 @@ from app.ai_engine.exceptions import (
     UpstreamRateLimitError,
     UpstreamTimeoutError,
 )
-from app.llm_orchestration.models import GatewayError, GatewayMeta, GatewayResult, UsageInfo
+from app.llm_orchestration.models import GatewayError, GatewayMeta, GatewayResult, UsageInfo, is_reasoning_model
 
 if TYPE_CHECKING:
     from openai import AsyncOpenAI
@@ -87,7 +87,7 @@ class ResponsesClient:
 
         async def do_create() -> "Response":
             # 1. GPT-5 requires typed content blocks.
-            is_gpt5 = model.startswith("gpt-5")
+            is_gpt5 = model == "gpt-5" or model.startswith("gpt-5-")
             effective_input = self._to_typed_content_blocks(messages) if is_gpt5 else messages
 
             # 2. Base parameters
@@ -99,9 +99,7 @@ class ResponsesClient:
 
             # 3. Reasoning and Temperature
             # GPT-5 and o-series (o1, o3, o4) use reasoning config instead of temperature.
-            is_reasoning = (
-                is_gpt5 or model.startswith(("o1-", "o3-", "o4-")) or model in {"o1", "o3", "o4"}
-            )
+            is_reasoning = is_reasoning_model(model)
 
             if is_reasoning:
                 if reasoning_effort:

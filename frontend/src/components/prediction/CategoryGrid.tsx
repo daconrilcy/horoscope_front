@@ -6,9 +6,10 @@ import { getNoteBand, getCategoryMeta } from "../../utils/predictionBands";
 interface Props {
   categories: DailyPredictionCategory[];
   lang: Lang;
+  onCategoryClick?: (code: string) => void;
 }
 
-export const CategoryGrid: React.FC<Props> = ({ categories, lang }) => {
+export const CategoryGrid: React.FC<Props> = ({ categories, lang, onCategoryClick }) => {
   // Sort by rank asc
   const sortedCategories = [...categories].sort((a, b) => a.rank - b.rank);
 
@@ -24,13 +25,19 @@ export const CategoryGrid: React.FC<Props> = ({ categories, lang }) => {
         const meta = getCategoryMeta(cat.code, lang);
 
         return (
-          <div key={cat.code} className="panel" style={{ 
-            padding: "1rem", 
-            display: "flex", 
-            flexDirection: "column", 
-            alignItems: "center",
-            textAlign: "center"
-          }}>
+          <div 
+            key={cat.code} 
+            className="panel" 
+            onClick={() => onCategoryClick?.(cat.code)}
+            style={{ 
+              padding: "1rem", 
+              display: "flex", 
+              flexDirection: "column", 
+              alignItems: "center",
+              textAlign: "center",
+              cursor: onCategoryClick ? "pointer" : "default"
+            }}
+          >
             <span style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>{meta.icon}</span>
             <span style={{ fontSize: "0.8rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold" }}>
               {meta.label}

@@ -85,3 +85,16 @@ export const PREDICTION_UI_MESSAGES: Record<
   intensity: { fr: "Intensité", en: "Intensity" },
   pending_summary: { fr: "Calcul de votre tendance en cours...", en: "Calculating your daily trend..." },
 };
+
+/**
+ * Helper to get a label with fallback.
+ */
+export function getLabel(
+  dictionary: Record<string, Record<Lang, string>>,
+  code: string,
+  lang: Lang
+): string {
+  const entry = dictionary[code];
+  if (!entry) return code;
+  return entry[lang] || code;
+}

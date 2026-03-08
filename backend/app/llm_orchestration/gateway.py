@@ -26,6 +26,7 @@ from app.llm_orchestration.models import (
     PromptRenderError,
     UnknownUseCaseError,
     UseCaseConfig,
+    is_reasoning_model,
 )
 from app.llm_orchestration.policies.hard_policy import get_hard_policy
 from app.llm_orchestration.providers.responses_client import ResponsesClient
@@ -167,10 +168,15 @@ class LLMGateway:
         context: Dict[str, Any],
         policy: str,
         locale: str,
+        chart_json_in_prompt: bool = False,
     ) -> str:
         """
         Centralizes the construction of the user data block (Layer 4).
         Validates user question presence according to the policy.
+
+        Args:
+            chart_json_in_prompt: When True, chart_json has already been rendered
+                into the developer prompt template and must NOT be duplicated here.
         """
         # Search for question in multiple fields
         question = (
@@ -198,14 +204,10 @@ class LLMGateway:
         if "situation" in context:
             parts.append(f"Context: {context['situation']}")
 
-        # Important : chart_json is included in user message ONLY if it was NOT
-        # already rendered into the developer prompt (redundancy protection).
-        if "chart_json" in context:
-            # We check if it's in required_prompt_placeholders of the config via context
-            # but usually config is known by the caller.
-            # For simplicity, if caller passed it here, we add it.
-            if context.get("_chart_json_in_prompt") is not True:
-                parts.append(f"Technical Data: {context['chart_json']}")
+        # chart_json is included in user message ONLY if it was NOT already rendered
+        # into the developer prompt (redundancy protection).
+        if "chart_json" in context and not chart_json_in_prompt:
+            parts.append(f"Technical Data: {context['chart_json']}")
 
         if not parts:
             return _FALLBACK_USER_MSG.get(locale, _FALLBACK_USER_MSG["fr"])
@@ -615,14 +617,7 @@ class LLMGateway:
 
     def _adjust_reasoning_config(self, config: UseCaseConfig) -> UseCaseConfig:
         """Auto-adjusts tokens, timeout, and reasoning_effort for reasoning models."""
-        _REASONING_PREFIXES = ("o1-", "o3-", "o4-", "gpt-5")
-        _REASONING_EXACT = {"o1", "o3", "o4"}
-
-        is_reasoning = (
-            config.model.startswith(_REASONING_PREFIXES) or config.model in _REASONING_EXACT
-        )
-
-        if is_reasoning:
+        if is_reasoning_model(config.model):
             updates = {}
             if config.max_output_tokens < 16384:
                 updates["max_output_tokens"] = 16384
@@ -759,18 +754,13 @@ class LLMGateway:
             # 9. Layer 4 (User Data) & Composition
             user_data_block = context.get("user_data_block")
             if not user_data_block:
-                context_with_hint = {
-                    **context,
-                    # Only suppress user-layer chart_json when the prompt template
-                    # actually references {{chart_json}}.
-                    "_chart_json_in_prompt": "{{chart_json}}" in config.developer_prompt,
-                }
                 user_data_block = self.build_user_payload(
                     use_case=use_case,
                     user_input=user_input,
-                    context=context_with_hint,
+                    context=context,
                     policy=config.user_question_policy,
                     locale=locale,
+                    chart_json_in_prompt="{{chart_json}}" in config.developer_prompt,
                 )
 
             if config.interaction_mode == "chat":

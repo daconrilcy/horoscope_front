@@ -31,6 +31,7 @@ from app.ai_engine.exceptions import (
     ProviderNotConfiguredError,
     RateLimitExceededError,
     UpstreamError,
+    UpstreamRateLimitError,
     UpstreamTimeoutError,
 )
 from app.ai_engine.exceptions import (
@@ -492,6 +493,20 @@ class AIEngineAdapter:
             except Exception as err:
                 if _can_use_test_fallback(err):
                     return _build_test_chat_fallback(messages)
+                # Preserve typed upstream errors so callers get correct HTTP codes (429/504/502).
+                if isinstance(err, UpstreamRateLimitError):
+                    raise AIEngineAdapterError(
+                        code="rate_limit_exceeded",
+                        message="rate limit exceeded",
+                        status_code=429,
+                        details={"retry_after_ms": str(err.retry_after_ms or 60000)},
+                    ) from err
+                if isinstance(err, UpstreamTimeoutError):
+                    raise AIEngineAdapterError(
+                        code="upstream_timeout",
+                        message="llm provider timeout",
+                        status_code=504,
+                    ) from err
                 from app.llm_orchestration.models import GatewayError
 
                 if isinstance(err, GatewayError):
@@ -610,10 +625,28 @@ class AIEngineAdapter:
                     trace_id=trace_id,
                     db=db,
                 )
+                if result.structured_output:
+                    for key in ("text", "message", "content"):
+                        if key in result.structured_output:
+                            return result.structured_output[key]
                 return result.raw_output
             except Exception as err:
                 if _can_use_test_fallback(err):
                     return _build_test_guidance_fallback(use_case)
+                # Preserve typed upstream errors so callers get correct HTTP codes (429/504/502).
+                if isinstance(err, UpstreamRateLimitError):
+                    raise AIEngineAdapterError(
+                        code="rate_limit_exceeded",
+                        message="rate limit exceeded",
+                        status_code=429,
+                        details={"retry_after_ms": str(err.retry_after_ms or 60000)},
+                    ) from err
+                if isinstance(err, UpstreamTimeoutError):
+                    raise AIEngineAdapterError(
+                        code="upstream_timeout",
+                        message="llm provider timeout",
+                        status_code=504,
+                    ) from err
                 from app.llm_orchestration.models import GatewayError
 
                 if isinstance(err, GatewayError):

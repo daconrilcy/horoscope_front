@@ -1,4 +1,4 @@
-import { MessageCircle, Layers } from 'lucide-react'
+import { MessageCircle, Layers, Calendar } from 'lucide-react'
 import { ShortcutCard } from './ShortcutCard'
 
 const SHORTCUTS = [
@@ -20,20 +20,34 @@ const SHORTCUTS = [
     path: '/consultations',
     isOnline: false,
   },
+  {
+    key: 'history',
+    title: 'Historique',
+    subtitle: 'Mes prédictions',
+    icon: Calendar,
+    badgeColor: 'var(--primary)',
+    path: '/dashboard', // For now, stays on dashboard or a modal
+    isOnline: false,
+  },
 ]
 
 export interface ShortcutsSectionProps {
   onChatClick?: () => void
   onTirageClick?: () => void
+  onHistoryClick?: () => void
 }
 
-export function ShortcutsSection({ onChatClick, onTirageClick }: ShortcutsSectionProps) {
+export function ShortcutsSection({ onChatClick, onTirageClick, onHistoryClick }: ShortcutsSectionProps) {
   return (
     <section className="shortcuts-section">
       <h2 className="shortcuts-section__title">Activités</h2>
       <div className="shortcuts-grid">
         {SHORTCUTS.map((shortcut) => {
-          const handleClick = shortcut.key === 'chat' ? onChatClick : onTirageClick
+          let handleClick = undefined;
+          if (shortcut.key === 'chat') handleClick = onChatClick;
+          else if (shortcut.key === 'tirage') handleClick = onTirageClick;
+          else if (shortcut.key === 'history') handleClick = onHistoryClick;
+
           return (
             <ShortcutCard
               key={shortcut.key}

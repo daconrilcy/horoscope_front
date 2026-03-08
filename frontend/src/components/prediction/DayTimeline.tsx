@@ -10,9 +10,10 @@ import {
 interface Props {
   timeline: DailyPredictionTimeBlock[];
   lang: Lang;
+  onTimelineClick?: () => void;
 }
 
-export const DayTimeline: React.FC<Props> = ({ timeline, lang }) => {
+export const DayTimeline: React.FC<Props> = ({ timeline, lang, onTimelineClick }) => {
   const locale = getLocale(lang);
 
   const formatTime = (iso: string) => {
@@ -23,7 +24,7 @@ export const DayTimeline: React.FC<Props> = ({ timeline, lang }) => {
   };
 
   return (
-    <div style={{ marginBottom: "2rem" }}>
+    <div style={{ marginBottom: "2rem", cursor: onTimelineClick ? "pointer" : "default" }} onClick={onTimelineClick}>
       <h3 style={{ marginBottom: "1rem", color: "var(--text-1)" }}>{getPredictionMessage("timeline", lang)}</h3>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
         {timeline.map((block, idx) => {

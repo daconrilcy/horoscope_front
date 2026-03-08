@@ -61,22 +61,6 @@ export function getCategoryLabel(code: string, lang: Lang): string {
 }
 
 export function getNoteBand(note: number, lang: Lang) {
-  let key = "neutral";
-  let colorVar = "var(--text-2)";
-
-  if (note <= 5) {
-    key = "fragile";
-    colorVar = "var(--danger)";
-  } else if (note <= 9) {
-    key = "tendu"; // Use localized keys
-    if (lang === "en") key = "tense";
-    // Actually our dictionary uses 'fragile', 'tendu', etc. as keys
-    // Let's stick to dictionary keys
-    key = note <= 5 ? "fragile" : note <= 9 ? "tendu" : note <= 12 ? "neutre" : note <= 16 ? "porteur" : "très favorable";
-    
-    // Remap key to canonical for color? No, we use thresholds
-  }
-
   const bandKey = note <= 5 ? "fragile" : note <= 9 ? "tendu" : note <= 12 ? "neutre" : note <= 16 ? "porteur" : "très favorable";
   
   const colors: Record<string, string> = {

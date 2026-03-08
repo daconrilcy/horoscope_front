@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
+import time
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum
@@ -16,6 +18,7 @@ from app.infra.db.repositories.chart_result_repository import ChartResultReposit
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 from app.infra.db.repositories.prediction_ruleset_repository import PredictionRulesetRepository
 from app.infra.db.repositories.user_birth_profile_repository import UserBirthProfileRepository
+from app.infra.observability.metrics import increment_counter
 from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.exceptions import PredictionContextError
 from app.prediction.schemas import EngineInput
@@ -28,6 +31,8 @@ if TYPE_CHECKING:
     from app.prediction.context_loader import PredictionContextLoader
     from app.prediction.persistence_service import PredictionPersistenceService
     from app.prediction.schemas import EngineOutput
+
+logger = logging.getLogger(__name__)
 
 
 class ComputeMode(Enum):
@@ -79,6 +84,9 @@ class DailyPredictionService:
         """
         Orchestrates the resolution of user context, engine execution, and persistence.
         """
+        start_time = time.perf_counter()
+        increment_counter("prediction.compute")
+
         # 1. Resolve dependencies
         profile = self._resolve_profile(db, user_id)
         tz_str = self._resolve_timezone(profile, timezone_override)
@@ -92,9 +100,13 @@ class DailyPredictionService:
             run = DailyPredictionRepository(db).get_run(
                 user_id, resolved_date, reference_version_id, ruleset_id
             )
-            if run is None:
-                return None
-            return ServiceResult(run=run, engine_output=None, was_reused=True)
+            result = None
+            if run is not None:
+                result = ServiceResult(run=run, engine_output=None, was_reused=True)
+            
+            if result:
+                self._log_and_metrics(user_id, start_time, result)
+            return result
 
         # 3. Resolve natal chart
         natal_chart = self._resolve_natal_chart(db, user_id)
@@ -116,7 +128,9 @@ class DailyPredictionService:
         if mode == ComputeMode.compute_if_missing:
             existing_run = DailyPredictionRepository(db).get_run_by_hash(user_id, input_hash)
             if existing_run:
-                return ServiceResult(run=existing_run, engine_output=None, was_reused=True)
+                result = ServiceResult(run=existing_run, engine_output=None, was_reused=True)
+                self._log_and_metrics(user_id, start_time, result)
+                return result
 
         # 6. Mode force_recompute : remove old run if it exists
         if mode == ComputeMode.force_recompute:
@@ -150,10 +164,43 @@ class DailyPredictionService:
             db=db,
         )
 
-        return ServiceResult(
+        result = ServiceResult(
             run=save_result.run,
             engine_output=engine_output,
             was_reused=False,
+        )
+
+        self._log_and_metrics(user_id, start_time, result)
+        return result
+
+    def _log_and_metrics(self, user_id: int, start_time: float, result: ServiceResult) -> None:
+        duration_ms = int((time.perf_counter() - start_time) * 1000)
+        
+        if result.was_reused:
+            increment_counter("prediction.reused")
+
+        has_pivots = False
+        overall_tone = None
+        if result.engine_output:
+            has_pivots = bool(result.engine_output.turning_points)
+            overall_tone = result.engine_output.run_metadata.get("overall_tone")
+        elif result.run and hasattr(result.run, "turning_points") and result.run.turning_points:
+             # If turning_points is a relationship or list in model
+             has_pivots = len(result.run.turning_points) > 0
+        
+        # Note: if result.run.overall_tone is available, we could use it too
+        if not overall_tone and result.run and hasattr(result.run, "overall_tone"):
+            overall_tone = result.run.overall_tone
+
+        logger.info(
+            "prediction.run",
+            extra={
+                "user_id": user_id,
+                "duration_ms": duration_ms,
+                "was_reused": result.was_reused,
+                "has_pivots": has_pivots,
+                "overall_tone": overall_tone,
+            },
         )
 
     def _resolve_profile(self, db: Session, user_id: int) -> UserBirthProfileModel:
