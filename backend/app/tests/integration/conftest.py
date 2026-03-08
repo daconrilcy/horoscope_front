@@ -4,7 +4,10 @@ import logging
 import os
 
 import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
+from app.infra.db.base import Base
 from app.core.rate_limit import reset_rate_limits
 
 # Keep reference-data seed integration flows deterministic without manual shell exports.
@@ -23,3 +26,16 @@ def _reset_in_memory_rate_limits() -> None:
 def _reset_global_logging_disable() -> None:
     # Some unit suites disable logging globally; restore it for integration suites.
     logging.disable(logging.NOTSET)
+
+
+@pytest.fixture
+def db_session() -> Session:
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+    Base.metadata.create_all(bind=engine)
+    SessionLocal = sessionmaker(bind=engine)
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+        Base.metadata.drop_all(bind=engine)

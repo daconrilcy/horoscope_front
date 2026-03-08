@@ -1,6 +1,6 @@
 # Story 35.1 : Persistance du run calculé
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -44,36 +44,36 @@ Double appel avec même `EngineOutput` (même hash) → un seul run en DB, `was_
 
 ### T1 — Ajouter `get_run_by_hash` au repository (AC1)
 
-- [ ] Modifier `backend/app/infra/db/repositories/daily_prediction_repository.py`
-  - [ ] Ajouter `get_run_by_hash(user_id: int, input_hash: str) -> DailyPredictionRunModel | None`
+- [x] Modifier `backend/app/infra/db/repositories/daily_prediction_repository.py`
+  - [x] Ajouter `get_run_by_hash(user_id: int, input_hash: str) -> DailyPredictionRunModel | None`
 
 ### T2 — `PredictionPersistenceService` (AC1–AC7)
 
-- [ ] Créer `backend/app/prediction/persistence_service.py`
-  - [ ] Dataclass `SaveResult(run: DailyPredictionRunModel, was_reused: bool)`
-  - [ ] Classe `PredictionPersistenceService`
-  - [ ] `save(engine_output, user_id, reference_version_id, ruleset_id, db) -> SaveResult`
-    - [ ] Vérifier hash existant via `get_run_by_hash()`
-    - [ ] Si trouvé → retourner `SaveResult(run=existing, was_reused=True)`
-    - [ ] Sinon : créer run, scores, pivots, blocs dans une session
-    - [ ] `_save_scores(run, engine_output, ctx, db)` — calcul du rank inclus
-    - [ ] `_save_turning_points(run, engine_output, db)`
-    - [ ] `_save_time_blocks(run, engine_output, db)`
+- [x] Créer `backend/app/prediction/persistence_service.py`
+  - [x] Dataclass `SaveResult(run: DailyPredictionRunModel, was_reused: bool)`
+  - [x] Classe `PredictionPersistenceService`
+  - [x] `save(engine_output, user_id, reference_version_id, ruleset_id, db) -> SaveResult`
+    - [x] Vérifier hash existant via `get_run_by_hash()`
+    - [x] Si trouvé → retourner `SaveResult(run=existing, was_reused=True)`
+    - [x] Sinon : créer run, scores, pivots, blocs dans une session
+    - [x] `_save_scores(run, engine_output, ctx, db)` — calcul du rank inclus
+    - [x] `_save_turning_points(run, engine_output, db)`
+    - [x] `_save_time_blocks(run, engine_output, db)`
 
 ### T3 — Tests d'intégration (AC1–AC7)
 
-- [ ] Créer `backend/app/tests/integration/test_prediction_persistence.py`
-  - [ ] Setup : DB SQLite en mémoire avec migrations appliquées
-  - [ ] `test_create_new_run` — premier save → `was_reused=False`, run en DB
-  - [ ] `test_reuse_existing_hash` — deuxième save même hash → `was_reused=True`, pas de doublon
-  - [ ] `test_new_run_on_hash_change` — hash différent → nouveau run
-  - [ ] `test_scores_persisted` — autant de scores que de catégories actives
-  - [ ] `test_rank_correct` — catégorie note 18 → rank=1
-  - [ ] `test_rank_tiebreak_sort_order` — même note → rang selon `sort_order`
-  - [ ] `test_turning_points_persisted` — pivots de l'`EngineOutput` → en DB
-  - [ ] `test_time_blocks_persisted` — blocs → en DB
-  - [ ] `test_transaction_rollback` — erreur injection → DB propre
-  - [ ] `test_idempotent_double_save` — double save → un seul run
+- [x] Créer `backend/app/tests/integration/test_prediction_persistence.py`
+  - [x] Setup : DB SQLite en mémoire avec migrations appliquées
+  - [x] `test_create_new_run` — premier save → `was_reused=False`, run en DB
+  - [x] `test_reuse_existing_hash` — deuxième save même hash → `was_reused=True`, pas de doublon
+  - [x] `test_new_run_on_hash_change` — hash différent → nouveau run
+  - [x] `test_scores_persisted` — autant de scores que de catégories actives
+  - [x] `test_rank_correct` — catégorie note 18 → rank=1
+  - [x] `test_rank_tiebreak_sort_order` — même note → rang selon `sort_order`
+  - [x] `test_turning_points_persisted` — pivots de l'`EngineOutput` → en DB
+  - [x] `test_time_blocks_persisted` — blocs → en DB
+  - [x] `test_transaction_rollback` — erreur injection → DB propre
+  - [x] `test_idempotent_double_save` — double save → un seul run
 
 ## Dev Notes
 
@@ -157,10 +157,25 @@ Vérifier que `EngineOutput` (défini en 33-1) expose la `local_date` du run. Si
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+gemini-2.0-flash
 
 ### Debug Log References
 
+- Added `get_run_by_hash` to `DailyPredictionRepository`.
+- Created `PredictionPersistenceService` with transaction support.
+- Implemented score ranking with tiebreak on category `sort_order`.
+- Added serialization for `TurningPoint` drivers and `TimeBlock` dominant categories.
+- Created comprehensive integration tests.
+
 ### Completion Notes List
 
+- All ACs satisfied.
+- Tests pass (10/10) after code review fixes.
+- Code review fixes applied: field name mapping corrected for real TurningPoint/TimeBlock objects (C2), test_transaction_rollback uses deterministic mock injection (H1), 3 missing tests added (C1), unused Any import removed (L1).
+
 ### File List
+
+- `backend/app/infra/db/repositories/daily_prediction_repository.py` (modified)
+- `backend/app/prediction/persistence_service.py` (created)
+- `backend/app/tests/integration/test_prediction_persistence.py` (created)
+- `backend/app/tests/integration/conftest.py` (modified)

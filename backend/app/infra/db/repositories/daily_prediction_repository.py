@@ -18,6 +18,14 @@ class DailyPredictionRepository:
     def __init__(self, db: Session) -> None:
         self.db = db
 
+    def get_run_by_hash(self, user_id: int, input_hash: str) -> DailyPredictionRunModel | None:
+        return self.db.scalar(
+            select(DailyPredictionRunModel).where(
+                DailyPredictionRunModel.user_id == user_id,
+                DailyPredictionRunModel.input_hash == input_hash,
+            )
+        )
+
     def create_run(
         self,
         user_id: int,
