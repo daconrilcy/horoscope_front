@@ -50,6 +50,12 @@ Le ruleset `1.0.0` est conservé pour la lecture des données historiques mais d
    ```
    *Note : Le script gère la réparation automatique si la version est déverrouillée.*
 
+**Calibration et QA :**
+- Les jobs de calibration et les tests QA doivent utiliser la paire canonique `reference=2.0.0` / `ruleset=2.0.0`.
+- `ruleset=1.0.0` reste réservé aux lectures historiques et aux scénarios de compatibilité explicitement legacy.
+- Une `ACTIVE_REFERENCE_VERSION` invalide fait désormais échouer immédiatement les jobs de calibration au lieu de basculer silencieusement sur la référence liée au ruleset.
+- Pour diagnostiquer un appel résiduel en legacy, filtrez les logs `prediction.run` sur `ruleset_version="1.0.0"` puis corrigez la config ou le test concerné.
+
 Pour plus de détails sur la stratégie de versionnement, voir [`docs/architecture/prediction-versioning-transition.md`](../docs/architecture/prediction-versioning-transition.md).
 
 Reference data seed/clone access:

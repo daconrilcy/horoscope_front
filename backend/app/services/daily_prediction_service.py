@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from sqlalchemy import select
 
 from app.core.config import settings
-from app.core.versions import LEGACY_RULESET_VERSION
+from app.core.versions import LEGACY_RULESET_VERSION, get_active_ruleset_version
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.repositories.chart_result_repository import ChartResultRepository
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
@@ -372,10 +372,12 @@ class DailyPredictionService:
             )
 
         if version == LEGACY_RULESET_VERSION:
+            canonical_ruleset_version = get_active_ruleset_version()
             logger.warning(
                 "DEPRECATION: Legacy ruleset '%s' is being used. "
-                "Please migrate to canonical version '2.0.0'.",
+                "Please migrate to canonical version '%s'.",
                 version,
+                canonical_ruleset_version,
                 extra={"ruleset_version": version, "legacy": True},
             )
 

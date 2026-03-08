@@ -78,7 +78,7 @@ def test_case_type(orchestrator, fixture_file):
 
     if "category_scores" in expected:
         for cat, score in expected["category_scores"].items():
-            assert output1.category_scores[cat]["note_20"] == score
+            assert output1.category_scores[cat] == score
     if "detected_events_count" in expected:
         assert len(output1.detected_events) == expected["detected_events_count"]
     if "sample_count" in expected:
@@ -111,8 +111,7 @@ def test_full_snapshot(orchestrator, snapshot_file):
 @pytest.mark.regression
 def test_hash_changes_on_version_change(orchestrator):
     """AC4 - ruleset_version différent → input_hash différent."""
-    # We only have one ruleset seeded (1.0.0), but we can simulate a hash check
-    # since _compute_hash is independent of DB content
+    # Le hash doit refléter le versionning métier, indépendamment du contenu DB.
     natal = {"planets": [], "houses": [], "angles": {}}
 
     input1 = EngineInput(
@@ -122,7 +121,7 @@ def test_hash_changes_on_version_change(orchestrator):
         latitude=48.85,
         longitude=2.35,
         reference_version="2.0.0",
-        ruleset_version="1.0.0",
+        ruleset_version="2.0.0",
     )
 
     input2 = EngineInput(
@@ -132,7 +131,7 @@ def test_hash_changes_on_version_change(orchestrator):
         latitude=48.85,
         longitude=2.35,
         reference_version="2.0.0",
-        ruleset_version="1.0.1",  # Different version
+        ruleset_version="2.0.1",  # Different version
     )
 
     hash1 = orchestrator._compute_hash(input1)

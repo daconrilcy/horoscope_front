@@ -60,14 +60,12 @@ def resolve_calibration_runtime(
     )
 
     if requested_reference_model is None:
-        logger.info(
-            "Calibration reference version %s not found; using ruleset-linked reference %s.",
-            requested_reference,
-            linked_reference.version,
-        )
-        return ResolvedCalibrationRuntime(
-            reference_version=linked_reference.version,
-            ruleset_version=ruleset.version,
+        raise ValueError(
+            "Calibration reference version "
+            f"{requested_reference!r} not found in the configured database. "
+            "Seed prediction reference data first with "
+            "`python scripts/seed_31_prediction_reference_v2.py` "
+            "and keep runtime configuration aligned with the seeded versions."
         )
 
     if requested_reference_model.id != linked_reference.id:

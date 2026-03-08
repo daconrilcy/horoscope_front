@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
 from app.core.config import settings
+from app.core.versions import ACTIVE_REFERENCE_VERSION, ACTIVE_RULESET_VERSION
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.prediction_reference import (
@@ -44,125 +45,60 @@ from scripts.seed_31_prediction_reference_v2 import run_seed
 
 client = TestClient(app)
 
+LEGACY_REFERENCE_VERSION = "1.0.0"
+LEGACY_RULESET_VERSION = "1.0.0"
+
 
 def _reset_prediction_reference(db) -> None:
     """Ensure the prediction reference used by the QA flow is fully re-seeded."""
-    rulesets = (
-        db.query(PredictionRulesetModel)
-        .filter(PredictionRulesetModel.version.in_(["1.0.0", "2.0.0"]))
-        .all()
-    )
-    for ruleset in rulesets:
-        db.execute(
-            delete(CategoryCalibrationModel).where(
-                CategoryCalibrationModel.ruleset_id == ruleset.id
-            )
-        )
-        db.execute(
-            delete(RulesetParameterModel).where(RulesetParameterModel.ruleset_id == ruleset.id)
-        )
-        db.execute(
-            delete(RulesetEventTypeModel).where(RulesetEventTypeModel.ruleset_id == ruleset.id)
-        )
-        db.delete(ruleset)
-    db.flush()
+    db.execute(delete(CategoryCalibrationModel))
+    db.execute(delete(RulesetParameterModel))
+    db.execute(delete(RulesetEventTypeModel))
+    db.execute(delete(PredictionRulesetModel))
 
-    version = (
-        db.query(ReferenceVersionModel)
-        .filter(ReferenceVersionModel.version == "2.0.0")
-        .first()
-    )
-    if version is None:
-        return
-
-    db.execute(
-        delete(PointCategoryWeightModel).where(
-            PointCategoryWeightModel.point_id.in_(
-                db.query(AstroPointModel.id).filter(
-                    AstroPointModel.reference_version_id == version.id
-                )
-            )
-        )
-    )
-    db.execute(delete(AstroPointModel).where(AstroPointModel.reference_version_id == version.id))
-    db.execute(
-        delete(HouseCategoryWeightModel).where(
-            HouseCategoryWeightModel.house_id.in_(
-                db.query(HouseModel.id).filter(HouseModel.reference_version_id == version.id)
-            )
-        )
-    )
-    db.execute(
-        delete(PlanetCategoryWeightModel).where(
-            PlanetCategoryWeightModel.planet_id.in_(
-                db.query(PlanetModel.id).filter(PlanetModel.reference_version_id == version.id)
-            )
-        )
-    )
-    db.execute(
-        delete(PlanetProfileModel).where(
-            PlanetProfileModel.planet_id.in_(
-                db.query(PlanetModel.id).filter(PlanetModel.reference_version_id == version.id)
-            )
-        )
-    )
-    db.execute(
-        delete(HouseProfileModel).where(
-            HouseProfileModel.house_id.in_(
-                db.query(HouseModel.id).filter(HouseModel.reference_version_id == version.id)
-            )
-        )
-    )
-    db.execute(
-        delete(SignRulershipModel).where(SignRulershipModel.reference_version_id == version.id)
-    )
-    db.execute(
-        delete(AspectProfileModel).where(
-            AspectProfileModel.aspect_id.in_(
-                db.query(AspectModel.id).filter(AspectModel.reference_version_id == version.id)
-            )
-        )
-    )
-    db.execute(
-        delete(PredictionCategoryModel).where(
-            PredictionCategoryModel.reference_version_id == version.id
-        )
-    )
-    db.execute(
-        delete(AstroCharacteristicModel).where(
-            AstroCharacteristicModel.reference_version_id == version.id
-        )
-    )
-    db.execute(delete(AspectModel).where(AspectModel.reference_version_id == version.id))
-    db.execute(delete(HouseModel).where(HouseModel.reference_version_id == version.id))
-    db.execute(delete(SignModel).where(SignModel.reference_version_id == version.id))
-    db.execute(delete(PlanetModel).where(PlanetModel.reference_version_id == version.id))
-    db.delete(version)
+    db.execute(delete(PointCategoryWeightModel))
+    db.execute(delete(AstroPointModel))
+    db.execute(delete(HouseCategoryWeightModel))
+    db.execute(delete(PlanetCategoryWeightModel))
+    db.execute(delete(PlanetProfileModel))
+    db.execute(delete(HouseProfileModel))
+    db.execute(delete(SignRulershipModel))
+    db.execute(delete(AspectProfileModel))
+    db.execute(delete(PredictionCategoryModel))
+    db.execute(delete(AstroCharacteristicModel))
+    db.execute(delete(AspectModel))
+    db.execute(delete(HouseModel))
+    db.execute(delete(SignModel))
+    db.execute(delete(PlanetModel))
+    db.execute(delete(ReferenceVersionModel))
     db.flush()
 
 
 def _ensure_prediction_reference_seed(db) -> None:
     ReferenceDataService._clear_cache_for_tests()
     _reset_prediction_reference(db)
-    ReferenceDataService.seed_reference_version(db, "1.0.0")
-    ReferenceDataService.seed_reference_version(db, "2.0.0")
-    
-    # Unlock V2 to allow run_seed to populate prediction-specific rulesets
+    db.commit()
+    db.expire_all()
+    ReferenceDataService.seed_reference_version(db, LEGACY_RULESET_VERSION)
+    ReferenceDataService.seed_reference_version(db, ACTIVE_REFERENCE_VERSION)
+
+    # Unlock the active reference to allow run_seed to populate prediction-specific rulesets.
     from app.infra.db.repositories.reference_repository import ReferenceRepository
+
     repo = ReferenceRepository(db)
-    v2 = repo.get_version("2.0.0")
-    if v2:
-        v2.is_locked = False
+    active_reference = repo.get_version(ACTIVE_REFERENCE_VERSION)
+    if active_reference:
+        active_reference.is_locked = False
         db.commit()
-    
+
     run_seed(db)
     db.commit()
 
 
 @pytest.fixture(autouse=True)
 def setup_db(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(settings, "active_reference_version", "2.0.0")
-    monkeypatch.setattr(settings, "ruleset_version", "2.0.0")
+    monkeypatch.setattr(settings, "active_reference_version", ACTIVE_REFERENCE_VERSION)
+    monkeypatch.setattr(settings, "ruleset_version", ACTIVE_RULESET_VERSION)
     with SessionLocal() as db:
         db.execute(delete(DailyPredictionRunModel))
         db.execute(delete(UserBirthProfileModel))
@@ -196,8 +132,8 @@ def _setup_qa_user_and_natal(db):
     chart_result = ChartResultModel(
         user_id=auth.user.id,
         chart_id=str(uuid.uuid4()),
-        reference_version="2.0.0",
-        ruleset_version="2.0.0",
+        reference_version=settings.active_reference_version,
+        ruleset_version=settings.active_ruleset_version,
         input_hash="integration_qa_hash",
         result_payload={
             "planets": {"Sun": 15.5, "Moon": 220.3},
@@ -239,6 +175,27 @@ def test_categories_all_present():
     }
     codes = {c["code"] for c in data["categories"]}
     assert codes == expected_codes, f"Expected categories {expected_codes}, got {codes}"
+
+
+def test_legacy_ruleset_1_0_0_still_supported(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setattr(settings, "ruleset_version", LEGACY_RULESET_VERSION)
+
+    with SessionLocal() as db:
+        token = _setup_qa_user_and_natal(db)
+
+    response = client.get(
+        "/v1/predictions/daily",
+        headers={"Authorization": f"Bearer {token}"},
+        params={"date": "2026-03-08"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["meta"]["reference_version"] == ACTIVE_REFERENCE_VERSION
+    assert data["meta"]["ruleset_version"] == LEGACY_RULESET_VERSION
+    assert data["categories"]
 
 
 def test_notes_in_valid_range():

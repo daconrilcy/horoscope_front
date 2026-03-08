@@ -35,11 +35,20 @@ def test_runtime_accepts_aligned_reference_ruleset_versions(db_session: Session)
     runtime = resolve_calibration_runtime(
         db_session,
         requested_reference_version="2.0.0",
-        requested_ruleset_version="1.0.0",
+        requested_ruleset_version="2.0.0",
     )
 
     assert runtime.reference_version == "2.0.0"
-    assert runtime.ruleset_version == "1.0.0"
+    assert runtime.ruleset_version == "2.0.0"
+
+
+def test_runtime_raises_actionable_error_when_reference_missing(db_session: Session):
+    with pytest.raises(ValueError, match="Calibration reference version '9.9.9' not found"):
+        resolve_calibration_runtime(
+            db_session,
+            requested_reference_version="9.9.9",
+            requested_ruleset_version="2.0.0",
+        )
 
 
 def test_runtime_raises_actionable_error_when_ruleset_missing():

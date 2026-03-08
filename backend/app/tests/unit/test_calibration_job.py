@@ -12,7 +12,7 @@ from app.jobs.calibration.runtime import ResolvedCalibrationRuntime
 from app.jobs.generate_daily_calibration_dataset import run_job
 from app.tests.regression.helpers import create_session
 
-_MOCK_RUNTIME = ResolvedCalibrationRuntime(reference_version="2.0.0", ruleset_version="1.0.0")
+_MOCK_RUNTIME = ResolvedCalibrationRuntime(reference_version="2.0.0", ruleset_version="2.0.0")
 
 
 @pytest.fixture
@@ -62,7 +62,7 @@ def test_job_stores_raw_day(db_session):
         ),
         patch(
             "app.jobs.generate_daily_calibration_dataset.CALIBRATION_VERSIONS",
-            {"reference_version": "2.0.0", "ruleset_version": "1.0.0"},
+            {"reference_version": "2.0.0", "ruleset_version": "2.0.0"},
         ),
         patch("app.jobs.generate_daily_calibration_dataset.SessionLocal", return_value=db_session),
     ):
@@ -104,7 +104,7 @@ def test_job_skips_existing_entry(db_session):
                 category_code=category_code,
                 raw_score=1.0,
                 reference_version="2.0.0",
-                ruleset_version="1.0.0",
+                ruleset_version="2.0.0",
             )
         )
     db_session.commit()
@@ -134,7 +134,7 @@ def test_job_skips_existing_entry(db_session):
         ),
         patch(
             "app.jobs.generate_daily_calibration_dataset.CALIBRATION_VERSIONS",
-            {"reference_version": "2.0.0", "ruleset_version": "1.0.0"},
+            {"reference_version": "2.0.0", "ruleset_version": "2.0.0"},
         ),
         patch("app.jobs.generate_daily_calibration_dataset.SessionLocal", return_value=db_session),
     ):
@@ -156,7 +156,7 @@ def test_job_resume_after_interruption(db_session):
             power=0.1,
             volatility=0.2,
             reference_version="2.0.0",
-            ruleset_version="1.0.0",
+            ruleset_version="2.0.0",
         )
     )
     db_session.commit()
@@ -186,7 +186,7 @@ def test_job_resume_after_interruption(db_session):
         ),
         patch(
             "app.jobs.generate_daily_calibration_dataset.CALIBRATION_VERSIONS",
-            {"reference_version": "2.0.0", "ruleset_version": "1.0.0"},
+            {"reference_version": "2.0.0", "ruleset_version": "2.0.0"},
         ),
         patch("app.jobs.generate_daily_calibration_dataset.SessionLocal", return_value=db_session),
     ):

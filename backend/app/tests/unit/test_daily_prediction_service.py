@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlalchemy.orm import Session
 
+from app.core.versions import ACTIVE_RULESET_VERSION
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.prediction.schemas import EngineOutput
@@ -205,7 +206,9 @@ def test_identical_hash_not_recomputed(
         
         # Versions resolution
         db.scalar.return_value = 10
-        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20, reference_version_id=10)
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
 
         result = service.get_or_compute(
             user_id=1,
@@ -234,7 +237,9 @@ def test_force_recompute(service, db, mock_profile, context_loader, persistence_
 
         # Versions resolution
         db.scalar.return_value = 10
-        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20, reference_version_id=10)
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
 
         # Simulate an existing run that must be deleted
         mock_old_run = MagicMock(spec=DailyPredictionRunModel)
@@ -270,7 +275,9 @@ def test_read_only_existing(service, db, mock_profile):
         
         # Versions resolution
         db.scalar.return_value = 10
-        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20, reference_version_id=10)
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
 
         result = service.get_or_compute(
             user_id=1,
@@ -364,6 +371,41 @@ def test_ruleset_legacy_logs_deprecation(service, db, mock_profile, caplog):
                 )
         
         assert "DEPRECATION: Legacy ruleset '1.0.0' is being used" in caplog.text
+        assert f"canonical version '{ACTIVE_RULESET_VERSION}'" in caplog.text
+
+
+def test_prediction_run_log_includes_ruleset_version(service, db, mock_profile, caplog):
+    svc_path = "app.services.daily_prediction_service"
+    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo:
+
+        mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
+        mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
+            result_payload={}
+        )
+        mock_existing_run = MagicMock(spec=DailyPredictionRunModel)
+        mock_daily_repo.return_value.get_run_by_hash.return_value = mock_existing_run
+        db.scalar.return_value = 10
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
+
+        with caplog.at_level(logging.INFO):
+            result = service.get_or_compute(
+                user_id=1,
+                db=db,
+                ruleset_version="1.0.0",
+            )
+
+        assert result is not None
+        prediction_run_records = [
+            record for record in caplog.records if record.message == "prediction.run"
+        ]
+        assert prediction_run_records
+        assert prediction_run_records[-1].ruleset_version == "1.0.0"
+        assert prediction_run_records[-1].was_reused is True
 
 
 def test_read_only_missing(service, db, mock_profile):
@@ -377,7 +419,9 @@ def test_read_only_missing(service, db, mock_profile):
         
         # Versions resolution
         db.scalar.return_value = 10
-        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20, reference_version_id=10)
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
 
         result = service.get_or_compute(
             user_id=1,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from datetime import date, datetime
 from unittest.mock import MagicMock, patch
 
@@ -7,11 +8,12 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
-from app.core.config import settings
 from app.api.v1.routers.predictions import get_daily_prediction_service
+from app.core.config import settings
 from app.infra.db.base import Base
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.models.user import UserModel
+from app.infra.db.models.user_refresh_token import UserRefreshTokenModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
@@ -26,18 +28,24 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def cleanup_tables():
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine, checkfirst=True)
     app.dependency_overrides.clear()
     with SessionLocal() as db:
+        db.execute(delete(UserRefreshTokenModel))
         db.execute(delete(UserModel))
+        db.execute(delete(ReferenceVersionModel))
         db.commit()
+    yield
+    app.dependency_overrides.clear()
 
 
 def _register_and_get_access_token() -> str:
     with SessionLocal() as db:
         auth = AuthService.register(
-            db, email="daily-api-user@example.com", password="strong-pass-123", role="user"
+            db,
+            email=f"daily-api-user-{uuid.uuid4()}@example.com",
+            password="strong-pass-123",
+            role="user",
         )
         db.commit()
         return auth.tokens.access_token
@@ -46,7 +54,10 @@ def _register_and_get_access_token() -> str:
 def _register_admin_and_get_token() -> str:
     with SessionLocal() as db:
         auth = AuthService.register(
-            db, email="admin@example.com", password="admin-pass-123", role="admin"
+            db,
+            email=f"admin-{uuid.uuid4()}@example.com",
+            password="admin-pass-123",
+            role="admin",
         )
         db.commit()
         return auth.tokens.access_token

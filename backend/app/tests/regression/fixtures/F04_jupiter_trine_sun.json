@@ -107,27 +107,111 @@
     "latitude": 48.85,
     "longitude": 2.35,
     "reference_version": "2.0.0",
-    "ruleset_version": "1.0.0",
+    "ruleset_version": "2.0.0",
     "debug_mode": true
   },
   "expected": {
-    "input_hash": "d1bea74e5361f48d80aeea7504d83cee2745ce4d32bb238fff0cade89d3a7f0c",
+    "input_hash": "9e3aa74dbd23cf1890510edfd94830e3d903bc22bd05d4e5d8650c20f44b6e65",
     "category_scores": {
-      "energy": 10,
-      "mood": 10,
-      "health": 10,
-      "work": 10,
-      "career": 10,
-      "money": 10,
-      "love": 10,
-      "sex_intimacy": 10,
-      "family_home": 10,
-      "social_network": 10,
-      "communication": 10,
-      "pleasure_creativity": 10
+      "energy": {
+        "note_20": 10,
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "power": 0.0,
+        "volatility": 0.0,
+        "sort_order": 1
+      },
+      "mood": {
+        "note_20": 10,
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "power": 0.0,
+        "volatility": 0.0,
+        "sort_order": 2
+      },
+      "health": {
+        "note_20": 10,
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "power": 0.0,
+        "volatility": 0.0,
+        "sort_order": 3
+      },
+      "work": {
+        "note_20": 10,
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "power": 0.0,
+        "volatility": 0.0,
+        "sort_order": 4
+      },
+      "career": {
+        "note_20": 10,
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "power": 0.0,
+        "volatility": 0.0,
+        "sort_order": 5
+      },
+      "money": {
+        "note_20": 10,
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "power": 0.0,
+        "volatility": 0.0,
+        "sort_order": 6
+      },
+      "love": {
+        "note_20": 10,
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "power": 0.0,
+        "volatility": 0.0,
+        "sort_order": 7
+      },
+      "sex_intimacy": {
+        "note_20": 10,
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "power": 0.0,
+        "volatility": 0.0,
+        "sort_order": 8
+      },
+      "family_home": {
+        "note_20": 10,
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "power": 0.0,
+        "volatility": 0.0,
+        "sort_order": 9
+      },
+      "social_network": {
+        "note_20": 10,
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "power": 0.0,
+        "volatility": 0.0,
+        "sort_order": 10
+      },
+      "communication": {
+        "note_20": 10,
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "power": 0.0,
+        "volatility": 0.0,
+        "sort_order": 11
+      },
+      "pleasure_creativity": {
+        "note_20": 10,
+        "raw_score": 0.0,
+        "normalized_score": 0.0,
+        "power": 0.0,
+        "volatility": 0.0,
+        "sort_order": 12
+      }
     },
     "detected_events_count": 51,
-    "turning_points_count": 2,
+    "turning_points_count": 0,
     "sample_count": 96,
     "is_provisional_calibration": true
   }
