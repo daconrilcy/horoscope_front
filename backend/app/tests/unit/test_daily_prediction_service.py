@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -65,7 +66,9 @@ def test_user_without_natal(service, db):
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_prof
         mock_chart_repo.return_value.get_latest_by_user_id.return_value = None
         db.scalar.return_value = 10  # reference_version_id
-        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20, reference_version_id=10)
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
 
         with pytest.raises(DailyPredictionServiceError) as excinfo:
             service.get_or_compute(
@@ -155,8 +158,10 @@ def test_user_with_natal_full_compute(
         mock_daily_repo.return_value.get_run_by_hash.return_value = None
         
         # Versions resolution
-        db.scalar.return_value = 10 # reference_version_id
-        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20, reference_version_id=10) # ruleset_id
+        db.scalar.return_value = 10  # reference_version_id
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )  # ruleset_id
         
         # Engine run
         mock_output = MagicMock(spec=EngineOutput)
@@ -330,6 +335,35 @@ def test_ruleset_inconsistent_raises(service, db, mock_profile):
                 reference_version="ref10"
             )
         assert excinfo.value.code == "ruleset_inconsistent"
+
+
+def test_ruleset_legacy_logs_deprecation(service, db, mock_profile, caplog):
+    svc_path = "app.services.daily_prediction_service"
+    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo:
+        
+        mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
+        mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
+            result_payload={}
+        )
+        # Versions resolution
+        db.scalar.return_value = 10
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
+
+        with caplog.at_level(logging.WARNING):
+            # Use compute_if_missing and return existing run to avoid further complexity
+            with patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo:
+                mock_daily_repo.return_value.get_run_by_hash.return_value = MagicMock()
+                service.get_or_compute(
+                    user_id=1,
+                    db=db,
+                    ruleset_version="1.0.0"
+                )
+        
+        assert "DEPRECATION: Legacy ruleset '1.0.0' is being used" in caplog.text
 
 
 def test_read_only_missing(service, db, mock_profile):

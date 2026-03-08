@@ -183,7 +183,10 @@ def run_seed(db: Session):
             )
         )
         
-        all_ok = all(actual.get(k, 0) == v for k, v in EXPECTED_COUNTS.items()) and ruleset_v2 is not None
+        all_ok = (
+            all(actual.get(k, 0) == v for k, v in EXPECTED_COUNTS.items())
+            and ruleset_v2 is not None
+        )
         
         if all_ok and v2.is_locked:
             print("2.0.0 already seeded and locked — skipping")

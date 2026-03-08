@@ -14,6 +14,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from sqlalchemy import select
 
 from app.core.config import settings
+from app.core.versions import LEGACY_RULESET_VERSION
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.repositories.chart_result_repository import ChartResultRepository
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
@@ -110,7 +111,9 @@ class DailyPredictionService:
                 result = ServiceResult(run=run, engine_output=None, was_reused=True)
 
             if result:
-                self._log_and_metrics(user_id, start_time, result)
+                self._log_and_metrics(
+                    user_id, start_time, result, ruleset_version=resolved_ruleset_version
+                )
             return result
 
         # prediction.compute is only incremented for actual compute paths (not read_only)
@@ -137,7 +140,9 @@ class DailyPredictionService:
             existing_run = DailyPredictionRepository(db).get_run_by_hash(user_id, input_hash)
             if existing_run:
                 result = ServiceResult(run=existing_run, engine_output=None, was_reused=True)
-                self._log_and_metrics(user_id, start_time, result)
+                self._log_and_metrics(
+                    user_id, start_time, result, ruleset_version=resolved_ruleset_version
+                )
                 return result
 
         # 6. Mode force_recompute : remove old run if it exists
@@ -167,7 +172,9 @@ class DailyPredictionService:
                 engine_output=engine_output,
                 was_reused=False,
             )
-            self._log_and_metrics(user_id, start_time, result)
+            self._log_and_metrics(
+                user_id, start_time, result, ruleset_version=resolved_ruleset_version
+            )
             return result
 
         except Exception as e:
@@ -180,7 +187,13 @@ class DailyPredictionService:
             fallback_run = self._try_read_latest_available(db, user_id, resolved_date)
             if fallback_run:
                 result = ServiceResult(run=fallback_run, engine_output=None, was_reused=True)
-                self._log_and_metrics(user_id, start_time, result, error=error_str)
+                self._log_and_metrics(
+                    user_id,
+                    start_time,
+                    result,
+                    error=error_str,
+                    ruleset_version=resolved_ruleset_version,
+                )
                 return result
 
             # No fallback available — log final failure (AC3) then re-raise as service error (AC5)
@@ -192,6 +205,7 @@ class DailyPredictionService:
                     "duration_ms": duration_ms,
                     "was_reused": False,
                     "error": error_str,
+                    "ruleset_version": resolved_ruleset_version,
                 },
             )
             if isinstance(e, DailyPredictionServiceError):
@@ -248,6 +262,7 @@ class DailyPredictionService:
         result: ServiceResult,
         *,
         error: str | None = None,
+        ruleset_version: str | None = None,
     ) -> None:
         duration_ms = int((time.perf_counter() - start_time) * 1000)
 
@@ -273,6 +288,8 @@ class DailyPredictionService:
             "has_pivots": has_pivots,
             "overall_tone": overall_tone,
         }
+        if ruleset_version:
+            log_extra["ruleset_version"] = ruleset_version
         if error is not None:
             log_extra["error"] = error
 
@@ -352,6 +369,14 @@ class DailyPredictionService:
                 f"{ruleset.reference_version_id}, "
                 f"mais la référence active demandée est ID {expected_reference_version_id}. "
                 "Vérifiez la cohérence de la configuration runtime.",
+            )
+
+        if version == LEGACY_RULESET_VERSION:
+            logger.warning(
+                "DEPRECATION: Legacy ruleset '%s' is being used. "
+                "Please migrate to canonical version '2.0.0'.",
+                version,
+                extra={"ruleset_version": version, "legacy": True},
             )
 
         return ruleset.id

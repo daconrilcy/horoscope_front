@@ -9,6 +9,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from app.core.versions import ACTIVE_REFERENCE_VERSION, ACTIVE_RULESET_VERSION
+
 backend_root = Path(__file__).parent.parent.parent
 env_path = backend_root / ".env"
 
@@ -45,9 +47,6 @@ class AspectSchoolType(str, Enum):
     MODERN = "modern"
     CLASSIC = "classic"
     STRICT = "strict"
-
-
-from app.core.versions import ACTIVE_REFERENCE_VERSION, ACTIVE_RULESET_VERSION
 
 
 class Settings:
@@ -112,7 +111,9 @@ class Settings:
         self.database_url = self._normalize_database_url(
             os.getenv("DATABASE_URL", "sqlite:///./horoscope.db")
         )
-        self.active_reference_version = os.getenv("ACTIVE_REFERENCE_VERSION", ACTIVE_REFERENCE_VERSION)
+        self.active_reference_version = os.getenv(
+            "ACTIVE_REFERENCE_VERSION", ACTIVE_REFERENCE_VERSION
+        )
         self._ruleset_version = os.getenv("RULESET_VERSION", ACTIVE_RULESET_VERSION)
 
         default_zodiac = (

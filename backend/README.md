@@ -33,7 +33,27 @@ Note:
 - Les rulesets `1.0.0` (legacy) et `2.0.0` (canonique) sont seedés sur la référence `2.0.0` via [`backend/scripts/seed_31_prediction_reference_v2.py`](./scripts/seed_31_prediction_reference_v2.py).
 - `backend/.env.example` et `backend/.env` doivent rester alignés sur cette paire tant que le seed/runtime n'a pas changé.
 
-## Quality
+### Transition de versioning (Ruleset 2.0.0)
+
+Le ruleset `2.0.0` est désormais la version canonique alignée sur la référence `2.0.0`.
+Le ruleset `1.0.0` est conservé pour la lecture des données historiques mais déclenche un log de `DEPRECATION`.
+
+**Runbook de transition (Dev/Local) :**
+1. Mettre à jour votre `.env` local :
+   ```env
+   ACTIVE_REFERENCE_VERSION=2.0.0
+   RULESET_VERSION=2.0.0
+   ```
+2. Re-seeder la référence V2 pour inclure le ruleset canonique :
+   ```bash
+   python -m scripts.seed_31_prediction_reference_v2
+   ```
+   *Note : Le script gère la réparation automatique si la version est déverrouillée.*
+
+Pour plus de détails sur la stratégie de versionnement, voir [`docs/architecture/prediction-versioning-transition.md`](../docs/architecture/prediction-versioning-transition.md).
+
+Reference data seed/clone access:
+
 
 **🚀 [Natal Pro Dev Guide](../docs/natal-pro-dev-guide.md) (Settings, Errors, Validation)** — *Reference for audit-grade astrology calculation.*
 
