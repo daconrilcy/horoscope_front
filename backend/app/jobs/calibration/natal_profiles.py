@@ -10,11 +10,7 @@ class CalibrationVersions(Mapping[str, str]):
 
     def __getitem__(self, key: str) -> str:
         if key == "reference_version":
-            return (
-                settings.active_reference_version
-                if settings.active_reference_version != "1.0.0"
-                else "2.0.0"
-            )
+            return settings.active_reference_version
         if key == "ruleset_version":
             return settings.active_ruleset_version
         raise KeyError(key)

@@ -55,7 +55,7 @@ def test_job_stores_raw_day(db_session):
         ),
         patch(
             "app.jobs.generate_daily_calibration_dataset.CALIBRATION_VERSIONS",
-            {"reference_version": "1.0.0", "ruleset_version": "1.0.0"},
+            {"reference_version": "2.0.0", "ruleset_version": "1.0.0"},
         ),
         patch("app.jobs.generate_daily_calibration_dataset.SessionLocal", return_value=db_session),
     ):
@@ -96,7 +96,7 @@ def test_job_skips_existing_entry(db_session):
                 local_date=date(2024, 1, 1),
                 category_code=category_code,
                 raw_score=1.0,
-                reference_version="1.0.0",
+                reference_version="2.0.0",
                 ruleset_version="1.0.0",
             )
         )
@@ -123,7 +123,7 @@ def test_job_skips_existing_entry(db_session):
         ),
         patch(
             "app.jobs.generate_daily_calibration_dataset.CALIBRATION_VERSIONS",
-            {"reference_version": "1.0.0", "ruleset_version": "1.0.0"},
+            {"reference_version": "2.0.0", "ruleset_version": "1.0.0"},
         ),
         patch("app.jobs.generate_daily_calibration_dataset.SessionLocal", return_value=db_session),
     ):
@@ -144,7 +144,7 @@ def test_job_resume_after_interruption(db_session):
             raw_score=1.0,
             power=0.1,
             volatility=0.2,
-            reference_version="1.0.0",
+            reference_version="2.0.0",
             ruleset_version="1.0.0",
         )
     )
@@ -171,7 +171,7 @@ def test_job_resume_after_interruption(db_session):
         ),
         patch(
             "app.jobs.generate_daily_calibration_dataset.CALIBRATION_VERSIONS",
-            {"reference_version": "1.0.0", "ruleset_version": "1.0.0"},
+            {"reference_version": "2.0.0", "ruleset_version": "1.0.0"},
         ),
         patch("app.jobs.generate_daily_calibration_dataset.SessionLocal", return_value=db_session),
     ):

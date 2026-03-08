@@ -238,6 +238,7 @@ Gemini 2.0 Flash
 - Implémentation du repository `CalibrationRepository` avec méthodes `exists`, `save` et `count`.
 - Création du job batch `generate_daily_calibration_dataset.py` supportant l'idempotence, la reprise sur erreur et l'exécution sans couche éditoriale.
 - Correction des profils de calibration pour fournir `house_cusps` au format attendu par le moteur.
+- Durcissement post-validation: résolution runtime explicite du couple `reference_version` / `ruleset_version` à partir du ruleset réellement seedé en base, sans fallback codé en dur dans `natal_profiles.py`.
 - Exécution locale complète validée avec versions réelles `reference_version=2.0.0` et `ruleset_version=1.0.0`.
 - Tests unitaires validant le stockage correct des scores, le skip des entrées existantes et la reprise sur dataset partiel.
 
@@ -257,6 +258,10 @@ Gemini 2.0 Flash
 
 ### Review Date
 2026-03-08
+
+## Change Log
+
+- 2026-03-08: Durcissement post-vérification locale du job avec résolution runtime des versions et revalidation réelle (`Computed=1830`, second run idempotent `Computed=0`, `Skipped=1830`).
 
 ### Outcome
 Approved after fixes.

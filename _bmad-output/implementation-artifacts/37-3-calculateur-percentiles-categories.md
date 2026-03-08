@@ -259,6 +259,7 @@ Gemini 2.0 Flash
 - Création de l'entrypoint CLI `compute_calibration_percentiles.py`.
 - Validation de l'injection en base de données et du mécanisme de basculement automatique via `PredictionRulesetRepository`.
 - Gestion des rapports de contrôle au format JSON.
+- Durcissement post-validation: résolution runtime du couple de versions depuis le ruleset actif seedé et génération forcée du rapport dans `docs/calibration/percentile_report.json` à la racine du repo.
 - Correction post-review du choix de versions par défaut pour exécuter la calibration sur `2.0.0 / 1.0.0`.
 - Correction post-review de l'écriture transactionnelle pour éviter un état partiel en base en cas d'échec pendant le run.
 - Correction post-review du rapport JSON pour inclure la liste complète des `outliers` en plus du `outlier_count`.
@@ -278,6 +279,10 @@ Gemini 2.0 Flash
 - `backend/app/jobs/calibration/percentile_calculator.py`
 - `backend/app/jobs/compute_calibration_percentiles.py`
 - `backend/app/jobs/calibration/natal_profiles.py` (modifié)
+
+## Change Log
+
+- 2026-03-08: Vérification locale post-dev validée après génération du dataset réel (`21960` raw days) et injection réussie de `12` calibrations avec rapport JSON à la racine `docs/calibration/percentile_report.json`.
 - `backend/app/prediction/calibrator.py` (modifié post-review métier)
 - `backend/app/tests/unit/test_calibrator.py` (modifié post-review métier)
 - `backend/app/tests/unit/test_percentile_calculator.py`

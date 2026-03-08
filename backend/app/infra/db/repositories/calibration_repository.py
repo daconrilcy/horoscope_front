@@ -1,9 +1,12 @@
-# backend/app/infra/db/repositories/calibration_repository.py
 from __future__ import annotations
+
 from datetime import date
-from sqlalchemy import select, func
+
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+
 from app.infra.db.models.calibration import CalibrationRawDayModel
+
 
 class CalibrationRepository:
     def __init__(self, db: Session) -> None:
@@ -48,8 +51,8 @@ class CalibrationRepository:
                 CalibrationRawDayModel.ruleset_version == ruleset_version,
             )
         ).all()
-        
-        scores_by_cat = {}
+
+        scores_by_cat: dict[str, list[float]] = {}
         for cat_code, score in results:
             if cat_code not in scores_by_cat:
                 scores_by_cat[cat_code] = []

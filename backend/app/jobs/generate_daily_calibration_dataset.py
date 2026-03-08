@@ -13,6 +13,7 @@ from app.jobs.calibration.natal_profiles import (
     CALIBRATION_PROFILES,
     CALIBRATION_VERSIONS,
 )
+from app.jobs.calibration.runtime import resolve_calibration_runtime
 from app.prediction.context_loader import PredictionContextLoader
 from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.schemas import EngineInput
@@ -76,12 +77,18 @@ def run_job() -> None:
     db: Session = SessionLocal()
     repo = CalibrationRepository(db)
     dates = get_date_range(CALIBRATION_DATE_RANGE["start"], CALIBRATION_DATE_RANGE["end"])
-    ref_version = CALIBRATION_VERSIONS["reference_version"]
-    ruleset_version = CALIBRATION_VERSIONS["ruleset_version"]
     if not dates:
         logger.info("Calibration job skipped: empty date range.")
         db.close()
         return
+
+    runtime = resolve_calibration_runtime(
+        db,
+        requested_reference_version=CALIBRATION_VERSIONS["reference_version"],
+        requested_ruleset_version=CALIBRATION_VERSIONS["ruleset_version"],
+    )
+    ref_version = runtime.reference_version
+    ruleset_version = runtime.ruleset_version
 
     def ctx_loader(
         reference_version_value: str,
