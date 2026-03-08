@@ -36,13 +36,13 @@ so that je dispose de données d'usage réelles pour piloter les itérations pro
 - [x] Exporter `trackEvent`
 - [x] Définir les constantes `EVENTS`
 
-### T2 — Ajouter les 6 appels trackEvent dans les composants prediction (AC1, AC3)
+### T2 — Ajouter les 6 appels trackEvent dans TodayPage via callbacks (AC1, AC3)
 
-- [x] Ajouter `PREDICTION_VIEWED` et `PREDICTION_REFRESHED` dans `TodayPage.tsx`
-- [x] Ajouter `CATEGORY_CLICKED` dans `CategoryGrid.tsx`
-- [x] Ajouter `TIMELINE_OPENED` dans `DayTimeline.tsx`
-- [x] Ajouter `TURNING_POINT_OPENED` dans `TurningPointsList.tsx`
-- [x] Ajouter `HISTORY_VIEWED` dans `ShortcutsSection.tsx`
+- [x] Ajouter `PREDICTION_VIEWED` et `PREDICTION_REFRESHED` dans `TodayPage.tsx` (via useEffect sur `prediction`)
+- [x] Ajouter `CATEGORY_CLICKED` dans `TodayPage.tsx` (passé comme `onCategoryClick` à `CategoryGrid.tsx`)
+- [x] Ajouter `TIMELINE_OPENED` dans `TodayPage.tsx` (passé comme `onTimelineClick` à `DayTimeline.tsx`)
+- [x] Ajouter `TURNING_POINT_OPENED` dans `TodayPage.tsx` (passé comme `onTurningPointClick` à `TurningPointsList.tsx`)
+- [x] Ajouter `HISTORY_VIEWED` dans `TodayPage.tsx` (passé comme `onHistoryClick` à `ShortcutsSection.tsx`)
 
 ### T3 — Ajouter logs structurés dans DailyPredictionService (AC2, AC5)
 
@@ -86,8 +86,14 @@ Gemini 2.0 Flash
 - `backend/app/tests/unit/test_daily_prediction_metrics.py`
 - `frontend/src/i18n/predictions.ts` (modifié)
 - `frontend/src/utils/predictionI18n.ts` (modifié)
+- `backend/app/llm_orchestration/gateway.py` (modifié — hors scope analytics, refactor chart_json_in_prompt)
+- `backend/app/llm_orchestration/models.py` (modifié — hors scope analytics, ajout is_reasoning_model)
+- `backend/app/llm_orchestration/providers/responses_client.py` (modifié — hors scope analytics)
+- `backend/app/services/ai_engine_adapter.py` (modifié — hors scope analytics)
+- `backend/scripts/seed_28_4.py` (hors scope analytics)
 
 ## Change Log
 
 - 2026-03-08: Story créée pour Epic 38.
 - 2026-03-08: Implémentation complète de l'instrumentation analytics et observabilité.
+- 2026-03-08: Code review — correctifs appliqués : (M1) `increment_counter("prediction.compute")` déplacé hors du chemin read_only ; (M3) `TIMELINE_OPENED` limité au clic sur le titre h3 ; (L2) suppression du `range_days: 7` hardcodé dans `HISTORY_VIEWED` ; (L3) type `EventName` ajouté dans `analytics.ts` pour sécuriser `trackEvent` ; (L4) `PREDICTION_REFRESHED` tracké après le succès du rechargement via ref ; (M2/L1) File List et descriptions T2 corrigés dans la story.

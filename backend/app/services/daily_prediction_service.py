@@ -85,7 +85,6 @@ class DailyPredictionService:
         Orchestrates the resolution of user context, engine execution, and persistence.
         """
         start_time = time.perf_counter()
-        increment_counter("prediction.compute")
 
         # 1. Resolve dependencies
         profile = self._resolve_profile(db, user_id)
@@ -107,6 +106,9 @@ class DailyPredictionService:
             if result:
                 self._log_and_metrics(user_id, start_time, result)
             return result
+
+        # prediction.compute is only incremented for actual compute paths (not read_only)
+        increment_counter("prediction.compute")
 
         # 3. Resolve natal chart
         natal_chart = self._resolve_natal_chart(db, user_id)

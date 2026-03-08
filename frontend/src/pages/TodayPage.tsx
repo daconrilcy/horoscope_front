@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { RefreshCw } from 'lucide-react'
 
 import { TodayHeader } from '../components/TodayHeader'
@@ -21,6 +21,7 @@ export function TodayPage() {
   const navigate = useNavigate()
   const accessToken = useAccessTokenSnapshot()
   const lang = detectLang() === 'en' ? 'en' : 'fr'
+  const manualRefreshPending = useRef(false)
 
   const { data: user, isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useAuthMe(accessToken)
 
@@ -37,6 +38,10 @@ export function TodayPage() {
         date: prediction.meta.date_local,
         was_reused: prediction.meta.was_reused,
       })
+      if (manualRefreshPending.current) {
+        trackEvent(EVENTS.PREDICTION_REFRESHED, { was_reused: prediction.meta.was_reused })
+        manualRefreshPending.current = false
+      }
     }
   }, [prediction])
 
@@ -51,7 +56,7 @@ export function TodayPage() {
   }
 
   const handleRefresh = () => {
-    trackEvent(EVENTS.PREDICTION_REFRESHED)
+    manualRefreshPending.current = true
     refetchPrediction()
   }
 
@@ -69,7 +74,7 @@ export function TodayPage() {
   }
 
   const handleHistoryClick = () => {
-    trackEvent(EVENTS.HISTORY_VIEWED, { range_days: 7 })
+    trackEvent(EVENTS.HISTORY_VIEWED)
   }
 
   return (

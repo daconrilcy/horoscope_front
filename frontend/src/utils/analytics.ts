@@ -15,7 +15,9 @@ export const EVENTS = {
   HISTORY_VIEWED: 'history_viewed',
 } as const;
 
-export function trackEvent(name: string, props: Record<string, unknown> = {}): void {
+export type EventName = typeof EVENTS[keyof typeof EVENTS];
+
+export function trackEvent(name: EventName, props: Record<string, unknown> = {}): void {
   // Delegate to window.analytics if present (Segment, custom, etc.)
   if (typeof window !== 'undefined' && (window as any).analytics?.track) {
     (window as any).analytics.track(name, props);

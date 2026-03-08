@@ -24,8 +24,13 @@ export const DayTimeline: React.FC<Props> = ({ timeline, lang, onTimelineClick }
   };
 
   return (
-    <div style={{ marginBottom: "2rem", cursor: onTimelineClick ? "pointer" : "default" }} onClick={onTimelineClick}>
-      <h3 style={{ marginBottom: "1rem", color: "var(--text-1)" }}>{getPredictionMessage("timeline", lang)}</h3>
+    <div style={{ marginBottom: "2rem" }}>
+      <h3
+        style={{ marginBottom: "1rem", color: "var(--text-1)", cursor: onTimelineClick ? "pointer" : "default" }}
+        onClick={onTimelineClick}
+      >
+        {getPredictionMessage("timeline", lang)}
+      </h3>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
         {timeline.map((block, idx) => {
           const isPivot = block.turning_point;
