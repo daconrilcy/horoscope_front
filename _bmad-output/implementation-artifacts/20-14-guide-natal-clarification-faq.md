@@ -170,6 +170,7 @@ claude-sonnet-4-6
 - `NatalChartPage.test.tsx` : 6 nouveaux tests ajoutés dans `describe("Story 20-14")`. Correction de la régression `getByText(/Lune/)` → `getAllByText(/Lune/)` causée par "Lune" présent dans le nouveau `planetsDesc` FR. Fix: Tests resserrés via `within()` pour cibler spécifiquement les sections résultats vs guide.
 - `BirthProfilePage.tsx` & `api/natalChart.ts` : Inclus dans la liste des fichiers pour régulariser les changements de typage (orb_used null) et nettoyage mineur.
 - Résultat: **53/53 tests passent**, zéro régression, qualité de code renforcée après revue.
+- Révalidation corrective du 2026-03-08: le guide natal et sa FAQ ont été rejoués via `NatalChartPage.test.tsx` après intégration du bloc `NatalInterpretationSection`; aucune régression de contenu ou d'ouverture du guide observée.
 
 ### File List
 
@@ -184,3 +185,4 @@ claude-sonnet-4-6
 ## Change Log
 
 - 2026-02-27: Implémentation story 20-14 — guide natal enrichi avec 6 sections métier (ajout angles, renommage signe solaire/ascendant, astuce rétrograde dans planètes) + FAQ 8 Q/R en FR/EN/ES. 6 nouveaux tests UI. 53/53 tests verts.
+- 2026-03-08: Révalidation `NatalChartPage` post-corrections frontend hors chapitre 38 — contenu guide/FAQ 20.14 confirmé stable.

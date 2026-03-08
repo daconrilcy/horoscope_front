@@ -98,9 +98,18 @@ export function getCategoryMeta(code: string, lang: Lang) {
     vitalite: "energy",
   };
   const canonical = legacyMap[normalized] || normalized;
+  const categoryLabel = getCategoryLabel(canonical, lang);
+  const fallbackLabel =
+    categoryLabel === canonical
+      ? canonical
+          .split("_")
+          .filter(Boolean)
+          .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+          .join(" ")
+      : categoryLabel;
 
   return {
-    label: getCategoryLabel(canonical, lang),
+    label: fallbackLabel,
     icon: CATEGORY_ICONS[canonical] || "✨",
   };
 }

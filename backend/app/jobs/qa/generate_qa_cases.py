@@ -38,7 +38,11 @@ def get_or_create_qa_user(db, profile):
     email = f"qa_{profile['label']}@horoscope.app"
     user = db.query(UserModel).filter(UserModel.email == email).first()
     if not user:
-        user = UserModel(email=email, password_hash=hash_password(secrets.token_urlsafe(16)), role="user")
+        user = UserModel(
+            email=email,
+            password_hash=hash_password(secrets.token_urlsafe(16)),
+            role="user",
+        )
         db.add(user)
         db.flush()
 
@@ -72,7 +76,11 @@ def get_or_create_qa_user(db, profile):
 
 
 def generate() -> int:
-    """Generate QA cases for all calibration profiles. Returns the number of cases successfully generated."""
+    """
+    Generate QA cases for all calibration profiles.
+
+    Returns the number of cases successfully generated.
+    """
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     db = SessionLocal()
     generated_count = 0
@@ -127,7 +135,11 @@ def generate() -> int:
     finally:
         db.close()
 
-    logger.info(f"Generation complete: {generated_count}/{len(CALIBRATION_PROFILES)} cases produced")
+    logger.info(
+        "Generation complete: %s/%s cases produced",
+        generated_count,
+        len(CALIBRATION_PROFILES),
+    )
     return generated_count
 
 

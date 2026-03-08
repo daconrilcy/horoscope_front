@@ -16,7 +16,13 @@ from app.ai_engine.exceptions import (
     UpstreamRateLimitError,
     UpstreamTimeoutError,
 )
-from app.llm_orchestration.models import GatewayError, GatewayMeta, GatewayResult, UsageInfo, is_reasoning_model
+from app.llm_orchestration.models import (
+    GatewayError,
+    GatewayMeta,
+    GatewayResult,
+    UsageInfo,
+    is_reasoning_model,
+)
 
 if TYPE_CHECKING:
     from openai import AsyncOpenAI

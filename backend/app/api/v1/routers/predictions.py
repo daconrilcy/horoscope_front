@@ -139,7 +139,10 @@ def _raise_daily_prediction_service_error(
             status_code=503,
             detail={
                 "code": error.code,
-                "message": "Service temporairement indisponible. Veuillez réessayer dans quelques minutes.",
+                "message": (
+                    "Service temporairement indisponible. "
+                    "Veuillez réessayer dans quelques minutes."
+                ),
             },
         )
 
@@ -465,11 +468,15 @@ def _build_summary(
 
     scores = sorted(full_run.get("category_scores", []), key=lambda s: s["rank"] or 99)
     top_categories = [cat_id_to_code.get(s["category_id"], "unknown") for s in scores[:3]]
-    top_codes = set(top_categories)
+    bottom_scores = sorted(
+        full_run.get("category_scores", []),
+        key=lambda score: (
+            float(score.get("note_20") or 0),
+            int(score.get("rank") or 99),
+        ),
+    )
     bottom_categories = [
-        cat_id_to_code.get(s["category_id"], "unknown")
-        for s in reversed(scores)
-        if cat_id_to_code.get(s["category_id"], "unknown") not in top_codes
+        cat_id_to_code.get(score["category_id"], "unknown") for score in bottom_scores
     ][:2]
 
     best_window = None

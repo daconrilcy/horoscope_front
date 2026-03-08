@@ -202,6 +202,7 @@ GPT-5 Codex
   - ajout des profils `prod_premium` (default) et `prod_compact` en DB,
   - seed idempotent dédié (`seed_pdf_templates_prod.py`) avec upsert + reset `is_default` limité au scope des clés seedées,
   - documentation admin enrichie sur le comportement "best effort" de `sections_start_new_page`.
+- Révalidation corrective frontend du 2026-03-08: `NatalChartPage.test.tsx` a été adapté pour mocker le contrat courant de `NatalInterpretationSection` (`useNatalInterpretationsList`, `useNatalPdfTemplates`, `useNatalInterpretationById`) ; la présence du bloc historique/PDF n'introduit plus de faux négatifs en suite cible.
 
 ### Senior Developer Review (AI)
 
@@ -251,3 +252,4 @@ GPT-5 Codex
 - 2026-03-05: Ajout d'un système de calibration runtime PDF (budget/spacing/head/footer) avec clés admin normalisées et `sections_start_new_page` conditionné au reste après intro.
 - 2026-03-05: Nettoyage artefacts texte fin de payload (`\"}]`/`”}],`) + amélioration chunking long token sans espaces.
 - 2026-03-05: Seed prod PDF templates ajouté/exécuté (`prod_premium` default, `prod_compact`), idempotent et scope-safe sur reset des defaults.
+- 2026-03-08: Stabilisation du harnais de test frontend autour du bloc historique/PDF natal — mocks des hooks 30.9 réalignés dans `NatalChartPage.test.tsx`, validation ciblée verte sans changement de statut story.

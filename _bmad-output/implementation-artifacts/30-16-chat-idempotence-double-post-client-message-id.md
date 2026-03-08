@@ -122,6 +122,11 @@ claude-sonnet-4-6
 - `ChatGuidanceService.send_message_async` : logique d'idempotence complète avec gestion race condition.
 - `ChatMessageRequest` : champ optionnel `client_message_id` ajouté, transmis au service.
 - Frontend : `crypto.randomUUID()` généré par `handleSendMessage`, `SendChatPayload` étendu.
+- Réaudit frontend du 2026-03-08: les assertions de `ChatPage.test.tsx` ont été réalignées sur le contrat réel d'idempotence en vérifiant `client_message_id` via `expect.objectContaining(...)` au lieu d'un payload figé.
+
+## Change Log
+
+- 2026-03-08: Validation corrective frontend — contrat `client_message_id` revalidé dans `ChatPage.test.tsx`, sans régression sur l'optimistic update.
 
 ### File List
 

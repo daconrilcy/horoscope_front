@@ -70,6 +70,7 @@ claude-sonnet-4-6
 - **Task 2 (AC 4)** : Ajout de `getGuideTranslations(lang)` dans `natalChart.ts` (après le dictionnaire pour éviter la référence circulaire). Utilise `natalChartTranslations[lang]?.guide ?? natalChartTranslations.fr.guide` — garantit un fallback FR sans crash si la langue n'est pas dans le dictionnaire. `NatalChartGuide.tsx` utilise désormais `getGuideTranslations(lang)` au lieu de l'accès direct.
 - **Task 3 (AC 5)** : 5 nouveaux tests dans `describe("Story 20-15")` : guide EN (6 sections + 8 FAQ EN), guide ES (6 sections + 8 FAQ ES), non-régression FR, fallback runtime (lang="pt"), message ascendant manquant EN+ES. Tests directs sur `NatalChartGuide` (sans passer par `NatalChartPage`) pour isolation maximale.
 - Résultat : **1096/1096 tests passent**, zéro régression.
+- Révalidation corrective du 2026-03-08: le test d'intégration `NatalChartPage transmet la langue du navigateur au guide` est de nouveau vert après réalignement du harnais de mock natal complet.
 
 ### File List
 
@@ -82,3 +83,4 @@ claude-sonnet-4-6
 ## Change Log
 
 - 2026-02-27: Implémentation story 20-15 — helper `getGuideTranslations` avec fallback FR, type `NatalChartGuideTranslations` exporté, 5 nouveaux tests i18n EN/ES/FR/fallback. 1096/1096 tests verts.
+- 2026-03-08: Révalidation `NatalChartPage` post-intégration historique natal — propagation langue navigateur → guide toujours conforme.

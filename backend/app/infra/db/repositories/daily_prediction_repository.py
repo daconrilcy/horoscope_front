@@ -26,7 +26,11 @@ class DailyPredictionRepository:
             )
         )
 
-    def get_latest_run_before(self, user_id: int, date_local: date) -> DailyPredictionRunModel | None:
+    def get_latest_run_before(
+        self,
+        user_id: int,
+        date_local: date,
+    ) -> DailyPredictionRunModel | None:
         """
         Retrieves the most recent run for a user before a specific date.
         Useful for fallback logic.

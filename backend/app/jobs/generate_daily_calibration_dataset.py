@@ -199,9 +199,17 @@ def run_job() -> None:
 
                     if computed_count % 10 == 0:
                         logger.info(
-                            "Progress: %s/%s profiles, %s/%s days. Computed: %s, Skipped: %s, Total: %s",
-                            p_idx, total_profiles, d_idx, total_dates,
-                            computed_count, skipped_count, total_iterations,
+                            (
+                                "Progress: %s/%s profiles, %s/%s days. "
+                                "Computed: %s, Skipped: %s, Total: %s"
+                            ),
+                            p_idx,
+                            total_profiles,
+                            d_idx,
+                            total_dates,
+                            computed_count,
+                            skipped_count,
+                            total_iterations,
                         )
 
         except Exception as e:

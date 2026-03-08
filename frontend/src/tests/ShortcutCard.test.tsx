@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { MemoryRouter } from "react-router-dom"
 import { describe, it, expect, vi, afterEach } from "vitest"
 import { render, cleanup, screen, fireEvent } from "@testing-library/react"
@@ -6,6 +7,14 @@ import fs from "fs"
 import path from "path"
 import { ShortcutCard } from "../components/ShortcutCard"
 import { ShortcutsSection } from "../components/ShortcutsSection"
+
+function RouterWrapper({ children }: { children: ReactNode }) {
+  return (
+    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      {children}
+    </MemoryRouter>
+  )
+}
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -37,39 +46,39 @@ describe("ShortcutCard", () => {
 
   describe("Rendu et Structure", () => {
     it("affiche le titre et le sous-titre", () => {
-      render(<ShortcutCard {...defaultProps} />, { wrapper: MemoryRouter })
+      render(<ShortcutCard {...defaultProps} />, { wrapper: RouterWrapper })
       expect(screen.getByText(defaultProps.title)).toBeInTheDocument()
       expect(screen.getByText(defaultProps.subtitle)).toBeInTheDocument()
     })
 
     it("applique la classe subtitle--online quand isOnline est true", () => {
-      const { container } = render(<ShortcutCard {...defaultProps} isOnline={true} />, { wrapper: MemoryRouter })
+      const { container } = render(<ShortcutCard {...defaultProps} isOnline={true} />, { wrapper: RouterWrapper })
       const subtitle = container.querySelector(".shortcut-card__subtitle")
       expect(subtitle).toHaveClass("shortcut-card__subtitle--online")
     })
 
     it("n'applique pas la classe subtitle--online quand isOnline est false ou absent", () => {
-      const { container } = render(<ShortcutCard {...defaultProps} />, { wrapper: MemoryRouter })
+      const { container } = render(<ShortcutCard {...defaultProps} />, { wrapper: RouterWrapper })
       const subtitle = container.querySelector(".shortcut-card__subtitle")
       expect(subtitle).not.toHaveClass("shortcut-card__subtitle--online")
     })
 
     it("est un bouton par défaut si 'to' est absent", () => {
-      render(<ShortcutCard {...defaultProps} />, { wrapper: MemoryRouter })
+      render(<ShortcutCard {...defaultProps} />, { wrapper: RouterWrapper })
       const button = screen.getByRole("button")
       expect(button).toHaveAttribute("type", "button")
       expect(button).toHaveClass("shortcut-card")
     })
 
     it("est un lien si 'to' est présent", () => {
-      render(<ShortcutCard {...defaultProps} to="/chat" />, { wrapper: MemoryRouter })
+      render(<ShortcutCard {...defaultProps} to="/chat" />, { wrapper: RouterWrapper })
       const link = screen.getByRole("link")
       expect(link).toHaveAttribute("href", "/chat")
       expect(link).toHaveClass("shortcut-card")
     })
 
     it("rend le badge avec la bonne couleur", () => {
-      const { container } = render(<ShortcutCard {...defaultProps} />, { wrapper: MemoryRouter })
+      const { container } = render(<ShortcutCard {...defaultProps} />, { wrapper: RouterWrapper })
       const badge = container.querySelector(".shortcut-card__badge") as HTMLElement
       expect(badge).toHaveStyle({ background: defaultProps.badgeColor })
     })
@@ -78,14 +87,14 @@ describe("ShortcutCard", () => {
   describe("Interactions", () => {
     it("appelle onClick lors du clic sur bouton", () => {
       const onClick = vi.fn()
-      render(<ShortcutCard {...defaultProps} onClick={onClick} />, { wrapper: MemoryRouter })
+      render(<ShortcutCard {...defaultProps} onClick={onClick} />, { wrapper: RouterWrapper })
       fireEvent.click(screen.getByRole("button"))
       expect(onClick).toHaveBeenCalledTimes(1)
     })
 
     it("appelle onClick lors du clic sur lien", () => {
       const onClick = vi.fn()
-      render(<ShortcutCard {...defaultProps} to="/chat" onClick={onClick} />, { wrapper: MemoryRouter })
+      render(<ShortcutCard {...defaultProps} to="/chat" onClick={onClick} />, { wrapper: RouterWrapper })
       fireEvent.click(screen.getByRole("link"))
       expect(onClick).toHaveBeenCalledTimes(1)
     })
@@ -96,33 +105,34 @@ describe("ShortcutCard", () => {
 
 describe("ShortcutsSection", () => {
   it("affiche le titre de section 'Activités'", () => {
-    render(<ShortcutsSection />, { wrapper: MemoryRouter })
+    render(<ShortcutsSection />, { wrapper: RouterWrapper })
     expect(screen.getByRole("heading", { name: /activit/i })).toBeInTheDocument()
   })
 
-  it("rend les deux raccourcis par défaut sous forme de liens", () => {
-    render(<ShortcutsSection />, { wrapper: MemoryRouter })
+  it("rend les raccourcis par défaut sous forme de liens", () => {
+    render(<ShortcutsSection />, { wrapper: RouterWrapper })
     expect(screen.getByText("Chat astrologue")).toBeInTheDocument()
     expect(screen.getByText("Tirage du jour")).toBeInTheDocument()
-    expect(screen.getAllByRole("link")).toHaveLength(2)
+    expect(screen.getByText("Historique")).toBeInTheDocument()
+    expect(screen.getAllByRole("link")).toHaveLength(3)
   })
 
   it("déclenche onChatClick lors du clic sur le chat", () => {
     const onChatClick = vi.fn()
-    render(<ShortcutsSection onChatClick={onChatClick} />, { wrapper: MemoryRouter })
+    render(<ShortcutsSection onChatClick={onChatClick} />, { wrapper: RouterWrapper })
     fireEvent.click(screen.getByRole("link", { name: /Chat astrologue/i }))
     expect(onChatClick).toHaveBeenCalledTimes(1)
   })
 
   it("déclenche onTirageClick lors du clic sur le tirage", () => {
     const onTirageClick = vi.fn()
-    render(<ShortcutsSection onTirageClick={onTirageClick} />, { wrapper: MemoryRouter })
+    render(<ShortcutsSection onTirageClick={onTirageClick} />, { wrapper: RouterWrapper })
     fireEvent.click(screen.getByRole("link", { name: /Tirage du jour/i }))
     expect(onTirageClick).toHaveBeenCalledTimes(1)
   })
 
   it("utilise une structure sémantique <section>", () => {
-    const { container } = render(<ShortcutsSection />, { wrapper: MemoryRouter })
+    const { container } = render(<ShortcutsSection />, { wrapper: RouterWrapper })
     expect(container.querySelector("section")).toHaveClass("shortcuts-section")
   })
 })

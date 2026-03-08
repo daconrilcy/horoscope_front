@@ -30,12 +30,12 @@ const predictionOk = {
   summary: {
     overall_tone: "open",
     overall_summary: "Journee favorable pour prendre contact et structurer vos priorites.",
-    top_categories: ["love", "career_luck"],
-    bottom_categories: ["energy", "social"],
+    top_categories: ["love", "career"],
+    bottom_categories: ["energy", "social_network"],
     best_window: {
       start_local: "2026-03-08T08:00:00+01:00",
       end_local: "2026-03-08T09:30:00+01:00",
-      dominant_category: "career_luck",
+      dominant_category: "career",
     },
     main_turning_point: {
       occurred_at_local: "2026-03-08T11:15:00+01:00",
@@ -54,7 +54,7 @@ const predictionOk = {
       summary: "Les echanges sont fluides.",
     },
     {
-      code: "career_luck",
+      code: "career",
       note_20: 7.2,
       raw_score: 0.12,
       power: 0.8,
@@ -68,7 +68,7 @@ const predictionOk = {
       start_local: "2026-03-08T08:00:00+01:00",
       end_local: "2026-03-08T09:30:00+01:00",
       tone_code: "open",
-      dominant_categories: ["love", "career_luck"],
+      dominant_categories: ["love", "career"],
       summary: "Bon moment pour lancer une conversation importante.",
       turning_point: false,
     },
@@ -172,7 +172,7 @@ describe("TodayPage", () => {
     expect(screen.getAllByText("11:15")).toHaveLength(2);
     expect(screen.getByText("Points de bascule")).toBeInTheDocument();
     expect(screen.getByText("Pivot")).toBeInTheDocument();
-    expect(screen.getByText("Career Luck")).toBeInTheDocument();
+    expect(screen.getByText("Carrière")).toBeInTheDocument();
     expect(screen.getByText("13.6")).toBeInTheDocument();
     expect(screen.getByText("7.2")).toBeInTheDocument();
     expect(screen.getByText("Chat astrologue")).toBeInTheDocument();
@@ -217,7 +217,7 @@ describe("TodayPage", () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText("Impossible de charger votre horoscope du jour.")).toBeInTheDocument();
+      expect(screen.getByText("Impossible de charger votre horoscope.")).toBeInTheDocument();
     });
 
     shouldFail = false;
@@ -236,7 +236,7 @@ describe("TodayPage", () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText("Aucune prédiction disponible pour le moment.")).toBeInTheDocument();
+      expect(screen.getByText("Aucune prédiction disponible.")).toBeInTheDocument();
     });
   });
 
@@ -251,7 +251,7 @@ describe("TodayPage", () => {
     });
 
     expect(screen.getByText("Best window")).toBeInTheDocument();
-    expect(screen.getByText("Turning points")).toBeInTheDocument();
-    expect(screen.getByText("Dominant : Career Luck")).toBeInTheDocument();
+    expect(screen.getByText("Turning Points")).toBeInTheDocument();
+    expect(screen.getByText("Dominant : Career")).toBeInTheDocument();
   });
 });

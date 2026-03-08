@@ -21,7 +21,6 @@ from app.infra.db.repositories.prediction_ruleset_repository import PredictionRu
 from app.infra.db.repositories.user_birth_profile_repository import UserBirthProfileRepository
 from app.infra.observability.metrics import increment_counter
 from app.prediction.engine_orchestrator import EngineOrchestrator
-from app.prediction.exceptions import PredictionContextError
 from app.prediction.schemas import EngineInput
 
 if TYPE_CHECKING:

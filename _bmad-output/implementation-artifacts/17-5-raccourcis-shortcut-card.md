@@ -201,6 +201,7 @@ const SHORTCUTS = [
 - AC7 (thème dark/light) couvert par les tokens CSS déjà définis dans `theme.css`
 - `ShortcutCard` utilise un `<button>` natif pour l'accessibilité clavier
 - Pas de régression introduite : 813 tests passent, 3 échecs pré-existants dans `SettingsPage.test.tsx` (non liés à cette story)
+- Évolution post-story validée le 2026-03-08: `ShortcutsSection` expose désormais aussi le raccourci `Historique`; les tests ont été réalignés sur ce contrat produit courant sans régression visuelle ou de navigation.
 
 ## File List
 
@@ -212,3 +213,4 @@ const SHORTCUTS = [
 ## Change Log
 
 - 2026-02-23: Story 17.5 implémentée — ShortcutCard + ShortcutsSection + CSS + 20 tests unitaires
+- 2026-03-08: Révalidation corrective frontend — contrat actuel `ShortcutsSection` confirmé avec 3 liens (`Chat astrologue`, `Tirage du jour`, `Historique`), suite Vitest ciblée repassée au vert.

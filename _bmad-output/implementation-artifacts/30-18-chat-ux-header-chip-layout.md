@@ -141,6 +141,11 @@ claude-sonnet-4-6
 - `ChatPage` : `useAstrologer` / `selectedAstrologer` retirés, `currentAstrologer` déduit par matching `persona_name` dans `astrologers.data`, props `personaBio`, `personaSpecialties`, `onNewConversation` passées à `ChatWindow`.
 - `ChatWindow` : état vide remplacé par une bulle `MessageBubble role="assistant"` avec `chat_opening_message` (synthétique, frontend uniquement).
 - `i18n/astrologers.ts` : clé `chat_opening_message` ajoutée (fr/en/es).
+- Audit de cohérence relancé le 2026-03-08: le contrat UI actuel est confirmé comme source de vérité (`layout` desktop en 2 colonnes, chip astrologue dans le header, message d'ouverture assistant, bouton `Nouvelle discussion` côté fenêtre). Les suites `ChatComponents` et `ChatPage` ont été réalignées et revalidées.
+
+## Change Log
+
+- 2026-03-08: Révalidation corrective frontend — contrats UI chat confirmés (2 colonnes desktop, chip header, opening message assistant), tests ciblés `ChatComponents` + `ChatPage` verts.
 
 ### File List
 

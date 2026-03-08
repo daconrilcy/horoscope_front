@@ -115,16 +115,17 @@ describe("ConversationList", () => {
 
   it("shows loading state", () => {
     const onSelect = vi.fn()
-    render(
+    const { container } = render(
       <ConversationList
         conversations={[]}
         selectedId={null}
         onSelect={onSelect}
         isLoading={true}
+        onNewConversation={vi.fn()}
       />
     )
 
-    expect(screen.getByText("Chargement...")).toBeInTheDocument()
+    expect(container.querySelectorAll(".conversation-item-skeleton")).toHaveLength(3)
   })
 
   it("shows error state", () => {
@@ -135,6 +136,7 @@ describe("ConversationList", () => {
         selectedId={null}
         onSelect={onSelect}
         error={new Error("Erreur")}
+        onNewConversation={vi.fn()}
       />
     )
 
@@ -148,6 +150,7 @@ describe("ConversationList", () => {
         conversations={[]}
         selectedId={null}
         onSelect={onSelect}
+        onNewConversation={vi.fn()}
       />
     )
 
@@ -161,6 +164,7 @@ describe("ConversationList", () => {
         conversations={conversations}
         selectedId={null}
         onSelect={onSelect}
+        onNewConversation={vi.fn()}
       />
     )
 
@@ -178,6 +182,7 @@ describe("ConversationList", () => {
         conversations={conversations}
         selectedId={null}
         onSelect={onSelect}
+        onNewConversation={vi.fn()}
       />
     )
 
@@ -194,6 +199,7 @@ describe("ConversationList", () => {
         conversations={conversations}
         selectedId={null}
         onSelect={onSelect}
+        onNewConversation={vi.fn()}
       />
     )
 
@@ -381,14 +387,13 @@ describe("AstrologerDetailPanel", () => {
 })
 
 describe("ChatLayout", () => {
-  it("renders 3 columns on desktop", () => {
+  it("renders 2 columns on desktop", () => {
     const onMobileViewChange = vi.fn()
 
     render(
       <ChatLayout
         leftPanel={<div data-testid="left">Left</div>}
         centerPanel={<div data-testid="center">Center</div>}
-        rightPanel={<div data-testid="right">Right</div>}
         mobileView="list"
         onMobileViewChange={onMobileViewChange}
         hasConversation={false}
@@ -398,7 +403,7 @@ describe("ChatLayout", () => {
 
     expect(screen.getByTestId("left")).toBeInTheDocument()
     expect(screen.getByTestId("center")).toBeInTheDocument()
-    expect(screen.getByTestId("right")).toBeInTheDocument()
+    expect(screen.queryByTestId("right")).not.toBeInTheDocument()
     expect(document.querySelector(".chat-layout--desktop")).toBeInTheDocument()
   })
 
@@ -409,7 +414,6 @@ describe("ChatLayout", () => {
       <ChatLayout
         leftPanel={<div data-testid="left">Left</div>}
         centerPanel={<div data-testid="center">Center</div>}
-        rightPanel={<div data-testid="right">Right</div>}
         mobileView="list"
         onMobileViewChange={onMobileViewChange}
         hasConversation={false}
@@ -430,7 +434,6 @@ describe("ChatLayout", () => {
       <ChatLayout
         leftPanel={<div data-testid="left">Left</div>}
         centerPanel={<div data-testid="center">Center</div>}
-        rightPanel={<div data-testid="right">Right</div>}
         mobileView="chat"
         onMobileViewChange={onMobileViewChange}
         hasConversation={true}
@@ -450,7 +453,6 @@ describe("ChatLayout", () => {
       <ChatLayout
         leftPanel={<div data-testid="left">Left</div>}
         centerPanel={<div data-testid="center">Center</div>}
-        rightPanel={<div data-testid="right">Right</div>}
         mobileView="list"
         onMobileViewChange={onMobileViewChange}
         hasConversation={true}
@@ -472,7 +474,6 @@ describe("ChatLayout", () => {
       <ChatLayout
         leftPanel={<div data-testid="left">Left</div>}
         centerPanel={<div data-testid="center">Center</div>}
-        rightPanel={<div data-testid="right">Right</div>}
         mobileView="list"
         onMobileViewChange={onMobileViewChange}
         hasConversation={false}
@@ -502,7 +503,7 @@ describe("ChatWindow", () => {
     const onSendMessage = vi.fn()
     render(<ChatWindow messages={[]} onSendMessage={onSendMessage} />)
 
-    expect(screen.getByText("Commencez une conversation avec votre astrologue.")).toBeInTheDocument()
+    expect(screen.getByText("Bonjour, que puis-je faire pour vous ?")).toBeInTheDocument()
   })
 
   it("renders typing indicator when isTyping is true", () => {

@@ -120,6 +120,7 @@ claude-sonnet-4-6
 - Header Theme natal aligné sur le contrat backend: affichage `metadata.reference_version`, `metadata.ruleset_version` et `metadata.house_system`.
 - Rendu “thème natal absent” traité comme état vide attendu (404) sans bruit d'erreur technique côté utilisateur.
 - Politique de logs support front alignée: 4xx fonctionnels non loggés, 5xx loggés avec request id.
+- Révalidation corrective du 2026-03-08: `NatalChartPage.test.tsx` a été remis au niveau du runtime actuel en mockant aussi les hooks `useNatalInterpretationsList`, `useNatalPdfTemplates` et `useNatalInterpretationById` injectés par `NatalInterpretationSection`; la suite ciblée repasse à `59/59`.
 
 ### File List
 
@@ -156,3 +157,4 @@ claude-sonnet-4-6
 
 - 2026-02-25: Implémentation complète story 18-3 — Hero/Today/Natal, mapping SVG, tokens CSS, tests UI.
 - 2026-02-26: Correctifs post-story — affichage metadata `house_system`, état vide natal chart sur 404, réduction du bruit de logs front.
+- 2026-03-08: Réparation du harnais de test `NatalChartPage` après intégration des hooks d'historique/templating natal; validation ciblée `59/59` verte.

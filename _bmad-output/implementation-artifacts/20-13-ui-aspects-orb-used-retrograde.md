@@ -67,6 +67,7 @@ claude-sonnet-4-6
 - Indicateur `℞` préservé (non-régression story 20-8).
 - État vide aspects déjà présent (`t.noAspects`) confirmé par test dédié.
 - 4 nouveaux tests dans `describe("Story 20-13")` : AC 1 (orb+orb_used), AC 2 (vide), AC 3 (retrograde), AC 4 (legacy sans orb_used).
+- Revalidation corrective du 2026-03-08: les assertions de la suite `NatalChartPage` couvrant `orb`, `orb_used` et `℞` ont été rejouées avec le runtime natal complet; aucun défaut fonctionnel nouveau détecté.
 
 ### File List
 
@@ -80,3 +81,4 @@ claude-sonnet-4-6
 
 - 2026-02-27: Affichage `orb_used` dans les aspects natal, clé i18n `orbUsed` (3 langues), 4 nouveaux tests, lint et suite complète OK.
 - 2026-02-27: Correctif post-review - contrat frontend assoupli sur `orb_used?: number | null` pour refléter les payloads API défensifs déjà supportés au rendu.
+- 2026-03-08: Révalidation `NatalChartPage` post-intégration historique natal — AC 20.13 toujours verts dans la suite ciblée.

@@ -129,6 +129,7 @@ gemini-2.0-flash-thinking-exp
 - Regression tests were updated and new tests were added for the daily prediction contract.
 - Post-validation fix: the API client now maps backend prediction errors returned as `detail: { code, message }` into `ApiError`, preserving the functional error code exposed by FastAPI routes.
 - Revalidated chapter 36 frontend scope on 2026-03-08 with `npm run lint`, targeted `vitest`, and `npm run build`.
+- Corrective audit on 2026-03-08: `getCategoryMeta()` now humanizes unknown category slugs (ex: `career_luck` -> `Career Luck`) instead of leaking raw API codes in UI/test expectations.
 
 ### File List
 
@@ -154,3 +155,4 @@ gemini-2.0-flash-thinking-exp
 - 2026-03-08: Implémentation complète du contrat front et intégration UI.
 - 2026-03-08: Corrections post-review appliquées sur le cache utilisateur, l'affichage brut des scores, le typage DTO et la couverture de tests.
 - 2026-03-08: Validation finale chapitre 36, correction du mapping des erreurs FastAPI `detail` côté client daily prediction.
+- 2026-03-08: Audit correctif frontend hors chapitre 38 — fallback i18n des catégories inconnues rendu lisible côté `predictionI18n`, validation ciblée `predictionBands` + lint verte.

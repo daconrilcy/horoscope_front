@@ -9,7 +9,15 @@ import { getGuideTranslations, natalChartTranslations } from "../i18n/natalChart
  * ApiError est importé pour créer des instances dans les tests (new ApiError(...)).
  * vi.mock remplace la classe réelle par notre mock défini ci-dessous.
  */
-import { ApiError, useLatestNatalChart, generateNatalChart, useNatalInterpretation } from "../api/natalChart"
+import {
+  ApiError,
+  useLatestNatalChart,
+  generateNatalChart,
+  useNatalInterpretation,
+  useNatalInterpretationsList,
+  useNatalPdfTemplates,
+  useNatalInterpretationById,
+} from "../api/natalChart"
 
 /**
  * Mock de ApiError pour les tests.
@@ -30,10 +38,23 @@ vi.mock("../api/natalChart", () => ({
   useLatestNatalChart: vi.fn(),
   generateNatalChart: vi.fn(),
   useNatalInterpretation: vi.fn(),
+  useNatalInterpretationsList: vi.fn(),
+  useNatalPdfTemplates: vi.fn(),
+  useNatalInterpretationById: vi.fn(),
+}))
+
+vi.mock("../utils/authToken", () => ({
+  useAccessTokenSnapshot: () => "mock-token",
 }))
 
 const mockUseLatestNatalChart: ReturnType<typeof vi.mocked<typeof useLatestNatalChart>> = vi.mocked(useLatestNatalChart)
 const mockUseNatalInterpretation: ReturnType<typeof vi.mocked<typeof useNatalInterpretation>> = vi.mocked(useNatalInterpretation)
+const mockUseNatalInterpretationsList: ReturnType<typeof vi.mocked<typeof useNatalInterpretationsList>> =
+  vi.mocked(useNatalInterpretationsList)
+const mockUseNatalPdfTemplates: ReturnType<typeof vi.mocked<typeof useNatalPdfTemplates>> =
+  vi.mocked(useNatalPdfTemplates)
+const mockUseNatalInterpretationById: ReturnType<typeof vi.mocked<typeof useNatalInterpretationById>> =
+  vi.mocked(useNatalInterpretationById)
 
 const TEST_REFERENCE_VERSION = "1.0"
 const TEST_RULESET_VERSION = "1.0"
@@ -71,6 +92,27 @@ beforeEach(() => {
   vi.stubGlobal("navigator", { ...navigator, language: "fr-FR" })
   localStorage.clear()
   mockUseNatalInterpretation.mockReturnValue({
+    isLoading: false,
+    isError: false,
+    data: null,
+    refetch: vi.fn(),
+  })
+  mockUseNatalInterpretationsList.mockReturnValue({
+    isLoading: false,
+    isError: false,
+    data: { items: [], total: 0, limit: 20, offset: 0 },
+    refetch: vi.fn(),
+  })
+  mockUseNatalPdfTemplates.mockReturnValue({
+    isLoading: false,
+    isError: false,
+    data: {
+      items: [
+        { key: "default_natal", name: "Par défaut", description: null, locale: "fr", is_default: true },
+      ],
+    },
+  })
+  mockUseNatalInterpretationById.mockReturnValue({
     isLoading: false,
     isError: false,
     data: null,

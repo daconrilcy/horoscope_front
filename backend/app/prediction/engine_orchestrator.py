@@ -11,11 +11,11 @@ import swisseph as swe
 
 from app.infra.db.repositories.prediction_schemas import RulesetContext
 
-from .category_codes import normalize_category_code, normalize_category_codes
 from .aggregator import TemporalAggregator
 from .astro_calculator import AstroCalculator
 from .block_generator import BlockGenerator
 from .calibrator import PercentileCalibrator
+from .category_codes import normalize_category_codes
 from .context_loader import LoadedPredictionContext
 from .contribution_calculator import ContributionCalculator
 from .domain_router import DomainRouter

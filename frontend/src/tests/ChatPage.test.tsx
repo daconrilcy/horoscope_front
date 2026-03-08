@@ -331,6 +331,7 @@ describe("ChatPage", () => {
     })
 
     it("redirects to /astrologers when personaId is unknown (API error)", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
       const mutateAsync = vi.fn().mockRejectedValue(new Error("Not found"))
       mockUseCreateConversationByPersona.mockReturnValue({
         ...baseCreateConversationState,
@@ -343,6 +344,7 @@ describe("ChatPage", () => {
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith("/astrologers", { replace: true })
       })
+      consoleErrorSpy.mockRestore()
     })
   })
 
@@ -429,12 +431,11 @@ describe("ChatPage", () => {
 
       renderWithRouter("/chat/10")
 
-      // "Luna" appears in both the conversation list item and the empty state persona — use getAllByText
+      // "Luna" appears in both the conversation list item and the chat header persona chip.
       const lunaElements = screen.getAllByText("Luna")
       expect(lunaElements.length).toBeGreaterThanOrEqual(1)
-      // The persona name should appear in the chat-window-empty-persona element
-      expect(lunaElements.some((el) => el.className === "chat-window-empty-persona")).toBe(true)
-      expect(screen.getByText(/Commencez une conversation/)).toBeInTheDocument()
+      expect(lunaElements.some((el) => el.className === "astrologer-chip-name")).toBe(true)
+      expect(screen.getByText("Bonjour, que puis-je faire pour vous ?")).toBeInTheDocument()
     })
   })
 
@@ -470,10 +471,13 @@ describe("ChatPage", () => {
       fireEvent.change(textarea, { target: { value: "Bonjour" } })
       fireEvent.click(screen.getByRole("button", { name: "Envoyer" }))
 
-      expect(mutateAsync).toHaveBeenCalledWith({
-        message: "Bonjour",
-        conversation_id: 42,
-      })
+      expect(mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Bonjour",
+          conversation_id: 42,
+          client_message_id: expect.any(String),
+        })
+      )
 
       await waitFor(() => {
         expect(screen.getByText("Salut")).toBeInTheDocument()
@@ -636,12 +640,18 @@ describe("ChatPage", () => {
       expect(screen.getByRole("button", { name: "Envoyer" })).toBeInTheDocument()
     })
 
-    it("renders astrologer detail panel", () => {
+    it("renders persona chip in chat header when persona is available", () => {
       mockUseChatConversations.mockReturnValue({
         ...baseConversationsState,
         data: {
           conversations: [
-            { conversation_id: 42, status: "active", updated_at: "2026-02-22T10:00:00Z", last_message_preview: "Test" },
+            {
+              conversation_id: 42,
+              status: "active",
+              updated_at: "2026-02-22T10:00:00Z",
+              last_message_preview: "Test",
+              persona_name: "Luna",
+            },
           ],
           total: 1,
           limit: 20,
@@ -651,8 +661,9 @@ describe("ChatPage", () => {
 
       renderWithRouter("/chat/42")
 
-      expect(screen.getByText("Votre Astrologue")).toBeInTheDocument()
-      expect(screen.getByText("#42")).toBeInTheDocument()
+      const lunaElements = screen.getAllByText("Luna")
+      expect(lunaElements.some((el) => el.className === "astrologer-chip-name")).toBe(true)
+      expect(screen.queryByText("Votre Astrologue")).not.toBeInTheDocument()
     })
   })
 })

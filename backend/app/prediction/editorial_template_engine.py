@@ -148,7 +148,9 @@ class EditorialTemplateEngine:
             editorial.overall_tone,
             tone_labels.get("neutral", self.TONE_LABELS["fr"]["neutral"]),
         )
-        top3_labels_list = [self._get_category_label(c.code, lang) for c in editorial.top3_categories]
+        top3_labels_list = [
+            self._get_category_label(c.code, lang) for c in editorial.top3_categories
+        ]
         top3_labels = ", ".join(top3_labels_list)
 
         intro = intro_tpl.format(
