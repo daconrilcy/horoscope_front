@@ -1,6 +1,6 @@
 # Story 39.4: Documenter, monitorer et déprécier le ruleset legacy
 
-Status: completed
+Status: done
 
 ## Story
 
@@ -19,13 +19,15 @@ So that l'équipe peut piloter la bascule vers le ruleset canonique puis planifi
 
 - Mise à jour de `backend/README.md` avec le runbook de transition.
 - Création de `docs/architecture/prediction-versioning-transition.md` (Stratégie et relation entre versions).
+- Alignement de `backend/.env` sur le ruleset canonique `2.0.0` pour rester cohérent avec le runbook non-prod.
 - Ajout d'un log de warning `DEPRECATION` dans `DailyPredictionService._resolve_ruleset_id` si le ruleset `1.0.0` est utilisé.
 - Ajout du champ `ruleset_version` dans les logs de `prediction.run` via `_log_and_metrics`.
 - Centralisation de `LEGACY_RULESET_VERSION` dans `backend/app/core/versions.py`.
-- Validation unitaire du log de dépréciation dans `test_daily_prediction_service.py`.
+- Validation unitaire du log de dépréciation et du champ structuré `ruleset_version` dans `test_daily_prediction_service.py`.
 
 ### File List
 
+- `backend/.env`
 - `backend/app/core/versions.py`
 - `backend/app/services/daily_prediction_service.py`
 - `backend/app/tests/unit/test_daily_prediction_service.py`
