@@ -159,8 +159,7 @@ class EditorialOutputBuilder:
                 note = self._score_value(s, "note_20", 0)
                 vol = self._score_value(s, "volatility", 0.0)
                 flags[code] = (
-                    note <= self.CAUTION_NOTE_THRESHOLD
-                    or vol >= self.CAUTION_VOL_THRESHOLD
+                    note <= self.CAUTION_NOTE_THRESHOLD or vol >= self.CAUTION_VOL_THRESHOLD
                 )
         return flags
 

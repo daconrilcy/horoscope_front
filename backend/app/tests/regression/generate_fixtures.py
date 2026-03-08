@@ -2,15 +2,14 @@ import json
 from datetime import date
 from pathlib import Path
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
-
-from app.prediction.context_loader import PredictionContextLoader
-from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.schemas import EngineInput
-from app.tests.regression.helpers import assert_clamps, serialize_output
+from app.tests.regression.helpers import (
+    assert_clamps,
+    create_orchestrator,
+    create_session,
+    serialize_output,
+)
 
-BACKEND_DIR = Path(__file__).resolve().parents[3]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 
 
@@ -172,82 +171,80 @@ FIXTURE_CONFIGS = [
 
 
 def generate():
-    database_url = f"sqlite:///{(BACKEND_DIR / 'horoscope.db').as_posix()}"
-    engine = create_engine(database_url)
-    session = Session(bind=engine)
-    loader = PredictionContextLoader()
-
-    orchestrator = EngineOrchestrator(
-        prediction_context_loader=lambda r, rs, d: loader.load(session, r, rs, d)
-    )
+    session = create_session()
+    orchestrator = create_orchestrator(session)
 
     FIXTURES_DIR.mkdir(parents=True, exist_ok=True)
 
-    for name, local_date, natal, tz, lat, lon, ref_v, ruleset_v in FIXTURE_CONFIGS:
-        print(f"Generating fixture: {name}...")
-        engine_input = EngineInput(
-            natal_chart=natal,
-            local_date=local_date,
-            timezone=tz,
-            latitude=lat,
-            longitude=lon,
-            reference_version=ref_v,
-            ruleset_version=ruleset_v,
-            debug_mode=True,
-        )
-
-        output = orchestrator.run(engine_input)
-
-        fixture_data = {
-            "input": {
-                "natal_chart": natal,
-                "local_date": local_date.isoformat(),
-                "timezone": tz,
-                "latitude": lat,
-                "longitude": lon,
-                "reference_version": ref_v,
-                "ruleset_version": ruleset_v,
-                "debug_mode": True,
-            },
-            "expected": {
-                "input_hash": output.effective_context.input_hash,
-                "category_scores": output.category_scores,
-                "detected_events_count": len(output.detected_events),
-                "turning_points_count": len(output.turning_points),
-                "sample_count": len(output.sampling_timeline),
-                "is_provisional_calibration": output.run_metadata["is_provisional_calibration"],
-            },
-        }
-
-        expected = fixture_data["expected"]
-        if name == "F06_moon_sign_ingress":
-            expected["required_event_types"] = ["moon_sign_ingress"]
-        if name == "F07_mercury_retrograde":
-            expected["required_event_types"] = ["exact", "enter_orb"]
-        if name == "F10_dst_spring":
-            expected["sample_count"] = 92
-        if name == "F11_dst_autumn":
-            expected["sample_count"] = 100
-        if name == "F12_provisional_calibration":
-            expected["is_provisional_calibration"] = True
-
-        assert_clamps(orchestrator, engine_input, output)
-
-        # Add snapshots for AC6
-        if name in ["F01_calm_day", "F10_dst_spring"]:
-            snapshot_name = (
-                "snapshot_full_day_A" if name == "F01_calm_day" else "snapshot_full_day_B"
+    try:
+        for name, local_date, natal, tz, lat, lon, ref_v, ruleset_v in FIXTURE_CONFIGS:
+            print(f"Generating fixture: {name}...")
+            engine_input = EngineInput(
+                natal_chart=natal,
+                local_date=local_date,
+                timezone=tz,
+                latitude=lat,
+                longitude=lon,
+                reference_version=ref_v,
+                ruleset_version=ruleset_v,
+                debug_mode=True,
             )
-            snapshot_file = FIXTURES_DIR / f"{snapshot_name}.json"
-            print(f"  Creating snapshot: {snapshot_name}...")
-            snapshot_data = {
-                "input": fixture_data["input"],
-                "expected_output": serialize_output(output),
-            }
-            snapshot_file.write_text(json.dumps(snapshot_data, indent=2, ensure_ascii=False))
 
-        fixture_file = FIXTURES_DIR / f"{name}.json"
-        fixture_file.write_text(json.dumps(fixture_data, indent=2, ensure_ascii=False))
+            output = orchestrator.run(engine_input)
+
+            fixture_data = {
+                "input": {
+                    "natal_chart": natal,
+                    "local_date": local_date.isoformat(),
+                    "timezone": tz,
+                    "latitude": lat,
+                    "longitude": lon,
+                    "reference_version": ref_v,
+                    "ruleset_version": ruleset_v,
+                    "debug_mode": True,
+                },
+                "expected": {
+                    "input_hash": output.effective_context.input_hash,
+                    "category_scores": output.category_scores,
+                    "detected_events_count": len(output.detected_events),
+                    "turning_points_count": len(output.turning_points),
+                    "sample_count": len(output.sampling_timeline),
+                    "is_provisional_calibration": output.run_metadata["is_provisional_calibration"],
+                },
+            }
+
+            expected = fixture_data["expected"]
+            if name == "F06_moon_sign_ingress":
+                expected["required_event_types"] = ["moon_sign_ingress"]
+            if name == "F07_mercury_retrograde":
+                expected["required_event_types"] = ["exact", "enter_orb"]
+            if name == "F10_dst_spring":
+                expected["sample_count"] = 92
+            if name == "F11_dst_autumn":
+                expected["sample_count"] = 100
+            if name == "F12_provisional_calibration":
+                expected["is_provisional_calibration"] = True
+
+            assert_clamps(orchestrator, engine_input, output)
+
+            # Add snapshots for AC6
+            if name in ["F01_calm_day", "F10_dst_spring"]:
+                snapshot_name = (
+                    "snapshot_full_day_A" if name == "F01_calm_day" else "snapshot_full_day_B"
+                )
+                snapshot_file = FIXTURES_DIR / f"{snapshot_name}.json"
+                print(f"  Creating snapshot: {snapshot_name}...")
+                snapshot_data = {
+                    "input": fixture_data["input"],
+                    "expected_output": serialize_output(output),
+                }
+                snapshot_file.write_text(json.dumps(snapshot_data, indent=2, ensure_ascii=False))
+
+            fixture_file = FIXTURES_DIR / f"{name}.json"
+            fixture_file.write_text(json.dumps(fixture_data, indent=2, ensure_ascii=False))
+    finally:
+        session.close()
+        session.info["engine"].dispose()
 
 
 if __name__ == "__main__":

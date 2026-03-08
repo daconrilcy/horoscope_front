@@ -51,7 +51,8 @@ class NatalSensitivityCalculator:
     def _compute_occ(self, natal: NatalChart, cat_code: str, pc) -> float:
         # Trouver les maisons associées à cette catégorie
         associated_houses = {
-            w.house_number for w in pc.house_category_weights
+            w.house_number
+            for w in pc.house_category_weights
             if w.category_code == cat_code and w.weight > 0
         }
         total = 0.0
@@ -65,7 +66,8 @@ class NatalSensitivityCalculator:
     def _compute_rul(self, natal: NatalChart, cat_code: str, pc) -> float:
         # AC4: If the ruler of the cusp sign for a linked house is angular, it contributes.
         associated_houses = {
-            w.house_number for w in pc.house_category_weights
+            w.house_number
+            for w in pc.house_category_weights
             if w.category_code == cat_code and w.weight > 0
         }
 
@@ -82,7 +84,8 @@ class NatalSensitivityCalculator:
 
     def _compute_ang(self, natal: NatalChart, cat_code: str, pc) -> float:
         planet_cat_weights = {
-            self._normalize_code(w.planet_code): w.weight for w in pc.planet_category_weights
+            self._normalize_code(w.planet_code): w.weight
+            for w in pc.planet_category_weights
             if w.category_code == cat_code
         }
         total = 0.0

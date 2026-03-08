@@ -3,19 +3,22 @@ from __future__ import annotations
 from dataclasses import asdict, is_dataclass
 from datetime import date, datetime
 from pathlib import Path
+from tempfile import mkdtemp
 from typing import Any
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
+from app.infra.db.base import Base
 from app.prediction.aggregator import RAW_DAY_MAX, RAW_STEP_MAX, DayAggregation
 from app.prediction.context_loader import PredictionContextLoader
 from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.natal_sensitivity import NatalSensitivityCalculator
 from app.prediction.schemas import EngineInput, EngineOutput
+from app.services.reference_data_service import ReferenceDataService
+from scripts.seed_31_prediction_reference_v2 import run_seed
 
 BACKEND_DIR = Path(__file__).resolve().parents[3]
-DB_PATH = BACKEND_DIR / "horoscope.db"
 
 NS_MIN = 0.75
 NS_MAX = 1.25
@@ -41,8 +44,22 @@ def serialize_output(engine_output: EngineOutput) -> dict[str, Any]:
 
 
 def create_session() -> Session:
-    engine = create_engine(f"sqlite:///{DB_PATH.as_posix()}")
-    return Session(bind=engine)
+    temp_dir = Path(mkdtemp(prefix="prediction-regression-"))
+    db_path = temp_dir / "regression.db"
+    database_url = f"sqlite:///{db_path.as_posix()}"
+
+    engine = create_engine(database_url)
+    Base.metadata.create_all(bind=engine)
+    session = Session(bind=engine)
+
+    ReferenceDataService._clear_cache_for_tests()
+    ReferenceDataService.seed_reference_version(session, "1.0.0")
+    run_seed(session)
+    session.commit()
+
+    session.info["engine"] = engine
+    session.info["temp_dir"] = temp_dir
+    return session
 
 
 def create_orchestrator(session: Session) -> EngineOrchestrator:

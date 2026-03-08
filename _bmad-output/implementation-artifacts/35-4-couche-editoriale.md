@@ -191,6 +191,8 @@ claude-sonnet-4-6
 - Updated `EngineOutput` in `backend/app/prediction/schemas.py` to include the `editorial` field.
 - Created comprehensive unit tests in `backend/app/tests/unit/test_editorial_builder.py` covering all ACs.
 - Ensured no LLM dependencies were introduced as per AC1.
+- Post-review validation: full-day regression snapshots were refreshed so the editorial contract is now locked in non-regression tests.
+- Validation finale exécutée dans le venv sur la suite ciblée chapitre 35 puis sur toute la suite backend sans régression.
 
 ### File List
 

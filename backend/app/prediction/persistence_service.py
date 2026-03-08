@@ -66,7 +66,13 @@ class PredictionPersistenceService:
         )
 
         # AC3, AC4, AC5 - Persist child entities
-        self._save_scores(run, engine_output, reference_version_id, db, engine_output.explainability)
+        self._save_scores(
+            run,
+            engine_output,
+            reference_version_id,
+            db,
+            engine_output.explainability,
+        )
         self._save_turning_points(run, engine_output, db)
         self._save_time_blocks(run, engine_output, db)
 
@@ -141,46 +147,33 @@ class PredictionPersistenceService:
                 severity = tp.get("severity")
                 summary = tp.get("summary")
                 drivers = tp.get("driver_events") or tp.get("drivers")
-                if drivers is not None:
-                    driver_json = json.dumps(
-                        [
-                            {k: v.isoformat() if hasattr(v, "isoformat") else v for k, v in d.items()}
-                            if isinstance(d, dict) else d
-                            for d in drivers
-                        ]
-                    )
-                else:
-                    driver_json = None
+                driver_json = self._dumps_optional_list(drivers)
             else:
                 # Real TurningPoint from TurningPointDetector
                 occurred_at = tp.local_time
                 severity = tp.severity
                 summary = tp.reason
-                
+
                 # AC3 - Use driver_events if present, otherwise fallback to trigger_event
                 drivers = getattr(tp, "driver_events", None)
                 if drivers is not None:
-                    driver_json = json.dumps(
-                        [
-                            {
-                                k: v.isoformat() if hasattr(v, "isoformat") else v
-                                for k, v in (asdict(d) if hasattr(d, "__dataclass_fields__") else d).items()
-                            }
-                            for d in drivers
-                        ]
-                    )
+                    driver_json = self._dumps_optional_list(drivers)
                 else:
                     trigger = tp.trigger_event
-                    driver_data = [
-                        {
-                            "event_type": trigger.event_type,
-                            "body": trigger.body,
-                            "target": trigger.target,
-                            "contribution": None,
-                            "local_time": trigger.local_time.isoformat(),
-                        }
-                    ] if trigger is not None else None
-                    driver_json = json.dumps(driver_data)
+                    driver_data = (
+                        [
+                            {
+                                "event_type": trigger.event_type,
+                                "body": trigger.body,
+                                "target": trigger.target,
+                                "contribution": None,
+                                "local_time": trigger.local_time.isoformat(),
+                            }
+                        ]
+                        if trigger is not None
+                        else None
+                    )
+                    driver_json = self._dumps_optional_list(driver_data)
 
             model = DailyPredictionTurningPointModel(
                 run_id=run.id,
@@ -219,7 +212,7 @@ class PredictionPersistenceService:
                 summary = None  # TimeBlock has no summary field
                 dominant = block.dominant_categories
 
-            dominant_json = json.dumps(dominant) if dominant else None
+            dominant_json = self._dumps_optional_list(dominant)
 
             model = DailyPredictionTimeBlockModel(
                 run_id=run.id,
@@ -231,3 +224,19 @@ class PredictionPersistenceService:
                 summary=summary,
             )
             db.add(model)
+
+    def _dumps_optional_list(self, value: object) -> str | None:
+        if value is None:
+            return None
+        return json.dumps(self._json_ready(value))
+
+    def _json_ready(self, value: object) -> object:
+        if hasattr(value, "isoformat"):
+            return value.isoformat()
+        if hasattr(value, "__dataclass_fields__"):
+            return {key: self._json_ready(item) for key, item in asdict(value).items()}
+        if isinstance(value, dict):
+            return {key: self._json_ready(item) for key, item in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [self._json_ready(item) for item in value]
+        return value

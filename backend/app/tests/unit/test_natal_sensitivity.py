@@ -103,9 +103,7 @@ def test_bounds_always_respected(mock_ctx: SimpleNamespace) -> None:
 
     results = calculator.compute(natal, mock_ctx)
 
-    assert all(
-        calculator.NS_MIN <= value <= calculator.NS_MAX for value in results.values()
-    )
+    assert all(calculator.NS_MIN <= value <= calculator.NS_MAX for value in results.values())
 
 
 def test_no_occupation_neutral(mock_ctx: SimpleNamespace) -> None:

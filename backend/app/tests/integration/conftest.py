@@ -7,8 +7,8 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.infra.db.base import Base
 from app.core.rate_limit import reset_rate_limits
+from app.infra.db.base import Base
 
 # Keep reference-data seed integration flows deterministic without manual shell exports.
 os.environ.setdefault("REFERENCE_SEED_ADMIN_TOKEN", "test-seed-token")

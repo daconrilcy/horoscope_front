@@ -87,8 +87,7 @@ class BlockGenerator:
                 counts[category_code] = counts.get(category_code, 0) + 1
 
         means = {
-            category_code: sums[category_code] / counts[category_code]
-            for category_code in sums
+            category_code: sums[category_code] / counts[category_code] for category_code in sums
         }
         sorted_cats = sorted(means.items(), key=lambda item: (-item[1], item[0]))
         return [category_code for category_code, _ in sorted_cats[:3]]

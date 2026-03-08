@@ -75,6 +75,7 @@ Changer `ruleset_version` dans l'`EngineInput` → `input_hash` différent.
 - [x] Créer `backend/app/tests/regression/helpers.py`
   - [x] `serialize_output(engine_output) -> dict` — sérialisation JSON-safe déterministe de l'output complet
   - [x] `assert_clamps(orchestrator, engine_input, engine_output)` — vérifie les clamps réels (`NS`, `Contribution`, `RawStep`, `RawDay`, `note_20`)
+  - [x] `create_session()` — base SQLite temporaire autonome + seed V1/V2 pour éliminer la dépendance à une DB locale pré-remplie
 
 ## Dev Notes
 
@@ -181,6 +182,9 @@ gemini-2.0-flash
 - Implémentation d'un helper de sérialisation déterministe et des helpers d'inspection du moteur.
 - Validation du déterminisme strict, des pivots stables et des clamps réels.
 - Intégration du marker `regression` dans `pyproject.toml` et `pytest.ini`.
+- Correctif post-review: l'infrastructure de régression est maintenant hermétique, avec base temporaire et seed automatique `1.0.0` puis `2.0.0`.
+- Correctif post-review: les snapshots complets A/B ont été régénérés pour inclure le champ `editorial` issu de 35.4.
+- Validation finale exécutée dans le venv: chapitre 35 vert, puis suite backend complète verte.
 
 ### File List
 

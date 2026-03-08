@@ -24,12 +24,8 @@ def mock_ctx():
         "opposition": SimpleNamespace(
             code="opposition", intensity_weight=0.90, default_valence="negative"
         ),
-        "square": SimpleNamespace(
-            code="square", intensity_weight=0.85, default_valence="negative"
-        ),
-        "trine": SimpleNamespace(
-            code="trine", intensity_weight=0.80, default_valence="positive"
-        ),
+        "square": SimpleNamespace(code="square", intensity_weight=0.85, default_valence="negative"),
+        "trine": SimpleNamespace(code="trine", intensity_weight=0.80, default_valence="positive"),
         "sextile": SimpleNamespace(
             code="sextile", intensity_weight=0.65, default_valence="positive"
         ),

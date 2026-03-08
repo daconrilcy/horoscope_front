@@ -34,11 +34,7 @@ def mock_ctx():
 
 @pytest.fixture
 def natal_chart():
-    return NatalChart(
-        planet_positions={"Sun": 0.0},
-        planet_houses={"Sun": 1},
-        house_sign_rulers={}
-    )
+    return NatalChart(planet_positions={"Sun": 0.0}, planet_houses={"Sun": 1}, house_sign_rulers={})
 
 
 def create_step(ut_jd, planets, asc_deg=0.0):
@@ -63,17 +59,18 @@ def create_step(ut_jd, planets, asc_deg=0.0):
         planets=planet_states,
     )
 
+
 def test_enter_orb_detected(mock_ctx, natal_chart):
     detector = EventDetector(mock_ctx, natal_chart)
     # orb_max for Sun-Sun conjunction is 2.0
     steps = [
-        create_step(2460000.0, {"Sun": 357.5}), # orb = 2.5
-        create_step(2460000.1, {"Sun": 358.5}), # orb = 1.5
+        create_step(2460000.0, {"Sun": 357.5}),  # orb = 2.5
+        create_step(2460000.1, {"Sun": 358.5}),  # orb = 1.5
     ]
     day_grid = DayGrid([], 2460000.0, 2460000.2, None, None, date(2024, 1, 1), "UTC")
-    
+
     events = detector.detect(steps, day_grid)
-    
+
     enter_events = [e for e in events if e.event_type == "enter_orb"]
     assert len(enter_events) == 1
     assert enter_events[0].body == "Sun"
@@ -83,79 +80,85 @@ def test_enter_orb_detected(mock_ctx, natal_chart):
     assert enter_events[0].metadata["natal_house_target"] == 1
     assert enter_events[0].metadata["natal_house_transited"] == 1
 
+
 def test_exit_orb_detected(mock_ctx, natal_chart):
     detector = EventDetector(mock_ctx, natal_chart)
     steps = [
-        create_step(2460000.0, {"Sun": 1.5}), # orb = 1.5
-        create_step(2460000.1, {"Sun": 2.5}), # orb = 2.5
+        create_step(2460000.0, {"Sun": 1.5}),  # orb = 1.5
+        create_step(2460000.1, {"Sun": 2.5}),  # orb = 2.5
     ]
     day_grid = DayGrid([], 2460000.0, 2460000.2, None, None, date(2024, 1, 1), "UTC")
-    
+
     events = detector.detect(steps, day_grid)
-    
+
     exit_events = [e for e in events if e.event_type == "exit_orb"]
     assert len(exit_events) == 1
     assert exit_events[0].metadata["phase"] == "separating"
 
+
 def test_exact_detected(mock_ctx, natal_chart):
     detector = EventDetector(mock_ctx, natal_chart)
     steps = [
-        create_step(2460000.0, {"Sun": 358.5}), # orb = 1.5
-        create_step(2460000.1, {"Sun": 359.9}), # orb = 0.1
-        create_step(2460000.2, {"Sun": 1.5}),   # orb = 1.5
+        create_step(2460000.0, {"Sun": 358.5}),  # orb = 1.5
+        create_step(2460000.1, {"Sun": 359.9}),  # orb = 0.1
+        create_step(2460000.2, {"Sun": 1.5}),  # orb = 1.5
     ]
     day_grid = DayGrid([], 2460000.0, 2460000.3, None, None, date(2024, 1, 1), "UTC")
-    
+
     events = detector.detect(steps, day_grid)
-    
+
     exact_events = [e for e in events if e.event_type == "exact"]
     assert len(exact_events) == 1
     assert exact_events[0].ut_time == 2460000.1
     assert exact_events[0].orb_deg == pytest.approx(0.1)
     assert exact_events[0].metadata["natal_house_target"] == 1
 
+
 def test_moon_ingress_detected(mock_ctx, natal_chart):
     detector = EventDetector(mock_ctx, natal_chart)
     steps = [
-        create_step(2460000.0, {"Moon": 29.5}), # Sign 0
-        create_step(2460000.1, {"Moon": 30.5}), # Sign 1
+        create_step(2460000.0, {"Moon": 29.5}),  # Sign 0
+        create_step(2460000.1, {"Moon": 30.5}),  # Sign 1
     ]
     day_grid = DayGrid([], 2460000.0, 2460000.2, None, None, date(2024, 1, 1), "UTC")
-    
+
     events = detector.detect(steps, day_grid)
-    
+
     ingress = [e for e in events if e.event_type == "moon_sign_ingress"]
     assert len(ingress) == 1
     assert ingress[0].metadata["from_sign"] == 0
     assert ingress[0].metadata["to_sign"] == 1
 
+
 def test_asc_change_detected(mock_ctx, natal_chart):
     detector = EventDetector(mock_ctx, natal_chart)
     steps = [
-        create_step(2460000.0, {}, asc_deg=29.9), # Sign 0
-        create_step(2460000.1, {}, asc_deg=30.1), # Sign 1
+        create_step(2460000.0, {}, asc_deg=29.9),  # Sign 0
+        create_step(2460000.1, {}, asc_deg=30.1),  # Sign 1
     ]
     day_grid = DayGrid([], 2460000.0, 2460000.2, None, None, date(2024, 1, 1), "UTC")
-    
+
     events = detector.detect(steps, day_grid)
-    
+
     asc_change = [e for e in events if e.event_type == "asc_sign_change"]
     assert len(asc_change) == 1
     assert asc_change[0].metadata["from_sign"] == 0
     assert asc_change[0].metadata["to_sign"] == 1
 
+
 def test_24_planetary_hours(mock_ctx, natal_chart):
     detector = EventDetector(mock_ctx, natal_chart)
     # Sunday (2024-03-03 is a Sunday)
     day_grid = DayGrid([], 2460372.5, 2460373.5, 2460372.7, 2460373.2, date(2024, 3, 3), "UTC")
-    
+
     events = detector.detect([], day_grid)
-    
+
     ph_events = [e for e in events if e.event_type == "planetary_hour_change"]
     assert len(ph_events) == 24
     # First ruler of Sunday is Sun
     assert ph_events[0].body == "Sun"
     assert ph_events[0].metadata["hour_number"] == 1
+
 
 def test_exact_metadata_uses_prev_step_house(mock_ctx, natal_chart):
     """Régression H1 : natal_house_transited de l'exact doit venir du step i-1, pas du step i."""
@@ -206,12 +209,11 @@ def test_exact_metadata_uses_prev_step_house(mock_ctx, natal_chart):
 def test_non_v1_target_ignored(mock_ctx):
     # Eris is not in V1 targets
     chart = NatalChart(
-        planet_positions={"Eris": 10.0},
-        planet_houses={"Eris": 1},
-        house_sign_rulers={}
+        planet_positions={"Eris": 10.0}, planet_houses={"Eris": 1}, house_sign_rulers={}
     )
     detector = EventDetector(mock_ctx, chart)
     assert "Eris" not in detector.natal_positions
+
 
 def test_minor_aspect_ignored(mock_ctx, natal_chart):
     detector = EventDetector(mock_ctx, natal_chart)
@@ -220,10 +222,11 @@ def test_minor_aspect_ignored(mock_ctx, natal_chart):
         create_step(2460000.0, {"Sun": 150.0}),
     ]
     day_grid = DayGrid([], 2460000.0, 2460000.2, None, None, date(2024, 1, 1), "UTC")
-    
+
     events = detector.detect(steps, day_grid)
     aspect_events = [e for e in events if e.event_type in ["enter_orb", "exact", "exit_orb"]]
     assert len(aspect_events) == 0
+
 
 def test_events_sorted_by_time(mock_ctx, natal_chart):
     detector = EventDetector(mock_ctx, natal_chart)
@@ -281,9 +284,7 @@ def test_orb_max_resolves_lowercase_profiles_without_fallback(mock_ctx):
         "conjunction": MagicMock(orb_multiplier=1.5),
     }
     chart = NatalChart(
-        planet_positions={"Sun": 0.0},
-        planet_houses={"Sun": 1},
-        house_sign_rulers={}
+        planet_positions={"Sun": 0.0}, planet_houses={"Sun": 1}, house_sign_rulers={}
     )
     detector = EventDetector(mock_ctx, chart)
 
@@ -300,9 +301,7 @@ def test_orb_max_falls_back_when_profile_value_is_none(mock_ctx):
         "conjunction": MagicMock(orb_multiplier=1.5),
     }
     chart = NatalChart(
-        planet_positions={"Sun": 0.0},
-        planet_houses={"Sun": 1},
-        house_sign_rulers={}
+        planet_positions={"Sun": 0.0}, planet_houses={"Sun": 1}, house_sign_rulers={}
     )
     detector = EventDetector(mock_ctx, chart)
 

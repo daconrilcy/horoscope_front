@@ -58,8 +58,8 @@ Si le champ n'existe pas encore sur le modèle → ajouter une migration Alembic
 ### T3 — Mise à jour `PredictionPersistenceService` (AC3, AC5)
 
 - [x] Modifier `backend/app/prediction/persistence_service.py`
-  - [x] `save()` prend en paramètre optionnel `explainability: ExplainabilityReport | None`
-  - [x] Si fourni → sérialiser `top_contributors` en JSON et stocker dans `contributors_json`
+  - [x] `save()` consomme `engine_output.explainability`
+  - [x] Si présent sur l'output → sérialiser `top_contributors` en JSON et stocker dans `contributors_json`
 
 ### T4 — Tests unitaires (AC1–AC5)
 
@@ -172,6 +172,7 @@ gemini-2.0-flash
 - **[Code Review Fix]** `test_save_turning_point_drivers_format` réécrit avec un vrai `TurningPoint` + `AstroEvent` au lieu d'un `MockTurningPoint`.
 - **[Code Review Fix]** `PredictionPersistenceService.save()` — param `explainability` supprimé, `engine_output.explainability` utilisé directement. Cohérence `EngineOutput` ↔ service.
 - **[Code Review Fix]** Chemin dict dans `_save_turning_points` : sérialisation `datetime` via `.isoformat()` ajoutée pour éviter `TypeError` à runtime.
+- Validation finale exécutée dans le venv sur la suite ciblée chapitre 35 puis sur toute la suite backend sans régression.
 
 ### File List
 

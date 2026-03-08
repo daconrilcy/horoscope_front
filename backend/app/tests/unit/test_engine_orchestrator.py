@@ -136,9 +136,7 @@ def _build_loaded_context() -> LoadedPredictionContext:
 
 @pytest.fixture
 def orchestrator():
-    return EngineOrchestrator(
-        prediction_context_loader=lambda *_: _build_loaded_context()
-    )
+    return EngineOrchestrator(prediction_context_loader=lambda *_: _build_loaded_context())
 
 
 @pytest.fixture

@@ -399,8 +399,7 @@ class EngineOrchestrator:
                 counts[category_code] = counts.get(category_code, 0) + 1
 
         return {
-            category_code: sums[category_code] / counts[category_code]
-            for category_code in sums
+            category_code: sums[category_code] / counts[category_code] for category_code in sums
         }
 
     def _resolve_caution_category_codes(
@@ -554,7 +553,7 @@ class EngineOrchestrator:
             natal_chart.get("planets"),
             code_key="code",
         )
-        
+
         # Normalize planet names
         normalized_positions: dict[str, float] = {}
         for code, longitude in planet_positions.items():
@@ -562,8 +561,8 @@ class EngineOrchestrator:
             if canonical is not None:
                 normalized_positions[canonical] = longitude
             else:
-                normalized_positions[code] = longitude # Keep original if not a planet (e.g. angle)
-                
+                normalized_positions[code] = longitude  # Keep original if not a planet (e.g. angle)
+
         # Include angles
         for angle_code, longitude in self._extract_angle_longitudes(natal_chart).items():
             normalized_positions[angle_code] = longitude
@@ -573,9 +572,9 @@ class EngineOrchestrator:
             code: self._house_for_longitude(lon, natal_cusps)
             for code, lon in normalized_positions.items()
         }
-        
+
         house_sign_rulers = self._extract_house_sign_rulers(natal_chart, natal_cusps)
-        
+
         return NatalChart(
             planet_positions=normalized_positions,
             planet_houses=point_houses,
