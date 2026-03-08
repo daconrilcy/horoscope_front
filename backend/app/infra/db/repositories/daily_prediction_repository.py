@@ -34,6 +34,7 @@ class DailyPredictionRepository:
         reference_version_id: int,
         ruleset_id: int,
         input_hash: str | None = None,
+        house_system_effective: str | None = None,
         overall_summary: str | None = None,
         overall_tone: str | None = None,
         main_turning_point_at: datetime | None = None,
@@ -45,6 +46,7 @@ class DailyPredictionRepository:
             reference_version_id=reference_version_id,
             ruleset_id=ruleset_id,
             input_hash=input_hash,
+            house_system_effective=house_system_effective,
             overall_summary=overall_summary,
             overall_tone=overall_tone,
             main_turning_point_at=main_turning_point_at,
@@ -180,6 +182,7 @@ class DailyPredictionRepository:
             "ruleset_id": run.ruleset_id,
             "input_hash": run.input_hash,
             "computed_at": run.computed_at.isoformat(),
+            "house_system_effective": run.house_system_effective,
             "overall_summary": run.overall_summary,
             "overall_tone": run.overall_tone,
             "main_turning_point_at": (

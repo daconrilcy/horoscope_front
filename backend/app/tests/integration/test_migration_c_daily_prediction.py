@@ -162,6 +162,7 @@ def test_daily_prediction_repository_basic_flow(
             reference_version_id=ref_v.id,
             ruleset_id=ruleset.id,
             input_hash="hash1",
+            house_system_effective="placidus",
         )
         assert run.id is not None
 
@@ -185,6 +186,7 @@ def test_daily_prediction_repository_basic_flow(
 
         full_run = repo.get_full_run(run.id)
         assert full_run is not None
+        assert full_run["house_system_effective"] == "placidus"
         assert len(full_run["category_scores"]) == 1
         assert len(full_run["turning_points"]) == 1
         assert len(full_run["time_blocks"]) == 1

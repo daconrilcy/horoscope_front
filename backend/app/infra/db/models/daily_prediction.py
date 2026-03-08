@@ -51,6 +51,7 @@ class DailyPredictionRunModel(Base):
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=utc_now
     )
+    house_system_effective: Mapped[str | None] = mapped_column(String(16), nullable=True)
     overall_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     overall_tone: Mapped[str | None] = mapped_column(String(16), nullable=True)
     main_turning_point_at: Mapped[datetime | None] = mapped_column(

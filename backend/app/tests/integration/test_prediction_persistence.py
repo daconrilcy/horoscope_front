@@ -121,6 +121,7 @@ def test_create_new_run(db_session: Session, seed_data):
     run = db_session.get(DailyPredictionRunModel, result.run.id)
     assert run.user_id == user_id
     assert run.input_hash == "hash1"
+    assert run.house_system_effective == "placidus"
     assert len(run.category_scores) == 2
 
 

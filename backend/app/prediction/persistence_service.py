@@ -61,6 +61,7 @@ class PredictionPersistenceService:
             reference_version_id=reference_version_id,
             ruleset_id=ruleset_id,
             input_hash=input_hash,
+            house_system_effective=engine_output.effective_context.house_system_effective,
             overall_summary=engine_output.run_metadata.get("overall_summary"),
             overall_tone=engine_output.run_metadata.get("overall_tone"),
         )

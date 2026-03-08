@@ -16,7 +16,9 @@
       "Bash(.venv/Scripts/python -m pytest backend/app/tests/unit/ --tb=short -q)",
       "Bash(.venv/Scripts/python -m pytest:*)",
       "Bash(.venv/Scripts/python:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(cd:*)",
+      "Bash(git:*)"
     ],
     "additionalDirectories": [
       "c:\\dev\\horoscope_front\\_bmad-output\\implementation-artifacts"

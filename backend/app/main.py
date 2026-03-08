@@ -36,6 +36,7 @@ from app.api.v1.routers.natal_interpretation import router as natal_interpretati
 from app.api.v1.routers.ops_feature_flags import router as ops_feature_flags_router
 from app.api.v1.routers.ops_monitoring import router as ops_monitoring_router
 from app.api.v1.routers.ops_persona import router as ops_persona_router
+from app.api.v1.routers.predictions import router as predictions_router
 from app.api.v1.routers.privacy import router as privacy_router
 from app.api.v1.routers.reference_data import router as reference_data_router
 from app.api.v1.routers.support import router as support_router
@@ -448,6 +449,7 @@ app.include_router(natal_interpretation_router)
 app.include_router(ops_monitoring_router)
 app.include_router(ops_feature_flags_router)
 app.include_router(ops_persona_router)
+app.include_router(predictions_router)
 app.include_router(privacy_router)
 app.include_router(reference_data_router)
 app.include_router(users_router)

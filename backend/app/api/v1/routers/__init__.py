@@ -13,6 +13,7 @@ from app.api.v1.routers.guidance import router as guidance_router
 from app.api.v1.routers.ops_feature_flags import router as ops_feature_flags_router
 from app.api.v1.routers.ops_monitoring import router as ops_monitoring_router
 from app.api.v1.routers.ops_persona import router as ops_persona_router
+from app.api.v1.routers.predictions import router as predictions_router
 from app.api.v1.routers.privacy import router as privacy_router
 from app.api.v1.routers.reference_data import router as reference_data_router
 from app.api.v1.routers.support import router as support_router
@@ -34,6 +35,7 @@ __all__ = [
     "ops_monitoring_router",
     "ops_feature_flags_router",
     "ops_persona_router",
+    "predictions_router",
     "privacy_router",
     "reference_data_router",
     "support_router",
