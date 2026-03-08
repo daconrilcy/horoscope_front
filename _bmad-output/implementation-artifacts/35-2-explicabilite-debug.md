@@ -172,6 +172,7 @@ gemini-2.0-flash
 - **[Code Review Fix]** `test_save_turning_point_drivers_format` réécrit avec un vrai `TurningPoint` + `AstroEvent` au lieu d'un `MockTurningPoint`.
 - **[Code Review Fix]** `PredictionPersistenceService.save()` — param `explainability` supprimé, `engine_output.explainability` utilisé directement. Cohérence `EngineOutput` ↔ service.
 - **[Code Review Fix]** Chemin dict dans `_save_turning_points` : sérialisation `datetime` via `.isoformat()` ajoutée pour éviter `TypeError` à runtime.
+- **[Post-release Fix]** Migration `20260308_0037_add_contributors_json.py` rendue idempotente pour les bases SQLite locales où la colonne `contributors_json` existait déjà alors que `alembic_version` était en retard. Cela supprime le blocage `duplicate column name` au `alembic upgrade head`.
 - Validation finale exécutée dans le venv sur la suite ciblée chapitre 35 puis sur toute la suite backend sans régression.
 
 ### File List
@@ -185,3 +186,4 @@ gemini-2.0-flash
 - `backend/app/prediction/schemas.py`
 - `backend/app/prediction/engine_orchestrator.py`
 - `backend/app/prediction/turning_point_detector.py`
+- `backend/app/tests/integration/test_migration_0037_add_contributors_json.py`

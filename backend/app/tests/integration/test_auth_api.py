@@ -1,21 +1,49 @@
+from pathlib import Path
+
+import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete, select
+from sqlalchemy import create_engine, delete, select
+from sqlalchemy.orm import sessionmaker
 
 from app.core.security import create_token
+from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_refresh_token import UserRefreshTokenModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 
 client = TestClient(app)
 
 
+@pytest.fixture(autouse=True)
+def _isolated_auth_database(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    database_url = f"sqlite:///{(tmp_path / 'auth-api.db').as_posix()}"
+    test_engine = create_engine(
+        database_url,
+        connect_args={"check_same_thread": False},
+        future=True,
+    )
+    test_session_local = sessionmaker(
+        bind=test_engine,
+        autoflush=False,
+        autocommit=False,
+        future=True,
+    )
+    monkeypatch.setattr(db_session_module, "engine", test_engine)
+    monkeypatch.setattr(db_session_module, "SessionLocal", test_session_local)
+    Base.metadata.create_all(bind=test_engine)
+    try:
+        yield
+    finally:
+        test_engine.dispose()
+
+
 def _cleanup_users() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.create_all(bind=db_session_module.engine)
+    with db_session_module.SessionLocal() as db:
         db.execute(delete(AuditEventModel))
         db.execute(delete(UserRefreshTokenModel))
         db.execute(delete(UserModel))
@@ -181,7 +209,7 @@ def test_refresh_success_records_actor_identity_in_audit_event() -> None:
     refreshed = client.post("/v1/auth/refresh", json={"refresh_token": refresh_token})
     assert refreshed.status_code == 200
 
-    with SessionLocal() as db:
+    with db_session_module.SessionLocal() as db:
         event = db.scalar(
             select(AuditEventModel)
             .where(AuditEventModel.action == "auth_refresh", AuditEventModel.status == "success")

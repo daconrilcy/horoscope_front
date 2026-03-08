@@ -49,6 +49,7 @@ from app.domain.astrology.houses_provider import HousesCalcError, UnsupportedHou
 from app.domain.astrology.natal_preparation import (
     warmup_timezone_finder,
 )
+from app.infra.db.bootstrap import ensure_local_sqlite_schema_ready
 from app.infra.observability.metrics import increment_counter, observe_duration
 from app.llm_orchestration.models import InputValidationError
 from app.services.pricing_experiment_service import PricingExperimentService
@@ -148,6 +149,7 @@ def _ensure_llm_registry_seeded() -> None:
 
 @asynccontextmanager
 async def _app_lifespan(_: FastAPI):
+    ensure_local_sqlite_schema_ready()
     PricingExperimentService.record_variant_state_change(
         enabled=PricingExperimentService.is_enabled(),
         request_id=None,

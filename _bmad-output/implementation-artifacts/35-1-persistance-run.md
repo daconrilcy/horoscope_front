@@ -173,6 +173,7 @@ gemini-2.0-flash
 - Tests pass (10/10) after code review fixes.
 - Code review fixes applied: field name mapping corrected for real TurningPoint/TimeBlock objects (C2), test_transaction_rollback uses deterministic mock injection (H1), 3 missing tests added (C1), unused Any import removed (L1).
 - Post-review hardening: JSON serialization for persistence is now centralized for dataclasses, dicts, datetimes and list payloads, which prevents runtime drift between test doubles and real engine objects.
+- Post-release stabilization: chapter 35 now executes correctly against the real local SQLite runtime after adding startup schema bootstrap and replay-safe migration handling, without changing the persistence contract itself.
 - Validation finale exécutée dans le venv sur la suite ciblée chapitre 35 puis sur toute la suite backend sans régression.
 
 ### File List

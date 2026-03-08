@@ -184,6 +184,7 @@ gemini-2.0-flash
 - Intégration du marker `regression` dans `pyproject.toml` et `pytest.ini`.
 - Correctif post-review: l'infrastructure de régression est maintenant hermétique, avec base temporaire et seed automatique `1.0.0` puis `2.0.0`.
 - Correctif post-review: les snapshots complets A/B ont été régénérés pour inclure le champ `editorial` issu de 35.4.
+- Post-release validation: les suites unitaires touchées indirectement par le bootstrap/migration SQLite (`guidance`, `persona_config`, `privacy`) ont été revérifiées et restent vertes.
 - Validation finale exécutée dans le venv: chapitre 35 vert, puis suite backend complète verte.
 
 ### File List

@@ -17,6 +17,14 @@ depends_on = None
 
 
 def upgrade():
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    column_names = {
+        column["name"] for column in inspector.get_columns("daily_prediction_category_scores")
+    }
+    if "contributors_json" in column_names:
+        return
+
     op.add_column(
         "daily_prediction_category_scores",
         sa.Column("contributors_json", sa.Text(), nullable=True),
@@ -24,4 +32,12 @@ def upgrade():
 
 
 def downgrade():
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    column_names = {
+        column["name"] for column in inspector.get_columns("daily_prediction_category_scores")
+    }
+    if "contributors_json" not in column_names:
+        return
+
     op.drop_column("daily_prediction_category_scores", "contributors_json")

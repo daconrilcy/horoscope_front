@@ -192,6 +192,8 @@ claude-sonnet-4-6
 - Created comprehensive unit tests in `backend/app/tests/unit/test_editorial_builder.py` covering all ACs.
 - Ensured no LLM dependencies were introduced as per AC1.
 - Post-review validation: full-day regression snapshots were refreshed so the editorial contract is now locked in non-regression tests.
+- Post-release stabilization: local SQLite startup now auto-upgrades missing auth/schema tables in dev, and the chapter-35 migration path no longer breaks login/register on partially drifted local DBs.
+- Post-release validation: real local smoke `POST /v1/auth/register` and `POST /v1/auth/login` both return `200` after migration to `20260308_0037`.
 - Validation finale exécutée dans le venv sur la suite ciblée chapitre 35 puis sur toute la suite backend sans régression.
 
 ### File List
@@ -200,6 +202,10 @@ claude-sonnet-4-6
 - `backend/app/tests/unit/test_editorial_builder.py`
 - `backend/app/prediction/schemas.py`
 - `backend/app/prediction/engine_orchestrator.py`
+- `backend/app/infra/db/bootstrap.py`
+- `backend/app/tests/unit/test_db_bootstrap.py`
+- `backend/app/tests/integration/test_db_bootstrap.py`
+- `backend/app/tests/integration/test_auth_api.py`
 
 ## Change Log
 
