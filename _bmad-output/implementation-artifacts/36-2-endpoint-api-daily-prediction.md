@@ -114,6 +114,8 @@ gemini-2.0-flash-thinking-exp
 - Added coverage for non-natal `422`, malformed persisted JSON, turning-point overlap, and metadata fidelity.
 - Persisted `house_system_effective` on daily prediction runs so reused runs return the effective house system.
 - Verified fixes with `ruff check .` and targeted backend test suites in the venv.
+- Post-validation fix: `profile_missing` now returns `422` on `/v1/predictions/daily`, while `natal_missing` remains the only `404` business error for this endpoint, matching AC5.
+- Revalidated chapter 36 backend scope on 2026-03-08 with `ruff check` and targeted `pytest` in the activated venv.
 
 ### File List
 
@@ -134,3 +136,4 @@ gemini-2.0-flash-thinking-exp
 - 2026-03-08: Story créée pour l'Epic 36 — Productisation V1.
 - 2026-03-08: Implémentation de l'endpoint API et des tests d'intégration.
 - 2026-03-08: Correctifs post-review appliqués et validés, story passée à done.
+- 2026-03-08: Validation finale chapitre 36, alignement du mapping `profile_missing` -> `422` pour l'endpoint daily.

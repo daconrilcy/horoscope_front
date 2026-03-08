@@ -47,6 +47,32 @@ describe("dailyPrediction api", () => {
     });
   });
 
+  it("mappe le format detail { code, message } des endpoints prediction", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            detail: {
+              code: "timezone_missing",
+              message: "Timezone missing",
+            },
+          }),
+          {
+            status: 422,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      ),
+    );
+
+    await expect(getDailyPrediction("token-1")).rejects.toMatchObject({
+      code: "timezone_missing",
+      status: 422,
+      message: "Timezone missing",
+    });
+  });
+
   it("propage request_id et code sur les erreurs API standard", async () => {
     vi.stubGlobal(
       "fetch",

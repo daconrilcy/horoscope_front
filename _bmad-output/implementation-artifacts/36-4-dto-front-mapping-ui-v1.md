@@ -127,6 +127,8 @@ gemini-2.0-flash-thinking-exp
 - `CategoryGrid` now displays the raw `note_20` value returned by the API without re-interpretation.
 - DTO typing was tightened for `turning_points[].drivers` and `severity`.
 - Regression tests were updated and new tests were added for the daily prediction contract.
+- Post-validation fix: the API client now maps backend prediction errors returned as `detail: { code, message }` into `ApiError`, preserving the functional error code exposed by FastAPI routes.
+- Revalidated chapter 36 frontend scope on 2026-03-08 with `npm run lint`, targeted `vitest`, and `npm run build`.
 
 ### File List
 
@@ -151,3 +153,4 @@ gemini-2.0-flash-thinking-exp
 - 2026-03-08: Story créée pour l'Epic 36 — Productisation V1.
 - 2026-03-08: Implémentation complète du contrat front et intégration UI.
 - 2026-03-08: Corrections post-review appliquées sur le cache utilisateur, l'affichage brut des scores, le typage DTO et la couverture de tests.
+- 2026-03-08: Validation finale chapitre 36, correction du mapping des erreurs FastAPI `detail` côté client daily prediction.

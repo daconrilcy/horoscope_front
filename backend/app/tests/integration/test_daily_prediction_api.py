@@ -162,6 +162,24 @@ def test_daily_prediction_422_for_non_natal_service_error():
     }
 
 
+def test_daily_prediction_profile_missing_is_422():
+    token = _register_and_get_access_token()
+    mock_service = MagicMock()
+    mock_service.get_or_compute.side_effect = DailyPredictionServiceError(
+        code="profile_missing",
+        message="Profil de naissance introuvable",
+    )
+    _override_service(mock_service)
+
+    response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == {
+        "code": "profile_missing",
+        "message": "Profil de naissance introuvable",
+    }
+
+
 def test_daily_prediction_categories_sorted_by_rank():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()

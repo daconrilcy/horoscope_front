@@ -9,6 +9,10 @@ type ErrorEnvelope = {
   };
 };
 
+type FastApiDetailEnvelope = {
+  detail?: unknown;
+};
+
 export class ApiError extends Error {
   readonly code: string;
   readonly status: number;
@@ -22,22 +26,52 @@ export class ApiError extends Error {
   }
 }
 
+function toApiErrorPayload(raw: Record<string, unknown>): ErrorEnvelope | null {
+  if (raw?.error && typeof raw.error === "object") {
+    return raw as unknown as ErrorEnvelope;
+  }
+
+  const detail = (raw as FastApiDetailEnvelope).detail;
+  if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+    const detailRecord = detail as Record<string, unknown>;
+    if (typeof detailRecord.code === "string" && typeof detailRecord.message === "string") {
+      return {
+        error: {
+          code: detailRecord.code,
+          message: detailRecord.message,
+        },
+      };
+    }
+  }
+
+  if (typeof detail === "string") {
+    return {
+      error: {
+        code: "request_failed",
+        message: detail,
+      },
+    };
+  }
+
+  if (Array.isArray(detail)) {
+    const firstDetail = detail[0] as { msg?: string } | undefined;
+    return {
+      error: {
+        code: "unprocessable_entity",
+        message: firstDetail?.msg || "Données invalides",
+      },
+    };
+  }
+
+  return null;
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     let payload: ErrorEnvelope | null = null;
     try {
       const raw = (await response.json()) as Record<string, unknown>;
-      if (raw?.error) {
-        payload = raw as unknown as ErrorEnvelope;
-      } else if (Array.isArray(raw?.detail)) {
-        const firstDetail = (raw.detail as Array<{ msg?: string }>)[0];
-        payload = {
-          error: {
-            code: "unprocessable_entity",
-            message: firstDetail?.msg || "Données invalides",
-          },
-        };
-      }
+      payload = toApiErrorPayload(raw);
     } catch {
       payload = null;
     }

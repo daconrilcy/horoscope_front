@@ -127,8 +127,12 @@ def get_daily_prediction_service() -> DailyPredictionService:
     )
 
 
-def _raise_daily_prediction_service_error(error: DailyPredictionServiceError) -> None:
-    status_code = 404 if error.code in {"natal_missing", "profile_missing"} else 422
+def _raise_daily_prediction_service_error(
+    error: DailyPredictionServiceError,
+    *,
+    not_found_codes: set[str] | None = None,
+) -> None:
+    status_code = 404 if error.code in (not_found_codes or set()) else 422
     raise HTTPException(
         status_code=status_code,
         detail={"code": error.code, "message": error.message},
@@ -168,7 +172,10 @@ def debug_daily_prediction(
             ruleset_version=settings.ruleset_version,
         )
     except DailyPredictionServiceError as error:
-        _raise_daily_prediction_service_error(error)
+        _raise_daily_prediction_service_error(
+            error,
+            not_found_codes={"natal_missing", "profile_missing"},
+        )
 
     if result is None:
         raise HTTPException(
@@ -333,7 +340,7 @@ def get_daily_prediction(
             ruleset_version=settings.ruleset_version,
         )
     except DailyPredictionServiceError as error:
-        _raise_daily_prediction_service_error(error)
+        _raise_daily_prediction_service_error(error, not_found_codes={"natal_missing"})
 
     if result is None:
         raise HTTPException(status_code=404, detail="Prediction not found")
