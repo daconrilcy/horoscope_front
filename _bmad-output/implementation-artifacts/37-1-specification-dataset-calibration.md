@@ -1,6 +1,6 @@
 # Story 37.1 : Spécification du dataset de calibration
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -34,8 +34,8 @@ Le fichier `backend/app/jobs/calibration/natal_profiles.py` est importable en Py
 
 ### T1 — Créer la documentation de spécification du dataset
 
-- [ ] Créer le dossier `docs/calibration/`
-- [ ] Créer `docs/calibration/dataset-spec.md` avec les sections :
+- [x] Créer le dossier `docs/calibration/`
+- [x] Créer `docs/calibration/dataset-spec.md` avec les sections :
   - En-tête : `dataset_version`, date de création, auteur
   - Panel de profils natals (≥ 5 lignes avec label, signe solaire, ascendant, timezone, lat/lon)
   - Plage temporelle (dates de début et fin, politique sur les jours invalides)
@@ -46,17 +46,17 @@ Le fichier `backend/app/jobs/calibration/natal_profiles.py` est importable en Py
 
 ### T2 — Créer le package `backend/app/jobs/calibration/`
 
-- [ ] Créer `backend/app/jobs/__init__.py` (si absent)
-- [ ] Créer `backend/app/jobs/calibration/__init__.py`
+- [x] Créer `backend/app/jobs/__init__.py` (si absent)
+- [x] Créer `backend/app/jobs/calibration/__init__.py`
 
 ### T3 — Créer le fichier de profils natals de calibration
 
-- [ ] Créer `backend/app/jobs/calibration/natal_profiles.py`
-  - [ ] Définir `CALIBRATION_PROFILES: list[dict]` avec ≥ 5 profils
-  - [ ] Couvrir au minimum : 2 fuseaux européens, 1 fuseau américain, 1 fuseau asiatique, 1 latitude > 55°N
-  - [ ] Chaque profil contient : `label`, `natal_chart`, `timezone`, `latitude`, `longitude`
-  - [ ] Définir `CALIBRATION_DATE_RANGE = {"start": "2024-01-01", "end": "2024-12-31"}`
-  - [ ] Définir `CALIBRATION_VERSIONS` en lisant **les versions actives réelles** via `settings` :
+- [x] Créer `backend/app/jobs/calibration/natal_profiles.py`
+  - [x] Définir `CALIBRATION_PROFILES: list[dict]` avec ≥ 5 profils
+  - [x] Couvrir au minimum : 2 fuseaux européens, 1 fuseau américain, 1 fuseau asiatique, 1 latitude > 55°N
+  - [x] Chaque profil contient : `label`, `natal_chart`, `timezone`, `latitude`, `longitude`
+  - [x] Définir `CALIBRATION_DATE_RANGE = {"start": "2024-01-01", "end": "2024-12-31"}`
+  - [x] Définir `CALIBRATION_VERSIONS` en lisant **les versions actives réelles** via `settings` :
     ```python
     from app.core.config import settings
     # NE PAS coder "1.0.0" en dur — lire depuis la config active au moment du run
@@ -65,18 +65,18 @@ Le fichier `backend/app/jobs/calibration/natal_profiles.py` est importable en Py
         "ruleset_version": settings.active_ruleset_version,  # à ajouter dans config si absent
     }
     ```
-  - [ ] Documenter dans `dataset-spec.md` les versions **effectivement utilisées** lors de la campagne (à remplir après exécution, pas à coder en dur)
+  - [x] Documenter dans `dataset-spec.md` les versions **effectivement utilisées** lors de la campagne (à remplir après exécution, pas à coder en dur)
 
 ### T4 — Créer le script de validation du dataset
 
-- [ ] Créer `backend/app/jobs/calibration/validate_dataset.py`
-  - [ ] Vérifier `len(CALIBRATION_PROFILES) >= 5`
-  - [ ] Vérifier que chaque profil possède les clés : `label`, `natal_chart`, `timezone`, `latitude`, `longitude`
-  - [ ] Vérifier que les labels sont uniques
-  - [ ] Vérifier la diversité des fuseaux (au moins 2 valeurs distinctes)
-  - [ ] Vérifier la plage temporelle ≥ 365 jours
-  - [ ] Afficher un rapport de validation en stdout
-  - [ ] Retourner code de sortie 0 si OK, 1 si erreur
+- [x] Créer `backend/app/jobs/calibration/validate_dataset.py`
+  - [x] Vérifier `len(CALIBRATION_PROFILES) >= 5`
+  - [x] Vérifier que chaque profil possède les clés : `label`, `natal_chart`, `timezone`, `latitude`, `longitude`
+  - [x] Vérifier que les labels sont uniques
+  - [x] Vérifier la diversité des fuseaux (au moins 2 valeurs distinctes)
+  - [x] Vérifier la plage temporelle ≥ 365 jours
+  - [x] Afficher un rapport de validation en stdout
+  - [x] Retourner code de sortie 0 si OK, 1 si erreur
 
 ## Dev Notes
 
@@ -225,14 +225,23 @@ Les versions ne sont **pas codées en dur** — elles sont lues depuis `settings
 ## Dev Agent Record
 
 ### Agent Model Used
+Gemini 2.0 Flash
 
 ### Debug Log References
+- Dataset validation script output: `[OK] Dataset valide — 5 profils, 366 jours, versions {'reference_version': '1.0.0', 'ruleset_version': '1.0.0'}`
 
 ### Completion Notes List
+- Création de la spécification du dataset dans `docs/calibration/dataset-spec.md`.
+- Ajout de l'alias `active_ruleset_version` dans `backend/app/core/config.py` pour alignement avec les besoins de calibration.
+- Initialisation du package `backend/app/jobs/calibration/`.
+- Implémentation de `natal_profiles.py` avec 5 profils natals diversifiés (Europe, US, Asie, Haute Latitude).
+- Création et validation du script `validate_dataset.py`.
+- Vérification du respect des critères de couverture temporelle (366 jours pour 2024).
 
 ### File List
 
 - `docs/calibration/dataset-spec.md`
+- `backend/app/core/config.py` (modifié)
 - `backend/app/jobs/__init__.py`
 - `backend/app/jobs/calibration/__init__.py`
 - `backend/app/jobs/calibration/natal_profiles.py`
@@ -241,3 +250,4 @@ Les versions ne sont **pas codées en dur** — elles sont lues depuis `settings
 ## Change Log
 
 - 2026-03-08: Story créée pour Epic 37.
+- 2026-03-08: Implémentation complète de la spécification et du dataset de calibration.

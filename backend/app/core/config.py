@@ -111,6 +111,7 @@ class Settings:
         )
         self.active_reference_version = os.getenv("ACTIVE_REFERENCE_VERSION", "1.0.0")
         self.ruleset_version = os.getenv("RULESET_VERSION", "1.0.0")
+        self.active_ruleset_version = self.ruleset_version
 
         default_zodiac = (
             os.getenv("NATAL_RULESET_DEFAULT_ZODIAC", ZodiacType.TROPICAL).strip().lower()
