@@ -318,3 +318,4 @@ development_status:
   36-1-service-applicatif-daily-prediction: done
   36-2-endpoint-api-daily-prediction: done
   36-3-endpoint-historique-daily-prediction: done
+  36-4-dto-front-mapping-ui-v1: done

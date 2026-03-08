@@ -1,69 +1,70 @@
 import { useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
 
 import { TodayHeader } from '../components/TodayHeader'
-import { HeroHoroscopeCard } from '../components/HeroHoroscopeCard'
 import { ShortcutsSection } from '../components/ShortcutsSection'
-import { DailyInsightsSection } from '../components/DailyInsightsSection'
-import { useAccessTokenSnapshot, getSubjectFromAccessToken } from '../utils/authToken'
+import { DayPredictionCard } from '../components/prediction/DayPredictionCard'
+import { CategoryGrid } from '../components/prediction/CategoryGrid'
+import { DayTimeline } from '../components/prediction/DayTimeline'
+import { TurningPointsList } from '../components/prediction/TurningPointsList'
+
+import { useAccessTokenSnapshot } from '../utils/authToken'
 import { useAuthMe } from '../api/authMe'
-import { getBirthData } from '../api/birthProfile'
+import { useDailyPrediction } from '../api/useDailyPrediction'
 import { getUserDisplayName } from '../utils/user'
-import { STATIC_HOROSCOPE, TODAY_DATE_FORMATTER } from '../constants/horoscope'
-import { ANONYMOUS_SUBJECT } from '../utils/constants'
-import { translateSign, detectLang, isKnownSignCode } from '../i18n/astrology'
 
 export function TodayPage() {
   const navigate = useNavigate()
   const accessToken = useAccessTokenSnapshot()
-  const tokenSubject = getSubjectFromAccessToken(accessToken) ?? ANONYMOUS_SUBJECT
-  const lang = detectLang()
 
-  const { data: user, isLoading: isUserLoading, isError, refetch } = useAuthMe(accessToken)
+  const { data: user, isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useAuthMe(accessToken)
 
-  const { data: birthData } = useQuery({
-    queryKey: ['birth-profile', tokenSubject],
-    queryFn: () => getBirthData(accessToken!),
-    enabled: Boolean(accessToken),
-    staleTime: 1000 * 60 * 5,
-  })
+  const { 
+    data: prediction, 
+    isLoading: isPredictionLoading, 
+    isError: isPredictionError,
+    refetch: refetchPrediction
+  } = useDailyPrediction(accessToken)
 
-  // Current date formatted for the hero card (e.g. "24 fév.")
-  const todayDate = TODAY_DATE_FORMATTER.format(new Date())
-    .replace(/\.$/, '') // Remove trailing dot if any (standardizing for French abbreviations)
-    .trim()
+  const userName = isUserLoading ? 'loading' : (isUserError ? 'Utilisateur' : getUserDisplayName(user))
 
-  const userName = isUserLoading ? 'loading' : (isError ? 'Utilisateur' : getUserDisplayName(user))
+  const isLoading = isUserLoading || isPredictionLoading
+  const isError = isUserError || isPredictionError
 
-  // Derive sign info from API astro_profile, fallback to static data
-  const rawSunSignCode = birthData?.astro_profile?.sun_sign_code ?? null
-  const sunSignCode = rawSunSignCode && isKnownSignCode(rawSunSignCode) ? rawSunSignCode : null
-  const signName = sunSignCode ? translateSign(sunSignCode, lang) : STATIC_HOROSCOPE.signName
+  const handleRetry = () => {
+    refetchUser()
+    refetchPrediction()
+  }
 
   return (
     <div className="today-page">
       <TodayHeader userName={userName} />
 
-      {isError && !user ? (
-        <div className="panel state-error-centered" style={{ marginTop: '2rem' }}>
-          <p>Impossible de charger votre profil.</p>
-          <button type="button" onClick={() => refetch()}>Réessayer</button>
+      {isLoading ? (
+        <div className="panel state-loading" style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <p>Chargement de votre ciel du jour...</p>
         </div>
-      ) : (
+      ) : isError ? (
+        <div className="panel state-error-centered" style={{ marginTop: '2rem' }}>
+          <p>Impossible de charger votre horoscope du jour.</p>
+          <button type="button" onClick={handleRetry}>Réessayer</button>
+        </div>
+      ) : prediction ? (
         <>
-          <HeroHoroscopeCard
-            signCode={sunSignCode}
-            sign={STATIC_HOROSCOPE.sign}
-            signName={signName}
-            date={todayDate}
-            headline={STATIC_HOROSCOPE.headline}
-            onReadFull={() => navigate('/natal')}
-            onReadDetailed={() => navigate('/natal')}
-          />
+          <DayPredictionCard prediction={prediction} />
+          
+          <CategoryGrid categories={prediction.categories} />
+          
+          <TurningPointsList turningPoints={prediction.turning_points} />
+          
+          <DayTimeline timeline={prediction.timeline} />
+
           <ShortcutsSection />
-          {/* DailyInsightsSection implements the 'Section Amour/Travail/Énergie' from spec §10.3 */}
-          <DailyInsightsSection onSectionClick={() => navigate('/natal')} />
         </>
+      ) : (
+        <div className="panel state-empty" style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <p>Aucune prédiction disponible pour le moment.</p>
+          <button type="button" onClick={() => navigate('/natal')}>Configurer mon profil</button>
+        </div>
       )}
     </div>
   )

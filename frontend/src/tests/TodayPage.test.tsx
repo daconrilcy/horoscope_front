@@ -1,106 +1,139 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { cleanup, render, screen, waitFor } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { createMemoryRouter, RouterProvider } from "react-router-dom"
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
-import { setAccessToken } from "../utils/authToken"
-import { routes } from "../app/routes"
-import { ThemeProvider } from "../state/ThemeProvider"
-import { STATIC_HOROSCOPE, TODAY_DATE_FORMATTER } from "../constants/horoscope"
+import { routes } from "../app/routes";
+import { ThemeProvider } from "../state/ThemeProvider";
+import { setAccessToken } from "../utils/authToken";
 
-beforeEach(() => {
-  localStorage.setItem("lang", "fr")
-  vi.stubGlobal("fetch", makeFetchMock())
-  setupToken()
-})
+const authMeOk = {
+  data: {
+    id: 42,
+    role: "user",
+    email: "celeste@example.com",
+    created_at: "2026-03-08T08:30:00Z",
+  },
+};
 
-afterEach(() => {
-  cleanup()
-  vi.unstubAllGlobals()
-  localStorage.clear()
-})
-
-const AUTH_ME_USER = {
-  ok: true,
-  status: 200,
-  json: async () => ({
-    data: {
-      id: 42,
-      role: "user",
-      email: "test@example.com",
-      created_at: "2025-01-15T10:30:00Z",
+const predictionOk = {
+  meta: {
+    date_local: "2026-03-08",
+    timezone: "Europe/Paris",
+    computed_at: "2026-03-08T06:00:00Z",
+    reference_version: "2026.03",
+    ruleset_version: "1.0.0",
+    was_reused: false,
+    house_system_effective: "placidus",
+  },
+  summary: {
+    overall_tone: "open",
+    overall_summary: "Journee favorable pour prendre contact et structurer vos priorites.",
+    top_categories: ["love", "career_luck"],
+    bottom_categories: ["energy", "social"],
+    best_window: {
+      start_local: "2026-03-08T08:00:00+01:00",
+      end_local: "2026-03-08T09:30:00+01:00",
+      dominant_category: "career_luck",
     },
-  }),
-}
-
-const NOT_FOUND = {
-  ok: false,
-  status: 404,
-  json: async () => ({ error: { code: "not_found", message: "not found" } }),
-}
-
-const BIRTH_DATA_LEO = {
-  ok: true,
-  status: 200,
-  json: async () => ({
-    data: {
-      birth_date: "1990-07-25",
-      birth_time: "10:30",
-      birth_place: "Paris, France",
-      birth_timezone: "Europe/Paris",
-      astro_profile: {
-        sun_sign_code: "leo",
-        ascendant_sign_code: "scorpio",
-        missing_birth_time: false,
-      },
+    main_turning_point: {
+      occurred_at_local: "2026-03-08T11:15:00+01:00",
+      severity: 2.5,
+      summary: "Accalmie passagere avant un nouveau pic d'energie.",
     },
-  }),
-}
-
-const BIRTH_DATA_UNKNOWN_SIGN = {
-  ok: true,
-  status: 200,
-  json: async () => ({
-    data: {
-      birth_date: "1990-07-25",
-      birth_time: "10:30",
-      birth_place: "Paris, France",
-      birth_timezone: "Europe/Paris",
-      astro_profile: {
-        sun_sign_code: "unknown_sign",
-        ascendant_sign_code: null,
-        missing_birth_time: false,
-      },
+  },
+  categories: [
+    {
+      code: "love",
+      note_20: 13.6,
+      raw_score: 0.64,
+      power: 1.2,
+      volatility: 0.4,
+      rank: 1,
+      summary: "Les echanges sont fluides.",
     },
-  }),
+    {
+      code: "career_luck",
+      note_20: 7.2,
+      raw_score: 0.12,
+      power: 0.8,
+      volatility: 0.7,
+      rank: 2,
+      summary: "Gardez une marge de manoeuvre.",
+    },
+  ],
+  timeline: [
+    {
+      start_local: "2026-03-08T08:00:00+01:00",
+      end_local: "2026-03-08T09:30:00+01:00",
+      tone_code: "open",
+      dominant_categories: ["love", "career_luck"],
+      summary: "Bon moment pour lancer une conversation importante.",
+      turning_point: false,
+    },
+    {
+      start_local: "2026-03-08T11:15:00+01:00",
+      end_local: "2026-03-08T12:00:00+01:00",
+      tone_code: "careful",
+      dominant_categories: ["energy"],
+      summary: "Le rythme change brusquement.",
+      turning_point: true,
+    },
+  ],
+  turning_points: [
+    {
+      occurred_at_local: "2026-03-08T11:15:00+01:00",
+      severity: 2.5,
+      summary: "Un signal demande de lever le pied.",
+      drivers: [{ label: "Mars carre Lune" }],
+    },
+  ],
+};
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
-function makeFetchMock(
-  authMeResponse: object = AUTH_ME_USER,
-  birthDataResponse: object = NOT_FOUND,
-) {
-  return vi.fn(async (input: RequestInfo | URL) => {
-    const url = String(input)
-    if (url.endsWith("/v1/auth/me")) return authMeResponse
-    if (url.includes("/v1/users/me/birth-data")) return birthDataResponse
-    return NOT_FOUND
-  })
+function installFetchMock(options?: {
+  authMe?: Response | Promise<Response>;
+  prediction?: Response | Promise<Response>;
+}) {
+  const authMe = options?.authMe ?? jsonResponse(authMeOk);
+  const prediction = options?.prediction ?? jsonResponse(predictionOk);
+
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/v1/auth/me")) {
+        return Promise.resolve(authMe);
+      }
+      if (url.includes("/v1/predictions/daily")) {
+        return Promise.resolve(prediction);
+      }
+      return Promise.resolve(jsonResponse({ error: { code: "not_found", message: "not found" } }, 404));
+    }),
+  );
 }
 
 function setupToken(sub = "42") {
-  const payload = btoa(JSON.stringify({ sub, role: "user" }))
-  setAccessToken(`x.${payload}.y`)
+  const payload = btoa(JSON.stringify({ sub, role: "user" }));
+  setAccessToken(`x.${payload}.y`);
 }
 
-function renderWithRouter(initialEntries: string[] = ["/dashboard"]) {
+function renderDashboard(initialEntries: string[] = ["/dashboard"]) {
   const router = createMemoryRouter(routes, {
     initialEntries,
     future: { v7_relativeSplatPath: true },
-  })
+  });
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
-  })
+  });
+
   return {
     router,
     ...render(
@@ -108,306 +141,102 @@ function renderWithRouter(initialEntries: string[] = ["/dashboard"]) {
         <QueryClientProvider client={queryClient}>
           <RouterProvider router={router} future={{ v7_startTransition: true }} />
         </QueryClientProvider>
-      </ThemeProvider>
+      </ThemeProvider>,
     ),
-  }
+  };
 }
 
 describe("TodayPage", () => {
-  describe("AC1: Assemblage des composants dans le bon ordre", () => {
-    it("affiche le header 'Aujourd'hui' / 'Horoscope' et respecte la hiérarchie H1 unique", async () => {
-      renderWithRouter(["/dashboard"])
+  beforeEach(() => {
+    localStorage.setItem("lang", "fr");
+    setupToken();
+  });
 
-      await waitFor(() => {
-        // kicker text unique à TodayHeader
-        const kickers = screen.getAllByText("Aujourd'hui")
-        expect(kickers.length).toBeGreaterThanOrEqual(1)
-        
-        const h1s = screen.getAllByRole("heading", { level: 1 })
-        expect(h1s).toHaveLength(1)
-        expect(h1s[0]).toHaveTextContent("Horoscope")
-      })
-    })
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+    localStorage.clear();
+  });
 
-    it("respecte l'ordre vertical de la spec §10.3", async () => {
-      const { container } = renderWithRouter(["/dashboard"])
+  it("affiche la prediction API, les categories dynamiques et les heures en HH:mm", async () => {
+    installFetchMock();
 
-      await waitFor(() => {
-        expect(screen.getByText("Horoscope")).toBeInTheDocument()
-      })
+    renderDashboard();
 
-      // On vérifie l'ordre dans le DOM
-      const sections = container.querySelectorAll('.today-page > *')
-      
-      // 1. TodayHeader (via sa classe ou son contenu)
-      expect(sections[0]).toHaveClass('today-header')
-      // 2. HeroHoroscopeCard
-      expect(sections[1]).toHaveClass('hero-card')
-      // 3. ShortcutsSection
-      expect(sections[2]).toHaveClass('shortcuts-section')
-      // 4. DailyInsightsSection (sans titre visible, mais avec une région accessible)
-      expect(sections[3]).toHaveAttribute("aria-label", "Voir tous les insights amour")
-    })
-  })
+    await waitFor(() => {
+      expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
+    });
 
-  describe("AC2: Données statiques conformes à la spec", () => {
-    it("affiche le chip avec le signe Verseau et la date du jour", async () => {
-      const expectedDate = TODAY_DATE_FORMATTER.format(new Date())
-        .replace(/\.$/, '')
+    expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument();
+    expect(screen.getByText("08:00 - 09:30")).toBeInTheDocument();
+    expect(screen.getAllByText("11:15")).toHaveLength(2);
+    expect(screen.getByText("Points de bascule")).toBeInTheDocument();
+    expect(screen.getByText("Pivot")).toBeInTheDocument();
+    expect(screen.getByText("Career Luck")).toBeInTheDocument();
+    expect(screen.getByText("13.6")).toBeInTheDocument();
+    expect(screen.getByText("7.2")).toBeInTheDocument();
+    expect(screen.getByText("Chat astrologue")).toBeInTheDocument();
+    expect(screen.getByText("Tirage du jour")).toBeInTheDocument();
+  });
 
-      renderWithRouter(["/dashboard"])
+  it("affiche un etat de chargement explicite pendant la recuperation de la prediction", async () => {
+    installFetchMock({
+      prediction: new Promise<Response>(() => undefined),
+    });
 
-      await waitFor(() => {
-        const chip = screen.getByText(new RegExp(STATIC_HOROSCOPE.signName, "i"))
-        expect(chip).toBeInTheDocument()
-        expect(screen.getByText(new RegExp(expectedDate, "i"))).toBeInTheDocument()
-      })
-    })
+    renderDashboard();
 
-    it("affiche le headline de la journée", async () => {
-      renderWithRouter(["/dashboard"])
+    expect(screen.getByText("Chargement de votre ciel du jour...")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /Chargement du profil/i })).toBeInTheDocument();
+  });
 
-      await waitFor(() => {
-        expect(
-          screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })
-        ).toBeInTheDocument()
-      })
-    })
+  it("affiche un message d'erreur explicite et permet de relancer", async () => {
+    let shouldFail = true;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.endsWith("/v1/auth/me")) {
+          return Promise.resolve(jsonResponse(authMeOk));
+        }
+        if (url.includes("/v1/predictions/daily")) {
+          if (shouldFail) {
+            return Promise.resolve(
+              jsonResponse(
+                { error: { code: "daily_prediction_unavailable", message: "prediction indisponible" } },
+                503,
+              ),
+            );
+          }
+          return Promise.resolve(jsonResponse(predictionOk));
+        }
+        return Promise.resolve(jsonResponse({ error: { code: "not_found", message: "not found" } }, 404));
+      }),
+    );
 
-    it("affiche la section Raccourcis avec les 2 cards", async () => {
-      renderWithRouter(["/dashboard"])
+    renderDashboard();
 
-      await waitFor(() => {
-        expect(screen.getByText("Chat astrologue")).toBeInTheDocument()
-      })
-      expect(screen.getByText("En ligne")).toBeInTheDocument()
-      expect(screen.getByText("Tirage du jour")).toBeInTheDocument()
-      expect(screen.getByText("3 cartes")).toBeInTheDocument()
-    })
+    await waitFor(() => {
+      expect(screen.getByText("Impossible de charger votre horoscope du jour.")).toBeInTheDocument();
+    });
 
-    it("affiche la section Insights avec les 3 mini cards et navigue au clic sur une card", async () => {
-      const user = userEvent.setup()
-      const { router } = renderWithRouter(["/dashboard"])
+    shouldFail = false;
+    await userEvent.click(screen.getByRole("button", { name: "Réessayer" }));
 
-      await waitFor(() => {
-        expect(screen.getAllByText("Amour").length).toBeGreaterThanOrEqual(1)
-      })
-      expect(screen.getByText("Travail")).toBeInTheDocument()
-      expect(screen.getByText("Énergie")).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
+    });
+  });
 
-      const loveCard = screen.getAllByRole("button", { name: /Amour/i }).find(el => el.classList.contains('mini-card'))
-      if (!loveCard) throw new Error("Could not find Amour mini-card button")
-      await user.click(loveCard)
+  it("n'explose pas sur une reponse vide et affiche l'etat empty", async () => {
+    installFetchMock({
+      prediction: jsonResponse(null),
+    });
 
-      await waitFor(() => {
-        expect(router.state.location.pathname).toBe("/natal")
-      })
-    })
-  })
+    renderDashboard();
 
-  describe("AC3: Navigation depuis HeroHoroscopeCard", () => {
-    it("navigue vers /natal quand on clique sur 'Lire en 2 min'", async () => {
-      const user = userEvent.setup()
-
-      const { router } = renderWithRouter(["/dashboard"])
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })
-        ).toBeInTheDocument()
-      })
-
-      const cta = screen.getByRole("button", {
-        name: /Lire l'horoscope complet en 2 minutes/i,
-      })
-      await user.click(cta)
-
-      await waitFor(() => {
-        expect(router.state.location.pathname).toBe("/natal")
-      })
-    })
-
-    it("navigue vers /natal quand on clique sur 'Version détaillée'", async () => {
-      const user = userEvent.setup()
-
-      const { router } = renderWithRouter(["/dashboard"])
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })
-        ).toBeInTheDocument()
-      })
-
-      const detailedBtn = screen.getByRole("button", {
-        name: /Voir la version détaillée de l'horoscope/i,
-      })
-      await user.click(detailedBtn)
-
-      await waitFor(() => {
-        expect(router.state.location.pathname).toBe("/natal")
-      })
-    })
-  })
-
-  describe("AC4: Navigation depuis ShortcutsSection", () => {
-    it("navigue vers /chat quand on clique sur 'Chat astrologue'", async () => {
-      const user = userEvent.setup()
-
-      const { router } = renderWithRouter(["/dashboard"])
-
-      await waitFor(() => {
-        expect(screen.getByText("Chat astrologue")).toBeInTheDocument()
-      })
-
-      const chatBtn = screen.getByRole("link", { name: /Chat astrologue/i })
-      await user.click(chatBtn)
-
-      await waitFor(() => {
-        expect(router.state.location.pathname).toBe("/chat")
-      })
-    })
-
-    it("navigue vers /consultations quand on clique sur 'Tirage du jour'", async () => {
-      const user = userEvent.setup()
-
-      const { router } = renderWithRouter(["/dashboard"])
-
-      await waitFor(() => {
-        expect(screen.getByText("Tirage du jour")).toBeInTheDocument()
-      })
-
-      const tirageBtn = screen.getByRole("link", { name: /Tirage du jour/i })
-      await user.click(tirageBtn)
-
-      await waitFor(() => {
-        expect(router.state.location.pathname).toBe("/consultations")
-      })
-    })
-  })
-
-  describe("AC5: Avatar avec nom utilisateur", () => {
-    it("affiche les initiales de l'utilisateur connecté", async () => {
-      vi.stubGlobal("fetch", makeFetchMock({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          data: { id: 42, role: "user", email: "cyril@example.com", created_at: "2025-01-15T10:30:00Z" },
-        }),
-      }))
-
-      renderWithRouter(["/dashboard"])
-
-      await waitFor(() => {
-        expect(screen.getByLabelText("Profil de cyril")).toBeInTheDocument()
-      })
-    })
-
-    it("génère des initiales correctes pour les emails avec points", async () => {
-      vi.stubGlobal("fetch", makeFetchMock({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          data: { email: "john.doe@example.com" },
-        }),
-      }))
-
-      renderWithRouter(["/dashboard"])
-
-      await waitFor(() => {
-        expect(screen.getByText("JD")).toBeInTheDocument()
-      })
-    })
-
-    it("affiche un état d'erreur si l'API d'authentification échoue mais conserve le header", async () => {
-      vi.stubGlobal("fetch", makeFetchMock({
-        ok: false,
-        status: 401,
-        json: async () => ({ error: "unauthorized" }),
-      }))
-
-      renderWithRouter(["/dashboard"])
-
-      await waitFor(() => {
-        // Le header doit rester visible
-        expect(screen.getByText("Horoscope")).toBeInTheDocument()
-        // Le message d'erreur s'affiche dans le corps
-        expect(screen.getByText("Impossible de charger votre profil.")).toBeInTheDocument()
-        expect(screen.getByRole("button", { name: "Réessayer" })).toBeInTheDocument()
-      })
-    })
-
-    it("affiche un état de chargement (pulse avatar) pendant la récupération des données utilisateur", async () => {
-      let resolveAuthMe: (value: unknown) => void
-      const authMePromise = new Promise((resolve) => {
-        resolveAuthMe = resolve
-      })
-
-      vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
-        const url = String(input)
-        if (url.endsWith("/v1/auth/me")) return authMePromise
-        return NOT_FOUND
-      }))
-
-      renderWithRouter(["/dashboard"])
-
-      // Le header doit être présent et l'avatar en mode chargement
-      expect(screen.getByLabelText("Chargement du profil")).toBeInTheDocument()
-
-      resolveAuthMe!({
-        ok: true,
-        status: 200,
-        json: async () => ({ data: { email: "cyril@example.com" } }),
-      })
-
-      await waitFor(() => {
-        expect(screen.getByLabelText("Profil de cyril")).toBeInTheDocument()
-      })
-    })
-  })
-
-  describe("AC-18-3-1: Signe solaire depuis l'API astro_profile", () => {
-    it("affiche le signName traduit depuis l'API quand sun_sign_code est disponible", async () => {
-      vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_USER, BIRTH_DATA_LEO))
-      localStorage.setItem("lang", "fr")
-
-      renderWithRouter(["/dashboard"])
-
-      await waitFor(() => {
-        // "Lion" = traduction FR de "leo"
-        expect(screen.getByText(/Lion/)).toBeInTheDocument()
-      })
-    })
-
-    it("affiche un SVG dans le chip quand sun_sign_code est disponible", async () => {
-      vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_USER, BIRTH_DATA_LEO))
-
-      const { container } = renderWithRouter(["/dashboard"])
-
-      await waitFor(() => {
-        const chip = container.querySelector(".hero-card__chip")
-        const svg = chip?.querySelector("svg.hero-card__chip-icon")
-        expect(svg).toBeInTheDocument()
-      })
-    })
-
-    it("fallback sur signName statique quand birth-data retourne 404", async () => {
-      // makeFetchMock par défaut: birth-data retourne NOT_FOUND
-      renderWithRouter(["/dashboard"])
-
-      await waitFor(() => {
-        // STATIC_HOROSCOPE.signName = "Verseau"
-        expect(screen.getByText(/Verseau/)).toBeInTheDocument()
-      })
-    })
-
-    it("fallback sur signName statique quand sun_sign_code est inconnu", async () => {
-      vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_USER, BIRTH_DATA_UNKNOWN_SIGN))
-
-      renderWithRouter(["/dashboard"])
-
-      await waitFor(() => {
-        expect(screen.getByText(/Verseau/)).toBeInTheDocument()
-      })
-    })
-  })
-})
+    await waitFor(() => {
+      expect(screen.getByText("Aucune prédiction disponible pour le moment.")).toBeInTheDocument();
+    });
+  });
+});

@@ -7,7 +7,6 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import { setAccessToken, clearAccessToken } from "../utils/authToken"
 import { TestAppRouter } from "../app/router"
 import { routes } from "../app/routes"
-import { STATIC_HOROSCOPE } from "../constants/horoscope"
 import { ThemeProvider } from "../state/ThemeProvider"
 
 beforeEach(() => {
@@ -105,10 +104,38 @@ const PRIVACY_EMPTY = {
   json: async () => ({ data: null }),
 }
 
+const DAILY_PREDICTION_SUCCESS = {
+  ok: true,
+  status: 200,
+  json: async () => ({
+    meta: {
+      date_local: "2026-03-08",
+      timezone: "Europe/Paris",
+      computed_at: "2026-03-08T06:00:00Z",
+      reference_version: "2026.03",
+      ruleset_version: "1.0.0",
+      was_reused: false,
+      house_system_effective: "placidus",
+    },
+    summary: {
+      overall_tone: "open",
+      overall_summary: "Journee favorable pour prendre contact.",
+      top_categories: ["love"],
+      bottom_categories: ["energy"],
+      best_window: null,
+      main_turning_point: null,
+    },
+    categories: [],
+    timeline: [],
+    turning_points: [],
+  }),
+}
+
 function makeFetchMock(authMeResponse: object = AUTH_ME_USER) {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
     if (url.endsWith("/v1/auth/me")) return authMeResponse
+    if (url.includes("/v1/predictions/daily")) return DAILY_PREDICTION_SUCCESS
     if (url.endsWith("/v1/billing/subscription")) return BILLING_SUBSCRIPTION
     if (url.endsWith("/v1/billing/quota")) return BILLING_QUOTA
     if (url.endsWith("/v1/privacy/export")) return PRIVACY_EMPTY
@@ -154,7 +181,7 @@ describe("AuthGuard", () => {
     renderApp(["/dashboard"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
     })
   })
 
@@ -178,7 +205,7 @@ describe("RoleGuard", () => {
     renderApp(["/admin/monitoring"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
     })
   })
 
@@ -211,7 +238,7 @@ describe("RoleGuard", () => {
     renderApp(["/support"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
     })
   })
 
@@ -222,7 +249,7 @@ describe("RoleGuard", () => {
     renderApp(["/enterprise/credentials"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
     })
   })
 
@@ -257,7 +284,7 @@ describe("RootRedirect", () => {
     renderApp(["/"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
     })
   })
 })
@@ -271,14 +298,14 @@ describe("Navigation", () => {
     renderApp(["/dashboard"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
     })
     
     const chatLinks = screen.getAllByRole("link", { name: /Chat/i })
     await user.click(chatLinks[0])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Aucune conversation|No conversation/i })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: /Bienvenue dans vos discussions/i })).toBeInTheDocument()
     })
   })
 
@@ -304,26 +331,26 @@ describe("Navigation", () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
     })
     
     const chatLinks = screen.getAllByRole("link", { name: /Chat/i })
     await user.click(chatLinks[0])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Aucune conversation|No conversation/i })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: /Bienvenue dans vos discussions/i })).toBeInTheDocument()
     })
     
     router.navigate(-1)
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
     })
     
     router.navigate(1)
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Aucune conversation|No conversation/i })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: /Bienvenue dans vos discussions/i })).toBeInTheDocument()
     })
   })
 
