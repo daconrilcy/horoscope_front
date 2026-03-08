@@ -106,6 +106,31 @@ class EngineOrchestrator:
         self._explainability_builder = explainability_builder or ExplainabilityBuilder()
         self._editorial_builder = editorial_builder or EditorialOutputBuilder()
 
+    def with_context_loader(
+        self,
+        prediction_context_loader: "Callable[[str, str, date], LoadedPredictionContext | None]",
+    ) -> "EngineOrchestrator":
+        """Return a new orchestrator with a fresh context loader, reusing stateless sub-components.
+
+        Avoids re-instantiating sub-components on every request while binding
+        a per-request db session into the loader.
+        """
+        return EngineOrchestrator(
+            prediction_context_loader=prediction_context_loader,
+            temporal_sampler=self._temporal_sampler,
+            astro_calculator_factory=self._astro_calculator_factory,
+            event_detector_factory=self._event_detector_factory,
+            natal_sensitivity_calculator=self._natal_sensitivity_calculator,
+            domain_router=self._domain_router,
+            contribution_calculator=self._contribution_calculator,
+            temporal_aggregator=self._temporal_aggregator,
+            percentile_calibrator=self._percentile_calibrator,
+            turning_point_detector=self._turning_point_detector,
+            block_generator=self._block_generator,
+            explainability_builder=self._explainability_builder,
+            editorial_builder=self._editorial_builder,
+        )
+
     def run(self, engine_input: EngineInput) -> EngineOutput:
         """
         Executes the prediction engine for a given input.

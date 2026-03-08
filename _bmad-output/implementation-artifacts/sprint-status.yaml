@@ -313,3 +313,6 @@ development_status:
   35-3-non-regression: done
   35-4-couche-editoriale: done
   epic-35-retrospective: optional
+
+  epic-36: in-progress
+  36-1-service-applicatif-daily-prediction: done
