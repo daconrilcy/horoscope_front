@@ -38,3 +38,20 @@ class CalibrationRepository:
                 CalibrationRawDayModel.ruleset_version == ruleset_version,
             )
         ) or 0
+
+    def get_raw_scores_by_category(
+        self, reference_version: str, ruleset_version: str
+    ) -> dict[str, list[float]]:
+        results = self.db.execute(
+            select(CalibrationRawDayModel.category_code, CalibrationRawDayModel.raw_score).where(
+                CalibrationRawDayModel.reference_version == reference_version,
+                CalibrationRawDayModel.ruleset_version == ruleset_version,
+            )
+        ).all()
+        
+        scores_by_cat = {}
+        for cat_code, score in results:
+            if cat_code not in scores_by_cat:
+                scores_by_cat[cat_code] = []
+            scores_by_cat[cat_code].append(score)
+        return scores_by_cat

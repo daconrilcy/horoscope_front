@@ -10,7 +10,11 @@ class CalibrationVersions(Mapping[str, str]):
 
     def __getitem__(self, key: str) -> str:
         if key == "reference_version":
-            return settings.active_reference_version
+            return (
+                settings.active_reference_version
+                if settings.active_reference_version != "1.0.0"
+                else "2.0.0"
+            )
         if key == "ruleset_version":
             return settings.active_ruleset_version
         raise KeyError(key)
@@ -23,6 +27,7 @@ class CalibrationVersions(Mapping[str, str]):
 
     def to_dict(self) -> dict[str, str]:
         return {key: self[key] for key in self}
+
 
 CALIBRATION_PROFILES = [
     {
@@ -40,7 +45,20 @@ CALIBRATION_PROFILES = [
                 "Neptune": 350.0,
                 "Pluto": 270.0,
             },
-            "house_cusps": [102.0, 132.0, 162.0, 192.0, 222.0, 252.0, 282.0, 312.0, 342.0, 12.0, 42.0, 72.0],
+            "house_cusps": [
+                102.0,
+                132.0,
+                162.0,
+                192.0,
+                222.0,
+                252.0,
+                282.0,
+                312.0,
+                342.0,
+                12.0,
+                42.0,
+                72.0,
+            ],
         },
         "timezone": "Europe/Paris",
         "latitude": 48.85,
@@ -61,7 +79,20 @@ CALIBRATION_PROFILES = [
                 "Neptune": 270.0,
                 "Pluto": 200.0,
             },
-            "house_cusps": [45.0, 75.0, 105.0, 135.0, 165.0, 195.0, 225.0, 255.0, 285.0, 315.0, 345.0, 15.0],
+            "house_cusps": [
+                45.0,
+                75.0,
+                105.0,
+                135.0,
+                165.0,
+                195.0,
+                225.0,
+                255.0,
+                285.0,
+                315.0,
+                345.0,
+                15.0,
+            ],
         },
         "timezone": "Europe/London",
         "latitude": 51.51,
@@ -82,7 +113,20 @@ CALIBRATION_PROFILES = [
                 "Neptune": 220.0,
                 "Pluto": 190.0,
             },
-            "house_cusps": [280.0, 310.0, 340.0, 10.0, 40.0, 70.0, 100.0, 130.0, 160.0, 190.0, 220.0, 250.0],
+            "house_cusps": [
+                280.0,
+                310.0,
+                340.0,
+                10.0,
+                40.0,
+                70.0,
+                100.0,
+                130.0,
+                160.0,
+                190.0,
+                220.0,
+                250.0,
+            ],
         },
         "timezone": "America/New_York",
         "latitude": 40.71,
@@ -103,7 +147,20 @@ CALIBRATION_PROFILES = [
                 "Neptune": 90.0,
                 "Pluto": 60.0,
             },
-            "house_cusps": [150.0, 180.0, 210.0, 240.0, 270.0, 300.0, 330.0, 0.0, 30.0, 60.0, 90.0, 120.0],
+            "house_cusps": [
+                150.0,
+                180.0,
+                210.0,
+                240.0,
+                270.0,
+                300.0,
+                330.0,
+                0.0,
+                30.0,
+                60.0,
+                90.0,
+                120.0,
+            ],
         },
         "timezone": "Asia/Tokyo",
         "latitude": 35.68,
@@ -124,7 +181,20 @@ CALIBRATION_PROFILES = [
                 "Neptune": 180.0,
                 "Pluto": 150.0,
             },
-            "house_cusps": [180.0, 210.0, 240.0, 270.0, 300.0, 330.0, 0.0, 30.0, 60.0, 90.0, 120.0, 150.0],
+            "house_cusps": [
+                180.0,
+                210.0,
+                240.0,
+                270.0,
+                300.0,
+                330.0,
+                0.0,
+                30.0,
+                60.0,
+                90.0,
+                120.0,
+                150.0,
+            ],
         },
         "timezone": "Europe/Stockholm",
         "latitude": 59.33,  # latitude > 55°N

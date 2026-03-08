@@ -102,3 +102,33 @@ def test_calibrate_all_missing_category(calibrator):
     )
     results = calibrator.calibrate_all(day_agg, {})
     assert results == {"cat1": 10}
+
+
+def test_degenerate_calibration_with_zero_median_returns_neutral_score(calibrator):
+    calibration = CalibrationData(
+        p05=0.0,
+        p25=0.0,
+        p50=0.0,
+        p75=0.0,
+        p95=0.01,
+        sample_size=1830,
+    )
+
+    assert calibrator.calibrate(0.0, calibration) == 10
+    assert calibrator.calibrate(-0.001, calibration) == 1
+    assert calibrator.calibrate(0.005, calibration) == 14
+
+
+def test_repeated_zero_anchors_center_on_p50_when_present(calibrator):
+    calibration = CalibrationData(
+        p05=-0.001,
+        p25=0.0,
+        p50=0.0,
+        p75=0.003,
+        p95=0.01,
+        sample_size=1830,
+    )
+
+    assert calibrator.calibrate(0.0, calibration) == 10
+    assert calibrator.calibrate(-0.0005, calibration) == 6
+    assert calibrator.calibrate(0.0015, calibration) == 12

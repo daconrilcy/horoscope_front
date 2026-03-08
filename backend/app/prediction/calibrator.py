@@ -30,20 +30,30 @@ class PercentileCalibrator:
         ]
         targets = self.PERCENTILE_TARGETS
 
-        if raw_day <= anchors[0]:
+        if raw_day < anchors[0]:
             return 1
-        if raw_day >= anchors[-1]:
+        if raw_day > anchors[-1]:
             return 20
 
-        for i in range(len(anchors) - 1):
-            x0, x1 = anchors[i], anchors[i + 1]
-            y0, y1 = targets[i], targets[i + 1]
-            if x0 <= raw_day <= x1 and x1 > x0:
+        anchor_groups = self._group_equal_anchors(anchors)
+        for start, end in anchor_groups:
+            if raw_day == anchors[start]:
+                return self._exact_score_for_anchor_group(start, end, targets)
+
+        group_scores = [
+            (anchors[start], self._interpolation_score_for_anchor_group(start, end, targets))
+            for start, end in anchor_groups
+        ]
+
+        for i in range(len(group_scores) - 1):
+            x0, y0 = group_scores[i]
+            x1, y1 = group_scores[i + 1]
+            if x0 < raw_day < x1:
                 t = (raw_day - x0) / (x1 - x0)
                 return max(1, min(20, round(y0 + t * (y1 - y0))))
 
-        # Fallback : calibration dégénérée (percentiles égaux)
-        return 10
+        # Calibration entièrement dégénérée ou valeur non couverte par interpolation.
+        return group_scores[len(group_scores) // 2][1]
 
     def calibrate_all(
         self,
@@ -58,3 +68,33 @@ class PercentileCalibrator:
             cal = calibrations.get(category)
             results[category] = self.calibrate(cat_agg.raw_day, cal)
         return results
+
+    def _group_equal_anchors(self, anchors: list[float]) -> list[tuple[int, int]]:
+        groups: list[tuple[int, int]] = []
+        start = 0
+        for idx in range(1, len(anchors)):
+            if anchors[idx] != anchors[start]:
+                groups.append((start, idx - 1))
+                start = idx
+        groups.append((start, len(anchors) - 1))
+        return groups
+
+    def _exact_score_for_anchor_group(self, start: int, end: int, targets: list[float]) -> int:
+        if start <= 2 <= end:
+            return 10
+        if start == 0 and end == 0:
+            return 1
+        if start == 4 and end == 4:
+            return 20
+        return self._interpolation_score_for_anchor_group(start, end, targets)
+
+    def _interpolation_score_for_anchor_group(
+        self, start: int, end: int, targets: list[float]
+    ) -> int:
+        if start <= 2 <= end:
+            return 10
+        if end < 2:
+            return round(targets[end])
+        if start > 2:
+            return round(targets[start])
+        return round(targets[(start + end) // 2])

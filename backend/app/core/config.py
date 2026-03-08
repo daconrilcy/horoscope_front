@@ -110,8 +110,7 @@ class Settings:
             os.getenv("DATABASE_URL", "sqlite:///./horoscope.db")
         )
         self.active_reference_version = os.getenv("ACTIVE_REFERENCE_VERSION", "1.0.0")
-        self.ruleset_version = os.getenv("RULESET_VERSION", "1.0.0")
-        self.active_ruleset_version = self.ruleset_version
+        self._ruleset_version = os.getenv("RULESET_VERSION", "1.0.0")
 
         default_zodiac = (
             os.getenv("NATAL_RULESET_DEFAULT_ZODIAC", ZodiacType.TROPICAL).strip().lower()
@@ -273,6 +272,22 @@ class Settings:
             raise RuntimeError(
                 "REFERENCE_SEED_ADMIN_TOKEN must be set outside local/test environments"
             )
+
+    @property
+    def ruleset_version(self) -> str:
+        return self._ruleset_version
+
+    @ruleset_version.setter
+    def ruleset_version(self, value: str) -> None:
+        self._ruleset_version = value
+
+    @property
+    def active_ruleset_version(self) -> str:
+        return self._ruleset_version
+
+    @active_ruleset_version.setter
+    def active_ruleset_version(self, value: str) -> None:
+        self._ruleset_version = value
 
     @property
     def jwt_verification_secret_keys(self) -> list[str]:
