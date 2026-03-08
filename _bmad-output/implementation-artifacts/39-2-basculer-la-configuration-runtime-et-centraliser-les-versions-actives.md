@@ -1,6 +1,6 @@
 # Story 39.2: Basculer la configuration runtime et centraliser les versions actives
 
-Status: completed
+Status: done
 
 ## Story
 
