@@ -1,0 +1,108 @@
+{
+  "case_id": "QA-04",
+  "profile": "profile_tokyo_capricorn",
+  "date": "2026-03-11",
+  "overall_tone": "neutral",
+  "is_provisional": true,
+  "calibration_label": "provisional",
+  "category_scores": {
+    "energy": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 1
+    },
+    "mood": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 2
+    },
+    "health": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 3
+    },
+    "work": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 4
+    },
+    "career": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 5
+    },
+    "money": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 6
+    },
+    "love": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 7
+    },
+    "sex_intimacy": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 8
+    },
+    "family_home": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 9
+    },
+    "social_network": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 10
+    },
+    "communication": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 11
+    },
+    "pleasure_creativity": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 12
+    }
+  },
+  "turning_points_count": 0,
+  "timeline_blocks_count": 24
+}

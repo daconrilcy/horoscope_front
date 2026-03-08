@@ -8,8 +8,11 @@ import pytest
 
 from app.infra.db.models.calibration import CalibrationRawDayModel
 from app.infra.db.repositories.calibration_repository import CalibrationRepository
+from app.jobs.calibration.runtime import ResolvedCalibrationRuntime
 from app.jobs.generate_daily_calibration_dataset import run_job
 from app.tests.regression.helpers import create_session
+
+_MOCK_RUNTIME = ResolvedCalibrationRuntime(reference_version="2.0.0", ruleset_version="1.0.0")
 
 
 @pytest.fixture
@@ -37,6 +40,10 @@ def test_job_stores_raw_day(db_session):
     with (
         patch("app.jobs.generate_daily_calibration_dataset.EngineOrchestrator") as mock_cls,
         patch("app.jobs.generate_daily_calibration_dataset.PredictionContextLoader") as loader_cls,
+        patch(
+            "app.jobs.generate_daily_calibration_dataset.resolve_calibration_runtime",
+            return_value=_MOCK_RUNTIME,
+        ),
         patch(
             "app.jobs.generate_daily_calibration_dataset.CALIBRATION_PROFILES",
             [
@@ -106,6 +113,10 @@ def test_job_skips_existing_entry(db_session):
         patch("app.jobs.generate_daily_calibration_dataset.EngineOrchestrator") as mock_cls,
         patch("app.jobs.generate_daily_calibration_dataset.PredictionContextLoader") as loader_cls,
         patch(
+            "app.jobs.generate_daily_calibration_dataset.resolve_calibration_runtime",
+            return_value=_MOCK_RUNTIME,
+        ),
+        patch(
             "app.jobs.generate_daily_calibration_dataset.CALIBRATION_PROFILES",
             [
                 {
@@ -153,6 +164,10 @@ def test_job_resume_after_interruption(db_session):
     with (
         patch("app.jobs.generate_daily_calibration_dataset.EngineOrchestrator") as mock_cls,
         patch("app.jobs.generate_daily_calibration_dataset.PredictionContextLoader") as loader_cls,
+        patch(
+            "app.jobs.generate_daily_calibration_dataset.resolve_calibration_runtime",
+            return_value=_MOCK_RUNTIME,
+        ),
         patch(
             "app.jobs.generate_daily_calibration_dataset.CALIBRATION_PROFILES",
             [

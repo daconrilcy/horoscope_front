@@ -1,15 +1,24 @@
 import React from "react";
 import type { DailyPredictionTurningPoint } from "../../types/dailyPrediction";
+import type { Lang } from "../../i18n/predictions";
+import { getLocale } from "../../utils/locale";
+import {
+  getPivotSeverityLabel,
+  getPredictionMessage,
+} from "../../utils/predictionI18n";
 
 interface Props {
   turningPoints: DailyPredictionTurningPoint[];
+  lang: Lang;
 }
 
-export const TurningPointsList: React.FC<Props> = ({ turningPoints }) => {
+export const TurningPointsList: React.FC<Props> = ({ turningPoints, lang }) => {
   if (turningPoints.length === 0) return null;
 
+  const locale = getLocale(lang);
+
   const formatTime = (iso: string) => {
-    return new Date(iso).toLocaleTimeString("fr-FR", {
+    return new Date(iso).toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -17,7 +26,7 @@ export const TurningPointsList: React.FC<Props> = ({ turningPoints }) => {
 
   return (
     <div style={{ marginBottom: "2rem" }}>
-      <h3 style={{ marginBottom: "1rem", color: "var(--text-1)" }}>Points de bascule</h3>
+      <h3 style={{ marginBottom: "1rem", color: "var(--text-1)" }}>{getPredictionMessage("turning_points", lang)}</h3>
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {turningPoints.map((tp, idx) => (
           <div 
@@ -44,7 +53,7 @@ export const TurningPointsList: React.FC<Props> = ({ turningPoints }) => {
                 {formatTime(tp.occurred_at_local)}
               </span>
               <span style={{ fontSize: "0.8rem", color: "var(--text-3)", textTransform: "uppercase" }}>
-                Intensité : {tp.severity}
+                {getPredictionMessage("intensity", lang)} : {getPivotSeverityLabel(tp.severity, lang)}
               </span>
             </div>
             

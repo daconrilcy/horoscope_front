@@ -1,12 +1,14 @@
 import React from "react";
 import type { DailyPredictionCategory } from "../../types/dailyPrediction";
+import type { Lang } from "../../i18n/predictions";
 import { getNoteBand, getCategoryMeta } from "../../utils/predictionBands";
 
 interface Props {
   categories: DailyPredictionCategory[];
+  lang: Lang;
 }
 
-export const CategoryGrid: React.FC<Props> = ({ categories }) => {
+export const CategoryGrid: React.FC<Props> = ({ categories, lang }) => {
   // Sort by rank asc
   const sortedCategories = [...categories].sort((a, b) => a.rank - b.rank);
 
@@ -18,8 +20,8 @@ export const CategoryGrid: React.FC<Props> = ({ categories }) => {
       marginBottom: "2rem" 
     }}>
       {sortedCategories.map((cat) => {
-        const band = getNoteBand(cat.note_20);
-        const meta = getCategoryMeta(cat.code);
+        const band = getNoteBand(cat.note_20, lang);
+        const meta = getCategoryMeta(cat.code, lang);
 
         return (
           <div key={cat.code} className="panel" style={{ 

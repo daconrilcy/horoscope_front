@@ -239,4 +239,19 @@ describe("TodayPage", () => {
       expect(screen.getByText("Aucune prédiction disponible pour le moment.")).toBeInTheDocument();
     });
   });
+
+  it("bascule les libelles de prediction en anglais quand la langue active est en", async () => {
+    localStorage.setItem("lang", "en");
+    installFetchMock();
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Best window")).toBeInTheDocument();
+    expect(screen.getByText("Turning points")).toBeInTheDocument();
+    expect(screen.getByText("Dominant : Career Luck")).toBeInTheDocument();
+  });
 });

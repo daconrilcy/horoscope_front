@@ -45,7 +45,13 @@ def upgrade():
             name="uq_calibration_raw_day",
         ),
     )
+    op.create_index(
+        "ix_calibration_raw_days_lookup",
+        "calibration_raw_days",
+        ["profile_label", "local_date", "reference_version", "ruleset_version"],
+    )
 
 
 def downgrade():
+    op.drop_index("ix_calibration_raw_days_lookup", table_name="calibration_raw_days")
     op.drop_table("calibration_raw_days")

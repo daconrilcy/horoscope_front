@@ -1,18 +1,26 @@
 import React from "react";
 import type { DailyPredictionResponse } from "../../types/dailyPrediction";
-import { TONE_LABELS, TONE_COLORS } from "../../utils/predictionBands";
+import type { Lang } from "../../i18n/predictions";
+import { getLocale } from "../../utils/locale";
+import {
+  getCategoryLabel,
+  getPredictionMessage,
+  getToneColor,
+  getToneLabel,
+} from "../../utils/predictionI18n";
 
 interface Props {
   prediction: DailyPredictionResponse;
+  lang: Lang;
 }
 
-export const DayPredictionCard: React.FC<Props> = ({ prediction }) => {
+export const DayPredictionCard: React.FC<Props> = ({ prediction, lang }) => {
   const { summary, meta } = prediction;
-  const toneLabel = summary.overall_tone ? TONE_LABELS[summary.overall_tone] || summary.overall_tone : "Neutre";
-  const toneColor = summary.overall_tone ? TONE_COLORS[summary.overall_tone] || "var(--text-2)" : "var(--text-2)";
+  const locale = getLocale(lang);
+  const toneLabel = getToneLabel(summary.overall_tone, lang);
+  const toneColor = getToneColor(summary.overall_tone);
 
-  // Format date: "8 mars 2026"
-  const formattedDate = new Date(meta.date_local).toLocaleDateString("fr-FR", {
+  const formattedDate = new Date(meta.date_local).toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -39,7 +47,7 @@ export const DayPredictionCard: React.FC<Props> = ({ prediction }) => {
       </div>
 
       <p style={{ fontSize: "1.125rem", lineHeight: "1.6", color: "var(--text-1)" }}>
-        {summary.overall_summary || "Calcul de votre tendance en cours..."}
+        {summary.overall_summary || getPredictionMessage("pending_summary", lang)}
       </p>
 
       {summary.best_window && (
@@ -51,15 +59,15 @@ export const DayPredictionCard: React.FC<Props> = ({ prediction }) => {
           border: "1px solid rgba(255, 255, 255, 0.1)"
         }}>
           <h4 style={{ margin: "0 0 0.5rem 0", fontSize: "0.9rem", color: "var(--text-3)", textTransform: "uppercase" }}>
-            Meilleur créneau
+            {getPredictionMessage("best_window", lang)}
           </h4>
           <div style={{ fontSize: "1rem", fontWeight: "500" }}>
-            {new Date(summary.best_window.start_local).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+            {new Date(summary.best_window.start_local).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
             {" - "}
-            {new Date(summary.best_window.end_local).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+            {new Date(summary.best_window.end_local).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
           </div>
           <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.875rem", color: "var(--text-2)" }}>
-            Dominante : {summary.best_window.dominant_category}
+            {getPredictionMessage("dominant", lang)} : {getCategoryLabel(summary.best_window.dominant_category, lang)}
           </p>
         </div>
       )}

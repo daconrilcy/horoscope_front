@@ -109,7 +109,7 @@ class Settings:
         self.database_url = self._normalize_database_url(
             os.getenv("DATABASE_URL", "sqlite:///./horoscope.db")
         )
-        self.active_reference_version = os.getenv("ACTIVE_REFERENCE_VERSION", "1.0.0")
+        self.active_reference_version = os.getenv("ACTIVE_REFERENCE_VERSION", "2.0.0")
         self._ruleset_version = os.getenv("RULESET_VERSION", "1.0.0")
 
         default_zodiac = (

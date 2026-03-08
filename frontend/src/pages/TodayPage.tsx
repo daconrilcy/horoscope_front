@@ -7,6 +7,8 @@ import { CategoryGrid } from '../components/prediction/CategoryGrid'
 import { DayTimeline } from '../components/prediction/DayTimeline'
 import { TurningPointsList } from '../components/prediction/TurningPointsList'
 
+import { detectLang } from '../i18n/astrology'
+import { getPredictionMessage } from '../utils/predictionI18n'
 import { useAccessTokenSnapshot } from '../utils/authToken'
 import { useAuthMe } from '../api/authMe'
 import { useDailyPrediction } from '../api/useDailyPrediction'
@@ -15,6 +17,7 @@ import { getUserDisplayName } from '../utils/user'
 export function TodayPage() {
   const navigate = useNavigate()
   const accessToken = useAccessTokenSnapshot()
+  const lang = detectLang() === 'en' ? 'en' : 'fr'
 
   const { data: user, isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useAuthMe(accessToken)
 
@@ -41,29 +44,29 @@ export function TodayPage() {
 
       {isLoading ? (
         <div className="panel state-loading" style={{ marginTop: '2rem', textAlign: 'center' }}>
-          <p>Chargement de votre ciel du jour...</p>
+          <p>{getPredictionMessage('loading', lang)}</p>
         </div>
       ) : isError ? (
         <div className="panel state-error-centered" style={{ marginTop: '2rem' }}>
-          <p>Impossible de charger votre horoscope du jour.</p>
-          <button type="button" onClick={handleRetry}>Réessayer</button>
+          <p>{getPredictionMessage('error', lang)}</p>
+          <button type="button" onClick={handleRetry}>{getPredictionMessage('retry', lang)}</button>
         </div>
       ) : prediction ? (
         <>
-          <DayPredictionCard prediction={prediction} />
+          <DayPredictionCard prediction={prediction} lang={lang} />
           
-          <CategoryGrid categories={prediction.categories} />
+          <CategoryGrid categories={prediction.categories} lang={lang} />
           
-          <TurningPointsList turningPoints={prediction.turning_points} />
+          <TurningPointsList turningPoints={prediction.turning_points} lang={lang} />
           
-          <DayTimeline timeline={prediction.timeline} />
+          <DayTimeline timeline={prediction.timeline} lang={lang} />
 
           <ShortcutsSection />
         </>
       ) : (
         <div className="panel state-empty" style={{ marginTop: '2rem', textAlign: 'center' }}>
-          <p>Aucune prédiction disponible pour le moment.</p>
-          <button type="button" onClick={() => navigate('/natal')}>Configurer mon profil</button>
+          <p>{getPredictionMessage('empty', lang)}</p>
+          <button type="button" onClick={() => navigate('/natal')}>{getPredictionMessage('setup_profile', lang)}</button>
         </div>
       )}
     </div>

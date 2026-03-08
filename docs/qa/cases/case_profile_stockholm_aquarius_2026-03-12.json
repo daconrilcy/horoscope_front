@@ -1,0 +1,108 @@
+{
+  "case_id": "QA-05",
+  "profile": "profile_stockholm_aquarius",
+  "date": "2026-03-12",
+  "overall_tone": "neutral",
+  "is_provisional": true,
+  "calibration_label": "provisional",
+  "category_scores": {
+    "energy": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 1
+    },
+    "mood": {
+      "note_20": 10,
+      "raw_score": 2.264209243376781e-05,
+      "normalized_score": 2.264209243376781e-05,
+      "power": 0.0005573438137542846,
+      "volatility": 5.688366479144909e-05,
+      "sort_order": 2
+    },
+    "health": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 3
+    },
+    "work": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 4
+    },
+    "career": {
+      "note_20": 10,
+      "raw_score": 3.764832479991597e-06,
+      "normalized_score": 3.764832479991597e-06,
+      "power": 9.267279950748545e-05,
+      "volatility": 9.458377992857815e-06,
+      "sort_order": 5
+    },
+    "money": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 6
+    },
+    "love": {
+      "note_20": 10,
+      "raw_score": 3.5816954127010436e-05,
+      "normalized_score": 3.5816954127010436e-05,
+      "power": 0.0007632714955876714,
+      "volatility": 0.0001024166902010276,
+      "sort_order": 7
+    },
+    "sex_intimacy": {
+      "note_20": 10,
+      "raw_score": 0.0,
+      "normalized_score": 0.0,
+      "power": 0.0,
+      "volatility": 0.0,
+      "sort_order": 8
+    },
+    "family_home": {
+      "note_20": 10,
+      "raw_score": 3.790286273412733e-05,
+      "normalized_score": 3.790286273412733e-05,
+      "power": 0.0009329935442246727,
+      "volatility": 9.52232548608858e-05,
+      "sort_order": 9
+    },
+    "social_network": {
+      "note_20": 10,
+      "raw_score": 3.657569461097158e-05,
+      "normalized_score": 3.657569461097158e-05,
+      "power": 0.0008620733534789292,
+      "volatility": 9.041113991277021e-05,
+      "sort_order": 10
+    },
+    "communication": {
+      "note_20": 10,
+      "raw_score": 2.4314519715666033e-05,
+      "normalized_score": 2.4314519715666033e-05,
+      "power": 0.0005985112545394716,
+      "volatility": 6.10852991222803e-05,
+      "sort_order": 11
+    },
+    "pleasure_creativity": {
+      "note_20": 10,
+      "raw_score": 2.720321029755214e-05,
+      "normalized_score": 2.720321029755214e-05,
+      "power": 0.0006696174842474372,
+      "volatility": 6.834254830218224e-05,
+      "sort_order": 12
+    }
+  },
+  "turning_points_count": 0,
+  "timeline_blocks_count": 24
+}

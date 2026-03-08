@@ -250,6 +250,7 @@ Gemini 2.0 Flash
 - `backend/app/infra/db/repositories/calibration_repository.py`
 - `backend/app/jobs/generate_daily_calibration_dataset.py`
 - `backend/app/jobs/calibration/natal_profiles.py` (modifié)
+- `backend/app/jobs/calibration/runtime.py` (créé — résolution runtime des versions de calibration)
 - `backend/app/prediction/engine_orchestrator.py` (modifié)
 - `backend/app/tests/unit/test_calibration_job.py`
 - `backend/app/tests/unit/test_engine_orchestrator.py` (modifié)

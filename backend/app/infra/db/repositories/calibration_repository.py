@@ -12,6 +12,23 @@ class CalibrationRepository:
     def __init__(self, db: Session) -> None:
         self.db = db
 
+    def get_existing_category_codes(
+        self,
+        profile_label: str,
+        local_date: date,
+        reference_version: str,
+        ruleset_version: str,
+    ) -> frozenset[str]:
+        rows = self.db.execute(
+            select(CalibrationRawDayModel.category_code).where(
+                CalibrationRawDayModel.profile_label == profile_label,
+                CalibrationRawDayModel.local_date == local_date,
+                CalibrationRawDayModel.reference_version == reference_version,
+                CalibrationRawDayModel.ruleset_version == ruleset_version,
+            )
+        ).scalars()
+        return frozenset(rows)
+
     def exists(
         self,
         profile_label: str,
