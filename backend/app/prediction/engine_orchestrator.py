@@ -270,6 +270,7 @@ class EngineOrchestrator:
             "debug_mode": engine_input.debug_mode,
             "jd_interval": [jd_start, jd_end],
             "is_provisional_calibration": loaded_context.is_provisional_calibration,
+            "calibration_label": loaded_context.calibration_label,
         }
 
         output = EngineOutput(

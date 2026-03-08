@@ -3,7 +3,9 @@ from typing import Mapping
 from app.infra.db.repositories.prediction_schemas import CalibrationData
 from app.prediction.aggregator import DayAggregation
 
-DEFAULT_CALIBRATION = CalibrationData(p05=-1.5, p25=-0.5, p50=0.0, p75=0.5, p95=1.5, sample_size=0)
+DEFAULT_CALIBRATION = CalibrationData(
+    p05=-1.5, p25=-0.5, p50=0.0, p75=0.5, p95=1.5, sample_size=0, calibration_label="default"
+)
 
 
 class PercentileCalibrator:

@@ -53,6 +53,7 @@ class DailyPredictionRunModel(Base):
     )
     house_system_effective: Mapped[str | None] = mapped_column(String(16), nullable=True)
     is_provisional_calibration: Mapped[bool | None] = mapped_column(nullable=True)
+    calibration_label: Mapped[str | None] = mapped_column(String(64), nullable=True)
     overall_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     overall_tone: Mapped[str | None] = mapped_column(String(16), nullable=True)
     main_turning_point_at: Mapped[datetime | None] = mapped_column(

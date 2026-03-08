@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.infra.db.repositories.prediction_schemas import (
+    CalibrationData,
     CategoryData,
     HouseProfileData,
     PlanetProfileData,
@@ -101,6 +102,18 @@ def build_ruleset_context(*, reference_version_id=1, parameters=None):
     )
 
 
+def build_calibration(*, label: str | None):
+    return CalibrationData(
+        p05=-1.5,
+        p25=-0.5,
+        p50=0.0,
+        p75=0.5,
+        p95=1.5,
+        sample_size=10,
+        calibration_label=label,
+    )
+
+
 def test_load_complete_ok(mock_db, mock_rv_model):
     mock_db.scalar.return_value = mock_rv_model
     valid_pred_ctx = build_prediction_context()
@@ -116,11 +129,12 @@ def test_load_complete_ok(mock_db, mock_rv_model):
 
         mock_ruleset_repo = mock_ruleset_repo_cls.return_value
         mock_ruleset_repo.get_active_ruleset_context.return_value = valid_ruleset_ctx
-        mock_ruleset_repo.get_calibrations.return_value = MagicMock()
+        mock_ruleset_repo.get_calibrations.return_value = build_calibration(label="v1")
 
         ctx = PredictionContextLoader().load(mock_db, "V1", "V1")
 
     assert ctx.is_provisional_calibration is False
+    assert ctx.calibration_label == "v1"
     assert "amour" in ctx.calibrations
     assert isinstance(ctx.calibrations, MappingProxyType)
     assert isinstance(ctx.prediction_context.categories, tuple)
@@ -339,7 +353,76 @@ def test_missing_calibration_provisional(mock_db, mock_rv_model):
         ctx = PredictionContextLoader().load(mock_db, "V1", "V1")
 
     assert ctx.is_provisional_calibration is True
+    assert ctx.calibration_label == "provisional"
     assert ctx.calibrations["amour"] is None
+
+
+def test_provisional_label_keeps_provisional_flag(mock_db, mock_rv_model):
+    mock_db.scalar.return_value = mock_rv_model
+    valid_pred_ctx = build_prediction_context()
+    valid_ruleset_ctx = build_ruleset_context()
+
+    with (
+        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
+        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+    ):
+        mock_ref_repo_cls.return_value.load_prediction_context.return_value = valid_pred_ctx
+        mock_ref_repo_cls.return_value.get_categories.return_value = valid_pred_ctx.categories
+        mock_ruleset_repo_cls.return_value.get_active_ruleset_context.return_value = (
+            valid_ruleset_ctx
+        )
+        mock_ruleset_repo_cls.return_value.get_calibrations.return_value = build_calibration(
+            label="provisional"
+        )
+
+        ctx = PredictionContextLoader().load(mock_db, "V1", "V1")
+
+    assert ctx.is_provisional_calibration is True
+    assert ctx.calibration_label == "provisional"
+
+
+def test_mixed_stable_labels_are_reported_explicitly(mock_db, mock_rv_model):
+    mock_db.scalar.return_value = mock_rv_model
+    valid_pred_ctx = build_prediction_context(
+        categories=(
+            CategoryData(
+                id=1,
+                code="amour",
+                name="Amour",
+                display_name="Amour",
+                sort_order=1,
+                is_enabled=True,
+            ),
+            CategoryData(
+                id=2,
+                code="travail",
+                name="Travail",
+                display_name="Travail",
+                sort_order=2,
+                is_enabled=True,
+            ),
+        )
+    )
+    valid_ruleset_ctx = build_ruleset_context()
+
+    with (
+        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
+        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+    ):
+        mock_ref_repo_cls.return_value.load_prediction_context.return_value = valid_pred_ctx
+        mock_ref_repo_cls.return_value.get_categories.return_value = valid_pred_ctx.categories
+        mock_ruleset_repo_cls.return_value.get_active_ruleset_context.return_value = (
+            valid_ruleset_ctx
+        )
+        mock_ruleset_repo_cls.return_value.get_calibrations.side_effect = [
+            build_calibration(label="v1"),
+            build_calibration(label="v2"),
+        ]
+
+        ctx = PredictionContextLoader().load(mock_db, "V1", "V1")
+
+    assert ctx.is_provisional_calibration is False
+    assert ctx.calibration_label == "mixed"
 
 
 def test_repository_value_error_is_normalized(mock_db, mock_rv_model):

@@ -31,6 +31,8 @@ class DailyPredictionMeta(BaseModel):
     ruleset_version: str
     was_reused: bool
     house_system_effective: str | None
+    is_provisional_calibration: bool | None
+    calibration_label: str | None
 
 
 class DailyPredictionCategory(BaseModel):
@@ -237,6 +239,8 @@ def debug_daily_prediction(
         ruleset_version=settings.ruleset_version,
         was_reused=result.was_reused,
         house_system_effective=house_system_effective,
+        is_provisional_calibration=result.run.is_provisional_calibration,
+        calibration_label=result.run.calibration_label,
     )
 
     return DailyPredictionDebugResponse(
@@ -433,6 +437,8 @@ def get_daily_prediction(
             ruleset_version=settings.ruleset_version,
             was_reused=result.was_reused,
             house_system_effective=house_system_effective,
+            is_provisional_calibration=result.run.is_provisional_calibration,
+            calibration_label=result.run.calibration_label,
         ),
         summary=summary,
         categories=categories,

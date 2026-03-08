@@ -36,6 +36,7 @@ class DailyPredictionRepository:
         input_hash: str | None = None,
         house_system_effective: str | None = None,
         is_provisional_calibration: bool | None = None,
+        calibration_label: str | None = None,
         overall_summary: str | None = None,
         overall_tone: str | None = None,
         main_turning_point_at: datetime | None = None,
@@ -49,6 +50,7 @@ class DailyPredictionRepository:
             input_hash=input_hash,
             house_system_effective=house_system_effective,
             is_provisional_calibration=is_provisional_calibration,
+            calibration_label=calibration_label,
             overall_summary=overall_summary,
             overall_tone=overall_tone,
             main_turning_point_at=main_turning_point_at,
@@ -186,6 +188,7 @@ class DailyPredictionRepository:
             "computed_at": run.computed_at.isoformat(),
             "house_system_effective": run.house_system_effective,
             "is_provisional_calibration": run.is_provisional_calibration,
+            "calibration_label": run.calibration_label,
             "overall_summary": run.overall_summary,
             "overall_tone": run.overall_tone,
             "main_turning_point_at": (

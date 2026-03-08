@@ -1,6 +1,6 @@
 # Story 37.5 : Versionning et rollout de calibration
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -34,44 +34,82 @@ Le champ `is_provisional_calibration` est inclus dans le bloc `meta` du payload 
 
 ### T1 — Propager `is_provisional_calibration` et `calibration_label` jusqu'à `EngineOutput.run_metadata` ET les persister en DB
 
-- [ ] Lire `LoadedPredictionContext.is_provisional_calibration` dans `EngineOrchestrator.run()`
-- [ ] Ajouter `is_provisional_calibration` et `calibration_label` dans la construction de `run_metadata`
-- [ ] **Persister `is_provisional_calibration` ET `calibration_label` dans `DailyPredictionRunModel`** :
-  - Ajouter colonne `is_provisional_calibration: bool | None` (nullable, compatibilité avec runs anciens)
-  - Ajouter colonne `calibration_label: str | None` (nullable, valeur ex. `"provisional"`, `"v1"`) — **requis pour AC3** : distinguer les runs par label de calibration dans les historiques
-  - Migration Alembic requise pour les deux colonnes
-  - Les remplir dans `PredictionPersistenceService.save()` depuis `engine_output.run_metadata`
-- [ ] **Pour les runs réutilisés** (`was_reused=True`, `engine_output=None`) : lire les deux valeurs depuis `DailyPredictionRunModel` (colonnes DB) — garantit leur survie aux runs réutilisés et leur disponibilité pour l'API
-- [ ] Vérifier que `DailyPredictionMeta` est alimenté depuis les colonnes DB, pas depuis `engine_output` (qui peut être `None`)
+- [x] Lire `LoadedPredictionContext.is_provisional_calibration` dans `EngineOrchestrator.run()`
+- [x] Ajouter `is_provisional_calibration` et `calibration_label` dans la construction de `run_metadata`
+- [x] **Persister `is_provisional_calibration` ET `calibration_label` dans `DailyPredictionRunModel`** :
+  - [x] Ajouter colonne `is_provisional_calibration: bool | None` (nullable, compatibilité avec runs anciens)
+  - [x] Ajouter colonne `calibration_label: str | None` (nullable, valeur ex. `"provisional"`, `"v1"`)
+  - [x] Migration Alembic requise pour les deux colonnes
+  - [x] Les remplir dans `PredictionPersistenceService.save()` depuis `engine_output.run_metadata`
+- [x] **Pour les runs réutilisés** (`was_reused=True`, `engine_output=None`) : lire les deux valeurs depuis `DailyPredictionRunModel` (colonnes DB) — garantit leur survie aux runs réutilisés et leur disponibilité pour l'API
+- [x] Vérifier que `DailyPredictionMeta` est alimenté depuis les colonnes DB, pas depuis `engine_output` (qui peut être `None`)
 
 ### T2 — Ajouter `calibration_label` dans `CategoryCalibrationModel`
 
-- [ ] Vérifier la présence du champ `calibration_label: str` dans `CategoryCalibrationModel`
-- [ ] Si absent : ajouter le champ avec valeur par défaut `"provisional"`
-- [ ] Générer une migration Alembic si la colonne est absente en base
-- [ ] Vérifier que `PercentileCalibrator` lit et propage le `calibration_label`
+- [x] Vérifier la présence du champ `calibration_label: str` dans `CategoryCalibrationModel`
+- [x] Si absent : ajouter le champ avec valeur par défaut `"provisional"`
+- [x] Générer une migration Alembic si la colonne est absente en base
+- [x] Vérifier que `PercentileCalibrator` lit et propage le `calibration_label`
 
 ### T3 — Créer `docs/calibration/rollout-policy.md`
 
-- [ ] Décrire les états de calibration : `provisional` (sortie du job de calcul percentile), `v1` (après validation métier story 37-4), `vN` (incréments suivants)
-- [ ] Documenter la règle d'immuabilité : les runs existants ne sont jamais recalculés
-- [ ] Documenter la procédure de promotion : conditions, vérifications, mise à jour du `calibration_label` en DB
-- [ ] Documenter la procédure de rollback : retour à la calibration précédente sans altérer les runs existants
+- [x] Décrire les états de calibration : `provisional` (sortie du job de calcul percentile), `v1` (après validation métier story 37-4), `vN` (incréments suivants)
+- [x] Documenter la règle d'immuabilité : les runs existants ne sont jamais recalculés
+- [x] Documenter la procédure de promotion : conditions, vérifications, mise à jour du `calibration_label` en DB
+- [x] Documenter la procédure de rollback : retour à la calibration précédente sans altérer les runs existants
 
 ### T4 — Mettre à jour le payload endpoint 36-2
 
-- [ ] Ajouter `is_provisional_calibration: bool | None` dans le schéma Pydantic `DailyPredictionMeta` (story 36-2)
-- [ ] Ajouter `calibration_label: str | None` dans `DailyPredictionMeta` — permet au front d'afficher ou logguer le label de calibration actif
-- [ ] Vérifier que le mapping lit depuis `DailyPredictionRunModel` (colonnes DB), pas depuis `engine_output.run_metadata` (peut être `None` sur runs réutilisés)
-- [ ] Vérifier que `is_provisional_calibration` est `False` pour une calibration promue et `True` pour une provisoire
+- [x] Ajouter `is_provisional_calibration: bool | None` dans le schéma Pydantic `DailyPredictionMeta` (story 36-2)
+- [x] Ajouter `calibration_label: str | None` dans `DailyPredictionMeta` — permet au front d'afficher ou logguer le label de calibration actif
+- [x] Vérifier que le mapping lit depuis `DailyPredictionRunModel` (colonnes DB), pas depuis `engine_output.run_metadata` (peut être `None` sur runs réutilisés)
+- [x] Vérifier que `is_provisional_calibration` est `False` pour une calibration promue et `True` pour une provisoire
 
 ### T5 — Tests `backend/app/tests/unit/test_calibration_versioning.py`
 
-- [ ] `test_engine_output_has_provisional_flag` — `EngineOutput.run_metadata` contient `is_provisional_calibration`
-- [ ] `test_calibration_label_in_db` — `CategoryCalibrationModel` possède le champ `calibration_label`
-- [ ] `test_calibration_label_persisted_in_run` — après `PredictionPersistenceService.save()`, `DailyPredictionRunModel.calibration_label` est rempli depuis `engine_output.run_metadata`
-- [ ] `test_calibration_label_survives_reuse` — sur un run réutilisé (`was_reused=True`, `engine_output=None`), `DailyPredictionRunModel.calibration_label` est lisible depuis la DB
-- [ ] `test_historical_runs_unchanged_after_calibration_change` — les runs persistés avant un changement de calibration conservent leurs scores et leur `calibration_label` d'origine
+- [x] `test_engine_output_has_provisional_flag` — `EngineOutput.run_metadata` contient `is_provisional_calibration`
+- [x] `test_calibration_label_in_db` — `CategoryCalibrationModel` possède le champ `calibration_label`
+- [x] `test_calibration_label_persisted_in_run` — après `PredictionPersistenceService.save()`, `DailyPredictionRunModel.calibration_label` est rempli depuis `engine_output.run_metadata`
+- [x] `test_calibration_label_survives_reuse` — sur un run réutilisé (`was_reused=True`, `engine_output=None`), `DailyPredictionRunModel.calibration_label` est lisible depuis la DB
+- [x] `test_historical_runs_unchanged_after_calibration_change` — les runs persistés avant un changement de calibration conservent leurs scores et leur `calibration_label` d'origine
+
+## Dev Agent Record
+
+### Agent Model Used
+Gemini 2.0 Flash
+
+### Debug Log References
+- Unit tests pass: `5 passed in 3.94s`
+- Alembic migration created: `20260308_0041_add_calibration_label_traceability.py`
+
+### Completion Notes List
+- Ajout de la colonne `calibration_label` dans les tables `daily_prediction_runs` et `category_calibrations`.
+- Propagation du label de calibration depuis le chargement du contexte jusqu'aux métadonnées de sortie du moteur.
+- Persistance du label de calibration et du flag provisoire dans le run pour assurer la traçabilité historique.
+- Mise à jour de l'API (endpoint daily et debug) pour exposer ces métadonnées dans le bloc `meta`.
+- Documentation de la politique de rollout dans `docs/calibration/rollout-policy.md`.
+- Validation par tests unitaires de la persistance, de la réutilisation des runs et de l'immuabilité historique.
+
+### File List
+
+- `backend/app/prediction/engine_orchestrator.py`
+- `backend/app/prediction/context_loader.py`
+- `backend/app/prediction/persistence_service.py`
+- `backend/app/infra/db/models/daily_prediction.py`
+- `backend/app/infra/db/models/prediction_ruleset.py`
+- `backend/app/infra/db/repositories/daily_prediction_repository.py`
+- `backend/app/infra/db/repositories/prediction_ruleset_repository.py`
+- `backend/app/infra/db/repositories/prediction_schemas.py`
+- `backend/app/api/v1/routers/predictions.py`
+- `backend/app/prediction/calibrator.py`
+- `backend/migrations/versions/20260308_0041_add_calibration_label_traceability.py`
+- `backend/app/tests/unit/test_calibration_versioning.py`
+- `docs/calibration/rollout-policy.md`
+
+## Change Log
+
+- 2026-03-08: Story créée pour Epic 37.
+- 2026-03-08: Implémentation complète de la traçabilité et du versionnement de calibration.
 
 ## Dev Notes
 

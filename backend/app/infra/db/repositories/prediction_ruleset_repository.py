@@ -104,6 +104,7 @@ class PredictionRulesetRepository:
             p75=row.p75,
             p95=row.p95,
             sample_size=row.sample_size,
+            calibration_label=row.calibration_label,
         )
 
     def get_active_ruleset_context(

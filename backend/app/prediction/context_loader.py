@@ -26,6 +26,9 @@ from app.infra.db.repositories.prediction_schemas import (
 )
 from app.prediction.exceptions import PredictionContextError
 
+_PROVISIONAL_CALIBRATION_LABEL = "provisional"
+_MIXED_CALIBRATION_LABEL = "mixed"
+
 
 @dataclass(frozen=True)
 class LoadedPredictionContext:
@@ -35,6 +38,7 @@ class LoadedPredictionContext:
     ruleset_context: RulesetContext
     calibrations: Mapping[str, CalibrationData | None]
     is_provisional_calibration: bool
+    calibration_label: str
 
 
 class PredictionContextLoader:
@@ -97,6 +101,7 @@ class PredictionContextLoader:
 
         calibrations: dict[str, CalibrationData | None] = {}
         is_provisional = False
+        found_labels: set[str] = set()
         for category in pred_ctx.categories:
             try:
                 calib = ruleset_repo.get_calibrations(
@@ -109,6 +114,14 @@ class PredictionContextLoader:
             calibrations[category.code] = calib
             if calib is None:
                 is_provisional = True
+                continue
+            if calib.calibration_label:
+                found_labels.add(calib.calibration_label)
+
+        is_provisional, calibration_label = self._resolve_calibration_traceability(
+            labels=found_labels,
+            has_missing_calibrations=is_provisional,
+        )
 
         frozen_pred_ctx = self._freeze_prediction_context(pred_ctx)
         frozen_ruleset_ctx = self._freeze_ruleset_context(ruleset_ctx)
@@ -118,7 +131,35 @@ class PredictionContextLoader:
             ruleset_context=frozen_ruleset_ctx,
             calibrations=MappingProxyType(dict(calibrations)),
             is_provisional_calibration=is_provisional,
+            calibration_label=calibration_label,
         )
+
+    def _resolve_calibration_traceability(
+        self,
+        *,
+        labels: set[str],
+        has_missing_calibrations: bool,
+    ) -> tuple[bool, str]:
+        normalized_labels = {label.strip() for label in labels if label and label.strip()}
+        has_provisional_label = _PROVISIONAL_CALIBRATION_LABEL in normalized_labels
+        stable_labels = normalized_labels - {_PROVISIONAL_CALIBRATION_LABEL}
+
+        is_provisional = has_missing_calibrations or has_provisional_label
+
+        if not normalized_labels:
+            return (is_provisional, _PROVISIONAL_CALIBRATION_LABEL if is_provisional else "unknown")
+
+        if len(stable_labels) > 1:
+            return (is_provisional, _MIXED_CALIBRATION_LABEL)
+
+        if has_provisional_label and stable_labels:
+            return (True, _MIXED_CALIBRATION_LABEL)
+
+        if has_provisional_label:
+            return (True, _PROVISIONAL_CALIBRATION_LABEL)
+
+        stable_label = next(iter(stable_labels))
+        return (is_provisional, stable_label)
 
     def _validate_context(self, pred_ctx: PredictionContext, ruleset_ctx: RulesetContext) -> None:
         """Validates that mandatory components are present."""

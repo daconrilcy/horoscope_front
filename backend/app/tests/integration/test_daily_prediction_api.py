@@ -69,6 +69,8 @@ def _build_mock_run(
     mock_run.timezone = timezone
     mock_run.computed_at = computed_at
     mock_run.reference_version_id = reference_version_id
+    mock_run.is_provisional_calibration = None
+    mock_run.calibration_label = None
     return mock_run
 
 
@@ -80,6 +82,8 @@ def test_daily_prediction_requires_auth():
 def test_daily_prediction_nominal_200():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
+    mock_run.is_provisional_calibration = False
+    mock_run.calibration_label = "v1"
     mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
@@ -125,6 +129,8 @@ def test_daily_prediction_nominal_200():
     assert "timeline" in data
     assert "turning_points" in data
     assert data["meta"]["was_reused"] is True
+    assert data["meta"]["is_provisional_calibration"] is False
+    assert data["meta"]["calibration_label"] == "v1"
     assert data["summary"]["overall_tone"] == "positive"
     assert data["categories"][0]["code"] == "love"
 
@@ -634,6 +640,8 @@ def test_debug_200_admin_nominal():
     mock_run.input_hash = "debug_hash"
     mock_run.reference_version_id = 1
     mock_run.ruleset_id = 2
+    mock_run.is_provisional_calibration = True
+    mock_run.calibration_label = "mixed"
 
     mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
     mock_service = MagicMock()
@@ -681,6 +689,8 @@ def test_debug_200_admin_nominal():
     assert data["input_hash"] == "debug_hash"
     assert data["reference_version_id"] == 1
     assert data["ruleset_id"] == 2
+    assert data["meta"]["is_provisional_calibration"] is True
+    assert data["meta"]["calibration_label"] == "mixed"
     assert data["is_provisional_calibration"] is True
     assert data["categories"][0]["contributors"][0]["source"] == "transit"
     assert data["turning_points"][0]["drivers"][0]["event"] == "Jupiter Conjunct Moon"

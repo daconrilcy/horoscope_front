@@ -183,6 +183,7 @@ class PercentileCalculatorService:
             p50=result.p50,
             p75=result.p75,
             p95=result.p95,
+            calibration_label="provisional",
             sample_size=result.sample_size,
             valid_from=valid_from,
             valid_to=valid_to,

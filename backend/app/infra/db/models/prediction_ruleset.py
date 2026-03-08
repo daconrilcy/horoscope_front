@@ -117,6 +117,9 @@ class CategoryCalibrationModel(Base):
     p50: Mapped[float | None] = mapped_column(Float, nullable=True)
     p75: Mapped[float | None] = mapped_column(Float, nullable=True)
     p95: Mapped[float | None] = mapped_column(Float, nullable=True)
+    calibration_label: Mapped[str] = mapped_column(
+        String(64), nullable=False, default="provisional", server_default="provisional"
+    )
     sample_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
     valid_from: Mapped[date] = mapped_column(Date, nullable=False)
     valid_to: Mapped[date | None] = mapped_column(Date, nullable=True)
