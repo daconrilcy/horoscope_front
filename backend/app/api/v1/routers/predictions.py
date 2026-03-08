@@ -134,6 +134,15 @@ def _raise_daily_prediction_service_error(
     *,
     not_found_codes: set[str] | None = None,
 ) -> None:
+    if error.code in ("compute_failed", "timeout"):
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": error.code,
+                "message": "Service temporairement indisponible. Veuillez réessayer dans quelques minutes.",
+            },
+        )
+
     status_code = 404 if error.code in (not_found_codes or set()) else 422
     raise HTTPException(
         status_code=status_code,

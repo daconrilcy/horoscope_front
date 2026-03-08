@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import concurrent.futures
 import hashlib
 import json
 import logging
@@ -83,10 +84,14 @@ class DailyPredictionService:
     ) -> ServiceResult | None:
         """
         Orchestrates the resolution of user context, engine execution, and persistence.
+
+        Setup errors (profile_missing, timezone_missing, etc.) propagate directly as
+        DailyPredictionServiceError — no fallback is attempted for these. Only engine
+        or persistence failures trigger the fallback on the latest available run (AC1).
         """
         start_time = time.perf_counter()
 
-        # 1. Resolve dependencies
+        # 1-6. Setup — DailyPredictionServiceError propagates directly, no fallback
         profile = self._resolve_profile(db, user_id)
         tz_str = self._resolve_timezone(profile, timezone_override)
         lat, lon = self._resolve_location(profile, location_override)
@@ -102,7 +107,7 @@ class DailyPredictionService:
             result = None
             if run is not None:
                 result = ServiceResult(run=run, engine_output=None, was_reused=True)
-            
+
             if result:
                 self._log_and_metrics(user_id, start_time, result)
             return result
@@ -143,7 +148,71 @@ class DailyPredictionService:
                 db.delete(old_run)
                 db.flush()
 
-        # 7. Engine calculation
+        # 7-8. Engine + persistence — failures trigger fallback (AC1)
+        try:
+            engine_output = self._compute_with_timeout(db, engine_input)
+
+            save_result = self.persistence_service.save(
+                engine_output=engine_output,
+                user_id=user_id,
+                local_date=resolved_date,
+                reference_version_id=reference_version_id,
+                ruleset_id=ruleset_id,
+                db=db,
+            )
+
+            result = ServiceResult(
+                run=save_result.run,
+                engine_output=engine_output,
+                was_reused=False,
+            )
+            self._log_and_metrics(user_id, start_time, result)
+            return result
+
+        except Exception as e:
+            # AC1 — Fallback on engine/persistence failure only
+            error_str = str(e)
+            logger.error(
+                "prediction.compute_failed", extra={"user_id": user_id, "error": error_str}
+            )
+
+            fallback_run = self._try_read_latest_available(db, user_id, resolved_date)
+            if fallback_run:
+                result = ServiceResult(run=fallback_run, engine_output=None, was_reused=True)
+                self._log_and_metrics(user_id, start_time, result, error=error_str)
+                return result
+
+            # No fallback available — log final failure (AC3) then re-raise as service error (AC5)
+            duration_ms = int((time.perf_counter() - start_time) * 1000)
+            logger.info(
+                "prediction.run",
+                extra={
+                    "user_id": user_id,
+                    "duration_ms": duration_ms,
+                    "was_reused": False,
+                    "error": error_str,
+                },
+            )
+            if isinstance(e, DailyPredictionServiceError):
+                raise
+            raise DailyPredictionServiceError(
+                "compute_failed",
+                f"Calcul indisponible et aucune prédiction en cache. Détail: {error_str}",
+            ) from e
+
+    def _compute_with_timeout(self, db: Session, engine_input: EngineInput) -> EngineOutput:
+        """
+        Timeout best-effort : lève DailyPredictionServiceError("timeout") après 30s.
+
+        ⚠️  Limitation GIL : le thread de calcul continue en arrière-plan après timeout
+        (le code CPU-bound n'est pas interruptible). Ce thread conserve une référence
+        à la Session SQLAlchemy (`db` capturée dans la closure ctx_loader).
+        `db.expire_all()` est appelé après timeout pour invalider le cache de session
+        et limiter le risque de lectures périmées si le thread accède encore à la
+        session. La session reste non thread-safe ; ne pas la réutiliser dans un autre
+        thread simultanément pendant les ~30s suivant le timeout.
+        """
+
         def ctx_loader(ref: str, rule: str, dt: date) -> object:
             return self.context_loader.load(db, ref, rule, dt)
 
@@ -151,59 +220,71 @@ class DailyPredictionService:
             orchestrator = self._orchestrator_proto.with_context_loader(ctx_loader)
         else:
             orchestrator = EngineOrchestrator(prediction_context_loader=ctx_loader)
-        try:
-            engine_output = orchestrator.run(engine_input)
-        except PredictionContextError as exc:
-            raise DailyPredictionServiceError("context_error", str(exc)) from exc
 
-        # 8. Persistence
-        save_result = self.persistence_service.save(
-            engine_output=engine_output,
-            user_id=user_id,
-            local_date=resolved_date,
-            reference_version_id=reference_version_id,
-            ruleset_id=ruleset_id,
-            db=db,
-        )
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(orchestrator.run, engine_input)
+            try:
+                return future.result(timeout=30)
+            except concurrent.futures.TimeoutError:
+                try:
+                    db.expire_all()
+                except Exception:
+                    pass
+                raise DailyPredictionServiceError(
+                    "timeout", "Calcul trop long — service temporairement dégradé"
+                ) from None
 
-        result = ServiceResult(
-            run=save_result.run,
-            engine_output=engine_output,
-            was_reused=False,
-        )
+    def _try_read_latest_available(
+        self, db: Session, user_id: int, date_local: date
+    ) -> DailyPredictionRunModel | None:
+        """AC2 - Retrieves the most recent run before the requested date."""
+        return DailyPredictionRepository(db).get_latest_run_before(user_id, date_local)
 
-        self._log_and_metrics(user_id, start_time, result)
-        return result
-
-    def _log_and_metrics(self, user_id: int, start_time: float, result: ServiceResult) -> None:
+    def _log_and_metrics(
+        self,
+        user_id: int,
+        start_time: float,
+        result: ServiceResult,
+        *,
+        error: str | None = None,
+    ) -> None:
         duration_ms = int((time.perf_counter() - start_time) * 1000)
-        
+
         if result.was_reused:
             increment_counter("prediction.reused")
 
         has_pivots = False
         overall_tone = None
         if result.engine_output:
-            has_pivots = bool(result.engine_output.turning_points)
-            overall_tone = result.engine_output.run_metadata.get("overall_tone")
-        elif result.run and hasattr(result.run, "turning_points") and result.run.turning_points:
-             # If turning_points is a relationship or list in model
-             has_pivots = len(result.run.turning_points) > 0
-        
-        # Note: if result.run.overall_tone is available, we could use it too
-        if not overall_tone and result.run and hasattr(result.run, "overall_tone"):
-            overall_tone = result.run.overall_tone
+            has_pivots = bool(getattr(result.engine_output, "turning_points", []))
+            overall_tone = getattr(result.engine_output, "run_metadata", {}).get("overall_tone")
+        elif result.run:
+            # Fallback for reused runs: overall_tone is usually in the model
+            if hasattr(result.run, "overall_tone"):
+                overall_tone = result.run.overall_tone
+            if hasattr(result.run, "turning_points") and result.run.turning_points:
+                has_pivots = len(result.run.turning_points) > 0
 
-        logger.info(
-            "prediction.run",
-            extra={
-                "user_id": user_id,
-                "duration_ms": duration_ms,
-                "was_reused": result.was_reused,
-                "has_pivots": has_pivots,
-                "overall_tone": overall_tone,
-            },
-        )
+        log_extra: dict[str, Any] = {
+            "user_id": user_id,
+            "duration_ms": duration_ms,
+            "was_reused": result.was_reused,
+            "has_pivots": has_pivots,
+            "overall_tone": overall_tone,
+        }
+        if error is not None:
+            log_extra["error"] = error
+
+        logger.info("prediction.run", extra=log_extra)
+
+        if duration_ms > 25000:
+            logger.warning(
+                "prediction.slow_run",
+                extra={
+                    "user_id": user_id,
+                    "duration_ms": duration_ms,
+                },
+            )
 
     def _resolve_profile(self, db: Session, user_id: int) -> UserBirthProfileModel:
         profile = UserBirthProfileRepository(db).get_by_user_id(user_id)
