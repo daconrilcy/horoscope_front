@@ -54,6 +54,7 @@ testpaths = ["app/tests", "app/ai_engine/tests"]
 asyncio_mode = "auto"
 markers = [
   "golden: SwissEph precision tests with frozen reference values (requires pyswisseph)",
+  "regression: regression tests (deselect with -m 'not regression')",
 ]
 
 [tool.ruff]

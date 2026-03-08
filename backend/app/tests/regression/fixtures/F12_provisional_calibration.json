@@ -1,0 +1,134 @@
+{
+  "input": {
+    "natal_chart": {
+      "planets": [
+        {
+          "code": "sun",
+          "longitude": 280.36892
+        },
+        {
+          "code": "moon",
+          "longitude": 223.323775
+        },
+        {
+          "code": "mercury",
+          "longitude": 271.889275
+        },
+        {
+          "code": "venus",
+          "longitude": 250.0
+        },
+        {
+          "code": "mars",
+          "longitude": 147.47107
+        },
+        {
+          "code": "jupiter",
+          "longitude": 15.0
+        },
+        {
+          "code": "saturn",
+          "longitude": 40.395639
+        },
+        {
+          "code": "uranus",
+          "longitude": 300.0
+        },
+        {
+          "code": "neptune",
+          "longitude": 310.0
+        },
+        {
+          "code": "pluto",
+          "longitude": 240.0
+        }
+      ],
+      "houses": [
+        {
+          "number": 1,
+          "cusp_longitude": 0.0
+        },
+        {
+          "number": 2,
+          "cusp_longitude": 30.0
+        },
+        {
+          "number": 3,
+          "cusp_longitude": 60.0
+        },
+        {
+          "number": 4,
+          "cusp_longitude": 90.0
+        },
+        {
+          "number": 5,
+          "cusp_longitude": 120.0
+        },
+        {
+          "number": 6,
+          "cusp_longitude": 150.0
+        },
+        {
+          "number": 7,
+          "cusp_longitude": 180.0
+        },
+        {
+          "number": 8,
+          "cusp_longitude": 210.0
+        },
+        {
+          "number": 9,
+          "cusp_longitude": 240.0
+        },
+        {
+          "number": 10,
+          "cusp_longitude": 270.0
+        },
+        {
+          "number": 11,
+          "cusp_longitude": 300.0
+        },
+        {
+          "number": 12,
+          "cusp_longitude": 330.0
+        }
+      ],
+      "angles": {
+        "ASC": {
+          "longitude": 0.0
+        },
+        "MC": {
+          "longitude": 270.0
+        }
+      }
+    },
+    "local_date": "2026-03-07",
+    "timezone": "Europe/Paris",
+    "latitude": 48.85,
+    "longitude": 2.35,
+    "reference_version": "2.0.0",
+    "ruleset_version": "1.0.0",
+    "debug_mode": true
+  },
+  "expected": {
+    "input_hash": "423804f201bfbb51a994da287512d7305839a6f8d5d50161413e809e43ed9110",
+    "category_scores": {
+      "energy": 10,
+      "mood": 10,
+      "health": 10,
+      "work": 10,
+      "career": 10,
+      "money": 10,
+      "love": 10,
+      "sex_intimacy": 10,
+      "family_home": 10,
+      "social_network": 10,
+      "communication": 10,
+      "pleasure_creativity": 10
+    },
+    "detected_events_count": 52,
+    "turning_points_count": 2,
+    "sample_count": 96,
+    "is_provisional_calibration": true
+  }
+}

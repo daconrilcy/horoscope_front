@@ -310,6 +310,6 @@ development_status:
   epic-35: in-progress
   35-1-persistance-run: done
   35-2-explicabilite-debug: done
-  35-3-non-regression: backlog
+  35-3-non-regression: done
   35-4-couche-editoriale: backlog
   epic-35-retrospective: optional
