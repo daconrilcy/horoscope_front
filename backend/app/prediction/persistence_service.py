@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import date
+from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Session
 
@@ -15,6 +16,8 @@ from app.infra.db.models.daily_prediction import (
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
 
+if TYPE_CHECKING:
+    from .explainability import ExplainabilityReport
 from .schemas import EngineOutput
 
 
@@ -63,7 +66,7 @@ class PredictionPersistenceService:
         )
 
         # AC3, AC4, AC5 - Persist child entities
-        self._save_scores(run, engine_output, reference_version_id, db)
+        self._save_scores(run, engine_output, reference_version_id, db, engine_output.explainability)
         self._save_turning_points(run, engine_output, db)
         self._save_time_blocks(run, engine_output, db)
 
@@ -78,8 +81,9 @@ class PredictionPersistenceService:
         engine_output: EngineOutput,
         reference_version_id: int,
         db: Session,
+        explainability: ExplainabilityReport | None = None,
     ) -> None:
-        """Saves category scores with computed ranks."""
+        """Saves category scores with computed ranks and top contributors."""
         ref_repo = PredictionReferenceRepository(db)
         categories = {cat.code: cat for cat in ref_repo.get_categories(reference_version_id)}
 
@@ -93,6 +97,19 @@ class PredictionPersistenceService:
         active_scores.sort(key=lambda x: (-x[1].get("note_20", 0), x[0].sort_order))
 
         for rank, (category, score_data) in enumerate(active_scores, start=1):
+            contributors_json = None
+            if explainability and category.code in explainability.categories:
+                expl = explainability.categories[category.code]
+                contributors_json = json.dumps(
+                    [
+                        {
+                            k: v.isoformat() if hasattr(v, "isoformat") else v
+                            for k, v in asdict(c).items()
+                        }
+                        for c in expl.top_contributors
+                    ]
+                )
+
             model = DailyPredictionCategoryScoreModel(
                 run_id=run.id,
                 category_id=category.id,
@@ -103,6 +120,7 @@ class PredictionPersistenceService:
                 volatility=score_data.get("volatility"),
                 rank=rank,
                 summary=score_data.get("summary"),
+                contributors_json=contributors_json,
             )
             db.add(model)
 
@@ -115,31 +133,54 @@ class PredictionPersistenceService:
         """Saves turning points with serialized drivers.
 
         Handles both dict format (tests/external) and real TurningPoint objects
-        from TurningPointDetector (local_time, reason, trigger_event, categories_impacted).
+        from TurningPointDetector.
         """
         for tp in engine_output.turning_points:
             if isinstance(tp, dict):
                 occurred_at = tp.get("occurred_at_local")
                 severity = tp.get("severity")
                 summary = tp.get("summary")
-                drivers = tp.get("drivers")
-                driver_json = json.dumps(drivers) if drivers is not None else None
+                drivers = tp.get("driver_events") or tp.get("drivers")
+                if drivers is not None:
+                    driver_json = json.dumps(
+                        [
+                            {k: v.isoformat() if hasattr(v, "isoformat") else v for k, v in d.items()}
+                            if isinstance(d, dict) else d
+                            for d in drivers
+                        ]
+                    )
+                else:
+                    driver_json = None
             else:
                 # Real TurningPoint from TurningPointDetector
                 occurred_at = tp.local_time
                 severity = tp.severity
                 summary = tp.reason
-                trigger = tp.trigger_event
-                driver_data = {
-                    "trigger_event": {
-                        "event_type": trigger.event_type,
-                        "body": trigger.body,
-                        "target": trigger.target,
-                        "aspect": trigger.aspect,
-                    } if trigger is not None else None,
-                    "categories_impacted": tp.categories_impacted,
-                }
-                driver_json = json.dumps(driver_data)
+                
+                # AC3 - Use driver_events if present, otherwise fallback to trigger_event
+                drivers = getattr(tp, "driver_events", None)
+                if drivers is not None:
+                    driver_json = json.dumps(
+                        [
+                            {
+                                k: v.isoformat() if hasattr(v, "isoformat") else v
+                                for k, v in (asdict(d) if hasattr(d, "__dataclass_fields__") else d).items()
+                            }
+                            for d in drivers
+                        ]
+                    )
+                else:
+                    trigger = tp.trigger_event
+                    driver_data = [
+                        {
+                            "event_type": trigger.event_type,
+                            "body": trigger.body,
+                            "target": trigger.target,
+                            "contribution": None,
+                            "local_time": trigger.local_time.isoformat(),
+                        }
+                    ] if trigger is not None else None
+                    driver_json = json.dumps(driver_data)
 
             model = DailyPredictionTurningPointModel(
                 run_id=run.id,

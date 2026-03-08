@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import date, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from .explainability import ExplainabilityReport
 
 
 @dataclass(frozen=True)
@@ -96,3 +102,4 @@ class EngineOutput:
     category_scores: dict[str, Any] = field(default_factory=dict)
     time_blocks: list[Any] = field(default_factory=list)
     turning_points: list[Any] = field(default_factory=list)
+    explainability: ExplainabilityReport | None = None

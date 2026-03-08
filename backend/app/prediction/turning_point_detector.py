@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from app.prediction.schemas import AstroEvent
@@ -15,6 +15,7 @@ class TurningPoint:
     categories_impacted: list[str]
     trigger_event: AstroEvent | None
     severity: float
+    driver_events: list[Any] = field(default_factory=list)  # Added for explainability (AC3)
 
 
 class TurningPointDetector:
@@ -79,6 +80,11 @@ class TurningPointDetector:
             for categories, _ in reasons_found.values():
                 all_impacted.update(categories)
 
+            if best_reason == "high_priority_event":
+                driver_events = list(high_priority_events)
+            else:
+                driver_events = list(events_by_step[index])
+
             pivots.append(
                 TurningPoint(
                     local_time=step_times[index],
@@ -86,6 +92,7 @@ class TurningPointDetector:
                     categories_impacted=sorted(all_impacted),
                     trigger_event=reasons_found[best_reason][1],
                     severity=self.REASON_SEVERITY[best_reason],
+                    driver_events=driver_events,
                 )
             )
 

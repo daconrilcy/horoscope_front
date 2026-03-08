@@ -18,6 +18,7 @@ from .contribution_calculator import ContributionCalculator
 from .domain_router import DomainRouter
 from .event_detector import EventDetector
 from .exceptions import PredictionContextError
+from .explainability import ExplainabilityBuilder
 from .natal_sensitivity import NatalSensitivityCalculator
 from .schemas import (
     AstroEvent,
@@ -82,6 +83,7 @@ class EngineOrchestrator:
         percentile_calibrator: PercentileCalibrator | None = None,
         turning_point_detector: TurningPointDetector | None = None,
         block_generator: BlockGenerator | None = None,
+        explainability_builder: ExplainabilityBuilder | None = None,
     ) -> None:
         self._ruleset_context_loader = ruleset_context_loader
         self._prediction_context_loader = prediction_context_loader
@@ -97,6 +99,7 @@ class EngineOrchestrator:
         self._percentile_calibrator = percentile_calibrator or PercentileCalibrator()
         self._turning_point_detector = turning_point_detector or TurningPointDetector()
         self._block_generator = block_generator or BlockGenerator()
+        self._explainability_builder = explainability_builder or ExplainabilityBuilder()
 
     def run(self, engine_input: EngineInput) -> EngineOutput:
         """
@@ -157,6 +160,40 @@ class EngineOrchestrator:
             natal_sensitivity,
             loaded_context,
         )
+
+        # Build explainability report (AC1-AC4)
+        contributions_log = []
+        for step_contributions in contributions_by_step:
+            for event, cat_contributions in step_contributions:
+                for cat_code, contrib in cat_contributions.items():
+                    contributions_log.append((event, cat_code, contrib))
+
+        # Format raw contributions for debug mode
+        raw_by_step = None
+        if engine_input.debug_mode:
+            raw_by_step = {
+                sample.local_time.isoformat(): [
+                    {
+                        "event": {
+                            "event_type": ev.event_type,
+                            "body": ev.body,
+                            "target": ev.target,
+                            "aspect": ev.aspect,
+                        },
+                        "contributions": contribs,
+                    }
+                    for ev, contribs in contributions_by_step[i]
+                ]
+                for i, sample in enumerate(day_grid.samples)
+            }
+
+        explainability = self._explainability_builder.build(
+            contributions_log=contributions_log,
+            run_input_hash=input_hash,
+            debug_mode=engine_input.debug_mode,
+            raw_contributions_by_step=raw_by_step,
+        )
+
         step_times = [sample.local_time for sample in day_grid.samples]
         turning_points = self._turning_point_detector.detect(
             notes_by_step,
@@ -200,6 +237,7 @@ class EngineOrchestrator:
             category_scores=category_scores,
             time_blocks=time_blocks,
             turning_points=turning_points,
+            explainability=explainability,
         )
 
     def _build_prediction_outputs(
