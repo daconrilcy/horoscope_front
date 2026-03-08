@@ -1,0 +1,2 @@
+Votre journée du {date_local} s'annonce {overall_tone_label}.
+Vos points forts : {top3_labels}.

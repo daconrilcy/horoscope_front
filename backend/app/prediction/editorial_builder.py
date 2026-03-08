@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -27,6 +27,7 @@ class CategorySummary:
 
 @dataclass(frozen=True)
 class EditorialOutput:
+    local_date: date
     top3_categories: list[CategorySummary]
     bottom2_categories: list[CategorySummary]
     main_pivot: TurningPoint | None
@@ -58,6 +59,7 @@ class EditorialOutputBuilder:
         top3_contributors = self._extract_contributors(explainability, top3)
 
         return EditorialOutput(
+            local_date=engine_output.effective_context.local_date,
             top3_categories=top3,
             bottom2_categories=bottom2,
             main_pivot=main_pivot,

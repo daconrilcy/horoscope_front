@@ -19,6 +19,7 @@ from .context_loader import LoadedPredictionContext
 from .contribution_calculator import ContributionCalculator
 from .domain_router import DomainRouter
 from .editorial_builder import EditorialOutputBuilder
+from .editorial_template_engine import EditorialTemplateEngine
 from .event_detector import EventDetector
 from .exceptions import PredictionContextError
 from .explainability import ExplainabilityBuilder
@@ -88,6 +89,7 @@ class EngineOrchestrator:
         block_generator: BlockGenerator | None = None,
         explainability_builder: ExplainabilityBuilder | None = None,
         editorial_builder: EditorialOutputBuilder | None = None,
+        editorial_template_engine: EditorialTemplateEngine | None = None,
     ) -> None:
         self._ruleset_context_loader = ruleset_context_loader
         self._prediction_context_loader = prediction_context_loader
@@ -105,6 +107,9 @@ class EngineOrchestrator:
         self._block_generator = block_generator or BlockGenerator()
         self._explainability_builder = explainability_builder or ExplainabilityBuilder()
         self._editorial_builder = editorial_builder or EditorialOutputBuilder()
+        self._editorial_template_engine = (
+            editorial_template_engine or EditorialTemplateEngine()
+        )
 
     def with_context_loader(
         self,
@@ -129,6 +134,7 @@ class EngineOrchestrator:
             block_generator=self._block_generator,
             explainability_builder=self._explainability_builder,
             editorial_builder=self._editorial_builder,
+            editorial_template_engine=self._editorial_template_engine,
         )
 
     def run(
@@ -137,6 +143,8 @@ class EngineOrchestrator:
         *,
         category_codes: tuple[str, ...] | None = None,
         include_editorial: bool = True,
+        include_editorial_text: bool = False,
+        editorial_text_lang: str = "fr",
     ) -> EngineOutput:
         """
         Executes the prediction engine for a given input.
@@ -258,6 +266,7 @@ class EngineOrchestrator:
         effective_context = EffectiveContext(
             house_system_requested=house_system_requested,
             house_system_effective=house_system_effective,
+            local_date=engine_input.local_date,
             timezone=engine_input.timezone,
             input_hash=input_hash,
         )
@@ -302,10 +311,18 @@ class EngineOrchestrator:
         )
         editorial = self._editorial_builder.build(editorial_input, explainability)
 
+        editorial_text = None
+        if include_editorial_text:
+            editorial_text = self._editorial_template_engine.render(
+                editorial,
+                lang=editorial_text_lang,
+            )
+
         return dataclasses.replace(
             output,
             run_metadata={**run_metadata, "overall_tone": editorial.overall_tone},
             editorial=editorial,
+            editorial_text=editorial_text,
         )
 
     def _refine_detected_events(

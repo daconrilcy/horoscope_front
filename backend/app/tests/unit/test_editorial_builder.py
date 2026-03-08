@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from app.prediction.block_generator import TimeBlock
 from app.prediction.editorial_builder import EditorialOutputBuilder
@@ -44,6 +44,7 @@ def create_mock_engine_output(
         effective_context=EffectiveContext(
             house_system_requested="placidus",
             house_system_effective="placidus",
+            local_date=date(2026, 3, 8),
             timezone="UTC",
             input_hash="hash",
         ),

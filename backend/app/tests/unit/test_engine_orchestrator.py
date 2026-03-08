@@ -16,6 +16,7 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetData,
 )
 from app.prediction.context_loader import LoadedPredictionContext
+from app.prediction.editorial_template_engine import EditorialTextOutput
 from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.exceptions import PredictionContextError
 from app.prediction.schemas import AstroEvent, EngineInput, EngineOutput, SamplePoint
@@ -131,6 +132,7 @@ def _build_loaded_context() -> LoadedPredictionContext:
         ruleset_context=ruleset_context,
         calibrations={"work": None},
         is_provisional_calibration=True,
+        calibration_label="provisional",
     )
 
 
@@ -276,6 +278,40 @@ def test_run_can_skip_editorial_generation(orchestrator, base_input):
     assert "overall_tone" not in output.run_metadata
 
 
+def test_run_can_render_editorial_text_with_configurable_language(base_input):
+    captured = {}
+
+    class StubTemplateEngine:
+        def render(self, editorial, lang: str = "fr") -> EditorialTextOutput:
+            captured["editorial"] = editorial
+            captured["lang"] = lang
+            return EditorialTextOutput(
+                intro=f"intro-{lang}",
+                category_summaries={},
+                pivot_phrase=None,
+                window_phrase=None,
+                caution_sante=None,
+                caution_argent=None,
+            )
+
+    orchestrator = EngineOrchestrator(
+        prediction_context_loader=lambda *_: _build_loaded_context(),
+        editorial_template_engine=StubTemplateEngine(),
+    )
+
+    output = orchestrator.run(
+        base_input,
+        include_editorial_text=True,
+        editorial_text_lang="en",
+    )
+
+    assert output.editorial is not None
+    assert output.editorial_text is not None
+    assert output.editorial_text.intro == "intro-en"
+    assert captured["editorial"] == output.editorial
+    assert captured["lang"] == "en"
+
+
 def test_invalid_timezone_raises_prediction_context_error(orchestrator, base_input):
     """Un fuseau IANA invalide doit lever une erreur métier stable."""
     invalid_input = EngineInput(
@@ -415,6 +451,7 @@ def test_run_integrates_prediction_scoring_pipeline_with_lowercase_reference_cod
         ),
         calibrations={"work": None},
         is_provisional_calibration=True,
+        calibration_label="provisional",
     )
     samples = [
         SamplePoint(

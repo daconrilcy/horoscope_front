@@ -1,0 +1,1 @@
+La meilleure fenêtre se situe entre {window_start} et {window_end}, portée par la thématique {dominant_category_label}.

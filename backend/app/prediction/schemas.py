@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .editorial_builder import EditorialOutput
+    from .editorial_template_engine import EditorialTextOutput
     from .explainability import ExplainabilityReport
 
 
@@ -38,6 +39,7 @@ class EffectiveContext:
 
     house_system_requested: str
     house_system_effective: str
+    local_date: date
     timezone: str
     input_hash: str
 
@@ -104,3 +106,4 @@ class EngineOutput:
     turning_points: list[Any] = field(default_factory=list)
     explainability: ExplainabilityReport | None = None
     editorial: EditorialOutput | None = None
+    editorial_text: EditorialTextOutput | None = None

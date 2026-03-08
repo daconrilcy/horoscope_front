@@ -39,6 +39,7 @@ class LoadedPredictionContext:
     calibrations: Mapping[str, CalibrationData | None]
     is_provisional_calibration: bool
     calibration_label: str
+    language: str = "fr"
 
 
 class PredictionContextLoader:

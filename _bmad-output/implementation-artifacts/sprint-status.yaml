@@ -327,3 +327,6 @@ development_status:
   37-3-calculateur-percentiles-categories: done
   37-4-validation-metier-notes: done
   37-5-versionning-rollout-calibration: done
+
+  epic-38: in-progress
+  38-1-templates-editoriaux-parametrables: done
