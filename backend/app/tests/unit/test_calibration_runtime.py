@@ -22,10 +22,19 @@ def db_session():
             session.info["engine"].dispose()
 
 
-def test_runtime_uses_ruleset_linked_reference_version(db_session: Session):
+def test_runtime_raises_on_reference_ruleset_mismatch(db_session: Session):
+    with pytest.raises(ValueError, match="Calibration runtime mismatch"):
+        resolve_calibration_runtime(
+            db_session,
+            requested_reference_version="1.0.0",
+            requested_ruleset_version="1.0.0",
+        )
+
+
+def test_runtime_accepts_aligned_reference_ruleset_versions(db_session: Session):
     runtime = resolve_calibration_runtime(
         db_session,
-        requested_reference_version="1.0.0",
+        requested_reference_version="2.0.0",
         requested_ruleset_version="1.0.0",
     )
 

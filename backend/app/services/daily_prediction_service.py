@@ -78,8 +78,8 @@ class DailyPredictionService:
         location_override: tuple[float, float] | None = None,
         timezone_override: str | None = None,
         mode: ComputeMode = ComputeMode.compute_if_missing,
-        reference_version: str = settings.active_reference_version,
-        ruleset_version: str,
+        reference_version: str | None = None,
+        ruleset_version: str | None = None,
     ) -> ServiceResult | None:
         """
         Orchestrates the resolution of user context, engine execution, and persistence.
@@ -91,12 +91,14 @@ class DailyPredictionService:
         start_time = time.perf_counter()
 
         # 1-6. Setup — DailyPredictionServiceError propagates directly, no fallback
+        resolved_reference_version = reference_version or settings.active_reference_version
+        resolved_ruleset_version = ruleset_version or settings.active_ruleset_version
         profile = self._resolve_profile(db, user_id)
         tz_str = self._resolve_timezone(profile, timezone_override)
         lat, lon = self._resolve_location(profile, location_override)
         resolved_date = self._resolve_date(date_local, tz_str)
-        reference_version_id = self._resolve_reference_version_id(db, reference_version)
-        ruleset_id = self._resolve_ruleset_id(db, ruleset_version)
+        reference_version_id = self._resolve_reference_version_id(db, resolved_reference_version)
+        ruleset_id = self._resolve_ruleset_id(db, resolved_ruleset_version, reference_version_id)
 
         # 2. Mode read_only : lecture seule, aucun calcul
         if mode == ComputeMode.read_only:
@@ -124,8 +126,8 @@ class DailyPredictionService:
             timezone=tz_str,
             latitude=lat,
             longitude=lon,
-            reference_version=reference_version,
-            ruleset_version=ruleset_version,
+            reference_version=resolved_reference_version,
+            ruleset_version=resolved_ruleset_version,
             debug_mode=False,
         )
         input_hash = self._compute_input_hash(engine_input)
@@ -331,12 +333,27 @@ class DailyPredictionService:
             )
         return rv_id
 
-    def _resolve_ruleset_id(self, db: Session, version: str) -> int:
+    def _resolve_ruleset_id(
+        self, db: Session, version: str, expected_reference_version_id: int | None = None
+    ) -> int:
         ruleset = PredictionRulesetRepository(db).get_ruleset(version)
         if ruleset is None:
             raise DailyPredictionServiceError(
                 "ruleset_missing", f"Ruleset version '{version}' introuvable"
             )
+
+        if (
+            expected_reference_version_id is not None
+            and ruleset.reference_version_id != expected_reference_version_id
+        ):
+            raise DailyPredictionServiceError(
+                "ruleset_inconsistent",
+                f"Le ruleset '{version}' est rattaché à la référence ID "
+                f"{ruleset.reference_version_id}, "
+                f"mais la référence active demandée est ID {expected_reference_version_id}. "
+                "Vérifiez la cohérence de la configuration runtime.",
+            )
+
         return ruleset.id
 
     def _compute_input_hash(self, engine_input: EngineInput) -> str:

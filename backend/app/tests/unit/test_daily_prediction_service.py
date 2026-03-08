@@ -65,13 +65,12 @@ def test_user_without_natal(service, db):
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_prof
         mock_chart_repo.return_value.get_latest_by_user_id.return_value = None
         db.scalar.return_value = 10  # reference_version_id
-        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20)
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20, reference_version_id=10)
 
         with pytest.raises(DailyPredictionServiceError) as excinfo:
             service.get_or_compute(
                 user_id=1,
                 db=db,
-                ruleset_version="ruleset_v1",
             )
         assert excinfo.value.code == "natal_missing"
 
@@ -85,7 +84,6 @@ def test_user_missing_profile(service, db):
             service.get_or_compute(
                 user_id=1,
                 db=db,
-                ruleset_version="ruleset_v1",
             )
         assert excinfo.value.code == "profile_missing"
 
@@ -102,7 +100,6 @@ def test_timezone_missing_raises(service, db, mock_profile):
             service.get_or_compute(
                 user_id=1,
                 db=db,
-                ruleset_version="ruleset_v1",
             )
         assert excinfo.value.code == "timezone_missing"
 
@@ -119,7 +116,6 @@ def test_timezone_invalid_raises(service, db, mock_profile):
             service.get_or_compute(
                 user_id=1,
                 db=db,
-                ruleset_version="ruleset_v1",
             )
         assert excinfo.value.code == "timezone_invalid"
 
@@ -136,7 +132,6 @@ def test_location_missing_raises(service, db, mock_profile):
             service.get_or_compute(
                 user_id=1,
                 db=db,
-                ruleset_version="ruleset_v1",
             )
         assert excinfo.value.code == "location_missing"
 
@@ -161,7 +156,7 @@ def test_user_with_natal_full_compute(
         
         # Versions resolution
         db.scalar.return_value = 10 # reference_version_id
-        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20) # ruleset_id
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20, reference_version_id=10) # ruleset_id
         
         # Engine run
         mock_output = MagicMock(spec=EngineOutput)
@@ -174,7 +169,6 @@ def test_user_with_natal_full_compute(
         result = service.get_or_compute(
             user_id=1,
             db=db,
-            ruleset_version="ruleset_v1",
         )
 
         assert isinstance(result, ServiceResult)
@@ -206,12 +200,11 @@ def test_identical_hash_not_recomputed(
         
         # Versions resolution
         db.scalar.return_value = 10
-        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20)
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20, reference_version_id=10)
 
         result = service.get_or_compute(
             user_id=1,
             db=db,
-            ruleset_version="ruleset_v1",
             mode=ComputeMode.compute_if_missing
         )
 
@@ -236,7 +229,7 @@ def test_force_recompute(service, db, mock_profile, context_loader, persistence_
 
         # Versions resolution
         db.scalar.return_value = 10
-        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20)
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20, reference_version_id=10)
 
         # Simulate an existing run that must be deleted
         mock_old_run = MagicMock(spec=DailyPredictionRunModel)
@@ -249,7 +242,6 @@ def test_force_recompute(service, db, mock_profile, context_loader, persistence_
         result = service.get_or_compute(
             user_id=1,
             db=db,
-            ruleset_version="ruleset_v1",
             mode=ComputeMode.force_recompute
         )
 
@@ -273,12 +265,11 @@ def test_read_only_existing(service, db, mock_profile):
         
         # Versions resolution
         db.scalar.return_value = 10
-        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20)
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20, reference_version_id=10)
 
         result = service.get_or_compute(
             user_id=1,
             db=db,
-            ruleset_version="ruleset_v1",
             mode=ComputeMode.read_only
         )
 
@@ -298,7 +289,6 @@ def test_version_missing_raises(service, db, mock_profile):
             service.get_or_compute(
                 user_id=1,
                 db=db,
-                ruleset_version="ruleset_v1",
             )
         assert excinfo.value.code == "version_missing"
 
@@ -320,6 +310,28 @@ def test_ruleset_missing_raises(service, db, mock_profile):
         assert excinfo.value.code == "ruleset_missing"
 
 
+def test_ruleset_inconsistent_raises(service, db, mock_profile):
+    svc_path = "app.services.daily_prediction_service"
+    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo:
+        mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
+        db.scalar.return_value = 10  # reference_version_id = 10
+        
+        # ruleset linked to reference_version_id = 99 (inconsistent)
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=99
+        )
+
+        with pytest.raises(DailyPredictionServiceError) as excinfo:
+            service.get_or_compute(
+                user_id=1,
+                db=db,
+                ruleset_version="v2",
+                reference_version="ref10"
+            )
+        assert excinfo.value.code == "ruleset_inconsistent"
+
+
 def test_read_only_missing(service, db, mock_profile):
     svc_path = "app.services.daily_prediction_service"
     with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
@@ -331,12 +343,11 @@ def test_read_only_missing(service, db, mock_profile):
         
         # Versions resolution
         db.scalar.return_value = 10
-        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20)
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(id=20, reference_version_id=10)
 
         result = service.get_or_compute(
             user_id=1,
             db=db,
-            ruleset_version="ruleset_v1",
             mode=ComputeMode.read_only
         )
 

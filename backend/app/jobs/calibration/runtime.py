@@ -71,16 +71,11 @@ def resolve_calibration_runtime(
         )
 
     if requested_reference_model.id != linked_reference.id:
-        logger.info(
-            "Calibration reference version %s overridden by ruleset-linked reference %s "
-            "for ruleset %s.",
-            requested_reference,
-            linked_reference.version,
-            ruleset.version,
-        )
-        return ResolvedCalibrationRuntime(
-            reference_version=linked_reference.version,
-            ruleset_version=ruleset.version,
+        raise ValueError(
+            "Calibration runtime mismatch: requested reference version "
+            f"{requested_reference!r} does not match the reference linked to ruleset "
+            f"{ruleset.version!r} ({linked_reference.version!r}). "
+            "Update the runtime configuration so both versions stay aligned."
         )
 
     return ResolvedCalibrationRuntime(

@@ -10,7 +10,7 @@ from typing import Literal
 ACTIVE_REFERENCE_VERSION: str = "2.0.0"
 
 # Ruleset version governs calculation parameters and event types
-ACTIVE_RULESET_VERSION: str = "1.0.0"  # Currently using legacy, switch to 2.0.0 later
+ACTIVE_RULESET_VERSION: str = "2.0.0"
 
 def validate_version_format(version: str) -> bool:
     """Validate that version follows X.Y.Z format."""

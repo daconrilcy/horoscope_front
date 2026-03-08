@@ -7,6 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
+from app.core.config import settings
 from app.api.v1.routers.predictions import get_daily_prediction_service
 from app.infra.db.base import Base
 from app.infra.db.models.reference import ReferenceVersionModel
@@ -355,7 +356,12 @@ def test_daily_prediction_meta_uses_run_reference_version_and_house_system_effec
     token = _register_and_get_access_token()
     with SessionLocal() as db:
         db.add(
-            ReferenceVersionModel(id=7, version="legacy-v1", description="Legacy", is_locked=True)
+            ReferenceVersionModel(
+                id=7,
+                version=settings.active_reference_version,
+                description="Active",
+                is_locked=True,
+            )
         )
         db.commit()
 
@@ -380,7 +386,7 @@ def test_daily_prediction_meta_uses_run_reference_version_and_house_system_effec
 
     assert response.status_code == 200
     meta = response.json()["meta"]
-    assert meta["reference_version"] == "legacy-v1"
+    assert meta["reference_version"] == settings.active_reference_version
     assert meta["house_system_effective"] == "placidus"
 
 

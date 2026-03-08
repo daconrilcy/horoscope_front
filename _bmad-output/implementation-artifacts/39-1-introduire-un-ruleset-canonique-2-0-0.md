@@ -1,6 +1,6 @@
 # Story 39.1: Introduire un ruleset canonique 2.0.0
 
-Status: completed
+Status: done
 
 ## Story
 

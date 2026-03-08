@@ -145,6 +145,16 @@ def _ensure_prediction_reference_seed(db) -> None:
     ReferenceDataService._clear_cache_for_tests()
     _reset_prediction_reference(db)
     ReferenceDataService.seed_reference_version(db, "1.0.0")
+    ReferenceDataService.seed_reference_version(db, "2.0.0")
+    
+    # Unlock V2 to allow run_seed to populate prediction-specific rulesets
+    from app.infra.db.repositories.reference_repository import ReferenceRepository
+    repo = ReferenceRepository(db)
+    v2 = repo.get_version("2.0.0")
+    if v2:
+        v2.is_locked = False
+        db.commit()
+    
     run_seed(db)
     db.commit()
 
@@ -152,7 +162,7 @@ def _ensure_prediction_reference_seed(db) -> None:
 @pytest.fixture(autouse=True)
 def setup_db(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(settings, "active_reference_version", "2.0.0")
-    monkeypatch.setattr(settings, "ruleset_version", "1.0.0")
+    monkeypatch.setattr(settings, "ruleset_version", "2.0.0")
     with SessionLocal() as db:
         db.execute(delete(DailyPredictionRunModel))
         db.execute(delete(UserBirthProfileModel))
@@ -187,7 +197,7 @@ def _setup_qa_user_and_natal(db):
         user_id=auth.user.id,
         chart_id=str(uuid.uuid4()),
         reference_version="2.0.0",
-        ruleset_version="1.0.0",
+        ruleset_version="2.0.0",
         input_hash="integration_qa_hash",
         result_payload={
             "planets": {"Sun": 15.5, "Moon": 220.3},

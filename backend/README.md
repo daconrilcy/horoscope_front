@@ -29,8 +29,8 @@ python -m uvicorn app.main:app --reload
 ```
 
 Note:
-- La pile locale de prédiction quotidienne attend actuellement `ACTIVE_REFERENCE_VERSION=2.0.0` et `RULESET_VERSION=1.0.0`.
-- Le ruleset `1.0.0` est seedé sur la référence `2.0.0` via [`backend/scripts/seed_31_prediction_reference_v2.py`](./scripts/seed_31_prediction_reference_v2.py).
+- La pile locale de prédiction quotidienne attend actuellement `ACTIVE_REFERENCE_VERSION=2.0.0` et `RULESET_VERSION=2.0.0`.
+- Les rulesets `1.0.0` (legacy) et `2.0.0` (canonique) sont seedés sur la référence `2.0.0` via [`backend/scripts/seed_31_prediction_reference_v2.py`](./scripts/seed_31_prediction_reference_v2.py).
 - `backend/.env.example` et `backend/.env` doivent rester alignés sur cette paire tant que le seed/runtime n'a pas changé.
 
 ## Quality

@@ -52,7 +52,7 @@ def test_fallback_on_engine_error(service, mock_deps, db_session):
     fallback_run.local_date = date(2023, 12, 31)
     service._try_read_latest_available = MagicMock(return_value=fallback_run)
 
-    result = service.get_or_compute(user_id=1, db=db_session, ruleset_version="1.0.0")
+    result = service.get_or_compute(user_id=1, db=db_session)
 
     assert result.was_reused is True
     assert result.run.id == 123
@@ -81,7 +81,7 @@ def test_timeout_raises_on_slow_run(service, mock_deps, db_session):
     service._try_read_latest_available = MagicMock(return_value=None)
 
     with pytest.raises(DailyPredictionServiceError) as excinfo:
-        service.get_or_compute(user_id=1, db=db_session, ruleset_version="1.0.0")
+        service.get_or_compute(user_id=1, db=db_session)
 
     assert excinfo.value.code == "timeout"
 
@@ -154,7 +154,7 @@ def test_log_includes_duration(caplog, service, mock_deps, db_session):
     mock_deps["persistence_service"].save.return_value = MagicMock(run=MagicMock())
 
     with caplog.at_level(logging.INFO):
-        service.get_or_compute(user_id=1, db=db_session, ruleset_version="1.0.0")
+        service.get_or_compute(user_id=1, db=db_session)
 
     record = next(r for r in caplog.records if "prediction.run" in r.message)
     assert hasattr(record, "duration_ms")
