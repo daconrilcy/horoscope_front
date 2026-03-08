@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Any
 
+from app.prediction.category_codes import normalize_category_code, normalize_category_codes
+
 if TYPE_CHECKING:
     from app.prediction.explainability import ContributorEntry, ExplainabilityReport
     from app.prediction.schemas import EngineOutput
@@ -40,7 +42,7 @@ class EditorialOutput:
 class EditorialOutputBuilder:
     CAUTION_NOTE_THRESHOLD = 7
     CAUTION_VOL_THRESHOLD = 1.5
-    DEFAULT_CAUTION_CODES = {"sante", "argent"}
+    DEFAULT_CAUTION_CODES = {"health", "money"}
 
     def build(
         self, engine_output: EngineOutput, explainability: ExplainabilityReport
@@ -152,11 +154,15 @@ class EditorialOutputBuilder:
         self, scores: dict[str, Any], params: dict[str, Any] | None
     ) -> dict[str, bool]:
         caution_codes = set(
-            (params or {}).get("caution_category_codes", list(self.DEFAULT_CAUTION_CODES))
+            normalize_category_codes(
+                (params or {}).get("caution_category_codes", list(self.DEFAULT_CAUTION_CODES))
+            )
         )
         flags = {}
         for code in caution_codes:
             s = scores.get(code)
+            if s is None:
+                s = scores.get(normalize_category_code(code))
             if s:
                 note = self._score_value(s, "note_20", 0)
                 vol = self._score_value(s, "volatility", 0.0)

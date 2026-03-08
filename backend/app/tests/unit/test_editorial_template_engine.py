@@ -13,18 +13,18 @@ def sample_editorial():
     return EditorialOutput(
         local_date=date(2024, 1, 1),
         top3_categories=[
-            CategorySummary(code="amour", note_20=15, power=0.8, volatility=0.2),
-            CategorySummary(code="travail", note_20=12, power=0.5, volatility=0.1),
-            CategorySummary(code="vitalite", note_20=18, power=0.9, volatility=0.3),
+            CategorySummary(code="love", note_20=15, power=0.8, volatility=0.2),
+            CategorySummary(code="work", note_20=12, power=0.5, volatility=0.1),
+            CategorySummary(code="energy", note_20=18, power=0.9, volatility=0.3),
         ],
         bottom2_categories=[],
         main_pivot=MagicMock(local_time=datetime(2024, 1, 1, 14, 30), severity=0.6),
         best_window=BestWindow(
             start_local=datetime(2024, 1, 1, 10, 0),
             end_local=datetime(2024, 1, 1, 12, 0),
-            dominant_category="amour"
+            dominant_category="love"
         ),
-        caution_flags={"sante": True, "argent": False},
+        caution_flags={"health": True, "money": False},
         overall_tone="positive",
         top3_contributors_per_category={}
     )
@@ -37,9 +37,9 @@ def test_template_renders_correctly(sample_editorial):
     assert "très porteuse" in output.intro
     assert "Amour & Relations" in output.intro
     
-    assert "amour" in output.category_summaries
-    assert "15/20" in output.category_summaries["amour"]
-    assert "porteur" in output.category_summaries["amour"]
+    assert "love" in output.category_summaries
+    assert "15/20" in output.category_summaries["love"]
+    assert "porteur" in output.category_summaries["love"]
     
     assert "14:30" in output.pivot_phrase
     # SEVERITY_LABELS: low <= 0.25, medium <= 0.5, high <= 0.75, critical > 0.75
@@ -62,7 +62,7 @@ def test_variables_from_engine(sample_editorial):
     custom_editorial = EditorialOutput(
         local_date=date(2025, 5, 20),
         top3_categories=[
-            CategorySummary(code="amour", note_20=20, power=1.0, volatility=0.0),
+            CategorySummary(code="love", note_20=20, power=1.0, volatility=0.0),
         ],
         bottom2_categories=[],
         main_pivot=MagicMock(local_time=datetime(2025, 5, 20, 8, 15), severity=0.1),
@@ -75,8 +75,8 @@ def test_variables_from_engine(sample_editorial):
     output = engine.render(custom_editorial)
     assert "2025-05-20" in output.intro
     assert "contrastée" in output.intro # mixed -> contrastée
-    assert "20/20" in output.category_summaries["amour"]
-    assert "très favorable" in output.category_summaries["amour"]
+    assert "20/20" in output.category_summaries["love"]
+    assert "très favorable" in output.category_summaries["love"]
     assert "08:15" in output.pivot_phrase
     assert "mineur" in output.pivot_phrase # 0.1 -> mineur
 
@@ -113,7 +113,7 @@ def test_no_free_text_generated(sample_editorial):
         output = engine.render(sample_editorial)
         expected = (
             "MOCK 2024-01-01 très porteuse "
-            "Amour & Relations, Travail & Carrière, Vitalité & Énergie"
+            "Amour & Relations, Travail, Énergie & Vitalité"
         )
         assert output.intro == expected
 
@@ -139,10 +139,30 @@ def test_caution_argent_prudent_wording():
     editorial.overall_tone = "neutral"
     editorial.main_pivot = None
     editorial.best_window = None
-    editorial.caution_flags = {"argent": True}
+    editorial.caution_flags = {"money": True}
     
     output = engine.render(editorial)
     # AC3: ni "investissez" ni "achetez" ni injonction financière directe
     forbidden = ["investissez", "achetez", "vendez", "bourse", "spéculez"]
     for word in forbidden:
         assert word not in output.caution_argent.lower()
+
+
+def test_legacy_french_codes_are_normalized_for_labels_and_cautions():
+    engine = EditorialTemplateEngine()
+    editorial = EditorialOutput(
+        local_date=date(2024, 1, 1),
+        top3_categories=[CategorySummary(code="amour", note_20=14, power=0.8, volatility=0.2)],
+        bottom2_categories=[],
+        main_pivot=None,
+        best_window=None,
+        caution_flags={"argent": True, "sante": True},
+        overall_tone="neutral",
+        top3_contributors_per_category={},
+    )
+
+    output = engine.render(editorial, lang="en")
+
+    assert "Love & Relationships" in output.intro
+    assert output.caution_sante is not None
+    assert output.caution_argent is not None

@@ -1,0 +1,1 @@
+The best window is between {window_start} and {window_end}, focused on the {dominant_category_label} theme.

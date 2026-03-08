@@ -1,0 +1,1 @@
+At {pivot_time}, a turning point is identified ({pivot_severity_label}).

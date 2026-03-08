@@ -11,6 +11,7 @@ import swisseph as swe
 
 from app.infra.db.repositories.prediction_schemas import RulesetContext
 
+from .category_codes import normalize_category_code, normalize_category_codes
 from .aggregator import TemporalAggregator
 from .astro_calculator import AstroCalculator
 from .block_generator import BlockGenerator
@@ -375,7 +376,7 @@ class EngineOrchestrator:
         if requested_category_codes is None:
             category_codes = available_category_codes
         else:
-            allowed_codes = set(requested_category_codes)
+            allowed_codes = set(normalize_category_codes(requested_category_codes))
             unknown_codes = allowed_codes.difference(available_category_codes)
             if unknown_codes:
                 unknown_codes_csv = ", ".join(sorted(unknown_codes))
@@ -511,7 +512,7 @@ class EngineOrchestrator:
     ) -> list[str]:
         raw_codes = loaded_context.ruleset_context.parameters.get("caution_category_codes")
         if isinstance(raw_codes, (list, tuple, set)):
-            return [str(code) for code in raw_codes]
+            return normalize_category_codes(raw_codes)
         return list(EditorialOutputBuilder.DEFAULT_CAUTION_CODES)
 
     def _nearest_step_index(self, ut_time: float, samples: list[SamplePoint]) -> int:

@@ -167,7 +167,7 @@ def test_caution_flags_use_ruleset_config() -> None:
     builder = EditorialOutputBuilder()
     scores = {
         "finance": MockScore(7, 1.0, 1.8, 1),
-        "sante": MockScore(14, 1.0, 0.1, 2),
+        "health": MockScore(14, 1.0, 0.1, 2),
     }
 
     output = builder.build(
@@ -184,14 +184,14 @@ def test_caution_flags_use_ruleset_config() -> None:
 def test_no_caution_when_thresholds_not_met() -> None:
     builder = EditorialOutputBuilder()
     scores = {
-        "sante": MockScore(10, 1.0, 0.5, 1),
-        "argent": MockScore(12, 1.0, 0.5, 2),
+        "health": MockScore(10, 1.0, 0.5, 1),
+        "money": MockScore(12, 1.0, 0.5, 2),
     }
 
     output = builder.build(create_mock_engine_output(scores), create_mock_explainability())
 
-    assert output.caution_flags["sante"] is False
-    assert output.caution_flags["argent"] is False
+    assert output.caution_flags["health"] is False
+    assert output.caution_flags["money"] is False
 
 
 def test_overall_tone_positive_negative_and_mixed() -> None:

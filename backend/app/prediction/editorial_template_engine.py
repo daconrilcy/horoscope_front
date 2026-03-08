@@ -7,6 +7,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from app.prediction.category_codes import normalize_category_code
+
 if TYPE_CHECKING:
     from app.prediction.editorial_builder import EditorialOutput
 
@@ -36,11 +38,33 @@ class EditorialTemplateEngine:
     # Internal mappings for labels when not provided by DB
     CATEGORY_LABELS = {
         "fr": {
-            "amour": "Amour & Relations",
-            "travail": "Travail & Carrière",
-            "vitalite": "Vitalité & Énergie",
-            "finances": "Finances & Matériel",
-        }
+            "love": "Amour & Relations",
+            "work": "Travail",
+            "career": "Carrière",
+            "energy": "Énergie & Vitalité",
+            "mood": "Humeur & Climat intérieur",
+            "health": "Santé & Hygiène de vie",
+            "money": "Argent & Ressources",
+            "sex_intimacy": "Sexe & Intimité",
+            "family_home": "Famille & Foyer",
+            "social_network": "Vie sociale & Réseau",
+            "communication": "Communication",
+            "pleasure_creativity": "Plaisir & Créativité",
+        },
+        "en": {
+            "love": "Love & Relationships",
+            "work": "Work",
+            "career": "Career",
+            "energy": "Energy & Vitality",
+            "mood": "Mood & Inner Climate",
+            "health": "Health & Routine",
+            "money": "Money & Resources",
+            "sex_intimacy": "Sex & Intimacy",
+            "family_home": "Family & Home",
+            "social_network": "Social Network",
+            "communication": "Communication",
+            "pleasure_creativity": "Pleasure & Creativity",
+        },
     }
 
     TONE_LABELS = {
@@ -49,7 +73,13 @@ class EditorialTemplateEngine:
             "mixed": "contrastée",
             "neutral": "équilibrée",
             "negative": "exigeante",
-        }
+        },
+        "en": {
+            "positive": "very positive",
+            "mixed": "mixed",
+            "neutral": "balanced",
+            "negative": "challenging",
+        },
     }
 
     SEVERITY_LABELS = {
@@ -58,7 +88,13 @@ class EditorialTemplateEngine:
             "medium": "notable",
             "high": "majeur",
             "critical": "critique",
-        }
+        },
+        "en": {
+            "low": "minor",
+            "medium": "notable",
+            "high": "major",
+            "critical": "critical",
+        },
     }
 
     def _get_band_label(self, note: int, lang: str = "fr") -> str:
@@ -72,6 +108,16 @@ class EditorialTemplateEngine:
             if note <= 16:
                 return "porteur"
             return "très favorable"
+        if lang == "en":
+            if note <= 5:
+                return "fragile"
+            if note <= 9:
+                return "tense"
+            if note <= 12:
+                return "neutral"
+            if note <= 16:
+                return "favorable"
+            return "very favorable"
         return "N/A"
 
     def _get_severity_label(self, severity: float, lang: str = "fr") -> str:
@@ -97,9 +143,12 @@ class EditorialTemplateEngine:
         """
         # 1. Intro
         intro_tpl = self._load_template(lang, "intro_du_jour")
-        tone_label = self.TONE_LABELS.get(lang, {}).get(editorial.overall_tone, "neutre")
-        cat_labels = self.CATEGORY_LABELS.get(lang, {})
-        top3_labels_list = [cat_labels.get(c.code, c.code) for c in editorial.top3_categories]
+        tone_labels = self.TONE_LABELS.get(lang, self.TONE_LABELS["fr"])
+        tone_label = tone_labels.get(
+            editorial.overall_tone,
+            tone_labels.get("neutral", self.TONE_LABELS["fr"]["neutral"]),
+        )
+        top3_labels_list = [self._get_category_label(c.code, lang) for c in editorial.top3_categories]
         top3_labels = ", ".join(top3_labels_list)
 
         intro = intro_tpl.format(
@@ -112,7 +161,7 @@ class EditorialTemplateEngine:
         cat_tpl = self._load_template(lang, "resume_categorie")
         category_summaries = {}
         for cat in editorial.top3_categories:
-            label = cat_labels.get(cat.code, cat.code)
+            label = self._get_category_label(cat.code, lang)
             category_summaries[cat.code] = cat_tpl.format(
                 category_label=label,
                 note_20=cat.note_20,
@@ -153,7 +202,7 @@ class EditorialTemplateEngine:
             start_str = editorial.best_window.start_local.strftime("%H:%M")
             end_str = editorial.best_window.end_local.strftime("%H:%M")
             dom_category = editorial.best_window.dominant_category
-            dom_label = cat_labels.get(dom_category, dom_category)
+            dom_label = self._get_category_label(dom_category, lang)
             window_phrase = win_tpl.format(
                 window_start=start_str,
                 window_end=end_str,
@@ -162,11 +211,11 @@ class EditorialTemplateEngine:
 
         # 5. Cautions
         caution_sante = None
-        if editorial.caution_flags.get("sante"):
+        if editorial.caution_flags.get("health") or editorial.caution_flags.get("sante"):
             caution_sante = self._load_template(lang, "prudence_sante")
 
         caution_argent = None
-        if editorial.caution_flags.get("argent"):
+        if editorial.caution_flags.get("money") or editorial.caution_flags.get("argent"):
             caution_argent = self._load_template(lang, "prudence_argent")
 
         return EditorialTextOutput(
@@ -177,3 +226,8 @@ class EditorialTemplateEngine:
             caution_sante=caution_sante,
             caution_argent=caution_argent,
         )
+
+    def _get_category_label(self, code: str, lang: str) -> str:
+        labels = self.CATEGORY_LABELS.get(lang, self.CATEGORY_LABELS["fr"])
+        canonical_code = normalize_category_code(code)
+        return labels.get(canonical_code, canonical_code)
