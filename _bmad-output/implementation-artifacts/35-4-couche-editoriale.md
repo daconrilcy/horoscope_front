@@ -1,6 +1,6 @@
 # Story 35.4 : Préparation de la couche éditoriale dérivée
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -51,36 +51,36 @@ Champs nécessaires aux templates présents. Depuis `ExplainabilityReport.catego
 
 ### T1 — `EditorialOutputBuilder` (AC1–AC9)
 
-- [ ] Créer `backend/app/prediction/editorial_builder.py`
-  - [ ] Dataclass `BestWindow(start_local: datetime, end_local: datetime, dominant_category: str)`
-  - [ ] Dataclass `CategorySummary(code: str, note_20: int, power: float, volatility: float)`
-  - [ ] Dataclass `EditorialOutput` (tous les champs AC2–AC9)
-  - [ ] Constantes `CAUTION_NOTE_THRESHOLD = 7`, `CAUTION_VOL_THRESHOLD = 1.5`
-  - [ ] Classe `EditorialOutputBuilder`
-  - [ ] `build(engine_output: EngineOutput, explainability: ExplainabilityReport) -> EditorialOutput`
-    - [ ] `_build_top3_bottom2(scores) -> tuple[list[CategorySummary], list[CategorySummary]]`
-    - [ ] `_find_main_pivot(turning_points) -> TurningPoint | None`
-    - [ ] `_find_best_window(time_blocks, top3) -> BestWindow | None`
-    - [ ] `_compute_caution_flags(scores, params) -> dict[str, bool]`
-    - [ ] `_derive_tone(top3) -> str`
+- [x] Créer `backend/app/prediction/editorial_builder.py`
+  - [x] Dataclass `BestWindow(start_local: datetime, end_local: datetime, dominant_category: str)`
+  - [x] Dataclass `CategorySummary(code: str, note_20: int, power: float, volatility: float)`
+  - [x] Dataclass `EditorialOutput` (tous les champs AC2–AC9)
+  - [x] Constantes `CAUTION_NOTE_THRESHOLD = 7`, `CAUTION_VOL_THRESHOLD = 1.5`
+  - [x] Classe `EditorialOutputBuilder`
+  - [x] `build(engine_output: EngineOutput, explainability: ExplainabilityReport) -> EditorialOutput`
+    - [x] `_build_top3_bottom2(scores) -> tuple[list[CategorySummary], list[CategorySummary]]`
+    - [x] `_find_main_pivot(turning_points) -> TurningPoint | None`
+    - [x] `_find_best_window(time_blocks, top3) -> BestWindow | None`
+    - [x] `_compute_caution_flags(scores, params) -> dict[str, bool]`
+    - [x] `_derive_tone(top3) -> str`
 
 ### T2 — Tests unitaires (AC1–AC9)
 
-- [ ] Créer `backend/app/tests/unit/test_editorial_builder.py`
-  - [ ] `test_top3_sorted_desc` — top3 triés par note décroissante
-  - [ ] `test_bottom2_lowest` — bottom2 = les deux notes les plus basses
-  - [ ] `test_top3_bottom2_disjoint` — pas de code commun
-  - [ ] `test_main_pivot_max_severity` — pivot principal = severity max
-  - [ ] `test_no_pivot_none` — pas de pivot → `main_pivot=None`
-  - [ ] `test_best_window_present` — bloc avec peak90 max → fenêtre retournée
-  - [ ] `test_caution_sante_low_note` — santé note ≤ 7 → flagué
-  - [ ] `test_caution_argent_high_vol` — argent vol ≥ 1.5 → flagué
-  - [ ] `test_no_caution_above_threshold` — note > 7 et vol < 1.5 → pas de flag
-  - [ ] `test_tone_positive` — top3 moyenne ≥ 13 → `"positive"`
-  - [ ] `test_tone_negative` — top3 moyenne ≤ 7 → `"negative"`
-  - [ ] `test_tone_mixed` — écart ≥ 5 → `"mixed"`
-  - [ ] `test_no_llm_dependency` — aucun mock LLM requis dans les tests
-  - [ ] `test_contributors_from_explainability` — `top3_contributors_per_category` provient de l'explainability
+- [x] Créer `backend/app/tests/unit/test_editorial_builder.py`
+  - [x] `test_top3_sorted_desc` — top3 triés par note décroissante
+  - [x] `test_bottom2_lowest` — bottom2 = les deux notes les plus basses
+  - [x] `test_top3_bottom2_disjoint` — pas de code commun
+  - [x] `test_main_pivot_max_severity` — pivot principal = severity max
+  - [x] `test_no_pivot_none` — pas de pivot → `main_pivot=None`
+  - [x] `test_best_window_present` — bloc avec peak90 max → fenêtre retournée
+  - [x] `test_caution_sante_low_note` — santé note ≤ 7 → flagué
+  - [x] `test_caution_argent_high_vol` — argent vol ≥ 1.5 → flagué
+  - [x] `test_no_caution_above_threshold` — note > 7 et vol < 1.5 → pas de flag
+  - [x] `test_tone_positive` — top3 moyenne ≥ 13 → `"positive"`
+  - [x] `test_tone_negative` — top3 moyenne ≤ 7 → `"negative"`
+  - [x] `test_tone_mixed` — écart ≥ 5 → `"mixed"`
+  - [x] `test_no_llm_dependency` — aucun mock LLM requis dans les tests
+  - [x] `test_contributors_from_explainability` — `top3_contributors_per_category` provient de l'explainability
 
 ## Dev Notes
 
@@ -185,4 +185,20 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Implemented `EditorialOutputBuilder` to derive editorial data from engine scores and metrics.
+- Added `EditorialOutput` and related dataclasses in `backend/app/prediction/editorial_builder.py`.
+- Integrated `EditorialOutputBuilder` into `EngineOrchestrator.run()`.
+- Updated `EngineOutput` in `backend/app/prediction/schemas.py` to include the `editorial` field.
+- Created comprehensive unit tests in `backend/app/tests/unit/test_editorial_builder.py` covering all ACs.
+- Ensured no LLM dependencies were introduced as per AC1.
+
 ### File List
+
+- `backend/app/prediction/editorial_builder.py`
+- `backend/app/tests/unit/test_editorial_builder.py`
+- `backend/app/prediction/schemas.py`
+- `backend/app/prediction/engine_orchestrator.py`
+
+## Change Log
+
+- 2026-03-08: Implementation of editorial layer (Story 35.4).

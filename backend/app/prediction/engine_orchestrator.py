@@ -1,8 +1,10 @@
+import dataclasses
 import hashlib
 import json
 from collections.abc import Callable
 from datetime import UTC, date, datetime, time, timedelta
 from numbers import Real
+from types import SimpleNamespace
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import swisseph as swe
@@ -16,6 +18,7 @@ from .calibrator import PercentileCalibrator
 from .context_loader import LoadedPredictionContext
 from .contribution_calculator import ContributionCalculator
 from .domain_router import DomainRouter
+from .editorial_builder import EditorialOutputBuilder
 from .event_detector import EventDetector
 from .exceptions import PredictionContextError
 from .explainability import ExplainabilityBuilder
@@ -84,6 +87,7 @@ class EngineOrchestrator:
         turning_point_detector: TurningPointDetector | None = None,
         block_generator: BlockGenerator | None = None,
         explainability_builder: ExplainabilityBuilder | None = None,
+        editorial_builder: EditorialOutputBuilder | None = None,
     ) -> None:
         self._ruleset_context_loader = ruleset_context_loader
         self._prediction_context_loader = prediction_context_loader
@@ -100,6 +104,7 @@ class EngineOrchestrator:
         self._turning_point_detector = turning_point_detector or TurningPointDetector()
         self._block_generator = block_generator or BlockGenerator()
         self._explainability_builder = explainability_builder or ExplainabilityBuilder()
+        self._editorial_builder = editorial_builder or EditorialOutputBuilder()
 
     def run(self, engine_input: EngineInput) -> EngineOutput:
         """
@@ -154,6 +159,7 @@ class EngineOrchestrator:
             notes_by_step,
             events_by_step,
             contributions_by_step,
+            editorial_category_scores,
         ) = self._build_prediction_outputs(
             detected_events,
             day_grid.samples,
@@ -229,7 +235,7 @@ class EngineOrchestrator:
             "is_provisional_calibration": loaded_context.is_provisional_calibration,
         }
 
-        return EngineOutput(
+        output = EngineOutput(
             run_metadata=run_metadata,
             effective_context=effective_context,
             sampling_timeline=list(day_grid.samples),
@@ -238,6 +244,27 @@ class EngineOrchestrator:
             time_blocks=time_blocks,
             turning_points=turning_points,
             explainability=explainability,
+        )
+
+        editorial_input = dataclasses.replace(
+            output,
+            run_metadata={
+                **run_metadata,
+                "caution_category_codes": self._resolve_caution_category_codes(loaded_context),
+            },
+            category_scores=editorial_category_scores,
+            time_blocks=self._build_editorial_time_blocks(
+                time_blocks,
+                notes_by_step,
+                step_times,
+            ),
+        )
+        editorial = self._editorial_builder.build(editorial_input, explainability)
+
+        return dataclasses.replace(
+            output,
+            run_metadata={**run_metadata, "overall_tone": editorial.overall_tone},
+            editorial=editorial,
         )
 
     def _build_prediction_outputs(
@@ -251,6 +278,7 @@ class EngineOrchestrator:
         list[dict[str, int]],
         list[list[AstroEvent]],
         list[list[tuple[AstroEvent, dict[str, float]]]],
+        dict[str, dict[str, float | int]],
     ]:
         category_codes = [
             category.code
@@ -291,6 +319,26 @@ class EngineOrchestrator:
             day_aggregation,
             loaded_context.calibrations,
         )
+        editorial_category_scores = {
+            category.code: {
+                "note_20": category_scores.get(category.code, 0),
+                "raw_score": day_aggregation.categories.get(category.code).raw_day
+                if category.code in day_aggregation.categories
+                else 0.0,
+                "normalized_score": day_aggregation.categories.get(category.code).raw_day
+                if category.code in day_aggregation.categories
+                else 0.0,
+                "power": day_aggregation.categories.get(category.code).power
+                if category.code in day_aggregation.categories
+                else 0.0,
+                "volatility": day_aggregation.categories.get(category.code).volatility
+                if category.code in day_aggregation.categories
+                else 0.0,
+                "sort_order": category.sort_order,
+            }
+            for category in loaded_context.prediction_context.categories
+            if category.is_enabled
+        }
         notes_by_step = [
             {
                 category_code: self._percentile_calibrator.calibrate(
@@ -302,7 +350,67 @@ class EngineOrchestrator:
             for step_contributions in contribution_totals_by_step
         ]
 
-        return category_scores, notes_by_step, events_by_step, contributions_by_step
+        return (
+            category_scores,
+            notes_by_step,
+            events_by_step,
+            contributions_by_step,
+            editorial_category_scores,
+        )
+
+    def _build_editorial_time_blocks(
+        self,
+        time_blocks: list,
+        notes_by_step: list[dict[str, int]],
+        step_times: list[datetime],
+    ) -> list[SimpleNamespace]:
+        editorial_blocks: list[SimpleNamespace] = []
+        for block in time_blocks:
+            step_indices = [
+                step_index
+                for step_index, step_time in enumerate(step_times)
+                if block.start_local <= step_time < block.end_local
+            ]
+            category_means = self._category_means_for_steps(notes_by_step, step_indices)
+            editorial_blocks.append(
+                SimpleNamespace(
+                    start_local=block.start_local,
+                    end_local=block.end_local,
+                    dominant_categories=list(block.dominant_categories),
+                    tone_code=block.tone_code,
+                    category_means=category_means,
+                )
+            )
+        return editorial_blocks
+
+    def _category_means_for_steps(
+        self,
+        notes_by_step: list[dict[str, int]],
+        step_indices: list[int],
+    ) -> dict[str, float]:
+        if not step_indices:
+            return {}
+
+        sums: dict[str, float] = {}
+        counts: dict[str, int] = {}
+        for step_index in step_indices:
+            for category_code, note in notes_by_step[step_index].items():
+                sums[category_code] = sums.get(category_code, 0.0) + note
+                counts[category_code] = counts.get(category_code, 0) + 1
+
+        return {
+            category_code: sums[category_code] / counts[category_code]
+            for category_code in sums
+        }
+
+    def _resolve_caution_category_codes(
+        self,
+        loaded_context: LoadedPredictionContext,
+    ) -> list[str]:
+        raw_codes = loaded_context.ruleset_context.parameters.get("caution_category_codes")
+        if isinstance(raw_codes, (list, tuple, set)):
+            return [str(code) for code in raw_codes]
+        return list(EditorialOutputBuilder.DEFAULT_CAUTION_CODES)
 
     def _nearest_step_index(self, ut_time: float, samples: list[SamplePoint]) -> int:
         return min(

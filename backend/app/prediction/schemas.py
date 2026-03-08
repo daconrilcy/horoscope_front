@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Any
 
-
 if TYPE_CHECKING:
+    from .editorial_builder import EditorialOutput
     from .explainability import ExplainabilityReport
 
 
@@ -103,3 +103,4 @@ class EngineOutput:
     time_blocks: list[Any] = field(default_factory=list)
     turning_points: list[Any] = field(default_factory=list)
     explainability: ExplainabilityReport | None = None
+    editorial: EditorialOutput | None = None

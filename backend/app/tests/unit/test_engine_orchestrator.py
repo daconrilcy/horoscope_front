@@ -223,11 +223,15 @@ def test_output_has_mandatory_fields(orchestrator, base_input):
     assert isinstance(output.sampling_timeline, list)
     assert isinstance(output.detected_events, list)
     assert isinstance(output.category_scores, dict)
+    assert isinstance(output.editorial, object)
     assert isinstance(output.time_blocks, list)
     assert isinstance(output.turning_points, list)
     assert len(output.sampling_timeline) == 96
     assert len(output.detected_events) >= 24
     assert 1 <= output.category_scores["work"] <= 20
+    assert output.editorial is not None
+    assert output.editorial.overall_tone in {"positive", "negative", "mixed", "neutral"}
+    assert output.run_metadata["overall_tone"] == output.editorial.overall_tone
     assert len(output.time_blocks) == 24
 
 
@@ -471,5 +475,7 @@ def test_run_integrates_prediction_scoring_pipeline_with_lowercase_reference_cod
     output = orchestrator.run(base_input)
 
     assert output.category_scores["work"] > 10
+    assert output.editorial is not None
+    assert output.editorial.top3_categories[0].code == "work"
     assert len(output.turning_points) == 1
     assert len(output.time_blocks) == 2
