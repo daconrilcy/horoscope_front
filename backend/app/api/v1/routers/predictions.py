@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -76,6 +76,20 @@ class DailyPredictionResponse(BaseModel):
     turning_points: list[DailyPredictionTurningPoint]
 
 
+class DailyHistoryItem(BaseModel):
+    date_local: str
+    overall_tone: str | None
+    categories: dict[str, float]
+    pivot_count: int
+    computed_at: str
+    was_recomputed: bool | None = None
+
+
+class DailyHistoryResponse(BaseModel):
+    items: list[DailyHistoryItem]
+    total: int
+
+
 router = APIRouter(prefix="/v1/predictions", tags=["predictions"])
 
 
@@ -86,17 +100,81 @@ def get_daily_prediction_service() -> DailyPredictionService:
     )
 
 
+@router.get("/daily/history", response_model=DailyHistoryResponse)
+def get_daily_history(
+    from_date: date = Query(...),
+    to_date: date = Query(...),
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> DailyHistoryResponse:
+    if from_date > to_date:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "invalid_date_range",
+                "message": "from_date must be before or equal to to_date",
+            },
+        )
+
+    delta = (to_date - from_date).days
+    if delta > 90:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "range_too_large",
+                "message": f"Requested range ({delta} days) exceeds the maximum of 90 days",
+            },
+        )
+
+    repo = DailyPredictionRepository(db)
+    runs = repo.get_user_history(current_user.id, from_date, to_date)
+
+    if not runs:
+        return DailyHistoryResponse(items=[], total=0)
+
+    # Resolve category mapping for the reference versions found
+    ref_repo = PredictionReferenceRepository(db)
+    # Optimization: cache mappings per reference_version_id
+    mappings: dict[int, dict[int, str]] = {}
+
+    items = []
+    for run in sorted(runs, key=lambda item: item.local_date, reverse=True):
+        ref_id = run.reference_version_id
+        if ref_id not in mappings:
+            categories_data = ref_repo.get_categories(ref_id)
+            mappings[ref_id] = {c.id: c.code for c in categories_data}
+
+        cat_map = mappings[ref_id]
+        categories_dict = {
+            cat_map.get(score.category_id, "unknown"): float(score.note_20 or 0)
+            for score in run.category_scores
+        }
+
+        items.append(
+            DailyHistoryItem(
+                date_local=run.local_date.isoformat(),
+                overall_tone=run.overall_tone,
+                categories=categories_dict,
+                pivot_count=len(run.turning_points),
+                computed_at=run.computed_at.isoformat(),
+                was_recomputed=None,
+            )
+        )
+
+    return DailyHistoryResponse(items=items, total=len(items))
+
+
 @router.get("/daily", response_model=DailyPredictionResponse)
 def get_daily_prediction(
-    date: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    target_date: str | None = Query(None, alias="date", pattern=r"^\d{4}-\d{2}-\d{2}$"),
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
     service: DailyPredictionService = Depends(get_daily_prediction_service),
 ) -> Any:
     parsed_date = None
-    if date:
+    if target_date:
         try:
-            parsed_date = datetime.strptime(date, "%Y-%m-%d").date()
+            parsed_date = datetime.strptime(target_date, "%Y-%m-%d").date()
         except ValueError:
             raise HTTPException(
                 status_code=422,

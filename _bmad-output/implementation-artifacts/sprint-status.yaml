@@ -317,3 +317,4 @@ development_status:
   epic-36: in-progress
   36-1-service-applicatif-daily-prediction: done
   36-2-endpoint-api-daily-prediction: done
+  36-3-endpoint-historique-daily-prediction: done

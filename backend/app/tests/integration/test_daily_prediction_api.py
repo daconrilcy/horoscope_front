@@ -348,3 +348,187 @@ def test_daily_prediction_meta_uses_run_reference_version_and_house_system_effec
     meta = response.json()["meta"]
     assert meta["reference_version"] == "legacy-v1"
     assert meta["house_system_effective"] == "placidus"
+
+
+def test_history_requires_auth():
+    response = client.get(
+        "/v1/predictions/daily/history", params={"from_date": "2026-03-01", "to_date": "2026-03-08"}
+    )
+    assert response.status_code == 401
+
+
+def test_history_200_nominal():
+    token = _register_and_get_access_token()
+
+    score_love = MagicMock(category_id=1, note_20=15.0)
+    score_work = MagicMock(category_id=2, note_20=12.0)
+    mock_runs = [
+        MagicMock(
+            id=1,
+            local_date=date(2026, 3, 8),
+            reference_version_id=1,
+            overall_tone="positive",
+            category_scores=[score_love, score_work],
+            turning_points=[MagicMock(id=1), MagicMock(id=2)],
+        ),
+        MagicMock(
+            id=2,
+            local_date=date(2026, 3, 7),
+            reference_version_id=1,
+            overall_tone="positive",
+            category_scores=[score_love],
+            turning_points=[MagicMock(id=3)],
+        ),
+    ]
+    # Set computed_at manually to avoid MagicMock issues with isoformat
+    mock_runs[0].computed_at = datetime(2026, 3, 8, 10, 0)
+    mock_runs[1].computed_at = datetime(2026, 3, 7, 10, 0)
+
+    repo_history_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_user_history"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+
+    mock_categories = [
+        MagicMock(id=1, code="love"),
+        MagicMock(id=2, code="work"),
+    ]
+
+    with (
+        patch(repo_history_path, return_value=mock_runs),
+        patch(ref_path, return_value=mock_categories),
+    ):
+        response = client.get(
+            "/v1/predictions/daily/history",
+            params={"from_date": "2026-03-01", "to_date": "2026-03-08"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 2
+    assert data["items"][0]["date_local"] == "2026-03-08"
+    assert data["items"][0]["categories"]["love"] == 15.0
+    assert data["items"][0]["pivot_count"] == 2
+
+
+def test_history_empty_range():
+    token = _register_and_get_access_token()
+    repo_history_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_user_history"
+
+    with patch(repo_history_path, return_value=[]):
+        response = client.get(
+            "/v1/predictions/daily/history",
+            params={"from_date": "2026-03-01", "to_date": "2026-03-08"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"items": [], "total": 0}
+
+
+def test_history_sorted_desc():
+    token = _register_and_get_access_token()
+    mock_runs = [
+        MagicMock(
+            id=2,
+            local_date=date(2026, 3, 7),
+            reference_version_id=1,
+            overall_tone="steady",
+            category_scores=[],
+            turning_points=[],
+        ),
+        MagicMock(
+            id=1,
+            local_date=date(2026, 3, 8),
+            reference_version_id=1,
+            overall_tone="positive",
+            category_scores=[],
+            turning_points=[],
+        ),
+    ]
+    mock_runs[0].computed_at = datetime(2026, 3, 7, 10, 0)
+    mock_runs[1].computed_at = datetime(2026, 3, 8, 10, 0)
+
+    repo_history_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_user_history"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+
+    with (
+        patch(repo_history_path, return_value=mock_runs),
+        patch(ref_path, return_value=[]),
+    ):
+        response = client.get(
+            "/v1/predictions/daily/history",
+            params={"from_date": "2026-03-01", "to_date": "2026-03-08"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    assert [item["date_local"] for item in response.json()["items"]] == [
+        "2026-03-08",
+        "2026-03-07",
+    ]
+
+
+def test_history_max_range_exceeded_400():
+    token = _register_and_get_access_token()
+    response = client.get(
+        "/v1/predictions/daily/history",
+        params={"from_date": "2026-01-01", "to_date": "2026-05-01"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"]["code"] == "range_too_large"
+
+
+def test_history_invalid_dates_400():
+    token = _register_and_get_access_token()
+    response = client.get(
+        "/v1/predictions/daily/history",
+        params={"from_date": "2026-03-08", "to_date": "2026-03-01"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"]["code"] == "invalid_date_range"
+
+
+def test_history_invalid_calendar_date_422_standard():
+    token = _register_and_get_access_token()
+    response = client.get(
+        "/v1/predictions/daily/history",
+        params={"from_date": "2026-02-31", "to_date": "2026-03-01"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 422
+    error = response.json()["error"]
+    assert error["code"] == "invalid_request_payload"
+    assert error["details"]["errors"][0]["loc"][-1] == "from_date"
+
+
+def test_history_no_recompute():
+    token = _register_and_get_access_token()
+    mock_service = MagicMock()
+    _override_service(mock_service)
+
+    repo_history_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_user_history"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    mock_run = MagicMock(
+        id=1,
+        local_date=date(2026, 3, 8),
+        reference_version_id=1,
+        overall_tone="positive",
+        category_scores=[],
+        turning_points=[],
+    )
+    mock_run.computed_at = datetime(2026, 3, 8, 10, 0)
+
+    with (
+        patch(repo_history_path, return_value=[mock_run]),
+        patch(ref_path, return_value=[]),
+    ):
+        response = client.get(
+            "/v1/predictions/daily/history",
+            params={"from_date": "2026-03-01", "to_date": "2026-03-08"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    mock_service.get_or_compute.assert_not_called()

@@ -232,11 +232,15 @@ class DailyPredictionRepository:
         return list(
             self.db.scalars(
                 select(DailyPredictionRunModel)
+                .options(
+                    selectinload(DailyPredictionRunModel.category_scores),
+                    selectinload(DailyPredictionRunModel.turning_points),
+                )
                 .where(
                     DailyPredictionRunModel.user_id == user_id,
                     DailyPredictionRunModel.local_date >= from_date,
                     DailyPredictionRunModel.local_date <= to_date,
                 )
-                .order_by(DailyPredictionRunModel.local_date)
+                .order_by(DailyPredictionRunModel.local_date.desc())
             ).all()
         )
