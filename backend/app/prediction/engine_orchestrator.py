@@ -150,6 +150,11 @@ class EngineOrchestrator:
         ]
         event_detector = self._event_detector_factory(loaded_context, natal_chart)
         detected_events = event_detector.detect(astro_states, day_grid)
+        detected_events = self._refine_detected_events(
+            detected_events,
+            astro_calculator,
+            event_detector,
+        )
         natal_sensitivity = self._natal_sensitivity_calculator.compute(
             natal_chart,
             loaded_context,
@@ -240,7 +245,7 @@ class EngineOrchestrator:
             effective_context=effective_context,
             sampling_timeline=list(day_grid.samples),
             detected_events=detected_events,
-            category_scores=category_scores,
+            category_scores=editorial_category_scores,
             time_blocks=time_blocks,
             turning_points=turning_points,
             explainability=explainability,
@@ -266,6 +271,33 @@ class EngineOrchestrator:
             run_metadata={**run_metadata, "overall_tone": editorial.overall_tone},
             editorial=editorial,
         )
+
+    def _refine_detected_events(
+        self,
+        detected_events: list[AstroEvent],
+        astro_calculator: AstroCalculator,
+        event_detector: EventDetector,
+    ) -> list[AstroEvent]:
+        if not hasattr(self._temporal_sampler, "refine_around"):
+            return detected_events
+        if not hasattr(event_detector, "refine_exact_event"):
+            return detected_events
+
+        refined_events: list[AstroEvent] = []
+        for event in detected_events:
+            if event.event_type != "exact":
+                refined_events.append(event)
+                continue
+
+            refined_points = self._temporal_sampler.refine_around(event.ut_time, radius_minutes=5)
+            refined_states = [
+                astro_calculator.compute_step(sample.ut_time, sample.local_time)
+                for sample in refined_points
+            ]
+            refined_events.append(event_detector.refine_exact_event(event, refined_states))
+
+        refined_events.sort(key=lambda item: item.ut_time)
+        return refined_events
 
     def _build_prediction_outputs(
         self,

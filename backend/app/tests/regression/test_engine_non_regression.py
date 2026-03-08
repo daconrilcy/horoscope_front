@@ -78,7 +78,7 @@ def test_case_type(orchestrator, fixture_file):
 
     if "category_scores" in expected:
         for cat, score in expected["category_scores"].items():
-            assert output1.category_scores[cat] == score
+            assert output1.category_scores[cat]["note_20"] == score
     if "detected_events_count" in expected:
         assert len(output1.detected_events) == expected["detected_events_count"]
     if "sample_count" in expected:

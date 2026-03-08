@@ -566,32 +566,36 @@
         "base_weight": 1.0,
         "body": "Moon",
         "event_type": "exact",
-        "local_time": "2026-03-07T05:00:00+01:00",
+        "local_time": "2026-03-07T04:01:29.999987+00:00",
         "metadata": {
+          "coarse_ut_time": 2461106.6666666665,
           "natal_house_target": 11,
           "natal_house_transited": 7,
-          "phase": "applying"
+          "phase": "applying",
+          "refined": true
         },
-        "orb_deg": 0.012398607192352529,
+        "orb_deg": 0.0004251525110134935,
         "priority": 50,
         "target": "Uranus",
-        "ut_time": 2461106.6666666665
+        "ut_time": 2461106.667708333
       },
       {
         "aspect": "sextile",
         "base_weight": 1.0,
         "body": "Moon",
         "event_type": "exact",
-        "local_time": "2026-03-07T05:00:00+01:00",
+        "local_time": "2026-03-07T04:01:29.999987+00:00",
         "metadata": {
+          "coarse_ut_time": 2461106.6666666665,
           "natal_house_target": 10,
           "natal_house_transited": 7,
-          "phase": "applying"
+          "phase": "applying",
+          "refined": true
         },
-        "orb_deg": 0.012398607192352529,
+        "orb_deg": 0.0004251525110134935,
         "priority": 50,
         "target": "MC",
-        "ut_time": 2461106.6666666665
+        "ut_time": 2461106.667708333
       },
       {
         "aspect": null,
@@ -702,16 +706,18 @@
         "base_weight": 1.0,
         "body": "Moon",
         "event_type": "exact",
-        "local_time": "2026-03-07T08:45:00+01:00",
+        "local_time": "2026-03-07T07:42:29.999987+00:00",
         "metadata": {
+          "coarse_ut_time": 2461106.8229166665,
           "natal_house_target": 10,
           "natal_house_transited": 8,
-          "phase": "applying"
+          "phase": "applying",
+          "refined": true
         },
-        "orb_deg": 0.019180444455912493,
+        "orb_deg": 0.00213270499497753,
         "priority": 50,
         "target": "Mercury",
-        "ut_time": 2461106.8229166665
+        "ut_time": 2461106.8211805555
       },
       {
         "aspect": null,
@@ -1288,18 +1294,102 @@
       }
     ],
     "category_scores": {
-      "career": 10,
-      "communication": 10,
-      "energy": 10,
-      "family_home": 10,
-      "health": 10,
-      "love": 10,
-      "money": 10,
-      "mood": 10,
-      "pleasure_creativity": 10,
-      "sex_intimacy": 10,
-      "social_network": 10,
-      "work": 10
+      "career": {
+        "normalized_score": -0.001277944061619864,
+        "note_20": 10,
+        "power": 0.17526089987929563,
+        "raw_score": -0.001277944061619864,
+        "sort_order": 5,
+        "volatility": 0.017887490690220175
+      },
+      "communication": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 11,
+        "volatility": 0.0
+      },
+      "energy": {
+        "normalized_score": -0.0017018798867830774,
+        "note_20": 10,
+        "power": 0.23340067018739347,
+        "raw_score": -0.0017018798867830774,
+        "sort_order": 1,
+        "volatility": 0.023821356149280826
+      },
+      "family_home": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 9,
+        "volatility": 0.0
+      },
+      "health": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 3,
+        "volatility": 0.0
+      },
+      "love": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 7,
+        "volatility": 0.0
+      },
+      "money": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 6,
+        "volatility": 0.0
+      },
+      "mood": {
+        "normalized_score": -0.0009818537808363908,
+        "note_20": 10,
+        "power": 0.1346542328004193,
+        "raw_score": -0.0009818537808363908,
+        "sort_order": 2,
+        "volatility": 0.013743090086123552
+      },
+      "pleasure_creativity": {
+        "normalized_score": -0.00019176831656960764,
+        "note_20": 10,
+        "power": 0.02629965484383191,
+        "raw_score": -0.00019176831656960764,
+        "sort_order": 12,
+        "volatility": 0.0026841972824460077
+      },
+      "sex_intimacy": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 8,
+        "volatility": 0.0
+      },
+      "social_network": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 10,
+        "volatility": 0.0
+      },
+      "work": {
+        "normalized_score": -0.0006780927673901316,
+        "note_20": 10,
+        "power": 0.09299557952778949,
+        "raw_score": -0.0006780927673901316,
+        "sort_order": 4,
+        "volatility": 0.009491321590729069
+      }
     },
     "time_blocks": [
       {
@@ -1423,32 +1513,36 @@
             "base_weight": 1.0,
             "body": "Moon",
             "event_type": "exact",
-            "local_time": "2026-03-07T05:00:00+01:00",
+            "local_time": "2026-03-07T04:01:29.999987+00:00",
             "metadata": {
+              "coarse_ut_time": 2461106.6666666665,
               "natal_house_target": 11,
               "natal_house_transited": 7,
-              "phase": "applying"
+              "phase": "applying",
+              "refined": true
             },
-            "orb_deg": 0.012398607192352529,
+            "orb_deg": 0.0004251525110134935,
             "priority": 50,
             "target": "Uranus",
-            "ut_time": 2461106.6666666665
+            "ut_time": 2461106.667708333
           },
           {
             "aspect": "sextile",
             "base_weight": 1.0,
             "body": "Moon",
             "event_type": "exact",
-            "local_time": "2026-03-07T05:00:00+01:00",
+            "local_time": "2026-03-07T04:01:29.999987+00:00",
             "metadata": {
+              "coarse_ut_time": 2461106.6666666665,
               "natal_house_target": 10,
               "natal_house_transited": 7,
-              "phase": "applying"
+              "phase": "applying",
+              "refined": true
             },
-            "orb_deg": 0.012398607192352529,
+            "orb_deg": 0.0004251525110134935,
             "priority": 50,
             "target": "MC",
-            "ut_time": 2461106.6666666665
+            "ut_time": 2461106.667708333
           },
           {
             "aspect": null,

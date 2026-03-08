@@ -825,6 +825,24 @@
         "ut_time": 2461129.1145833335
       },
       {
+        "aspect": "conjunction",
+        "base_weight": 1.0,
+        "body": "Moon",
+        "event_type": "exact",
+        "local_time": "2026-03-29T14:58:30+00:00",
+        "metadata": {
+          "coarse_ut_time": 2461129.125,
+          "natal_house_target": 5,
+          "natal_house_transited": 5,
+          "phase": "applying",
+          "refined": true
+        },
+        "orb_deg": 0.004468796074093007,
+        "priority": 50,
+        "target": "Mars",
+        "ut_time": 2461129.1239583334
+      },
+      {
         "aspect": "trine",
         "base_weight": 1.0,
         "body": "Moon",
@@ -838,22 +856,6 @@
         "orb_deg": 4.408825660095999,
         "priority": 50,
         "target": "Mercury",
-        "ut_time": 2461129.125
-      },
-      {
-        "aspect": "conjunction",
-        "base_weight": 1.0,
-        "body": "Moon",
-        "event_type": "exact",
-        "local_time": "2026-03-29T17:00:00+02:00",
-        "metadata": {
-          "natal_house_target": 5,
-          "natal_house_transited": 5,
-          "phase": "applying"
-        },
-        "orb_deg": 0.009379339904000972,
-        "priority": 50,
-        "target": "Mars",
         "ut_time": 2461129.125
       },
       {
@@ -962,32 +964,36 @@
         "base_weight": 1.0,
         "body": "Moon",
         "event_type": "exact",
-        "local_time": "2026-03-29T21:30:00+02:00",
+        "local_time": "2026-03-29T19:33:30+00:00",
         "metadata": {
+          "coarse_ut_time": 2461129.3125,
           "natal_house_target": 9,
           "natal_house_transited": 5,
-          "phase": "applying"
+          "phase": "applying",
+          "refined": true
         },
-        "orb_deg": 0.030517504529086636,
+        "orb_deg": 0.001700380947653457,
         "priority": 50,
         "target": "Pluto",
-        "ut_time": 2461129.3125
+        "ut_time": 2461129.3149305554
       },
       {
         "aspect": "trine",
         "base_weight": 1.0,
         "body": "Moon",
         "event_type": "exact",
-        "local_time": "2026-03-29T21:30:00+02:00",
+        "local_time": "2026-03-29T19:33:30+00:00",
         "metadata": {
+          "coarse_ut_time": 2461129.3125,
           "natal_house_target": 10,
           "natal_house_transited": 5,
-          "phase": "applying"
+          "phase": "applying",
+          "refined": true
         },
-        "orb_deg": 0.030517504529086636,
+        "orb_deg": 0.001700380947653457,
         "priority": 50,
         "target": "MC",
-        "ut_time": 2461129.3125
+        "ut_time": 2461129.3149305554
       },
       {
         "aspect": null,
@@ -1161,18 +1167,102 @@
       }
     ],
     "category_scores": {
-      "career": 10,
-      "communication": 10,
-      "energy": 10,
-      "family_home": 10,
-      "health": 10,
-      "love": 10,
-      "money": 10,
-      "mood": 10,
-      "pleasure_creativity": 10,
-      "sex_intimacy": 10,
-      "social_network": 10,
-      "work": 10
+      "career": {
+        "normalized_score": 0.005932736630664748,
+        "note_20": 10,
+        "power": 0.14490577965163454,
+        "raw_score": 0.005932736630664748,
+        "sort_order": 5,
+        "volatility": 0.015107471868772081
+      },
+      "communication": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 11,
+        "volatility": 0.0
+      },
+      "energy": {
+        "normalized_score": 0.0029381171885196847,
+        "note_20": 10,
+        "power": 0.07176286230366663,
+        "raw_score": 0.0029381171885196847,
+        "sort_order": 1,
+        "volatility": 0.007481795592153793
+      },
+      "family_home": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 9,
+        "volatility": 0.0
+      },
+      "health": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 3,
+        "volatility": 0.0
+      },
+      "love": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 7,
+        "volatility": 0.0
+      },
+      "money": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 6,
+        "volatility": 0.0
+      },
+      "mood": {
+        "normalized_score": 0.00271210817401817,
+        "note_20": 10,
+        "power": 0.0662426421264615,
+        "raw_score": 0.00271210817401817,
+        "sort_order": 2,
+        "volatility": 0.006906272854295808
+      },
+      "pleasure_creativity": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 12,
+        "volatility": 0.0
+      },
+      "sex_intimacy": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 8,
+        "volatility": 0.0
+      },
+      "social_network": {
+        "normalized_score": 0.0,
+        "note_20": 10,
+        "power": 0.0,
+        "raw_score": 0.0,
+        "sort_order": 10,
+        "volatility": 0.0
+      },
+      "work": {
+        "normalized_score": 0.003955157753776499,
+        "note_20": 10,
+        "power": 0.09660385310108968,
+        "raw_score": 0.003955157753776499,
+        "sort_order": 4,
+        "volatility": 0.01007164791251472
+      }
     },
     "time_blocks": [
       {
@@ -1715,6 +1805,24 @@
         ],
         "driver_events": [
           {
+            "aspect": "conjunction",
+            "base_weight": 1.0,
+            "body": "Moon",
+            "event_type": "exact",
+            "local_time": "2026-03-29T14:58:30+00:00",
+            "metadata": {
+              "coarse_ut_time": 2461129.125,
+              "natal_house_target": 5,
+              "natal_house_transited": 5,
+              "phase": "applying",
+              "refined": true
+            },
+            "orb_deg": 0.004468796074093007,
+            "priority": 50,
+            "target": "Mars",
+            "ut_time": 2461129.1239583334
+          },
+          {
             "aspect": "trine",
             "base_weight": 1.0,
             "body": "Moon",
@@ -1728,22 +1836,6 @@
             "orb_deg": 4.408825660095999,
             "priority": 50,
             "target": "Mercury",
-            "ut_time": 2461129.125
-          },
-          {
-            "aspect": "conjunction",
-            "base_weight": 1.0,
-            "body": "Moon",
-            "event_type": "exact",
-            "local_time": "2026-03-29T17:00:00+02:00",
-            "metadata": {
-              "natal_house_target": 5,
-              "natal_house_transited": 5,
-              "phase": "applying"
-            },
-            "orb_deg": 0.009379339904000972,
-            "priority": 50,
-            "target": "Mars",
             "ut_time": 2461129.125
           },
           {
@@ -1929,32 +2021,36 @@
             "base_weight": 1.0,
             "body": "Moon",
             "event_type": "exact",
-            "local_time": "2026-03-29T21:30:00+02:00",
+            "local_time": "2026-03-29T19:33:30+00:00",
             "metadata": {
+              "coarse_ut_time": 2461129.3125,
               "natal_house_target": 9,
               "natal_house_transited": 5,
-              "phase": "applying"
+              "phase": "applying",
+              "refined": true
             },
-            "orb_deg": 0.030517504529086636,
+            "orb_deg": 0.001700380947653457,
             "priority": 50,
             "target": "Pluto",
-            "ut_time": 2461129.3125
+            "ut_time": 2461129.3149305554
           },
           {
             "aspect": "trine",
             "base_weight": 1.0,
             "body": "Moon",
             "event_type": "exact",
-            "local_time": "2026-03-29T21:30:00+02:00",
+            "local_time": "2026-03-29T19:33:30+00:00",
             "metadata": {
+              "coarse_ut_time": 2461129.3125,
               "natal_house_target": 10,
               "natal_house_transited": 5,
-              "phase": "applying"
+              "phase": "applying",
+              "refined": true
             },
-            "orb_deg": 0.030517504529086636,
+            "orb_deg": 0.001700380947653457,
             "priority": 50,
             "target": "MC",
-            "ut_time": 2461129.3125
+            "ut_time": 2461129.3149305554
           }
         ],
         "end_local": "2026-03-29T22:00:00+02:00",
@@ -3107,10 +3203,10 @@
               "work": 0.0
             },
             "event": {
-              "aspect": "trine",
+              "aspect": "conjunction",
               "body": "Moon",
-              "event_type": "enter_orb",
-              "target": "Mercury"
+              "event_type": "exact",
+              "target": "Mars"
             }
           },
           {
@@ -3129,10 +3225,10 @@
               "work": 0.0
             },
             "event": {
-              "aspect": "conjunction",
+              "aspect": "trine",
               "body": "Moon",
-              "event_type": "exact",
-              "target": "Mars"
+              "event_type": "enter_orb",
+              "target": "Mercury"
             }
           },
           {

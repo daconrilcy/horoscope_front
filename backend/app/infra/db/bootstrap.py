@@ -6,7 +6,8 @@ from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import inspect
+from alembic.script import ScriptDirectory
+from sqlalchemy import inspect, text
 
 from app.core.config import settings
 from app.infra.db.session import engine
@@ -36,6 +37,17 @@ def _missing_required_tables() -> set[str]:
     return _REQUIRED_AUTH_TABLES - existing_tables
 
 
+def _current_revision() -> str | None:
+    inspector = inspect(engine)
+    if "alembic_version" not in inspector.get_table_names():
+        return None
+
+    with engine.connect() as connection:
+        return connection.execute(
+            text("SELECT version_num FROM alembic_version")
+        ).scalar_one_or_none()
+
+
 def _alembic_config() -> Config:
     backend_root = Path(__file__).resolve().parents[3]
     config = Config(str(backend_root / "alembic.ini"))
@@ -44,17 +56,28 @@ def _alembic_config() -> Config:
     return config
 
 
+def _head_revision() -> str:
+    return ScriptDirectory.from_config(_alembic_config()).get_current_head()
+
+
 def ensure_local_sqlite_schema_ready() -> None:
     if not _should_auto_upgrade_local_sqlite():
         return
 
     missing_tables = _missing_required_tables()
-    if not missing_tables:
+    current_revision = _current_revision()
+    head_revision = _head_revision()
+    if not missing_tables and current_revision == head_revision:
         return
 
     logger.warning(
-        "local_sqlite_schema_auto_upgrade database_url=%s missing_tables=%s",
+        (
+            "local_sqlite_schema_auto_upgrade database_url=%s missing_tables=%s "
+            "current_revision=%s head_revision=%s"
+        ),
         settings.database_url,
         sorted(missing_tables),
+        current_revision,
+        head_revision,
     )
     command.upgrade(_alembic_config(), "head")

@@ -168,7 +168,7 @@ def assert_clamps(
         assert -RAW_DAY_MAX <= category.raw_day <= RAW_DAY_MAX
 
     for score in output.category_scores.values():
-        assert 1 <= score <= 20
+        assert 1 <= score["note_20"] <= 20
 
 
 def _sort_key(item: tuple[object, object]) -> str:

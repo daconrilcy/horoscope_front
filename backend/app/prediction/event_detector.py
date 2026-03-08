@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 from datetime import datetime, timedelta
 from datetime import timezone as dt_tz
@@ -81,6 +82,59 @@ class EventDetector:
         # Sort all events chronologically
         events.sort(key=lambda e: e.ut_time)
         return events
+
+    def refine_exact_event(
+        self,
+        coarse_event: AstroEvent,
+        refined_steps: list[StepAstroState],
+    ) -> AstroEvent:
+        """Refine an exact event using denser astro states around the coarse timestamp."""
+        if coarse_event.event_type != "exact":
+            return coarse_event
+        if coarse_event.body is None or coarse_event.target is None or coarse_event.aspect is None:
+            return coarse_event
+
+        natal_lon = self.natal_positions.get(coarse_event.target)
+        if natal_lon is None:
+            return coarse_event
+
+        aspect_deg = next(
+            (
+                aspect_value
+                for aspect_value, aspect_code in self.ASPECTS_V1.items()
+                if aspect_code == coarse_event.aspect
+            ),
+            None,
+        )
+        if aspect_deg is None:
+            return coarse_event
+
+        best_step: StepAstroState | None = None
+        best_orb: float | None = None
+        for step in refined_steps:
+            planet_state = step.planets.get(coarse_event.body)
+            if planet_state is None:
+                continue
+            orb = self._orb(planet_state.longitude, natal_lon, aspect_deg)
+            if best_orb is None or orb < best_orb:
+                best_orb = orb
+                best_step = step
+
+        if best_step is None or best_orb is None:
+            return coarse_event
+
+        refined_metadata = {
+            **coarse_event.metadata,
+            "refined": True,
+            "coarse_ut_time": coarse_event.ut_time,
+        }
+        return dataclasses.replace(
+            coarse_event,
+            ut_time=best_step.ut_jd,
+            local_time=best_step.local_time,
+            orb_deg=best_orb,
+            metadata=refined_metadata,
+        )
 
     def _detect_aspects(self, steps: list[StepAstroState]) -> list[AstroEvent]:
         detected: list[AstroEvent] = []
