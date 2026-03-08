@@ -91,6 +91,115 @@ const predictionOk = {
   ],
 };
 
+const predictionTechnical = {
+  meta: {
+    date_local: "2026-03-08",
+    timezone: "Europe/Paris",
+    computed_at: "2026-03-08T20:22:30Z",
+    reference_version: "2.0.0",
+    ruleset_version: "2.0.0",
+    was_reused: false,
+    house_system_effective: "placidus",
+    is_provisional_calibration: true,
+    calibration_label: "provisional",
+  },
+  summary: {
+    overall_tone: "neutral",
+    overall_summary:
+      "Votre journée du 2026-03-08 s'annonce équilibrée. Vos points forts : Énergie & Vitalité, Humeur & Climat intérieur, Santé & Hygiène de vie.",
+    top_categories: ["energy", "mood", "health"],
+    bottom_categories: ["energy", "mood"],
+    best_window: {
+      start_local: "2026-03-08T00:00:00+01:00",
+      end_local: "2026-03-08T01:00:00+01:00",
+      dominant_category: "career",
+    },
+    main_turning_point: {
+      occurred_at_local: "2026-03-08T07:30:00",
+      severity: 0.8,
+      summary: "delta_note",
+    },
+  },
+  categories: [
+    {
+      code: "energy",
+      note_20: 10,
+      raw_score: 0,
+      power: 0,
+      volatility: 0,
+      rank: 1,
+      summary: "Énergie & Vitalité : Votre score est de 10/20 (climat neutre).",
+    },
+    {
+      code: "mood",
+      note_20: 10,
+      raw_score: 0,
+      power: 0,
+      volatility: 0,
+      rank: 2,
+      summary: "Humeur & Climat intérieur : Votre score est de 10/20 (climat neutre).",
+    },
+    {
+      code: "health",
+      note_20: 10,
+      raw_score: 0,
+      power: 0,
+      volatility: 0,
+      rank: 3,
+      summary: "Santé & Hygiène de vie : Votre score est de 10/20 (climat neutre).",
+    },
+  ],
+  timeline: [
+    {
+      start_local: "2026-03-08T00:00:00+01:00",
+      end_local: "2026-03-08T01:00:00+01:00",
+      tone_code: "neutral",
+      dominant_categories: ["career", "communication", "energy"],
+      summary: null,
+      turning_point: false,
+    },
+    {
+      start_local: "2026-03-08T01:00:00+01:00",
+      end_local: "2026-03-08T02:00:00+01:00",
+      tone_code: "neutral",
+      dominant_categories: ["career", "communication", "energy"],
+      summary: null,
+      turning_point: false,
+    },
+    {
+      start_local: "2026-03-08T02:00:00+01:00",
+      end_local: "2026-03-08T03:00:00+01:00",
+      tone_code: "neutral",
+      dominant_categories: ["career", "communication", "energy"],
+      summary: null,
+      turning_point: false,
+    },
+    {
+      start_local: "2026-03-08T07:00:00+01:00",
+      end_local: "2026-03-08T07:30:00+01:00",
+      tone_code: "neutral",
+      dominant_categories: ["career", "communication", "energy"],
+      summary: null,
+      turning_point: true,
+    },
+  ],
+  turning_points: [
+    {
+      occurred_at_local: "2026-03-08T07:30:00+01:00",
+      severity: 0.8,
+      summary: "delta_note",
+      drivers: [
+        {
+          event_type: "exact",
+          body: "Venus",
+          target: "Pluto",
+          aspect: "opposition",
+        },
+      ],
+    },
+  ],
+};
+
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -168,8 +277,8 @@ describe("TodayPage", () => {
     });
 
     expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument();
-    expect(screen.getByText("08:00 - 09:30")).toBeInTheDocument();
-    expect(screen.getAllByText("11:15")).toHaveLength(2);
+    expect(screen.getAllByText("08:00 - 09:30").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("11:15").length).toBeGreaterThan(0);
     expect(screen.getByText("Points de bascule")).toBeInTheDocument();
     expect(screen.getByText("Pivot")).toBeInTheDocument();
     expect(screen.getByText("Carrière")).toBeInTheDocument();
@@ -240,6 +349,26 @@ describe("TodayPage", () => {
     });
   });
 
+  it("affiche l'etat empty quand l'API renvoie une erreur de setup 422", async () => {
+    installFetchMock({
+      prediction: jsonResponse(
+        {
+          detail: {
+            code: "profile_missing",
+            message: "Profil de naissance introuvable",
+          },
+        },
+        422,
+      ),
+    });
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText("Aucune prédiction disponible.")).toBeInTheDocument();
+    });
+  });
+
   it("bascule les libelles de prediction en anglais quand la langue active est en", async () => {
     localStorage.setItem("lang", "en");
     installFetchMock();
@@ -253,5 +382,24 @@ describe("TodayPage", () => {
     expect(screen.getByText("Best window")).toBeInTheDocument();
     expect(screen.getByText("Turning Points")).toBeInTheDocument();
     expect(screen.getByText("Dominant : Career")).toBeInTheDocument();
+  });
+
+  it("humanise les payloads techniques et compacte la timeline repetitive", async () => {
+    installFetchMock({
+      prediction: jsonResponse(predictionTechnical),
+    });
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Votre journée du 2026-03-08 s'annonce équilibrée/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/Calibration provisoire/i)).toBeInTheDocument();
+    expect(screen.queryByText("delta_note")).not.toBeInTheDocument();
+    expect(screen.getByText("Le climat change nettement sur ce créneau.")).toBeInTheDocument();
+    expect(screen.getByText("Aspect exact : Venus opposition Pluto")).toBeInTheDocument();
+    expect(screen.getByText("00:00 - 03:00")).toBeInTheDocument();
+    expect(screen.queryByText("Énergie & Vitalité : Votre score est de 10/20 (climat neutre).")).not.toBeInTheDocument();
   });
 });

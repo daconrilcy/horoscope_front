@@ -205,6 +205,44 @@ describe("astro_profile nullable consumption", () => {
     expect(astroProfile.ascendant_sign_code).toBeNull()
     expect(astroProfile.missing_birth_time).toBe(true)
   })
+
+  it("normalizes GET birth data and maps birth_place_resolved_id to place_resolved_id", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          data: {
+            birth_date: "1990-01-15",
+            birth_time: "10:30",
+            birth_place: "Paris, France",
+            birth_place_text: "Paris, France",
+            birth_timezone: "Europe/Paris",
+            birth_place_resolved_id: 123,
+            birth_place_resolved: {
+              id: 123,
+              display_name: "Paris, France",
+            },
+            geolocation_consent: true,
+            current_city: "Paris",
+            current_country: "France",
+          },
+        }),
+      }),
+    )
+
+    const result = await getBirthData("test-token")
+    expect(result).toMatchObject({
+      birth_place: "Paris, France",
+      place_resolved_id: 123,
+      geolocation_consent: true,
+      current_city: "Paris",
+    })
+    expect(result).not.toHaveProperty("birth_place_resolved_id")
+    expect(result).not.toHaveProperty("birth_place_resolved")
+    expect(result).not.toHaveProperty("birth_place_text")
+  })
 })
 
 describe("planet position retrograde contract compatibility", () => {

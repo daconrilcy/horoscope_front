@@ -54,6 +54,10 @@ const MESSAGES: Record<string, Record<Lang, string>> = {
   intensity: { fr: "Intensité", en: "Intensity" },
   pivot_badge: { fr: "Pivot", en: "Pivot" },
   pending_summary: { fr: "Calcul de votre tendance...", en: "Computing your trend..." },
+  provisional_calibration: {
+    fr: "Calibration provisoire : les notes peuvent rester peu contrastées tant que le référentiel local n'est pas entièrement calibré.",
+    en: "Provisional calibration: scores may stay close together until the local reference is fully calibrated.",
+  },
 };
 
 export function getCategoryLabel(code: string, lang: Lang): string {
@@ -136,4 +140,83 @@ export function getPredictionMessage(key: string, lang: Lang): string {
   const entry = MESSAGES[key];
   if (!entry) return key;
   return entry[lang] || key;
+}
+
+export function humanizeTurningPointSummary(
+  summary: string | null | undefined,
+  lang: Lang,
+): string | null {
+  if (!summary) return null;
+
+  const normalized = summary.trim().toLowerCase();
+  const labels: Record<string, Record<Lang, string>> = {
+    delta_note: {
+      fr: "Le climat change nettement sur ce créneau.",
+      en: "The mood shifts noticeably during this window.",
+    },
+    top3_change: {
+      fr: "Les priorités du jour changent de dominante.",
+      en: "The day's dominant themes are shifting.",
+    },
+    high_priority_event: {
+      fr: "Un événement astrologique marqué mérite votre attention.",
+      en: "A strong astrological event deserves your attention.",
+    },
+  };
+
+  return labels[normalized]?.[lang] ?? summary;
+}
+
+export function humanizePredictionDriverLabel(
+  driver: { label?: string | null; event_type?: string | null; body?: unknown; target?: unknown; aspect?: unknown },
+  lang: Lang,
+): string {
+  if (driver.label && driver.label.trim()) {
+    return driver.label;
+  }
+
+  const eventType = typeof driver.event_type === "string" ? driver.event_type : "";
+  const body = typeof driver.body === "string" ? driver.body : null;
+  const target = typeof driver.target === "string" ? driver.target : null;
+  const aspect = typeof driver.aspect === "string" ? driver.aspect : null;
+
+  if (eventType === "exact" && body && aspect && target) {
+    return lang === "fr"
+      ? `Aspect exact : ${body} ${aspect} ${target}`
+      : `Exact aspect: ${body} ${aspect} ${target}`;
+  }
+
+  if (eventType === "planetary_hour_change") {
+    return lang === "fr" ? "Changement d'heure planétaire" : "Planetary hour change";
+  }
+
+  const eventLabels: Record<string, Record<Lang, string>> = {
+    exact: { fr: "Aspect exact", en: "Exact aspect" },
+    ingress: { fr: "Changement de signe", en: "Sign ingress" },
+    station: { fr: "Station planétaire", en: "Planetary station" },
+  };
+
+  if (eventLabels[eventType]) {
+    return eventLabels[eventType][lang];
+  }
+
+  return eventType || (lang === "fr" ? "Signal astrologique" : "Astrological signal");
+}
+
+export function buildTimelineFallbackSummary(
+  dominantCategories: string[],
+  toneCode: string,
+  lang: Lang,
+): string {
+  const labels = dominantCategories.slice(0, 3).map((code) => getCategoryLabel(code, lang));
+  const tone = getToneLabel(toneCode, lang).toLowerCase();
+  const joined = labels.join(", ");
+
+  if (!joined) {
+    return lang === "fr" ? `Climat ${tone}.` : `${tone} atmosphere.`;
+  }
+
+  return lang === "fr"
+    ? `Climat ${tone}, accent sur ${joined}.`
+    : `${tone} atmosphere, with focus on ${joined}.`;
 }

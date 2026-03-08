@@ -185,6 +185,54 @@ def test_user_with_natal_full_compute(
         mock_orchestrator.return_value.run.assert_called_once()
 
 
+def test_modern_natal_payload_is_normalized_for_engine(
+    service, db, mock_profile, context_loader, persistence_service
+):
+    svc_path = "app.services.daily_prediction_service"
+    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{svc_path}.EngineOrchestrator") as mock_orchestrator:
+
+        mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
+        mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
+            result_payload={
+                "planet_positions": [
+                    {"planet_code": "sun", "longitude": 34.08},
+                    {"planet_code": "moon", "longitude": 112.45},
+                ],
+                "houses": [
+                    {"number": 1, "cusp_longitude": 12.5},
+                    {"number": 10, "cusp_longitude": 281.2},
+                ],
+            }
+        )
+        mock_daily_repo.return_value.get_run_by_hash.return_value = None
+        db.scalar.return_value = 10
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
+
+        mock_output = MagicMock(spec=EngineOutput)
+        mock_orchestrator.return_value.run.return_value = mock_output
+        mock_run = MagicMock(spec=DailyPredictionRunModel)
+        persistence_service.save.return_value = MagicMock(run=mock_run, was_reused=False)
+
+        result = service.get_or_compute(user_id=1, db=db)
+
+        assert result is not None
+        engine_input = mock_orchestrator.return_value.run.call_args.args[0]
+        assert engine_input.natal_chart["planets"] == [
+            {"code": "sun", "longitude": 34.08},
+            {"code": "moon", "longitude": 112.45},
+        ]
+        assert engine_input.natal_chart["houses"] == [
+            {"number": 1, "cusp_longitude": 12.5},
+            {"number": 10, "cusp_longitude": 281.2},
+        ]
+
+
 def test_identical_hash_not_recomputed(
     service, db, mock_profile, context_loader, persistence_service
 ):
@@ -220,6 +268,43 @@ def test_identical_hash_not_recomputed(
         assert result.was_reused is True
         assert result.engine_output is None
         mock_orchestrator.return_value.run.assert_not_called()
+
+
+def test_stale_cached_run_without_overall_summary_is_recomputed(
+    service, db, mock_profile, context_loader, persistence_service
+):
+    svc_path = "app.services.daily_prediction_service"
+    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{svc_path}.EngineOrchestrator") as mock_orchestrator:
+
+        mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
+        mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
+            result_payload={}
+        )
+        stale_run = MagicMock(spec=DailyPredictionRunModel)
+        stale_run.id = 99
+        stale_run.overall_summary = None
+        mock_daily_repo.return_value.get_run_by_hash.return_value = stale_run
+        db.scalar.return_value = 10
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
+
+        mock_output = MagicMock(spec=EngineOutput)
+        mock_orchestrator.return_value.run.return_value = mock_output
+        fresh_run = MagicMock(spec=DailyPredictionRunModel)
+        persistence_service.save.return_value = MagicMock(run=fresh_run, was_reused=False)
+
+        result = service.get_or_compute(user_id=1, db=db)
+
+        assert result.run == fresh_run
+        assert result.was_reused is False
+        db.delete.assert_called_once_with(stale_run)
+        db.flush.assert_called()
+        mock_orchestrator.return_value.run.assert_called_once()
 
 
 def test_force_recompute(service, db, mock_profile, context_loader, persistence_service):

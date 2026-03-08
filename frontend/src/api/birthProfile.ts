@@ -28,6 +28,12 @@ export type BirthProfileData = {
   current_timezone?: string | null
 }
 
+type RawBirthProfileData = BirthProfileData & {
+  birth_place_text?: string
+  birth_place_resolved_id?: number
+  birth_place_resolved?: unknown
+}
+
 export class BirthProfileApiError extends Error {
   code: string
   status: number
@@ -39,6 +45,51 @@ export class BirthProfileApiError extends Error {
     this.code = code
     this.status = status
     this.requestId = requestId
+  }
+}
+
+function normalizeBirthProfileData(data: RawBirthProfileData): BirthProfileData {
+  return {
+    birth_date: data.birth_date,
+    birth_time: data.birth_time,
+    birth_place: data.birth_place,
+    birth_timezone: data.birth_timezone,
+    place_resolved_id: data.place_resolved_id ?? data.birth_place_resolved_id,
+    birth_city: data.birth_city,
+    birth_country: data.birth_country,
+    birth_lat: data.birth_lat,
+    birth_lon: data.birth_lon,
+    astro_profile: data.astro_profile,
+    geolocation_consent: data.geolocation_consent,
+    current_city: data.current_city,
+    current_country: data.current_country,
+    current_lat: data.current_lat,
+    current_lon: data.current_lon,
+    current_location_display: data.current_location_display,
+    current_timezone: data.current_timezone,
+  }
+}
+
+function serializeBirthProfileData(data: BirthProfileData): BirthProfileData {
+  return {
+    birth_date: data.birth_date,
+    birth_time: data.birth_time,
+    birth_place: data.birth_place,
+    birth_timezone: data.birth_timezone,
+    ...(data.place_resolved_id !== undefined ? { place_resolved_id: data.place_resolved_id } : {}),
+    ...(data.birth_city !== undefined ? { birth_city: data.birth_city } : {}),
+    ...(data.birth_country !== undefined ? { birth_country: data.birth_country } : {}),
+    ...(data.birth_lat !== undefined ? { birth_lat: data.birth_lat } : {}),
+    ...(data.birth_lon !== undefined ? { birth_lon: data.birth_lon } : {}),
+    geolocation_consent: data.geolocation_consent,
+    ...(data.current_city !== undefined ? { current_city: data.current_city } : {}),
+    ...(data.current_country !== undefined ? { current_country: data.current_country } : {}),
+    ...(data.current_lat !== undefined ? { current_lat: data.current_lat } : {}),
+    ...(data.current_lon !== undefined ? { current_lon: data.current_lon } : {}),
+    ...(data.current_location_display !== undefined
+      ? { current_location_display: data.current_location_display }
+      : {}),
+    ...(data.current_timezone !== undefined ? { current_timezone: data.current_timezone } : {}),
   }
 }
 
@@ -66,15 +117,19 @@ export async function getBirthData(accessToken: string): Promise<BirthProfileDat
     )
   }
 
-  const payload = (await response.json()) as { data: BirthProfileData; meta: { request_id: string } }
-  return payload.data
+  const payload = (await response.json()) as {
+    data: RawBirthProfileData
+    meta: { request_id: string }
+  }
+  return normalizeBirthProfileData(payload.data)
 }
 
 export async function saveBirthData(accessToken: string, data: BirthProfileData): Promise<BirthProfileData> {
+  const sanitizedPayload = serializeBirthProfileData(data)
   const response = await apiFetch(`${API_BASE_URL}/v1/users/me/birth-data`, {
     method: "PUT",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-    body: JSON.stringify(data),
+    body: JSON.stringify(sanitizedPayload),
   })
 
   if (!response.ok) {
@@ -92,6 +147,9 @@ export async function saveBirthData(accessToken: string, data: BirthProfileData)
     )
   }
 
-  const payload = (await response.json()) as { data: BirthProfileData; meta: { request_id: string } }
-  return payload.data
+  const payload = (await response.json()) as {
+    data: RawBirthProfileData
+    meta: { request_id: string }
+  }
+  return normalizeBirthProfileData(payload.data)
 }

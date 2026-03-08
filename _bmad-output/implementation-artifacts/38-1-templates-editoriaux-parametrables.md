@@ -98,6 +98,7 @@ Gemini 2.0 Flash
 - Fix review: ajout de `local_date` dans `EditorialOutput` et `EffectiveContext`.
 - Fix review: la langue du rendu textuel est configurable via `editorial_text_lang` dans `EngineOrchestrator.run()`.
 - Validation par tests unitaires couvrant les contraintes de prudence (santé/argent), l'intégrité du rendu et la gestion des erreurs de chargement.
+- 2026-03-08: correctif post-intégration — le rendu `editorial_text` est désormais demandé systématiquement par `DailyPredictionService` pour les calculs quotidiens et persisté dans la table des runs (`overall_summary` + résumés de catégories), afin que le texte éditorial survive au cache et aux relectures API.
 
 ### File List
 
@@ -112,10 +113,14 @@ Gemini 2.0 Flash
 - `backend/app/prediction/editorial_builder.py`
 - `backend/app/prediction/schemas.py`
 - `backend/app/prediction/context_loader.py`
+- `backend/app/prediction/persistence_service.py`
+- `backend/app/services/daily_prediction_service.py`
 - `backend/app/tests/unit/test_editorial_template_engine.py`
+- `backend/app/tests/unit/test_persistence_explainability.py`
 
 ## Change Log
 
 - 2026-03-08: Story créée pour Epic 38.
 - 2026-03-08: Implémentation complète du moteur de templates éditoriaux et intégration dans l'orchestrateur.
 - 2026-03-08: Correction des retours de revue Senior AI (traçabilité date, langue dynamique, robustesse erreurs, lint).
+- 2026-03-08: Durcissement runtime — persistance effective des textes éditoriaux dans les runs quotidiens et réutilisation cache cohérente côté API `/v1/predictions/daily`.

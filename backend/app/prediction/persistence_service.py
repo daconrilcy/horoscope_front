@@ -47,6 +47,7 @@ class PredictionPersistenceService:
         """
         input_hash = engine_output.effective_context.input_hash
         repo = DailyPredictionRepository(db)
+        editorial_text = engine_output.editorial_text
 
         # AC1 - Reuse if hash matches
         existing = repo.get_run_by_hash(user_id, input_hash)
@@ -64,7 +65,11 @@ class PredictionPersistenceService:
             house_system_effective=engine_output.effective_context.house_system_effective,
             is_provisional_calibration=engine_output.run_metadata.get("is_provisional_calibration"),
             calibration_label=engine_output.run_metadata.get("calibration_label"),
-            overall_summary=engine_output.run_metadata.get("overall_summary"),
+            overall_summary=(
+                editorial_text.intro
+                if editorial_text is not None
+                else engine_output.run_metadata.get("overall_summary")
+            ),
             overall_tone=engine_output.run_metadata.get("overall_tone"),
         )
 
@@ -119,6 +124,12 @@ class PredictionPersistenceService:
                     ]
                 )
 
+            editorial_summary = None
+            if engine_output.editorial_text is not None:
+                editorial_summary = engine_output.editorial_text.category_summaries.get(
+                    category.code
+                )
+
             model = DailyPredictionCategoryScoreModel(
                 run_id=run.id,
                 category_id=category.id,
@@ -128,7 +139,7 @@ class PredictionPersistenceService:
                 power=score_data.get("power"),
                 volatility=score_data.get("volatility"),
                 rank=rank,
-                summary=score_data.get("summary"),
+                summary=editorial_summary or score_data.get("summary"),
                 contributors_json=contributors_json,
             )
             db.add(model)

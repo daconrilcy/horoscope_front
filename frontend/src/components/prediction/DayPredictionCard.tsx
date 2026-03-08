@@ -50,6 +50,22 @@ export const DayPredictionCard: React.FC<Props> = ({ prediction, lang }) => {
         {summary.overall_summary || getPredictionMessage("pending_summary", lang)}
       </p>
 
+      {meta.is_provisional_calibration && (
+        <p
+          style={{
+            marginTop: "0.75rem",
+            padding: "0.75rem 1rem",
+            borderRadius: "0.75rem",
+            backgroundColor: "rgba(255, 184, 77, 0.12)",
+            border: "1px solid rgba(255, 184, 77, 0.35)",
+            color: "var(--text-1)",
+            fontSize: "0.9rem",
+          }}
+        >
+          {getPredictionMessage("provisional_calibration", lang)}
+        </p>
+      )}
+
       {summary.best_window && (
         <div style={{ 
           marginTop: "1.5rem", 

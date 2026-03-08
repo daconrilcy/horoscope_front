@@ -130,6 +130,7 @@ gemini-2.0-flash-thinking-exp
 - Post-validation fix: the API client now maps backend prediction errors returned as `detail: { code, message }` into `ApiError`, preserving the functional error code exposed by FastAPI routes.
 - Revalidated chapter 36 frontend scope on 2026-03-08 with `npm run lint`, targeted `vitest`, and `npm run build`.
 - Corrective audit on 2026-03-08: `getCategoryMeta()` now humanizes unknown category slugs (ex: `career_luck` -> `Career Luck`) instead of leaking raw API codes in UI/test expectations.
+- Correctif UX quotidien du 2026-03-08: `TodayPage` gère maintenant explicitement les états setup/404 sur la prédiction, les messages techniques de pivot sont humanisés, la timeline compacte les blocs consécutifs identiques, les commentaires de catégories purement mécaniques sont masqués, et l'UI signale la calibration provisoire.
 
 ### File List
 
@@ -148,6 +149,7 @@ gemini-2.0-flash-thinking-exp
 - `frontend/src/tests/predictionBands.test.ts`
 - `frontend/src/tests/App.test.tsx`
 - `frontend/src/tests/router.test.tsx`
+- `frontend/src/utils/predictionI18n.ts`
 
 ## Change Log
 
@@ -156,3 +158,4 @@ gemini-2.0-flash-thinking-exp
 - 2026-03-08: Corrections post-review appliquées sur le cache utilisateur, l'affichage brut des scores, le typage DTO et la couverture de tests.
 - 2026-03-08: Validation finale chapitre 36, correction du mapping des erreurs FastAPI `detail` côté client daily prediction.
 - 2026-03-08: Audit correctif frontend hors chapitre 38 — fallback i18n des catégories inconnues rendu lisible côté `predictionI18n`, validation ciblée `predictionBands` + lint verte.
+- 2026-03-08: Stabilisation finale du parcours `/dashboard` et `/profile` — sérialisation stricte de `birth-data`, réduction du bruit de retry React Query, rendu quotidien moins technique et plus lisible en phase de calibration provisoire.

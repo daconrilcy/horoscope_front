@@ -76,6 +76,7 @@ Gemini 2.0 Flash
 - Implémentation de la couche i18n frontend dans `frontend/src/i18n/predictions.ts`.
 - Mise à jour de `EditorialTemplateEngine` pour supporter les libellés EN (catégories, tons, sévérités).
 - Ajout de tests unitaires backend validant l'intégrité de l'i18n des templates.
+- 2026-03-08: correctif UX complémentaire — humanisation frontend des résumés de pivots techniques (`delta_note`, `top3_change`, `high_priority_event`) et des labels de drivers pour éviter l'exposition de codes internes dans `TodayPage`.
 
 ### File List
 
@@ -87,10 +88,14 @@ Gemini 2.0 Flash
 - `backend/app/prediction/editorial_templates/en/prudence_argent.txt`
 - `docs/editorial/charte-redactionnelle.md`
 - `frontend/src/i18n/predictions.ts`
+- `frontend/src/utils/predictionI18n.ts`
+- `frontend/src/components/prediction/TurningPointsList.tsx`
 - `backend/app/prediction/editorial_template_engine.py` (modifié)
 - `backend/app/tests/unit/test_editorial_i18n.py`
+- `frontend/src/tests/TodayPage.test.tsx`
 
 ## Change Log
 
 - 2026-03-08: Story créée pour Epic 38.
 - 2026-03-08: Implémentation complète de l'i18n éditorial (EN templates, frontend i18n, charte).
+- 2026-03-08: Correctif d'affichage `TodayPage` — les libellés techniques de pivots et drivers sont désormais rendus en texte utilisateur lisible.

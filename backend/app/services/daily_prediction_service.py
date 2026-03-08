@@ -139,11 +139,18 @@ class DailyPredictionService:
         if mode == ComputeMode.compute_if_missing:
             existing_run = DailyPredictionRepository(db).get_run_by_hash(user_id, input_hash)
             if existing_run:
-                result = ServiceResult(run=existing_run, engine_output=None, was_reused=True)
-                self._log_and_metrics(
-                    user_id, start_time, result, ruleset_version=resolved_ruleset_version
+                if existing_run.overall_summary:
+                    result = ServiceResult(run=existing_run, engine_output=None, was_reused=True)
+                    self._log_and_metrics(
+                        user_id, start_time, result, ruleset_version=resolved_ruleset_version
+                    )
+                    return result
+                logger.info(
+                    "prediction.stale_cached_run_recompute",
+                    extra={"user_id": user_id, "run_id": existing_run.id},
                 )
-                return result
+                db.delete(existing_run)
+                db.flush()
 
         # 6. Mode force_recompute : remove old run if it exists
         if mode == ComputeMode.force_recompute:
@@ -237,7 +244,11 @@ class DailyPredictionService:
             orchestrator = EngineOrchestrator(prediction_context_loader=ctx_loader)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(orchestrator.run, engine_input)
+            future = executor.submit(
+                orchestrator.run,
+                engine_input,
+                include_editorial_text=True,
+            )
             try:
                 return future.result(timeout=30)
             except concurrent.futures.TimeoutError:
@@ -338,7 +349,38 @@ class DailyPredictionService:
         chart = ChartResultRepository(db).get_latest_by_user_id(user_id)
         if chart is None:
             raise DailyPredictionServiceError("natal_missing", "Aucun thème natal trouvé")
-        return chart.result_payload
+        return self._normalize_natal_chart_payload(chart.result_payload)
+
+    def _normalize_natal_chart_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """
+        Accept both legacy natal payloads and modern ChartResult payloads.
+
+        The daily prediction engine still expects `planets` entries keyed by `code`,
+        while stored natal results now expose `planet_positions` keyed by
+        `planet_code`. Normalize the stored shape here to keep the engine contract
+        stable without rewriting historical chart payloads.
+        """
+        normalized = dict(payload)
+        if "planets" in normalized:
+            return normalized
+
+        planet_positions = normalized.get("planet_positions")
+        if not isinstance(planet_positions, list):
+            return normalized
+
+        planets: list[dict[str, Any]] = []
+        for position in planet_positions:
+            if not isinstance(position, dict):
+                continue
+            code = position.get("code") or position.get("planet_code")
+            longitude = position.get("longitude")
+            if code is None or longitude is None:
+                continue
+            planets.append({"code": code, "longitude": longitude})
+
+        if planets:
+            normalized["planets"] = planets
+        return normalized
 
     def _resolve_reference_version_id(self, db: Session, version: str) -> int:
         rv_id = db.scalar(

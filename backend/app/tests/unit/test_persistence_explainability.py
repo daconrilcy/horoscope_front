@@ -11,6 +11,7 @@ from app.infra.db.models.daily_prediction import (
 from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
 from app.infra.db.models.reference import ReferenceVersionModel
+from app.prediction.editorial_template_engine import EditorialTextOutput
 from app.prediction.explainability import (
     CategoryExplainability,
     ContributorEntry,
@@ -87,6 +88,7 @@ def test_save_with_explainability(db_session, seed_data):
         effective_context=EffectiveContext(
             house_system_requested="placidus",
             house_system_effective="placidus",
+            local_date=local_date,
             timezone="UTC",
             input_hash="hash_expl",
         ),
@@ -153,6 +155,7 @@ def test_save_turning_point_drivers_format(db_session, seed_data):
         effective_context=EffectiveContext(
             house_system_requested="placidus",
             house_system_effective="placidus",
+            local_date=local_date,
             timezone="UTC",
             input_hash="hash_tp_drivers",
         ),
@@ -182,3 +185,60 @@ def test_save_turning_point_drivers_format(db_session, seed_data):
     assert drivers[0]["event_type"] == "conjunction"
     assert drivers[0]["body"] == "Sun"
     assert "2026-03-08T12:00:00" in drivers[0]["local_time"]
+
+
+def test_save_persists_editorial_text_into_run_and_category_summaries(db_session, seed_data):
+    service = PredictionPersistenceService()
+    local_date = date(2026, 3, 8)
+    engine_output = EngineOutput(
+        run_metadata={},
+        effective_context=EffectiveContext(
+            house_system_requested="placidus",
+            house_system_effective="placidus",
+            local_date=local_date,
+            timezone="UTC",
+            input_hash="hash_editorial_text",
+        ),
+        category_scores={
+            "love": {"note_20": 15},
+            "work": {"note_20": 12},
+        },
+        turning_points=[],
+        time_blocks=[],
+        editorial_text=EditorialTextOutput(
+            intro="Journee plutot fluide sur vos axes forts.",
+            category_summaries={"love": "L'amour est porteur aujourd'hui."},
+            pivot_phrase=None,
+            window_phrase=None,
+            caution_sante=None,
+            caution_argent=None,
+        ),
+    )
+
+    result = service.save(
+        engine_output=engine_output,
+        user_id=1,
+        local_date=local_date,
+        reference_version_id=seed_data["version_id"],
+        ruleset_id=seed_data["ruleset_id"],
+        db=db_session,
+    )
+
+    db_session.flush()
+    assert result.run.overall_summary == "Journee plutot fluide sur vos axes forts."
+
+    love_score = db_session.scalar(
+        select(DailyPredictionCategoryScoreModel).where(
+            DailyPredictionCategoryScoreModel.run_id == result.run.id,
+            DailyPredictionCategoryScoreModel.category_id == seed_data["categories"]["love"],
+        )
+    )
+    work_score = db_session.scalar(
+        select(DailyPredictionCategoryScoreModel).where(
+            DailyPredictionCategoryScoreModel.run_id == result.run.id,
+            DailyPredictionCategoryScoreModel.category_id == seed_data["categories"]["work"],
+        )
+    )
+
+    assert love_score.summary == "L'amour est porteur aujourd'hui."
+    assert work_score.summary is None

@@ -94,11 +94,20 @@ Gemini 2.0 Flash
 - Mise en place du backlog d'ajustements produit.
 - Validation technique par tests d'intégration (TestClient).
 - Mise à jour de `config.py` pour utiliser Reference Version 2.0.0 par défaut (requis par ruleset 1.0.0).
+- 2026-03-08: réouverture puis clôture corrective — stabilisation de la fixture QA backend (seed autonome), adaptation du service daily prediction aux payloads natals modernes stockés, et assainissement de l'affichage `TodayPage` pour les cas provisoires/répétitifs (timeline condensée, messages techniques humanisés).
 
 ### File List
 - `backend/app/jobs/qa/generate_qa_cases.py`
 - `backend/app/tests/integration/test_daily_prediction_qa.py`
 - `backend/app/core/config.py` (modifié)
+- `backend/app/services/daily_prediction_service.py` (modifié)
+- `backend/app/prediction/persistence_service.py` (modifié)
+- `frontend/src/components/prediction/DayPredictionCard.tsx` (modifié)
+- `frontend/src/components/prediction/DayTimeline.tsx` (modifié)
+- `frontend/src/components/prediction/TurningPointsList.tsx` (modifié)
+- `frontend/src/components/prediction/CategoryGrid.tsx` (modifié)
+- `frontend/src/utils/predictionI18n.ts` (modifié)
+- `frontend/src/tests/TodayPage.test.tsx` (modifié)
 - `docs/qa/daily-prediction-checklist.md`
 - `docs/qa/daily-prediction-qa-report-2026-03-08.md`
 - `docs/qa/product-adjustments-backlog.md`
@@ -108,3 +117,4 @@ Gemini 2.0 Flash
 
 - 2026-03-08: Story créée pour Epic 38.
 - 2026-03-08: Implémentation de la phase de QA produit, script de génération de cas et tests d'intégration.
+- 2026-03-08: Révalidation post-correctifs — fin du `503` daily prediction sur profils natals modernes, persistance du résumé éditorial, et nettoyage UI des artefacts techniques les plus visibles pendant la calibration provisoire.

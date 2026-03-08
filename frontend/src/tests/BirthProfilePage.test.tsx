@@ -43,6 +43,17 @@ const PROFILE_WITH_GEOLOCATION = {
   current_timezone: "Europe/Paris",
 }
 
+const PROFILE_WITH_READONLY_FIELDS = {
+  ...PROFILE_WITH_GEOLOCATION,
+  birth_place_text: "Paris, Île-de-France, France métropolitaine, France",
+  birth_place_resolved_id: 1,
+  birth_place_resolved: {
+    id: 1,
+    provider: "nominatim",
+    display_name: "Paris, Île-de-France, France métropolitaine, France",
+  },
+}
+
 function geocodingSearchAndResolveSuccess(
   displayName: string,
   lat: number,
@@ -258,6 +269,82 @@ describe("BirthProfilePage", () => {
     expect(body.current_city).toBe("Lyon")
     expect(body.current_location_display).toBe("Lyon, Auvergne-Rhone-Alpes, France")
     expect(body.current_timezone).toBe("Europe/Paris")
+  })
+
+  it("strips read-only birth-data fields before auto-saving detected location", async () => {
+    setupToken()
+    const getCurrentPosition = vi.fn((success: PositionCallback) => {
+      success({
+        coords: {
+          latitude: 45.764,
+          longitude: 4.8357,
+          accuracy: 10,
+          altitude: null,
+          altitudeAccuracy: null,
+          heading: null,
+          speed: null,
+        },
+        timestamp: Date.now(),
+      } as GeolocationPosition)
+    })
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: { getCurrentPosition },
+    })
+
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes("/v1/users/me/birth-data") && !init?.method) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ data: PROFILE_WITH_READONLY_FIELDS, meta: { request_id: "r1" } }),
+        }
+      }
+      if (url.includes("/v1/geocoding/reverse")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: {
+              display_name: "Lyon, Auvergne-Rhone-Alpes, France",
+              city: "Lyon",
+              country: "France",
+              lat: 45.764,
+              lon: 4.8357,
+              timezone_iana: "Europe/Paris",
+            },
+            meta: { request_id: "geo-1" },
+          }),
+        }
+      }
+      if (url.includes("/v1/users/me/birth-data") && init?.method === "PUT") {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ data: JSON.parse(init.body as string), meta: { request_id: "r2" } }),
+        }
+      }
+      return SUCCESS_GET_RESPONSE
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    renderBirthProfilePage()
+
+    await waitFor(() => {
+      expect(getCurrentPosition).toHaveBeenCalledTimes(1)
+    })
+
+    const putCall = fetchMock.mock.calls.find((call) => {
+      const [, init] = call as [RequestInfo | URL, RequestInit]
+      return init?.method === "PUT"
+    })
+    expect(putCall).toBeDefined()
+    const body = JSON.parse((putCall![1] as RequestInit).body as string)
+    expect(body.birth_place_text).toBeUndefined()
+    expect(body.birth_place_resolved_id).toBeUndefined()
+    expect(body.birth_place_resolved).toBeUndefined()
+    expect(body.place_resolved_id).toBe(1)
   })
 
   it("shows the generation button only if birth data exists", async () => {

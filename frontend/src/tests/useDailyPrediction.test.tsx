@@ -62,6 +62,20 @@ describe("useDailyPrediction", () => {
     );
   });
 
+  it("desactive les retries et refetch automatiques pour la prediction quotidienne", () => {
+    getSubjectFromAccessTokenMock.mockReturnValue("42");
+
+    render(<DailyPredictionProbe token="token-a" date="2026-03-08" />);
+
+    expect(useQueryMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        retry: false,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+      }),
+    );
+  });
+
   it("scope aussi l'historique par utilisateur", () => {
     getSubjectFromAccessTokenMock.mockReturnValue("84");
 

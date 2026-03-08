@@ -5,6 +5,8 @@ import { getLocale } from "../../utils/locale";
 import {
   getPivotSeverityLabel,
   getPredictionMessage,
+  humanizePredictionDriverLabel,
+  humanizeTurningPointSummary,
 } from "../../utils/predictionI18n";
 
 interface Props {
@@ -61,7 +63,7 @@ export const TurningPointsList: React.FC<Props> = ({ turningPoints, lang, onTurn
             </div>
             
             <p style={{ margin: 0, fontSize: "1rem", lineHeight: "1.5", color: "var(--text-1)" }}>
-              {tp.summary}
+              {humanizeTurningPointSummary(tp.summary, lang)}
             </p>
             
             {tp.drivers && tp.drivers.length > 0 && (
@@ -74,7 +76,7 @@ export const TurningPointsList: React.FC<Props> = ({ turningPoints, lang, onTurn
                     padding: "0.2rem 0.5rem",
                     borderRadius: "4px"
                   }}>
-                    {driver.label || driver.event_type}
+                    {humanizePredictionDriverLabel(driver, lang)}
                   </span>
                 ))}
               </div>

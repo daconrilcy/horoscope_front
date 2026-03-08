@@ -23,6 +23,10 @@ export const CategoryGrid: React.FC<Props> = ({ categories, lang, onCategoryClic
       {sortedCategories.map((cat) => {
         const band = getNoteBand(cat.note_20, lang);
         const meta = getCategoryMeta(cat.code, lang);
+        const shouldShowSummary = Boolean(
+          cat.summary &&
+            !(cat.note_20 === 10 && cat.power === 0 && cat.volatility === 0 && cat.raw_score === 0),
+        );
 
         return (
           <div 
@@ -53,7 +57,7 @@ export const CategoryGrid: React.FC<Props> = ({ categories, lang, onCategoryClic
             <span style={{ fontSize: "0.75rem", color: band.colorVar, fontWeight: "500" }}>
               {band.label}
             </span>
-            {cat.summary && (
+            {shouldShowSummary && (
               <p style={{ marginTop: "0.75rem", fontSize: "0.8rem", lineHeight: "1.4", color: "var(--text-2)" }}>
                 {cat.summary}
               </p>
