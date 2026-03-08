@@ -15,6 +15,7 @@ from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.daily_prediction_service import (
+    ComputeMode,
     DailyPredictionServiceError,
     ServiceResult,
 )
@@ -36,6 +37,15 @@ def _register_and_get_access_token() -> str:
     with SessionLocal() as db:
         auth = AuthService.register(
             db, email="daily-api-user@example.com", password="strong-pass-123", role="user"
+        )
+        db.commit()
+        return auth.tokens.access_token
+
+
+def _register_admin_and_get_token() -> str:
+    with SessionLocal() as db:
+        auth = AuthService.register(
+            db, email="admin@example.com", password="admin-pass-123", role="admin"
         )
         db.commit()
         return auth.tokens.access_token
@@ -532,3 +542,209 @@ def test_history_no_recompute():
 
     assert response.status_code == 200
     mock_service.get_or_compute.assert_not_called()
+
+
+def test_debug_requires_auth():
+    response = client.get("/v1/predictions/daily/debug", params={"target_user_id": 42})
+    assert response.status_code == 401
+
+
+def test_debug_403_non_admin():
+    token = _register_and_get_access_token()
+    response = client.get(
+        "/v1/predictions/daily/debug",
+        params={"target_user_id": 42},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"]["code"] == "forbidden"
+
+
+def test_debug_422_when_target_user_id_missing():
+    token = _register_admin_and_get_token()
+    response = client.get(
+        "/v1/predictions/daily/debug",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 422
+    error = response.json()["error"]
+    assert error["code"] == "invalid_request_payload"
+    assert error["details"]["errors"][0]["loc"][-1] == "target_user_id"
+
+
+def test_debug_404_no_run():
+    token = _register_admin_and_get_token()
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = None
+    _override_service(mock_service)
+
+    response = client.get(
+        "/v1/predictions/daily/debug",
+        params={"target_user_id": 42},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"]["code"] == "not_found"
+
+
+def test_debug_422_when_target_profile_missing():
+    token = _register_admin_and_get_token()
+    mock_service = MagicMock()
+    mock_service.get_or_compute.side_effect = DailyPredictionServiceError(
+        code="profile_missing",
+        message="Profil de naissance introuvable",
+    )
+    _override_service(mock_service)
+
+    response = client.get(
+        "/v1/predictions/daily/debug",
+        params={"target_user_id": 42},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == {
+        "code": "profile_missing",
+        "message": "Profil de naissance introuvable",
+    }
+
+
+def test_debug_200_admin_nominal():
+    token = _register_admin_and_get_token()
+
+    mock_run = _build_mock_run()
+    mock_run.input_hash = "debug_hash"
+    mock_run.reference_version_id = 1
+    mock_run.ruleset_id = 2
+
+    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    mock_full_run = {
+        "id": 1,
+        "input_hash": "debug_hash",
+        "reference_version_id": 1,
+        "ruleset_id": 2,
+        "is_provisional_calibration": True,
+        "category_scores": [
+            {
+                "category_id": 1,
+                "category_code": "love",
+                "note_20": 15,
+                "raw_score": 0.5,
+                "power": 0.7,
+                "volatility": 0.1,
+                "rank": 1,
+                "contributors_json": '[{"source":"transit","weight":0.8}]',
+            }
+        ],
+        "turning_points": [
+            {
+                "occurred_at_local": "2026-03-08T10:00:00+01:00",
+                "severity": 0.9,
+                "summary": "Big change",
+                "driver_json": '[{"event":"Jupiter Conjunct Moon"}]',
+            }
+        ],
+    }
+
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    with patch(repo_path, return_value=mock_full_run):
+        response = client.get(
+            "/v1/predictions/daily/debug",
+            params={"target_user_id": 42},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["input_hash"] == "debug_hash"
+    assert data["reference_version_id"] == 1
+    assert data["ruleset_id"] == 2
+    assert data["is_provisional_calibration"] is True
+    assert data["categories"][0]["contributors"][0]["source"] == "transit"
+    assert data["turning_points"][0]["drivers"][0]["event"] == "Jupiter Conjunct Moon"
+
+
+def test_debug_returns_empty_lists_when_json_fields_are_absent():
+    token = _register_admin_and_get_token()
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = ServiceResult(
+        run=_build_mock_run(), engine_output=None, was_reused=True
+    )
+    _override_service(mock_service)
+
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    with (
+        patch(
+            repo_path,
+            return_value={
+                "reference_version_id": 1,
+                "ruleset_id": 2,
+                "is_provisional_calibration": None,
+                "category_scores": [
+                    {
+                        "category_id": 1,
+                        "note_20": 12,
+                        "raw_score": 0.3,
+                        "power": 0.4,
+                        "volatility": 0.2,
+                        "rank": 1,
+                        "contributors_json": None,
+                    }
+                ],
+                "turning_points": [
+                    {
+                        "occurred_at_local": "2026-03-08T10:00:00+01:00",
+                        "severity": 0.4,
+                        "summary": "Minor shift",
+                        "driver_json": None,
+                    }
+                ],
+            },
+        ),
+        patch(
+            "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories",
+            return_value=[MagicMock(id=1, code="love")],
+        ),
+    ):
+        response = client.get(
+            "/v1/predictions/daily/debug",
+            params={"target_user_id": 42},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["categories"][0]["contributors"] == []
+    assert data["turning_points"][0]["drivers"] == []
+
+
+def test_debug_no_recompute():
+    token = _register_admin_and_get_token()
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = ServiceResult(
+        run=_build_mock_run(), engine_output=None, was_reused=True
+    )
+    _override_service(mock_service)
+
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    with patch(
+        repo_path,
+        return_value={
+            "reference_version_id": 1,
+            "ruleset_id": 2,
+            "category_scores": [],
+            "turning_points": [],
+        },
+    ):
+        client.get(
+            "/v1/predictions/daily/debug",
+            params={"target_user_id": 42},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    mock_service.get_or_compute.assert_called_once()
+    assert mock_service.get_or_compute.call_args.kwargs["mode"] == ComputeMode.read_only

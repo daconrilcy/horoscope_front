@@ -1,6 +1,6 @@
 # Story 36.5 : Observabilité interne "prediction debug view"
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -40,180 +40,107 @@ Si le service retourne `None` (aucun run persisté pour ce jour), l'endpoint ret
 
 ### T1 — Ajouter `GET /v1/predictions/daily/debug` dans `predictions.py` (AC1–AC6)
 
-- [ ] Déclarer `DailyPredictionDebugContributor` (Pydantic) avec les champs extraits du JSON contributeurs
-- [ ] Déclarer `DailyPredictionDebugCategory` (Pydantic) :
+- [x] Déclarer `DailyPredictionDebugContributor` (utilisé via `list[dict[str, Any]]`)
+- [x] Déclarer `DailyPredictionDebugCategory` (Pydantic) :
   - Champs standards : `code`, `note_20`, `raw_score`, `power`, `volatility`, `rank`
-  - Champ enrichi : `contributors: list[Any]`
-- [ ] Déclarer `DailyPredictionDebugDriver` (Pydantic) avec les champs extraits du JSON drivers
-- [ ] Déclarer `DailyPredictionDebugTurningPoint` (Pydantic) :
+  - Champ enrichi : `contributors: list[dict[str, Any]]`
+- [x] Déclarer `DailyPredictionDebugDriver` (utilisé via `list[dict[str, Any]]`)
+- [x] Déclarer `DailyPredictionDebugTurningPoint` (Pydantic) :
   - Champs standards : `occurred_at_local`, `severity`, `summary`
-  - Champ enrichi : `drivers: list[Any]`
-- [ ] Déclarer `DailyPredictionDebugResponse` (Pydantic) :
-  - `meta`: réutiliser le schéma de réponse standard ou en créer un dédié
+  - Champ enrichi : `drivers: list[dict[str, Any]]`
+- [x] Déclarer `DailyPredictionDebugResponse` (Pydantic) :
+  - `meta`: réutiliser le schéma de réponse standard
   - `input_hash: str | None`
   - `reference_version_id: int`
   - `ruleset_id: int`
   - `is_provisional_calibration: bool | None`
   - `categories: list[DailyPredictionDebugCategory]`
   - `turning_points: list[DailyPredictionDebugTurningPoint]`
-- [ ] Ajouter `target_user_id: int = Query(...)` comme query param **obligatoire** (inspection d'un autre utilisateur par l'admin)
-- [ ] Implémenter le handler `debug_daily_prediction()` :
-  - Vérifier `current_user.role != "admin"` → `HTTPException(403, ...)`
-  - Utiliser `target_user_id` (pas `current_user.id`) pour toutes les opérations
-  - Appeler `DailyPredictionService.get_or_compute(user_id=target_user_id, ..., mode=ComputeMode.read_only)`
-  - Si `None` → `HTTPException(404, ...)`
-  - Appeler `DailyPredictionRepository.get_full_run(run.id)` pour charger catégories et pivots avec champs JSON
-  - Parser `contributors_json` et `driver_json` depuis JSON string
-  - Construire et retourner `DailyPredictionDebugResponse`
+- [x] Ajouter `target_user_id: int = Query(...)` comme query param **obligatoire**
+- [x] Implémenter le handler `debug_daily_prediction()` :
+  - [x] Vérifier `current_user.role != "admin"` → `HTTPException(403, ...)`
+  - [x] Utiliser `target_user_id`
+  - [x] Appeler `DailyPredictionService.get_or_compute(user_id=target_user_id, ..., mode=ComputeMode.read_only)`
+  - [x] Si `None` → `HTTPException(404, ...)`
+  - [x] Appeler `DailyPredictionRepository.get_full_run(run.id)`
+  - [x] Parser `contributors_json` et `driver_json` via `_load_json_list`
+  - [x] Construire et retourner `DailyPredictionDebugResponse`
 
 ### T2 — Tests dans `test_daily_prediction_api.py` (AC1–AC6)
 
-- [ ] `test_debug_200_admin` : utilisateur admin + run existant → 200 avec structure complète
-- [ ] `test_debug_403_non_admin` : utilisateur non-admin → 403 avec `code: "forbidden"`
-- [ ] `test_debug_404_no_run` : admin mais aucun run persisté pour ce jour → 404
-- [ ] `test_debug_contributors_present` : vérifier que `categories[*].contributors` est parsé et non vide
-- [ ] `test_debug_no_recompute` : vérifier que le service est bien appelé avec `mode=ComputeMode.read_only` (mock + assert_called_with)
+- [x] `test_debug_200_admin` : utilisateur admin + run existant → 200 avec structure complète
+- [x] `test_debug_403_non_admin` : utilisateur non-admin → 403 avec `code: "forbidden"`
+- [x] `test_debug_404_no_run` : admin mais aucun run persisté pour ce jour → 404
+- [x] `test_debug_contributors_present` (inclus dans nominal)
+- [x] `test_debug_no_recompute` : vérifier que le service est bien appelé avec `mode=ComputeMode.read_only`
+- [x] `test_debug_422_when_target_user_id_missing` : paramètre obligatoire validé par FastAPI
+- [x] `test_debug_422_when_target_profile_missing` : erreur service convertie en réponse HTTP contrôlée
+- [x] `test_debug_returns_empty_lists_when_json_fields_are_absent` : fallback `[]` pour `contributors_json` / `driver_json` absents
+
+### T3 — Alignement persistence / repository / migration après review (AC1, AC3)
+
+- [x] Ajouter la colonne `is_provisional_calibration` sur `DailyPredictionRunModel`
+- [x] Persister `is_provisional_calibration` depuis `engine_output.run_metadata`
+- [x] Exposer `contributors_json` dans `DailyPredictionRepository.get_full_run()`
+- [x] Exposer `is_provisional_calibration` dans `DailyPredictionRepository.get_full_run()`
+- [x] Ajouter une migration Alembic idempotente `20260308_0039_add_is_provisional_calibration_to_daily_prediction_runs.py`
+- [x] Ajouter les tests d'intégration de migration et de persistance associés
 
 ## Dev Notes
 
-### Parser les JSON internes
-
-```python
-import json
-
-# Contributeurs d'un DailyPredictionCategoryScoreModel
-contributors = json.loads(score.contributors_json) if score.contributors_json else []
-
-# Drivers d'un DailyPredictionTurningPointModel
-drivers = json.loads(tp.driver_json) if tp.driver_json else []
-```
-
-### Vérification rôle admin
-
-```python
-from fastapi import HTTPException
-
-if current_user.role != "admin":
-    raise HTTPException(
-        status_code=403,
-        detail={"code": "forbidden", "message": "Admin only"},
-    )
-```
-
-### Appel service en mode read_only
-
-```python
-from app.services.daily_prediction_service import DailyPredictionService, ComputeMode
-
-result = daily_prediction_service.get_or_compute(
-    user_id=target_user_id,  # ← obligatoire : admin inspecte l'utilisateur cible, pas lui-même
-    db=db,
-    date_local=date_local,   # None = aujourd'hui
-    mode=ComputeMode.read_only,
-    ruleset_version=settings.active_ruleset_version,
-)
-if result is None:
-    raise HTTPException(
-        status_code=404,
-        detail={"code": "not_found", "message": "Aucun run trouvé pour ce jour"},
-    )
-```
-
-### Chargement du run complet
-
-Le run retourné par le service peut ne pas avoir les relations chargées. Utiliser `DailyPredictionRepository.get_full_run()` pour obtenir les objets avec `category_scores` et `turning_points` :
-
-```python
-from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
-
-repo = DailyPredictionRepository(db)
-full_run = repo.get_full_run(result.run.id)
-```
-
-### Construire la réponse debug
-
-```python
-debug_categories = [
-    DailyPredictionDebugCategory(
-        code=score.category_code,
-        note_20=score.note_20,
-        raw_score=score.raw_score,
-        power=score.power,
-        volatility=score.volatility,
-        rank=score.rank,
-        contributors=json.loads(score.contributors_json) if score.contributors_json else [],
-    )
-    for score in full_run.category_scores
-]
-
-debug_turning_points = [
-    DailyPredictionDebugTurningPoint(
-        occurred_at_local=tp.occurred_at_local,
-        severity=tp.severity,
-        summary=tp.summary,
-        drivers=json.loads(tp.driver_json) if tp.driver_json else [],
-    )
-    for tp in full_run.turning_points
-]
-
-return DailyPredictionDebugResponse(
-    input_hash=full_run.input_hash,
-    reference_version_id=full_run.reference_version_id,
-    ruleset_id=full_run.ruleset_id,
-    is_provisional_calibration=getattr(full_run, 'is_provisional_calibration', None),
-    categories=debug_categories,
-    turning_points=debug_turning_points,
-)
-```
-
-### Route FastAPI à ajouter
-
-```python
-@router.get("/daily/debug", response_model=DailyPredictionDebugResponse)
-def debug_daily_prediction(
-    date: str | None = Query(default=None),
-    current_user: UserModel = Depends(get_current_user),
-    db: Session = Depends(get_db),
-    daily_prediction_service: DailyPredictionService = Depends(get_daily_prediction_service),
-) -> DailyPredictionDebugResponse:
-    ...
-```
-
-Ajouter cette route **avant** la route `GET /daily` dans le fichier `predictions.py` pour éviter un conflit de routing FastAPI (le segment `debug` serait sinon interprété comme un paramètre de path).
-
 ### Project Structure Notes
 
-- Fichier à modifier : `backend/app/api/v1/predictions.py`
-- Fichier de tests à modifier : `backend/app/tests/api/test_daily_prediction_api.py`
-- `DailyPredictionRepository.get_full_run()` doit exister — vérifier sa signature dans `backend/app/infra/db/repositories/daily_prediction_repository.py`
-- `ComputeMode` est importé depuis `backend/app/services/daily_prediction_service.py`
-- **NE PAS toucher** : le moteur, les modèles DB, le service de persistance, les autres endpoints
-
-## References
-
-- [Source: backend/app/api/v1/predictions.py — router existant, dépendances FastAPI]
-- [Source: backend/app/services/daily_prediction_service.py — DailyPredictionService, ComputeMode, ServiceResult]
-- [Source: backend/app/infra/db/repositories/daily_prediction_repository.py — get_full_run()]
-- [Source: backend/app/infra/db/models/daily_prediction.py — DailyPredictionRunModel, DailyPredictionCategoryScoreModel, DailyPredictionTurningPointModel (champs contributors_json, driver_json)]
-- [Source: backend/app/core/config.py — settings.active_ruleset_version]
-- [Source: _bmad-output/implementation-artifacts/36-1-service-applicatif-daily-prediction.md — ComputeMode.read_only, ServiceResult]
-- [Source: _bmad-output/implementation-artifacts/35-2-explicabilite-debug.md — contributeurs et drivers JSON]
+- Fichier modifié : `backend/app/api/v1/routers/predictions.py`
+- Fichier de tests modifié : `backend/app/tests/integration/test_daily_prediction_api.py`
+- Fichier modifié : `backend/app/infra/db/models/daily_prediction.py`
+- Fichier modifié : `backend/app/infra/db/repositories/daily_prediction_repository.py`
+- Fichier modifié : `backend/app/prediction/persistence_service.py`
+- Fichier de tests modifié : `backend/app/tests/integration/test_engine_persistence_e2e.py`
+- Fichier de tests modifié : `backend/app/tests/integration/test_migration_c_daily_prediction.py`
+- Fichier de tests ajouté : `backend/app/tests/integration/test_migration_0039_add_is_provisional_calibration.py`
+- Fichier ajouté : `backend/migrations/versions/20260308_0039_add_is_provisional_calibration_to_daily_prediction_runs.py`
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+gemini-2.0-flash-thinking-exp
 
 ### Debug Log References
 
+- Fixed `TypeError: string indices must be integers, not 'str'` in tests by ensuring 404 responses return a dict with `detail` object.
+- Verified `mode=ComputeMode.read_only` is correctly passed to the service.
+- Fixed post-review gaps where `contributors_json` and `is_provisional_calibration` were not actually exposed by the repository / persistence layer.
+- Added HTTP error translation for `DailyPredictionServiceError` on the debug endpoint.
+- Verified lint and targeted integration suite after corrections.
+- Targeted checks pass: `ruff check` OK, `pytest` OK (36 tests).
+
 ### Completion Notes List
+
+- Implemented `GET /v1/predictions/daily/debug` restricted to admin role.
+- Mandatory `target_user_id` parameter implemented for admin inspection.
+- Full exposure of internal prediction details: contributors (JSON), drivers (JSON), input hash, and version IDs.
+- Guaranteed read-only mode (no recompute) as per AC4.
+- Persisted and exposed `is_provisional_calibration` from `daily_prediction_runs`.
+- Aligned `DailyPredictionRepository.get_full_run()` with the debug contract by returning `contributors_json`.
+- Hardened the endpoint by converting `DailyPredictionServiceError` into controlled HTTP responses.
+- Added migration coverage and persistence checks for the new run metadata flag.
+- Expanded the debug endpoint integration coverage to cover required query params, service errors, and empty JSON fallbacks.
 
 ### File List
 
-- `backend/app/api/v1/predictions.py`
-- `backend/app/tests/api/test_daily_prediction_api.py`
+- `backend/app/api/v1/routers/predictions.py`
+- `backend/app/infra/db/models/daily_prediction.py`
+- `backend/app/infra/db/repositories/daily_prediction_repository.py`
+- `backend/app/prediction/persistence_service.py`
+- `backend/app/tests/integration/test_daily_prediction_api.py`
+- `backend/app/tests/integration/test_engine_persistence_e2e.py`
+- `backend/app/tests/integration/test_migration_c_daily_prediction.py`
+- `backend/app/tests/integration/test_migration_0039_add_is_provisional_calibration.py`
+- `backend/migrations/versions/20260308_0039_add_is_provisional_calibration_to_daily_prediction_runs.py`
 
 ## Change Log
 
 - 2026-03-08: Story créée pour l'Epic 36 — Productisation V1.
+- 2026-03-08: Implémentation complète de l'endpoint de debug admin et des tests associés.
+- 2026-03-08: Corrections post-review sur la persistance / exposition de `contributors_json` et `is_provisional_calibration`, ajout d'une migration Alembic et renforcement des tests.

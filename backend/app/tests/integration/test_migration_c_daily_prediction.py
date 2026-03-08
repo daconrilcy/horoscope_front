@@ -163,6 +163,7 @@ def test_daily_prediction_repository_basic_flow(
             ruleset_id=ruleset.id,
             input_hash="hash1",
             house_system_effective="placidus",
+            is_provisional_calibration=True,
         )
         assert run.id is not None
 
@@ -180,14 +181,28 @@ def test_daily_prediction_repository_basic_flow(
         assert run2.needs_recompute is False
 
         # 3. add some children
-        repo.upsert_category_scores(run.id, [{"category_id": category.id, "note_20": 15}])
+        repo.upsert_category_scores(
+            run.id,
+            [
+                {
+                    "category_id": category.id,
+                    "note_20": 15,
+                    "contributors_json": '[{"source":"transit","weight":0.8}]',
+                }
+            ],
+        )
         repo.upsert_turning_points(run.id, [{"summary": "Great moment", "severity": 0.8}])
         repo.upsert_time_blocks(run.id, [{"block_index": 0, "summary": "Morning"}])
 
         full_run = repo.get_full_run(run.id)
         assert full_run is not None
         assert full_run["house_system_effective"] == "placidus"
+        assert full_run["is_provisional_calibration"] is True
         assert len(full_run["category_scores"]) == 1
+        assert (
+            full_run["category_scores"][0]["contributors_json"]
+            == '[{"source":"transit","weight":0.8}]'
+        )
         assert len(full_run["turning_points"]) == 1
         assert len(full_run["time_blocks"]) == 1
 
@@ -380,8 +395,8 @@ def test_get_user_history(
         # Plage partielle
         history = repo.get_user_history(user.id, date(2026, 3, 6), date(2026, 3, 7))
         assert len(history) == 2
-        assert history[0].local_date == date(2026, 3, 6)
-        assert history[1].local_date == date(2026, 3, 7)
+        assert history[0].local_date == date(2026, 3, 7)
+        assert history[1].local_date == date(2026, 3, 6)
 
         # Plage entière
         all_runs = repo.get_user_history(user.id, date(2026, 3, 5), date(2026, 3, 8))

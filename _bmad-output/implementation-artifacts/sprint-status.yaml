@@ -314,8 +314,9 @@ development_status:
   35-4-couche-editoriale: done
   epic-35-retrospective: optional
 
-  epic-36: in-progress
+  epic-36: done
   36-1-service-applicatif-daily-prediction: done
   36-2-endpoint-api-daily-prediction: done
   36-3-endpoint-historique-daily-prediction: done
   36-4-dto-front-mapping-ui-v1: done
+  36-5-observabilite-debug-prediction: done

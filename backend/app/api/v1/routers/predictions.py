@@ -90,6 +90,33 @@ class DailyHistoryResponse(BaseModel):
     total: int
 
 
+class DailyPredictionDebugCategory(BaseModel):
+    code: str
+    note_20: float
+    raw_score: float
+    power: float
+    volatility: float
+    rank: int
+    contributors: list[dict[str, Any]]
+
+
+class DailyPredictionDebugTurningPoint(BaseModel):
+    occurred_at_local: str
+    severity: float
+    summary: str | None
+    drivers: list[dict[str, Any]]
+
+
+class DailyPredictionDebugResponse(BaseModel):
+    meta: DailyPredictionMeta
+    input_hash: str | None
+    reference_version_id: int
+    ruleset_id: int
+    is_provisional_calibration: bool | None
+    categories: list[DailyPredictionDebugCategory]
+    turning_points: list[DailyPredictionDebugTurningPoint]
+
+
 router = APIRouter(prefix="/v1/predictions", tags=["predictions"])
 
 
@@ -97,6 +124,122 @@ def get_daily_prediction_service() -> DailyPredictionService:
     return DailyPredictionService(
         context_loader=PredictionContextLoader(),
         persistence_service=PredictionPersistenceService(),
+    )
+
+
+def _raise_daily_prediction_service_error(error: DailyPredictionServiceError) -> None:
+    status_code = 404 if error.code in {"natal_missing", "profile_missing"} else 422
+    raise HTTPException(
+        status_code=status_code,
+        detail={"code": error.code, "message": error.message},
+    )
+
+
+@router.get("/daily/debug", response_model=DailyPredictionDebugResponse)
+def debug_daily_prediction(
+    target_user_id: int = Query(...),
+    date: str | None = Query(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+    service: DailyPredictionService = Depends(get_daily_prediction_service),
+) -> DailyPredictionDebugResponse:
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail={"code": "forbidden", "message": "Admin only"},
+        )
+
+    parsed_date = None
+    if date:
+        try:
+            parsed_date = datetime.strptime(date, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(
+                status_code=422,
+                detail="Invalid date format. Use YYYY-MM-DD.",
+            )
+
+    try:
+        result = service.get_or_compute(
+            user_id=target_user_id,
+            db=db,
+            date_local=parsed_date,
+            mode=ComputeMode.read_only,
+            ruleset_version=settings.ruleset_version,
+        )
+    except DailyPredictionServiceError as error:
+        _raise_daily_prediction_service_error(error)
+
+    if result is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "not_found", "message": "Aucun run trouvé pour ce jour"},
+        )
+
+    repo = DailyPredictionRepository(db)
+    full_run = repo.get_full_run(result.run.id)
+    if not full_run:
+        raise HTTPException(status_code=500, detail="Failed to load full prediction run")
+
+    # Mappings
+    ref_repo = PredictionReferenceRepository(db)
+    categories_data = ref_repo.get_categories(result.run.reference_version_id)
+    cat_id_to_code = {c.id: c.code for c in categories_data}
+
+    debug_categories = [
+        DailyPredictionDebugCategory(
+            code=cat_id_to_code.get(s["category_id"], "unknown"),
+            note_20=float(s["note_20"] or 0),
+            raw_score=float(s["raw_score"] or 0),
+            power=float(s["power"] or 0),
+            volatility=float(s["volatility"] or 0),
+            rank=int(s["rank"] or 0),
+            contributors=_load_json_list(
+                s.get("contributors_json"), field_name="category_scores.contributors_json"
+            ),
+        )
+        for s in full_run.get("category_scores", [])
+    ]
+
+    debug_turning_points = [
+        DailyPredictionDebugTurningPoint(
+            occurred_at_local=tp["occurred_at_local"],
+            severity=float(tp["severity"] or 0),
+            summary=tp["summary"],
+            drivers=_load_json_list(tp.get("driver_json"), field_name="turning_points.driver_json"),
+        )
+        for tp in full_run.get("turning_points", [])
+    ]
+
+    # Resolve reference version string
+    reference_version = settings.active_reference_version
+    if result.run.reference_version_id is not None:
+        version_model = db.get(ReferenceVersionModel, result.run.reference_version_id)
+        if version_model is not None:
+            reference_version = version_model.version
+
+    house_system_effective = full_run.get("house_system_effective")
+    if house_system_effective is None and result.engine_output is not None:
+        house_system_effective = result.engine_output.effective_context.house_system_effective
+
+    meta = DailyPredictionMeta(
+        date_local=result.run.local_date.isoformat(),
+        timezone=result.run.timezone,
+        computed_at=result.run.computed_at.isoformat(),
+        reference_version=reference_version,
+        ruleset_version=settings.ruleset_version,
+        was_reused=result.was_reused,
+        house_system_effective=house_system_effective,
+    )
+
+    return DailyPredictionDebugResponse(
+        meta=meta,
+        input_hash=full_run.get("input_hash"),
+        reference_version_id=result.run.reference_version_id,
+        ruleset_id=full_run["ruleset_id"],
+        is_provisional_calibration=full_run.get("is_provisional_calibration"),
+        categories=debug_categories,
+        turning_points=debug_turning_points,
     )
 
 
@@ -189,10 +332,8 @@ def get_daily_prediction(
             mode=ComputeMode.compute_if_missing,
             ruleset_version=settings.ruleset_version,
         )
-    except DailyPredictionServiceError as e:
-        if e.code == "natal_missing":
-            raise HTTPException(status_code=404, detail={"code": e.code, "message": e.message})
-        raise HTTPException(status_code=422, detail={"code": e.code, "message": e.message})
+    except DailyPredictionServiceError as error:
+        _raise_daily_prediction_service_error(error)
 
     if result is None:
         raise HTTPException(status_code=404, detail="Prediction not found")

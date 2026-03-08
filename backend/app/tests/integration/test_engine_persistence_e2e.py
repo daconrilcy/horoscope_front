@@ -51,6 +51,10 @@ def test_engine_output_persists_without_manual_mapping() -> None:
 
         persisted_run = session.get(DailyPredictionRunModel, result.run.id)
         assert persisted_run is not None
+        assert (
+            persisted_run.is_provisional_calibration
+            == engine_output.run_metadata["is_provisional_calibration"]
+        )
         assert len(persisted_run.category_scores) == len(engine_output.category_scores)
         assert len(persisted_run.turning_points) == len(engine_output.turning_points)
         assert len(persisted_run.time_blocks) == len(engine_output.time_blocks)

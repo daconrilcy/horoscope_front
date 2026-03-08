@@ -62,6 +62,7 @@ class PredictionPersistenceService:
             ruleset_id=ruleset_id,
             input_hash=input_hash,
             house_system_effective=engine_output.effective_context.house_system_effective,
+            is_provisional_calibration=engine_output.run_metadata.get("is_provisional_calibration"),
             overall_summary=engine_output.run_metadata.get("overall_summary"),
             overall_tone=engine_output.run_metadata.get("overall_tone"),
         )
