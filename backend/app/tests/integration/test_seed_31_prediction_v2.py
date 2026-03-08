@@ -159,28 +159,37 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             == 8
         )
 
-        ruleset = session.scalar(
+        ruleset_v1 = session.scalar(
             select(PredictionRulesetModel).where(
-                PredictionRulesetModel.reference_version_id == v2.id
+                PredictionRulesetModel.reference_version_id == v2.id,
+                PredictionRulesetModel.version == "1.0.0"
             )
         )
-        assert ruleset is not None
-        assert ruleset.version == "1.0.0"
+        assert ruleset_v1 is not None
+        
+        ruleset_v2 = session.scalar(
+            select(PredictionRulesetModel).where(
+                PredictionRulesetModel.reference_version_id == v2.id,
+                PredictionRulesetModel.version == "2.0.0"
+            )
+        )
+        assert ruleset_v2 is not None
+
         assert (
             session.scalar(
                 select(func.count())
                 .select_from(RulesetEventTypeModel)
-                .where(RulesetEventTypeModel.ruleset_id == ruleset.id)
+                .where(RulesetEventTypeModel.ruleset_id.in_([ruleset_v1.id, ruleset_v2.id]))
             )
-            == 8
+            == 16
         )
         assert (
             session.scalar(
                 select(func.count())
                 .select_from(RulesetParameterModel)
-                .where(RulesetParameterModel.ruleset_id == ruleset.id)
+                .where(RulesetParameterModel.ruleset_id.in_([ruleset_v1.id, ruleset_v2.id]))
             )
-            == 8
+            == 16
         )
 
         # 4. Verify idempotence (already seeded and locked)

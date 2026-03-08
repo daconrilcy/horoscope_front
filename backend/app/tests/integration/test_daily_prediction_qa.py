@@ -47,12 +47,12 @@ client = TestClient(app)
 
 def _reset_prediction_reference(db) -> None:
     """Ensure the prediction reference used by the QA flow is fully re-seeded."""
-    ruleset = (
+    rulesets = (
         db.query(PredictionRulesetModel)
-        .filter(PredictionRulesetModel.version == "1.0.0")
-        .first()
+        .filter(PredictionRulesetModel.version.in_(["1.0.0", "2.0.0"]))
+        .all()
     )
-    if ruleset is not None:
+    for ruleset in rulesets:
         db.execute(
             delete(CategoryCalibrationModel).where(
                 CategoryCalibrationModel.ruleset_id == ruleset.id
@@ -65,7 +65,7 @@ def _reset_prediction_reference(db) -> None:
             delete(RulesetEventTypeModel).where(RulesetEventTypeModel.ruleset_id == ruleset.id)
         )
         db.delete(ruleset)
-        db.flush()
+    db.flush()
 
     version = (
         db.query(ReferenceVersionModel)

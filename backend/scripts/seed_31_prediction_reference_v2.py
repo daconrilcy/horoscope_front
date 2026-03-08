@@ -41,8 +41,8 @@ EXPECTED_COUNTS = {
     "planet_category_weights": 85,
     "house_category_weights": 24,
     "point_category_weights": 8,
-    "ruleset_event_types": 8,
-    "ruleset_parameters": 8,
+    "ruleset_event_types": 16,  # 8 per ruleset (1.0.0 and 2.0.0)
+    "ruleset_parameters": 16,   # 8 per ruleset (1.0.0 and 2.0.0)
 }
 
 
@@ -101,27 +101,72 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
     )
 
     # Rulesets are tied to reference_version_id
-    ruleset = db.scalar(
+    rulesets = db.scalars(
         select(PredictionRulesetModel).where(
             PredictionRulesetModel.reference_version_id == reference_version_id
         )
-    )
-    if ruleset:
-        actual["ruleset_event_types"] = db.scalar(
+    ).all()
+    
+    actual["ruleset_event_types"] = 0
+    actual["ruleset_parameters"] = 0
+    
+    for ruleset in rulesets:
+        actual["ruleset_event_types"] += db.scalar(
             select(func.count())
             .select_from(RulesetEventTypeModel)
             .where(RulesetEventTypeModel.ruleset_id == ruleset.id)
         )
-        actual["ruleset_parameters"] = db.scalar(
+        actual["ruleset_parameters"] += db.scalar(
             select(func.count())
             .select_from(RulesetParameterModel)
             .where(RulesetParameterModel.ruleset_id == ruleset.id)
         )
-    else:
-        actual["ruleset_event_types"] = 0
-        actual["ruleset_parameters"] = 0
 
     return actual
+
+
+def _seed_ruleset_content(db: Session, ruleset_id: int):
+    """Seed event types and parameters for a specific ruleset."""
+    # Seed event types
+    event_types_data = [
+        ("aspect_exact_to_angle", "aspect", 2.0),
+        ("aspect_exact_to_luminary", "aspect", 1.8),
+        ("aspect_exact_to_personal", "aspect", 1.5),
+        ("aspect_enter_orb", "aspect", 1.0),
+        ("aspect_exit_orb", "aspect", 0.5),
+        ("moon_sign_ingress", "ingress", 1.5),
+        ("asc_sign_change", "ingress", 2.0),
+        ("planetary_hour_change", "timing", 0.8),
+    ]
+    for code, group, weight in event_types_data:
+        db.add(
+            RulesetEventTypeModel(
+                ruleset_id=ruleset_id,
+                code=code,
+                name=code.replace("_", " ").title(),
+                event_group=group,
+                priority=0,
+                base_weight=weight,
+            )
+        )
+
+    # Seed parameters
+    params_data = [
+        ("orb_multiplier_applying", "float", "1.2"),
+        ("orb_multiplier_exact", "float", "1.5"),
+        ("orb_multiplier_separating", "float", "0.8"),
+        ("turning_point_threshold", "float", "0.7"),
+        ("score_clamp_min", "float", "0.0"),
+        ("score_clamp_max", "float", "100.0"),
+        ("top_turning_points_count", "int", "3"),
+        ("normalization_method", "string", "percentile"),
+    ]
+    for key, dtype, val in params_data:
+        db.add(
+            RulesetParameterModel(
+                ruleset_id=ruleset_id, param_key=key, param_value=val, data_type=dtype
+            )
+        )
 
 
 def run_seed(db: Session):
@@ -129,41 +174,55 @@ def run_seed(db: Session):
     v2 = db.scalar(select(ReferenceVersionModel).where(ReferenceVersionModel.version == "2.0.0"))
     if v2 is not None:
         actual = _check_counts(db, v2.id)
-        all_ok = all(actual.get(k, 0) == v for k, v in EXPECTED_COUNTS.items())
+        
+        # We check if at least version 2.0.0 ruleset exists to consider it partly done
+        ruleset_v2 = db.scalar(
+            select(PredictionRulesetModel).where(
+                PredictionRulesetModel.reference_version_id == v2.id,
+                PredictionRulesetModel.version == "2.0.0"
+            )
+        )
+        
+        all_ok = all(actual.get(k, 0) == v for k, v in EXPECTED_COUNTS.items()) and ruleset_v2 is not None
+        
         if all_ok and v2.is_locked:
             print("2.0.0 already seeded and locked — skipping")
             return
 
-        # State corrupted or incomplete
-        lines = [
-            "ERROR: 2.0.0 exists but is incomplete or unlocked. Manual investigation required."
-        ]
-        for k, expected in EXPECTED_COUNTS.items():
-            got = actual.get(k, 0)
-            status = "OK" if got == expected else f"MISMATCH (expected {expected}, got {got})"
-            lines.append(f"  {k}: {status}")
-        lines.append(f"  is_locked: {v2.is_locked}")
-        raise SeedAbortError("\n".join(lines))
+        if not v2.is_locked:
+            print("2.0.0 exists but is unlocked — proceeding with repair/seed")
+        else:
+            # State corrupted or incomplete
+            lines = [
+                "ERROR: 2.0.0 exists but is incomplete or unlocked. Manual investigation required."
+            ]
+            for k, expected in EXPECTED_COUNTS.items():
+                got = actual.get(k, 0)
+                status = "OK" if got == expected else f"MISMATCH (expected {expected}, got {got})"
+                lines.append(f"  {k}: {status}")
+            lines.append(f"  ruleset_v2_exists: {ruleset_v2 is not None}")
+            lines.append(f"  is_locked: {v2.is_locked}")
+            raise SeedAbortError("\n".join(lines))
+    else:
+        # 2. Setup V1 and V2
+        v1 = db.scalar(select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0"))
+        if not v1:
+            print("ERROR: Reference version 1.0.0 not found. Seed failed.")
+            sys.exit(1)
 
-    # 2. Setup V1 and V2
-    v1 = db.scalar(select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0"))
-    if not v1:
-        print("ERROR: Reference version 1.0.0 not found. Seed failed.")
-        sys.exit(1)
+        print("Creating reference version 2.0.0...")
+        repo = ReferenceRepository(db)
+        v2 = repo.create_version(
+            version="2.0.0",
+            description="Moteur de prédiction quotidienne v1 — référentiel sémantique complet",
+        )
+        v2.is_locked = False
+        db.flush()
 
-    print("Creating reference version 2.0.0...")
-    repo = ReferenceRepository(db)
-    v2 = repo.create_version(
-        version="2.0.0",
-        description="Moteur de prédiction quotidienne v1 — référentiel sémantique complet",
-    )
-    v2.is_locked = False
-    db.flush()
-
-    # 3. Clone V1 to V2
-    print("Cloning V1 data to V2...")
-    repo.clone_version_data(v1.id, v2.id)
-    db.flush()
+        # 3. Clone V1 to V2
+        print("Cloning V1 data to V2...")
+        repo.clone_version_data(v1.id, v2.id)
+        db.flush()
 
     # 4. Seed prediction categories
     print("Seeding prediction categories...")
@@ -626,66 +685,40 @@ def run_seed(db: Session):
             )
         )
 
-    # 12. Seed ruleset 1.0.0
-    print("Seeding ruleset 1.0.0...")
-    ruleset = PredictionRulesetModel(
+    # 12. Seed ruleset 1.0.0 (legacy)
+    print("Seeding ruleset 1.0.0 (legacy)...")
+    ruleset_v1 = PredictionRulesetModel(
         version="1.0.0",
         reference_version_id=v2.id,
         zodiac_type="tropical",
         coordinate_mode="geocentric",
         house_system="placidus",
         time_step_minutes=30,
-        description="Ruleset initial moteur prédiction quotidienne",
+        description="Ruleset legacy (v1) rattaché à la référence 2.0.0",
         is_locked=False,
     )
-    db.add(ruleset)
+    db.add(ruleset_v1)
+    db.flush()
+    _seed_ruleset_content(db, ruleset_v1.id)
+
+    # 13. Seed ruleset 2.0.0 (canonical)
+    print("Seeding ruleset 2.0.0 (canonical)...")
+    ruleset_v2 = PredictionRulesetModel(
+        version="2.0.0",
+        reference_version_id=v2.id,
+        zodiac_type="tropical",
+        coordinate_mode="geocentric",
+        house_system="placidus",
+        time_step_minutes=30,
+        description="Ruleset canonique v2 rattaché à la référence 2.0.0",
+        is_locked=False,
+    )
+    db.add(ruleset_v2)
+    db.flush()
+    _seed_ruleset_content(db, ruleset_v2.id)
     db.flush()
 
-    # 13. Seed event types
-    print("Seeding event types...")
-    event_types_data = [
-        ("aspect_exact_to_angle", "aspect", 2.0),
-        ("aspect_exact_to_luminary", "aspect", 1.8),
-        ("aspect_exact_to_personal", "aspect", 1.5),
-        ("aspect_enter_orb", "aspect", 1.0),
-        ("aspect_exit_orb", "aspect", 0.5),
-        ("moon_sign_ingress", "ingress", 1.5),
-        ("asc_sign_change", "ingress", 2.0),
-        ("planetary_hour_change", "timing", 0.8),
-    ]
-    for code, group, weight in event_types_data:
-        db.add(
-            RulesetEventTypeModel(
-                ruleset_id=ruleset.id,
-                code=code,
-                name=code.replace("_", " ").title(),
-                event_group=group,
-                priority=0,
-                base_weight=weight,
-            )
-        )
-
-    # 14. Seed parameters
-    print("Seeding ruleset parameters...")
-    params_data = [
-        ("orb_multiplier_applying", "float", "1.2"),
-        ("orb_multiplier_exact", "float", "1.5"),
-        ("orb_multiplier_separating", "float", "0.8"),
-        ("turning_point_threshold", "float", "0.7"),
-        ("score_clamp_min", "float", "0.0"),
-        ("score_clamp_max", "float", "100.0"),
-        ("top_turning_points_count", "int", "3"),
-        ("normalization_method", "string", "percentile"),
-    ]
-    for key, dtype, val in params_data:
-        db.add(
-            RulesetParameterModel(
-                ruleset_id=ruleset.id, param_key=key, param_value=val, data_type=dtype
-            )
-        )
-    db.flush()
-
-    # 15. Validation counts
+    # 14. Validation counts
     print("Validating counts...")
     actual = _check_counts(db, v2.id)
     for k, expected in EXPECTED_COUNTS.items():
