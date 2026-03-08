@@ -1,0 +1,40 @@
+# backend/app/infra/db/repositories/calibration_repository.py
+from __future__ import annotations
+from datetime import date
+from sqlalchemy import select, func
+from sqlalchemy.orm import Session
+from app.infra.db.models.calibration import CalibrationRawDayModel
+
+class CalibrationRepository:
+    def __init__(self, db: Session) -> None:
+        self.db = db
+
+    def exists(
+        self,
+        profile_label: str,
+        local_date: date,
+        category_code: str,
+        reference_version: str,
+        ruleset_version: str,
+    ) -> bool:
+        return self.db.scalar(
+            select(CalibrationRawDayModel).where(
+                CalibrationRawDayModel.profile_label == profile_label,
+                CalibrationRawDayModel.local_date == local_date,
+                CalibrationRawDayModel.category_code == category_code,
+                CalibrationRawDayModel.reference_version == reference_version,
+                CalibrationRawDayModel.ruleset_version == ruleset_version,
+            )
+        ) is not None
+
+    def save(self, raw_day: CalibrationRawDayModel) -> None:
+        self.db.add(raw_day)
+        self.db.flush()
+
+    def count(self, reference_version: str, ruleset_version: str) -> int:
+        return self.db.scalar(
+            select(func.count(CalibrationRawDayModel.id)).where(
+                CalibrationRawDayModel.reference_version == reference_version,
+                CalibrationRawDayModel.ruleset_version == ruleset_version,
+            )
+        ) or 0

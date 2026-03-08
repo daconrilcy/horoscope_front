@@ -6,6 +6,7 @@ from app.infra.db.models.billing import (
     UserDailyQuotaUsageModel,
     UserSubscriptionModel,
 )
+from app.infra.db.models.calibration import CalibrationRawDayModel
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
@@ -71,6 +72,7 @@ from app.infra.db.models.user_refresh_token import UserRefreshTokenModel
 __all__ = [
     "ChatConversationModel",
     "ChatMessageModel",
+    "CalibrationRawDayModel",
     "ChartResultModel",
     "AuditEventModel",
     "BillingPlanModel",

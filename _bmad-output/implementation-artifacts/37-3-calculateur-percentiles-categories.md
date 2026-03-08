@@ -48,7 +48,7 @@ Le service génère un rapport JSON ou CSV par catégorie incluant : `sample_siz
     - [ ] `run(reference_version, ruleset_version, ruleset_id, valid_from, valid_to) -> list[PercentileResult]`
       - [ ] Charger tous les `raw_score` par catégorie depuis `CalibrationRawDayModel`
       - [ ] Appeler `compute_percentiles()` par catégorie
-      - [ ] Upsert dans `CategoryCalibrationModel` (delete + insert par `(ruleset_id, category_id, valid_from, valid_to)`)
+      - [ ] Upsert dans `CategoryCalibrationModel` (delete + insert par `(ruleset_id, category_id, valid_from)`)
       - [ ] Retourner la liste des `PercentileResult`
     - [ ] `generate_report(results: list[PercentileResult], output_path: Path) -> None` — écrit un fichier JSON
 
@@ -112,7 +112,7 @@ def compute_percentiles(raw_scores: list[float]) -> PercentileResult:
 
 ### Vérification du modèle `CategoryCalibrationModel` avant implémentation
 
-Vérifier les champs exacts dans `backend/app/infra/db/models/prediction_ruleset.py` avant d'implémenter l'upsert. Les champs attendus sont : `ruleset_id`, `category_id`, `p5`, `p25`, `p50`, `p75`, `p95`, `valid_from`, `valid_to`. Le champ `sample_size` peut nécessiter une migration s'il est absent.
+Vérification faite sur le code actuel : `CategoryCalibrationModel` expose déjà `p05`, `p25`, `p50`, `p75`, `p95`, `sample_size`, `valid_from`, `valid_to`. Aucune migration supplémentaire n'est nécessaire pour `sample_size`.
 
 ### Pattern upsert dans `CategoryCalibrationModel`
 
@@ -134,40 +134,71 @@ def _upsert_calibration(
     calibration = CategoryCalibrationModel(
         ruleset_id=ruleset_id,
         category_id=category_id,
-        p5=result.p5,
+        p05=result.p5,
         p25=result.p25,
         p50=result.p50,
         p75=result.p75,
         p95=result.p95,
         valid_from=valid_from,
         valid_to=valid_to,
-        # sample_size=result.sample_size,  # si le champ existe
+        sample_size=result.sample_size,
     )
     db.add(calibration)
     db.commit()
 ```
+
+### Dataset 37.2 validé et prêt à consommer
+
+Validation locale réelle effectuée le `2026-03-08` sur SQLite locale :
+
+- `reference_version=2.0.0`
+- `ruleset_version=1.0.0`
+- `5` profils
+- `366` jours (`2024-01-01` → `2024-12-31`)
+- `12` catégories actives :
+  - `career`
+  - `communication`
+  - `energy`
+  - `family_home`
+  - `health`
+  - `love`
+  - `money`
+  - `mood`
+  - `pleasure_creativity`
+  - `sex_intimacy`
+  - `social_network`
+  - `work`
+- `1830` raw scores par catégorie
+- `21960` lignes totales
+- `0` doublon
+
+Implications directes pour l'implémentation :
+
+- le `ruleset_id` à résoudre pour la campagne locale validée est celui du ruleset `1.0.0`
+- la story doit cibler les codes de catégories réellement présents en base, pas les anciens exemples `amour/travail/vitalité/finances`
+- le rapport de contrôle peut s'appuyer sur un `sample_size` attendu de `1830` pour chaque catégorie tant que le dataset reste inchangé
 
 ### Format du rapport de contrôle
 
 ```json
 {
   "generated_at": "2026-03-08T12:00:00Z",
-  "reference_version": "1.0.0",
+  "reference_version": "2.0.0",
   "ruleset_version": "1.0.0",
   "valid_from": "2024-01-01",
   "valid_to": "2024-12-31",
   "categories": {
-    "amour": {
+    "love": {
       "sample_size": 1830,
-      "min": -1.85,
-      "max": 1.92,
+      "min": -0.01295,
+      "max": 0.05327,
       "mean": 0.03,
-      "p5": -1.10,
-      "p25": -0.45,
-      "p50": 0.02,
-      "p75": 0.51,
-      "p95": 1.12,
-      "outlier_count": 4
+      "p5": -0.01,
+      "p25": -0.00,
+      "p50": 0.00,
+      "p75": 0.01,
+      "p95": 0.03,
+      "outlier_count": 0
     }
   }
 }
@@ -191,6 +222,13 @@ def _upsert_calibration(
 
 Ce service lit la table `calibration_raw_days` produite par la story 37.2. Il faut que le job 37.2 ait été exécuté et ait produit des données avant de lancer ce service.
 
+### Notes d'implémentation révisées après validation dataset
+
+- Utiliser `reference_version=CALIBRATION_VERSIONS["reference_version"]` et `ruleset_version=CALIBRATION_VERSIONS["ruleset_version"]` lors du run, puis résoudre le `ruleset_id` via `PredictionRulesetRepository.get_ruleset()`.
+- Les champs du modèle sont `p05/p25/p50/p75/p95` et non `p5/p25/p50/p75/p95`.
+- La story peut rester sans modification moteur: `PredictionRulesetRepository.get_calibrations()` lit déjà `sample_size`.
+- Générer le rapport dans `docs/calibration/percentile_report.json`, fichier non commité.
+
 ## References
 
 - [Source: backend/app/infra/db/models/prediction_ruleset.py — CategoryCalibrationModel (champs P5…P95, valid_from, valid_to)]
@@ -205,6 +243,8 @@ Ce service lit la table `calibration_raw_days` produite par la story 37.2. Il fa
 ### Debug Log References
 
 ### Completion Notes List
+- Dataset 37.2 validé localement avant démarrage: `21960` raw days, `1830` scores par catégorie, `0` doublon.
+- Contrat modèle confirmé: `CategoryCalibrationModel.sample_size` existe déjà et le champ percentile bas est `p05`.
 
 ### File List
 

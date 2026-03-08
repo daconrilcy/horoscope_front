@@ -302,3 +302,26 @@ def test_unknown_aspect_pol_returns_zero(mock_ctx):
         metadata={},
     )
     assert calculator._pol(event, "WORK", mock_ctx) == 0.0
+
+
+def test_non_aspect_event_does_not_require_orb_max(mock_ctx, caplog):
+    calculator = ContributionCalculator()
+    event = AstroEvent(
+        event_type="planetary_hour_change",
+        ut_time=0,
+        local_time=datetime.now(),
+        body="Sun",
+        target=None,
+        aspect=None,
+        orb_deg=0.0,
+        priority=50,
+        base_weight=1.0,
+        metadata={"hour_number": 1},
+    )
+
+    with caplog.at_level("WARNING"):
+        result = calculator.compute(event, {"WORK": 1.0}, {"WORK": 1.0}, mock_ctx)
+
+    assert calculator._f_orb(event, mock_ctx) == 1.0
+    assert result["WORK"] == 0.0
+    assert "orb_max not found" not in caplog.text

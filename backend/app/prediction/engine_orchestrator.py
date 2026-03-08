@@ -131,7 +131,13 @@ class EngineOrchestrator:
             editorial_builder=self._editorial_builder,
         )
 
-    def run(self, engine_input: EngineInput) -> EngineOutput:
+    def run(
+        self,
+        engine_input: EngineInput,
+        *,
+        category_codes: tuple[str, ...] | None = None,
+        include_editorial: bool = True,
+    ) -> EngineOutput:
         """
         Executes the prediction engine for a given input.
 
@@ -185,7 +191,7 @@ class EngineOrchestrator:
             loaded_context,
         )
         (
-            category_scores,
+            _category_scores,
             notes_by_step,
             events_by_step,
             contributions_by_step,
@@ -195,6 +201,7 @@ class EngineOrchestrator:
             day_grid.samples,
             natal_sensitivity,
             loaded_context,
+            requested_category_codes=category_codes,
         )
 
         # Build explainability report (AC1-AC4)
@@ -276,6 +283,9 @@ class EngineOrchestrator:
             explainability=explainability,
         )
 
+        if not include_editorial:
+            return output
+
         editorial_input = dataclasses.replace(
             output,
             run_metadata={
@@ -330,6 +340,8 @@ class EngineOrchestrator:
         samples: list[SamplePoint],
         ns_map: dict[str, float],
         loaded_context: LoadedPredictionContext,
+        *,
+        requested_category_codes: tuple[str, ...] | None = None,
     ) -> tuple[
         dict[str, int],
         list[dict[str, int]],
@@ -337,11 +349,27 @@ class EngineOrchestrator:
         list[list[tuple[AstroEvent, dict[str, float]]]],
         dict[str, dict[str, float | int]],
     ]:
-        category_codes = [
+        available_category_codes = [
             category.code
             for category in loaded_context.prediction_context.categories
             if category.is_enabled
         ]
+        if requested_category_codes is None:
+            category_codes = available_category_codes
+        else:
+            allowed_codes = set(requested_category_codes)
+            unknown_codes = allowed_codes.difference(available_category_codes)
+            if unknown_codes:
+                unknown_codes_csv = ", ".join(sorted(unknown_codes))
+                raise PredictionContextError(
+                    "Requested category codes are not enabled in the prediction context: "
+                    f"{unknown_codes_csv}"
+                )
+            category_codes = [
+                category_code
+                for category_code in available_category_codes
+                if category_code in allowed_codes
+            ]
         events_by_step: list[list[AstroEvent]] = [[] for _ in samples]
         contributions_by_step: list[list[tuple[AstroEvent, dict[str, float]]]] = [
             [] for _ in samples
@@ -394,7 +422,7 @@ class EngineOrchestrator:
                 "sort_order": category.sort_order,
             }
             for category in loaded_context.prediction_context.categories
-            if category.is_enabled
+            if category.is_enabled and category.code in category_codes
         }
         notes_by_step = [
             {

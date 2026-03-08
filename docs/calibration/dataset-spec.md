@@ -25,18 +25,27 @@ Ce dataset s'appuie sur 5 profils natals représentatifs pour couvrir une divers
 ## Versions moteur fixées
 *Note: Ces versions sont lues dynamiquement depuis la configuration active au moment du run.*
 
-- **reference_version**: 1.0.0
+- **reference_version**: 2.0.0
 - **ruleset_version**: 1.0.0
 
 ## Liste des catégories actives couvertes
 Le dataset couvre l'ensemble des catégories définies dans le moteur de prédiction :
-- Amour / Relations
-- Travail / Carrière
-- Vitalité / Énergie
-- Finances / Matériel
+- `career`
+- `communication`
+- `energy`
+- `family_home`
+- `health`
+- `love`
+- `money`
+- `mood`
+- `pleasure_creativity`
+- `sex_intimacy`
+- `social_network`
+- `work`
 
 ## Politique des jours invalides
 Toute anomalie de calcul (SwissEph inaccessible, erreur de parsing) entraîne l'invalidation du jour pour le profil concerné. Le dataset de calibration exige une continuité > 95% pour être considéré comme valide pour une campagne.
 
 ## Changelog du dataset
 - **2026-03-08 (v1.0.0)**: Création initiale de la spécification avec 5 profils de base.
+- **2026-03-08 (v1.0.0)**: Campagne locale validée sur SQLite avec `reference_version=2.0.0`, `ruleset_version=1.0.0`, `21960` raw days produits et `0` doublon.

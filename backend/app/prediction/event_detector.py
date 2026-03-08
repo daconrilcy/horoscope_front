@@ -166,6 +166,7 @@ class EventDetector:
                         meta = {
                             "natal_house_target": target_house,
                             "natal_house_transited": transit_house,
+                            "orb_max": orb_max,
                         }
 
                         if len(h) >= 2:
@@ -219,6 +220,7 @@ class EventDetector:
                                         if prev_planet
                                         else transit_house
                                     ),
+                                    "orb_max": orb_max,
                                     "phase": "applying",
                                 }
                                 detected.append(

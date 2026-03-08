@@ -77,6 +77,7 @@ def test_enter_orb_detected(mock_ctx, natal_chart):
     assert enter_events[0].target == "Sun"
     assert enter_events[0].aspect == "conjunction"
     assert enter_events[0].metadata["phase"] == "applying"
+    assert enter_events[0].metadata["orb_max"] == pytest.approx(2.0)
     assert enter_events[0].metadata["natal_house_target"] == 1
     assert enter_events[0].metadata["natal_house_transited"] == 1
 
@@ -111,6 +112,7 @@ def test_exact_detected(mock_ctx, natal_chart):
     assert len(exact_events) == 1
     assert exact_events[0].ut_time == 2460000.1
     assert exact_events[0].orb_deg == pytest.approx(0.1)
+    assert exact_events[0].metadata["orb_max"] == pytest.approx(2.0)
     assert exact_events[0].metadata["natal_house_target"] == 1
 
 

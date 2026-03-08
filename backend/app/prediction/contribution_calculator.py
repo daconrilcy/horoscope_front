@@ -104,6 +104,8 @@ class ContributionCalculator:
         """AC3 - parabolic orb factor: 1 - (orb/orb_max)^2."""
         if event.orb_deg is None:
             return 0.0
+        if event.aspect is None:
+            return 1.0
 
         orb_max = self._get_orb_max(event, ctx)
 

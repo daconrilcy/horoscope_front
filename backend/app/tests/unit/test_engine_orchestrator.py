@@ -269,6 +269,13 @@ def test_debug_mode_propagated(orchestrator, base_input):
     assert output.run_metadata["debug_mode"] is True
 
 
+def test_run_can_skip_editorial_generation(orchestrator, base_input):
+    output = orchestrator.run(base_input, include_editorial=False)
+
+    assert output.editorial is None
+    assert "overall_tone" not in output.run_metadata
+
+
 def test_invalid_timezone_raises_prediction_context_error(orchestrator, base_input):
     """Un fuseau IANA invalide doit lever une erreur métier stable."""
     invalid_input = EngineInput(
