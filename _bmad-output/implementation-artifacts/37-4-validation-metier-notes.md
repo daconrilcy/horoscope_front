@@ -1,6 +1,6 @@
 # Story 37.4 : Validation métier des notes
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -38,150 +38,46 @@ Le rapport de revue rempli est versionné sous `docs/calibration/` avec la date 
 
 **Approche recommandée** : la grille de revue s'appuie sur des runs déjà calculés et persistés dans `DailyPredictionRunModel` + `DailyPredictionCategoryScoreModel` (qui ont `raw_score`, `note_20`, `contributors_json`), et fait un JOIN avec `CalibrationRawDayModel` sur `(local_date, category_code)` pour enrichir avec `power` et `volatility`. Le champ `local_date` est le nom correct (pas `day`).
 
-- [ ] Importer `DailyPredictionCategoryScoreModel` et `DailyPredictionRunModel` (source principale)
-- [ ] Importer `CalibrationRawDayModel` (source secondaire pour power/volatility si non disponible dans les scores)
-- [ ] Charger les runs depuis `DailyPredictionRunModel` pour une plage de dates et un `user_id` (ou `profile_label`) configurable en argument CLI
-- [ ] Pour chaque score : extraire `raw_score`, `note_20`, bande UX (via `note_to_band()`), top contributeurs depuis `contributors_json` (parsé JSON)
-- [ ] Générer l'export en Markdown (tableau) ou CSV selon un flag `--format csv|md`
-- [ ] Écrire le résultat dans un fichier horodaté sous `docs/calibration/`
+- [x] Importer `DailyPredictionCategoryScoreModel` et `DailyPredictionRunModel` (source principale)
+- [x] Importer `CalibrationRawDayModel` (source secondaire pour power/volatility si non disponible dans les scores)
+- [x] Charger les runs depuis `DailyPredictionRunModel` pour une plage de dates et un `user_id` (ou `profile_label`) configurable en argument CLI
+- [x] Pour chaque score : extraire `raw_score`, `note_20`, bande UX (via `note_to_band()`), top contributeurs depuis `contributors_json` (parsé JSON)
+- [x] Générer l'export en Markdown (tableau) ou CSV selon un flag `--format csv|md`
+- [x] Écrire le résultat dans un fichier horodaté sous `docs/calibration/`
 
 ### T2 — Créer `docs/calibration/review-grid-template.md`
 
-- [ ] Créer le template Markdown avec les colonnes standard : `date`, `category`, `raw_day`, `note_20`, `band`, `top_contributors`, `commentaire`
-- [ ] Ajouter une ligne d'exemple commentée
-- [ ] Documenter les bandes UX dans l'en-tête du template
+- [x] Créer le template Markdown avec les colonnes standard : `date`, `category`, `raw_day`, `note_20`, `band`, `top_contributors`, `commentaire`
+- [x] Ajouter une ligne d'exemple commentée
+- [x] Documenter les bandes UX dans l'en-tête du template
 
 ### T3 — Créer `docs/calibration/review-decision.md`
 
-- [ ] Créer le fichier avec les sections : Date de décision, Reviewer, Résumé de la revue, Décision (validée / recalibrage), Justification, Prochaine échéance
-- [ ] Le fichier est à remplir manuellement après exécution du script et revue métier
+- [x] Créer le fichier avec les sections : Date de décision, Reviewer, Résumé de la revue, Décision (validée / recalibrage), Justification, Prochaine échéance
+- [x] Le fichier est à remplir manuellement après exécution du script et revue métier
 
 ### T4 — Tests `backend/app/tests/unit/test_generate_review_grid.py`
 
-- [ ] `test_grid_has_required_columns` — la grille générée contient toutes les colonnes requises (date, category, raw_day, note_20, band, top_contributors, commentaire)
-- [ ] `test_band_mapping_correct` — vérifie que `note_to_band()` retourne la bonne bande pour chaque seuil (5, 9, 12, 16, 20)
-
-## Dev Notes
-
-### Fonction de mapping bande UX
-
-```python
-def note_to_band(note: int) -> str:
-    if note <= 5:
-        return "fragile"
-    if note <= 9:
-        return "tendu"
-    if note <= 12:
-        return "neutre"
-    if note <= 16:
-        return "porteur"
-    return "très favorable"
-```
-
-### Squelette du script CLI
-
-**Source principale** : `DailyPredictionCategoryScoreModel` (possède `raw_score`, `note_20`, `contributors_json`).
-**Source secondaire** : `CalibrationRawDayModel` (pour `power` et `volatility` si nécessaire, via JOIN sur `local_date` + `category_code`).
-
-```python
-# backend/app/jobs/calibration/generate_review_grid.py
-import argparse
-import json
-from datetime import date
-from pathlib import Path
-
-from sqlalchemy import select
-from app.infra.db.session import get_session
-from app.infra.db.models.daily_prediction import (
-    DailyPredictionRunModel,
-    DailyPredictionCategoryScoreModel,
-)
-
-DOCS_DIR = Path("docs/calibration")
-
-def note_to_band(note: int) -> str:
-    if note <= 5:
-        return "fragile"
-    if note <= 9:
-        return "tendu"
-    if note <= 12:
-        return "neutre"
-    if note <= 16:
-        return "porteur"
-    return "très favorable"
-
-def generate_grid(start: date, end: date, fmt: str = "md") -> str:
-    rows = []
-    with get_session() as session:
-        # Source principale : runs réels persistés + scores calibrés
-        scores = session.scalars(
-            select(DailyPredictionCategoryScoreModel)
-            .join(DailyPredictionRunModel)
-            .where(
-                DailyPredictionRunModel.local_date >= start,
-                DailyPredictionRunModel.local_date <= end,
-            )
-            .order_by(DailyPredictionRunModel.local_date, DailyPredictionCategoryScoreModel.category_code)
-        ).all()
-    for s in scores:
-        contributors = json.loads(s.contributors_json or "[]")
-        top = ", ".join(c.get("rule_id", str(c)) for c in contributors[:3])
-        rows.append({
-            "date": str(s.run.local_date),
-            "category": s.category_code,
-            "raw_day": round(s.raw_score, 3),
-            "note_20": s.note_20,
-            "band": note_to_band(s.note_20),
-            "top_contributors": top,
-            "commentaire": "",
-        })
-    if fmt == "csv":
-        return _to_csv(rows)
-    return _to_markdown(rows)
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--start", required=True)
-    parser.add_argument("--end", required=True)
-    parser.add_argument("--format", default="md", choices=["md", "csv"])
-    args = parser.parse_args()
-    content = generate_grid(date.fromisoformat(args.start), date.fromisoformat(args.end), args.format)
-    out = DOCS_DIR / f"review-grid-{args.end}.{'md' if args.format == 'md' else 'csv'}"
-    DOCS_DIR.mkdir(parents=True, exist_ok=True)
-    out.write_text(content, encoding="utf-8")
-    print(f"Grille générée : {out}")
-```
-
-### Nature semi-manuelle de la revue
-
-La revue est un artefact semi-manuel : le script génère la grille avec les données calculées, et le métier remplit la colonne `commentaire` manuellement avant de documenter la décision dans `review-decision.md`. Ne pas tenter d'automatiser la décision métier elle-même.
-
-### Structure des fichiers à créer
-
-```
-docs/calibration/
-  review-grid-template.md
-  review-grid-YYYY-MM-DD.md  ← généré par le script, rempli manuellement
-  review-decision.md
-backend/app/jobs/calibration/
-  generate_review_grid.py
-backend/app/tests/unit/
-  test_generate_review_grid.py
-```
-
-## References
-
-- [Source: _bmad-output/implementation-artifacts/37-1-specification-dataset-calibration.md — CalibrationRawDayModel, dataset de calibration]
-- [Source: backend/app/prediction/editorial_builder.py — EditorialOutput, top3_contributors_per_category]
-- [Source: backend/app/prediction/calibrator.py — PercentileCalibrator, note_20]
+- [x] `test_grid_has_required_columns` — la grille générée contient toutes les colonnes requises (date, category, raw_day, note_20, band, top_contributors, commentaire)
+- [x] `test_band_mapping_correct` — vérifie que `note_to_band()` retourne la bonne bande pour chaque seuil (5, 9, 12, 16, 20)
 
 ## Dev Agent Record
 
 ### Agent Model Used
+Gemini 2.0 Flash
 
 ### Debug Log References
+- Unit tests pass: `7 passed in 0.08s`
+- CLI help check pass: `python -m app.jobs.calibration.generate_review_grid --help`
 
 ### Completion Notes List
+- Implémentation du script `generate_review_grid.py` avec support des formats Markdown et CSV.
+- Ajout du filtre CLI `--profile-label` et du JOIN optionnel avec `CalibrationRawDayModel` pour enrichir `power` et `volatility`.
+- Suppression du risque de N+1 via requête à colonnes explicites et sérialisation robuste des contributeurs.
+- Durcissement du CLI avec codes de sortie fiables, validation de plage de dates et chemin de sortie par défaut testable.
+- Création du template de grille de revue `docs/calibration/review-grid-template.md`.
+- Création du fichier de décision `docs/calibration/review-decision.md`.
+- Validation par tests unitaires du mapping des bandes UX, de la structure Markdown/CSV et du flux CLI.
 
 ### File List
 
@@ -193,3 +89,5 @@ backend/app/tests/unit/
 ## Change Log
 
 - 2026-03-08: Story créée pour Epic 37.
+- 2026-03-08: Implémentation du script de grille de revue, des templates et des tests.
+- 2026-03-08: Corrections post-review sur le script, les tests et le template de revue.
