@@ -1503,3 +1503,65 @@ So that aucune régression qualitative n'atteigne la production.
 - Traces d'évaluation disponibles pour analyse.
 
 [Source: docs/agent/story-29-N5-eval-fixtures-gate.md]
+
+## Epic 39: Versionning métier explicite du ruleset de prédiction
+
+Supprimer l'ambiguïté entre `reference_version` et `ruleset_version` dans la pile de prédiction quotidienne, en introduisant un ruleset canonique aligné sur la référence active, sans casser les données historiques ni les jobs existants.
+
+**FRs covered:** FR6, FR7, FR8, FR18, FR36, FR37, NFR17, NFR22
+
+### Story 39.1: Introduire un ruleset canonique 2.0.0 et préserver la rétrocompatibilité
+
+As a platform engineer,
+I want créer un ruleset canonique `2.0.0` rattaché à la référence `2.0.0` sans supprimer le ruleset legacy `1.0.0`,
+So that la plateforme dispose d'un versionning métier lisible tout en restant compatible avec l'historique et les environnements locaux existants.
+
+**Acceptance Criteria:**
+- Un nouveau ruleset `2.0.0` est seedé en base avec le même contenu fonctionnel initial que le ruleset `1.0.0`.
+- Le ruleset legacy `1.0.0` reste lisible pour les runs, calibrations et artefacts déjà persistés.
+- Le seed/runtime empêche la création ambiguë de plusieurs rulesets actifs non documentés pour la même référence.
+- Les services lisant les rulesets continuent à fonctionner avec `1.0.0` et `2.0.0` pendant la phase de transition.
+
+[Source: user request 2026-03-08; backend/scripts/seed_31_prediction_reference_v2.py; docs/calibration/dataset-spec.md]
+
+### Story 39.2: Basculer la configuration runtime et centraliser les versions actives
+
+As a backend maintainer,
+I want centraliser les versions actives de prédiction et basculer la configuration par défaut vers le ruleset canonique,
+So that les environnements local/dev/test n'utilisent plus de paire de versions ambiguë ou implicite.
+
+**Acceptance Criteria:**
+- La configuration active de prédiction est centralisée dans un point unique réutilisable par les services, jobs et tests.
+- `backend/.env.example` et la documentation runtime exposent explicitement la paire active supportée.
+- Les services de prédiction quotidienne, de calibration et de QA consomment la source de vérité centrale plutôt que des strings dispersées.
+- Une incohérence runtime entre ruleset actif et référence active est détectable explicitement.
+
+[Source: user request 2026-03-08; backend/app/core/config.py; backend/README.md]
+
+### Story 39.3: Migrer les jobs, fixtures et tests vers le nouveau versionning métier
+
+As a QA and data engineer,
+I want réaligner les seeds, fixtures, jobs de calibration et suites de test sur le nouveau ruleset canonique,
+So that la validation automatique reflète le contrat métier cible sans dépendre d'une dette de nommage historique.
+
+**Acceptance Criteria:**
+- Les jobs de calibration et de QA utilisent la source de vérité centrale pour résoudre `reference_version` / `ruleset_version`.
+- Les tests backend et les fixtures critiques n'utilisent plus de strings dispersées quand une constante de version active existe.
+- Les suites ciblées de daily prediction restent vertes après la bascule.
+- Les cas legacy nécessaires continuent à couvrir la lecture de données `1.0.0`.
+
+[Source: user request 2026-03-08; backend/app/jobs/calibration/natal_profiles.py; backend/app/tests/integration/test_daily_prediction_qa.py]
+
+### Story 39.4: Documenter, monitorer et déprécier le ruleset legacy
+
+As a product operations lead,
+I want documenter la transition de versionning et tracer l'usage du ruleset legacy,
+So that l'équipe peut piloter la bascule vers le ruleset canonique puis planifier proprement la dépréciation du legacy.
+
+**Acceptance Criteria:**
+- La documentation backend/calibration/QA explique clairement la relation entre référence `2.0.0`, ruleset canonique et ruleset legacy.
+- Les environnements non prod disposent d'un runbook de transition simple.
+- L'observabilité permet d'identifier si des calculs ou jobs utilisent encore le ruleset legacy.
+- Une stratégie de dépréciation explicite du ruleset legacy est écrite, sans suppression immédiate des données historiques.
+
+[Source: user request 2026-03-08; docs/qa/daily-prediction-qa-report-2026-03-08.md; backend/README.md]

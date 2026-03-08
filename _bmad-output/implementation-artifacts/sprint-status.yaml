@@ -334,3 +334,9 @@ development_status:
   38-3-qa-produit-cas-reels: done
   38-4-analytics-instrumentation-usage: done
   38-5-gardefous-runtime-exploitation: done
+  
+  epic-39: in-progress
+  39-1-introduire-un-ruleset-canonique-2-0-0: completed
+  39-2-basculer-la-configuration-runtime-et-centraliser-les-versions-actives: backlog
+  39-3-migrer-les-jobs-fixtures-et-tests-vers-le-nouveau-versionning-metier: backlog
+  39-4-documenter-monitorer-et-deprecier-le-ruleset-legacy: backlog

@@ -191,10 +191,55 @@ def run_seed(db: Session):
 
         if not v2.is_locked:
             print("2.0.0 exists but is unlocked — proceeding with repair/seed")
+            # Repair path: clear existing partial data for v2 before re-seeding
+            from sqlalchemy import delete
+            db.execute(delete(RulesetEventTypeModel).where(RulesetEventTypeModel.ruleset_id.in_(
+                select(PredictionRulesetModel.id).where(PredictionRulesetModel.reference_version_id == v2.id)
+            )))
+            db.execute(delete(RulesetParameterModel).where(RulesetParameterModel.ruleset_id.in_(
+                select(PredictionRulesetModel.id).where(PredictionRulesetModel.reference_version_id == v2.id)
+            )))
+            db.execute(delete(PredictionRulesetModel).where(PredictionRulesetModel.reference_version_id == v2.id))
+            db.execute(delete(PointCategoryWeightModel).where(PointCategoryWeightModel.point_id.in_(
+                select(AstroPointModel.id).where(AstroPointModel.reference_version_id == v2.id)
+            )))
+            db.execute(delete(AstroPointModel).where(AstroPointModel.reference_version_id == v2.id))
+            db.execute(delete(HouseCategoryWeightModel).where(HouseCategoryWeightModel.house_id.in_(
+                select(HouseModel.id).where(HouseModel.reference_version_id == v2.id)
+            )))
+            db.execute(delete(PlanetCategoryWeightModel).where(PlanetCategoryWeightModel.planet_id.in_(
+                select(PlanetModel.id).where(PlanetModel.reference_version_id == v2.id)
+            )))
+            db.execute(delete(HouseProfileModel).where(HouseProfileModel.house_id.in_(
+                select(HouseModel.id).where(HouseModel.reference_version_id == v2.id)
+            )))
+            db.execute(delete(PlanetProfileModel).where(PlanetProfileModel.planet_id.in_(
+                select(PlanetModel.id).where(PlanetModel.reference_version_id == v2.id)
+            )))
+            db.execute(delete(SignRulershipModel).where(SignRulershipModel.reference_version_id == v2.id))
+            db.execute(delete(AspectProfileModel).where(AspectProfileModel.aspect_id.in_(
+                select(AspectModel.id).where(AspectModel.reference_version_id == v2.id)
+            )))
+            db.execute(delete(PredictionCategoryModel).where(PredictionCategoryModel.reference_version_id == v2.id))
+            
+            # Step 3 must be re-run if we are repairing, as ReferenceRepository.clone_version_data 
+            # might have been partially executed. However, clone_version_data itself is not 
+            # easily "partially" undoable without deleting the ReferenceVersion itself.
+            # For simplicity in this script, we assume if v2 exists, clone_version_data was called.
+            # If we want to be 100% safe, we'd need to check if Planets/Houses exist in V2.
+            has_basic_data = db.scalar(select(func.count()).select_from(PlanetModel).where(PlanetModel.reference_version_id == v2.id)) > 0
+            if not has_basic_data:
+                v1 = db.scalar(select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0"))
+                if not v1:
+                    raise SeedAbortError("Reference version 1.0.0 not found for cloning.")
+                print("Cloning V1 data to V2...")
+                repo = ReferenceRepository(db)
+                repo.clone_version_data(v1.id, v2.id)
+            db.flush()
         else:
-            # State corrupted or incomplete
+            # State corrupted or incomplete AND locked
             lines = [
-                "ERROR: 2.0.0 exists but is incomplete or unlocked. Manual investigation required."
+                "ERROR: 2.0.0 exists and is LOCKED but is incomplete. Manual investigation required."
             ]
             for k, expected in EXPECTED_COUNTS.items():
                 got = actual.get(k, 0)

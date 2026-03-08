@@ -277,19 +277,21 @@ class Settings:
             )
 
     @property
-    def ruleset_version(self) -> str:
-        return self._ruleset_version
-
-    @ruleset_version.setter
-    def ruleset_version(self, value: str) -> None:
-        self._ruleset_version = value
-
-    @property
     def active_ruleset_version(self) -> str:
         return self._ruleset_version
 
     @active_ruleset_version.setter
     def active_ruleset_version(self, value: str) -> None:
+        self._ruleset_version = value
+
+    @property
+    def ruleset_version(self) -> str:
+        """Alias for active_ruleset_version (backwards compatibility)."""
+        return self._ruleset_version
+
+    @ruleset_version.setter
+    def ruleset_version(self, value: str) -> None:
+        """Alias for active_ruleset_version (backwards compatibility)."""
         self._ruleset_version = value
 
     @property

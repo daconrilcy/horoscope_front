@@ -208,13 +208,72 @@ def test_seed_31_prediction_v2_idempotence_corrupted_fails(
         # 1. Setup V1.0.0
         ReferenceDataService.seed_reference_version(session, "1.0.0")
 
-        # 2. Partially seed V2.0.0 manually
-        v2 = ReferenceVersionModel(version="2.0.0", description="Corrupted", is_locked=False)
+        # 2. Partially seed V2.0.0 manually (LOCKED)
+        v2 = ReferenceVersionModel(version="2.0.0", description="Corrupted", is_locked=True)
         session.add(v2)
         session.commit()
 
         # 3. Running run_seed should raise SeedAbortError as per AC15 case 3
-        with pytest.raises(SeedAbortError):
+        with pytest.raises(SeedAbortError, match="LOCKED"):
             run_seed(session)
+
+    engine.dispose()
+
+
+def test_seed_31_prediction_v2_repair_unlocked_proceeds(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    engine = _setup_engine(monkeypatch, tmp_path, "test-seed-v2-repair.db")
+
+    with Session(engine) as session:
+        # 1. Setup V1.0.0
+        ReferenceDataService.seed_reference_version(session, "1.0.0")
+        session.commit()
+
+        # 2. Partially seed V2.0.0 manually (unlocked)
+        v2 = ReferenceVersionModel(
+            version="2.0.0", description="Unlocked but partial", is_locked=False
+        )
+        session.add(v2)
+        session.commit()
+
+        # Add a dummy category to simulate partial seeding
+        session.add(
+            PredictionCategoryModel(
+                reference_version_id=v2.id,
+                code="partial",
+                name="Partial",
+                display_name="Partial",
+                sort_order=1,
+            )
+        )
+        session.commit()
+
+        # 3. Running run_seed should proceed with repair
+        run_seed(session)
+        session.commit()
+
+        # 4. Verify repair successful (original counts expected)
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(PredictionCategoryModel)
+                .where(PredictionCategoryModel.reference_version_id == v2.id)
+            )
+            == 12
+        )
+        # Ensure the 'partial' category was removed
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(PredictionCategoryModel)
+                .where(
+                    PredictionCategoryModel.reference_version_id == v2.id,
+                    PredictionCategoryModel.code == "partial",
+                )
+            )
+            == 0
+        )
+        assert v2.is_locked is True
 
     engine.dispose()
