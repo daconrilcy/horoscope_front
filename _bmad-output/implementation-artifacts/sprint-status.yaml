@@ -307,7 +307,7 @@ development_status:
   34-5-turning-points-blocs-ux: done
   epic-34-retrospective: optional
 
-  epic-35: in-progress
+  epic-35: done
   35-1-persistance-run: done
   35-2-explicabilite-debug: done
   35-3-non-regression: done
@@ -334,14 +334,14 @@ development_status:
   38-3-qa-produit-cas-reels: done
   38-4-analytics-instrumentation-usage: done
   38-5-gardefous-runtime-exploitation: done
-  
+
   epic-39: done
   39-1-introduire-un-ruleset-canonique-2-0-0: done
   39-2-basculer-la-configuration-runtime-et-centraliser-les-versions-actives: done
   39-3-migrer-les-jobs-fixtures-et-tests-vers-le-nouveau-versionning-metier: done
   39-4-documenter-monitorer-et-deprecier-le-ruleset-legacy: done
 
-  epic-40: in-progress
+  epic-40: done
   40-1-summaries-humanises-time-blocks-et-turning-points: done
   40-2-discrimination-scores-calibration-provisoire: done
 
@@ -349,5 +349,5 @@ development_status:
   41-1-realigner-taxonomie-et-hierarchie-evenements-intraday: done
   41-2-propager-influence-temporelle-evenements-fenetres-utiles: done
   41-3-fenetres-decisionnelles-et-pivots-filtres: done
-  41-4-contrat-api-et-ui-centres-aide-decision-intraday: backlog
+  41-4-contrat-api-et-ui-centres-aide-decision-intraday: done
   41-5-qa-actionability-et-budget-de-bruit-intraday: backlog

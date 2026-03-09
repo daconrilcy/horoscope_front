@@ -91,6 +91,73 @@ const predictionOk = {
   ],
 };
 
+const predictionWithDecisionWindows = {
+  meta: {
+    date_local: "2026-03-08",
+    timezone: "Europe/Paris",
+    computed_at: "2026-03-08T06:00:00Z",
+    reference_version: "2026.03",
+    ruleset_version: "2.0.0",
+    was_reused: false,
+    house_system_effective: "placidus",
+  },
+  summary: {
+    overall_tone: "positive",
+    overall_summary: "Journée avec des créneaux décisionnels bien définis.",
+    top_categories: ["love", "work"],
+    bottom_categories: ["energy"],
+    best_window: null,
+    main_turning_point: null,
+  },
+  categories: [
+    { code: "love", note_20: 14, raw_score: 0.7, power: 1.1, volatility: 0.3, rank: 1, summary: null },
+  ],
+  timeline: [
+    {
+      start_local: "2026-03-08T09:00:00+01:00",
+      end_local: "2026-03-08T11:00:00+01:00",
+      tone_code: "positive",
+      dominant_categories: ["love"],
+      summary: null,
+      turning_point: false,
+    },
+  ],
+  turning_points: [
+    {
+      occurred_at_local: "2026-03-08T14:00:00+01:00",
+      severity: "0.6",
+      summary: "high_priority_event",
+      drivers: [{ event_type: "aspect_enter_orb", body: "Mars", target: "Jupiter" }],
+    },
+  ],
+  decision_windows: [
+    {
+      start_local: "2026-03-08T09:00:00+01:00",
+      end_local: "2026-03-08T11:00:00+01:00",
+      window_type: "favorable",
+      score: 0.82,
+      confidence: 0.9,
+      dominant_categories: ["love"],
+    },
+    {
+      start_local: "2026-03-08T14:00:00+01:00",
+      end_local: "2026-03-08T15:30:00+01:00",
+      window_type: "prudence",
+      score: 0.55,
+      confidence: 0.75,
+      dominant_categories: ["work"],
+    },
+    {
+      start_local: "2026-03-08T17:00:00+01:00",
+      end_local: "2026-03-08T18:30:00+01:00",
+      window_type: "pivot",
+      score: 0.65,
+      confidence: 0.8,
+      dominant_categories: ["love", "work"],
+    },
+  ],
+};
+
 const predictionTechnical = {
   meta: {
     date_local: "2026-03-08",
@@ -401,5 +468,61 @@ describe("TodayPage", () => {
     expect(screen.getByText("Aspect exact : Venus opposition Pluto")).toBeInTheDocument();
     expect(screen.getByText("00:00 - 03:00")).toBeInTheDocument();
     expect(screen.queryByText("Énergie & Vitalité : Votre score est de 10/20 (climat neutre).")).not.toBeInTheDocument();
+  });
+
+  it("affiche les fenetres decisionnelles avec labels humanises quand elles sont presentes", async () => {
+    installFetchMock({
+      prediction: jsonResponse(predictionWithDecisionWindows),
+    });
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Journée avec des créneaux décisionnels bien définis/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Moments clés du jour")).toBeInTheDocument();
+    expect(screen.getByText("Fenêtre favorable")).toBeInTheDocument();
+    expect(screen.getByText("Prudence")).toBeInTheDocument();
+    expect(screen.getByText("Moment de bascule")).toBeInTheDocument();
+    expect(screen.getByText("Bon créneau pour lancer une action ou prendre une décision.")).toBeInTheDocument();
+    expect(screen.getByText("Gardez une marge de manœuvre, évitez les engagements irréversibles.")).toBeInTheDocument();
+    expect(screen.getByText("Le climat change : restez attentif à vos ressentis.")).toBeInTheDocument();
+  });
+
+  it("humanise les nouveaux event_type V2 du backend sans exposer de code technique", async () => {
+    installFetchMock({
+      prediction: jsonResponse(predictionWithDecisionWindows),
+    });
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Journée avec des créneaux décisionnels bien définis/i)).toBeInTheDocument();
+    });
+
+    // aspect_enter_orb doit être humanisé, pas affiché tel quel
+    expect(screen.queryByText("aspect_enter_orb")).not.toBeInTheDocument();
+    expect(screen.queryByText("high_priority_event")).not.toBeInTheDocument();
+    expect(screen.getByText("Entrée en orbe d'aspect")).toBeInTheDocument();
+    expect(screen.getByText("Un événement astrologique marqué mérite votre attention.")).toBeInTheDocument();
+  });
+
+  it("la timeline detaillee est disponible mais n'est plus le bloc prioritaire", async () => {
+    installFetchMock();
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
+    });
+
+    // La timeline est dans un <details> pliable, pas au premier plan
+    const detailsEl = document.querySelector("details");
+    expect(detailsEl).not.toBeNull();
+    expect(detailsEl?.open).toBe(false);
+    // Le titre reste accessible
+    const summary = detailsEl?.querySelector("summary");
+    expect(summary?.textContent).toContain("Chronologie du jour");
   });
 });

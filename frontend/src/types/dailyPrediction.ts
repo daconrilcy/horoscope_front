@@ -62,12 +62,22 @@ export interface DailyPredictionSummary {
   low_score_variance?: boolean;
 }
 
+export interface DailyPredictionDecisionWindow {
+  start_local: string;
+  end_local: string;
+  window_type: 'favorable' | 'prudence' | 'pivot';
+  score: number;
+  confidence: number;
+  dominant_categories: string[];
+}
+
 export interface DailyPredictionResponse {
   meta: DailyPredictionMeta;
   summary: DailyPredictionSummary;
   categories: DailyPredictionCategory[];
   timeline: DailyPredictionTimeBlock[];
   turning_points: DailyPredictionTurningPoint[];
+  decision_windows?: DailyPredictionDecisionWindow[] | null;
 }
 
 export interface DailyHistoryItem {

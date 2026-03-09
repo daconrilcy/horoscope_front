@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, ChevronDown } from 'lucide-react'
 
 import { TodayHeader } from '../components/TodayHeader'
 import { ShortcutsSection } from '../components/ShortcutsSection'
@@ -8,6 +8,7 @@ import { DayPredictionCard } from '../components/prediction/DayPredictionCard'
 import { CategoryGrid } from '../components/prediction/CategoryGrid'
 import { DayTimeline } from '../components/prediction/DayTimeline'
 import { TurningPointsList } from '../components/prediction/TurningPointsList'
+import { DecisionWindowsSection } from '../components/prediction/DecisionWindowsSection'
 
 import { detectLang } from '../i18n/astrology'
 import { getPredictionMessage } from '../utils/predictionI18n'
@@ -20,7 +21,8 @@ import { trackEvent, EVENTS } from '../utils/analytics'
 export function TodayPage() {
   const navigate = useNavigate()
   const accessToken = useAccessTokenSnapshot()
-  const lang = detectLang() === 'en' ? 'en' : 'fr'
+  const detected = detectLang()
+  const lang = (detected === 'en' ? 'en' : 'fr') as any
   const manualRefreshPending = useRef(false)
 
   const { data: user, isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useAuthMe(accessToken)
@@ -100,29 +102,41 @@ export function TodayPage() {
               style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}
             >
               <RefreshCw size={16} />
-              Actualiser
+              {getPredictionMessage('refresh', lang)}
             </button>
           </div>
 
           <DayPredictionCard prediction={prediction} lang={lang} />
-          
-          <CategoryGrid 
-            categories={prediction.categories} 
-            lang={lang} 
+
+          {prediction.decision_windows && prediction.decision_windows.length > 0 && (
+            <DecisionWindowsSection windows={prediction.decision_windows} lang={lang} />
+          )}
+
+          <CategoryGrid
+            categories={prediction.categories}
+            lang={lang}
             onCategoryClick={handleCategoryClick}
           />
-          
-          <TurningPointsList 
-            turningPoints={prediction.turning_points} 
-            lang={lang} 
+
+          <TurningPointsList
+            turningPoints={prediction.turning_points}
+            lang={lang}
             onTurningPointClick={handleTurningPointClick}
           />
-          
-          <DayTimeline 
-            timeline={prediction.timeline} 
-            lang={lang} 
-            onTimelineClick={handleTimelineClick}
-          />
+
+          <details className="group mb-8">
+            <summary className="flex items-center justify-between cursor-pointer py-3 text-text-2 text-sm font-medium border-t border-line hover:text-text-1 transition-colors select-none list-none">
+              <span>{getPredictionMessage('timeline', lang)}</span>
+              <ChevronDown size={18} className="group-open:rotate-180 transition-transform opacity-60" />
+            </summary>
+            <div className="pt-4">
+              <DayTimeline
+                timeline={prediction.timeline}
+                lang={lang}
+                onTimelineClick={handleTimelineClick}
+              />
+            </div>
+          </details>
 
           <ShortcutsSection onHistoryClick={handleHistoryClick} />
         </>

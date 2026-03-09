@@ -1,6 +1,6 @@
 # Story 41.4 : Contrat API et UI centrés sur l'aide à la décision intraday
 
-Status: backlog
+Status: done
 
 ## Story
 
@@ -12,50 +12,50 @@ afin de comprendre rapidement à quels moments de la journée lancer une action,
 
 ### AC1 — Le contrat API expose des fenêtres lisibles
 
-- [ ] Le payload `/v1/predictions/daily` expose un champ lisible et stable pour les fenêtres décisionnelles
-- [ ] Les drivers techniques ne remontent plus tels quels dans le contrat utilisateur final
+- [x] Le payload `/v1/predictions/daily` expose un champ lisible et stable pour les fenêtres décisionnelles
+- [x] Les drivers techniques ne remontent plus tels quels dans le contrat utilisateur final
 
 ### AC2 — `TodayPage` met en avant l'aide à la décision
 
-- [ ] L'UI affiche en priorité 3 à 6 fenêtres maximum
-- [ ] Chaque fenêtre présente une période, un ton actionnable, des domaines clés et un message utile
-- [ ] La hiérarchie visuelle distingue clairement `moment fort`, `prudence`, `fenêtre favorable`
+- [x] L'UI affiche en priorité 3 à 6 fenêtres maximum
+- [x] Chaque fenêtre présente une période, un ton actionnable, des domaines clés et un message utile
+- [x] La hiérarchie visuelle distingue clairement `moment fort`, `prudence`, `fenêtre favorable`
 
 ### AC3 — La timeline détaillée devient secondaire
 
-- [ ] La chronologie complète peut rester disponible, mais elle n'est plus la vue principale du produit
-- [ ] Les répétitions techniques sont masquées ou condensées
+- [x] La chronologie complète peut rester disponible, mais elle n'est plus la vue principale du produit
+- [x] Les répétitions techniques sont masquées ou condensées
 
 ### AC4 — Les libellés sont entièrement humanisés
 
-- [ ] Aucun label technique type `enter_orb` n'est visible dans le rendu final
-- [ ] Les drivers affichés sont limités aux éléments vraiment utiles à l'utilisateur
+- [x] Aucun label technique type `enter_orb` n'est visible dans le rendu final
+- [x] Les drivers affichés sont limités aux éléments vraiment utiles à l'utilisateur
 
 ### AC5 — Les tests frontend sont réalignés
 
-- [ ] Les tests `TodayPage` et composants prediction couvrent les nouvelles fenêtres et le rendu orienté décision
+- [x] Les tests `TodayPage` et composants prediction couvrent les nouvelles fenêtres et le rendu orienté décision
 
 ## Tasks / Subtasks
 
 ### T1 — Étendre les types backend/front
 
-- [ ] Ajouter les types API/TS nécessaires pour les fenêtres décisionnelles
-- [ ] Préserver la compatibilité des consommateurs existants si nécessaire
+- [x] Ajouter les types API/TS nécessaires pour les fenêtres décisionnelles
+- [x] Préserver la compatibilité des consommateurs existants si nécessaire
 
 ### T2 — Revoir la présentation de `TodayPage`
 
-- [ ] Créer ou adapter les composants de fenêtres décisionnelles
-- [ ] Réduire le poids visuel de la timeline brute
+- [x] Créer ou adapter les composants de fenêtres décisionnelles
+- [x] Réduire le poids visuel de la timeline brute
 
 ### T3 — Humaniser complètement les drivers
 
-- [ ] Étendre `predictionI18n`
-- [ ] Filtrer les drivers de faible valeur produit
+- [x] Étendre `predictionI18n`
+- [x] Filtrer les drivers de faible valeur produit
 
 ### T4 — Tests
 
-- [ ] Mettre à jour `TodayPage.test.tsx`
-- [ ] Ajouter des tests ciblés sur les nouveaux composants si nécessaire
+- [x] Mettre à jour `TodayPage.test.tsx`
+- [x] Ajouter des tests ciblés sur les nouveaux composants si nécessaire
 
 ## Dev Notes
 
@@ -74,14 +74,31 @@ afin de comprendre rapidement à quels moments de la journée lancer une action,
 
 ### Agent Model Used
 
-GPT-5 Codex
+claude-sonnet-4-6
 
 ### Debug Log References
 
+- AC1 backend : le contrat `decision_windows` (type + score + confidence + dominant_categories) était déjà exposé par 41.3 dans `predictions.py`. Aucune modification backend nécessaire.
+- `AdminPage.test.tsx` : 1 test pré-existant en échec (non lié à cette story, confirmé par `git stash` avant/après).
+
 ### Completion Notes List
 
+- **T1** : Ajouté `DailyPredictionDecisionWindow` interface et champ `decision_windows?: DailyPredictionDecisionWindow[] | null` dans `DailyPredictionResponse` (frontend/src/types/dailyPrediction.ts). Compat ascendante préservée (champ optionnel).
+- **T2** : Créé `DecisionWindowsSection.tsx` — affiche jusqu'à 6 fenêtres triées, badge coloré par type (favorable=vert, prudence=jaune, pivot=violet), message actionnable, domaines dominants avec icônes. `TodayPage.tsx` : `DecisionWindowsSection` en position prioritaire (avant CategoryGrid), `DayTimeline` déplacée dans un `<details>` pliable.
+- **T3** : Étendu `predictionI18n.ts` — ajouté labels pour `decision_windows_title`, `window_type_*`, `window_msg_*` (fr+en) ; ajouté humanisation des event_types V2 : `aspect_exact_to_angle`, `aspect_exact_to_luminary`, `aspect_exact_to_personal`, `aspect_enter_orb`, `aspect_exit_orb`, `moon_sign_ingress`, `asc_sign_change` ; suppression du fallback `return eventType` qui exposait les codes techniques.
+- **T4** : Ajouté 4 nouveaux tests TodayPage (decision_windows affichées, labels humanisés, nouveaux event_type V2, timeline secondaire dans `<details>`). 10/10 tests TodayPage passent. 1121/1122 tests totaux passent (1 régression pré-existante AdminPage non liée).
+
 ### File List
+
+- `frontend/src/types/dailyPrediction.ts` (modifié — ajout DailyPredictionDecisionWindow + champ decision_windows)
+- `frontend/src/components/prediction/DecisionWindowsSection.tsx` (nouveau)
+- `frontend/src/pages/TodayPage.tsx` (modifié — ajout DecisionWindowsSection, timeline dans details)
+- `frontend/src/utils/predictionI18n.ts` (modifié — labels window_type/msg + event_type V2)
+- `frontend/src/tests/TodayPage.test.tsx` (modifié — 4 nouveaux tests)
+- `_bmad-output/implementation-artifacts/41-4-contrat-api-et-ui-centres-aide-decision-intraday.md` (modifié — statuts AC/tâches)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modifié — statut story)
 
 ## Change Log
 
 - 2026-03-09 : Story créée à partir de l'audit intraday produit/backend.
+- 2026-03-09 : Implémentation complète — types TS, DecisionWindowsSection, TodayPage redesign (decision windows prioritaires, timeline en details), humanisation event_type V2, 4 nouveaux tests TodayPage (10/10 pass). (claude-sonnet-4-6)

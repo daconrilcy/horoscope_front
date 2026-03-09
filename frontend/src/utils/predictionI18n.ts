@@ -53,10 +53,28 @@ const MESSAGES: Record<string, Record<Lang, string>> = {
   turning_points: { fr: "Points de bascule", en: "Turning Points" },
   intensity: { fr: "Intensité", en: "Intensity" },
   pivot_badge: { fr: "Pivot", en: "Pivot" },
+  refresh: { fr: "Actualiser", en: "Refresh" },
   pending_summary: { fr: "Calcul de votre tendance...", en: "Computing your trend..." },
   provisional_calibration: {
     fr: "Calibration provisoire : les notes peuvent rester peu contrastées tant que le référentiel local n'est pas entièrement calibré.",
     en: "Provisional calibration: scores may stay close together until the local reference is fully calibrated.",
+  },
+  // Decision windows
+  decision_windows_title: { fr: "Moments clés du jour", en: "Key moments today" },
+  window_type_favorable: { fr: "Fenêtre favorable", en: "Favorable window" },
+  window_type_prudence: { fr: "Prudence", en: "Caution" },
+  window_type_pivot: { fr: "Moment de bascule", en: "Turning moment" },
+  window_msg_favorable: {
+    fr: "Bon créneau pour lancer une action ou prendre une décision.",
+    en: "Good window to take action or make a decision.",
+  },
+  window_msg_prudence: {
+    fr: "Gardez une marge de manœuvre, évitez les engagements irréversibles.",
+    en: "Keep some flexibility, avoid irreversible commitments.",
+  },
+  window_msg_pivot: {
+    fr: "Le climat change : restez attentif à vos ressentis.",
+    en: "The mood is shifting: stay attentive to how you feel.",
   },
 };
 
@@ -191,16 +209,25 @@ export function humanizePredictionDriverLabel(
   }
 
   const eventLabels: Record<string, Record<Lang, string>> = {
+    // Legacy codes
     exact: { fr: "Aspect exact", en: "Exact aspect" },
     ingress: { fr: "Changement de signe", en: "Sign ingress" },
     station: { fr: "Station planétaire", en: "Planetary station" },
+    // Taxonomy V2 codes (event_detector.py)
+    aspect_exact_to_angle: { fr: "Aspect exact (Asc/MC)", en: "Exact aspect (Asc/MC)" },
+    aspect_exact_to_luminary: { fr: "Aspect exact (Soleil/Lune)", en: "Exact aspect (Sun/Moon)" },
+    aspect_exact_to_personal: { fr: "Aspect exact", en: "Exact aspect" },
+    aspect_enter_orb: { fr: "Entrée en orbe d'aspect", en: "Aspect orb opening" },
+    aspect_exit_orb: { fr: "Sortie d'orbe d'aspect", en: "Aspect orb closing" },
+    moon_sign_ingress: { fr: "Changement de signe de la Lune", en: "Moon sign change" },
+    asc_sign_change: { fr: "Changement de signe à l'Ascendant", en: "Ascendant sign change" },
   };
 
   if (eventLabels[eventType]) {
     return eventLabels[eventType][lang];
   }
 
-  return eventType || (lang === "fr" ? "Signal astrologique" : "Astrological signal");
+  return lang === "fr" ? "Signal astrologique" : "Astrological signal";
 }
 
 export function buildTimelineFallbackSummary(
