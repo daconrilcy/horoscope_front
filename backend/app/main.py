@@ -8,6 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
+from sqlalchemy.exc import OperationalError
 from starlette.responses import Response
 
 from app.ai_engine.routes import router as ai_engine_router
@@ -63,7 +64,11 @@ def _ensure_llm_registry_seeded() -> None:
     if settings.app_env in {"production", "prod"}:
         return
 
-    from app.infra.db.models import LlmPersonaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
+    from app.infra.db.models import (
+        LlmPersonaModel,
+        LlmPromptVersionModel,
+        LlmUseCaseConfigModel,
+    )
     from app.infra.db.models.llm_prompt import PromptStatus
     from app.infra.db.session import SessionLocal
     from app.llm_orchestration.seeds.use_cases_seed import seed_use_cases
@@ -73,56 +78,101 @@ def _ensure_llm_registry_seeded() -> None:
     from scripts.seed_30_14_chat_prompt import seed as seed_chat_prompt_v2
     from scripts.seed_astrologers_6_profiles import seed_astrologers
 
-    with SessionLocal() as db:
-        use_case_count = db.query(LlmUseCaseConfigModel).count()
-        complete_use_case = (
-            db.query(LlmUseCaseConfigModel)
-            .filter(LlmUseCaseConfigModel.key == "natal_interpretation")
-            .one_or_none()
-        )
-        short_use_case = (
-            db.query(LlmUseCaseConfigModel)
-            .filter(LlmUseCaseConfigModel.key == "natal_interpretation_short")
-            .one_or_none()
-        )
-        active_short_prompt = PromptRegistryV2.get_active_prompt(db, "natal_interpretation_short")
-        prompt_count = db.query(LlmPromptVersionModel).count()
-        enabled_personas = db.query(LlmPersonaModel).filter(LlmPersonaModel.enabled == True).count()  # noqa: E712
-        required_use_cases = (
-            db.query(LlmUseCaseConfigModel)
-            .filter(LlmUseCaseConfigModel.persona_strategy == "required")
-            .all()
-        )
-        has_persona_lock = any(
-            enabled_personas > 1 and len(uc.allowed_persona_ids or []) <= 1
-            for uc in required_use_cases
-        )
-        active_complete_prompt = db.execute(
-            select(LlmPromptVersionModel).where(
-                LlmPromptVersionModel.use_case_key == "natal_interpretation",
-                LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
+    def collect_registry_state() -> tuple[bool, bool, int, int, bool, int, bool, bool]:
+        with SessionLocal() as db:
+            use_case_count = db.query(LlmUseCaseConfigModel).count()
+            complete_use_case = (
+                db.query(LlmUseCaseConfigModel)
+                .filter(LlmUseCaseConfigModel.key == "natal_interpretation")
+                .one_or_none()
             )
-        ).scalar_one_or_none()
-        active_chat_prompt = db.execute(
-            select(LlmPromptVersionModel).where(
-                LlmPromptVersionModel.use_case_key == "chat_astrologer",
-                LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
+            short_use_case = (
+                db.query(LlmUseCaseConfigModel)
+                .filter(LlmUseCaseConfigModel.key == "natal_interpretation_short")
+                .one_or_none()
             )
-        ).scalar_one_or_none()
-        placeholder_drift = (
-            not complete_use_case
-            or "chart_json" not in (complete_use_case.required_prompt_placeholders or [])
-            or not short_use_case
-            or "chart_json" not in (short_use_case.required_prompt_placeholders or [])
-        )
-        missing_registry = use_case_count == 0 or prompt_count == 0 or active_short_prompt is None
-        degraded_registry = (
-            enabled_personas < 6
-            or has_persona_lock
-            or active_complete_prompt is None
-            or active_chat_prompt is None
-            or placeholder_drift
-        )
+            active_short_prompt = PromptRegistryV2.get_active_prompt(
+                db, "natal_interpretation_short"
+            )
+            prompt_count = db.query(LlmPromptVersionModel).count()
+            enabled_personas = (
+                db.query(LlmPersonaModel).filter(LlmPersonaModel.enabled == True).count()  # noqa: E712
+            )
+            required_use_cases = (
+                db.query(LlmUseCaseConfigModel)
+                .filter(LlmUseCaseConfigModel.persona_strategy == "required")
+                .all()
+            )
+            has_persona_lock = any(
+                enabled_personas > 1 and len(uc.allowed_persona_ids or []) <= 1
+                for uc in required_use_cases
+            )
+            active_complete_prompt = db.execute(
+                select(LlmPromptVersionModel).where(
+                    LlmPromptVersionModel.use_case_key == "natal_interpretation",
+                    LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
+                )
+            ).scalar_one_or_none()
+            active_chat_prompt = db.execute(
+                select(LlmPromptVersionModel).where(
+                    LlmPromptVersionModel.use_case_key == "chat_astrologer",
+                    LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
+                )
+            ).scalar_one_or_none()
+            placeholder_drift = (
+                not complete_use_case
+                or "chart_json" not in (complete_use_case.required_prompt_placeholders or [])
+                or not short_use_case
+                or "chart_json" not in (short_use_case.required_prompt_placeholders or [])
+            )
+            missing_registry = (
+                use_case_count == 0 or prompt_count == 0 or active_short_prompt is None
+            )
+            degraded_registry = (
+                enabled_personas < 6
+                or has_persona_lock
+                or active_complete_prompt is None
+                or active_chat_prompt is None
+                or placeholder_drift
+            )
+            return (
+                missing_registry,
+                degraded_registry,
+                use_case_count,
+                prompt_count,
+                active_short_prompt is not None,
+                enabled_personas,
+                has_persona_lock,
+                placeholder_drift,
+            )
+
+    try:
+        (
+            missing_registry,
+            degraded_registry,
+            use_case_count,
+            prompt_count,
+            has_active_short_prompt,
+            enabled_personas,
+            has_persona_lock,
+            placeholder_drift,
+        ) = collect_registry_state()
+    except OperationalError as error:
+        is_local_dev = settings.app_env in {"development", "dev", "local"}
+        if not is_local_dev or not settings._is_local_sqlite_database_url(settings.database_url):
+            raise
+        logger.warning("llm_registry_local_sqlite_repair error=%s", error)
+        ensure_local_sqlite_schema_ready()
+        (
+            missing_registry,
+            degraded_registry,
+            use_case_count,
+            prompt_count,
+            has_active_short_prompt,
+            enabled_personas,
+            has_persona_lock,
+            placeholder_drift,
+        ) = collect_registry_state()
 
     if not missing_registry and not degraded_registry:
         return
@@ -134,7 +184,7 @@ def _ensure_llm_registry_seeded() -> None:
         ),
         use_case_count,
         prompt_count,
-        active_short_prompt is not None,
+        has_active_short_prompt,
         enabled_personas,
         has_persona_lock,
         placeholder_drift,

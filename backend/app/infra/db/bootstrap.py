@@ -8,13 +8,13 @@ from alembic import command
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 from sqlalchemy import inspect, text
+from sqlalchemy.exc import OperationalError
 
 from app.core.config import settings
+from app.infra.db.base import Base
 from app.infra.db.session import engine
 
 logger = logging.getLogger(__name__)
-
-_REQUIRED_AUTH_TABLES = {"users", "user_refresh_tokens"}
 
 
 def _is_pytest_runtime() -> bool:
@@ -31,10 +31,11 @@ def _should_auto_upgrade_local_sqlite() -> bool:
     return ":memory:" not in settings.database_url
 
 
-def _missing_required_tables() -> set[str]:
+def _missing_declared_tables() -> set[str]:
     inspector = inspect(engine)
     existing_tables = set(inspector.get_table_names())
-    return _REQUIRED_AUTH_TABLES - existing_tables
+    declared_tables = set(Base.metadata.tables)
+    return declared_tables - existing_tables
 
 
 def _current_revision() -> str | None:
@@ -60,11 +61,31 @@ def _head_revision() -> str:
     return ScriptDirectory.from_config(_alembic_config()).get_current_head()
 
 
+def _repair_missing_tables(missing_tables: set[str]) -> None:
+    tables_to_create = [
+        table for table in Base.metadata.sorted_tables if table.name in missing_tables
+    ]
+    for table in tables_to_create:
+        try:
+            Base.metadata.create_all(bind=engine, tables=[table], checkfirst=True)
+        except OperationalError as error:
+            if "already exists" in str(error).lower():
+                logger.warning(
+                    "local_sqlite_schema_repair_table_exists database_url=%s table=%s",
+                    settings.database_url,
+                    table.name,
+                )
+                continue
+            raise
+
+
 def ensure_local_sqlite_schema_ready() -> None:
     if not _should_auto_upgrade_local_sqlite():
         return
 
-    missing_tables = _missing_required_tables()
+    inspector = inspect(engine)
+    existing_tables = set(inspector.get_table_names())
+    missing_tables = _missing_declared_tables()
     current_revision = _current_revision()
     head_revision = _head_revision()
     if not missing_tables and current_revision == head_revision:
@@ -80,4 +101,25 @@ def ensure_local_sqlite_schema_ready() -> None:
         current_revision,
         head_revision,
     )
-    command.upgrade(_alembic_config(), "head")
+
+    if current_revision is None and existing_tables:
+        logger.warning(
+            "local_sqlite_schema_stamp_existing_metadata database_url=%s table_count=%s",
+            settings.database_url,
+            len(existing_tables),
+        )
+        _repair_missing_tables(missing_tables)
+        command.stamp(_alembic_config(), "head")
+        return
+
+    if current_revision != head_revision:
+        command.upgrade(_alembic_config(), "head")
+        return
+
+    if missing_tables:
+        logger.warning(
+            "local_sqlite_schema_repair_create_all database_url=%s missing_tables=%s",
+            settings.database_url,
+            sorted(missing_tables),
+        )
+        _repair_missing_tables(missing_tables)

@@ -61,7 +61,7 @@ def _setup_engine(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, db_name: str)
     db_path = tmp_path / db_name
     database_url = f"sqlite:///{db_path.as_posix()}"
     monkeypatch.setattr(settings, "database_url", database_url)
-    command.upgrade(_alembic_config(), "20260307_0033")
+    command.upgrade(_alembic_config(), "20260308_0041")
     return _sqlite_engine(database_url)
 
 

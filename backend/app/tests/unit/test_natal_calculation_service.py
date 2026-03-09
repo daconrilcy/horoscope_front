@@ -128,7 +128,7 @@ def test_calculate_natal_none_reference_version_resolves_to_active_version_in_er
             NatalCalculationService.calculate(db, payload, reference_version=None)
 
     assert error.value.code == "reference_version_not_found"
-    assert error.value.details["version"] == "1.0.0"
+    assert error.value.details["version"] == "2.0.0"
 
 
 def test_calculate_natal_keeps_sign_and_house_consistent_with_geometry() -> None:

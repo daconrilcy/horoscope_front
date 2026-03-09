@@ -39,9 +39,9 @@ class EffectiveContext:
 
     house_system_requested: str
     house_system_effective: str
-    local_date: date
     timezone: str
     input_hash: str
+    local_date: date | None = None
 
 
 @dataclass(frozen=True)

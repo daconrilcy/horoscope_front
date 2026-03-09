@@ -233,6 +233,8 @@ claude-sonnet-4-6 (via Gemini CLI)
 - ✅ Unit tests coverage for all intraday components.
 - ✅ Integration QA tests with automated noise budget verification.
 - ✅ No regressions in existing intraday logic or frontend.
+- ✅ Validation complémentaire effectuée sur backend local SQLite réel : `/v1/predictions/daily` et `/dashboard` restent opérationnels après auto-réparation du schéma et re-seed de la référence/ruleset actifs.
+- ✅ Non-régression ajoutée pour les runs réutilisés : les `decision_windows` restent présentes dans le payload API même quand la réponse provient du cache persistant.
 
 ### File List
 
@@ -251,3 +253,4 @@ claude-sonnet-4-6 (via Gemini CLI)
 
 - 2026-03-09 : Story créée — clôture qualité épic 41, budget de bruit intraday, tests unitaires composants et intégration QA go/no-go.
 - 2026-03-09 : Implémentation complète, renforcement du moteur (merging/capping) et validation QA automatisée.
+- 2026-03-09 : Validation finale end-to-end en local, avec durcissement du bootstrap SQLite et du seed `2.0.0` pour sécuriser le parcours dashboard/auth/prediction sur base de dev. (Codex)

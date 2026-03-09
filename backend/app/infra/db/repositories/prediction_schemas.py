@@ -116,7 +116,7 @@ class CalibrationData:
     p75: float | None
     p95: float | None
     sample_size: int | None
-    calibration_label: str | None
+    calibration_label: str | None = "provisional"
 
 
 @dataclass(frozen=True)

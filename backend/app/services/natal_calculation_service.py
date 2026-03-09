@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import FrameType, HouseSystemType, ZodiacType, settings
@@ -21,6 +22,7 @@ from app.domain.astrology.natal_calculation import (
     build_natal_result,
 )
 from app.domain.astrology.natal_preparation import BirthInput
+from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.observability.metrics import increment_counter
 from app.services.reference_data_service import ReferenceDataService
 
@@ -284,22 +286,6 @@ class NatalCalculationService:
         """
         resolved_version = reference_version or settings.active_reference_version
 
-        if timeout_check is not None:
-            timeout_check()
-        reference_data = ReferenceDataService.get_active_reference_data(
-            db,
-            version=resolved_version,
-        )
-        if timeout_check is not None:
-            timeout_check()
-
-        if not reference_data:
-            raise NatalCalculationError(
-                code="reference_version_not_found",
-                message="reference version not found",
-                details={"version": resolved_version},
-            )
-
         (
             resolved_zodiac,
             resolved_ayanamsa,
@@ -315,14 +301,41 @@ class NatalCalculationService:
             prefer_simplified_defaults=not accurate and not engine_override,
         )
 
-        # AC 2: Given zodiac=sidereal sans ayanamsa -> 422 missing_ayanamsa
-        # This applies when zodiac is explicitly requested as sidereal.
+        # Validate user-supplied options before checking reference payload availability.
         if (zodiac or "").strip().lower() == "sidereal" and not (ayanamsa or "").strip():
             increment_counter("natal_ruleset_invalid_total|code=missing_ayanamsa")
             raise NatalCalculationError(
                 code="missing_ayanamsa",
                 message="ayanamsa is required when sidereal zodiac is explicitly requested",
                 details={"zodiac": "sidereal"},
+            )
+
+        if timeout_check is not None:
+            timeout_check()
+        reference_data = ReferenceDataService.get_active_reference_data(
+            db,
+            version=resolved_version,
+        )
+        if not reference_data and reference_version is None:
+            fallback_version = db.scalar(
+                select(ReferenceVersionModel.version)
+                .order_by(ReferenceVersionModel.created_at.desc(), ReferenceVersionModel.id.desc())
+                .limit(1)
+            )
+            if fallback_version and fallback_version != resolved_version:
+                resolved_version = fallback_version
+                reference_data = ReferenceDataService.get_active_reference_data(
+                    db,
+                    version=resolved_version,
+                )
+        if timeout_check is not None:
+            timeout_check()
+
+        if not reference_data:
+            raise NatalCalculationError(
+                code="reference_version_not_found",
+                message="reference version not found",
+                details={"version": resolved_version},
             )
 
         # Fallback to default ayanamsa if still missing (e.g. zodiac came from defaults)
@@ -396,6 +409,7 @@ class NatalCalculationService:
 
         # Story 24-1: aspect school and versioned rules identifier.
         from app.core.config import AspectSchoolType
+        resolved_ruleset_version = str(reference_data.get("version") or settings.ruleset_version)
 
         aspect_school_str = (aspect_school or "").strip().lower()
         if not aspect_school_str:
@@ -414,13 +428,13 @@ class NatalCalculationService:
                     },
                 )
 
-        aspect_rules_version = f"{resolved_aspect_school.value}-{settings.ruleset_version}"
+        aspect_rules_version = f"{resolved_aspect_school.value}-{resolved_ruleset_version}"
 
         try:
             return build_natal_result(
                 birth_input=birth_input,
                 reference_data=reference_data,
-                ruleset_version=settings.ruleset_version,
+                ruleset_version=resolved_ruleset_version,
                 timeout_check=timeout_check,
                 engine=engine,
                 birth_lat=birth_input.birth_lat,

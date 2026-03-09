@@ -197,6 +197,25 @@ def test_ruleset_auto_seed_in_local_dev(service, db):
         db.commit.assert_called_once()
 
 
+def test_reference_version_auto_seed_in_local_dev(service, db):
+    svc_path = "app.services.daily_prediction_service"
+
+    with patch(f"{svc_path}.settings") as mock_settings, \
+         patch(
+             "app.services.reference_data_service.ReferenceDataService.seed_reference_version"
+         ) as mock_seed_reference:
+        mock_settings.app_env = "development"
+        mock_settings.active_reference_version = "2.0.0"
+        db.scalar.side_effect = [None, 10]
+
+        reference_version_id = service._resolve_reference_version_id(db, "2.0.0")
+
+        assert reference_version_id == 10
+        mock_seed_reference.assert_any_call(db, "1.0.0")
+        mock_seed_reference.assert_any_call(db, "2.0.0")
+        assert mock_seed_reference.call_count == 2
+
+
 def test_ruleset_missing_without_auto_seed_raises(service, db):
     svc_path = "app.services.daily_prediction_service"
     ruleset_repo = MagicMock()
@@ -680,7 +699,7 @@ def test_prediction_run_log_includes_ruleset_version(service, db, mock_profile, 
             result_payload={}
         )
         mock_existing_run = MagicMock(spec=DailyPredictionRunModel)
-        mock_daily_repo.return_value.get_run_by_hash.return_value = mock_existing_run
+        mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = mock_existing_run
         db.scalar.return_value = 10
         mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
             id=20, reference_version_id=10

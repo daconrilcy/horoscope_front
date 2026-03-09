@@ -2,6 +2,7 @@ from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, inspect, text
 
 from app.core.config import settings
@@ -42,5 +43,5 @@ def test_migration_0037_is_idempotent_when_column_already_exists(
             for column in inspect(connection).get_columns("daily_prediction_category_scores")
         }
 
-    assert revision == "20260308_0037"
+    assert revision == ScriptDirectory.from_config(config).get_current_head()
     assert "contributors_json" in columns

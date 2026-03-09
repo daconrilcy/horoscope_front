@@ -87,6 +87,8 @@ claude-sonnet-4-6
 - **T2** : Créé `DecisionWindowsSection.tsx` — affiche jusqu'à 6 fenêtres triées, badge coloré par type (favorable=vert, prudence=jaune, pivot=violet), message actionnable, domaines dominants avec icônes. `TodayPage.tsx` : `DecisionWindowsSection` en position prioritaire (avant CategoryGrid), `DayTimeline` déplacée dans un `<details>` pliable.
 - **T3** : Étendu `predictionI18n.ts` — ajouté labels pour `decision_windows_title`, `window_type_*`, `window_msg_*` (fr+en) ; ajouté humanisation des event_types V2 : `aspect_exact_to_angle`, `aspect_exact_to_luminary`, `aspect_exact_to_personal`, `aspect_enter_orb`, `aspect_exit_orb`, `moon_sign_ingress`, `asc_sign_change` ; suppression du fallback `return eventType` qui exposait les codes techniques.
 - **T4** : Ajouté 4 nouveaux tests TodayPage (decision_windows affichées, labels humanisés, nouveaux event_type V2, timeline secondaire dans `<details>`). 10/10 tests TodayPage passent. 1121/1122 tests totaux passent (1 régression pré-existante AdminPage non liée).
+- **Post-validation 2026-03-09** : Le backend reconstruit désormais `decision_windows` depuis les données persistées quand une prédiction est réutilisée depuis le cache/DB (`was_reused=true`). Le contrat `/v1/predictions/daily` reste donc stable pour `/dashboard` même sans `engine_output` en mémoire.
+- **Post-validation 2026-03-09** : Le démarrage local SQLite répare le schéma et ré-amorce la référence/ruleset `2.0.0` si nécessaire, ce qui supprime les erreurs locales `version_missing`/`ruleset_missing` qui bloquaient le chargement du dashboard.
 
 ### File List
 
@@ -102,3 +104,4 @@ claude-sonnet-4-6
 
 - 2026-03-09 : Story créée à partir de l'audit intraday produit/backend.
 - 2026-03-09 : Implémentation complète — types TS, DecisionWindowsSection, TodayPage redesign (decision windows prioritaires, timeline en details), humanisation event_type V2, 4 nouveaux tests TodayPage (10/10 pass). (claude-sonnet-4-6)
+- 2026-03-09 : Validation finale de l'épic en environnement local réel — correction de la reconstruction des `decision_windows` sur runs réutilisés et auto-réparation du seed `reference/ruleset 2.0.0` pour rétablir `/dashboard`. (Codex)

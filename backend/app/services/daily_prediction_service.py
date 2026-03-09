@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from app.prediction.persistence_service import PredictionPersistenceService
     from app.prediction.schemas import EngineOutput
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 class ComputeMode(Enum):
@@ -416,6 +416,11 @@ class DailyPredictionService:
         rv_id = db.scalar(
             select(ReferenceVersionModel.id).where(ReferenceVersionModel.version == version)
         )
+        if rv_id is None and self._should_auto_seed_reference_version(version):
+            self._auto_seed_reference_version(db, version=version)
+            rv_id = db.scalar(
+                select(ReferenceVersionModel.id).where(ReferenceVersionModel.version == version)
+            )
         if rv_id is None:
             raise DailyPredictionServiceError(
                 "version_missing", f"Référence version '{version}' introuvable"
@@ -468,6 +473,18 @@ class DailyPredictionService:
         if settings.app_env in {"production", "prod"}:
             return False
         return version in {settings.active_ruleset_version, LEGACY_RULESET_VERSION}
+
+    def _should_auto_seed_reference_version(self, version: str) -> bool:
+        if settings.app_env in {"production", "prod"}:
+            return False
+        return version in {settings.active_reference_version, LEGACY_RULESET_VERSION}
+
+    def _auto_seed_reference_version(self, db: Session, *, version: str) -> None:
+        from app.services.reference_data_service import ReferenceDataService
+
+        if version != LEGACY_RULESET_VERSION:
+            ReferenceDataService.seed_reference_version(db, LEGACY_RULESET_VERSION)
+        ReferenceDataService.seed_reference_version(db, version)
 
     def _auto_seed_prediction_ruleset(
         self,

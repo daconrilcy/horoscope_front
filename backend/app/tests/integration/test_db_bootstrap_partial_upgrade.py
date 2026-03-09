@@ -2,7 +2,7 @@ from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, inspect, text
 
 from app.infra.db import bootstrap
 
@@ -50,5 +50,31 @@ def test_auto_upgrade_moves_existing_local_sqlite_from_intermediate_revision_to_
             ).scalar_one()
         assert revision == bootstrap._head_revision()
         assert user_count == 1
+    finally:
+        test_engine.dispose()
+
+
+def test_auto_upgrade_repairs_missing_llm_tables_even_when_revision_is_head(
+    monkeypatch: object, tmp_path: Path
+) -> None:
+    db_path = tmp_path / "bootstrap-head-missing-llm.db"
+    database_url = f"sqlite:///{db_path.as_posix()}"
+    config = _alembic_config()
+    monkeypatch.setattr(bootstrap.settings, "database_url", database_url)
+    command.upgrade(config, "head")
+
+    test_engine = create_engine(database_url, future=True)
+    with test_engine.begin() as connection:
+        connection.execute(text("DROP TABLE llm_prompt_versions"))
+
+    monkeypatch.setattr(bootstrap.settings, "app_env", "development")
+    monkeypatch.setattr(bootstrap, "engine", test_engine)
+    monkeypatch.setattr(bootstrap, "_is_pytest_runtime", lambda: False)
+
+    try:
+        bootstrap.ensure_local_sqlite_schema_ready()
+
+        tables = set(inspect(test_engine).get_table_names())
+        assert "llm_prompt_versions" in tables
     finally:
         test_engine.dispose()
