@@ -146,6 +146,7 @@ GPT-5 Codex
   - added versioned update audit events for `seed` and `clone`,
   - enforced immutable history on in-place updates of locked reference versions,
   - added Alembic upgrade/downgrade integration test for reference migration.
+- 2026-03-09: hardening complémentaire du seed de référence côté services consommateurs — détection/réparation d'une version existante mais partielle dans `ReferenceDataService`, puis prise en charge du cas local/dev où une référence `2.0.0` verrouillée et incomplète empêchait la génération du thème natal et le seed prédiction.
 
 ### File List
 
@@ -164,13 +165,16 @@ GPT-5 Codex
 - backend/app/infra/db/repositories/__init__.py
 - backend/app/infra/db/repositories/reference_repository.py
 - backend/app/services/reference_data_service.py
+- backend/app/services/daily_prediction_service.py
 - backend/app/api/v1/routers/__init__.py
 - backend/app/api/v1/routers/reference_data.py
 - backend/app/main.py
 - backend/app/tests/unit/test_reference_data_service.py
+- backend/app/tests/unit/test_daily_prediction_service.py
 - backend/app/tests/integration/test_reference_data_api.py
 - backend/app/tests/integration/test_reference_data_migrations.py
 
 ### Change Log
 
 - 2026-02-20: Code-review fixes integrated (error contract, request_id propagation, audit events, immutability guard, migration up/down test).
+- 2026-03-09: Repair path étendu pour les références partielles/corrompues rencontrées en local sur les parcours `/v1/users/me/natal-chart` et `/v1/predictions/daily`.

@@ -23,6 +23,7 @@ So that les environnements local/dev/test n'utilisent plus de paire de versions 
 - Mise à jour de `backend/.env.example` et `backend/README.md`.
 - Mise à jour des tests d'intégration QA pour utiliser `2.0.0`.
 - Création d'un test unitaire `backend/app/tests/unit/test_daily_prediction_version_consistency.py` pour valider AC4.
+- 2026-03-09: le runtime local/dev s'auto-répare aussi si le ruleset actif est absent ou si la référence active `2.0.0` est présente mais corrompue dans un état verrouillé incomplet; l'auto-seed reste désactivé en production.
 
 ### File List
 
@@ -32,6 +33,7 @@ So that les environnements local/dev/test n'utilisent plus de paire de versions 
 - `backend/README.md`
 - `backend/app/tests/integration/test_daily_prediction_qa.py`
 - `backend/app/tests/unit/test_daily_prediction_version_consistency.py`
+- `backend/app/tests/unit/test_daily_prediction_service.py`
 - `backend/app/tests/unit/test_calibration_runtime.py`
 - `_bmad-output/implementation-artifacts/39-2-basculer-la-configuration-runtime-et-centraliser-les-versions-actives.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`

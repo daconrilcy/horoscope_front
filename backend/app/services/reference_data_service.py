@@ -141,8 +141,13 @@ class ReferenceDataService:
         model = repo.get_version(target_version)
         if model is None:
             model = repo.create_version(target_version, description="Initial seeded version")
+            # SQLite can reuse integer PKs in local/dev databases. If orphan rows from a
+            # previously deleted reference version still exist for that numeric id, purge
+            # them before seeding to keep auto-heal idempotent.
+            repo.clear_version_data(model.id)
             repo.seed_version_defaults(model.id)
-        elif not repo.has_version_data(model.id):
+        elif not repo.has_complete_version_data(model.id):
+            repo.clear_version_data(model.id)
             repo.seed_version_defaults(model.id)
 
         db.commit()

@@ -23,6 +23,7 @@ from app.infra.db.repositories.user_birth_profile_repository import UserBirthPro
 from app.infra.observability.metrics import increment_counter
 from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.schemas import EngineInput
+from app.services.user_birth_profile_service import UserBirthProfileService
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -96,7 +97,7 @@ class DailyPredictionService:
         resolved_ruleset_version = ruleset_version or settings.active_ruleset_version
         profile = self._resolve_profile(db, user_id)
         tz_str = self._resolve_timezone(profile, timezone_override)
-        lat, lon = self._resolve_location(profile, location_override)
+        lat, lon = self._resolve_location(db, profile, location_override)
         resolved_date = self._resolve_date(date_local, tz_str)
         reference_version_id = self._resolve_reference_version_id(db, resolved_reference_version)
         ruleset_id = self._resolve_ruleset_id(db, resolved_ruleset_version, reference_version_id)
@@ -146,7 +147,10 @@ class DailyPredictionService:
                     is_stale = True
                 elif any(b.summary is None for b in existing_run.time_blocks):
                     is_stale = True
-                elif any(tp.summary in [None, "delta_note", "top3_change", "high_priority_event"] for tp in existing_run.turning_points):
+                elif any(
+                    tp.summary in [None, "delta_note", "top3_change", "high_priority_event"]
+                    for tp in existing_run.turning_points
+                ):
                     is_stale = True
 
                 if not is_stale:
@@ -161,7 +165,11 @@ class DailyPredictionService:
                     extra={
                         "user_id": user_id,
                         "run_id": existing_run.id,
-                        "reason": "missing_summaries" if existing_run.overall_summary else "no_overall_summary"
+                        "reason": (
+                            "missing_summaries"
+                            if existing_run.overall_summary
+                            else "no_overall_summary"
+                        ),
                     },
                 )
                 db.delete(existing_run)
@@ -347,13 +355,20 @@ class DailyPredictionService:
         return tz_str
 
     def _resolve_location(
-        self, profile: UserBirthProfileModel, override: tuple[float, float] | None
+        self,
+        db: Session,
+        profile: UserBirthProfileModel,
+        override: tuple[float, float] | None,
     ) -> tuple[float, float]:
         if override:
             return override
-        if profile.current_lat is None or profile.current_lon is None:
+        if profile.current_lat is not None and profile.current_lon is not None:
+            return profile.current_lat, profile.current_lon
+
+        resolved = UserBirthProfileService.resolve_coordinates(db, profile)
+        if resolved.birth_lat is None or resolved.birth_lon is None:
             raise DailyPredictionServiceError("location_missing", "Localisation introuvable")
-        return profile.current_lat, profile.current_lon
+        return resolved.birth_lat, resolved.birth_lon
 
     def _resolve_date(self, date_local: date | None, tz_str: str) -> date:
         if date_local is not None:
@@ -410,7 +425,16 @@ class DailyPredictionService:
     def _resolve_ruleset_id(
         self, db: Session, version: str, expected_reference_version_id: int | None = None
     ) -> int:
-        ruleset = PredictionRulesetRepository(db).get_ruleset(version)
+        repo = PredictionRulesetRepository(db)
+        ruleset = repo.get_ruleset(version)
+        if ruleset is None and self._should_auto_seed_prediction_ruleset(version):
+            self._auto_seed_prediction_ruleset(
+                db,
+                ruleset_version=version,
+                expected_reference_version_id=expected_reference_version_id,
+            )
+            ruleset = repo.get_ruleset(version)
+
         if ruleset is None:
             raise DailyPredictionServiceError(
                 "ruleset_missing", f"Ruleset version '{version}' introuvable"
@@ -439,6 +463,79 @@ class DailyPredictionService:
             )
 
         return ruleset.id
+
+    def _should_auto_seed_prediction_ruleset(self, version: str) -> bool:
+        if settings.app_env in {"production", "prod"}:
+            return False
+        return version in {settings.active_ruleset_version, LEGACY_RULESET_VERSION}
+
+    def _auto_seed_prediction_ruleset(
+        self,
+        db: Session,
+        *,
+        ruleset_version: str,
+        expected_reference_version_id: int | None,
+    ) -> None:
+        from scripts.seed_31_prediction_reference_v2 import SeedAbortError, run_seed
+
+        try:
+            run_seed(db)
+            db.commit()
+            return
+        except SeedAbortError as exc:
+            db.rollback()
+            if not self._repair_locked_incomplete_reference_version(
+                db,
+                expected_reference_version_id=expected_reference_version_id,
+                error_text=str(exc),
+            ):
+                raise DailyPredictionServiceError(
+                    "ruleset_seed_failed",
+                    f"Seed automatique impossible pour le ruleset '{ruleset_version}': {exc}",
+                ) from exc
+
+        try:
+            run_seed(db)
+            db.commit()
+        except SeedAbortError as exc:
+            db.rollback()
+            raise DailyPredictionServiceError(
+                "ruleset_seed_failed",
+                f"Seed automatique impossible pour le ruleset '{ruleset_version}': {exc}",
+            ) from exc
+
+    def _repair_locked_incomplete_reference_version(
+        self,
+        db: Session,
+        *,
+        expected_reference_version_id: int | None,
+        error_text: str,
+    ) -> bool:
+        if "LOCKED but is incomplete" not in error_text:
+            return False
+
+        version_model = None
+        if expected_reference_version_id is not None:
+            version_model = db.get(ReferenceVersionModel, expected_reference_version_id)
+        if version_model is None:
+            version_model = db.scalar(
+                select(ReferenceVersionModel).where(
+                    ReferenceVersionModel.version == settings.active_reference_version
+                )
+            )
+        if version_model is None or not version_model.is_locked:
+            return False
+
+        logger.warning(
+            "prediction.ruleset_autoseed_repair",
+            extra={
+                "reference_version": version_model.version,
+                "reference_version_id": version_model.id,
+            },
+        )
+        version_model.is_locked = False
+        db.commit()
+        return True
 
     def _compute_input_hash(self, engine_input: EngineInput) -> str:
         """Reproduces the hash used by EngineOrchestrator for consistency."""

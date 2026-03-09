@@ -56,6 +56,21 @@ class ReferenceRepository:
             )
         )
 
+    def has_complete_version_data(self, reference_version_id: int) -> bool:
+        return all(
+            self.db.scalar(
+                select(model.id).where(model.reference_version_id == reference_version_id).limit(1)
+            )
+            is not None
+            for model in (
+                PlanetModel,
+                SignModel,
+                HouseModel,
+                AspectModel,
+                AstroCharacteristicModel,
+            )
+        )
+
     def seed_version_defaults(self, reference_version_id: int) -> None:
         self.db.add_all(
             [

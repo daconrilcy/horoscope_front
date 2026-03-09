@@ -25,12 +25,15 @@ So that we have a clean source of truth for calculations while maintaining backw
 - Refactor du script de seed `backend/scripts/seed_31_prediction_reference_v2.py` pour gérer les deux rulesets et la réparation.
 - Validation des formats de version via regex.
 - Unification des alias de propriété dans la configuration.
+- 2026-03-09: ajout d'un chemin d'auto-réparation côté service daily prediction pour les environnements local/dev quand la référence `2.0.0` existe déjà dans un état verrouillé mais incomplet; le service déverrouille la référence corrompue, relance le seed V2, puis revalide la présence du ruleset canonique.
 
 ### File List
 
 - `backend/app/core/versions.py`
 - `backend/app/core/config.py`
 - `backend/scripts/seed_31_prediction_reference_v2.py`
+- `backend/app/services/daily_prediction_service.py`
+- `backend/app/tests/unit/test_daily_prediction_service.py`
 - `backend/app/tests/integration/test_seed_31_prediction_v2.py`
 - `backend/app/tests/integration/test_daily_prediction_qa.py`
 - `_bmad-output/implementation-artifacts/39-1-introduire-un-ruleset-canonique-2-0-0.md`

@@ -82,6 +82,36 @@ def test_seed_reference_version_is_idempotent() -> None:
     assert {item["code"]: item.get("default_orb_deg") for item in aspects} == expected_default_orbs
 
 
+def test_seed_reference_version_repairs_partial_existing_version() -> None:
+    _cleanup_reference_tables()
+    with SessionLocal() as db:
+        partial = ReferenceVersionModel(version="2.0.0", description="partial", is_locked=True)
+        db.add(partial)
+        db.flush()
+        db.add(
+            AspectModel(
+                reference_version_id=partial.id,
+                code="conjunction",
+                name="Conjunction",
+                angle=0,
+                default_orb_deg=8.0,
+            )
+        )
+        db.commit()
+
+    with SessionLocal() as db:
+        version = ReferenceDataService.seed_reference_version(db, version="2.0.0")
+        payload = ReferenceDataService.get_active_reference_data(db, version="2.0.0")
+
+    assert version == "2.0.0"
+    assert payload["version"] == "2.0.0"
+    assert len(payload["planets"]) == 10
+    assert len(payload["signs"]) == 12
+    assert len(payload["houses"]) == 12
+    assert len(payload["aspects"]) == 5
+    assert len(payload["characteristics"]) >= 1
+
+
 def test_reference_data_exposes_persisted_aspect_orb_traits() -> None:
     _cleanup_reference_tables()
     with SessionLocal() as db:

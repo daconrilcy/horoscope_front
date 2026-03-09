@@ -127,10 +127,12 @@ def test_timezone_invalid_raises(service, db, mock_profile):
 def test_location_missing_raises(service, db, mock_profile):
     mock_profile.current_lat = None
     mock_profile.current_lon = None
-    
+
     svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo:
+    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{svc_path}.UserBirthProfileService.resolve_coordinates") as mock_resolve:
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
+        mock_resolve.return_value = MagicMock(birth_lat=None, birth_lon=None)
 
         with pytest.raises(DailyPredictionServiceError) as excinfo:
             service.get_or_compute(
@@ -138,6 +140,130 @@ def test_location_missing_raises(service, db, mock_profile):
                 db=db,
             )
         assert excinfo.value.code == "location_missing"
+
+
+def test_birth_coordinates_fallback_when_current_location_missing(service, db, mock_profile):
+    mock_profile.current_lat = None
+    mock_profile.current_lon = None
+
+    svc_path = "app.services.daily_prediction_service"
+    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{svc_path}.UserBirthProfileService.resolve_coordinates") as mock_resolve, \
+         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{svc_path}.EngineOrchestrator") as mock_orchestrator:
+
+        mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
+        mock_resolve.return_value = MagicMock(birth_lat=48.8566, birth_lon=2.3522)
+        mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
+            result_payload={"planets": [{"code": "sun", "longitude": 34.08}]}
+        )
+        mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = None
+        db.scalar.return_value = 10
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
+        mock_output = MagicMock(spec=EngineOutput)
+        mock_orchestrator.return_value.run.return_value = mock_output
+        mock_run = MagicMock(spec=DailyPredictionRunModel)
+        persistence_service = service.persistence_service
+        persistence_service.save.return_value = MagicMock(run=mock_run, was_reused=False)
+
+        result = service.get_or_compute(user_id=1, db=db)
+
+        assert isinstance(result, ServiceResult)
+        mock_resolve.assert_called_once_with(db, mock_profile)
+
+
+def test_ruleset_auto_seed_in_local_dev(service, db):
+    svc_path = "app.services.daily_prediction_service"
+    ruleset_repo = MagicMock()
+    ruleset_repo.get_ruleset.side_effect = [
+        None,
+        MagicMock(id=20, reference_version_id=10, version="2.0.0"),
+    ]
+
+    with patch(f"{svc_path}.PredictionRulesetRepository", return_value=ruleset_repo), \
+         patch(f"{svc_path}.settings") as mock_settings, \
+         patch("scripts.seed_31_prediction_reference_v2.run_seed") as mock_run_seed:
+        mock_settings.app_env = "development"
+        mock_settings.active_ruleset_version = "2.0.0"
+
+        ruleset_id = service._resolve_ruleset_id(db, "2.0.0", expected_reference_version_id=10)
+
+        assert ruleset_id == 20
+        mock_run_seed.assert_called_once_with(db)
+        db.commit.assert_called_once()
+
+
+def test_ruleset_missing_without_auto_seed_raises(service, db):
+    svc_path = "app.services.daily_prediction_service"
+    ruleset_repo = MagicMock()
+    ruleset_repo.get_ruleset.return_value = None
+
+    with patch(f"{svc_path}.PredictionRulesetRepository", return_value=ruleset_repo), \
+         patch(f"{svc_path}.settings") as mock_settings:
+        mock_settings.app_env = "production"
+        mock_settings.active_ruleset_version = "2.0.0"
+
+        with pytest.raises(DailyPredictionServiceError) as excinfo:
+            service._resolve_ruleset_id(db, "2.0.0", expected_reference_version_id=10)
+
+        assert excinfo.value.code == "ruleset_missing"
+
+
+def test_ruleset_auto_seed_repairs_locked_incomplete_reference(service, db):
+    svc_path = "app.services.daily_prediction_service"
+    ruleset_repo = MagicMock()
+    ruleset_repo.get_ruleset.side_effect = [
+        None,
+        MagicMock(id=20, reference_version_id=10, version="2.0.0"),
+    ]
+    locked_version = MagicMock(id=10, version="2.0.0", is_locked=True)
+    seed_error = (
+        "ERROR: 2.0.0 exists and is LOCKED but is incomplete. Manual investigation required."
+    )
+
+    with patch(f"{svc_path}.PredictionRulesetRepository", return_value=ruleset_repo), \
+         patch(f"{svc_path}.settings") as mock_settings, \
+         patch("scripts.seed_31_prediction_reference_v2.run_seed") as mock_run_seed, \
+         patch("scripts.seed_31_prediction_reference_v2.SeedAbortError", RuntimeError):
+        mock_settings.app_env = "development"
+        mock_settings.active_ruleset_version = "2.0.0"
+        mock_settings.active_reference_version = "2.0.0"
+        db.get.return_value = locked_version
+        mock_run_seed.side_effect = [RuntimeError(seed_error), None]
+
+        ruleset_id = service._resolve_ruleset_id(db, "2.0.0", expected_reference_version_id=10)
+
+        assert ruleset_id == 20
+        assert locked_version.is_locked is False
+        assert mock_run_seed.call_count == 2
+        db.rollback.assert_called_once()
+        assert db.commit.call_count == 2
+
+
+def test_ruleset_seed_abort_is_wrapped_as_service_error(service, db):
+    svc_path = "app.services.daily_prediction_service"
+    ruleset_repo = MagicMock()
+    ruleset_repo.get_ruleset.return_value = None
+
+    with patch(f"{svc_path}.PredictionRulesetRepository", return_value=ruleset_repo), \
+         patch(f"{svc_path}.settings") as mock_settings, \
+         patch("scripts.seed_31_prediction_reference_v2.run_seed") as mock_run_seed, \
+         patch("scripts.seed_31_prediction_reference_v2.SeedAbortError", RuntimeError):
+        mock_settings.app_env = "development"
+        mock_settings.active_ruleset_version = "2.0.0"
+        mock_settings.active_reference_version = "2.0.0"
+        mock_run_seed.side_effect = RuntimeError("manual investigation required")
+        db.get.return_value = None
+        db.scalar.return_value = None
+
+        with pytest.raises(DailyPredictionServiceError) as excinfo:
+            service._resolve_ruleset_id(db, "2.0.0", expected_reference_version_id=10)
+
+        assert excinfo.value.code == "ruleset_seed_failed"
 
 
 def test_user_with_natal_full_compute(
