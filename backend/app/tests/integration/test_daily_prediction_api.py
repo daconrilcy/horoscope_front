@@ -1170,3 +1170,68 @@ def test_daily_prediction_decision_windows():
     assert dw["window_type"] == "favorable"
     assert dw["score"] == 15.0
     assert "love" in dw["dominant_categories"]
+
+
+def test_daily_prediction_rebuilds_decision_windows_for_reused_run():
+    token = _register_and_get_access_token()
+    mock_run = _build_mock_run()
+
+    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    mock_full_run = {
+        "id": 1,
+        "category_scores": [
+            {
+                "category_id": 1,
+                "note_20": 16,
+                "raw_score": 0.8,
+                "power": 0.9,
+                "volatility": 0.3,
+                "rank": 1,
+                "summary": None,
+            },
+            {
+                "category_id": 2,
+                "note_20": 14,
+                "raw_score": 0.6,
+                "power": 0.7,
+                "volatility": 0.4,
+                "rank": 2,
+                "summary": None,
+            },
+        ],
+        "turning_points": [],
+        "time_blocks": [
+            {
+                "block_index": 0,
+                "start_at_local": "2026-03-08T08:00:00+01:00",
+                "end_at_local": "2026-03-08T10:00:00+01:00",
+                "tone_code": "positive",
+                "dominant_categories_json": "[\"love\", \"work\"]",
+                "summary": None,
+            }
+        ],
+    }
+    mock_categories = [
+        MagicMock(id=1, code="love"),
+        MagicMock(id=2, code="work"),
+    ]
+
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    with (
+        patch(repo_path, return_value=mock_full_run),
+        patch(ref_path, return_value=mock_categories),
+    ):
+        response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["meta"]["was_reused"] is True
+    assert len(data["decision_windows"]) == 1
+    window = data["decision_windows"][0]
+    assert window["window_type"] == "favorable"
+    assert window["dominant_categories"] == ["love", "work"]

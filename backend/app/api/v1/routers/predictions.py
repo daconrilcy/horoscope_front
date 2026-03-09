@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import date, datetime
+from types import SimpleNamespace
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -15,6 +16,7 @@ from app.infra.db.repositories.daily_prediction_repository import DailyPredictio
 from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
 from app.infra.db.session import get_db_session
 from app.prediction.context_loader import PredictionContextLoader
+from app.prediction.decision_window_builder import DecisionWindowBuilder
 from app.prediction.persistence_service import PredictionPersistenceService
 from app.services.daily_prediction_service import (
     ComputeMode,
@@ -444,22 +446,7 @@ def get_daily_prediction(
         key=lambda b: _parse_iso_datetime(b.start_local),
     )
 
-    # AC5: expose decision_windows from engine output when available (additive, non-breaking)
-    decision_windows = None
-    if result.engine_output is not None:
-        raw_dws = getattr(result.engine_output, "decision_windows", None) or []
-        if raw_dws:
-            decision_windows = [
-                DailyPredictionDecisionWindow(
-                    start_local=dw.start_local.isoformat(),
-                    end_local=dw.end_local.isoformat(),
-                    window_type=dw.window_type,
-                    score=dw.score,
-                    confidence=dw.confidence,
-                    dominant_categories=list(dw.dominant_categories),
-                )
-                for dw in raw_dws
-            ]
+    decision_windows = _build_decision_windows(result, full_run, cat_id_to_code)
 
     # Build summary
     summary = _build_summary(result, full_run, cat_id_to_code)
@@ -559,6 +546,78 @@ def _build_summary(
         main_turning_point=main_turning_point,
         low_score_variance=low_score_variance,
     )
+
+
+def _build_decision_windows(
+    result: Any,
+    full_run: dict[str, Any],
+    cat_id_to_code: dict[int, str],
+) -> list[DailyPredictionDecisionWindow] | None:
+    if result.engine_output is not None:
+        raw_dws = getattr(result.engine_output, "decision_windows", None) or []
+        if raw_dws:
+            return [
+                DailyPredictionDecisionWindow(
+                    start_local=dw.start_local.isoformat(),
+                    end_local=dw.end_local.isoformat(),
+                    window_type=dw.window_type,
+                    score=dw.score,
+                    confidence=dw.confidence,
+                    dominant_categories=list(dw.dominant_categories),
+                )
+                for dw in raw_dws
+            ]
+
+    raw_blocks = full_run.get("time_blocks", [])
+    if not raw_blocks:
+        return None
+
+    category_scores = {
+        cat_id_to_code.get(score["category_id"], "unknown"): {
+            "note_20": float(score.get("note_20") or 0),
+            "volatility": float(score.get("volatility") or 0),
+        }
+        for score in full_run.get("category_scores", [])
+        if score.get("category_id") in cat_id_to_code
+    }
+
+    blocks = [
+        SimpleNamespace(
+            start_local=_parse_iso_datetime(block["start_at_local"]),
+            end_local=_parse_iso_datetime(block["end_at_local"]),
+            tone_code=block.get("tone_code") or "neutral",
+            dominant_categories=_load_json_list(
+                block.get("dominant_categories_json"),
+                field_name="time_blocks.dominant_categories_json",
+            ),
+        )
+        for block in raw_blocks
+        if block.get("start_at_local") and block.get("end_at_local")
+    ]
+    if not blocks:
+        return None
+
+    turning_points = [
+        SimpleNamespace(local_time=_parse_iso_datetime(tp["occurred_at_local"]))
+        for tp in full_run.get("turning_points", [])
+        if tp.get("occurred_at_local")
+    ]
+
+    rebuilt = DecisionWindowBuilder().build(blocks, turning_points, category_scores)
+    if not rebuilt:
+        return None
+
+    return [
+        DailyPredictionDecisionWindow(
+            start_local=window.start_local.isoformat(),
+            end_local=window.end_local.isoformat(),
+            window_type=window.window_type,
+            score=window.score,
+            confidence=window.confidence,
+            dominant_categories=list(window.dominant_categories),
+        )
+        for window in rebuilt
+    ]
 
 
 def _load_json_list(raw_value: str | None, *, field_name: str) -> list[Any]:
