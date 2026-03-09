@@ -1,0 +1,1 @@
+At {pivot_time}, a {pivot_severity_label} turning point: {categories_labels}.

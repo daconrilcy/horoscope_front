@@ -137,17 +137,32 @@ class DailyPredictionService:
 
         # 5. Mode compute_if_missing : short-circuit if hash exists
         if mode == ComputeMode.compute_if_missing:
-            existing_run = DailyPredictionRepository(db).get_run_by_hash(user_id, input_hash)
+            repo = DailyPredictionRepository(db)
+            existing_run = repo.get_run_by_hash_with_details(user_id, input_hash)
             if existing_run:
-                if existing_run.overall_summary:
+                # AC8 - Check if cached run has all required summaries
+                is_stale = False
+                if not existing_run.overall_summary:
+                    is_stale = True
+                elif any(b.summary is None for b in existing_run.time_blocks):
+                    is_stale = True
+                elif any(tp.summary in [None, "delta_note", "top3_change", "high_priority_event"] for tp in existing_run.turning_points):
+                    is_stale = True
+
+                if not is_stale:
                     result = ServiceResult(run=existing_run, engine_output=None, was_reused=True)
                     self._log_and_metrics(
                         user_id, start_time, result, ruleset_version=resolved_ruleset_version
                     )
                     return result
+
                 logger.info(
                     "prediction.stale_cached_run_recompute",
-                    extra={"user_id": user_id, "run_id": existing_run.id},
+                    extra={
+                        "user_id": user_id,
+                        "run_id": existing_run.id,
+                        "reason": "missing_summaries" if existing_run.overall_summary else "no_overall_summary"
+                    },
                 )
                 db.delete(existing_run)
                 db.flush()

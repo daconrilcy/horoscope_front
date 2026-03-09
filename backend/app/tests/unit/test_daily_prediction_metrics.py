@@ -57,7 +57,7 @@ def test_reused_counter_incremented(mock_increment, service, db_session):
     
     # Mock repository to find existing run
     with patch("app.services.daily_prediction_service.DailyPredictionRepository") as MockRepo:
-        MockRepo.return_value.get_run_by_hash.return_value = MagicMock()
+        MockRepo.return_value.get_run_by_hash_with_details.return_value = MagicMock()
         service.get_or_compute(user_id=1, db=db_session)
 
     mock_increment.assert_any_call("prediction.compute")

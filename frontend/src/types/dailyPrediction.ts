@@ -17,6 +17,7 @@ export interface DailyPredictionCategory {
   power: number;
   volatility: number;
   rank: number;
+  is_provisional?: boolean | null;
   summary: string | null;
 }
 
@@ -45,6 +46,7 @@ export interface DailyPredictionTimeBlock {
 export interface DailyPredictionSummary {
   overall_tone: string | null;
   overall_summary: string | null;
+  calibration_note?: string | null;
   top_categories: string[];
   bottom_categories: string[];
   best_window: {
@@ -57,6 +59,7 @@ export interface DailyPredictionSummary {
     severity: number | string;
     summary: string | null;
   } | null;
+  low_score_variance?: boolean;
 }
 
 export interface DailyPredictionResponse {

@@ -26,6 +26,19 @@ class DailyPredictionRepository:
             )
         )
 
+    def get_run_by_hash_with_details(self, user_id: int, input_hash: str) -> DailyPredictionRunModel | None:
+        return self.db.scalar(
+            select(DailyPredictionRunModel)
+            .options(
+                selectinload(DailyPredictionRunModel.time_blocks),
+                selectinload(DailyPredictionRunModel.turning_points),
+            )
+            .where(
+                DailyPredictionRunModel.user_id == user_id,
+                DailyPredictionRunModel.input_hash == input_hash,
+            )
+        )
+
     def get_latest_run_before(
         self,
         user_id: int,
@@ -222,6 +235,7 @@ class DailyPredictionRepository:
                     "power": s.power,
                     "volatility": s.volatility,
                     "rank": s.rank,
+                    "is_provisional": s.is_provisional,
                     "summary": s.summary,
                     "contributors_json": s.contributors_json,
                 }

@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from typing import Mapping
 
 from app.infra.db.repositories.prediction_schemas import CalibrationData
@@ -70,6 +71,91 @@ class PercentileCalibrator:
             cal = calibrations.get(category)
             results[category] = self.calibrate(cat_agg.raw_day, cal)
         return results
+
+    def calibrate_all_provisional_aware(
+        self,
+        day_aggregation: DayAggregation,
+        calibrations: Mapping[str, CalibrationData | None],
+        *,
+        provisional_cats: list[str] | None = None,
+        day_relative_cal: CalibrationData | None = None,
+    ) -> dict[str, int]:
+        """
+        Calibre toutes les catégories en injectant une distribution jour-relative
+        si les calibrations sont absentes ou provisoires (AC1, AC2).
+
+        Les kwargs optionnels ``provisional_cats`` et ``day_relative_cal`` permettent
+        de passer des valeurs pré-calculées pour éviter un double calcul côté appelant.
+        """
+        # 1. Identifier les catégories provisoires (si non fourni)
+        if provisional_cats is None:
+            provisional_cats = self.get_provisional_categories(
+                day_aggregation.categories.keys(), calibrations
+            )
+        _provisional_set = set(provisional_cats)
+
+        # 2. Calculer la calibration jour-relative si possible et non fournie
+        if day_relative_cal is None and len(_provisional_set) >= 3:
+            raw_days = [
+                day_aggregation.categories[cat].raw_day
+                for cat in _provisional_set
+                if cat in day_aggregation.categories
+            ]
+            day_relative_cal = self.compute_day_relative_calibration(raw_days)
+
+        # 3. Calibrer
+        results = {}
+        for category, cat_agg in day_aggregation.categories.items():
+            if category in _provisional_set and day_relative_cal:
+                results[category] = self.calibrate(cat_agg.raw_day, day_relative_cal)
+            else:
+                cal = calibrations.get(category)
+                results[category] = self.calibrate(cat_agg.raw_day, cal)
+        return results
+
+    def get_provisional_categories(
+        self,
+        category_codes: Iterable[str],
+        calibrations: Mapping[str, CalibrationData | None],
+    ) -> list[str]:
+        """Identifie les catégories considérées comme provisoires."""
+        provisional_cats = []
+        for code in category_codes:
+            cal = calibrations.get(code)
+            if (
+                cal is None
+                or cal.sample_size in {None, 0}
+                or cal.calibration_label == "provisional"
+            ):
+                provisional_cats.append(code)
+        return provisional_cats
+
+    def compute_day_relative_calibration(self, raw_days: list[float]) -> CalibrationData:
+        """ Calibration jour-relative : p05/p25/p50/p75/p95 sur les raw_day de la journée. """
+        if len(raw_days) < 3:
+            return DEFAULT_CALIBRATION
+            
+        sorted_days = sorted(raw_days)
+        # Vérifier la variance : si tous identiques -> dégénéré
+        if sorted_days[-1] == sorted_days[0]:
+            return DEFAULT_CALIBRATION
+            
+        n = len(sorted_days)
+
+        def _pct(p: float) -> float:
+            idx = (p / 100.0) * (n - 1)
+            lo, hi = int(idx), min(int(idx) + 1, n - 1)
+            return sorted_days[lo] + (idx - lo) * (sorted_days[hi] - sorted_days[lo])
+
+        return CalibrationData(
+            p05=_pct(5),
+            p25=_pct(25),
+            p50=_pct(50),
+            p75=_pct(75),
+            p95=_pct(95),
+            sample_size=n,
+            calibration_label="day-relative",
+        )
 
     def _group_equal_anchors(self, anchors: list[float]) -> list[tuple[int, int]]:
         groups: list[tuple[int, int]] = []

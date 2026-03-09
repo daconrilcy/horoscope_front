@@ -313,15 +313,32 @@ class EngineOrchestrator:
         editorial = self._editorial_builder.build(editorial_input, explainability)
 
         editorial_text = None
+        updated_time_blocks = time_blocks
+        updated_turning_points = turning_points
+
         if include_editorial_text:
             editorial_text = self._editorial_template_engine.render(
                 editorial,
                 lang=editorial_text_lang,
+                time_blocks=time_blocks,
+                turning_points=turning_points,
             )
+            # Injecter les summaries dans les TimeBlock
+            updated_time_blocks = [
+                dataclasses.replace(block, summary=summary)
+                for block, summary in zip(time_blocks, editorial_text.time_block_summaries)
+            ]
+            # Injecter les summaries dans les TurningPoint
+            updated_turning_points = [
+                dataclasses.replace(tp, summary=summary)
+                for tp, summary in zip(turning_points, editorial_text.turning_point_summaries)
+            ]
 
         return dataclasses.replace(
             output,
             run_metadata={**run_metadata, "overall_tone": editorial.overall_tone},
+            time_blocks=updated_time_blocks,
+            turning_points=updated_turning_points,
             editorial=editorial,
             editorial_text=editorial_text,
         )
@@ -419,10 +436,31 @@ class EngineOrchestrator:
             contribution_totals_by_step,
             category_codes,
         )
-        category_scores = self._percentile_calibrator.calibrate_all(
+
+        # Compute provisional metadata once — reused for day scores, notes_by_step,
+        # editorial_category_scores, avoiding redundant recalculation.
+        provisional_cats_list = self._percentile_calibrator.get_provisional_categories(
+            category_codes, loaded_context.calibrations
+        )
+        day_relative_cal = None
+        if len(provisional_cats_list) >= 3:
+            raw_days = [
+                day_aggregation.categories[cat].raw_day
+                for cat in provisional_cats_list
+                if cat in day_aggregation.categories
+            ]
+            day_relative_cal = self._percentile_calibrator.compute_day_relative_calibration(
+                raw_days
+            )
+        provisional_cats = set(provisional_cats_list)
+
+        category_scores = self._percentile_calibrator.calibrate_all_provisional_aware(
             day_aggregation,
             loaded_context.calibrations,
+            provisional_cats=provisional_cats_list,
+            day_relative_cal=day_relative_cal,
         )
+
         editorial_category_scores = {
             category.code: {
                 "note_20": category_scores.get(category.code, 0),
@@ -439,6 +477,7 @@ class EngineOrchestrator:
                 if category.code in day_aggregation.categories
                 else 0.0,
                 "sort_order": category.sort_order,
+                "is_provisional": category.code in provisional_cats,
             }
             for category in loaded_context.prediction_context.categories
             if category.is_enabled and category.code in category_codes
@@ -447,7 +486,9 @@ class EngineOrchestrator:
             {
                 category_code: self._percentile_calibrator.calibrate(
                     step_contributions.get(category_code, 0.0),
-                    loaded_context.calibrations.get(category_code),
+                    day_relative_cal
+                    if category_code in provisional_cats and day_relative_cal
+                    else loaded_context.calibrations.get(category_code),
                 )
                 for category_code in category_codes
             }

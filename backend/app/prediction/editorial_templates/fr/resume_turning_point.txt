@@ -1,0 +1,1 @@
+À {pivot_time}, un basculement {pivot_severity_label} : {categories_labels}.

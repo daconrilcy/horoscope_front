@@ -139,6 +139,7 @@ class PredictionPersistenceService:
                 power=score_data.get("power"),
                 volatility=score_data.get("volatility"),
                 rank=rank,
+                is_provisional=score_data.get("is_provisional"),
                 summary=editorial_summary or score_data.get("summary"),
                 contributors_json=contributors_json,
             )
@@ -166,7 +167,11 @@ class PredictionPersistenceService:
                 # Real TurningPoint from TurningPointDetector
                 occurred_at = tp.local_time
                 severity = tp.severity
-                summary = tp.reason
+                # tp.summary is populated when include_editorial_text=True (service default).
+                # Fallback to tp.reason only if summary is absent — callers without
+                # include_editorial_text=True will persist a technical code; this is
+                # intentional for non-editorial paths (debug, tests, scripts).
+                summary = tp.summary or tp.reason
 
                 # AC3 - Use driver_events if present, otherwise fallback to trigger_event
                 drivers = getattr(tp, "driver_events", None)
@@ -223,7 +228,7 @@ class PredictionPersistenceService:
                 start_at = block.start_local
                 end_at = block.end_local
                 tone_code = block.tone_code
-                summary = None  # TimeBlock has no summary field
+                summary = block.summary or None
                 dominant = block.dominant_categories
 
             dominant_json = self._dumps_optional_list(dominant)

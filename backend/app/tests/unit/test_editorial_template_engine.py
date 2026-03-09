@@ -166,3 +166,90 @@ def test_legacy_french_codes_are_normalized_for_labels_and_cautions():
     assert "Love & Relationships" in output.intro
     assert output.caution_sante is not None
     assert output.caution_argent is not None
+
+def test_render_time_block_summary_fr():
+    engine = EditorialTemplateEngine()
+    block = MagicMock()
+    block.tone_code = "positive"
+    block.dominant_categories = ["work", "energy"]
+    block.start_local = datetime(2026, 3, 8, 8, 0)
+    block.end_local = datetime(2026, 3, 8, 11, 30)
+    
+    summary = engine._render_time_block_summary(block, "fr")
+    assert "08:00" in summary
+    assert "11:30" in summary
+    assert "très porteuse" in summary
+    assert "Travail" in summary
+    assert "Énergie & Vitalité" in summary
+
+def test_render_turning_point_summary_fr():
+    engine = EditorialTemplateEngine()
+    tp = MagicMock()
+    tp.severity = 0.9
+    tp.categories_impacted = ["love"]
+    tp.local_time = datetime(2026, 3, 8, 14, 15)
+    
+    summary = engine._render_turning_point_summary(tp, "fr")
+    assert "14:15" in summary
+    assert "critique" in summary # 0.9 -> labels["critical"] -> "critique"
+    assert "Amour & Relations" in summary
+
+def test_render_fallback_when_no_blocks(sample_editorial):
+    engine = EditorialTemplateEngine()
+    output = engine.render(sample_editorial, time_blocks=[], turning_points=[])
+    assert output.time_block_summaries == []
+    assert output.turning_point_summaries == []
+
+def test_render_full_with_blocks(sample_editorial):
+    engine = EditorialTemplateEngine()
+    block = MagicMock()
+    block.tone_code = "positive"
+    block.dominant_categories = ["work"]
+    block.start_local = datetime(2026, 3, 8, 8, 0)
+    block.end_local = datetime(2026, 3, 8, 9, 0)
+
+    tp = MagicMock()
+    tp.severity = 0.5
+    tp.categories_impacted = ["love"]
+    tp.local_time = datetime(2026, 3, 8, 10, 0)
+
+    output = engine.render(sample_editorial, time_blocks=[block], turning_points=[tp])
+    assert len(output.time_block_summaries) == 1
+    assert "08:00" in output.time_block_summaries[0]
+    assert len(output.turning_point_summaries) == 1
+    assert "10:00" in output.turning_point_summaries[0]
+
+
+def test_render_without_blocks_returns_empty_summaries(sample_editorial):
+    """AC5 non-régression : sans time_blocks/turning_points, les listes sont vides."""
+    engine = EditorialTemplateEngine()
+    output = engine.render(sample_editorial)
+    assert output.time_block_summaries == []
+    assert output.turning_point_summaries == []
+
+
+def test_render_empty_categories_impacted_uses_fallback_label():
+    """Si categories_impacted est vide, le summary utilise le libellé de repli."""
+    engine = EditorialTemplateEngine()
+    tp = MagicMock()
+    tp.severity = 0.5
+    tp.categories_impacted = []
+    tp.local_time = datetime(2026, 3, 8, 9, 0)
+    summary = engine._render_turning_point_summary(tp, "fr")
+    assert "plusieurs domaines" in summary
+
+    summary_en = engine._render_turning_point_summary(tp, "en")
+    assert "several areas" in summary_en
+
+
+def test_render_unknown_tone_code_uses_raw_value():
+    """Un tone_code inconnu est passé tel quel dans le summary (pas d'erreur)."""
+    engine = EditorialTemplateEngine()
+    block = MagicMock()
+    block.tone_code = "unknown_tone"
+    block.dominant_categories = ["work"]
+    block.start_local = datetime(2026, 3, 8, 8, 0)
+    block.end_local = datetime(2026, 3, 8, 9, 0)
+    summary = engine._render_time_block_summary(block, "fr")
+    assert "unknown_tone" in summary
+

@@ -42,6 +42,7 @@ class DailyPredictionCategory(BaseModel):
     power: float
     volatility: float
     rank: int
+    is_provisional: bool | None = None
     summary: str | None
 
 
@@ -64,10 +65,12 @@ class DailyPredictionTimeBlock(BaseModel):
 class DailyPredictionSummary(BaseModel):
     overall_tone: str | None
     overall_summary: str | None
+    calibration_note: str | None = None
     top_categories: list[str]
     bottom_categories: list[str]
     best_window: dict[str, Any] | None
     main_turning_point: dict[str, Any] | None
+    low_score_variance: bool = False
 
 
 class DailyPredictionResponse(BaseModel):
@@ -99,6 +102,7 @@ class DailyPredictionDebugCategory(BaseModel):
     power: float
     volatility: float
     rank: int
+    is_provisional: bool | None = None
     contributors: list[dict[str, Any]]
 
 
@@ -215,6 +219,7 @@ def debug_daily_prediction(
             power=float(s["power"] or 0),
             volatility=float(s["volatility"] or 0),
             rank=int(s["rank"] or 0),
+            is_provisional=s.get("is_provisional"),
             contributors=_load_json_list(
                 s.get("contributors_json"), field_name="category_scores.contributors_json"
             ),
@@ -381,6 +386,7 @@ def get_daily_prediction(
                 power=float(s["power"] or 0),
                 volatility=float(s["volatility"] or 0),
                 rank=int(s["rank"] or 0),
+                is_provisional=s.get("is_provisional"),
                 summary=s["summary"],
             )
             for s in full_run.get("category_scores", [])
@@ -501,13 +507,29 @@ def _build_summary(
         else None
     )
 
+    # AC6 - Disclaimer for provisional calibration
+    calibration_note = None
+    low_score_variance = False
+    if full_run.get("is_provisional_calibration"):
+        calibration_note = (
+            "Les scores sont calculés sans données historiques : ils reflètent des tendances"
+            " relatives à la journée, pas des statistiques absolues."
+        )
+        top3_notes = [float(s.get("note_20") or 0) for s in scores[:3]]
+        if top3_notes:
+            spread = max(top3_notes) - min(top3_notes)
+            if spread < 3:
+                low_score_variance = True
+
     return DailyPredictionSummary(
         overall_tone=full_run.get("overall_tone"),
         overall_summary=full_run.get("overall_summary"),
+        calibration_note=calibration_note,
         top_categories=top_categories,
         bottom_categories=bottom_categories,
         best_window=best_window,
         main_turning_point=main_turning_point,
+        low_score_variance=low_score_variance,
     )
 
 

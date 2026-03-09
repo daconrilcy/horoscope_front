@@ -1,0 +1,1 @@
+Entre {start_time} et {end_time}, tonalité {tone_label} — {categories_labels}.

@@ -156,7 +156,7 @@ def test_user_with_natal_full_compute(
         mock_chart.result_payload = {"some": "natal"}
         mock_chart_repo.return_value.get_latest_by_user_id.return_value = mock_chart
         
-        mock_daily_repo.return_value.get_run_by_hash.return_value = None
+        mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = None
         
         # Versions resolution
         db.scalar.return_value = 10  # reference_version_id
@@ -208,7 +208,7 @@ def test_modern_natal_payload_is_normalized_for_engine(
                 ],
             }
         )
-        mock_daily_repo.return_value.get_run_by_hash.return_value = None
+        mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = None
         db.scalar.return_value = 10
         mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
             id=20, reference_version_id=10
@@ -250,7 +250,10 @@ def test_identical_hash_not_recomputed(
         
         # Mock existing run
         mock_existing_run = MagicMock(spec=DailyPredictionRunModel)
-        mock_daily_repo.return_value.get_run_by_hash.return_value = mock_existing_run
+        mock_existing_run.overall_summary = "Some summary"
+        mock_existing_run.time_blocks = [MagicMock(summary="Block summary")]
+        mock_existing_run.turning_points = [MagicMock(summary="TP summary")]
+        mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = mock_existing_run
         
         # Versions resolution
         db.scalar.return_value = 10
@@ -287,7 +290,87 @@ def test_stale_cached_run_without_overall_summary_is_recomputed(
         stale_run = MagicMock(spec=DailyPredictionRunModel)
         stale_run.id = 99
         stale_run.overall_summary = None
-        mock_daily_repo.return_value.get_run_by_hash.return_value = stale_run
+        mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = stale_run
+        db.scalar.return_value = 10
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
+
+        mock_output = MagicMock(spec=EngineOutput)
+        mock_orchestrator.return_value.run.return_value = mock_output
+        fresh_run = MagicMock(spec=DailyPredictionRunModel)
+        persistence_service.save.return_value = MagicMock(run=fresh_run, was_reused=False)
+
+        result = service.get_or_compute(user_id=1, db=db)
+
+        assert result.run == fresh_run
+        assert result.was_reused is False
+        db.delete.assert_called_once_with(stale_run)
+        db.flush.assert_called()
+        mock_orchestrator.return_value.run.assert_called_once()
+
+
+def test_stale_cached_run_with_missing_block_summaries_is_recomputed(
+    service, db, mock_profile, context_loader, persistence_service
+):
+    svc_path = "app.services.daily_prediction_service"
+    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{svc_path}.EngineOrchestrator") as mock_orchestrator:
+
+        mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
+        mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
+            result_payload={}
+        )
+        stale_run = MagicMock(spec=DailyPredictionRunModel)
+        stale_run.id = 99
+        stale_run.overall_summary = "Some summary"
+        stale_run.time_blocks = [MagicMock(summary=None)] # Missing summary
+        stale_run.turning_points = [MagicMock(summary="Valid summary")]
+        
+        mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = stale_run
+        db.scalar.return_value = 10
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
+
+        mock_output = MagicMock(spec=EngineOutput)
+        mock_orchestrator.return_value.run.return_value = mock_output
+        fresh_run = MagicMock(spec=DailyPredictionRunModel)
+        persistence_service.save.return_value = MagicMock(run=fresh_run, was_reused=False)
+
+        result = service.get_or_compute(user_id=1, db=db)
+
+        assert result.run == fresh_run
+        assert result.was_reused is False
+        db.delete.assert_called_once_with(stale_run)
+        db.flush.assert_called()
+        mock_orchestrator.return_value.run.assert_called_once()
+
+
+def test_stale_cached_run_with_technical_tp_summary_is_recomputed(
+    service, db, mock_profile, context_loader, persistence_service
+):
+    svc_path = "app.services.daily_prediction_service"
+    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{svc_path}.EngineOrchestrator") as mock_orchestrator:
+
+        mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
+        mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
+            result_payload={}
+        )
+        stale_run = MagicMock(spec=DailyPredictionRunModel)
+        stale_run.id = 99
+        stale_run.overall_summary = "Some summary"
+        stale_run.time_blocks = [MagicMock(summary="Valid summary")]
+        stale_run.turning_points = [MagicMock(summary="delta_note")] # Technical summary
+        
+        mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = stale_run
         db.scalar.return_value = 10
         mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
             id=20, reference_version_id=10
@@ -448,7 +531,7 @@ def test_ruleset_legacy_logs_deprecation(service, db, mock_profile, caplog):
         with caplog.at_level(logging.WARNING):
             # Use compute_if_missing and return existing run to avoid further complexity
             with patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo:
-                mock_daily_repo.return_value.get_run_by_hash.return_value = MagicMock()
+                mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = MagicMock()
                 service.get_or_compute(
                     user_id=1,
                     db=db,

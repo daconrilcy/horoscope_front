@@ -99,6 +99,7 @@ class DailyPredictionCategoryScoreModel(Base):
     power: Mapped[float | None] = mapped_column(Float, nullable=True)
     volatility: Mapped[float | None] = mapped_column(Float, nullable=True)
     rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    is_provisional: Mapped[bool | None] = mapped_column(nullable=True)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     contributors_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 

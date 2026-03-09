@@ -15,6 +15,7 @@ class TurningPoint:
     categories_impacted: list[str]
     trigger_event: AstroEvent | None
     severity: float
+    summary: str = field(default="")
     driver_events: list[Any] = field(default_factory=list)  # Added for explainability (AC3)
 
 

@@ -17,6 +17,7 @@ class TimeBlock:
     dominant_categories: list[str] = field(default_factory=list)
     tone_code: str = "neutral"
     driver_events: list[AstroEvent] = field(default_factory=list)
+    summary: str = field(default="")
 
 
 class BlockGenerator:

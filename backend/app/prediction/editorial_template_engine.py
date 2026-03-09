@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from app.prediction.category_codes import normalize_category_code
 
@@ -25,6 +25,8 @@ class EditorialTextOutput:
     window_phrase: str | None
     caution_sante: str | None
     caution_argent: str | None
+    time_block_summaries: list[str] = field(default_factory=list)
+    turning_point_summaries: list[str] = field(default_factory=list)
 
 
 class EditorialTemplateEngine:
@@ -137,7 +139,13 @@ class EditorialTemplateEngine:
             raise FileNotFoundError(f"Template not found: {path}")
         return path.read_text(encoding="utf-8").strip()
 
-    def render(self, editorial: EditorialOutput, lang: str = "fr") -> EditorialTextOutput:
+    def render(
+        self,
+        editorial: EditorialOutput,
+        lang: str = "fr",
+        time_blocks: list | None = None,
+        turning_points: list | None = None,
+    ) -> EditorialTextOutput:
         """
         Renders the full editorial content.
         """
@@ -220,6 +228,15 @@ class EditorialTemplateEngine:
         if editorial.caution_flags.get("money") or editorial.caution_flags.get("argent"):
             caution_argent = self._load_template(lang, "prudence_argent")
 
+        # 6. Time Blocks and Turning Points Summaries
+        time_block_summaries = []
+        if time_blocks:
+            time_block_summaries = [self._render_time_block_summary(b, lang) for b in time_blocks]
+
+        turning_point_summaries = []
+        if turning_points:
+            turning_point_summaries = [self._render_turning_point_summary(tp, lang) for tp in turning_points]
+
         return EditorialTextOutput(
             intro=intro,
             category_summaries=category_summaries,
@@ -227,9 +244,38 @@ class EditorialTemplateEngine:
             window_phrase=window_phrase,
             caution_sante=caution_sante,
             caution_argent=caution_argent,
+            time_block_summaries=time_block_summaries,
+            turning_point_summaries=turning_point_summaries,
         )
 
     def _get_category_label(self, code: str, lang: str) -> str:
         labels = self.CATEGORY_LABELS.get(lang, self.CATEGORY_LABELS["fr"])
         canonical_code = normalize_category_code(code)
         return labels.get(canonical_code, canonical_code)
+
+    def _render_time_block_summary(self, block: Any, lang: str) -> str:
+        tpl = self._load_template(lang, "resume_bloc_horaire")
+        tone_labels = self.TONE_LABELS.get(lang, self.TONE_LABELS["fr"])
+        tone_label = tone_labels.get(block.tone_code, block.tone_code)
+        
+        cats_labels = [self._get_category_label(c, lang) for c in block.dominant_categories]
+        categories_labels = ", ".join(cats_labels) if cats_labels else ("plusieurs domaines" if lang == "fr" else "several areas")
+
+        return tpl.format(
+            start_time=block.start_local.strftime("%H:%M"),
+            end_time=block.end_local.strftime("%H:%M"),
+            tone_label=tone_label,
+            categories_labels=categories_labels,
+        )
+
+    def _render_turning_point_summary(self, tp: Any, lang: str) -> str:
+        tpl = self._load_template(lang, "resume_turning_point")
+        
+        cats_labels = [self._get_category_label(c, lang) for c in tp.categories_impacted]
+        categories_labels = ", ".join(cats_labels) if cats_labels else ("plusieurs domaines" if lang == "fr" else "several areas")
+
+        return tpl.format(
+            pivot_time=tp.local_time.strftime("%H:%M"),
+            pivot_severity_label=self._get_severity_label(tp.severity, lang),
+            categories_labels=categories_labels,
+        )

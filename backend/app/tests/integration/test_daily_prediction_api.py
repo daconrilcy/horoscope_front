@@ -793,3 +793,283 @@ def test_debug_no_recompute():
 
     mock_service.get_or_compute.assert_called_once()
     assert mock_service.get_or_compute.call_args.kwargs["mode"] == ComputeMode.read_only
+
+
+def test_daily_prediction_timeline_summary_non_null():
+    """AC9 / AC7 : timeline[].summary n'est pas null après un run frais."""
+    token = _register_and_get_access_token()
+    mock_run = _build_mock_run()
+    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=False)
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    mock_full_run = {
+        "id": 1,
+        "category_scores": [],
+        "turning_points": [],
+        "time_blocks": [
+            {
+                "block_index": 0,
+                "start_at_local": "2026-03-08T08:00:00+01:00",
+                "end_at_local": "2026-03-08T11:30:00+01:00",
+                "tone_code": "positive",
+                "dominant_categories_json": '["work", "energy"]',
+                "summary": "Entre 08:00 et 11:30, tonalité très porteuse — Travail, Énergie & Vitalité.",
+            },
+            {
+                "block_index": 1,
+                "start_at_local": "2026-03-08T11:30:00+01:00",
+                "end_at_local": "2026-03-08T14:00:00+01:00",
+                "tone_code": "neutral",
+                "dominant_categories_json": '["mood"]',
+                "summary": "Entre 11:30 et 14:00, tonalité équilibrée — Humeur & Climat intérieur.",
+            },
+        ],
+    }
+
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+
+    with patch(repo_path, return_value=mock_full_run), patch(ref_path, return_value=[]):
+        response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    timeline = response.json()["timeline"]
+    assert len(timeline) == 2
+    for block in timeline:
+        assert block.get("summary") is not None, "timeline[].summary ne doit pas être null"
+        assert block["summary"] != "", "timeline[].summary ne doit pas être vide"
+    assert "très porteuse" in timeline[0]["summary"]
+
+
+def test_daily_prediction_turning_points_summary_humanized():
+    """AC9 / AC7 : turning_points[].summary est humanisé, pas un code technique."""
+    token = _register_and_get_access_token()
+    mock_run = _build_mock_run()
+    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=False)
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    technical_codes = {"delta_note", "top3_change", "high_priority_event"}
+
+    mock_full_run = {
+        "id": 1,
+        "category_scores": [],
+        "time_blocks": [],
+        "turning_points": [
+            {
+                "occurred_at_local": "2026-03-08T14:15:00+01:00",
+                "severity": 0.9,
+                "summary": "À 14:15, un basculement critique : Amour & Relations.",
+                "driver_json": None,
+            },
+            {
+                "occurred_at_local": "2026-03-08T16:00:00+01:00",
+                "severity": 0.6,
+                "summary": "À 16:00, un basculement majeur : Travail.",
+                "driver_json": None,
+            },
+        ],
+    }
+
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+
+    with patch(repo_path, return_value=mock_full_run), patch(ref_path, return_value=[]):
+        response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    turning_points = response.json()["turning_points"]
+    assert len(turning_points) == 2
+    for tp in turning_points:
+        assert tp.get("summary") is not None, "turning_points[].summary ne doit pas être null"
+        assert tp["summary"] not in technical_codes, (
+            f"turning_points[].summary '{tp['summary']}' est un code technique"
+        )
+    assert "critique" in turning_points[0]["summary"]
+
+
+def test_daily_prediction_reused_run_summaries_readable():
+    """AC9 / AC7 : sur un run réutilisé (was_reused=True), les summaries restent lisibles."""
+    token = _register_and_get_access_token()
+    mock_run = _build_mock_run()
+    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    mock_full_run = {
+        "id": 1,
+        "category_scores": [],
+        "turning_points": [
+            {
+                "occurred_at_local": "2026-03-08T10:00:00+01:00",
+                "severity": 0.8,
+                "summary": "À 10:00, un basculement majeur : Humeur & Climat intérieur.",
+                "driver_json": None,
+            }
+        ],
+        "time_blocks": [
+            {
+                "block_index": 0,
+                "start_at_local": "2026-03-08T08:00:00+01:00",
+                "end_at_local": "2026-03-08T10:00:00+01:00",
+                "tone_code": "positive",
+                "dominant_categories_json": '["love"]',
+                "summary": "Entre 08:00 et 10:00, tonalité très porteuse — Amour & Relations.",
+            }
+        ],
+    }
+
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+
+    with patch(repo_path, return_value=mock_full_run), patch(ref_path, return_value=[]):
+        response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["meta"]["was_reused"] is True
+    assert data["timeline"][0]["summary"] is not None
+    assert data["turning_points"][0]["summary"] is not None
+    assert data["turning_points"][0]["summary"] not in {"delta_note", "top3_change", "high_priority_event"}
+
+
+def test_daily_prediction_is_provisional_per_category():
+    """AC4 : chaque catégorie expose is_provisional depuis la DB."""
+    token = _register_and_get_access_token()
+    mock_run = _build_mock_run()
+    mock_run.is_provisional_calibration = True
+    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    mock_full_run = {
+        "id": 1,
+        "local_date": "2026-03-09",
+        "timezone": "Europe/Paris",
+        "computed_at": "2026-03-09T10:00:00",
+        "overall_summary": "Journée équilibrée.",
+        "overall_tone": "neutral",
+        "is_provisional_calibration": True,
+        "category_scores": [
+            {
+                "category_id": 1,
+                "note_20": 14,
+                "raw_score": 0.2,
+                "power": 0.5,
+                "volatility": 0.1,
+                "rank": 1,
+                "is_provisional": True,
+                "summary": "Amour favorable.",
+            },
+            {
+                "category_id": 2,
+                "note_20": 8,
+                "raw_score": -0.1,
+                "power": 0.3,
+                "volatility": 0.2,
+                "rank": 2,
+                "is_provisional": False,
+                "summary": "Travail mitigé.",
+            },
+        ],
+        "turning_points": [],
+        "time_blocks": [],
+    }
+
+    mock_categories = [MagicMock(id=1, code="love"), MagicMock(id=2, code="work")]
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+
+    with patch(repo_path, return_value=mock_full_run), patch(ref_path, return_value=mock_categories):
+        response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    data = response.json()
+    categories = {c["code"]: c for c in data["categories"]}
+    assert categories["love"]["is_provisional"] is True
+    assert categories["work"]["is_provisional"] is False
+
+
+def test_daily_prediction_summary_calibration_note_when_provisional():
+    """AC6 : calibration_note est populé quand is_provisional_calibration=True."""
+    token = _register_and_get_access_token()
+    mock_run = _build_mock_run()
+    mock_run.is_provisional_calibration = True
+    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    # Scores serrés pour déclencher low_score_variance aussi
+    mock_full_run = {
+        "id": 1,
+        "local_date": "2026-03-09",
+        "timezone": "Europe/Paris",
+        "computed_at": "2026-03-09T10:00:00",
+        "overall_summary": "Journée calme.",
+        "overall_tone": "neutral",
+        "is_provisional_calibration": True,
+        "category_scores": [
+            {"category_id": 1, "note_20": 11, "raw_score": 0.1, "power": 0.3, "volatility": 0.1, "rank": 1, "summary": None},
+            {"category_id": 2, "note_20": 10, "raw_score": 0.0, "power": 0.3, "volatility": 0.1, "rank": 2, "summary": None},
+            {"category_id": 3, "note_20": 10, "raw_score": 0.0, "power": 0.3, "volatility": 0.1, "rank": 3, "summary": None},
+        ],
+        "turning_points": [],
+        "time_blocks": [],
+    }
+
+    mock_categories = [MagicMock(id=1, code="love"), MagicMock(id=2, code="work"), MagicMock(id=3, code="health")]
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+
+    with patch(repo_path, return_value=mock_full_run), patch(ref_path, return_value=mock_categories):
+        response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    summary = response.json()["summary"]
+    assert summary["calibration_note"] is not None
+    assert "historiques" in summary["calibration_note"]
+    assert summary["low_score_variance"] is True
+
+
+def test_daily_prediction_summary_no_calibration_note_when_not_provisional():
+    """AC6 : calibration_note est None quand is_provisional_calibration=False."""
+    token = _register_and_get_access_token()
+    mock_run = _build_mock_run()
+    mock_run.is_provisional_calibration = False
+    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    mock_full_run = {
+        "id": 1,
+        "local_date": "2026-03-09",
+        "timezone": "Europe/Paris",
+        "computed_at": "2026-03-09T10:00:00",
+        "overall_summary": "Belle journée.",
+        "overall_tone": "positive",
+        "is_provisional_calibration": False,
+        "category_scores": [
+            {"category_id": 1, "note_20": 18, "raw_score": 0.8, "power": 0.9, "volatility": 0.1, "rank": 1, "summary": None},
+        ],
+        "turning_points": [],
+        "time_blocks": [],
+    }
+
+    mock_categories = [MagicMock(id=1, code="love")]
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+
+    with patch(repo_path, return_value=mock_full_run), patch(ref_path, return_value=mock_categories):
+        response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    summary = response.json()["summary"]
+    assert summary["calibration_note"] is None
+    assert summary["low_score_variance"] is False
