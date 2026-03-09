@@ -40,6 +40,7 @@ class BlockGenerator:
         for pivot in pivots:
             boundaries.add(pivot.local_time)
 
+        pivot_times = {pivot.local_time for pivot in pivots}
         sorted_boundaries = sorted(boundaries)
         blocks = []
         for index in range(len(sorted_boundaries) - 1):
@@ -75,7 +76,38 @@ class BlockGenerator:
         for index, block in enumerate(blocks):
             block.block_index = index
 
-        return blocks
+        # AC2: budget of noise — merge identical consecutive blocks
+        if not blocks:
+            return []
+
+        merged_blocks = [blocks[0]]
+        for i in range(1, len(blocks)):
+            last = merged_blocks[-1]
+            curr = blocks[i]
+            if (
+                curr.start_local not in pivot_times
+                and last.tone_code == curr.tone_code
+                and last.dominant_categories == curr.dominant_categories
+            ):
+                # Merge curr into last
+                last.end_local = curr.end_local
+                last.driver_events.extend(curr.driver_events)
+                # Keep only top 3 unique driver events
+                unique_drivers = []
+                seen_signatures = set()
+                for event in last.driver_events:
+                    sig = (event.event_type, event.ut_time, event.body, event.target, event.aspect)
+                    if sig not in seen_signatures:
+                        unique_drivers.append(event)
+                        seen_signatures.add(sig)
+                last.driver_events = unique_drivers[:3]
+            else:
+                merged_blocks.append(curr)
+
+        for index, block in enumerate(merged_blocks):
+            block.block_index = index
+
+        return merged_blocks
 
     def _dominant_categories(self, notes_slice: list[dict[str, int]]) -> list[str]:
         if not notes_slice:

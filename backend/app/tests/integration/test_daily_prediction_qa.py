@@ -41,12 +41,27 @@ from app.infra.db.session import SessionLocal
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.reference_data_service import ReferenceDataService
+from app.tests.fixtures.intraday_qa_fixtures import (
+    get_active_day,
+    get_calm_day,
+    get_transition_day,
+)
+from app.tests.helpers.intraday_qa_report import (
+    assert_fixture_expectations,
+    assert_within_budget,
+    build_report,
+)
 from scripts.seed_31_prediction_reference_v2 import run_seed
 
 client = TestClient(app)
 
 LEGACY_REFERENCE_VERSION = "1.0.0"
 LEGACY_RULESET_VERSION = "1.0.0"
+FIXTURE_BUILDERS = {
+    "active_day": get_active_day,
+    "calm_day": get_calm_day,
+    "transition_day": get_transition_day,
+}
 
 
 def _reset_prediction_reference(db) -> None:
@@ -108,23 +123,43 @@ def setup_db(monkeypatch: pytest.MonkeyPatch):
         _ensure_prediction_reference_seed(db)
 
 
-def _setup_qa_user_and_natal(db):
+def _setup_qa_user_and_natal(db, *, fixture_data: dict | None = None):
     auth = AuthService.register(
-        db, email="qa-integration@example.com", password="strong-pass-123", role="user"
+        db,
+        email=f"qa-integration-{uuid.uuid4()}@example.com",
+        password="strong-pass-123",
+        role="user",
     )
     db.commit()
+
+    natal = (
+        fixture_data["simulated_natal_profile"]
+        if fixture_data
+        else {
+            "birth_date": date(1990, 1, 1),
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+            "birth_lat": 48.85,
+            "birth_lon": 2.35,
+            "current_lat": 48.85,
+            "current_lon": 2.35,
+            "current_timezone": "Europe/Paris",
+        }
+    )
 
     # Create birth profile
     birth_profile = UserBirthProfileModel(
         user_id=auth.user.id,
-        birth_date=date(1990, 1, 1),
-        birth_place="Paris",
-        birth_timezone="Europe/Paris",
-        birth_lat=48.85,
-        birth_lon=2.35,
-        current_lat=48.85,
-        current_lon=2.35,
-        current_timezone="Europe/Paris",
+        birth_date=date.fromisoformat(natal["birth_date"])
+        if isinstance(natal["birth_date"], str)
+        else natal["birth_date"],
+        birth_place=natal["birth_place"],
+        birth_timezone=natal["birth_timezone"],
+        birth_lat=natal["birth_lat"],
+        birth_lon=natal["birth_lon"],
+        current_lat=natal["current_lat"],
+        current_lon=natal["current_lon"],
+        current_timezone=natal["current_timezone"],
     )
     db.add(birth_profile)
 
@@ -138,13 +173,43 @@ def _setup_qa_user_and_natal(db):
         result_payload={
             "planets": {"Sun": 15.5, "Moon": 220.3},
             "house_cusps": [
-                102.0, 132.0, 162.0, 192.0, 222.0, 252.0, 282.0, 312.0, 342.0, 12.0, 42.0, 72.0
+                102.0,
+                132.0,
+                162.0,
+                192.0,
+                222.0,
+                252.0,
+                282.0,
+                312.0,
+                342.0,
+                12.0,
+                42.0,
+                72.0,
             ],
         },
     )
     db.add(chart_result)
     db.commit()
     return auth.tokens.access_token
+
+
+def _fetch_prediction_for_fixture(fixture_name: str) -> dict:
+    fixture_data = FIXTURE_BUILDERS[fixture_name]()
+    with SessionLocal() as db:
+        token = _setup_qa_user_and_natal(db, fixture_data=fixture_data)
+
+    with SessionLocal() as db:
+        db.execute(delete(DailyPredictionRunModel))
+        db.commit()
+
+    response = client.get(
+        "/v1/predictions/daily",
+        headers={"Authorization": f"Bearer {token}"},
+        params={"date": fixture_data["target_date"]},
+    )
+
+    assert response.status_code == 200
+    return {"fixture": fixture_data, "payload": response.json()}
 
 
 def test_categories_all_present():
@@ -171,7 +236,8 @@ def test_categories_all_present():
         "sex_intimacy",
         "family_home",
         "social_network",
-        "communication", "pleasure_creativity",
+        "communication",
+        "pleasure_creativity",
     }
     codes = {c["code"] for c in data["categories"]}
     assert codes == expected_codes, f"Expected categories {expected_codes}, got {codes}"
@@ -260,9 +326,7 @@ def test_caution_flags_consistent():
     assert isinstance(bottom_categories, list)
     assert len(bottom_categories) <= 2
     for code in bottom_categories:
-        assert code in all_codes, (
-            f"bottom_categories contains unknown code '{code}'"
-        )
+        assert code in all_codes, f"bottom_categories contains unknown code '{code}'"
 
     # The lowest-scoring category must appear in bottom_categories when present
     if bottom_categories and data["categories"]:
@@ -272,3 +336,51 @@ def test_caution_flags_consistent():
             f"Lowest-scoring category '{worst_code}' (note={sorted_by_note[0]['note_20']}) "
             f"absent from bottom_categories {bottom_categories}"
         )
+
+
+# --- QA Actionability & Noise Budget Tests (Story 41.5) ---
+
+MAX_DECISION_WINDOWS = 6
+MAX_IDENTICAL_CONSECUTIVE_BLOCKS = 2
+MAX_TECHNICAL_DRIVERS_VISIBLE = 0
+
+
+def test_decision_windows_within_budget():
+    result = _fetch_prediction_for_fixture("active_day")
+    decision_windows = result["payload"].get("decision_windows") or []
+
+    assert len(decision_windows) <= MAX_DECISION_WINDOWS
+    for dw in decision_windows:
+        assert dw["window_type"] in {"favorable", "prudence", "pivot"}
+
+
+@pytest.mark.parametrize("fixture_name", ["calm_day", "active_day", "transition_day"])
+def test_fixture_expectations_match_api_response(fixture_name: str):
+    result = _fetch_prediction_for_fixture(fixture_name)
+    fixture_data = result["fixture"]
+    report = build_report(result["payload"])
+
+    assert_fixture_expectations(
+        report,
+        expected_pivot_range=fixture_data["expected_pivot_range"],
+        expected_window_range=fixture_data["expected_window_range"],
+    )
+
+
+def test_intraday_go_nogo():
+    for fixture_name in ["active_day", "transition_day"]:
+        result = _fetch_prediction_for_fixture(fixture_name)
+        fixture_data = result["fixture"]
+        report = build_report(result["payload"])
+
+        try:
+            assert_within_budget(
+                report,
+                max_windows=MAX_DECISION_WINDOWS,
+                max_identical_blocks=MAX_IDENTICAL_CONSECUTIVE_BLOCKS,
+                max_technical_drivers=MAX_TECHNICAL_DRIVERS_VISIBLE,
+            )
+        except AssertionError as e:
+            pytest.fail(
+                f"QA Go/No-Go failed for {fixture_name} ({fixture_data['target_date']}):\n{str(e)}"
+            )

@@ -1,0 +1,167 @@
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass
+from datetime import date, datetime, timedelta
+from typing import Any
+
+from app.prediction.schemas import AstroEvent
+
+BASE_TIME = datetime(2026, 3, 9, 6, 0, 0)
+STEP = timedelta(minutes=15)
+
+
+@dataclass(frozen=True)
+class SimulatedNatalProfile:
+    birth_date: date
+    birth_place: str
+    birth_timezone: str
+    birth_lat: float
+    birth_lon: float
+    current_lat: float
+    current_lon: float
+    current_timezone: str
+
+
+def make_step_times(n: int) -> list[datetime]:
+    return [BASE_TIME + i * STEP for i in range(n)]
+
+
+def make_notes(
+    n: int,
+    default: int = 10,
+    variations: dict[int, dict[str, int]] | None = None,
+) -> list[dict[str, int]]:
+    codes = ["energy", "mood", "work", "love", "money", "health"]
+    result = []
+    for i in range(n):
+        step_notes = {code: default for code in codes}
+        if variations and i in variations:
+            step_notes.update(variations[i])
+        result.append(step_notes)
+    return result
+
+
+def make_event(event_type: str, priority: int, step_index: int) -> AstroEvent:
+    event_time = BASE_TIME + step_index * STEP
+    return AstroEvent(
+        event_type=event_type,
+        ut_time=float(step_index),
+        local_time=event_time,
+        body="Sun",
+        target="Moon",
+        aspect="conjunction",
+        orb_deg=0.5,
+        priority=priority,
+        base_weight=1.0,
+    )
+
+
+def _build_fixture(
+    *,
+    target_date: date,
+    simulated_natal_profile: SimulatedNatalProfile,
+    notes_by_step: list[dict[str, int]],
+    events_by_step: list[list[AstroEvent]],
+    step_times: list[datetime],
+    expected_pivot_range: tuple[int, int],
+    expected_window_range: tuple[int, int],
+) -> dict[str, Any]:
+    return {
+        "target_date": target_date.isoformat(),
+        "simulated_natal_profile": asdict(simulated_natal_profile),
+        "notes_by_step": notes_by_step,
+        "events_by_step": events_by_step,
+        "step_times": step_times,
+        "expected_pivot_range": expected_pivot_range,
+        "expected_window_range": expected_window_range,
+    }
+
+
+def get_calm_day() -> dict[str, Any]:
+    """
+    Scénario calm_day : tous les delta_notes < 3, aucun événement décisionnel priority >= 65
+    → 0 pivot attendu, 0–2 decision_windows
+    """
+    n_steps = 96
+    natal = SimulatedNatalProfile(
+        birth_date=date(1992, 11, 18),
+        birth_place="Paris",
+        birth_timezone="Europe/Paris",
+        birth_lat=48.8566,
+        birth_lon=2.3522,
+        current_lat=48.8566,
+        current_lon=2.3522,
+        current_timezone="Europe/Paris",
+    )
+    return _build_fixture(
+        target_date=date(2026, 3, 5),
+        simulated_natal_profile=natal,
+        notes_by_step=make_notes(n_steps, default=10),
+        events_by_step=[[] for _ in range(n_steps)],
+        step_times=make_step_times(n_steps),
+        expected_pivot_range=(0, 0),
+        expected_window_range=(0, 0),
+    )
+
+
+def get_active_day() -> dict[str, Any]:
+    """
+    Scénario active_day : plusieurs delta_notes >= 3 sur catégories distinctes
+    + événements priority >= 65
+    → 3–5 pivots attendus, 3–6 decision_windows
+    """
+    n_steps = 96
+    natal = SimulatedNatalProfile(
+        birth_date=date(1990, 1, 1),
+        birth_place="Paris",
+        birth_timezone="Europe/Paris",
+        birth_lat=48.85,
+        birth_lon=2.35,
+        current_lat=48.85,
+        current_lon=2.35,
+        current_timezone="Europe/Paris",
+    )
+    variations = {
+        20: {"energy": 14},
+        50: {"love": 6},
+    }
+    events = [[] for _ in range(n_steps)]
+    events[30] = [make_event("aspect_exact_to_personal", 70, 30)]
+    return _build_fixture(
+        target_date=date(2026, 3, 15),
+        simulated_natal_profile=natal,
+        notes_by_step=make_notes(n_steps, default=10, variations=variations),
+        events_by_step=events,
+        step_times=make_step_times(n_steps),
+        expected_pivot_range=(3, 5),
+        expected_window_range=(3, 6),
+    )
+
+
+def get_transition_day() -> dict[str, Any]:
+    """
+    Scénario transition_day : un événement moon_sign_ingress priority >= 65
+    → 1 pivot high_priority_event, 1 decision_window de type pivot
+    """
+    n_steps = 96
+    natal = SimulatedNatalProfile(
+        birth_date=date(1988, 7, 22),
+        birth_place="Lyon",
+        birth_timezone="Europe/Paris",
+        birth_lat=45.764,
+        birth_lon=4.8357,
+        current_lat=45.764,
+        current_lon=4.8357,
+        current_timezone="Europe/Paris",
+    )
+    events = [[] for _ in range(n_steps)]
+    events[40] = [make_event("moon_sign_ingress", 65, 40)]
+    return _build_fixture(
+        target_date=date(2026, 3, 7),
+        simulated_natal_profile=natal,
+        notes_by_step=make_notes(n_steps, default=10),
+        events_by_step=events,
+        step_times=make_step_times(n_steps),
+        expected_pivot_range=(1, 1),
+        expected_window_range=(1, 1),
+    )

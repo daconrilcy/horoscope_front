@@ -137,7 +137,6 @@ def test_adaptive_split(base_data):
         trigger_event=None,
         severity=1.0,
     )
-
     generator = BlockGenerator()
     blocks = generator.generate(
         [pivot],
@@ -198,7 +197,6 @@ def test_two_blocks_with_single_pivot(base_data):
         trigger_event=None,
         severity=1.0,
     )
-
     generator = BlockGenerator()
     blocks = generator.generate(
         [pivot],

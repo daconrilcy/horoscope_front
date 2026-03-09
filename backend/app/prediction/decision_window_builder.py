@@ -30,9 +30,7 @@ class DecisionWindowBuilder:
         windows: list[DecisionWindow] = []
 
         for block in time_blocks:
-            has_pivot = any(
-                block.start_local <= pt < block.end_local for pt in pivot_times
-            )
+            has_pivot = any(block.start_local <= pt < block.end_local for pt in pivot_times)
             window_type = self._classify(block, has_pivot)
             if window_type == "neutral":
                 continue  # skip noise — AC3: raisonnable et lisible

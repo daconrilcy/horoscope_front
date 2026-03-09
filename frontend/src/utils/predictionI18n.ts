@@ -219,6 +219,8 @@ export function humanizePredictionDriverLabel(
     aspect_exact_to_personal: { fr: "Aspect exact", en: "Exact aspect" },
     aspect_enter_orb: { fr: "Entrée en orbe d'aspect", en: "Aspect orb opening" },
     aspect_exit_orb: { fr: "Sortie d'orbe d'aspect", en: "Aspect orb closing" },
+    enter_orb: { fr: "Entrée en orbe", en: "Orb opening" },
+    exit_orb: { fr: "Sortie d'orbe", en: "Orb closing" },
     moon_sign_ingress: { fr: "Changement de signe de la Lune", en: "Moon sign change" },
     asc_sign_change: { fr: "Changement de signe à l'Ascendant", en: "Ascendant sign change" },
   };
