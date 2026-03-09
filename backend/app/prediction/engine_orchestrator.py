@@ -18,6 +18,7 @@ from .calibrator import PercentileCalibrator
 from .category_codes import normalize_category_codes
 from .context_loader import LoadedPredictionContext
 from .contribution_calculator import ContributionCalculator
+from .decision_window_builder import DecisionWindowBuilder
 from .domain_router import DomainRouter
 from .editorial_builder import EditorialOutputBuilder
 from .editorial_template_engine import EditorialTemplateEngine
@@ -33,6 +34,7 @@ from .schemas import (
     NatalChart,
     SamplePoint,
 )
+from .temporal_kernel import spread_event_weights
 from .temporal_sampler import TemporalSampler
 from .turning_point_detector import TurningPointDetector
 
@@ -91,6 +93,7 @@ class EngineOrchestrator:
         explainability_builder: ExplainabilityBuilder | None = None,
         editorial_builder: EditorialOutputBuilder | None = None,
         editorial_template_engine: EditorialTemplateEngine | None = None,
+        decision_window_builder: DecisionWindowBuilder | None = None,
     ) -> None:
         self._ruleset_context_loader = ruleset_context_loader
         self._prediction_context_loader = prediction_context_loader
@@ -111,6 +114,7 @@ class EngineOrchestrator:
         self._editorial_template_engine = (
             editorial_template_engine or EditorialTemplateEngine()
         )
+        self._decision_window_builder = decision_window_builder or DecisionWindowBuilder()
 
     def with_context_loader(
         self,
@@ -136,6 +140,7 @@ class EngineOrchestrator:
             explainability_builder=self._explainability_builder,
             editorial_builder=self._editorial_builder,
             editorial_template_engine=self._editorial_template_engine,
+            decision_window_builder=self._decision_window_builder,
         )
 
     def run(
@@ -259,6 +264,12 @@ class EngineOrchestrator:
             step_times,
             contributions_by_step,
         )
+        decision_windows = self._decision_window_builder.build(
+            time_blocks,
+            turning_points,
+            editorial_category_scores,
+        )
+
         house_system_effective = self._resolve_effective_house_system(
             house_system_requested,
             astro_states,
@@ -292,6 +303,7 @@ class EngineOrchestrator:
             time_blocks=time_blocks,
             turning_points=turning_points,
             explainability=explainability,
+            decision_windows=decision_windows,
         )
 
         if not include_editorial:
@@ -341,6 +353,7 @@ class EngineOrchestrator:
             turning_points=updated_turning_points,
             editorial=editorial,
             editorial_text=editorial_text,
+            decision_windows=decision_windows,
         )
 
     def _refine_detected_events(
@@ -416,7 +429,7 @@ class EngineOrchestrator:
             if not samples:
                 break
 
-            step_index = self._nearest_step_index(event.ut_time, samples)
+            center_index = self._nearest_step_index(event.ut_time, samples)
             routed_categories = self._domain_router.route(event, loaded_context)
             contributions = self._contribution_calculator.compute(
                 event,
@@ -425,12 +438,21 @@ class EngineOrchestrator:
                 loaded_context,
             )
 
-            events_by_step[step_index].append(event)
-            contributions_by_step[step_index].append((event, contributions))
-            for category_code, contribution in contributions.items():
-                contribution_totals_by_step[step_index][category_code] = (
-                    contribution_totals_by_step[step_index].get(category_code, 0.0) + contribution
-                )
+            # Traceability: event and per-event contributions stay on the
+            # nearest step only (AC4 — drivers remain identifiable).
+            events_by_step[center_index].append(event)
+            contributions_by_step[center_index].append((event, contributions))
+
+            # Temporal spreading: contribution totals are distributed across
+            # the influence window so notes_by_step shows a rise/peak/fall
+            # curve instead of an isolated spike (AC3).
+            spread = spread_event_weights(event, samples)
+            for step_i, weight in spread:
+                for category_code, contribution in contributions.items():
+                    contribution_totals_by_step[step_i][category_code] = (
+                        contribution_totals_by_step[step_i].get(category_code, 0.0)
+                        + contribution * weight
+                    )
 
         day_aggregation = self._temporal_aggregator.aggregate(
             contribution_totals_by_step,

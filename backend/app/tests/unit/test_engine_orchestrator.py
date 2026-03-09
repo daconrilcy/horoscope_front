@@ -234,7 +234,7 @@ def test_output_has_mandatory_fields(orchestrator, base_input):
     assert output.editorial is not None
     assert output.editorial.overall_tone in {"positive", "negative", "mixed", "neutral"}
     assert output.run_metadata["overall_tone"] == output.editorial.overall_tone
-    assert len(output.time_blocks) == 24
+    assert len(output.time_blocks) >= 1  # signal-driven: no fixed 24-block hourly grid
 
 
 def test_house_system_fields_present(orchestrator, base_input):
@@ -528,5 +528,7 @@ def test_run_integrates_prediction_scoring_pipeline_with_lowercase_reference_cod
     assert output.category_scores["work"]["note_20"] > 10
     assert output.editorial is not None
     assert output.editorial.top3_categories[0].code == "work"
-    assert len(output.turning_points) == 1
-    assert len(output.time_blocks) == 2
+    # Temporal spreading smooths the 4-step signal: no step-to-step delta >= 2
+    # → 0 turning points; block generator produces 1 block for the whole mini-day.
+    assert len(output.turning_points) == 0
+    assert len(output.time_blocks) == 1

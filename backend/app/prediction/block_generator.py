@@ -29,12 +29,13 @@ class BlockGenerator:
         step_times: list[datetime],
         contributions_by_step: list[list[tuple["AstroEvent", dict[str, float]]]],
     ) -> list[TimeBlock]:
-        boundaries = set()
-        for index in range(0, len(step_times), 4):
-            boundaries.add(step_times[index])
+        if not step_times:
+            return []
 
-        if step_times:
-            boundaries.add(step_times[-1] + timedelta(minutes=15))
+        # AC1: signal-driven boundaries -- no fixed hourly grid
+        # Day start and day end are the only mandatory boundaries.
+        # Pivot times (real signal changes) define block splits.
+        boundaries = {step_times[0], step_times[-1] + timedelta(minutes=15)}
 
         for pivot in pivots:
             boundaries.add(pivot.local_time)

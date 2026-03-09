@@ -21,6 +21,8 @@ class TurningPoint:
 
 class TurningPointDetector:
     PRIORITY_PIVOT_THRESHOLD = 65
+    # AC2: raise threshold so minor/technical changes don't become user pivots
+    DELTA_NOTE_THRESHOLD = 3
 
     REASON_PRIORITY = {
         "high_priority_event": 3,
@@ -45,10 +47,11 @@ class TurningPointDetector:
         for index in range(1, len(step_times)):
             reasons_found: dict[str, tuple[list[str], AstroEvent | None]] = {}
 
+            # AC2: use DELTA_NOTE_THRESHOLD (3) instead of 2 to filter minor changes
             impacted_categories = []
             for category_code, note in notes_by_step[index].items():
                 prev_note = notes_by_step[index - 1].get(category_code, note)
-                if abs(note - prev_note) >= 2:
+                if abs(note - prev_note) >= self.DELTA_NOTE_THRESHOLD:
                     impacted_categories.append(category_code)
 
             if impacted_categories:
@@ -56,11 +59,22 @@ class TurningPointDetector:
 
             top3_current = self._top3_codes(notes_by_step[index])
             top3_previous = self._top3_codes(notes_by_step[index - 1])
+            # AC2: top3_change only fires when the underlying shift is significant
+            # (max delta >= threshold), preventing rounding-artifact pivots
             if top3_current != top3_previous:
-                reasons_found["top3_change"] = (
-                    list(top3_current.symmetric_difference(top3_previous)),
-                    None,
+                all_codes = set(notes_by_step[index]) | set(notes_by_step[index - 1])
+                max_delta = max(
+                    abs(
+                        notes_by_step[index].get(code, 0)
+                        - notes_by_step[index - 1].get(code, 0)
+                    )
+                    for code in all_codes
                 )
+                if max_delta >= self.DELTA_NOTE_THRESHOLD:
+                    reasons_found["top3_change"] = (
+                        list(top3_current.symmetric_difference(top3_previous)),
+                        None,
+                    )
 
             high_priority_events = [
                 event

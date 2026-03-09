@@ -62,6 +62,15 @@ class DailyPredictionTimeBlock(BaseModel):
     turning_point: bool
 
 
+class DailyPredictionDecisionWindow(BaseModel):
+    start_local: str
+    end_local: str
+    window_type: str  # "favorable" | "prudence" | "pivot"
+    score: float
+    confidence: float
+    dominant_categories: list[str]
+
+
 class DailyPredictionSummary(BaseModel):
     overall_tone: str | None
     overall_summary: str | None
@@ -79,6 +88,7 @@ class DailyPredictionResponse(BaseModel):
     categories: list[DailyPredictionCategory]
     timeline: list[DailyPredictionTimeBlock]
     turning_points: list[DailyPredictionTurningPoint]
+    decision_windows: list[DailyPredictionDecisionWindow] | None = None
 
 
 class DailyHistoryItem(BaseModel):
@@ -434,6 +444,23 @@ def get_daily_prediction(
         key=lambda b: _parse_iso_datetime(b.start_local),
     )
 
+    # AC5: expose decision_windows from engine output when available (additive, non-breaking)
+    decision_windows = None
+    if result.engine_output is not None:
+        raw_dws = getattr(result.engine_output, "decision_windows", None) or []
+        if raw_dws:
+            decision_windows = [
+                DailyPredictionDecisionWindow(
+                    start_local=dw.start_local.isoformat(),
+                    end_local=dw.end_local.isoformat(),
+                    window_type=dw.window_type,
+                    score=dw.score,
+                    confidence=dw.confidence,
+                    dominant_categories=list(dw.dominant_categories),
+                )
+                for dw in raw_dws
+            ]
+
     # Build summary
     summary = _build_summary(result, full_run, cat_id_to_code)
     reference_version = settings.active_reference_version
@@ -462,6 +489,7 @@ def get_daily_prediction(
         categories=categories,
         timeline=timeline,
         turning_points=turning_points,
+        decision_windows=decision_windows,
     )
 
 

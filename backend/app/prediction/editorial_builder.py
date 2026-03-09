@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from app.prediction.category_codes import normalize_category_code, normalize_category_codes
 
@@ -47,19 +47,16 @@ class EditorialOutputBuilder:
     def build(
         self, engine_output: EngineOutput, explainability: ExplainabilityReport
     ) -> EditorialOutput:
-        """
-        Produce a clear editorial contract from raw engine output.
-        No LLM calls or free text generation here.
-        """
         top3, bottom2 = self._build_top3_bottom2(engine_output.category_scores)
         main_pivot = self._find_main_pivot(engine_output.turning_points)
-        best_window = self._find_best_window(engine_output.time_blocks, top3)
+        best_window = self._find_best_window(
+            engine_output.time_blocks, top3, engine_output.category_scores
+        )
         caution_flags = self._compute_caution_flags(
             engine_output.category_scores, engine_output.run_metadata
         )
         overall_tone = self._derive_tone(top3)
         top3_contributors = self._extract_contributors(explainability, top3)
-
         return EditorialOutput(
             local_date=engine_output.effective_context.local_date,
             top3_categories=top3,
@@ -71,9 +68,7 @@ class EditorialOutputBuilder:
             top3_contributors_per_category=top3_contributors,
         )
 
-    def _build_top3_bottom2(
-        self, scores: dict[str, Any]
-    ) -> tuple[list[CategorySummary], list[CategorySummary]]:
+    def _build_top3_bottom2(self, scores):
         sorted_scores = sorted(
             [(code, s) for code, s in scores.items()],
             key=lambda item: (
@@ -81,7 +76,6 @@ class EditorialOutputBuilder:
                 self._score_value(item[1], "sort_order", 0),
             ),
         )
-
         top3_raw = sorted_scores[:3]
         top3 = [
             CategorySummary(
@@ -92,7 +86,6 @@ class EditorialOutputBuilder:
             )
             for c, s in top3_raw
         ]
-
         top3_codes = {c.code for c in top3}
         remaining = [(code, score) for code, score in sorted_scores if code not in top3_codes]
         sorted_remaining = sorted(
@@ -112,47 +105,37 @@ class EditorialOutputBuilder:
             )
             for c, s in bottom2_raw
         ]
-
         return top3, bottom2
 
-    def _find_main_pivot(self, turning_points: list[Any]) -> Any | None:
+    def _find_main_pivot(self, turning_points):
         if not turning_points:
             return None
         return max(turning_points, key=lambda tp: getattr(tp, "severity", 0.0))
 
-    def _find_best_window(
-        self, time_blocks: list[Any], top3: list[CategorySummary]
-    ) -> BestWindow | None:
+    def _find_best_window(self, time_blocks, top3, category_scores=None):
         if not time_blocks or not top3:
             return None
-
         top3_codes = [c.code for c in top3]
         ordered_blocks = sorted(
             time_blocks,
             key=lambda block: getattr(block, "start_local", datetime.min),
         )
+        scores = category_scores or {}
         best_block = max(
             ordered_blocks,
-            key=lambda block: (
-                self._window_score(block, top3_codes),
-                1 if top3_codes[0] in getattr(block, "dominant_categories", []) else 0,
-            ),
+            key=lambda block: self._window_score(block, top3_codes, scores),
         )
-
         dominant = top3_codes[0]
         dom_cats = getattr(best_block, "dominant_categories", [])
         if dom_cats:
             dominant = dom_cats[0]
-
         return BestWindow(
             start_local=best_block.start_local,
             end_local=best_block.end_local,
             dominant_category=dominant,
         )
 
-    def _compute_caution_flags(
-        self, scores: dict[str, Any], params: dict[str, Any] | None
-    ) -> dict[str, bool]:
+    def _compute_caution_flags(self, scores, params):
         caution_codes = set(
             normalize_category_codes(
                 (params or {}).get("caution_category_codes", list(self.DEFAULT_CAUTION_CODES))
@@ -171,7 +154,7 @@ class EditorialOutputBuilder:
                 )
         return flags
 
-    def _derive_tone(self, top3: list[CategorySummary]) -> str:
+    def _derive_tone(self, top3):
         if not top3:
             return "neutral"
         notes = [c.note_20 for c in top3]
@@ -185,9 +168,7 @@ class EditorialOutputBuilder:
             return "mixed"
         return "neutral"
 
-    def _extract_contributors(
-        self, explainability: ExplainabilityReport, top3: list[CategorySummary]
-    ) -> dict[str, list[ContributorEntry]]:
+    def _extract_contributors(self, explainability, top3):
         result = {
             category_code: category_explainability.top_contributors
             for category_code, category_explainability in explainability.categories.items()
@@ -196,17 +177,27 @@ class EditorialOutputBuilder:
             result.setdefault(cat.code, [])
         return result
 
-    def _score_value(self, score: Any, field_name: str, default: Any) -> Any:
+    def _score_value(self, score, field_name, default):
         if isinstance(score, dict):
             return score.get(field_name, default)
         return getattr(score, field_name, default)
 
-    def _window_score(self, block: Any, top3_codes: list[str]) -> float:
+    def _window_score(self, block, top3_codes, category_scores=None):
         category_means = getattr(block, "category_means", None)
         if isinstance(category_means, dict):
-            values = [float(category_means.get(code, 0.0)) for code in top3_codes]
-            return sum(values) / len(values)
-
+            notes = [float(category_means.get(code, 0.0)) for code in top3_codes]
+            avg_note = sum(notes) / len(notes) if notes else 0.0
+            vols = []
+            for code in top3_codes:
+                score = (category_scores or {}).get(code)
+                if score is not None:
+                    vol = self._score_value(score, "volatility", 0.5)
+                    vols.append(float(vol))
+            avg_vol = sum(vols) / len(vols) if vols else 0.5
+            stability = 1.0 / (1.0 + avg_vol)
+            tone_map = {"positive": 0.1, "mixed": 0.0, "neutral": 0.0, "negative": -0.1}
+            tone_factor = 1.0 + tone_map.get(getattr(block, "tone_code", "neutral"), 0.0)
+            return avg_note * stability * tone_factor
         dominant_categories = getattr(block, "dominant_categories", [])
         overlap = len([code for code in top3_codes if code in dominant_categories])
         tone_priority = {"positive": 3.0, "mixed": 2.0, "neutral": 1.0, "negative": 0.0}

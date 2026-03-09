@@ -1180,12 +1180,12 @@
     "category_scores": {
       "career": {
         "is_provisional": true,
-        "normalized_score": 2.6362812035823917e-05,
+        "normalized_score": 2.636281203582392e-05,
         "note_20": 20,
-        "power": 0.0006439058514944603,
-        "raw_score": 2.6362812035823917e-05,
+        "power": 0.00021463528383148676,
+        "raw_score": 2.636281203582392e-05,
         "sort_order": 5,
-        "volatility": 6.713182566614459e-05
+        "volatility": 3.192515778724781e-05
       },
       "communication": {
         "is_provisional": true,
@@ -1200,10 +1200,10 @@
         "is_provisional": true,
         "normalized_score": 1.305586881774137e-05,
         "note_20": 14,
-        "power": 0.00031888670740678034,
+        "power": 0.00010629556913559344,
         "raw_score": 1.305586881774137e-05,
         "sort_order": 1,
-        "volatility": 3.324623747275732e-05
+        "volatility": 1.5810554332732246e-05
       },
       "family_home": {
         "is_provisional": true,
@@ -1245,10 +1245,10 @@
         "is_provisional": true,
         "normalized_score": 1.2051571216376649e-05,
         "note_20": 14,
-        "power": 0.00029435696068318183,
+        "power": 9.811898689439394e-05,
         "raw_score": 1.2051571216376649e-05,
         "sort_order": 2,
-        "volatility": 3.0688834590237524e-05
+        "volatility": 1.4594357845598996e-05
       },
       "pleasure_creativity": {
         "is_provisional": true,
@@ -1281,10 +1281,10 @@
         "is_provisional": true,
         "normalized_score": 1.757520802388261e-05,
         "note_20": 17,
-        "power": 0.00042927056766297353,
+        "power": 0.00014309018922099116,
         "raw_score": 1.757520802388261e-05,
         "sort_order": 4,
-        "volatility": 4.4754550444096396e-05
+        "volatility": 2.128343852483187e-05
       }
     },
     "time_blocks": [
@@ -2098,34 +2098,6 @@
         "block_index": 28,
         "dominant_categories": [
           "career",
-          "communication",
-          "energy"
-        ],
-        "driver_events": [
-          {
-            "aspect": null,
-            "base_weight": 0.8,
-            "body": "Jupiter",
-            "event_type": "planetary_hour_change",
-            "local_time": "2026-03-29T20:17:05.891680+02:00",
-            "metadata": {
-              "hour_number": 13
-            },
-            "orb_deg": 0.0,
-            "priority": 20,
-            "target": null,
-            "ut_time": 2461129.2618737463
-          }
-        ],
-        "end_local": "2026-03-29T20:30:00+02:00",
-        "start_local": "2026-03-29T20:00:00+02:00",
-        "summary": "",
-        "tone_code": "neutral"
-      },
-      {
-        "block_index": 29,
-        "dominant_categories": [
-          "career",
           "energy",
           "mood"
         ],
@@ -2146,28 +2118,42 @@
             "priority": 40,
             "target": "Mercury",
             "ut_time": 2461129.2708333335
+          },
+          {
+            "aspect": null,
+            "base_weight": 0.8,
+            "body": "Jupiter",
+            "event_type": "planetary_hour_change",
+            "local_time": "2026-03-29T20:17:05.891680+02:00",
+            "metadata": {
+              "hour_number": 13
+            },
+            "orb_deg": 0.0,
+            "priority": 20,
+            "target": null,
+            "ut_time": 2461129.2618737463
           }
         ],
-        "end_local": "2026-03-29T20:45:00+02:00",
-        "start_local": "2026-03-29T20:30:00+02:00",
+        "end_local": "2026-03-29T21:00:00+02:00",
+        "start_local": "2026-03-29T20:00:00+02:00",
+        "summary": "",
+        "tone_code": "positive"
+      },
+      {
+        "block_index": 29,
+        "dominant_categories": [
+          "career",
+          "energy",
+          "mood"
+        ],
+        "driver_events": [],
+        "end_local": "2026-03-29T21:15:00+02:00",
+        "start_local": "2026-03-29T21:00:00+02:00",
         "summary": "",
         "tone_code": "positive"
       },
       {
         "block_index": 30,
-        "dominant_categories": [
-          "career",
-          "communication",
-          "energy"
-        ],
-        "driver_events": [],
-        "end_local": "2026-03-29T21:00:00+02:00",
-        "start_local": "2026-03-29T20:45:00+02:00",
-        "summary": "",
-        "tone_code": "neutral"
-      },
-      {
-        "block_index": 31,
         "dominant_categories": [
           "career",
           "communication",
@@ -2190,12 +2176,12 @@
           }
         ],
         "end_local": "2026-03-29T21:30:00+02:00",
-        "start_local": "2026-03-29T21:00:00+02:00",
+        "start_local": "2026-03-29T21:15:00+02:00",
         "summary": "",
         "tone_code": "neutral"
       },
       {
-        "block_index": 32,
+        "block_index": 31,
         "dominant_categories": [
           "career",
           "communication",
@@ -2247,7 +2233,7 @@
         "tone_code": "neutral"
       },
       {
-        "block_index": 33,
+        "block_index": 32,
         "dominant_categories": [
           "career",
           "communication",
@@ -2276,7 +2262,7 @@
         "tone_code": "neutral"
       },
       {
-        "block_index": 34,
+        "block_index": 33,
         "dominant_categories": [
           "career",
           "communication",
@@ -2289,7 +2275,7 @@
         "tone_code": "neutral"
       },
       {
-        "block_index": 35,
+        "block_index": 34,
         "dominant_categories": [
           "career",
           "communication",
@@ -2332,7 +2318,7 @@
         "tone_code": "neutral"
       },
       {
-        "block_index": 36,
+        "block_index": 35,
         "dominant_categories": [
           "career",
           "communication",
@@ -2834,26 +2820,8 @@
           "mood",
           "work"
         ],
-        "driver_events": [
-          {
-            "aspect": "trine",
-            "base_weight": 1.0,
-            "body": "Venus",
-            "event_type": "aspect_enter_orb",
-            "local_time": "2026-03-29T20:30:00+02:00",
-            "metadata": {
-              "natal_house_target": 10,
-              "natal_house_transited": 1,
-              "orb_max": 3.0,
-              "phase": "applying"
-            },
-            "orb_deg": 2.9939258862996496,
-            "priority": 40,
-            "target": "Mercury",
-            "ut_time": 2461129.2708333335
-          }
-        ],
-        "local_time": "2026-03-29T20:30:00+02:00",
+        "driver_events": [],
+        "local_time": "2026-03-29T20:00:00+02:00",
         "reason": "delta_note",
         "severity": 0.8,
         "summary": "",
@@ -2867,8 +2835,23 @@
           "mood",
           "work"
         ],
-        "driver_events": [],
-        "local_time": "2026-03-29T20:45:00+02:00",
+        "driver_events": [
+          {
+            "aspect": null,
+            "base_weight": 0.8,
+            "body": "Mars",
+            "event_type": "planetary_hour_change",
+            "local_time": "2026-03-29T21:13:33.023941+02:00",
+            "metadata": {
+              "hour_number": 14
+            },
+            "orb_deg": 0.0,
+            "priority": 20,
+            "target": null,
+            "ut_time": 2461129.301076666
+          }
+        ],
+        "local_time": "2026-03-29T21:15:00+02:00",
         "reason": "delta_note",
         "severity": 0.8,
         "summary": "",
@@ -4561,8 +4544,8 @@
     "editorial": {
       "best_window": {
         "dominant_category": "career",
-        "end_local": "2026-03-29T20:45:00+02:00",
-        "start_local": "2026-03-29T20:30:00+02:00"
+        "end_local": "2026-03-29T21:00:00+02:00",
+        "start_local": "2026-03-29T20:00:00+02:00"
       },
       "bottom2_categories": [
         {
@@ -4627,20 +4610,20 @@
         {
           "code": "career",
           "note_20": 20,
-          "power": 0.0006439058514944603,
-          "volatility": 6.713182566614459e-05
+          "power": 0.00021463528383148676,
+          "volatility": 3.192515778724781e-05
         },
         {
           "code": "work",
           "note_20": 17,
-          "power": 0.00042927056766297353,
-          "volatility": 4.4754550444096396e-05
+          "power": 0.00014309018922099116,
+          "volatility": 2.128343852483187e-05
         },
         {
           "code": "energy",
           "note_20": 14,
-          "power": 0.00031888670740678034,
-          "volatility": 3.324623747275732e-05
+          "power": 0.00010629556913559344,
+          "volatility": 1.5810554332732246e-05
         }
       ],
       "top3_contributors_per_category": {

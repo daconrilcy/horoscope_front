@@ -117,8 +117,8 @@
         "note_20": 1,
         "raw_score": -0.0029326499987259455,
         "normalized_score": -0.0029326499987259455,
-        "power": 0.41894999981799225,
-        "volatility": 0.04189499998179923,
+        "power": 0.13964999993933075,
+        "volatility": 0.019953470228233846,
         "sort_order": 1,
         "is_provisional": true
       },
@@ -126,8 +126,8 @@
         "note_20": 3,
         "raw_score": -0.0016206749992959174,
         "normalized_score": -0.0016206749992959174,
-        "power": 0.2315249998994168,
-        "volatility": 0.02315249998994168,
+        "power": 0.07717499996647226,
+        "volatility": 0.01102691775770818,
         "sort_order": 2,
         "is_provisional": true
       },
@@ -142,19 +142,19 @@
       },
       "work": {
         "note_20": 13,
-        "raw_score": 0.00931553690134531,
-        "normalized_score": 0.00931553690134531,
-        "power": 0.20065499756119504,
-        "volatility": 0.026467385533257202,
+        "raw_score": 0.008448236981259969,
+        "normalized_score": 0.008448236981259969,
+        "power": 0.058211999986211585,
+        "volatility": 0.010646309165887925,
         "sort_order": 4,
         "is_provisional": true
       },
       "career": {
         "note_20": 16,
-        "raw_score": 0.014202515101963676,
-        "normalized_score": 0.014202515101963676,
-        "power": 0.3009824963417926,
-        "volatility": 0.04191009691285755,
+        "raw_score": 0.01399304022157713,
+        "normalized_score": 0.01399304022157713,
+        "power": 0.09823274997673206,
+        "volatility": 0.017157464350493774,
         "sort_order": 5,
         "is_provisional": true
       },
@@ -162,17 +162,17 @@
         "note_20": 10,
         "raw_score": 0.0028304514528295827,
         "normalized_score": 0.0028304514528295827,
-        "power": 0.07016624998338004,
-        "volatility": 0.0070165679219082,
+        "power": 0.023388749994460015,
+        "volatility": 0.0033417073361657695,
         "sort_order": 6,
         "is_provisional": true
       },
       "love": {
         "note_20": 16,
-        "raw_score": 0.014936894608745512,
-        "normalized_score": 0.014936894608745512,
-        "power": 0.3875287456817206,
-        "volatility": 0.04009987824762017,
+        "raw_score": 0.013775006622867353,
+        "normalized_score": 0.013775006622867353,
+        "power": 0.10012904891361957,
+        "volatility": 0.01646612596388179,
         "sort_order": 7,
         "is_provisional": true
       },
@@ -180,8 +180,8 @@
         "note_20": 10,
         "raw_score": 0.002254492497775346,
         "normalized_score": 0.002254492497775346,
-        "power": 0.05588351998676313,
-        "volatility": 0.005588281416325291,
+        "power": 0.01862783999558771,
+        "volatility": 0.002661426557087813,
         "sort_order": 8,
         "is_provisional": true
       },
@@ -196,10 +196,10 @@
       },
       "social_network": {
         "note_20": 20,
-        "raw_score": 0.024999628241065133,
-        "normalized_score": 0.024999628241065133,
-        "power": 0.6198254935801273,
-        "volatility": 0.06198254935801273,
+        "raw_score": 0.024265804249984195,
+        "normalized_score": 0.024265804249984195,
+        "power": 0.18826289808301888,
+        "volatility": 0.02754311247317842,
         "sort_order": 10,
         "is_provisional": true
       },
@@ -216,14 +216,14 @@
         "note_20": 13,
         "raw_score": 0.008414664614900823,
         "normalized_score": 0.008414664614900823,
-        "power": 0.2344190601921635,
-        "volatility": 0.027894337273107486,
+        "power": 0.07813968673072116,
+        "volatility": 0.013488755745123648,
         "sort_order": 12,
         "is_provisional": true
       }
     },
     "detected_events_count": 49,
-    "turning_points_count": 19,
+    "turning_points_count": 29,
     "sample_count": 100,
     "is_provisional_calibration": true
   }

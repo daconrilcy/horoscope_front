@@ -93,6 +93,18 @@ class AstroEvent:
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
+
+
+@dataclass(frozen=True)
+class DecisionWindow:
+    """A decisional window produced by the prediction engine."""
+
+    start_local: datetime
+    end_local: datetime
+    window_type: str  # "favorable" | "prudence" | "pivot"
+    score: float  # avg note of dominant categories, 0-20
+    confidence: float  # 0-1, inverse of volatility
+    dominant_categories: list[str]
 @dataclass(frozen=True)
 class EngineOutput:
     """Final output of the prediction engine run."""
@@ -107,3 +119,4 @@ class EngineOutput:
     explainability: ExplainabilityReport | None = None
     editorial: EditorialOutput | None = None
     editorial_text: EditorialTextOutput | None = None
+    decision_windows: list[Any] = field(default_factory=list)

@@ -347,7 +347,7 @@ development_status:
 
   epic-41: in-progress
   41-1-realigner-taxonomie-et-hierarchie-evenements-intraday: done
-  41-2-propager-influence-temporelle-evenements-fenetres-utiles: backlog
-  41-3-fenetres-decisionnelles-et-pivots-filtres: backlog
+  41-2-propager-influence-temporelle-evenements-fenetres-utiles: done
+  41-3-fenetres-decisionnelles-et-pivots-filtres: done
   41-4-contrat-api-et-ui-centres-aide-decision-intraday: backlog
   41-5-qa-actionability-et-budget-de-bruit-intraday: backlog

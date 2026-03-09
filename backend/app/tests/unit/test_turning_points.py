@@ -31,10 +31,11 @@ def base_data():
     return step_times, notes_by_step, events_by_step, contributions_by_step
 
 
-def test_pivot_delta_note_2(base_data):
+def test_pivot_delta_note_3(base_data):
+    # AC2: threshold is now 3; delta=3 triggers a pivot
     step_times, notes_by_step, events_by_step, _ = base_data
     for index in range(4, 96):
-        notes_by_step[index]["love"] = 12
+        notes_by_step[index]["love"] = 13  # delta = 3
 
     detector = TurningPointDetector()
     pivots = detector.detect(notes_by_step, events_by_step, step_times)
@@ -43,6 +44,18 @@ def test_pivot_delta_note_2(base_data):
     assert pivots[0].reason == "delta_note"
     assert pivots[0].local_time == step_times[4]
     assert "love" in pivots[0].categories_impacted
+
+
+def test_no_pivot_delta_note_2(base_data):
+    # AC2: delta=2 is now below the threshold, no pivot expected
+    step_times, notes_by_step, events_by_step, _ = base_data
+    for index in range(4, 96):
+        notes_by_step[index]["love"] = 12  # delta = 2
+
+    detector = TurningPointDetector()
+    pivots = detector.detect(notes_by_step, events_by_step, step_times)
+
+    assert len(pivots) == 0
 
 
 def test_no_pivot_delta_note_1(base_data):
@@ -56,6 +69,7 @@ def test_no_pivot_delta_note_1(base_data):
 
 
 def test_pivot_top3_change(base_data):
+    # AC2: money delta=10 >= 3, pivot expected (reason is delta_note, higher priority)
     step_times, notes_by_step, events_by_step, _ = base_data
     notes_by_step[3] = {"love": 10, "work": 10, "health": 10, "money": 5}
     notes_by_step[4] = {"love": 10, "work": 10, "health": 10, "money": 15}
@@ -63,7 +77,23 @@ def test_pivot_top3_change(base_data):
     detector = TurningPointDetector()
     pivots = detector.detect(notes_by_step, events_by_step, step_times)
 
-    assert any(pivot.reason == "top3_change" for pivot in pivots)
+    assert len(pivots) >= 1
+    assert any(p.reason in ("delta_note", "top3_change") for p in pivots)
+
+
+def test_no_pivot_top3_change_below_threshold(base_data):
+    # AC2: top3_change with max_delta < 3 must NOT produce a pivot
+    # All steps track money=10; step 4 changes to 11 (delta=1 < 3)
+    step_times, notes_by_step, events_by_step, _ = base_data
+    for step_notes in notes_by_step:
+        step_notes["money"] = 10
+    notes_by_step[4]["money"] = 11  # delta = 1, below threshold
+
+    detector = TurningPointDetector()
+    pivots = detector.detect(notes_by_step, events_by_step, step_times)
+
+    # max_delta=1, no pivot expected
+    assert len(pivots) == 0
 
 
 def test_pivot_high_priority(base_data):
@@ -78,7 +108,8 @@ def test_pivot_high_priority(base_data):
     assert pivots[0].local_time == step_times[10]
 
 
-def test_24_blocks_no_pivot(base_data):
+def test_signal_driven_single_block_no_pivot(base_data):
+    # AC1: without pivots, the whole day is one block (no fixed hourly grid)
     step_times, notes_by_step, events_by_step, contributions_by_step = base_data
 
     generator = BlockGenerator()
@@ -90,13 +121,14 @@ def test_24_blocks_no_pivot(base_data):
         contributions_by_step,
     )
 
-    assert len(blocks) == 24
-    for index, block in enumerate(blocks):
-        assert block.block_index == index
-        assert block.end_local - block.start_local == timedelta(hours=1)
+    assert len(blocks) == 1
+    assert blocks[0].block_index == 0
+    assert blocks[0].start_local == step_times[0]
+    assert blocks[0].end_local == step_times[-1] + timedelta(minutes=15)
 
 
 def test_adaptive_split(base_data):
+    # AC1: 1 pivot -> 2 blocks (before/after pivot)
     step_times, notes_by_step, events_by_step, contributions_by_step = base_data
     pivot = TurningPoint(
         local_time=step_times[5],
@@ -115,18 +147,17 @@ def test_adaptive_split(base_data):
         contributions_by_step,
     )
 
-    assert len(blocks) == 25
+    assert len(blocks) == 2
     assert blocks[0].start_local == step_times[0]
-    assert blocks[0].end_local == step_times[4]
-    assert blocks[1].start_local == step_times[4]
-    assert blocks[1].end_local == step_times[5]
-    assert blocks[2].start_local == step_times[5]
-    assert blocks[2].end_local == step_times[8]
+    assert blocks[0].end_local == step_times[5]
+    assert blocks[1].start_local == step_times[5]
+    assert blocks[1].end_local == step_times[-1] + timedelta(minutes=15)
 
 
 def test_tone_positive(base_data):
+    # With no pivots -> 1 block; tone computed from all 96 steps
     step_times, notes_by_step, events_by_step, contributions_by_step = base_data
-    for index in range(4):
+    for index in range(96):
         notes_by_step[index] = {"love": 15, "work": 15, "health": 15}
 
     generator = BlockGenerator()
@@ -141,8 +172,9 @@ def test_tone_positive(base_data):
 
 
 def test_tone_negative(base_data):
+    # With no pivots -> 1 block; tone computed from all 96 steps
     step_times, notes_by_step, events_by_step, contributions_by_step = base_data
-    for index in range(4):
+    for index in range(96):
         notes_by_step[index] = {"love": 5, "work": 5, "health": 5}
 
     generator = BlockGenerator()
@@ -156,7 +188,8 @@ def test_tone_negative(base_data):
     assert blocks[0].tone_code == "negative"
 
 
-def test_min_block_1_step(base_data):
+def test_two_blocks_with_single_pivot(base_data):
+    # AC1: pivot at step[7] yields exactly 2 blocks
     step_times, notes_by_step, events_by_step, contributions_by_step = base_data
     pivot = TurningPoint(
         local_time=step_times[7],
@@ -175,12 +208,10 @@ def test_min_block_1_step(base_data):
         contributions_by_step,
     )
 
-    assert len(blocks) == 25
-    one_step_blocks = [
-        block for block in blocks if block.end_local - block.start_local == timedelta(minutes=15)
-    ]
-    assert len(one_step_blocks) == 1
-    assert one_step_blocks[0].start_local == step_times[7]
+    assert len(blocks) == 2
+    assert blocks[0].start_local == step_times[0]
+    assert blocks[0].end_local == step_times[7]
+    assert blocks[1].start_local == step_times[7]
 
 
 def test_driver_traceable(base_data):

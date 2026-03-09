@@ -1125,3 +1125,48 @@ def test_daily_prediction_summary_no_calibration_note_when_not_provisional():
     summary = response.json()["summary"]
     assert summary["calibration_note"] is None
     assert summary["low_score_variance"] is False
+
+
+def test_daily_prediction_decision_windows():
+    """AC5 : expose decision_windows from engine output when available."""
+    token = _register_and_get_access_token()
+    mock_run = _build_mock_run()
+    
+    # Engine output with decision windows
+    mock_dw = MagicMock()
+    mock_dw.start_local = datetime(2026, 3, 8, 8, 0)
+    mock_dw.end_local = datetime(2026, 3, 8, 12, 0)
+    mock_dw.window_type = "favorable"
+    mock_dw.score = 15.0
+    mock_dw.confidence = 0.8
+    mock_dw.dominant_categories = ["love", "work"]
+    
+    mock_engine_output = MagicMock()
+    mock_engine_output.decision_windows = [mock_dw]
+    mock_engine_output.editorial = None
+    mock_engine_output.effective_context.house_system_effective = "placidus"
+    
+    mock_result = ServiceResult(run=mock_run, engine_output=mock_engine_output, was_reused=False)
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    mock_full_run = {
+        "id": 1,
+        "category_scores": [],
+        "turning_points": [],
+        "time_blocks": [],
+    }
+
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    with patch(repo_path, return_value=mock_full_run):
+        response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "decision_windows" in data
+    assert len(data["decision_windows"]) == 1
+    dw = data["decision_windows"][0]
+    assert dw["window_type"] == "favorable"
+    assert dw["score"] == 15.0
+    assert "love" in dw["dominant_categories"]
