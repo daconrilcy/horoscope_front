@@ -815,7 +815,10 @@ def test_daily_prediction_timeline_summary_non_null():
                 "end_at_local": "2026-03-08T11:30:00+01:00",
                 "tone_code": "positive",
                 "dominant_categories_json": '["work", "energy"]',
-                "summary": "Entre 08:00 et 11:30, tonalité très porteuse — Travail, Énergie & Vitalité.",
+                "summary": (
+                    "Entre 08:00 et 11:30, tonalité très porteuse"
+                    " — Travail, Énergie & Vitalité."
+                ),
             },
             {
                 "block_index": 1,
@@ -934,7 +937,11 @@ def test_daily_prediction_reused_run_summaries_readable():
     assert data["meta"]["was_reused"] is True
     assert data["timeline"][0]["summary"] is not None
     assert data["turning_points"][0]["summary"] is not None
-    assert data["turning_points"][0]["summary"] not in {"delta_note", "top3_change", "high_priority_event"}
+    assert data["turning_points"][0]["summary"] not in {
+        "delta_note",
+        "top3_change",
+        "high_priority_event",
+    }
 
 
 def test_daily_prediction_is_provisional_per_category():
@@ -985,7 +992,10 @@ def test_daily_prediction_is_provisional_per_category():
     repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
     ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
 
-    with patch(repo_path, return_value=mock_full_run), patch(ref_path, return_value=mock_categories):
+    with (
+        patch(repo_path, return_value=mock_full_run),
+        patch(ref_path, return_value=mock_categories),
+    ):
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
 
     assert response.status_code == 200
@@ -1015,19 +1025,50 @@ def test_daily_prediction_summary_calibration_note_when_provisional():
         "overall_tone": "neutral",
         "is_provisional_calibration": True,
         "category_scores": [
-            {"category_id": 1, "note_20": 11, "raw_score": 0.1, "power": 0.3, "volatility": 0.1, "rank": 1, "summary": None},
-            {"category_id": 2, "note_20": 10, "raw_score": 0.0, "power": 0.3, "volatility": 0.1, "rank": 2, "summary": None},
-            {"category_id": 3, "note_20": 10, "raw_score": 0.0, "power": 0.3, "volatility": 0.1, "rank": 3, "summary": None},
+            {
+                "category_id": 1,
+                "note_20": 11,
+                "raw_score": 0.1,
+                "power": 0.3,
+                "volatility": 0.1,
+                "rank": 1,
+                "summary": None,
+            },
+            {
+                "category_id": 2,
+                "note_20": 10,
+                "raw_score": 0.0,
+                "power": 0.3,
+                "volatility": 0.1,
+                "rank": 2,
+                "summary": None,
+            },
+            {
+                "category_id": 3,
+                "note_20": 10,
+                "raw_score": 0.0,
+                "power": 0.3,
+                "volatility": 0.1,
+                "rank": 3,
+                "summary": None,
+            },
         ],
         "turning_points": [],
         "time_blocks": [],
     }
 
-    mock_categories = [MagicMock(id=1, code="love"), MagicMock(id=2, code="work"), MagicMock(id=3, code="health")]
+    mock_categories = [
+        MagicMock(id=1, code="love"),
+        MagicMock(id=2, code="work"),
+        MagicMock(id=3, code="health"),
+    ]
     repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
     ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
 
-    with patch(repo_path, return_value=mock_full_run), patch(ref_path, return_value=mock_categories):
+    with (
+        patch(repo_path, return_value=mock_full_run),
+        patch(ref_path, return_value=mock_categories),
+    ):
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
 
     assert response.status_code == 200
@@ -1056,7 +1097,15 @@ def test_daily_prediction_summary_no_calibration_note_when_not_provisional():
         "overall_tone": "positive",
         "is_provisional_calibration": False,
         "category_scores": [
-            {"category_id": 1, "note_20": 18, "raw_score": 0.8, "power": 0.9, "volatility": 0.1, "rank": 1, "summary": None},
+            {
+                "category_id": 1,
+                "note_20": 18,
+                "raw_score": 0.8,
+                "power": 0.9,
+                "volatility": 0.1,
+                "rank": 1,
+                "summary": None,
+            },
         ],
         "turning_points": [],
         "time_blocks": [],
@@ -1066,7 +1115,10 @@ def test_daily_prediction_summary_no_calibration_note_when_not_provisional():
     repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
     ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
 
-    with patch(repo_path, return_value=mock_full_run), patch(ref_path, return_value=mock_categories):
+    with (
+        patch(repo_path, return_value=mock_full_run),
+        patch(ref_path, return_value=mock_categories),
+    ):
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
 
     assert response.status_code == 200

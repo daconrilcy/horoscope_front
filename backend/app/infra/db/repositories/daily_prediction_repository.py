@@ -26,7 +26,9 @@ class DailyPredictionRepository:
             )
         )
 
-    def get_run_by_hash_with_details(self, user_id: int, input_hash: str) -> DailyPredictionRunModel | None:
+    def get_run_by_hash_with_details(
+        self, user_id: int, input_hash: str
+    ) -> DailyPredictionRunModel | None:
         return self.db.scalar(
             select(DailyPredictionRunModel)
             .options(

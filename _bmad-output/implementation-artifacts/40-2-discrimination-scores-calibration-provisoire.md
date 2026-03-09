@@ -26,7 +26,7 @@ afin que les scores provisoires reflètent de vraies différences relatives entr
 ### AC3 — Chaque `DailyPredictionCategoryScore` enregistre son statut provisoire en DB
 
 - [x] La table `daily_prediction_category_scores` possède une nouvelle colonne `is_provisional BOOLEAN NULL DEFAULT NULL`
-- [x] Une migration Alembic est créée et appliquée en suivant le pattern réel du repo (`<revision_hash>_add_is_provisional_to_category_scores.py`), avec `down_revision` pointant sur la dernière révision effectivement présente au moment de l'implémentation
+- [x] Une migration Alembic est créée et appliquée en suivant le pattern réel du repo (`YYYYMMDD_XXXX_add_is_provisional_to_category_scores.py`), avec `down_revision` pointant sur la dernière révision effectivement présente au moment de l'implémentation
 - [x] `PredictionPersistenceService._save_scores()` remplit `is_provisional=True` si la calibration de la catégorie était `None` ou `sample_size == 0` au moment du calcul, `False` sinon
 
 ### AC4 — L'API `/v1/predictions/daily` expose `is_provisional` par catégorie
@@ -96,7 +96,7 @@ afin que les scores provisoires reflètent de vraies différences relatives entr
 
 ### T3 — Migration Alembic (AC3)
 
-- [x] Créer une migration dans `backend/migrations/versions/` avec un nom conforme au pattern Alembic actuel du repo (identifiant de révision hashé, pas séquentiel) :
+- [x] Créer une migration dans `backend/migrations/versions/` avec un nom conforme au pattern Alembic actuel du repo (identifiant séquentiel `YYYYMMDD_XXXX`) :
   ```python
   """Add is_provisional to daily_prediction_category_scores
   Revision ID: <generated_revision_id>
