@@ -127,25 +127,28 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
 
 def _seed_ruleset_content(db: Session, ruleset_id: int):
     """Seed event types and parameters for a specific ruleset."""
-    # Seed event types
+    # Seed event types — (code, group, priority, base_weight)
+    # Priorities are calibrated against TurningPointDetector.PRIORITY_PIVOT_THRESHOLD = 65:
+    #   >= 65: can trigger a high_priority_event pivot
+    #   < 65:  enriches existing pivots only
     event_types_data = [
-        ("aspect_exact_to_angle", "aspect", 2.0),
-        ("aspect_exact_to_luminary", "aspect", 1.8),
-        ("aspect_exact_to_personal", "aspect", 1.5),
-        ("aspect_enter_orb", "aspect", 1.0),
-        ("aspect_exit_orb", "aspect", 0.5),
-        ("moon_sign_ingress", "ingress", 1.5),
-        ("asc_sign_change", "ingress", 2.0),
-        ("planetary_hour_change", "timing", 0.8),
+        ("aspect_exact_to_angle",    "aspect",  80, 2.0),  # above pivot threshold
+        ("aspect_exact_to_luminary", "aspect",  75, 1.8),  # above pivot threshold
+        ("aspect_exact_to_personal", "aspect",  68, 1.5),  # slightly above pivot threshold
+        ("aspect_enter_orb",         "aspect",  40, 1.0),  # below threshold — enriches only
+        ("aspect_exit_orb",          "aspect",  25, 0.5),  # below threshold
+        ("moon_sign_ingress",        "ingress", 72, 1.5),  # above pivot threshold
+        ("asc_sign_change",          "ingress", 78, 2.0),  # above pivot threshold — structurant
+        ("planetary_hour_change",    "timing",  20, 0.8),  # well below threshold
     ]
-    for code, group, weight in event_types_data:
+    for code, group, priority, weight in event_types_data:
         db.add(
             RulesetEventTypeModel(
                 ruleset_id=ruleset_id,
                 code=code,
                 name=code.replace("_", " ").title(),
                 event_group=group,
-                priority=0,
+                priority=priority,
                 base_weight=weight,
             )
         )

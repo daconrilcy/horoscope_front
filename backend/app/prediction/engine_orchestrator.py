@@ -356,7 +356,7 @@ class EngineOrchestrator:
 
         refined_events: list[AstroEvent] = []
         for event in detected_events:
-            if event.event_type != "exact":
+            if event.event_type not in EventDetector.EXACT_EVENT_TYPES:
                 refined_events.append(event)
                 continue
 

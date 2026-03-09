@@ -17,6 +17,19 @@ class EventDetector:
     """
     Service to detect astrological events from a sequence of astronomical states.
     Transforms StepAstroState sequence into a list of enriched AstroEvents.
+
+    Taxonomy V2 — event_type codes:
+      Aspects:
+        - aspect_exact_to_angle:    exact aspect to Asc or MC
+        - aspect_exact_to_luminary: exact aspect to Sun or Moon
+        - aspect_exact_to_personal: exact aspect to any other natal target
+        - aspect_enter_orb:         transit entering orb range of a natal point
+        - aspect_exit_orb:          transit exiting orb range of a natal point
+      Ingresses:
+        - moon_sign_ingress:        Moon changing zodiac sign
+        - asc_sign_change:          Ascendant changing zodiac sign
+      Timing:
+        - planetary_hour_change:    start of a new planetary hour
     """
 
     ASPECTS_V1: dict[int, str] = {
@@ -43,6 +56,15 @@ class EventDetector:
         "Asc",
         "MC",
     }
+
+    # Taxonomy V2: codes emitted for exact aspects, discriminated by target family
+    ANGLE_TARGETS: frozenset[str] = frozenset({"Asc", "MC"})
+    LUMINARY_TARGETS: frozenset[str] = frozenset({"Sun", "Moon"})
+    EXACT_EVENT_TYPES: frozenset[str] = frozenset({
+        "aspect_exact_to_angle",
+        "aspect_exact_to_luminary",
+        "aspect_exact_to_personal",
+    })
 
     def __init__(self, ctx: LoadedPredictionContext, natal_chart: NatalChart):
         self.ctx = ctx
@@ -89,7 +111,7 @@ class EventDetector:
         refined_steps: list[StepAstroState],
     ) -> AstroEvent:
         """Refine an exact event using denser astro states around the coarse timestamp."""
-        if coarse_event.event_type != "exact":
+        if coarse_event.event_type not in self.EXACT_EVENT_TYPES:
             return coarse_event
         if coarse_event.body is None or coarse_event.target is None or coarse_event.aspect is None:
             return coarse_event
@@ -174,11 +196,11 @@ class EventDetector:
                             phase = "applying" if orb < prev_orb else "separating"
                             meta["phase"] = phase
 
-                            # enter_orb
+                            # aspect_enter_orb
                             if prev_orb > orb_max and orb <= orb_max:
                                 detected.append(
                                     self._create_event(
-                                        "enter_orb",
+                                        "aspect_enter_orb",
                                         step.ut_jd,
                                         step.local_time,
                                         body_code,
@@ -189,11 +211,11 @@ class EventDetector:
                                     )
                                 )
 
-                            # exit_orb
+                            # aspect_exit_orb
                             elif prev_orb <= orb_max and orb > orb_max:
                                 detected.append(
                                     self._create_event(
-                                        "exit_orb",
+                                        "aspect_exit_orb",
                                         step.ut_jd,
                                         step.local_time,
                                         body_code,
@@ -204,7 +226,7 @@ class EventDetector:
                                     )
                                 )
 
-                        # exact detection (local minimum)
+                        # exact detection (local minimum) — code discriminated by target family
                         if len(h) >= 3:
                             p1, p2, p3 = h[-3], h[-2], h[-1]
                             if p2 < p1 and p2 < p3 and p2 <= orb_max:
@@ -225,7 +247,7 @@ class EventDetector:
                                 }
                                 detected.append(
                                     self._create_event(
-                                        "exact",
+                                        self._discriminate_exact_code(target_code),
                                         prev_step.ut_jd,
                                         prev_step.local_time,
                                         body_code,
@@ -381,6 +403,14 @@ class EventDetector:
         multiplier = float(multiplier_raw) if multiplier_raw is not None else 1.0
         return orb_active * multiplier
 
+    def _discriminate_exact_code(self, target: str | None) -> str:
+        """Return the taxonomy V2 exact event code based on the natal target family."""
+        if target in self.ANGLE_TARGETS:
+            return "aspect_exact_to_angle"
+        if target in self.LUMINARY_TARGETS:
+            return "aspect_exact_to_luminary"
+        return "aspect_exact_to_personal"
+
     def _lookup_mapping_value(self, mapping: dict, key: str) -> object | None:
         candidates = (key, key.lower(), key.upper(), key.title())
         for candidate in candidates:
@@ -400,6 +430,13 @@ class EventDetector:
         metadata: dict,
     ) -> AstroEvent:
         et_data = self.ctx.ruleset_context.event_types.get(event_type)
+        if et_data is None:
+            logger.warning(
+                "event_type_fallback event_type=%s body=%s target=%s — not found in ruleset; using priority=50 base_weight=1.0",
+                event_type,
+                body,
+                target,
+            )
         priority = et_data.priority if et_data else 50
         base_weight = et_data.base_weight if et_data else 1.0
 

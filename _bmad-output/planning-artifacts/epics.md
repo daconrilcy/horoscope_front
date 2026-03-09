@@ -1565,3 +1565,79 @@ So that l'équipe peut piloter la bascule vers le ruleset canonique puis planifi
 - Une stratégie de dépréciation explicite du ruleset legacy est écrite, sans suppression immédiate des données historiques.
 
 [Source: user request 2026-03-08; docs/qa/daily-prediction-qa-report-2026-03-08.md; backend/README.md]
+
+## Epic 41: Fenêtres décisionnelles intraday pour la prédiction quotidienne
+
+Transformer la timeline intraday de la prédiction quotidienne en un produit réellement orienté décision utilisateur: moins de bruit, moins de répétition, et des moments de la journée clairement exploitables pour agir, temporiser, communiquer ou éviter un mauvais timing.
+
+**FRs covered:** FR16, FR18, FR36, FR37, NFR17, NFR22
+
+### Story 41.1: Réaligner la taxonomie et la hiérarchie des événements intraday
+
+As a backend maintainer,
+I want aligner les `event_type`, priorités et poids entre le seed ruleset et le moteur runtime,
+So that le moteur sache distinguer un vrai signal intraday d'un simple bruit technique et que les pivots forts reposent sur une hiérarchie cohérente.
+
+**Acceptance Criteria:**
+- Les types d'événements utilisés par `EventDetector` correspondent explicitement aux types seedés dans le ruleset actif, sans fallback silencieux systématique vers `priority=50` / `base_weight=1.0`.
+- Les priorités différencient clairement les événements structurants (`exact`, ingressions majeures) des événements secondaires (`enter_orb`, `exit_orb`, `planetary_hour_change`).
+- Un événement secondaire isolé ne peut plus, à lui seul, produire un pivot “critique” utilisateur.
+- Des tests unitaires et d'intégration valident la cohérence seed/runtime et la hiérarchie de priorité.
+
+[Source: audit produit 2026-03-09; backend/app/prediction/event_detector.py; backend/scripts/seed_31_prediction_reference_v2.py]
+
+### Story 41.2: Propager l'influence temporelle des événements sur de vraies fenêtres utiles
+
+As a prediction engine designer,
+I want étaler l'influence d'un événement sur une fenêtre temporelle montante / culminante / descendante au lieu d'un seul pas de 15 minutes,
+So that les tendances intraday reflètent des créneaux réellement exploitables par l'utilisateur plutôt que des impulsions ponctuelles difficiles à interpréter.
+
+**Acceptance Criteria:**
+- Les contributions d'un événement ne sont plus affectées uniquement au `nearest_step_index`; elles se propagent sur plusieurs steps selon un profil temporel déterministe.
+- Les aspects exacts ont une influence plus durable que les événements secondaires.
+- Les scores intraday par catégorie montrent une montée, un pic et une retombée quand un événement significatif traverse la journée.
+- La logique reste déterministe, testable et compatible avec le debug explainability.
+
+[Source: audit produit 2026-03-09; backend/app/prediction/engine_orchestrator.py; backend/app/prediction/temporal_sampler.py]
+
+### Story 41.3: Remplacer la timeline rigide par des fenêtres décisionnelles et des pivots filtrés
+
+As a product owner de la fonctionnalité daily prediction,
+I want que le moteur produise quelques fenêtres décisionnelles fortes et des pivots filtrés par valeur utilisateur,
+So that l'utilisateur voit clairement quand agir, attendre, communiquer ou éviter une décision, sans être noyé par des changements mineurs.
+
+**Acceptance Criteria:**
+- Le découpage intraday n'est plus fondé sur une grille horaire fixe par défaut; les blocs sont fusionnés tant que le signal reste équivalent.
+- Les pivots sont détectés à partir du signal brut ou semi-brut pertinent, pas seulement via des différences de notes entières arrondies.
+- L'API expose un nombre limité de fenêtres décisionnelles de forte valeur, avec type (`favorable`, `prudence`, `pivot`) et niveau de confiance.
+- Le “meilleur créneau” est choisi via un score d'actionnabilité, pas seulement un recouvrement avec le top 3 global.
+
+[Source: audit produit 2026-03-09; backend/app/prediction/block_generator.py; backend/app/prediction/turning_point_detector.py; backend/app/prediction/editorial_builder.py]
+
+### Story 41.4: Recentrer le contrat API et l'UI TodayPage sur l'aide à la décision
+
+As a utilisateur consultant `/dashboard`,
+I want voir quelques fenêtres claires avec des libellés actionnables et des drivers humanisés,
+So that je comprenne rapidement à quels moments de la journée lancer une action, prendre une décision ou rester prudent.
+
+**Acceptance Criteria:**
+- Le contrat `/v1/predictions/daily` expose des champs lisibles et stables pour les fenêtres décisionnelles et leurs drivers principaux.
+- Les labels techniques (`enter_orb`, etc.) ne sont plus visibles dans le rendu utilisateur final.
+- `TodayPage` met visuellement en avant 3 à 6 fenêtres maximum, avec hiérarchie claire, ton exploitable et messages orientés action.
+- La timeline détaillée historique peut subsister, mais comme vue secondaire et non comme élément principal de décision.
+
+[Source: audit produit 2026-03-09; frontend/src/components/prediction/TurningPointsList.tsx; frontend/src/utils/predictionI18n.ts; frontend/src/pages/TodayPage.tsx]
+
+### Story 41.5: Valider la qualité produit intraday avec un budget de bruit explicite
+
+As a QA engineer,
+I want mesurer automatiquement la qualité décisionnelle de la sortie intraday,
+So that les futures itérations n'introduisent pas de timeline bruyante, répétitive ou non exploitable pour l'utilisateur.
+
+**Acceptance Criteria:**
+- Une suite de fixtures et cas QA couvre plusieurs journées contrastées avec attentes explicites sur le nombre de pivots et de fenêtres.
+- Un budget de bruit est défini et testé automatiquement (ex: max pivots critiques, max répétitions de blocs identiques, max drivers techniques visibles).
+- Les rapports QA distinguent “signal utile” et “bruit intraday”.
+- La décision go/no-go produit sur l'intraday peut s'appuyer sur ces indicateurs objectifs.
+
+[Source: audit produit 2026-03-09; docs/qa/daily-prediction-qa-report-2026-03-08.md; backend/app/tests/integration/test_daily_prediction_qa.py]

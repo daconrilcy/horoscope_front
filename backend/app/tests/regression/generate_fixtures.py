@@ -217,7 +217,7 @@ def generate():
             if name == "F06_moon_sign_ingress":
                 expected["required_event_types"] = ["moon_sign_ingress"]
             if name == "F07_mercury_retrograde":
-                expected["required_event_types"] = ["exact", "enter_orb"]
+                expected["required_event_types"] = ["aspect_exact_to_personal", "aspect_enter_orb"]
             if name == "F10_dst_spring":
                 expected["sample_count"] = 92
             if name == "F11_dst_autumn":

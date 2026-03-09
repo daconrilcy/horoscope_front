@@ -282,7 +282,13 @@ def test_run_can_render_editorial_text_with_configurable_language(base_input):
     captured = {}
 
     class StubTemplateEngine:
-        def render(self, editorial, lang: str = "fr") -> EditorialTextOutput:
+        def render(
+            self,
+            editorial,
+            lang: str = "fr",
+            time_blocks=None,
+            turning_points=None,
+        ) -> EditorialTextOutput:
             captured["editorial"] = editorial
             captured["lang"] = lang
             return EditorialTextOutput(
@@ -292,8 +298,9 @@ def test_run_can_render_editorial_text_with_configurable_language(base_input):
                 window_phrase=None,
                 caution_sante=None,
                 caution_argent=None,
+                time_block_summaries=[""] * len(time_blocks) if time_blocks else [],
+                turning_point_summaries=[""] * len(turning_points) if turning_points else [],
             )
-
     orchestrator = EngineOrchestrator(
         prediction_context_loader=lambda *_: _build_loaded_context(),
         editorial_template_engine=StubTemplateEngine(),
@@ -492,7 +499,7 @@ def test_run_integrates_prediction_scoring_pipeline_with_lowercase_reference_cod
         def detect(self, *_args):
             return [
                 AstroEvent(
-                    event_type="exact",
+                    event_type="aspect_exact_to_angle",  # MC is an angle target
                     ut_time=0.0,
                     local_time=samples[0].local_time,
                     body="Sun",
