@@ -88,19 +88,19 @@ so that je comprenne rapidement ce qui change, pourquoi cela change, et quelles 
 - Le plus petit delta cohérent est préféré:
   - frontend-only si l’agrégation 2h est fiable à partir du contrat existant
   - extension additive backend seulement si nécessaire pour éviter une logique fragile ou dupliquée côté React
-- État actuel observé du dashboard:
-  - `TodayPage.tsx` affiche aujourd’hui `DecisionWindowsSection`, puis `CategoryGrid`, puis `TurningPointsList`, puis `DayTimeline` dans un `<details>`
-  - `DecisionWindowsSection.tsx` montre jusqu’à 6 fenêtres triées par priorité métier puis réordonnées chronologiquement
-  - `TurningPointsList.tsx` affiche déjà les pivots réels avec heure, intensité, résumé et drivers humanisés
-  - `DayTimeline.tsx` condense les blocs adjacents similaires et marque les pivots, ce qui en fait la meilleure base technique pour dériver un agenda 2h
+- État final livré du dashboard:
+  - `TodayPage.tsx` assemble `DayPredictionCard`, `TurningPointsList`, `DayAgenda`, puis `CategoryGrid`
+  - `Chronologie du jour` n’est plus exposée dans l’UI
+  - `TurningPointsList.tsx` affiche des bascules dérivées des changements d’aspects majeurs
+  - `DayAgenda.tsx` affiche 12 créneaux fixes de 2h avec 1 à 3 aspects majeurs ou `Pas d'aspect majeur`
 
 ### Project Structure Notes
 
 - Zone frontend principale:
   - `frontend/src/pages/TodayPage.tsx`
-  - `frontend/src/components/prediction/DecisionWindowsSection.tsx`
   - `frontend/src/components/prediction/TurningPointsList.tsx`
-  - `frontend/src/components/prediction/DayTimeline.tsx`
+  - `frontend/src/components/prediction/DayAgenda.tsx`
+  - `frontend/src/utils/dailyAstrology.ts`
   - `frontend/src/utils/predictionI18n.ts`
   - `frontend/src/i18n/predictions.ts`
   - `frontend/src/types/dailyPrediction.ts`
@@ -141,8 +141,8 @@ so that je comprenne rapidement ce qui change, pourquoi cela change, et quelles 
 
 - Préférer l’adaptation des composants existants avant création de nouveaux composants:
   - `TurningPointsList.tsx` est le meilleur candidat pour `Moments clés du jour`
-  - `DayTimeline.tsx` peut soit être refactoré en agenda, soit être laissé comme vue secondaire avec un nouveau `DayAgenda.tsx`
-  - `DecisionWindowsSection.tsx` doit être supprimé, remplacé ou redéfini seulement si sa responsabilité finale reste claire et non redondante avec `Moments clés du jour`
+  - `DayAgenda.tsx` porte désormais l’agenda 12 créneaux / 2h
+  - `DecisionWindowsSection.tsx` et `DayTimeline.tsx` ne font plus partie de la hiérarchie principale du dashboard daily
 - Si un nouveau composant est créé pour l’agenda, le nom attendu est `DayAgenda.tsx` ou équivalent explicite.
 - Toute logique de mapping de données vers créneaux 2h doit vivre dans un helper dédié ou dans un composant container testable, pas dans du JSX inline massif.
 
@@ -181,14 +181,17 @@ so that je comprenne rapidement ce qui change, pourquoi cela change, et quelles 
 ### References
 
 - [Source: user request 2026-03-10 — refactor `/dashboard` avec séparation `Moments clés du jour` / `Agenda du jour`]
+- [Source: user request 2026-03-10 — suppression de `Chronologie du jour`, définition des aspects majeurs par créneau et alignement backend]
 - [Source: _bmad-output/planning-artifacts/epics.md#Epic-41]
 - [Source: _bmad-output/implementation-artifacts/41-3-fenetres-decisionnelles-et-pivots-filtres.md]
 - [Source: _bmad-output/implementation-artifacts/41-4-contrat-api-et-ui-centres-aide-decision-intraday.md]
 - [Source: _bmad-output/implementation-artifacts/41-5-qa-actionability-et-budget-de-bruit-intraday.md]
 - [Source: frontend/src/pages/TodayPage.tsx]
-- [Source: frontend/src/components/prediction/DecisionWindowsSection.tsx]
 - [Source: frontend/src/components/prediction/TurningPointsList.tsx]
-- [Source: frontend/src/components/prediction/DayTimeline.tsx]
+- [Source: frontend/src/components/prediction/DayAgenda.tsx]
+- [Source: frontend/src/utils/dailyAstrology.ts]
+- [Source: backend/app/api/v1/routers/predictions.py]
+- [Source: backend/app/prediction/decision_window_builder.py]
 
 ## Dev Agent Record
 
