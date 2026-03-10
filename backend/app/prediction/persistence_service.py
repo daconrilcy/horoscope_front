@@ -25,13 +25,14 @@ from .schemas import (
 
 if TYPE_CHECKING:
     from .explainability import ExplainabilityReport
+    from .persisted_snapshot import PersistedPredictionSnapshot
 
 
 @dataclass(frozen=True)
 class SaveResult:
     """Result of a persistence operation."""
 
-    run: DailyPredictionRunModel
+    run: PersistedPredictionSnapshot
     was_reused: bool
 
 
@@ -75,12 +76,12 @@ class PredictionPersistenceService:
         repo = DailyPredictionRepository(db)
 
         # AC1 - Reuse if hash matches
-        existing = repo.get_run_by_hash(user_id, input_hash)
+        existing = repo.get_run_for_reuse(user_id, input_hash)
         if existing:
             return SaveResult(run=existing, was_reused=True)
 
         # AC2 - Create new run
-        run = repo.create_run(
+        run_model = repo.create_run(
             user_id=user_id,
             local_date=local_date,
             timezone=core.effective_context.timezone,
@@ -104,19 +105,24 @@ class PredictionPersistenceService:
 
         # AC3, AC4, AC5 - Persist child entities
         self._save_scores(
-            run,
+            run_model,
             bundle,
             reference_version_id,
             db,
             core.explainability,
         )
-        self._save_turning_points(run, bundle, db)
-        self._save_time_blocks(run, bundle, db)
+        self._save_turning_points(run_model, bundle, db)
+        self._save_time_blocks(run_model, bundle, db)
 
         # AC6 - Single transaction (flush)
         db.flush()
+        
+        # Reload full run to get typed snapshot
+        snapshot = repo.get_full_run(run_model.id)
+        if snapshot is None:
+            raise RuntimeError("Failed to reload persisted run snapshot")
 
-        return SaveResult(run=run, was_reused=False)
+        return SaveResult(run=snapshot, was_reused=False)
 
     def _save_scores(
         self,

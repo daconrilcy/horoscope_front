@@ -1,17 +1,24 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import date, datetime
 from unittest.mock import MagicMock
 
 import pytest
 
+from app.prediction.persisted_snapshot import (
+    PersistedPredictionSnapshot,
+    PersistedCategoryScore,
+    PersistedTimeBlock,
+    PersistedTurningPoint,
+)
 from app.prediction.public_projection import (
+    PublicPredictionAssembler,
     PublicCategoryPolicy,
     PublicDecisionWindowPolicy,
-    PublicPredictionAssembler,
-    PublicTimelinePolicy,
     PublicTurningPointPolicy,
+    PublicTimelinePolicy,
+    PublicSummaryPolicy,
 )
 
 
@@ -21,63 +28,77 @@ def cat_map():
 
 
 @pytest.fixture
-def sample_full_run():
-    return {
-        "local_date": "2026-03-10",
-        "timezone": "Europe/Paris",
-        "computed_at": "2026-03-10T10:00:00",
-        "category_scores": [
-            {
-                "category_id": 1,
-                "note_20": 15.0,
-                "rank": 1,
-                "raw_score": 0.8,
-                "power": 0.7,
-                "volatility": 0.2,
-                "summary": "Love is great",
-            },
-            {
-                "category_id": 2,
-                "note_20": 12.0,
-                "rank": 2,
-                "raw_score": 0.6,
-                "power": 0.5,
-                "volatility": 0.3,
-                "summary": "Work is ok",
-            },
+def sample_snapshot():
+    return PersistedPredictionSnapshot(
+        run_id=1,
+        user_id=1,
+        local_date=date(2026, 3, 10),
+        timezone="Europe/Paris",
+        computed_at=datetime(2026, 3, 10, 10, 0),
+        input_hash="hash123",
+        reference_version_id=1,
+        ruleset_id=1,
+        house_system_effective="placidus",
+        is_provisional_calibration=False,
+        calibration_label="v1",
+        overall_summary="Great day ahead",
+        overall_tone="positive",
+        category_scores=[
+            PersistedCategoryScore(
+                category_id=1,
+                category_code="love",
+                note_20=15,
+                raw_score=0.8,
+                power=0.7,
+                volatility=0.2,
+                rank=1,
+                is_provisional=False,
+                summary="Love is great",
+            ),
+            PersistedCategoryScore(
+                category_id=2,
+                category_code="work",
+                note_20=12,
+                raw_score=0.6,
+                power=0.5,
+                volatility=0.3,
+                rank=2,
+                is_provisional=False,
+                summary="Work is ok",
+            ),
         ],
-        "time_blocks": [
-            {
-                "start_at_local": "2026-03-10T08:00:00",
-                "end_at_local": "2026-03-10T10:00:00",
-                "tone_code": "positive",
-                "dominant_categories_json": json.dumps(["love"]),
-            }
+        time_blocks=[
+            PersistedTimeBlock(
+                block_index=0,
+                start_at_local=datetime(2026, 3, 10, 8, 0),
+                end_at_local=datetime(2026, 3, 10, 10, 0),
+                tone_code="positive",
+                dominant_categories=["love"],
+                summary=None,
+            )
         ],
-        "turning_points": [
-            {
-                "occurred_at_local": "2026-03-10T09:00:00",
-                "severity": 0.9,
-                "summary": "Major shift",
-                "driver_json": json.dumps([{"code": "sun_trine_jupiter"}]),
-            }
+        turning_points=[
+            PersistedTurningPoint(
+                occurred_at_local=datetime(2026, 3, 10, 9, 0),
+                severity=0.9,
+                summary="Major shift",
+                drivers=[{"code": "sun_trine_jupiter"}],
+            )
         ],
-        "overall_tone": "positive",
-        "overall_summary": "Great day ahead",
-    }
+    )
 
 
-def test_category_policy(cat_map, sample_full_run):
+def test_category_policy(cat_map, sample_snapshot):
     policy = PublicCategoryPolicy()
-    categories = policy.build(sample_full_run, cat_map)
+    categories = policy.build(sample_snapshot, cat_map)
     
     assert len(categories) == 2
     assert categories[0]["code"] == "love"
-    assert categories[0]["note_20"] == 15.0
+    assert categories[0]["note_20"] == 15
     assert categories[1]["code"] == "work"
 
 
-def test_decision_window_policy_normalization(cat_map, sample_full_run):
+def test_decision_window_policy_normalization(cat_map, sample_snapshot):
     policy = PublicDecisionWindowPolicy()
     category_notes = {"love": 15.0, "work": 12.0}
     
@@ -93,47 +114,44 @@ def test_decision_window_policy_normalization(cat_map, sample_full_run):
                 "dominant_categories": ["love"],
             }
         ])
-        mp.setattr(policy, "_rebuild_from_persistence", mock_rebuild)
+        # Note: In the refactored code, the method name is _rebuild_from_snapshot
+        mp.setattr(policy, "_rebuild_from_snapshot", mock_rebuild)
         
-        windows = policy.build(sample_full_run, cat_map, category_notes)
+        windows = policy.build(sample_snapshot, cat_map, category_notes)
         assert len(windows) == 1
         assert windows[0]["dominant_categories"] == ["love"]
 
 
-def test_turning_point_policy_no_windows(sample_full_run):
+def test_turning_point_policy_no_windows(sample_snapshot):
     policy = PublicTurningPointPolicy()
-    tps = policy.build(sample_full_run, decision_windows=[])
+    tps = policy.build(sample_snapshot, decision_windows=[])
     
     assert len(tps) == 1
     assert tps[0]["severity"] == 0.9
     assert tps[0]["drivers"][0]["code"] == "sun_trine_jupiter"
 
 
-def test_timeline_policy(sample_full_run):
+def test_timeline_policy(sample_snapshot):
     policy = PublicTimelinePolicy()
     cat_notes = {"love": 15.0}
-    tp_times = [datetime.fromisoformat("2026-03-10T09:00:00")]
+    tp_times = [datetime(2026, 3, 10, 9, 0)]
     
-    timeline = policy.build(sample_full_run, cat_notes, tp_times)
+    timeline = policy.build(sample_snapshot, cat_notes, tp_times)
     
     assert len(timeline) == 1
     assert timeline[0]["turning_point"] is True
     assert "tonalité très porteuse" in timeline[0]["summary"]
 
 
-def test_assembler_integration(cat_map, sample_full_run):
+def test_assembler_integration(cat_map, sample_snapshot):
     assembler = PublicPredictionAssembler()
     
     result = assembler.assemble(
-        full_run=sample_full_run,
+        snapshot=sample_snapshot,
         cat_id_to_code=cat_map,
         reference_version="2.0.0",
         ruleset_version="2.0.0",
-        run_date_local="2026-03-10",
-        run_timezone="Europe/Paris",
-        run_computed_at="2026-03-10T10:00:00",
-        run_is_provisional=False,
-        run_calibration_label="v1",
+        was_reused=False,
     )
     
     assert result["meta"]["date_local"] == "2026-03-10"
@@ -143,46 +161,42 @@ def test_assembler_integration(cat_map, sample_full_run):
     assert len(result["turning_points"]) >= 1
 
 
-def test_assembler_falls_back_to_engine_output_house_system(cat_map, sample_full_run):
+def test_assembler_falls_back_to_engine_output_house_system(cat_map, sample_snapshot):
     assembler = PublicPredictionAssembler()
+    
+    # Snapshot without house system
+    snapshot_no_house = PersistedPredictionSnapshot(
+        **{**sample_snapshot.__dict__, "house_system_effective": None}
+    )
+    
     engine_output = MagicMock()
-    engine_output.effective_context.house_system_effective = "placidus"
+    engine_output.core.effective_context.house_system_effective = "placidus"
 
     result = assembler.assemble(
-        full_run=sample_full_run,
+        snapshot=snapshot_no_house,
         cat_id_to_code=cat_map,
         engine_output=engine_output,
         reference_version="2.0.0",
         ruleset_version="2.0.0",
-        run_date_local="2026-03-10",
-        run_timezone="Europe/Paris",
-        run_computed_at="2026-03-10T10:00:00",
-        run_is_provisional=False,
-        run_calibration_label="v1",
+        was_reused=False,
     )
-
+    
     assert result["meta"]["house_system_effective"] == "placidus"
 
 
-def test_assembler_summary_uses_provisional_flag(
-    cat_map,
-    sample_full_run,
-):
+def test_assembler_summary_uses_provisional_flag(cat_map, sample_snapshot):
     assembler = PublicPredictionAssembler()
-    full_run = dict(sample_full_run)
-    full_run.pop("is_provisional_calibration", None)
+    
+    snapshot_prov = PersistedPredictionSnapshot(
+        **{**sample_snapshot.__dict__, "is_provisional_calibration": True}
+    )
 
     result = assembler.assemble(
-        full_run=full_run,
+        snapshot=snapshot_prov,
         cat_id_to_code=cat_map,
         reference_version="2.0.0",
         ruleset_version="2.0.0",
-        run_date_local="2026-03-10",
-        run_timezone="Europe/Paris",
-        run_computed_at="2026-03-10T10:00:00",
-        run_is_provisional=True,
-        run_calibration_label="v1",
+        was_reused=False,
     )
-
-    assert result["meta"]["is_provisional_calibration"] is True
-    assert result["summary"]["calibration_note"] is not None
+    
+    assert "scores sont calculés sans données historiques" in result["summary"]["calibration_note"]

@@ -19,8 +19,8 @@ from app.services.user_birth_profile_service import UserBirthProfileService
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
-
     from app.infra.db.models.user_birth_profile import UserBirthProfileModel
+    from app.services.prediction_context_repair_service import PredictionContextRepairService
 
 logger = logging.getLogger()
 
@@ -41,6 +41,9 @@ class PredictionRequestResolver:
     """
     Handles the resolution of all inputs required for a daily prediction run.
     """
+
+    def __init__(self, repair_service: PredictionContextRepairService | None = None) -> None:
+        self._repair_service = repair_service
 
     def resolve(
         self,
@@ -164,11 +167,11 @@ class PredictionRequestResolver:
         rv_id = db.scalar(
             select(ReferenceVersionModel.id).where(ReferenceVersionModel.version == version)
         )
-        if rv_id is None and self._should_auto_seed_reference_version(version):
-            self._auto_seed_reference_version(db, version=version)
-            rv_id = db.scalar(
-                select(ReferenceVersionModel.id).where(ReferenceVersionModel.version == version)
-            )
+        if rv_id is None and self._repair_service:
+            if self._repair_service.try_repair(db, reference_version=version, ruleset_version=""):
+                rv_id = db.scalar(
+                    select(ReferenceVersionModel.id).where(ReferenceVersionModel.version == version)
+                )
         if rv_id is None:
             raise DailyPredictionServiceError(
                 "version_missing", f"Référence version '{version}' introuvable"
@@ -181,13 +184,15 @@ class PredictionRequestResolver:
         from app.services.daily_prediction_types import DailyPredictionServiceError
         repo = PredictionRulesetRepository(db)
         ruleset = repo.get_ruleset(version)
-        if ruleset is None and self._should_auto_seed_prediction_ruleset(version):
-            self._auto_seed_prediction_ruleset(
-                db,
+        if ruleset is None and self._repair_service:
+            # Note: We pass empty reference_version as try_repair handles its own logic for rulesets
+            if self._repair_service.try_repair(
+                db, 
+                reference_version=settings.active_reference_version, 
                 ruleset_version=version,
-                expected_reference_version_id=expected_reference_version_id,
-            )
-            ruleset = repo.get_ruleset(version)
+                reference_version_id=expected_reference_version_id
+            ):
+                ruleset = repo.get_ruleset(version)
 
         if ruleset is None:
             raise DailyPredictionServiceError(
@@ -217,89 +222,3 @@ class PredictionRequestResolver:
             )
 
         return ruleset.id
-
-    def _should_auto_seed_prediction_ruleset(self, version: str) -> bool:
-        if settings.app_env in {"production", "prod"}:
-            return False
-        return version in {settings.active_ruleset_version, LEGACY_RULESET_VERSION}
-
-    def _should_auto_seed_reference_version(self, version: str) -> bool:
-        if settings.app_env in {"production", "prod"}:
-            return False
-        return version in {settings.active_reference_version, LEGACY_RULESET_VERSION}
-
-    def _auto_seed_reference_version(self, db: Session, *, version: str) -> None:
-        from app.services.reference_data_service import ReferenceDataService
-
-        if version != LEGACY_RULESET_VERSION:
-            ReferenceDataService.seed_reference_version(db, LEGACY_RULESET_VERSION)
-        ReferenceDataService.seed_reference_version(db, version)
-
-    def _auto_seed_prediction_ruleset(
-        self,
-        db: Session,
-        *,
-        ruleset_version: str,
-        expected_reference_version_id: int | None,
-    ) -> None:
-        from app.services.daily_prediction_types import DailyPredictionServiceError
-        from scripts.seed_31_prediction_reference_v2 import SeedAbortError, run_seed
-
-        try:
-            run_seed(db)
-            db.commit()
-            return
-        except SeedAbortError as exc:
-            db.rollback()
-            if not self._repair_locked_incomplete_reference_version(
-                db,
-                expected_reference_version_id=expected_reference_version_id,
-                error_text=str(exc),
-            ):
-                raise DailyPredictionServiceError(
-                    "ruleset_seed_failed",
-                    f"Seed automatique impossible pour le ruleset '{ruleset_version}': {exc}",
-                ) from exc
-
-        try:
-            run_seed(db)
-            db.commit()
-        except SeedAbortError as exc:
-            db.rollback()
-            raise DailyPredictionServiceError(
-                "ruleset_seed_failed",
-                f"Seed automatique impossible pour le ruleset '{ruleset_version}': {exc}",
-            ) from exc
-
-    def _repair_locked_incomplete_reference_version(
-        self,
-        db: Session,
-        *,
-        expected_reference_version_id: int | None,
-        error_text: str,
-    ) -> bool:
-        if "LOCKED but is incomplete" not in error_text:
-            return False
-
-        version_model = None
-        if expected_reference_version_id is not None:
-            version_model = db.get(ReferenceVersionModel, expected_reference_version_id)
-        if version_model is None:
-            version_model = db.scalar(
-                select(ReferenceVersionModel).where(
-                    ReferenceVersionModel.version == settings.active_reference_version
-                )
-            )
-        if version_model is None or not version_model.is_locked:
-            return False
-
-        logger.warning(
-            "prediction.ruleset_autoseed_repair",
-            extra={
-                "reference_version": version_model.version,
-                "reference_version_id": version_model.id,
-            },
-        )
-        version_model.is_locked = False
-        db.commit()
-        return True

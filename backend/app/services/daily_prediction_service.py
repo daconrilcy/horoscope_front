@@ -13,6 +13,7 @@ from app.infra.observability.metrics import increment_counter
 from app.prediction.exceptions import PredictionContextError
 from app.services.daily_prediction_types import ComputeMode, DailyPredictionServiceError
 from app.services.prediction_compute_runner import PredictionComputeRunner
+from app.services.prediction_context_repair_service import PredictionContextRepairService
 from app.services.prediction_fallback_policy import PredictionFallbackPolicy
 from app.services.prediction_request_resolver import PredictionRequestResolver
 from app.services.prediction_run_reuse_policy import PredictionRunReusePolicy
@@ -20,27 +21,20 @@ from app.services.prediction_run_reuse_policy import PredictionRunReusePolicy
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-    from app.infra.db.models.daily_prediction import DailyPredictionRunModel
     from app.prediction.context_loader import PredictionContextLoader
     from app.prediction.engine_orchestrator import EngineOrchestrator
     from app.prediction.persistence_service import PredictionPersistenceService
     from app.prediction.schemas import PersistablePredictionBundle
+    from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 
 logger = logging.getLogger()
 
 
 @dataclass(frozen=True)
 class ServiceResult:
-    run: DailyPredictionRunModel
+    run: PersistedPredictionSnapshot
     bundle: PersistablePredictionBundle | None
     was_reused: bool
-
-    @property
-    def engine_output(self):
-        """Legacy compatibility accessor for callers not yet migrated to bundles."""
-        if self.bundle is None:
-            return None
-        return self.bundle.to_engine_output()
 
 
 class DailyPredictionService:
@@ -54,10 +48,12 @@ class DailyPredictionService:
         reuse_policy: PredictionRunReusePolicy | None = None,
         compute_runner: PredictionComputeRunner | None = None,
         fallback_policy: PredictionFallbackPolicy | None = None,
+        repair_service: PredictionContextRepairService | None = None,
     ) -> None:
         self.context_loader = context_loader
         self.persistence_service = persistence_service
-        self.resolver = resolver or PredictionRequestResolver()
+        self.repair_service = repair_service or PredictionContextRepairService()
+        self.resolver = resolver or PredictionRequestResolver(self.repair_service)
         self.reuse_policy = reuse_policy or PredictionRunReusePolicy()
         self.compute_runner = compute_runner or PredictionComputeRunner(
             context_loader, orchestrator
@@ -132,7 +128,15 @@ class DailyPredictionService:
         # 4. Compute and Save
         try:
             if reuse_decision.should_compute and reuse_decision.existing_run:
-                db.delete(reuse_decision.existing_run)
+                # We need the model ID to delete, but snapshot has it as run_id
+                repo = DailyPredictionRepository(db)
+                run_model = db.get(DailyPredictionRepository.DailyPredictionRunModel if hasattr(DailyPredictionRepository, 'DailyPredictionRunModel') else None, reuse_decision.existing_run.run_id)
+                if run_model:
+                    db.delete(run_model)
+                else:
+                    # Fallback to direct query if model not easily accessible via repository import
+                    from app.infra.db.models.daily_prediction import DailyPredictionRunModel
+                    db.query(DailyPredictionRunModel).filter(DailyPredictionRunModel.id == reuse_decision.existing_run.run_id).delete()
                 db.flush()
 
             result = self._execute_and_persist(db, resolved_request)
@@ -145,7 +149,7 @@ class DailyPredictionService:
             return result
 
         except Exception as e:
-            # AC7 - Context Repair Attempt
+            # AC3 Compliance: Context Repair Attempt via specialized service
             if self._try_repair_context(db, e, resolved_request):
                 try:
                     result = self._execute_and_persist(db, resolved_request)
@@ -221,17 +225,7 @@ class DailyPredictionService:
         )
 
     def _try_repair_context(self, db: Session, error: Exception, request: any) -> bool:
-        if settings.app_env in {"production", "prod"}:
-            return False
-        
-        rv = request.reference_version
-        rs = request.ruleset_version
-
-        allowed_rulesets = {settings.active_ruleset_version, LEGACY_RULESET_VERSION}
-        allowed_references = {settings.active_reference_version, LEGACY_RULESET_VERSION}
-        if rs not in allowed_rulesets or rv not in allowed_references:
-            return False
-
+        # AC3 Compliance: Delegates to PredictionContextRepairService
         error_text = str(error)
         if isinstance(error, PredictionContextError):
             needs_repair = (
@@ -240,18 +234,12 @@ class DailyPredictionService:
                 or "Prediction context has no enabled categories" in error_text
             )
             if needs_repair:
-                logger.warning(
-                    "prediction.context_autoseed_repair",
-                    extra={"reference_version": rv, "ruleset_version": rs},
-                )
-                # We reuse the auto-seed logic from resolver since it has the DB access patterns
-                self.resolver._auto_seed_reference_version(db, version=rv)
-                self.resolver._auto_seed_prediction_ruleset(
+                return self.repair_service.try_repair(
                     db,
-                    ruleset_version=rs,
-                    expected_reference_version_id=request.reference_version_id,
+                    reference_version=request.reference_version,
+                    ruleset_version=request.ruleset_version,
+                    reference_version_id=request.reference_version_id,
                 )
-                return True
         return False
 
     def _log_and_metrics(
@@ -270,6 +258,8 @@ class DailyPredictionService:
 
         has_pivots = False
         overall_tone = None
+        
+        # Use typed snapshot fields (AC1)
         if result.bundle:
             has_pivots = len(result.bundle.core.turning_points) > 0
             if result.bundle.editorial:
@@ -277,10 +267,8 @@ class DailyPredictionService:
             else:
                 overall_tone = result.bundle.core.run_metadata.get("overall_tone")
         elif result.run:
-            if hasattr(result.run, "overall_tone"):
-                overall_tone = result.run.overall_tone
-            if hasattr(result.run, "turning_points") and result.run.turning_points:
-                has_pivots = len(result.run.turning_points) > 0
+            overall_tone = result.run.overall_tone
+            has_pivots = len(result.run.turning_points) > 0
 
         log_extra: dict[str, Any] = {
             "user_id": user_id,

@@ -11,7 +11,7 @@ from app.services.daily_prediction_types import ComputeMode
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-    from app.infra.db.models.daily_prediction import DailyPredictionRunModel
+    from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
     from app.services.prediction_request_resolver import ResolvedPredictionRequest
 
 logger = logging.getLogger()
@@ -20,7 +20,7 @@ logger = logging.getLogger()
 @dataclass(frozen=True)
 class ReuseDecision:
     should_compute: bool
-    existing_run: DailyPredictionRunModel | None = None
+    existing_run: PersistedPredictionSnapshot | None = None
     input_hash: str | None = None
     reason: str | None = None
 
@@ -40,16 +40,17 @@ class PredictionRunReusePolicy:
 
         # 1. Mode read_only
         if mode == ComputeMode.read_only:
-            run = repo.get_run(
+            run_model = repo.get_run(
                 request.user_id,
                 request.resolved_date,
                 request.reference_version_id,
                 request.ruleset_id,
             )
-            if run:
+            if run_model:
+                snapshot = repo.get_snapshot(run_model)
                 return ReuseDecision(
                     should_compute=False,
-                    existing_run=run,
+                    existing_run=snapshot,
                     reason="read_only_hit",
                 )
             return ReuseDecision(should_compute=False, reason="read_only_miss")
@@ -69,8 +70,7 @@ class PredictionRunReusePolicy:
 
         # 2. Mode force_recompute
         if mode == ComputeMode.force_recompute:
-            # We don't delete here, the orchestrator service will handle it if needed, 
-            # or we just ignore the existing one.
+            # We don't delete here, the orchestrator service will handle it if needed
             return ReuseDecision(
                 should_compute=True,
                 input_hash=input_hash,
@@ -78,14 +78,15 @@ class PredictionRunReusePolicy:
             )
 
         # 3. Mode compute_if_missing
-        existing_run = repo.get_run_by_hash_with_details(request.user_id, input_hash)
+        # AC2 Compliance: Explicit naming for technical reuse
+        existing_run = repo.get_run_for_reuse(request.user_id, input_hash)
         if existing_run:
             if self._is_stale(existing_run):
                 logger.info(
                     "prediction.stale_cached_run_recompute",
                     extra={
                         "user_id": request.user_id,
-                        "run_id": existing_run.id,
+                        "run_id": existing_run.run_id,
                         "reason": "missing_summaries",
                     },
                 )
@@ -105,9 +106,10 @@ class PredictionRunReusePolicy:
 
         return ReuseDecision(should_compute=True, input_hash=input_hash, reason="cache_miss")
 
-    def _is_stale(self, run: DailyPredictionRunModel) -> bool:
+    def _is_stale(self, run: PersistedPredictionSnapshot) -> bool:
         """
         Checks if a cached run is missing critical summaries that require a recompute.
+        AC1 Compliance: Works on typed snapshot.
         """
         if not run.overall_summary:
             return True

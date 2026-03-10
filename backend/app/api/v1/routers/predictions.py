@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import date, datetime
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -22,6 +22,9 @@ from app.services.daily_prediction_types import (
     ComputeMode,
     DailyPredictionServiceError,
 )
+
+if TYPE_CHECKING:
+    from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 
 
 class DailyPredictionMeta(BaseModel):
@@ -213,70 +216,68 @@ def debug_daily_prediction(
         )
 
     repo = DailyPredictionRepository(db)
-    full_run = repo.get_full_run(result.run.id)
-    if not full_run:
-        raise HTTPException(status_code=500, detail="Failed to load full prediction run")
+    # AC1 Compliance: get_full_run now returns PersistedPredictionSnapshot
+    snapshot = repo.get_full_run(result.run.run_id)
+    if not snapshot:
+        raise HTTPException(status_code=500, detail="Failed to load full prediction run snapshot")
 
     # Mappings
     ref_repo = PredictionReferenceRepository(db)
-    categories_data = ref_repo.get_categories(result.run.reference_version_id)
+    categories_data = ref_repo.get_categories(snapshot.reference_version_id)
     cat_id_to_code = {c.id: c.code for c in categories_data}
 
     debug_categories = [
         DailyPredictionDebugCategory(
-            code=cat_id_to_code.get(s["category_id"], "unknown"),
-            note_20=float(s["note_20"] or 0),
-            raw_score=float(s["raw_score"] or 0),
-            power=float(s["power"] or 0),
-            volatility=float(s["volatility"] or 0),
-            rank=int(s["rank"] or 0),
-            is_provisional=s.get("is_provisional"),
-            contributors=_load_json_list(
-                s.get("contributors_json"), field_name="category_scores.contributors_json"
-            ),
+            code=cat_id_to_code.get(s.category_id, "unknown"),
+            note_20=float(s.note_20 or 0),
+            raw_score=float(s.raw_score or 0),
+            power=float(s.power or 0),
+            volatility=float(s.volatility or 0),
+            rank=int(s.rank or 0),
+            is_provisional=s.is_provisional,
+            contributors=s.contributors,
         )
-        for s in full_run.get("category_scores", [])
+        for s in snapshot.category_scores
     ]
 
     debug_turning_points = [
         DailyPredictionDebugTurningPoint(
-            occurred_at_local=tp["occurred_at_local"],
-            severity=float(tp["severity"] or 0),
-            summary=tp["summary"],
-            drivers=_load_json_list(tp.get("driver_json"), field_name="turning_points.driver_json"),
+            occurred_at_local=tp.occurred_at_local.isoformat(),
+            severity=float(tp.severity or 0),
+            summary=tp.summary,
+            drivers=tp.drivers,
         )
-        for tp in full_run.get("turning_points", [])
+        for tp in snapshot.turning_points
     ]
 
     # Resolve reference version string
     reference_version = settings.active_reference_version
-    if result.run.reference_version_id is not None:
-        version_model = db.get(ReferenceVersionModel, result.run.reference_version_id)
-        if version_model is not None:
-            reference_version = version_model.version
+    version_model = db.get(ReferenceVersionModel, snapshot.reference_version_id)
+    if version_model is not None:
+        reference_version = version_model.version
 
-    house_system_effective = full_run.get("house_system_effective")
+    house_system_effective = snapshot.house_system_effective
     if house_system_effective is None and result.bundle is not None:
         house_system_effective = result.bundle.core.effective_context.house_system_effective
 
     meta = DailyPredictionMeta(
-        date_local=result.run.local_date.isoformat(),
-        timezone=result.run.timezone,
-        computed_at=result.run.computed_at.isoformat(),
+        date_local=snapshot.local_date.isoformat(),
+        timezone=snapshot.timezone,
+        computed_at=snapshot.computed_at.isoformat(),
         reference_version=reference_version,
         ruleset_version=settings.ruleset_version,
         was_reused=result.was_reused,
         house_system_effective=house_system_effective,
-        is_provisional_calibration=result.run.is_provisional_calibration,
-        calibration_label=result.run.calibration_label,
+        is_provisional_calibration=snapshot.is_provisional_calibration,
+        calibration_label=snapshot.calibration_label,
     )
 
     return DailyPredictionDebugResponse(
         meta=meta,
-        input_hash=full_run.get("input_hash"),
-        reference_version_id=result.run.reference_version_id,
-        ruleset_id=full_run["ruleset_id"],
-        is_provisional_calibration=full_run.get("is_provisional_calibration"),
+        input_hash=snapshot.input_hash,
+        reference_version_id=snapshot.reference_version_id,
+        ruleset_id=snapshot.ruleset_id,
+        is_provisional_calibration=snapshot.is_provisional_calibration,
         categories=debug_categories,
         turning_points=debug_turning_points,
     )
@@ -378,37 +379,32 @@ def get_daily_prediction(
         raise HTTPException(status_code=404, detail="Prediction not found")
 
     repo = DailyPredictionRepository(db)
-    full_run = repo.get_full_run(result.run.id)
-    if not full_run:
-        raise HTTPException(status_code=500, detail="Failed to load full prediction run")
+    # AC1 Compliance: get_full_run now returns PersistedPredictionSnapshot
+    snapshot = repo.get_full_run(result.run.run_id)
+    if not snapshot:
+        raise HTTPException(status_code=500, detail="Failed to load full prediction run snapshot")
 
     # Mappings
     ref_repo = PredictionReferenceRepository(db)
-    categories_data = ref_repo.get_categories(result.run.reference_version_id)
+    categories_data = ref_repo.get_categories(snapshot.reference_version_id)
     cat_id_to_code = {c.id: c.code for c in categories_data}
 
     # Resolve reference version string
     reference_version = settings.active_reference_version
-    if result.run.reference_version_id is not None:
-        version_model = db.get(ReferenceVersionModel, result.run.reference_version_id)
-        if version_model is not None:
-            reference_version = version_model.version
+    version_model = db.get(ReferenceVersionModel, snapshot.reference_version_id)
+    if version_model is not None:
+        reference_version = version_model.version
 
-    # AC1/AC2 - Call dedicated Assembler
+    # AC1/AC2/AC4 - Call Assembler with typed snapshot
     assembler = PublicPredictionAssembler()
     try:
         assembled = assembler.assemble(
-            full_run=full_run,
+            snapshot=snapshot,
             cat_id_to_code=cat_id_to_code,
             engine_output=result.bundle,
             was_reused=result.was_reused,
             reference_version=reference_version,
             ruleset_version=settings.ruleset_version,
-            run_date_local=result.run.local_date.isoformat(),
-            run_timezone=result.run.timezone,
-            run_computed_at=result.run.computed_at.isoformat(),
-            run_is_provisional=result.run.is_provisional_calibration,
-            run_calibration_label=result.run.calibration_label,
         )
     except ValueError as exc:
         raise HTTPException(

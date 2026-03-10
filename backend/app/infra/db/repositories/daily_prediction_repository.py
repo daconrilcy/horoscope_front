@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, date, datetime
 from typing import Any
 
@@ -11,6 +12,12 @@ from app.infra.db.models.daily_prediction import (
     DailyPredictionRunModel,
     DailyPredictionTimeBlockModel,
     DailyPredictionTurningPointModel,
+)
+from app.prediction.persisted_snapshot import (
+    PersistedCategoryScore,
+    PersistedPredictionSnapshot,
+    PersistedTimeBlock,
+    PersistedTurningPoint,
 )
 
 
@@ -26,12 +33,53 @@ class DailyPredictionRepository:
             )
         )
 
+    def get_run_for_reuse(self, user_id: int, input_hash: str) -> PersistedPredictionSnapshot | None:
+        """
+        Retrieves a run by hash and returns a typed snapshot for reuse decision.
+        AC2 Compliance: Explicit naming for technical reuse.
+        """
+        run = self.db.scalar(
+            select(DailyPredictionRunModel)
+            .options(
+                selectinload(DailyPredictionRunModel.category_scores),
+                selectinload(DailyPredictionRunModel.time_blocks),
+                selectinload(DailyPredictionRunModel.turning_points),
+            )
+            .where(
+                DailyPredictionRunModel.user_id == user_id,
+                DailyPredictionRunModel.input_hash == input_hash,
+            )
+        )
+        return self.get_snapshot(run) if run else None
+
+    def get_run_for_fallback(self, user_id: int, date_local: date) -> PersistedPredictionSnapshot | None:
+        """
+        Retrieves the most recent run before a specific date for fallback.
+        AC2 Compliance: Explicit naming for business fallback.
+        """
+        run = self.db.scalar(
+            select(DailyPredictionRunModel)
+            .options(
+                selectinload(DailyPredictionRunModel.category_scores),
+                selectinload(DailyPredictionRunModel.time_blocks),
+                selectinload(DailyPredictionRunModel.turning_points),
+            )
+            .where(
+                DailyPredictionRunModel.user_id == user_id,
+                DailyPredictionRunModel.local_date < date_local,
+            )
+            .order_by(DailyPredictionRunModel.local_date.desc())
+            .limit(1)
+        )
+        return self.get_snapshot(run) if run else None
+
     def get_run_by_hash_with_details(
         self, user_id: int, input_hash: str
     ) -> DailyPredictionRunModel | None:
         return self.db.scalar(
             select(DailyPredictionRunModel)
             .options(
+                selectinload(DailyPredictionRunModel.category_scores),
                 selectinload(DailyPredictionRunModel.time_blocks),
                 selectinload(DailyPredictionRunModel.turning_points),
             )
@@ -109,6 +157,81 @@ class DailyPredictionRepository:
                 DailyPredictionRunModel.ruleset_id == ruleset_id,
             )
         )
+
+    def get_snapshot(self, run: DailyPredictionRunModel | None) -> PersistedPredictionSnapshot | None:
+        """
+        Converts a run model to a typed snapshot.
+        AC1 Compliance: Robust, typed read model.
+        """
+        if run is None:
+            return None
+
+        # AC3 Compliance: Explicit contributors and drivers parsing
+        category_scores = [
+            PersistedCategoryScore(
+                category_id=s.category_id,
+                category_code="unknown",  # Will be mapped by assembler if needed
+                note_20=s.note_20 or 0,
+                raw_score=s.raw_score or 0.0,
+                power=s.power or 0.0,
+                volatility=s.volatility or 0.0,
+                rank=s.rank or 0,
+                is_provisional=bool(s.is_provisional),
+                summary=s.summary,
+                contributors=self._load_json_list(s.contributors_json),
+            )
+            for s in run.category_scores
+        ]
+
+        turning_points = [
+            PersistedTurningPoint(
+                occurred_at_local=tp.occurred_at_local,
+                severity=tp.severity or 0.0,
+                summary=tp.summary,
+                drivers=self._load_json_list(tp.driver_json),
+            )
+            for tp in run.turning_points
+        ]
+
+        time_blocks = [
+            PersistedTimeBlock(
+                block_index=b.block_index,
+                start_at_local=b.start_at_local,
+                end_at_local=b.end_at_local,
+                tone_code=b.tone_code or "neutral",
+                dominant_categories=self._load_json_list(b.dominant_categories_json),
+                summary=b.summary,
+            )
+            for b in sorted(run.time_blocks, key=lambda x: x.block_index)
+        ]
+
+        return PersistedPredictionSnapshot(
+            run_id=run.id,
+            user_id=run.user_id,
+            local_date=run.local_date,
+            timezone=run.timezone,
+            computed_at=run.computed_at,
+            input_hash=run.input_hash,
+            reference_version_id=run.reference_version_id,
+            ruleset_id=run.ruleset_id,
+            house_system_effective=run.house_system_effective,
+            is_provisional_calibration=bool(run.is_provisional_calibration),
+            calibration_label=run.calibration_label,
+            overall_summary=run.overall_summary,
+            overall_tone=run.overall_tone,
+            category_scores=category_scores,
+            turning_points=turning_points,
+            time_blocks=time_blocks,
+        )
+
+    def _load_json_list(self, raw: str | None) -> list[Any]:
+        if not raw:
+            return []
+        try:
+            val = json.loads(raw)
+            return val if isinstance(val, list) else []
+        except (json.JSONDecodeError, TypeError):
+            return []
 
     def get_or_create_run(
         self,
@@ -197,7 +320,11 @@ class DailyPredictionRepository:
         self.db.flush()
         self.db.expire_all()
 
-    def get_full_run(self, run_id: int) -> dict[str, Any] | None:
+    def get_full_run(self, run_id: int) -> PersistedPredictionSnapshot | None:
+        """
+        Retrieves a full run and returns a typed snapshot.
+        AC1 Compliance: Replaces dict[str, Any] output.
+        """
         run = self.db.scalar(
             select(DailyPredictionRunModel)
             .execution_options(populate_existing=True)
@@ -208,65 +335,7 @@ class DailyPredictionRepository:
             )
             .where(DailyPredictionRunModel.id == run_id)
         )
-        if run is None:
-            return None
-
-        return {
-            "id": run.id,
-            "user_id": run.user_id,
-            "local_date": run.local_date.isoformat(),
-            "timezone": run.timezone,
-            "reference_version_id": run.reference_version_id,
-            "ruleset_id": run.ruleset_id,
-            "input_hash": run.input_hash,
-            "computed_at": run.computed_at.isoformat(),
-            "house_system_effective": run.house_system_effective,
-            "is_provisional_calibration": run.is_provisional_calibration,
-            "calibration_label": run.calibration_label,
-            "overall_summary": run.overall_summary,
-            "overall_tone": run.overall_tone,
-            "main_turning_point_at": (
-                run.main_turning_point_at.isoformat() if run.main_turning_point_at else None
-            ),
-            "category_scores": [
-                {
-                    "category_id": s.category_id,
-                    "raw_score": s.raw_score,
-                    "normalized_score": s.normalized_score,
-                    "note_20": s.note_20,
-                    "power": s.power,
-                    "volatility": s.volatility,
-                    "rank": s.rank,
-                    "is_provisional": s.is_provisional,
-                    "summary": s.summary,
-                    "contributors_json": s.contributors_json,
-                }
-                for s in run.category_scores
-            ],
-            "turning_points": [
-                {
-                    "occurred_at_local": tp.occurred_at_local.isoformat()
-                    if tp.occurred_at_local
-                    else None,
-                    "event_type_id": tp.event_type_id,
-                    "severity": tp.severity,
-                    "driver_json": tp.driver_json,
-                    "summary": tp.summary,
-                }
-                for tp in run.turning_points
-            ],
-            "time_blocks": [
-                {
-                    "block_index": b.block_index,
-                    "start_at_local": b.start_at_local.isoformat() if b.start_at_local else None,
-                    "end_at_local": b.end_at_local.isoformat() if b.end_at_local else None,
-                    "tone_code": b.tone_code,
-                    "dominant_categories_json": b.dominant_categories_json,
-                    "summary": b.summary,
-                }
-                for b in sorted(run.time_blocks, key=lambda x: x.block_index)
-            ],
-        }
+        return self.get_snapshot(run)
 
     def get_user_history(
         self, user_id: int, from_date: date, to_date: date

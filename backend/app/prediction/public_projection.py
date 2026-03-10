@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from types import SimpleNamespace
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from app.prediction.decision_window_builder import DecisionWindowBuilder
 from app.prediction.editorial_template_engine import EditorialTemplateEngine
+
+if TYPE_CHECKING:
+    from .persisted_snapshot import PersistedPredictionSnapshot
 
 MAJOR_ASPECT_NOTE_THRESHOLD = 7.0
 
@@ -14,80 +16,74 @@ MAJOR_ASPECT_NOTE_THRESHOLD = 7.0
 class PublicPredictionAssembler:
     """
     Assembles the public API response for a daily prediction.
+    AC1/AC4 Compliance: Uses typed snapshot for projection.
     """
 
     def assemble(
         self,
-        full_run: dict[str, Any],
+        snapshot: PersistedPredictionSnapshot,
         cat_id_to_code: dict[int, str],
         *,
         engine_output: Any | None = None,
         was_reused: bool = False,
         reference_version: str,
         ruleset_version: str,
-        run_date_local: str,
-        run_timezone: str,
-        run_computed_at: str,
-        run_is_provisional: bool | None = False,
-        run_calibration_label: str | None = None,
     ) -> dict[str, Any]:
         # 1. Categories
-        categories = PublicCategoryPolicy().build(full_run, cat_id_to_code)
+        categories = PublicCategoryPolicy().build(snapshot, cat_id_to_code)
         category_note_by_code = {c["code"]: c["note_20"] for c in categories}
 
         # 2. Decision Windows
         decision_windows = PublicDecisionWindowPolicy().build(
-            full_run, cat_id_to_code, category_note_by_code, engine_output=engine_output
+            snapshot, cat_id_to_code, category_note_by_code, engine_output=engine_output
         )
 
         # 3. Turning Points
         turning_points = PublicTurningPointPolicy().build(
-            full_run, decision_windows or []
+            snapshot, decision_windows or []
         )
 
         # 4. Timeline
         turning_point_times = [
             datetime.fromisoformat(tp["occurred_at_local"])
+            if isinstance(tp["occurred_at_local"], str)
+            else tp["occurred_at_local"]
             for tp in turning_points
             if tp.get("occurred_at_local")
         ]
         timeline = PublicTimelinePolicy().build(
-            full_run, category_note_by_code, turning_point_times
+            snapshot, category_note_by_code, turning_point_times
         )
 
         # 5. Summary
         summary = PublicSummaryPolicy().build(
-            full_run,
+            snapshot,
             cat_id_to_code,
             decision_windows,
             turning_points,
             engine_output=engine_output,
-            is_provisional=bool(run_is_provisional),
         )
 
         # 6. Meta
-        house_system_effective = full_run.get("house_system_effective")
+        house_system_effective = snapshot.house_system_effective
         if house_system_effective is None and engine_output is not None:
-            effective_context = getattr(
-                _resolve_core_engine_output(engine_output),
-                "effective_context",
-                None,
-            )
+            core_output = _resolve_core_engine_output(engine_output)
             house_system_effective = getattr(
-                effective_context,
+                getattr(core_output, "effective_context", None),
                 "house_system_effective",
                 None,
             )
+
         meta = {
-            "date_local": run_date_local,
-            "timezone": run_timezone,
-            "computed_at": run_computed_at,
+            "date_local": snapshot.local_date.isoformat(),
+            "timezone": snapshot.timezone,
+            "computed_at": snapshot.computed_at.isoformat(),
             "reference_version": reference_version,
             "ruleset_version": ruleset_version,
             "was_reused": was_reused,
             "house_system_effective": house_system_effective,
-            "is_provisional_calibration": bool(run_is_provisional),
-            "calibration_label": run_calibration_label,
+            "is_provisional_calibration": snapshot.is_provisional_calibration,
+            "calibration_label": snapshot.calibration_label,
         }
 
         return {
@@ -103,21 +99,21 @@ class PublicPredictionAssembler:
 class PublicCategoryPolicy:
     def build(
         self,
-        full_run: dict[str, Any],
+        snapshot: PersistedPredictionSnapshot,
         cat_id_to_code: dict[int, str],
     ) -> list[dict[str, Any]]:
         categories = [
             {
-                "code": cat_id_to_code.get(s["category_id"], "unknown"),
-                "note_20": float(s["note_20"] or 0),
-                "raw_score": float(s["raw_score"] or 0),
-                "power": float(s["power"] or 0),
-                "volatility": float(s["volatility"] or 0),
-                "rank": int(s["rank"] or 0),
-                "is_provisional": s.get("is_provisional"),
-                "summary": s.get("summary"),
+                "code": cat_id_to_code.get(s.category_id, "unknown"),
+                "note_20": s.note_20,
+                "raw_score": s.raw_score,
+                "power": s.power,
+                "volatility": s.volatility,
+                "rank": s.rank,
+                "is_provisional": s.is_provisional,
+                "summary": s.summary,
             }
-            for s in full_run.get("category_scores", [])
+            for s in snapshot.category_scores
         ]
         return sorted(categories, key=lambda c: c["rank"])
 
@@ -125,7 +121,7 @@ class PublicCategoryPolicy:
 class PublicDecisionWindowPolicy:
     def build(
         self,
-        full_run: dict[str, Any],
+        snapshot: PersistedPredictionSnapshot,
         cat_id_to_code: dict[int, str],
         category_note_by_code: dict[str, float],
         *,
@@ -148,52 +144,45 @@ class PublicDecisionWindowPolicy:
                 for dw in raw_dws
             ]
         
-        # Otherwise rebuild from persisted blocks
+        # Otherwise rebuild from snapshot
         if not raw_windows:
-            raw_windows = self._rebuild_from_persistence(full_run, cat_id_to_code)
+            raw_windows = self._rebuild_from_snapshot(snapshot, cat_id_to_code)
 
         if not raw_windows:
             return None
 
-        # AC4 - Semantic Normalization (deduplication and filtering)
         return self._normalize(raw_windows, category_note_by_code)
 
-    def _rebuild_from_persistence(
-        self, full_run: dict[str, Any], cat_id_to_code: dict[int, str]
+    def _rebuild_from_snapshot(
+        self, snapshot: PersistedPredictionSnapshot, cat_id_to_code: dict[int, str]
     ) -> list[dict[str, Any]]:
-        raw_blocks = full_run.get("time_blocks", [])
-        if not raw_blocks:
+        if not snapshot.time_blocks:
             return []
 
         category_scores = {
-            cat_id_to_code.get(score["category_id"], "unknown"): {
-                "note_20": float(score.get("note_20") or 0),
-                "volatility": float(score.get("volatility") or 0),
+            cat_id_to_code.get(score.category_id, "unknown"): {
+                "note_20": float(score.note_20),
+                "volatility": score.volatility,
             }
-            for score in full_run.get("category_scores", [])
-            if score.get("category_id") in cat_id_to_code
+            for score in snapshot.category_scores
+            if score.category_id in cat_id_to_code
         }
 
+        # Adapt snapshot blocks to what DecisionWindowBuilder expects (SimpleNamespace or duck typing)
+        from types import SimpleNamespace
         blocks = [
             SimpleNamespace(
-                start_local=datetime.fromisoformat(block["start_at_local"]),
-                end_local=datetime.fromisoformat(block["end_at_local"]),
-                tone_code=block.get("tone_code") or "neutral",
-                dominant_categories=self._load_json_list(
-                    block.get("dominant_categories_json"),
-                    field_name="time_blocks.dominant_categories_json",
-                ),
+                start_local=b.start_at_local,
+                end_local=b.end_at_local,
+                tone_code=b.tone_code,
+                dominant_categories=b.dominant_categories,
             )
-            for block in raw_blocks
-            if block.get("start_at_local") and block.get("end_at_local")
+            for b in snapshot.time_blocks
         ]
-        if not blocks:
-            return []
 
         turning_points = [
-            SimpleNamespace(local_time=datetime.fromisoformat(tp["occurred_at_local"]))
-            for tp in full_run.get("turning_points", [])
-            if tp.get("occurred_at_local")
+            SimpleNamespace(local_time=tp.occurred_at_local)
+            for tp in snapshot.turning_points
         ]
 
         rebuilt = DecisionWindowBuilder().build(blocks, turning_points, category_scores)
@@ -218,7 +207,7 @@ class PublicDecisionWindowPolicy:
         normalized: list[dict[str, Any]] = []
         sorted_raw = sorted(
             raw_windows,
-            key=lambda item: datetime.fromisoformat(item["start_local"]),
+            key=lambda item: item["start_local"],
         )
         
         for window in sorted_raw:
@@ -263,48 +252,32 @@ class PublicDecisionWindowPolicy:
             unique_categories.append(category)
         return unique_categories[:3]
 
-    def _load_json_list(self, raw_value: str | None, *, field_name: str) -> list[Any]:
-        if not raw_value:
-            return []
-        try:
-            parsed = json.loads(raw_value)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"Malformed JSON payload for {field_name}") from exc
-        if not isinstance(parsed, list):
-            raise ValueError(f"Expected a JSON list for {field_name}")
-        return parsed
-
 
 class PublicTurningPointPolicy:
     def build(
-        self, full_run: dict[str, Any], decision_windows: list[dict[str, Any]]
+        self, snapshot: PersistedPredictionSnapshot, decision_windows: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
-        # AC3/AC4 - If no windows, return raw ones
+        # If no windows, return raw ones from snapshot
         if not decision_windows:
             return [
                 {
-                    "occurred_at_local": tp["occurred_at_local"],
-                    "severity": float(tp["severity"] or 0),
-                    "summary": tp.get("summary"),
-                    "drivers": self._load_json_list(
-                        tp.get("driver_json"),
-                        field_name="turning_points.driver_json",
-                    ),
+                    "occurred_at_local": tp.occurred_at_local.isoformat(),
+                    "severity": tp.severity,
+                    "summary": tp.summary,
+                    "drivers": tp.drivers,
                 }
-                for tp in full_run.get("turning_points", [])
+                for tp in snapshot.turning_points
             ]
 
         # Otherwise align with decision windows boundaries
         sorted_windows = sorted(
             decision_windows,
-            key=lambda window: datetime.fromisoformat(window["start_local"]),
+            key=lambda window: window["start_local"],
         )
         boundaries = sorted(
-            {w["start_local"] for w in sorted_windows} | {w["end_local"] for w in sorted_windows},
-            key=datetime.fromisoformat,
+            {w["start_local"] for w in sorted_windows} | {w["end_local"] for w in sorted_windows}
         )
 
-        raw_turning_points = full_run.get("turning_points", [])
         public_turning_points: list[dict[str, Any]] = []
         
         for boundary in boundaries:
@@ -325,14 +298,9 @@ class PublicTurningPointPolicy:
                 continue
 
             drivers = []
-            for tp in raw_turning_points:
-                if tp.get("occurred_at_local") == boundary:
-                    drivers.extend(
-                        self._load_json_list(
-                            tp.get("driver_json"),
-                            field_name="turning_points.driver_json",
-                        )
-                    )
+            for tp in snapshot.turning_points:
+                if tp.occurred_at_local.isoformat() == boundary:
+                    drivers.extend(tp.drivers)
 
             public_turning_points.append({
                 "occurred_at_local": boundary,
@@ -351,12 +319,11 @@ class PublicTurningPointPolicy:
         include_start: bool,
         include_end: bool,
     ) -> list[str]:
-        boundary_dt = datetime.fromisoformat(boundary)
         for window in windows:
-            start_dt = datetime.fromisoformat(window["start_local"])
-            end_dt = datetime.fromisoformat(window["end_local"])
-            after_start = boundary_dt > start_dt or (include_start and boundary_dt == start_dt)
-            before_end = boundary_dt < end_dt or (include_end and boundary_dt == end_dt)
+            start = window["start_local"]
+            end = window["end_local"]
+            after_start = boundary > start or (include_start and boundary == start)
+            before_end = boundary < end or (include_end and boundary == end)
             if after_start and before_end:
                 return list(window["dominant_categories"])
         return []
@@ -372,52 +339,38 @@ class PublicTurningPointPolicy:
             return f"À {time_label}, les aspects majeurs s'estompent : {fmt(prev_cats)}."
         return f"À {time_label}, un basculement critique : {fmt(next_cats)}."
 
-    def _load_json_list(self, raw_value: str | None, *, field_name: str) -> list[Any]:
-        if not raw_value:
-            return []
-        try:
-            parsed = json.loads(raw_value)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"Malformed JSON payload for {field_name}") from exc
-        if not isinstance(parsed, list):
-            raise ValueError(f"Expected a JSON list for {field_name}")
-        return parsed
-
 
 class PublicTimelinePolicy:
     def build(
         self,
-        full_run: dict[str, Any],
+        snapshot: PersistedPredictionSnapshot,
         category_note_by_code: dict[str, float],
         turning_point_times: list[datetime],
     ) -> list[dict[str, Any]]:
         blocks = []
-        for raw_block in full_run.get("time_blocks", []):
+        for b in snapshot.time_blocks:
             dominant_categories = self._filter_major_categories(
-                self._load_json_list(
-                    raw_block.get("dominant_categories_json"),
-                    field_name="time_blocks.dominant_categories_json",
-                ),
+                b.dominant_categories,
                 category_note_by_code,
             )
             blocks.append({
-                "start_local": raw_block["start_at_local"],
-                "end_local": raw_block["end_at_local"],
-                "tone_code": raw_block.get("tone_code") or "neutral",
+                "start_local": b.start_at_local.isoformat(),
+                "end_local": b.end_at_local.isoformat(),
+                "tone_code": b.tone_code,
                 "dominant_categories": dominant_categories,
                 "summary": self._build_summary(
-                    raw_block["start_at_local"],
-                    raw_block["end_at_local"],
+                    b.start_at_local,
+                    b.end_at_local,
                     dominant_categories,
-                    raw_block.get("tone_code"),
+                    b.tone_code,
                 ),
                 "turning_point": self._contains_turning_point(
-                    raw_block["start_at_local"],
-                    raw_block["end_at_local"],
+                    b.start_at_local,
+                    b.end_at_local,
                     turning_point_times,
                 ),
             })
-        return sorted(blocks, key=lambda b: datetime.fromisoformat(b["start_local"]))
+        return sorted(blocks, key=lambda b: b["start_local"])
 
     def _filter_major_categories(
         self, categories: list[str], category_note_by_code: dict[str, float]
@@ -431,9 +384,9 @@ class PublicTimelinePolicy:
             unique_categories.append(category)
         return unique_categories[:3]
 
-    def _build_summary(self, start: str, end: str, cats: list[str], tone: str | None) -> str:
-        s_lbl = datetime.fromisoformat(start).strftime("%H:%M")
-        e_lbl = datetime.fromisoformat(end).strftime("%H:%M")
+    def _build_summary(self, start: datetime, end: datetime, cats: list[str], tone: str | None) -> str:
+        s_lbl = start.strftime("%H:%M")
+        e_lbl = end.strftime("%H:%M")
         if not cats:
             return f"Entre {s_lbl} et {e_lbl}, pas d'aspect majeur."
         
@@ -442,58 +395,42 @@ class PublicTimelinePolicy:
         cat_lbl = ", ".join(labels.get(c, c) for c in cats)
         return f"Entre {s_lbl} et {e_lbl}, tonalité {tone_lbl} — {cat_lbl}."
 
-    def _contains_turning_point(self, start: str, end: str, tp_times: list[datetime]) -> bool:
-        s_dt = datetime.fromisoformat(start)
-        e_dt = datetime.fromisoformat(end)
-        
+    def _contains_turning_point(self, start: datetime, end: datetime, tp_times: list[datetime]) -> bool:
         def to_wall(dt: datetime) -> datetime:
             return dt.replace(tzinfo=None) if dt.tzinfo else dt
         
+        s_wall = to_wall(start)
+        e_wall = to_wall(end)
+        
         for tp in tp_times:
-            # AC - Unified comparison: if one is aware and other is naive, use wall time
-            if (s_dt.tzinfo is not None) == (tp.tzinfo is not None):
-                if s_dt <= tp < e_dt:
-                    return True
-            else:
-                if to_wall(s_dt) <= to_wall(tp) < to_wall(e_dt):
-                    return True
+            tp_wall = to_wall(tp)
+            if s_wall <= tp_wall < e_wall:
+                return True
         return False
-
-    def _load_json_list(self, raw_value: str | None, *, field_name: str) -> list[Any]:
-        if not raw_value:
-            return []
-        try:
-            parsed = json.loads(raw_value)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"Malformed JSON payload for {field_name}") from exc
-        if not isinstance(parsed, list):
-            raise ValueError(f"Expected a JSON list for {field_name}")
-        return parsed
 
 
 class PublicSummaryPolicy:
     def build(
         self,
-        full_run: dict[str, Any],
+        snapshot: PersistedPredictionSnapshot,
         cat_id_to_code: dict[int, str],
         decision_windows: list[dict[str, Any]] | None,
         turning_points: list[dict[str, Any]],
         *,
         engine_output: Any | None = None,
-        is_provisional: bool = False,
     ) -> dict[str, Any]:
         editorial = _resolve_editorial_output(engine_output)
         
-        scores = sorted(full_run.get("category_scores", []), key=lambda s: s["rank"] or 99)
-        top_categories = [cat_id_to_code.get(s["category_id"], "unknown") for s in scores[:3]]
+        scores = sorted(snapshot.category_scores, key=lambda s: s.rank or 99)
+        top_categories = [cat_id_to_code.get(s.category_id, "unknown") for s in scores[:3]]
         
         bottom_scores = sorted(
-            full_run.get("category_scores", []),
-            key=lambda score: (float(score.get("note_20") or 0), int(score.get("rank") or 99)),
+            snapshot.category_scores,
+            key=lambda s: (s.note_20, s.rank or 99),
         )
         bottom_categories = [
-            cat_id_to_code.get(score["category_id"], "unknown")
-            for score in bottom_scores[:2]
+            cat_id_to_code.get(s.category_id, "unknown")
+            for s in bottom_scores[:2]
         ]
 
         best_window = None
@@ -522,18 +459,18 @@ class PublicSummaryPolicy:
 
         cal_note = None
         low_var = False
-        if is_provisional or full_run.get("is_provisional_calibration"):
+        if snapshot.is_provisional_calibration:
             cal_note = (
                 "Les scores sont calculés sans données historiques : ils reflètent "
                 "des tendances relatives à la journée, pas des statistiques absolues."
             )
-            top3_notes = [float(s.get("note_20") or 0) for s in scores[:3]]
+            top3_notes = [s.note_20 for s in scores[:3]]
             if top3_notes and (max(top3_notes) - min(top3_notes) < 3):
                 low_var = True
 
         return {
-            "overall_tone": full_run.get("overall_tone"),
-            "overall_summary": full_run.get("overall_summary"),
+            "overall_tone": snapshot.overall_tone,
+            "overall_summary": snapshot.overall_summary,
             "calibration_note": cal_note,
             "top_categories": top_categories,
             "bottom_categories": bottom_categories,
