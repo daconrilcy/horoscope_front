@@ -65,6 +65,45 @@ class UserPredictionBaselineRepository:
         ).all()
         return [self._to_persisted(m) for m in models]
 
+    def get_latest_baselines_for_user(
+        self,
+        user_id: int,
+        reference_version_id: int,
+        ruleset_id: int,
+        house_system_effective: str,
+        window_days: int,
+        as_of_date: date,
+    ) -> list[PersistedUserBaseline]:
+        models = self.db.scalars(
+            select(UserPredictionBaselineModel)
+            .options(selectinload(UserPredictionBaselineModel.category))
+            .where(
+                UserPredictionBaselineModel.user_id == user_id,
+                UserPredictionBaselineModel.reference_version_id == reference_version_id,
+                UserPredictionBaselineModel.ruleset_id == ruleset_id,
+                UserPredictionBaselineModel.house_system_effective == house_system_effective,
+                UserPredictionBaselineModel.window_days == window_days,
+                UserPredictionBaselineModel.window_end_date <= as_of_date,
+            )
+            .order_by(
+                UserPredictionBaselineModel.window_end_date.desc(),
+                UserPredictionBaselineModel.window_start_date.desc(),
+            )
+        ).all()
+
+        if not models:
+            return []
+
+        latest_end_date = models[0].window_end_date
+        latest_start_date = models[0].window_start_date
+        latest_models = [
+            model
+            for model in models
+            if model.window_end_date == latest_end_date
+            and model.window_start_date == latest_start_date
+        ]
+        return [self._to_persisted(model) for model in latest_models]
+
     def upsert_baseline(
         self,
         user_id: int,

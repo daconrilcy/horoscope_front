@@ -15,6 +15,7 @@ from app.services.prediction_context_repair_service import PredictionContextRepa
 from app.services.prediction_fallback_policy import PredictionFallbackPolicy
 from app.services.prediction_request_resolver import PredictionRequestResolver
 from app.services.prediction_run_reuse_policy import PredictionRunReusePolicy
+from app.services.relative_scoring_service import RelativeScoringService
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -58,6 +59,7 @@ class DailyPredictionService:
             context_loader, orchestrator
         )
         self.fallback_policy = fallback_policy or PredictionFallbackPolicy()
+        self.relative_scoring_service = RelativeScoringService()
 
     def get_or_compute(
         self,
@@ -93,11 +95,17 @@ class DailyPredictionService:
 
         # 2. Reuse Decision
         reuse_decision = self.reuse_policy.decide(db, resolved_request, mode)
-        
+
         if not reuse_decision.should_compute:
             if reuse_decision.existing_run:
+                run = reuse_decision.existing_run
+                try:
+                    run = self.relative_scoring_service.enrich_snapshot(db, run)
+                except Exception as e:
+                    logger.warning("prediction.enrich_failed error=%s", str(e))
+
                 result = ServiceResult(
-                    run=reuse_decision.existing_run,
+                    run=run,
                     bundle=None,
                     was_reused=True,
                 )
@@ -108,7 +116,7 @@ class DailyPredictionService:
                     ruleset_version=resolved_request.ruleset_version,
                 )
                 return result
-            
+
             # read_only miss
             return None
 
@@ -126,7 +134,7 @@ class DailyPredictionService:
 
         # 4. Compute and Save
         try:
-            if reuse_decision.should_compute and reuse_decision.existing_run:
+            if reuse_decision.should_compute and reuse_decision.existing_run:  
                 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 
                 run_model = db.get(
@@ -138,6 +146,20 @@ class DailyPredictionService:
                 db.flush()
 
             result = self._execute_and_persist(db, resolved_request)
+
+            # Enrich after persistence
+            enriched_run = result.run
+            try:
+                enriched_run = self.relative_scoring_service.enrich_snapshot(db, result.run)
+            except Exception as e:
+                logger.warning("prediction.enrich_failed error=%s", str(e))
+
+            result = ServiceResult(
+                run=enriched_run,
+                bundle=result.bundle,
+                was_reused=result.was_reused
+            )
+
             self._log_and_metrics(
                 user_id,
                 start_time,
@@ -151,6 +173,20 @@ class DailyPredictionService:
             if self._try_repair_context(db, e, resolved_request):
                 try:
                     result = self._execute_and_persist(db, resolved_request)
+
+                    # Enrich after persistence
+                    enriched_run = result.run
+                    try:
+                        enriched_run = self.relative_scoring_service.enrich_snapshot(db, result.run)
+                    except Exception as enrich_error:
+                        logger.warning("prediction.enrich_failed error=%s", str(enrich_error))
+
+                    result = ServiceResult(
+                        run=enriched_run,
+                        bundle=result.bundle,
+                        was_reused=result.was_reused
+                    )
+
                     self._log_and_metrics(
                         user_id,
                         start_time,
@@ -174,8 +210,14 @@ class DailyPredictionService:
                 resolved_request.resolved_date,
             )
             if fallback.success:
+                run = fallback.fallback_run
+                try:
+                    run = self.relative_scoring_service.enrich_snapshot(db, run)
+                except Exception as enrich_error:
+                    logger.warning("prediction.enrich_failed error=%s", str(enrich_error))
+
                 result = ServiceResult(
-                    run=fallback.fallback_run,
+                    run=run,
                     bundle=None,
                     was_reused=True,
                 )
@@ -187,7 +229,6 @@ class DailyPredictionService:
                     ruleset_version=resolved_request.ruleset_version,
                 )
                 return result
-
             # No fallback available
             self._log_failure(
                 user_id,

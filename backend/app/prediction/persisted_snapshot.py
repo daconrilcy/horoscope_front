@@ -4,7 +4,10 @@ import json
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from types import SimpleNamespace
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from app.prediction.persisted_relative_score import PersistedRelativeScore
 
 
 @dataclass(frozen=True)
@@ -92,6 +95,7 @@ class PersistedPredictionSnapshot:
     category_scores: list[PersistedCategoryScore] = field(default_factory=list)
     turning_points: list[PersistedTurningPoint] = field(default_factory=list)
     time_blocks: list[PersistedTimeBlock] = field(default_factory=list)
+    relative_scores: dict[str, PersistedRelativeScore] = field(default_factory=dict)
 
     @property
     def id(self) -> int:

@@ -7,6 +7,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.prediction.exceptions import PredictionContextError
+from app.prediction.persisted_relative_score import PersistedRelativeScore
 from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 from app.services.daily_prediction_service import (
     DailyPredictionService,
@@ -481,3 +482,63 @@ def test_read_only_existing(service, db):
         assert result.run == mock_snapshot
         assert result.was_reused is True
         assert result.bundle is None
+
+
+def test_relative_enrichment_preserves_absolute_snapshot_fields(service, db):
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+
+    with (
+        patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo,
+        patch(f"{res_path}.ChartResultRepository") as mock_chart_repo,
+        patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo,
+        patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo,
+        patch.object(service.relative_scoring_service, "enrich_snapshot") as mock_enrich,
+        patch.object(service.compute_runner, "run_with_timeout") as mock_compute,
+    ):
+        mock_prof = MagicMock()
+        mock_prof.user_id = 1
+        mock_prof.current_timezone = "Europe/Paris"
+        mock_prof.current_lat = 48.8
+        mock_prof.current_lon = 2.3
+        mock_profile_repo.return_value.get_by_user_id.return_value = mock_prof
+
+        mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
+            result_payload={"planets": []}
+        )
+        mock_daily_repo.return_value.get_run_for_reuse.return_value = None
+        db.scalar.side_effect = lambda stmt, *args, **kwargs: 10
+
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
+
+        absolute_snapshot = _build_mock_snapshot()
+        enriched_snapshot = PersistedPredictionSnapshot(
+            **{
+                **absolute_snapshot.__dict__,
+                "relative_scores": {
+                    "love": PersistedRelativeScore(
+                        category_code="love",
+                        relative_z_score=1.2,
+                        relative_percentile=0.85,
+                        relative_rank=1,
+                        is_available=True,
+                        fallback_reason=None,
+                    )
+                },
+            }
+        )
+        service.persistence_service.save.return_value = MagicMock(
+            run=absolute_snapshot, was_reused=False
+        )
+        mock_enrich.return_value = enriched_snapshot
+        mock_compute.return_value = MagicMock(bundle=MagicMock())
+
+        result = service.get_or_compute(user_id=1, db=db)
+
+        assert result.run.category_scores == absolute_snapshot.category_scores
+        assert result.run.overall_summary == absolute_snapshot.overall_summary
+        assert result.run.overall_tone == absolute_snapshot.overall_tone
+        assert result.run.relative_scores["love"].relative_rank == 1
+        mock_enrich.assert_called_once_with(db, absolute_snapshot)

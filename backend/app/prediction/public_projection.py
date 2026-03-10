@@ -106,9 +106,12 @@ class PublicCategoryPolicy:
         snapshot: PersistedPredictionSnapshot,
         cat_id_to_code: dict[int, str],
     ) -> list[dict[str, Any]]:
-        categories = [
-            {
-                "code": cat_id_to_code.get(s.category_id, "unknown"),
+        categories = []
+        for s in snapshot.category_scores:
+            code = cat_id_to_code.get(s.category_id, "unknown")
+
+            categories.append({
+                "code": code,
                 "note_20": s.note_20,
                 "raw_score": s.raw_score,
                 "power": s.power,
@@ -116,9 +119,7 @@ class PublicCategoryPolicy:
                 "rank": s.rank,
                 "is_provisional": s.is_provisional,
                 "summary": s.summary,
-            }
-            for s in snapshot.category_scores
-        ]
+            })
         return sorted(categories, key=lambda c: c["rank"])
 
 
