@@ -44,8 +44,14 @@ class PublicPredictionAssembler:
             snapshot, cat_id_to_code, category_note_by_code, engine_output=engine_output
         )
 
+        is_flat_day = _is_flat_day(snapshot, decision_windows)
+
         # 3. Turning Points
-        turning_points = PublicTurningPointPolicy().build(snapshot, decision_windows or [])
+        turning_points = PublicTurningPointPolicy().build(
+            snapshot,
+            decision_windows or [],
+            is_flat_day=is_flat_day,
+        )
 
         # 4. Timeline
         turning_point_times = [
@@ -65,10 +71,16 @@ class PublicPredictionAssembler:
             cat_id_to_code,
             decision_windows,
             turning_points,
+            is_flat_day=is_flat_day,
             engine_output=engine_output,
         )
 
-        # 6. Meta
+        # 6. Micro Trends (Story 41.14)
+        micro_trends = None
+        if summary.get("flat_day") and snapshot.relative_scores:
+            micro_trends = PublicMicroTrendPolicy().build(snapshot)
+
+        # 7. Meta
         house_system_effective = snapshot.house_system_effective
         if house_system_effective is None and engine_output is not None:
             core_output = _resolve_core_engine_output(engine_output)
@@ -97,7 +109,93 @@ class PublicPredictionAssembler:
             "timeline": timeline,
             "turning_points": turning_points,
             "decision_windows": decision_windows,
+            "micro_trends": micro_trends,
         }
+
+
+class PublicMicroTrendPolicy:
+    """
+    Builds micro-trends for flat days based on relative scores.
+    AC3/AC4 Compliance: Nuance-focused wording, limit to 3 trends.
+    """
+
+    MICRO_TREND_LABELS = {
+        "fr": {
+            "positive": [
+                "Légère fluidité dans le domaine {cat}",
+                "Nuance plutôt porteuse pour {cat}",
+                "Un climat un peu plus dégagé en {cat}",
+            ],
+            "negative": [
+                "Petite nuance de réserve en {cat}",
+                "Climat un poil plus exigeant pour {cat}",
+                "Discrète vigilance suggérée en {cat}",
+            ],
+        }
+    }
+
+    def build(self, snapshot: PersistedPredictionSnapshot) -> list[dict[str, Any]]:
+        trends = []
+        labels = EditorialTemplateEngine.CATEGORY_LABELS["fr"]
+
+        candidates = [
+            rel
+            for rel in snapshot.relative_scores.values()
+            if rel.is_available and self._meets_signal_threshold(rel)
+        ]
+        candidates.sort(
+            key=lambda rel: (
+                -self._signal_strength(rel),
+                rel.category_code,
+            )
+        )
+
+        for rel in candidates[:3]:  # AC3: limit to 3
+            cat_name = labels.get(rel.category_code, rel.category_code).lower()
+
+            # Select wording based on sign
+            is_pos = self._signal_polarity(rel) >= 0
+            pool = self.MICRO_TREND_LABELS["fr"]["positive" if is_pos else "negative"]
+            # Use rank to vary wording or just take first for simplicity
+            idx = (rel.relative_rank - 1) % len(pool) if rel.relative_rank else 0
+            wording = pool[idx].format(cat=cat_name)
+
+            trends.append(
+                {
+                    "category_code": rel.category_code,
+                    "z_score": (
+                        round(rel.relative_z_score, 2)
+                        if rel.relative_z_score is not None
+                        else None
+                    ),
+                    "percentile": round(rel.relative_percentile or 0.0, 3),
+                    "rank": rel.relative_rank or 99,
+                    "wording": wording,
+                }
+            )
+
+        return trends
+
+    def _meets_signal_threshold(self, relative_score: Any) -> bool:
+        if relative_score.relative_z_score is not None:
+            return abs(relative_score.relative_z_score) >= 0.5
+        if relative_score.relative_percentile is None:
+            return False
+        return (
+            relative_score.relative_percentile >= 0.7
+            or relative_score.relative_percentile <= 0.3
+        )
+
+    def _signal_strength(self, relative_score: Any) -> float:
+        if relative_score.relative_z_score is not None:
+            return abs(relative_score.relative_z_score)
+        percentile = relative_score.relative_percentile or 0.5
+        return abs(percentile - 0.5) * 2
+
+    def _signal_polarity(self, relative_score: Any) -> float:
+        if relative_score.relative_z_score is not None:
+            return relative_score.relative_z_score
+        return (relative_score.relative_percentile or 0.5) - 0.5
 
 
 class PublicCategoryPolicy:
@@ -287,11 +385,16 @@ class PublicDecisionWindowPolicy:
 
 class PublicTurningPointPolicy:
     def build(
-        self, snapshot: PersistedPredictionSnapshot, decision_windows: list[dict[str, Any]]
+        self,
+        snapshot: PersistedPredictionSnapshot,
+        decision_windows: list[dict[str, Any]],
+        *,
+        is_flat_day: bool = False,
     ) -> list[dict[str, Any]]:
+        if is_flat_day:
+            return []
+
         if not decision_windows:
-            if self._is_non_actionable_day(snapshot):
-                return []
             return [
                 {
                     "occurred_at_local": tp.occurred_at_local.isoformat(),
@@ -386,15 +489,6 @@ class PublicTurningPointPolicy:
             )
 
         return public_turning_points
-
-    def _is_non_actionable_day(self, snapshot: PersistedPredictionSnapshot) -> bool:
-        if not snapshot.time_blocks or not snapshot.category_scores:
-            return False
-
-        return all(
-            float(score.note_20) <= MAJOR_ASPECT_NOTE_THRESHOLD
-            for score in snapshot.category_scores
-        )
 
     def _get_active_categories(
         self,
@@ -520,6 +614,7 @@ class PublicSummaryPolicy:
         decision_windows: list[dict[str, Any]] | None,
         turning_points: list[dict[str, Any]],
         *,
+        is_flat_day: bool = False,
         engine_output: Any | None = None,
     ) -> dict[str, Any]:
         editorial = _resolve_editorial_output(engine_output)
@@ -574,6 +669,14 @@ class PublicSummaryPolicy:
             if top3_notes and (max(top3_notes) - min(top3_notes) < 3):
                 low_var = True
 
+        # Relative fields (AC1)
+        relative_top = None
+        rel_summary = None
+        if is_flat_day and snapshot.relative_scores:
+            micro_trends = PublicMicroTrendPolicy().build(snapshot)
+            relative_top = [trend["category_code"] for trend in micro_trends]
+            rel_summary = self._build_relative_summary(micro_trends)
+
         return {
             "overall_tone": snapshot.overall_tone,
             "overall_summary": snapshot.overall_summary,
@@ -583,7 +686,64 @@ class PublicSummaryPolicy:
             "best_window": best_window,
             "main_turning_point": main_tp,
             "low_score_variance": low_var,
+            "flat_day": is_flat_day,
+            "relative_top_categories": relative_top,
+            "relative_summary": rel_summary,
         }
+
+    def _build_relative_summary(self, micro_trends: list[dict[str, Any]]) -> str | None:
+        if not micro_trends:
+            return None
+
+        labels = EditorialTemplateEngine.CATEGORY_LABELS["fr"]
+        positive_codes = [
+            trend["category_code"]
+            for trend in micro_trends
+            if (trend.get("z_score") or 0.0) > 0
+            or (
+                trend.get("z_score") is None
+                and float(trend.get("percentile") or 0.0) >= 0.5
+            )
+        ]
+        negative_codes = [
+            trend["category_code"]
+            for trend in micro_trends
+            if trend["category_code"] not in positive_codes
+        ]
+
+        def _format_names(codes: list[str]) -> str:
+            names = [labels.get(code, code).lower() for code in codes]
+            if len(names) == 1:
+                return names[0]
+            if len(names) == 2:
+                return f"{names[0]} et {names[1]}"
+            return f"{', '.join(names[:-1])} et {names[-1]}"
+
+        parts: list[str] = ["Journée globalement calme."]
+        if positive_codes:
+            parts.append(
+                "Parmi les nuances du jour, léger avantage relatif pour "
+                f"{_format_names(positive_codes)}."
+            )
+        if negative_codes:
+            parts.append(
+                f"À l'inverse, ambiance un peu plus retenue en {_format_names(negative_codes)}."
+            )
+        return " ".join(parts)
+
+
+def _is_flat_day(
+    snapshot: PersistedPredictionSnapshot,
+    decision_windows: list[dict[str, Any]] | None,
+) -> bool:
+    if decision_windows:
+        return False
+    if not snapshot.time_blocks or not snapshot.category_scores:
+        return False
+    return all(
+        float(score.note_20) <= MAJOR_ASPECT_NOTE_THRESHOLD
+        for score in snapshot.category_scores
+    )
 
 
 def _resolve_core_engine_output(engine_output: Any | None) -> Any | None:

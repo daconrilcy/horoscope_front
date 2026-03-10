@@ -84,6 +84,19 @@ class DailyPredictionSummary(BaseModel):
     best_window: dict[str, Any] | None
     main_turning_point: dict[str, Any] | None
     low_score_variance: bool = False
+    
+    # Story 41.14: Relative nuance fields
+    flat_day: bool = False
+    relative_top_categories: list[str] | None = None
+    relative_summary: str | None = None
+
+
+class DailyPredictionMicroTrend(BaseModel):
+    category_code: str
+    z_score: float | None = None
+    percentile: float
+    rank: int
+    wording: str
 
 
 class DailyPredictionResponse(BaseModel):
@@ -93,6 +106,9 @@ class DailyPredictionResponse(BaseModel):
     timeline: list[DailyPredictionTimeBlock]
     turning_points: list[DailyPredictionTurningPoint]
     decision_windows: list[DailyPredictionDecisionWindow] | None = None
+    
+    # Story 41.14: Micro trends for flat days
+    micro_trends: list[DailyPredictionMicroTrend] | None = None
 
 
 class DailyHistoryItem(BaseModel):
