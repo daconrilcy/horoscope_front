@@ -67,6 +67,7 @@ from app.infra.db.models.user_natal_interpretation import (
     InterpretationLevel,
     UserNatalInterpretationModel,
 )
+from app.infra.db.models.user_prediction_baseline import UserPredictionBaselineModel
 from app.infra.db.models.user_refresh_token import UserRefreshTokenModel
 
 __all__ = [
@@ -85,6 +86,7 @@ __all__ = [
     "UserNatalInterpretationModel",
     "InterpretationLevel",
     "UserRefreshTokenModel",
+    "UserPredictionBaselineModel",
     "EnterpriseAccountModel",
     "EnterpriseApiCredentialModel",
     "EnterpriseBillingPlanModel",

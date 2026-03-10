@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import date, datetime
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -24,7 +24,7 @@ from app.services.daily_prediction_types import (
 )
 
 if TYPE_CHECKING:
-    from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
+    pass
 
 
 class DailyPredictionMeta(BaseModel):

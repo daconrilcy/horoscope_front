@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import json
 from datetime import datetime
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from app.prediction.decision_window_builder import DecisionWindowBuilder
 from app.prediction.editorial_template_engine import EditorialTemplateEngine
@@ -10,7 +9,14 @@ from app.prediction.editorial_template_engine import EditorialTemplateEngine
 if TYPE_CHECKING:
     from .persisted_snapshot import PersistedPredictionSnapshot
 
-MAJOR_ASPECT_NOTE_THRESHOLD = 7.0
+MAJOR_ASPECT_NOTE_THRESHOLD = 12.0
+PUBLIC_PIVOT_EVENT_TYPES = frozenset(
+    {
+        "aspect_exact_to_angle",
+        "aspect_exact_to_luminary",
+        "moon_sign_ingress",
+    }
+)
 
 
 class PublicPredictionAssembler:
@@ -39,9 +45,7 @@ class PublicPredictionAssembler:
         )
 
         # 3. Turning Points
-        turning_points = PublicTurningPointPolicy().build(
-            snapshot, decision_windows or []
-        )
+        turning_points = PublicTurningPointPolicy().build(snapshot, decision_windows or [])
 
         # 4. Timeline
         turning_point_times = [
@@ -143,7 +147,7 @@ class PublicDecisionWindowPolicy:
                 }
                 for dw in raw_dws
             ]
-        
+
         # Otherwise rebuild from snapshot
         if not raw_windows:
             raw_windows = self._rebuild_from_snapshot(snapshot, cat_id_to_code)
@@ -151,7 +155,8 @@ class PublicDecisionWindowPolicy:
         if not raw_windows:
             return None
 
-        return self._normalize(raw_windows, category_note_by_code)
+        normalized = self._normalize(snapshot, raw_windows, category_note_by_code)
+        return normalized or None
 
     def _rebuild_from_snapshot(
         self, snapshot: PersistedPredictionSnapshot, cat_id_to_code: dict[int, str]
@@ -168,8 +173,9 @@ class PublicDecisionWindowPolicy:
             if score.category_id in cat_id_to_code
         }
 
-        # Adapt snapshot blocks to what DecisionWindowBuilder expects (SimpleNamespace or duck typing)
+        # Adapt snapshot blocks to what DecisionWindowBuilder expects.
         from types import SimpleNamespace
+
         blocks = [
             SimpleNamespace(
                 start_local=b.start_at_local,
@@ -181,8 +187,7 @@ class PublicDecisionWindowPolicy:
         ]
 
         turning_points = [
-            SimpleNamespace(local_time=tp.occurred_at_local)
-            for tp in snapshot.turning_points
+            SimpleNamespace(local_time=tp.occurred_at_local) for tp in snapshot.turning_points
         ]
 
         rebuilt = DecisionWindowBuilder().build(blocks, turning_points, category_scores)
@@ -202,21 +207,26 @@ class PublicDecisionWindowPolicy:
         ]
 
     def _normalize(
-        self, raw_windows: list[dict[str, Any]], category_note_by_code: dict[str, float]
+        self,
+        snapshot: PersistedPredictionSnapshot,
+        raw_windows: list[dict[str, Any]],
+        category_note_by_code: dict[str, float],
     ) -> list[dict[str, Any]]:
         normalized: list[dict[str, Any]] = []
         sorted_raw = sorted(
             raw_windows,
             key=lambda item: item["start_local"],
         )
-        
+
         for window in sorted_raw:
             dominant_categories = self._filter_major_categories(
                 window["dominant_categories"],
                 category_note_by_code,
             )
             if not dominant_categories:
-                continue
+                if not self._should_keep_public_pivot_window(snapshot, window):
+                    continue
+                dominant_categories = list(dict.fromkeys(window["dominant_categories"]))[:2]
 
             if normalized:
                 previous = normalized[-1]
@@ -233,12 +243,33 @@ class PublicDecisionWindowPolicy:
                     }
                     continue
 
-            normalized.append({
-                **window,
-                "dominant_categories": dominant_categories,
-            })
+            normalized.append(
+                {
+                    **window,
+                    "dominant_categories": dominant_categories,
+                }
+            )
 
         return normalized
+
+    def _should_keep_public_pivot_window(
+        self,
+        snapshot: PersistedPredictionSnapshot,
+        window: dict[str, Any],
+    ) -> bool:
+        if window.get("window_type") != "pivot":
+            return False
+
+        window_start = window.get("start_local")
+        for turning_point in snapshot.turning_points:
+            if not _same_local_moment(turning_point.occurred_at_local, window_start):
+                continue
+            if any(
+                driver.get("event_type") in PUBLIC_PIVOT_EVENT_TYPES
+                for driver in turning_point.drivers
+            ):
+                return True
+        return False
 
     def _filter_major_categories(
         self, categories: list[str], category_note_by_code: dict[str, float]
@@ -257,19 +288,61 @@ class PublicTurningPointPolicy:
     def build(
         self, snapshot: PersistedPredictionSnapshot, decision_windows: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
-        # If no windows, return raw ones from snapshot
         if not decision_windows:
+            if self._is_non_actionable_day(snapshot):
+                return []
             return [
                 {
                     "occurred_at_local": tp.occurred_at_local.isoformat(),
-                    "severity": tp.severity,
+                    "severity": float(tp.severity),
                     "summary": tp.summary,
                     "drivers": tp.drivers,
                 }
-                for tp in snapshot.turning_points
+                for tp in sorted(snapshot.turning_points, key=lambda item: item.occurred_at_local)
             ]
 
-        # Otherwise align with decision windows boundaries
+        if snapshot.turning_points:
+            public_turning_points: list[dict[str, Any]] = []
+            pivot_window_starts = [
+                window["start_local"]
+                for window in decision_windows
+                if window.get("window_type") == "pivot"
+            ]
+            for tp in sorted(snapshot.turning_points, key=lambda item: item.occurred_at_local):
+                occurred_at = tp.occurred_at_local.isoformat()
+                if pivot_window_starts and not any(
+                    _same_local_moment(tp.occurred_at_local, window_start)
+                    for window_start in pivot_window_starts
+                ):
+                    continue
+                prev_cats = self._get_active_categories(
+                    decision_windows,
+                    occurred_at,
+                    include_end=True,
+                    include_start=False,
+                )
+                next_cats = self._get_active_categories(
+                    decision_windows,
+                    occurred_at,
+                    include_end=False,
+                    include_start=True,
+                )
+                summary = tp.summary
+                if summary in {None, "delta_note", "top3_change", "high_priority_event"}:
+                    summary = self._build_summary(occurred_at, prev_cats, next_cats)
+
+                public_turning_points.append(
+                    {
+                        "occurred_at_local": occurred_at,
+                        "severity": float(tp.severity),
+                        "summary": summary,
+                        "drivers": tp.drivers,
+                    }
+                )
+
+            return public_turning_points
+
+        # Otherwise synthesize pivots from interior boundaries only.
         sorted_windows = sorted(
             decision_windows,
             key=lambda window: window["start_local"],
@@ -279,8 +352,8 @@ class PublicTurningPointPolicy:
         )
 
         public_turning_points: list[dict[str, Any]] = []
-        
-        for boundary in boundaries:
+
+        for boundary in boundaries[1:-1]:
             prev_cats = self._get_active_categories(
                 sorted_windows,
                 boundary,
@@ -302,14 +375,25 @@ class PublicTurningPointPolicy:
                 if tp.occurred_at_local.isoformat() == boundary:
                     drivers.extend(tp.drivers)
 
-            public_turning_points.append({
-                "occurred_at_local": boundary,
-                "severity": 1.0 if prev_cats and next_cats else 0.8,
-                "summary": self._build_summary(boundary, prev_cats, next_cats),
-                "drivers": drivers,
-            })
+            public_turning_points.append(
+                {
+                    "occurred_at_local": boundary,
+                    "severity": 1.0 if prev_cats and next_cats else 0.8,
+                    "summary": self._build_summary(boundary, prev_cats, next_cats),
+                    "drivers": drivers,
+                }
+            )
 
         return public_turning_points
+
+    def _is_non_actionable_day(self, snapshot: PersistedPredictionSnapshot) -> bool:
+        if not snapshot.time_blocks or not snapshot.category_scores:
+            return False
+
+        return all(
+            float(score.note_20) <= MAJOR_ASPECT_NOTE_THRESHOLD
+            for score in snapshot.category_scores
+        )
 
     def _get_active_categories(
         self,
@@ -331,8 +415,10 @@ class PublicTurningPointPolicy:
     def _build_summary(self, occurred_at: str, prev_cats: list[str], next_cats: list[str]) -> str:
         time_label = datetime.fromisoformat(occurred_at).strftime("%H:%M")
         labels = EditorialTemplateEngine.CATEGORY_LABELS["fr"]
-        def fmt(cats): return ", ".join(labels.get(c, c) for c in cats)
-        
+
+        def fmt(cats):
+            return ", ".join(labels.get(c, c) for c in cats)
+
         if not prev_cats and next_cats:
             return f"À {time_label}, des aspects majeurs émergent : {fmt(next_cats)}."
         if prev_cats and not next_cats:
@@ -353,23 +439,25 @@ class PublicTimelinePolicy:
                 b.dominant_categories,
                 category_note_by_code,
             )
-            blocks.append({
-                "start_local": b.start_at_local.isoformat(),
-                "end_local": b.end_at_local.isoformat(),
-                "tone_code": b.tone_code,
-                "dominant_categories": dominant_categories,
-                "summary": self._build_summary(
-                    b.start_at_local,
-                    b.end_at_local,
-                    dominant_categories,
-                    b.tone_code,
-                ),
-                "turning_point": self._contains_turning_point(
-                    b.start_at_local,
-                    b.end_at_local,
-                    turning_point_times,
-                ),
-            })
+            blocks.append(
+                {
+                    "start_local": b.start_at_local.isoformat(),
+                    "end_local": b.end_at_local.isoformat(),
+                    "tone_code": b.tone_code,
+                    "dominant_categories": dominant_categories,
+                    "summary": self._build_summary(
+                        b.start_at_local,
+                        b.end_at_local,
+                        dominant_categories,
+                        b.tone_code,
+                    ),
+                    "turning_point": self._contains_turning_point(
+                        b.start_at_local,
+                        b.end_at_local,
+                        turning_point_times,
+                    ),
+                }
+            )
         return sorted(blocks, key=lambda b: b["start_local"])
 
     def _filter_major_categories(
@@ -384,24 +472,38 @@ class PublicTimelinePolicy:
             unique_categories.append(category)
         return unique_categories[:3]
 
-    def _build_summary(self, start: datetime, end: datetime, cats: list[str], tone: str | None) -> str:
+    def _build_summary(
+        self,
+        start: datetime,
+        end: datetime,
+        cats: list[str],
+        tone: str | None,
+    ) -> str:
         s_lbl = start.strftime("%H:%M")
         e_lbl = end.strftime("%H:%M")
         if not cats:
             return f"Entre {s_lbl} et {e_lbl}, pas d'aspect majeur."
-        
-        tone_lbl = EditorialTemplateEngine.TONE_LABELS["fr"].get(tone or "neutral", "équilibrée")
+
+        tone_lbl = EditorialTemplateEngine.TONE_LABELS["fr"].get(
+            tone or "neutral",
+            "équilibrée",
+        )
         labels = EditorialTemplateEngine.CATEGORY_LABELS["fr"]
         cat_lbl = ", ".join(labels.get(c, c) for c in cats)
         return f"Entre {s_lbl} et {e_lbl}, tonalité {tone_lbl} — {cat_lbl}."
 
-    def _contains_turning_point(self, start: datetime, end: datetime, tp_times: list[datetime]) -> bool:
+    def _contains_turning_point(
+        self,
+        start: datetime,
+        end: datetime,
+        tp_times: list[datetime],
+    ) -> bool:
         def to_wall(dt: datetime) -> datetime:
             return dt.replace(tzinfo=None) if dt.tzinfo else dt
-        
+
         s_wall = to_wall(start)
         e_wall = to_wall(end)
-        
+
         for tp in tp_times:
             tp_wall = to_wall(tp)
             if s_wall <= tp_wall < e_wall:
@@ -420,27 +522,26 @@ class PublicSummaryPolicy:
         engine_output: Any | None = None,
     ) -> dict[str, Any]:
         editorial = _resolve_editorial_output(engine_output)
-        
+
         scores = sorted(snapshot.category_scores, key=lambda s: s.rank or 99)
         top_categories = [cat_id_to_code.get(s.category_id, "unknown") for s in scores[:3]]
-        
+
         bottom_scores = sorted(
             snapshot.category_scores,
             key=lambda s: (s.note_20, s.rank or 99),
         )
         bottom_categories = [
-            cat_id_to_code.get(s.category_id, "unknown")
-            for s in bottom_scores[:2]
+            cat_id_to_code.get(s.category_id, "unknown") for s in bottom_scores[:2]
         ]
 
         best_window = None
-        if editorial and editorial.best_window:
+        if decision_windows and editorial and editorial.best_window:
             best_window = {
                 "start_local": editorial.best_window.start_local.isoformat(),
                 "end_local": editorial.best_window.end_local.isoformat(),
                 "dominant_category": editorial.best_window.dominant_category,
             }
-        
+
         if best_window is None and decision_windows:
             cand = max(decision_windows, key=lambda w: (w["score"], w["confidence"]))
             if cand.get("dominant_categories"):
@@ -451,11 +552,15 @@ class PublicSummaryPolicy:
                 }
 
         tps = sorted(turning_points, key=lambda tp: float(tp["severity"] or 0), reverse=True)
-        main_tp = {
-            "occurred_at_local": tps[0]["occurred_at_local"],
-            "severity": float(tps[0]["severity"]),
-            "summary": tps[0]["summary"],
-        } if tps else None
+        main_tp = (
+            {
+                "occurred_at_local": tps[0]["occurred_at_local"],
+                "severity": float(tps[0]["severity"]),
+                "summary": tps[0]["summary"],
+            }
+            if tps
+            else None
+        )
 
         cal_note = None
         low_var = False
@@ -493,3 +598,15 @@ def _resolve_editorial_output(engine_output: Any | None) -> Any | None:
     if editorial_bundle is None:
         return None
     return getattr(editorial_bundle, "data", editorial_bundle)
+
+
+def _same_local_moment(left: datetime, right: str | datetime | None) -> bool:
+    if right is None:
+        return False
+
+    right_dt = datetime.fromisoformat(right) if isinstance(right, str) else right
+
+    def to_wall(dt: datetime) -> datetime:
+        return dt.replace(tzinfo=None) if dt.tzinfo else dt
+
+    return to_wall(left) == to_wall(right_dt)

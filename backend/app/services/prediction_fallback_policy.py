@@ -7,8 +7,10 @@ from typing import TYPE_CHECKING
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 
 if TYPE_CHECKING:
-    from sqlalchemy.orm import Session
     from datetime import date
+
+    from sqlalchemy.orm import Session
+
     from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 
 logger = logging.getLogger()
@@ -38,8 +40,10 @@ class PredictionFallbackPolicy:
         """
         repo = DailyPredictionRepository(db)
         fallback_run = repo.get_run_for_fallback(user_id, requested_date)
-        
+
         if fallback_run:
-            return FallbackDecision(success=True, fallback_run=fallback_run, reason="latest_available")
-        
+            return FallbackDecision(
+                success=True, fallback_run=fallback_run, reason="latest_available"
+            )
+
         return FallbackDecision(success=False, reason="no_historical_data")

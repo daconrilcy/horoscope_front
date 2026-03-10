@@ -19,6 +19,7 @@ from app.services.user_birth_profile_service import UserBirthProfileService
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
+
     from app.infra.db.models.user_birth_profile import UserBirthProfileModel
     from app.services.prediction_context_repair_service import PredictionContextRepairService
 

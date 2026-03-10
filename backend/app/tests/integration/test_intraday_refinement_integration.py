@@ -152,7 +152,8 @@ def _loaded_context() -> LoadedPredictionContext:
         calibrations={"work": None},
         is_provisional_calibration=True,
         calibration_label="provisional",
-        )
+    )
+
 
 def test_intraday_refinement_changes_exact_event_timestamp_in_output() -> None:
     orchestrator = EngineOrchestrator(
@@ -180,7 +181,9 @@ def test_intraday_refinement_changes_exact_event_timestamp_in_output() -> None:
 
     output = orchestrator.run(engine_input)
 
-    exact_events = [event for event in output.detected_events if event.event_type == "aspect_exact_to_angle"]
+    exact_events = [
+        event for event in output.detected_events if event.event_type == "aspect_exact_to_angle"
+    ]
     assert len(exact_events) == 1
     assert exact_events[0].metadata["refined"] is True
     assert exact_events[0].local_time.minute == 16

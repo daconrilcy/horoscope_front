@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict, is_dataclass, replace
 from datetime import date, datetime
 from pathlib import Path
 from tempfile import mkdtemp
@@ -28,6 +28,17 @@ CONTRIBUTION_MAX = 1.0
 
 def serialize_output(engine_output: EngineOutput) -> dict[str, Any]:
     """Sérialisation JSON-safe déterministe de tous les champs pertinents."""
+
+    if hasattr(engine_output, "to_engine_output"):
+        legacy_output = engine_output.to_engine_output()
+        run_metadata = dict(legacy_output.run_metadata)
+        run_metadata.pop("caution_category_codes", None)
+        run_metadata.pop("overall_summary", None)
+        engine_output = replace(
+            legacy_output,
+            run_metadata=run_metadata,
+            editorial_text=None,
+        )
 
     def _to_dict(obj: Any) -> Any:
         if isinstance(obj, (date, datetime)):

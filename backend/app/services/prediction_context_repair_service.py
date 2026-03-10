@@ -35,8 +35,17 @@ class PredictionContextRepairService:
         if settings.app_env in {"production", "prod"}:
             return False
 
-        allowed_versions = {settings.active_ruleset_version, LEGACY_RULESET_VERSION}
-        if ruleset_version not in allowed_versions or reference_version not in allowed_versions:
+        allowed_reference_versions = {
+            settings.active_reference_version,
+            LEGACY_RULESET_VERSION,
+        }
+        allowed_ruleset_versions = {
+            settings.active_ruleset_version,
+            LEGACY_RULESET_VERSION,
+        }
+        if reference_version and reference_version not in allowed_reference_versions:
+            return False
+        if ruleset_version and ruleset_version not in allowed_ruleset_versions:
             return False
 
         logger.warning(
@@ -45,12 +54,14 @@ class PredictionContextRepairService:
         )
 
         try:
-            self._auto_seed_reference_version(db, version=reference_version)
-            self._auto_seed_prediction_ruleset(
-                db,
-                ruleset_version=ruleset_version,
-                expected_reference_version_id=reference_version_id,
-            )
+            if reference_version:
+                self._auto_seed_reference_version(db, version=reference_version)
+            if ruleset_version:
+                self._auto_seed_prediction_ruleset(
+                    db,
+                    ruleset_version=ruleset_version,
+                    expected_reference_version_id=reference_version_id,
+                )
             logger.info("prediction.context_repair_success")
             return True
         except Exception as e:

@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class ComputeMode(Enum):
     compute_if_missing = "compute_if_missing"
     force_recompute = "force_recompute"

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from app.prediction.category_codes import normalize_category_code, normalize_category_codes
 
 from .schemas import BestWindow, CategorySummary, EditorialOutput, EngineOutput
+
+if TYPE_CHECKING:
+    from .explainability import ExplainabilityReport
 
 
 class EditorialOutputBuilder:

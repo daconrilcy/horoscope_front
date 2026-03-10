@@ -6,8 +6,6 @@ from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING, Any
 
-from app.core.config import settings
-from app.core.versions import LEGACY_RULESET_VERSION
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 from app.infra.observability.metrics import increment_counter
 from app.prediction.exceptions import PredictionContextError
@@ -23,9 +21,10 @@ if TYPE_CHECKING:
 
     from app.prediction.context_loader import PredictionContextLoader
     from app.prediction.engine_orchestrator import EngineOrchestrator
+    from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
     from app.prediction.persistence_service import PredictionPersistenceService
     from app.prediction.schemas import PersistablePredictionBundle
-    from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
+    from app.services.prediction_request_resolver import ResolvedPredictionRequest
 
 logger = logging.getLogger()
 
@@ -128,15 +127,14 @@ class DailyPredictionService:
         # 4. Compute and Save
         try:
             if reuse_decision.should_compute and reuse_decision.existing_run:
-                # We need the model ID to delete, but snapshot has it as run_id
-                repo = DailyPredictionRepository(db)
-                run_model = db.get(DailyPredictionRepository.DailyPredictionRunModel if hasattr(DailyPredictionRepository, 'DailyPredictionRunModel') else None, reuse_decision.existing_run.run_id)
-                if run_model:
+                from app.infra.db.models.daily_prediction import DailyPredictionRunModel
+
+                run_model = db.get(
+                    DailyPredictionRunModel,
+                    reuse_decision.existing_run.run_id,
+                )
+                if run_model is not None:
                     db.delete(run_model)
-                else:
-                    # Fallback to direct query if model not easily accessible via repository import
-                    from app.infra.db.models.daily_prediction import DailyPredictionRunModel
-                    db.query(DailyPredictionRunModel).filter(DailyPredictionRunModel.id == reuse_decision.existing_run.run_id).delete()
                 db.flush()
 
             result = self._execute_and_persist(db, resolved_request)
@@ -204,7 +202,11 @@ class DailyPredictionService:
                 f"Calcul indisponible et aucune prédiction en cache. Détail: {error_str}",
             ) from e
 
-    def _execute_and_persist(self, db: Session, request: any) -> ServiceResult:
+    def _execute_and_persist(
+        self,
+        db: Session,
+        request: "ResolvedPredictionRequest",
+    ) -> ServiceResult:
         if request.engine_input is None:
             raise ValueError("engine_input is required for execution")
         compute_result = self.compute_runner.run_with_timeout(db, request.engine_input)
@@ -224,7 +226,12 @@ class DailyPredictionService:
             was_reused=False,
         )
 
-    def _try_repair_context(self, db: Session, error: Exception, request: any) -> bool:
+    def _try_repair_context(
+        self,
+        db: Session,
+        error: Exception,
+        request: "ResolvedPredictionRequest",
+    ) -> bool:
         # AC3 Compliance: Delegates to PredictionContextRepairService
         error_text = str(error)
         if isinstance(error, PredictionContextError):

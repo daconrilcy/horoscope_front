@@ -156,12 +156,12 @@ def run_job() -> None:
                         debug_mode=False,
                     )
 
-                    bundle = orchestrator.run(
+                    result = orchestrator.run(
                         engine_input,
                         category_codes=missing_category_codes,
                         include_editorial=False,
                     )
-                    core_output = bundle.core
+                    core_output = getattr(result, "core", result)
                     duration_calc = time.time() - start_time_calc
                     pivot_count = (
                         len(core_output.turning_points) if core_output.turning_points else 0
@@ -222,7 +222,9 @@ def run_job() -> None:
         logger.info("Job completed.")
         logger.info(
             "Summary: Computed=%s, Skipped=%s, Duration=%.2fs",
-            computed_count, skipped_count, duration_global,
+            computed_count,
+            skipped_count,
+            duration_global,
         )
 
 

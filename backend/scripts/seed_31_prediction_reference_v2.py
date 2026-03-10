@@ -42,7 +42,7 @@ EXPECTED_COUNTS = {
     "house_category_weights": 24,
     "point_category_weights": 8,
     "ruleset_event_types": 16,  # 8 per ruleset (1.0.0 and 2.0.0)
-    "ruleset_parameters": 16,   # 8 per ruleset (1.0.0 and 2.0.0)
+    "ruleset_parameters": 16,  # 8 per ruleset (1.0.0 and 2.0.0)
 }
 
 
@@ -106,10 +106,10 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
             PredictionRulesetModel.reference_version_id == reference_version_id
         )
     ).all()
-    
+
     actual["ruleset_event_types"] = 0
     actual["ruleset_parameters"] = 0
-    
+
     for ruleset in rulesets:
         actual["ruleset_event_types"] += db.scalar(
             select(func.count())
@@ -132,14 +132,14 @@ def _seed_ruleset_content(db: Session, ruleset_id: int):
     #   >= 65: can trigger a high_priority_event pivot
     #   < 65:  enriches existing pivots only
     event_types_data = [
-        ("aspect_exact_to_angle",    "aspect",  80, 2.0),  # above pivot threshold
-        ("aspect_exact_to_luminary", "aspect",  75, 1.8),  # above pivot threshold
-        ("aspect_exact_to_personal", "aspect",  68, 1.5),  # slightly above pivot threshold
-        ("aspect_enter_orb",         "aspect",  40, 1.0),  # below threshold — enriches only
-        ("aspect_exit_orb",          "aspect",  25, 0.5),  # below threshold
-        ("moon_sign_ingress",        "ingress", 72, 1.5),  # above pivot threshold
-        ("asc_sign_change",          "ingress", 78, 2.0),  # above pivot threshold — structurant
-        ("planetary_hour_change",    "timing",  20, 0.8),  # well below threshold
+        ("aspect_exact_to_angle", "aspect", 80, 2.0),  # above pivot threshold
+        ("aspect_exact_to_luminary", "aspect", 75, 1.8),  # above pivot threshold
+        ("aspect_exact_to_personal", "aspect", 68, 1.5),  # slightly above pivot threshold
+        ("aspect_enter_orb", "aspect", 40, 1.0),  # below threshold — enriches only
+        ("aspect_exit_orb", "aspect", 25, 0.5),  # below threshold
+        ("moon_sign_ingress", "ingress", 72, 1.5),  # above pivot threshold
+        ("asc_sign_change", "ingress", 78, 2.0),  # above pivot threshold — structurant
+        ("planetary_hour_change", "timing", 20, 0.8),  # well below threshold
     ]
     for code, group, priority, weight in event_types_data:
         db.add(
@@ -177,20 +177,20 @@ def run_seed(db: Session):
     v2 = db.scalar(select(ReferenceVersionModel).where(ReferenceVersionModel.version == "2.0.0"))
     if v2 is not None:
         actual = _check_counts(db, v2.id)
-        
+
         # We check if at least version 2.0.0 ruleset exists to consider it partly done
         ruleset_v2 = db.scalar(
             select(PredictionRulesetModel).where(
                 PredictionRulesetModel.reference_version_id == v2.id,
-                PredictionRulesetModel.version == "2.0.0"
+                PredictionRulesetModel.version == "2.0.0",
             )
         )
-        
+
         all_ok = (
             all(actual.get(k, 0) == v for k, v in EXPECTED_COUNTS.items())
             and ruleset_v2 is not None
         )
-        
+
         if all_ok and v2.is_locked:
             print("2.0.0 already seeded and locked — skipping")
             return
@@ -199,43 +199,101 @@ def run_seed(db: Session):
             print("2.0.0 exists but is unlocked — proceeding with repair/seed")
             # Repair path: clear existing partial data for v2 before re-seeding
             from sqlalchemy import delete
-            db.execute(delete(RulesetEventTypeModel).where(RulesetEventTypeModel.ruleset_id.in_(
-                select(PredictionRulesetModel.id).where(PredictionRulesetModel.reference_version_id == v2.id)
-            )))
-            db.execute(delete(RulesetParameterModel).where(RulesetParameterModel.ruleset_id.in_(
-                select(PredictionRulesetModel.id).where(PredictionRulesetModel.reference_version_id == v2.id)
-            )))
-            db.execute(delete(PredictionRulesetModel).where(PredictionRulesetModel.reference_version_id == v2.id))
-            db.execute(delete(PointCategoryWeightModel).where(PointCategoryWeightModel.point_id.in_(
-                select(AstroPointModel.id).where(AstroPointModel.reference_version_id == v2.id)
-            )))
+
+            db.execute(
+                delete(RulesetEventTypeModel).where(
+                    RulesetEventTypeModel.ruleset_id.in_(
+                        select(PredictionRulesetModel.id).where(
+                            PredictionRulesetModel.reference_version_id == v2.id
+                        )
+                    )
+                )
+            )
+            db.execute(
+                delete(RulesetParameterModel).where(
+                    RulesetParameterModel.ruleset_id.in_(
+                        select(PredictionRulesetModel.id).where(
+                            PredictionRulesetModel.reference_version_id == v2.id
+                        )
+                    )
+                )
+            )
+            db.execute(
+                delete(PredictionRulesetModel).where(
+                    PredictionRulesetModel.reference_version_id == v2.id
+                )
+            )
+            db.execute(
+                delete(PointCategoryWeightModel).where(
+                    PointCategoryWeightModel.point_id.in_(
+                        select(AstroPointModel.id).where(
+                            AstroPointModel.reference_version_id == v2.id
+                        )
+                    )
+                )
+            )
             db.execute(delete(AstroPointModel).where(AstroPointModel.reference_version_id == v2.id))
-            db.execute(delete(HouseCategoryWeightModel).where(HouseCategoryWeightModel.house_id.in_(
-                select(HouseModel.id).where(HouseModel.reference_version_id == v2.id)
-            )))
-            db.execute(delete(PlanetCategoryWeightModel).where(PlanetCategoryWeightModel.planet_id.in_(
-                select(PlanetModel.id).where(PlanetModel.reference_version_id == v2.id)
-            )))
-            db.execute(delete(HouseProfileModel).where(HouseProfileModel.house_id.in_(
-                select(HouseModel.id).where(HouseModel.reference_version_id == v2.id)
-            )))
-            db.execute(delete(PlanetProfileModel).where(PlanetProfileModel.planet_id.in_(
-                select(PlanetModel.id).where(PlanetModel.reference_version_id == v2.id)
-            )))
-            db.execute(delete(SignRulershipModel).where(SignRulershipModel.reference_version_id == v2.id))
-            db.execute(delete(AspectProfileModel).where(AspectProfileModel.aspect_id.in_(
-                select(AspectModel.id).where(AspectModel.reference_version_id == v2.id)
-            )))
-            db.execute(delete(PredictionCategoryModel).where(PredictionCategoryModel.reference_version_id == v2.id))
-            
-            # Step 3 must be re-run if we are repairing, as ReferenceRepository.clone_version_data 
-            # might have been partially executed. However, clone_version_data itself is not 
+            db.execute(
+                delete(HouseCategoryWeightModel).where(
+                    HouseCategoryWeightModel.house_id.in_(
+                        select(HouseModel.id).where(HouseModel.reference_version_id == v2.id)
+                    )
+                )
+            )
+            db.execute(
+                delete(PlanetCategoryWeightModel).where(
+                    PlanetCategoryWeightModel.planet_id.in_(
+                        select(PlanetModel.id).where(PlanetModel.reference_version_id == v2.id)
+                    )
+                )
+            )
+            db.execute(
+                delete(HouseProfileModel).where(
+                    HouseProfileModel.house_id.in_(
+                        select(HouseModel.id).where(HouseModel.reference_version_id == v2.id)
+                    )
+                )
+            )
+            db.execute(
+                delete(PlanetProfileModel).where(
+                    PlanetProfileModel.planet_id.in_(
+                        select(PlanetModel.id).where(PlanetModel.reference_version_id == v2.id)
+                    )
+                )
+            )
+            db.execute(
+                delete(SignRulershipModel).where(SignRulershipModel.reference_version_id == v2.id)
+            )
+            db.execute(
+                delete(AspectProfileModel).where(
+                    AspectProfileModel.aspect_id.in_(
+                        select(AspectModel.id).where(AspectModel.reference_version_id == v2.id)
+                    )
+                )
+            )
+            db.execute(
+                delete(PredictionCategoryModel).where(
+                    PredictionCategoryModel.reference_version_id == v2.id
+                )
+            )
+
+            # Step 3 must be re-run if we are repairing, as ReferenceRepository.clone_version_data
+            # might have been partially executed. However, clone_version_data itself is not
             # easily "partially" undoable without deleting the ReferenceVersion itself.
             # For simplicity in this script, we assume if v2 exists, clone_version_data was called.
             # If we want to be 100% safe, we'd need to check if Planets/Houses exist in V2.
-            has_basic_data = db.scalar(select(func.count()).select_from(PlanetModel).where(PlanetModel.reference_version_id == v2.id)) > 0
+            has_basic_data = (
+                db.scalar(
+                    select(func.count())
+                    .select_from(PlanetModel)
+                    .where(PlanetModel.reference_version_id == v2.id)
+                )
+                > 0
+            )
             if not has_basic_data:
-                v1 = db.scalar(select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0"))
+                v1 = db.scalar(
+                    select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0")
+                )
                 if not v1:
                     raise SeedAbortError("Reference version 1.0.0 not found for cloning.")
                 print("Cloning V1 data to V2...")
@@ -245,7 +303,10 @@ def run_seed(db: Session):
         else:
             # State corrupted or incomplete AND locked
             lines = [
-                "ERROR: 2.0.0 exists and is LOCKED but is incomplete. Manual investigation required."
+                (
+                    "ERROR: 2.0.0 exists and is LOCKED but is incomplete. "
+                    "Manual investigation required."
+                )
             ]
             for k, expected in EXPECTED_COUNTS.items():
                 got = actual.get(k, 0)
@@ -256,7 +317,9 @@ def run_seed(db: Session):
             raise SeedAbortError("\n".join(lines))
     else:
         # 2. Setup V1 and V2
-        v1 = db.scalar(select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0"))
+        v1 = db.scalar(
+            select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0")
+        )
         if not v1:
             print("ERROR: Reference version 1.0.0 not found. Seed failed.")
             sys.exit(1)

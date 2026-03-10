@@ -1,11 +1,9 @@
 # backend/app/prediction/editorial_template_engine.py
 from __future__ import annotations
 
-import logging
-from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from app.prediction.category_codes import normalize_category_code
 
@@ -214,11 +212,16 @@ class EditorialTemplateEngine:
         # 6. Time Blocks and Turning Points Summaries
         time_block_summaries = []
         if time_blocks:
-            time_block_summaries = [self._render_time_block_summary(b, lang) for b in time_blocks]
+            time_block_summaries = [
+                self._render_time_block_summary(block, lang) for block in time_blocks
+            ]
 
         turning_point_summaries = []
         if turning_points:
-            turning_point_summaries = [self._render_turning_point_summary(tp, lang) for tp in turning_points]
+            turning_point_summaries = [
+                self._render_turning_point_summary(turning_point, lang)
+                for turning_point in turning_points
+            ]
 
         return EditorialTextOutput(
             intro=intro,
@@ -240,9 +243,11 @@ class EditorialTemplateEngine:
         tpl = self._load_template(lang, "resume_bloc_horaire")
         tone_labels = self.TONE_LABELS.get(lang, self.TONE_LABELS["fr"])
         tone_label = tone_labels.get(block.tone_code, block.tone_code)
-        
+
         cats_labels = [self._get_category_label(c, lang) for c in block.dominant_categories]
-        categories_labels = ", ".join(cats_labels) if cats_labels else ("plusieurs domaines" if lang == "fr" else "several areas")
+        categories_labels = ", ".join(cats_labels)
+        if not categories_labels:
+            categories_labels = "plusieurs domaines" if lang == "fr" else "several areas"
 
         return tpl.format(
             start_time=block.start_local.strftime("%H:%M"),

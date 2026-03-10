@@ -33,7 +33,9 @@ class DailyPredictionRepository:
             )
         )
 
-    def get_run_for_reuse(self, user_id: int, input_hash: str) -> PersistedPredictionSnapshot | None:
+    def get_run_for_reuse(
+        self, user_id: int, input_hash: str
+    ) -> PersistedPredictionSnapshot | None:
         """
         Retrieves a run by hash and returns a typed snapshot for reuse decision.
         AC2 Compliance: Explicit naming for technical reuse.
@@ -41,7 +43,9 @@ class DailyPredictionRepository:
         run = self.db.scalar(
             select(DailyPredictionRunModel)
             .options(
-                selectinload(DailyPredictionRunModel.category_scores),
+                selectinload(DailyPredictionRunModel.category_scores).selectinload(
+                    DailyPredictionCategoryScoreModel.category
+                ),
                 selectinload(DailyPredictionRunModel.time_blocks),
                 selectinload(DailyPredictionRunModel.turning_points),
             )
@@ -52,7 +56,9 @@ class DailyPredictionRepository:
         )
         return self.get_snapshot(run) if run else None
 
-    def get_run_for_fallback(self, user_id: int, date_local: date) -> PersistedPredictionSnapshot | None:
+    def get_run_for_fallback(
+        self, user_id: int, date_local: date
+    ) -> PersistedPredictionSnapshot | None:
         """
         Retrieves the most recent run before a specific date for fallback.
         AC2 Compliance: Explicit naming for business fallback.
@@ -60,7 +66,9 @@ class DailyPredictionRepository:
         run = self.db.scalar(
             select(DailyPredictionRunModel)
             .options(
-                selectinload(DailyPredictionRunModel.category_scores),
+                selectinload(DailyPredictionRunModel.category_scores).selectinload(
+                    DailyPredictionCategoryScoreModel.category
+                ),
                 selectinload(DailyPredictionRunModel.time_blocks),
                 selectinload(DailyPredictionRunModel.turning_points),
             )
@@ -158,7 +166,9 @@ class DailyPredictionRepository:
             )
         )
 
-    def get_snapshot(self, run: DailyPredictionRunModel | None) -> PersistedPredictionSnapshot | None:
+    def get_snapshot(
+        self, run: DailyPredictionRunModel | None
+    ) -> PersistedPredictionSnapshot | None:
         """
         Converts a run model to a typed snapshot.
         AC1 Compliance: Robust, typed read model.
@@ -170,7 +180,9 @@ class DailyPredictionRepository:
         category_scores = [
             PersistedCategoryScore(
                 category_id=s.category_id,
-                category_code="unknown",  # Will be mapped by assembler if needed
+                category_code=(
+                    s.category.code if getattr(s, "category", None) is not None else "unknown"
+                ),
                 note_20=s.note_20 or 0,
                 raw_score=s.raw_score or 0.0,
                 power=s.power or 0.0,
@@ -344,7 +356,9 @@ class DailyPredictionRepository:
             self.db.scalars(
                 select(DailyPredictionRunModel)
                 .options(
-                    selectinload(DailyPredictionRunModel.category_scores),
+                    selectinload(DailyPredictionRunModel.category_scores).selectinload(
+                        DailyPredictionCategoryScoreModel.category
+                    ),
                     selectinload(DailyPredictionRunModel.turning_points),
                 )
                 .where(

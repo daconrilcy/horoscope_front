@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from app.prediction.event_detector import EventDetector
-from app.prediction.schemas import AstroEvent, NatalChart, PlanetState, StepAstroState
+from app.prediction.schemas import NatalChart, PlanetState, StepAstroState
 from app.prediction.temporal_sampler import DayGrid
 from app.prediction.turning_point_detector import TurningPointDetector
 
@@ -55,14 +55,14 @@ def mock_ctx_with_event_types():
         "square": MagicMock(orb_multiplier=1.0),
     }
     ctx.ruleset_context.event_types = {
-        "aspect_exact_to_angle":    _make_event_type_mock(80, 2.0),
+        "aspect_exact_to_angle": _make_event_type_mock(80, 2.0),
         "aspect_exact_to_luminary": _make_event_type_mock(75, 1.8),
         "aspect_exact_to_personal": _make_event_type_mock(68, 1.5),
-        "aspect_enter_orb":         _make_event_type_mock(40, 1.0),
-        "aspect_exit_orb":          _make_event_type_mock(25, 0.5),
-        "moon_sign_ingress":        _make_event_type_mock(72, 1.5),
-        "asc_sign_change":          _make_event_type_mock(78, 2.0),
-        "planetary_hour_change":    _make_event_type_mock(20, 0.8),
+        "aspect_enter_orb": _make_event_type_mock(40, 1.0),
+        "aspect_exit_orb": _make_event_type_mock(25, 0.5),
+        "moon_sign_ingress": _make_event_type_mock(72, 1.5),
+        "asc_sign_change": _make_event_type_mock(78, 2.0),
+        "planetary_hour_change": _make_event_type_mock(20, 0.8),
     }
     return ctx
 
@@ -263,7 +263,11 @@ def test_minor_aspect_ignored(mock_ctx, natal_chart):
     day_grid = DayGrid([], 2460000.0, 2460000.2, None, None, date(2024, 1, 1), "UTC")
 
     events = detector.detect(steps, day_grid)
-    aspect_events = [e for e in events if e.event_type in EventDetector.EXACT_EVENT_TYPES | {"aspect_enter_orb", "aspect_exit_orb"}]
+    aspect_events = [
+        e
+        for e in events
+        if e.event_type in EventDetector.EXACT_EVENT_TYPES | {"aspect_enter_orb", "aspect_exit_orb"}
+    ]
     assert len(aspect_events) == 0
 
 
@@ -427,7 +431,7 @@ def test_exact_to_luminary_priority(mock_ctx_with_event_types):
     steps = [
         create_step(2460000.0, {"Sun": 358.5}),  # orb=1.5
         create_step(2460000.1, {"Sun": 359.9}),  # orb=0.1 — exact minimum
-        create_step(2460000.2, {"Sun": 1.5}),    # orb=1.5
+        create_step(2460000.2, {"Sun": 1.5}),  # orb=1.5
     ]
     day_grid = DayGrid([], 2460000.0, 2460000.3, None, None, date(2024, 1, 1), "UTC")
     events = detector.detect(steps, day_grid)
@@ -445,13 +449,15 @@ def test_exact_to_angle_priority(mock_ctx_with_event_types):
         planet_houses={"Asc": 1},
         house_sign_rulers={},
     )
-    mock_ctx_with_event_types.prediction_context.planet_profiles["Asc"] = MagicMock(orb_active_deg=2.0)
+    mock_ctx_with_event_types.prediction_context.planet_profiles["Asc"] = MagicMock(
+        orb_active_deg=2.0
+    )
     detector = EventDetector(mock_ctx_with_event_types, chart)
 
     steps = [
         create_step(2460000.0, {"Sun": 358.5}),  # orb=1.5
         create_step(2460000.1, {"Sun": 359.9}),  # orb=0.1 — exact minimum
-        create_step(2460000.2, {"Sun": 1.5}),    # orb=1.5
+        create_step(2460000.2, {"Sun": 1.5}),  # orb=1.5
     ]
     day_grid = DayGrid([], 2460000.0, 2460000.3, None, None, date(2024, 1, 1), "UTC")
     events = detector.detect(steps, day_grid)
