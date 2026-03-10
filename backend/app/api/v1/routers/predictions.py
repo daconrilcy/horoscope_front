@@ -19,9 +19,9 @@ from app.prediction.context_loader import PredictionContextLoader
 from app.prediction.decision_window_builder import DecisionWindowBuilder
 from app.prediction.editorial_template_engine import EditorialTemplateEngine
 from app.prediction.persistence_service import PredictionPersistenceService
-from app.services.daily_prediction_service import (
+from app.services.daily_prediction_service import DailyPredictionService
+from app.services.daily_prediction_types import (
     ComputeMode,
-    DailyPredictionService,
     DailyPredictionServiceError,
 )
 

@@ -1,48 +1,32 @@
 from __future__ import annotations
 
-import concurrent.futures
-import hashlib
-import json
 import logging
 import time
 from dataclasses import dataclass
-from datetime import date, datetime
-from enum import Enum
+from datetime import date
 from typing import TYPE_CHECKING, Any
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
-
-from sqlalchemy import select
 
 from app.core.config import settings
-from app.core.versions import LEGACY_RULESET_VERSION, get_active_ruleset_version
-from app.infra.db.models.reference import ReferenceVersionModel
-from app.infra.db.repositories.chart_result_repository import ChartResultRepository
+from app.core.versions import LEGACY_RULESET_VERSION
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
-from app.infra.db.repositories.prediction_ruleset_repository import PredictionRulesetRepository
-from app.infra.db.repositories.user_birth_profile_repository import UserBirthProfileRepository
 from app.infra.observability.metrics import increment_counter
-from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.exceptions import PredictionContextError
-from app.prediction.input_hash import compute_engine_input_hash
-from app.prediction.schemas import EngineInput
-from app.services.user_birth_profile_service import UserBirthProfileService
+from app.services.daily_prediction_types import ComputeMode, DailyPredictionServiceError
+from app.services.prediction_compute_runner import PredictionComputeRunner
+from app.services.prediction_fallback_policy import PredictionFallbackPolicy
+from app.services.prediction_request_resolver import PredictionRequestResolver
+from app.services.prediction_run_reuse_policy import PredictionRunReusePolicy
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
     from app.infra.db.models.daily_prediction import DailyPredictionRunModel
-    from app.infra.db.models.user_birth_profile import UserBirthProfileModel
     from app.prediction.context_loader import PredictionContextLoader
+    from app.prediction.engine_orchestrator import EngineOrchestrator
     from app.prediction.persistence_service import PredictionPersistenceService
     from app.prediction.schemas import EngineOutput
 
 logger = logging.getLogger()
-
-
-class ComputeMode(Enum):
-    compute_if_missing = "compute_if_missing"
-    force_recompute = "force_recompute"
-    read_only = "read_only"
 
 
 @dataclass(frozen=True)
@@ -52,13 +36,6 @@ class ServiceResult:
     was_reused: bool
 
 
-class DailyPredictionServiceError(Exception):
-    def __init__(self, code: str, message: str) -> None:
-        self.code = code
-        self.message = message
-        super().__init__(f"[{code}] {message}")
-
-
 class DailyPredictionService:
     def __init__(
         self,
@@ -66,12 +43,19 @@ class DailyPredictionService:
         persistence_service: PredictionPersistenceService,
         *,
         orchestrator: EngineOrchestrator | None = None,
+        resolver: PredictionRequestResolver | None = None,
+        reuse_policy: PredictionRunReusePolicy | None = None,
+        compute_runner: PredictionComputeRunner | None = None,
+        fallback_policy: PredictionFallbackPolicy | None = None,
     ) -> None:
         self.context_loader = context_loader
         self.persistence_service = persistence_service
-        # Optional pre-built orchestrator: sub-components are reused per call
-        # via with_context_loader(). If None, a fresh orchestrator is created per call.
-        self._orchestrator_proto = orchestrator
+        self.resolver = resolver or PredictionRequestResolver()
+        self.reuse_policy = reuse_policy or PredictionRunReusePolicy()
+        self.compute_runner = compute_runner or PredictionComputeRunner(
+            context_loader, orchestrator
+        )
+        self.fallback_policy = fallback_policy or PredictionFallbackPolicy()
 
     def get_or_compute(
         self,
@@ -86,189 +70,121 @@ class DailyPredictionService:
         ruleset_version: str | None = None,
     ) -> ServiceResult | None:
         """
-        Orchestrates the resolution of user context, engine execution, and persistence.
-
-        Setup errors (profile_missing, timezone_missing, etc.) propagate directly as
-        DailyPredictionServiceError — no fallback is attempted for these. Only engine
-        or persistence failures trigger the fallback on the latest available run (AC1).
+        Orchestrates user context resolution, reuse decision, engine execution and fallback.
         """
         start_time = time.perf_counter()
 
-        # 1-6. Setup — DailyPredictionServiceError propagates directly, no fallback
-        resolved_reference_version = reference_version or settings.active_reference_version
-        resolved_ruleset_version = ruleset_version or settings.active_ruleset_version
-        profile = self._resolve_profile(db, user_id)
-        tz_str = self._resolve_timezone(profile, timezone_override)
-        lat, lon = self._resolve_location(db, profile, location_override)
-        resolved_date = self._resolve_date(date_local, tz_str)
-        reference_version_id = self._resolve_reference_version_id(db, resolved_reference_version)
-        ruleset_id = self._resolve_ruleset_id(db, resolved_ruleset_version, reference_version_id)
+        # 1. Resolve Request
+        resolved_request = self.resolver.resolve(
+            db=db,
+            user_id=user_id,
+            date_local=date_local,
+            location_override=location_override,
+            timezone_override=timezone_override,
+            reference_version=reference_version,
+            ruleset_version=ruleset_version,
+            include_engine_input=mode != ComputeMode.read_only,
+        )
 
-        # 2. Mode read_only : lecture seule, aucun calcul
-        if mode == ComputeMode.read_only:
-            run = DailyPredictionRepository(db).get_run(
-                user_id, resolved_date, reference_version_id, ruleset_id
-            )
-            result = None
-            if run is not None:
-                result = ServiceResult(run=run, engine_output=None, was_reused=True)
+        if mode != ComputeMode.read_only:
+            increment_counter("prediction.compute")
 
-            if result:
+        # 2. Reuse Decision
+        reuse_decision = self.reuse_policy.decide(db, resolved_request, mode)
+        
+        if not reuse_decision.should_compute:
+            if reuse_decision.existing_run:
+                result = ServiceResult(
+                    run=reuse_decision.existing_run,
+                    engine_output=None,
+                    was_reused=True,
+                )
                 self._log_and_metrics(
-                    user_id, start_time, result, ruleset_version=resolved_ruleset_version
+                    user_id,
+                    start_time,
+                    result,
+                    ruleset_version=resolved_request.ruleset_version,
                 )
-            return result
+                return result
+            
+            # read_only miss
+            return None
 
-        # prediction.compute is only incremented for actual compute paths (not read_only)
-        increment_counter("prediction.compute")
-
-        # 3. Resolve natal chart
-        natal_chart = self._resolve_natal_chart(db, user_id)
-
-        # 4. Build EngineInput and compute hash BEFORE engine (AC2)
-        engine_input = EngineInput(
-            natal_chart=natal_chart,
-            local_date=resolved_date,
-            timezone=tz_str,
-            latitude=lat,
-            longitude=lon,
-            reference_version=resolved_reference_version,
-            ruleset_version=resolved_ruleset_version,
-            debug_mode=False,
-        )
-        input_hash = compute_engine_input_hash(
-            natal_chart=engine_input.natal_chart,
-            local_date=engine_input.local_date,
-            timezone=engine_input.timezone,
-            latitude=engine_input.latitude,
-            longitude=engine_input.longitude,
-            reference_version=engine_input.reference_version,
-            ruleset_version=engine_input.ruleset_version,
-        )
-
-        # 5. Mode compute_if_missing : short-circuit if hash exists
-        if mode == ComputeMode.compute_if_missing:
-            repo = DailyPredictionRepository(db)
-            existing_run = repo.get_run_by_hash_with_details(user_id, input_hash)
-            if existing_run:
-                # AC8 - Check if cached run has all required summaries
-                is_stale = False
-                if not existing_run.overall_summary:
-                    is_stale = True
-                elif any(b.summary is None for b in existing_run.time_blocks):
-                    is_stale = True
-                elif any(
-                    tp.summary in [None, "delta_note", "top3_change", "high_priority_event"]
-                    for tp in existing_run.turning_points
-                ):
-                    is_stale = True
-
-                if not is_stale:
-                    result = ServiceResult(run=existing_run, engine_output=None, was_reused=True)
-                    self._log_and_metrics(
-                        user_id, start_time, result, ruleset_version=resolved_ruleset_version
-                    )
-                    return result
-
-                logger.info(
-                    "prediction.stale_cached_run_recompute",
-                    extra={
-                        "user_id": user_id,
-                        "run_id": existing_run.id,
-                        "reason": (
-                            "missing_summaries"
-                            if existing_run.overall_summary
-                            else "no_overall_summary"
-                        ),
-                    },
-                )
-                db.delete(existing_run)
-                db.flush()
-
-        # 6. Mode force_recompute : remove old run if it exists
+        # 3. Mode force_recompute : cleanup if needed
         if mode == ComputeMode.force_recompute:
             old_run = DailyPredictionRepository(db).get_run(
-                user_id, resolved_date, reference_version_id, ruleset_id
+                user_id, 
+                resolved_request.resolved_date, 
+                resolved_request.reference_version_id, 
+                resolved_request.ruleset_id
             )
             if old_run:
                 db.delete(old_run)
                 db.flush()
 
-        # 7-8. Engine + persistence — failures trigger fallback (AC1)
+        # 4. Compute and Save
         try:
-            result = self._compute_and_save(
-                db=db,
-                engine_input=engine_input,
-                user_id=user_id,
-                resolved_date=resolved_date,
-                reference_version_id=reference_version_id,
-                ruleset_id=ruleset_id,
-            )
+            if reuse_decision.should_compute and reuse_decision.existing_run:
+                db.delete(reuse_decision.existing_run)
+                db.flush()
+
+            result = self._execute_and_persist(db, resolved_request)
             self._log_and_metrics(
-                user_id, start_time, result, ruleset_version=resolved_ruleset_version
+                user_id,
+                start_time,
+                result,
+                ruleset_version=resolved_request.ruleset_version,
             )
             return result
 
         except Exception as e:
-            repaired_context = False
-            if self._should_repair_prediction_context(
-                error=e,
-                ruleset_version=resolved_ruleset_version,
-                reference_version=resolved_reference_version,
-            ):
-                repaired_context = self._auto_seed_prediction_context(
-                    db,
-                    reference_version=resolved_reference_version,
-                    ruleset_version=resolved_ruleset_version,
-                    expected_reference_version_id=reference_version_id,
-                )
-
-            if repaired_context:
+            # AC7 - Context Repair Attempt
+            if self._try_repair_context(db, e, resolved_request):
                 try:
-                    result = self._compute_and_save(
-                        db=db,
-                        engine_input=engine_input,
-                        user_id=user_id,
-                        resolved_date=resolved_date,
-                        reference_version_id=reference_version_id,
-                        ruleset_id=ruleset_id,
-                    )
+                    result = self._execute_and_persist(db, resolved_request)
                     self._log_and_metrics(
-                        user_id, start_time, result, ruleset_version=resolved_ruleset_version
+                        user_id,
+                        start_time,
+                        result,
+                        ruleset_version=resolved_request.ruleset_version,
                     )
                     return result
                 except Exception as retry_error:
                     e = retry_error
 
-            # AC1 — Fallback on engine/persistence failure only
+            # AC1 - Fallback on engine/persistence failure
             error_str = str(e)
             logger.error(
-                "prediction.compute_failed", extra={"user_id": user_id, "error": error_str}
+                "prediction.compute_failed",
+                extra={"user_id": user_id, "error": error_str},
             )
 
-            fallback_run = self._try_read_latest_available(db, user_id, resolved_date)
-            if fallback_run:
-                result = ServiceResult(run=fallback_run, engine_output=None, was_reused=True)
+            fallback = self.fallback_policy.try_fallback(
+                db,
+                user_id,
+                resolved_request.resolved_date,
+            )
+            if fallback.success:
+                result = ServiceResult(
+                    run=fallback.fallback_run,
+                    engine_output=None,
+                    was_reused=True,
+                )
                 self._log_and_metrics(
                     user_id,
                     start_time,
                     result,
                     error=error_str,
-                    ruleset_version=resolved_ruleset_version,
+                    ruleset_version=resolved_request.ruleset_version,
                 )
                 return result
 
-            # No fallback available — log final failure (AC3) then re-raise as service error (AC5)
-            duration_ms = int((time.perf_counter() - start_time) * 1000)
-            logger.info(
-                "prediction.run",
-                extra={
-                    "user_id": user_id,
-                    "duration_ms": duration_ms,
-                    "was_reused": False,
-                    "error": error_str,
-                    "ruleset_version": resolved_ruleset_version,
-                },
+            # No fallback available
+            self._log_failure(
+                user_id,
+                start_time,
+                error_str,
+                resolved_request.ruleset_version,
             )
             if isinstance(e, DailyPredictionServiceError):
                 raise
@@ -277,76 +193,59 @@ class DailyPredictionService:
                 f"Calcul indisponible et aucune prédiction en cache. Détail: {error_str}",
             ) from e
 
-    def _compute_and_save(
-        self,
-        *,
-        db: Session,
-        engine_input: EngineInput,
-        user_id: int,
-        resolved_date: date,
-        reference_version_id: int,
-        ruleset_id: int,
-    ) -> ServiceResult:
-        engine_output = self._compute_with_timeout(db, engine_input)
-
+    def _execute_and_persist(self, db: Session, request: any) -> ServiceResult:
+        if request.engine_input is None:
+            raise ValueError("engine_input is required for execution")
+        compute_result = self.compute_runner.run_with_timeout(db, request.engine_input)
+        
         save_result = self.persistence_service.save(
-            engine_output=engine_output,
-            user_id=user_id,
-            local_date=resolved_date,
-            reference_version_id=reference_version_id,
-            ruleset_id=ruleset_id,
+            engine_output=compute_result.engine_output,
+            user_id=request.user_id,
+            local_date=request.resolved_date,
+            reference_version_id=request.reference_version_id,
+            ruleset_id=request.ruleset_id,
             db=db,
         )
 
         return ServiceResult(
             run=save_result.run,
-            engine_output=engine_output,
+            engine_output=compute_result.engine_output,
             was_reused=False,
         )
 
-    def _compute_with_timeout(self, db: Session, engine_input: EngineInput) -> EngineOutput:
-        """
-        Timeout best-effort : lève DailyPredictionServiceError("timeout") après 30s.
+    def _try_repair_context(self, db: Session, error: Exception, request: any) -> bool:
+        if settings.app_env in {"production", "prod"}:
+            return False
+        
+        rv = request.reference_version
+        rs = request.ruleset_version
 
-        ⚠️  Limitation GIL : le thread de calcul continue en arrière-plan après timeout
-        (le code CPU-bound n'est pas interruptible). Ce thread conserve une référence
-        à la Session SQLAlchemy (`db` capturée dans la closure ctx_loader).
-        `db.expire_all()` est appelé après timeout pour invalider le cache de session
-        et limiter le risque de lectures périmées si le thread accède encore à la
-        session. La session reste non thread-safe ; ne pas la réutiliser dans un autre
-        thread simultanément pendant les ~30s suivant le timeout.
-        """
+        allowed_rulesets = {settings.active_ruleset_version, LEGACY_RULESET_VERSION}
+        allowed_references = {settings.active_reference_version, LEGACY_RULESET_VERSION}
+        if rs not in allowed_rulesets or rv not in allowed_references:
+            return False
 
-        def ctx_loader(ref: str, rule: str, dt: date) -> object:
-            return self.context_loader.load(db, ref, rule, dt)
-
-        if self._orchestrator_proto is not None:
-            orchestrator = self._orchestrator_proto.with_context_loader(ctx_loader)
-        else:
-            orchestrator = EngineOrchestrator(prediction_context_loader=ctx_loader)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(
-                orchestrator.run,
-                engine_input,
-                include_editorial_text=True,
+        error_text = str(error)
+        if isinstance(error, PredictionContextError):
+            needs_repair = (
+                "Prediction context has no planet profiles" in error_text
+                or "Prediction context has no house profiles" in error_text
+                or "Prediction context has no enabled categories" in error_text
             )
-            try:
-                return future.result(timeout=30)
-            except concurrent.futures.TimeoutError:
-                try:
-                    db.expire_all()
-                except Exception:
-                    pass
-                raise DailyPredictionServiceError(
-                    "timeout", "Calcul trop long — service temporairement dégradé"
-                ) from None
-
-    def _try_read_latest_available(
-        self, db: Session, user_id: int, date_local: date
-    ) -> DailyPredictionRunModel | None:
-        """AC2 - Retrieves the most recent run before the requested date."""
-        return DailyPredictionRepository(db).get_latest_run_before(user_id, date_local)
+            if needs_repair:
+                logger.warning(
+                    "prediction.context_autoseed_repair",
+                    extra={"reference_version": rv, "ruleset_version": rs},
+                )
+                # We reuse the auto-seed logic from resolver since it has the DB access patterns
+                self.resolver._auto_seed_reference_version(db, version=rv)
+                self.resolver._auto_seed_prediction_ruleset(
+                    db,
+                    ruleset_version=rs,
+                    expected_reference_version_id=request.reference_version_id,
+                )
+                return True
+        return False
 
     def _log_and_metrics(
         self,
@@ -368,7 +267,6 @@ class DailyPredictionService:
             has_pivots = bool(getattr(result.engine_output, "turning_points", []))
             overall_tone = getattr(result.engine_output, "run_metadata", {}).get("overall_tone")
         elif result.run:
-            # Fallback for reused runs: overall_tone is usually in the model
             if hasattr(result.run, "overall_tone"):
                 overall_tone = result.run.overall_tone
             if hasattr(result.run, "turning_points") and result.run.turning_points:
@@ -391,270 +289,24 @@ class DailyPredictionService:
         if duration_ms > 25000:
             logger.warning(
                 "prediction.slow_run",
-                extra={
-                    "user_id": user_id,
-                    "duration_ms": duration_ms,
-                },
+                extra={"user_id": user_id, "duration_ms": duration_ms},
             )
 
-    def _resolve_profile(self, db: Session, user_id: int) -> UserBirthProfileModel:
-        profile = UserBirthProfileRepository(db).get_by_user_id(user_id)
-        if profile is None:
-            raise DailyPredictionServiceError("profile_missing", "Profil de naissance introuvable")
-        return profile
-
-    def _resolve_timezone(self, profile: UserBirthProfileModel, override: str | None) -> str:
-        tz_str = override or profile.current_timezone or profile.birth_timezone
-        if not tz_str:
-            raise DailyPredictionServiceError("timezone_missing", "Timezone introuvable")
-        try:
-            ZoneInfo(tz_str)
-        except (ZoneInfoNotFoundError, KeyError):
-            raise DailyPredictionServiceError("timezone_invalid", f"Timezone invalide : '{tz_str}'")
-        return tz_str
-
-    def _resolve_location(
+    def _log_failure(
         self,
-        db: Session,
-        profile: UserBirthProfileModel,
-        override: tuple[float, float] | None,
-    ) -> tuple[float, float]:
-        if override:
-            return override
-        if profile.current_lat is not None and profile.current_lon is not None:
-            return profile.current_lat, profile.current_lon
-
-        resolved = UserBirthProfileService.resolve_coordinates(db, profile)
-        if resolved.birth_lat is None or resolved.birth_lon is None:
-            raise DailyPredictionServiceError("location_missing", "Localisation introuvable")
-        return resolved.birth_lat, resolved.birth_lon
-
-    def _resolve_date(self, date_local: date | None, tz_str: str) -> date:
-        if date_local is not None:
-            return date_local
-        return datetime.now(ZoneInfo(tz_str)).date()
-
-    def _resolve_natal_chart(self, db: Session, user_id: int) -> dict[str, Any]:
-        chart = ChartResultRepository(db).get_latest_by_user_id(user_id)
-        if chart is None:
-            raise DailyPredictionServiceError("natal_missing", "Aucun thème natal trouvé")
-        return self._normalize_natal_chart_payload(chart.result_payload)
-
-    def _normalize_natal_chart_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """
-        Accept both legacy natal payloads and modern ChartResult payloads.
-
-        The daily prediction engine still expects `planets` entries keyed by `code`,
-        while stored natal results now expose `planet_positions` keyed by
-        `planet_code`. Normalize the stored shape here to keep the engine contract
-        stable without rewriting historical chart payloads.
-        """
-        normalized = dict(payload)
-        if "planets" in normalized:
-            return normalized
-
-        planet_positions = normalized.get("planet_positions")
-        if not isinstance(planet_positions, list):
-            return normalized
-
-        planets: list[dict[str, Any]] = []
-        for position in planet_positions:
-            if not isinstance(position, dict):
-                continue
-            code = position.get("code") or position.get("planet_code")
-            longitude = position.get("longitude")
-            if code is None or longitude is None:
-                continue
-            planets.append({"code": code, "longitude": longitude})
-
-        if planets:
-            normalized["planets"] = planets
-        return normalized
-
-    def _resolve_reference_version_id(self, db: Session, version: str) -> int:
-        rv_id = db.scalar(
-            select(ReferenceVersionModel.id).where(ReferenceVersionModel.version == version)
-        )
-        if rv_id is None and self._should_auto_seed_reference_version(version):
-            self._auto_seed_reference_version(db, version=version)
-            rv_id = db.scalar(
-                select(ReferenceVersionModel.id).where(ReferenceVersionModel.version == version)
-            )
-        if rv_id is None:
-            raise DailyPredictionServiceError(
-                "version_missing", f"Référence version '{version}' introuvable"
-            )
-        return rv_id
-
-    def _resolve_ruleset_id(
-        self, db: Session, version: str, expected_reference_version_id: int | None = None
-    ) -> int:
-        repo = PredictionRulesetRepository(db)
-        ruleset = repo.get_ruleset(version)
-        if ruleset is None and self._should_auto_seed_prediction_ruleset(version):
-            self._auto_seed_prediction_ruleset(
-                db,
-                ruleset_version=version,
-                expected_reference_version_id=expected_reference_version_id,
-            )
-            ruleset = repo.get_ruleset(version)
-
-        if ruleset is None:
-            raise DailyPredictionServiceError(
-                "ruleset_missing", f"Ruleset version '{version}' introuvable"
-            )
-
-        if (
-            expected_reference_version_id is not None
-            and ruleset.reference_version_id != expected_reference_version_id
-        ):
-            raise DailyPredictionServiceError(
-                "ruleset_inconsistent",
-                f"Le ruleset '{version}' est rattaché à la référence ID "
-                f"{ruleset.reference_version_id}, "
-                f"mais la référence active demandée est ID {expected_reference_version_id}. "
-                "Vérifiez la cohérence de la configuration runtime.",
-            )
-
-        if version == LEGACY_RULESET_VERSION:
-            canonical_ruleset_version = get_active_ruleset_version()
-            logger.warning(
-                "DEPRECATION: Legacy ruleset '%s' is being used. "
-                "Please migrate to canonical version '%s'.",
-                version,
-                canonical_ruleset_version,
-                extra={"ruleset_version": version, "legacy": True},
-            )
-
-        return ruleset.id
-
-    def _should_auto_seed_prediction_ruleset(self, version: str) -> bool:
-        if settings.app_env in {"production", "prod"}:
-            return False
-        return version in {settings.active_ruleset_version, LEGACY_RULESET_VERSION}
-
-    def _should_auto_seed_reference_version(self, version: str) -> bool:
-        if settings.app_env in {"production", "prod"}:
-            return False
-        return version in {settings.active_reference_version, LEGACY_RULESET_VERSION}
-
-    def _auto_seed_reference_version(self, db: Session, *, version: str) -> None:
-        from app.services.reference_data_service import ReferenceDataService
-
-        if version != LEGACY_RULESET_VERSION:
-            ReferenceDataService.seed_reference_version(db, LEGACY_RULESET_VERSION)
-        ReferenceDataService.seed_reference_version(db, version)
-
-    def _auto_seed_prediction_ruleset(
-        self,
-        db: Session,
-        *,
+        user_id: int,
+        start_time: float,
+        error_str: str,
         ruleset_version: str,
-        expected_reference_version_id: int | None,
     ) -> None:
-        from scripts.seed_31_prediction_reference_v2 import SeedAbortError, run_seed
-
-        try:
-            run_seed(db)
-            db.commit()
-            return
-        except SeedAbortError as exc:
-            db.rollback()
-            if not self._repair_locked_incomplete_reference_version(
-                db,
-                expected_reference_version_id=expected_reference_version_id,
-                error_text=str(exc),
-            ):
-                raise DailyPredictionServiceError(
-                    "ruleset_seed_failed",
-                    f"Seed automatique impossible pour le ruleset '{ruleset_version}': {exc}",
-                ) from exc
-
-        try:
-            run_seed(db)
-            db.commit()
-        except SeedAbortError as exc:
-            db.rollback()
-            raise DailyPredictionServiceError(
-                "ruleset_seed_failed",
-                f"Seed automatique impossible pour le ruleset '{ruleset_version}': {exc}",
-            ) from exc
-
-    def _should_repair_prediction_context(
-        self,
-        *,
-        error: Exception,
-        ruleset_version: str,
-        reference_version: str,
-    ) -> bool:
-        if settings.app_env in {"production", "prod"}:
-            return False
-        if ruleset_version not in {settings.active_ruleset_version, LEGACY_RULESET_VERSION}:
-            return False
-        if reference_version not in {settings.active_reference_version, LEGACY_RULESET_VERSION}:
-            return False
-
-        error_text = str(error)
-        if isinstance(error, PredictionContextError):
-            return (
-                "Prediction context has no planet profiles" in error_text
-                or "Prediction context has no house profiles" in error_text
-                or "Prediction context has no enabled categories" in error_text
-            )
-        return False
-
-    def _auto_seed_prediction_context(
-        self,
-        db: Session,
-        *,
-        reference_version: str,
-        ruleset_version: str,
-        expected_reference_version_id: int | None,
-    ) -> bool:
-        logger.warning(
-            "prediction.context_autoseed_repair",
+        duration_ms = int((time.perf_counter() - start_time) * 1000)
+        logger.info(
+            "prediction.run",
             extra={
-                "reference_version": reference_version,
+                "user_id": user_id,
+                "duration_ms": duration_ms,
+                "was_reused": False,
+                "error": error_str,
                 "ruleset_version": ruleset_version,
             },
         )
-        self._auto_seed_reference_version(db, version=reference_version)
-        self._auto_seed_prediction_ruleset(
-            db,
-            ruleset_version=ruleset_version,
-            expected_reference_version_id=expected_reference_version_id,
-        )
-        return True
-
-    def _repair_locked_incomplete_reference_version(
-        self,
-        db: Session,
-        *,
-        expected_reference_version_id: int | None,
-        error_text: str,
-    ) -> bool:
-        if "LOCKED but is incomplete" not in error_text:
-            return False
-
-        version_model = None
-        if expected_reference_version_id is not None:
-            version_model = db.get(ReferenceVersionModel, expected_reference_version_id)
-        if version_model is None:
-            version_model = db.scalar(
-                select(ReferenceVersionModel).where(
-                    ReferenceVersionModel.version == settings.active_reference_version
-                )
-            )
-        if version_model is None or not version_model.is_locked:
-            return False
-
-        logger.warning(
-            "prediction.ruleset_autoseed_repair",
-            extra={
-                "reference_version": version_model.version,
-                "reference_version_id": version_model.id,
-            },
-        )
-        version_model.is_locked = False
-        db.commit()
-        return True

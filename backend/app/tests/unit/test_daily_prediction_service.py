@@ -14,10 +14,12 @@ from app.prediction.exceptions import PredictionContextError
 from app.prediction.input_hash import compute_engine_input_hash
 from app.prediction.schemas import EngineOutput
 from app.services.daily_prediction_service import (
-    ComputeMode,
     DailyPredictionService,
-    DailyPredictionServiceError,
     ServiceResult,
+)
+from app.services.daily_prediction_types import (
+    ComputeMode,
+    DailyPredictionServiceError,
 )
 
 
@@ -56,10 +58,10 @@ def mock_profile():
 
 
 def test_user_without_natal(service, db):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo:
+    res_path = "app.services.prediction_request_resolver"
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo:
 
         mock_prof = MagicMock(spec=UserBirthProfileModel)
         mock_prof.current_timezone = "Europe/Paris"
@@ -83,8 +85,8 @@ def test_user_without_natal(service, db):
 
 
 def test_user_missing_profile(service, db):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo:
+    res_path = "app.services.prediction_request_resolver"
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo:
         mock_profile_repo.return_value.get_by_user_id.return_value = None
 
         with pytest.raises(DailyPredictionServiceError) as excinfo:
@@ -99,8 +101,8 @@ def test_timezone_missing_raises(service, db, mock_profile):
     mock_profile.current_timezone = None
     mock_profile.birth_timezone = None
     
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo:
+    res_path = "app.services.prediction_request_resolver"
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo:
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
 
         with pytest.raises(DailyPredictionServiceError) as excinfo:
@@ -115,8 +117,8 @@ def test_timezone_invalid_raises(service, db, mock_profile):
     mock_profile.current_timezone = "Not/AValidZone"
     mock_profile.birth_timezone = None
 
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo:
+    res_path = "app.services.prediction_request_resolver"
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo:
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
 
         with pytest.raises(DailyPredictionServiceError) as excinfo:
@@ -131,9 +133,9 @@ def test_location_missing_raises(service, db, mock_profile):
     mock_profile.current_lat = None
     mock_profile.current_lon = None
 
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.UserBirthProfileService.resolve_coordinates") as mock_resolve:
+    res_path = "app.services.prediction_request_resolver"
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.UserBirthProfileService.resolve_coordinates") as mock_resolve:
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
         mock_resolve.return_value = MagicMock(birth_lat=None, birth_lon=None)
 
@@ -149,13 +151,16 @@ def test_birth_coordinates_fallback_when_current_location_missing(service, db, m
     mock_profile.current_lat = None
     mock_profile.current_lon = None
 
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.UserBirthProfileService.resolve_coordinates") as mock_resolve, \
-         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
-         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
-         patch(f"{svc_path}.EngineOrchestrator") as mock_orchestrator:
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+    comp_path = "app.services.prediction_compute_runner"
+    
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.UserBirthProfileService.resolve_coordinates") as mock_resolve, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{comp_path}.EngineOrchestrator") as mock_orchestrator:
 
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
         mock_resolve.return_value = MagicMock(birth_lat=48.8566, birth_lon=2.3522)
@@ -180,20 +185,24 @@ def test_birth_coordinates_fallback_when_current_location_missing(service, db, m
 
 
 def test_ruleset_auto_seed_in_local_dev(service, db):
-    svc_path = "app.services.daily_prediction_service"
+    res_path = "app.services.prediction_request_resolver"
     ruleset_repo = MagicMock()
     ruleset_repo.get_ruleset.side_effect = [
         None,
         MagicMock(id=20, reference_version_id=10, version="2.0.0"),
     ]
 
-    with patch(f"{svc_path}.PredictionRulesetRepository", return_value=ruleset_repo), \
-         patch(f"{svc_path}.settings") as mock_settings, \
+    with patch(f"{res_path}.PredictionRulesetRepository", return_value=ruleset_repo), \
+         patch(f"{res_path}.settings") as mock_settings, \
          patch("scripts.seed_31_prediction_reference_v2.run_seed") as mock_run_seed:
         mock_settings.app_env = "development"
         mock_settings.active_ruleset_version = "2.0.0"
 
-        ruleset_id = service._resolve_ruleset_id(db, "2.0.0", expected_reference_version_id=10)
+        ruleset_id = service.resolver._resolve_ruleset_id(
+            db,
+            "2.0.0",
+            expected_reference_version_id=10,
+        )
 
         assert ruleset_id == 20
         mock_run_seed.assert_called_once_with(db)
@@ -201,42 +210,37 @@ def test_ruleset_auto_seed_in_local_dev(service, db):
 
 
 def test_reference_version_auto_seed_in_local_dev(service, db):
-    svc_path = "app.services.daily_prediction_service"
-
-    with patch(f"{svc_path}.settings") as mock_settings, \
-         patch(
-             "app.services.reference_data_service.ReferenceDataService.seed_reference_version"
-         ) as mock_seed_reference:
-        mock_settings.app_env = "development"
-        mock_settings.active_reference_version = "2.0.0"
+    with patch.object(service.resolver, "_should_auto_seed_reference_version", return_value=True), \
+         patch.object(service.resolver, "_auto_seed_reference_version") as mock_seed_reference:
+        
+        # 1. Resolver check before seed (None)
+        # 2. Final check after seed (10)
         db.scalar.side_effect = [None, 10]
 
-        reference_version_id = service._resolve_reference_version_id(db, "2.0.0")
+        reference_version_id = service.resolver._resolve_reference_version_id(db, "2.0.0")
 
         assert reference_version_id == 10
-        mock_seed_reference.assert_any_call(db, "1.0.0")
-        mock_seed_reference.assert_any_call(db, "2.0.0")
-        assert mock_seed_reference.call_count == 2
+        mock_seed_reference.assert_called_once_with(db, version="2.0.0")
 
 
 def test_ruleset_missing_without_auto_seed_raises(service, db):
-    svc_path = "app.services.daily_prediction_service"
+    res_path = "app.services.prediction_request_resolver"
     ruleset_repo = MagicMock()
     ruleset_repo.get_ruleset.return_value = None
 
-    with patch(f"{svc_path}.PredictionRulesetRepository", return_value=ruleset_repo), \
-         patch(f"{svc_path}.settings") as mock_settings:
+    with patch(f"{res_path}.PredictionRulesetRepository", return_value=ruleset_repo), \
+         patch(f"{res_path}.settings") as mock_settings:
         mock_settings.app_env = "production"
         mock_settings.active_ruleset_version = "2.0.0"
 
         with pytest.raises(DailyPredictionServiceError) as excinfo:
-            service._resolve_ruleset_id(db, "2.0.0", expected_reference_version_id=10)
+            service.resolver._resolve_ruleset_id(db, "2.0.0", expected_reference_version_id=10)
 
         assert excinfo.value.code == "ruleset_missing"
 
 
 def test_ruleset_auto_seed_repairs_locked_incomplete_reference(service, db):
-    svc_path = "app.services.daily_prediction_service"
+    res_path = "app.services.prediction_request_resolver"
     ruleset_repo = MagicMock()
     ruleset_repo.get_ruleset.side_effect = [
         None,
@@ -247,8 +251,8 @@ def test_ruleset_auto_seed_repairs_locked_incomplete_reference(service, db):
         "ERROR: 2.0.0 exists and is LOCKED but is incomplete. Manual investigation required."
     )
 
-    with patch(f"{svc_path}.PredictionRulesetRepository", return_value=ruleset_repo), \
-         patch(f"{svc_path}.settings") as mock_settings, \
+    with patch(f"{res_path}.PredictionRulesetRepository", return_value=ruleset_repo), \
+         patch(f"{res_path}.settings") as mock_settings, \
          patch("scripts.seed_31_prediction_reference_v2.run_seed") as mock_run_seed, \
          patch("scripts.seed_31_prediction_reference_v2.SeedAbortError", RuntimeError):
         mock_settings.app_env = "development"
@@ -257,7 +261,11 @@ def test_ruleset_auto_seed_repairs_locked_incomplete_reference(service, db):
         db.get.return_value = locked_version
         mock_run_seed.side_effect = [RuntimeError(seed_error), None]
 
-        ruleset_id = service._resolve_ruleset_id(db, "2.0.0", expected_reference_version_id=10)
+        ruleset_id = service.resolver._resolve_ruleset_id(
+            db,
+            "2.0.0",
+            expected_reference_version_id=10,
+        )
 
         assert ruleset_id == 20
         assert locked_version.is_locked is False
@@ -267,12 +275,12 @@ def test_ruleset_auto_seed_repairs_locked_incomplete_reference(service, db):
 
 
 def test_ruleset_seed_abort_is_wrapped_as_service_error(service, db):
-    svc_path = "app.services.daily_prediction_service"
+    res_path = "app.services.prediction_request_resolver"
     ruleset_repo = MagicMock()
     ruleset_repo.get_ruleset.return_value = None
 
-    with patch(f"{svc_path}.PredictionRulesetRepository", return_value=ruleset_repo), \
-         patch(f"{svc_path}.settings") as mock_settings, \
+    with patch(f"{res_path}.PredictionRulesetRepository", return_value=ruleset_repo), \
+         patch(f"{res_path}.settings") as mock_settings, \
          patch("scripts.seed_31_prediction_reference_v2.run_seed") as mock_run_seed, \
          patch("scripts.seed_31_prediction_reference_v2.SeedAbortError", RuntimeError):
         mock_settings.app_env = "development"
@@ -283,7 +291,7 @@ def test_ruleset_seed_abort_is_wrapped_as_service_error(service, db):
         db.scalar.return_value = None
 
         with pytest.raises(DailyPredictionServiceError) as excinfo:
-            service._resolve_ruleset_id(db, "2.0.0", expected_reference_version_id=10)
+            service.resolver._resolve_ruleset_id(db, "2.0.0", expected_reference_version_id=10)
 
         assert excinfo.value.code == "ruleset_seed_failed"
 
@@ -291,15 +299,18 @@ def test_ruleset_seed_abort_is_wrapped_as_service_error(service, db):
 def test_incomplete_prediction_context_is_auto_repaired_in_local_dev(
     service, db, mock_profile, persistence_service
 ):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
-         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
-         patch(f"{svc_path}.settings") as mock_settings, \
-         patch.object(service, "_compute_with_timeout") as mock_compute, \
-         patch.object(service, "_auto_seed_reference_version") as mock_seed_reference, \
-         patch.object(service, "_auto_seed_prediction_ruleset") as mock_seed_ruleset:
+    from app.services.prediction_compute_runner import ComputeResult
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+    
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{res_path}.settings") as mock_settings, \
+         patch.object(service.compute_runner, "run_with_timeout") as mock_compute, \
+         patch.object(service.resolver, "_auto_seed_reference_version") as mock_seed_reference, \
+         patch.object(service.resolver, "_auto_seed_prediction_ruleset") as mock_seed_ruleset:
 
         mock_settings.app_env = "development"
         mock_settings.active_reference_version = "2.0.0"
@@ -317,7 +328,7 @@ def test_incomplete_prediction_context_is_auto_repaired_in_local_dev(
         mock_output = MagicMock(spec=EngineOutput)
         mock_compute.side_effect = [
             PredictionContextError("Prediction context has no planet profiles"),
-            mock_output,
+            ComputeResult(engine_output=mock_output),
         ]
         mock_run = MagicMock(spec=DailyPredictionRunModel)
         persistence_service.save.return_value = MagicMock(run=mock_run, was_reused=False)
@@ -340,13 +351,11 @@ def test_incomplete_prediction_context_does_not_autorepair_in_production(service
     svc_path = "app.services.daily_prediction_service"
     with patch(f"{svc_path}.settings") as mock_settings:
         mock_settings.app_env = "production"
-        mock_settings.active_reference_version = "2.0.0"
-        mock_settings.active_ruleset_version = "2.0.0"
 
-        should_repair = service._should_repair_prediction_context(
+        should_repair = service._try_repair_context(
+            db=db,
             error=PredictionContextError("Prediction context has no planet profiles"),
-            ruleset_version="2.0.0",
-            reference_version="2.0.0",
+            request=MagicMock(),
         )
 
         assert should_repair is False
@@ -355,12 +364,15 @@ def test_incomplete_prediction_context_does_not_autorepair_in_production(service
 def test_user_with_natal_full_compute(
     service, db, mock_profile, context_loader, persistence_service
 ):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
-         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
-         patch(f"{svc_path}.EngineOrchestrator") as mock_orchestrator:
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+    comp_path = "app.services.prediction_compute_runner"
+    
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{comp_path}.EngineOrchestrator") as mock_orchestrator:
         
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
         
@@ -400,12 +412,15 @@ def test_user_with_natal_full_compute(
 def test_modern_natal_payload_is_normalized_for_engine(
     service, db, mock_profile, context_loader, persistence_service
 ):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
-         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
-         patch(f"{svc_path}.EngineOrchestrator") as mock_orchestrator:
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+    comp_path = "app.services.prediction_compute_runner"
+    
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{comp_path}.EngineOrchestrator") as mock_orchestrator:
 
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
         mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
@@ -448,12 +463,15 @@ def test_modern_natal_payload_is_normalized_for_engine(
 def test_identical_hash_not_recomputed(
     service, db, mock_profile, context_loader, persistence_service
 ):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
-         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
-         patch(f"{svc_path}.EngineOrchestrator") as mock_orchestrator:
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+    comp_path = "app.services.prediction_compute_runner"
+    
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{comp_path}.EngineOrchestrator") as mock_orchestrator:
         
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
         mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
@@ -488,11 +506,13 @@ def test_identical_hash_not_recomputed(
 def test_compute_if_missing_uses_shared_engine_input_hash(
     service, db, mock_profile, context_loader, persistence_service
 ):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
-         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo:
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+    
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo:
         natal_payload = {
             "planets": [{"code": "sun", "longitude": 34.08}],
             "houses": [{"number": 1, "cusp_longitude": 12.5}],
@@ -532,12 +552,17 @@ def test_compute_if_missing_uses_shared_engine_input_hash(
 def test_stale_cached_run_without_overall_summary_is_recomputed(
     service, db, mock_profile, context_loader, persistence_service
 ):
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+    comp_path = "app.services.prediction_compute_runner"
     svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
-         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
-         patch(f"{svc_path}.EngineOrchestrator") as mock_orchestrator:
+    
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{comp_path}.EngineOrchestrator") as mock_orchestrator, \
+         patch(f"{svc_path}.DailyPredictionRepository"):
 
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
         mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
@@ -569,12 +594,15 @@ def test_stale_cached_run_without_overall_summary_is_recomputed(
 def test_stale_cached_run_with_missing_block_summaries_is_recomputed(
     service, db, mock_profile, context_loader, persistence_service
 ):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
-         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
-         patch(f"{svc_path}.EngineOrchestrator") as mock_orchestrator:
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+    comp_path = "app.services.prediction_compute_runner"
+    
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{comp_path}.EngineOrchestrator") as mock_orchestrator:
 
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
         mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
@@ -609,12 +637,15 @@ def test_stale_cached_run_with_missing_block_summaries_is_recomputed(
 def test_stale_cached_run_with_technical_tp_summary_is_recomputed(
     service, db, mock_profile, context_loader, persistence_service
 ):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
-         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
-         patch(f"{svc_path}.EngineOrchestrator") as mock_orchestrator:
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+    comp_path = "app.services.prediction_compute_runner"
+    
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{comp_path}.EngineOrchestrator") as mock_orchestrator:
 
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
         mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
@@ -647,12 +678,15 @@ def test_stale_cached_run_with_technical_tp_summary_is_recomputed(
 
 
 def test_force_recompute(service, db, mock_profile, context_loader, persistence_service):
+    res_path = "app.services.prediction_request_resolver"
     svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
+    comp_path = "app.services.prediction_compute_runner"
+    
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo, \
          patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
-         patch(f"{svc_path}.EngineOrchestrator") as mock_orchestrator:
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{comp_path}.EngineOrchestrator") as mock_orchestrator:
 
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
         mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
@@ -687,12 +721,18 @@ def test_force_recompute(service, db, mock_profile, context_loader, persistence_
 
 
 def test_read_only_existing(service, db, mock_profile):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo:
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+    
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo:
         
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
+        mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
+            result_payload={}
+        )
         
         mock_existing_run = MagicMock(spec=DailyPredictionRunModel)
         mock_daily_repo.return_value.get_run.return_value = mock_existing_run
@@ -715,8 +755,8 @@ def test_read_only_existing(service, db, mock_profile):
 
 
 def test_version_missing_raises(service, db, mock_profile):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo:
+    res_path = "app.services.prediction_request_resolver"
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo:
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
         # db.scalar returns None → reference version introuvable
         db.scalar.return_value = None
@@ -730,9 +770,9 @@ def test_version_missing_raises(service, db, mock_profile):
 
 
 def test_ruleset_missing_raises(service, db, mock_profile):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo:
+    res_path = "app.services.prediction_request_resolver"
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo:
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
         db.scalar.return_value = 10  # reference_version_id OK
         mock_ruleset_repo.return_value.get_ruleset.return_value = None  # ruleset introuvable
@@ -747,9 +787,9 @@ def test_ruleset_missing_raises(service, db, mock_profile):
 
 
 def test_ruleset_inconsistent_raises(service, db, mock_profile):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo:
+    res_path = "app.services.prediction_request_resolver"
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo:
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
         db.scalar.return_value = 10  # reference_version_id = 10
         
@@ -769,10 +809,12 @@ def test_ruleset_inconsistent_raises(service, db, mock_profile):
 
 
 def test_ruleset_legacy_logs_deprecation(service, db, mock_profile, caplog):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
-         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo:
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+    
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo:
         
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
         mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
@@ -786,7 +828,7 @@ def test_ruleset_legacy_logs_deprecation(service, db, mock_profile, caplog):
 
         with caplog.at_level(logging.WARNING):
             # Use compute_if_missing and return existing run to avoid further complexity
-            with patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo:
+            with patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo:
                 mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = MagicMock()
                 service.get_or_compute(
                     user_id=1,
@@ -799,11 +841,13 @@ def test_ruleset_legacy_logs_deprecation(service, db, mock_profile, caplog):
 
 
 def test_prediction_run_log_includes_ruleset_version(service, db, mock_profile, caplog):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
-         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo:
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+    
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo:
 
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
         mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
@@ -833,12 +877,19 @@ def test_prediction_run_log_includes_ruleset_version(service, db, mock_profile, 
 
 
 def test_read_only_missing(service, db, mock_profile):
-    svc_path = "app.services.daily_prediction_service"
-    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
-         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
-         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo:
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+    
+    with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo:
         
         mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
+        mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
+            result_payload={}
+        )
+        
         mock_daily_repo.return_value.get_run.return_value = None
         
         # Versions resolution

@@ -1,11 +1,13 @@
 # backend/app/tests/unit/test_daily_prediction_metrics.py
 import logging
-from datetime import date
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from app.services.daily_prediction_service import DailyPredictionService
+from app.services.prediction_compute_runner import ComputeResult
+from app.services.prediction_run_reuse_policy import ReuseDecision
 
 
 @pytest.fixture
@@ -26,68 +28,67 @@ def service(mock_deps):
 
 @patch("app.services.daily_prediction_service.increment_counter")
 def test_compute_counter_incremented(mock_increment, service, mock_deps, db_session):
-    # Setup mocks to avoid real DB/Engine work
-    service._resolve_profile = MagicMock()
-    service._resolve_timezone = MagicMock(return_value="UTC")
-    service._resolve_location = MagicMock(return_value=(0, 0))
-    service._resolve_date = MagicMock(return_value=date(2024, 1, 1))
-    service._resolve_reference_version_id = MagicMock(return_value=1)
-    service._resolve_ruleset_id = MagicMock(return_value=1)
-    service._resolve_natal_chart = MagicMock(return_value={})
+    resolved_request = SimpleNamespace(
+        user_id=1,
+        engine_input=SimpleNamespace(ruleset_version="2.0.0"),
+        resolved_date=None,
+        reference_version_id=1,
+        ruleset_id=1,
+        ruleset_version="2.0.0",
+    )
+    service.resolver.resolve = MagicMock(return_value=resolved_request)
+    service.reuse_policy.decide = MagicMock(return_value=ReuseDecision(should_compute=True))
+    service.compute_runner.run_with_timeout = MagicMock(
+        return_value=ComputeResult(engine_output=MagicMock(run_metadata={}, turning_points=[]))
+    )
     mock_deps["persistence_service"].save.return_value = MagicMock(run=MagicMock())
 
-    with patch(
-        "app.services.daily_prediction_service.compute_engine_input_hash",
-        return_value="hash",
-    ):
-        service.get_or_compute(user_id=1, db=db_session)
+    service.get_or_compute(user_id=1, db=db_session)
     
     # Verify increment_counter("prediction.compute") called
     mock_increment.assert_any_call("prediction.compute")
 
 @patch("app.services.daily_prediction_service.increment_counter")
 def test_reused_counter_incremented(mock_increment, service, db_session):
-    # Mock compute_if_missing logic to return existing run
-    service._resolve_profile = MagicMock()
-    service._resolve_timezone = MagicMock(return_value="UTC")
-    service._resolve_location = MagicMock(return_value=(0, 0))
-    service._resolve_date = MagicMock(return_value=date(2024, 1, 1))
-    service._resolve_reference_version_id = MagicMock(return_value=1)
-    service._resolve_ruleset_id = MagicMock(return_value=1)
-    service._resolve_natal_chart = MagicMock(return_value={})
-    # Mock repository to find existing run
-    with patch("app.services.daily_prediction_service.DailyPredictionRepository") as MockRepo:
-        MockRepo.return_value.get_run_by_hash_with_details.return_value = MagicMock()
-        with patch(
-            "app.services.daily_prediction_service.compute_engine_input_hash",
-            return_value="hash",
-        ):
-            service.get_or_compute(user_id=1, db=db_session)
+    resolved_request = SimpleNamespace(
+        user_id=1,
+        engine_input=SimpleNamespace(ruleset_version="2.0.0"),
+        resolved_date=None,
+        reference_version_id=1,
+        ruleset_id=1,
+        ruleset_version="2.0.0",
+    )
+    service.resolver.resolve = MagicMock(return_value=resolved_request)
+    service.reuse_policy.decide = MagicMock(
+        return_value=ReuseDecision(should_compute=False, existing_run=MagicMock())
+    )
+
+    service.get_or_compute(user_id=1, db=db_session)
 
     mock_increment.assert_any_call("prediction.compute")
     mock_increment.assert_any_call("prediction.reused")
 
 def test_log_includes_tone_and_pivot_count(caplog, service, mock_deps, db_session):
-    service._resolve_profile = MagicMock()
-    service._resolve_timezone = MagicMock(return_value="UTC")
-    service._resolve_location = MagicMock(return_value=(0, 0))
-    service._resolve_date = MagicMock(return_value=date(2024, 1, 1))
-    service._resolve_reference_version_id = MagicMock(return_value=1)
-    service._resolve_ruleset_id = MagicMock(return_value=1)
-    service._resolve_natal_chart = MagicMock(return_value={})
+    resolved_request = SimpleNamespace(
+        user_id=1,
+        engine_input=SimpleNamespace(ruleset_version="2.0.0"),
+        resolved_date=None,
+        reference_version_id=1,
+        ruleset_id=1,
+        ruleset_version="2.0.0",
+    )
+    service.resolver.resolve = MagicMock(return_value=resolved_request)
+    service.reuse_policy.decide = MagicMock(return_value=ReuseDecision(should_compute=True))
     engine_output = MagicMock()
     engine_output.run_metadata = {"overall_tone": "positive"}
     engine_output.turning_points = [1, 2] # 2 pivots
-    
-    mock_deps["orchestrator"].with_context_loader.return_value.run.return_value = engine_output
+    service.compute_runner.run_with_timeout = MagicMock(
+        return_value=ComputeResult(engine_output=engine_output)
+    )
     mock_deps["persistence_service"].save.return_value = MagicMock(run=MagicMock())
-    
-    with patch(
-        "app.services.daily_prediction_service.compute_engine_input_hash",
-        return_value="hash",
-    ):
-        with caplog.at_level(logging.INFO):
-            service.get_or_compute(user_id=1, db=db_session)
+
+    with caplog.at_level(logging.INFO):
+        service.get_or_compute(user_id=1, db=db_session)
     
     record = next(r for r in caplog.records if "prediction.run" in r.message)
     assert record.user_id == 1

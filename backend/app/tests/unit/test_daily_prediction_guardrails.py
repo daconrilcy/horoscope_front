@@ -1,5 +1,6 @@
 from datetime import date
-from unittest.mock import MagicMock, patch
+from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -12,6 +13,8 @@ from app.services.daily_prediction_service import (
     DailyPredictionService,
     DailyPredictionServiceError,
 )
+from app.services.prediction_compute_runner import ComputeResult
+from app.services.prediction_run_reuse_policy import ReuseDecision
 
 
 @pytest.fixture
@@ -33,28 +36,31 @@ def service(mock_deps):
 
 
 def test_fallback_on_engine_error(service, mock_deps, db_session):
-    # Setup mocks to trigger an exception during _compute_with_timeout
-    service._resolve_profile = MagicMock()
-    service._resolve_timezone = MagicMock(return_value="UTC")
-    service._resolve_location = MagicMock(return_value=(0, 0))
-    service._resolve_date = MagicMock(return_value=date(2024, 1, 1))
-    service._resolve_reference_version_id = MagicMock(return_value=1)
-    service._resolve_ruleset_id = MagicMock(return_value=1)
-    service._resolve_natal_chart = MagicMock(return_value={})
-    # Force error in engine
-    service._compute_with_timeout = MagicMock(side_effect=Exception("Engine boom"))
+    resolved_request = SimpleNamespace(
+        user_id=1,
+        engine_input=SimpleNamespace(
+            reference_version="2.0.0",
+            ruleset_version="2.0.0",
+        ),
+        resolved_date=date(2024, 1, 1),
+        reference_version_id=1,
+        ruleset_id=1,
+        ruleset_version="2.0.0",
+        reference_version="2.0.0",
+    )
+    service.resolver.resolve = MagicMock(return_value=resolved_request)
+    service.reuse_policy.decide = MagicMock(return_value=ReuseDecision(should_compute=True))
+    service.compute_runner.run_with_timeout = MagicMock(side_effect=Exception("Engine boom"))
 
     # Mock fallback to return a run
     fallback_run = MagicMock(spec=DailyPredictionRunModel)
     fallback_run.id = 123
     fallback_run.local_date = date(2023, 12, 31)
-    service._try_read_latest_available = MagicMock(return_value=fallback_run)
+    service.fallback_policy.try_fallback = MagicMock(
+        return_value=SimpleNamespace(success=True, fallback_run=fallback_run)
+    )
 
-    with patch(
-        "app.services.daily_prediction_service.compute_engine_input_hash",
-        return_value="hash",
-    ):
-        result = service.get_or_compute(user_id=1, db=db_session)
+    result = service.get_or_compute(user_id=1, db=db_session)
 
     assert result.was_reused is True
     assert result.run.id == 123
@@ -62,30 +68,35 @@ def test_fallback_on_engine_error(service, mock_deps, db_session):
 
 
 def test_timeout_raises_on_slow_run(service, mock_deps, db_session):
-    service._resolve_profile = MagicMock()
-    service._resolve_timezone = MagicMock(return_value="UTC")
-    service._resolve_location = MagicMock(return_value=(0, 0))
-    service._resolve_date = MagicMock(return_value=date(2024, 1, 1))
-    service._resolve_reference_version_id = MagicMock(return_value=1)
-    service._resolve_ruleset_id = MagicMock(return_value=1)
-    service._resolve_natal_chart = MagicMock(return_value={})
+    resolved_request = SimpleNamespace(
+        user_id=1,
+        engine_input=SimpleNamespace(
+            reference_version="2.0.0",
+            ruleset_version="2.0.0",
+        ),
+        resolved_date=date(2024, 1, 1),
+        reference_version_id=1,
+        ruleset_id=1,
+        ruleset_version="2.0.0",
+        reference_version="2.0.0",
+    )
+    service.resolver.resolve = MagicMock(return_value=resolved_request)
+    service.reuse_policy.decide = MagicMock(return_value=ReuseDecision(should_compute=True))
     # Mock _compute_with_timeout directly — avoids patching the stdlib Future class,
     # which is fragile and could affect concurrent code in other tests.
-    service._compute_with_timeout = MagicMock(
+    service.compute_runner.run_with_timeout = MagicMock(
         side_effect=DailyPredictionServiceError(
             "timeout",
             "Calcul trop long - service temporairement degrade",
         )
     )
     # No fallback available so the timeout error propagates
-    service._try_read_latest_available = MagicMock(return_value=None)
+    service.fallback_policy.try_fallback = MagicMock(
+        return_value=SimpleNamespace(success=False, fallback_run=None)
+    )
 
-    with patch(
-        "app.services.daily_prediction_service.compute_engine_input_hash",
-        return_value="hash",
-    ):
-        with pytest.raises(DailyPredictionServiceError) as excinfo:
-            service.get_or_compute(user_id=1, db=db_session)
+    with pytest.raises(DailyPredictionServiceError) as excinfo:
+        service.get_or_compute(user_id=1, db=db_session)
 
     assert excinfo.value.code == "timeout"
 
@@ -140,27 +151,28 @@ def test_latest_run_fallback_found(service, db_session):
 def test_log_includes_duration(caplog, service, mock_deps, db_session):
     import logging
 
-    service._resolve_profile = MagicMock()
-    service._resolve_timezone = MagicMock(return_value="UTC")
-    service._resolve_location = MagicMock(return_value=(0, 0))
-    service._resolve_date = MagicMock(return_value=date(2024, 1, 1))
-    service._resolve_reference_version_id = MagicMock(return_value=1)
-    service._resolve_ruleset_id = MagicMock(return_value=1)
-    service._resolve_natal_chart = MagicMock(return_value={})
-    service._compute_with_timeout = MagicMock(
-        return_value=MagicMock(
-            turning_points=[],
-            run_metadata={"overall_tone": "neutral"},
+    resolved_request = SimpleNamespace(
+        user_id=1,
+        engine_input=SimpleNamespace(ruleset_version="2.0.0"),
+        resolved_date=date(2024, 1, 1),
+        reference_version_id=1,
+        ruleset_id=1,
+        ruleset_version="2.0.0",
+    )
+    service.resolver.resolve = MagicMock(return_value=resolved_request)
+    service.reuse_policy.decide = MagicMock(return_value=ReuseDecision(should_compute=True))
+    service.compute_runner.run_with_timeout = MagicMock(
+        return_value=ComputeResult(
+            engine_output=MagicMock(
+                turning_points=[],
+                run_metadata={"overall_tone": "neutral"},
+            )
         )
     )
     mock_deps["persistence_service"].save.return_value = MagicMock(run=MagicMock())
 
-    with patch(
-        "app.services.daily_prediction_service.compute_engine_input_hash",
-        return_value="hash",
-    ):
-        with caplog.at_level(logging.INFO):
-            service.get_or_compute(user_id=1, db=db_session)
+    with caplog.at_level(logging.INFO):
+        service.get_or_compute(user_id=1, db=db_session)
 
     record = next(r for r in caplog.records if "prediction.run" in r.message)
     assert hasattr(record, "duration_ms")
