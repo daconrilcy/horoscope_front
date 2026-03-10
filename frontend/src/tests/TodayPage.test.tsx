@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -346,11 +346,12 @@ describe("TodayPage", () => {
     });
 
     expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument();
-    expect(screen.getAllByText("08:00 - 09:30").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("11:15").length).toBeGreaterThan(0);
-    expect(screen.getByText("Moments charnières")).toBeInTheDocument();
+    expect(screen.getByText("11:00 – 11:30")).toBeInTheDocument();
+    expect(screen.getByText("Moments clés du jour")).toBeInTheDocument();
+    expect(screen.getByText("Agenda du jour")).toBeInTheDocument();
     expect(screen.getByText("Changement")).toBeInTheDocument();
-    expect(screen.getByText("Carrière")).toBeInTheDocument();
+    expect(screen.getByText("Impacts :")).toBeInTheDocument();
+    expect(screen.getAllByText("Carrière").length).toBeGreaterThan(0);
     expect(screen.getByText("13.6")).toBeInTheDocument();
     expect(screen.getByText("7.2")).toBeInTheDocument();
     expect(screen.getByText("Chat astrologue")).toBeInTheDocument();
@@ -449,7 +450,7 @@ describe("TodayPage", () => {
     });
 
     expect(screen.getByText("Best window")).toBeInTheDocument();
-    expect(screen.getByText("Key shifts")).toBeInTheDocument();
+    expect(screen.getByText("Key moments today")).toBeInTheDocument();
     expect(screen.getByText("Dominant : Career")).toBeInTheDocument();
   });
 
@@ -472,7 +473,7 @@ describe("TodayPage", () => {
     expect(screen.queryByText("Énergie & Vitalité : Votre score est de 10/20 (climat neutre).")).not.toBeInTheDocument();
   });
 
-  it("affiche les fenetres decisionnelles avec labels humanises quand elles sont presentes", async () => {
+  it("affiche l'agenda du jour et les moments clés quand ils sont présents", async () => {
     installFetchMock({
       prediction: jsonResponse(predictionWithDecisionWindows),
     });
@@ -483,13 +484,38 @@ describe("TodayPage", () => {
       expect(screen.getByText(/Journée avec des créneaux décisionnels bien définis/i)).toBeInTheDocument();
     });
 
+    expect(screen.getByText("Agenda du jour")).toBeInTheDocument();
     expect(screen.getByText("Moments clés du jour")).toBeInTheDocument();
-    expect(screen.getByText("Fenêtre favorable")).toBeInTheDocument();
-    expect(screen.getByText("Prudence")).toBeInTheDocument();
-    expect(screen.getByText("Transition à surveiller")).toBeInTheDocument();
-    expect(screen.getByText("Bon créneau pour lancer une action ou prendre une décision.")).toBeInTheDocument();
-    expect(screen.getByText("Gardez une marge de manœuvre, évitez les engagements irréversibles.")).toBeInTheDocument();
-    expect(screen.getByText("Le rythme change sur ce créneau : observez avant d'agir.")).toBeInTheDocument();
+    expect(screen.getAllByTestId("agenda-slot")).toHaveLength(12);
+    expect(screen.getAllByTestId("agenda-slot-pivot")).toHaveLength(1);
+
+    const morningSlot = screen
+      .getAllByTestId("agenda-slot")
+      .find((element) => element.getAttribute("data-slot-label") === "08:00");
+    expect(morningSlot).toBeDefined();
+    expect(within(morningSlot!).getByText("Amour & Relations")).toBeInTheDocument();
+
+    const pivotSlot = screen
+      .getAllByTestId("agenda-slot")
+      .find((element) => element.getAttribute("data-slot-label") === "14:00");
+    expect(pivotSlot).toBeDefined();
+    expect(within(pivotSlot!).getByTestId("agenda-slot-pivot")).toBeInTheDocument();
+
+    expect(screen.getByText("Un événement astrologique marqué mérite votre attention.")).toBeInTheDocument();
+  });
+
+  it("localise le libellé d'impacts en anglais", async () => {
+    localStorage.setItem("lang", "en");
+    installFetchMock();
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Impacts:")).toBeInTheDocument();
+    expect(screen.queryByText("Impacts :")).not.toBeInTheDocument();
   });
 
   it("humanise les nouveaux event_type V2 du backend sans exposer de code technique", async () => {

@@ -8,7 +8,7 @@ import { DayPredictionCard } from '../components/prediction/DayPredictionCard'
 import { CategoryGrid } from '../components/prediction/CategoryGrid'
 import { DayTimeline } from '../components/prediction/DayTimeline'
 import { TurningPointsList } from '../components/prediction/TurningPointsList'
-import { DecisionWindowsSection } from '../components/prediction/DecisionWindowsSection'
+import { DayAgenda } from '../components/prediction/DayAgenda'
 
 import { detectLang } from '../i18n/astrology'
 import { getPredictionMessage } from '../utils/predictionI18n'
@@ -108,20 +108,24 @@ export function TodayPage() {
 
           <DayPredictionCard prediction={prediction} lang={lang} />
 
-          {prediction.decision_windows && prediction.decision_windows.length > 0 && (
-            <DecisionWindowsSection windows={prediction.decision_windows} lang={lang} />
-          )}
+          <TurningPointsList
+            turningPoints={prediction.turning_points}
+            timeline={prediction.timeline}
+            lang={lang}
+            onTurningPointClick={handleTurningPointClick}
+          />
+
+          <DayAgenda
+            timeline={prediction.timeline}
+            turningPoints={prediction.turning_points}
+            dateContext={prediction.meta.date_local}
+            lang={lang}
+          />
 
           <CategoryGrid
             categories={prediction.categories}
             lang={lang}
             onCategoryClick={handleCategoryClick}
-          />
-
-          <TurningPointsList
-            turningPoints={prediction.turning_points}
-            lang={lang}
-            onTurningPointClick={handleTurningPointClick}
           />
 
           <details className="group mb-8">

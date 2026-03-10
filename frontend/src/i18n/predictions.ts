@@ -68,6 +68,7 @@ export const PREDICTION_UI_MESSAGES: Record<
   | "timeline"
   | "pivot_badge"
   | "turning_points"
+  | "impacts_label"
   | "intensity"
   | "pending_summary",
   Record<Lang, string>
@@ -81,7 +82,8 @@ export const PREDICTION_UI_MESSAGES: Record<
   dominant: { fr: "Dominante", en: "Dominant" },
   timeline: { fr: "Chronologie du jour", en: "Today's timeline" },
   pivot_badge: { fr: "Changement", en: "Shift" },
-  turning_points: { fr: "Moments charnières", en: "Key shifts" },
+  turning_points: { fr: "Moments clés du jour", en: "Key moments today" },
+  impacts_label: { fr: "Impacts :", en: "Impacts:" },
   intensity: { fr: "Intensité", en: "Intensity" },
   pending_summary: { fr: "Calcul de votre tendance en cours...", en: "Calculating your daily trend..." },
 };

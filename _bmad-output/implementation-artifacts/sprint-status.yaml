@@ -351,3 +351,4 @@ development_status:
   41-3-fenetres-decisionnelles-et-pivots-filtres: done
   41-4-contrat-api-et-ui-centres-aide-decision-intraday: done
   41-5-qa-actionability-et-budget-de-bruit-intraday: done
+  41-6-refactor-dashboard-moments-cles-et-agenda-du-jour: done

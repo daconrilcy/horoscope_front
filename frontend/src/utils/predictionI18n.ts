@@ -50,7 +50,8 @@ const MESSAGES: Record<string, Record<Lang, string>> = {
   best_window: { fr: "Meilleur créneau", en: "Best window" },
   dominant: { fr: "Dominante", en: "Dominant" },
   timeline: { fr: "Chronologie du jour", en: "Daily Timeline" },
-  turning_points: { fr: "Moments charnières", en: "Key shifts" },
+  turning_points: { fr: "Moments clés du jour", en: "Key moments today" },
+  impacts_label: { fr: "Impacts :", en: "Impacts:" },
   intensity: { fr: "Intensité", en: "Intensity" },
   pivot_badge: { fr: "Changement", en: "Shift" },
   refresh: { fr: "Actualiser", en: "Refresh" },
@@ -59,8 +60,8 @@ const MESSAGES: Record<string, Record<Lang, string>> = {
     fr: "Lecture provisoire : ces scores restent indicatifs tant que l'historique de calibration n'est pas complet.",
     en: "Provisional reading: these scores remain indicative until calibration history is complete.",
   },
-  // Decision windows
-  decision_windows_title: { fr: "Moments clés du jour", en: "Key moments today" },
+  // Agenda du jour (ex-fenêtres décisionnelles)
+  decision_windows_title: { fr: "Agenda du jour", en: "Daily Agenda" },
   window_type_favorable: { fr: "Fenêtre favorable", en: "Favorable window" },
   window_type_prudence: { fr: "Prudence", en: "Caution" },
   window_type_pivot: { fr: "Transition à surveiller", en: "Watch for a shift" },
