@@ -87,6 +87,66 @@ def test_pivot_block_yields_pivot():
     windows = builder.build([block], pivots, {"energy": {"note_20": 10, "volatility": 0.5}})
     assert len(windows) == 1
     assert windows[0].window_type == "pivot"
+    assert windows[0].start_local == BASE_TIME + timedelta(hours=1)
+    assert windows[0].end_local == BASE_TIME + timedelta(hours=2)
+
+
+def test_positive_pivot_block_stays_favorable():
+    builder = DecisionWindowBuilder()
+    block = TimeBlock(
+        block_index=0,
+        start_local=BASE_TIME,
+        end_local=BASE_TIME + timedelta(hours=2),
+        tone_code="positive",
+        dominant_categories=["energy"],
+    )
+    from app.prediction.turning_point_detector import TurningPoint
+
+    pivots = [
+        TurningPoint(
+            local_time=BASE_TIME + timedelta(minutes=30),
+            reason="high_priority_event",
+            categories_impacted=[],
+            trigger_event=None,
+            severity=1.0,
+        )
+    ]
+
+    windows = builder.build([block], pivots, {"energy": {"note_20": 15, "volatility": 0.5}})
+
+    assert len(windows) == 1
+    assert windows[0].window_type == "favorable"
+    assert windows[0].start_local == BASE_TIME
+    assert windows[0].end_local == BASE_TIME + timedelta(hours=2)
+
+
+def test_neutral_pivot_window_is_clipped_to_readable_duration():
+    builder = DecisionWindowBuilder()
+    block = TimeBlock(
+        block_index=0,
+        start_local=BASE_TIME,
+        end_local=BASE_TIME + timedelta(hours=8),
+        tone_code="neutral",
+        dominant_categories=["energy"],
+    )
+    from app.prediction.turning_point_detector import TurningPoint
+
+    pivots = [
+        TurningPoint(
+            local_time=BASE_TIME,
+            reason="delta_note",
+            categories_impacted=[],
+            trigger_event=None,
+            severity=0.8,
+        )
+    ]
+
+    windows = builder.build([block], pivots, {"energy": {"note_20": 10, "volatility": 0.5}})
+
+    assert len(windows) == 1
+    assert windows[0].window_type == "pivot"
+    assert windows[0].start_local == BASE_TIME
+    assert windows[0].end_local == BASE_TIME + timedelta(minutes=90)
 
 
 def test_builder_does_not_silently_clip_window_count():

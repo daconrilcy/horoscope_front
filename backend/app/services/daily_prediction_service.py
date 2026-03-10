@@ -22,6 +22,7 @@ from app.infra.db.repositories.prediction_ruleset_repository import PredictionRu
 from app.infra.db.repositories.user_birth_profile_repository import UserBirthProfileRepository
 from app.infra.observability.metrics import increment_counter
 from app.prediction.engine_orchestrator import EngineOrchestrator
+from app.prediction.exceptions import PredictionContextError
 from app.prediction.schemas import EngineInput
 from app.services.user_birth_profile_service import UserBirthProfileService
 
@@ -186,21 +187,13 @@ class DailyPredictionService:
 
         # 7-8. Engine + persistence — failures trigger fallback (AC1)
         try:
-            engine_output = self._compute_with_timeout(db, engine_input)
-
-            save_result = self.persistence_service.save(
-                engine_output=engine_output,
+            result = self._compute_and_save(
+                db=db,
+                engine_input=engine_input,
                 user_id=user_id,
-                local_date=resolved_date,
+                resolved_date=resolved_date,
                 reference_version_id=reference_version_id,
                 ruleset_id=ruleset_id,
-                db=db,
-            )
-
-            result = ServiceResult(
-                run=save_result.run,
-                engine_output=engine_output,
-                was_reused=False,
             )
             self._log_and_metrics(
                 user_id, start_time, result, ruleset_version=resolved_ruleset_version
@@ -208,6 +201,36 @@ class DailyPredictionService:
             return result
 
         except Exception as e:
+            repaired_context = False
+            if self._should_repair_prediction_context(
+                error=e,
+                ruleset_version=resolved_ruleset_version,
+                reference_version=resolved_reference_version,
+            ):
+                repaired_context = self._auto_seed_prediction_context(
+                    db,
+                    reference_version=resolved_reference_version,
+                    ruleset_version=resolved_ruleset_version,
+                    expected_reference_version_id=reference_version_id,
+                )
+
+            if repaired_context:
+                try:
+                    result = self._compute_and_save(
+                        db=db,
+                        engine_input=engine_input,
+                        user_id=user_id,
+                        resolved_date=resolved_date,
+                        reference_version_id=reference_version_id,
+                        ruleset_id=ruleset_id,
+                    )
+                    self._log_and_metrics(
+                        user_id, start_time, result, ruleset_version=resolved_ruleset_version
+                    )
+                    return result
+                except Exception as retry_error:
+                    e = retry_error
+
             # AC1 — Fallback on engine/persistence failure only
             error_str = str(e)
             logger.error(
@@ -244,6 +267,33 @@ class DailyPredictionService:
                 "compute_failed",
                 f"Calcul indisponible et aucune prédiction en cache. Détail: {error_str}",
             ) from e
+
+    def _compute_and_save(
+        self,
+        *,
+        db: Session,
+        engine_input: EngineInput,
+        user_id: int,
+        resolved_date: date,
+        reference_version_id: int,
+        ruleset_id: int,
+    ) -> ServiceResult:
+        engine_output = self._compute_with_timeout(db, engine_input)
+
+        save_result = self.persistence_service.save(
+            engine_output=engine_output,
+            user_id=user_id,
+            local_date=resolved_date,
+            reference_version_id=reference_version_id,
+            ruleset_id=ruleset_id,
+            db=db,
+        )
+
+        return ServiceResult(
+            run=save_result.run,
+            engine_output=engine_output,
+            was_reused=False,
+        )
 
     def _compute_with_timeout(self, db: Session, engine_input: EngineInput) -> EngineOutput:
         """
@@ -520,6 +570,52 @@ class DailyPredictionService:
                 "ruleset_seed_failed",
                 f"Seed automatique impossible pour le ruleset '{ruleset_version}': {exc}",
             ) from exc
+
+    def _should_repair_prediction_context(
+        self,
+        *,
+        error: Exception,
+        ruleset_version: str,
+        reference_version: str,
+    ) -> bool:
+        if settings.app_env in {"production", "prod"}:
+            return False
+        if ruleset_version not in {settings.active_ruleset_version, LEGACY_RULESET_VERSION}:
+            return False
+        if reference_version not in {settings.active_reference_version, LEGACY_RULESET_VERSION}:
+            return False
+
+        error_text = str(error)
+        if isinstance(error, PredictionContextError):
+            return (
+                "Prediction context has no planet profiles" in error_text
+                or "Prediction context has no house profiles" in error_text
+                or "Prediction context has no enabled categories" in error_text
+            )
+        return False
+
+    def _auto_seed_prediction_context(
+        self,
+        db: Session,
+        *,
+        reference_version: str,
+        ruleset_version: str,
+        expected_reference_version_id: int | None,
+    ) -> bool:
+        logger.warning(
+            "prediction.context_autoseed_repair",
+            extra={
+                "reference_version": reference_version,
+                "ruleset_version": ruleset_version,
+            },
+        )
+        self._auto_seed_reference_version(db, version=reference_version)
+        self._auto_seed_prediction_ruleset(
+            db,
+            ruleset_version=ruleset_version,
+            expected_reference_version_id=expected_reference_version_id,
+        )
+        return True
 
     def _repair_locked_incomplete_reference_version(
         self,

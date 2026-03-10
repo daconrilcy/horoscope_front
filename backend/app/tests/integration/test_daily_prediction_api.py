@@ -1235,3 +1235,26 @@ def test_daily_prediction_rebuilds_decision_windows_for_reused_run():
     window = data["decision_windows"][0]
     assert window["window_type"] == "favorable"
     assert window["dominant_categories"] == ["love", "work"]
+
+
+def test_time_block_contains_turning_point_uses_half_open_intervals():
+    from app.api.v1.routers.predictions import _time_block_contains_turning_point
+
+    turning_point_time = datetime.fromisoformat("2026-03-08T10:00:00+01:00")
+
+    assert (
+        _time_block_contains_turning_point(
+            "2026-03-08T08:00:00+01:00",
+            "2026-03-08T10:00:00+01:00",
+            [turning_point_time],
+        )
+        is False
+    )
+    assert (
+        _time_block_contains_turning_point(
+            "2026-03-08T10:00:00+01:00",
+            "2026-03-08T12:00:00+01:00",
+            [turning_point_time],
+        )
+        is True
+    )

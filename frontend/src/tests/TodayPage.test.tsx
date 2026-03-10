@@ -174,6 +174,8 @@ const predictionTechnical = {
     overall_tone: "neutral",
     overall_summary:
       "Votre journée du 2026-03-08 s'annonce équilibrée. Vos points forts : Énergie & Vitalité, Humeur & Climat intérieur, Santé & Hygiène de vie.",
+    calibration_note:
+      "Les scores sont calculés sans données historiques : ils reflètent des tendances relatives à la journée, pas des statistiques absolues.",
     top_categories: ["energy", "mood", "health"],
     bottom_categories: ["energy", "mood"],
     best_window: {
@@ -346,8 +348,8 @@ describe("TodayPage", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument();
     expect(screen.getAllByText("08:00 - 09:30").length).toBeGreaterThan(0);
     expect(screen.getAllByText("11:15").length).toBeGreaterThan(0);
-    expect(screen.getByText("Points de bascule")).toBeInTheDocument();
-    expect(screen.getByText("Pivot")).toBeInTheDocument();
+    expect(screen.getByText("Moments charnières")).toBeInTheDocument();
+    expect(screen.getByText("Changement")).toBeInTheDocument();
     expect(screen.getByText("Carrière")).toBeInTheDocument();
     expect(screen.getByText("13.6")).toBeInTheDocument();
     expect(screen.getByText("7.2")).toBeInTheDocument();
@@ -447,7 +449,7 @@ describe("TodayPage", () => {
     });
 
     expect(screen.getByText("Best window")).toBeInTheDocument();
-    expect(screen.getByText("Turning Points")).toBeInTheDocument();
+    expect(screen.getByText("Key shifts")).toBeInTheDocument();
     expect(screen.getByText("Dominant : Career")).toBeInTheDocument();
   });
 
@@ -462,7 +464,7 @@ describe("TodayPage", () => {
       expect(screen.getByText(/Votre journée du 2026-03-08 s'annonce équilibrée/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Calibration provisoire/i)).toBeInTheDocument();
+    expect(screen.getByText(/Les scores sont calculés sans données historiques/i)).toBeInTheDocument();
     expect(screen.queryByText("delta_note")).not.toBeInTheDocument();
     expect(screen.getByText("Le climat change nettement sur ce créneau.")).toBeInTheDocument();
     expect(screen.getByText("Aspect exact : Venus opposition Pluto")).toBeInTheDocument();
@@ -484,10 +486,10 @@ describe("TodayPage", () => {
     expect(screen.getByText("Moments clés du jour")).toBeInTheDocument();
     expect(screen.getByText("Fenêtre favorable")).toBeInTheDocument();
     expect(screen.getByText("Prudence")).toBeInTheDocument();
-    expect(screen.getByText("Moment de bascule")).toBeInTheDocument();
+    expect(screen.getByText("Transition à surveiller")).toBeInTheDocument();
     expect(screen.getByText("Bon créneau pour lancer une action ou prendre une décision.")).toBeInTheDocument();
     expect(screen.getByText("Gardez une marge de manœuvre, évitez les engagements irréversibles.")).toBeInTheDocument();
-    expect(screen.getByText("Le climat change : restez attentif à vos ressentis.")).toBeInTheDocument();
+    expect(screen.getByText("Le rythme change sur ce créneau : observez avant d'agir.")).toBeInTheDocument();
   });
 
   it("humanise les nouveaux event_type V2 du backend sans exposer de code technique", async () => {

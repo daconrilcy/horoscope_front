@@ -656,5 +656,5 @@ def _time_block_contains_turning_point(
     start_dt = _parse_iso_datetime(start_local)
     end_dt = _parse_iso_datetime(end_local)
     return any(
-        start_dt <= turning_point_time <= end_dt for turning_point_time in turning_point_times
+        start_dt <= turning_point_time < end_dt for turning_point_time in turning_point_times
     )

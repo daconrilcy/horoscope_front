@@ -89,6 +89,11 @@ claude-sonnet-4-6
 - **T4** : Ajouté 4 nouveaux tests TodayPage (decision_windows affichées, labels humanisés, nouveaux event_type V2, timeline secondaire dans `<details>`). 10/10 tests TodayPage passent. 1121/1122 tests totaux passent (1 régression pré-existante AdminPage non liée).
 - **Post-validation 2026-03-09** : Le backend reconstruit désormais `decision_windows` depuis les données persistées quand une prédiction est réutilisée depuis le cache/DB (`was_reused=true`). Le contrat `/v1/predictions/daily` reste donc stable pour `/dashboard` même sans `engine_output` en mémoire.
 - **Post-validation 2026-03-09** : Le démarrage local SQLite répare le schéma et ré-amorce la référence/ruleset `2.0.0` si nécessaire, ce qui supprime les erreurs locales `version_missing`/`ruleset_missing` qui bloquaient le chargement du dashboard.
+- **Post-validation 2026-03-10** : Le message de calibration provisoire affiché sur `/dashboard` reprend désormais `summary.calibration_note` quand elle existe, au lieu d'un warning frontend générique plus alarmiste.
+- **Post-validation 2026-03-10** : Les libellés utilisateur ont été clarifiés (`Moments charnières`, `Transition à surveiller`, badge `Changement`) pour éviter l'ambiguïté de "moment de bascule".
+- **Post-validation 2026-03-10** : Les blocs positifs ou prudents restent étiquetés `favorable` / `prudence` même s'ils démarrent sur un pivot ; seules les transitions neutres restent `pivot`, et elles sont limitées à 90 minutes maximum pour éviter les créneaux de bascule artificiellement longs.
+- **Post-validation 2026-03-10** : La timeline API marque désormais un `turning_point` sur l'intervalle demi-ouvert `[start, end)`, ce qui supprime le double marquage des deux blocs adjacents autour d'une même heure de pivot.
+- **Post-validation 2026-03-10** : En dev local, `/v1/predictions/daily` déclenche aussi une auto-réparation si la référence `2.0.0` existe mais reste partiellement seedée ; cela supprime les erreurs `compute_failed` qui empêchaient encore le chargement du dashboard.
 
 ### File List
 
@@ -97,6 +102,9 @@ claude-sonnet-4-6
 - `frontend/src/pages/TodayPage.tsx` (modifié — ajout DecisionWindowsSection, timeline dans details)
 - `frontend/src/utils/predictionI18n.ts` (modifié — labels window_type/msg + event_type V2)
 - `frontend/src/tests/TodayPage.test.tsx` (modifié — 4 nouveaux tests)
+- `backend/app/prediction/decision_window_builder.py` (modifié — transitions pivot limitées et reclassement positif/négatif)
+- `backend/app/api/v1/routers/predictions.py` (modifié — marquage demi-ouvert des turning points dans la timeline)
+- `backend/app/services/daily_prediction_service.py` (modifié — auto-heal local sur contexte prédictif partiellement seedé)
 - `_bmad-output/implementation-artifacts/41-4-contrat-api-et-ui-centres-aide-decision-intraday.md` (modifié — statuts AC/tâches)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modifié — statut story)
 
@@ -105,3 +113,4 @@ claude-sonnet-4-6
 - 2026-03-09 : Story créée à partir de l'audit intraday produit/backend.
 - 2026-03-09 : Implémentation complète — types TS, DecisionWindowsSection, TodayPage redesign (decision windows prioritaires, timeline en details), humanisation event_type V2, 4 nouveaux tests TodayPage (10/10 pass). (claude-sonnet-4-6)
 - 2026-03-09 : Validation finale de l'épic en environnement local réel — correction de la reconstruction des `decision_windows` sur runs réutilisés et auto-réparation du seed `reference/ruleset 2.0.0` pour rétablir `/dashboard`. (Codex)
+- 2026-03-10 : Post-validation UX/runtime — calibration note backend priorisée dans l'UI, renommage des pivots utilisateur, limitation des transitions `pivot` à 90 min, marquage timeline corrigé et auto-heal local du contexte prédictif pour supprimer les `compute_failed` sur `/dashboard`. (Codex)

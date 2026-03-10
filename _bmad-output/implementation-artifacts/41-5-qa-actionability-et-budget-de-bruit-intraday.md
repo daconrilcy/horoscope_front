@@ -122,11 +122,13 @@ else:               → "neutral"
 ### Logique _classify() dans DecisionWindowBuilder
 
 ```python
-if has_pivot:         → "pivot"
 if tone == "positive" → "favorable"
 if tone in ("negative","mixed") → "prudence"
-else:                 → "neutral"  # → skipped
+if has_pivot:         → "pivot"     # transitions neutres uniquement
+else:                 → "neutral"   # → skipped
 ```
+
+Les fenêtres `pivot` neutres sont désormais resserrées autour du point de transition et plafonnées à 90 minutes pour éviter des créneaux de bascule trop longs.
 
 ### Constantes de budget à définir dans les tests
 
@@ -235,6 +237,8 @@ claude-sonnet-4-6 (via Gemini CLI)
 - ✅ No regressions in existing intraday logic or frontend.
 - ✅ Validation complémentaire effectuée sur backend local SQLite réel : `/v1/predictions/daily` et `/dashboard` restent opérationnels après auto-réparation du schéma et re-seed de la référence/ruleset actifs.
 - ✅ Non-régression ajoutée pour les runs réutilisés : les `decision_windows` restent présentes dans le payload API même quand la réponse provient du cache persistant.
+- ✅ Non-régression ajoutée sur le marquage timeline : un `turning_point` appartient au bloc `[start, end)` uniquement, ce qui évite les incohérences entre agenda, pivots et fenêtres décisionnelles.
+- ✅ Validation complémentaire ajoutée sur l'UX des transitions : les blocs positifs/prudents gardent leur type métier et les transitions `pivot` neutres sont limitées à 90 minutes maximum.
 
 ### File List
 
@@ -245,6 +249,7 @@ claude-sonnet-4-6 (via Gemini CLI)
 - `backend/app/tests/unit/test_turning_point_detector.py`
 - `backend/app/tests/unit/test_block_generator.py`
 - `backend/app/tests/unit/test_decision_window_builder.py`
+- `backend/app/tests/integration/test_daily_prediction_api.py`
 - `backend/app/tests/unit/test_turning_points.py`
 - `backend/app/tests/integration/test_daily_prediction_qa.py`
 - `frontend/src/utils/predictionI18n.ts`
@@ -254,3 +259,4 @@ claude-sonnet-4-6 (via Gemini CLI)
 - 2026-03-09 : Story créée — clôture qualité épic 41, budget de bruit intraday, tests unitaires composants et intégration QA go/no-go.
 - 2026-03-09 : Implémentation complète, renforcement du moteur (merging/capping) et validation QA automatisée.
 - 2026-03-09 : Validation finale end-to-end en local, avec durcissement du bootstrap SQLite et du seed `2.0.0` pour sécuriser le parcours dashboard/auth/prediction sur base de dev. (Codex)
+- 2026-03-10 : Post-validation — ajustement du budget de bruit sur les transitions `pivot` (max 90 min), correction de cohérence timeline/turning points via intervalle demi-ouvert, et verrouillage des tests associés. (Codex)

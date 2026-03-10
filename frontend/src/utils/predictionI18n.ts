@@ -50,20 +50,20 @@ const MESSAGES: Record<string, Record<Lang, string>> = {
   best_window: { fr: "Meilleur créneau", en: "Best window" },
   dominant: { fr: "Dominante", en: "Dominant" },
   timeline: { fr: "Chronologie du jour", en: "Daily Timeline" },
-  turning_points: { fr: "Points de bascule", en: "Turning Points" },
+  turning_points: { fr: "Moments charnières", en: "Key shifts" },
   intensity: { fr: "Intensité", en: "Intensity" },
-  pivot_badge: { fr: "Pivot", en: "Pivot" },
+  pivot_badge: { fr: "Changement", en: "Shift" },
   refresh: { fr: "Actualiser", en: "Refresh" },
   pending_summary: { fr: "Calcul de votre tendance...", en: "Computing your trend..." },
   provisional_calibration: {
-    fr: "Calibration provisoire : les notes peuvent rester peu contrastées tant que le référentiel local n'est pas entièrement calibré.",
-    en: "Provisional calibration: scores may stay close together until the local reference is fully calibrated.",
+    fr: "Lecture provisoire : ces scores restent indicatifs tant que l'historique de calibration n'est pas complet.",
+    en: "Provisional reading: these scores remain indicative until calibration history is complete.",
   },
   // Decision windows
   decision_windows_title: { fr: "Moments clés du jour", en: "Key moments today" },
   window_type_favorable: { fr: "Fenêtre favorable", en: "Favorable window" },
   window_type_prudence: { fr: "Prudence", en: "Caution" },
-  window_type_pivot: { fr: "Moment de bascule", en: "Turning moment" },
+  window_type_pivot: { fr: "Transition à surveiller", en: "Watch for a shift" },
   window_msg_favorable: {
     fr: "Bon créneau pour lancer une action ou prendre une décision.",
     en: "Good window to take action or make a decision.",
@@ -73,8 +73,8 @@ const MESSAGES: Record<string, Record<Lang, string>> = {
     en: "Keep some flexibility, avoid irreversible commitments.",
   },
   window_msg_pivot: {
-    fr: "Le climat change : restez attentif à vos ressentis.",
-    en: "The mood is shifting: stay attentive to how you feel.",
+    fr: "Le rythme change sur ce créneau : observez avant d'agir.",
+    en: "The tempo is shifting here: observe before acting.",
   },
 };
 

@@ -33,7 +33,7 @@ Note:
 - Les rulesets `1.0.0` (legacy) et `2.0.0` (canonique) sont seedés sur la référence `2.0.0` via [`backend/scripts/seed_31_prediction_reference_v2.py`](./scripts/seed_31_prediction_reference_v2.py).
 - `backend/.env.example` et `backend/.env` doivent rester alignés sur cette paire tant que le seed/runtime n'a pas changé.
 - En environnement local SQLite, le bootstrap runtime répare désormais le schéma manquant au démarrage et ré-amorce automatiquement la référence/ruleset actifs si `2.0.0` est absent ou partiellement seedé.
-- Si `/dashboard` ou `/v1/predictions/daily` échouait auparavant avec `version_missing` ou `ruleset_missing`, un simple redémarrage du backend suffit maintenant dans la majorité des cas pour remettre la base locale en état.
+- Si `/dashboard` ou `/v1/predictions/daily` échouait auparavant avec `version_missing`, `ruleset_missing` ou `compute_failed` sur une base locale partiellement seedée, un simple redémarrage du backend suffit maintenant dans la majorité des cas pour remettre la base locale en état.
 
 ### Transition de versioning (Ruleset 2.0.0)
 
@@ -57,7 +57,7 @@ Le ruleset `1.0.0` est conservé pour la lecture des données historiques mais d
    cd backend
    python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
    ```
-   Le démarrage applique désormais la réparation locale du schéma et du seed intraday avant les appels auth et prediction.
+   Le démarrage applique désormais la réparation locale du schéma et du seed intraday avant les appels auth et prediction. Si le calcul daily rencontre encore un contexte de prédiction incomplet (`planet_profiles`, `house_profiles`, etc.), le service déclenche un auto-heal local puis retente le calcul une fois.
 
 **Calibration et QA :**
 - Les jobs de calibration et les tests QA doivent utiliser la paire canonique `reference=2.0.0` / `ruleset=2.0.0`.

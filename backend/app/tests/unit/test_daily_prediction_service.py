@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.versions import ACTIVE_RULESET_VERSION
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
+from app.prediction.exceptions import PredictionContextError
 from app.prediction.schemas import EngineOutput
 from app.services.daily_prediction_service import (
     ComputeMode,
@@ -283,6 +284,70 @@ def test_ruleset_seed_abort_is_wrapped_as_service_error(service, db):
             service._resolve_ruleset_id(db, "2.0.0", expected_reference_version_id=10)
 
         assert excinfo.value.code == "ruleset_seed_failed"
+
+
+def test_incomplete_prediction_context_is_auto_repaired_in_local_dev(
+    service, db, mock_profile, persistence_service
+):
+    svc_path = "app.services.daily_prediction_service"
+    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo, \
+         patch(f"{svc_path}.settings") as mock_settings, \
+         patch.object(service, "_compute_with_timeout") as mock_compute, \
+         patch.object(service, "_auto_seed_reference_version") as mock_seed_reference, \
+         patch.object(service, "_auto_seed_prediction_ruleset") as mock_seed_ruleset:
+
+        mock_settings.app_env = "development"
+        mock_settings.active_reference_version = "2.0.0"
+        mock_settings.active_ruleset_version = "2.0.0"
+        mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
+        mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
+            result_payload={"planets": [{"code": "sun", "longitude": 34.08}]}
+        )
+        mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = None
+        db.scalar.return_value = 10
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
+
+        mock_output = MagicMock(spec=EngineOutput)
+        mock_compute.side_effect = [
+            PredictionContextError("Prediction context has no planet profiles"),
+            mock_output,
+        ]
+        mock_run = MagicMock(spec=DailyPredictionRunModel)
+        persistence_service.save.return_value = MagicMock(run=mock_run, was_reused=False)
+
+        result = service.get_or_compute(user_id=1, db=db)
+
+        assert result.run == mock_run
+        assert result.was_reused is False
+        assert result.engine_output == mock_output
+        assert mock_compute.call_count == 2
+        mock_seed_reference.assert_called_once_with(db, version="2.0.0")
+        mock_seed_ruleset.assert_called_once_with(
+            db,
+            ruleset_version="2.0.0",
+            expected_reference_version_id=10,
+        )
+
+
+def test_incomplete_prediction_context_does_not_autorepair_in_production(service, db):
+    svc_path = "app.services.daily_prediction_service"
+    with patch(f"{svc_path}.settings") as mock_settings:
+        mock_settings.app_env = "production"
+        mock_settings.active_reference_version = "2.0.0"
+        mock_settings.active_ruleset_version = "2.0.0"
+
+        should_repair = service._should_repair_prediction_context(
+            error=PredictionContextError("Prediction context has no planet profiles"),
+            ruleset_version="2.0.0",
+            reference_version="2.0.0",
+        )
+
+        assert should_repair is False
 
 
 def test_user_with_natal_full_compute(

@@ -80,8 +80,8 @@ export const PREDICTION_UI_MESSAGES: Record<
   best_window: { fr: "Meilleur créneau", en: "Best window" },
   dominant: { fr: "Dominante", en: "Dominant" },
   timeline: { fr: "Chronologie du jour", en: "Today's timeline" },
-  pivot_badge: { fr: "Pivot", en: "Pivot" },
-  turning_points: { fr: "Points de bascule", en: "Turning points" },
+  pivot_badge: { fr: "Changement", en: "Shift" },
+  turning_points: { fr: "Moments charnières", en: "Key shifts" },
   intensity: { fr: "Intensité", en: "Intensity" },
   pending_summary: { fr: "Calcul de votre tendance en cours...", en: "Calculating your daily trend..." },
 };

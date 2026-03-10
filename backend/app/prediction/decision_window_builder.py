@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 from app.prediction.schemas import DecisionWindow
@@ -20,30 +21,36 @@ class DecisionWindowBuilder:
     Neutral non-pivot blocks are omitted to reduce noise (AC3).
     """
 
+    MAX_PIVOT_WINDOW_DURATION = timedelta(minutes=90)
+
     def build(
         self,
         time_blocks: list[TimeBlock],
         turning_points: list[TurningPoint],
         category_scores: dict[str, Any],
     ) -> list[DecisionWindow]:
-        pivot_times = {tp.local_time for tp in turning_points}
+        pivot_times = sorted(tp.local_time for tp in turning_points)
         windows: list[DecisionWindow] = []
 
         for block in time_blocks:
-            has_pivot = any(block.start_local <= pt < block.end_local for pt in pivot_times)
+            pivot_time = next(
+                (pt for pt in pivot_times if block.start_local <= pt < block.end_local),
+                None,
+            )
+            has_pivot = pivot_time is not None
             window_type = self._classify(block, has_pivot)
             if window_type == "neutral":
-                continue  # skip noise — AC3: raisonnable et lisible
+                continue
 
             score = self._block_score(block, category_scores)
             confidence = self._block_confidence(block, category_scores)
-            # AC3: limit to top 2 dominant categories per window
             dominant = list(block.dominant_categories[:2])
+            start_local, end_local = self._window_bounds(block, window_type, pivot_time)
 
             windows.append(
                 DecisionWindow(
-                    start_local=block.start_local,
-                    end_local=block.end_local,
+                    start_local=start_local,
+                    end_local=end_local,
                     window_type=window_type,
                     score=score,
                     confidence=confidence,
@@ -54,14 +61,27 @@ class DecisionWindowBuilder:
         return windows
 
     def _classify(self, block: TimeBlock, has_pivot: bool) -> str:
-        if has_pivot:
-            return "pivot"
         tone = getattr(block, "tone_code", "neutral")
         if tone == "positive":
             return "favorable"
         if tone in ("negative", "mixed"):
             return "prudence"
+        if has_pivot:
+            return "pivot"
         return "neutral"
+
+    def _window_bounds(
+        self,
+        block: TimeBlock,
+        window_type: str,
+        pivot_time: Any,
+    ) -> tuple[Any, Any]:
+        if window_type != "pivot" or pivot_time is None:
+            return block.start_local, block.end_local
+
+        clipped_start = max(block.start_local, pivot_time)
+        clipped_end = min(block.end_local, pivot_time + self.MAX_PIVOT_WINDOW_DURATION)
+        return clipped_start, max(clipped_start, clipped_end)
 
     def _block_score(self, block: TimeBlock, category_scores: dict[str, Any]) -> float:
         notes: list[float] = []

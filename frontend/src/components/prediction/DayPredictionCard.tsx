@@ -19,6 +19,8 @@ export const DayPredictionCard: React.FC<Props> = ({ prediction, lang }) => {
   const locale = getLocale(lang);
   const toneLabel = getToneLabel(summary.overall_tone, lang);
   const toneColor = getToneColor(summary.overall_tone);
+  const calibrationMessage =
+    summary.calibration_note || getPredictionMessage("provisional_calibration", lang);
 
   const formattedDate = new Date(meta.date_local).toLocaleDateString(locale, {
     day: "numeric",
@@ -62,7 +64,7 @@ export const DayPredictionCard: React.FC<Props> = ({ prediction, lang }) => {
             fontSize: "0.9rem",
           }}
         >
-          {getPredictionMessage("provisional_calibration", lang)}
+          {calibrationMessage}
         </p>
       )}
 
