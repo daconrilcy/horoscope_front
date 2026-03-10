@@ -72,6 +72,30 @@ def test_refine_around_yields_1min_steps_centered_on_target() -> None:
         assert nxt.ut_time - current.ut_time == pytest.approx(one_minute_jd, abs=1e-10)
 
 
+def test_refine_around_projects_to_requested_timezone() -> None:
+    sampler = TemporalSampler()
+    target_local = datetime(2026, 3, 7, 5, 0, tzinfo=ZoneInfo(PARIS_TZ))
+    target_jd = sampler._datetime_to_jd(target_local.astimezone(ZoneInfo("UTC")))
+
+    points = sampler.refine_around(target_jd, radius_minutes=2, tz_name=PARIS_TZ)
+
+    assert all(point.local_time.tzinfo == ZoneInfo(PARIS_TZ) for point in points)
+    assert points[0].local_time.replace(microsecond=0).isoformat() == "2026-03-07T04:58:29+01:00"
+    assert points[-1].local_time.replace(microsecond=0).isoformat() == "2026-03-07T05:01:29+01:00"
+
+
+def test_refine_around_tracks_dst_offset_in_local_timezone() -> None:
+    sampler = TemporalSampler()
+    target_local = datetime(2026, 3, 29, 17, 0, tzinfo=ZoneInfo(PARIS_TZ))
+    target_jd = sampler._datetime_to_jd(target_local.astimezone(ZoneInfo("UTC")))
+
+    points = sampler.refine_around(target_jd, radius_minutes=2, tz_name=PARIS_TZ)
+
+    assert all(point.local_time.utcoffset() == timedelta(hours=2) for point in points)
+    assert points[0].local_time.replace(microsecond=0).isoformat() == "2026-03-29T16:58:30+02:00"
+    assert points[-1].local_time.replace(microsecond=0).isoformat() == "2026-03-29T17:01:30+02:00"
+
+
 def test_dst_spring_forward_has_92_samples_and_stays_in_day() -> None:
     grid = build_paris_grid(date(2026, 3, 29))
 

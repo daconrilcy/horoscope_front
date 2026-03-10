@@ -569,7 +569,7 @@
         "base_weight": 1.5,
         "body": "Moon",
         "event_type": "aspect_exact_to_personal",
-        "local_time": "2026-03-07T04:01:29.999987+00:00",
+        "local_time": "2026-03-07T05:01:29.999987+01:00",
         "metadata": {
           "coarse_ut_time": 2461106.6666666665,
           "natal_house_target": 11,
@@ -588,7 +588,7 @@
         "base_weight": 2.0,
         "body": "Moon",
         "event_type": "aspect_exact_to_angle",
-        "local_time": "2026-03-07T04:01:29.999987+00:00",
+        "local_time": "2026-03-07T05:01:29.999987+01:00",
         "metadata": {
           "coarse_ut_time": 2461106.6666666665,
           "natal_house_target": 10,
@@ -712,7 +712,7 @@
         "base_weight": 1.5,
         "body": "Moon",
         "event_type": "aspect_exact_to_personal",
-        "local_time": "2026-03-07T07:42:29.999987+00:00",
+        "local_time": "2026-03-07T08:42:29.999987+01:00",
         "metadata": {
           "coarse_ut_time": 2461106.8229166665,
           "natal_house_target": 10,
@@ -1495,7 +1495,7 @@
             "base_weight": 1.5,
             "body": "Moon",
             "event_type": "aspect_exact_to_personal",
-            "local_time": "2026-03-07T04:01:29.999987+00:00",
+            "local_time": "2026-03-07T05:01:29.999987+01:00",
             "metadata": {
               "coarse_ut_time": 2461106.6666666665,
               "natal_house_target": 11,
@@ -1514,7 +1514,7 @@
             "base_weight": 2.0,
             "body": "Moon",
             "event_type": "aspect_exact_to_angle",
-            "local_time": "2026-03-07T04:01:29.999987+00:00",
+            "local_time": "2026-03-07T05:01:29.999987+01:00",
             "metadata": {
               "coarse_ut_time": 2461106.6666666665,
               "natal_house_target": 10,
@@ -1606,7 +1606,7 @@
             "base_weight": 1.5,
             "body": "Moon",
             "event_type": "aspect_exact_to_personal",
-            "local_time": "2026-03-07T07:42:29.999987+00:00",
+            "local_time": "2026-03-07T08:42:29.999987+01:00",
             "metadata": {
               "coarse_ut_time": 2461106.8229166665,
               "natal_house_target": 10,
@@ -1665,7 +1665,7 @@
             "base_weight": 1.5,
             "body": "Moon",
             "event_type": "aspect_exact_to_personal",
-            "local_time": "2026-03-07T04:01:29.999987+00:00",
+            "local_time": "2026-03-07T05:01:29.999987+01:00",
             "metadata": {
               "coarse_ut_time": 2461106.6666666665,
               "natal_house_target": 11,
@@ -1684,7 +1684,7 @@
             "base_weight": 2.0,
             "body": "Moon",
             "event_type": "aspect_exact_to_angle",
-            "local_time": "2026-03-07T04:01:29.999987+00:00",
+            "local_time": "2026-03-07T05:01:29.999987+01:00",
             "metadata": {
               "coarse_ut_time": 2461106.6666666665,
               "natal_house_target": 10,
@@ -1708,7 +1708,7 @@
           "base_weight": 2.0,
           "body": "Moon",
           "event_type": "aspect_exact_to_angle",
-          "local_time": "2026-03-07T04:01:29.999987+00:00",
+          "local_time": "2026-03-07T05:01:29.999987+01:00",
           "metadata": {
             "coarse_ut_time": 2461106.6666666665,
             "natal_house_target": 10,
@@ -1770,7 +1770,7 @@
             "base_weight": 1.5,
             "body": "Moon",
             "event_type": "aspect_exact_to_personal",
-            "local_time": "2026-03-07T07:42:29.999987+00:00",
+            "local_time": "2026-03-07T08:42:29.999987+01:00",
             "metadata": {
               "coarse_ut_time": 2461106.8229166665,
               "natal_house_target": 10,
@@ -1794,7 +1794,7 @@
           "base_weight": 1.5,
           "body": "Moon",
           "event_type": "aspect_exact_to_personal",
-          "local_time": "2026-03-07T07:42:29.999987+00:00",
+          "local_time": "2026-03-07T08:42:29.999987+01:00",
           "metadata": {
             "coarse_ut_time": 2461106.8229166665,
             "natal_house_target": 10,
@@ -3545,7 +3545,7 @@
             "base_weight": 1.5,
             "body": "Moon",
             "event_type": "aspect_exact_to_personal",
-            "local_time": "2026-03-07T04:01:29.999987+00:00",
+            "local_time": "2026-03-07T05:01:29.999987+01:00",
             "metadata": {
               "coarse_ut_time": 2461106.6666666665,
               "natal_house_target": 11,
@@ -3564,7 +3564,7 @@
             "base_weight": 2.0,
             "body": "Moon",
             "event_type": "aspect_exact_to_angle",
-            "local_time": "2026-03-07T04:01:29.999987+00:00",
+            "local_time": "2026-03-07T05:01:29.999987+01:00",
             "metadata": {
               "coarse_ut_time": 2461106.6666666665,
               "natal_house_target": 10,
@@ -3588,7 +3588,7 @@
           "base_weight": 2.0,
           "body": "Moon",
           "event_type": "aspect_exact_to_angle",
-          "local_time": "2026-03-07T04:01:29.999987+00:00",
+          "local_time": "2026-03-07T05:01:29.999987+01:00",
           "metadata": {
             "coarse_ut_time": 2461106.6666666665,
             "natal_house_target": 10,
@@ -4020,7 +4020,7 @@
           "communication"
         ],
         "end_local": "2026-03-07T05:15:00+01:00",
-        "score": 10.0,
+        "score": 12.0,
         "start_local": "2026-03-07T05:00:00+01:00",
         "window_type": "pivot"
       },
@@ -4030,8 +4030,8 @@
           "career",
           "communication"
         ],
-        "end_local": "2026-03-07T08:45:00+01:00",
-        "score": 10.0,
+        "end_local": "2026-03-07T06:45:00+01:00",
+        "score": 12.0,
         "start_local": "2026-03-07T05:15:00+01:00",
         "window_type": "pivot"
       },
@@ -4041,8 +4041,8 @@
           "career",
           "communication"
         ],
-        "end_local": "2026-03-08T00:00:00+01:00",
-        "score": 10.0,
+        "end_local": "2026-03-07T10:15:00+01:00",
+        "score": 12.0,
         "start_local": "2026-03-07T08:45:00+01:00",
         "window_type": "pivot"
       }

@@ -1315,6 +1315,43 @@ def test_daily_prediction_turning_points_follow_major_aspect_boundaries():
     assert "Amour & Relations" in data["turning_points"][0]["summary"]
     assert "Travail" in data["turning_points"][1]["summary"]
     assert data["turning_points"][1]["drivers"] == [{"event_type": "aspect_exact"}]
+    assert isinstance(data["turning_points"][1]["severity"], float)
+
+
+def test_daily_prediction_turning_points_expose_numeric_severity():
+    token = _register_and_get_access_token()
+    mock_run = _build_mock_run()
+    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    mock_full_run = {
+        "id": 1,
+        "category_scores": [],
+        "turning_points": [
+            {
+                "occurred_at_local": "2026-03-08T22:15:00+01:00",
+                "severity": "0.9",
+                "summary": "Pivot lisible",
+                "driver_json": "[]",
+            }
+        ],
+        "time_blocks": [],
+    }
+
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    with (
+        patch(repo_path, return_value=mock_full_run),
+        patch(ref_path, return_value=[]),
+    ):
+        response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    turning_point = response.json()["turning_points"][0]
+    assert turning_point["severity"] == 0.9
+    assert isinstance(turning_point["severity"], float)
 
 
 def test_daily_prediction_pivot_windows_use_score_twelve():

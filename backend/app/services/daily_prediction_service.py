@@ -23,6 +23,7 @@ from app.infra.db.repositories.user_birth_profile_repository import UserBirthPro
 from app.infra.observability.metrics import increment_counter
 from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.exceptions import PredictionContextError
+from app.prediction.input_hash import compute_engine_input_hash
 from app.prediction.schemas import EngineInput
 from app.services.user_birth_profile_service import UserBirthProfileService
 
@@ -135,7 +136,15 @@ class DailyPredictionService:
             ruleset_version=resolved_ruleset_version,
             debug_mode=False,
         )
-        input_hash = self._compute_input_hash(engine_input)
+        input_hash = compute_engine_input_hash(
+            natal_chart=engine_input.natal_chart,
+            local_date=engine_input.local_date,
+            timezone=engine_input.timezone,
+            latitude=engine_input.latitude,
+            longitude=engine_input.longitude,
+            reference_version=engine_input.reference_version,
+            ruleset_version=engine_input.ruleset_version,
+        )
 
         # 5. Mode compute_if_missing : short-circuit if hash exists
         if mode == ComputeMode.compute_if_missing:
@@ -649,17 +658,3 @@ class DailyPredictionService:
         version_model.is_locked = False
         db.commit()
         return True
-
-    def _compute_input_hash(self, engine_input: EngineInput) -> str:
-        """Reproduces the hash used by EngineOrchestrator for consistency."""
-        canonical = {
-            "natal": engine_input.natal_chart,
-            "local_date": engine_input.local_date.isoformat(),
-            "timezone": engine_input.timezone,
-            "latitude": engine_input.latitude,
-            "longitude": engine_input.longitude,
-            "reference_version": engine_input.reference_version,
-            "ruleset_version": engine_input.ruleset_version,
-        }
-        serialized = json.dumps(canonical, sort_keys=True, ensure_ascii=True, default=str)
-        return hashlib.sha256(serialized.encode()).hexdigest()

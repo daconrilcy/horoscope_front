@@ -25,6 +25,7 @@ from .editorial_template_engine import EditorialTemplateEngine
 from .event_detector import EventDetector
 from .exceptions import PredictionContextError
 from .explainability import ExplainabilityBuilder
+from .input_hash import compute_engine_input_hash
 from .natal_sensitivity import NatalSensitivityCalculator
 from .schemas import (
     AstroEvent,
@@ -162,7 +163,15 @@ class EngineOrchestrator:
             EngineOutput: The structured output of the engine.
         """
         # AC3 - Compute hash
-        input_hash = self._compute_hash(engine_input)
+        input_hash = compute_engine_input_hash(
+            natal_chart=engine_input.natal_chart,
+            local_date=engine_input.local_date,
+            timezone=engine_input.timezone,
+            latitude=engine_input.latitude,
+            longitude=engine_input.longitude,
+            reference_version=engine_input.reference_version,
+            ruleset_version=engine_input.ruleset_version,
+        )
 
         # AC4 - Convert local date to UT interval (JD)
         jd_start, jd_end = self._local_date_to_ut_interval(
@@ -199,6 +208,7 @@ class EngineOrchestrator:
             detected_events,
             astro_calculator,
             event_detector,
+            engine_input.timezone,
         )
         natal_sensitivity = self._natal_sensitivity_calculator.compute(
             natal_chart,
@@ -361,6 +371,7 @@ class EngineOrchestrator:
         detected_events: list[AstroEvent],
         astro_calculator: AstroCalculator,
         event_detector: EventDetector,
+        tz_name: str,
     ) -> list[AstroEvent]:
         if not hasattr(self._temporal_sampler, "refine_around"):
             return detected_events
@@ -373,7 +384,11 @@ class EngineOrchestrator:
                 refined_events.append(event)
                 continue
 
-            refined_points = self._temporal_sampler.refine_around(event.ut_time, radius_minutes=5)
+            refined_points = self._temporal_sampler.refine_around(
+                event.ut_time,
+                radius_minutes=5,
+                tz_name=tz_name,
+            )
             refined_states = [
                 astro_calculator.compute_step(sample.ut_time, sample.local_time)
                 for sample in refined_points
@@ -583,20 +598,6 @@ class EngineOrchestrator:
             range(len(samples)),
             key=lambda index: abs(samples[index].ut_time - ut_time),
         )
-
-    def _compute_hash(self, engine_input: EngineInput) -> str:
-        """Computes a stable SHA-256 hash for the engine input."""
-        canonical = {
-            "natal": engine_input.natal_chart,
-            "local_date": engine_input.local_date.isoformat(),
-            "timezone": engine_input.timezone,
-            "latitude": engine_input.latitude,
-            "longitude": engine_input.longitude,
-            "reference_version": engine_input.reference_version,
-            "ruleset_version": engine_input.ruleset_version,
-        }
-        serialized = json.dumps(canonical, sort_keys=True, ensure_ascii=True)
-        return hashlib.sha256(serialized.encode()).hexdigest()
 
     def _local_date_to_ut_interval(self, local_date: date, tz_name: str) -> tuple[float, float]:
         """Converts a local date + timezone into a UT interval (Julian Day start/end)."""

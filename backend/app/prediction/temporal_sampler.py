@@ -75,8 +75,19 @@ class TemporalSampler:
             timezone=tz_name,
         )
 
-    def refine_around(self, ut_jd: float, radius_minutes: int = 5) -> list[SamplePoint]:
-        """Generate 1-minute samples symmetrically around a Julian Day."""
+    def refine_around(
+        self,
+        ut_jd: float,
+        radius_minutes: int = 5,
+        tz_name: str = "UTC",
+    ) -> list[SamplePoint]:
+        """Generate 1-minute samples symmetrically around a Julian Day.
+        
+        Args:
+            ut_jd: The Julian Day center point.
+            radius_minutes: How many minutes to sample on each side.
+            tz_name: The IANA timezone name for local_time representation.
+        """
         one_minute = timedelta(minutes=1)
         center_utc = self._jd_to_local_datetime(ut_jd, "UTC")
         start_utc = center_utc - ((radius_minutes - 0.5) * one_minute)
@@ -87,7 +98,7 @@ class TemporalSampler:
             points.append(
                 SamplePoint(
                     ut_time=self._datetime_to_jd(sample_utc),
-                    local_time=sample_utc,
+                    local_time=sample_utc.astimezone(ZoneInfo(tz_name)),
                 )
             )
 

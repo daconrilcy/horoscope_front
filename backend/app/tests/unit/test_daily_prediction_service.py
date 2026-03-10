@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import date
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -10,6 +11,7 @@ from app.core.versions import ACTIVE_RULESET_VERSION
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.prediction.exceptions import PredictionContextError
+from app.prediction.input_hash import compute_engine_input_hash
 from app.prediction.schemas import EngineOutput
 from app.services.daily_prediction_service import (
     ComputeMode,
@@ -481,6 +483,50 @@ def test_identical_hash_not_recomputed(
         assert result.was_reused is True
         assert result.engine_output is None
         mock_orchestrator.return_value.run.assert_not_called()
+
+
+def test_compute_if_missing_uses_shared_engine_input_hash(
+    service, db, mock_profile, context_loader, persistence_service
+):
+    svc_path = "app.services.daily_prediction_service"
+    with patch(f"{svc_path}.UserBirthProfileRepository") as mock_profile_repo, \
+         patch(f"{svc_path}.ChartResultRepository") as mock_chart_repo, \
+         patch(f"{svc_path}.DailyPredictionRepository") as mock_daily_repo, \
+         patch(f"{svc_path}.PredictionRulesetRepository") as mock_ruleset_repo:
+        natal_payload = {
+            "planets": [{"code": "sun", "longitude": 34.08}],
+            "houses": [{"number": 1, "cusp_longitude": 12.5}],
+            "angles": {},
+        }
+        mock_profile_repo.return_value.get_by_user_id.return_value = mock_profile
+        mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
+            result_payload=natal_payload
+        )
+        mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = None
+        db.scalar.return_value = 10
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
+        persistence_service.save.return_value = MagicMock(
+            run=MagicMock(spec=DailyPredictionRunModel),
+            was_reused=False,
+        )
+
+        service.get_or_compute(user_id=1, db=db, date_local=date(2026, 3, 8))
+
+        expected_hash = compute_engine_input_hash(
+            natal_chart=natal_payload,
+            local_date=date(2026, 3, 8),
+            timezone="Europe/Paris",
+            latitude=48.8566,
+            longitude=2.3522,
+            reference_version="2.0.0",
+            ruleset_version="2.0.0",
+        )
+        mock_daily_repo.return_value.get_run_by_hash_with_details.assert_called_once_with(
+            1,
+            expected_hash,
+        )
 
 
 def test_stale_cached_run_without_overall_summary_is_recomputed(

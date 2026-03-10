@@ -51,7 +51,7 @@ class DailyPredictionCategory(BaseModel):
 
 class DailyPredictionTurningPoint(BaseModel):
     occurred_at_local: str
-    severity: str
+    severity: float
     summary: str | None
     drivers: list[dict[str, Any]]
 
@@ -682,7 +682,7 @@ def _build_public_turning_points(
         return [
             DailyPredictionTurningPoint(
                 occurred_at_local=turning_point["occurred_at_local"],
-                severity=str(turning_point["severity"]),
+                severity=float(turning_point["severity"] or 0),
                 summary=turning_point.get("summary"),
                 drivers=_load_json_list(
                     turning_point.get("driver_json"),
@@ -741,7 +741,7 @@ def _build_public_turning_points(
         public_turning_points.append(
             DailyPredictionTurningPoint(
                 occurred_at_local=boundary,
-                severity="1.0" if previous_categories and next_categories else "0.8",
+                severity=1.0 if previous_categories and next_categories else 0.8,
                 summary=_build_turning_point_summary(
                     boundary,
                     previous_categories,

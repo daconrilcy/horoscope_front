@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from app.prediction.input_hash import compute_engine_input_hash
 from app.prediction.schemas import EngineInput
 from app.tests.regression.helpers import (
     assert_clamps,
@@ -134,8 +135,24 @@ def test_hash_changes_on_version_change(orchestrator):
         ruleset_version="2.0.1",  # Different version
     )
 
-    hash1 = orchestrator._compute_hash(input1)
-    hash2 = orchestrator._compute_hash(input2)
+    hash1 = compute_engine_input_hash(
+        natal_chart=input1.natal_chart,
+        local_date=input1.local_date,
+        timezone=input1.timezone,
+        latitude=input1.latitude,
+        longitude=input1.longitude,
+        reference_version=input1.reference_version,
+        ruleset_version=input1.ruleset_version,
+    )
+    hash2 = compute_engine_input_hash(
+        natal_chart=input2.natal_chart,
+        local_date=input2.local_date,
+        timezone=input2.timezone,
+        latitude=input2.latitude,
+        longitude=input2.longitude,
+        reference_version=input2.reference_version,
+        ruleset_version=input2.ruleset_version,
+    )
 
     assert hash1 != hash2
 

@@ -60,11 +60,13 @@ class EventDetector:
     # Taxonomy V2: codes emitted for exact aspects, discriminated by target family
     ANGLE_TARGETS: frozenset[str] = frozenset({"Asc", "MC"})
     LUMINARY_TARGETS: frozenset[str] = frozenset({"Sun", "Moon"})
-    EXACT_EVENT_TYPES: frozenset[str] = frozenset({
-        "aspect_exact_to_angle",
-        "aspect_exact_to_luminary",
-        "aspect_exact_to_personal",
-    })
+    EXACT_EVENT_TYPES: frozenset[str] = frozenset(
+        {
+            "aspect_exact_to_angle",
+            "aspect_exact_to_luminary",
+            "aspect_exact_to_personal",
+        }
+    )
 
     def __init__(self, ctx: LoadedPredictionContext, natal_chart: NatalChart):
         self.ctx = ctx
@@ -432,7 +434,7 @@ class EventDetector:
         et_data = self.ctx.ruleset_context.event_types.get(event_type)
         if et_data is None:
             logger.warning(
-                "event_type_fallback event_type=%s body=%s target=%s — not found in ruleset; using priority=50 base_weight=1.0",
+                "event_type_fallback event_type=%s body=%s target=%s — not found in ruleset; using priority=50 base_weight=1.0",  # noqa: E501
                 event_type,
                 body,
                 target,

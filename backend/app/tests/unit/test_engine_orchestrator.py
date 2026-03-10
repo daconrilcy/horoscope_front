@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta, timezone
+from enum import Enum
 from types import SimpleNamespace
 
 import pytest
@@ -19,6 +20,7 @@ from app.prediction.context_loader import LoadedPredictionContext
 from app.prediction.editorial_template_engine import EditorialTextOutput
 from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.exceptions import PredictionContextError
+from app.prediction.input_hash import compute_engine_input_hash
 from app.prediction.schemas import AstroEvent, EngineInput, EngineOutput, SamplePoint
 from app.prediction.temporal_sampler import DayGrid
 
@@ -171,8 +173,24 @@ def base_input():
 
 def test_hash_stable(orchestrator, base_input):
     """AC3 - Same input × 2 → same hash."""
-    hash1 = orchestrator._compute_hash(base_input)
-    hash2 = orchestrator._compute_hash(base_input)
+    hash1 = compute_engine_input_hash(
+        natal_chart=base_input.natal_chart,
+        local_date=base_input.local_date,
+        timezone=base_input.timezone,
+        latitude=base_input.latitude,
+        longitude=base_input.longitude,
+        reference_version=base_input.reference_version,
+        ruleset_version=base_input.ruleset_version,
+    )
+    hash2 = compute_engine_input_hash(
+        natal_chart=base_input.natal_chart,
+        local_date=base_input.local_date,
+        timezone=base_input.timezone,
+        latitude=base_input.latitude,
+        longitude=base_input.longitude,
+        reference_version=base_input.reference_version,
+        ruleset_version=base_input.ruleset_version,
+    )
     assert hash1 == hash2
     assert isinstance(hash1, str)
     assert len(hash1) == 64  # SHA-256 hex digest length
@@ -180,7 +198,15 @@ def test_hash_stable(orchestrator, base_input):
 
 def test_hash_changes_on_diff(orchestrator, base_input):
     """AC3 - Changing local_date → different hash."""
-    hash1 = orchestrator._compute_hash(base_input)
+    hash1 = compute_engine_input_hash(
+        natal_chart=base_input.natal_chart,
+        local_date=base_input.local_date,
+        timezone=base_input.timezone,
+        latitude=base_input.latitude,
+        longitude=base_input.longitude,
+        reference_version=base_input.reference_version,
+        ruleset_version=base_input.ruleset_version,
+    )
 
     modified_input = EngineInput(
         natal_chart=base_input.natal_chart,
@@ -192,8 +218,50 @@ def test_hash_changes_on_diff(orchestrator, base_input):
         ruleset_version=base_input.ruleset_version,
         debug_mode=base_input.debug_mode,
     )
-    hash2 = orchestrator._compute_hash(modified_input)
+    hash2 = compute_engine_input_hash(
+        natal_chart=modified_input.natal_chart,
+        local_date=modified_input.local_date,
+        timezone=modified_input.timezone,
+        latitude=modified_input.latitude,
+        longitude=modified_input.longitude,
+        reference_version=modified_input.reference_version,
+        ruleset_version=modified_input.ruleset_version,
+    )
     assert hash1 != hash2
+
+
+def test_hash_canonicalizes_nested_values_and_enums() -> None:
+    class HouseSystem(Enum):
+        PLACIDUS = "placidus"
+
+    hash1 = compute_engine_input_hash(
+        natal_chart={
+            "angles": {},
+            "metadata": {"house_system": HouseSystem.PLACIDUS, "as_of": date(2026, 3, 8)},
+            "planets": [{"code": "sun", "longitude": 1.0}],
+        },
+        local_date=date(2026, 3, 8),
+        timezone="Europe/Paris",
+        latitude=48.8566,
+        longitude=2.3522,
+        reference_version="2.0.0",
+        ruleset_version="2.0.0",
+    )
+    hash2 = compute_engine_input_hash(
+        natal_chart={
+            "planets": [{"longitude": 1.0, "code": "sun"}],
+            "metadata": {"as_of": date(2026, 3, 8), "house_system": HouseSystem.PLACIDUS},
+            "angles": {},
+        },
+        local_date=date(2026, 3, 8),
+        timezone="Europe/Paris",
+        latitude=48.8566,
+        longitude=2.3522,
+        reference_version="2.0.0",
+        ruleset_version="2.0.0",
+    )
+
+    assert hash1 == hash2
 
 
 def test_local_to_ut_paris(orchestrator):
