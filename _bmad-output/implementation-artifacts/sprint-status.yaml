@@ -355,5 +355,5 @@ development_status:
   41-7-securisation-technique-hash-timezone-et-dto-publics: done
   41-8-decoupage-service-applicatif-daily-prediction: done
   41-9-assembleur-public-et-projection-api-explicite: done
-  41-10-separation-sorties-moteur-et-pipeline-editorial: ready-for-dev
+  41-10-separation-sorties-moteur-et-pipeline-editorial: done
   41-11-snapshot-persisted-et-nettoyage-frontiere-api-persistance: ready-for-dev

@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from app.prediction.context_loader import PredictionContextLoader
     from app.prediction.engine_orchestrator import EngineOrchestrator
     from app.prediction.persistence_service import PredictionPersistenceService
-    from app.prediction.schemas import EngineOutput
+    from app.prediction.schemas import PersistablePredictionBundle
 
 logger = logging.getLogger()
 
@@ -32,8 +32,15 @@ logger = logging.getLogger()
 @dataclass(frozen=True)
 class ServiceResult:
     run: DailyPredictionRunModel
-    engine_output: EngineOutput | None
+    bundle: PersistablePredictionBundle | None
     was_reused: bool
+
+    @property
+    def engine_output(self):
+        """Legacy compatibility accessor for callers not yet migrated to bundles."""
+        if self.bundle is None:
+            return None
+        return self.bundle.to_engine_output()
 
 
 class DailyPredictionService:
@@ -96,7 +103,7 @@ class DailyPredictionService:
             if reuse_decision.existing_run:
                 result = ServiceResult(
                     run=reuse_decision.existing_run,
-                    engine_output=None,
+                    bundle=None,
                     was_reused=True,
                 )
                 self._log_and_metrics(
@@ -167,7 +174,7 @@ class DailyPredictionService:
             if fallback.success:
                 result = ServiceResult(
                     run=fallback.fallback_run,
-                    engine_output=None,
+                    bundle=None,
                     was_reused=True,
                 )
                 self._log_and_metrics(
@@ -199,7 +206,7 @@ class DailyPredictionService:
         compute_result = self.compute_runner.run_with_timeout(db, request.engine_input)
         
         save_result = self.persistence_service.save(
-            engine_output=compute_result.engine_output,
+            bundle=compute_result.bundle,
             user_id=request.user_id,
             local_date=request.resolved_date,
             reference_version_id=request.reference_version_id,
@@ -209,7 +216,7 @@ class DailyPredictionService:
 
         return ServiceResult(
             run=save_result.run,
-            engine_output=compute_result.engine_output,
+            bundle=compute_result.bundle,
             was_reused=False,
         )
 
@@ -263,9 +270,12 @@ class DailyPredictionService:
 
         has_pivots = False
         overall_tone = None
-        if result.engine_output:
-            has_pivots = bool(getattr(result.engine_output, "turning_points", []))
-            overall_tone = getattr(result.engine_output, "run_metadata", {}).get("overall_tone")
+        if result.bundle:
+            has_pivots = len(result.bundle.core.turning_points) > 0
+            if result.bundle.editorial:
+                overall_tone = result.bundle.editorial.data.overall_tone
+            else:
+                overall_tone = result.bundle.core.run_metadata.get("overall_tone")
         elif result.run:
             if hasattr(result.run, "overall_tone"):
                 overall_tone = result.run.overall_tone

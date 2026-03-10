@@ -6,37 +6,7 @@ from typing import TYPE_CHECKING
 
 from app.prediction.category_codes import normalize_category_code, normalize_category_codes
 
-if TYPE_CHECKING:
-    from app.prediction.explainability import ContributorEntry, ExplainabilityReport
-    from app.prediction.schemas import EngineOutput
-    from app.prediction.turning_point_detector import TurningPoint
-
-
-@dataclass(frozen=True)
-class BestWindow:
-    start_local: datetime
-    end_local: datetime
-    dominant_category: str
-
-
-@dataclass(frozen=True)
-class CategorySummary:
-    code: str
-    note_20: int
-    power: float
-    volatility: float
-
-
-@dataclass(frozen=True)
-class EditorialOutput:
-    local_date: date
-    top3_categories: list[CategorySummary]
-    bottom2_categories: list[CategorySummary]
-    main_pivot: TurningPoint | None
-    best_window: BestWindow | None
-    caution_flags: dict[str, bool]
-    overall_tone: str
-    top3_contributors_per_category: dict[str, list[ContributorEntry]]
+from .schemas import BestWindow, CategorySummary, EditorialOutput, EngineOutput
 
 
 class EditorialOutputBuilder:

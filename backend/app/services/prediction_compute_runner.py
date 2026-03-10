@@ -9,17 +9,23 @@ from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.services.daily_prediction_types import DailyPredictionServiceError
 
 if TYPE_CHECKING:
-    from sqlalchemy.orm import Session
     from datetime import date
+
+    from sqlalchemy.orm import Session
+
     from app.prediction.context_loader import PredictionContextLoader
-    from app.prediction.schemas import EngineInput, EngineOutput
+    from app.prediction.schemas import EngineInput, PersistablePredictionBundle
 
 logger = logging.getLogger()
 
 
 @dataclass(frozen=True)
 class ComputeResult:
-    engine_output: EngineOutput
+    bundle: PersistablePredictionBundle
+
+    @property
+    def engine_output(self):
+        return self.bundle.to_engine_output()
 
 
 class PredictionComputeRunner:
@@ -57,8 +63,8 @@ class PredictionComputeRunner:
                 include_editorial_text=True,
             )
             try:
-                engine_output = future.result(timeout=30)
-                return ComputeResult(engine_output=engine_output)
+                bundle = future.result(timeout=30)
+                return ComputeResult(bundle=bundle)
             except concurrent.futures.TimeoutError:
                 try:
                     db.expire_all()

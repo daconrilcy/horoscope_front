@@ -12,7 +12,7 @@ from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.prediction.exceptions import PredictionContextError
 from app.prediction.input_hash import compute_engine_input_hash
-from app.prediction.schemas import EngineOutput
+from app.prediction.schemas import PersistablePredictionBundle
 from app.services.daily_prediction_service import (
     DailyPredictionService,
     ServiceResult,
@@ -168,12 +168,16 @@ def test_birth_coordinates_fallback_when_current_location_missing(service, db, m
             result_payload={"planets": [{"code": "sun", "longitude": 34.08}]}
         )
         mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = None
-        db.scalar.return_value = 10
+        
+        # Versions resolution
+        def scalar_side_effect(*args, **kwargs):
+            return 10
+        db.scalar.side_effect = scalar_side_effect
         mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
             id=20, reference_version_id=10
         )
-        mock_output = MagicMock(spec=EngineOutput)
-        mock_orchestrator.return_value.run.return_value = mock_output
+        mock_bundle = MagicMock(spec=PersistablePredictionBundle)
+        mock_orchestrator.return_value.run.return_value = mock_bundle
         mock_run = MagicMock(spec=DailyPredictionRunModel)
         persistence_service = service.persistence_service
         persistence_service.save.return_value = MagicMock(run=mock_run, was_reused=False)
@@ -320,16 +324,30 @@ def test_incomplete_prediction_context_is_auto_repaired_in_local_dev(
             result_payload={"planets": [{"code": "sun", "longitude": 34.08}]}
         )
         mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = None
-        db.scalar.return_value = 10
+        
+        # Versions resolution
+        def scalar_side_effect(stmt, *args, **kwargs):
+            from sqlalchemy.sql import Select
+            # If stmt is a Select object, we can check what it's selecting
+            if isinstance(stmt, Select):
+                # Check if we are selecting an ID (likely version lookup)
+                # This is a bit heuristic but works for these tests
+                if "id" in str(stmt).lower():
+                    return 10
+            return None
+        db.scalar.side_effect = scalar_side_effect
         mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
             id=20, reference_version_id=10
         )
 
-        mock_output = MagicMock(spec=EngineOutput)
+        mock_bundle = MagicMock()
+        mock_bundle.core.turning_points = []
+
         mock_compute.side_effect = [
             PredictionContextError("Prediction context has no planet profiles"),
-            ComputeResult(engine_output=mock_output),
+            ComputeResult(bundle=mock_bundle),
         ]
+
         mock_run = MagicMock(spec=DailyPredictionRunModel)
         persistence_service.save.return_value = MagicMock(run=mock_run, was_reused=False)
 
@@ -337,7 +355,7 @@ def test_incomplete_prediction_context_is_auto_repaired_in_local_dev(
 
         assert result.run == mock_run
         assert result.was_reused is False
-        assert result.engine_output == mock_output
+        assert result.bundle == mock_bundle
         assert mock_compute.call_count == 2
         mock_seed_reference.assert_called_once_with(db, version="2.0.0")
         mock_seed_ruleset.assert_called_once_with(
@@ -384,13 +402,22 @@ def test_user_with_natal_full_compute(
         
         # Versions resolution
         db.scalar.return_value = 10  # reference_version_id
+        def scalar_side_effect(stmt, *args, **kwargs):
+            from sqlalchemy.sql import Select
+            if isinstance(stmt, Select):
+                if "id" in str(stmt).lower():
+                    return 10
+            return None
+        db.scalar.side_effect = scalar_side_effect
         mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
             id=20, reference_version_id=10
         )  # ruleset_id
         
         # Engine run
-        mock_output = MagicMock(spec=EngineOutput)
-        mock_orchestrator.return_value.run.return_value = mock_output
+        mock_bundle = MagicMock()
+        mock_bundle.core.turning_points = []
+
+        mock_orchestrator.return_value.run.return_value = mock_bundle
         
         # Persistence
         mock_run = MagicMock(spec=DailyPredictionRunModel)
@@ -404,7 +431,7 @@ def test_user_with_natal_full_compute(
         assert isinstance(result, ServiceResult)
         assert result.run == mock_run
         assert result.was_reused is False
-        assert result.engine_output == mock_output
+        assert result.bundle == mock_bundle
         
         mock_orchestrator.return_value.run.assert_called_once()
 
@@ -436,13 +463,17 @@ def test_modern_natal_payload_is_normalized_for_engine(
             }
         )
         mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = None
-        db.scalar.return_value = 10
+        
+        # Versions resolution
+        def scalar_side_effect(*args, **kwargs):
+            return 10
+        db.scalar.side_effect = scalar_side_effect
         mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
             id=20, reference_version_id=10
         )
 
-        mock_output = MagicMock(spec=EngineOutput)
-        mock_orchestrator.return_value.run.return_value = mock_output
+        mock_bundle = MagicMock(spec=PersistablePredictionBundle)
+        mock_orchestrator.return_value.run.return_value = mock_bundle
         mock_run = MagicMock(spec=DailyPredictionRunModel)
         persistence_service.save.return_value = MagicMock(run=mock_run, was_reused=False)
 
@@ -499,7 +530,7 @@ def test_identical_hash_not_recomputed(
 
         assert result.run == mock_existing_run
         assert result.was_reused is True
-        assert result.engine_output is None
+        assert result.bundle is None
         mock_orchestrator.return_value.run.assert_not_called()
 
 
@@ -523,7 +554,11 @@ def test_compute_if_missing_uses_shared_engine_input_hash(
             result_payload=natal_payload
         )
         mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = None
-        db.scalar.return_value = 10
+        
+        # Versions resolution
+        def scalar_side_effect(*args, **kwargs):
+            return 10
+        db.scalar.side_effect = scalar_side_effect
         mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
             id=20, reference_version_id=10
         )
@@ -572,13 +607,22 @@ def test_stale_cached_run_without_overall_summary_is_recomputed(
         stale_run.id = 99
         stale_run.overall_summary = None
         mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = stale_run
-        db.scalar.return_value = 10
+        def scalar_side_effect(stmt, *args, **kwargs):
+            from sqlalchemy.sql import Select
+            if isinstance(stmt, Select):
+                if "id" in str(stmt).lower():
+                    return 10
+            return None
+        db.scalar.side_effect = scalar_side_effect
         mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
             id=20, reference_version_id=10
         )
 
-        mock_output = MagicMock(spec=EngineOutput)
-        mock_orchestrator.return_value.run.return_value = mock_output
+        mock_bundle = MagicMock()
+        mock_bundle.core.turning_points = []
+
+        mock_orchestrator.return_value.run.return_value = mock_bundle
+
         fresh_run = MagicMock(spec=DailyPredictionRunModel)
         persistence_service.save.return_value = MagicMock(run=fresh_run, was_reused=False)
 
@@ -613,15 +657,24 @@ def test_stale_cached_run_with_missing_block_summaries_is_recomputed(
         stale_run.overall_summary = "Some summary"
         stale_run.time_blocks = [MagicMock(summary=None)] # Missing summary
         stale_run.turning_points = [MagicMock(summary="Valid summary")]
-        
+
         mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = stale_run
-        db.scalar.return_value = 10
+        def scalar_side_effect(stmt, *args, **kwargs):
+            from sqlalchemy.sql import Select
+            if isinstance(stmt, Select):
+                if "id" in str(stmt).lower():
+                    return 10
+            return None
+        db.scalar.side_effect = scalar_side_effect
         mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
             id=20, reference_version_id=10
         )
 
-        mock_output = MagicMock(spec=EngineOutput)
-        mock_orchestrator.return_value.run.return_value = mock_output
+        mock_bundle = MagicMock()
+        mock_bundle.core.turning_points = []
+
+        mock_orchestrator.return_value.run.return_value = mock_bundle
+
         fresh_run = MagicMock(spec=DailyPredictionRunModel)
         persistence_service.save.return_value = MagicMock(run=fresh_run, was_reused=False)
 
@@ -658,13 +711,21 @@ def test_stale_cached_run_with_technical_tp_summary_is_recomputed(
         stale_run.turning_points = [MagicMock(summary="delta_note")] # Technical summary
         
         mock_daily_repo.return_value.get_run_by_hash_with_details.return_value = stale_run
-        db.scalar.return_value = 10
+        def scalar_side_effect(stmt, *args, **kwargs):
+            from sqlalchemy.sql import Select
+            if isinstance(stmt, Select):
+                if "id" in str(stmt).lower():
+                    return 10
+            return None
+        db.scalar.side_effect = scalar_side_effect
         mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
             id=20, reference_version_id=10
         )
 
-        mock_output = MagicMock(spec=EngineOutput)
-        mock_orchestrator.return_value.run.return_value = mock_output
+        mock_bundle = MagicMock()
+        mock_bundle.core.turning_points = []
+
+        mock_orchestrator.return_value.run.return_value = mock_bundle
         fresh_run = MagicMock(spec=DailyPredictionRunModel)
         persistence_service.save.return_value = MagicMock(run=fresh_run, was_reused=False)
 
@@ -751,7 +812,7 @@ def test_read_only_existing(service, db, mock_profile):
 
         assert result.run == mock_existing_run
         assert result.was_reused is True
-        assert result.engine_output is None
+        assert result.bundle is None
 
 
 def test_version_missing_raises(service, db, mock_profile):

@@ -19,7 +19,8 @@ def test_engine_output_persists_without_manual_mapping() -> None:
         )
         engine_input = build_engine_input(load_json(fixture_path)["input"])
         orchestrator = create_orchestrator(session)
-        engine_output = orchestrator.run(engine_input)
+        bundle = orchestrator.run(engine_input)
+        core_output = bundle.core
 
         reference_version_id = session.scalar(
             select(ReferenceVersionModel.id).where(
@@ -36,7 +37,7 @@ def test_engine_output_persists_without_manual_mapping() -> None:
 
         service = PredictionPersistenceService()
         result = service.save(
-            engine_output,
+            bundle,
             user_id=1,
             local_date=engine_input.local_date,
             reference_version_id=reference_version_id,
@@ -47,20 +48,20 @@ def test_engine_output_persists_without_manual_mapping() -> None:
 
         assert result.was_reused is False
         assert result.run.id is not None
-        assert all(isinstance(score, dict) for score in engine_output.category_scores.values())
+        assert all(isinstance(score, dict) for score in core_output.category_scores.values())
 
         persisted_run = session.get(DailyPredictionRunModel, result.run.id)
         assert persisted_run is not None
         assert (
             persisted_run.is_provisional_calibration
-            == engine_output.run_metadata["is_provisional_calibration"]
+            == core_output.run_metadata["is_provisional_calibration"]
         )
-        assert len(persisted_run.category_scores) == len(engine_output.category_scores)
-        assert len(persisted_run.turning_points) == len(engine_output.turning_points)
-        assert len(persisted_run.time_blocks) == len(engine_output.time_blocks)
+        assert len(persisted_run.category_scores) == len(core_output.category_scores)
+        assert len(persisted_run.turning_points) == len(core_output.turning_points)
+        assert len(persisted_run.time_blocks) == len(core_output.time_blocks)
 
         persisted_scores = {score.category.code: score for score in persisted_run.category_scores}
-        for code, output_score in engine_output.category_scores.items():
+        for code, output_score in core_output.category_scores.items():
             persisted = persisted_scores[code]
             assert persisted.note_20 == output_score["note_20"]
             assert persisted.raw_score == output_score["raw_score"]
@@ -80,7 +81,7 @@ def test_engine_output_persists_without_manual_mapping() -> None:
             )
 
         reused = service.save(
-            engine_output,
+            bundle,
             user_id=1,
             local_date=engine_input.local_date,
             reference_version_id=reference_version_id,

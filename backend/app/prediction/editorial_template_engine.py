@@ -9,24 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from app.prediction.category_codes import normalize_category_code
 
-if TYPE_CHECKING:
-    from app.prediction.editorial_builder import EditorialOutput
-
-logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class EditorialTextOutput:
-    """Final rendered editorial texts."""
-
-    intro: str
-    category_summaries: dict[str, str]
-    pivot_phrase: str | None
-    window_phrase: str | None
-    caution_sante: str | None
-    caution_argent: str | None
-    time_block_summaries: list[str] = field(default_factory=list)
-    turning_point_summaries: list[str] = field(default_factory=list)
+from .schemas import EditorialOutput, EditorialTextOutput
 
 
 class EditorialTemplateEngine:
@@ -270,9 +253,19 @@ class EditorialTemplateEngine:
 
     def _render_turning_point_summary(self, tp: Any, lang: str) -> str:
         tpl = self._load_template(lang, "resume_turning_point")
-        
-        cats_labels = [self._get_category_label(c, lang) for c in tp.categories_impacted]
-        categories_labels = ", ".join(cats_labels) if cats_labels else ("plusieurs domaines" if lang == "fr" else "several areas")
+
+        # [AI-Review] Fix potential crash if tp.categories_impacted is missing
+        # (happens in some refactor scenarios)
+        impacted = getattr(tp, "categories_impacted", [])
+        if not impacted and hasattr(tp, "dominant_categories"):
+            impacted = tp.dominant_categories
+
+        cats_labels = [self._get_category_label(c, lang) for c in impacted]
+        categories_labels = (
+            ", ".join(cats_labels)
+            if cats_labels
+            else ("plusieurs domaines" if lang == "fr" else "several areas")
+        )
 
         return tpl.format(
             pivot_time=tp.local_time.strftime("%H:%M"),

@@ -1,6 +1,3 @@
-import dataclasses
-import hashlib
-import json
 from collections.abc import Callable
 from datetime import UTC, date, datetime, time, timedelta
 from numbers import Real
@@ -21,7 +18,7 @@ from .contribution_calculator import ContributionCalculator
 from .decision_window_builder import DecisionWindowBuilder
 from .domain_router import DomainRouter
 from .editorial_builder import EditorialOutputBuilder
-from .editorial_template_engine import EditorialTemplateEngine
+from .editorial_service import PredictionEditorialService
 from .event_detector import EventDetector
 from .exceptions import PredictionContextError
 from .explainability import ExplainabilityBuilder
@@ -29,10 +26,11 @@ from .input_hash import compute_engine_input_hash
 from .natal_sensitivity import NatalSensitivityCalculator
 from .schemas import (
     AstroEvent,
+    CoreEngineOutput,
     EffectiveContext,
     EngineInput,
-    EngineOutput,
     NatalChart,
+    PersistablePredictionBundle,
     SamplePoint,
 )
 from .temporal_kernel import spread_event_weights
@@ -92,8 +90,7 @@ class EngineOrchestrator:
         turning_point_detector: TurningPointDetector | None = None,
         block_generator: BlockGenerator | None = None,
         explainability_builder: ExplainabilityBuilder | None = None,
-        editorial_builder: EditorialOutputBuilder | None = None,
-        editorial_template_engine: EditorialTemplateEngine | None = None,
+        editorial_service: PredictionEditorialService | None = None,
         decision_window_builder: DecisionWindowBuilder | None = None,
     ) -> None:
         self._ruleset_context_loader = ruleset_context_loader
@@ -111,21 +108,14 @@ class EngineOrchestrator:
         self._turning_point_detector = turning_point_detector or TurningPointDetector()
         self._block_generator = block_generator or BlockGenerator()
         self._explainability_builder = explainability_builder or ExplainabilityBuilder()
-        self._editorial_builder = editorial_builder or EditorialOutputBuilder()
-        self._editorial_template_engine = (
-            editorial_template_engine or EditorialTemplateEngine()
-        )
+        self._editorial_service = editorial_service or PredictionEditorialService()
         self._decision_window_builder = decision_window_builder or DecisionWindowBuilder()
 
     def with_context_loader(
         self,
         prediction_context_loader: "Callable[[str, str, date], LoadedPredictionContext | None]",
     ) -> "EngineOrchestrator":
-        """Return a new orchestrator with a fresh context loader, reusing stateless sub-components.
-
-        Avoids re-instantiating sub-components on every request while binding
-        a per-request db session into the loader.
-        """
+        """Return a new orchestrator with a fresh context loader."""
         return EngineOrchestrator(
             prediction_context_loader=prediction_context_loader,
             temporal_sampler=self._temporal_sampler,
@@ -139,8 +129,7 @@ class EngineOrchestrator:
             turning_point_detector=self._turning_point_detector,
             block_generator=self._block_generator,
             explainability_builder=self._explainability_builder,
-            editorial_builder=self._editorial_builder,
-            editorial_template_engine=self._editorial_template_engine,
+            editorial_service=self._editorial_service,
             decision_window_builder=self._decision_window_builder,
         )
 
@@ -152,17 +141,11 @@ class EngineOrchestrator:
         include_editorial: bool = True,
         include_editorial_text: bool = False,
         editorial_text_lang: str = "fr",
-    ) -> EngineOutput:
+    ) -> PersistablePredictionBundle:
         """
-        Executes the prediction engine for a given input.
-
-        Args:
-            engine_input: The canonical input for the engine.
-
-        Returns:
-            EngineOutput: The structured output of the engine.
+        Executes the prediction engine for a given input and returns a complete bundle.
         """
-        # AC3 - Compute hash
+        # 1. AC3 - Compute hash
         input_hash = compute_engine_input_hash(
             natal_chart=engine_input.natal_chart,
             local_date=engine_input.local_date,
@@ -173,7 +156,7 @@ class EngineOrchestrator:
             ruleset_version=engine_input.ruleset_version,
         )
 
-        # AC4 - Convert local date to UT interval (JD)
+        # 2. AC4 - Convert local date to UT interval (JD)
         jd_start, jd_end = self._local_date_to_ut_interval(
             engine_input.local_date, engine_input.timezone
         )
@@ -228,7 +211,7 @@ class EngineOrchestrator:
             requested_category_codes=category_codes,
         )
 
-        # Build explainability report (AC1-AC4)
+        # 3. Build explainability report
         contributions_log = []
         for step_contributions in contributions_by_step:
             for event, cat_contributions in step_contributions:
@@ -294,7 +277,7 @@ class EngineOrchestrator:
         )
 
         run_metadata = {
-            "run_id": None,  # Will be handled by persistence in later stories
+            "run_id": None,
             "computed_at": self._local_date_start_utc(
                 engine_input.local_date, engine_input.timezone
             ).isoformat(),
@@ -302,68 +285,34 @@ class EngineOrchestrator:
             "jd_interval": [jd_start, jd_end],
             "is_provisional_calibration": loaded_context.is_provisional_calibration,
             "calibration_label": loaded_context.calibration_label,
+            "caution_category_codes": self._resolve_caution_category_codes(loaded_context),
         }
 
-        output = EngineOutput(
-            run_metadata=run_metadata,
+        # AC1 - CoreEngineOutput (Calcul pur sans texte)
+        core_output = CoreEngineOutput(
             effective_context=effective_context,
-            sampling_timeline=list(day_grid.samples),
-            detected_events=detected_events,
+            run_metadata=run_metadata,
             category_scores=editorial_category_scores,
             time_blocks=time_blocks,
             turning_points=turning_points,
-            explainability=explainability,
             decision_windows=decision_windows,
+            detected_events=detected_events,
+            sampling_timeline=list(day_grid.samples),
+            explainability=explainability,
         )
 
         if not include_editorial:
-            return output
+            return PersistablePredictionBundle(core=core_output)
 
-        editorial_input = dataclasses.replace(
-            output,
-            run_metadata={
-                **run_metadata,
-                "caution_category_codes": self._resolve_caution_category_codes(loaded_context),
-            },
-            category_scores=editorial_category_scores,
-            time_blocks=self._build_editorial_time_blocks(
-                time_blocks,
-                notes_by_step,
-                step_times,
-            ),
+        # AC1 - EditorialOutputBundle (Textes et résumés) via AC3 - PredictionEditorialService
+        editorial_bundle = self._editorial_service.generate_bundle(
+            core_output, lang=editorial_text_lang
         )
-        editorial = self._editorial_builder.build(editorial_input, explainability)
 
-        editorial_text = None
-        updated_time_blocks = time_blocks
-        updated_turning_points = turning_points
-
-        if include_editorial_text:
-            editorial_text = self._editorial_template_engine.render(
-                editorial,
-                lang=editorial_text_lang,
-                time_blocks=time_blocks,
-                turning_points=turning_points,
-            )
-            # Injecter les summaries dans les TimeBlock
-            updated_time_blocks = [
-                dataclasses.replace(block, summary=summary)
-                for block, summary in zip(time_blocks, editorial_text.time_block_summaries)
-            ]
-            # Injecter les summaries dans les TurningPoint
-            updated_turning_points = [
-                dataclasses.replace(tp, summary=summary)
-                for tp, summary in zip(turning_points, editorial_text.turning_point_summaries)
-            ]
-
-        return dataclasses.replace(
-            output,
-            run_metadata={**run_metadata, "overall_tone": editorial.overall_tone},
-            time_blocks=updated_time_blocks,
-            turning_points=updated_turning_points,
-            editorial=editorial,
-            editorial_text=editorial_text,
-            decision_windows=decision_windows,
+        # AC1 - PersistablePredictionBundle (Prêt à sauvegarder)
+        return PersistablePredictionBundle(
+            core=core_output,
+            editorial=editorial_bundle,
         )
 
     def _refine_detected_events(

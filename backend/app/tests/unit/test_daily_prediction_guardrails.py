@@ -34,6 +34,16 @@ def service(mock_deps):
         orchestrator=mock_deps["orchestrator"],
     )
 
+def _make_bundle(*, overall_tone: str | None = None, turning_points: list | None = None):
+    bundle = MagicMock()
+    bundle.core.turning_points = turning_points or []
+    bundle.core.run_metadata = {}
+    bundle.editorial = None
+    if overall_tone is not None:
+        bundle.editorial = MagicMock()
+        bundle.editorial.data.overall_tone = overall_tone
+    return bundle
+
 
 def test_fallback_on_engine_error(service, mock_deps, db_session):
     resolved_request = SimpleNamespace(
@@ -64,7 +74,7 @@ def test_fallback_on_engine_error(service, mock_deps, db_session):
 
     assert result.was_reused is True
     assert result.run.id == 123
-    assert result.engine_output is None
+    assert result.bundle is None
 
 
 def test_timeout_raises_on_slow_run(service, mock_deps, db_session):
@@ -162,12 +172,7 @@ def test_log_includes_duration(caplog, service, mock_deps, db_session):
     service.resolver.resolve = MagicMock(return_value=resolved_request)
     service.reuse_policy.decide = MagicMock(return_value=ReuseDecision(should_compute=True))
     service.compute_runner.run_with_timeout = MagicMock(
-        return_value=ComputeResult(
-            engine_output=MagicMock(
-                turning_points=[],
-                run_metadata={"overall_tone": "neutral"},
-            )
-        )
+        return_value=ComputeResult(bundle=_make_bundle(overall_tone="neutral"))
     )
     mock_deps["persistence_service"].save.return_value = MagicMock(run=MagicMock())
 

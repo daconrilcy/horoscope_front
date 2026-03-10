@@ -26,6 +26,17 @@ def service(mock_deps):
         orchestrator=mock_deps["orchestrator"]
     )
 
+def _make_bundle(*, overall_tone: str | None = None, turning_points: list | None = None):
+    bundle = MagicMock()
+    bundle.core.turning_points = turning_points or []
+    bundle.core.run_metadata = {}
+    bundle.editorial = None
+    if overall_tone is not None:
+        bundle.editorial = MagicMock()
+        bundle.editorial.data.overall_tone = overall_tone
+    return bundle
+
+
 @patch("app.services.daily_prediction_service.increment_counter")
 def test_compute_counter_incremented(mock_increment, service, mock_deps, db_session):
     resolved_request = SimpleNamespace(
@@ -39,7 +50,7 @@ def test_compute_counter_incremented(mock_increment, service, mock_deps, db_sess
     service.resolver.resolve = MagicMock(return_value=resolved_request)
     service.reuse_policy.decide = MagicMock(return_value=ReuseDecision(should_compute=True))
     service.compute_runner.run_with_timeout = MagicMock(
-        return_value=ComputeResult(engine_output=MagicMock(run_metadata={}, turning_points=[]))
+        return_value=ComputeResult(bundle=_make_bundle())
     )
     mock_deps["persistence_service"].save.return_value = MagicMock(run=MagicMock())
 
@@ -79,11 +90,10 @@ def test_log_includes_tone_and_pivot_count(caplog, service, mock_deps, db_sessio
     )
     service.resolver.resolve = MagicMock(return_value=resolved_request)
     service.reuse_policy.decide = MagicMock(return_value=ReuseDecision(should_compute=True))
-    engine_output = MagicMock()
-    engine_output.run_metadata = {"overall_tone": "positive"}
-    engine_output.turning_points = [1, 2] # 2 pivots
     service.compute_runner.run_with_timeout = MagicMock(
-        return_value=ComputeResult(engine_output=engine_output)
+        return_value=ComputeResult(
+            bundle=_make_bundle(overall_tone="positive", turning_points=[1, 2])
+        )
     )
     mock_deps["persistence_service"].save.return_value = MagicMock(run=MagicMock())
 

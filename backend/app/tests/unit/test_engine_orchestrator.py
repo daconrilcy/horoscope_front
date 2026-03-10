@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta, timezone
 from enum import Enum
 from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -17,11 +18,10 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetData,
 )
 from app.prediction.context_loader import LoadedPredictionContext
-from app.prediction.editorial_template_engine import EditorialTextOutput
 from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.exceptions import PredictionContextError
 from app.prediction.input_hash import compute_engine_input_hash
-from app.prediction.schemas import AstroEvent, EngineInput, EngineOutput, SamplePoint
+from app.prediction.schemas import AstroEvent, EngineInput, PersistablePredictionBundle, SamplePoint
 from app.prediction.temporal_sampler import DayGrid
 
 
@@ -277,44 +277,44 @@ def test_local_to_ut_paris(orchestrator):
 
 
 def test_output_has_mandatory_fields(orchestrator, base_input):
-    """Integrated run returns the mandatory EngineOutput fields."""
-    output = orchestrator.run(base_input)
-    assert isinstance(output, EngineOutput)
-    assert "run_metadata" in output.__dict__
-    assert output.run_metadata["computed_at"] == "2026-03-06T23:00:00+00:00"
-    assert output.run_metadata["is_provisional_calibration"] is True
-    assert output.run_metadata["jd_interval"] == [
+    """Integrated run returns the mandatory fields via PersistablePredictionBundle."""
+    bundle = orchestrator.run(base_input)
+    assert isinstance(bundle, PersistablePredictionBundle)
+    core = bundle.core
+    assert "run_metadata" in core.__dict__
+    assert core.run_metadata["computed_at"] == "2026-03-06T23:00:00+00:00"
+    assert core.run_metadata["is_provisional_calibration"] is True
+    assert core.run_metadata["jd_interval"] == [
         pytest.approx(2461106.4583333335, abs=1e-6),
         pytest.approx(2461107.4583333335, abs=1e-6),
     ]
-    assert output.effective_context is not None
-    assert isinstance(output.sampling_timeline, list)
-    assert isinstance(output.detected_events, list)
-    assert isinstance(output.category_scores, dict)
-    assert isinstance(output.editorial, object)
-    assert isinstance(output.time_blocks, list)
-    assert isinstance(output.turning_points, list)
-    assert len(output.sampling_timeline) == 96
-    assert len(output.detected_events) >= 24
-    assert 1 <= output.category_scores["work"]["note_20"] <= 20
-    assert output.category_scores["work"]["raw_score"] is not None
-    assert output.category_scores["work"]["power"] is not None
-    assert output.editorial is not None
-    assert output.editorial.overall_tone in {"positive", "negative", "mixed", "neutral"}
-    assert output.run_metadata["overall_tone"] == output.editorial.overall_tone
-    assert len(output.time_blocks) >= 1  # signal-driven: no fixed 24-block hourly grid
+    assert core.effective_context is not None
+    assert isinstance(core.sampling_timeline, list)
+    assert isinstance(core.detected_events, list)
+    assert isinstance(core.category_scores, dict)
+    assert isinstance(bundle.editorial, object)
+    assert isinstance(core.time_blocks, list)
+    assert isinstance(core.turning_points, list)
+    assert len(core.sampling_timeline) == 96
+    assert len(core.detected_events) >= 24
+    assert 1 <= core.category_scores["work"]["note_20"] <= 20
+    assert core.category_scores["work"]["raw_score"] is not None
+    assert core.category_scores["work"]["power"] is not None
+    assert bundle.editorial is not None
+    assert bundle.editorial.data.overall_tone in {"positive", "negative", "mixed", "neutral"}
+    assert len(core.time_blocks) >= 1
 
 
 def test_house_system_fields_present(orchestrator, base_input):
     """AC5 - house_system_requested and effective present."""
-    output = orchestrator.run(base_input)
-    ctx = output.effective_context
+    bundle = orchestrator.run(base_input)
+    ctx = bundle.core.effective_context
     assert ctx.house_system_requested == "whole_sign"
     assert ctx.house_system_effective == "placidus"
 
 
 def test_determinism(orchestrator, base_input):
-    """AC6 - Two identical runs → identical EngineOutput."""
+    """AC6 - Two identical runs → identical result."""
     output1 = orchestrator.run(base_input)
     output2 = orchestrator.run(base_input)
 
@@ -334,56 +334,38 @@ def test_debug_mode_propagated(orchestrator, base_input):
         debug_mode=True,
     )
 
-    output = orchestrator.run(debug_input)
+    bundle = orchestrator.run(debug_input)
 
-    assert output.run_metadata["debug_mode"] is True
+    assert bundle.core.run_metadata["debug_mode"] is True
 
 
 def test_run_can_skip_editorial_generation(orchestrator, base_input):
-    output = orchestrator.run(base_input, include_editorial=False)
+    bundle = orchestrator.run(base_input, include_editorial=False)
 
-    assert output.editorial is None
-    assert "overall_tone" not in output.run_metadata
+    assert bundle.editorial is None
 
 
 def test_run_can_render_editorial_text_with_configurable_language(base_input):
     captured = {}
 
-    class StubTemplateEngine:
-        def render(
-            self,
-            editorial,
-            lang: str = "fr",
-            time_blocks=None,
-            turning_points=None,
-        ) -> EditorialTextOutput:
-            captured["editorial"] = editorial
+    class StubEditorialService:
+        def generate_bundle(self, core_output, lang: str = "fr"):
+            captured["core"] = core_output
             captured["lang"] = lang
-            return EditorialTextOutput(
-                intro=f"intro-{lang}",
-                category_summaries={},
-                pivot_phrase=None,
-                window_phrase=None,
-                caution_sante=None,
-                caution_argent=None,
-                time_block_summaries=[""] * len(time_blocks) if time_blocks else [],
-                turning_point_summaries=[""] * len(turning_points) if turning_points else [],
-            )
+            return MagicMock()
+
     orchestrator = EngineOrchestrator(
         prediction_context_loader=lambda *_: _build_loaded_context(),
-        editorial_template_engine=StubTemplateEngine(),
+        editorial_service=StubEditorialService(),
     )
 
-    output = orchestrator.run(
+    bundle = orchestrator.run(
         base_input,
         include_editorial_text=True,
         editorial_text_lang="en",
     )
 
-    assert output.editorial is not None
-    assert output.editorial_text is not None
-    assert output.editorial_text.intro == "intro-en"
-    assert captured["editorial"] == output.editorial
+    assert bundle.editorial is not None
     assert captured["lang"] == "en"
 
 
@@ -414,13 +396,14 @@ def test_missing_prediction_context_raises_prediction_context_error(base_input):
 
 def test_run_integrates_chapter_33_components(orchestrator, base_input):
     """The orchestrator wires the chapter 33 components into a real pipeline."""
-    output = orchestrator.run(base_input)
+    bundle = orchestrator.run(base_input)
+    core = bundle.core
 
     planetary_hours = [
-        event for event in output.detected_events if event.event_type == "planetary_hour_change"
+        event for event in core.detected_events if event.event_type == "planetary_hour_change"
     ]
     assert len(planetary_hours) == 24
-    assert output.effective_context.house_system_effective == "placidus"
+    assert core.effective_context.house_system_effective == "placidus"
 
 
 def test_run_integrates_prediction_scoring_pipeline_with_lowercase_reference_codes(base_input):
@@ -591,12 +574,13 @@ def test_run_integrates_prediction_scoring_pipeline_with_lowercase_reference_cod
         event_detector_factory=lambda *_: StubEventDetector(),
     )
 
-    output = orchestrator.run(base_input)
+    bundle = orchestrator.run(base_input)
+    core = bundle.core
 
-    assert output.category_scores["work"]["note_20"] > 10
-    assert output.editorial is not None
-    assert output.editorial.top3_categories[0].code == "work"
+    assert core.category_scores["work"]["note_20"] > 10
+    assert bundle.editorial is not None
+    assert bundle.editorial.data.top3_categories[0].code == "work"
     # Temporal spreading smooths the 4-step signal: no step-to-step delta >= 2
     # → 0 turning points; block generator produces 1 block for the whole mini-day.
-    assert len(output.turning_points) == 0
-    assert len(output.time_blocks) == 1
+    assert len(core.turning_points) == 0
+    assert len(core.time_blocks) == 1

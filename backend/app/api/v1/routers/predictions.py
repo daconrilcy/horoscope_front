@@ -256,8 +256,8 @@ def debug_daily_prediction(
             reference_version = version_model.version
 
     house_system_effective = full_run.get("house_system_effective")
-    if house_system_effective is None and result.engine_output is not None:
-        house_system_effective = result.engine_output.effective_context.house_system_effective
+    if house_system_effective is None and result.bundle is not None:
+        house_system_effective = result.bundle.core.effective_context.house_system_effective
 
     meta = DailyPredictionMeta(
         date_local=result.run.local_date.isoformat(),
@@ -400,7 +400,7 @@ def get_daily_prediction(
         assembled = assembler.assemble(
             full_run=full_run,
             cat_id_to_code=cat_id_to_code,
-            engine_output=result.engine_output,
+            engine_output=result.bundle,
             was_reused=result.was_reused,
             reference_version=reference_version,
             ruleset_version=settings.ruleset_version,
@@ -415,7 +415,7 @@ def get_daily_prediction(
             status_code=500,
             detail={
                 "code": "prediction_payload_invalid",
-                "message": f"Malformed data in prediction run: {exc}",
+                "message": str(exc),
             },
         )
 

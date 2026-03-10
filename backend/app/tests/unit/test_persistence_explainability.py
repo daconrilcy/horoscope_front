@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from app.infra.db.models.daily_prediction import (
     DailyPredictionCategoryScoreModel,
+    DailyPredictionTimeBlockModel,
     DailyPredictionTurningPointModel,
 )
 from app.infra.db.models.prediction_reference import PredictionCategoryModel
@@ -242,3 +243,63 @@ def test_save_persists_editorial_text_into_run_and_category_summaries(db_session
 
     assert love_score.summary == "L'amour est porteur aujourd'hui."
     assert work_score.summary is None
+
+
+def test_save_persists_time_block_summaries_without_turning_points(db_session, seed_data):
+    service = PredictionPersistenceService()
+    local_date = date(2026, 3, 8)
+    engine_output = EngineOutput(
+        run_metadata={},
+        effective_context=EffectiveContext(
+            house_system_requested="placidus",
+            house_system_effective="placidus",
+            local_date=local_date,
+            timezone="UTC",
+            input_hash="hash_block_editorial_text",
+        ),
+        category_scores={},
+        turning_points=[],
+        time_blocks=[
+            {
+                "block_index": 0,
+                "start_at_local": datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+                "end_at_local": datetime(2026, 3, 8, 10, 0, tzinfo=timezone.utc),
+                "tone_code": "positive",
+                "dominant_categories": ["love"],
+            },
+            {
+                "block_index": 1,
+                "start_at_local": datetime(2026, 3, 8, 10, 0, tzinfo=timezone.utc),
+                "end_at_local": datetime(2026, 3, 8, 12, 0, tzinfo=timezone.utc),
+                "tone_code": "neutral",
+                "dominant_categories": ["work"],
+            },
+        ],
+        editorial_text=EditorialTextOutput(
+            intro="Intro",
+            category_summaries={},
+            pivot_phrase=None,
+            window_phrase=None,
+            caution_sante=None,
+            caution_argent=None,
+            time_block_summaries=["Bloc 1", "Bloc 2"],
+            turning_point_summaries=[],
+        ),
+    )
+
+    result = service.save(
+        engine_output=engine_output,
+        user_id=1,
+        local_date=local_date,
+        reference_version_id=seed_data["version_id"],
+        ruleset_id=seed_data["ruleset_id"],
+        db=db_session,
+    )
+
+    blocks = db_session.scalars(
+        select(DailyPredictionTimeBlockModel).where(
+            DailyPredictionTimeBlockModel.run_id == result.run.id
+        )
+    ).all()
+
+    assert [block.summary for block in blocks] == ["Bloc 1", "Bloc 2"]

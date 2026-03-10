@@ -68,7 +68,11 @@ class PublicPredictionAssembler:
         # 6. Meta
         house_system_effective = full_run.get("house_system_effective")
         if house_system_effective is None and engine_output is not None:
-            effective_context = getattr(engine_output, "effective_context", None)
+            effective_context = getattr(
+                _resolve_core_engine_output(engine_output),
+                "effective_context",
+                None,
+            )
             house_system_effective = getattr(
                 effective_context,
                 "house_system_effective",
@@ -129,8 +133,9 @@ class PublicDecisionWindowPolicy:
     ) -> list[dict[str, Any]] | None:
         # Use Engine Output if available (live compute)
         raw_windows = []
-        if engine_output is not None:
-            raw_dws = getattr(engine_output, "decision_windows", None) or []
+        core_output = _resolve_core_engine_output(engine_output)
+        if core_output is not None:
+            raw_dws = getattr(core_output, "decision_windows", None) or []
             raw_windows = [
                 {
                     "start_local": dw.start_local.isoformat(),
@@ -477,7 +482,7 @@ class PublicSummaryPolicy:
         engine_output: Any | None = None,
         is_provisional: bool = False,
     ) -> dict[str, Any]:
-        editorial = getattr(engine_output, "editorial", None) if engine_output else None
+        editorial = _resolve_editorial_output(engine_output)
         
         scores = sorted(full_run.get("category_scores", []), key=lambda s: s["rank"] or 99)
         top_categories = [cat_id_to_code.get(s["category_id"], "unknown") for s in scores[:3]]
@@ -536,3 +541,18 @@ class PublicSummaryPolicy:
             "main_turning_point": main_tp,
             "low_score_variance": low_var,
         }
+
+
+def _resolve_core_engine_output(engine_output: Any | None) -> Any | None:
+    if engine_output is None:
+        return None
+    return getattr(engine_output, "core", engine_output)
+
+
+def _resolve_editorial_output(engine_output: Any | None) -> Any | None:
+    if engine_output is None:
+        return None
+    editorial_bundle = getattr(engine_output, "editorial", None)
+    if editorial_bundle is None:
+        return None
+    return getattr(editorial_bundle, "data", editorial_bundle)

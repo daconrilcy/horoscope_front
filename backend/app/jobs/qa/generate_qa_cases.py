@@ -106,18 +106,24 @@ def generate() -> int:
                 ruleset_version=settings.active_ruleset_version,
             )
 
-            if result and result.engine_output:
-                metadata = result.engine_output.run_metadata
+            if result and result.bundle:
+                core_output = result.bundle.core
+                editorial_output = result.bundle.editorial
+                metadata = core_output.run_metadata
                 case_data = {
                     "case_id": f"QA-{i+1:02d}",
                     "profile": profile["label"],
                     "date": qa_date.isoformat(),
-                    "overall_tone": metadata.get("overall_tone"),
+                    "overall_tone": (
+                        editorial_output.data.overall_tone
+                        if editorial_output
+                        else metadata.get("overall_tone")
+                    ),
                     "is_provisional": metadata.get("is_provisional_calibration"),
                     "calibration_label": metadata.get("calibration_label"),
-                    "category_scores": result.engine_output.category_scores,
-                    "turning_points_count": len(result.engine_output.turning_points),
-                    "timeline_blocks_count": len(result.engine_output.time_blocks),
+                    "category_scores": core_output.category_scores,
+                    "turning_points_count": len(core_output.turning_points),
+                    "timeline_blocks_count": len(core_output.time_blocks),
                 }
 
                 output_file = OUTPUT_DIR / f"case_{profile['label']}_{qa_date}.json"

@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from .editorial_builder import EditorialOutput
     from .editorial_template_engine import EditorialTextOutput
-    from .explainability import ExplainabilityReport
 
 
 @dataclass(frozen=True)
@@ -106,8 +105,123 @@ class DecisionWindow:
     confidence: float  # 0-1, inverse of volatility
     dominant_categories: list[str]
 @dataclass(frozen=True)
+class BestWindow:
+    start_local: datetime
+    end_local: datetime
+    dominant_category: str
+
+
+@dataclass(frozen=True)
+class CategorySummary:
+    code: str
+    note_20: int
+    power: float
+    volatility: float
+
+
+@dataclass(frozen=True)
+class EditorialOutput:
+    local_date: date
+    top3_categories: list[CategorySummary]
+    bottom2_categories: list[CategorySummary]
+    main_pivot: Any | None  # TurningPoint
+    best_window: BestWindow | None
+    caution_flags: dict[str, bool]
+    overall_tone: str
+    top3_contributors_per_category: dict[str, list[Any]] # ContributorEntry
+
+
+@dataclass(frozen=True)
+class EditorialTextOutput:
+    """Final rendered editorial texts."""
+
+    intro: str
+    category_summaries: dict[str, str]
+    pivot_phrase: str | None
+    window_phrase: str | None
+    caution_sante: str | None
+    caution_argent: str | None
+    time_block_summaries: list[str] = field(default_factory=list)
+    turning_point_summaries: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class CoreEngineOutput:
+    """Raw calculation results from the engine, without editorial text."""
+
+    effective_context: EffectiveContext
+    run_metadata: dict[str, Any]
+    category_scores: dict[str, Any]
+    time_blocks: list[Any]
+    turning_points: list[Any]
+    decision_windows: list[DecisionWindow]
+    detected_events: list[AstroEvent] = field(default_factory=list)
+    sampling_timeline: list[SamplePoint] = field(default_factory=list)
+    explainability: Any | None = None # ExplainabilityReport
+
+
+@dataclass(frozen=True)
+class EditorialOutputBundle:
+    """Data and rendered texts for editorial presentation."""
+
+    data: EditorialOutput
+    text: EditorialTextOutput
+
+    def __getattr__(self, name: str) -> Any:
+        if hasattr(self.data, name):
+            return getattr(self.data, name)
+        if hasattr(self.text, name):
+            return getattr(self.text, name)
+        raise AttributeError(name)
+
+
+@dataclass(frozen=True)
+class PersistablePredictionBundle:
+    """Complete bundle ready for persistence."""
+
+    core: CoreEngineOutput
+    editorial: EditorialOutputBundle | None = None
+
+    @property
+    def editorial_text(self) -> "EditorialTextOutput | None":
+        if self.editorial is None:
+            return None
+        return self.editorial.text
+
+    def to_engine_output(self) -> "EngineOutput":
+        """Build a legacy aggregate view for callers not yet migrated to the bundle API."""
+        run_metadata = dict(self.core.run_metadata)
+        if self.editorial is not None:
+            run_metadata.setdefault("overall_tone", self.editorial.data.overall_tone)
+            run_metadata.setdefault("overall_summary", self.editorial.text.intro)
+
+        return EngineOutput(
+            run_metadata=run_metadata,
+            effective_context=self.core.effective_context,
+            sampling_timeline=list(self.core.sampling_timeline),
+            detected_events=list(self.core.detected_events),
+            category_scores=dict(self.core.category_scores),
+            time_blocks=list(self.core.time_blocks),
+            turning_points=list(self.core.turning_points),
+            explainability=self.core.explainability,
+            editorial=self.editorial.data if self.editorial is not None else None,
+            editorial_text=self.editorial.text if self.editorial is not None else None,
+            decision_windows=list(self.core.decision_windows),
+        )
+
+    def __getattr__(self, name: str) -> Any:
+        if name == "run_metadata":
+            return self.to_engine_output().run_metadata
+        if name == "editorial_text":
+            return self.editorial_text
+        if hasattr(self.core, name):
+            return getattr(self.core, name)
+        raise AttributeError(name)
+
+
+@dataclass(frozen=True)
 class EngineOutput:
-    """Final output of the prediction engine run."""
+    """Final output of the prediction engine run. (Aggregator for backward compatibility)"""
 
     run_metadata: dict[str, Any]
     effective_context: EffectiveContext
@@ -116,7 +230,7 @@ class EngineOutput:
     category_scores: dict[str, Any] = field(default_factory=dict)
     time_blocks: list[Any] = field(default_factory=list)
     turning_points: list[Any] = field(default_factory=list)
-    explainability: ExplainabilityReport | None = None
+    explainability: Any | None = None # ExplainabilityReport
     editorial: EditorialOutput | None = None
     editorial_text: EditorialTextOutput | None = None
     decision_windows: list[Any] = field(default_factory=list)

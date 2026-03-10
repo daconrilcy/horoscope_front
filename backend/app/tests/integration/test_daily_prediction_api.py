@@ -81,7 +81,7 @@ def _build_mock_run(
     mock_run.timezone = timezone
     mock_run.computed_at = computed_at
     mock_run.reference_version_id = reference_version_id
-    mock_run.is_provisional_calibration = None
+    mock_run.is_provisional_calibration = False
     mock_run.calibration_label = None
     return mock_run
 
@@ -96,7 +96,8 @@ def test_daily_prediction_nominal_200():
     mock_run = _build_mock_run()
     mock_run.is_provisional_calibration = False
     mock_run.calibration_label = "v1"
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -201,7 +202,8 @@ def test_daily_prediction_profile_missing_is_422():
 def test_daily_prediction_categories_sorted_by_rank():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -253,7 +255,8 @@ def test_daily_prediction_categories_sorted_by_rank():
 def test_daily_prediction_timeline_chronological():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -271,6 +274,7 @@ def test_daily_prediction_timeline_chronological():
         ],
         "time_blocks": [
             {
+                "block_index": 0,
                 "start_at_local": "2026-03-08T06:00:00+00:00",
                 "end_at_local": "2026-03-08T07:00:00+00:00",
                 "tone_code": "neutral",
@@ -307,7 +311,8 @@ def test_daily_prediction_date_param():
     mock_run = _build_mock_run(
         local_date_value=target_date, computed_at=datetime(2026, 3, 10, 10, 0)
     )
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -333,7 +338,8 @@ def test_daily_prediction_date_param():
 def test_daily_prediction_returns_500_on_malformed_json_payload():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -378,7 +384,8 @@ def test_daily_prediction_meta_uses_run_reference_version_and_house_system_effec
         db.commit()
 
     mock_run = _build_mock_run(reference_version_id=7)
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -405,9 +412,10 @@ def test_daily_prediction_meta_uses_run_reference_version_and_house_system_effec
 def test_daily_prediction_meta_falls_back_to_engine_output_house_system_effective():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run(reference_version_id=1)
-    mock_engine_output = MagicMock()
-    mock_engine_output.effective_context.house_system_effective = "porphyre"
-    mock_result = ServiceResult(run=mock_run, engine_output=mock_engine_output, was_reused=False)
+    mock_bundle = MagicMock()
+    mock_bundle.core.effective_context.house_system_effective = "placidus"
+    mock_result = ServiceResult(run=mock_run, bundle=mock_bundle, was_reused=False)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -426,7 +434,7 @@ def test_daily_prediction_meta_falls_back_to_engine_output_house_system_effectiv
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
 
     assert response.status_code == 200
-    assert response.json()["meta"]["house_system_effective"] == "porphyre"
+    assert response.json()["meta"]["house_system_effective"] == "placidus"
 
 
 def test_history_requires_auth():
@@ -688,7 +696,8 @@ def test_debug_200_admin_nominal():
     mock_run.is_provisional_calibration = True
     mock_run.calibration_label = "mixed"
 
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -745,7 +754,7 @@ def test_debug_returns_empty_lists_when_json_fields_are_absent():
     token = _register_admin_and_get_token()
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = ServiceResult(
-        run=_build_mock_run(), engine_output=None, was_reused=True
+        run=_build_mock_run(), bundle=None, was_reused=True
     )
     _override_service(mock_service)
 
@@ -799,7 +808,7 @@ def test_debug_no_recompute():
     token = _register_admin_and_get_token()
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = ServiceResult(
-        run=_build_mock_run(), engine_output=None, was_reused=True
+        run=_build_mock_run(), bundle=None, was_reused=True
     )
     _override_service(mock_service)
 
@@ -827,7 +836,8 @@ def test_daily_prediction_timeline_summary_non_null():
     """AC9 / AC7 : timeline[].summary n'est pas null après un run frais."""
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=False)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -878,7 +888,8 @@ def test_daily_prediction_turning_points_summary_humanized():
     """AC9 / AC7 : turning_points[].summary est humanisé, pas un code technique."""
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=False)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -926,7 +937,8 @@ def test_daily_prediction_reused_run_summaries_readable():
     """AC9 / AC7 : sur un run réutilisé (was_reused=True), les summaries restent lisibles."""
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -977,7 +989,8 @@ def test_daily_prediction_is_provisional_per_category():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
     mock_run.is_provisional_calibration = True
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -1038,7 +1051,8 @@ def test_daily_prediction_summary_calibration_note_when_provisional():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
     mock_run.is_provisional_calibration = True
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -1111,7 +1125,8 @@ def test_daily_prediction_summary_no_calibration_note_when_not_provisional():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
     mock_run.is_provisional_calibration = False
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -1169,12 +1184,13 @@ def test_daily_prediction_decision_windows():
     mock_dw.confidence = 0.8
     mock_dw.dominant_categories = ["love", "work"]
     
-    mock_engine_output = MagicMock()
-    mock_engine_output.decision_windows = [mock_dw]
-    mock_engine_output.editorial = None
-    mock_engine_output.effective_context.house_system_effective = "placidus"
+    mock_bundle = MagicMock()
+    mock_bundle.core.decision_windows = [mock_dw]
+    mock_bundle.core.effective_context.house_system_effective = "placidus"
+    mock_bundle.editorial = None
     
-    mock_result = ServiceResult(run=mock_run, engine_output=mock_engine_output, was_reused=False)
+    mock_result = ServiceResult(run=mock_run, bundle=mock_bundle, was_reused=False)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -1203,7 +1219,8 @@ def test_daily_prediction_decision_windows():
 def test_daily_prediction_filters_decision_windows_to_major_aspects():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -1266,7 +1283,8 @@ def test_daily_prediction_filters_decision_windows_to_major_aspects():
 def test_daily_prediction_turning_points_follow_major_aspect_boundaries():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -1349,7 +1367,8 @@ def test_daily_prediction_turning_points_follow_major_aspect_boundaries():
 def test_daily_prediction_turning_points_expose_numeric_severity():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -1385,7 +1404,8 @@ def test_daily_prediction_turning_points_expose_numeric_severity():
 def test_daily_prediction_pivot_windows_use_score_twelve():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
@@ -1443,7 +1463,8 @@ def test_daily_prediction_rebuilds_decision_windows_for_reused_run():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
 
-    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_result = ServiceResult(run=mock_run, bundle=None, was_reused=True)
+
     mock_service = MagicMock()
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)

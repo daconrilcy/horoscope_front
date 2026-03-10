@@ -156,18 +156,19 @@ def run_job() -> None:
                         debug_mode=False,
                     )
 
-                    engine_output = orchestrator.run(
+                    bundle = orchestrator.run(
                         engine_input,
                         category_codes=missing_category_codes,
                         include_editorial=False,
                     )
+                    core_output = bundle.core
                     duration_calc = time.time() - start_time_calc
                     pivot_count = (
-                        len(engine_output.turning_points) if engine_output.turning_points else 0
+                        len(core_output.turning_points) if core_output.turning_points else 0
                     )
 
                     for category_code in missing_category_codes:
-                        score = engine_output.category_scores.get(category_code)
+                        score = core_output.category_scores.get(category_code)
                         if score is None:
                             raise RuntimeError(
                                 "Engine output is missing a requested category score for "
