@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.infra.db.models.user_prediction_baseline import UserPredictionBaselineModel
@@ -116,43 +117,52 @@ class UserPredictionBaselineRepository:
         window_end_date: date,
         stats: dict[str, float | int],
     ) -> PersistedUserBaseline:
-        model = self.db.scalar(
-            select(UserPredictionBaselineModel).where(
-                UserPredictionBaselineModel.user_id == user_id,
-                UserPredictionBaselineModel.category_id == category_id,
-                UserPredictionBaselineModel.reference_version_id == reference_version_id,
-                UserPredictionBaselineModel.ruleset_id == ruleset_id,
-                UserPredictionBaselineModel.house_system_effective == house_system_effective,
-                UserPredictionBaselineModel.window_days == window_days,
-                UserPredictionBaselineModel.window_start_date == window_start_date,
-                UserPredictionBaselineModel.window_end_date == window_end_date,
-            )
+        model = self._get_baseline_model(
+            user_id=user_id,
+            category_id=category_id,
+            reference_version_id=reference_version_id,
+            ruleset_id=ruleset_id,
+            house_system_effective=house_system_effective,
+            window_days=window_days,
+            window_start_date=window_start_date,
+            window_end_date=window_end_date,
         )
 
         if model is None:
-            model = UserPredictionBaselineModel(
-                user_id=user_id,
-                category_id=category_id,
-                reference_version_id=reference_version_id,
-                ruleset_id=ruleset_id,
-                house_system_effective=house_system_effective,
-                window_days=window_days,
-                window_start_date=window_start_date,
-                window_end_date=window_end_date,
-            )
-            self.db.add(model)
+            try:
+                with self.db.begin_nested():
+                    model = UserPredictionBaselineModel(
+                        user_id=user_id,
+                        category_id=category_id,
+                        reference_version_id=reference_version_id,
+                        ruleset_id=ruleset_id,
+                        house_system_effective=house_system_effective,
+                        window_days=window_days,
+                        window_start_date=window_start_date,
+                        window_end_date=window_end_date,
+                    )
+                    self.db.add(model)
+                    self._apply_stats(model, stats)
+                    self.db.flush()
+            except IntegrityError:
+                model = self._get_baseline_model(
+                    user_id=user_id,
+                    category_id=category_id,
+                    reference_version_id=reference_version_id,
+                    ruleset_id=ruleset_id,
+                    house_system_effective=house_system_effective,
+                    window_days=window_days,
+                    window_start_date=window_start_date,
+                    window_end_date=window_end_date,
+                )
+                if model is None:
+                    raise
+                self._apply_stats(model, stats)
+                self.db.flush()
+        else:
+            self._apply_stats(model, stats)
+            self.db.flush()
 
-        model.mean_raw_score = float(stats["mean_raw_score"])
-        model.std_raw_score = float(stats["std_raw_score"])
-        model.mean_note_20 = float(stats["mean_note_20"])
-        model.std_note_20 = float(stats["std_note_20"])
-        model.p10 = float(stats["p10"])
-        model.p50 = float(stats["p50"])
-        model.p90 = float(stats["p90"])
-        model.sample_size_days = int(stats["sample_size_days"])
-        model.computed_at = datetime.now(UTC)
-
-        self.db.flush()
         # Ensure category is loaded for _to_persisted
         if not model.category:
             self.db.expire(model, ["category"])
@@ -164,6 +174,121 @@ class UserPredictionBaselineRepository:
             )
 
         return self._to_persisted(model)
+
+    def get_users_needing_baseline(
+        self,
+        reference_version_id: int,
+        ruleset_id: int,
+        house_system_effective: str,
+        window_days: int = 365,
+    ) -> list[int]:
+        """
+        Finds user IDs who either:
+        1. Have a birth profile but no baseline for the given versions/window.
+        2. Have a baseline that is older than their birth profile update.
+        """
+        from sqlalchemy import and_
+
+        from app.infra.db.models.chart_result import ChartResultModel
+        from app.infra.db.models.user_birth_profile import UserBirthProfileModel
+
+        latest_chart_subquery = (
+            select(
+                ChartResultModel.user_id.label("user_id"),
+                func.max(ChartResultModel.created_at).label("latest_chart_created_at"),
+            )
+            .where(ChartResultModel.user_id.is_not(None))
+            .group_by(ChartResultModel.user_id)
+            .subquery()
+        )
+
+        baseline_filters = and_(
+            UserPredictionBaselineModel.user_id == UserBirthProfileModel.user_id,
+            UserPredictionBaselineModel.reference_version_id == reference_version_id,
+            UserPredictionBaselineModel.ruleset_id == ruleset_id,
+            UserPredictionBaselineModel.house_system_effective == house_system_effective,
+            UserPredictionBaselineModel.window_days == window_days,
+        )
+
+        chart_is_current = (
+            latest_chart_subquery.c.latest_chart_created_at >= UserBirthProfileModel.updated_at
+        )
+
+        # Users with a current natal chart but no baseline for these versions and house system.
+        stmt_missing = (
+            select(UserBirthProfileModel.user_id)
+            .join(
+                latest_chart_subquery,
+                latest_chart_subquery.c.user_id == UserBirthProfileModel.user_id,
+            )
+            .outerjoin(
+                UserPredictionBaselineModel,
+                baseline_filters,
+            )
+            .where(UserPredictionBaselineModel.id.is_(None), chart_is_current)
+        )
+        users_missing = self.db.scalars(stmt_missing).all()
+
+        # Users with a current natal chart and a stale baseline.
+        stmt_obsolete = (
+            select(UserBirthProfileModel.user_id)
+            .join(
+                latest_chart_subquery,
+                latest_chart_subquery.c.user_id == UserBirthProfileModel.user_id,
+            )
+            .join(
+                UserPredictionBaselineModel,
+                baseline_filters,
+            )
+            .where(
+                UserBirthProfileModel.updated_at > UserPredictionBaselineModel.computed_at,
+                chart_is_current,
+            )
+            .distinct()
+        )
+        users_obsolete = self.db.scalars(stmt_obsolete).all()
+
+        return list(set(users_missing) | set(users_obsolete))
+
+    def _apply_stats(
+        self,
+        model: UserPredictionBaselineModel,
+        stats: dict[str, float | int],
+    ) -> None:
+        model.mean_raw_score = float(stats["mean_raw_score"])
+        model.std_raw_score = float(stats["std_raw_score"])
+        model.mean_note_20 = float(stats["mean_note_20"])
+        model.std_note_20 = float(stats["std_note_20"])
+        model.p10 = float(stats["p10"])
+        model.p50 = float(stats["p50"])
+        model.p90 = float(stats["p90"])
+        model.sample_size_days = int(stats["sample_size_days"])
+        model.computed_at = datetime.now(UTC)
+
+    def _get_baseline_model(
+        self,
+        *,
+        user_id: int,
+        category_id: int,
+        reference_version_id: int,
+        ruleset_id: int,
+        house_system_effective: str,
+        window_days: int,
+        window_start_date: date,
+        window_end_date: date,
+    ) -> UserPredictionBaselineModel | None:
+        return self.db.scalar(
+            select(UserPredictionBaselineModel).where(
+                UserPredictionBaselineModel.user_id == user_id,
+                UserPredictionBaselineModel.category_id == category_id,
+                UserPredictionBaselineModel.reference_version_id == reference_version_id,
+                UserPredictionBaselineModel.ruleset_id == ruleset_id,
+                UserPredictionBaselineModel.house_system_effective == house_system_effective,
+                UserPredictionBaselineModel.window_days == window_days,
+                UserPredictionBaselineModel.window_start_date == window_start_date,
+                UserPredictionBaselineModel.window_end_date == window_end_date,
+            )
+        )
 
     def _to_persisted(self, model: UserPredictionBaselineModel) -> PersistedUserBaseline:
         return PersistedUserBaseline(

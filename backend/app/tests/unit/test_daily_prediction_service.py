@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.prediction.exceptions import PredictionContextError
 from app.prediction.persisted_relative_score import PersistedRelativeScore
-from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
+from app.prediction.persisted_snapshot import PersistedCategoryScore, PersistedPredictionSnapshot
 from app.services.daily_prediction_service import (
     DailyPredictionService,
     ServiceResult,
@@ -542,3 +542,63 @@ def test_relative_enrichment_preserves_absolute_snapshot_fields(service, db):
         assert result.run.overall_tone == absolute_snapshot.overall_tone
         assert result.run.relative_scores["love"].relative_rank == 1
         mock_enrich.assert_called_once_with(db, absolute_snapshot)
+
+
+def test_daily_prediction_still_returns_snapshot_when_baseline_is_missing(service, db):
+    res_path = "app.services.prediction_request_resolver"
+    reuse_path = "app.services.prediction_run_reuse_policy"
+    relative_repo_path = "app.services.relative_scoring_service.UserPredictionBaselineRepository"
+
+    with (
+        patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo,
+        patch(f"{res_path}.ChartResultRepository") as mock_chart_repo,
+        patch(f"{reuse_path}.DailyPredictionRepository") as mock_daily_repo,
+        patch(f"{res_path}.PredictionRulesetRepository") as mock_ruleset_repo,
+        patch.object(service.compute_runner, "run_with_timeout") as mock_compute,
+        patch(relative_repo_path) as mock_baseline_repo,
+    ):
+        mock_prof = MagicMock()
+        mock_prof.user_id = 1
+        mock_prof.current_timezone = "Europe/Paris"
+        mock_prof.current_lat = 48.8
+        mock_prof.current_lon = 2.3
+        mock_profile_repo.return_value.get_by_user_id.return_value = mock_prof
+
+        mock_chart_repo.return_value.get_latest_by_user_id.return_value = MagicMock(
+            result_payload={"planets": []}
+        )
+        mock_daily_repo.return_value.get_run_for_reuse.return_value = None
+        db.scalar.side_effect = lambda stmt, *args, **kwargs: 10
+
+        mock_ruleset_repo.return_value.get_ruleset.return_value = MagicMock(
+            id=20, reference_version_id=10
+        )
+        mock_baseline_repo.return_value.get_latest_baselines_for_user.return_value = []
+
+        absolute_snapshot = PersistedPredictionSnapshot(
+            **{
+                **_build_mock_snapshot().__dict__,
+                "category_scores": [
+                    PersistedCategoryScore(
+                        category_id=1,
+                        category_code="love",
+                        note_20=15,
+                        raw_score=10.0,
+                        power=1.0,
+                        volatility=1.0,
+                        rank=1,
+                        is_provisional=False,
+                        summary=None,
+                    )
+                ],
+            }
+        )
+        service.persistence_service.save.return_value = MagicMock(
+            run=absolute_snapshot, was_reused=False
+        )
+        mock_compute.return_value = MagicMock(bundle=MagicMock())
+
+        result = service.get_or_compute(user_id=1, db=db)
+
+        assert result.run.overall_summary == absolute_snapshot.overall_summary
+        assert result.run.relative_scores["love"].fallback_reason == "baseline_missing"

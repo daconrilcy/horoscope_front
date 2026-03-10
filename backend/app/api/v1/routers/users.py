@@ -7,7 +7,7 @@ from threading import Lock
 from time import monotonic
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.exc import SQLAlchemyError
@@ -18,6 +18,7 @@ from app.core.request_id import resolve_request_id
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
 from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
+from app.jobs.refresh_user_baselines import refresh_user_baseline
 from app.services.natal_interpretation_service import (
     NatalInterpretationData,
     NatalInterpretationService,
@@ -525,6 +526,7 @@ def upsert_me_birth_data(
             payload=parsed,
         )
         db.commit()
+
         return {"data": profile.model_dump(), "meta": {"request_id": request_id}}
     except ValidationError as error:
         db.rollback()
@@ -599,6 +601,7 @@ def upsert_me_birth_data(
 def generate_me_natal_chart(
     request: Request,
     payload: dict[str, Any],
+    background_tasks: BackgroundTasks,
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
@@ -617,6 +620,10 @@ def generate_me_natal_chart(
             altitude_m=parsed_payload.altitude_m,
         )
         db.commit()
+
+        # Trigger the refresh only once a natal chart is available for the current profile.
+        background_tasks.add_task(refresh_user_baseline, db, current_user.id)
+
         return {"data": generated.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ValidationError as error:
         db.rollback()
