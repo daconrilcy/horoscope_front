@@ -1,16 +1,16 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
-import { RefreshCw, ChevronDown } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 
 import { TodayHeader } from '../components/TodayHeader'
 import { ShortcutsSection } from '../components/ShortcutsSection'
 import { DayPredictionCard } from '../components/prediction/DayPredictionCard'
 import { CategoryGrid } from '../components/prediction/CategoryGrid'
-import { DayTimeline } from '../components/prediction/DayTimeline'
 import { TurningPointsList } from '../components/prediction/TurningPointsList'
 import { DayAgenda } from '../components/prediction/DayAgenda'
 
 import { detectLang } from '../i18n/astrology'
+import { buildDailyAgendaSlots, buildDailyKeyMoments } from '../utils/dailyAstrology'
 import { getPredictionMessage } from '../utils/predictionI18n'
 import { useAccessTokenSnapshot } from '../utils/authToken'
 import { useAuthMe } from '../api/authMe'
@@ -66,10 +66,6 @@ export function TodayPage() {
     trackEvent(EVENTS.CATEGORY_CLICKED, { category_code: categoryCode })
   }
 
-  const handleTimelineClick = () => {
-    trackEvent(EVENTS.TIMELINE_OPENED)
-  }
-
   const handleTurningPointClick = (severity: number) => {
     const severityCode = severity > 0.75 ? 'critical' : severity > 0.5 ? 'high' : severity > 0.25 ? 'medium' : 'low'
     trackEvent(EVENTS.TURNING_POINT_OPENED, { severity: severityCode })
@@ -78,6 +74,24 @@ export function TodayPage() {
   const handleHistoryClick = () => {
     trackEvent(EVENTS.HISTORY_VIEWED)
   }
+
+  const agendaSlots = prediction
+    ? buildDailyAgendaSlots(
+        prediction.meta.date_local,
+        prediction.decision_windows,
+        prediction.timeline,
+        prediction.categories,
+      )
+    : []
+
+  const keyMoments = prediction
+    ? buildDailyKeyMoments(
+        prediction.meta.date_local,
+        prediction.decision_windows,
+        prediction.timeline,
+        prediction.categories,
+      )
+    : []
 
   return (
     <div className="today-page">
@@ -109,16 +123,13 @@ export function TodayPage() {
           <DayPredictionCard prediction={prediction} lang={lang} />
 
           <TurningPointsList
-            turningPoints={prediction.turning_points}
-            timeline={prediction.timeline}
+            moments={keyMoments}
             lang={lang}
             onTurningPointClick={handleTurningPointClick}
           />
 
           <DayAgenda
-            timeline={prediction.timeline}
-            turningPoints={prediction.turning_points}
-            dateContext={prediction.meta.date_local}
+            slots={agendaSlots}
             lang={lang}
           />
 
@@ -127,20 +138,6 @@ export function TodayPage() {
             lang={lang}
             onCategoryClick={handleCategoryClick}
           />
-
-          <details className="group mb-8">
-            <summary className="flex items-center justify-between cursor-pointer py-3 text-text-2 text-sm font-medium border-t border-line hover:text-text-1 transition-colors select-none list-none">
-              <span>{getPredictionMessage('timeline', lang)}</span>
-              <ChevronDown size={18} className="group-open:rotate-180 transition-transform opacity-60" />
-            </summary>
-            <div className="pt-4">
-              <DayTimeline
-                timeline={prediction.timeline}
-                lang={lang}
-                onTimelineClick={handleTimelineClick}
-              />
-            </div>
-          </details>
 
           <ShortcutsSection onHistoryClick={handleHistoryClick} />
         </>

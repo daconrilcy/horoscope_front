@@ -22,6 +22,7 @@ class DecisionWindowBuilder:
     """
 
     MAX_PIVOT_WINDOW_DURATION = timedelta(minutes=90)
+    PIVOT_SCORE = 12.0
 
     def build(
         self,
@@ -42,7 +43,7 @@ class DecisionWindowBuilder:
             if window_type == "neutral":
                 continue
 
-            score = self._block_score(block, category_scores)
+            score = self._block_score(block, category_scores, window_type)
             confidence = self._block_confidence(block, category_scores)
             dominant = list(block.dominant_categories[:2])
             start_local, end_local = self._window_bounds(block, window_type, pivot_time)
@@ -83,7 +84,15 @@ class DecisionWindowBuilder:
         clipped_end = min(block.end_local, pivot_time + self.MAX_PIVOT_WINDOW_DURATION)
         return clipped_start, max(clipped_start, clipped_end)
 
-    def _block_score(self, block: TimeBlock, category_scores: dict[str, Any]) -> float:
+    def _block_score(
+        self,
+        block: TimeBlock,
+        category_scores: dict[str, Any],
+        window_type: str,
+    ) -> float:
+        if window_type == "pivot":
+            return self.PIVOT_SCORE
+
         notes: list[float] = []
         for code in list(block.dominant_categories)[:2]:
             s = category_scores.get(code)

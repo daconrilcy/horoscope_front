@@ -1,6 +1,6 @@
 # Story 41.6: Refactor dashboard intraday en moments clés et agenda du jour
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -49,33 +49,33 @@ so that je comprenne rapidement ce qui change, pourquoi cela change, et quelles 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Redéfinir le rôle produit des deux sections dashboard (AC: 1, 5)
-  - [ ] Remplacer la section actuelle de fenêtres décisionnelles par une section `Moments clés du jour` centrée sur les turning points
-  - [ ] Renommer la section `Moments charnières` en `Agenda du jour`
-  - [ ] Mettre à jour les libellés i18n FR/EN pour refléter la nouvelle sémantique
+- [x] Task 1: Redéfinir le rôle produit des deux sections dashboard (AC: 1, 5)
+  - [x] Remplacer la section actuelle de fenêtres décisionnelles par une section `Moments clés du jour` centrée sur les turning points
+  - [x] Renommer la section `Moments charnières` en `Agenda du jour`
+  - [x] Mettre à jour les libellés i18n FR/EN pour refléter la nouvelle sémantique
 
-- [ ] Task 2: Concevoir le modèle d'affichage des points de bascule (AC: 2, 6)
-  - [ ] Déterminer si les `turning_points` actuels suffisent ou si un enrichissement additif du contrat API est requis
-  - [ ] Définir une fenêtre courte de rendu autour de chaque turning point (15 ou 30 minutes selon règles explicites)
-  - [ ] Produire un message utilisateur composé de: ce qui change, cause principale, impacts métier
-  - [ ] Réutiliser les drivers et catégories dominantes existants au lieu d'introduire un second moteur parallèle
+- [x] Task 2: Concevoir le modèle d'affichage des points de bascule (AC: 2, 6)
+  - [x] Déterminer si les `turning_points` actuels suffisent ou si un enrichissement additif du contrat API est requis
+  - [x] Définir une fenêtre courte de rendu autour de chaque turning point (15 ou 30 minutes selon règles explicites)
+  - [x] Produire un message utilisateur composé de: ce qui change, cause principale, impacts métier
+  - [x] Réutiliser les drivers et catégories dominantes existants au lieu d'introduire un second moteur parallèle
 
-- [ ] Task 3: Construire l’`Agenda du jour` en grille météo (AC: 3, 4, 6)
-  - [ ] Définir l’algorithme de découpage en 12 créneaux fixes de 2h sur la journée locale
-  - [ ] Agréger le signal intraday existant pour chaque créneau sans contradiction avec timeline et blocs
-  - [ ] Déterminer le jeu de pictogrammes et la règle d’affichage des activités propices
-  - [ ] Ajouter un indicateur de bascule quand au moins un turning point tombe dans le créneau
+- [x] Task 3: Construire l’`Agenda du jour` en grille météo (AC: 3, 4, 6)
+  - [x] Définir l’algorithme de découpage en 12 créneaux fixes de 2h sur la journée locale
+  - [x] Agréger le signal intraday existant pour chaque créneau sans contradiction avec timeline et blocs
+  - [x] Déterminer le jeu de pictogrammes et la règle d’affichage des activités propices
+  - [x] Ajouter un indicateur de bascule quand au moins un turning point tombe dans le créneau
 
-- [ ] Task 4: Refactoriser les composants React du dashboard (AC: 1, 2, 3, 5)
-  - [ ] Adapter ou remplacer `DecisionWindowsSection.tsx`
-  - [ ] Adapter `TurningPointsList.tsx` pour le nouveau rendu `Moments clés du jour`
-  - [ ] Adapter `DayTimeline.tsx` ou créer un nouveau composant `DayAgenda.tsx` pour la grille 4x3
-  - [ ] Réviser l’assemblage de `TodayPage.tsx` pour la nouvelle hiérarchie visuelle
+- [x] Task 4: Refactoriser les composants React du dashboard (AC: 1, 2, 3, 5)
+  - [x] Adapter ou remplacer `DecisionWindowsSection.tsx`
+  - [x] Adapter `TurningPointsList.tsx` pour le nouveau rendu `Moments clés du jour`
+  - [x] Adapter `DayTimeline.tsx` ou créer un nouveau composant `DayAgenda.tsx` pour la grille 4x3
+  - [x] Réviser l’assemblage de `TodayPage.tsx` pour la nouvelle hiérarchie visuelle
 
-- [ ] Task 5: Durcir la cohérence data-to-UI (AC: 4, 6, 7)
-  - [ ] Vérifier que les runs réutilisés exposent encore les données nécessaires au nouvel agenda et aux moments clés
-  - [ ] Ajouter les tests backend/unitaires nécessaires si un mapping d’agenda est introduit
-  - [ ] Ajouter les tests frontend pour la non-régression du dashboard
+- [x] Task 5: Durcir la cohérence data-to-UI (AC: 4, 6, 7)
+  - [x] Vérifier que les runs réutilisés exposent encore les données nécessaires au nouvel agenda et aux moments clés
+  - [x] Ajouter les tests backend/unitaires nécessaires si un mapping d’agenda est introduit
+  - [x] Ajouter les tests frontend pour la non-régression du dashboard
 
 ## Dev Notes
 
@@ -203,11 +203,24 @@ GPT-5 Codex
 
 ### Completion Notes List
 
-- Story créée en mode ready-for-dev.
-- Story volontairement orientée refactor incrémental et réutilisation du contrat daily prediction existant.
-- Extension backend laissée additive et conditionnelle, uniquement si l’agrégation agenda 2h s’avère trop fragile côté frontend.
+- `Chronologie du jour` a été retirée de l’UI dashboard; la page expose désormais uniquement `Moments clés du jour`, `Agenda du jour`, puis la grille des catégories.
+- Le frontend calcule un agenda 12 créneaux / 2h et des bascules lisibles via `frontend/src/utils/dailyAstrology.ts`, sans surinterpréter les blocs neutres.
+- Le backend `/v1/predictions/daily` publie maintenant des `decision_windows`, `turning_points` et `timeline` cohérents avec la notion d’aspects majeurs, avec score de bascule fixé à `12/20` pour les fenêtres `pivot`.
+- Le routeur backend a été durci pour gérer correctement les timestamps intraday mixtes avec et sans offset, évitant le crash runtime observé sur le chargement du daily.
+- Vérifications exécutées sur le flux livré: lint frontend, build frontend, tests `TodayPage`, tests unitaires backend `DecisionWindowBuilder`, et tests d’intégration backend `daily_prediction_api`.
 
 ### File List
 
+- `backend/app/api/v1/routers/predictions.py`
+- `backend/app/prediction/decision_window_builder.py`
+- `backend/app/tests/integration/test_daily_prediction_api.py`
+- `backend/app/tests/unit/test_decision_window_builder.py`
+- `frontend/src/components/prediction/DayAgenda.tsx`
+- `frontend/src/components/prediction/TurningPointsList.tsx`
+- `frontend/src/i18n/predictions.ts`
+- `frontend/src/pages/TodayPage.tsx`
+- `frontend/src/tests/TodayPage.test.tsx`
+- `frontend/src/utils/dailyAstrology.ts`
+- `frontend/src/utils/predictionI18n.ts`
 - `_bmad-output/implementation-artifacts/41-6-refactor-dashboard-moments-cles-et-agenda-du-jour.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`

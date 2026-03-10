@@ -1172,6 +1172,208 @@ def test_daily_prediction_decision_windows():
     assert "love" in dw["dominant_categories"]
 
 
+def test_daily_prediction_filters_decision_windows_to_major_aspects():
+    token = _register_and_get_access_token()
+    mock_run = _build_mock_run()
+    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    mock_full_run = {
+        "id": 1,
+        "category_scores": [
+            {
+                "category_id": 1,
+                "note_20": 19,
+                "raw_score": 0.7,
+                "power": 0.8,
+                "volatility": 0.1,
+                "rank": 1,
+                "summary": None,
+            },
+            {
+                "category_id": 2,
+                "note_20": 6,
+                "raw_score": -0.1,
+                "power": 0.2,
+                "volatility": 0.1,
+                "rank": 2,
+                "summary": None,
+            },
+        ],
+        "turning_points": [],
+        "time_blocks": [
+            {
+                "block_index": 0,
+                "start_at_local": "2026-03-08T20:00:00+01:00",
+                "end_at_local": "2026-03-08T22:00:00+01:00",
+                "tone_code": "positive",
+                "dominant_categories_json": "[\"love\", \"work\"]",
+                "summary": None,
+            }
+        ],
+    }
+    mock_categories = [
+        MagicMock(id=1, code="love"),
+        MagicMock(id=2, code="work"),
+    ]
+
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    with (
+        patch(repo_path, return_value=mock_full_run),
+        patch(ref_path, return_value=mock_categories),
+    ):
+        response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["decision_windows"][0]["dominant_categories"] == ["love"]
+    assert data["timeline"][0]["dominant_categories"] == ["love"]
+    assert "Amour & Relations" in data["timeline"][0]["summary"]
+    assert "Travail" not in data["timeline"][0]["summary"]
+
+
+def test_daily_prediction_turning_points_follow_major_aspect_boundaries():
+    token = _register_and_get_access_token()
+    mock_run = _build_mock_run()
+    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    mock_full_run = {
+        "id": 1,
+        "category_scores": [
+            {
+                "category_id": 1,
+                "note_20": 18,
+                "raw_score": 0.5,
+                "power": 0.7,
+                "volatility": 0.1,
+                "rank": 1,
+                "summary": None,
+            },
+            {
+                "category_id": 2,
+                "note_20": 17,
+                "raw_score": 0.4,
+                "power": 0.6,
+                "volatility": 0.1,
+                "rank": 2,
+                "summary": None,
+            },
+        ],
+        "turning_points": [
+            {
+                "occurred_at_local": "2026-03-08T22:15:00+01:00",
+                "severity": 0.9,
+                "summary": "technical_code",
+                "driver_json": '[{"event_type":"aspect_exact"}]',
+            }
+        ],
+        "time_blocks": [
+            {
+                "block_index": 0,
+                "start_at_local": "2026-03-08T21:30:00+01:00",
+                "end_at_local": "2026-03-08T22:15:00+01:00",
+                "tone_code": "positive",
+                "dominant_categories_json": "[\"love\"]",
+                "summary": None,
+            },
+            {
+                "block_index": 1,
+                "start_at_local": "2026-03-08T22:15:00+01:00",
+                "end_at_local": "2026-03-08T23:15:00+01:00",
+                "tone_code": "positive",
+                "dominant_categories_json": "[\"work\"]",
+                "summary": None,
+            },
+        ],
+    }
+    mock_categories = [
+        MagicMock(id=1, code="love"),
+        MagicMock(id=2, code="work"),
+    ]
+
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    with (
+        patch(repo_path, return_value=mock_full_run),
+        patch(ref_path, return_value=mock_categories),
+    ):
+        response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert [tp["occurred_at_local"] for tp in data["turning_points"]] == [
+        "2026-03-08T21:30:00+01:00",
+        "2026-03-08T22:15:00+01:00",
+        "2026-03-08T23:15:00+01:00",
+    ]
+    assert "Amour & Relations" in data["turning_points"][0]["summary"]
+    assert "Travail" in data["turning_points"][1]["summary"]
+    assert data["turning_points"][1]["drivers"] == [{"event_type": "aspect_exact"}]
+
+
+def test_daily_prediction_pivot_windows_use_score_twelve():
+    token = _register_and_get_access_token()
+    mock_run = _build_mock_run()
+    mock_result = ServiceResult(run=mock_run, engine_output=None, was_reused=True)
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    mock_full_run = {
+        "id": 1,
+        "category_scores": [
+            {
+                "category_id": 1,
+                "note_20": 14,
+                "raw_score": 0.2,
+                "power": 0.4,
+                "volatility": 0.3,
+                "rank": 1,
+                "summary": None,
+            }
+        ],
+        "turning_points": [
+            {
+                "occurred_at_local": "2026-03-08T10:00:00+01:00",
+                "severity": 0.8,
+                "summary": "Pivot métier",
+                "driver_json": None,
+            }
+        ],
+        "time_blocks": [
+            {
+                "block_index": 0,
+                "start_at_local": "2026-03-08T08:00:00+01:00",
+                "end_at_local": "2026-03-08T12:00:00+01:00",
+                "tone_code": "neutral",
+                "dominant_categories_json": "[\"love\"]",
+                "summary": None,
+            }
+        ],
+    }
+    mock_categories = [MagicMock(id=1, code="love")]
+
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    with (
+        patch(repo_path, return_value=mock_full_run),
+        patch(ref_path, return_value=mock_categories),
+    ):
+        response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["decision_windows"]) == 1
+    assert data["decision_windows"][0]["window_type"] == "pivot"
+    assert data["decision_windows"][0]["score"] == 12.0
+
+
 def test_daily_prediction_rebuilds_decision_windows_for_reused_run():
     token = _register_and_get_access_token()
     mock_run = _build_mock_run()
@@ -1254,6 +1456,21 @@ def test_time_block_contains_turning_point_uses_half_open_intervals():
         _time_block_contains_turning_point(
             "2026-03-08T10:00:00+01:00",
             "2026-03-08T12:00:00+01:00",
+            [turning_point_time],
+        )
+        is True
+    )
+
+
+def test_time_block_contains_turning_point_accepts_mixed_offset_formats():
+    from app.api.v1.routers.predictions import _time_block_contains_turning_point
+
+    turning_point_time = datetime.fromisoformat("2026-03-08T10:00:00+01:00")
+
+    assert (
+        _time_block_contains_turning_point(
+            "2026-03-08T09:00:00",
+            "2026-03-08T11:00:00",
             [turning_point_time],
         )
         is True

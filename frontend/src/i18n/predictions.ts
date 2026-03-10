@@ -69,6 +69,8 @@ export const PREDICTION_UI_MESSAGES: Record<
   | "pivot_badge"
   | "turning_points"
   | "impacts_label"
+  | "no_major_aspect"
+  | "aspect_shift_label"
   | "intensity"
   | "pending_summary",
   Record<Lang, string>
@@ -84,6 +86,8 @@ export const PREDICTION_UI_MESSAGES: Record<
   pivot_badge: { fr: "Changement", en: "Shift" },
   turning_points: { fr: "Moments clés du jour", en: "Key moments today" },
   impacts_label: { fr: "Impacts :", en: "Impacts:" },
+  no_major_aspect: { fr: "Pas d'aspect majeur", en: "No major aspect" },
+  aspect_shift_label: { fr: "Bascule", en: "Shift" },
   intensity: { fr: "Intensité", en: "Intensity" },
   pending_summary: { fr: "Calcul de votre tendance en cours...", en: "Calculating your daily trend..." },
 };

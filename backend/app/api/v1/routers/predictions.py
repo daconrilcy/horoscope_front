@@ -17,6 +17,7 @@ from app.infra.db.repositories.prediction_reference_repository import Prediction
 from app.infra.db.session import get_db_session
 from app.prediction.context_loader import PredictionContextLoader
 from app.prediction.decision_window_builder import DecisionWindowBuilder
+from app.prediction.editorial_template_engine import EditorialTemplateEngine
 from app.prediction.persistence_service import PredictionPersistenceService
 from app.services.daily_prediction_service import (
     ComputeMode,
@@ -136,6 +137,7 @@ class DailyPredictionDebugResponse(BaseModel):
 
 
 router = APIRouter(prefix="/v1/predictions", tags=["predictions"])
+MAJOR_ASPECT_NOTE_THRESHOLD = 7.0
 
 
 def get_daily_prediction_service() -> DailyPredictionService:
@@ -388,7 +390,6 @@ def get_daily_prediction(
     categories_data = ref_repo.get_categories(result.run.reference_version_id)
     cat_id_to_code = {c.id: c.code for c in categories_data}
 
-    # Timeline and turning points
     categories = sorted(
         [
             DailyPredictionCategory(
@@ -405,51 +406,36 @@ def get_daily_prediction(
         ],
         key=lambda c: c.rank,
     )
-
-    turning_points = [
-        DailyPredictionTurningPoint(
-            occurred_at_local=tp["occurred_at_local"],
-            severity=str(tp["severity"]),
-            summary=tp["summary"],
-            drivers=_load_json_list(
-                tp.get("driver_json"),
-                field_name="turning_points.driver_json",
-            ),
-        )
-        for tp in full_run.get("turning_points", [])
-    ]
+    category_note_by_code = {category.code: category.note_20 for category in categories}
+    decision_windows = _build_public_decision_windows(
+        result,
+        full_run,
+        cat_id_to_code,
+        category_note_by_code,
+    )
+    turning_points = _build_public_turning_points(
+        decision_windows or [],
+        full_run,
+    )
     turning_point_times = [
         _parse_iso_datetime(tp.occurred_at_local)
         for tp in turning_points
         if tp.occurred_at_local is not None
     ]
-
-    timeline = sorted(
-        [
-            DailyPredictionTimeBlock(
-                start_local=b["start_at_local"],
-                end_local=b["end_at_local"],
-                tone_code=b["tone_code"] or "neutral",
-                dominant_categories=_load_json_list(
-                    b.get("dominant_categories_json"),
-                    field_name="time_blocks.dominant_categories_json",
-                ),
-                summary=b["summary"],
-                turning_point=_time_block_contains_turning_point(
-                    b["start_at_local"],
-                    b["end_at_local"],
-                    turning_point_times,
-                ),
-            )
-            for b in full_run.get("time_blocks", [])
-        ],
-        key=lambda b: _parse_iso_datetime(b.start_local),
+    timeline = _build_public_timeline(
+        full_run,
+        category_note_by_code,
+        turning_point_times,
     )
 
-    decision_windows = _build_decision_windows(result, full_run, cat_id_to_code)
-
     # Build summary
-    summary = _build_summary(result, full_run, cat_id_to_code)
+    summary = _build_summary(
+        result,
+        full_run,
+        cat_id_to_code,
+        decision_windows=decision_windows,
+        turning_points=turning_points,
+    )
     reference_version = settings.active_reference_version
     if result.run.reference_version_id is not None:
         version_model = db.get(ReferenceVersionModel, result.run.reference_version_id)
@@ -481,7 +467,12 @@ def get_daily_prediction(
 
 
 def _build_summary(
-    result, full_run: dict, cat_id_to_code: dict[int, str]
+    result,
+    full_run: dict,
+    cat_id_to_code: dict[int, str],
+    *,
+    decision_windows: list[DailyPredictionDecisionWindow] | None,
+    turning_points: list[DailyPredictionTurningPoint],
 ) -> DailyPredictionSummary:
     editorial = None
     if result.engine_output is not None:
@@ -508,15 +499,28 @@ def _build_summary(
             "dominant_category": editorial.best_window.dominant_category,
         }
 
-    # main_turning_point from DB (max severity)
+    if best_window is None and decision_windows:
+        candidate = max(
+            decision_windows,
+            key=lambda window: (window.score, window.confidence),
+        )
+        if candidate.dominant_categories:
+            best_window = {
+                "start_local": candidate.start_local,
+                "end_local": candidate.end_local,
+                "dominant_category": candidate.dominant_categories[0],
+            }
+
     tps = sorted(
-        full_run.get("turning_points", []), key=lambda t: t.get("severity") or 0, reverse=True
+        turning_points,
+        key=lambda turning_point: float(turning_point.severity or 0),
+        reverse=True,
     )
     main_turning_point = (
         {
-            "occurred_at_local": tps[0]["occurred_at_local"],
-            "severity": tps[0]["severity"],
-            "summary": tps[0].get("summary"),
+            "occurred_at_local": tps[0].occurred_at_local,
+            "severity": float(tps[0].severity),
+            "summary": tps[0].summary,
         }
         if tps
         else None
@@ -620,6 +624,247 @@ def _build_decision_windows(
     ]
 
 
+def _build_public_decision_windows(
+    result: Any,
+    full_run: dict[str, Any],
+    cat_id_to_code: dict[int, str],
+    category_note_by_code: dict[str, float],
+) -> list[DailyPredictionDecisionWindow] | None:
+    raw_windows = _build_decision_windows(result, full_run, cat_id_to_code) or []
+    if not raw_windows:
+        return None
+
+    normalized: list[DailyPredictionDecisionWindow] = []
+    for window in sorted(raw_windows, key=lambda item: _parse_iso_datetime(item.start_local)):
+        dominant_categories = _filter_major_categories(
+            window.dominant_categories,
+            category_note_by_code,
+        )
+        if not dominant_categories:
+            continue
+
+        if normalized:
+            previous = normalized[-1]
+            if (
+                previous.end_local == window.start_local
+                and previous.window_type == window.window_type
+                and previous.dominant_categories == dominant_categories
+            ):
+                normalized[-1] = DailyPredictionDecisionWindow(
+                    start_local=previous.start_local,
+                    end_local=window.end_local,
+                    window_type=previous.window_type,
+                    score=max(previous.score, window.score),
+                    confidence=max(previous.confidence, window.confidence),
+                    dominant_categories=previous.dominant_categories,
+                )
+                continue
+
+        normalized.append(
+            DailyPredictionDecisionWindow(
+                start_local=window.start_local,
+                end_local=window.end_local,
+                window_type=window.window_type,
+                score=window.score,
+                confidence=window.confidence,
+                dominant_categories=dominant_categories,
+            )
+        )
+
+    return normalized or None
+
+
+def _build_public_turning_points(
+    decision_windows: list[DailyPredictionDecisionWindow],
+    full_run: dict[str, Any],
+) -> list[DailyPredictionTurningPoint]:
+    if not decision_windows:
+        return [
+            DailyPredictionTurningPoint(
+                occurred_at_local=turning_point["occurred_at_local"],
+                severity=str(turning_point["severity"]),
+                summary=turning_point.get("summary"),
+                drivers=_load_json_list(
+                    turning_point.get("driver_json"),
+                    field_name="turning_points.driver_json",
+                ),
+            )
+            for turning_point in full_run.get("turning_points", [])
+        ]
+
+    sorted_windows = sorted(
+        decision_windows,
+        key=lambda window: _parse_iso_datetime(window.start_local),
+    )
+    boundaries = sorted(
+        {
+            window.start_local
+            for window in sorted_windows
+        }
+        | {
+            window.end_local
+            for window in sorted_windows
+        },
+        key=_parse_iso_datetime,
+    )
+
+    raw_turning_points = full_run.get("turning_points", [])
+    public_turning_points: list[DailyPredictionTurningPoint] = []
+    for boundary in boundaries:
+        previous_categories = _get_active_categories_at_boundary(
+            sorted_windows,
+            boundary,
+            include_end=True,
+            include_start=False,
+        )
+        next_categories = _get_active_categories_at_boundary(
+            sorted_windows,
+            boundary,
+            include_end=False,
+            include_start=True,
+        )
+
+        if previous_categories == next_categories:
+            continue
+
+        drivers = []
+        for turning_point in raw_turning_points:
+            if turning_point.get("occurred_at_local") != boundary:
+                continue
+            drivers.extend(
+                _load_json_list(
+                    turning_point.get("driver_json"),
+                    field_name="turning_points.driver_json",
+                )
+            )
+
+        public_turning_points.append(
+            DailyPredictionTurningPoint(
+                occurred_at_local=boundary,
+                severity="1.0" if previous_categories and next_categories else "0.8",
+                summary=_build_turning_point_summary(
+                    boundary,
+                    previous_categories,
+                    next_categories,
+                ),
+                drivers=drivers,
+            )
+        )
+
+    return public_turning_points
+
+
+def _build_public_timeline(
+    full_run: dict[str, Any],
+    category_note_by_code: dict[str, float],
+    turning_point_times: list[datetime],
+) -> list[DailyPredictionTimeBlock]:
+    blocks: list[DailyPredictionTimeBlock] = []
+    for raw_block in full_run.get("time_blocks", []):
+        dominant_categories = _filter_major_categories(
+            _load_json_list(
+                raw_block.get("dominant_categories_json"),
+                field_name="time_blocks.dominant_categories_json",
+            ),
+            category_note_by_code,
+        )
+        blocks.append(
+            DailyPredictionTimeBlock(
+                start_local=raw_block["start_at_local"],
+                end_local=raw_block["end_at_local"],
+                tone_code=raw_block.get("tone_code") or "neutral",
+                dominant_categories=dominant_categories,
+                summary=_build_timeline_summary(
+                    raw_block["start_at_local"],
+                    raw_block["end_at_local"],
+                    dominant_categories,
+                    raw_block.get("tone_code"),
+                ),
+                turning_point=_time_block_contains_turning_point(
+                    raw_block["start_at_local"],
+                    raw_block["end_at_local"],
+                    turning_point_times,
+                ),
+            )
+        )
+
+    return sorted(blocks, key=lambda block: _parse_iso_datetime(block.start_local))
+
+
+def _filter_major_categories(
+    categories: list[str],
+    category_note_by_code: dict[str, float],
+) -> list[str]:
+    unique_categories: list[str] = []
+    for category in categories:
+        if category in unique_categories:
+            continue
+        if float(category_note_by_code.get(category, 10)) <= MAJOR_ASPECT_NOTE_THRESHOLD:
+            continue
+        unique_categories.append(category)
+    return unique_categories[:3]
+
+
+def _get_active_categories_at_boundary(
+    windows: list[DailyPredictionDecisionWindow],
+    boundary: str,
+    *,
+    include_start: bool,
+    include_end: bool,
+) -> list[str]:
+    boundary_dt = _parse_iso_datetime(boundary)
+    for window in windows:
+        start_dt = _parse_iso_datetime(window.start_local)
+        end_dt = _parse_iso_datetime(window.end_local)
+        after_start = boundary_dt > start_dt or (include_start and boundary_dt == start_dt)
+        before_end = boundary_dt < end_dt or (include_end and boundary_dt == end_dt)
+        if after_start and before_end:
+            return list(window.dominant_categories)
+    return []
+
+
+def _format_time_label(iso_value: str) -> str:
+    parsed = _parse_iso_datetime(iso_value)
+    return parsed.strftime("%H:%M")
+
+
+def _build_turning_point_summary(
+    occurred_at_local: str,
+    previous_categories: list[str],
+    next_categories: list[str],
+) -> str:
+    time_label = _format_time_label(occurred_at_local)
+    next_labels = _format_category_labels(next_categories)
+    previous_labels = _format_category_labels(previous_categories)
+    if not previous_categories and next_categories:
+        return f"À {time_label}, des aspects majeurs émergent : {next_labels}."
+    if previous_categories and not next_categories:
+        return f"À {time_label}, les aspects majeurs s'estompent : {previous_labels}."
+    return f"À {time_label}, un basculement critique : {next_labels}."
+
+
+def _build_timeline_summary(
+    start_local: str,
+    end_local: str,
+    dominant_categories: list[str],
+    tone_code: str | None = None,
+) -> str:
+    start_label = _format_time_label(start_local)
+    end_label = _format_time_label(end_local)
+    if not dominant_categories:
+        return f"Entre {start_label} et {end_label}, pas d'aspect majeur."
+    tone_label = EditorialTemplateEngine.TONE_LABELS["fr"].get(tone_code or "neutral", "équilibrée")
+    return (
+        f"Entre {start_label} et {end_label}, tonalité {tone_label} — "
+        f"{_format_category_labels(dominant_categories)}."
+    )
+
+
+def _format_category_labels(categories: list[str]) -> str:
+    labels = EditorialTemplateEngine.CATEGORY_LABELS["fr"]
+    return ", ".join(labels.get(category, category) for category in categories)
+
+
 def _load_json_list(raw_value: str | None, *, field_name: str) -> list[Any]:
     if not raw_value:
         return []
@@ -648,6 +893,10 @@ def _parse_iso_datetime(value: str) -> datetime:
     return datetime.fromisoformat(value)
 
 
+def _to_local_wall_time(value: datetime) -> datetime:
+    return value.replace(tzinfo=None) if value.tzinfo is not None else value
+
+
 def _time_block_contains_turning_point(
     start_local: str,
     end_local: str,
@@ -655,6 +904,16 @@ def _time_block_contains_turning_point(
 ) -> bool:
     start_dt = _parse_iso_datetime(start_local)
     end_dt = _parse_iso_datetime(end_local)
-    return any(
-        start_dt <= turning_point_time < end_dt for turning_point_time in turning_point_times
-    )
+
+    def contains(turning_point_time: datetime) -> bool:
+        block_is_aware = start_dt.tzinfo is not None and end_dt.tzinfo is not None
+        turning_point_is_aware = turning_point_time.tzinfo is not None
+        if block_is_aware == turning_point_is_aware:
+            return start_dt <= turning_point_time < end_dt
+
+        local_start = _to_local_wall_time(start_dt)
+        local_end = _to_local_wall_time(end_dt)
+        local_turning_point = _to_local_wall_time(turning_point_time)
+        return local_start <= local_turning_point < local_end
+
+    return any(contains(turning_point_time) for turning_point_time in turning_point_times)

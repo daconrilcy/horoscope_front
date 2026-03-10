@@ -52,6 +52,8 @@ const MESSAGES: Record<string, Record<Lang, string>> = {
   timeline: { fr: "Chronologie du jour", en: "Daily Timeline" },
   turning_points: { fr: "Moments clés du jour", en: "Key moments today" },
   impacts_label: { fr: "Impacts :", en: "Impacts:" },
+  no_major_aspect: { fr: "Pas d'aspect majeur", en: "No major aspect" },
+  aspect_shift_label: { fr: "Bascule", en: "Shift" },
   intensity: { fr: "Intensité", en: "Intensity" },
   pivot_badge: { fr: "Changement", en: "Shift" },
   refresh: { fr: "Actualiser", en: "Refresh" },

@@ -87,6 +87,7 @@ def test_pivot_block_yields_pivot():
     windows = builder.build([block], pivots, {"energy": {"note_20": 10, "volatility": 0.5}})
     assert len(windows) == 1
     assert windows[0].window_type == "pivot"
+    assert windows[0].score == 12.0
     assert windows[0].start_local == BASE_TIME + timedelta(hours=1)
     assert windows[0].end_local == BASE_TIME + timedelta(hours=2)
 

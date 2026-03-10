@@ -269,6 +269,107 @@ const predictionTechnical = {
   ],
 };
 
+const predictionNeutralTimelineWithLateWindows = {
+  meta: {
+    date_local: "2026-03-10",
+    timezone: "Europe/Paris",
+    computed_at: "2026-03-10T04:48:58.981478",
+    reference_version: "2.0.0",
+    ruleset_version: "2.0.0",
+    was_reused: false,
+    house_system_effective: "placidus",
+    is_provisional_calibration: true,
+    calibration_label: "provisional",
+  },
+  summary: {
+    overall_tone: "positive",
+    overall_summary: "Votre journée du 2026-03-10 s'annonce très porteuse.",
+    calibration_note: "Les scores sont calculés sans données historiques : ils reflètent des tendances relatives à la journée, pas des statistiques absolues.",
+    top_categories: ["social_network", "pleasure_creativity", "energy"],
+    bottom_categories: ["money", "work"],
+    best_window: {
+      start_local: "2026-03-10T21:30:00+01:00",
+      end_local: "2026-03-10T22:15:00+01:00",
+      dominant_category: "pleasure_creativity",
+    },
+    main_turning_point: {
+      occurred_at_local: "2026-03-10T02:30:00",
+      severity: 1.0,
+      summary: "À 02:30, un basculement critique : plusieurs domaines.",
+    },
+  },
+  categories: [
+    { code: "social_network", note_20: 20, raw_score: 0.1, power: 0.1, volatility: 0.1, rank: 1, is_provisional: true, summary: null },
+    { code: "pleasure_creativity", note_20: 19, raw_score: 0.09, power: 0.09, volatility: 0.09, rank: 2, is_provisional: true, summary: null },
+  ],
+  timeline: [
+    {
+      start_local: "2026-03-10T00:00:00",
+      end_local: "2026-03-10T21:30:00",
+      tone_code: "neutral",
+      dominant_categories: ["career", "communication", "energy"],
+      summary: "Entre 00:00 et 21:30, tonalité équilibrée — Carrière, Communication, Énergie & Vitalité.",
+      turning_point: true,
+    },
+    {
+      start_local: "2026-03-10T21:30:00",
+      end_local: "2026-03-10T23:15:00",
+      tone_code: "positive",
+      dominant_categories: ["pleasure_creativity", "social_network", "career"],
+      summary: "Entre 21:30 et 23:15, tonalité très porteuse — Plaisir & Créativité, Vie sociale & Réseau, Carrière.",
+      turning_point: true,
+    },
+    {
+      start_local: "2026-03-10T23:15:00",
+      end_local: "2026-03-11T00:00:00",
+      tone_code: "neutral",
+      dominant_categories: ["career", "communication", "energy"],
+      summary: "Entre 23:15 et 00:00, tonalité équilibrée — Carrière, Communication, Énergie & Vitalité.",
+      turning_point: true,
+    },
+  ],
+  turning_points: [
+    {
+      occurred_at_local: "2026-03-10T02:30:00",
+      severity: "1.0",
+      summary: "À 02:30, un basculement critique : plusieurs domaines.",
+      drivers: [],
+    },
+    {
+      occurred_at_local: "2026-03-10T21:30:00",
+      severity: "0.8",
+      summary: "À 21:30, un basculement critique : Communication, Énergie & Vitalité, Plaisir & Créativité, Vie sociale & Réseau.",
+      drivers: [],
+    },
+  ],
+  decision_windows: [
+    {
+      start_local: "2026-03-10T02:00:00+01:00",
+      end_local: "2026-03-10T06:00:00+01:00",
+      window_type: "pivot",
+      score: 10,
+      confidence: 1,
+      dominant_categories: ["career", "communication"],
+    },
+    {
+      start_local: "2026-03-10T21:30:00+01:00",
+      end_local: "2026-03-10T22:15:00+01:00",
+      window_type: "favorable",
+      score: 19.5,
+      confidence: 0.99,
+      dominant_categories: ["pleasure_creativity", "social_network"],
+    },
+    {
+      start_local: "2026-03-10T22:15:00+01:00",
+      end_local: "2026-03-10T23:15:00+01:00",
+      window_type: "favorable",
+      score: 19.5,
+      confidence: 0.99,
+      dominant_categories: ["pleasure_creativity", "social_network"],
+    },
+  ],
+};
+
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -349,8 +450,8 @@ describe("TodayPage", () => {
     expect(screen.getByText("11:00 – 11:30")).toBeInTheDocument();
     expect(screen.getByText("Moments clés du jour")).toBeInTheDocument();
     expect(screen.getByText("Agenda du jour")).toBeInTheDocument();
-    expect(screen.getByText("Changement")).toBeInTheDocument();
-    expect(screen.getByText("Impacts :")).toBeInTheDocument();
+    expect(screen.getAllByText("Bascule").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Impacts :").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Carrière").length).toBeGreaterThan(0);
     expect(screen.getByText("13.6")).toBeInTheDocument();
     expect(screen.getByText("7.2")).toBeInTheDocument();
@@ -467,9 +568,7 @@ describe("TodayPage", () => {
 
     expect(screen.getByText(/Les scores sont calculés sans données historiques/i)).toBeInTheDocument();
     expect(screen.queryByText("delta_note")).not.toBeInTheDocument();
-    expect(screen.getByText("Le climat change nettement sur ce créneau.")).toBeInTheDocument();
-    expect(screen.getByText("Aspect exact : Venus opposition Pluto")).toBeInTheDocument();
-    expect(screen.getByText("00:00 - 03:00")).toBeInTheDocument();
+    expect(screen.getAllByText("Pas d'aspect majeur").length).toBeGreaterThan(0);
     expect(screen.queryByText("Énergie & Vitalité : Votre score est de 10/20 (climat neutre).")).not.toBeInTheDocument();
   });
 
@@ -487,7 +586,7 @@ describe("TodayPage", () => {
     expect(screen.getByText("Agenda du jour")).toBeInTheDocument();
     expect(screen.getByText("Moments clés du jour")).toBeInTheDocument();
     expect(screen.getAllByTestId("agenda-slot")).toHaveLength(12);
-    expect(screen.getAllByTestId("agenda-slot-pivot")).toHaveLength(1);
+    expect(screen.getAllByTestId("agenda-slot-pivot").length).toBeGreaterThan(0);
 
     const morningSlot = screen
       .getAllByTestId("agenda-slot")
@@ -501,7 +600,7 @@ describe("TodayPage", () => {
     expect(pivotSlot).toBeDefined();
     expect(within(pivotSlot!).getByTestId("agenda-slot-pivot")).toBeInTheDocument();
 
-    expect(screen.getByText("Un événement astrologique marqué mérite votre attention.")).toBeInTheDocument();
+    expect(screen.getAllByText(/aspects majeurs/i).length).toBeGreaterThan(0);
   });
 
   it("localise le libellé d'impacts en anglais", async () => {
@@ -514,11 +613,37 @@ describe("TodayPage", () => {
       expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Impacts:")).toBeInTheDocument();
+    expect(screen.getAllByText("Impacts:").length).toBeGreaterThan(0);
     expect(screen.queryByText("Impacts :")).not.toBeInTheDocument();
   });
 
-  it("humanise les nouveaux event_type V2 du backend sans exposer de code technique", async () => {
+  it("n'affiche pas de fausses recommandations d'agenda sur des créneaux uniquement neutres", async () => {
+    installFetchMock({
+      prediction: jsonResponse(predictionNeutralTimelineWithLateWindows),
+    });
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText("Votre journée du 2026-03-10 s'annonce très porteuse.")).toBeInTheDocument();
+    });
+
+    const midnightSlot = screen
+      .getAllByTestId("agenda-slot")
+      .find((element) => element.getAttribute("data-slot-label") === "00:00");
+    expect(midnightSlot).toBeDefined();
+    expect(within(midnightSlot!).queryByText("Carrière")).not.toBeInTheDocument();
+    expect(within(midnightSlot!).queryByText("Communication")).not.toBeInTheDocument();
+
+    const eveningSlot = screen
+      .getAllByTestId("agenda-slot")
+      .find((element) => element.getAttribute("data-slot-label") === "20:00");
+    expect(eveningSlot).toBeDefined();
+    expect(within(eveningSlot!).getByText("Plaisir & Créativité")).toBeInTheDocument();
+    expect(within(midnightSlot!).getByText("Pas d'aspect majeur")).toBeInTheDocument();
+  });
+
+  it("n'expose pas de codes techniques backend dans l'interface", async () => {
     installFetchMock({
       prediction: jsonResponse(predictionWithDecisionWindows),
     });
@@ -529,14 +654,12 @@ describe("TodayPage", () => {
       expect(screen.getByText(/Journée avec des créneaux décisionnels bien définis/i)).toBeInTheDocument();
     });
 
-    // aspect_enter_orb doit être humanisé, pas affiché tel quel
     expect(screen.queryByText("aspect_enter_orb")).not.toBeInTheDocument();
     expect(screen.queryByText("high_priority_event")).not.toBeInTheDocument();
-    expect(screen.getByText("Entrée en orbe d'aspect")).toBeInTheDocument();
-    expect(screen.getByText("Un événement astrologique marqué mérite votre attention.")).toBeInTheDocument();
+    expect(screen.queryByText("Entrée en orbe d'aspect")).not.toBeInTheDocument();
   });
 
-  it("la timeline detaillee est disponible mais n'est plus le bloc prioritaire", async () => {
+  it("ne rend plus la chronologie du jour devenue redondante", async () => {
     installFetchMock();
 
     renderDashboard();
@@ -545,12 +668,6 @@ describe("TodayPage", () => {
       expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
     });
 
-    // La timeline est dans un <details> pliable, pas au premier plan
-    const detailsEl = document.querySelector("details");
-    expect(detailsEl).not.toBeNull();
-    expect(detailsEl?.open).toBe(false);
-    // Le titre reste accessible
-    const summary = detailsEl?.querySelector("summary");
-    expect(summary?.textContent).toContain("Chronologie du jour");
+    expect(screen.queryByText("Chronologie du jour")).not.toBeInTheDocument();
   });
 });
