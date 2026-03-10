@@ -361,6 +361,7 @@ def test_daily_prediction_returns_500_on_malformed_json_payload():
 
     assert response.status_code == 500
     assert response.json()["detail"]["code"] == "prediction_payload_invalid"
+    assert "time_blocks.dominant_categories_json" in response.json()["detail"]["message"]
 
 
 def test_daily_prediction_meta_uses_run_reference_version_and_house_system_effective():
@@ -399,6 +400,33 @@ def test_daily_prediction_meta_uses_run_reference_version_and_house_system_effec
     meta = response.json()["meta"]
     assert meta["reference_version"] == settings.active_reference_version
     assert meta["house_system_effective"] == "placidus"
+
+
+def test_daily_prediction_meta_falls_back_to_engine_output_house_system_effective():
+    token = _register_and_get_access_token()
+    mock_run = _build_mock_run(reference_version_id=1)
+    mock_engine_output = MagicMock()
+    mock_engine_output.effective_context.house_system_effective = "porphyre"
+    mock_result = ServiceResult(run=mock_run, engine_output=mock_engine_output, was_reused=False)
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    full_run_empty = {
+        "id": 1,
+        "house_system_effective": None,
+        "category_scores": [],
+        "turning_points": [],
+        "time_blocks": [],
+    }
+    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+
+    with patch(repo_path, return_value=full_run_empty), patch(ref_path, return_value=[]):
+        response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    assert response.json()["meta"]["house_system_effective"] == "porphyre"
 
 
 def test_history_requires_auth():
@@ -1477,12 +1505,13 @@ def test_daily_prediction_rebuilds_decision_windows_for_reused_run():
 
 
 def test_time_block_contains_turning_point_uses_half_open_intervals():
-    from app.api.v1.routers.predictions import _time_block_contains_turning_point
+    from app.prediction.public_projection import PublicTimelinePolicy
+    contains = PublicTimelinePolicy()._contains_turning_point
 
     turning_point_time = datetime.fromisoformat("2026-03-08T10:00:00+01:00")
 
     assert (
-        _time_block_contains_turning_point(
+        contains(
             "2026-03-08T08:00:00+01:00",
             "2026-03-08T10:00:00+01:00",
             [turning_point_time],
@@ -1490,7 +1519,7 @@ def test_time_block_contains_turning_point_uses_half_open_intervals():
         is False
     )
     assert (
-        _time_block_contains_turning_point(
+        contains(
             "2026-03-08T10:00:00+01:00",
             "2026-03-08T12:00:00+01:00",
             [turning_point_time],
@@ -1500,12 +1529,13 @@ def test_time_block_contains_turning_point_uses_half_open_intervals():
 
 
 def test_time_block_contains_turning_point_accepts_mixed_offset_formats():
-    from app.api.v1.routers.predictions import _time_block_contains_turning_point
+    from app.prediction.public_projection import PublicTimelinePolicy
+    contains = PublicTimelinePolicy()._contains_turning_point
 
     turning_point_time = datetime.fromisoformat("2026-03-08T10:00:00+01:00")
 
     assert (
-        _time_block_contains_turning_point(
+        contains(
             "2026-03-08T09:00:00",
             "2026-03-08T11:00:00",
             [turning_point_time],
