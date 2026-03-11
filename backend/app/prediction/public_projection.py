@@ -45,7 +45,7 @@ class PublicPredictionAssembler:
             snapshot, cat_id_to_code, category_note_by_code, engine_output=engine_output
         )
 
-        is_flat_day = _is_flat_day(snapshot, decision_windows)
+        is_flat_day = _is_flat_day(snapshot, decision_windows, categories)
 
         # 3. Turning Points
         turning_points = PublicTurningPointPolicy().build(
@@ -67,6 +67,10 @@ class PublicPredictionAssembler:
         )
 
         # 5. Summary
+        micro_trends = None
+        if is_flat_day and snapshot.relative_scores:
+            micro_trends = PublicMicroTrendPolicy().build(snapshot)
+
         summary = PublicSummaryPolicy().build(
             snapshot,
             cat_id_to_code,
@@ -74,13 +78,10 @@ class PublicPredictionAssembler:
             turning_points,
             is_flat_day=is_flat_day,
             engine_output=engine_output,
+            micro_trends=micro_trends,
         )
 
-        # 6. Micro Trends (Story 41.14)
-        micro_trends = None
-        if summary.get("flat_day") and snapshot.relative_scores:
-            micro_trends = PublicMicroTrendPolicy().build(snapshot)
-
+        # 6. Micro Trends (Story 41.14) - Already handled in summary, just return key
         # 7. Meta
         house_system_effective = snapshot.house_system_effective
         if house_system_effective is None and engine_output is not None:
@@ -117,27 +118,40 @@ class PublicPredictionAssembler:
 class PublicMicroTrendPolicy:
     """
     Builds micro-trends for flat days based on relative scores.
+    AC2 Compliance: Significant deviation from baseline required.
     AC3/AC4 Compliance: Nuance-focused wording, limit to 3 trends.
     """
 
     MICRO_TREND_LABELS = {
         "fr": {
             "positive": [
-                "Légère fluidité dans le domaine {cat}",
-                "Nuance plutôt porteuse pour {cat}",
-                "Un climat un peu plus dégagé en {cat}",
+                "Légère fluidité : {cat}",
+                "Nuance plutôt porteuse : {cat}",
+                "Climat un peu plus dégagé : {cat}",
             ],
             "negative": [
-                "Petite nuance de réserve en {cat}",
-                "Climat un poil plus exigeant pour {cat}",
-                "Discrète vigilance suggérée en {cat}",
+                "Petite nuance de réserve : {cat}",
+                "Climat un poil plus exigeant : {cat}",
+                "Discrète vigilance suggérée : {cat}",
             ],
-        }
+        },
+        "en": {
+            "positive": [
+                "Slightly smoother: {cat}",
+                "Positive nuance: {cat}",
+                "A bit more clear: {cat}",
+            ],
+            "negative": [
+                "Slightly reserved: {cat}",
+                "A bit more demanding: {cat}",
+                "Discrete caution suggested: {cat}",
+            ],
+        },
     }
 
-    def build(self, snapshot: PersistedPredictionSnapshot) -> list[dict[str, Any]]:
+    def build(self, snapshot: PersistedPredictionSnapshot, lang: str = "fr") -> list[dict[str, Any]]:
         trends = []
-        labels = EditorialTemplateEngine.CATEGORY_LABELS["fr"]
+        labels = EditorialTemplateEngine.CATEGORY_LABELS.get(lang, EditorialTemplateEngine.CATEGORY_LABELS["fr"])
 
         candidates = [
             rel
@@ -156,7 +170,9 @@ class PublicMicroTrendPolicy:
 
             # Select wording based on sign
             is_pos = self._signal_polarity(rel) >= 0
-            pool = self.MICRO_TREND_LABELS["fr"]["positive" if is_pos else "negative"]
+            pool = self.MICRO_TREND_LABELS.get(lang, self.MICRO_TREND_LABELS["fr"])[
+                "positive" if is_pos else "negative"
+            ]
             # Use rank to vary wording or just take first for simplicity
             idx = (rel.relative_rank - 1) % len(pool) if rel.relative_rank else 0
             wording = pool[idx].format(cat=cat_name)
@@ -178,25 +194,49 @@ class PublicMicroTrendPolicy:
         return trends
 
     def _meets_signal_threshold(self, relative_score: Any) -> bool:
+        # V3 Logic: Use absolute day baseline (z_abs or pct_abs)
+        # We require a more significant deviation (z >= 1.5 or pct >= 0.8/<= 0.2)
+        # to ensure the micro-trend brings "real nuance" (AC2).
+        z_abs = getattr(relative_score, "z_abs", None)
+        if z_abs is not None:
+            return abs(z_abs) >= 1.5
+
+        pct_abs = getattr(relative_score, "pct_abs", None)
+        if pct_abs is not None:
+            return pct_abs >= 0.8 or pct_abs <= 0.2
+
+        # Legacy Fallback: Strengthened to 1.0 for honesty (was 0.5)
         if relative_score.relative_z_score is not None:
-            return abs(relative_score.relative_z_score) >= 0.5
+            return abs(relative_score.relative_z_score) >= 1.0
         if relative_score.relative_percentile is None:
             return False
         return (
-            relative_score.relative_percentile >= 0.7
-            or relative_score.relative_percentile <= 0.3
+            relative_score.relative_percentile >= 0.75
+            or relative_score.relative_percentile <= 0.25
         )
 
     def _signal_strength(self, relative_score: Any) -> float:
+        # Prioritize V3 z_abs for sorting
+        z_abs = getattr(relative_score, "z_abs", None)
+        if z_abs is not None:
+            return abs(z_abs)
+
         if relative_score.relative_z_score is not None:
             return abs(relative_score.relative_z_score)
-        percentile = relative_score.relative_percentile or 0.5
-        return abs(percentile - 0.5) * 2
+        
+        pct_abs = getattr(relative_score, "pct_abs", 0.5)
+        return abs(pct_abs - 0.5) * 2
 
     def _signal_polarity(self, relative_score: Any) -> float:
+        z_abs = getattr(relative_score, "z_abs", None)
+        if z_abs is not None:
+            return z_abs
+            
         if relative_score.relative_z_score is not None:
             return relative_score.relative_z_score
-        return (relative_score.relative_percentile or 0.5) - 0.5
+            
+        pct_abs = getattr(relative_score, "pct_abs", 0.5)
+        return pct_abs - 0.5
 
 
 class PublicCategoryPolicy:
@@ -219,6 +259,10 @@ class PublicCategoryPolicy:
                 "intensity_20": s.intensity_20,
                 "confidence_20": s.confidence_20,
                 "rarity_percentile": s.rarity_percentile,
+                "level_day": s.level_day,
+                "dominance_day": s.dominance_day,
+                "stability_day": s.stability_day,
+                "intensity_day": s.intensity_day,
                 "rank": s.rank,
                 "is_provisional": s.is_provisional,
                 "summary": s.summary,
@@ -317,6 +361,13 @@ class PublicDecisionWindowPolicy:
     def _is_low_signal_snapshot(self, snapshot: PersistedPredictionSnapshot) -> bool:
         if not snapshot.category_scores:
             return True
+
+        # V3 Logic: Based on intensity (AC1)
+        if any(getattr(s, "intensity_20", None) is not None for s in snapshot.category_scores):
+            # If any category has intensity >= 3.0, it's NOT a low signal day
+            return all(float(getattr(s, "intensity_20", 0.0) or 0.0) < 3.0 for s in snapshot.category_scores)
+
+        # Legacy Fallback
         if any(
             float(score.note_20) > MAJOR_ASPECT_NOTE_THRESHOLD
             for score in snapshot.category_scores
@@ -665,6 +716,7 @@ class PublicSummaryPolicy:
         *,
         is_flat_day: bool = False,
         engine_output: Any | None = None,
+        micro_trends: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         editorial = _resolve_editorial_output(engine_output)
 
@@ -732,8 +784,7 @@ class PublicSummaryPolicy:
         # Relative fields (AC1)
         relative_top = None
         rel_summary = None
-        if is_flat_day and snapshot.relative_scores:
-            micro_trends = PublicMicroTrendPolicy().build(snapshot)
+        if is_flat_day and micro_trends:
             relative_top = [trend["category_code"] for trend in micro_trends]
             rel_summary = self._build_relative_summary(micro_trends)
 
@@ -795,14 +846,34 @@ class PublicSummaryPolicy:
 def _is_flat_day(
     snapshot: PersistedPredictionSnapshot,
     decision_windows: list[dict[str, Any]] | None,
+    categories: list[dict[str, Any]],
 ) -> bool:
+    """
+    Determines if the day is 'flat' (no significant signal dynamics).
+    AC1: Uses V3 metrics (intensity, stability) if available.
+    AC3: Intense but neutral days are NOT flat.
+    """
     if decision_windows:
         return False
-    if not snapshot.time_blocks or not snapshot.category_scores:
+    if not snapshot.time_blocks or not categories:
         return False
+
+    # V3 Logic: Based on intensity and stability (AC1/AC3)
+    # A day is flat if intensity is very low for ALL categories AND stability is high.
+    # An intense but neutral day (low note_20 but high intensity_20) is NOT flat.
+    v3_scores = [s for s in categories if s.get("intensity_20") is not None]
+    if v3_scores:
+        # Thresholds (0-20 scale): intensity < 3.0 (very calm)
+        all_very_calm = all(float(s["intensity_20"]) < 3.0 for s in v3_scores)
+        # All categories must be relatively stable (> 14.0) to call it a "flat day"
+        all_stable = all(float(s.get("stability_day") or 0.0) >= 14.0 for s in v3_scores)
+        
+        return all_very_calm and all_stable
+
+    # Legacy Fallback: No windows and all notes <= threshold
     return all(
-        float(score.note_20) <= MAJOR_ASPECT_NOTE_THRESHOLD
-        for score in snapshot.category_scores
+        float(score["note_20"]) <= MAJOR_ASPECT_NOTE_THRESHOLD
+        for score in categories
     )
 
 
