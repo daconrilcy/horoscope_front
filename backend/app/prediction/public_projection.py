@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -47,18 +46,18 @@ class PublicPredictionAssembler:
 
         # 2. Decision Windows
         decision_windows = PublicDecisionWindowPolicy().build(
-            snapshot, cat_id_to_code, category_note_by_code, 
-            engine_output=engine_output, evidence=evidence
+            snapshot,
+            cat_id_to_code,
+            category_note_by_code,
+            engine_output=engine_output,
+            evidence=evidence,
         )
 
         is_flat_day = _is_flat_day(snapshot, decision_windows, categories)
 
         # 3. Turning Points
         turning_points = PublicTurningPointPolicy().build(
-            snapshot,
-            decision_windows or [],
-            is_flat_day=is_flat_day,
-            evidence=evidence
+            snapshot, decision_windows or [], is_flat_day=is_flat_day, evidence=evidence
         )
 
         # 4. Timeline
@@ -86,7 +85,7 @@ class PublicPredictionAssembler:
             is_flat_day=is_flat_day,
             engine_output=engine_output,
             micro_trends=micro_trends,
-            evidence=evidence
+            evidence=evidence,
         )
 
         # 7. Meta
@@ -126,17 +125,19 @@ class PublicPredictionAssembler:
         self, snapshot: PersistedPredictionSnapshot, engine_output: Any | None
     ) -> V3EvidencePack | None:
         """Extracts V3 evidence pack from engine output or snapshot."""
+        from .schemas import V3EvidencePack
+
         if engine_output is not None:
             v3_core = getattr(engine_output, "v3_core", None)
-            if v3_core and hasattr(v3_core, "evidence_pack"):
-                return v3_core.evidence_pack
+            evidence_pack = getattr(v3_core, "evidence_pack", None)
+            if isinstance(evidence_pack, V3EvidencePack):
+                return evidence_pack
 
-        # Story 42.16: Check snapshot metadata (persisted case)
-        if hasattr(snapshot, "run_metadata") and snapshot.run_metadata:
-            # If evidence_pack was persisted in run_metadata
-            ev = snapshot.run_metadata.get("v3_evidence_pack")
-            if ev:
-                return ev
+        v3_metrics = getattr(snapshot, "v3_metrics", None)
+        if isinstance(v3_metrics, dict):
+            evidence = v3_metrics.get("evidence_pack")
+            if isinstance(evidence, dict):
+                return _deserialize_evidence_pack(evidence)
 
         return None
 
@@ -175,9 +176,13 @@ class PublicMicroTrendPolicy:
         },
     }
 
-    def build(self, snapshot: PersistedPredictionSnapshot, lang: str = "fr") -> list[dict[str, Any]]:
+    def build(
+        self, snapshot: PersistedPredictionSnapshot, lang: str = "fr"
+    ) -> list[dict[str, Any]]:
         trends = []
-        labels = EditorialTemplateEngine.CATEGORY_LABELS.get(lang, EditorialTemplateEngine.CATEGORY_LABELS["fr"])
+        labels = EditorialTemplateEngine.CATEGORY_LABELS.get(
+            lang, EditorialTemplateEngine.CATEGORY_LABELS["fr"]
+        )
 
         candidates = [
             rel
@@ -207,9 +212,7 @@ class PublicMicroTrendPolicy:
                 {
                     "category_code": rel.category_code,
                     "z_score": (
-                        round(rel.relative_z_score, 2)
-                        if rel.relative_z_score is not None
-                        else None
+                        round(rel.relative_z_score, 2) if rel.relative_z_score is not None else None
                     ),
                     "percentile": round(rel.relative_percentile or 0.0, 3),
                     "rank": rel.relative_rank or 99,
@@ -235,8 +238,7 @@ class PublicMicroTrendPolicy:
         if relative_score.relative_percentile is None:
             return False
         return (
-            relative_score.relative_percentile >= 0.75
-            or relative_score.relative_percentile <= 0.25
+            relative_score.relative_percentile >= 0.75 or relative_score.relative_percentile <= 0.25
         )
 
     def _signal_strength(self, relative_score: Any) -> float:
@@ -246,7 +248,7 @@ class PublicMicroTrendPolicy:
 
         if relative_score.relative_z_score is not None:
             return abs(relative_score.relative_z_score)
-        
+
         pct_abs = getattr(relative_score, "pct_abs", 0.5)
         return abs(pct_abs - 0.5) * 2
 
@@ -254,10 +256,10 @@ class PublicMicroTrendPolicy:
         z_abs = getattr(relative_score, "z_abs", None)
         if z_abs is not None:
             return z_abs
-            
+
         if relative_score.relative_z_score is not None:
             return relative_score.relative_z_score
-            
+
         pct_abs = getattr(relative_score, "pct_abs", 0.5)
         return pct_abs - 0.5
 
@@ -270,27 +272,29 @@ class PublicCategoryPolicy:
         evidence: V3EvidencePack | None = None,
     ) -> list[dict[str, Any]]:
         categories = []
-        
+
         if evidence:
             for code, theme in evidence.themes.items():
-                categories.append({
-                    "code": code,
-                    "note_20": round(theme.score_20),
-                    "raw_score": theme.level,
-                    "power": theme.intensity / 20.0,
-                    "volatility": 1.0 - theme.stability / 20.0,
-                    "score_20": theme.score_20,
-                    "intensity_20": theme.intensity,
-                    "confidence_20": theme.stability,
-                    "rarity_percentile": theme.rarity,
-                    "level_day": theme.level,
-                    "dominance_day": theme.dominance,
-                    "stability_day": theme.stability,
-                    "intensity_day": theme.intensity,
-                    "rank": 99, # Will be re-ranked if needed
-                    "is_provisional": snapshot.is_provisional_calibration,
-                    "summary": None,
-                })
+                categories.append(
+                    {
+                        "code": code,
+                        "note_20": round(theme.score_20),
+                        "raw_score": theme.level,
+                        "power": theme.intensity / 20.0,
+                        "volatility": 1.0 - theme.stability / 20.0,
+                        "score_20": theme.score_20,
+                        "intensity_20": theme.intensity,
+                        "confidence_20": theme.stability,
+                        "rarity_percentile": theme.rarity,
+                        "level_day": theme.level,
+                        "dominance_day": theme.dominance,
+                        "stability_day": theme.stability,
+                        "intensity_day": theme.intensity,
+                        "rank": 99,  # Will be re-ranked if needed
+                        "is_provisional": snapshot.is_provisional_calibration,
+                        "summary": None,
+                    }
+                )
             # Re-rank by score
             sorted_cats = sorted(categories, key=lambda c: c["score_20"], reverse=True)
             for i, c in enumerate(sorted_cats):
@@ -300,24 +304,26 @@ class PublicCategoryPolicy:
         # Fallback to snapshot
         for s in snapshot.category_scores:
             code = cat_id_to_code.get(s.category_id, "unknown")
-            categories.append({
-                "code": code,
-                "note_20": s.note_20,
-                "raw_score": s.raw_score,
-                "power": s.power,
-                "volatility": s.volatility,
-                "score_20": s.score_20,
-                "intensity_20": s.intensity_20,
-                "confidence_20": s.confidence_20,
-                "rarity_percentile": s.rarity_percentile,
-                "level_day": s.level_day,
-                "dominance_day": s.dominance_day,
-                "stability_day": s.stability_day,
-                "intensity_day": s.intensity_day,
-                "rank": s.rank,
-                "is_provisional": s.is_provisional,
-                "summary": s.summary,
-            })
+            categories.append(
+                {
+                    "code": code,
+                    "note_20": s.note_20,
+                    "raw_score": s.raw_score,
+                    "power": s.power,
+                    "volatility": s.volatility,
+                    "score_20": s.score_20,
+                    "intensity_20": s.intensity_20,
+                    "confidence_20": s.confidence_20,
+                    "rarity_percentile": s.rarity_percentile,
+                    "level_day": s.level_day,
+                    "dominance_day": s.dominance_day,
+                    "stability_day": s.stability_day,
+                    "intensity_day": s.intensity_day,
+                    "rank": s.rank,
+                    "is_provisional": s.is_provisional,
+                    "summary": s.summary,
+                }
+            )
         return sorted(categories, key=lambda c: c["rank"])
 
 
@@ -333,7 +339,7 @@ class PublicDecisionWindowPolicy:
     ) -> list[dict[str, Any]] | None:
         # Prioritize evidence pack
         if evidence:
-            return [
+            raw_windows = [
                 {
                     "start_local": w.start_local.isoformat(),
                     "end_local": w.end_local.isoformat(),
@@ -345,12 +351,13 @@ class PublicDecisionWindowPolicy:
                 }
                 for w in evidence.time_windows
             ]
+            return self._normalize(snapshot, raw_windows, category_note_by_code) or None
 
         # Fallback to Engine Output
         core_output = _resolve_core_engine_output(engine_output)
         if core_output is not None:
             raw_dws = getattr(core_output, "decision_windows", None) or []
-            return [
+            raw_windows = [
                 {
                     "start_local": dw.start_local.isoformat(),
                     "end_local": dw.end_local.isoformat(),
@@ -363,13 +370,14 @@ class PublicDecisionWindowPolicy:
                 }
                 for dw in raw_dws
             ]
+            return self._normalize(snapshot, raw_windows, category_note_by_code) or None
 
         # Otherwise rebuild from snapshot
         raw_windows = self._rebuild_from_snapshot(snapshot, cat_id_to_code)
         if not raw_windows:
             return None
 
-        return self._normalize(snapshot, raw_windows, category_note_by_code)
+        return self._normalize(snapshot, raw_windows, category_note_by_code) or None
 
     def _rebuild_from_snapshot(
         self, snapshot: PersistedPredictionSnapshot, cat_id_to_code: dict[int, str]
@@ -389,6 +397,7 @@ class PublicDecisionWindowPolicy:
         }
 
         from types import SimpleNamespace
+
         blocks = [
             SimpleNamespace(
                 start_local=b.start_at_local,
@@ -422,8 +431,13 @@ class PublicDecisionWindowPolicy:
         if not snapshot.category_scores:
             return True
         if any(getattr(s, "intensity_20", None) is not None for s in snapshot.category_scores):
-            return all(float(getattr(s, "intensity_20", 0.0) or 0.0) < 3.0 for s in snapshot.category_scores)
-        if any(float(score.note_20) > MAJOR_ASPECT_NOTE_THRESHOLD for score in snapshot.category_scores):
+            return all(
+                float(getattr(s, "intensity_20", 0.0) or 0.0) < 3.0
+                for s in snapshot.category_scores
+            )
+        if any(
+            float(score.note_20) > MAJOR_ASPECT_NOTE_THRESHOLD for score in snapshot.category_scores
+        ):
             return False
         return all((block.tone_code or "neutral") == "neutral" for block in snapshot.time_blocks)
 
@@ -477,10 +491,7 @@ class PublicDecisionWindowPolicy:
             if not _same_local_moment(tp.occurred_at_local, window_start):
                 continue
 
-            if any(
-                d.get("event_type") in PUBLIC_PIVOT_EVENT_TYPES 
-                for d in tp.drivers
-            ):
+            if any(d.get("event_type") in PUBLIC_PIVOT_EVENT_TYPES for d in tp.drivers):
                 return True
         return False
 
@@ -513,7 +524,7 @@ class PublicTurningPointPolicy:
             return [
                 {
                     "occurred_at_local": tp.local_time.isoformat(),
-                    "severity": tp.amplitude / 10.0, # Scaled
+                    "severity": tp.amplitude / 10.0,  # Scaled
                     "summary": f"Bascule durable ({tp.reason})",
                     "drivers": [{"event_type": d} for d in tp.drivers],
                 }
@@ -539,23 +550,24 @@ class PublicTurningPointPolicy:
             for window in decision_windows
             if window.get("window_type") == "pivot"
         ]
-        
+
         for tp in sorted(snapshot.turning_points, key=lambda item: item.occurred_at_local):
             occurred_at = tp.occurred_at_local.isoformat()
             # Only keep if it matches a pivot window start
             if pivot_window_starts and not any(
-                _same_local_moment(tp.occurred_at_local, ws)
-                for ws in pivot_window_starts
+                _same_local_moment(tp.occurred_at_local, ws) for ws in pivot_window_starts
             ):
                 continue
-            
-            public_turning_points.append({
-                "occurred_at_local": occurred_at,
-                "severity": float(tp.severity),
-                "summary": tp.summary,
-                "drivers": tp.drivers,
-            })
-            
+
+            public_turning_points.append(
+                {
+                    "occurred_at_local": occurred_at,
+                    "severity": float(tp.severity),
+                    "summary": tp.summary,
+                    "drivers": tp.drivers,
+                }
+            )
+
         return public_turning_points
 
 
@@ -572,23 +584,20 @@ class PublicTimelinePolicy:
                 b.dominant_categories,
                 category_note_by_code,
             )
-            blocks.append({
-                "start_local": b.start_at_local.isoformat(),
-                "end_local": b.end_at_local.isoformat(),
-                "tone_code": b.tone_code,
-                "dominant_categories": dominant_categories,
-                "summary": self._build_summary(
-                    b.start_at_local, 
-                    b.end_at_local, 
-                    dominant_categories, 
-                    b.tone_code
-                ),
-                "turning_point": self._contains_turning_point(
-                    b.start_at_local, 
-                    b.end_at_local, 
-                    turning_point_times
-                ),
-            })
+            blocks.append(
+                {
+                    "start_local": b.start_at_local.isoformat(),
+                    "end_local": b.end_at_local.isoformat(),
+                    "tone_code": b.tone_code,
+                    "dominant_categories": dominant_categories,
+                    "summary": self._build_summary(
+                        b.start_at_local, b.end_at_local, dominant_categories, b.tone_code
+                    ),
+                    "turning_point": self._contains_turning_point(
+                        b.start_at_local, b.end_at_local, turning_point_times
+                    ),
+                }
+            )
         return self._merge_adjacent_blocks(sorted(blocks, key=lambda block: block["start_local"]))
 
     def _merge_adjacent_blocks(self, blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -599,10 +608,10 @@ class PublicTimelinePolicy:
         for block in blocks[1:]:
             previous = merged[-1]
             if (
-                not previous["turning_point"] 
-                and not block["turning_point"] 
-                and previous["end_local"] == block["start_local"] 
-                and previous["tone_code"] == block["tone_code"] 
+                not previous["turning_point"]
+                and not block["turning_point"]
+                and previous["end_local"] == block["start_local"]
+                and previous["tone_code"] == block["tone_code"]
                 and previous["dominant_categories"] == block["dominant_categories"]
             ):
                 merged[-1] = {
@@ -631,7 +640,9 @@ class PublicTimelinePolicy:
             unique_categories.append(category)
         return unique_categories[:3]
 
-    def _build_summary(self, start: datetime, end: datetime, cats: list[str], tone: str | None) -> str:
+    def _build_summary(
+        self, start: datetime, end: datetime, cats: list[str], tone: str | None
+    ) -> str:
         s_lbl, e_lbl = start.strftime("%H:%M"), end.strftime("%H:%M")
         if not cats:
             return f"Entre {s_lbl} et {e_lbl}, pas d'aspect majeur."
@@ -640,7 +651,9 @@ class PublicTimelinePolicy:
         cat_lbl = ", ".join(EditorialTemplateEngine.CATEGORY_LABELS["fr"].get(c, c) for c in cats)
         return f"Entre {s_lbl} et {e_lbl}, tonalité {tone_lbl} — {cat_lbl}."
 
-    def _contains_turning_point(self, start: datetime, end: datetime, tp_times: list[datetime]) -> bool:
+    def _contains_turning_point(
+        self, start: datetime, end: datetime, tp_times: list[datetime]
+    ) -> bool:
         s_wall, e_wall = start.replace(tzinfo=None), end.replace(tzinfo=None)
         for tp in tp_times:
             tp_wall = tp.replace(tzinfo=None)
@@ -663,7 +676,7 @@ class PublicSummaryPolicy:
         evidence: V3EvidencePack | None = None,
     ) -> dict[str, Any]:
         editorial = _resolve_editorial_output(engine_output)
-        
+
         # Priority 1: Evidence Pack summaries if they exist (future prompt)
         if evidence and evidence.day_profile.get("overall_summary"):
             return {
@@ -677,24 +690,37 @@ class PublicSummaryPolicy:
         scores = sorted(snapshot.category_scores, key=lambda s: s.rank or 99)
         top_categories = [cat_id_to_code.get(s.category_id, "unknown") for s in scores[:3]]
         bottom_scores = sorted(snapshot.category_scores, key=lambda s: (s.note_20, s.rank or 99))
-        bottom_categories = [cat_id_to_code.get(s.category_id, "unknown") for s in bottom_scores[:2]]
+        bottom_categories = [
+            cat_id_to_code.get(s.category_id, "unknown") for s in bottom_scores[:2]
+        ]
 
         tps = sorted(turning_points, key=lambda tp: float(tp["severity"] or 0), reverse=True)
-        main_tp = {
-            "occurred_at_local": tps[0]["occurred_at_local"],
-            "severity": float(tps[0]["severity"]),
-            "summary": tps[0]["summary"],
-        } if tps else None
+        main_tp = (
+            {
+                "occurred_at_local": tps[0]["occurred_at_local"],
+                "severity": float(tps[0]["severity"]),
+                "summary": tps[0]["summary"],
+            }
+            if tps
+            else None
+        )
 
         cal_note = None
         low_var = False
         if snapshot.is_provisional_calibration:
             cal_note = "Les scores sont calculés sans données historiques."
             top3_notes = [s.note_20 for s in scores[:3]]
-            if top3_notes and (max(top3_notes) - min(top3_notes) < 3): low_var = True
+            if top3_notes and (max(top3_notes) - min(top3_notes) < 3):
+                low_var = True
 
-        relative_top = [trend["category_code"] for trend in micro_trends] if is_flat_day and micro_trends else None
-        rel_summary = self._build_relative_summary(micro_trends) if is_flat_day and micro_trends else None
+        relative_top = (
+            [trend["category_code"] for trend in micro_trends]
+            if is_flat_day and micro_trends
+            else None
+        )
+        rel_summary = (
+            self._build_relative_summary(micro_trends) if is_flat_day and micro_trends else None
+        )
 
         return {
             "overall_tone": snapshot.overall_tone,
@@ -711,14 +737,18 @@ class PublicSummaryPolicy:
         }
 
     def _extract_best_window(self, decision_windows, editorial) -> dict[str, Any] | None:
-        if not decision_windows: return None
+        if not decision_windows:
+            return None
         if editorial and editorial.best_window:
             ew = {
                 "start_local": editorial.best_window.start_local.isoformat(),
                 "end_local": editorial.best_window.end_local.isoformat(),
                 "dominant_category": editorial.best_window.dominant_category,
             }
-            if any(w["start_local"] == ew["start_local"] and w["end_local"] == ew["end_local"] for w in decision_windows):
+            if any(
+                w["start_local"] == ew["start_local"] and w["end_local"] == ew["end_local"]
+                for w in decision_windows
+            ):
                 return ew
         candidates = [w for w in decision_windows if w["window_type"] in ("favorable", "pivot")]
         if candidates:
@@ -732,43 +762,117 @@ class PublicSummaryPolicy:
         return None
 
     def _build_relative_summary(self, micro_trends: list[dict[str, Any]]) -> str | None:
-        if not micro_trends: return None
+        if not micro_trends:
+            return None
         labels = EditorialTemplateEngine.CATEGORY_LABELS["fr"]
         positive_codes = [t["category_code"] for t in micro_trends if (t.get("z_score") or 0.0) > 0]
-        negative_codes = [t["category_code"] for t in micro_trends if t["category_code"] not in positive_codes]
+        negative_codes = [
+            t["category_code"] for t in micro_trends if t["category_code"] not in positive_codes
+        ]
 
         def _format_names(codes):
             names = [labels.get(c, c).lower() for c in codes]
-            if len(names) == 1: return names[0]
+            if len(names) == 1:
+                return names[0]
             return f"{', '.join(names[:-1])} et {names[-1]}"
 
         parts = ["Journée globalement calme."]
-        if positive_codes: parts.append(f"Léger avantage relatif pour {_format_names(positive_codes)}.")
-        if negative_codes: parts.append(f"Ambiance un peu plus retenue en {_format_names(negative_codes)}.")
+        if positive_codes:
+            parts.append(f"Léger avantage relatif pour {_format_names(positive_codes)}.")
+        if negative_codes:
+            parts.append(f"Ambiance un peu plus retenue en {_format_names(negative_codes)}.")
         return " ".join(parts)
 
 
-def _is_flat_day(snapshot: PersistedPredictionSnapshot, decision_windows: list[dict[str, Any]] | None, categories: list[dict[str, Any]]) -> bool:
-    if decision_windows: return False
-    if not snapshot.time_blocks or not categories: return False
+def _is_flat_day(
+    snapshot: PersistedPredictionSnapshot,
+    decision_windows: list[dict[str, Any]] | None,
+    categories: list[dict[str, Any]],
+) -> bool:
+    if decision_windows:
+        return False
+    if not snapshot.time_blocks or not categories:
+        return False
     v3_scores = [s for s in categories if s.get("intensity_20") is not None]
     if v3_scores:
-        return all(float(s["intensity_20"]) < 3.0 for s in v3_scores) and all(float(s.get("stability_day") or 0.0) >= 14.0 for s in v3_scores)
+        return all(float(s["intensity_20"]) < 3.0 for s in v3_scores) and all(
+            float(s.get("stability_day") or 0.0) >= 14.0 for s in v3_scores
+        )
     return all(float(score["note_20"]) <= MAJOR_ASPECT_NOTE_THRESHOLD for score in categories)
 
 
+def _deserialize_evidence_pack(payload: dict[str, Any]) -> V3EvidencePack:
+    from .schemas import (
+        V3EvidencePack,
+        V3EvidenceTheme,
+        V3EvidenceTurningPoint,
+        V3EvidenceWindow,
+    )
+
+    themes = {
+        code: V3EvidenceTheme(
+            code=theme["code"],
+            score_20=float(theme["score_20"]),
+            level=float(theme["level"]),
+            intensity=float(theme["intensity"]),
+            dominance=float(theme["dominance"]),
+            stability=float(theme["stability"]),
+            rarity=float(theme["rarity"]),
+            is_major=bool(theme["is_major"]),
+        )
+        for code, theme in payload.get("themes", {}).items()
+    }
+    time_windows = [
+        V3EvidenceWindow(
+            start_local=datetime.fromisoformat(window["start_local"]),
+            end_local=datetime.fromisoformat(window["end_local"]),
+            type=window["type"],
+            score=float(window["score"]),
+            intensity=float(window["intensity"]),
+            confidence=float(window["confidence"]),
+            themes=list(window.get("themes", [])),
+        )
+        for window in payload.get("time_windows", [])
+    ]
+    turning_points = [
+        V3EvidenceTurningPoint(
+            local_time=datetime.fromisoformat(turning_point["local_time"]),
+            reason=turning_point["reason"],
+            amplitude=float(turning_point["amplitude"]),
+            confidence=float(turning_point["confidence"]),
+            themes=list(turning_point.get("themes", [])),
+            drivers=list(turning_point.get("drivers", [])),
+        )
+        for turning_point in payload.get("turning_points", [])
+    ]
+    return V3EvidencePack(
+        version=payload["version"],
+        generated_at=datetime.fromisoformat(payload["generated_at"]),
+        day_profile=dict(payload.get("day_profile", {})),
+        themes=themes,
+        time_windows=time_windows,
+        turning_points=turning_points,
+        v3_natal_structural=dict(payload.get("v3_natal_structural", {})),
+        v3_layer_diagnostics=dict(payload.get("v3_layer_diagnostics", {})),
+        metadata=dict(payload.get("metadata", {})),
+    )
+
+
 def _resolve_core_engine_output(engine_output: Any | None) -> Any | None:
-    if engine_output is None: return None
+    if engine_output is None:
+        return None
     return getattr(engine_output, "core", engine_output)
 
 
 def _resolve_editorial_output(engine_output: Any | None) -> Any | None:
-    if engine_output is None: return None
+    if engine_output is None:
+        return None
     eb = getattr(engine_output, "editorial", None)
     return getattr(eb, "data", eb) if eb else None
 
 
 def _same_local_moment(left: datetime, right: str | datetime | None) -> bool:
-    if right is None: return False
+    if right is None:
+        return False
     rdt = datetime.fromisoformat(right) if isinstance(right, str) else right
     return left.replace(tzinfo=None) == rdt.replace(tzinfo=None)

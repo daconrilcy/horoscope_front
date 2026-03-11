@@ -374,7 +374,7 @@ development_status:
   42-8-etendre-le-snapshot-et-la-persistance-pour-le-daily-v3: done
   42-9-segmenter-la-journee-par-changement-de-regime: done
   42-10-detecter-les-turning-points-comme-des-changements-de-regime-persistants: done
-  42-11-refaire-les-fenetres-decisionnelles-a-partir-des-blocs-v3: ready-for-dev
+  42-11-refaire-les-fenetres-decisionnelles-a-partir-des-blocs-v3: done
   42-12-etendre-la-baseline-utilisateur-en-baseline-day-slot-et-saison: in-progress
   42-13-refaire-le-scoring-relatif-v3-autour-d-absolu-slot-confiance-et-rarete: ready-for-dev
   42-14-refaire-la-logique-de-flat-day-et-de-micro-tendances-dans-le-moteur-v3: in-progress

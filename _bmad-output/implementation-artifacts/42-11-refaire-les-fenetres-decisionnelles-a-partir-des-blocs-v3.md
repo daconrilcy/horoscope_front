@@ -1,6 +1,6 @@
 # Story 42.11: Refaire les fenêtres décisionnelles à partir des blocs v3
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -22,21 +22,21 @@ so that les fenêtres proposées aient une personnalité propre et une valeur d�
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Reconcevoir la logique de fenêtre métier (AC: 1, 2)
-  - [ ] Définir la dérivation depuis les blocs v3
-  - [ ] Définir les types de fenêtres utiles
+- [x] Task 1: Reconcevoir la logique de fenêtre métier (AC: 1, 2)
+  - [x] Définir la dérivation depuis les blocs v3
+  - [x] Définir les types de fenêtres utiles
 
-- [ ] Task 2: Refaire le builder de fenêtres (AC: 2, 3)
-  - [ ] Adapter `decision_window_builder.py`
-  - [ ] Ajouter score et confiance v3 si nécessaire
+- [x] Task 2: Refaire le builder de fenêtres (AC: 2, 3)
+  - [x] Adapter `decision_window_builder.py`
+  - [x] Ajouter score et confiance v3 si nécessaire
 
-- [ ] Task 3: Brancher les fenêtres dans la projection publique (AC: 3, 4)
-  - [ ] Revoir `best_window`
-  - [ ] Garder une projection sobre sur journée faible
+- [x] Task 3: Brancher les fenêtres dans la projection publique (AC: 3, 4)
+  - [x] Revoir `best_window`
+  - [x] Garder une projection sobre sur journée faible
 
-- [ ] Task 4: Tests (AC: 5)
-  - [ ] Tester cohérence blocs -> fenêtres
-  - [ ] Tester absence de `best_window` artificiel
+- [x] Task 4: Tests (AC: 5)
+  - [x] Tester cohérence blocs -> fenêtres
+  - [x] Tester absence de `best_window` artificiel
 
 ## Dev Notes
 
@@ -75,6 +75,8 @@ GPT-5 Codex + BMAD Code Reviewer
 - [x] `best_window` reliability improved with a minimum score threshold (12.0) (AC3).
 - [x] Score blending correctly handles V3 metrics.
 - [x] Unit tests cover V3 window generation, filtering, and score calculation (AC5).
+- [x] Code review fix: public projection now normalizes engine-output windows before exposing them, preserving pivot filtering and `None` on empty output.
+- [x] Code review fix: structuring public pivots from luminary/personal events are preserved after normalization instead of being dropped.
 
 ### File List
 
@@ -83,5 +85,5 @@ GPT-5 Codex + BMAD Code Reviewer
 - `backend/app/prediction/public_projection.py`
 - `backend/app/prediction/schemas.py`
 - `backend/app/tests/unit/test_v3_decision_windows.py`
+- `backend/app/tests/unit/test_public_projection.py`
 - `_bmad-output/implementation-artifacts/42-11-refaire-les-fenetres-decisionnelles-a-partir-des-blocs-v3.md`
-
