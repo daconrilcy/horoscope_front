@@ -67,14 +67,16 @@ class V3ThemeAggregator:
         min_val = min(smoothed_composites)
         vol_val = statistics.stdev(smoothed_composites) if len(smoothed_composites) > 1 else 0.0
 
-        score = 10.0 + (avg_val - SCORE_CENTER) * SCORE_SCALE
-        score = max(0.0, min(20.0, score))
+        # V3 metrics for calibration (AC1)
+        level_day = avg_val - SCORE_CENTER
+        pos_peak = max_val - SCORE_CENTER
+        neg_peak = SCORE_CENTER - min_val
+        dominance_day = pos_peak - neg_peak
 
         avg_dynamic = statistics.mean(abs(value) for value in smoothed_dynamics)
         peak_dynamic = max(abs(value) for value in smoothed_dynamics)
         intensity_raw = (avg_dynamic * 0.65) + (peak_dynamic * 0.35)
-        intensity = (intensity_raw / INTENSITY_MAX_RAW) * 20.0
-        intensity = max(0.0, min(20.0, intensity))
+        intensity_day = max(0.0, min(20.0, (intensity_raw / INTENSITY_MAX_RAW) * 20.0))
 
         explained_signal = self._explained_signal_share(
             raw_dynamic_values=dynamic_values,
@@ -106,16 +108,18 @@ class V3ThemeAggregator:
             + baseline_quality * 0.10
             + coherence * 0.10
         ) * 20.0
-        confidence = max(0.0, min(20.0, conf_raw))
+        stability_day = max(0.0, min(20.0, conf_raw))
 
         peak_relief = max(abs(max_val - SCORE_CENTER), abs(min_val - SCORE_CENTER))
         rarity = self._rarity_score(peak_relief, avg_dynamic)
         rarity = max(0.0, min(20.0, rarity))
 
         return V3DailyMetrics(
-            score_20=score,
-            intensity_20=intensity,
-            confidence_20=confidence,
+            score_20=10.0, # Will be calibrated by PercentileCalibrator
+            level_day=level_day,
+            intensity_day=intensity_day,
+            dominance_day=dominance_day,
+            stability_day=stability_day,
             rarity_percentile=rarity,
             avg_score=avg_val,
             max_score=max_val,

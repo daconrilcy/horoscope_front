@@ -2,6 +2,7 @@ from collections.abc import Iterable
 from typing import Mapping
 
 from app.infra.db.repositories.prediction_schemas import CalibrationData
+from app.prediction.schemas import V3DailyMetrics
 from app.prediction.aggregator import DayAggregation
 
 DEFAULT_CALIBRATION = CalibrationData(
@@ -57,6 +58,34 @@ class PercentileCalibrator:
 
         # Calibration entièrement dégénérée ou valeur non couverte par interpolation.
         return group_scores[len(group_scores) // 2][1]
+
+    def calibrate_v3(self, metrics: V3DailyMetrics, calibration: CalibrationData | None) -> float:
+        """
+        Calibre les métriques V3 en une note 0-20 absolue (AC1, AC2, AC3).
+        S'appuie sur le niveau, l'intensité, la dominance et la stabilité.
+        """
+        # 1. Base Signal: combination of average level and dominance (peak asymmetry)
+        # AC2: Ensuring intense ambivalent days aren't crushed by giving more weight to dominance.
+        base_signal = metrics.level_day * 0.5 + metrics.dominance_day * 0.5
+
+        # 2. Intensity Boost (I)
+        # Les journées intenses élargissent l'amplitude de la note (plus d'expressivité)
+        intensity_factor = metrics.intensity_day / 20.0
+        boost = 1.0 + intensity_factor * 1.0  # Jusqu'à +100% d'expansion
+
+        # 3. Stability Damping (S)
+        # Une faible stabilité ramène la note vers le neutre pour éviter les faux espoirs/peurs
+        stability_factor = metrics.stability_day / 20.0
+        damp = 0.4 + stability_factor * 0.6  # De 0.4 (très instable) à 1.0 (parfaitement stable)
+
+        # Application de la composition
+        calibrated_raw = base_signal * boost * damp
+
+        # 4. Mapping final sur 0-20
+        # Sensibilité : 1.0 de déviation raw = 10 points sur 20.
+        score_20 = 10.0 + calibrated_raw * 10.0
+
+        return max(0.0, min(20.0, score_20))
 
     def calibrate_all(
         self,

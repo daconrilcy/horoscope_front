@@ -1,3 +1,4 @@
+import dataclasses
 from collections.abc import Callable
 from datetime import UTC, date, datetime, time, timedelta
 from numbers import Real
@@ -392,10 +393,15 @@ class EngineOrchestrator:
                 )
             theme_signals[theme_code] = V3ThemeSignal(theme_code=theme_code, timeline=timeline)
 
-        daily_metrics = {
-            theme_code: self._v3_theme_aggregator.aggregate_theme(theme_signal)
-            for theme_code, theme_signal in theme_signals.items()
-        }
+        daily_metrics: dict[str, V3DailyMetrics] = {}
+        for theme_code, theme_signal in theme_signals.items():
+            metrics = self._v3_theme_aggregator.aggregate_theme(theme_signal)
+            # AC1, AC2, AC3: Calibrate using the new multidimensional V3 logic
+            calibrated_score = self._percentile_calibrator.calibrate_v3(
+                metrics, loaded_context.calibrations.get(theme_code)
+            )
+            daily_metrics[theme_code] = dataclasses.replace(metrics, score_20=calibrated_score)
+
         computed_at = self._local_date_start_utc(local_date, timezone)
         return V3EngineOutput(
             engine_version=v3_versions["engine_version"] or settings.v3_engine_version,

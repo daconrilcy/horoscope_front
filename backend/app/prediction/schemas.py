@@ -119,12 +119,15 @@ class V3DailyMetrics:
     All _20 metrics are normalized on a [0, 20] scale.
     """
 
-    score_20: float       # -1 to +1 signal mapped to 0-20 (10 = neutral) (AC2)
-    intensity_20: float   # total relief/energy of the day (0-20)
-    confidence_20: float  # signal clarity/reliability (0-20) (AC3)
-    rarity_percentile: float # rarity index on 0-20, not a statistical percentile (AC4)
+    score_20: float       # Final calibrated score
+    level_day: float      # AC1: Average signal relative to neutral
+    intensity_day: float  # AC1: Total energy/relief of the day
+    dominance_day: float  # AC1: Asymmetry of peaks
+    stability_day: float  # AC1: Signal clarity/reliability
     
-    # Raw stats
+    rarity_percentile: float # rarity index on 0-20, not a statistical percentile
+    
+    # Raw stats (retained for traceability)
     avg_score: float
     max_score: float
     min_score: float
