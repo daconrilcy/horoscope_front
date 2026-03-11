@@ -1641,3 +1641,73 @@ So that les futures itérations n'introduisent pas de timeline bruyante, répét
 - La décision go/no-go produit sur l'intraday peut s'appuyer sur ces indicateurs objectifs.
 
 [Source: audit produit 2026-03-09; docs/qa/daily-prediction-qa-report-2026-03-08.md; backend/app/tests/integration/test_daily_prediction_qa.py]
+
+### Story 41.12: Introduire une baseline utilisateur 12 mois pour la calibration relative
+
+As a backend maintainer,
+I want persister une baseline utilisateur simulée sur 12 mois par catégorie,
+So that la plateforme puisse comparer une journée donnée à l’historique personnel de l’utilisateur sans recalcul coûteux à chaque requête.
+
+**Acceptance Criteria:**
+- Une baseline 12 mois par utilisateur/catégorie est stockée en base avec moyenne, écart-type, percentiles, fenêtre temporelle et versions métier.
+- Le modèle de données est versionné et distinct par `reference_version`, `ruleset_version` et `house_system_effective`.
+- La génération de baseline reste découplée du routeur API et du frontend.
+- Les cas variance nulle, historique incomplet et baseline absente sont explicitement gérés.
+
+[Source: _bmad-output/planning-artifacts/epic-41-relative-calibration-spec.md]
+
+### Story 41.13: Calculer un scoring relatif journalier à partir de la baseline
+
+As a prediction engine designer,
+I want calculer des métriques relatives utilisateur pour chaque catégorie quotidienne,
+So that une journée neutre puisse faire émerger des dominantes personnelles légères sans altérer le scoring absolu existant.
+
+**Acceptance Criteria:**
+- Le backend calcule au minimum `relative_z_score`, `relative_percentile` et `relative_rank` par catégorie.
+- Les fallbacks couvrent variance nulle, baseline absente et échantillon insuffisant.
+- Le scoring absolu existant (`note_20`, `raw_score`, `power`, `volatility`) reste inchangé.
+- La logique relative est centralisée dans une couche dédiée réutilisable par service et projection publique.
+
+[Source: _bmad-output/planning-artifacts/epic-41-relative-calibration-spec.md]
+
+### Story 41.14: Exposer des micro-tendances sur les journées plates sans faux signaux forts
+
+As a utilisateur consultant le daily,
+I want voir quelques micro-tendances lisibles quand la journée est globalement calme,
+So that je distingue une journée neutre uniforme d’une journée neutre avec quelques dominantes relatives, sans faux créneaux d’action.
+
+**Acceptance Criteria:**
+- Le contrat `/v1/predictions/daily` ajoute de façon additive `flat_day`, `relative_top_categories`, `relative_summary` et `micro_trends`.
+- Une journée plate reste plate: pas de `best_window`, pas de `turning_points` publics, pas de `decision_windows`.
+- Les micro-tendances restent secondaires et n’alimentent jamais la timeline décisionnelle.
+- Les journées actives continuent à être pilotées par le scoring absolu et les fenêtres existantes.
+
+[Source: _bmad-output/planning-artifacts/epic-41-relative-calibration-spec.md]
+
+### Story 41.15: Générer et rafraîchir les baselines utilisateur de manière asynchrone
+
+As a platform engineer,
+I want générer et rafraîchir les baselines utilisateur de façon asynchrone,
+So that la calibration relative soit disponible sans bloquer l’inscription ni la consultation du daily.
+
+**Acceptance Criteria:**
+- Un job peut générer la baseline après disponibilité du thème natal.
+- Un refresh explicite est déclenchable lors des changements de versions métier, de `house_system_effective` ou de données natales.
+- Le job est idempotent et observable.
+- Le produit continue de fonctionner proprement si la baseline n’est pas encore disponible.
+
+[Source: _bmad-output/planning-artifacts/epic-41-relative-calibration-spec.md]
+
+### Story 41.16: Verrouiller la QA et les garde-fous produit de la calibration relative
+
+As a QA engineer,
+I want valider que la calibration relative enrichit les journées plates sans créer de faux signaux forts,
+So that le daily reste honnête, lisible et conforme au budget de bruit Epic 41.
+
+**Acceptance Criteria:**
+- Les suites QA distinguent journée plate sans micro-tendance, journée plate avec micro-tendances, et journée active inchangée.
+- Aucun faux `best_window`, faux `turning_point` ou wording trompeur n’est introduit.
+- Le budget de bruit intraday Epic 41.5 reste respecté.
+- Les cas baseline absente ou obsolète sont couverts sans dégrader le comportement nominal.
+
+[Source: _bmad-output/planning-artifacts/epic-41-relative-calibration-spec.md]

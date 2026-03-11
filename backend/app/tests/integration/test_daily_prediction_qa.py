@@ -1,6 +1,6 @@
 # backend/app/tests/integration/test_daily_prediction_qa.py
 import uuid
-from datetime import date
+from datetime import date, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -37,6 +37,7 @@ from app.infra.db.models.reference import (
 )
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
+from app.infra.db.models.user_prediction_baseline import UserPredictionBaselineModel
 from app.infra.db.session import SessionLocal
 from app.main import app
 from app.services.auth_service import AuthService
@@ -44,6 +45,8 @@ from app.services.reference_data_service import ReferenceDataService
 from app.tests.fixtures.intraday_qa_fixtures import (
     get_active_day,
     get_calm_day,
+    get_flat_day_no_signal,
+    get_flat_day_with_micro_trends,
     get_transition_day,
 )
 from app.tests.helpers.intraday_qa_report import (
@@ -61,6 +64,8 @@ FIXTURE_BUILDERS = {
     "active_day": get_active_day,
     "calm_day": get_calm_day,
     "transition_day": get_transition_day,
+    "flat_day_with_micro_trends": get_flat_day_with_micro_trends,
+    "flat_day_no_signal": get_flat_day_no_signal,
 }
 
 
@@ -116,6 +121,7 @@ def setup_db(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(settings, "ruleset_version", ACTIVE_RULESET_VERSION)
     with SessionLocal() as db:
         db.execute(delete(DailyPredictionRunModel))
+        db.execute(delete(UserPredictionBaselineModel))
         db.execute(delete(UserBirthProfileModel))
         db.execute(delete(ChartResultModel))
         db.execute(delete(UserModel))
@@ -190,6 +196,53 @@ def _setup_qa_user_and_natal(db, *, fixture_data: dict | None = None):
     )
     db.add(chart_result)
     db.commit()
+
+    # Seed baselines if present in fixture
+    if fixture_data and fixture_data.get("baselines"):
+        from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
+        from app.infra.db.repositories.reference_repository import ReferenceRepository
+        from app.infra.db.repositories.prediction_ruleset_repository import PredictionRulesetRepository
+        
+        ref_repo = ReferenceRepository(db)
+        ruleset_repo = PredictionRulesetRepository(db)
+        pred_ref_repo = PredictionReferenceRepository(db)
+        
+        ref_v = ref_repo.get_version(settings.active_reference_version)
+        ruleset = ruleset_repo.get_ruleset(settings.ruleset_version)
+        categories = pred_ref_repo.get_categories(ref_v.id)
+        cat_map = {c.code: c.id for c in categories}
+        
+        target_date = date.fromisoformat(fixture_data["target_date"])
+        window_days = 365
+        start_date = target_date - timedelta(days=window_days - 1)
+
+        for cat_code, stats in fixture_data["baselines"].items():
+            cat_id = cat_map.get(cat_code)
+            if not cat_id:
+                continue
+                
+            baseline = UserPredictionBaselineModel(
+                user_id=auth.user.id,
+                category_id=cat_id,
+                reference_version_id=ref_v.id,
+                ruleset_id=ruleset.id,
+                house_system_effective="placidus",
+                window_days=window_days,
+                window_start_date=start_date,
+                window_end_date=target_date,
+                mean_raw_score=stats["mean_raw_score"],
+                std_raw_score=stats["std_raw_score"],
+                mean_note_20=stats.get("mean_note_20", 10.0),
+                std_note_20=stats.get("std_note_20", 2.0),
+                p10=stats["p10"],
+                p50=stats["p50"],
+                p90=stats["p90"],
+                sample_size_days=window_days,
+            )
+            db.add(baseline)
+        db.flush() # Use flush instead of commit to catch errors early
+        db.commit()
+
     return auth.tokens.access_token
 
 
@@ -202,11 +255,87 @@ def _fetch_prediction_for_fixture(fixture_name: str) -> dict:
         db.execute(delete(DailyPredictionRunModel))
         db.commit()
 
-    response = client.get(
-        "/v1/predictions/daily",
-        headers={"Authorization": f"Bearer {token}"},
-        params={"date": fixture_data["target_date"]},
-    )
+    # AC3: If fixture asks for mock engine, we mock EngineOrchestrator.run
+    # This allows testing the assembler safeguards on controlled engine output.
+    if fixture_data.get("mock_engine"):
+        from app.prediction.schemas import PersistablePredictionBundle, CoreEngineOutput, EffectiveContext
+        from unittest.mock import patch
+        
+        # Build a minimal bundle that matches the fixture expectations
+        # We only need enough to satisfy the assembler
+        target_date = date.fromisoformat(fixture_data["target_date"])
+        
+        # Determine dominant categories from notes
+        notes = fixture_data["notes_by_step"]
+        avg_notes = {}
+        for step in notes:
+            for cat, val in step.items():
+                avg_notes[cat] = avg_notes.get(cat, 0) + val
+        for cat in avg_notes:
+            avg_notes[cat] /= len(notes)
+        
+        sorted_cats = sorted(avg_notes.items(), key=lambda x: x[1], reverse=True)
+        top3 = [c[0] for c in sorted_cats[:3]]
+        
+        # Simplified category_scores for assembler
+        editorial_category_scores = {
+            cat: {
+                "note_20": int(val),
+                "raw_score": float(val),
+                "power": 1.0,
+                "volatility": 0.0,
+                "rank": i + 1,
+                "is_provisional": False
+            }
+            for i, (cat, val) in enumerate(sorted_cats)
+        }
+
+        mock_bundle = PersistablePredictionBundle(
+            core=CoreEngineOutput(
+                effective_context=EffectiveContext(
+                    house_system_requested="placidus",
+                    house_system_effective="placidus",
+                    local_date=target_date,
+                    timezone="Europe/Paris",
+                    input_hash="mock_hash"
+                ),
+                run_metadata={
+                    "is_provisional_calibration": False,
+                    "calibration_label": "v2",
+                    "computed_at": datetime.now().isoformat()
+                },
+                category_scores=editorial_category_scores,
+                time_blocks=[
+                    {
+                        "block_index": 0,
+                        "start_at_local": datetime.combine(target_date, datetime.min.time()),
+                        "end_at_local": datetime.combine(target_date, datetime.max.time()),
+                        "tone_code": "neutral",
+                        "dominant_categories": [],
+                        "summary": "Calme"
+                    }
+                ],
+                turning_points=[],
+                decision_windows=[],
+                detected_events=[],
+                sampling_timeline=[],
+                explainability=None
+            ),
+            editorial=None # Assembler will build it if needed or use core
+        )
+        
+        with patch("app.services.prediction_compute_runner.EngineOrchestrator.run", return_value=mock_bundle):
+            response = client.get(
+                "/v1/predictions/daily",
+                headers={"Authorization": f"Bearer {token}"},
+                params={"date": fixture_data["target_date"]},
+            )
+    else:
+        response = client.get(
+            "/v1/predictions/daily",
+            headers={"Authorization": f"Bearer {token}"},
+            params={"date": fixture_data["target_date"]},
+        )
 
     assert response.status_code == 200
     return {"fixture": fixture_data, "payload": response.json()}
@@ -368,6 +497,7 @@ def test_fixture_expectations_match_api_response(fixture_name: str):
 
 
 def test_intraday_go_nogo():
+    # Active days must respect windows/identical blocks budget
     for fixture_name in ["active_day", "transition_day"]:
         result = _fetch_prediction_for_fixture(fixture_name)
         fixture_data = result["fixture"]
@@ -384,3 +514,94 @@ def test_intraday_go_nogo():
             pytest.fail(
                 f"QA Go/No-Go failed for {fixture_name} ({fixture_data['target_date']}):\n{str(e)}"
             )
+
+    # Flat days must respect micro-trend budget (max 3)
+    for fixture_name in ["flat_day_with_micro_trends", "flat_day_no_signal"]:
+        result = _fetch_prediction_for_fixture(fixture_name)
+        fixture_data = result["fixture"]
+        report = build_report(result["payload"])
+
+        try:
+            assert_within_budget(
+                report,
+                max_windows=0, # AC2: No windows on flat days
+                max_identical_blocks=MAX_IDENTICAL_CONSECUTIVE_BLOCKS,
+                max_technical_drivers=MAX_TECHNICAL_DRIVERS_VISIBLE,
+                max_micro_trends=3, # Story 41.14 AC3
+            )
+        except AssertionError as e:
+            pytest.fail(
+                f"QA Go/No-Go failed for {fixture_name} ({fixture_data['target_date']}):\n{str(e)}"
+            )
+
+
+# --- Relative Calibration QA Tests (Story 41.16) ---
+
+def test_flat_day_with_micro_trends_qa():
+    """
+    Vérifie qu'une journée plate avec signal relatif expose des micro-tendances
+    et respecte les garde-fous (pas de best_window, pas de pivots).
+    """
+    result = _fetch_prediction_for_fixture("flat_day_with_micro_trends")
+    payload = result["payload"]
+    
+    # 1. Vérification du flag flat_day (AC1)
+    assert payload["summary"]["flat_day"] is True
+    
+    # 2. Vérification des micro-tendances (AC1)
+    assert payload["micro_trends"] is not None
+    assert len(payload["micro_trends"]) > 0
+    # On a seedé "love" avec un Z-score de 2.5
+    love_trend = next((t for t in payload["micro_trends"] if t["category_code"] == "love"), None)
+    assert love_trend is not None
+    assert love_trend["z_score"] == 2.5
+    
+    # 3. Garde-fous (AC2)
+    assert payload["summary"]["best_window"] is None
+    assert payload["decision_windows"] is None or payload["decision_windows"] == []
+    assert payload["turning_points"] == []
+    
+    # 4. Cohérence éditoriale (AC2)
+    assert payload["summary"]["relative_summary"] is not None
+    assert "amour" in payload["summary"]["relative_summary"].lower()
+
+
+def test_flat_day_no_signal_qa():
+    """
+    Vérifie qu'une journée plate SANS signal relatif n'expose pas de micro-tendances.
+    """
+    result = _fetch_prediction_for_fixture("flat_day_no_signal")
+    payload = result["payload"]
+    
+    assert payload["summary"]["flat_day"] is True
+    # Z-score pour "love" est 0 (10-10)/2
+    # La policy filtre les Z < 0.5
+    assert payload["micro_trends"] == [] or payload["micro_trends"] is None
+
+
+def test_active_day_unchanged_by_relative_calibration():
+    """
+    Vérifie qu'une journée active garde ses fenêtres absolues et n'est pas marquée 'flat_day'.
+    """
+    result = _fetch_prediction_for_fixture("active_day")
+    payload = result["payload"]
+    
+    assert payload["summary"]["flat_day"] is False
+    assert payload["summary"]["best_window"] is not None
+    assert len(payload.get("decision_windows", [])) > 0
+    # Même si on a une baseline, on n'affiche pas les micro-tendances sur journée active
+    assert payload["micro_trends"] is None
+
+
+def test_baseline_missing_fallback_qa():
+    """
+    Vérifie que l'absence de baseline ne casse pas le daily (AC4).
+    """
+    # get_calm_day n'a pas de baselines seedées
+    result = _fetch_prediction_for_fixture("calm_day")
+    payload = result["payload"]
+    
+    assert payload.get("meta") is not None
+    assert payload["summary"]["flat_day"] is True
+    assert payload["micro_trends"] is None or payload["micro_trends"] == []
+    assert payload["summary"]["relative_summary"] is None

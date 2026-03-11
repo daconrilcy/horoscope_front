@@ -357,3 +357,8 @@ development_status:
   41-9-assembleur-public-et-projection-api-explicite: done
   41-10-separation-sorties-moteur-et-pipeline-editorial: done
   41-11-snapshot-persisted-et-nettoyage-frontiere-api-persistance: done
+  41-12-baseline-utilisateur-12-mois-pour-calibration-relative: done
+  41-13-scoring-relatif-journalier-a-partir-de-la-baseline: done
+  41-14-projection-publique-des-micro-tendances-des-journees-plates: done
+  41-15-jobs-de-generation-et-refresh-de-baseline-utilisateur: done
+  41-16-qa-et-gardefous-produit-pour-la-calibration-relative: completed

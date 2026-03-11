@@ -1,0 +1,285 @@
+.........................................................FFFFFF.FF.      [100%]
+================================== FAILURES ===================================
+_____________________________ test_create_new_run _____________________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x00000213405DBCB0>
+seed_data = {'categories': {'love': 1, 'work': 2}, 'ruleset_id': 1, 'version_id': 1}
+
+    def test_create_new_run(db_session: Session, seed_data):
+        service = PredictionPersistenceService()
+        user_id = 1
+        local_date = date(2026, 3, 7)
+    
+        engine_output = EngineOutput(
+            run_metadata={},
+            effective_context=make_effective_context("hash1"),
+            category_scores={
+                "love": {
+                    "note_20": 15,
+                    "raw_score": 0.5,
+                    "normalized_score": 0.6,
+                    "power": 0.7,
+                    "volatility": 0.1,
+                },
+                "work": {
+                    "note_20": 18,
+                    "raw_score": 0.8,
+                    "normalized_score": 0.9,
+                    "power": 0.5,
+                    "volatility": 0.2,
+                },
+            },
+            turning_points=[],
+            time_blocks=[],
+        )
+    
+        result = save_output(service, engine_output, user_id, local_date, seed_data, db_session)
+    
+        assert result.was_reused is False
+>       assert result.run.id is not None
+               ^^^^^^^^^^^^^
+E       AttributeError: 'PersistedPredictionSnapshot' object has no attribute 'id'
+
+app\tests\integration\test_prediction_persistence.py:117: AttributeError
+__________________________ test_reuse_existing_hash ___________________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x00000213405DA3C0>
+seed_data = {'categories': {'love': 1, 'work': 2}, 'ruleset_id': 1, 'version_id': 1}
+
+    def test_reuse_existing_hash(db_session: Session, seed_data):
+        service = PredictionPersistenceService()
+        user_id = 1
+        local_date = date(2026, 3, 7)
+        engine_output = EngineOutput(
+            run_metadata={},
+            effective_context=make_effective_context("hash1"),
+            category_scores={"love": {"note_20": 15}},
+            turning_points=[],
+            time_blocks=[],
+        )
+    
+        # First save
+        res1 = save_output(service, engine_output, user_id, local_date, seed_data, db_session)
+        assert res1.was_reused is False
+    
+        # Second save same hash
+        res2 = save_output(service, engine_output, user_id, local_date, seed_data, db_session)
+        assert res2.was_reused is True
+>       assert res2.run.id == res1.run.id
+               ^^^^^^^^^^^
+E       AttributeError: 'PersistedPredictionSnapshot' object has no attribute 'id'
+
+app\tests\integration\test_prediction_persistence.py:147: AttributeError
+______________________________ test_rank_correct ______________________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x00000213405DBE00>
+seed_data = {'categories': {'love': 1, 'work': 2}, 'ruleset_id': 1, 'version_id': 1}
+
+    def test_rank_correct(db_session: Session, seed_data):
+        service = PredictionPersistenceService()
+        user_id = 1
+        local_date = date(2026, 3, 7)
+    
+        # Work (18) should be rank 1, Love (15) rank 2
+        engine_output = EngineOutput(
+            run_metadata={},
+            effective_context=make_effective_context("hash_rank"),
+            category_scores={
+                "love": {"note_20": 15, "raw_score": 0.5},
+                "work": {"note_20": 18, "raw_score": 0.8},
+            },
+        )
+    
+        result = save_output(service, engine_output, user_id, local_date, seed_data, db_session)
+    
+>       scores = {s.category.code: s.rank for s in result.run.category_scores}
+                  ^^^^^^^^^^
+E       AttributeError: 'PersistedCategoryScore' object has no attribute 'category'. Did you mean: 'category_id'?
+
+app\tests\integration\test_prediction_persistence.py:167: AttributeError
+________________________ test_rank_tiebreak_sort_order ________________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x00000213405DAF90>
+seed_data = {'categories': {'love': 1, 'work': 2}, 'ruleset_id': 1, 'version_id': 1}
+
+    def test_rank_tiebreak_sort_order(db_session: Session, seed_data):
+        service = PredictionPersistenceService()
+        user_id = 1
+        local_date = date(2026, 3, 7)
+    
+        # Same note 15. Love (sort_order=1) should be rank 1, Work (sort_order=2) rank 2
+        engine_output = EngineOutput(
+            run_metadata={},
+            effective_context=make_effective_context("hash_tie"),
+            category_scores={"love": {"note_20": 15}, "work": {"note_20": 15}},
+        )
+    
+        result = save_output(service, engine_output, user_id, local_date, seed_data, db_session)
+    
+>       scores = {s.category.code: s.rank for s in result.run.category_scores}
+                  ^^^^^^^^^^
+E       AttributeError: 'PersistedCategoryScore' object has no attribute 'category'. Did you mean: 'category_id'?
+
+app\tests\integration\test_prediction_persistence.py:186: AttributeError
+________________________ test_turning_points_persisted ________________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x00000213405DB230>
+seed_data = {'categories': {'love': 1, 'work': 2}, 'ruleset_id': 1, 'version_id': 1}
+
+    def test_turning_points_persisted(db_session: Session, seed_data):
+        service = PredictionPersistenceService()
+        user_id = 1
+        local_date = date(2026, 3, 7)
+    
+        engine_output = EngineOutput(
+            run_metadata={},
+            effective_context=make_effective_context("hash_tp"),
+            category_scores={},
+            turning_points=[
+                {
+                    "occurred_at_local": datetime(2026, 3, 7, 10, 0),
+                    "severity": 0.9,
+                    "summary": "High intensity point",
+                    "drivers": [{"event": "Sun conjunct Natal Moon", "impact": 0.8}],
+                }
+            ],
+            time_blocks=[],
+        )
+    
+        result = save_output(service, engine_output, user_id, local_date, seed_data, db_session)
+    
+        assert len(result.run.turning_points) == 1
+        tp = result.run.turning_points[0]
+        assert tp.severity == 0.9
+        assert tp.summary == "High intensity point"
+>       assert "Sun conjunct Natal Moon" in tp.driver_json
+                                            ^^^^^^^^^^^^^^
+E       AttributeError: 'PersistedTurningPoint' object has no attribute 'driver_json'
+
+app\tests\integration\test_prediction_persistence.py:217: AttributeError
+_________________________ test_time_blocks_persisted __________________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x00000213405DBB60>
+seed_data = {'categories': {'love': 1, 'work': 2}, 'ruleset_id': 1, 'version_id': 1}
+
+    def test_time_blocks_persisted(db_session: Session, seed_data):
+        service = PredictionPersistenceService()
+        user_id = 1
+        local_date = date(2026, 3, 7)
+    
+        engine_output = EngineOutput(
+            run_metadata={},
+            effective_context=make_effective_context("hash_blocks"),
+            category_scores={},
+            turning_points=[],
+            time_blocks=[
+                {
+                    "block_index": 0,
+                    "start_at_local": datetime(2026, 3, 7, 0, 0),
+                    "end_at_local": datetime(2026, 3, 7, 6, 0),
+                    "tone_code": "calm",
+                    "summary": "A peaceful morning",
+                    "dominant_categories": ["love"],
+                }
+            ],
+        )
+    
+        result = save_output(service, engine_output, user_id, local_date, seed_data, db_session)
+    
+        assert len(result.run.time_blocks) == 1
+        block = result.run.time_blocks[0]
+        assert block.block_index == 0
+        assert block.tone_code == "calm"
+>       assert "love" in block.dominant_categories_json
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'PersistedTimeBlock' object has no attribute 'dominant_categories_json'. Did you mean: 'dominant_categories'?
+
+app\tests\integration\test_prediction_persistence.py:248: AttributeError
+_________________________ test_new_run_on_hash_change _________________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x00000213405DB770>
+seed_data = {'categories': {'love': 1, 'work': 2}, 'ruleset_id': 1, 'version_id': 1}
+
+    def test_new_run_on_hash_change(db_session: Session, seed_data):
+        service = PredictionPersistenceService()
+        user_id = 1
+    
+        def make_output(hash_val, local_date):
+            return EngineOutput(
+                run_metadata={},
+                effective_context=make_effective_context(hash_val),
+                category_scores={"love": {"note_20": 15}},
+                turning_points=[],
+                time_blocks=[],
+            ), local_date
+    
+        output_a, date_a = make_output("hash_a", date(2026, 3, 7))
+        output_b, date_b = make_output(
+            "hash_b", date(2026, 3, 8)
+        )  # different date avoids unique constraint
+    
+        res1 = save_output(service, output_a, user_id, date_a, seed_data, db_session)
+        res2 = save_output(service, output_b, user_id, date_b, seed_data, db_session)
+    
+        assert res1.was_reused is False
+        assert res2.was_reused is False
+>       assert res1.run.id != res2.run.id
+               ^^^^^^^^^^^
+E       AttributeError: 'PersistedPredictionSnapshot' object has no attribute 'id'
+
+app\tests\integration\test_prediction_persistence.py:307: AttributeError
+____________________________ test_scores_persisted ____________________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x00000213405DACF0>
+seed_data = {'categories': {'love': 1, 'work': 2}, 'ruleset_id': 1, 'version_id': 1}
+
+    def test_scores_persisted(db_session: Session, seed_data):
+        service = PredictionPersistenceService()
+        user_id = 1
+        local_date = date(2026, 3, 7)
+    
+        engine_output = EngineOutput(
+            run_metadata={},
+            effective_context=make_effective_context("hash_scores"),
+            category_scores={
+                "love": {
+                    "note_20": 15,
+                    "raw_score": 0.5,
+                    "normalized_score": 0.6,
+                    "power": 0.7,
+                    "volatility": 0.1,
+                },
+                "work": {
+                    "note_20": 18,
+                    "raw_score": 0.8,
+                    "normalized_score": 0.9,
+                    "power": 0.5,
+                    "volatility": 0.2,
+                },
+            },
+            turning_points=[],
+            time_blocks=[],
+        )
+    
+        result = save_output(service, engine_output, user_id, local_date, seed_data, db_session)
+    
+        db_session.expire_all()
+        scores = db_session.scalars(
+            select(DailyPredictionCategoryScoreModel).where(
+>               DailyPredictionCategoryScoreModel.run_id == result.run.id
+                                                            ^^^^^^^^^^^^^
+            )
+        ).all()
+E       AttributeError: 'PersistedPredictionSnapshot' object has no attribute 'id'
+
+app\tests\integration\test_prediction_persistence.py:343: AttributeError
+=========================== short test summary info ===========================
+FAILED app/tests/integration/test_prediction_persistence.py::test_create_new_run
+FAILED app/tests/integration/test_prediction_persistence.py::test_reuse_existing_hash
+FAILED app/tests/integration/test_prediction_persistence.py::test_rank_correct
+FAILED app/tests/integration/test_prediction_persistence.py::test_rank_tiebreak_sort_order
+FAILED app/tests/integration/test_prediction_persistence.py::test_turning_points_persisted
+FAILED app/tests/integration/test_prediction_persistence.py::test_time_blocks_persisted
+FAILED app/tests/integration/test_prediction_persistence.py::test_new_run_on_hash_change
+FAILED app/tests/integration/test_prediction_persistence.py::test_scores_persisted
+8 failed, 59 passed in 3.77s

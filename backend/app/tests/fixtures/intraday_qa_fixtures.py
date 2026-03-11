@@ -65,6 +65,8 @@ def _build_fixture(
     step_times: list[datetime],
     expected_pivot_range: tuple[int, int],
     expected_window_range: tuple[int, int],
+    baselines: dict[str, dict[str, float]] | None = None,
+    mock_engine: bool = False,
 ) -> dict[str, Any]:
     return {
         "target_date": target_date.isoformat(),
@@ -74,6 +76,8 @@ def _build_fixture(
         "step_times": step_times,
         "expected_pivot_range": expected_pivot_range,
         "expected_window_range": expected_window_range,
+        "baselines": baselines,
+        "mock_engine": mock_engine,
     }
 
 
@@ -101,6 +105,88 @@ def get_calm_day() -> dict[str, Any]:
         step_times=make_step_times(n_steps),
         expected_pivot_range=(0, 0),
         expected_window_range=(0, 0),
+        mock_engine=True, # Force calm for QA test reliability
+    )
+
+
+def get_flat_day_with_micro_trends() -> dict[str, Any]:
+    """
+    Scénario flat_day_with_micro_trends : journée calme mais avec un signal relatif fort.
+    """
+    n_steps = 96
+    natal = SimulatedNatalProfile(
+        birth_date=date(1995, 5, 5),
+        birth_place="Marseille",
+        birth_timezone="Europe/Paris",
+        birth_lat=43.2965,
+        birth_lon=5.3698,
+        current_lat=43.2965,
+        current_lon=5.3698,
+        current_timezone="Europe/Paris",
+    )
+    
+    # Baseline with low mean for love, making 10.0 a strong relative score
+    baselines = {
+        "love": {
+            "mean_raw_score": 5.0,
+            "std_raw_score": 2.0, # Z = (10 - 5) / 2 = 2.5
+            "p10": 2.0, "p50": 5.0, "p90": 8.0
+        },
+        "work": {
+            "mean_raw_score": 10.0,
+            "std_raw_score": 2.0, # Z = 0
+            "p10": 7.0, "p50": 10.0, "p90": 13.0
+        }
+    }
+    
+    return _build_fixture(
+        target_date=date(2026, 3, 12),
+        simulated_natal_profile=natal,
+        notes_by_step=make_notes(n_steps, default=10), # raw_score defaults to ~10.0 in mock engine
+        events_by_step=[[] for _ in range(n_steps)],
+        step_times=make_step_times(n_steps),
+        expected_pivot_range=(0, 0),
+        expected_window_range=(0, 0),
+        baselines=baselines,
+        mock_engine=True,
+    )
+
+
+def get_flat_day_no_signal() -> dict[str, Any]:
+    """
+    Scénario flat_day_no_signal : journée calme, signal relatif faible.
+    """
+    n_steps = 96
+    natal = SimulatedNatalProfile(
+        birth_date=date(1985, 12, 12),
+        birth_place="Lille",
+        birth_timezone="Europe/Paris",
+        birth_lat=50.6292,
+        birth_lon=3.0573,
+        current_lat=50.6292,
+        current_lon=3.0573,
+        current_timezone="Europe/Paris",
+    )
+    
+    # Baseline matching the current scores
+    baselines = {
+        "love": {
+            "mean_raw_score": 10.0,
+            "std_raw_score": 2.0,
+            "p10": 7.0, "p50": 10.0, "p90": 13.0
+        }
+    }
+    
+    return _build_fixture(
+        target_date=date(2026, 3, 13),
+        simulated_natal_profile=natal,
+        notes_by_step=make_notes(n_steps, default=10),
+        events_by_step=[[] for _ in range(n_steps)],
+        step_times=make_step_times(n_steps),
+        expected_pivot_range=(0, 0),
+        expected_window_range=(0, 0),
+        baselines=baselines,
+        mock_engine=True,
     )
 
 

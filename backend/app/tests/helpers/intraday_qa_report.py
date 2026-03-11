@@ -23,12 +23,14 @@ class IntradayQAReport:
     noise_blocks: int
     technical_drivers_found: List[str] = field(default_factory=list)
     identical_consecutive_blocks: int = 0
+    total_micro_trends: int = 0
 
 
 def build_report(response_data: dict) -> IntradayQAReport:
     timeline = response_data.get("timeline", [])
     turning_points = response_data.get("turning_points", [])
     decision_windows = response_data.get("decision_windows", []) or []
+    micro_trends = response_data.get("micro_trends", []) or []
 
     # Codes techniques résiduels détectés dans les decision_windows.
     tech_drivers = []
@@ -75,6 +77,7 @@ def build_report(response_data: dict) -> IntradayQAReport:
         noise_blocks=noise_blocks_count,
         technical_drivers_found=tech_drivers,
         identical_consecutive_blocks=identical_consecutive,
+        total_micro_trends=len(micro_trends),
     )
 
 
@@ -84,6 +87,7 @@ def assert_within_budget(
     max_windows: int,
     max_identical_blocks: int,
     max_technical_drivers: int,
+    max_micro_trends: int = 3,
 ):
     errors = []
     if report.total_decision_windows > max_windows:
@@ -101,6 +105,11 @@ def assert_within_budget(
         errors.append(
             "Technical drivers found in decision windows: "
             f"{report.technical_drivers_found} (max: {max_technical_drivers})"
+        )
+
+    if report.total_micro_trends > max_micro_trends:
+        errors.append(
+            f"Too many micro-trends: {report.total_micro_trends} (max: {max_micro_trends})"
         )
 
     if errors:

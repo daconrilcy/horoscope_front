@@ -394,11 +394,7 @@ def get_daily_prediction(
     if result is None:
         raise HTTPException(status_code=404, detail="Prediction not found")
 
-    repo = DailyPredictionRepository(db)
-    # AC1 Compliance: get_full_run now returns PersistedPredictionSnapshot
-    snapshot = repo.get_full_run(result.run.run_id)
-    if not snapshot:
-        raise HTTPException(status_code=500, detail="Failed to load full prediction run snapshot")
+    snapshot = result.run
 
     # Mappings
     ref_repo = PredictionReferenceRepository(db)

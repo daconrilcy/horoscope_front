@@ -341,7 +341,9 @@ class DailyPredictionRepository:
             select(DailyPredictionRunModel)
             .execution_options(populate_existing=True)
             .options(
-                selectinload(DailyPredictionRunModel.category_scores),
+                selectinload(DailyPredictionRunModel.category_scores).selectinload(
+                    DailyPredictionCategoryScoreModel.category
+                ),
                 selectinload(DailyPredictionRunModel.turning_points),
                 selectinload(DailyPredictionRunModel.time_blocks),
             )
