@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING, Any
 
+from app.core.config import settings
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 from app.infra.observability.metrics import increment_counter
 from app.prediction.exceptions import PredictionContextError
@@ -126,7 +127,8 @@ class DailyPredictionService:
                 user_id, 
                 resolved_request.resolved_date, 
                 resolved_request.reference_version_id, 
-                resolved_request.ruleset_id
+                resolved_request.ruleset_id,
+                engine_mode=settings.daily_engine_mode.value,
             )
             if old_run:
                 db.delete(old_run)
@@ -250,7 +252,13 @@ class DailyPredictionService:
     ) -> ServiceResult:
         if request.engine_input is None:
             raise ValueError("engine_input is required for execution")
-        compute_result = self.compute_runner.run_with_timeout(db, request.engine_input)
+        
+        # AC2 - Pass engine mode from settings
+        compute_result = self.compute_runner.run_with_timeout(
+            db, 
+            request.engine_input,
+            engine_mode=settings.daily_engine_mode
+        )
         
         save_result = self.persistence_service.save(
             bundle=compute_result.bundle,

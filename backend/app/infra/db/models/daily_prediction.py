@@ -30,6 +30,7 @@ class DailyPredictionRunModel(Base):
             "local_date",
             "reference_version_id",
             "ruleset_id",
+            "engine_mode",
             name="uq_daily_prediction_runs_user_date_ruleset",
         ),
         Index("ix_daily_prediction_runs_user_id_local_date", "user_id", "local_date"),
@@ -48,6 +49,10 @@ class DailyPredictionRunModel(Base):
         ForeignKey("prediction_rulesets.id", ondelete="RESTRICT"), nullable=False
     )
     input_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    engine_mode: Mapped[str] = mapped_column(String(16), nullable=False, default="v2")
+    engine_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    snapshot_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    evidence_pack_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=utc_now
     )

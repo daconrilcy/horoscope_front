@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
     from sqlalchemy.orm import Session
 
+    from app.core.config import DailyEngineMode
     from app.prediction.context_loader import PredictionContextLoader
     from app.prediction.schemas import EngineInput, PersistablePredictionBundle
 
@@ -41,7 +42,13 @@ class PredictionComputeRunner:
         self.context_loader = context_loader
         self._orchestrator_proto = orchestrator_proto
 
-    def run_with_timeout(self, db: Session, engine_input: EngineInput) -> ComputeResult:
+    def run_with_timeout(
+        self,
+        db: Session,
+        engine_input: EngineInput,
+        *,
+        engine_mode: DailyEngineMode | None = None,
+    ) -> ComputeResult:
         """
         Executes the engine with a 30s timeout.
         
@@ -56,12 +63,15 @@ class PredictionComputeRunner:
         else:
             orchestrator = EngineOrchestrator(prediction_context_loader=ctx_loader)
 
+        kwargs = {
+            "engine_input": engine_input,
+            "include_editorial_text": True,
+        }
+        if engine_mode is not None:
+            kwargs["engine_mode"] = engine_mode
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(
-                orchestrator.run,
-                engine_input,
-                include_editorial_text=True,
-            )
+            future = executor.submit(orchestrator.run, **kwargs)
             try:
                 bundle = future.result(timeout=30)
                 return ComputeResult(bundle=bundle)

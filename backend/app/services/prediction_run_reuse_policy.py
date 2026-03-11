@@ -4,6 +4,7 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from app.core.config import DailyEngineMode, settings
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 from app.prediction.input_hash import compute_engine_input_hash
 from app.services.daily_prediction_types import ComputeMode
@@ -15,6 +16,16 @@ if TYPE_CHECKING:
     from app.services.prediction_request_resolver import ResolvedPredictionRequest
 
 logger = logging.getLogger()
+
+
+def _current_v3_versions() -> tuple[str | None, str | None, str | None]:
+    if settings.daily_engine_mode == DailyEngineMode.V2:
+        return (None, None, None)
+    return (
+        settings.v3_engine_version,
+        settings.v3_snapshot_version,
+        settings.v3_evidence_pack_version,
+    )
 
 
 @dataclass(frozen=True)
@@ -45,6 +56,7 @@ class PredictionRunReusePolicy:
                 request.resolved_date,
                 request.reference_version_id,
                 request.ruleset_id,
+                engine_mode=settings.daily_engine_mode.value,
             )
             if run_model:
                 snapshot = repo.get_snapshot(run_model)
@@ -66,7 +78,12 @@ class PredictionRunReusePolicy:
             longitude=request.engine_input.longitude,
             reference_version=request.engine_input.reference_version,
             ruleset_version=request.engine_input.ruleset_version,
+            engine_mode=settings.daily_engine_mode.value,
+            engine_version=_current_v3_versions()[0],
+            snapshot_version=_current_v3_versions()[1],
+            evidence_pack_version=_current_v3_versions()[2],
         )
+        engine_version, snapshot_version, evidence_pack_version = _current_v3_versions()
 
         # 2. Mode force_recompute
         if mode == ComputeMode.force_recompute:
@@ -79,7 +96,14 @@ class PredictionRunReusePolicy:
 
         # 3. Mode compute_if_missing
         # AC2 Compliance: Explicit naming for technical reuse
-        existing_run = repo.get_run_for_reuse(request.user_id, input_hash)
+        existing_run = repo.get_run_for_reuse(
+            request.user_id,
+            input_hash,
+            engine_mode=settings.daily_engine_mode.value,
+            engine_version=engine_version,
+            snapshot_version=snapshot_version,
+            evidence_pack_version=evidence_pack_version,
+        )
         if existing_run:
             if self._is_stale(existing_run):
                 logger.info(

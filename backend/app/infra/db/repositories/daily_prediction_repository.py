@@ -25,21 +25,48 @@ class DailyPredictionRepository:
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def get_run_by_hash(self, user_id: int, input_hash: str) -> DailyPredictionRunModel | None:
-        return self.db.scalar(
-            select(DailyPredictionRunModel).where(
-                DailyPredictionRunModel.user_id == user_id,
-                DailyPredictionRunModel.input_hash == input_hash,
-            )
+    def get_run_by_hash(
+        self,
+        user_id: int,
+        input_hash: str,
+        *,
+        engine_mode: str | None = None,
+        engine_version: str | None = None,
+        snapshot_version: str | None = None,
+        evidence_pack_version: str | None = None,
+    ) -> DailyPredictionRunModel | None:
+        predicates = self._run_identity_filters(
+            user_id=user_id,
+            input_hash=input_hash,
+            engine_mode=engine_mode,
+            engine_version=engine_version,
+            snapshot_version=snapshot_version,
+            evidence_pack_version=evidence_pack_version,
         )
+        return self.db.scalar(select(DailyPredictionRunModel).where(*predicates))
 
     def get_run_for_reuse(
-        self, user_id: int, input_hash: str
+        self,
+        user_id: int,
+        input_hash: str,
+        *,
+        engine_mode: str | None = None,
+        engine_version: str | None = None,
+        snapshot_version: str | None = None,
+        evidence_pack_version: str | None = None,
     ) -> PersistedPredictionSnapshot | None:
         """
         Retrieves a run by hash and returns a typed snapshot for reuse decision.
         AC2 Compliance: Explicit naming for technical reuse.
         """
+        predicates = self._run_identity_filters(
+            user_id=user_id,
+            input_hash=input_hash,
+            engine_mode=engine_mode,
+            engine_version=engine_version,
+            snapshot_version=snapshot_version,
+            evidence_pack_version=evidence_pack_version,
+        )
         run = self.db.scalar(
             select(DailyPredictionRunModel)
             .options(
@@ -49,10 +76,7 @@ class DailyPredictionRepository:
                 selectinload(DailyPredictionRunModel.time_blocks),
                 selectinload(DailyPredictionRunModel.turning_points),
             )
-            .where(
-                DailyPredictionRunModel.user_id == user_id,
-                DailyPredictionRunModel.input_hash == input_hash,
-            )
+            .where(*predicates)
         )
         return self.get_snapshot(run) if run else None
 
@@ -82,8 +106,23 @@ class DailyPredictionRepository:
         return self.get_snapshot(run) if run else None
 
     def get_run_by_hash_with_details(
-        self, user_id: int, input_hash: str
+        self,
+        user_id: int,
+        input_hash: str,
+        *,
+        engine_mode: str | None = None,
+        engine_version: str | None = None,
+        snapshot_version: str | None = None,
+        evidence_pack_version: str | None = None,
     ) -> DailyPredictionRunModel | None:
+        predicates = self._run_identity_filters(
+            user_id=user_id,
+            input_hash=input_hash,
+            engine_mode=engine_mode,
+            engine_version=engine_version,
+            snapshot_version=snapshot_version,
+            evidence_pack_version=evidence_pack_version,
+        )
         return self.db.scalar(
             select(DailyPredictionRunModel)
             .options(
@@ -91,10 +130,7 @@ class DailyPredictionRepository:
                 selectinload(DailyPredictionRunModel.time_blocks),
                 selectinload(DailyPredictionRunModel.turning_points),
             )
-            .where(
-                DailyPredictionRunModel.user_id == user_id,
-                DailyPredictionRunModel.input_hash == input_hash,
-            )
+            .where(*predicates)
         )
 
     def get_latest_run_before(
@@ -124,6 +160,10 @@ class DailyPredictionRepository:
         reference_version_id: int,
         ruleset_id: int,
         input_hash: str | None = None,
+        engine_mode: str = "v2",
+        engine_version: str | None = None,
+        snapshot_version: str | None = None,
+        evidence_pack_version: str | None = None,
         house_system_effective: str | None = None,
         is_provisional_calibration: bool | None = None,
         calibration_label: str | None = None,
@@ -138,6 +178,10 @@ class DailyPredictionRepository:
             reference_version_id=reference_version_id,
             ruleset_id=ruleset_id,
             input_hash=input_hash,
+            engine_mode=engine_mode,
+            engine_version=engine_version,
+            snapshot_version=snapshot_version,
+            evidence_pack_version=evidence_pack_version,
             house_system_effective=house_system_effective,
             is_provisional_calibration=is_provisional_calibration,
             calibration_label=calibration_label,
@@ -156,14 +200,19 @@ class DailyPredictionRepository:
         local_date: date,
         reference_version_id: int,
         ruleset_id: int,
+        *,
+        engine_mode: str | None = None,
     ) -> DailyPredictionRunModel | None:
+        predicates = [
+            DailyPredictionRunModel.user_id == user_id,
+            DailyPredictionRunModel.local_date == local_date,
+            DailyPredictionRunModel.reference_version_id == reference_version_id,
+            DailyPredictionRunModel.ruleset_id == ruleset_id,
+        ]
+        if engine_mode is not None:
+            predicates.append(DailyPredictionRunModel.engine_mode == engine_mode)
         return self.db.scalar(
-            select(DailyPredictionRunModel).where(
-                DailyPredictionRunModel.user_id == user_id,
-                DailyPredictionRunModel.local_date == local_date,
-                DailyPredictionRunModel.reference_version_id == reference_version_id,
-                DailyPredictionRunModel.ruleset_id == ruleset_id,
-            )
+            select(DailyPredictionRunModel).where(*predicates)
         )
 
     def get_snapshot(
@@ -231,6 +280,10 @@ class DailyPredictionRepository:
             calibration_label=run.calibration_label,
             overall_summary=run.overall_summary,
             overall_tone=run.overall_tone,
+            engine_mode=run.engine_mode,
+            engine_version=run.engine_version,
+            snapshot_version=run.snapshot_version,
+            evidence_pack_version=run.evidence_pack_version,
             category_scores=category_scores,
             turning_points=turning_points,
             time_blocks=time_blocks,
@@ -245,6 +298,32 @@ class DailyPredictionRepository:
         except (json.JSONDecodeError, TypeError):
             return []
 
+    def _run_identity_filters(
+        self,
+        *,
+        user_id: int,
+        input_hash: str,
+        engine_mode: str | None,
+        engine_version: str | None,
+        snapshot_version: str | None,
+        evidence_pack_version: str | None,
+    ) -> list[object]:
+        predicates: list[object] = [
+            DailyPredictionRunModel.user_id == user_id,
+            DailyPredictionRunModel.input_hash == input_hash,
+        ]
+        if engine_mode is not None:
+            predicates.append(DailyPredictionRunModel.engine_mode == engine_mode)
+        if engine_version is not None:
+            predicates.append(DailyPredictionRunModel.engine_version == engine_version)
+        if snapshot_version is not None:
+            predicates.append(DailyPredictionRunModel.snapshot_version == snapshot_version)
+        if evidence_pack_version is not None:
+            predicates.append(
+                DailyPredictionRunModel.evidence_pack_version == evidence_pack_version
+            )
+        return predicates
+
     def get_or_create_run(
         self,
         user_id: int,
@@ -253,8 +332,15 @@ class DailyPredictionRepository:
         reference_version_id: int,
         ruleset_id: int,
         input_hash: str | None = None,
+        engine_mode: str = "v2",
     ) -> tuple[DailyPredictionRunModel, bool]:
-        run = self.get_run(user_id, local_date, reference_version_id, ruleset_id)
+        run = self.get_run(
+            user_id,
+            local_date,
+            reference_version_id,
+            ruleset_id,
+            engine_mode=engine_mode,
+        )
         if run is None:
             created_run = self.create_run(
                 user_id=user_id,
@@ -263,6 +349,7 @@ class DailyPredictionRepository:
                 reference_version_id=reference_version_id,
                 ruleset_id=ruleset_id,
                 input_hash=input_hash,
+                engine_mode=engine_mode,
             )
             created_run.needs_recompute = False
             return (created_run, True)

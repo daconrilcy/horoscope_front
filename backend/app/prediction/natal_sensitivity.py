@@ -1,7 +1,27 @@
 from collections.abc import Mapping
+from dataclasses import dataclass
 
 from app.prediction.context_loader import LoadedPredictionContext
 from app.prediction.schemas import NatalChart
+
+
+@dataclass(frozen=True)
+class BComponent:
+    """Explaining component of B(c) for V3 (AC1, AC4)."""
+
+    factor: str
+    weight: float
+    contribution: float
+    description: str
+
+
+@dataclass(frozen=True)
+class V3NatalStructuralOutput:
+    """Structure of B(c) for a specific theme (AC1, AC2)."""
+
+    theme_code: str
+    total_score: float
+    components: list[BComponent]
 
 
 class NatalSensitivityCalculator:
@@ -20,7 +40,7 @@ class NatalSensitivityCalculator:
 
     def compute(self, natal: NatalChart, ctx: LoadedPredictionContext) -> dict[str, float]:
         """
-        Computes sensitivity for all enabled categories.
+        Computes sensitivity for all enabled categories (V2).
         """
         params = ctx.ruleset_context.parameters
         w_occ = float(params.get("ns_weight_occ", 0.15))
@@ -47,6 +67,120 @@ class NatalSensitivityCalculator:
             results[cat_code] = max(self.NS_MIN, min(self.NS_MAX, ns_val))
 
         return results
+
+    def compute_v3(
+        self, natal: NatalChart, ctx: LoadedPredictionContext
+    ) -> dict[str, V3NatalStructuralOutput]:
+        """
+        Computes robust structural susceptibility B(c) for all enabled themes (AC1, AC2).
+        """
+        params = ctx.ruleset_context.parameters
+        # AC1: Extract weights from ruleset
+        w_occ = float(params.get("v3_b_weight_occ", 0.15))
+        w_rul = float(params.get("v3_b_weight_rul", 0.10))
+        w_ang = float(params.get("v3_b_weight_ang", 0.10))
+        w_asp = float(params.get("v3_b_weight_asp", 0.05))
+
+        pc = ctx.prediction_context
+        results: dict[str, V3NatalStructuralOutput] = {}
+
+        for category in pc.categories:
+            if not category.is_enabled:
+                continue
+
+            theme_code = category.code
+            components = []
+
+            # 1. Occupation (AC1)
+            occ_val = self._compute_occ(natal, theme_code, pc)
+            components.append(
+                BComponent(
+                    factor="occupation",
+                    weight=w_occ,
+                    contribution=occ_val * w_occ,
+                    description=f"Occupation natal des maisons liées: {occ_val:.2f}",
+                )
+            )
+
+            # 2. Rulership (AC1)
+            rul_val = self._compute_rul(natal, theme_code, pc)
+            components.append(
+                BComponent(
+                    factor="rulership",
+                    weight=w_rul,
+                    contribution=rul_val * w_rul,
+                    description=f"État natal des maîtres des maisons: {rul_val:.2f}",
+                )
+            )
+
+            # 3. Angularity (AC1)
+            ang_val = self._compute_ang(natal, theme_code, pc)
+            components.append(
+                BComponent(
+                    factor="angularity",
+                    weight=w_ang,
+                    contribution=ang_val * w_ang,
+                    description=f"Angularité des significateurs thématiques: {ang_val:.2f}",
+                )
+            )
+
+            # 4. Aspects (AC1)
+            asp_val = self._compute_natal_aspects_contribution(natal, theme_code, pc)
+            components.append(
+                BComponent(
+                    factor="aspects",
+                    weight=w_asp,
+                    contribution=asp_val * w_asp,
+                    description=f"Dignité par aspects natals: {asp_val:.2f}",
+                )
+            )
+
+            # AC2: Bounded and Centered
+            # Formula: B = 1.0 + Σ contributions
+            # Center at 1.0, typical range [0.5, 1.5]
+            total_contrib = sum(c.contribution for c in components)
+            total_score = 1.0 + total_contrib
+
+            # Clip between [0.5, 1.5] for V3
+            total_score = max(0.5, min(1.5, total_score))
+
+            results[theme_code] = V3NatalStructuralOutput(
+                theme_code=theme_code, total_score=total_score, components=components
+            )
+
+        return results
+
+    def _compute_natal_aspects_contribution(
+        self, natal: NatalChart, theme_code: str, pc
+    ) -> float:
+        """Computes contribution from natal aspects involving significators of the theme (AC1)."""
+        # Find significators for this theme
+        significators = {
+            self._normalize_code(w.planet_code)
+            for w in pc.planet_category_weights
+            if w.category_code == theme_code and w.weight > 0
+        }
+
+        total = 0.0
+        for aspect in natal.natal_aspects:
+            if aspect.body is None or aspect.target is None or aspect.orb_deg is None:
+                continue
+
+            b1 = self._normalize_code(aspect.body)
+            b2 = self._normalize_code(aspect.target)
+
+            # If one of the bodies is a significator
+            if b1 in significators or b2 in significators:
+                # Any major aspect is a sign of "strength" or "focus"
+                # Standardize max orb to 5.0 for this contribution logic
+                orb_weight = max(0.0, 1.0 - (aspect.orb_deg / 5.0))
+                
+                if aspect.aspect in ("conjunction", "trine", "sextile"):
+                    total += 1.0 * orb_weight
+                elif aspect.aspect in ("square", "opposition"):
+                    total += 0.5 * orb_weight
+
+        return total
 
     def _compute_occ(self, natal: NatalChart, cat_code: str, pc) -> float:
         # Trouver les maisons associées à cette catégorie

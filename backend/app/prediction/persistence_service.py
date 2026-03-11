@@ -73,10 +73,21 @@ class PredictionPersistenceService:
         core, editorial = self._coerce_bundle_parts(bundle)
         editorial_text = self._get_editorial_text(bundle, editorial)
         input_hash = core.effective_context.input_hash
+        engine_mode = str(core.run_metadata.get("engine_mode", "v2"))
+        engine_version = core.run_metadata.get("engine_version")
+        snapshot_version = core.run_metadata.get("snapshot_version")
+        evidence_pack_version = core.run_metadata.get("evidence_pack_version")
         repo = DailyPredictionRepository(db)
 
         # AC1 - Reuse if hash matches
-        existing = repo.get_run_for_reuse(user_id, input_hash)
+        existing = repo.get_run_for_reuse(
+            user_id,
+            input_hash,
+            engine_mode=engine_mode,
+            engine_version=engine_version,
+            snapshot_version=snapshot_version,
+            evidence_pack_version=evidence_pack_version,
+        )
         if existing:
             return SaveResult(run=existing, was_reused=True)
 
@@ -88,6 +99,10 @@ class PredictionPersistenceService:
             reference_version_id=reference_version_id,
             ruleset_id=ruleset_id,
             input_hash=input_hash,
+            engine_mode=engine_mode,
+            engine_version=engine_version,
+            snapshot_version=snapshot_version,
+            evidence_pack_version=evidence_pack_version,
             house_system_effective=core.effective_context.house_system_effective,
             is_provisional_calibration=core.run_metadata.get("is_provisional_calibration"),
             calibration_label=core.run_metadata.get("calibration_label"),

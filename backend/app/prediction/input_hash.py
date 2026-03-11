@@ -32,6 +32,11 @@ def compute_engine_input_hash(
     longitude: float,
     reference_version: str,
     ruleset_version: str,
+    *,
+    engine_mode: str = "v2",
+    engine_version: str | None = None,
+    snapshot_version: str | None = None,
+    evidence_pack_version: str | None = None,
 ) -> str:
     """
     Computes a stable, canonical SHA-256 hash for EngineInput.
@@ -48,6 +53,10 @@ def compute_engine_input_hash(
             "longitude": longitude,
             "reference_version": reference_version,
             "ruleset_version": ruleset_version,
+            "engine_mode": engine_mode,
+            "engine_version": engine_version or "",
+            "snapshot_version": snapshot_version or "",
+            "evidence_pack_version": evidence_pack_version or "",
         }
     )
     serialized = json.dumps(canonical, sort_keys=True, ensure_ascii=True)

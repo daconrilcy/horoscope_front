@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.core.config import settings
 from app.infra.db.repositories.prediction_schemas import (
     AspectProfileData,
     CategoryData,
@@ -18,7 +19,7 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetData,
 )
 from app.prediction.context_loader import LoadedPredictionContext
-from app.prediction.engine_orchestrator import EngineOrchestrator
+from app.prediction.engine_orchestrator import DailyEngineMode, EngineOrchestrator
 from app.prediction.exceptions import PredictionContextError
 from app.prediction.input_hash import compute_engine_input_hash
 from app.prediction.schemas import AstroEvent, EngineInput, PersistablePredictionBundle, SamplePoint
@@ -228,6 +229,34 @@ def test_hash_changes_on_diff(orchestrator, base_input):
         ruleset_version=modified_input.ruleset_version,
     )
     assert hash1 != hash2
+
+
+def test_hash_changes_when_engine_identity_changes(base_input) -> None:
+    hash_v2 = compute_engine_input_hash(
+        natal_chart=base_input.natal_chart,
+        local_date=base_input.local_date,
+        timezone=base_input.timezone,
+        latitude=base_input.latitude,
+        longitude=base_input.longitude,
+        reference_version=base_input.reference_version,
+        ruleset_version=base_input.ruleset_version,
+        engine_mode="v2",
+    )
+    hash_v3 = compute_engine_input_hash(
+        natal_chart=base_input.natal_chart,
+        local_date=base_input.local_date,
+        timezone=base_input.timezone,
+        latitude=base_input.latitude,
+        longitude=base_input.longitude,
+        reference_version=base_input.reference_version,
+        ruleset_version=base_input.ruleset_version,
+        engine_mode="v3",
+        engine_version="v3.1.0",
+        snapshot_version="2.0",
+        evidence_pack_version="3.0",
+    )
+
+    assert hash_v2 != hash_v3
 
 
 def test_hash_canonicalizes_nested_values_and_enums() -> None:
@@ -584,3 +613,52 @@ def test_run_integrates_prediction_scoring_pipeline_with_lowercase_reference_cod
     # → 0 turning points; block generator produces 1 block for the whole mini-day.
     assert len(core.turning_points) == 0
     assert len(core.time_blocks) == 1
+
+
+def test_run_v3_coexistence(orchestrator, base_input):
+    """AC2/AC7 - Test that V3 core is returned when requested, without breaking V2."""
+    bundle = orchestrator.run(base_input, engine_mode=DailyEngineMode.DUAL)
+
+    assert bundle.core is not None
+    assert bundle.v3_core is not None
+    assert bundle.v3_core.engine_version == settings.v3_engine_version
+    assert bundle.v3_core.run_metadata["mode"] == DailyEngineMode.DUAL.value
+    assert bundle.core.run_metadata["engine_mode"] == DailyEngineMode.DUAL.value
+
+
+def test_run_v3_only_returns_v3_skeleton(orchestrator, base_input):
+    """AC2 - Test V3 ONLY mode."""
+    bundle = orchestrator.run(base_input, engine_mode=DailyEngineMode.V3)
+
+    assert bundle.v3_core is not None
+    assert bundle.v3_core.engine_version == settings.v3_engine_version
+    assert bundle.core is not None
+    assert bundle.core.turning_points == []
+    assert bundle.core.time_blocks == []
+    assert bundle.core.run_metadata["engine_mode"] == DailyEngineMode.V3.value
+
+
+def test_run_v3_only_skips_v2_pipeline(base_input):
+    turning_point_detector = MagicMock()
+    block_generator = MagicMock()
+    decision_window_builder = MagicMock()
+
+    orchestrator = EngineOrchestrator(
+        prediction_context_loader=lambda *_: _build_loaded_context(),
+        turning_point_detector=turning_point_detector,
+        block_generator=block_generator,
+        decision_window_builder=decision_window_builder,
+    )
+
+    orchestrator.run(base_input, engine_mode=DailyEngineMode.V3)
+
+    turning_point_detector.detect.assert_not_called()
+    block_generator.generate.assert_not_called()
+    decision_window_builder.build.assert_not_called()
+
+
+def test_run_v3_is_deterministic(orchestrator, base_input):
+    output1 = orchestrator.run(base_input, engine_mode=DailyEngineMode.V3)
+    output2 = orchestrator.run(base_input, engine_mode=DailyEngineMode.V3)
+
+    assert output1 == output2

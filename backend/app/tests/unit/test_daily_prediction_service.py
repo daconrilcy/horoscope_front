@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlalchemy.orm import Session
 
+from app.core.config import DailyEngineMode, settings
 from app.prediction.exceptions import PredictionContextError
 from app.prediction.persisted_relative_score import PersistedRelativeScore
 from app.prediction.persisted_snapshot import PersistedCategoryScore, PersistedPredictionSnapshot
@@ -602,3 +603,28 @@ def test_daily_prediction_still_returns_snapshot_when_baseline_is_missing(servic
 
         assert result.run.overall_summary == absolute_snapshot.overall_summary
         assert result.run.relative_scores["love"].fallback_reason == "baseline_missing"
+
+
+def test_execute_and_persist_passes_runtime_engine_mode(
+    service, db, monkeypatch: pytest.MonkeyPatch
+):
+    request = MagicMock()
+    request.engine_input = MagicMock()
+    request.user_id = 1
+    request.resolved_date = date(2026, 3, 7)
+    request.reference_version_id = 10
+    request.ruleset_id = 20
+
+    compute_result = MagicMock()
+    save_result = MagicMock(run=_build_mock_snapshot(), was_reused=False)
+    monkeypatch.setattr(settings, "daily_engine_mode", DailyEngineMode.DUAL)
+    service.compute_runner.run_with_timeout = MagicMock(return_value=compute_result)
+    service.persistence_service.save = MagicMock(return_value=save_result)
+
+    service._execute_and_persist(db, request)
+
+    service.compute_runner.run_with_timeout.assert_called_once_with(
+        db,
+        request.engine_input,
+        engine_mode=DailyEngineMode.DUAL,
+    )

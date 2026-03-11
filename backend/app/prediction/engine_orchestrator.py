@@ -6,9 +6,10 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import swisseph as swe
 
+from app.core.config import DailyEngineMode, settings
 from app.infra.db.repositories.prediction_schemas import RulesetContext
 
-from .aggregator import TemporalAggregator
+from .aggregator import TemporalAggregator, V3ThemeAggregator
 from .astro_calculator import AstroCalculator
 from .block_generator import BlockGenerator
 from .calibrator import PercentileCalibrator
@@ -22,7 +23,9 @@ from .editorial_service import PredictionEditorialService
 from .event_detector import EventDetector
 from .exceptions import PredictionContextError
 from .explainability import ExplainabilityBuilder
+from .impulse_signal_builder import ImpulseSignalBuilder
 from .input_hash import compute_engine_input_hash
+from .intraday_activation_builder import IntradayActivationBuilder
 from .natal_sensitivity import NatalSensitivityCalculator
 from .schemas import (
     AstroEvent,
@@ -32,9 +35,14 @@ from .schemas import (
     NatalChart,
     PersistablePredictionBundle,
     SamplePoint,
+    V3DailyMetrics,
+    V3EngineOutput,
+    V3SignalLayer,
+    V3ThemeSignal,
 )
 from .temporal_kernel import spread_event_weights
 from .temporal_sampler import TemporalSampler
+from .transit_signal_builder import TransitSignalBuilder
 from .turning_point_detector import TurningPointDetector
 
 _ZODIAC_SIGNS = (
@@ -92,6 +100,10 @@ class EngineOrchestrator:
         explainability_builder: ExplainabilityBuilder | None = None,
         editorial_service: PredictionEditorialService | None = None,
         decision_window_builder: DecisionWindowBuilder | None = None,
+        transit_signal_builder: TransitSignalBuilder | None = None,
+        intraday_activation_builder: IntradayActivationBuilder | None = None,
+        impulse_signal_builder: ImpulseSignalBuilder | None = None,
+        v3_theme_aggregator: V3ThemeAggregator | None = None,
     ) -> None:
         self._ruleset_context_loader = ruleset_context_loader
         self._prediction_context_loader = prediction_context_loader
@@ -110,6 +122,18 @@ class EngineOrchestrator:
         self._explainability_builder = explainability_builder or ExplainabilityBuilder()
         self._editorial_service = editorial_service or PredictionEditorialService()
         self._decision_window_builder = decision_window_builder or DecisionWindowBuilder()
+        self._transit_signal_builder = (
+            transit_signal_builder or TransitSignalBuilder(self._contribution_calculator)
+        )
+        self._intraday_activation_builder = (
+            intraday_activation_builder or IntradayActivationBuilder(self._contribution_calculator)
+        )
+        self._impulse_signal_builder = (
+            impulse_signal_builder or ImpulseSignalBuilder(
+                self._domain_router, self._contribution_calculator
+            )
+        )
+        self._v3_theme_aggregator = v3_theme_aggregator or V3ThemeAggregator()
 
     def with_context_loader(
         self,
@@ -131,6 +155,10 @@ class EngineOrchestrator:
             explainability_builder=self._explainability_builder,
             editorial_service=self._editorial_service,
             decision_window_builder=self._decision_window_builder,
+            transit_signal_builder=self._transit_signal_builder,
+            intraday_activation_builder=self._intraday_activation_builder,
+            impulse_signal_builder=self._impulse_signal_builder,
+            v3_theme_aggregator=self._v3_theme_aggregator,
         )
 
     def run(
@@ -141,11 +169,14 @@ class EngineOrchestrator:
         include_editorial: bool = True,
         include_editorial_text: bool = False,
         editorial_text_lang: str = "fr",
+        engine_mode: DailyEngineMode = DailyEngineMode.V2,
     ) -> PersistablePredictionBundle:
         """
         Executes the prediction engine for a given input and returns a complete bundle.
         """
-        # 1. AC3 - Compute hash
+        mode = DailyEngineMode(engine_mode)
+        v3_versions = self._resolve_v3_versions(mode)
+
         input_hash = compute_engine_input_hash(
             natal_chart=engine_input.natal_chart,
             local_date=engine_input.local_date,
@@ -154,22 +185,21 @@ class EngineOrchestrator:
             longitude=engine_input.longitude,
             reference_version=engine_input.reference_version,
             ruleset_version=engine_input.ruleset_version,
+            engine_mode=mode.value,
+            engine_version=v3_versions["engine_version"],
+            snapshot_version=v3_versions["snapshot_version"],
+            evidence_pack_version=v3_versions["evidence_pack_version"],
         )
-
-        # 2. AC4 - Convert local date to UT interval (JD)
         jd_start, jd_end = self._local_date_to_ut_interval(
             engine_input.local_date, engine_input.timezone
         )
-
         loaded_context = self._load_prediction_context(engine_input)
         house_system_requested = self._resolve_house_system(
             engine_input.ruleset_version,
             loaded_context,
         )
-
         natal_cusps = self._extract_house_cusps(engine_input.natal_chart)
         natal_chart = self._build_natal_chart(engine_input.natal_chart, natal_cusps)
-
         day_grid = self._temporal_sampler.build_day_grid(
             engine_input.local_date,
             engine_input.timezone,
@@ -193,6 +223,205 @@ class EngineOrchestrator:
             event_detector,
             engine_input.timezone,
         )
+        house_system_effective = self._resolve_effective_house_system(
+            house_system_requested,
+            astro_states,
+        )
+        effective_context = EffectiveContext(
+            house_system_requested=house_system_requested,
+            house_system_effective=house_system_effective,
+            local_date=engine_input.local_date,
+            timezone=engine_input.timezone,
+            input_hash=input_hash,
+        )
+        run_metadata = self._build_run_metadata(
+            engine_input=engine_input,
+            loaded_context=loaded_context,
+            jd_start=jd_start,
+            jd_end=jd_end,
+            engine_mode=mode,
+            v3_versions=v3_versions,
+        )
+
+        v3_core = None
+        if mode in (DailyEngineMode.V3, DailyEngineMode.DUAL):
+            v3_core = self._build_v3_core(
+                astro_states=astro_states,
+                natal_chart=natal_chart,
+                loaded_context=loaded_context,
+                detected_events=detected_events,
+                samples=day_grid.samples,
+                local_date=engine_input.local_date,
+                timezone=engine_input.timezone,
+                engine_mode=mode,
+                v3_versions=v3_versions,
+            )
+
+        if mode == DailyEngineMode.V3:
+            core_output = self._build_v3_legacy_core(
+                effective_context=effective_context,
+                run_metadata=run_metadata,
+                detected_events=detected_events,
+                samples=day_grid.samples,
+                loaded_context=loaded_context,
+                v3_core=v3_core,
+            )
+        else:
+            core_output = self._build_v2_core_output(
+                input_hash=input_hash,
+                engine_input=engine_input,
+                detected_events=detected_events,
+                samples=day_grid.samples,
+                natal_chart=natal_chart,
+                loaded_context=loaded_context,
+                requested_category_codes=category_codes,
+                effective_context=effective_context,
+                run_metadata=run_metadata,
+            )
+
+        if not include_editorial:
+            return PersistablePredictionBundle(core=core_output, v3_core=v3_core)
+
+        # AC1 - EditorialOutputBundle (Textes et résumés) via AC3 - PredictionEditorialService
+        editorial_bundle = self._editorial_service.generate_bundle(
+            core_output, lang=editorial_text_lang
+        )
+
+        # AC1 - PersistablePredictionBundle (Prêt à sauvegarder)
+        return PersistablePredictionBundle(
+            core=core_output,
+            editorial=editorial_bundle,
+            v3_core=v3_core,
+        )
+
+    def _resolve_v3_versions(self, engine_mode: DailyEngineMode) -> dict[str, str | None]:
+        if engine_mode == DailyEngineMode.V2:
+            return {
+                "engine_version": None,
+                "snapshot_version": None,
+                "evidence_pack_version": None,
+            }
+        return {
+            "engine_version": settings.v3_engine_version,
+            "snapshot_version": settings.v3_snapshot_version,
+            "evidence_pack_version": settings.v3_evidence_pack_version,
+        }
+
+    def _build_run_metadata(
+        self,
+        *,
+        engine_input: EngineInput,
+        loaded_context: LoadedPredictionContext,
+        jd_start: float,
+        jd_end: float,
+        engine_mode: DailyEngineMode,
+        v3_versions: dict[str, str | None],
+    ) -> dict[str, object]:
+        return {
+            "run_id": None,
+            "computed_at": self._local_date_start_utc(
+                engine_input.local_date, engine_input.timezone
+            ).isoformat(),
+            "debug_mode": engine_input.debug_mode,
+            "jd_interval": [jd_start, jd_end],
+            "is_provisional_calibration": loaded_context.is_provisional_calibration,
+            "calibration_label": loaded_context.calibration_label,
+            "caution_category_codes": self._resolve_caution_category_codes(loaded_context),
+            "engine_mode": engine_mode.value,
+            "engine_version": v3_versions["engine_version"],
+            "snapshot_version": v3_versions["snapshot_version"],
+            "evidence_pack_version": v3_versions["evidence_pack_version"],
+        }
+
+    def _build_v3_core(
+        self,
+        *,
+        astro_states: list,
+        natal_chart: NatalChart,
+        loaded_context: LoadedPredictionContext,
+        detected_events: list[AstroEvent],
+        samples: list[SamplePoint],
+        local_date: date,
+        timezone: str,
+        engine_mode: DailyEngineMode,
+        v3_versions: dict[str, str | None],
+    ) -> V3EngineOutput:
+        b_map = self._natal_sensitivity_calculator.compute_v3(natal_chart, loaded_context)
+        t_timelines = self._transit_signal_builder.build_timeline(
+            astro_states, natal_chart, loaded_context
+        )
+        a_timelines = self._intraday_activation_builder.build_timeline(
+            astro_states, natal_chart, loaded_context
+        )
+        e_timelines = self._impulse_signal_builder.build_timeline(
+            detected_events, samples, b_map, loaded_context
+        )
+
+        theme_signals: dict[str, V3ThemeSignal] = {}
+        for theme_code, b_out in b_map.items():
+            t_timeline = t_timelines.get(theme_code, {})
+            a_timeline = a_timelines.get(theme_code, {})
+            e_timeline = e_timelines.get(theme_code, {})
+            timeline: dict[datetime, V3SignalLayer] = {}
+            for sample in samples:
+                t_val = t_timeline.get(sample.local_time, 0.0)
+                a_val = a_timeline.get(sample.local_time, 0.0)
+                e_val = e_timeline.get(sample.local_time, 0.0)
+                timeline[sample.local_time] = V3SignalLayer(
+                    baseline=b_out.total_score,
+                    transit=t_val,
+                    aspect=a_val,
+                    event=e_val,
+                    composite=b_out.total_score + t_val + a_val + e_val,
+                )
+            theme_signals[theme_code] = V3ThemeSignal(theme_code=theme_code, timeline=timeline)
+
+        daily_metrics = {
+            theme_code: self._v3_theme_aggregator.aggregate_theme(theme_signal)
+            for theme_code, theme_signal in theme_signals.items()
+        }
+        computed_at = self._local_date_start_utc(local_date, timezone)
+        return V3EngineOutput(
+            engine_version=v3_versions["engine_version"] or settings.v3_engine_version,
+            snapshot_version=v3_versions["snapshot_version"] or settings.v3_snapshot_version,
+            evidence_pack_version=(
+                v3_versions["evidence_pack_version"] or settings.v3_evidence_pack_version
+            ),
+            theme_signals=theme_signals,
+            daily_metrics=daily_metrics,
+            run_metadata={
+                "mode": engine_mode.value,
+                "v3_natal_structural": {
+                    theme_code: {
+                        "total": structural_output.total_score,
+                        "components": [
+                            {
+                                "factor": component.factor,
+                                "contribution": component.contribution,
+                                "desc": component.description,
+                            }
+                            for component in structural_output.components
+                        ],
+                    }
+                    for theme_code, structural_output in b_map.items()
+                },
+            },
+            computed_at=computed_at,
+        )
+
+    def _build_v2_core_output(
+        self,
+        *,
+        input_hash: str,
+        engine_input: EngineInput,
+        detected_events: list[AstroEvent],
+        samples: list[SamplePoint],
+        natal_chart: NatalChart,
+        loaded_context: LoadedPredictionContext,
+        requested_category_codes: tuple[str, ...] | None,
+        effective_context: EffectiveContext,
+        run_metadata: dict[str, object],
+    ) -> CoreEngineOutput:
         natal_sensitivity = self._natal_sensitivity_calculator.compute(
             natal_chart,
             loaded_context,
@@ -205,36 +434,34 @@ class EngineOrchestrator:
             editorial_category_scores,
         ) = self._build_prediction_outputs(
             detected_events,
-            day_grid.samples,
+            samples,
             natal_sensitivity,
             loaded_context,
-            requested_category_codes=category_codes,
+            requested_category_codes=requested_category_codes,
         )
 
-        # 3. Build explainability report
         contributions_log = []
         for step_contributions in contributions_by_step:
             for event, cat_contributions in step_contributions:
                 for cat_code, contrib in cat_contributions.items():
                     contributions_log.append((event, cat_code, contrib))
 
-        # Format raw contributions for debug mode
         raw_by_step = None
         if engine_input.debug_mode:
             raw_by_step = {
                 sample.local_time.isoformat(): [
                     {
                         "event": {
-                            "event_type": ev.event_type,
-                            "body": ev.body,
-                            "target": ev.target,
-                            "aspect": ev.aspect,
+                            "event_type": event.event_type,
+                            "body": event.body,
+                            "target": event.target,
+                            "aspect": event.aspect,
                         },
                         "contributions": contribs,
                     }
-                    for ev, contribs in contributions_by_step[i]
+                    for event, contribs in contributions_by_step[index]
                 ]
-                for i, sample in enumerate(day_grid.samples)
+                for index, sample in enumerate(samples)
             }
 
         explainability = self._explainability_builder.build(
@@ -244,7 +471,7 @@ class EngineOrchestrator:
             raw_contributions_by_step=raw_by_step,
         )
 
-        step_times = [sample.local_time for sample in day_grid.samples]
+        step_times = [sample.local_time for sample in samples]
         turning_points = self._turning_point_detector.detect(
             notes_by_step,
             events_by_step,
@@ -263,33 +490,7 @@ class EngineOrchestrator:
             editorial_category_scores,
         )
 
-        house_system_effective = self._resolve_effective_house_system(
-            house_system_requested,
-            astro_states,
-        )
-
-        effective_context = EffectiveContext(
-            house_system_requested=house_system_requested,
-            house_system_effective=house_system_effective,
-            local_date=engine_input.local_date,
-            timezone=engine_input.timezone,
-            input_hash=input_hash,
-        )
-
-        run_metadata = {
-            "run_id": None,
-            "computed_at": self._local_date_start_utc(
-                engine_input.local_date, engine_input.timezone
-            ).isoformat(),
-            "debug_mode": engine_input.debug_mode,
-            "jd_interval": [jd_start, jd_end],
-            "is_provisional_calibration": loaded_context.is_provisional_calibration,
-            "calibration_label": loaded_context.calibration_label,
-            "caution_category_codes": self._resolve_caution_category_codes(loaded_context),
-        }
-
-        # AC1 - CoreEngineOutput (Calcul pur sans texte)
-        core_output = CoreEngineOutput(
+        return CoreEngineOutput(
             effective_context=effective_context,
             run_metadata=run_metadata,
             category_scores=editorial_category_scores,
@@ -297,23 +498,66 @@ class EngineOrchestrator:
             turning_points=turning_points,
             decision_windows=decision_windows,
             detected_events=detected_events,
-            sampling_timeline=list(day_grid.samples),
+            sampling_timeline=list(samples),
             explainability=explainability,
         )
 
-        if not include_editorial:
-            return PersistablePredictionBundle(core=core_output)
+    def _build_v3_legacy_core(
+        self,
+        *,
+        effective_context: EffectiveContext,
+        run_metadata: dict[str, object],
+        detected_events: list[AstroEvent],
+        samples: list[SamplePoint],
+        loaded_context: LoadedPredictionContext,
+        v3_core: V3EngineOutput | None,
+    ) -> CoreEngineOutput:
+        metrics_by_theme = v3_core.daily_metrics if v3_core is not None else {}
+        category_scores: dict[str, dict[str, float | int | bool]] = {}
+        for category in loaded_context.prediction_context.categories:
+            if not category.is_enabled:
+                continue
+            metrics = metrics_by_theme.get(category.code)
+            if metrics is None:
+                continue
+            category_scores[category.code] = self._legacy_score_from_v3(
+                category,
+                metrics,
+                is_provisional=loaded_context.is_provisional_calibration,
+            )
 
-        # AC1 - EditorialOutputBundle (Textes et résumés) via AC3 - PredictionEditorialService
-        editorial_bundle = self._editorial_service.generate_bundle(
-            core_output, lang=editorial_text_lang
+        return CoreEngineOutput(
+            effective_context=effective_context,
+            run_metadata=run_metadata,
+            category_scores=category_scores,
+            time_blocks=[],
+            turning_points=[],
+            decision_windows=[],
+            detected_events=detected_events,
+            sampling_timeline=list(samples),
+            explainability=self._explainability_builder.build(
+                contributions_log=[],
+                run_input_hash=effective_context.input_hash,
+                debug_mode=False,
+            ),
         )
 
-        # AC1 - PersistablePredictionBundle (Prêt à sauvegarder)
-        return PersistablePredictionBundle(
-            core=core_output,
-            editorial=editorial_bundle,
-        )
+    def _legacy_score_from_v3(
+        self,
+        category: object,
+        metrics: V3DailyMetrics,
+        *,
+        is_provisional: bool,
+    ) -> dict[str, float | int | bool]:
+        return {
+            "note_20": max(0, min(20, round(metrics.score_20))),
+            "raw_score": metrics.avg_score,
+            "normalized_score": metrics.avg_score,
+            "power": metrics.intensity_20 / 20.0,
+            "volatility": metrics.volatility,
+            "sort_order": getattr(category, "sort_order", 0),
+            "is_provisional": is_provisional,
+        }
 
     def _refine_detected_events(
         self,
@@ -692,11 +936,48 @@ class EngineOrchestrator:
 
         house_sign_rulers = self._extract_house_sign_rulers(natal_chart, natal_cusps)
 
+        # AC1 for Story 42.2: Compute natal aspects
+        natal_aspects = self._compute_natal_aspects(normalized_positions)
+
         return NatalChart(
             planet_positions=normalized_positions,
             planet_houses=point_houses,
             house_sign_rulers=house_sign_rulers,
+            natal_aspects=natal_aspects,
         )
+
+    def _compute_natal_aspects(self, positions: dict[str, float]) -> list[AstroEvent]:
+        """Compute major aspects between natal planets/angles."""
+        aspects: list[AstroEvent] = []
+        codes = list(positions.keys())
+        
+        # Use a simplified version of _orb from EventDetector
+        for i, code1 in enumerate(codes):
+            for code2 in codes[i+1:]:
+                lon1 = positions[code1]
+                lon2 = positions[code2]
+                
+                for deg, name in EventDetector.ASPECTS_V1.items():
+                    # Simplified orb calculation
+                    diff = abs(lon1 - lon2) % 360
+                    if diff > 180:
+                        diff = 360 - diff
+                    orb = abs(diff - deg)
+                    
+                    if orb <= 5.0:  # Standard natal orb
+                        aspects.append(AstroEvent(
+                            event_type="natal_aspect",
+                            ut_time=0.0,
+                            local_time=datetime(1970, 1, 1, tzinfo=UTC),
+                            body=code1,
+                            target=code2,
+                            aspect=name,
+                            orb_deg=orb,
+                            priority=50,
+                            base_weight=1.0,
+                            metadata={"is_natal": True}
+                        ))
+        return aspects
 
     def _extract_named_longitudes(
         self,

@@ -16,6 +16,7 @@ class NatalChart:
     planet_positions: dict[str, float]
     planet_houses: dict[str, int]
     house_sign_rulers: dict[int, str]
+    natal_aspects: list[AstroEvent] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -92,6 +93,63 @@ class AstroEvent:
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
+@dataclass(frozen=True)
+class V3SignalLayer:
+    """A continuous signal layer for a specific category and time step (AC1)."""
+
+    baseline: float  # B(c): natal structural susceptibility
+    transit: float   # T(c,t): transit climate
+    aspect: float    # A(c,t): aspect dynamics
+    event: float     # E(c,t): event triggers
+    composite: float # Final combined signal for this step
+
+
+@dataclass(frozen=True)
+class V3ThemeSignal:
+    """Time-series of signal layers for a specific theme (AC1)."""
+
+    theme_code: str
+    timeline: dict[datetime, V3SignalLayer]
+
+
+@dataclass(frozen=True)
+class V3DailyMetrics:
+    """Daily derived metrics for a theme in v3 (AC1).
+    
+    All _20 metrics are normalized on a [0, 20] scale.
+    """
+
+    score_20: float       # -1 to +1 signal mapped to 0-20 (10 = neutral) (AC2)
+    intensity_20: float   # total relief/energy of the day (0-20)
+    confidence_20: float  # signal clarity/reliability (0-20) (AC3)
+    rarity_percentile: float # how unusual is this day (0-20, percentile mapped) (AC4)
+    
+    # Raw stats
+    avg_score: float
+    max_score: float
+    min_score: float
+    volatility: float
+
+
+@dataclass(frozen=True)
+class V3EngineOutput:
+    """Engine v3 calculation results (AC1).
+    
+    Attributes:
+        engine_version: Explicit version of the calculation logic (AC4)
+        snapshot_version: Version of the internal data structure (AC4)
+        evidence_pack_version: Version of the traceability format (AC4)
+    """
+
+    engine_version: str
+    snapshot_version: str
+    evidence_pack_version: str
+    
+    theme_signals: dict[str, V3ThemeSignal] = field(default_factory=dict)
+    daily_metrics: dict[str, V3DailyMetrics] = field(default_factory=dict)
+    
+    run_metadata: dict[str, Any] = field(default_factory=dict)
+    computed_at: datetime = field(default_factory=datetime.utcnow)
 
 
 @dataclass(frozen=True)
@@ -181,6 +239,7 @@ class PersistablePredictionBundle:
 
     core: CoreEngineOutput
     editorial: EditorialOutputBundle | None = None
+    v3_core: V3EngineOutput | None = None  # AC1
 
     @property
     def editorial_text(self) -> "EditorialTextOutput | None":

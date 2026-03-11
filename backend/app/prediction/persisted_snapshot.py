@@ -91,6 +91,10 @@ class PersistedPredictionSnapshot:
     calibration_label: str | None
     overall_summary: str | None
     overall_tone: str | None
+    engine_mode: str | None = None
+    engine_version: str | None = None
+    snapshot_version: str | None = None
+    evidence_pack_version: str | None = None
 
     category_scores: list[PersistedCategoryScore] = field(default_factory=list)
     turning_points: list[PersistedTurningPoint] = field(default_factory=list)

@@ -49,6 +49,12 @@ class AspectSchoolType(str, Enum):
     STRICT = "strict"
 
 
+class DailyEngineMode(str, Enum):
+    V2 = "v2"
+    V3 = "v3"
+    DUAL = "dual"
+
+
 class Settings:
     @staticmethod
     def _normalize_database_url(database_url: str) -> str:
@@ -105,6 +111,18 @@ class Settings:
         if minimum is not None and parsed < minimum:
             return minimum
         return parsed
+
+    @staticmethod
+    def _parse_daily_engine_mode(raw_value: str | DailyEngineMode | None) -> DailyEngineMode:
+        if isinstance(raw_value, DailyEngineMode):
+            return raw_value
+        if raw_value is None:
+            return DailyEngineMode.V2
+        normalized = str(raw_value).strip().lower()
+        try:
+            return DailyEngineMode(normalized)
+        except ValueError:
+            return DailyEngineMode.V2
 
     def __init__(self) -> None:
         self.app_env = os.getenv("APP_ENV", "development").strip().lower()
@@ -251,6 +269,13 @@ class Settings:
             "NATAL_ENGINE_COMPARE_ENABLED", default=False
         )
         self.llm_orchestration_v2 = self._parse_bool_env("LLM_ORCHESTRATION_V2", default=False)
+        self.daily_engine_mode = self._parse_daily_engine_mode(os.getenv("DAILY_ENGINE_MODE"))
+
+        # V3 Engine Conventions (AC4)
+        self.v3_engine_version = os.getenv("V3_ENGINE_VERSION", "v3.0.0-alpha").strip()
+        self.v3_snapshot_version = os.getenv("V3_SNAPSHOT_VERSION", "1.0").strip()
+        self.v3_evidence_pack_version = os.getenv("V3_EVIDENCE_PACK_VERSION", "1.0").strip()
+
         self.natal_schema_version = os.getenv("NATAL_SCHEMA_VERSION", "v3").strip().lower()
         self.llm_replay_encryption_key = os.getenv("LLM_REPLAY_ENCRYPTION_KEY", "").strip()
         if self.app_env == "production" and not self.llm_replay_encryption_key:
