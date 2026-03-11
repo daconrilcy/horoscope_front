@@ -1,6 +1,6 @@
 # Story 42.12: Étendre la baseline utilisateur en baseline day, slot et saison
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -22,22 +22,22 @@ so that la calibration personnelle compare des choses comparables et puisse serv
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Étendre le modèle de baseline (AC: 1, 2)
-  - [ ] Définir les nouveaux niveaux de baseline
-  - [ ] Adapter modèle, migration et repository
+- [x] Task 1: Étendre le modèle de baseline (AC: 1, 2)
+  - [x] Définir les nouveaux niveaux de baseline
+  - [x] Adapter modèle, migration et repository
 
-- [ ] Task 2: Introduire une génération minimale déterministe des nouvelles baselines (AC: 3, 5)
-  - [ ] Ajouter la production par slot et saison/mois
-  - [ ] Conserver le caractère déterministe
-  - [ ] Définir un SLO de génération
+- [x] Task 2: Introduire une génération minimale déterministe des nouvelles baselines (AC: 3, 5)
+  - [x] Ajouter la production par slot et saison/mois
+  - [x] Conserver le caractère déterministe
+  - [x] Définir un SLO de génération
 
-- [ ] Task 3: Préparer la lecture pour la story suivante (AC: 4)
-  - [ ] Exposer les primitives repository utiles
-  - [ ] Éviter de mélanger ici repository, génération et résolution produit avancée
+- [x] Task 3: Préparer la lecture pour la story suivante (AC: 4)
+  - [x] Exposer les primitives repository utiles
+  - [x] Éviter de mélanger ici repository, génération et résolution produit avancée
 
-- [ ] Task 4: Tests (AC: 6)
-  - [ ] Tester write/read sur les trois niveaux
-  - [ ] Tester génération minimale déterministe et versionnement
+- [x] Task 4: Tests (AC: 6)
+  - [x] Tester write/read sur les trois niveaux
+  - [x] Tester génération minimale déterministe et versionnement
 
 ## Dev Notes
 
@@ -72,8 +72,16 @@ GPT-5 Codex
 
 ### Completion Notes List
 
-- Story prête pour enrichir la baseline utilisateur au-delà du simple niveau journalier.
+- Modèle de baseline enrichi avec `day`, `slot`, `season` et `month`, versionné par utilisateur et versions métier.
+- Code review fix: la reconstruction repository tolère correctement `granularity_type` sérialisé en chaîne ou enum.
+- Code review fix: la génération minimale ignore désormais les catégories à historique incomplet au lieu de persister des baselines partielles.
+- Les tests d'intégration couvrent write/read, versionnement et refresh job sur les nouvelles granularités.
 
 ### File List
 
+- `backend/app/infra/db/models/user_prediction_baseline.py`
+- `backend/app/infra/db/repositories/user_prediction_baseline_repository.py`
+- `backend/app/services/user_prediction_baseline_service.py`
+- `backend/app/tests/integration/test_user_prediction_baseline.py`
+- `backend/app/tests/integration/test_user_baseline_refresh_job.py`
 - `_bmad-output/implementation-artifacts/42-12-etendre-la-baseline-utilisateur-en-baseline-day-slot-et-saison.md`

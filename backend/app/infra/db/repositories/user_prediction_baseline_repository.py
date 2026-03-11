@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
-from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
-from app.infra.db.models.user_prediction_baseline import UserPredictionBaselineModel, BaselineGranularity
+from app.infra.db.models.user_prediction_baseline import (
+    BaselineGranularity,
+    UserPredictionBaselineModel,
+)
 from app.prediction.persisted_baseline import PersistedUserBaseline
 
 
@@ -57,21 +59,23 @@ class UserPredictionBaselineRepository:
         window_end_date: date,
         granularity_type: str | None = None,
     ) -> list[PersistedUserBaseline]:
-        stmt = select(UserPredictionBaselineModel).options(
-            selectinload(UserPredictionBaselineModel.category)
-        ).where(
-            UserPredictionBaselineModel.user_id == user_id,
-            UserPredictionBaselineModel.reference_version_id == reference_version_id,
-            UserPredictionBaselineModel.ruleset_id == ruleset_id,
-            UserPredictionBaselineModel.house_system_effective == house_system_effective,
-            UserPredictionBaselineModel.window_days == window_days,
-            UserPredictionBaselineModel.window_start_date == window_start_date,
-            UserPredictionBaselineModel.window_end_date == window_end_date,
+        stmt = (
+            select(UserPredictionBaselineModel)
+            .options(selectinload(UserPredictionBaselineModel.category))
+            .where(
+                UserPredictionBaselineModel.user_id == user_id,
+                UserPredictionBaselineModel.reference_version_id == reference_version_id,
+                UserPredictionBaselineModel.ruleset_id == ruleset_id,
+                UserPredictionBaselineModel.house_system_effective == house_system_effective,
+                UserPredictionBaselineModel.window_days == window_days,
+                UserPredictionBaselineModel.window_start_date == window_start_date,
+                UserPredictionBaselineModel.window_end_date == window_end_date,
+            )
         )
-        
+
         if granularity_type:
             stmt = stmt.where(UserPredictionBaselineModel.granularity_type == granularity_type)
-            
+
         models = self.db.scalars(stmt).all()
         return [self._to_persisted(m) for m in models]
 
@@ -228,7 +232,7 @@ class UserPredictionBaselineRepository:
             UserPredictionBaselineModel.house_system_effective == house_system_effective,
             UserPredictionBaselineModel.window_days == window_days,
             # We focus on DAY level for checking needs
-            UserPredictionBaselineModel.granularity_type == BaselineGranularity.DAY
+            UserPredictionBaselineModel.granularity_type == BaselineGranularity.DAY,
         )
 
         chart_is_current = (
@@ -336,6 +340,6 @@ class UserPredictionBaselineRepository:
             p90=model.p90,
             sample_size_days=model.sample_size_days,
             computed_at=model.computed_at,
-            granularity_type=model.granularity_type.value,
+            granularity_type=getattr(model.granularity_type, "value", model.granularity_type),
             granularity_value=model.granularity_value,
         )
