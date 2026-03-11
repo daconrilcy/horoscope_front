@@ -925,3 +925,169 @@ def test_run_v3_exposes_transit_diagnostics_and_signal(base_input):
     assert max(transit_values) > 0.0
     assert bundle.v3_core.run_metadata["v3_transit_signal"]["performance"]["sample_count"] == 3
     assert bundle.v3_core.run_metadata["v3_transit_signal"]["themes"]["work"]["top_contributors"]
+
+
+def test_run_v3_exposes_intraday_activation_diagnostics_and_secondary_runtime(base_input):
+    profile = PlanetProfileData(
+        planet_id=1,
+        code="sun",
+        name="Sun",
+        class_code="luminary",
+        speed_rank=1,
+        speed_class="fast",
+        weight_intraday=1.0,
+        weight_day_climate=1.0,
+        typical_polarity="positive",
+        orb_active_deg=4.0,
+        orb_peak_deg=1.5,
+        keywords=("sun",),
+    )
+    loaded_context = LoadedPredictionContext(
+        prediction_context=PredictionContext(
+            categories=(
+                CategoryData(
+                    id=1,
+                    code="work",
+                    name="Work",
+                    display_name="Work",
+                    sort_order=1,
+                    is_enabled=True,
+                ),
+            ),
+            planet_profiles={"sun": profile, "Sun": profile},
+            house_profiles={},
+            planet_category_weights=(
+                PlanetCategoryWeightData(
+                    planet_id=1,
+                    planet_code="Sun",
+                    category_id=1,
+                    category_code="work",
+                    weight=1.0,
+                    influence_role="primary",
+                ),
+            ),
+            house_category_weights=(),
+            sign_rulerships={},
+            aspect_profiles={},
+            astro_points={},
+            point_category_weights=(),
+        ),
+        ruleset_context=RulesetContext(
+            ruleset=RulesetData(
+                id=1,
+                version="1.0.0",
+                reference_version_id=1,
+                zodiac_type="tropical",
+                coordinate_mode="geocentric",
+                house_system="whole_sign",
+                time_step_minutes=15,
+                is_locked=True,
+            ),
+            parameters={
+                "v3_b_weight_occ": 0.0,
+                "v3_b_weight_rul": 0.0,
+                "v3_b_weight_ang": 0.0,
+                "v3_b_weight_asp": 0.0,
+            },
+            event_types={
+                "planetary_hour_change": EventTypeData(
+                    id=1,
+                    code="planetary_hour_change",
+                    name="Planetary hour change",
+                    event_group="timing",
+                    priority=20,
+                    base_weight=0.8,
+                ),
+                "asc_sign_change": EventTypeData(
+                    id=2,
+                    code="asc_sign_change",
+                    name="Asc sign change",
+                    event_group="ingress",
+                    priority=50,
+                    base_weight=1.0,
+                ),
+            },
+        ),
+        calibrations={"work": None},
+        is_provisional_calibration=True,
+        calibration_label="provisional",
+    )
+    samples = [
+        SamplePoint(
+            ut_time=float(index),
+            local_time=datetime(2026, 3, 7, 0, 0, tzinfo=timezone.utc)
+            + timedelta(minutes=15 * index),
+        )
+        for index in range(2)
+    ]
+
+    class StubTemporalSampler:
+        def build_day_grid(self, *_args):
+            return DayGrid(
+                samples=samples,
+                ut_start=0.0,
+                ut_end=1.0,
+                sunrise_ut=0.0,
+                sunset_ut=0.5,
+                local_date=date(2026, 3, 7),
+                timezone="UTC",
+            )
+
+    class StubAstroCalculator:
+        def __init__(self, *_args):
+            pass
+
+        def compute_step(self, ut_time: float, local_time: datetime):
+            return SimpleNamespace(
+                ut_jd=ut_time,
+                local_time=local_time,
+                house_system_effective="placidus",
+                ascendant_deg=0.0,
+                mc_deg=0.0,
+                house_cusps=[],
+                planets={},
+            )
+
+    class StubEventDetector:
+        def __init__(self, *_args):
+            pass
+
+        def detect(self, *_args):
+            return [
+                AstroEvent(
+                    event_type="planetary_hour_change",
+                    ut_time=0.0,
+                    local_time=samples[0].local_time,
+                    body="Sun",
+                    target=None,
+                    aspect=None,
+                    orb_deg=0.0,
+                    priority=20,
+                    base_weight=0.8,
+                    metadata={"hour_number": 1},
+                )
+            ]
+
+    orchestrator = EngineOrchestrator(
+        prediction_context_loader=lambda *_: loaded_context,
+        temporal_sampler=StubTemporalSampler(),
+        astro_calculator_factory=lambda *_: StubAstroCalculator(),
+        event_detector_factory=lambda *_: StubEventDetector(),
+    )
+
+    bundle = orchestrator.run(
+        base_input,
+        engine_mode=DailyEngineMode.V3,
+        include_editorial=False,
+    )
+
+    aspect_values = [
+        layer.aspect for layer in bundle.v3_core.theme_signals["work"].timeline.values()
+    ]
+    assert max(aspect_values) > 0.0
+    assert (
+        bundle.v3_core.run_metadata["v3_intraday_activation"]["performance"]["sample_count"] == 2
+    )
+    assert bundle.v3_core.run_metadata["v3_intraday_activation"]["themes"]["work"][
+        "top_contributors"
+    ]

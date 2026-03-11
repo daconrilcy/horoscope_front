@@ -41,7 +41,7 @@ from .schemas import (
     V3ThemeSignal,
 )
 from .temporal_kernel import spread_event_weights
-from .temporal_sampler import TemporalSampler
+from .temporal_sampler import DayGrid, TemporalSampler
 from .transit_signal_builder import TransitSignalBuilder
 from .turning_point_detector import TurningPointDetector
 
@@ -351,9 +351,14 @@ class EngineOrchestrator:
             astro_states, natal_chart, loaded_context
         )
         t_timelines = transit_layer.timeline
-        a_timelines = self._intraday_activation_builder.build_timeline(
-            astro_states, natal_chart, loaded_context
+        intraday_layer = self._intraday_activation_builder.build(
+            astro_states,
+            natal_chart,
+            loaded_context,
+            day_grid=self._build_day_grid_from_samples(samples, local_date, timezone),
+            detected_events=detected_events,
         )
+        a_timelines = intraday_layer.timeline
         e_timelines = self._impulse_signal_builder.build_timeline(
             detected_events, samples, b_map, loaded_context
         )
@@ -407,6 +412,7 @@ class EngineOrchestrator:
                     for theme_code, structural_output in b_map.items()
                 },
                 "v3_transit_signal": transit_layer.diagnostics,
+                "v3_intraday_activation": intraday_layer.diagnostics,
             },
             computed_at=computed_at,
         )
@@ -792,6 +798,25 @@ class EngineOrchestrator:
         return min(
             range(len(samples)),
             key=lambda index: abs(samples[index].ut_time - ut_time),
+        )
+
+    def _build_day_grid_from_samples(
+        self,
+        samples: list[SamplePoint],
+        local_date: date,
+        timezone: str,
+    ) -> DayGrid:
+        if not samples:
+            raise PredictionContextError("Cannot build a DayGrid from an empty sample list")
+
+        return DayGrid(
+            samples=samples,
+            ut_start=samples[0].ut_time,
+            ut_end=samples[-1].ut_time,
+            sunrise_ut=None,
+            sunset_ut=None,
+            local_date=local_date,
+            timezone=timezone,
         )
 
     def _local_date_to_ut_interval(self, local_date: date, tz_name: str) -> tuple[float, float]:

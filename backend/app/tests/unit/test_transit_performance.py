@@ -76,7 +76,7 @@ def test_v3_layers_performance_benchmark():
     # Benchmark A(c,t)
     a_builder = IntradayActivationBuilder()
     start_a = time.perf_counter()
-    a_builder.build_timeline(steps, natal, ctx)
+    activation_result = a_builder.build(steps, natal, ctx)
     dur_a = (time.perf_counter() - start_a) * 1000
 
     # Benchmark Aggregation (10 themes)
@@ -109,5 +109,10 @@ def test_v3_layers_performance_benchmark():
         == TransitSignalBuilder.TARGET_BUDGET_MS
     )
     assert transit_result.diagnostics["performance"]["sample_count"] == 96
-    assert dur_a < 50.0
+    assert dur_a < IntradayActivationBuilder.TARGET_BUDGET_MS
+    assert (
+        activation_result.diagnostics["performance"]["budget_target_ms"]
+        == IntradayActivationBuilder.TARGET_BUDGET_MS
+    )
+    assert activation_result.diagnostics["performance"]["sample_count"] == 96
 
