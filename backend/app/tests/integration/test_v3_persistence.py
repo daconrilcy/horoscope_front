@@ -1,18 +1,25 @@
-from datetime import date, datetime, UTC
+from datetime import UTC, date, datetime
+
 import pytest
 from sqlalchemy.orm import Session
 
+from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
 from app.infra.db.models.reference import ReferenceVersionModel
-from app.infra.db.models.daily_prediction import DailyPredictionRunModel
+from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 from app.prediction.persistence_service import PredictionPersistenceService
 from app.prediction.schemas import (
-    PersistablePredictionBundle, CoreEngineOutput, EffectiveContext,
-    V3EngineOutput, V3DailyMetrics, V3ThemeSignal, V3SignalLayer,
-    SamplePoint
+    CoreEngineOutput,
+    EffectiveContext,
+    PersistablePredictionBundle,
+    SamplePoint,
+    V3DailyMetrics,
+    V3EngineOutput,
+    V3SignalLayer,
+    V3ThemeSignal,
 )
-from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
+
 
 @pytest.fixture
 def seed_data(db_session: Session):
@@ -110,6 +117,8 @@ def test_v3_persistence_save_and_load(db_session: Session, seed_data):
     assert snapshot is not None
     assert snapshot.engine_version == "v3.0.0-test"
     assert snapshot.engine_mode == "v3"
+    assert snapshot.v3_metrics is not None
+    assert snapshot.v3_metrics["engine_version"] == "v3.0.0-test"
     
     # Check category metrics
     cat_score = next(s for s in snapshot.category_scores if s.category_code == theme_code)

@@ -1,6 +1,6 @@
 # Story 42.8: Étendre le snapshot et la persistance pour le daily v3
 
-Status: completed
+Status: done
 
 ## Story
 
@@ -73,7 +73,9 @@ GPT-5 Codex
 
 ### Completion Notes List
 
-- Story prête pour porter la transition technique v2/v3 dans la persistance quotidienne.
+- Le snapshot relit maintenant le blob `v3_metrics_json` via `PersistedPredictionSnapshot.v3_metrics`.
+- La persistance reste compatible v2/v3 tout en conservant les métriques v3 étendues par thème.
+- Les tests d'intégration couvrent explicitement le write/read v3 et la relecture du payload v3 complet.
 
 ### File List
 
@@ -83,3 +85,4 @@ GPT-5 Codex
 - `backend/app/prediction/persistence_service.py`
 - `backend/app/prediction/persisted_snapshot.py`
 - `backend/app/tests/integration/test_v3_persistence.py`
+- `_bmad-output/implementation-artifacts/42-8-etendre-le-snapshot-et-la-persistance-pour-le-daily-v3.md`

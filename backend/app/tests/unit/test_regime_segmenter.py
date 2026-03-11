@@ -1,7 +1,10 @@
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
+
 import pytest
+
 from app.prediction.regime_segmenter import RegimeSegmenter
-from app.prediction.schemas import V3ThemeSignal, V3SignalLayer
+from app.prediction.schemas import V3SignalLayer, V3ThemeSignal
+
 
 def create_mock_signal(theme_code: str, values: list[float], start_time: datetime):
     timeline = {}
@@ -38,7 +41,7 @@ def test_segment_contrasting_day():
     
     blocks = segmenter.segment({"love": signal})
     
-    assert len(blocks) >= 2
+    assert len(blocks) >= 4
     # At least one block should be rising, one falling
     orientations = [b.orientation for b in blocks]
     assert "rising" in orientations
@@ -55,8 +58,8 @@ def test_segment_merging_limit():
     
     blocks = segmenter.segment({"health": signal})
     
-    # AC2: 4 to 8 segments max
-    assert len(blocks) >= 1 
+    # AC2: 4 to 8 segments max on an active day
+    assert len(blocks) >= 4
     assert len(blocks) <= 8
 
 def test_segment_determinism():

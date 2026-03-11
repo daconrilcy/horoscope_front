@@ -61,7 +61,7 @@ def test_metrics_score_and_intensity_can_diverge():
     lightly_oriented_metrics = aggregator.aggregate_theme(lightly_oriented)
     intensely_neutral_metrics = aggregator.aggregate_theme(intensely_neutral)
 
-    assert lightly_oriented_metrics.score_20 > intensely_neutral_metrics.score_20
+    assert lightly_oriented_metrics.level_day > intensely_neutral_metrics.level_day
     assert intensely_neutral_metrics.intensity_20 > lightly_oriented_metrics.intensity_20
 
 

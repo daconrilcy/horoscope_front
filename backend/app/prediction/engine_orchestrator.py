@@ -45,7 +45,7 @@ from .schemas import (
 from .temporal_kernel import spread_event_weights
 from .temporal_sampler import DayGrid, TemporalSampler
 from .transit_signal_builder import TransitSignalBuilder
-from .turning_point_detector import TurningPointDetector
+from .turning_point_detector import TurningPoint, TurningPointDetector
 
 _ZODIAC_SIGNS = (
     "aries",
@@ -560,20 +560,7 @@ class EngineOrchestrator:
                 is_provisional=loaded_context.is_provisional_calibration,
             )
 
-        # Map V3TimeBlocks to legacy format for backward compatibility
-        legacy_time_blocks = []
-        if v3_core and v3_core.time_blocks:
-            for b in v3_core.time_blocks:
-                legacy_time_blocks.append(
-                    SimpleNamespace(
-                        start_local=b.start_local,
-                        end_local=b.end_local,
-                        dominant_categories=b.dominant_themes,
-                        orientation=b.orientation,
-                        intensity=b.intensity,
-                        confidence=b.confidence,
-                    )
-                )
+        legacy_time_blocks = list(v3_core.time_blocks) if v3_core and v3_core.time_blocks else []
 
         # Map V3TurningPoints to legacy format
         legacy_turning_points = []
@@ -597,13 +584,19 @@ class EngineOrchestrator:
                     )
                 )
 
+        decision_windows = self._decision_window_builder.build(
+            legacy_time_blocks,
+            legacy_turning_points,
+            category_scores,
+        )
+
         return CoreEngineOutput(
             effective_context=effective_context,
             run_metadata=run_metadata,
             category_scores=category_scores,
             time_blocks=legacy_time_blocks,
             turning_points=legacy_turning_points,
-            decision_windows=[],
+            decision_windows=decision_windows,
             detected_events=detected_events,
             sampling_timeline=list(samples),
             explainability=self._explainability_builder.build(
@@ -624,11 +617,15 @@ class EngineOrchestrator:
             "note_20": max(0, min(20, round(metrics.score_20))),
             "raw_score": metrics.avg_score,
             "normalized_score": metrics.avg_score,
-            "power": metrics.intensity_20 / 20.0,
+            "power": metrics.intensity_day / 20.0,
             "volatility": metrics.volatility,
             "score_20": metrics.score_20,
-            "intensity_20": metrics.intensity_20,
-            "confidence_20": metrics.confidence_20,
+            "intensity_20": metrics.intensity_day,
+            "confidence_20": metrics.stability_day,
+            "level_day": metrics.level_day,
+            "dominance_day": metrics.dominance_day,
+            "stability_day": metrics.stability_day,
+            "intensity_day": metrics.intensity_day,
             "rarity_percentile": metrics.rarity_percentile,
             "sort_order": getattr(category, "sort_order", 0),
             "is_provisional": is_provisional,

@@ -1,6 +1,6 @@
 # Story 42.7: Refaire la calibration absolue à partir des courbes lissées
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -69,7 +69,9 @@ GPT-5 Codex
 
 ### Completion Notes List
 
-- Story prête pour refaire la calibration absolue sur les fondations du moteur v3.
+- Calibration v3 rebranchée sur les ancres `CalibrationData` au lieu d'une formule purement hardcodée.
+- La note absolue combine maintenant calibration, intensité, dominance et stabilité sans casser le neutre à 10.
+- La comparaison v2/v3 reste possible sur fixtures identiques via les tests ciblés.
 
 ### File List
 
@@ -78,5 +80,5 @@ GPT-5 Codex
 - `backend/app/prediction/engine_orchestrator.py`
 - `backend/app/prediction/schemas.py`
 - `backend/app/tests/unit/test_v3_calibration.py`
+- `backend/app/tests/unit/test_v3_metrics.py`
 - `_bmad-output/implementation-artifacts/42-7-refaire-la-calibration-absolue-a-partir-des-courbes-lissees.md`
-

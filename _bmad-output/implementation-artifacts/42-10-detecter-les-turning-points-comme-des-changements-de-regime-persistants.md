@@ -1,6 +1,6 @@
 # Story 42.10: Détecter les turning points comme des changements de régime persistants
 
-Status: completed
+Status: done
 
 ## Story
 
@@ -71,7 +71,9 @@ GPT-5 Codex
 
 ### Completion Notes List
 
-- Story prête pour refondre la logique de turning point autour des changements de régime.
+- Les turning points v3 restent centrés sur les changements de régime persistants, avec drivers conservés pour le debug.
+- Le chemin legacy reconstruit désormais des turning points compatibles à partir de la sortie v3 sans perdre les drivers.
+- Les blocs et pivots v3 sont à nouveau branchés ensemble dans l'orchestrateur pour alimenter les fenêtres décisionnelles.
 
 ### File List
 
@@ -80,3 +82,5 @@ GPT-5 Codex
 - `backend/app/prediction/engine_orchestrator.py`
 - `backend/app/prediction/schemas.py`
 - `backend/app/tests/unit/test_v3_turning_points.py`
+- `backend/app/tests/unit/test_engine_orchestrator.py`
+- `_bmad-output/implementation-artifacts/42-10-detecter-les-turning-points-comme-des-changements-de-regime-persistants.md`

@@ -69,6 +69,8 @@ Gemini CLI (Adversarial Reviewer)
 - Story prête pour faire des blocs v3 la représentation de régimes cohérents.
 - Segmenter robuste implémenté dans `regime_segmenter.py`.
 - Intégration effectuée dans `engine_orchestrator.py`.
+- Les journées actives sont maintenant garanties entre 4 et 8 segments, avec exception explicite pour les journées réellement calmes.
+- Les blocs v3 servent désormais directement de base aux fenêtres décisionnelles legacy-compatibles.
 
 ### File List
 
@@ -76,6 +78,8 @@ Gemini CLI (Adversarial Reviewer)
 - `backend/app/prediction/regime_segmenter.py`
 - `backend/app/prediction/engine_orchestrator.py`
 - `backend/app/tests/unit/test_regime_segmenter.py`
+- `backend/app/tests/unit/test_engine_orchestrator.py`
+- `_bmad-output/implementation-artifacts/42-9-segmenter-la-journee-par-changement-de-regime.md`
 
 ### Change Log
 
@@ -83,3 +87,5 @@ Gemini CLI (Adversarial Reviewer)
 - Création de `RegimeSegmenter` pour la segmentation basée sur le signal.
 - Intégration de `RegimeSegmenter` dans `EngineOrchestrator`.
 - Ajout de tests unitaires pour le segmenter.
+- Renforcement de la logique de merge/split pour respecter le budget produit `4-8` segments sur les journées actives.
+- Réutilisation directe des `V3TimeBlock` pour les fenêtres décisionnelles et la persistance.

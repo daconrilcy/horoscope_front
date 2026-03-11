@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import statistics
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from .schemas import V3TimeBlock
@@ -45,6 +45,8 @@ class RegimeSegmenter:
             vals = [tl[t].composite for tl in active_signals if t in tl]
             global_signal.append(statistics.mean(vals) if vals else 1.0)
 
+        quiet_day = self._is_quiet_day(global_signal)
+
         # 2. Smooth the signal to remove micro-oscillations
         smoothed = self._smooth(global_signal, window=7)
 
@@ -52,7 +54,7 @@ class RegimeSegmenter:
         change_indices = self._detect_change_points(smoothed, sorted_times)
         
         # 4. Merge until we have a reasonable amount of segments
-        merged_indices = self._merge_segments(change_indices, smoothed, sorted_times)
+        merged_indices = self._merge_segments(change_indices, smoothed, sorted_times, quiet_day)
 
         # 5. Create V3TimeBlock objects
         blocks = []
@@ -123,12 +125,17 @@ class RegimeSegmenter:
         
         return sorted(list(set(indices)))
 
-    def _merge_segments(self, indices: list[int], smoothed: list[float], times: list[datetime]) -> list[int]:
+    def _merge_segments(
+        self,
+        indices: list[int],
+        smoothed: list[float],
+        times: list[datetime],
+        quiet_day: bool,
+    ) -> list[int]:
         """Merges segments that are too short or too numerous."""
         current = list(indices)
 
-        # First pass: merge segments shorter than MIN_SEGMENT_MINUTES
-        # We allow fewer than MIN_SEGMENTS if the day is extremely quiet
+        # First pass: merge segments shorter than MIN_SEGMENT_MINUTES.
         i = 1
         while i < len(current) - 1:
             delta = (times[current[i]] - times[current[i - 1]]).total_seconds() / 60
@@ -144,8 +151,12 @@ class RegimeSegmenter:
             min_diff = float("inf")
             for j in range(1, len(current) - 1):
                 # Slopes
-                slope_prev = (smoothed[current[j]] - smoothed[current[j - 1]]) / max(1, current[j] - current[j - 1])
-                slope_next = (smoothed[current[j + 1]] - smoothed[current[j]]) / max(1, current[j + 1] - current[j])
+                slope_prev = (
+                    smoothed[current[j]] - smoothed[current[j - 1]]
+                ) / max(1, current[j] - current[j - 1])
+                slope_next = (
+                    smoothed[current[j + 1]] - smoothed[current[j]]
+                ) / max(1, current[j + 1] - current[j])
                 diff = abs(slope_next - slope_prev)
                 if diff < min_diff:
                     min_diff = diff
@@ -156,7 +167,40 @@ class RegimeSegmenter:
             else:
                 break
 
+        if not quiet_day:
+            while len(current) - 1 < self.MIN_SEGMENTS:
+                longest_index = self._longest_segment_index(current)
+                if longest_index == -1:
+                    break
+                start = current[longest_index - 1]
+                end = current[longest_index]
+                if end - start < 2:
+                    break
+                midpoint = (start + end) // 2
+                if midpoint in current or midpoint in {start, end}:
+                    break
+                current.insert(longest_index, midpoint)
+
         return current
+
+    def _is_quiet_day(self, values: list[float]) -> bool:
+        if not values:
+            return True
+        peak_deviation = max(abs(value - 1.0) for value in values)
+        spread = max(values) - min(values)
+        return peak_deviation < 0.12 and spread < 0.2
+
+    def _longest_segment_index(self, indices: list[int]) -> int:
+        if len(indices) < 2:
+            return -1
+        longest_index = -1
+        longest_span = -1
+        for idx in range(1, len(indices)):
+            span = indices[idx] - indices[idx - 1]
+            if span > longest_span:
+                longest_span = span
+                longest_index = idx
+        return longest_index
 
     def _detect_orientation(self, raw: list[float], smoothed: list[float]) -> str:
         if len(smoothed) < 2:

@@ -48,8 +48,16 @@ class V3ThemeAggregator:
         layers = list(theme_signal.timeline.values())
         if not layers:
             return V3DailyMetrics(
-                score_20=10.0, intensity_20=0.0, confidence_20=0.0, rarity_percentile=0.0,
-                avg_score=0.0, max_score=0.0, min_score=0.0, volatility=0.0
+                score_20=10.0,
+                level_day=0.0,
+                intensity_day=0.0,
+                dominance_day=0.0,
+                stability_day=0.0,
+                rarity_percentile=0.0,
+                avg_score=0.0,
+                max_score=0.0,
+                min_score=0.0,
+                volatility=0.0,
             )
 
         composites = [layer.composite for layer in layers]
@@ -115,7 +123,7 @@ class V3ThemeAggregator:
         rarity = max(0.0, min(20.0, rarity))
 
         return V3DailyMetrics(
-            score_20=10.0, # Will be calibrated by PercentileCalibrator
+            score_20=10.0,  # Will be calibrated by PercentileCalibrator
             level_day=level_day,
             intensity_day=intensity_day,
             dominance_day=dominance_day,
@@ -124,7 +132,7 @@ class V3ThemeAggregator:
             avg_score=avg_val,
             max_score=max_val,
             min_score=min_val,
-            volatility=vol_val
+            volatility=vol_val,
         )
 
     def _smooth_series(self, values: list[float]) -> list[float]:

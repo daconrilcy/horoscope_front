@@ -297,6 +297,7 @@ class DailyPredictionRepository:
             engine_version=run.engine_version,
             snapshot_version=run.snapshot_version,
             evidence_pack_version=run.evidence_pack_version,
+            v3_metrics=self._load_json_object(run.v3_metrics_json),
             category_scores=category_scores,
             turning_points=turning_points,
             time_blocks=time_blocks,
@@ -310,6 +311,15 @@ class DailyPredictionRepository:
             return val if isinstance(val, list) else []
         except (json.JSONDecodeError, TypeError):
             return []
+
+    def _load_json_object(self, raw: str | None) -> dict[str, Any] | None:
+        if not raw:
+            return None
+        try:
+            value = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            return None
+        return value if isinstance(value, dict) else None
 
     def _run_identity_filters(
         self,

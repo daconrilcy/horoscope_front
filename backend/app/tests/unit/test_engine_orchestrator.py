@@ -634,14 +634,15 @@ def test_run_v3_coexistence(orchestrator, base_input):
 
 
 def test_run_v3_only_returns_v3_skeleton(orchestrator, base_input):
-    """AC2 - Test V3 ONLY mode."""
+    """AC2 - Test V3 ONLY mode with legacy-compatible V3 outputs."""
     bundle = orchestrator.run(base_input, engine_mode=DailyEngineMode.V3)
 
     assert bundle.v3_core is not None
     assert bundle.v3_core.engine_version == settings.v3_engine_version
     assert bundle.core is not None
-    assert bundle.core.turning_points == []
-    assert bundle.core.time_blocks == []
+    assert bundle.core.time_blocks == bundle.v3_core.time_blocks
+    assert len(bundle.core.time_blocks) >= 1
+    assert isinstance(bundle.core.decision_windows, list)
     assert bundle.core.run_metadata["engine_mode"] == DailyEngineMode.V3.value
 
 
@@ -661,7 +662,7 @@ def test_run_v3_only_skips_v2_pipeline(base_input):
 
     turning_point_detector.detect.assert_not_called()
     block_generator.generate.assert_not_called()
-    decision_window_builder.build.assert_not_called()
+    decision_window_builder.build.assert_called_once()
 
 
 def test_run_v3_is_deterministic(orchestrator, base_input):

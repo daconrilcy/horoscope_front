@@ -1,7 +1,9 @@
 import pytest
+
+from app.infra.db.repositories.prediction_schemas import CalibrationData
 from app.prediction.calibrator import PercentileCalibrator
 from app.prediction.schemas import V3DailyMetrics
-from app.infra.db.repositories.prediction_schemas import CalibrationData
+
 
 @pytest.fixture
 def calibrator():
@@ -142,3 +144,38 @@ def test_compare_v2_v3_calibration(calibrator, default_cal):
     # V3 should deviate more from 10 because it's intense and positive dominant
     assert abs(score_v3 - 10.0) > abs(score_v2_linear - 10.0)
     assert score_v3 > 11.0 # Should be higher than just 10.5
+
+
+def test_calibrate_v3_uses_calibration_anchors(calibrator):
+    metrics = V3DailyMetrics(
+        score_20=10.0,
+        level_day=0.3,
+        intensity_day=8.0,
+        dominance_day=0.0,
+        stability_day=16.0,
+        rarity_percentile=4.0,
+        avg_score=1.3,
+        max_score=1.5,
+        min_score=1.1,
+        volatility=0.2,
+    )
+    compressed = CalibrationData(
+        p05=-0.2,
+        p25=-0.1,
+        p50=0.0,
+        p75=0.1,
+        p95=0.2,
+        sample_size=500,
+        calibration_label="compressed",
+    )
+    wide = CalibrationData(
+        p05=-2.0,
+        p25=-1.0,
+        p50=0.0,
+        p75=1.0,
+        p95=2.0,
+        sample_size=500,
+        calibration_label="wide",
+    )
+
+    assert calibrator.calibrate_v3(metrics, compressed) > calibrator.calibrate_v3(metrics, wide)

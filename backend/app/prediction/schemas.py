@@ -133,6 +133,16 @@ class V3DailyMetrics:
     min_score: float
     volatility: float
 
+    @property
+    def intensity_20(self) -> float:
+        """Backward-compatible alias for legacy consumers."""
+        return self.intensity_day
+
+    @property
+    def confidence_20(self) -> float:
+        """Backward-compatible alias for legacy consumers."""
+        return self.stability_day
+
 
 @dataclass(frozen=True)
 class V3TimeBlock:
@@ -146,6 +156,20 @@ class V3TimeBlock:
     confidence: float # 0-1
     dominant_themes: list[str] = field(default_factory=list)
     summary: str = ""
+
+    @property
+    def tone_code(self) -> str:
+        if self.orientation == "rising":
+            return "positive"
+        if self.orientation == "falling":
+            return "negative"
+        if self.orientation == "volatile":
+            return "mixed"
+        return "neutral"
+
+    @property
+    def dominant_categories(self) -> list[str]:
+        return list(self.dominant_themes)
 
 
 @dataclass(frozen=True)
