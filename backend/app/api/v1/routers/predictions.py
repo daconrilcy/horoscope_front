@@ -15,6 +15,7 @@ from app.infra.db.repositories.daily_prediction_repository import DailyPredictio
 from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
 from app.infra.db.session import get_db_session
 from app.prediction.context_loader import PredictionContextLoader
+from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 from app.prediction.persistence_service import PredictionPersistenceService
 from app.prediction.public_projection import PublicPredictionAssembler
 from app.services.daily_prediction_service import DailyPredictionService
@@ -395,6 +396,11 @@ def get_daily_prediction(
         raise HTTPException(status_code=404, detail="Prediction not found")
 
     snapshot = result.run
+    if not isinstance(snapshot, PersistedPredictionSnapshot):
+        reloaded_snapshot = DailyPredictionRepository(db).get_full_run(result.run.run_id)
+        if reloaded_snapshot is None:
+            raise HTTPException(status_code=404, detail="Prediction not found")
+        snapshot = reloaded_snapshot
 
     # Mappings
     ref_repo = PredictionReferenceRepository(db)

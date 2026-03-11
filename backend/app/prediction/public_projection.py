@@ -15,7 +15,6 @@ PUBLIC_PIVOT_EVENT_TYPES = frozenset(
         "aspect_exact_to_angle",
         "aspect_exact_to_luminary",
         "aspect_exact_to_personal",
-        "asc_sign_change",
         "moon_sign_ingress",
     }
 )
@@ -264,6 +263,8 @@ class PublicDecisionWindowPolicy:
     ) -> list[dict[str, Any]]:
         if not snapshot.time_blocks:
             return []
+        if self._is_low_signal_snapshot(snapshot):
+            return []
 
         category_scores = {
             cat_id_to_code.get(score.category_id, "unknown"): {
@@ -307,6 +308,16 @@ class PublicDecisionWindowPolicy:
             for window in rebuilt
         ]
 
+    def _is_low_signal_snapshot(self, snapshot: PersistedPredictionSnapshot) -> bool:
+        if not snapshot.category_scores:
+            return True
+        if any(
+            float(score.note_20) > MAJOR_ASPECT_NOTE_THRESHOLD
+            for score in snapshot.category_scores
+        ):
+            return False
+        return all((block.tone_code or "neutral") == "neutral" for block in snapshot.time_blocks)
+
     def _normalize(
         self,
         snapshot: PersistedPredictionSnapshot,
@@ -324,9 +335,11 @@ class PublicDecisionWindowPolicy:
                 window["dominant_categories"],
                 category_note_by_code,
             )
-            if not dominant_categories:
-                if not self._should_keep_public_pivot_window(snapshot, window):
+            if window.get("window_type") == "pivot":
+                keep_public_pivot = self._should_keep_public_pivot_window(snapshot, window)
+                if not keep_public_pivot and not dominant_categories:
                     continue
+            if not dominant_categories:
                 dominant_categories = list(dict.fromkeys(window["dominant_categories"]))[:2]
 
             if normalized:
@@ -530,7 +543,7 @@ class PublicTimelinePolicy:
         category_note_by_code: dict[str, float],
         turning_point_times: list[datetime],
     ) -> list[dict[str, Any]]:
-        blocks = []
+        blocks: list[dict[str, Any]] = []
         for b in snapshot.time_blocks:
             dominant_categories = self._filter_major_categories(
                 b.dominant_categories,
@@ -555,7 +568,35 @@ class PublicTimelinePolicy:
                     ),
                 }
             )
-        return sorted(blocks, key=lambda b: b["start_local"])
+        return self._merge_adjacent_blocks(sorted(blocks, key=lambda block: block["start_local"]))
+
+    def _merge_adjacent_blocks(self, blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        if not blocks:
+            return []
+
+        merged = [blocks[0]]
+        for block in blocks[1:]:
+            previous = merged[-1]
+            if (
+                not previous["turning_point"]
+                and not block["turning_point"]
+                and previous["end_local"] == block["start_local"]
+                and previous["tone_code"] == block["tone_code"]
+                and previous["dominant_categories"] == block["dominant_categories"]
+            ):
+                merged[-1] = {
+                    **previous,
+                    "end_local": block["end_local"],
+                    "summary": self._build_summary(
+                        datetime.fromisoformat(previous["start_local"]),
+                        datetime.fromisoformat(block["end_local"]),
+                        previous["dominant_categories"],
+                        previous["tone_code"],
+                    ),
+                }
+                continue
+            merged.append(block)
+        return merged
 
     def _filter_major_categories(
         self, categories: list[str], category_note_by_code: dict[str, float]
@@ -634,11 +675,17 @@ class PublicSummaryPolicy:
 
         best_window = None
         if decision_windows and editorial and editorial.best_window:
-            best_window = {
+            editorial_window = {
                 "start_local": editorial.best_window.start_local.isoformat(),
                 "end_local": editorial.best_window.end_local.isoformat(),
                 "dominant_category": editorial.best_window.dominant_category,
             }
+            if any(
+                window["start_local"] == editorial_window["start_local"]
+                and window["end_local"] == editorial_window["end_local"]
+                for window in decision_windows
+            ):
+                best_window = editorial_window
 
         if best_window is None and decision_windows:
             cand = max(decision_windows, key=lambda w: (w["score"], w["confidence"]))

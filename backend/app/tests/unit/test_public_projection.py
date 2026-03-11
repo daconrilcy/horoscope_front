@@ -378,7 +378,7 @@ def test_assembler_keeps_public_luminary_pivots_without_major_category_notes(cat
     "event_type",
     [
         "aspect_exact_to_personal",
-        "asc_sign_change",
+        "moon_sign_ingress",
     ],
 )
 def test_assembler_keeps_public_pivots_for_structuring_runtime_event_types(cat_map, event_type):

@@ -1,6 +1,7 @@
 # backend/app/tests/integration/test_daily_prediction_qa.py
 import uuid
 from datetime import date, datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -40,6 +41,7 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.models.user_prediction_baseline import UserPredictionBaselineModel
 from app.infra.db.session import SessionLocal
 from app.main import app
+from app.prediction.schemas import CoreEngineOutput, EffectiveContext, PersistablePredictionBundle
 from app.services.auth_service import AuthService
 from app.services.reference_data_service import ReferenceDataService
 from app.tests.fixtures.intraday_qa_fixtures import (
@@ -67,6 +69,64 @@ FIXTURE_BUILDERS = {
     "flat_day_with_micro_trends": get_flat_day_with_micro_trends,
     "flat_day_no_signal": get_flat_day_no_signal,
 }
+
+
+def _build_mock_bundle(fixture_data: dict) -> PersistablePredictionBundle:
+    target_date = date.fromisoformat(fixture_data["target_date"])
+    avg_notes: dict[str, float] = {}
+    for step in fixture_data["notes_by_step"]:
+        for category_code, note in step.items():
+            avg_notes[category_code] = avg_notes.get(category_code, 0.0) + float(note)
+
+    for category_code in avg_notes:
+        avg_notes[category_code] /= len(fixture_data["notes_by_step"])
+
+    sorted_cats = sorted(avg_notes.items(), key=lambda item: item[1], reverse=True)
+    editorial_category_scores = {
+        category_code: {
+            "note_20": int(note),
+            "raw_score": float(note),
+            "power": 1.0,
+            "volatility": 0.0,
+            "rank": index + 1,
+            "is_provisional": False,
+        }
+        for index, (category_code, note) in enumerate(sorted_cats)
+    }
+
+    return PersistablePredictionBundle(
+        core=CoreEngineOutput(
+            effective_context=EffectiveContext(
+                house_system_requested="placidus",
+                house_system_effective="placidus",
+                local_date=target_date,
+                timezone="Europe/Paris",
+                input_hash="mock_hash",
+            ),
+            run_metadata={
+                "is_provisional_calibration": False,
+                "calibration_label": "v2",
+                "computed_at": datetime.now().isoformat(),
+            },
+            category_scores=editorial_category_scores,
+            time_blocks=[
+                {
+                    "block_index": 0,
+                    "start_at_local": datetime.combine(target_date, datetime.min.time()),
+                    "end_at_local": datetime.combine(target_date, datetime.max.time()),
+                    "tone_code": "neutral",
+                    "dominant_categories": [],
+                    "summary": "Calme",
+                }
+            ],
+            turning_points=[],
+            decision_windows=[],
+            detected_events=[],
+            sampling_timeline=[],
+            explainability=None,
+        ),
+        editorial=None,
+    )
 
 
 def _reset_prediction_reference(db) -> None:
@@ -199,19 +259,23 @@ def _setup_qa_user_and_natal(db, *, fixture_data: dict | None = None):
 
     # Seed baselines if present in fixture
     if fixture_data and fixture_data.get("baselines"):
-        from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
+        from app.infra.db.repositories.prediction_reference_repository import (
+            PredictionReferenceRepository,
+        )
+        from app.infra.db.repositories.prediction_ruleset_repository import (
+            PredictionRulesetRepository,
+        )
         from app.infra.db.repositories.reference_repository import ReferenceRepository
-        from app.infra.db.repositories.prediction_ruleset_repository import PredictionRulesetRepository
-        
+
         ref_repo = ReferenceRepository(db)
         ruleset_repo = PredictionRulesetRepository(db)
         pred_ref_repo = PredictionReferenceRepository(db)
-        
+
         ref_v = ref_repo.get_version(settings.active_reference_version)
         ruleset = ruleset_repo.get_ruleset(settings.ruleset_version)
         categories = pred_ref_repo.get_categories(ref_v.id)
         cat_map = {c.code: c.id for c in categories}
-        
+
         target_date = date.fromisoformat(fixture_data["target_date"])
         window_days = 365
         start_date = target_date - timedelta(days=window_days - 1)
@@ -220,7 +284,7 @@ def _setup_qa_user_and_natal(db, *, fixture_data: dict | None = None):
             cat_id = cat_map.get(cat_code)
             if not cat_id:
                 continue
-                
+
             baseline = UserPredictionBaselineModel(
                 user_id=auth.user.id,
                 category_id=cat_id,
@@ -240,7 +304,7 @@ def _setup_qa_user_and_natal(db, *, fixture_data: dict | None = None):
                 sample_size_days=window_days,
             )
             db.add(baseline)
-        db.flush() # Use flush instead of commit to catch errors early
+        db.flush()
         db.commit()
 
     return auth.tokens.access_token
@@ -258,73 +322,12 @@ def _fetch_prediction_for_fixture(fixture_name: str) -> dict:
     # AC3: If fixture asks for mock engine, we mock EngineOrchestrator.run
     # This allows testing the assembler safeguards on controlled engine output.
     if fixture_data.get("mock_engine"):
-        from app.prediction.schemas import PersistablePredictionBundle, CoreEngineOutput, EffectiveContext
-        from unittest.mock import patch
-        
-        # Build a minimal bundle that matches the fixture expectations
-        # We only need enough to satisfy the assembler
-        target_date = date.fromisoformat(fixture_data["target_date"])
-        
-        # Determine dominant categories from notes
-        notes = fixture_data["notes_by_step"]
-        avg_notes = {}
-        for step in notes:
-            for cat, val in step.items():
-                avg_notes[cat] = avg_notes.get(cat, 0) + val
-        for cat in avg_notes:
-            avg_notes[cat] /= len(notes)
-        
-        sorted_cats = sorted(avg_notes.items(), key=lambda x: x[1], reverse=True)
-        top3 = [c[0] for c in sorted_cats[:3]]
-        
-        # Simplified category_scores for assembler
-        editorial_category_scores = {
-            cat: {
-                "note_20": int(val),
-                "raw_score": float(val),
-                "power": 1.0,
-                "volatility": 0.0,
-                "rank": i + 1,
-                "is_provisional": False
-            }
-            for i, (cat, val) in enumerate(sorted_cats)
-        }
+        mock_bundle = _build_mock_bundle(fixture_data)
 
-        mock_bundle = PersistablePredictionBundle(
-            core=CoreEngineOutput(
-                effective_context=EffectiveContext(
-                    house_system_requested="placidus",
-                    house_system_effective="placidus",
-                    local_date=target_date,
-                    timezone="Europe/Paris",
-                    input_hash="mock_hash"
-                ),
-                run_metadata={
-                    "is_provisional_calibration": False,
-                    "calibration_label": "v2",
-                    "computed_at": datetime.now().isoformat()
-                },
-                category_scores=editorial_category_scores,
-                time_blocks=[
-                    {
-                        "block_index": 0,
-                        "start_at_local": datetime.combine(target_date, datetime.min.time()),
-                        "end_at_local": datetime.combine(target_date, datetime.max.time()),
-                        "tone_code": "neutral",
-                        "dominant_categories": [],
-                        "summary": "Calme"
-                    }
-                ],
-                turning_points=[],
-                decision_windows=[],
-                detected_events=[],
-                sampling_timeline=[],
-                explainability=None
-            ),
-            editorial=None # Assembler will build it if needed or use core
-        )
-        
-        with patch("app.services.prediction_compute_runner.EngineOrchestrator.run", return_value=mock_bundle):
+        with patch(
+            "app.services.prediction_compute_runner.EngineOrchestrator.run",
+            return_value=mock_bundle,
+        ):
             response = client.get(
                 "/v1/predictions/daily",
                 headers={"Authorization": f"Bearer {token}"},

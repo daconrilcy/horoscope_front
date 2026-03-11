@@ -1,6 +1,6 @@
 # Story 41.16: QA et garde-fous produit pour la calibration relative
 
-Status: completed
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -132,19 +132,23 @@ GPT-5 Codex
 - Story implémentée le 2026-03-10.
 - Extension des fixtures dans `intraday_qa_fixtures.py` avec support des baselines et mock engine.
 - Mise à jour du report QA dans `intraday_qa_report.py` (ajout `total_micro_trends`).
-- Correction de bugs critiques : `selectinload` manquant dans `DailyPredictionRepository` et re-load redondant dans le routeur.
-- Tous les tests QA (14/14) passent, incluant les nouveaux cas de calibration relative.
+- Passe de vérification globale du 2026-03-11: fallback sûr sur snapshot complet dans le routeur uniquement si nécessaire.
+- Passe de vérification globale du 2026-03-11: projection publique durcie pour ne pas synthétiser de fenêtres sur snapshot low-signal et pour fusionner les blocs timeline neutres identiques.
+- Vérifications ciblées repassées avec succès sur baseline, scoring relatif, projection publique et QA produit.
 
 ### Completion Notes List
 
 - QA de la calibration relative verrouillé : les scénarios de journées plates et actives sont correctement discriminés et protégés.
 - Les micro-tendances sont limitées à 3 et n'apparaissent que si les conditions produit sont réunies.
+- Le budget de bruit public reste sous contrôle après filtrage des pivots reconstruits et consolidation de la timeline.
+- La matrice de validation 41.12–41.16 repasse verte après corrections.
 
 ### File List
 
+- `backend/app/prediction/public_projection.py`
 - `backend/app/tests/fixtures/intraday_qa_fixtures.py`
 - `backend/app/tests/helpers/intraday_qa_report.py`
 - `backend/app/tests/integration/test_daily_prediction_qa.py`
-- `backend/app/infra/db/repositories/daily_prediction_repository.py`
+- `backend/app/tests/unit/test_public_projection.py`
 - `backend/app/api/v1/routers/predictions.py`
 - `_bmad-output/implementation-artifacts/41-16-qa-et-gardefous-produit-pour-la-calibration-relative.md`
