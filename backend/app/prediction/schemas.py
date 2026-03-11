@@ -122,7 +122,7 @@ class V3DailyMetrics:
     score_20: float       # -1 to +1 signal mapped to 0-20 (10 = neutral) (AC2)
     intensity_20: float   # total relief/energy of the day (0-20)
     confidence_20: float  # signal clarity/reliability (0-20) (AC3)
-    rarity_percentile: float # how unusual is this day (0-20, percentile mapped) (AC4)
+    rarity_percentile: float # rarity index on 0-20, not a statistical percentile (AC4)
     
     # Raw stats
     avg_score: float

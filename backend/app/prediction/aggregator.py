@@ -12,9 +12,12 @@ CLOSE_WINDOW = 8
 # V3 Mapping Constants
 SCORE_CENTER = 1.0
 SCORE_SCALE = 5.0
-INTENSITY_MAX_RAW = 1.5
-RARITY_MAX_RAW = 2.5
-BASELINE_TARGET = 0.5
+INTENSITY_MAX_RAW = 1.25
+RARITY_SATURATION_RELIEF = 3.0
+SMOOTHING_WINDOW = 3
+MIN_SIGNAL_THRESHOLD = 0.05
+BASELINE_EXPECTED = 1.0
+BASELINE_TOLERANCE = 1.2
 
 
 @dataclass
@@ -49,54 +52,64 @@ class V3ThemeAggregator:
                 avg_score=0.0, max_score=0.0, min_score=0.0, volatility=0.0
             )
 
-        composites = [L.composite for L in layers]
-        
-        # 1. Stats de base
-        avg_val = statistics.mean(composites)
-        max_val = max(composites)
-        min_val = min(composites)
-        vol_val = statistics.stdev(composites) if len(composites) > 1 else 0.0
+        composites = [layer.composite for layer in layers]
+        baselines = [layer.baseline for layer in layers]
+        dynamic_values = [layer.composite - layer.baseline for layer in layers]
+        driver_energy = [
+            abs(layer.transit) + abs(layer.aspect) + abs(layer.event) for layer in layers
+        ]
 
-        # 2. score_20 (AC2)
-        # Baseline is around 1.0. T, A, E range typically [-2, 2]
-        # Composite range [ -3, 5 ]. Map [ -1, 3 ] to [ 0, 20 ]
-        # center 1.0 -> 10/20
+        smoothed_composites = self._smooth_series(composites)
+        smoothed_dynamics = self._smooth_series(dynamic_values)
+
+        avg_val = statistics.mean(smoothed_composites)
+        max_val = max(smoothed_composites)
+        min_val = min(smoothed_composites)
+        vol_val = statistics.stdev(smoothed_composites) if len(smoothed_composites) > 1 else 0.0
+
         score = 10.0 + (avg_val - SCORE_CENTER) * SCORE_SCALE
         score = max(0.0, min(20.0, score))
 
-        # 3. intensity_20 (AC1)
-        # Mean absolute deviation of the "dynamic" part (T+A+E)
-        dynamics = [abs(L.composite - L.baseline) for L in layers]
-        avg_dynamic = statistics.mean(dynamics)
-        intensity = (avg_dynamic / INTENSITY_MAX_RAW) * 20.0
+        avg_dynamic = statistics.mean(abs(value) for value in smoothed_dynamics)
+        peak_dynamic = max(abs(value) for value in smoothed_dynamics)
+        intensity_raw = (avg_dynamic * 0.65) + (peak_dynamic * 0.35)
+        intensity = (intensity_raw / INTENSITY_MAX_RAW) * 20.0
         intensity = max(0.0, min(20.0, intensity))
 
-        # 4. confidence_20 (AC3)
-        # Stability: inverse of volatility
-        stability_score = 1.0 / (1.0 + vol_val)
-        
-        # Baseline quality: is the natal structural signal strong enough?
-        baseline_quality = min(1.0, abs(layers[0].baseline) / BASELINE_TARGET)
-        
-        # Coherence inter-drivers: do T, A, E point in the same direction?
-        avg_t = statistics.mean([L.transit for L in layers])
-        avg_a = statistics.mean([L.aspect for L in layers])
-        avg_e = statistics.mean([L.event for L in layers])
+        explained_signal = self._explained_signal_share(
+            raw_dynamic_values=dynamic_values,
+            smoothed_dynamic_values=smoothed_dynamics,
+            driver_energy=driver_energy,
+        )
+        stability_score = self._stability_score(composites, smoothed_composites)
+        baseline_quality = self._baseline_quality(baselines)
+
+        avg_t = statistics.mean(layer.transit for layer in layers)
+        avg_a = statistics.mean(layer.aspect for layer in layers)
+        avg_e = statistics.mean(layer.event for layer in layers)
         drivers = [avg_t, avg_a, avg_e]
-        signs = [math.copysign(1, d) for d in drivers if abs(d) > 0.05]
-        coherence = 1.0 if not signs or all(s == signs[0] for s in signs) else 0.6
-        
-        conf_raw = (stability_score * 0.7 + baseline_quality * 0.2 + coherence * 0.1) * 20.0
+        signs = [
+            math.copysign(1, driver)
+            for driver in drivers
+            if abs(driver) > MIN_SIGNAL_THRESHOLD
+        ]
+        if not signs:
+            coherence = 0.75
+        elif all(s == signs[0] for s in signs):
+            coherence = 1.0
+        else:
+            coherence = 0.55
+
+        conf_raw = (
+            explained_signal * 0.40
+            + stability_score * 0.40
+            + baseline_quality * 0.10
+            + coherence * 0.10
+        ) * 20.0
         confidence = max(0.0, min(20.0, conf_raw))
 
-        # 5. rarity_percentile (AC4)
-        # Measure of "how far from the norm (1.0)" is the peak relief
-        # We use a non-linear mapping to simulate a percentile behavior
         peak_relief = max(abs(max_val - SCORE_CENTER), abs(min_val - SCORE_CENTER))
-        
-        # Sigmoid-like mapping to make it "distinguished from simple relative"
-        # 0.0 -> 0.0, 1.0 -> 10.0, 2.5 -> 18.0, 4.0 -> 20.0
-        rarity = 20.0 if peak_relief >= 3.0 else 20.0 * (1.0 - math.exp(-peak_relief / 1.1))
+        rarity = self._rarity_score(peak_relief, avg_dynamic)
         rarity = max(0.0, min(20.0, rarity))
 
         return V3DailyMetrics(
@@ -109,6 +122,72 @@ class V3ThemeAggregator:
             min_score=min_val,
             volatility=vol_val
         )
+
+    def _smooth_series(self, values: list[float]) -> list[float]:
+        if len(values) <= 2:
+            return list(values)
+
+        radius = max(1, SMOOTHING_WINDOW // 2)
+        smoothed: list[float] = []
+        for index in range(len(values)):
+            start = max(0, index - radius)
+            end = min(len(values), index + radius + 1)
+            smoothed.append(statistics.mean(values[start:end]))
+        return smoothed
+
+    def _explained_signal_share(
+        self,
+        *,
+        raw_dynamic_values: list[float],
+        smoothed_dynamic_values: list[float],
+        driver_energy: list[float],
+    ) -> float:
+        smoothed_energy = statistics.mean(abs(value) for value in smoothed_dynamic_values)
+        raw_energy = statistics.mean(abs(value) for value in raw_dynamic_values)
+        available_energy = statistics.mean(driver_energy)
+
+        if raw_energy <= MIN_SIGNAL_THRESHOLD and available_energy <= MIN_SIGNAL_THRESHOLD:
+            return 1.0
+        if available_energy <= MIN_SIGNAL_THRESHOLD:
+            return 0.0
+
+        structured_share = smoothed_energy / max(raw_energy, MIN_SIGNAL_THRESHOLD)
+        attributed_share = raw_energy / max(available_energy, MIN_SIGNAL_THRESHOLD)
+        return max(0.0, min(1.0, (structured_share * 0.7) + (attributed_share * 0.3)))
+
+    def _stability_score(
+        self,
+        raw_values: list[float],
+        smoothed_values: list[float],
+    ) -> float:
+        smoothed_volatility = statistics.stdev(smoothed_values) if len(smoothed_values) > 1 else 0.0
+        residual_noise = statistics.mean(
+            abs(raw_value - smooth_value)
+            for raw_value, smooth_value in zip(raw_values, smoothed_values, strict=False)
+        )
+        return 1.0 / (1.0 + smoothed_volatility + residual_noise)
+
+    def _baseline_quality(self, baselines: list[float]) -> float:
+        if not baselines:
+            return 0.0
+
+        present_samples = sum(1 for baseline in baselines if abs(baseline) > MIN_SIGNAL_THRESHOLD)
+        presence = present_samples / len(baselines)
+        consistency = 1.0 / (1.0 + (statistics.stdev(baselines) if len(baselines) > 1 else 0.0))
+        centeredness = max(
+            0.0,
+            1.0 - (abs(statistics.mean(baselines) - BASELINE_EXPECTED) / BASELINE_TOLERANCE),
+        )
+        return max(
+            0.0,
+            min(1.0, presence * ((centeredness * 0.7) + (consistency * 0.3))),
+        )
+
+    def _rarity_score(self, peak_relief: float, avg_dynamic: float) -> float:
+        rarity_driver = peak_relief + max(0.0, peak_relief - avg_dynamic) * 0.75
+        if rarity_driver >= RARITY_SATURATION_RELIEF:
+            return 20.0
+        return 20.0 * (1.0 - math.exp(-rarity_driver / 1.1))
 
 
 class TemporalAggregator:

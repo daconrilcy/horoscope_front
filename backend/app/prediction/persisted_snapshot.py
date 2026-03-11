@@ -22,6 +22,10 @@ class PersistedCategoryScore:
     is_provisional: bool
     summary: str | None
     contributors: list[dict[str, Any]] = field(default_factory=list)
+    score_20: float | None = None
+    intensity_20: float | None = None
+    confidence_20: float | None = None
+    rarity_percentile: float | None = None
 
     @property
     def category(self) -> SimpleNamespace:

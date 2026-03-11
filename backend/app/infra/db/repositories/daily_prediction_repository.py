@@ -240,6 +240,10 @@ class DailyPredictionRepository:
                 is_provisional=bool(s.is_provisional),
                 summary=s.summary,
                 contributors=self._load_json_list(s.contributors_json),
+                score_20=s.score_20,
+                intensity_20=s.intensity_20,
+                confidence_20=s.confidence_20,
+                rarity_percentile=s.rarity_percentile,
             )
             for s in run.category_scores
         ]

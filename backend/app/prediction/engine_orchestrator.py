@@ -574,6 +574,10 @@ class EngineOrchestrator:
             "normalized_score": metrics.avg_score,
             "power": metrics.intensity_20 / 20.0,
             "volatility": metrics.volatility,
+            "score_20": metrics.score_20,
+            "intensity_20": metrics.intensity_20,
+            "confidence_20": metrics.confidence_20,
+            "rarity_percentile": metrics.rarity_percentile,
             "sort_order": getattr(category, "sort_order", 0),
             "is_provisional": is_provisional,
         }

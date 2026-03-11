@@ -1318,3 +1318,20 @@ def test_run_v3_exposes_impulse_diagnostics_and_keeps_moon_ingress_out_of_a_laye
         == 2
     )
     assert bundle.v3_core.run_metadata["v3_impulse_signal"]["themes"]["work"]["top_contributors"]
+
+
+def test_run_v3_keeps_extended_metrics_in_legacy_category_scores(base_input):
+    orchestrator = EngineOrchestrator(prediction_context_loader=lambda *_: _build_loaded_context())
+
+    bundle = orchestrator.run(
+        base_input,
+        engine_mode=DailyEngineMode.V3,
+        include_editorial=False,
+    )
+
+    score_data = bundle.core.category_scores["work"]
+
+    assert score_data["note_20"] == round(score_data["score_20"])
+    assert "intensity_20" in score_data
+    assert "confidence_20" in score_data
+    assert "rarity_percentile" in score_data

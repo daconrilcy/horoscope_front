@@ -96,6 +96,38 @@ def test_category_policy(cat_map, sample_snapshot):
     assert categories[1]["code"] == "work"
 
 
+def test_category_policy_exposes_v3_metrics_when_present(cat_map, sample_snapshot):
+    enriched_snapshot = PersistedPredictionSnapshot(
+        **{
+            **sample_snapshot.__dict__,
+            "category_scores": [
+                PersistedCategoryScore(
+                    category_id=1,
+                    category_code="love",
+                    note_20=15,
+                    raw_score=0.8,
+                    power=0.7,
+                    volatility=0.2,
+                    rank=1,
+                    is_provisional=False,
+                    summary="Love is great",
+                    score_20=15.4,
+                    intensity_20=12.2,
+                    confidence_20=16.5,
+                    rarity_percentile=9.4,
+                )
+            ],
+        }
+    )
+
+    categories = PublicCategoryPolicy().build(enriched_snapshot, cat_map)
+
+    assert categories[0]["score_20"] == pytest.approx(15.4)
+    assert categories[0]["intensity_20"] == pytest.approx(12.2)
+    assert categories[0]["confidence_20"] == pytest.approx(16.5)
+    assert categories[0]["rarity_percentile"] == pytest.approx(9.4)
+
+
 def test_decision_window_policy_normalization(cat_map, sample_snapshot):
     policy = PublicDecisionWindowPolicy()
     category_notes = {"love": 15.0, "work": 12.0}

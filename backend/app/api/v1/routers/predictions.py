@@ -46,6 +46,10 @@ class DailyPredictionCategory(BaseModel):
     raw_score: float
     power: float
     volatility: float
+    score_20: float | None = None
+    intensity_20: float | None = None
+    confidence_20: float | None = None
+    rarity_percentile: float | None = None
     rank: int
     is_provisional: bool | None = None
     summary: str | None
@@ -132,6 +136,10 @@ class DailyPredictionDebugCategory(BaseModel):
     raw_score: float
     power: float
     volatility: float
+    score_20: float | None = None
+    intensity_20: float | None = None
+    confidence_20: float | None = None
+    rarity_percentile: float | None = None
     rank: int
     is_provisional: bool | None = None
     contributors: list[dict[str, Any]]
@@ -250,6 +258,12 @@ def debug_daily_prediction(
             raw_score=float(s.raw_score or 0),
             power=float(s.power or 0),
             volatility=float(s.volatility or 0),
+            score_20=float(s.score_20) if s.score_20 is not None else None,
+            intensity_20=float(s.intensity_20) if s.intensity_20 is not None else None,
+            confidence_20=float(s.confidence_20) if s.confidence_20 is not None else None,
+            rarity_percentile=(
+                float(s.rarity_percentile) if s.rarity_percentile is not None else None
+            ),
             rank=int(s.rank or 0),
             is_provisional=s.is_provisional,
             contributors=s.contributors,
