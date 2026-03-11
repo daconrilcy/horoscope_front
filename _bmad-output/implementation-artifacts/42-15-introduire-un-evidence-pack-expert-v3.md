@@ -1,6 +1,6 @@
 # Story 42.15: Introduire un evidence pack expert v3
 
-Status: ready-for-dev
+Status: completed
 
 ## Story
 
@@ -24,22 +24,22 @@ so that l'interprétation future et la projection publique consomment une struct
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Définir le schéma de l'evidence pack (AC: 1, 2, 3, 4)
-  - [ ] Ajouter `evidence_pack_version`
-  - [ ] Ajouter les types dédiés
-  - [ ] Définir le contenu minimal obligatoire
+- [x] Task 1: Définir le schéma de l'evidence pack (AC: 1, 2, 3, 4)
+  - [x] Ajouter `evidence_pack_version`
+  - [x] Ajouter les types dédiés
+  - [x] Définir le contenu minimal obligatoire
 
-- [ ] Task 2: Introduire un builder dédié (AC: 1, 3)
-  - [ ] Créer `daily_prediction_evidence_builder.py`
-  - [ ] Brancher la construction depuis les sorties v3
+- [x] Task 2: Introduire un builder dédié (AC: 1, 3)
+  - [x] Créer `daily_prediction_evidence_builder.py`
+  - [x] Brancher la construction depuis les sorties v3
 
-- [ ] Task 3: Préparer l'usage downstream (AC: 2, 4)
-  - [ ] Prévoir l'alimentation de `public_projection`
-  - [ ] Préparer un futur usage LLM sans le rendre obligatoire ici
+- [x] Task 3: Préparer l'usage downstream (AC: 2, 4)
+  - [x] Prévoir l'alimentation de `public_projection`
+  - [x] Préparer un futur usage LLM sans le rendre obligatoire ici
 
-- [ ] Task 4: Tests (AC: 5)
-  - [ ] Tester structure et contenu minimal
-  - [ ] Vérifier le caractère déterministe
+- [x] Task 4: Tests (AC: 5)
+  - [x] Tester structure et contenu minimal
+  - [x] Vérifier le caractère déterministe
 
 ## Dev Notes
 
@@ -65,16 +65,24 @@ so that l'interprétation future et la projection publique consomment une struct
 
 ### Agent Model Used
 
-GPT-5 Codex
+Gemini CLI Agent
 
 ### Debug Log References
 
-- Story générée en mode BMAD YOLO à partir de l'Epic 42.
+- Story complétée avec enrichissement du schéma V3EvidencePack (natal_structural, layer_diagnostics) et correction de l'injection de dépendances dans EngineOrchestrator.
 
 ### Completion Notes List
 
-- Story prête pour introduire la future source de vérité interprétable du moteur daily v3.
+- Story complétée. L'evidence pack est désormais une source de vérité complète incluant les diagnostics de couches (T, A, E) et la structure natale.
+- Dependency injection corrigée dans `EngineOrchestrator.with_context_loader`.
+- Schéma enrichi dans `schemas.py`.
+- Builder mis à jour pour mapper les nouvelles données.
+- Tests unitaires validant l'intégralité du pack.
 
 ### File List
 
+- `backend/app/prediction/daily_prediction_evidence_builder.py`
+- `backend/app/prediction/schemas.py`
+- `backend/app/prediction/engine_orchestrator.py`
+- `backend/app/tests/unit/test_evidence_pack_v3.py`
 - `_bmad-output/implementation-artifacts/42-15-introduire-un-evidence-pack-expert-v3.md`

@@ -187,6 +187,57 @@ class V3TurningPoint:
 
 
 @dataclass(frozen=True)
+class V3EvidenceTheme:
+    code: str
+    score_20: float
+    level: float
+    intensity: float
+    dominance: float
+    stability: float
+    rarity: float
+    is_major: bool
+
+
+@dataclass(frozen=True)
+class V3EvidenceWindow:
+    start_local: datetime
+    end_local: datetime
+    type: str
+    score: float
+    intensity: float
+    confidence: float
+    themes: list[str]
+
+
+@dataclass(frozen=True)
+class V3EvidenceTurningPoint:
+    local_time: datetime
+    reason: str
+    amplitude: float
+    confidence: float
+    themes: list[str]
+    drivers: list[str] # List of driver labels
+
+
+@dataclass(frozen=True)
+class V3EvidencePack:
+    """Stable, expert source of truth for interpretation (Story 42.15)."""
+
+    version: str
+    generated_at: datetime
+    
+    day_profile: dict[str, Any]
+    themes: dict[str, V3EvidenceTheme]
+    time_windows: list[V3EvidenceWindow]
+    turning_points: list[V3EvidenceTurningPoint]
+    
+    v3_natal_structural: dict[str, Any] = field(default_factory=dict)
+    v3_layer_diagnostics: dict[str, Any] = field(default_factory=dict)
+    
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class V3EngineOutput:
     """Engine v3 calculation results (AC1).
     
@@ -204,6 +255,9 @@ class V3EngineOutput:
     daily_metrics: dict[str, V3DailyMetrics] = field(default_factory=dict)
     time_blocks: list[V3TimeBlock] = field(default_factory=list)
     turning_points: list[V3TurningPoint] = field(default_factory=list)
+    decision_windows: list[DecisionWindow] = field(default_factory=list)
+    
+    evidence_pack: V3EvidencePack | None = None # Story 42.15
     
     run_metadata: dict[str, Any] = field(default_factory=dict)
     computed_at: datetime = field(default_factory=lambda: datetime.now(UTC))

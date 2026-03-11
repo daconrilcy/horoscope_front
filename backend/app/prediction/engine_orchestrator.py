@@ -17,6 +17,7 @@ from .calibrator import PercentileCalibrator
 from .category_codes import normalize_category_codes
 from .context_loader import LoadedPredictionContext
 from .contribution_calculator import ContributionCalculator
+from .daily_prediction_evidence_builder import DailyPredictionEvidenceBuilder
 from .decision_window_builder import DecisionWindowBuilder
 from .domain_router import DomainRouter
 from .editorial_builder import EditorialOutputBuilder
@@ -107,6 +108,7 @@ class EngineOrchestrator:
         impulse_signal_builder: ImpulseSignalBuilder | None = None,
         v3_theme_aggregator: V3ThemeAggregator | None = None,
         regime_segmenter: RegimeSegmenter | None = None,
+        v3_evidence_builder: DailyPredictionEvidenceBuilder | None = None,
     ) -> None:
         self._ruleset_context_loader = ruleset_context_loader
         self._prediction_context_loader = prediction_context_loader
@@ -138,6 +140,7 @@ class EngineOrchestrator:
         )
         self._v3_theme_aggregator = v3_theme_aggregator or V3ThemeAggregator()
         self._regime_segmenter = regime_segmenter or RegimeSegmenter()
+        self._v3_evidence_builder = v3_evidence_builder or DailyPredictionEvidenceBuilder()
 
     def with_context_loader(
         self,
@@ -164,6 +167,7 @@ class EngineOrchestrator:
             impulse_signal_builder=self._impulse_signal_builder,
             v3_theme_aggregator=self._v3_theme_aggregator,
             regime_segmenter=self._regime_segmenter,
+            v3_evidence_builder=self._v3_evidence_builder,
         )
 
     def run(
@@ -415,7 +419,7 @@ class EngineOrchestrator:
         )
 
         computed_at = self._local_date_start_utc(local_date, timezone)
-        return V3EngineOutput(
+        v3_output = V3EngineOutput(
             engine_version=v3_versions["engine_version"] or settings.v3_engine_version,
             snapshot_version=v3_versions["snapshot_version"] or settings.v3_snapshot_version,
             evidence_pack_version=(
@@ -448,6 +452,10 @@ class EngineOrchestrator:
             },
             computed_at=computed_at,
         )
+        
+        # AC1 Story 42.15: Build the stable evidence pack
+        evidence_pack = self._v3_evidence_builder.build(v3_output)
+        return dataclasses.replace(v3_output, evidence_pack=evidence_pack)
 
     def _build_v2_core_output(
         self,
