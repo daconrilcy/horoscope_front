@@ -3828,6 +3828,8 @@
           "communication"
         ],
         "end_local": "2026-03-29T18:30:00+02:00",
+        "intensity": null,
+        "orientation": null,
         "score": 12.0,
         "start_local": "2026-03-29T17:00:00+02:00",
         "window_type": "pivot"
@@ -3839,6 +3841,8 @@
           "energy"
         ],
         "end_local": "2026-03-29T21:15:00+02:00",
+        "intensity": null,
+        "orientation": null,
         "score": 17.0,
         "start_local": "2026-03-29T20:00:00+02:00",
         "window_type": "favorable"
@@ -3850,6 +3854,8 @@
           "communication"
         ],
         "end_local": "2026-03-29T21:30:00+02:00",
+        "intensity": null,
+        "orientation": null,
         "score": 12.0,
         "start_local": "2026-03-29T21:15:00+02:00",
         "window_type": "pivot"
@@ -3861,6 +3867,8 @@
           "communication"
         ],
         "end_local": "2026-03-29T21:45:00+02:00",
+        "intensity": null,
+        "orientation": null,
         "score": 12.0,
         "start_local": "2026-03-29T21:30:00+02:00",
         "window_type": "pivot"
@@ -3872,6 +3880,8 @@
           "communication"
         ],
         "end_local": "2026-03-29T23:15:00+02:00",
+        "intensity": null,
+        "orientation": null,
         "score": 12.0,
         "start_local": "2026-03-29T21:45:00+02:00",
         "window_type": "pivot"

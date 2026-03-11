@@ -173,6 +173,21 @@ class V3TimeBlock:
 
 
 @dataclass(frozen=True)
+class TimeBlock:
+    """Backward-compatible alias retained for older tests and fixtures."""
+
+    start_local: datetime
+    end_local: datetime
+    intensity: float = 0.0
+    dominant_themes: list[str] = field(default_factory=list)
+    sub_themes: list[str] = field(default_factory=list)
+
+    @property
+    def dominant_categories(self) -> list[str]:
+        return list(self.dominant_themes)
+
+
+@dataclass(frozen=True)
 class V3TurningPoint:
     """A turning point in V3 (Story 42.10)."""
 
@@ -247,9 +262,9 @@ class V3EngineOutput:
         evidence_pack_version: Version of the traceability format (AC4)
     """
 
-    engine_version: str
-    snapshot_version: str
-    evidence_pack_version: str
+    engine_version: str = "v3"
+    snapshot_version: str = "1.0"
+    evidence_pack_version: str = "1.0"
     
     theme_signals: dict[str, V3ThemeSignal] = field(default_factory=dict)
     daily_metrics: dict[str, V3DailyMetrics] = field(default_factory=dict)

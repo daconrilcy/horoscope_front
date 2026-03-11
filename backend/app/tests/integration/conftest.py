@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.rate_limit import reset_rate_limits
 from app.infra.db.base import Base
+from app.main import app
 
 # Keep reference-data seed integration flows deterministic without manual shell exports.
 os.environ.setdefault("REFERENCE_SEED_ADMIN_TOKEN", "test-seed-token")
@@ -26,6 +27,16 @@ def _reset_in_memory_rate_limits() -> None:
 def _reset_global_logging_disable() -> None:
     # Some unit suites disable logging globally; restore it for integration suites.
     logging.disable(logging.NOTSET)
+
+
+@pytest.fixture(autouse=True)
+def _reset_dependency_overrides() -> None:
+    # Integration tests share a single FastAPI app instance.
+    app.dependency_overrides.clear()
+    try:
+        yield
+    finally:
+        app.dependency_overrides.clear()
 
 
 @pytest.fixture

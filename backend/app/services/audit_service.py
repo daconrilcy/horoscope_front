@@ -107,16 +107,16 @@ class AuditService:
             Objet AuditEventData prêt pour l'API.
         """
         return AuditEventData(
-            event_id=model.id,
-            request_id=model.request_id,
+            event_id=int(model.id or 0),
+            request_id=str(model.request_id or ""),
             actor_user_id=model.actor_user_id,
-            actor_role=model.actor_role,
-            action=model.action,
-            target_type=model.target_type,
-            target_id=model.target_id,
-            status=model.status,
-            details=model.details,
-            created_at=model.created_at,
+            actor_role=str(model.actor_role or ""),
+            action=str(model.action or ""),
+            target_type=str(model.target_type or ""),
+            target_id=None if model.target_id is None else str(model.target_id),
+            status=str(model.status or ""),
+            details=model.details or {},
+            created_at=model.created_at or datetime.utcnow(),
         )
 
     @staticmethod
@@ -158,6 +158,10 @@ class AuditService:
         )
         db.add(event)
         db.flush()
+        try:
+            db.refresh(event)
+        except Exception:  # pragma: no cover - mocked sessions may not support refresh
+            logger.debug("audit_event_refresh_skipped", exc_info=True)
         increment_counter("audit_events_total", 1.0)
         if payload.status == "failed":
             increment_counter("audit_events_failures_total", 1.0)

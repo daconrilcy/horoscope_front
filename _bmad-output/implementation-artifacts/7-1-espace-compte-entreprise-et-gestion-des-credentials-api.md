@@ -158,6 +158,7 @@ GPT-5 Codex
 - Ajout du panneau frontend entreprise pour gestion de cle API avec etats `loading/error/empty`.
 - Couverture tests backend/frontend ajoutee et suite de regression complete validee.
 - Corrections post-review appliquees: migration Alembic ajoutee, contraintes DB de statut et unicite credential actif, secret de hash dedie (`API_CREDENTIALS_SECRET_KEY`), test `audit_unavailable` ajoute, et exposition UI de la cle reduite (masquage + expiration ecran).
+- Passe de stabilisation 2026-03-11: les réponses RBAC et rate-limit des endpoints credentials sont durcies contre les rôles mockés non sérialisables et les fuites de `dependency_overrides` entre tests.
 
 ### File List
 
@@ -166,6 +167,7 @@ GPT-5 Codex
 - `backend/app/main.py`
 - `backend/app/api/v1/routers/__init__.py`
 - `backend/app/api/v1/routers/enterprise_credentials.py`
+- `backend/app/services/audit_service.py`
 - `backend/app/infra/db/models/__init__.py`
 - `backend/app/infra/db/models/enterprise_account.py`
 - `backend/app/infra/db/models/enterprise_api_credential.py`

@@ -184,3 +184,68 @@ def test_assemble_uses_persisted_evidence_pack_snapshot():
     assert result["summary"]["overall_summary"] == "Persisted evidence summary"
     assert result["decision_windows"][0]["window_type"] == "favorable"
     assert result["categories"][0]["code"] == "work"
+
+
+def test_assemble_rebuilds_v3_summary_from_snapshot_local_date_when_evidence_has_no_summary():
+    evidence_pack = V3EvidencePack(
+        version="3.1.0",
+        generated_at=datetime(2026, 3, 10, 23, 0, tzinfo=UTC),
+        day_profile={
+            "tone": "positive",
+            "local_date": "2026-03-11",
+        },
+        themes={
+            "health": V3EvidenceTheme(
+                code="health",
+                score_20=16.0,
+                level=0.8,
+                intensity=14.0,
+                dominance=6.0,
+                stability=15.0,
+                rarity=8.0,
+                is_major=True,
+            )
+        },
+        time_windows=[],
+        turning_points=[],
+    )
+
+    snapshot = PersistedPredictionSnapshot(
+        run_id=1,
+        user_id=42,
+        local_date=date(2026, 3, 11),
+        timezone="Europe/Paris",
+        computed_at=datetime(2026, 3, 11, 7, 0, tzinfo=UTC),
+        input_hash="hash",
+        reference_version_id=1,
+        ruleset_id=1,
+        house_system_effective="placidus",
+        is_provisional_calibration=False,
+        calibration_label="final",
+        overall_summary="legacy summary with stale date",
+        overall_tone="neutral",
+        v3_metrics={"evidence_pack": _json_ready(asdict(evidence_pack))},
+        category_scores=[
+            PersistedCategoryScore(
+                category_id=1,
+                category_code="health",
+                note_20=16,
+                raw_score=0.8,
+                power=0.7,
+                volatility=0.25,
+                rank=1,
+                is_provisional=False,
+                summary=None,
+            )
+        ],
+    )
+
+    result = PublicPredictionAssembler().assemble(
+        snapshot,
+        {1: "health"},
+        reference_version="2.0.0",
+        ruleset_version="2.0.0",
+    )
+
+    assert "2026-03-11" in result["summary"]["overall_summary"]
+    assert "Santé & Hygiène de vie" in result["summary"]["overall_summary"]

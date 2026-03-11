@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from numbers import Real
 from typing import TYPE_CHECKING, Any
 
 from app.prediction.decision_window_builder import DecisionWindowBuilder
@@ -225,43 +226,62 @@ class PublicMicroTrendPolicy:
     def _meets_signal_threshold(self, relative_score: Any) -> bool:
         # V3 Logic: Use absolute day baseline (z_abs or pct_abs)
         z_abs = getattr(relative_score, "z_abs", None)
-        if z_abs is not None:
+        if isinstance(z_abs, Real):
             return abs(z_abs) >= 1.5
 
         pct_abs = getattr(relative_score, "pct_abs", None)
-        if pct_abs is not None:
+        if isinstance(pct_abs, Real):
             return pct_abs >= 0.8 or pct_abs <= 0.2
 
         # Legacy Fallback
-        if relative_score.relative_z_score is not None:
-            return abs(relative_score.relative_z_score) >= 1.0
-        if relative_score.relative_percentile is None:
+        rel_z = getattr(relative_score, "relative_z_score", None)
+        if isinstance(rel_z, Real) and abs(rel_z) >= 1.0:
+            return True
+
+        rel_pct = getattr(relative_score, "relative_percentile", None)
+        if not isinstance(rel_pct, Real):
             return False
-        return (
-            relative_score.relative_percentile >= 0.75 or relative_score.relative_percentile <= 0.25
-        )
+        return rel_pct >= 0.75 or rel_pct <= 0.25
 
     def _signal_strength(self, relative_score: Any) -> float:
         z_abs = getattr(relative_score, "z_abs", None)
-        if z_abs is not None:
+        if isinstance(z_abs, Real):
             return abs(z_abs)
 
-        if relative_score.relative_z_score is not None:
-            return abs(relative_score.relative_z_score)
+        rel_z = getattr(relative_score, "relative_z_score", None)
+        if isinstance(rel_z, Real):
+            return max(abs(rel_z), self._percentile_strength(relative_score))
 
-        pct_abs = getattr(relative_score, "pct_abs", 0.5)
-        return abs(pct_abs - 0.5) * 2
+        pct_abs = getattr(relative_score, "pct_abs", None)
+        if isinstance(pct_abs, Real):
+            return abs(pct_abs - 0.5) * 2
+
+        return self._percentile_strength(relative_score)
 
     def _signal_polarity(self, relative_score: Any) -> float:
         z_abs = getattr(relative_score, "z_abs", None)
-        if z_abs is not None:
+        if isinstance(z_abs, Real):
             return z_abs
 
-        if relative_score.relative_z_score is not None:
-            return relative_score.relative_z_score
+        rel_z = getattr(relative_score, "relative_z_score", None)
+        if isinstance(rel_z, Real) and rel_z != 0:
+            return rel_z
 
-        pct_abs = getattr(relative_score, "pct_abs", 0.5)
-        return pct_abs - 0.5
+        pct_abs = getattr(relative_score, "pct_abs", None)
+        if isinstance(pct_abs, Real):
+            return pct_abs - 0.5
+
+        rel_pct = getattr(relative_score, "relative_percentile", None)
+        if isinstance(rel_pct, Real):
+            return rel_pct - 0.5
+
+        return 0.0
+
+    def _percentile_strength(self, relative_score: Any) -> float:
+        rel_pct = getattr(relative_score, "relative_percentile", None)
+        if not isinstance(rel_pct, Real):
+            return 0.0
+        return abs(rel_pct - 0.5) * 2
 
 
 class PublicCategoryPolicy:
@@ -663,6 +683,13 @@ class PublicTimelinePolicy:
 
 
 class PublicSummaryPolicy:
+    _SUMMARY_TONE_LABELS = {
+        "positive": "très porteuse",
+        "mixed": "contrastée",
+        "neutral": "équilibrée",
+        "negative": "exigeante",
+    }
+
     def build(
         self,
         snapshot: PersistedPredictionSnapshot,
@@ -676,23 +703,18 @@ class PublicSummaryPolicy:
         evidence: V3EvidencePack | None = None,
     ) -> dict[str, Any]:
         editorial = _resolve_editorial_output(engine_output)
-
-        # Priority 1: Evidence Pack summaries if they exist (future prompt)
-        if evidence and evidence.day_profile.get("overall_summary"):
-            return {
-                "overall_tone": evidence.day_profile.get("overall_tone", "neutral"),
-                "overall_summary": evidence.day_profile["overall_summary"],
-                "best_window": self._extract_best_window(decision_windows, editorial),
-                "flat_day": is_flat_day,
-            }
-
-        # Legacy logic
-        scores = sorted(snapshot.category_scores, key=lambda s: s.rank or 99)
-        top_categories = [cat_id_to_code.get(s.category_id, "unknown") for s in scores[:3]]
-        bottom_scores = sorted(snapshot.category_scores, key=lambda s: (s.note_20, s.rank or 99))
-        bottom_categories = [
-            cat_id_to_code.get(s.category_id, "unknown") for s in bottom_scores[:2]
-        ]
+        top_categories, bottom_categories = self._resolve_ranked_categories(
+            snapshot,
+            cat_id_to_code,
+            evidence=evidence,
+        )
+        overall_tone = self._resolve_overall_tone(snapshot, evidence)
+        overall_summary = self._resolve_overall_summary(
+            snapshot,
+            top_categories,
+            overall_tone,
+            evidence=evidence,
+        )
 
         tps = sorted(turning_points, key=lambda tp: float(tp["severity"] or 0), reverse=True)
         main_tp = (
@@ -709,6 +731,7 @@ class PublicSummaryPolicy:
         low_var = False
         if snapshot.is_provisional_calibration:
             cal_note = "Les scores sont calculés sans données historiques."
+            scores = sorted(snapshot.category_scores, key=lambda s: s.rank or 99)
             top3_notes = [s.note_20 for s in scores[:3]]
             if top3_notes and (max(top3_notes) - min(top3_notes) < 3):
                 low_var = True
@@ -723,8 +746,8 @@ class PublicSummaryPolicy:
         )
 
         return {
-            "overall_tone": snapshot.overall_tone,
-            "overall_summary": snapshot.overall_summary,
+            "overall_tone": overall_tone,
+            "overall_summary": overall_summary,
             "calibration_note": cal_note,
             "top_categories": top_categories,
             "bottom_categories": bottom_categories,
@@ -735,6 +758,84 @@ class PublicSummaryPolicy:
             "relative_top_categories": relative_top,
             "relative_summary": rel_summary,
         }
+
+    def _resolve_ranked_categories(
+        self,
+        snapshot: PersistedPredictionSnapshot,
+        cat_id_to_code: dict[int, str],
+        *,
+        evidence: V3EvidencePack | None,
+    ) -> tuple[list[str], list[str]]:
+        if evidence and evidence.themes:
+            sorted_themes = sorted(
+                evidence.themes.values(),
+                key=lambda theme: theme.score_20,
+                reverse=True,
+            )
+            top_categories = [theme.code for theme in sorted_themes[:3]]
+            bottom_categories = [
+                theme.code
+                for theme in sorted(sorted_themes, key=lambda item: item.score_20)[:2]
+            ]
+            return top_categories, bottom_categories
+
+        scores = sorted(snapshot.category_scores, key=lambda s: s.rank or 99)
+        top_categories = [cat_id_to_code.get(s.category_id, "unknown") for s in scores[:3]]
+        bottom_scores = sorted(snapshot.category_scores, key=lambda s: (s.note_20, s.rank or 99))
+        bottom_categories = [
+            cat_id_to_code.get(s.category_id, "unknown") for s in bottom_scores[:2]
+        ]
+        return top_categories, bottom_categories
+
+    def _resolve_overall_tone(
+        self,
+        snapshot: PersistedPredictionSnapshot,
+        evidence: V3EvidencePack | None,
+    ) -> str | None:
+        if evidence:
+            tone = evidence.day_profile.get("overall_tone") or evidence.day_profile.get("tone")
+            if isinstance(tone, str) and tone:
+                return tone
+        return snapshot.overall_tone
+
+    def _resolve_overall_summary(
+        self,
+        snapshot: PersistedPredictionSnapshot,
+        top_categories: list[str],
+        overall_tone: str | None,
+        *,
+        evidence: V3EvidencePack | None,
+    ) -> str | None:
+        if evidence:
+            explicit_summary = evidence.day_profile.get("overall_summary")
+            if isinstance(explicit_summary, str) and explicit_summary.strip():
+                return explicit_summary
+            return self._build_v3_overall_summary(
+                local_date=snapshot.local_date,
+                overall_tone=overall_tone or "neutral",
+                top_categories=top_categories,
+            )
+        return snapshot.overall_summary
+
+    def _build_v3_overall_summary(
+        self,
+        *,
+        local_date,
+        overall_tone: str,
+        top_categories: list[str],
+    ) -> str:
+        tone_label = self._SUMMARY_TONE_LABELS.get(
+            overall_tone,
+            self._SUMMARY_TONE_LABELS["neutral"],
+        )
+        labels = EditorialTemplateEngine.CATEGORY_LABELS["fr"]
+        top_labels = ", ".join(labels.get(code, code) for code in top_categories[:3])
+        if top_labels:
+            return (
+                f"Votre journée du {local_date.isoformat()} s'annonce {tone_label}.\n"
+                f"Vos points forts : {top_labels}."
+            )
+        return f"Votre journée du {local_date.isoformat()} s'annonce {tone_label}."
 
     def _extract_best_window(self, decision_windows, editorial) -> dict[str, Any] | None:
         if not decision_windows:
@@ -753,7 +854,7 @@ class PublicSummaryPolicy:
         candidates = [w for w in decision_windows if w["window_type"] in ("favorable", "pivot")]
         if candidates:
             cand = max(candidates, key=lambda w: (w["score"], w.get("confidence", 0.5)))
-            if cand.get("dominant_categories") and cand["score"] >= MAJOR_ASPECT_NOTE_THRESHOLD:
+            if cand.get("dominant_categories"):
                 return {
                     "start_local": cand["start_local"],
                     "end_local": cand["end_local"],

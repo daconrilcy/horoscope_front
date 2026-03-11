@@ -662,7 +662,8 @@ def test_run_v3_only_skips_v2_pipeline(base_input):
 
     turning_point_detector.detect.assert_not_called()
     block_generator.generate.assert_not_called()
-    decision_window_builder.build.assert_called_once()
+    decision_window_builder.build.assert_not_called()
+    assert decision_window_builder.build_v3.call_count >= 1
 
 
 def test_run_v3_is_deterministic(orchestrator, base_input):

@@ -1,9 +1,9 @@
 from datetime import date, datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from sqlalchemy.orm import Session
 
-from app.prediction.persisted_baseline import PersistedUserBaseline
+from app.prediction.persisted_baseline import PersistedUserBaseline, V3Granularity
 from app.prediction.persisted_snapshot import (
     PersistedCategoryScore,
     PersistedPredictionSnapshot,
@@ -97,12 +97,33 @@ def test_relative_scoring_service_uses_latest_compatible_baseline():
 
         enriched = service.enrich_snapshot(db, snapshot)
 
-        repo_instance.get_latest_baselines_for_user.assert_called_once_with(
-            user_id=42,
-            reference_version_id=1,
-            ruleset_id=1,
-            house_system_effective="placidus",
-            window_days=365,
-            as_of_date=date(2026, 3, 10),
-        )
+        assert repo_instance.get_latest_baselines_for_user.call_args_list == [
+            call(
+                user_id=42,
+                reference_version_id=1,
+                ruleset_id=1,
+                house_system_effective="placidus",
+                window_days=365,
+                as_of_date=date(2026, 3, 10),
+                granularity_type=V3Granularity.DAY,
+            ),
+            call(
+                user_id=42,
+                reference_version_id=1,
+                ruleset_id=1,
+                house_system_effective="placidus",
+                window_days=365,
+                as_of_date=date(2026, 3, 10),
+                granularity_type=V3Granularity.SEASON,
+            ),
+            call(
+                user_id=42,
+                reference_version_id=1,
+                ruleset_id=1,
+                house_system_effective="placidus",
+                window_days=365,
+                as_of_date=date(2026, 3, 10),
+                granularity_type=V3Granularity.SLOT,
+            ),
+        ]
         assert enriched.relative_scores["love"].fallback_reason == "baseline_missing"

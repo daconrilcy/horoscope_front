@@ -568,7 +568,12 @@ describe("TodayPage", () => {
 
     expect(screen.getByText(/Les scores sont calculés sans données historiques/i)).toBeInTheDocument();
     expect(screen.queryByText("delta_note")).not.toBeInTheDocument();
-    expect(screen.getAllByText("Pas d'aspect majeur").length).toBeGreaterThan(0);
+    const midnightSlot = screen
+      .getAllByTestId("agenda-slot")
+      .find((element) => element.getAttribute("data-slot-label") === "00:00");
+    expect(midnightSlot).toBeDefined();
+    expect(within(midnightSlot!).getByText("Carrière")).toBeInTheDocument();
+    expect(within(midnightSlot!).getByText("Communication")).toBeInTheDocument();
     expect(screen.queryByText("Énergie & Vitalité : Votre score est de 10/20 (climat neutre).")).not.toBeInTheDocument();
   });
 

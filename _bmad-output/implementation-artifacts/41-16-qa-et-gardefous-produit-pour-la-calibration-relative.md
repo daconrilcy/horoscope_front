@@ -142,13 +142,21 @@ GPT-5 Codex
 - Les micro-tendances sont limitées à 3 et n'apparaissent que si les conditions produit sont réunies.
 - Le budget de bruit public reste sous contrôle après filtrage des pivots reconstruits et consolidation de la timeline.
 - La matrice de validation 41.12–41.16 repasse verte après corrections.
+- Passe de stabilisation 2026-03-11: isolation automatique des `dependency_overrides` FastAPI entre suites unitaires et d’intégration pour supprimer les fuites de mocks inter-tests.
+- Passe de stabilisation 2026-03-11: durcissement de `AuditService` et des suites daily/geocoding/guidance pour éviter les faux négatifs liés à des objets ORM ou rôles mockés non sérialisables.
 
 ### File List
 
 - `backend/app/prediction/public_projection.py`
+- `backend/app/services/audit_service.py`
 - `backend/app/tests/fixtures/intraday_qa_fixtures.py`
 - `backend/app/tests/helpers/intraday_qa_report.py`
+- `backend/app/tests/integration/conftest.py`
 - `backend/app/tests/integration/test_daily_prediction_qa.py`
+- `backend/app/tests/integration/test_geocoding_api.py`
+- `backend/app/tests/integration/test_enterprise_credentials_api.py`
+- `backend/app/tests/integration/test_natal_calculate_api.py`
+- `backend/app/tests/unit/conftest.py`
 - `backend/app/tests/unit/test_public_projection.py`
 - `backend/app/api/v1/routers/predictions.py`
 - `_bmad-output/implementation-artifacts/41-16-qa-et-gardefous-produit-pour-la-calibration-relative.md`

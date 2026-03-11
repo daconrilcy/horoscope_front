@@ -22,6 +22,7 @@ interface TimeRange {
   end_local: string;
   dominant_categories: string[];
   weight: number;
+  mark_boundaries?: boolean;
 }
 
 interface ParsedDateTime {
@@ -84,6 +85,7 @@ function buildMajorAspectRanges(
         (code) => (categoryNoteByCode.get(code) ?? 10) > majorThreshold,
       ),
       weight: window.window_type === "favorable" ? 2 : 1,
+      mark_boundaries: true,
     }))
     .filter((window) => window.dominant_categories.length > 0);
 
@@ -91,7 +93,7 @@ function buildMajorAspectRanges(
     return rangesFromWindows;
   }
 
-  return timeline
+  const expressiveTimelineRanges = timeline
     .filter((block) => !["neutral", "steady"].includes(block.tone_code))
     .map((block) => ({
       start_local: block.start_local,
@@ -100,6 +102,23 @@ function buildMajorAspectRanges(
         (code) => (categoryNoteByCode.get(code) ?? 10) > majorThreshold,
       ),
       weight: 1,
+      mark_boundaries: true,
+    }))
+    .filter((block) => block.dominant_categories.length > 0);
+
+  if (expressiveTimelineRanges.length > 0) {
+    return expressiveTimelineRanges;
+  }
+
+  return timeline
+    .map((block) => ({
+      start_local: block.start_local,
+      end_local: block.end_local,
+      dominant_categories: block.dominant_categories.filter(
+        (code) => (categoryNoteByCode.get(code) ?? 10) > majorThreshold,
+      ),
+      weight: 1,
+      mark_boundaries: false,
     }))
     .filter((block) => block.dominant_categories.length > 0);
 }
@@ -136,6 +155,9 @@ function hasTurningPointInSlot(
   dateContext: string,
 ): boolean {
   return ranges.some((range) => {
+    if (range.mark_boundaries === false) {
+      return false;
+    }
     const start = parseLocalDateTimeParts(range.start_local);
     const end = parseLocalDateTimeParts(range.end_local);
     if (!start || !end) {
@@ -201,7 +223,9 @@ export function buildDailyKeyMoments(
           .map((point) => point.minutes);
       }),
     ),
-  ).sort((left, right) => left - right);
+  )
+    .filter((minute) => minute > 0 && minute < 24 * 60)
+    .sort((left, right) => left - right);
 
   const moments: DailyKeyMoment[] = [];
   for (const minute of boundaryMinutes) {

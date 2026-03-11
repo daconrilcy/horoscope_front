@@ -77,10 +77,15 @@ GPT-5 Codex
 - Le mode `dual` est couvert par les suites QA et les fixtures de comparaison v2/v3.
 - Les scénarios plats, actifs, ambigus et intenses sont verrouillés dans les tests de QA et les gates de migration.
 - La migration progressive reste objectivable via les artefacts de test et le rapport de gates.
+- Passe de stabilisation 2026-03-11: les snapshots complets de non-régression ont été régénérés après durcissement de l’evidence pack, de la projection publique et du chemin editorial v3.
+- Passe de stabilisation 2026-03-11: l’orchestrateur v3 reste compatible avec les stubs éditoriaux legacy et l’evidence pack est rendu déterministe pour la comparaison inter-runs.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/42-17-verrouiller-qa-backtesting-et-migration-progressive-du-moteur-v3.md`
 - `_bmad-output/test-artifacts/v3-migration-gates.md`
+- `backend/app/prediction/engine_orchestrator.py`
+- `backend/app/tests/regression/fixtures/snapshot_full_day_A.json`
+- `backend/app/tests/regression/fixtures/snapshot_full_day_B.json`
 - `backend/app/tests/integration/test_daily_prediction_qa.py`
 - `backend/app/tests/helpers/intraday_qa_report.py`

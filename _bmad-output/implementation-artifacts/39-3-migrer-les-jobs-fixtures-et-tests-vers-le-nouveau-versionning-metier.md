@@ -23,6 +23,7 @@ So that la validation automatique reflète le contrat métier cible sans dépend
 - Isolation du fixture de `test_daily_prediction_api.py` pour éviter les fuites d'overrides entre tests et usage d'emails uniques pour supprimer les collisions inter-tests.
 - Correction de `test_daily_prediction_qa.py` pour purger complètement les tables de référence/ruleset avant reseed, utiliser les constantes actives plutôt que des strings dispersées pour la paire runtime, et couvrir explicitement le ruleset legacy `1.0.0`.
 - Vérification que les jobs `generate_qa_cases.py` et `natal_profiles.py` utilisent déjà les réglages centralisés.
+- Passe de stabilisation locale 2026-03-11: la base SQLite de dev a été réalignée pour rattacher les rulesets `1.0.0` et `2.0.0` à la référence active réellement seedée (`reference_version_id=1`), supprimant l’erreur runtime `ruleset_inconsistent` sur `/v1/predictions/daily`.
 
 ### File List
 

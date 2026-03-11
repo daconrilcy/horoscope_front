@@ -14,8 +14,7 @@ client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine, checkfirst=True)
     with SessionLocal() as db:
         db.execute(delete(AuditEventModel))
         db.execute(delete(EnterpriseApiCredentialModel))

@@ -211,6 +211,8 @@ GPT-5 Codex
 - Le backend `/v1/predictions/daily` publie maintenant des `decision_windows`, `turning_points` et `timeline` cohérents avec la notion d’aspects majeurs, avec score de bascule fixé à `12/20` pour les fenêtres `pivot`.
 - Le routeur backend a été durci pour gérer correctement les timestamps intraday mixtes avec et sans offset, évitant le crash runtime observé sur le chargement du daily.
 - Vérifications exécutées sur le flux livré: lint frontend, build frontend, tests `TodayPage`, tests unitaires backend `DecisionWindowBuilder`, et tests d’intégration backend `daily_prediction_api`.
+- Ajustement post-livraison 2026-03-11: l’agenda frontend réutilise désormais les blocs `timeline` neutres du v3 quand aucun créneau décisionnel exploitable n’est disponible, ce qui évite une journée entièrement remplie par `Pas d'aspect majeur` sur les `flat_day`.
+- Ajustement post-livraison 2026-03-11: les `Moments clés du jour` ne fabriquent plus de faux pivots synthétiques à `00:00`, tout en conservant les vraies transitions tardives de régime comme `22:45`.
 
 ### File List
 
@@ -224,6 +226,7 @@ GPT-5 Codex
 - `frontend/src/pages/TodayPage.tsx`
 - `frontend/src/tests/TodayPage.test.tsx`
 - `frontend/src/utils/dailyAstrology.ts`
+- `frontend/src/utils/dailyAstrology.test.ts`
 - `frontend/src/utils/predictionI18n.ts`
 - `_bmad-output/implementation-artifacts/41-6-refactor-dashboard-moments-cles-et-agenda-du-jour.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`

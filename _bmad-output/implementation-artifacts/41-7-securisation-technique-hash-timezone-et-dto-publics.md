@@ -1,6 +1,6 @@
 # Story 41.7: Sécurisation technique hash, timezone et DTO publics
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -40,28 +40,28 @@ so that les calculs intraday restent temporellement exacts, les runs soient déd
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Corriger l’invariant timezone du raffinement fin (AC: 1)
-  - [ ] Analyser `TemporalSampler.refine_around()` et le point d’injection dans `EngineOrchestrator`
-  - [ ] Choisir une stratégie unique: propager `tz_name` ou supprimer la dépendance métier au `local_time` dans ce chemin
-  - [ ] Ajouter des tests sur un cas utilisateur avec timezone non UTC
-  - [ ] Ajouter au moins un cas couvrant un changement d’heure
+- [x] Task 1: Corriger l’invariant timezone du raffinement fin (AC: 1)
+  - [x] Analyser `TemporalSampler.refine_around()` et le point d’injection dans `EngineOrchestrator`
+  - [x] Choisir une stratégie unique: propager `tz_name` ou supprimer la dépendance métier au `local_time` dans ce chemin
+  - [x] Ajouter des tests sur un cas utilisateur avec timezone non UTC
+  - [x] Ajouter au moins un cas couvrant un changement d’heure
 
-- [ ] Task 2: Extraire un calcul de hash partagé (AC: 2, 4)
-  - [ ] Créer `backend/app/prediction/input_hash.py`
-  - [ ] Déplacer la logique canonique de hash dans une seule fonction publique
-  - [ ] Remplacer `_compute_input_hash()` et `_compute_hash()` par l’utilitaire partagé
-  - [ ] Couvrir le cas de sérialisation stable des dates/enums/objets d’entrée
+- [x] Task 2: Extraire un calcul de hash partagé (AC: 2, 4)
+  - [x] Créer `backend/app/prediction/input_hash.py`
+  - [x] Déplacer la logique canonique de hash dans une seule fonction publique
+  - [x] Remplacer `_compute_input_hash()` et `_compute_hash()` par l’utilitaire partagé
+  - [x] Couvrir le cas de sérialisation stable des dates/enums/objets d’entrée
 
-- [ ] Task 3: Normaliser `severity` en float bout en bout (AC: 3, 4)
-  - [ ] Identifier les schémas domaine / debug / public concernés
-  - [ ] Supprimer les conversions en chaîne encore présentes dans la projection publique
-  - [ ] Vérifier la compatibilité avec les consommateurs frontend existants
+- [x] Task 3: Normaliser `severity` en float bout en bout (AC: 3, 4)
+  - [x] Identifier les schémas domaine / debug / public concernés
+  - [x] Supprimer les conversions en chaîne encore présentes dans la projection publique
+  - [x] Vérifier la compatibilité avec les consommateurs frontend existants
 
-- [ ] Task 4: Vérifier la non-régression du pipeline daily (AC: 4, 5)
-  - [ ] Mettre à jour les tests backend pertinents
-  - [ ] Vérifier la compatibilité avec des runs déjà persistés et la réutilisation associée
-  - [ ] Exécuter lint et tests backend ciblés
-  - [ ] Vérifier qu’un appel `/v1/predictions/daily` reste sérialisable sans erreur
+- [x] Task 4: Vérifier la non-régression du pipeline daily (AC: 4, 5)
+  - [x] Mettre à jour les tests backend pertinents
+  - [x] Vérifier la compatibilité avec des runs déjà persistés et la réutilisation associée
+  - [x] Exécuter lint et tests backend ciblés
+  - [x] Vérifier qu’un appel `/v1/predictions/daily` reste sérialisable sans erreur
 
 ## Dev Notes
 
@@ -149,8 +149,18 @@ GPT-5 Codex
 
 ### Completion Notes List
 
-- Story préparée pour sécuriser les invariants techniques avant le découpage structurel du service daily prediction.
+- Le pipeline daily utilise maintenant un hash d’entrée partagé et versionné, commun au service applicatif et à l’orchestrateur.
+- La résolution de timezone a été durcie pour ignorer les valeurs non textuelles ou invalides avant validation `ZoneInfo`, ce qui élimine les crashes runtime et les fuites de `MagicMock` observées dans les suites QA.
+- La projection publique normalise désormais `severity` et les payloads turning points sans divergence de type entre domaine, snapshot et API publique.
+- Des vérifications ciblées ont été rejouées sur le pipeline `/v1/predictions/daily`, la réutilisation de runs et les suites daily prediction associées.
 
 ### File List
 
+- `backend/app/prediction/input_hash.py`
+- `backend/app/prediction/schemas.py`
+- `backend/app/services/prediction_request_resolver.py`
+- `backend/app/services/daily_prediction_service.py`
+- `backend/app/prediction/engine_orchestrator.py`
+- `backend/app/tests/unit/test_engine_orchestrator.py`
+- `backend/app/tests/integration/test_daily_prediction_api.py`
 - `_bmad-output/implementation-artifacts/41-7-securisation-technique-hash-timezone-et-dto-publics.md`

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime
+from datetime import UTC
 from typing import TYPE_CHECKING, Any
 
 from .schemas import (
@@ -76,7 +76,7 @@ class DailyPredictionEvidenceBuilder:
 
         return V3EvidencePack(
             version=v3_output.evidence_pack_version,
-            generated_at=datetime.now(UTC),
+            generated_at=v3_output.computed_at.astimezone(UTC),
             day_profile=day_profile,
             themes=themes,
             time_windows=time_windows,
@@ -94,13 +94,19 @@ class DailyPredictionEvidenceBuilder:
         """Synthesizes global day characteristics."""
         all_metrics = list(v3_output.daily_metrics.values())
         if not all_metrics:
-            return {"tone": "unknown", "intensity": 0.0}
+            return {
+                "tone": "unknown",
+                "intensity": 0.0,
+                "local_date": self._resolve_local_date(v3_output),
+            }
 
         avg_score = sum(m.score_20 for m in all_metrics) / len(all_metrics)
         avg_intensity = sum(m.intensity_day for m in all_metrics) / len(all_metrics)
         avg_stability = sum(m.stability_day for m in all_metrics) / len(all_metrics)
 
         return {
+            "local_date": self._resolve_local_date(v3_output),
+            "tone": self._derive_tone(avg_score),
             "avg_score": round(avg_score, 2),
             "avg_intensity": round(avg_intensity, 2),
             "avg_stability": round(avg_stability, 2),
@@ -109,6 +115,26 @@ class DailyPredictionEvidenceBuilder:
             "block_count": len(v3_output.time_blocks),
             "pivot_count": len(v3_output.turning_points),
         }
+
+    def _resolve_local_date(self, v3_output: V3EngineOutput) -> str | None:
+        if v3_output.time_blocks:
+            return v3_output.time_blocks[0].start_local.date().isoformat()
+        if v3_output.decision_windows:
+            return v3_output.decision_windows[0].start_local.date().isoformat()
+        if v3_output.turning_points:
+            return v3_output.turning_points[0].local_time.date().isoformat()
+        for theme_signal in v3_output.theme_signals.values():
+            if theme_signal.timeline:
+                first_local = min(theme_signal.timeline)
+                return first_local.date().isoformat()
+        return None
+
+    def _derive_tone(self, avg_score: float) -> str:
+        if avg_score >= 13.0:
+            return "positive"
+        if avg_score <= 7.0:
+            return "negative"
+        return "neutral"
 
     def _format_driver(self, event: Any) -> str:
         """Deterministic string representation of an astrological driver."""

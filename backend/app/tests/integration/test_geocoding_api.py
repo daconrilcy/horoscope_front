@@ -32,7 +32,7 @@ client = TestClient(app)
 
 def _setup_db() -> None:
     """Crée toutes les tables (dont geocoding_query_cache) pour les tests."""
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine, checkfirst=True)
 
 
 def _clear_geocoding_cache() -> None:

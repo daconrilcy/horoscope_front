@@ -4024,6 +4024,8 @@
           "communication"
         ],
         "end_local": "2026-03-07T05:15:00+01:00",
+        "intensity": null,
+        "orientation": null,
         "score": 12.0,
         "start_local": "2026-03-07T05:00:00+01:00",
         "window_type": "pivot"
@@ -4035,6 +4037,8 @@
           "communication"
         ],
         "end_local": "2026-03-07T06:45:00+01:00",
+        "intensity": null,
+        "orientation": null,
         "score": 12.0,
         "start_local": "2026-03-07T05:15:00+01:00",
         "window_type": "pivot"
@@ -4046,6 +4050,8 @@
           "communication"
         ],
         "end_local": "2026-03-07T10:15:00+01:00",
+        "intensity": null,
+        "orientation": null,
         "score": 12.0,
         "start_local": "2026-03-07T08:45:00+01:00",
         "window_type": "pivot"

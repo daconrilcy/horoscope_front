@@ -102,14 +102,24 @@ class PredictionRequestResolver:
 
     def _resolve_timezone(self, profile: UserBirthProfileModel, override: str | None) -> str:
         from app.services.daily_prediction_types import DailyPredictionServiceError
-        tz_str = override or profile.current_timezone or profile.birth_timezone
+        tz_str = (
+            self._coerce_timezone_value(override)
+            or self._coerce_timezone_value(profile.current_timezone)
+            or self._coerce_timezone_value(profile.birth_timezone)
+        )
         if not tz_str:
             raise DailyPredictionServiceError("timezone_missing", "Timezone introuvable")
         try:
             ZoneInfo(tz_str)
-        except (ZoneInfoNotFoundError, KeyError):
+        except (ZoneInfoNotFoundError, KeyError, ValueError):
             raise DailyPredictionServiceError("timezone_invalid", f"Timezone invalide : '{tz_str}'")
         return tz_str
+
+    def _coerce_timezone_value(self, value: object) -> str | None:
+        if not isinstance(value, str):
+            return None
+        normalized = value.strip()
+        return normalized or None
 
     def _resolve_location(
         self,

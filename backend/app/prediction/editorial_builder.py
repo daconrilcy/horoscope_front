@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from datetime import date, datetime
+from typing import TYPE_CHECKING
 
 from app.prediction.category_codes import normalize_category_code, normalize_category_codes
 
@@ -101,8 +101,10 @@ class EditorialOutputBuilder:
         # 4. Tone
         overall_tone = evidence.day_profile.get("tone") or self._derive_tone(top3)
 
+        local_date = self._resolve_evidence_local_date(evidence)
+
         return EditorialOutput(
-            local_date=evidence.generated_at.date(), # Approximate
+            local_date=local_date,
             top3_categories=top3,
             bottom2_categories=bottom2,
             main_pivot=main_pivot,
@@ -111,6 +113,22 @@ class EditorialOutputBuilder:
             overall_tone=overall_tone,
             top3_contributors_per_category={}, # Handled by evidence drivers in interpretation
         )
+
+    def _resolve_evidence_local_date(self, evidence: V3EvidencePack):
+        raw_local_date = evidence.day_profile.get("local_date")
+        if isinstance(raw_local_date, str):
+            try:
+                return datetime.fromisoformat(raw_local_date).date()
+            except ValueError:
+                try:
+                    return date.fromisoformat(raw_local_date)
+                except ValueError:
+                    pass
+        if evidence.time_windows:
+            return evidence.time_windows[0].start_local.date()
+        if evidence.turning_points:
+            return evidence.turning_points[0].local_time.date()
+        return evidence.generated_at.date()
 
     def _build_top3_bottom2(self, scores):
         sorted_scores = sorted(

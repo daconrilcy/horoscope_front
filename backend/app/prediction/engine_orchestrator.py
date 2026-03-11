@@ -1,4 +1,5 @@
 import dataclasses
+import inspect
 from collections.abc import Callable
 from datetime import UTC, date, datetime, time, timedelta
 from numbers import Real
@@ -292,10 +293,10 @@ class EngineOrchestrator:
             return PersistablePredictionBundle(core=core_output, v3_core=v3_core)
 
         # AC1 - EditorialOutputBundle (Textes et résumés) via AC3 - PredictionEditorialService
-        editorial_bundle = self._editorial_service.generate_bundle(
-            core_output, 
-            lang=editorial_text_lang,
-            evidence_pack=v3_core.evidence_pack if v3_core else None
+        editorial_bundle = self._generate_editorial_bundle(
+            core_output=core_output,
+            editorial_text_lang=editorial_text_lang,
+            evidence_pack=v3_core.evidence_pack if v3_core else None,
         )
 
         # AC1 - PersistablePredictionBundle (Prêt à sauvegarder)
@@ -304,6 +305,23 @@ class EngineOrchestrator:
             editorial=editorial_bundle,
             v3_core=v3_core,
         )
+
+    def _generate_editorial_bundle(
+        self,
+        *,
+        core_output: CoreEngineOutput,
+        editorial_text_lang: str,
+        evidence_pack: object | None,
+    ):
+        generate_bundle = self._editorial_service.generate_bundle
+        signature = inspect.signature(generate_bundle)
+        if "evidence_pack" in signature.parameters:
+            return generate_bundle(
+                core_output,
+                lang=editorial_text_lang,
+                evidence_pack=evidence_pack,
+            )
+        return generate_bundle(core_output, lang=editorial_text_lang)
 
     def _resolve_v3_versions(self, engine_mode: DailyEngineMode) -> dict[str, str | None]:
         if engine_mode == DailyEngineMode.V2:

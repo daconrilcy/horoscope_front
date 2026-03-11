@@ -69,6 +69,8 @@ GPT-5 Codex
 - Code review fix: le fallback persisté recharge correctement l'evidence pack depuis `snapshot.v3_metrics` au lieu de dépendre d'un objet runtime.
 - Code review fix: les fenêtres publiques dérivées de l'evidence pack ou du runtime repassent par la normalisation publique avant exposition.
 - Les tests verrouillent le cas runtime et le cas snapshot persisté.
+- Ajustement post-livraison 2026-03-11: le résumé public v3 ne reconstruit plus la date locale depuis `generated_at` UTC; il s’appuie sur `local_date` portée par l’evidence pack pour éviter les décalages de jour dans `overall_summary`.
+- Ajustement post-livraison 2026-03-11: `public_projection` privilégie à nouveau les données structurées de l’evidence pack pour le ton, les tops/bottoms et le résumé, sans recycler un wording persisté devenu incohérent.
 
 ### File List
 
