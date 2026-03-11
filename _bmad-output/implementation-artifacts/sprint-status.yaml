@@ -377,8 +377,8 @@ development_status:
   42-11-refaire-les-fenetres-decisionnelles-a-partir-des-blocs-v3: done
   42-12-etendre-la-baseline-utilisateur-en-baseline-day-slot-et-saison: done
   42-13-refaire-le-scoring-relatif-v3-autour-d-absolu-slot-confiance-et-rarete: done
-  42-14-refaire-la-logique-de-flat-day-et-de-micro-tendances-dans-le-moteur-v3: in-progress
-  42-15-introduire-un-evidence-pack-expert-v3: ready-for-dev
-  42-16-brancher-la-projection-publique-et-la-future-interpretation-sur-l-evidence-pack: in-progress
-  42-17-verrouiller-qa-backtesting-et-migration-progressive-du-moteur-v3: in-progress
+  42-14-refaire-la-logique-de-flat-day-et-de-micro-tendances-dans-le-moteur-v3: done
+  42-15-introduire-un-evidence-pack-expert-v3: done
+  42-16-brancher-la-projection-publique-et-la-future-interpretation-sur-l-evidence-pack: done
+  42-17-verrouiller-qa-backtesting-et-migration-progressive-du-moteur-v3: done
   epic-42-retrospective: optional

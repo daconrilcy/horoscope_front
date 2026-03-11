@@ -1,6 +1,6 @@
 # Story 42.14: Refaire la logique de flat day et de micro-tendances dans le moteur v3
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -21,18 +21,18 @@ so that les micro-tendances et les signaux publics restent honnêtes et réellem
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Définir la nouvelle logique de flat day (AC: 1, 3)
-  - [ ] Définir les seuils à partir des métriques v3
-  - [ ] Éviter un simple proxy “pas de windows”
+- [x] Task 1: Définir la nouvelle logique de flat day (AC: 1, 3)
+  - [x] Définir les seuils à partir des métriques v3
+  - [x] Éviter un simple proxy “pas de windows”
 
-- [ ] Task 2: Revoir l'exposition des micro-tendances (AC: 2, 4)
-  - [ ] Adapter `public_projection.py`
-  - [ ] Garder une hiérarchie claire entre absolu et relatif
+- [x] Task 2: Revoir l'exposition des micro-tendances (AC: 2, 4)
+  - [x] Adapter `public_projection.py`
+  - [x] Garder une hiérarchie claire entre absolu et relatif
 
-- [ ] Task 3: Tester les cas produits clés (AC: 5)
-  - [ ] Cas plat
-  - [ ] Cas faible mais non plat
-  - [ ] Cas neutre intense
+- [x] Task 3: Tester les cas produits clés (AC: 5)
+  - [x] Cas plat
+  - [x] Cas faible mais non plat
+  - [x] Cas neutre intense
 
 ## Dev Notes
 
@@ -65,9 +65,13 @@ GPT-5 Codex
 
 ### Completion Notes List
 
-- Story prête pour refaire la notion de journée plate dans le cadre du moteur v3.
+- `flat_day` dépend maintenant de l'intensité et de la stabilité v3, pas d'un simple proxy "pas de pivots".
+- Les micro-tendances ne sont exposées que sur les journées réellement plates et seulement si le relatif apporte une nuance exploitable.
+- Les cas produit plat / faible non plat / intense neutre sont couverts en unit et QA.
 
 ### File List
 
+- `backend/app/prediction/public_projection.py`
+- `backend/app/tests/unit/test_v3_flat_day.py`
+- `backend/app/tests/integration/test_daily_prediction_qa.py`
 - `_bmad-output/implementation-artifacts/42-14-refaire-la-logique-de-flat-day-et-de-micro-tendances-dans-le-moteur-v3.md`
-
