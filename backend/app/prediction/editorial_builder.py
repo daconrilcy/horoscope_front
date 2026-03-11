@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from app.prediction.category_codes import normalize_category_code, normalize_category_codes
 
@@ -9,6 +9,7 @@ from .schemas import BestWindow, CategorySummary, EditorialOutput, EngineOutput
 
 if TYPE_CHECKING:
     from .explainability import ExplainabilityReport
+    from .schemas import V3EvidencePack
 
 
 class EditorialOutputBuilder:
@@ -19,6 +20,7 @@ class EditorialOutputBuilder:
     def build(
         self, engine_output: EngineOutput, explainability: ExplainabilityReport
     ) -> EditorialOutput:
+        """Legacy build from EngineOutput (V2)."""
         top3, bottom2 = self._build_top3_bottom2(engine_output.category_scores)
         main_pivot = self._find_main_pivot(engine_output.turning_points)
         best_window = self._find_best_window(
@@ -38,6 +40,76 @@ class EditorialOutputBuilder:
             caution_flags=caution_flags,
             overall_tone=overall_tone,
             top3_contributors_per_category=top3_contributors,
+        )
+
+    def build_from_evidence(self, evidence: V3EvidencePack) -> EditorialOutput:
+        """
+        AC1 Story 42.16: Branch editorial on the evidence pack.
+        Ensures wording cannot invent relief absent from evidence.
+        """
+        # 1. Themes
+        sorted_themes = sorted(
+            evidence.themes.values(), 
+            key=lambda t: t.score_20, 
+            reverse=True
+        )
+        top3 = [
+            CategorySummary(
+                code=t.code,
+                note_20=round(t.score_20),
+                power=t.intensity / 20.0,
+                volatility=1.0 - t.stability / 20.0
+            )
+            for t in sorted_themes[:3]
+        ]
+        
+        remaining = sorted_themes[3:]
+        bottom2 = [
+            CategorySummary(
+                code=t.code,
+                note_20=round(t.score_20),
+                power=t.intensity / 20.0,
+                volatility=1.0 - t.stability / 20.0
+            )
+            for t in sorted(remaining, key=lambda t: t.score_20)[:2]
+        ]
+
+        # 2. Main Pivot (from turning points)
+        main_pivot = None
+        if evidence.turning_points:
+            main_tp = max(evidence.turning_points, key=lambda tp: tp.amplitude)
+            from types import SimpleNamespace
+            main_pivot = SimpleNamespace(
+                local_time=main_tp.local_time,
+                severity=main_tp.amplitude / 10.0,
+                summary=f"Bascule ({main_tp.reason})"
+            )
+
+        # 3. Best Window
+        best_window = None
+        if evidence.time_windows:
+            # Prioritize favorable windows with high confidence
+            candidates = [w for w in evidence.time_windows if w.type in ("favorable", "pivot")]
+            if candidates:
+                bw = max(candidates, key=lambda w: (w.score, w.confidence))
+                best_window = BestWindow(
+                    start_local=bw.start_local,
+                    end_local=bw.end_local,
+                    dominant_category=bw.themes[0] if bw.themes else "unknown"
+                )
+
+        # 4. Tone
+        overall_tone = evidence.day_profile.get("tone") or self._derive_tone(top3)
+
+        return EditorialOutput(
+            local_date=evidence.generated_at.date(), # Approximate
+            top3_categories=top3,
+            bottom2_categories=bottom2,
+            main_pivot=main_pivot,
+            best_window=best_window,
+            caution_flags={}, # Will be derived later if needed
+            overall_tone=overall_tone,
+            top3_contributors_per_category={}, # Handled by evidence drivers in interpretation
         )
 
     def _build_top3_bottom2(self, scores):

@@ -7,7 +7,7 @@ from .editorial_template_engine import EditorialTemplateEngine
 from .schemas import EditorialOutputBundle
 
 if TYPE_CHECKING:
-    from .schemas import CoreEngineOutput
+    from .schemas import CoreEngineOutput, V3EvidencePack
 
 
 class PredictionEditorialService:
@@ -28,16 +28,20 @@ class PredictionEditorialService:
         self,
         core_output: CoreEngineOutput,
         lang: str = "fr",
+        evidence_pack: V3EvidencePack | None = None,
     ) -> EditorialOutputBundle:
         """
         Builds the editorial data and renders the associated texts.
+        AC1 Story 42.16: Use evidence_pack if available.
         """
         # 1. Build structured editorial data
-        editorial_data = self._builder.build(
-            # Adapting CoreEngineOutput to what builder expects (duck typing or conversion)
-            core_output,  # type: ignore
-            core_output.explainability,  # type: ignore
-        )
+        if evidence_pack:
+            editorial_data = self._builder.build_from_evidence(evidence_pack)
+        else:
+            editorial_data = self._builder.build(
+                core_output,  # type: ignore
+                core_output.explainability,  # type: ignore
+            )
 
         # 2. Render templates into final texts
         editorial_text = self._engine.render(

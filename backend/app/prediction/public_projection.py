@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -8,6 +9,7 @@ from app.prediction.editorial_template_engine import EditorialTemplateEngine
 
 if TYPE_CHECKING:
     from .persisted_snapshot import PersistedPredictionSnapshot
+    from .schemas import V3EvidencePack
 
 MAJOR_ASPECT_NOTE_THRESHOLD = 12.0
 PUBLIC_PIVOT_EVENT_TYPES = frozenset(
@@ -23,7 +25,7 @@ PUBLIC_PIVOT_EVENT_TYPES = frozenset(
 class PublicPredictionAssembler:
     """
     Assembles the public API response for a daily prediction.
-    AC1/AC4 Compliance: Uses typed snapshot for projection.
+    AC1/AC4 Compliance: Uses typed snapshot and evidence pack for projection.
     """
 
     def assemble(
@@ -36,13 +38,17 @@ class PublicPredictionAssembler:
         reference_version: str,
         ruleset_version: str,
     ) -> dict[str, Any]:
+        # AC1 Story 42.16: Resolve evidence pack
+        evidence = self._resolve_evidence_pack(snapshot, engine_output)
+
         # 1. Categories
-        categories = PublicCategoryPolicy().build(snapshot, cat_id_to_code)
+        categories = PublicCategoryPolicy().build(snapshot, cat_id_to_code, evidence=evidence)
         category_note_by_code = {c["code"]: c["note_20"] for c in categories}
 
         # 2. Decision Windows
         decision_windows = PublicDecisionWindowPolicy().build(
-            snapshot, cat_id_to_code, category_note_by_code, engine_output=engine_output
+            snapshot, cat_id_to_code, category_note_by_code, 
+            engine_output=engine_output, evidence=evidence
         )
 
         is_flat_day = _is_flat_day(snapshot, decision_windows, categories)
@@ -52,6 +58,7 @@ class PublicPredictionAssembler:
             snapshot,
             decision_windows or [],
             is_flat_day=is_flat_day,
+            evidence=evidence
         )
 
         # 4. Timeline
@@ -79,9 +86,9 @@ class PublicPredictionAssembler:
             is_flat_day=is_flat_day,
             engine_output=engine_output,
             micro_trends=micro_trends,
+            evidence=evidence
         )
 
-        # 6. Micro Trends (Story 41.14) - Already handled in summary, just return key
         # 7. Meta
         house_system_effective = snapshot.house_system_effective
         if house_system_effective is None and engine_output is not None:
@@ -102,6 +109,7 @@ class PublicPredictionAssembler:
             "house_system_effective": house_system_effective,
             "is_provisional_calibration": snapshot.is_provisional_calibration,
             "calibration_label": snapshot.calibration_label,
+            "v3_evidence_version": evidence.version if evidence else None,
         }
 
         return {
@@ -113,6 +121,24 @@ class PublicPredictionAssembler:
             "decision_windows": decision_windows,
             "micro_trends": micro_trends,
         }
+
+    def _resolve_evidence_pack(
+        self, snapshot: PersistedPredictionSnapshot, engine_output: Any | None
+    ) -> V3EvidencePack | None:
+        """Extracts V3 evidence pack from engine output or snapshot."""
+        if engine_output is not None:
+            v3_core = getattr(engine_output, "v3_core", None)
+            if v3_core and hasattr(v3_core, "evidence_pack"):
+                return v3_core.evidence_pack
+
+        # Story 42.16: Check snapshot metadata (persisted case)
+        if hasattr(snapshot, "run_metadata") and snapshot.run_metadata:
+            # If evidence_pack was persisted in run_metadata
+            ev = snapshot.run_metadata.get("v3_evidence_pack")
+            if ev:
+                return ev
+
+        return None
 
 
 class PublicMicroTrendPolicy:
@@ -195,8 +221,6 @@ class PublicMicroTrendPolicy:
 
     def _meets_signal_threshold(self, relative_score: Any) -> bool:
         # V3 Logic: Use absolute day baseline (z_abs or pct_abs)
-        # We require a more significant deviation (z >= 1.5 or pct >= 0.8/<= 0.2)
-        # to ensure the micro-trend brings "real nuance" (AC2).
         z_abs = getattr(relative_score, "z_abs", None)
         if z_abs is not None:
             return abs(z_abs) >= 1.5
@@ -205,7 +229,7 @@ class PublicMicroTrendPolicy:
         if pct_abs is not None:
             return pct_abs >= 0.8 or pct_abs <= 0.2
 
-        # Legacy Fallback: Strengthened to 1.0 for honesty (was 0.5)
+        # Legacy Fallback
         if relative_score.relative_z_score is not None:
             return abs(relative_score.relative_z_score) >= 1.0
         if relative_score.relative_percentile is None:
@@ -216,7 +240,6 @@ class PublicMicroTrendPolicy:
         )
 
     def _signal_strength(self, relative_score: Any) -> float:
-        # Prioritize V3 z_abs for sorting
         z_abs = getattr(relative_score, "z_abs", None)
         if z_abs is not None:
             return abs(z_abs)
@@ -244,11 +267,39 @@ class PublicCategoryPolicy:
         self,
         snapshot: PersistedPredictionSnapshot,
         cat_id_to_code: dict[int, str],
+        evidence: V3EvidencePack | None = None,
     ) -> list[dict[str, Any]]:
         categories = []
+        
+        if evidence:
+            for code, theme in evidence.themes.items():
+                categories.append({
+                    "code": code,
+                    "note_20": round(theme.score_20),
+                    "raw_score": theme.level,
+                    "power": theme.intensity / 20.0,
+                    "volatility": 1.0 - theme.stability / 20.0,
+                    "score_20": theme.score_20,
+                    "intensity_20": theme.intensity,
+                    "confidence_20": theme.stability,
+                    "rarity_percentile": theme.rarity,
+                    "level_day": theme.level,
+                    "dominance_day": theme.dominance,
+                    "stability_day": theme.stability,
+                    "intensity_day": theme.intensity,
+                    "rank": 99, # Will be re-ranked if needed
+                    "is_provisional": snapshot.is_provisional_calibration,
+                    "summary": None,
+                })
+            # Re-rank by score
+            sorted_cats = sorted(categories, key=lambda c: c["score_20"], reverse=True)
+            for i, c in enumerate(sorted_cats):
+                c["rank"] = i + 1
+            return sorted_cats
+
+        # Fallback to snapshot
         for s in snapshot.category_scores:
             code = cat_id_to_code.get(s.category_id, "unknown")
-
             categories.append({
                 "code": code,
                 "note_20": s.note_20,
@@ -278,13 +329,28 @@ class PublicDecisionWindowPolicy:
         category_note_by_code: dict[str, float],
         *,
         engine_output: Any | None = None,
+        evidence: V3EvidencePack | None = None,
     ) -> list[dict[str, Any]] | None:
-        # Use Engine Output if available (live compute)
-        raw_windows = []
+        # Prioritize evidence pack
+        if evidence:
+            return [
+                {
+                    "start_local": w.start_local.isoformat(),
+                    "end_local": w.end_local.isoformat(),
+                    "window_type": w.type,
+                    "score": w.score,
+                    "confidence": w.confidence,
+                    "dominant_categories": list(w.themes),
+                    "intensity": w.intensity,
+                }
+                for w in evidence.time_windows
+            ]
+
+        # Fallback to Engine Output
         core_output = _resolve_core_engine_output(engine_output)
         if core_output is not None:
             raw_dws = getattr(core_output, "decision_windows", None) or []
-            raw_windows = [
+            return [
                 {
                     "start_local": dw.start_local.isoformat(),
                     "end_local": dw.end_local.isoformat(),
@@ -299,14 +365,11 @@ class PublicDecisionWindowPolicy:
             ]
 
         # Otherwise rebuild from snapshot
-        if not raw_windows:
-            raw_windows = self._rebuild_from_snapshot(snapshot, cat_id_to_code)
-
+        raw_windows = self._rebuild_from_snapshot(snapshot, cat_id_to_code)
         if not raw_windows:
             return None
 
-        normalized = self._normalize(snapshot, raw_windows, category_note_by_code)
-        return normalized or None
+        return self._normalize(snapshot, raw_windows, category_note_by_code)
 
     def _rebuild_from_snapshot(
         self, snapshot: PersistedPredictionSnapshot, cat_id_to_code: dict[int, str]
@@ -325,9 +388,7 @@ class PublicDecisionWindowPolicy:
             if score.category_id in cat_id_to_code
         }
 
-        # Adapt snapshot blocks to what DecisionWindowBuilder expects.
         from types import SimpleNamespace
-
         blocks = [
             SimpleNamespace(
                 start_local=b.start_at_local,
@@ -337,7 +398,6 @@ class PublicDecisionWindowPolicy:
             )
             for b in snapshot.time_blocks
         ]
-
         turning_points = [
             SimpleNamespace(local_time=tp.occurred_at_local) for tp in snapshot.turning_points
         ]
@@ -361,17 +421,9 @@ class PublicDecisionWindowPolicy:
     def _is_low_signal_snapshot(self, snapshot: PersistedPredictionSnapshot) -> bool:
         if not snapshot.category_scores:
             return True
-
-        # V3 Logic: Based on intensity (AC1)
         if any(getattr(s, "intensity_20", None) is not None for s in snapshot.category_scores):
-            # If any category has intensity >= 3.0, it's NOT a low signal day
             return all(float(getattr(s, "intensity_20", 0.0) or 0.0) < 3.0 for s in snapshot.category_scores)
-
-        # Legacy Fallback
-        if any(
-            float(score.note_20) > MAJOR_ASPECT_NOTE_THRESHOLD
-            for score in snapshot.category_scores
-        ):
+        if any(float(score.note_20) > MAJOR_ASPECT_NOTE_THRESHOLD for score in snapshot.category_scores):
             return False
         return all((block.tone_code or "neutral") == "neutral" for block in snapshot.time_blocks)
 
@@ -382,10 +434,7 @@ class PublicDecisionWindowPolicy:
         category_note_by_code: dict[str, float],
     ) -> list[dict[str, Any]]:
         normalized: list[dict[str, Any]] = []
-        sorted_raw = sorted(
-            raw_windows,
-            key=lambda item: item["start_local"],
-        )
+        sorted_raw = sorted(raw_windows, key=lambda item: item["start_local"])
 
         for window in sorted_raw:
             dominant_categories = self._filter_major_categories(
@@ -414,30 +463,23 @@ class PublicDecisionWindowPolicy:
                     }
                     continue
 
-            normalized.append(
-                {
-                    **window,
-                    "dominant_categories": dominant_categories,
-                }
-            )
-
+            normalized.append({**window, "dominant_categories": dominant_categories})
         return normalized
 
     def _should_keep_public_pivot_window(
-        self,
-        snapshot: PersistedPredictionSnapshot,
-        window: dict[str, Any],
+        self, snapshot: PersistedPredictionSnapshot, window: dict[str, Any]
     ) -> bool:
         if window.get("window_type") != "pivot":
             return False
 
         window_start = window.get("start_local")
-        for turning_point in snapshot.turning_points:
-            if not _same_local_moment(turning_point.occurred_at_local, window_start):
+        for tp in snapshot.turning_points:
+            if not _same_local_moment(tp.occurred_at_local, window_start):
                 continue
+
             if any(
-                driver.get("event_type") in PUBLIC_PIVOT_EVENT_TYPES
-                for driver in turning_point.drivers
+                d.get("event_type") in PUBLIC_PIVOT_EVENT_TYPES 
+                for d in tp.drivers
             ):
                 return True
         return False
@@ -462,10 +504,23 @@ class PublicTurningPointPolicy:
         decision_windows: list[dict[str, Any]],
         *,
         is_flat_day: bool = False,
+        evidence: V3EvidencePack | None = None,
     ) -> list[dict[str, Any]]:
         if is_flat_day:
             return []
 
+        if evidence:
+            return [
+                {
+                    "occurred_at_local": tp.local_time.isoformat(),
+                    "severity": tp.amplitude / 10.0, # Scaled
+                    "summary": f"Bascule durable ({tp.reason})",
+                    "drivers": [{"event_type": d} for d in tp.drivers],
+                }
+                for tp in evidence.turning_points
+            ]
+
+        # Fallback: Restore nuance for legacy runs (Story 41.x logic)
         if not decision_windows:
             return [
                 {
@@ -477,120 +532,31 @@ class PublicTurningPointPolicy:
                 for tp in sorted(snapshot.turning_points, key=lambda item: item.occurred_at_local)
             ]
 
-        if snapshot.turning_points:
-            public_turning_points: list[dict[str, Any]] = []
-            pivot_window_starts = [
-                window["start_local"]
-                for window in decision_windows
-                if window.get("window_type") == "pivot"
-            ]
-            for tp in sorted(snapshot.turning_points, key=lambda item: item.occurred_at_local):
-                occurred_at = tp.occurred_at_local.isoformat()
-                if pivot_window_starts and not any(
-                    _same_local_moment(tp.occurred_at_local, window_start)
-                    for window_start in pivot_window_starts
-                ):
-                    continue
-                prev_cats = self._get_active_categories(
-                    decision_windows,
-                    occurred_at,
-                    include_end=True,
-                    include_start=False,
-                )
-                next_cats = self._get_active_categories(
-                    decision_windows,
-                    occurred_at,
-                    include_end=False,
-                    include_start=True,
-                )
-                summary = tp.summary
-                if summary in {None, "delta_note", "top3_change", "high_priority_event"}:
-                    summary = self._build_summary(occurred_at, prev_cats, next_cats)
-
-                public_turning_points.append(
-                    {
-                        "occurred_at_local": occurred_at,
-                        "severity": float(tp.severity),
-                        "summary": summary,
-                        "drivers": tp.drivers,
-                    }
-                )
-
-            return public_turning_points
-
-        # Otherwise synthesize pivots from interior boundaries only.
-        sorted_windows = sorted(
-            decision_windows,
-            key=lambda window: window["start_local"],
-        )
-        boundaries = sorted(
-            {w["start_local"] for w in sorted_windows} | {w["end_local"] for w in sorted_windows}
-        )
-
+        # Use windows to filter pivots
         public_turning_points: list[dict[str, Any]] = []
-
-        for boundary in boundaries[1:-1]:
-            prev_cats = self._get_active_categories(
-                sorted_windows,
-                boundary,
-                include_end=True,
-                include_start=False,
-            )
-            next_cats = self._get_active_categories(
-                sorted_windows,
-                boundary,
-                include_end=False,
-                include_start=True,
-            )
-
-            if prev_cats == next_cats:
+        pivot_window_starts = [
+            window["start_local"]
+            for window in decision_windows
+            if window.get("window_type") == "pivot"
+        ]
+        
+        for tp in sorted(snapshot.turning_points, key=lambda item: item.occurred_at_local):
+            occurred_at = tp.occurred_at_local.isoformat()
+            # Only keep if it matches a pivot window start
+            if pivot_window_starts and not any(
+                _same_local_moment(tp.occurred_at_local, ws)
+                for ws in pivot_window_starts
+            ):
                 continue
-
-            drivers = []
-            for tp in snapshot.turning_points:
-                if tp.occurred_at_local.isoformat() == boundary:
-                    drivers.extend(tp.drivers)
-
-            public_turning_points.append(
-                {
-                    "occurred_at_local": boundary,
-                    "severity": 1.0 if prev_cats and next_cats else 0.8,
-                    "summary": self._build_summary(boundary, prev_cats, next_cats),
-                    "drivers": drivers,
-                }
-            )
-
+            
+            public_turning_points.append({
+                "occurred_at_local": occurred_at,
+                "severity": float(tp.severity),
+                "summary": tp.summary,
+                "drivers": tp.drivers,
+            })
+            
         return public_turning_points
-
-    def _get_active_categories(
-        self,
-        windows: list[dict[str, Any]],
-        boundary: str,
-        *,
-        include_start: bool,
-        include_end: bool,
-    ) -> list[str]:
-        for window in windows:
-            start = window["start_local"]
-            end = window["end_local"]
-            after_start = boundary > start or (include_start and boundary == start)
-            before_end = boundary < end or (include_end and boundary == end)
-            if after_start and before_end:
-                return list(window["dominant_categories"])
-        return []
-
-    def _build_summary(self, occurred_at: str, prev_cats: list[str], next_cats: list[str]) -> str:
-        time_label = datetime.fromisoformat(occurred_at).strftime("%H:%M")
-        labels = EditorialTemplateEngine.CATEGORY_LABELS["fr"]
-
-        def fmt(cats):
-            return ", ".join(labels.get(c, c) for c in cats)
-
-        if not prev_cats and next_cats:
-            return f"À {time_label}, des aspects majeurs émergent : {fmt(next_cats)}."
-        if prev_cats and not next_cats:
-            return f"À {time_label}, les aspects majeurs s'estompent : {fmt(prev_cats)}."
-        return f"À {time_label}, un basculement critique : {fmt(next_cats)}."
 
 
 class PublicTimelinePolicy:
@@ -606,25 +572,23 @@ class PublicTimelinePolicy:
                 b.dominant_categories,
                 category_note_by_code,
             )
-            blocks.append(
-                {
-                    "start_local": b.start_at_local.isoformat(),
-                    "end_local": b.end_at_local.isoformat(),
-                    "tone_code": b.tone_code,
-                    "dominant_categories": dominant_categories,
-                    "summary": self._build_summary(
-                        b.start_at_local,
-                        b.end_at_local,
-                        dominant_categories,
-                        b.tone_code,
-                    ),
-                    "turning_point": self._contains_turning_point(
-                        b.start_at_local,
-                        b.end_at_local,
-                        turning_point_times,
-                    ),
-                }
-            )
+            blocks.append({
+                "start_local": b.start_at_local.isoformat(),
+                "end_local": b.end_at_local.isoformat(),
+                "tone_code": b.tone_code,
+                "dominant_categories": dominant_categories,
+                "summary": self._build_summary(
+                    b.start_at_local, 
+                    b.end_at_local, 
+                    dominant_categories, 
+                    b.tone_code
+                ),
+                "turning_point": self._contains_turning_point(
+                    b.start_at_local, 
+                    b.end_at_local, 
+                    turning_point_times
+                ),
+            })
         return self._merge_adjacent_blocks(sorted(blocks, key=lambda block: block["start_local"]))
 
     def _merge_adjacent_blocks(self, blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -635,10 +599,10 @@ class PublicTimelinePolicy:
         for block in blocks[1:]:
             previous = merged[-1]
             if (
-                not previous["turning_point"]
-                and not block["turning_point"]
-                and previous["end_local"] == block["start_local"]
-                and previous["tone_code"] == block["tone_code"]
+                not previous["turning_point"] 
+                and not block["turning_point"] 
+                and previous["end_local"] == block["start_local"] 
+                and previous["tone_code"] == block["tone_code"] 
                 and previous["dominant_categories"] == block["dominant_categories"]
             ):
                 merged[-1] = {
@@ -667,40 +631,19 @@ class PublicTimelinePolicy:
             unique_categories.append(category)
         return unique_categories[:3]
 
-    def _build_summary(
-        self,
-        start: datetime,
-        end: datetime,
-        cats: list[str],
-        tone: str | None,
-    ) -> str:
-        s_lbl = start.strftime("%H:%M")
-        e_lbl = end.strftime("%H:%M")
+    def _build_summary(self, start: datetime, end: datetime, cats: list[str], tone: str | None) -> str:
+        s_lbl, e_lbl = start.strftime("%H:%M"), end.strftime("%H:%M")
         if not cats:
             return f"Entre {s_lbl} et {e_lbl}, pas d'aspect majeur."
 
-        tone_lbl = EditorialTemplateEngine.TONE_LABELS["fr"].get(
-            tone or "neutral",
-            "équilibrée",
-        )
-        labels = EditorialTemplateEngine.CATEGORY_LABELS["fr"]
-        cat_lbl = ", ".join(labels.get(c, c) for c in cats)
+        tone_lbl = EditorialTemplateEngine.TONE_LABELS["fr"].get(tone or "neutral", "équilibrée")
+        cat_lbl = ", ".join(EditorialTemplateEngine.CATEGORY_LABELS["fr"].get(c, c) for c in cats)
         return f"Entre {s_lbl} et {e_lbl}, tonalité {tone_lbl} — {cat_lbl}."
 
-    def _contains_turning_point(
-        self,
-        start: datetime,
-        end: datetime,
-        tp_times: list[datetime],
-    ) -> bool:
-        def to_wall(dt: datetime) -> datetime:
-            return dt.replace(tzinfo=None) if dt.tzinfo else dt
-
-        s_wall = to_wall(start)
-        e_wall = to_wall(end)
-
+    def _contains_turning_point(self, start: datetime, end: datetime, tp_times: list[datetime]) -> bool:
+        s_wall, e_wall = start.replace(tzinfo=None), end.replace(tzinfo=None)
         for tp in tp_times:
-            tp_wall = to_wall(tp)
+            tp_wall = tp.replace(tzinfo=None)
             if s_wall <= tp_wall < e_wall:
                 return True
         return False
@@ -717,76 +660,41 @@ class PublicSummaryPolicy:
         is_flat_day: bool = False,
         engine_output: Any | None = None,
         micro_trends: list[dict[str, Any]] | None = None,
+        evidence: V3EvidencePack | None = None,
     ) -> dict[str, Any]:
         editorial = _resolve_editorial_output(engine_output)
+        
+        # Priority 1: Evidence Pack summaries if they exist (future prompt)
+        if evidence and evidence.day_profile.get("overall_summary"):
+            return {
+                "overall_tone": evidence.day_profile.get("overall_tone", "neutral"),
+                "overall_summary": evidence.day_profile["overall_summary"],
+                "best_window": self._extract_best_window(decision_windows, editorial),
+                "flat_day": is_flat_day,
+            }
 
+        # Legacy logic
         scores = sorted(snapshot.category_scores, key=lambda s: s.rank or 99)
         top_categories = [cat_id_to_code.get(s.category_id, "unknown") for s in scores[:3]]
-
-        bottom_scores = sorted(
-            snapshot.category_scores,
-            key=lambda s: (s.note_20, s.rank or 99),
-        )
-        bottom_categories = [
-            cat_id_to_code.get(s.category_id, "unknown") for s in bottom_scores[:2]
-        ]
-
-        best_window = None
-        if decision_windows and editorial and editorial.best_window:
-            editorial_window = {
-                "start_local": editorial.best_window.start_local.isoformat(),
-                "end_local": editorial.best_window.end_local.isoformat(),
-                "dominant_category": editorial.best_window.dominant_category,
-            }
-            if any(
-                window["start_local"] == editorial_window["start_local"]
-                and window["end_local"] == editorial_window["end_local"]
-                for window in decision_windows
-            ):
-                best_window = editorial_window
-
-        if best_window is None and decision_windows:
-            # AC3: Best window only if it meets a certain score/intensity in V3
-            # Filter for favorable/pivot first
-            candidates = [w for w in decision_windows if w["window_type"] in ("favorable", "pivot")]
-            if candidates:
-                cand = max(candidates, key=lambda w: (w["score"], w["confidence"]))
-                # AC3: Ensure window is actually exploitable (score > threshold)
-                if cand.get("dominant_categories") and cand["score"] >= MAJOR_ASPECT_NOTE_THRESHOLD:
-                    best_window = {
-                        "start_local": cand["start_local"],
-                        "end_local": cand["end_local"],
-                        "dominant_category": cand["dominant_categories"][0],
-                    }
+        bottom_scores = sorted(snapshot.category_scores, key=lambda s: (s.note_20, s.rank or 99))
+        bottom_categories = [cat_id_to_code.get(s.category_id, "unknown") for s in bottom_scores[:2]]
 
         tps = sorted(turning_points, key=lambda tp: float(tp["severity"] or 0), reverse=True)
-        main_tp = (
-            {
-                "occurred_at_local": tps[0]["occurred_at_local"],
-                "severity": float(tps[0]["severity"]),
-                "summary": tps[0]["summary"],
-            }
-            if tps
-            else None
-        )
+        main_tp = {
+            "occurred_at_local": tps[0]["occurred_at_local"],
+            "severity": float(tps[0]["severity"]),
+            "summary": tps[0]["summary"],
+        } if tps else None
 
         cal_note = None
         low_var = False
         if snapshot.is_provisional_calibration:
-            cal_note = (
-                "Les scores sont calculés sans données historiques : ils reflètent "
-                "des tendances relatives à la journée, pas des statistiques absolues."
-            )
+            cal_note = "Les scores sont calculés sans données historiques."
             top3_notes = [s.note_20 for s in scores[:3]]
-            if top3_notes and (max(top3_notes) - min(top3_notes) < 3):
-                low_var = True
+            if top3_notes and (max(top3_notes) - min(top3_notes) < 3): low_var = True
 
-        # Relative fields (AC1)
-        relative_top = None
-        rel_summary = None
-        if is_flat_day and micro_trends:
-            relative_top = [trend["category_code"] for trend in micro_trends]
-            rel_summary = self._build_relative_summary(micro_trends)
+        relative_top = [trend["category_code"] for trend in micro_trends] if is_flat_day and micro_trends else None
+        rel_summary = self._build_relative_summary(micro_trends) if is_flat_day and micro_trends else None
 
         return {
             "overall_tone": snapshot.overall_tone,
@@ -794,7 +702,7 @@ class PublicSummaryPolicy:
             "calibration_note": cal_note,
             "top_categories": top_categories,
             "bottom_categories": bottom_categories,
-            "best_window": best_window,
+            "best_window": self._extract_best_window(decision_windows, editorial),
             "main_turning_point": main_tp,
             "low_score_variance": low_var,
             "flat_day": is_flat_day,
@@ -802,103 +710,65 @@ class PublicSummaryPolicy:
             "relative_summary": rel_summary,
         }
 
+    def _extract_best_window(self, decision_windows, editorial) -> dict[str, Any] | None:
+        if not decision_windows: return None
+        if editorial and editorial.best_window:
+            ew = {
+                "start_local": editorial.best_window.start_local.isoformat(),
+                "end_local": editorial.best_window.end_local.isoformat(),
+                "dominant_category": editorial.best_window.dominant_category,
+            }
+            if any(w["start_local"] == ew["start_local"] and w["end_local"] == ew["end_local"] for w in decision_windows):
+                return ew
+        candidates = [w for w in decision_windows if w["window_type"] in ("favorable", "pivot")]
+        if candidates:
+            cand = max(candidates, key=lambda w: (w["score"], w.get("confidence", 0.5)))
+            if cand.get("dominant_categories") and cand["score"] >= MAJOR_ASPECT_NOTE_THRESHOLD:
+                return {
+                    "start_local": cand["start_local"],
+                    "end_local": cand["end_local"],
+                    "dominant_category": cand["dominant_categories"][0],
+                }
+        return None
+
     def _build_relative_summary(self, micro_trends: list[dict[str, Any]]) -> str | None:
-        if not micro_trends:
-            return None
-
+        if not micro_trends: return None
         labels = EditorialTemplateEngine.CATEGORY_LABELS["fr"]
-        positive_codes = [
-            trend["category_code"]
-            for trend in micro_trends
-            if (trend.get("z_score") or 0.0) > 0
-            or (
-                trend.get("z_score") is None
-                and float(trend.get("percentile") or 0.0) >= 0.5
-            )
-        ]
-        negative_codes = [
-            trend["category_code"]
-            for trend in micro_trends
-            if trend["category_code"] not in positive_codes
-        ]
+        positive_codes = [t["category_code"] for t in micro_trends if (t.get("z_score") or 0.0) > 0]
+        negative_codes = [t["category_code"] for t in micro_trends if t["category_code"] not in positive_codes]
 
-        def _format_names(codes: list[str]) -> str:
-            names = [labels.get(code, code).lower() for code in codes]
-            if len(names) == 1:
-                return names[0]
-            if len(names) == 2:
-                return f"{names[0]} et {names[1]}"
+        def _format_names(codes):
+            names = [labels.get(c, c).lower() for c in codes]
+            if len(names) == 1: return names[0]
             return f"{', '.join(names[:-1])} et {names[-1]}"
 
-        parts: list[str] = ["Journée globalement calme."]
-        if positive_codes:
-            parts.append(
-                "Parmi les nuances du jour, léger avantage relatif pour "
-                f"{_format_names(positive_codes)}."
-            )
-        if negative_codes:
-            parts.append(
-                f"À l'inverse, ambiance un peu plus retenue en {_format_names(negative_codes)}."
-            )
+        parts = ["Journée globalement calme."]
+        if positive_codes: parts.append(f"Léger avantage relatif pour {_format_names(positive_codes)}.")
+        if negative_codes: parts.append(f"Ambiance un peu plus retenue en {_format_names(negative_codes)}.")
         return " ".join(parts)
 
 
-def _is_flat_day(
-    snapshot: PersistedPredictionSnapshot,
-    decision_windows: list[dict[str, Any]] | None,
-    categories: list[dict[str, Any]],
-) -> bool:
-    """
-    Determines if the day is 'flat' (no significant signal dynamics).
-    AC1: Uses V3 metrics (intensity, stability) if available.
-    AC3: Intense but neutral days are NOT flat.
-    """
-    if decision_windows:
-        return False
-    if not snapshot.time_blocks or not categories:
-        return False
-
-    # V3 Logic: Based on intensity and stability (AC1/AC3)
-    # A day is flat if intensity is very low for ALL categories AND stability is high.
-    # An intense but neutral day (low note_20 but high intensity_20) is NOT flat.
+def _is_flat_day(snapshot: PersistedPredictionSnapshot, decision_windows: list[dict[str, Any]] | None, categories: list[dict[str, Any]]) -> bool:
+    if decision_windows: return False
+    if not snapshot.time_blocks or not categories: return False
     v3_scores = [s for s in categories if s.get("intensity_20") is not None]
     if v3_scores:
-        # Thresholds (0-20 scale): intensity < 3.0 (very calm)
-        all_very_calm = all(float(s["intensity_20"]) < 3.0 for s in v3_scores)
-        # All categories must be relatively stable (> 14.0) to call it a "flat day"
-        all_stable = all(float(s.get("stability_day") or 0.0) >= 14.0 for s in v3_scores)
-        
-        return all_very_calm and all_stable
-
-    # Legacy Fallback: No windows and all notes <= threshold
-    return all(
-        float(score["note_20"]) <= MAJOR_ASPECT_NOTE_THRESHOLD
-        for score in categories
-    )
+        return all(float(s["intensity_20"]) < 3.0 for s in v3_scores) and all(float(s.get("stability_day") or 0.0) >= 14.0 for s in v3_scores)
+    return all(float(score["note_20"]) <= MAJOR_ASPECT_NOTE_THRESHOLD for score in categories)
 
 
 def _resolve_core_engine_output(engine_output: Any | None) -> Any | None:
-    if engine_output is None:
-        return None
+    if engine_output is None: return None
     return getattr(engine_output, "core", engine_output)
 
 
 def _resolve_editorial_output(engine_output: Any | None) -> Any | None:
-    if engine_output is None:
-        return None
-    editorial_bundle = getattr(engine_output, "editorial", None)
-    if editorial_bundle is None:
-        return None
-    return getattr(editorial_bundle, "data", editorial_bundle)
+    if engine_output is None: return None
+    eb = getattr(engine_output, "editorial", None)
+    return getattr(eb, "data", eb) if eb else None
 
 
 def _same_local_moment(left: datetime, right: str | datetime | None) -> bool:
-    if right is None:
-        return False
-
-    right_dt = datetime.fromisoformat(right) if isinstance(right, str) else right
-
-    def to_wall(dt: datetime) -> datetime:
-        return dt.replace(tzinfo=None) if dt.tzinfo else dt
-
-    return to_wall(left) == to_wall(right_dt)
+    if right is None: return False
+    rdt = datetime.fromisoformat(right) if isinstance(right, str) else right
+    return left.replace(tzinfo=None) == rdt.replace(tzinfo=None)

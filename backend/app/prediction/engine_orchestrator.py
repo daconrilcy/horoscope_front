@@ -293,7 +293,9 @@ class EngineOrchestrator:
 
         # AC1 - EditorialOutputBundle (Textes et résumés) via AC3 - PredictionEditorialService
         editorial_bundle = self._editorial_service.generate_bundle(
-            core_output, lang=editorial_text_lang
+            core_output, 
+            lang=editorial_text_lang,
+            evidence_pack=v3_core.evidence_pack if v3_core else None
         )
 
         # AC1 - PersistablePredictionBundle (Prêt à sauvegarder)
