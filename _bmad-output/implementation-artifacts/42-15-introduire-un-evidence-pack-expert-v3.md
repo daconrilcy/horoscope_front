@@ -1,6 +1,6 @@
 # Story 42.15: Introduire un evidence pack expert v3
 
-Status: completed
+Status: done
 
 ## Story
 
@@ -78,6 +78,7 @@ Gemini CLI Agent
 - Schéma enrichi dans `schemas.py`.
 - Builder mis à jour pour mapper les nouvelles données.
 - Tests unitaires validant l'intégralité du pack.
+- Revue globale confirmée: builder, schémas et orchestration restent déterministes et compatibles avec la projection downstream.
 
 ### File List
 
