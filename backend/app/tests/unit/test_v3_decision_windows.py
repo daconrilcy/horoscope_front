@@ -1,7 +1,10 @@
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
+
 import pytest
+
 from app.prediction.decision_window_builder import DecisionWindowBuilder
 from app.prediction.schemas import V3TimeBlock, V3TurningPoint
+
 
 def test_build_v3_favorable_window():
     builder = DecisionWindowBuilder()
