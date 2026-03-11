@@ -111,7 +111,7 @@
     "debug_mode": true
   },
   "expected": {
-    "input_hash": "99141ab62307e8f0efc882e896b5d474ce81878ed661f0f5a554fd95863f1530",
+    "input_hash": "05d93f9be6a885f9c3f9841a91db1e80155299bbf47c5a841ff5707b91691065",
     "category_scores": {
       "energy": {
         "note_20": 14,

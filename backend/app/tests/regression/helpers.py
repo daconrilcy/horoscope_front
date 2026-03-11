@@ -96,7 +96,11 @@ def compute_ns_bounds(
 ) -> dict[str, float]:
     loaded_context = orchestrator._load_prediction_context(engine_input)
     natal_cusps = orchestrator._extract_house_cusps(engine_input.natal_chart)
-    natal_chart = orchestrator._build_natal_chart(engine_input.natal_chart, natal_cusps)
+    natal_chart = orchestrator._build_natal_chart(
+        engine_input.natal_chart,
+        natal_cusps,
+        loaded_context,
+    )
     return NatalSensitivityCalculator().compute(natal_chart, loaded_context)
 
 
@@ -106,7 +110,11 @@ def compute_day_aggregation(
 ) -> tuple[DayAggregation, list[list[tuple[Any, dict[str, float]]]]]:
     loaded_context = orchestrator._load_prediction_context(engine_input)
     natal_cusps = orchestrator._extract_house_cusps(engine_input.natal_chart)
-    natal_chart = orchestrator._build_natal_chart(engine_input.natal_chart, natal_cusps)
+    natal_chart = orchestrator._build_natal_chart(
+        engine_input.natal_chart,
+        natal_cusps,
+        loaded_context,
+    )
     day_grid = orchestrator._temporal_sampler.build_day_grid(
         engine_input.local_date,
         engine_input.timezone,

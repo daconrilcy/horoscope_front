@@ -199,7 +199,7 @@ class EngineOrchestrator:
             loaded_context,
         )
         natal_cusps = self._extract_house_cusps(engine_input.natal_chart)
-        natal_chart = self._build_natal_chart(engine_input.natal_chart, natal_cusps)
+        natal_chart = self._build_natal_chart(engine_input.natal_chart, natal_cusps, loaded_context)
         day_grid = self._temporal_sampler.build_day_grid(
             engine_input.local_date,
             engine_input.timezone,
@@ -909,7 +909,12 @@ class EngineOrchestrator:
         except (TypeError, ValueError) as exc:
             raise PredictionContextError("Natal house cusps must be numeric") from exc
 
-    def _build_natal_chart(self, natal_chart: dict, natal_cusps: list[float]) -> NatalChart:
+    def _build_natal_chart(
+        self,
+        natal_chart: dict,
+        natal_cusps: list[float],
+        loaded_context: LoadedPredictionContext,
+    ) -> NatalChart:
         planet_positions = self._extract_named_longitudes(
             natal_chart.get("planets"),
             code_key="code",
@@ -937,7 +942,7 @@ class EngineOrchestrator:
         house_sign_rulers = self._extract_house_sign_rulers(natal_chart, natal_cusps)
 
         # AC1 for Story 42.2: Compute natal aspects
-        natal_aspects = self._compute_natal_aspects(normalized_positions)
+        natal_aspects = self._compute_natal_aspects(normalized_positions, loaded_context)
 
         return NatalChart(
             planet_positions=normalized_positions,
@@ -946,38 +951,70 @@ class EngineOrchestrator:
             natal_aspects=natal_aspects,
         )
 
-    def _compute_natal_aspects(self, positions: dict[str, float]) -> list[AstroEvent]:
+    def _compute_natal_aspects(
+        self,
+        positions: dict[str, float],
+        loaded_context: LoadedPredictionContext,
+    ) -> list[AstroEvent]:
         """Compute major aspects between natal planets/angles."""
         aspects: list[AstroEvent] = []
         codes = list(positions.keys())
-        
-        # Use a simplified version of _orb from EventDetector
+        aspect_profiles = loaded_context.prediction_context.aspect_profiles
+
         for i, code1 in enumerate(codes):
-            for code2 in codes[i+1:]:
+            for code2 in codes[i + 1 :]:
                 lon1 = positions[code1]
                 lon2 = positions[code2]
-                
+
                 for deg, name in EventDetector.ASPECTS_V1.items():
-                    # Simplified orb calculation
                     diff = abs(lon1 - lon2) % 360
                     if diff > 180:
                         diff = 360 - diff
                     orb = abs(diff - deg)
-                    
-                    if orb <= 5.0:  # Standard natal orb
-                        aspects.append(AstroEvent(
-                            event_type="natal_aspect",
-                            ut_time=0.0,
-                            local_time=datetime(1970, 1, 1, tzinfo=UTC),
-                            body=code1,
-                            target=code2,
-                            aspect=name,
-                            orb_deg=orb,
-                            priority=50,
-                            base_weight=1.0,
-                            metadata={"is_natal": True}
-                        ))
+
+                    aspect_profile = self._lookup_mapping_value(aspect_profiles, name)
+                    orb_max = 5.0
+                    base_weight = 1.0
+                    default_valence = None
+                    if aspect_profile is not None:
+                        orb_max *= float(getattr(aspect_profile, "orb_multiplier", 1.0) or 1.0)
+                        base_weight = float(
+                            getattr(aspect_profile, "intensity_weight", 1.0) or 1.0
+                        )
+                        default_valence = getattr(aspect_profile, "default_valence", None)
+
+                    if orb <= orb_max:
+                        aspects.append(
+                            AstroEvent(
+                                event_type="natal_aspect",
+                                ut_time=0.0,
+                                local_time=datetime(1970, 1, 1, tzinfo=UTC),
+                                body=code1,
+                                target=code2,
+                                aspect=name,
+                                orb_deg=orb,
+                                priority=50,
+                                base_weight=base_weight,
+                                metadata={
+                                    "is_natal": True,
+                                    "default_valence": default_valence,
+                                    "orb_max": orb_max,
+                                },
+                            )
+                        )
         return aspects
+
+    def _lookup_mapping_value(self, mapping: dict | None, key: object) -> object | None:
+        if mapping is None:
+            return None
+        if not isinstance(key, str):
+            candidates = (key,)
+        else:
+            candidates = (key, key.lower(), key.upper(), key.title())
+        for candidate in candidates:
+            if candidate in mapping:
+                return mapping[candidate]
+        return None
 
     def _extract_named_longitudes(
         self,

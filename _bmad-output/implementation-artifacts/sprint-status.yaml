@@ -362,3 +362,23 @@ development_status:
   41-14-projection-publique-des-micro-tendances-des-journees-plates: done
   41-15-jobs-de-generation-et-refresh-de-baseline-utilisateur: done
   41-16-qa-et-gardefous-produit-pour-la-calibration-relative: done
+
+  epic-42: in-progress
+  42-1-formaliser-le-modele-de-signal-daily-v3: ready-for-dev
+  42-2-construire-la-susceptibilite-natale-structurelle: review
+  42-3-construire-le-climat-de-transit-continu: ready-for-dev
+  42-4-construire-la-couche-d-activation-intrajournaliere-locale: ready-for-dev
+  42-5-repositionner-les-exactitudes-comme-couche-impulsionnelle: ready-for-dev
+  42-6-produire-orientation-intensite-confiance-et-rarete-par-theme: ready-for-dev
+  42-7-refaire-la-calibration-absolue-a-partir-des-courbes-lissees: ready-for-dev
+  42-8-etendre-le-snapshot-et-la-persistance-pour-le-daily-v3: ready-for-dev
+  42-9-segmenter-la-journee-par-changement-de-regime: ready-for-dev
+  42-10-detecter-les-turning-points-comme-des-changements-de-regime-persistants: ready-for-dev
+  42-11-refaire-les-fenetres-decisionnelles-a-partir-des-blocs-v3: ready-for-dev
+  42-12-etendre-la-baseline-utilisateur-en-baseline-day-slot-et-saison: ready-for-dev
+  42-13-refaire-le-scoring-relatif-v3-autour-d-absolu-slot-confiance-et-rarete: ready-for-dev
+  42-14-refaire-la-logique-de-flat-day-et-de-micro-tendances-dans-le-moteur-v3: ready-for-dev
+  42-15-introduire-un-evidence-pack-expert-v3: ready-for-dev
+  42-16-brancher-la-projection-publique-et-la-future-interpretation-sur-l-evidence-pack: ready-for-dev
+  42-17-verrouiller-qa-backtesting-et-migration-progressive-du-moteur-v3: ready-for-dev
+  epic-42-retrospective: optional

@@ -115,18 +115,22 @@
       "calibration_label": "provisional",
       "computed_at": "2026-03-28T23:00:00+00:00",
       "debug_mode": true,
+      "engine_mode": "v2",
+      "engine_version": null,
+      "evidence_pack_version": null,
       "is_provisional_calibration": true,
       "jd_interval": [
         2461128.4583333335,
         2461129.4166666665
       ],
       "overall_tone": "positive",
-      "run_id": null
+      "run_id": null,
+      "snapshot_version": null
     },
     "effective_context": {
       "house_system_effective": "placidus",
       "house_system_requested": "placidus",
-      "input_hash": "99141ab62307e8f0efc882e896b5d474ce81878ed661f0f5a554fd95863f1530",
+      "input_hash": "05d93f9be6a885f9c3f9841a91db1e80155299bbf47c5a841ff5707b91691065",
       "local_date": "2026-03-29",
       "timezone": "Europe/Paris"
     },
@@ -3333,7 +3337,7 @@
           }
         ]
       },
-      "run_input_hash": "99141ab62307e8f0efc882e896b5d474ce81878ed661f0f5a554fd95863f1530"
+      "run_input_hash": "05d93f9be6a885f9c3f9841a91db1e80155299bbf47c5a841ff5707b91691065"
     },
     "editorial": {
       "best_window": {

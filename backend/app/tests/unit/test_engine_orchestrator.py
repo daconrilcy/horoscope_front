@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone
 from enum import Enum
 from types import SimpleNamespace
@@ -662,3 +663,47 @@ def test_run_v3_is_deterministic(orchestrator, base_input):
     output2 = orchestrator.run(base_input, engine_mode=DailyEngineMode.V3)
 
     assert output1 == output2
+
+
+def test_build_natal_chart_uses_contextual_aspect_profiles(base_input):
+    loaded_context = _build_loaded_context()
+    loaded_context = replace(
+        loaded_context,
+        prediction_context=replace(
+            loaded_context.prediction_context,
+            aspect_profiles={
+                "square": AspectProfileData(
+                    aspect_id=2,
+                    code="square",
+                    intensity_weight=1.8,
+                    default_valence="negative",
+                    orb_multiplier=0.5,
+                    phase_sensitive=False,
+                )
+            },
+        ),
+    )
+    orchestrator = EngineOrchestrator(prediction_context_loader=lambda *_: loaded_context)
+
+    natal_chart_payload = {
+        "planets": [
+            {"code": "sun", "longitude": 0.0, "house": 1},
+            {"code": "moon", "longitude": 92.0, "house": 4},
+        ],
+        "houses": base_input.natal_chart["houses"],
+        "angles": base_input.natal_chart["angles"],
+    }
+    natal_cusps = orchestrator._extract_house_cusps(natal_chart_payload)
+
+    natal_chart = orchestrator._build_natal_chart(
+        natal_chart_payload,
+        natal_cusps,
+        loaded_context,
+    )
+
+    square = next(
+        aspect for aspect in natal_chart.natal_aspects if aspect.aspect == "square"
+    )
+    assert square.base_weight == pytest.approx(1.8)
+    assert square.metadata["default_valence"] == "negative"
+    assert square.metadata["orb_max"] == pytest.approx(2.5)
