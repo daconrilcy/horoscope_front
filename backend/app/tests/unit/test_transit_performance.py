@@ -1,6 +1,6 @@
 import time
 from datetime import UTC, datetime, timedelta
-from unittest.mock import MagicMock
+from types import SimpleNamespace
 
 from app.prediction.aggregator import V3ThemeAggregator
 from app.prediction.intraday_activation_builder import IntradayActivationBuilder
@@ -23,17 +23,31 @@ def test_v3_layers_performance_benchmark():
     targets_list = planets_list + ["Asc", "MC"]
 
     # Mock context
-    ctx = MagicMock()
-    ctx.prediction_context.categories = [MagicMock(code="work", is_enabled=True)]
+    ctx = SimpleNamespace()
+    ctx.prediction_context = SimpleNamespace()
+    ctx.ruleset_context = SimpleNamespace()
+    ctx.prediction_context.categories = [SimpleNamespace(code="work", is_enabled=True)]
     ctx.prediction_context.planet_category_weights = []
     ctx.prediction_context.house_category_weights = []
     ctx.prediction_context.planet_profiles = {
-        p: MagicMock(weight_intraday=1.0, typical_polarity="positive") 
+        p: SimpleNamespace(weight_intraday=1.0, typical_polarity="positive", orb_active_deg=4.0)
         for p in planets_list
     }
     ctx.prediction_context.aspect_profiles = {
-        a: MagicMock(intensity_weight=1.0, default_valence="positive") 
+        a: SimpleNamespace(
+            intensity_weight=1.0,
+            default_valence="positive",
+            orb_multiplier=1.0,
+            phase_sensitive=True,
+        )
         for a in ["conjunction", "sextile", "square", "trine", "opposition"]
+    }
+    ctx.ruleset_context.parameters = {}
+    exact_type = SimpleNamespace(base_weight=1.0, priority=90)
+    ctx.ruleset_context.event_types = {
+        "aspect_exact_to_angle": exact_type,
+        "aspect_exact_to_luminary": exact_type,
+        "aspect_exact_to_personal": exact_type,
     }
 
     natal = NatalChart(
@@ -56,7 +70,7 @@ def test_v3_layers_performance_benchmark():
     # Benchmark T(c,t)
     t_builder = TransitSignalBuilder()
     start_t = time.perf_counter()
-    t_builder.build_timeline(steps, natal, ctx)
+    transit_result = t_builder.build(steps, natal, ctx)
     dur_t = (time.perf_counter() - start_t) * 1000
 
     # Benchmark A(c,t)
@@ -89,6 +103,11 @@ def test_v3_layers_performance_benchmark():
     print(f"  A(c,t) Activation: {dur_a:.2f}ms (Budget < 50ms)")
     print(f"  Aggregation (10 themes): {dur_agg:.2f}ms")
 
-    assert dur_t < 100.0
+    assert dur_t < TransitSignalBuilder.TARGET_BUDGET_MS
+    assert (
+        transit_result.diagnostics["performance"]["budget_target_ms"]
+        == TransitSignalBuilder.TARGET_BUDGET_MS
+    )
+    assert transit_result.diagnostics["performance"]["sample_count"] == 96
     assert dur_a < 50.0
 

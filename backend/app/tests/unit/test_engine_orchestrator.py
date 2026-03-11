@@ -23,7 +23,13 @@ from app.prediction.context_loader import LoadedPredictionContext
 from app.prediction.engine_orchestrator import DailyEngineMode, EngineOrchestrator
 from app.prediction.exceptions import PredictionContextError
 from app.prediction.input_hash import compute_engine_input_hash
-from app.prediction.schemas import AstroEvent, EngineInput, PersistablePredictionBundle, SamplePoint
+from app.prediction.schemas import (
+    AstroEvent,
+    EngineInput,
+    PersistablePredictionBundle,
+    PlanetState,
+    SamplePoint,
+)
 from app.prediction.temporal_sampler import DayGrid
 
 
@@ -707,3 +713,215 @@ def test_build_natal_chart_uses_contextual_aspect_profiles(base_input):
     assert square.base_weight == pytest.approx(1.8)
     assert square.metadata["default_valence"] == "negative"
     assert square.metadata["orb_max"] == pytest.approx(2.5)
+
+
+def test_run_v3_exposes_transit_diagnostics_and_signal(base_input):
+    profile = PlanetProfileData(
+        planet_id=1,
+        code="sun",
+        name="Sun",
+        class_code="planet",
+        speed_rank=1,
+        speed_class="variable",
+        weight_intraday=1.0,
+        weight_day_climate=1.0,
+        typical_polarity="positive",
+        orb_active_deg=4.0,
+        orb_peak_deg=1.5,
+        keywords=("sun",),
+    )
+    loaded_context = LoadedPredictionContext(
+        prediction_context=PredictionContext(
+            categories=(
+                CategoryData(
+                    id=1,
+                    code="work",
+                    name="Work",
+                    display_name="Work",
+                    sort_order=1,
+                    is_enabled=True,
+                ),
+            ),
+            planet_profiles={"sun": profile, "Sun": profile},
+            house_profiles={
+                10: HouseProfileData(
+                    house_id=10,
+                    number=10,
+                    name="Career",
+                    house_kind="angular",
+                    visibility_weight=1.0,
+                    base_priority=5,
+                    keywords=("career",),
+                ),
+            },
+            planet_category_weights=(
+                PlanetCategoryWeightData(
+                    planet_id=1,
+                    planet_code="sun",
+                    category_id=1,
+                    category_code="work",
+                    weight=1.0,
+                    influence_role="primary",
+                ),
+            ),
+            house_category_weights=(
+                HouseCategoryWeightData(
+                    house_id=10,
+                    house_number=10,
+                    category_id=1,
+                    category_code="work",
+                    weight=1.0,
+                    routing_role="primary",
+                ),
+            ),
+            sign_rulerships={"leo": "sun"},
+            aspect_profiles={
+                "conjunction": AspectProfileData(
+                    aspect_id=1,
+                    code="conjunction",
+                    intensity_weight=1.0,
+                    default_valence="positive",
+                    orb_multiplier=1.0,
+                    phase_sensitive=True,
+                ),
+            },
+            astro_points={},
+            point_category_weights=(),
+        ),
+        ruleset_context=RulesetContext(
+            ruleset=RulesetData(
+                id=1,
+                version="1.0.0",
+                reference_version_id=1,
+                zodiac_type="tropical",
+                coordinate_mode="geocentric",
+                house_system="whole_sign",
+                time_step_minutes=15,
+                is_locked=True,
+            ),
+            parameters={
+                "v3_b_weight_occ": 0.0,
+                "v3_b_weight_rul": 0.0,
+                "v3_b_weight_ang": 0.0,
+                "v3_b_weight_asp": 0.0,
+            },
+            event_types={
+                "aspect_exact_to_luminary": EventTypeData(
+                    id=1,
+                    code="aspect_exact_to_luminary",
+                    name="Exact luminary",
+                    event_group="aspect",
+                    priority=90,
+                    base_weight=1.0,
+                ),
+                "aspect_exact_to_angle": EventTypeData(
+                    id=2,
+                    code="aspect_exact_to_angle",
+                    name="Exact angle",
+                    event_group="aspect",
+                    priority=90,
+                    base_weight=1.0,
+                ),
+                "aspect_exact_to_personal": EventTypeData(
+                    id=3,
+                    code="aspect_exact_to_personal",
+                    name="Exact personal",
+                    event_group="aspect",
+                    priority=90,
+                    base_weight=1.0,
+                ),
+            },
+        ),
+        calibrations={"work": None},
+        is_provisional_calibration=True,
+        calibration_label="provisional",
+    )
+    samples = [
+        SamplePoint(
+            ut_time=float(index),
+            local_time=datetime(2026, 3, 7, 0, 0, tzinfo=timezone.utc)
+            + timedelta(minutes=15 * index),
+        )
+        for index in range(3)
+    ]
+
+    longitudes = [102.0, 100.0, 102.0]
+
+    class StubTemporalSampler:
+        def build_day_grid(self, *_args):
+            return DayGrid(
+                samples=samples,
+                ut_start=0.0,
+                ut_end=2.0,
+                sunrise_ut=None,
+                sunset_ut=None,
+                local_date=date(2026, 3, 7),
+                timezone="UTC",
+            )
+
+    class StubAstroCalculator:
+        def __init__(self, *_args):
+            self._index = 0
+
+        def compute_step(self, ut_time: float, local_time: datetime):
+            longitude = longitudes[self._index]
+            self._index += 1
+            return SimpleNamespace(
+                ut_jd=ut_time,
+                local_time=local_time,
+                house_system_effective="placidus",
+                ascendant_deg=0.0,
+                mc_deg=270.0,
+                house_cusps=[],
+                planets={
+                    "Sun": PlanetState(
+                        code="Sun",
+                        longitude=longitude,
+                        speed_lon=1.0,
+                        is_retrograde=False,
+                        sign_code=3,
+                        natal_house_transited=10,
+                    )
+                },
+            )
+
+    class StubEventDetector:
+        def __init__(self, *_args):
+            pass
+
+        def detect(self, *_args):
+            return []
+
+    orchestrator = EngineOrchestrator(
+        prediction_context_loader=lambda *_: loaded_context,
+        temporal_sampler=StubTemporalSampler(),
+        astro_calculator_factory=lambda *_: StubAstroCalculator(),
+        event_detector_factory=lambda *_: StubEventDetector(),
+    )
+    engine_input = EngineInput(
+        natal_chart={
+            "planets": [{"code": "sun", "longitude": 100.0, "house": 10}],
+            "houses": base_input.natal_chart["houses"],
+            "angles": base_input.natal_chart["angles"],
+        },
+        local_date=base_input.local_date,
+        timezone=base_input.timezone,
+        latitude=base_input.latitude,
+        longitude=base_input.longitude,
+        reference_version=base_input.reference_version,
+        ruleset_version=base_input.ruleset_version,
+        debug_mode=False,
+    )
+
+    bundle = orchestrator.run(
+        engine_input,
+        engine_mode=DailyEngineMode.V3,
+        include_editorial=False,
+    )
+
+    transit_values = [
+        layer.transit for layer in bundle.v3_core.theme_signals["work"].timeline.values()
+    ]
+    assert max(transit_values) > 0.0
+    assert bundle.v3_core.run_metadata["v3_transit_signal"]["performance"]["sample_count"] == 3
+    assert bundle.v3_core.run_metadata["v3_transit_signal"]["themes"]["work"]["top_contributors"]

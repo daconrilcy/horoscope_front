@@ -347,9 +347,10 @@ class EngineOrchestrator:
         v3_versions: dict[str, str | None],
     ) -> V3EngineOutput:
         b_map = self._natal_sensitivity_calculator.compute_v3(natal_chart, loaded_context)
-        t_timelines = self._transit_signal_builder.build_timeline(
+        transit_layer = self._transit_signal_builder.build(
             astro_states, natal_chart, loaded_context
         )
+        t_timelines = transit_layer.timeline
         a_timelines = self._intraday_activation_builder.build_timeline(
             astro_states, natal_chart, loaded_context
         )
@@ -405,6 +406,7 @@ class EngineOrchestrator:
                     }
                     for theme_code, structural_output in b_map.items()
                 },
+                "v3_transit_signal": transit_layer.diagnostics,
             },
             computed_at=computed_at,
         )
