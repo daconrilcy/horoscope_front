@@ -18,18 +18,18 @@ class PersistedRelativeScore:
     relative_z_score: float | None  # (raw - mean) / std. None if std == 0 or baseline missing
     relative_percentile: float | None  # 0.0 - 1.0. Based on percentiles in baseline
     relative_rank: int | None  # 1 to N, 1 being the highest relative score of the day
+    is_available: bool = False
 
     # V3 Granular Fields
-    z_abs: float | None    # Z-score vs Day baseline
-    z_slot: float | None   # Z-score vs Slot baseline
-    z_season: float | None # Z-score vs Season baseline
-    pct_abs: float | None  # Percentile vs Day baseline
-    pct_rel: float | None  # Percentile vs Slot baseline
-    pct_season: float | None # Percentile vs Season baseline
-    rarity: float | None   # Frequency/Rarity indicator (e.g. 1 - abs(percentile - 0.5) * 2 or similar)
-    
+    z_abs: float | None = None  # Z-score vs Day baseline
+    z_slot: float | None = None  # Z-score vs Slot baseline
+    z_season: float | None = None  # Z-score vs Season baseline
+    pct_abs: float | None = None  # Percentile vs Day baseline
+    pct_rel: float | None = None  # Percentile vs Slot baseline
+    pct_season: float | None = None  # Percentile vs Season baseline
+    rarity: float | None = None  # Frequency/Rarity indicator
+
     # Metadata for fallback/audit
-    is_available: bool
     # e.g. "baseline_missing", "variance_null", "sample_too_small"
     fallback_reason: str | None = None
 

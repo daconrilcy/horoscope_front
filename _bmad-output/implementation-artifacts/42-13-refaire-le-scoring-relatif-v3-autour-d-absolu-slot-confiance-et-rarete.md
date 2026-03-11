@@ -1,6 +1,6 @@
 # Story 42.13: Refaire le scoring relatif v3 autour d'absolu, slot, confiance et rareté
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -23,22 +23,22 @@ so that le produit puisse comparer un jour, un créneau et une intensité de man
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Définir le contrat de scoring relatif v3 (AC: 1, 4)
-  - [ ] Ajouter les nouveaux champs de score relatif
-  - [ ] Définir les conventions de lecture produit
+- [x] Task 1: Définir le contrat de scoring relatif v3 (AC: 1, 4)
+  - [x] Ajouter les nouveaux champs de score relatif
+  - [x] Définir les conventions de lecture produit
 
-- [ ] Task 2: Réimplémenter le calculateur relatif (AC: 1, 2, 3)
-  - [ ] Adapter `relative_scoring_calculator.py`
-  - [ ] Utiliser les nouveaux niveaux de baseline
+- [x] Task 2: Réimplémenter le calculateur relatif (AC: 1, 2, 3)
+  - [x] Adapter `relative_scoring_calculator.py`
+  - [x] Utiliser les nouveaux niveaux de baseline
 
-- [ ] Task 3: Adapter le service relatif (AC: 3, 4)
-  - [ ] Résoudre les bonnes baselines selon thème et contexte
-  - [ ] Préserver le primat de l'absolu
+- [x] Task 3: Adapter le service relatif (AC: 3, 4)
+  - [x] Résoudre les bonnes baselines selon thème et contexte
+  - [x] Préserver le primat de l'absolu
 
-- [ ] Task 4: Tests (AC: 5)
-  - [ ] Cas nominal
-  - [ ] Variance nulle
-  - [ ] Baseline absente
+- [x] Task 4: Tests (AC: 5)
+  - [x] Cas nominal
+  - [x] Variance nulle
+  - [x] Baseline absente
 
 ## Dev Notes
 
@@ -71,9 +71,15 @@ GPT-5 Codex
 
 ### Completion Notes List
 
-- Story prête pour recalculer le relatif v3 sur une base plus fine que le scoring journalier actuel.
+- Le scoring relatif expose `z_abs`, `z_slot`, `pct_abs`, `pct_rel` et une rareté explicite autour du baseline v3.
+- Code review fix: `RelativeScoringCalculator` accepte à nouveau les baselines legacy journalières en entrée, sans casser le contrat granulaire.
+- Code review fix: `PersistedRelativeScore` reste compatible avec les appels positionnels historiques tout en exposant les champs v3.
+- Les tests couvrent nominal, variance nulle, baseline absente et ranking stable.
 
 ### File List
 
+- `backend/app/prediction/persisted_relative_score.py`
+- `backend/app/prediction/relative_scoring_calculator.py`
+- `backend/app/tests/unit/test_relative_scoring_calculator.py`
+- `backend/app/tests/unit/test_v3_relative_scoring.py`
 - `_bmad-output/implementation-artifacts/42-13-refaire-le-scoring-relatif-v3-autour-d-absolu-slot-confiance-et-rarete.md`
-

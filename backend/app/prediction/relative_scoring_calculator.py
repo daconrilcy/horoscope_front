@@ -22,7 +22,7 @@ class RelativeScoringCalculator:
     def compute_all(
         self,
         raw_scores: dict[str, float],
-        granular_baselines: dict[str, dict[str, PersistedUserBaseline]],
+        granular_baselines: dict[str, dict[str, PersistedUserBaseline] | PersistedUserBaseline],
     ) -> dict[str, PersistedRelativeScore]:
         """
         Computes all relative scores and ranks them.
@@ -33,7 +33,7 @@ class RelativeScoringCalculator:
 
         # 1. Individual metrics calculation
         for category_code, raw_score in raw_scores.items():
-            category_baselines = granular_baselines.get(category_code, {})
+            category_baselines = self._coerce_baselines(granular_baselines.get(category_code))
             relative_scores[category_code] = self._compute_category_relative(
                 category_code, raw_score, category_baselines
             )
@@ -105,7 +105,10 @@ class RelativeScoringCalculator:
             pct_rel=pct_rel,
             pct_season=pct_season,
             rarity=rarity,
-            is_available=pct_abs is not None,
+            is_available=any(
+                metric is not None
+                for metric in (z_abs, z_slot, z_season, pct_abs, pct_rel, pct_season)
+            ),
             fallback_reason=fallback_day,
         )
 
@@ -145,5 +148,15 @@ class RelativeScoringCalculator:
 
     def _ranking_value(self, score: PersistedRelativeScore) -> float | None:
         if score.z_abs is not None:
-            return abs(score.z_abs) # AC: Rank by intensity (abs)
+            return abs(score.z_abs)  # AC: Rank by intensity (abs)
         return score.pct_abs
+
+    def _coerce_baselines(
+        self,
+        baselines: dict[str, PersistedUserBaseline] | PersistedUserBaseline | None,
+    ) -> dict[str, PersistedUserBaseline]:
+        if baselines is None:
+            return {}
+        if isinstance(baselines, dict):
+            return baselines
+        return {"day": baselines}
