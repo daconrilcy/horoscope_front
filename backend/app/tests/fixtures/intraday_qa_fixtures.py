@@ -251,3 +251,65 @@ def get_transition_day() -> dict[str, Any]:
         expected_pivot_range=(1, 1),
         expected_window_range=(1, 1),
     )
+
+
+def get_ambiguous_day() -> dict[str, Any]:
+    """
+    Scénario ambiguous_day : Signaux contradictoires forts.
+    Love à 18, Work à 4.
+    """
+    n_steps = 96
+    natal = SimulatedNatalProfile(
+        birth_date=date(1980, 10, 10),
+        birth_place="Bordeaux",
+        birth_timezone="Europe/Paris",
+        birth_lat=44.8378,
+        birth_lon=-0.5792,
+        current_lat=44.8378,
+        current_lon=-0.5792,
+        current_timezone="Europe/Paris",
+    )
+    variations = {
+        30: {"love": 18, "work": 4},
+        60: {"love": 19, "work": 3},
+    }
+    return _build_fixture(
+        target_date=date(2026, 3, 20),
+        simulated_natal_profile=natal,
+        notes_by_step=make_notes(n_steps, default=10, variations=variations),
+        events_by_step=[[] for _ in range(n_steps)],
+        step_times=make_step_times(n_steps),
+        expected_pivot_range=(1, 3),
+        expected_window_range=(1, 3),
+    )
+
+
+def get_intense_neutral_day() -> dict[str, Any]:
+    """
+    Scénario intense_neutral_day : Beaucoup d'aspects techniques (priorité 50-60)
+    mais notes globales stables autour de 10.
+    """
+    n_steps = 96
+    natal = SimulatedNatalProfile(
+        birth_date=date(1975, 3, 3),
+        birth_place="Nantes",
+        birth_timezone="Europe/Paris",
+        birth_lat=47.2184,
+        birth_lon=-1.5536,
+        current_lat=47.2184,
+        current_lon=-1.5536,
+        current_timezone="Europe/Paris",
+    )
+    events = [[] for _ in range(n_steps)]
+    for i in range(10, 90, 10):
+        events[i] = [make_event("aspect_minor", 55, i)]
+        
+    return _build_fixture(
+        target_date=date(2026, 3, 25),
+        simulated_natal_profile=natal,
+        notes_by_step=make_notes(n_steps, default=10),
+        events_by_step=events,
+        step_times=make_step_times(n_steps),
+        expected_pivot_range=(0, 2),
+        expected_window_range=(0, 2),
+    )

@@ -1,6 +1,6 @@
 # Story 42.17: Verrouiller QA, backtesting et migration progressive du moteur v3
 
-Status: ready-for-dev
+Status: completed
 
 ## Story
 
@@ -22,24 +22,24 @@ so that la bascule vers le moteur daily v3 soit objectivable et réversible.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Capitaliser sur le mode `dual` introduit plus tôt (AC: 1, 3)
-  - [ ] Exploiter le mode de double calcul déjà introduit
-  - [ ] Produire des métriques de comparaison lisibles
+- [x] Task 1: Capitaliser sur le mode `dual` introduit plus tôt (AC: 1, 3)
+  - [x] Exploiter le mode de double calcul déjà introduit
+  - [x] Produire des métriques de comparaison lisibles
 
-- [ ] Task 2: Étendre les fixtures et cas QA (AC: 2)
-  - [ ] Journées plates
-  - [ ] Journées actives
-  - [ ] Journées ambiguës
-  - [ ] Journées intenses mais neutres
+- [x] Task 2: Étendre les fixtures et cas QA (AC: 2)
+  - [x] Journées plates
+  - [x] Journées actives
+  - [x] Journées ambiguës
+  - [x] Journées intenses mais neutres
 
-- [ ] Task 3: Définir les gates produit de migration (AC: 4, 5)
-  - [ ] Documenter des critères go/no-go
-  - [ ] Prévoir un rollback propre
+- [x] Task 3: Définir les gates produit de migration (AC: 4, 5)
+  - [x] Documenter des critères go/no-go
+  - [x] Prévoir un rollback propre
 
-- [ ] Task 4: Tests et rapport (AC: 3, 5)
-  - [ ] Générer un rapport comparatif exploitable
-  - [ ] Vérifier la stabilité inter-runs
-  - [ ] Vérifier le respect des SLO runtime clés
+- [x] Task 4: Tests et rapport (AC: 3, 5)
+  - [x] Générer un rapport comparatif exploitable
+  - [x] Vérifier la stabilité inter-runs
+  - [x] Vérifier le respect des SLO runtime clés
 
 ## Dev Notes
 
@@ -52,7 +52,7 @@ so that la bascule vers le moteur daily v3 soit objectivable et réversible.
 
 - Fichiers principaux:
   - `backend/app/tests/integration/test_daily_prediction_qa.py`
-  - `backend/app/tests/regression/`
+  - `_bmad-output/test-artifacts/v3-migration-gates.md`
   - `backend/app/prediction/public_projection.py`
   - `backend/app/services/daily_prediction_service.py`
 
@@ -60,7 +60,6 @@ so that la bascule vers le moteur daily v3 soit objectivable et réversible.
 
 - [Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
 - [Source: backend/app/tests/integration/test_daily_prediction_qa.py]
-- [Source: backend/app/tests/regression/test_engine_non_regression.py]
 - [Source: backend/app/services/daily_prediction_service.py]
 
 ## Dev Agent Record
@@ -80,3 +79,5 @@ GPT-5 Codex
 ### File List
 
 - `_bmad-output/implementation-artifacts/42-17-verrouiller-qa-backtesting-et-migration-progressive-du-moteur-v3.md`
+- `_bmad-output/test-artifacts/v3-migration-gates.md`
+- `backend/app/tests/integration/test_daily_prediction_qa.py`
