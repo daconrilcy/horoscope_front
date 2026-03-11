@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-if TYPE_CHECKING:
-    from app.prediction.schemas import AstroEvent
+from app.prediction.schemas import AstroEvent, V3TimeBlock, V3TurningPoint
 
 
 @dataclass
@@ -24,6 +23,12 @@ class TurningPointDetector:
     # AC2: raise threshold so minor/technical changes don't become user pivots
     DELTA_NOTE_THRESHOLD = 3
     NON_DECISION_EVENT_TYPES = frozenset({"asc_sign_change"})
+
+    # V3 Thresholds (AC1)
+    MIN_V3_AMPLITUDE = 3.0
+    MIN_V3_REGIME_AMPLITUDE = 1.5  # Solid threshold for orientation changes
+    MIN_V3_DURATION_FOLLOWING = 60  # minutes
+    MIN_V3_CONFIDENCE = 0.5
 
     REASON_PRIORITY = {
         "high_priority_event": 3,
@@ -107,6 +112,65 @@ class TurningPointDetector:
                     trigger_event=reasons_found[best_reason][1],
                     severity=self.REASON_SEVERITY[best_reason],
                     driver_events=driver_events,
+                )
+            )
+
+        return pivots
+
+    def detect_v3(
+        self,
+        time_blocks: list[V3TimeBlock],
+        detected_events: list[AstroEvent],
+    ) -> list[V3TurningPoint]:
+        """Detect turning points as persistent regime changes (Story 42.10)."""
+        pivots = []
+        if not time_blocks:
+            return pivots
+
+        for i in range(1, len(time_blocks)):
+            prev = time_blocks[i - 1]
+            curr = time_blocks[i]
+
+            # Trigger logic: orientation change OR significant intensity jump
+            regime_changed = prev.orientation != curr.orientation
+            intensity_diff = abs(curr.intensity - prev.intensity)
+
+            reason = None
+            if regime_changed and intensity_diff >= self.MIN_V3_REGIME_AMPLITUDE:
+                reason = "regime_change"
+            elif intensity_diff >= self.MIN_V3_AMPLITUDE:
+                reason = "intensity_jump"
+
+            if not reason:
+                continue
+
+            # AC1 requirements: duration, confidence
+            duration_following = (curr.end_local - curr.start_local).total_seconds() / 60
+            if duration_following < self.MIN_V3_DURATION_FOLLOWING:
+                continue
+
+            confidence = min(prev.confidence, curr.confidence)
+            if confidence < self.MIN_V3_CONFIDENCE:
+                continue
+
+            # Attach strongest AstroEvents near the transition as drivers (AC4)
+            drivers = [
+                e
+                for e in detected_events
+                if abs((e.local_time - curr.start_local).total_seconds()) <= 60 * 60  # 1h window
+            ]
+            # Prioritize priority then intensity of contribution if possible
+            drivers = sorted(drivers, key=lambda e: e.priority, reverse=True)[:5]
+
+            pivots.append(
+                V3TurningPoint(
+                    local_time=curr.start_local,
+                    reason=reason,
+                    amplitude=intensity_diff,
+                    duration_following=duration_following,
+                    confidence=confidence,
+                    categories_impacted=curr.dominant_themes,
+                    drivers=drivers,
                 )
             )
 

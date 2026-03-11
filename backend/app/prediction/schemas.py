@@ -149,6 +149,20 @@ class V3TimeBlock:
 
 
 @dataclass(frozen=True)
+class V3TurningPoint:
+    """A turning point in V3 (Story 42.10)."""
+
+    local_time: datetime
+    reason: str  # "regime_change" | "intensity_jump" | "high_priority_event"
+    amplitude: float
+    duration_following: float  # minutes
+    confidence: float
+    categories_impacted: list[str] = field(default_factory=list)
+    drivers: list[AstroEvent] = field(default_factory=list)
+    summary: str = ""
+
+
+@dataclass(frozen=True)
 class V3EngineOutput:
     """Engine v3 calculation results (AC1).
     
@@ -165,6 +179,7 @@ class V3EngineOutput:
     theme_signals: dict[str, V3ThemeSignal] = field(default_factory=dict)
     daily_metrics: dict[str, V3DailyMetrics] = field(default_factory=dict)
     time_blocks: list[V3TimeBlock] = field(default_factory=list)
+    turning_points: list[V3TurningPoint] = field(default_factory=list)
     
     run_metadata: dict[str, Any] = field(default_factory=dict)
     computed_at: datetime = field(default_factory=lambda: datetime.now(UTC))

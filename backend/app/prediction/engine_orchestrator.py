@@ -407,6 +407,7 @@ class EngineOrchestrator:
             daily_metrics[theme_code] = dataclasses.replace(metrics, score_20=calibrated_score)
 
         time_blocks = self._regime_segmenter.segment(theme_signals)
+        turning_points = self._turning_point_detector.detect_v3(time_blocks, detected_events)
 
         computed_at = self._local_date_start_utc(local_date, timezone)
         return V3EngineOutput(
@@ -418,6 +419,7 @@ class EngineOrchestrator:
             theme_signals=theme_signals,
             daily_metrics=daily_metrics,
             time_blocks=time_blocks,
+            turning_points=turning_points,
             run_metadata={
                 "mode": engine_mode.value,
                 "v3_natal_structural": {
@@ -573,12 +575,34 @@ class EngineOrchestrator:
                     )
                 )
 
+        # Map V3TurningPoints to legacy format
+        legacy_turning_points = []
+        if v3_core and v3_core.turning_points:
+            for tp in v3_core.turning_points:
+                severity = 0.5
+                if tp.reason == "regime_change":
+                    severity = 0.8
+                elif tp.reason == "intensity_jump":
+                    severity = 0.9
+
+                legacy_turning_points.append(
+                    TurningPoint(
+                        local_time=tp.local_time,
+                        reason=tp.reason,
+                        categories_impacted=tp.categories_impacted,
+                        trigger_event=tp.drivers[0] if tp.drivers else None,
+                        severity=severity,
+                        summary=tp.summary,
+                        driver_events=tp.drivers,
+                    )
+                )
+
         return CoreEngineOutput(
             effective_context=effective_context,
             run_metadata=run_metadata,
             category_scores=category_scores,
             time_blocks=legacy_time_blocks,
-            turning_points=[],
+            turning_points=legacy_turning_points,
             decision_windows=[],
             detected_events=detected_events,
             sampling_timeline=list(samples),

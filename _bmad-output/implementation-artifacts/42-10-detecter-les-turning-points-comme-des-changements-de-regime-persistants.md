@@ -1,6 +1,6 @@
 # Story 42.10: Détecter les turning points comme des changements de régime persistants
 
-Status: ready-for-dev
+Status: completed
 
 ## Story
 
@@ -21,24 +21,24 @@ so that le produit ne montre plus de faux pivots sur des journées faibles ou am
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Définir le contrat métier du pivot v3 (AC: 1, 2)
-  - [ ] Définir fenêtres avant/après
-  - [ ] Définir amplitude minimale
-  - [ ] Définir durée minimale du régime suivant
+- [x] Task 1: Définir le contrat métier du pivot v3 (AC: 1, 2)
+  - [x] Définir fenêtres avant/après
+  - [x] Définir amplitude minimale
+  - [x] Définir durée minimale du régime suivant
 
-- [ ] Task 2: Réimplémenter la détection de pivot (AC: 2, 4)
-  - [ ] Refaire `turning_point_detector.py`
-  - [ ] Conserver les drivers utiles
-  - [ ] Éviter la dépendance directe à un `exact event`
+- [x] Task 2: Réimplémenter la détection de pivot (AC: 2, 4)
+  - [x] Refaire `turning_point_detector.py`
+  - [x] Conserver les drivers utiles
+  - [x] Éviter la dépendance directe à un `exact event`
 
-- [ ] Task 3: Brancher la sortie sur les blocs et fenêtres v3 (AC: 3)
-  - [ ] Utiliser les régimes segmentés comme entrée
-  - [ ] Préparer une sortie publique plus sobre
+- [x] Task 3: Brancher la sortie sur les blocs et fenêtres v3 (AC: 3)
+  - [x] Utiliser les régimes segmentés comme entrée
+  - [x] Préparer une sortie publique plus sobre
 
-- [ ] Task 4: Tests (AC: 5)
-  - [ ] Tester journée faible sans faux pivot
-  - [ ] Tester vrai basculement durable
-  - [ ] Tester cas ambigu sans pivot public
+- [x] Task 4: Tests (AC: 5)
+  - [x] Tester journée faible sans faux pivot
+  - [x] Tester vrai basculement durable
+  - [x] Tester cas ambigu sans pivot public
 
 ## Dev Notes
 
@@ -76,4 +76,7 @@ GPT-5 Codex
 ### File List
 
 - `_bmad-output/implementation-artifacts/42-10-detecter-les-turning-points-comme-des-changements-de-regime-persistants.md`
-
+- `backend/app/prediction/turning_point_detector.py`
+- `backend/app/prediction/engine_orchestrator.py`
+- `backend/app/prediction/schemas.py`
+- `backend/app/tests/unit/test_v3_turning_points.py`
