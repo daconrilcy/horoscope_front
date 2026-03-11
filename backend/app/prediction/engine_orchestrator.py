@@ -408,6 +408,11 @@ class EngineOrchestrator:
 
         time_blocks = self._regime_segmenter.segment(theme_signals)
         turning_points = self._turning_point_detector.detect_v3(time_blocks, detected_events)
+        
+        # AC1/AC2 Story 42.11: V3 Decision Windows
+        decision_windows = self._decision_window_builder.build_v3(
+            time_blocks, turning_points, daily_metrics
+        )
 
         computed_at = self._local_date_start_utc(local_date, timezone)
         return V3EngineOutput(
@@ -420,6 +425,7 @@ class EngineOrchestrator:
             daily_metrics=daily_metrics,
             time_blocks=time_blocks,
             turning_points=turning_points,
+            decision_windows=decision_windows,
             run_metadata={
                 "mode": engine_mode.value,
                 "v3_natal_structural": {
@@ -584,9 +590,9 @@ class EngineOrchestrator:
                     )
                 )
 
-        decision_windows = self._decision_window_builder.build(
-            legacy_time_blocks,
-            legacy_turning_points,
+        decision_windows = self._decision_window_builder.build_v3(
+            v3_core.time_blocks if v3_core else [],
+            v3_core.turning_points if v3_core else [],
             category_scores,
         )
 

@@ -60,17 +60,28 @@ so that les fenêtres proposées aient une personnalité propre et une valeur d�
 
 ### Agent Model Used
 
-GPT-5 Codex
+GPT-5 Codex + BMAD Code Reviewer
 
 ### Debug Log References
 
-- Story générée en mode BMAD YOLO à partir de l'Epic 42.
+- Code Review finding: `_block_score_v3` was incompatible with `V3DailyMetrics` objects (fixed).
+- Code Review finding: `best_window` lacked an actionability threshold (fixed).
+- Code Review finding: Story file was missing its own File List (fixed).
 
 ### Completion Notes List
 
-- Story prête pour refaire les fenêtres décisionnelles sur les blocs de régime v3.
+- [x] Decision windows are now fully derived from V3 blocks (AC1, AC2).
+- [x] Filter implemented to ensure sobriety on weak days: minimum intensity (4.0) and confidence (0.4) (AC4).
+- [x] `best_window` reliability improved with a minimum score threshold (12.0) (AC3).
+- [x] Score blending correctly handles V3 metrics.
+- [x] Unit tests cover V3 window generation, filtering, and score calculation (AC5).
 
 ### File List
 
+- `backend/app/prediction/decision_window_builder.py`
+- `backend/app/prediction/engine_orchestrator.py`
+- `backend/app/prediction/public_projection.py`
+- `backend/app/prediction/schemas.py`
+- `backend/app/tests/unit/test_v3_decision_windows.py`
 - `_bmad-output/implementation-artifacts/42-11-refaire-les-fenetres-decisionnelles-a-partir-des-blocs-v3.md`
 

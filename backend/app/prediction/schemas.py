@@ -219,6 +219,8 @@ class DecisionWindow:
     score: float  # avg note of dominant categories, 0-20
     confidence: float  # 0-1, inverse of volatility
     dominant_categories: list[str]
+    orientation: str | None = None  # AC2: V3 orientation
+    intensity: float | None = None    # AC2: V3 intensity
 @dataclass(frozen=True)
 class BestWindow:
     start_local: datetime

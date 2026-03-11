@@ -248,6 +248,8 @@ class PublicDecisionWindowPolicy:
                     "score": dw.score,
                     "confidence": dw.confidence,
                     "dominant_categories": list(dw.dominant_categories),
+                    "orientation": getattr(dw, "orientation", None),
+                    "intensity": getattr(dw, "intensity", None),
                 }
                 for dw in raw_dws
             ]
@@ -692,13 +694,18 @@ class PublicSummaryPolicy:
                 best_window = editorial_window
 
         if best_window is None and decision_windows:
-            cand = max(decision_windows, key=lambda w: (w["score"], w["confidence"]))
-            if cand.get("dominant_categories"):
-                best_window = {
-                    "start_local": cand["start_local"],
-                    "end_local": cand["end_local"],
-                    "dominant_category": cand["dominant_categories"][0],
-                }
+            # AC3: Best window only if it meets a certain score/intensity in V3
+            # Filter for favorable/pivot first
+            candidates = [w for w in decision_windows if w["window_type"] in ("favorable", "pivot")]
+            if candidates:
+                cand = max(candidates, key=lambda w: (w["score"], w["confidence"]))
+                # AC3: Ensure window is actually exploitable (score > threshold)
+                if cand.get("dominant_categories") and cand["score"] >= MAJOR_ASPECT_NOTE_THRESHOLD:
+                    best_window = {
+                        "start_local": cand["start_local"],
+                        "end_local": cand["end_local"],
+                        "dominant_category": cand["dominant_categories"][0],
+                    }
 
         tps = sorted(turning_points, key=lambda tp: float(tp["severity"] or 0), reverse=True)
         main_tp = (
