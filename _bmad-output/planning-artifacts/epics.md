@@ -1711,3 +1711,257 @@ So that le daily reste honnête, lisible et conforme au budget de bruit Epic 41.
 - Les cas baseline absente ou obsolète sont couverts sans dégrader le comportement nominal.
 
 [Source: _bmad-output/planning-artifacts/epic-41-relative-calibration-spec.md]
+
+## Epic 42: Refonte du moteur daily v3 orienté signal continu
+
+Faire évoluer le moteur daily d'une architecture majoritairement `event-driven` vers une architecture `signal-driven`, afin de calculer d'abord des courbes astro cohérentes dans le temps, puis d'en dériver des notes, fenêtres, pivots et textes plus crédibles.
+
+**FRs covered:** FR16, FR18, FR36, FR37, FR38, NFR17, NFR22
+
+### Story 42.1: Formaliser le modèle de signal daily v3
+
+As a backend architect,
+I want introduire un contrat de calcul v3 explicite pour le daily,
+So that le moteur puisse manipuler des couches de signal continues (`B`, `T`, `A`, `E`) sans casser immédiatement la pile v2.
+
+**Acceptance Criteria:**
+- Le backend introduit des types/schemas v3 distincts pour le signal quotidien, les métriques dérivées et les sorties intermédiaires.
+- Un feature flag ou sélecteur runtime permet de choisir explicitement entre moteur v2 et moteur v3.
+- Le backend supporte aussi un mode `dual` pour exécuter v2 et v3 sur une même entrée et comparer les sorties.
+- `engine_version` est défini explicitement dans le cycle de vie du run.
+- `engine_orchestrator` et `daily_prediction_service` peuvent accueillir le nouveau pipeline sans casser les appels existants.
+- Les contrats internes v3 restent découplés du DTO public actuel.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.2: Construire la susceptibilité natale structurelle du thème
+
+As a prediction engine designer,
+I want calculer une susceptibilité natale structurelle robuste par thème,
+So that la composante `B(c)` reflète réellement le thème natal au lieu d'un simple modulateur décoratif.
+
+**Acceptance Criteria:**
+- `B(c)` prend en compte au minimum maisons pertinentes, maîtres, angularité, occupation et aspects natals utiles.
+- Le score natal par thème est borné, centré et explicable.
+- La couche natale reste indépendante des activations de transit et intrajournalières.
+- Des tests verrouillent la stabilité et l'explicabilité du calcul.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.3: Construire un climat de transit continu par thème et par pas de temps
+
+As a prediction engine designer,
+I want remplacer la logique de transit purement événementielle par une couche continue,
+So that la composante `T(c,t)` exprime un fond de journée cohérent qui monte, culmine puis redescend.
+
+**Acceptance Criteria:**
+- Les transits pertinents sont évalués à chaque pas de temps avec une fonction continue d'orbe.
+- `T(c,t)` prend en compte nature des corps, type d'aspect, phase et polarité contextuelle.
+- Les exactitudes cessent d'être la seule source de signal fort.
+- Les courbes de transit produites sont déterministes et testables.
+- Un budget de performance explicite borne le coût de calcul de la couche `T`.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.4: Construire la couche d'activation intrajournalière locale
+
+As a product owner du daily,
+I want une activation locale continue à l'intérieur de la journée,
+So that la composante `A(c,t)` donne du relief horaire sans traiter chaque modulateur comme un pivot.
+
+**Acceptance Criteria:**
+- `A(c,t)` intègre les activations lunaires, angulaires et de maisons locales pertinentes.
+- Les signaux comme `asc_sign_change` et `planetary_hour_change` deviennent des modulateurs secondaires.
+- Le résultat reste une série temporelle continue par thème.
+- Les tests distinguent clairement activation locale et impulsion ponctuelle.
+- Un budget de performance explicite borne le coût de calcul de la couche `A`.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.5: Repositionner les exactitudes comme couche impulsionnelle
+
+As a backend maintainer,
+I want conserver les événements ponctuels comme une couche d'accentuation locale,
+So that `E(c,t)` mette en évidence les moments forts sans porter seule toute la narration quotidienne.
+
+**Acceptance Criteria:**
+- Les événements ponctuels restent détectés, mais leur rôle est borné à une accentuation locale.
+- Un exact event isolé ne crée plus à lui seul un récit de journée “vivante”.
+- La fusion `B/T/A/E` produit une courbe composite lissable.
+- Les tests montrent qu'un signal de fond faible ne devient pas artificiellement fort par simple exactitude.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.6: Produire orientation, intensité, confiance et rareté par thème
+
+As a product designer,
+I want que chaque thème quotidien expose plusieurs dimensions de lecture,
+So that le produit distingue enfin une journée neutre, une journée faible, une journée active et une journée instable.
+
+**Acceptance Criteria:**
+- Le moteur calcule au minimum `score_20`, `intensity_20`, `confidence_20` et `rarity_percentile` par thème.
+- `score_20` ne mélange plus orientation et intensité.
+- La formule de `confidence` est explicitement définie avant usage par blocs, pivots et fenêtres.
+- `rarity_percentile` est explicitement distingué d'un simple percentile relatif utilisateur.
+- Les nouvelles métriques sont dérivées des courbes lissées, pas uniquement du raw day v2.
+- Les tests métier couvrent plusieurs profils de journées contrastées.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.7: Refaire la calibration absolue à partir des courbes lissées
+
+As a backend maintainer,
+I want recalibrer les notes journalières à partir de métriques continues plus riches,
+So that les notes cessent de s'écraser autour du neutre quand la dynamique intrajournalière existe réellement.
+
+**Acceptance Criteria:**
+- La formule v3 s'appuie au minimum sur `level_day`, `intensity_day`, `dominance_day` et `stability_day`.
+- Une journée intense mais ambivalente n'est plus assimilée à une journée plate.
+- Le moteur garde une note publique lisible sur 20.
+- Des comparaisons v2/v3 permettent de mesurer le gain de discrimination.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.8: Étendre le snapshot et la persistance pour le daily v3
+
+As a platform engineer,
+I want persister les nouvelles métriques du moteur v3 sans casser la lecture existante,
+So that le backend puisse comparer, auditer et projeter v2 et v3 pendant la transition.
+
+**Acceptance Criteria:**
+- Le snapshot quotidien supporte les métriques v3 par thème et les nouvelles sorties de bloc/fenêtre.
+- La persistance reste backward compatible avec les consommateurs actuels.
+- Les migrations et modèles restent versionnés et auditables.
+- `engine_version` et `snapshot_version` sont persistés et utilisés par la réutilisation et la lecture repository.
+- Les tests de lecture/écriture couvrent coexistence v2/v3.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.9: Segmenter la journée par changement de régime plutôt que par pivot
+
+As a prediction engine designer,
+I want découper la journée en régimes cohérents dérivés des courbes,
+So that les blocs horaires soient les résumés d'un signal continu et non la simple conséquence d'un pivot ou d'une grille artificielle.
+
+**Acceptance Criteria:**
+- La segmentation part des courbes lissées et non d'une grille fixe ou des seuls turning points.
+- Les blocs sont ensuite fusionnés pour produire 4 à 8 segments lisibles maximum.
+- Chaque bloc expose orientation, intensité et confiance.
+- La segmentation reste déterministe et testable.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.10: Détecter les turning points comme des changements de régime persistants
+
+As a QA engineer,
+I want que les turning points représentent des bascules durables et non de simples événements,
+So that le produit ne montre plus de faux pivots sur des journées faibles ou ambiguës.
+
+**Acceptance Criteria:**
+- Un turning point requiert une amplitude minimale avant/après et une durée minimale du régime suivant.
+- Les pivots sont déclenchés par changement de régime sur les courbes, pas par simple exactitude.
+- Le nombre de pivots publics baisse sur les journées faibles.
+- Les tests couvrent faux positif, vrai pivot et cas ambivalent.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.11: Refaire les fenêtres décisionnelles à partir des blocs v3
+
+As a utilisateur consultant le daily,
+I want voir des créneaux vraiment utiles parce qu'ils résument des régimes cohérents,
+So that les fenêtres proposées aient une personnalité propre et une valeur décisionnelle crédible.
+
+**Acceptance Criteria:**
+- Les `decision_windows` sont dérivées des blocs de régime v3.
+- Chaque fenêtre expose au minimum orientation, intensité, confiance et thèmes dominants.
+- `best_window` n'émerge que si une fenêtre est réellement exploitable.
+- Les journées faibles ne génèrent plus de fenêtres artificiellement riches.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.12: Étendre la baseline utilisateur en baseline day, slot et saison
+
+As a platform engineer,
+I want enrichir la baseline utilisateur pour tenir compte du jour, de l'heure et de la saison,
+So that la calibration personnelle compare des choses comparables et puisse servir le scoring v3.
+
+**Acceptance Criteria:**
+- La persistance supporte au minimum `baseline_day`, `baseline_slot` et `baseline_month` ou `baseline_season`.
+- Les nouvelles baselines sont versionnées par utilisateur, thème, fenêtre et versions métier.
+- La story couvre prioritairement le modèle, la migration, le repository et une génération minimale déterministe.
+- La résolution runtime avancée des bonnes baselines selon le contexte est traitée dans la story suivante.
+- Un budget de performance explicite borne le coût de génération de baseline enrichie.
+- Les tests couvrent lecture, écriture et génération minimale déterministe.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.13: Refaire le scoring relatif v3 autour d'absolu, slot, confiance et rareté
+
+As a prediction engine designer,
+I want calculer un scoring relatif plus fin que le simple z-score journalier,
+So that le produit puisse comparer un jour, un créneau et une intensité de manière cohérente avec le moteur v3.
+
+**Acceptance Criteria:**
+- Le backend expose au minimum `z_abs`, `z_slot`, `pct_abs`, `pct_rel` et une notion de rareté.
+- Le fallback variance nulle reste robuste.
+- Le scoring relatif devient compatible avec les blocs/fenêtres v3.
+- Le scoring absolu demeure la vérité produit principale.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.14: Refaire la logique de flat day et de micro-tendances dans le moteur v3
+
+As a product owner,
+I want distinguer une journée plate, une journée faible et une journée intense mais neutre,
+So that les micro-tendances et les signaux publics restent honnêtes et réellement utiles.
+
+**Acceptance Criteria:**
+- `flat_day` dépend des métriques v3 et non d'un simple manque de pivots.
+- Les micro-tendances ne sont exposées que si le relatif apporte une vraie nuance.
+- Une journée intense mais neutre n'est plus traitée comme plate.
+- Le budget de bruit public reste respecté.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.15: Introduire un evidence pack expert v3
+
+As a backend architect,
+I want produire un evidence pack expert indépendant du JSON public,
+So that l'interprétation future et la projection publique consomment une structure cohérente, auditable et riche.
+
+**Acceptance Criteria:**
+- Le backend produit un `evidence_pack` avec profil global, thèmes, blocs, pivots et drivers.
+- L'evidence pack distingue ce qui est structurel, ponctuel, favorable, tendu et fiable.
+- `evidence_pack_version` est explicite dans le contrat.
+- Le format est déterministe, typé et testable.
+- L'evidence pack n'impose pas encore l'usage d'un LLM.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.16: Brancher la projection publique et la future interprétation sur l'evidence pack
+
+As a product platform team,
+I want faire de l'evidence pack la source de vérité interprétable,
+So that le JSON public et un futur prompt expert ne dérivent plus directement d'une agrégation fragile de signaux.
+
+**Acceptance Criteria:**
+- `public_projection` dérive ses résumés structurants de l'evidence pack.
+- L'éditorialisation ne peut plus inventer du relief absent du moteur.
+- Le backend prépare un contrat propre pour une future couche LLM.
+- Les tests verrouillent la cohérence entre evidence pack et payload public.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+### Story 42.17: Verrouiller QA, backtesting et migration progressive du moteur v3
+
+As a QA engineer,
+I want sécuriser la coexistence v2/v3 par des fixtures, des métriques et des gates explicites,
+So that la bascule vers le moteur daily v3 soit objectivable et réversible.
+
+**Acceptance Criteria:**
+- Le backend capitalise sur le mode `dual` introduit tôt dans l'epic pour comparer v2 et v3.
+- Des fixtures couvrent journées plates, actives, ambiguës et intensives.
+- Les rapports comparent nombre de pivots, dispersion des notes, fenêtres publiques, stabilité et budgets de performance.
+- Des critères go/no-go explicites de migration sont documentés.
+
+[Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]

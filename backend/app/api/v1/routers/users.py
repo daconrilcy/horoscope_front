@@ -18,7 +18,7 @@ from app.core.request_id import resolve_request_id
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
 from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
-from app.jobs.refresh_user_baselines import refresh_user_baseline
+from app.jobs.refresh_user_baselines import safe_refresh_user_baseline
 from app.services.natal_interpretation_service import (
     NatalInterpretationData,
     NatalInterpretationService,
@@ -622,7 +622,7 @@ def generate_me_natal_chart(
         db.commit()
 
         # Trigger the refresh only once a natal chart is available for the current profile.
-        background_tasks.add_task(refresh_user_baseline, db, current_user.id)
+        background_tasks.add_task(safe_refresh_user_baseline, db, current_user.id)
 
         return {"data": generated.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ValidationError as error:

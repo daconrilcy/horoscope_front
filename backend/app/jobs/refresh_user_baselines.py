@@ -18,6 +18,19 @@ if TYPE_CHECKING:
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
+NON_BLOCKING_REFRESH_ERROR_CODES = frozenset(
+    {
+        "version_missing",
+        "ruleset_missing",
+        "ruleset_inconsistent",
+        "natal_missing",
+        "profile_missing",
+        "location_missing",
+        "timezone_missing",
+        "timezone_invalid",
+    }
+)
+
 
 def refresh_user_baseline(db: Session, user_id: int) -> None:
     """Refreshes baseline for a specific user using current canonical versions."""
@@ -31,6 +44,34 @@ def refresh_user_baseline(db: Session, user_id: int) -> None:
         reference_version=settings.active_reference_version,
         ruleset_version=settings.ruleset_version,
     )
+
+
+def safe_refresh_user_baseline(db: Session, user_id: int) -> None:
+    """Runs refresh on the provided session and never breaks the caller flow."""
+    from app.services.daily_prediction_types import DailyPredictionServiceError
+
+    try:
+        refresh_user_baseline(db, user_id)
+        db.commit()
+    except DailyPredictionServiceError as exc:
+        db.rollback()
+        if exc.code in NON_BLOCKING_REFRESH_ERROR_CODES:
+            logger.warning(
+                "baseline_refresh_skipped user_id=%d code=%s error=%s",
+                user_id,
+                exc.code,
+                exc.message,
+            )
+            return
+        logger.exception(
+            "baseline_refresh_failed user_id=%d code=%s error=%s",
+            user_id,
+            exc.code,
+            exc.message,
+        )
+    except Exception:
+        db.rollback()
+        logger.exception("baseline_refresh_failed user_id=%d", user_id)
 
 
 def run_job() -> None:
