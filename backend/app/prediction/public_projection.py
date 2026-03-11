@@ -14,6 +14,8 @@ PUBLIC_PIVOT_EVENT_TYPES = frozenset(
     {
         "aspect_exact_to_angle",
         "aspect_exact_to_luminary",
+        "aspect_exact_to_personal",
+        "asc_sign_change",
         "moon_sign_ingress",
     }
 )

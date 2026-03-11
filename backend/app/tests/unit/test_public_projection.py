@@ -372,3 +372,75 @@ def test_assembler_keeps_public_luminary_pivots_without_major_category_notes(cat
     assert result["decision_windows"][0]["window_type"] == "pivot"
     assert result["turning_points"][0]["occurred_at_local"] == "2026-03-15T11:45:00"
     assert result["summary"]["best_window"]["dominant_category"] == "career"
+
+
+@pytest.mark.parametrize(
+    "event_type",
+    [
+        "aspect_exact_to_personal",
+        "asc_sign_change",
+    ],
+)
+def test_assembler_keeps_public_pivots_for_structuring_runtime_event_types(cat_map, event_type):
+    snapshot = PersistedPredictionSnapshot(
+        run_id=1,
+        user_id=1,
+        local_date=date(2026, 3, 15),
+        timezone="Europe/Paris",
+        computed_at=datetime(2026, 3, 15, 10, 0),
+        input_hash="hash123",
+        reference_version_id=1,
+        ruleset_id=1,
+        house_system_effective="placidus",
+        is_provisional_calibration=True,
+        calibration_label="provisional",
+        overall_summary="Active day",
+        overall_tone="neutral",
+        category_scores=[
+            PersistedCategoryScore(1, "energy", 10, 0.0, 0.0, 0.0, 1, True, None),
+            PersistedCategoryScore(2, "career", 10, 0.0, 0.0, 0.0, 2, True, None),
+            PersistedCategoryScore(3, "communication", 10, 0.0, 0.0, 0.0, 3, True, None),
+        ],
+        time_blocks=[
+            PersistedTimeBlock(
+                block_index=0,
+                start_at_local=datetime(2026, 3, 15, 11, 45),
+                end_at_local=datetime(2026, 3, 15, 16, 15),
+                tone_code="neutral",
+                dominant_categories=["career", "communication", "energy"],
+                summary=None,
+            )
+        ],
+        turning_points=[
+            PersistedTurningPoint(
+                occurred_at_local=datetime(2026, 3, 15, 11, 45),
+                severity=1.0,
+                summary="À 11:45, un basculement critique : plusieurs domaines.",
+                drivers=[{"event_type": event_type}],
+            )
+        ],
+    )
+    engine_output = MagicMock()
+    engine_output.core.decision_windows = [
+        MagicMock(
+            start_local=datetime(2026, 3, 15, 11, 45),
+            end_local=datetime(2026, 3, 15, 13, 15),
+            window_type="pivot",
+            score=12.0,
+            confidence=1.0,
+            dominant_categories=["career", "communication"],
+        )
+    ]
+    engine_output.editorial = None
+
+    result = PublicPredictionAssembler().assemble(
+        snapshot=snapshot,
+        cat_id_to_code=cat_map | {2: "career", 3: "communication"},
+        engine_output=engine_output,
+        reference_version="2.0.0",
+        ruleset_version="2.0.0",
+        was_reused=False,
+    )
+
+    assert len(result["decision_windows"]) == 1
+    assert result["decision_windows"][0]["window_type"] == "pivot"

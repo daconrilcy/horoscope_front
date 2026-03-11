@@ -419,6 +419,27 @@ def test_nominal_taxonomy_path_priority_and_weight(mock_ctx_with_event_types):
     assert enter[0].base_weight == pytest.approx(1.0)
 
 
+def test_nominal_exit_orb_priority_and_weight(mock_ctx_with_event_types):
+    chart = NatalChart(
+        planet_positions={"Sun": 0.0},
+        planet_houses={"Sun": 1},
+        house_sign_rulers={},
+    )
+    detector = EventDetector(mock_ctx_with_event_types, chart)
+
+    steps = [
+        create_step(2460000.0, {"Sun": 1.5}),  # orb=1.5 < orb_max
+        create_step(2460000.1, {"Sun": 2.5}),  # orb=2.5 > orb_max → exit_orb
+    ]
+    day_grid = DayGrid([], 2460000.0, 2460000.2, None, None, date(2024, 1, 1), "UTC")
+    events = detector.detect(steps, day_grid)
+
+    exit_events = [e for e in events if e.event_type == "aspect_exit_orb"]
+    assert len(exit_events) == 1
+    assert exit_events[0].priority == 25
+    assert exit_events[0].base_weight == pytest.approx(0.5)
+
+
 def test_exact_to_luminary_priority(mock_ctx_with_event_types):
     """Exact aspect to Sun → aspect_exact_to_luminary avec priority=75."""
     chart = NatalChart(
@@ -466,6 +487,38 @@ def test_exact_to_angle_priority(mock_ctx_with_event_types):
     assert len(exact) == 1
     assert exact[0].priority == 80
     assert exact[0].base_weight == pytest.approx(2.0)
+
+
+def test_nominal_moon_ingress_priority_and_weight(mock_ctx_with_event_types, natal_chart):
+    detector = EventDetector(mock_ctx_with_event_types, natal_chart)
+    steps = [
+        create_step(2460000.0, {"Moon": 29.5}),
+        create_step(2460000.1, {"Moon": 30.5}),
+    ]
+    day_grid = DayGrid([], 2460000.0, 2460000.2, None, None, date(2024, 1, 1), "UTC")
+
+    events = detector.detect(steps, day_grid)
+
+    ingress_events = [e for e in events if e.event_type == "moon_sign_ingress"]
+    assert len(ingress_events) == 1
+    assert ingress_events[0].priority == 72
+    assert ingress_events[0].base_weight == pytest.approx(1.5)
+
+
+def test_nominal_asc_sign_change_priority_and_weight(mock_ctx_with_event_types, natal_chart):
+    detector = EventDetector(mock_ctx_with_event_types, natal_chart)
+    steps = [
+        create_step(2460000.0, {}, asc_deg=29.9),
+        create_step(2460000.1, {}, asc_deg=30.1),
+    ]
+    day_grid = DayGrid([], 2460000.0, 2460000.2, None, None, date(2024, 1, 1), "UTC")
+
+    events = detector.detect(steps, day_grid)
+
+    asc_events = [e for e in events if e.event_type == "asc_sign_change"]
+    assert len(asc_events) == 1
+    assert asc_events[0].priority == 78
+    assert asc_events[0].base_weight == pytest.approx(2.0)
 
 
 def test_planetary_hour_change_below_pivot_threshold(mock_ctx_with_event_types):

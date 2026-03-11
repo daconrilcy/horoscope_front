@@ -69,7 +69,7 @@ def test_pivot_on_high_priority_event():
     assert pivots[0].trigger_event.priority == 65
 
 
-def test_asc_sign_change_does_not_create_decision_pivot():
+def test_asc_sign_change_can_create_high_priority_pivot():
     detector = TurningPointDetector()
     times = make_step_times(3)
     notes = make_notes(3, 10)
@@ -77,7 +77,9 @@ def test_asc_sign_change_does_not_create_decision_pivot():
 
     pivots = detector.detect(notes, events, times)
 
-    assert pivots == []
+    assert len(pivots) == 1
+    assert pivots[0].reason == "high_priority_event"
+    assert pivots[0].trigger_event.event_type == "asc_sign_change"
 
 
 def test_no_top3_change_below_threshold():

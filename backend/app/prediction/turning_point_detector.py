@@ -23,7 +23,6 @@ class TurningPointDetector:
     PRIORITY_PIVOT_THRESHOLD = 65
     # AC2: raise threshold so minor/technical changes don't become user pivots
     DELTA_NOTE_THRESHOLD = 3
-    NON_DECISION_EVENT_TYPES = frozenset({"asc_sign_change"})
 
     REASON_PRIORITY = {
         "high_priority_event": 3,
@@ -77,10 +76,7 @@ class TurningPointDetector:
             high_priority_events = [
                 event
                 for event in events_by_step[index]
-                if (
-                    event.priority >= self.PRIORITY_PIVOT_THRESHOLD
-                    and event.event_type not in self.NON_DECISION_EVENT_TYPES
-                )
+                if event.priority >= self.PRIORITY_PIVOT_THRESHOLD
             ]
             if high_priority_events:
                 reasons_found["high_priority_event"] = (

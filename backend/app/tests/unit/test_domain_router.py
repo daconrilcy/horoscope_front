@@ -6,6 +6,8 @@ import pytest
 from app.prediction.domain_router import DomainRouter
 from app.prediction.schemas import AstroEvent
 
+EXACT_EVENT_TYPE = "aspect_exact_to_personal"
+
 
 def _category(code: str, is_enabled: bool = True) -> SimpleNamespace:
     return SimpleNamespace(code=code, is_enabled=is_enabled)
@@ -45,7 +47,7 @@ def mock_ctx() -> SimpleNamespace:
 def test_house_vector_sum_1(mock_ctx):
     router = DomainRouter()
     event = AstroEvent(
-        event_type="exact",
+        event_type=EXACT_EVENT_TYPE,
         ut_time=0,
         local_time=datetime.now(),
         body="Sun",
@@ -66,7 +68,7 @@ def test_single_house_weight_1(mock_ctx):
     router = DomainRouter()
     # Case h_natal == h_transit
     event = AstroEvent(
-        event_type="exact",
+        event_type=EXACT_EVENT_TYPE,
         ut_time=0,
         local_time=datetime.now(),
         body="Sun",
@@ -102,7 +104,7 @@ def test_planet_blend_in_range(mock_ctx):
 def test_all_categories_covered(mock_ctx):
     router = DomainRouter()
     event = AstroEvent(
-        event_type="exact",
+        event_type=EXACT_EVENT_TYPE,
         ut_time=0,
         local_time=datetime.now(),
         body="Sun",
@@ -178,7 +180,7 @@ def test_full_calculation_ac4(mock_ctx):
     # D(e, LOVE) = 0.0 * 0.5 = 0.0
 
     event = AstroEvent(
-        event_type="exact",
+        event_type=EXACT_EVENT_TYPE,
         ut_time=0,
         local_time=datetime.now(),
         body="Mars",
