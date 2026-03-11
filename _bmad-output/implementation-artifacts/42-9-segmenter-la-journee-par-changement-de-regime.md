@@ -1,6 +1,6 @@
 # Story 42.9: Segmenter la journée par changement de régime
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -18,22 +18,22 @@ so that les blocs horaires soient les résumés d'un signal continu et non la si
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Définir la logique de segmentation de régime (AC: 1, 4)
-  - [ ] Définir les critères de changement de régime
-  - [ ] Définir les critères de fusion minimale
+- [x] Task 1: Définir la logique de segmentation de régime (AC: 1, 4)
+  - [x] Définir les critères de changement de régime
+  - [x] Définir les critères de fusion minimale
 
-- [ ] Task 2: Introduire un segmenter dédié (AC: 2, 3)
-  - [ ] Créer un module dédié si nécessaire
-  - [ ] Produire des blocs riches et typés
+- [x] Task 2: Introduire un segmenter dédié (AC: 2, 3)
+  - [x] Créer un module dédié si nécessaire
+  - [x] Produire des blocs riches et typés
 
-- [ ] Task 3: Brancher la sortie sur la chaîne v3 (AC: 5)
-  - [ ] Préparer l'alimentation des fenêtres et pivots
-  - [ ] Garder la compatibilité du debug
+- [x] Task 3: Brancher la sortie sur la chaîne v3 (AC: 5)
+  - [x] Préparer l'alimentation des fenêtres et pivots
+  - [x] Garder la compatibilité du debug
 
-- [ ] Task 4: Tests (AC: 4)
-  - [ ] Tester journée calme
-  - [ ] Tester journée avec deux régimes contrastés
-  - [ ] Tester fusion pour éviter la fragmentation
+- [x] Task 4: Tests (AC: 4)
+  - [x] Tester journée calme
+  - [x] Tester journée avec deux régimes contrastés
+  - [x] Tester fusion pour éviter la fragmentation
 
 ## Dev Notes
 
@@ -58,16 +58,28 @@ so that les blocs horaires soient les résumés d'un signal continu et non la si
 
 ### Agent Model Used
 
-GPT-5 Codex
+Gemini CLI (Adversarial Reviewer)
 
 ### Debug Log References
 
-- Story générée en mode BMAD YOLO à partir de l'Epic 42.
+- Story implémentée et revue.
 
 ### Completion Notes List
 
 - Story prête pour faire des blocs v3 la représentation de régimes cohérents.
+- Segmenter robuste implémenté dans `regime_segmenter.py`.
+- Intégration effectuée dans `engine_orchestrator.py`.
 
 ### File List
 
-- `_bmad-output/implementation-artifacts/42-9-segmenter-la-journee-par-changement-de-regime.md`
+- `backend/app/prediction/schemas.py`
+- `backend/app/prediction/regime_segmenter.py`
+- `backend/app/prediction/engine_orchestrator.py`
+- `backend/app/tests/unit/test_regime_segmenter.py`
+
+### Change Log
+
+- Ajout de `V3TimeBlock` dans `schemas.py`.
+- Création de `RegimeSegmenter` pour la segmentation basée sur le signal.
+- Intégration de `RegimeSegmenter` dans `EngineOrchestrator`.
+- Ajout de tests unitaires pour le segmenter.

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -135,6 +135,20 @@ class V3DailyMetrics:
 
 
 @dataclass(frozen=True)
+class V3TimeBlock:
+    """A coherent regime block in V3 (Story 42.9)."""
+
+    block_index: int
+    start_local: datetime
+    end_local: datetime
+    orientation: str  # "rising" | "falling" | "stable" | "volatile"
+    intensity: float  # 0-20
+    confidence: float # 0-1
+    dominant_themes: list[str] = field(default_factory=list)
+    summary: str = ""
+
+
+@dataclass(frozen=True)
 class V3EngineOutput:
     """Engine v3 calculation results (AC1).
     
@@ -150,9 +164,10 @@ class V3EngineOutput:
     
     theme_signals: dict[str, V3ThemeSignal] = field(default_factory=dict)
     daily_metrics: dict[str, V3DailyMetrics] = field(default_factory=dict)
+    time_blocks: list[V3TimeBlock] = field(default_factory=list)
     
     run_metadata: dict[str, Any] = field(default_factory=dict)
-    computed_at: datetime = field(default_factory=datetime.utcnow)
+    computed_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass(frozen=True)

@@ -28,6 +28,7 @@ from .impulse_signal_builder import ImpulseSignalBuilder
 from .input_hash import compute_engine_input_hash
 from .intraday_activation_builder import IntradayActivationBuilder
 from .natal_sensitivity import NatalSensitivityCalculator
+from .regime_segmenter import RegimeSegmenter
 from .schemas import (
     AstroEvent,
     CoreEngineOutput,
@@ -105,6 +106,7 @@ class EngineOrchestrator:
         intraday_activation_builder: IntradayActivationBuilder | None = None,
         impulse_signal_builder: ImpulseSignalBuilder | None = None,
         v3_theme_aggregator: V3ThemeAggregator | None = None,
+        regime_segmenter: RegimeSegmenter | None = None,
     ) -> None:
         self._ruleset_context_loader = ruleset_context_loader
         self._prediction_context_loader = prediction_context_loader
@@ -135,6 +137,7 @@ class EngineOrchestrator:
             )
         )
         self._v3_theme_aggregator = v3_theme_aggregator or V3ThemeAggregator()
+        self._regime_segmenter = regime_segmenter or RegimeSegmenter()
 
     def with_context_loader(
         self,
@@ -160,6 +163,7 @@ class EngineOrchestrator:
             intraday_activation_builder=self._intraday_activation_builder,
             impulse_signal_builder=self._impulse_signal_builder,
             v3_theme_aggregator=self._v3_theme_aggregator,
+            regime_segmenter=self._regime_segmenter,
         )
 
     def run(
@@ -402,6 +406,8 @@ class EngineOrchestrator:
             )
             daily_metrics[theme_code] = dataclasses.replace(metrics, score_20=calibrated_score)
 
+        time_blocks = self._regime_segmenter.segment(theme_signals)
+
         computed_at = self._local_date_start_utc(local_date, timezone)
         return V3EngineOutput(
             engine_version=v3_versions["engine_version"] or settings.v3_engine_version,
@@ -411,6 +417,7 @@ class EngineOrchestrator:
             ),
             theme_signals=theme_signals,
             daily_metrics=daily_metrics,
+            time_blocks=time_blocks,
             run_metadata={
                 "mode": engine_mode.value,
                 "v3_natal_structural": {
@@ -551,11 +558,26 @@ class EngineOrchestrator:
                 is_provisional=loaded_context.is_provisional_calibration,
             )
 
+        # Map V3TimeBlocks to legacy format for backward compatibility
+        legacy_time_blocks = []
+        if v3_core and v3_core.time_blocks:
+            for b in v3_core.time_blocks:
+                legacy_time_blocks.append(
+                    SimpleNamespace(
+                        start_local=b.start_local,
+                        end_local=b.end_local,
+                        dominant_categories=b.dominant_themes,
+                        orientation=b.orientation,
+                        intensity=b.intensity,
+                        confidence=b.confidence,
+                    )
+                )
+
         return CoreEngineOutput(
             effective_context=effective_context,
             run_metadata=run_metadata,
             category_scores=category_scores,
-            time_blocks=[],
+            time_blocks=legacy_time_blocks,
             turning_points=[],
             decision_windows=[],
             detected_events=detected_events,
