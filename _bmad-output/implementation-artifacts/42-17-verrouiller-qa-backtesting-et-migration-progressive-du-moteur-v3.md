@@ -1,6 +1,6 @@
 # Story 42.17: Verrouiller QA, backtesting et migration progressive du moteur v3
 
-Status: completed
+Status: done
 
 ## Story
 
@@ -74,10 +74,13 @@ GPT-5 Codex
 
 ### Completion Notes List
 
-- Story prête pour sécuriser la comparaison v2/v3 et la migration progressive du moteur daily.
+- Le mode `dual` est couvert par les suites QA et les fixtures de comparaison v2/v3.
+- Les scénarios plats, actifs, ambigus et intenses sont verrouillés dans les tests de QA et les gates de migration.
+- La migration progressive reste objectivable via les artefacts de test et le rapport de gates.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/42-17-verrouiller-qa-backtesting-et-migration-progressive-du-moteur-v3.md`
 - `_bmad-output/test-artifacts/v3-migration-gates.md`
 - `backend/app/tests/integration/test_daily_prediction_qa.py`
+- `backend/app/tests/helpers/intraday_qa_report.py`
