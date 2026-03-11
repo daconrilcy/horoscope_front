@@ -1,6 +1,6 @@
 # Story 42.16: Brancher la projection publique et la future interprétation sur l'evidence pack
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -18,18 +18,18 @@ so that le JSON public et un futur prompt expert ne dérivent plus directement d
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Brancher la projection publique sur l'evidence pack (AC: 1, 4, 5)
-  - [ ] Adapter `public_projection.py`
-  - [ ] Conserver un contrat public lisible
+- [x] Task 1: Brancher la projection publique sur l'evidence pack (AC: 1, 4, 5)
+  - [x] Adapter `public_projection.py`
+  - [x] Conserver un contrat public lisible
 
-- [ ] Task 2: Refaire la couche éditoriale autour de l'evidence pack (AC: 2, 3)
-  - [ ] Adapter `editorial_builder.py`
-  - [ ] Adapter `editorial_service.py`
-  - [ ] Préparer le pont vers un futur prompt expert
+- [x] Task 2: Refaire la couche éditoriale autour de l'evidence pack (AC: 2, 3)
+  - [x] Adapter `editorial_builder.py`
+  - [x] Adapter `editorial_service.py`
+  - [x] Préparer le pont vers un futur prompt expert
 
-- [ ] Task 3: Tests de cohérence (AC: 4)
-  - [ ] Vérifier que le payload public ne sur-interprète pas
-  - [ ] Vérifier l'alignement evidence pack / résumé public
+- [x] Task 3: Tests de cohérence (AC: 4)
+  - [x] Vérifier que le payload public ne sur-interprète pas
+  - [x] Vérifier l'alignement evidence pack / résumé public
 
 ## Dev Notes
 
@@ -65,9 +65,17 @@ GPT-5 Codex
 
 ### Completion Notes List
 
-- Story prête pour faire de l'evidence pack la base de la projection et de l'interprétation future.
+- La projection publique et l'éditorialisation consomment désormais l'evidence pack comme source de vérité prioritaire.
+- Code review fix: le fallback persisté recharge correctement l'evidence pack depuis `snapshot.v3_metrics` au lieu de dépendre d'un objet runtime.
+- Code review fix: les fenêtres publiques dérivées de l'evidence pack ou du runtime repassent par la normalisation publique avant exposition.
+- Les tests verrouillent le cas runtime et le cas snapshot persisté.
 
 ### File List
 
+- `backend/app/prediction/public_projection.py`
+- `backend/app/prediction/editorial_builder.py`
+- `backend/app/prediction/editorial_service.py`
+- `backend/app/prediction/daily_prediction_evidence_builder.py`
+- `backend/app/tests/unit/test_v3_editorial_evidence.py`
+- `backend/app/tests/unit/prediction/test_public_projection_evidence.py`
 - `_bmad-output/implementation-artifacts/42-16-brancher-la-projection-publique-et-la-future-interpretation-sur-l-evidence-pack.md`
-
