@@ -2,7 +2,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
+from enum import Enum
 from typing import Any
+
+
+class V3Granularity(str, Enum):
+    DAY = "day"
+    SLOT = "slot"
+    SEASON = "season"
+    MONTH = "month"
 
 
 @dataclass(frozen=True)
@@ -29,6 +37,9 @@ class PersistedUserBaseline:
 
     sample_size_days: int
     computed_at: datetime
+    
+    granularity_type: str = "day"
+    granularity_value: str = "all"
 
     def __getitem__(self, key: str) -> Any:
         return getattr(self, key)

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
+from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import DateTime, Enum as SqlEnum, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infra.db.base import Base
@@ -19,12 +20,21 @@ def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+class BaselineGranularity(str, Enum):
+    DAY = "day"
+    SLOT = "slot"
+    SEASON = "season"
+    MONTH = "month"
+
+
 class UserPredictionBaselineModel(Base):
     __tablename__ = "user_prediction_baselines"
     __table_args__ = (
         UniqueConstraint(
             "user_id",
             "category_id",
+            "granularity_type",
+            "granularity_value",
             "window_start_date",
             "window_end_date",
             "reference_version_id",
@@ -49,6 +59,17 @@ class UserPredictionBaselineModel(Base):
     ruleset_id: Mapped[int] = mapped_column(
         ForeignKey("prediction_rulesets.id", ondelete="RESTRICT"), nullable=False
     )
+
+    granularity_type: Mapped[BaselineGranularity] = mapped_column(
+        SqlEnum(BaselineGranularity),
+        nullable=False,
+        default=BaselineGranularity.DAY,
+        index=True,
+    )
+    granularity_value: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="all", server_default="all", index=True
+    )
+
     house_system_effective: Mapped[str] = mapped_column(String(16), nullable=False)
     window_days: Mapped[int] = mapped_column(Integer, nullable=False)
     window_start_date: Mapped[date] = mapped_column(nullable=False)
