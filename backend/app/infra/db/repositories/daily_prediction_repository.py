@@ -164,6 +164,7 @@ class DailyPredictionRepository:
         engine_version: str | None = None,
         snapshot_version: str | None = None,
         evidence_pack_version: str | None = None,
+        v3_metrics_json: str | None = None,
         house_system_effective: str | None = None,
         is_provisional_calibration: bool | None = None,
         calibration_label: str | None = None,
@@ -182,6 +183,7 @@ class DailyPredictionRepository:
             engine_version=engine_version,
             snapshot_version=snapshot_version,
             evidence_pack_version=evidence_pack_version,
+            v3_metrics_json=v3_metrics_json,
             house_system_effective=house_system_effective,
             is_provisional_calibration=is_provisional_calibration,
             calibration_label=calibration_label,
@@ -244,6 +246,13 @@ class DailyPredictionRepository:
                 intensity_20=s.intensity_20,
                 confidence_20=s.confidence_20,
                 rarity_percentile=s.rarity_percentile,
+                level_day=s.level_day,
+                dominance_day=s.dominance_day,
+                stability_day=s.stability_day,
+                intensity_day=s.intensity_day,
+                avg_score=s.avg_score,
+                max_score=s.max_score,
+                min_score=s.min_score,
             )
             for s in run.category_scores
         ]

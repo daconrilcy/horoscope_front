@@ -26,6 +26,13 @@ class PersistedCategoryScore:
     intensity_20: float | None = None
     confidence_20: float | None = None
     rarity_percentile: float | None = None
+    level_day: float | None = None
+    dominance_day: float | None = None
+    stability_day: float | None = None
+    intensity_day: float | None = None
+    avg_score: float | None = None
+    max_score: float | None = None
+    min_score: float | None = None
 
     @property
     def category(self) -> SimpleNamespace:
@@ -99,6 +106,7 @@ class PersistedPredictionSnapshot:
     engine_version: str | None = None
     snapshot_version: str | None = None
     evidence_pack_version: str | None = None
+    v3_metrics: dict[str, Any] | None = None
 
     category_scores: list[PersistedCategoryScore] = field(default_factory=list)
     turning_points: list[PersistedTurningPoint] = field(default_factory=list)

@@ -53,6 +53,7 @@ class DailyPredictionRunModel(Base):
     engine_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
     snapshot_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
     evidence_pack_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    v3_metrics_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=utc_now
     )
@@ -107,6 +108,13 @@ class DailyPredictionCategoryScoreModel(Base):
     intensity_20: Mapped[float | None] = mapped_column(Float, nullable=True)
     confidence_20: Mapped[float | None] = mapped_column(Float, nullable=True)
     rarity_percentile: Mapped[float | None] = mapped_column(Float, nullable=True)
+    level_day: Mapped[float | None] = mapped_column(Float, nullable=True)
+    dominance_day: Mapped[float | None] = mapped_column(Float, nullable=True)
+    stability_day: Mapped[float | None] = mapped_column(Float, nullable=True)
+    intensity_day: Mapped[float | None] = mapped_column(Float, nullable=True)
+    avg_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    max_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    min_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
     is_provisional: Mapped[bool | None] = mapped_column(nullable=True)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)

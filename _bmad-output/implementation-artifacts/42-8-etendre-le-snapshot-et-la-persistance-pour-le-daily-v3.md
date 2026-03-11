@@ -1,6 +1,6 @@
 # Story 42.8: Étendre le snapshot et la persistance pour le daily v3
 
-Status: ready-for-dev
+Status: completed
 
 ## Story
 
@@ -19,25 +19,25 @@ so that le backend puisse comparer, auditer et projeter v2 et v3 pendant la tran
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Étendre les modèles et schémas de persistance (AC: 1, 3)
-  - [ ] Définir les champs ou tables additionnels nécessaires
-  - [ ] Préparer la migration Alembic correspondante
+- [x] Task 1: Étendre les modèles et schémas de persistance (AC: 1, 3)
+  - [x] Définir les champs ou tables additionnels nécessaires
+  - [x] Préparer la migration Alembic correspondante
 
-- [ ] Task 2: Étendre les objets snapshot et repository (AC: 1, 4)
-  - [ ] Ajouter `snapshot_version`
-  - [ ] Ajouter les lectures v3 dans `persisted_snapshot.py`
-  - [ ] Étendre la reconstruction repository
+- [x] Task 2: Étendre les objets snapshot et repository (AC: 1, 4)
+  - [x] Ajouter `snapshot_version`
+  - [x] Ajouter les lectures v3 dans `persisted_snapshot.py`
+  - [x] Étendre la reconstruction repository
 
-- [ ] Task 3: Adapter le service de persistance (AC: 2, 4, 5)
-  - [ ] Ajouter `engine_version`
-  - [ ] Sauvegarder les nouvelles métriques sans casser le chemin v2
-  - [ ] Garantir une relecture complète cohérente
-  - [ ] Injecter ces versions dans l'`input_hash` et la reuse policy
+- [x] Task 3: Adapter le service de persistance (AC: 2, 4, 5)
+  - [x] Ajouter `engine_version`
+  - [x] Sauvegarder les nouvelles métriques sans casser le chemin v2
+  - [x] Garantir une relecture complète cohérente
+  - [x] Injecter ces versions dans l'`input_hash` et la reuse policy
 
-- [ ] Task 4: Tests (AC: 6)
-  - [ ] Tester write/read v3
-  - [ ] Tester coexistence avec runs v2
-  - [ ] Tester l'absence de collision logique v2/v3
+- [x] Task 4: Tests (AC: 6)
+  - [x] Tester write/read v3
+  - [x] Tester coexistence avec runs v2
+  - [x] Tester l'absence de collision logique v2/v3
 
 ## Dev Notes
 
@@ -78,3 +78,8 @@ GPT-5 Codex
 ### File List
 
 - `_bmad-output/implementation-artifacts/42-8-etendre-le-snapshot-et-la-persistance-pour-le-daily-v3.md`
+- `backend/app/infra/db/models/daily_prediction.py`
+- `backend/app/infra/db/repositories/daily_prediction_repository.py`
+- `backend/app/prediction/persistence_service.py`
+- `backend/app/prediction/persisted_snapshot.py`
+- `backend/app/tests/integration/test_v3_persistence.py`

@@ -71,12 +71,20 @@ class PredictionPersistenceService:
             raise TypeError("save() missing required persistence arguments")
 
         core, editorial = self._coerce_bundle_parts(bundle)
+        v3_core = getattr(bundle, "v3_core", None)
         editorial_text = self._get_editorial_text(bundle, editorial)
         input_hash = core.effective_context.input_hash
         engine_mode = str(core.run_metadata.get("engine_mode", "v2"))
-        engine_version = core.run_metadata.get("engine_version")
-        snapshot_version = core.run_metadata.get("snapshot_version")
-        evidence_pack_version = core.run_metadata.get("evidence_pack_version")
+        
+        if v3_core:
+            engine_version = v3_core.engine_version
+            snapshot_version = v3_core.snapshot_version
+            evidence_pack_version = v3_core.evidence_pack_version
+        else:
+            engine_version = core.run_metadata.get("engine_version")
+            snapshot_version = core.run_metadata.get("snapshot_version")
+            evidence_pack_version = core.run_metadata.get("evidence_pack_version")
+
         repo = DailyPredictionRepository(db)
 
         # AC1 - Reuse if hash matches
@@ -103,6 +111,7 @@ class PredictionPersistenceService:
             engine_version=engine_version,
             snapshot_version=snapshot_version,
             evidence_pack_version=evidence_pack_version,
+            v3_metrics_json=json.dumps(self._json_ready(v3_core)) if v3_core else None,
             house_system_effective=core.effective_context.house_system_effective,
             is_provisional_calibration=core.run_metadata.get("is_provisional_calibration"),
             calibration_label=core.run_metadata.get("calibration_label"),
@@ -151,6 +160,7 @@ class PredictionPersistenceService:
         ref_repo = PredictionReferenceRepository(db)
         categories = {cat.code: cat for cat in ref_repo.get_categories(reference_version_id)}
         core, editorial = self._coerce_bundle_parts(bundle)
+        v3_core = getattr(bundle, "v3_core", None)
         editorial_text = self._get_editorial_text(bundle, editorial)
 
         # Filter scores to only include enabled categories found in DB
@@ -182,6 +192,10 @@ class PredictionPersistenceService:
                     category.code
                 )
 
+            v3_metrics = None
+            if v3_core and category.code in v3_core.daily_metrics:
+                v3_metrics = v3_core.daily_metrics[category.code]
+
             model = DailyPredictionCategoryScoreModel(
                 run_id=run.id,
                 category_id=category.id,
@@ -189,11 +203,18 @@ class PredictionPersistenceService:
                 normalized_score=score_data.get("normalized_score"),
                 note_20=score_data.get("note_20"),
                 power=score_data.get("power"),
-                volatility=score_data.get("volatility"),
-                score_20=score_data.get("score_20"),
+                volatility=v3_metrics.volatility if v3_metrics else score_data.get("volatility"),
+                score_20=v3_metrics.score_20 if v3_metrics else score_data.get("score_20"),
                 intensity_20=score_data.get("intensity_20"),
                 confidence_20=score_data.get("confidence_20"),
-                rarity_percentile=score_data.get("rarity_percentile"),
+                rarity_percentile=v3_metrics.rarity_percentile if v3_metrics else score_data.get("rarity_percentile"),
+                level_day=v3_metrics.level_day if v3_metrics else None,
+                dominance_day=v3_metrics.dominance_day if v3_metrics else None,
+                stability_day=v3_metrics.stability_day if v3_metrics else None,
+                intensity_day=v3_metrics.intensity_day if v3_metrics else None,
+                avg_score=v3_metrics.avg_score if v3_metrics else score_data.get("avg_score"),
+                max_score=v3_metrics.max_score if v3_metrics else score_data.get("max_score"),
+                min_score=v3_metrics.min_score if v3_metrics else score_data.get("min_score"),
                 rank=rank,
                 is_provisional=score_data.get("is_provisional"),
                 summary=editorial_summary or score_data.get("summary"),
@@ -348,9 +369,15 @@ class PredictionPersistenceService:
         if hasattr(value, "isoformat"):
             return value.isoformat()
         if hasattr(value, "__dataclass_fields__"):
-            return {key: self._json_ready(item) for key, item in asdict(value).items()}
+            return {
+                str(key) if hasattr(key, "isoformat") else key: self._json_ready(item)
+                for key, item in asdict(value).items()
+            }
         if isinstance(value, dict):
-            return {key: self._json_ready(item) for key, item in value.items()}
+            return {
+                str(key) if hasattr(key, "isoformat") else key: self._json_ready(item)
+                for key, item in value.items()
+            }
         if isinstance(value, (list, tuple)):
             return [self._json_ready(item) for item in value]
         return value
