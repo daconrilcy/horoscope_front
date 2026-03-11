@@ -1091,3 +1091,230 @@ def test_run_v3_exposes_intraday_activation_diagnostics_and_secondary_runtime(ba
     assert bundle.v3_core.run_metadata["v3_intraday_activation"]["themes"]["work"][
         "top_contributors"
     ]
+
+
+def test_run_v3_exposes_impulse_diagnostics_and_keeps_moon_ingress_out_of_a_layer(base_input):
+    sun_profile = PlanetProfileData(
+        planet_id=1,
+        code="sun",
+        name="Sun",
+        class_code="luminary",
+        speed_rank=1,
+        speed_class="fast",
+        weight_intraday=1.0,
+        weight_day_climate=1.0,
+        typical_polarity="positive",
+        orb_active_deg=5.0,
+        orb_peak_deg=1.5,
+        keywords=("sun",),
+    )
+    moon_profile = PlanetProfileData(
+        planet_id=2,
+        code="moon",
+        name="Moon",
+        class_code="luminary",
+        speed_rank=2,
+        speed_class="fast",
+        weight_intraday=1.0,
+        weight_day_climate=1.0,
+        typical_polarity="positive",
+        orb_active_deg=5.0,
+        orb_peak_deg=1.5,
+        keywords=("moon",),
+    )
+    loaded_context = LoadedPredictionContext(
+        prediction_context=PredictionContext(
+            categories=(
+                CategoryData(
+                    id=1,
+                    code="work",
+                    name="Work",
+                    display_name="Work",
+                    sort_order=1,
+                    is_enabled=True,
+                ),
+            ),
+            planet_profiles={
+                "Sun": sun_profile,
+                "sun": sun_profile,
+                "Moon": moon_profile,
+                "moon": moon_profile,
+            },
+            house_profiles={},
+            planet_category_weights=(
+                PlanetCategoryWeightData(
+                    planet_id=1,
+                    planet_code="Sun",
+                    category_id=1,
+                    category_code="work",
+                    weight=1.0,
+                    influence_role="primary",
+                ),
+            ),
+            house_category_weights=(
+                HouseCategoryWeightData(
+                    house_id=10,
+                    house_number=10,
+                    category_id=1,
+                    category_code="work",
+                    weight=1.0,
+                    routing_role="primary",
+                ),
+            ),
+            sign_rulerships={},
+            aspect_profiles={
+                "conjunction": AspectProfileData(
+                    aspect_id=1,
+                    code="conjunction",
+                    intensity_weight=1.0,
+                    default_valence="positive",
+                    orb_multiplier=1.0,
+                    phase_sensitive=True,
+                ),
+            },
+            astro_points={},
+            point_category_weights=(),
+        ),
+        ruleset_context=RulesetContext(
+            ruleset=RulesetData(
+                id=1,
+                version="1.0.0",
+                reference_version_id=1,
+                zodiac_type="tropical",
+                coordinate_mode="geocentric",
+                house_system="whole_sign",
+                time_step_minutes=15,
+                is_locked=True,
+            ),
+            parameters={
+                "v3_b_weight_occ": 0.0,
+                "v3_b_weight_rul": 0.0,
+                "v3_b_weight_ang": 0.0,
+                "v3_b_weight_asp": 0.0,
+            },
+            event_types={
+                "aspect_exact_to_angle": EventTypeData(
+                    id=1,
+                    code="aspect_exact_to_angle",
+                    name="Exact angle",
+                    event_group="aspect",
+                    priority=90,
+                    base_weight=1.0,
+                ),
+                "moon_sign_ingress": EventTypeData(
+                    id=2,
+                    code="moon_sign_ingress",
+                    name="Moon ingress",
+                    event_group="ingress",
+                    priority=60,
+                    base_weight=0.6,
+                ),
+            },
+        ),
+        calibrations={"work": None},
+        is_provisional_calibration=True,
+        calibration_label="provisional",
+    )
+    samples = [
+        SamplePoint(
+            ut_time=float(index),
+            local_time=datetime(2026, 3, 7, 0, 0, tzinfo=timezone.utc)
+            + timedelta(minutes=15 * index),
+        )
+        for index in range(2)
+    ]
+
+    class StubTemporalSampler:
+        def build_day_grid(self, *_args):
+            return DayGrid(
+                samples=samples,
+                ut_start=0.0,
+                ut_end=1.0,
+                sunrise_ut=None,
+                sunset_ut=None,
+                local_date=date(2026, 3, 7),
+                timezone="UTC",
+            )
+
+    class StubAstroCalculator:
+        def __init__(self, *_args):
+            pass
+
+        def compute_step(self, ut_time: float, local_time: datetime):
+            return SimpleNamespace(
+                ut_jd=ut_time,
+                local_time=local_time,
+                house_system_effective="placidus",
+                ascendant_deg=0.0,
+                mc_deg=0.0,
+                house_cusps=[],
+                planets={
+                    "Sun": PlanetState(
+                        code="Sun",
+                        longitude=80.5,
+                        speed_lon=1.0,
+                        is_retrograde=False,
+                        sign_code=2,
+                        natal_house_transited=10,
+                    )
+                },
+            )
+
+    class StubEventDetector:
+        def __init__(self, *_args):
+            pass
+
+        def detect(self, *_args):
+            return [
+                AstroEvent(
+                    event_type="aspect_exact_to_angle",
+                    ut_time=0.0,
+                    local_time=samples[0].local_time,
+                    body="Sun",
+                    target="Asc",
+                    aspect="conjunction",
+                    orb_deg=0.0,
+                    priority=90,
+                    base_weight=1.0,
+                    metadata={
+                        "phase": "exact",
+                        "natal_house_target": 10,
+                        "natal_house_transited": 10,
+                    },
+                ),
+                AstroEvent(
+                    event_type="moon_sign_ingress",
+                    ut_time=0.0,
+                    local_time=samples[0].local_time,
+                    body="Moon",
+                    target=None,
+                    aspect=None,
+                    orb_deg=0.0,
+                    priority=60,
+                    base_weight=0.6,
+                    metadata={"from_sign": 1, "to_sign": 2, "natal_house_target": 10},
+                ),
+            ]
+
+    orchestrator = EngineOrchestrator(
+        prediction_context_loader=lambda *_: loaded_context,
+        temporal_sampler=StubTemporalSampler(),
+        astro_calculator_factory=lambda *_: StubAstroCalculator(),
+        event_detector_factory=lambda *_: StubEventDetector(),
+    )
+
+    bundle = orchestrator.run(
+        base_input,
+        engine_mode=DailyEngineMode.V3,
+        include_editorial=False,
+    )
+
+    first_layer = next(iter(bundle.v3_core.theme_signals["work"].timeline.values()))
+    assert first_layer.transit > 0.0
+    assert first_layer.aspect == 0.0
+    assert first_layer.event > 0.0
+    assert (
+        bundle.v3_core.run_metadata["v3_impulse_signal"]["performance"]["impulse_event_count"]
+        == 2
+    )
+    assert bundle.v3_core.run_metadata["v3_impulse_signal"]["themes"]["work"]["top_contributors"]

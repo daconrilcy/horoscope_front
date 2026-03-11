@@ -327,7 +327,7 @@ class IntradayActivationBuilder:
         secondary_events = [
             self._enrich_secondary_event(event, steps)
             for event in secondary_events
-            if event.event_type in {"planetary_hour_change", "moon_sign_ingress", "asc_sign_change"}
+            if event.event_type in {"planetary_hour_change", "asc_sign_change"}
         ]
         secondary_events.extend(self._detect_mc_sign_changes(steps, ctx))
         secondary_events.sort(key=lambda event: event.local_time)
@@ -356,12 +356,6 @@ class IntradayActivationBuilder:
             metadata.setdefault("angle_code", event.body or "Asc")
             metadata.setdefault("natal_house_target", 1)
             metadata.setdefault("natal_house_transited", 1)
-        elif event.event_type == "moon_sign_ingress":
-            step = min(steps, key=lambda sample: abs(sample.ut_jd - event.ut_time))
-            moon_state = step.planets.get("Moon")
-            if moon_state is not None:
-                metadata.setdefault("natal_house_target", moon_state.natal_house_transited)
-                metadata.setdefault("natal_house_transited", moon_state.natal_house_transited)
         return AstroEvent(
             event_type=event.event_type,
             ut_time=event.ut_time,

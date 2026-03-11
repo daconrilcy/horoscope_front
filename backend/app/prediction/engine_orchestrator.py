@@ -359,9 +359,19 @@ class EngineOrchestrator:
             detected_events=detected_events,
         )
         a_timelines = intraday_layer.timeline
-        e_timelines = self._impulse_signal_builder.build_timeline(
-            detected_events, samples, b_map, loaded_context
+        regime_support_timelines = self._build_regime_support_timelines(
+            samples=samples,
+            t_timelines=t_timelines,
+            a_timelines=a_timelines,
         )
+        impulse_layer = self._impulse_signal_builder.build(
+            detected_events,
+            samples,
+            b_map,
+            loaded_context,
+            support_timelines=regime_support_timelines,
+        )
+        e_timelines = impulse_layer.timeline
 
         theme_signals: dict[str, V3ThemeSignal] = {}
         for theme_code, b_out in b_map.items():
@@ -413,6 +423,7 @@ class EngineOrchestrator:
                 },
                 "v3_transit_signal": transit_layer.diagnostics,
                 "v3_intraday_activation": intraday_layer.diagnostics,
+                "v3_impulse_signal": impulse_layer.diagnostics,
             },
             computed_at=computed_at,
         )
@@ -818,6 +829,27 @@ class EngineOrchestrator:
             local_date=local_date,
             timezone=timezone,
         )
+
+    def _build_regime_support_timelines(
+        self,
+        *,
+        samples: list[SamplePoint],
+        t_timelines: dict[str, dict[datetime, float]],
+        a_timelines: dict[str, dict[datetime, float]],
+    ) -> dict[str, dict[datetime, float]]:
+        support_timelines: dict[str, dict[datetime, float]] = {}
+        theme_codes = set(t_timelines) | set(a_timelines)
+        for theme_code in theme_codes:
+            theme_support: dict[datetime, float] = {}
+            t_timeline = t_timelines.get(theme_code, {})
+            a_timeline = a_timelines.get(theme_code, {})
+            for sample in samples:
+                theme_support[sample.local_time] = (
+                    t_timeline.get(sample.local_time, 0.0)
+                    + a_timeline.get(sample.local_time, 0.0)
+                )
+            support_timelines[theme_code] = theme_support
+        return support_timelines
 
     def _local_date_to_ut_interval(self, local_date: date, tz_name: str) -> tuple[float, float]:
         """Converts a local date + timezone into a UT interval (Julian Day start/end)."""

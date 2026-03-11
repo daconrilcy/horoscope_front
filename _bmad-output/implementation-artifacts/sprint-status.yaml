@@ -368,7 +368,7 @@ development_status:
   42-2-construire-la-susceptibilite-natale-structurelle: review
   42-3-construire-le-climat-de-transit-continu: review
   42-4-construire-la-couche-d-activation-intrajournaliere-locale: review
-  42-5-repositionner-les-exactitudes-comme-couche-impulsionnelle: ready-for-dev
+  42-5-repositionner-les-exactitudes-comme-couche-impulsionnelle: review
   42-6-produire-orientation-intensite-confiance-et-rarete-par-theme: ready-for-dev
   42-7-refaire-la-calibration-absolue-a-partir-des-courbes-lissees: ready-for-dev
   42-8-etendre-le-snapshot-et-la-persistance-pour-le-daily-v3: ready-for-dev
