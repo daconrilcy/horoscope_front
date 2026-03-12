@@ -3,6 +3,8 @@ import {
   NOTE_BAND_LABELS,
   TONE_LABELS,
   PIVOT_LABELS,
+  TURNING_POINT_LABELS,
+  DRIVER_TYPE_LABELS,
   type Lang,
   getLabel,
 } from "../i18n/predictions";
@@ -233,6 +235,41 @@ export function humanizePredictionDriverLabel(
   }
 
   return lang === "fr" ? "Signal astrologique" : "Astrological signal";
+}
+
+export function humanizeTurningPointSemantic(
+  tp: {
+    change_type?: string;
+    previous_categories?: string[];
+    next_categories?: string[];
+    primary_driver?: any;
+  },
+  lang: Lang
+) {
+  const labels = TURNING_POINT_LABELS;
+  const changeLabel = getLabel(labels, tp.change_type || "recomposition", lang);
+  
+  // 1. Driver
+  const driverLabel = tp.primary_driver 
+    ? getLabel(DRIVER_TYPE_LABELS, tp.primary_driver.event_type, lang)
+    : getLabel(labels, "no_driver", lang);
+
+  // 2. Transition
+  const prev = tp.previous_categories?.slice(0, 2) || [];
+  const next = tp.next_categories?.slice(0, 2) || [];
+  
+  const formatCats = (cats: string[]) => {
+    if (cats.length === 0) return getLabel(labels, "none", lang);
+    return cats.map(c => getCategoryLabel(c, lang).toLowerCase()).join(` ${getLabel(labels, "and", lang)} `);
+  };
+
+  const transitionLabel = `${getLabel(labels, "from", lang)} ${formatCats(prev)} ${getLabel(labels, "to", lang)} ${formatCats(next)}`;
+
+  return {
+    title: changeLabel,
+    cause: driverLabel,
+    transition: transitionLabel
+  };
 }
 
 export function buildTimelineFallbackSummary(

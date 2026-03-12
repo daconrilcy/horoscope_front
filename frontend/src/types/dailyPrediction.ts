@@ -32,6 +32,17 @@ export interface DailyPredictionTurningPoint {
   severity: number | string;
   summary: string | null;
   drivers: DailyPredictionDriver[];
+  // Story 43.1
+  change_type?: string;
+  previous_categories?: string[];
+  next_categories?: string[];
+  primary_driver?: {
+    event_type: string;
+    body?: string;
+    target?: string;
+    aspect?: string;
+    metadata?: Record<string, unknown>;
+  } | null;
 }
 
 export interface DailyPredictionTimeBlock {

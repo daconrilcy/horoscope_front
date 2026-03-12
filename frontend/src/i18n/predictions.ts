@@ -57,6 +57,29 @@ export const PIVOT_LABELS: Record<string, Record<Lang, string>> = {
   critical: { fr: "Critique", en: "Critical" },
 };
 
+export const TURNING_POINT_LABELS: Record<string, Record<Lang, string>> = {
+  why: { fr: "Pourquoi ?", en: "Why?" },
+  before_after: { fr: "Transition", en: "Transition" },
+  implication: { fr: "Implication", en: "Implication" },
+  emergence: { fr: "Émergence d'un nouveau climat", en: "Emergence of a new climate" },
+  recomposition: { fr: "Recomposition des énergies", en: "Recomposition of energies" },
+  attenuation: { fr: "Atténuation de l'intensité", en: "Attenuation of intensity" },
+  no_driver: { fr: "Évolution naturelle du cycle", en: "Natural evolution of the cycle" },
+  from: { fr: "De", en: "From" },
+  to: { fr: "vers", en: "to" },
+  and: { fr: "et", en: "and" },
+  none: { fr: "calme", en: "calm" },
+};
+
+export const DRIVER_TYPE_LABELS: Record<string, Record<Lang, string>> = {
+  aspect_exact_to_angle: { fr: "Alignement angulaire exact", en: "Exact angular alignment" },
+  aspect_exact_to_luminary: { fr: "Point culminant d'un luminaire", en: "Culmination of a luminary" },
+  aspect_exact_to_personal: { fr: "Résonance avec votre thème natal", en: "Resonance with your natal chart" },
+  moon_sign_ingress: { fr: "Changement de signe lunaire", en: "Moon sign change" },
+  planet_ingress: { fr: "Changement de signe planétaire", en: "Planetary sign change" },
+  generic_event: { fr: "Configuration céleste notable", en: "Notable celestial configuration" },
+};
+
 export const PREDICTION_UI_MESSAGES: Record<
   | "loading"
   | "error"
