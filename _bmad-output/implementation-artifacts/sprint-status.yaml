@@ -387,5 +387,5 @@ development_status:
   43-1-structurer-une-semantique-explicable-des-bascules: done
   43-2-introduire-un-wording-i18n-pour-les-moments-cles: done
   43-3-refaire-le-rendu-ui-des-moments-cles: done
-  43-4-verrouiller-qa-et-coherence-multilingue-des-moments-cles: ready-for-dev
+  43-4-verrouiller-qa-et-coherence-multilingue-des-moments-cles: done
   epic-43-retrospective: optional
