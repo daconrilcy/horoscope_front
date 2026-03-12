@@ -213,6 +213,7 @@ GPT-5 Codex
 - Vérifications exécutées sur le flux livré: lint frontend, build frontend, tests `TodayPage`, tests unitaires backend `DecisionWindowBuilder`, et tests d’intégration backend `daily_prediction_api`.
 - Ajustement post-livraison 2026-03-11: l’agenda frontend réutilise désormais les blocs `timeline` neutres du v3 quand aucun créneau décisionnel exploitable n’est disponible, ce qui évite une journée entièrement remplie par `Pas d'aspect majeur` sur les `flat_day`.
 - Ajustement post-livraison 2026-03-11: les `Moments clés du jour` ne fabriquent plus de faux pivots synthétiques à `00:00`, tout en conservant les vraies transitions tardives de régime comme `22:45`.
+- Ajustement post-livraison 2026-03-12: les cellules de l’`Agenda du jour` affichent désormais un marqueur visuel de bascule quand un moment clé réel ou synthétique tombe dans le créneau, y compris sur les `flat_day` pilotés par fallback timeline.
 
 ### File List
 

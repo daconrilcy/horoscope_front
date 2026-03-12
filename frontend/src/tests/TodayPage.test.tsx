@@ -729,6 +729,7 @@ describe("TodayPage", () => {
       .find((element) => element.getAttribute("data-slot-label") === "14:00");
     expect(pivotSlot).toBeDefined();
     expect(within(pivotSlot!).getByTestId("agenda-slot-pivot")).toBeInTheDocument();
+    expect(within(pivotSlot!).getByTestId("agenda-slot-shift-marker")).toBeInTheDocument();
 
     expect(screen.getAllByText(/aspects majeurs/i).length).toBeGreaterThan(0);
   });
@@ -834,6 +835,18 @@ describe("TodayPage", () => {
     expect(
       screen.getByText(/Le focus glisse de vie sociale & réseau vers travail, avec santé & hygiène de vie et argent & ressources en fil conducteur/i),
     ).toBeInTheDocument();
+
+    const morningShiftSlot = screen
+      .getAllByTestId("agenda-slot")
+      .find((element) => element.getAttribute("data-slot-label") === "08:00");
+    expect(morningShiftSlot).toBeDefined();
+    expect(within(morningShiftSlot!).getByTestId("agenda-slot-shift-marker")).toBeInTheDocument();
+
+    const eveningShiftSlot = screen
+      .getAllByTestId("agenda-slot")
+      .find((element) => element.getAttribute("data-slot-label") === "20:00");
+    expect(eveningShiftSlot).toBeDefined();
+    expect(within(eveningShiftSlot!).getByTestId("agenda-slot-shift-marker")).toBeInTheDocument();
   });
 
   it("ne rend plus la chronologie du jour devenue redondante", async () => {

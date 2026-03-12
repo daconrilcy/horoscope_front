@@ -125,15 +125,6 @@ export function TodayPage() {
     trackEvent(EVENTS.HISTORY_VIEWED)
   }
 
-  const agendaSlots = prediction
-    ? buildDailyAgendaSlots(
-        prediction.meta.date_local,
-        prediction.decision_windows,
-        prediction.timeline,
-        prediction.categories,
-      )
-    : []
-
   const normalizedApiMoments: DailyPredictionTurningPoint[] = prediction
     ? prediction.turning_points.map((moment) => {
         const occurredMinute = parseLocalMinute(moment.occurred_at_local)
@@ -215,6 +206,16 @@ export function TodayPage() {
     ? (prediction.turning_points?.length > 0 
         ? normalizedApiMoments 
         : normalizedFallbackMoments)
+    : []
+
+  const agendaSlots = prediction
+    ? buildDailyAgendaSlots(
+        prediction.meta.date_local,
+        prediction.decision_windows,
+        prediction.timeline,
+        prediction.categories,
+        keyMoments.map((moment) => ({ occurred_at_local: moment.occurred_at_local })),
+      )
     : []
 
   return (

@@ -57,6 +57,7 @@ so that le produit ne surinterprète pas les bascules et conserve un wording coh
 - Extended `TodayPage` regression coverage to keep impacts labels, humanized summaries, and non-technical fallbacks stable in FR and EN.
 - Revalidated frontend targeted suites after post-implementation fixes on fallback normalization and enriched card rendering.
 - Added a dedicated regression case to prevent misleading `before == after` wording when the actual movement is an emergence via a third category.
+- Added a regression guard to ensure `Agenda du jour` marks slot cells when a displayed key moment falls inside the 2h window, including synthesized fallback moments on `flat_day`.
 
 ### File List
 

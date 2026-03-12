@@ -66,6 +66,7 @@ so that les moments clés enrichis ne sur-vendent pas des micro-variations et re
 - All edge cases (rising, falling, redistribution, below threshold) verified.
 - API contract coverage added so enriched turning-point fields are not stripped by FastAPI response serialization.
 - Flat-day rotations are now covered as real turning points, avoiding regression to pure frontend synthesis.
+- Agenda regressions now cover visible slot marking when enriched or synthesized turning points fall inside a 2h cell, so the dashboard signal stays aligned with the rendered key moments.
 
 ### File List
 

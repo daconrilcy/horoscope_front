@@ -1,5 +1,5 @@
 import React from "react";
-import { Zap } from "lucide-react";
+import { ArrowRightLeft, Zap } from "lucide-react";
 
 import type { Lang } from "../../i18n/predictions";
 import type { DailyAgendaSlot } from "../../utils/dailyAstrology";
@@ -72,13 +72,36 @@ export const DayAgenda: React.FC<Props> = ({ slots, lang }) => {
               </div>
             )}
 
+            {slot.hasTurningPoint && (
+              <div
+                data-testid="agenda-slot-shift-marker"
+                style={{
+                  marginTop: "1rem",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "1.75rem",
+                  height: "1.75rem",
+                  borderRadius: "999px",
+                  background: "rgba(var(--primary-rgb), 0.14)",
+                  color: "var(--primary)",
+                  border: "1px solid rgba(var(--primary-rgb), 0.28)",
+                  boxShadow: "0 0 0 1px rgba(var(--primary-rgb), 0.08) inset",
+                }}
+                aria-label={getPredictionMessage("pivot_badge", lang)}
+                title={getPredictionMessage("pivot_badge", lang)}
+              >
+                <ArrowRightLeft size={14} />
+              </div>
+            )}
+
             {slot.topCategories.length > 0 ? (
               <>
                 <div
                   style={{
                     display: "flex",
                     gap: "0.3rem",
-                    marginTop: "1rem",
+                    marginTop: slot.hasTurningPoint ? "0.25rem" : "1rem",
                     flexWrap: "wrap",
                     justifyContent: "center",
                   }}

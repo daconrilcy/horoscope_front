@@ -190,8 +190,19 @@ export function buildDailyAgendaSlots(
   decisionWindows: DailyPredictionDecisionWindow[] | null | undefined,
   timeline: DailyPredictionTimeBlock[],
   categories: DailyPredictionCategory[],
+  keyMoments:
+    | Array<{ occurredAtLocal?: string; occurred_at_local?: string }>
+    | null
+    | undefined = undefined,
 ): DailyAgendaSlot[] {
   const ranges = buildMajorAspectRanges(decisionWindows, timeline, categories);
+  const keyMomentMinutes = new Set(
+    (keyMoments ?? [])
+      .map((moment) => moment.occurredAtLocal ?? moment.occurred_at_local ?? null)
+      .map((iso) => (iso ? parseLocalDateTimeParts(iso) : null))
+      .filter((parsed): parsed is ParsedDateTime => parsed !== null && parsed.date === dateContext)
+      .map((parsed) => parsed.minutes),
+  );
 
   return Array.from({ length: SLOT_COUNT }, (_, index) => {
     const startMinute = index * SLOT_DURATION_MINUTES;
@@ -201,7 +212,10 @@ export function buildDailyAgendaSlots(
     return {
       label: `${String(index * 2).padStart(2, "0")}:00`,
       topCategories,
-      hasTurningPoint: hasTurningPointInSlot(ranges, startMinute, endMinute, dateContext),
+      hasTurningPoint:
+        Array.from(keyMomentMinutes).some(
+          (minute) => minute >= startMinute && minute < endMinute,
+        ) || hasTurningPointInSlot(ranges, startMinute, endMinute, dateContext),
     };
   });
 }
