@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { humanizePredictionDriverLabel, humanizeTurningPointSemantic } from "../utils/predictionI18n";
+import { 
+  humanizePredictionDriverLabel, 
+  humanizeTurningPointSemantic,
+  humanizeMovement,
+  humanizeCategoryDelta
+} from "../utils/predictionI18n";
 
 const TECHNICAL_DRIVER_CODES = [
   "enter_orb",
@@ -55,6 +60,35 @@ describe("predictionI18n", () => {
       expect(res.title).toBe("Recomposition des énergies");
       expect(res.cause).toBe("Évolution naturelle du cycle");
       expect(res.transition).toBe("De calme vers calme");
+    });
+  });
+
+  describe("humanizeMovement", () => {
+    it("génère un mouvement global en hausse marqué", () => {
+      const res = humanizeMovement({ direction: "rising", strength: 8.5, delta_composite: 5.0 }, "fr");
+      expect(res).toBe("Mouvement global en hausse (marqué).");
+    });
+
+    it("génère un mouvement global en baisse notable (EN)", () => {
+      const res = humanizeMovement({ direction: "falling", strength: 4.5, delta_composite: -2.0 }, "en");
+      expect(res).toBe("Global movement is falling (notable).");
+    });
+
+    it("gère la recomposition sans intensité", () => {
+      const res = humanizeMovement({ direction: "recomposition", strength: 1.0, delta_composite: 0.1 }, "fr");
+      expect(res).toBe("Mouvement global en mutation.");
+    });
+  });
+
+  describe("humanizeCategoryDelta", () => {
+    it("génère une progression sur une catégorie", () => {
+      const res = humanizeCategoryDelta({ code: "love", direction: "up", delta_intensity: 2.0 }, "fr");
+      expect(res).toBe("❤️ progression sur amour & relations");
+    });
+
+    it("génère un recul sur une catégorie (EN)", () => {
+      const res = humanizeCategoryDelta({ code: "work", direction: "down", delta_intensity: 3.0 }, "en");
+      expect(res).toBe("💼 Work decrease");
     });
   });
 });

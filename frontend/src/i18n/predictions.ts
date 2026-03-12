@@ -81,6 +81,8 @@ export const TURNING_POINT_LABELS: Record<string, Record<Lang, string>> = {
   to: { fr: "vers", en: "to" },
   and: { fr: "et", en: "and" },
   none: { fr: "calme", en: "calm" },
+  global_movement: { fr: "Mouvement global", en: "Global movement" },
+  local_variations: { fr: "Variations locales", en: "Local variations" },
 };
 
 export const DRIVER_TYPE_LABELS: Record<string, Record<Lang, string>> = {
@@ -90,6 +92,24 @@ export const DRIVER_TYPE_LABELS: Record<string, Record<Lang, string>> = {
   moon_sign_ingress: { fr: "Changement de signe lunaire", en: "Moon sign change" },
   planet_ingress: { fr: "Changement de signe planétaire", en: "Planetary sign change" },
   generic_event: { fr: "Configuration céleste notable", en: "Notable celestial configuration" },
+};
+
+export const MOVEMENT_DIRECTION_LABELS: Record<string, Record<Lang, string>> = {
+  rising: { fr: "en hausse", en: "rising" },
+  falling: { fr: "en baisse", en: "falling" },
+  recomposition: { fr: "en mutation", en: "shifting" },
+};
+
+export const INTENSITY_LEVEL_LABELS: Record<string, Record<Lang, string>> = {
+  slight: { fr: "léger", en: "slight" },
+  notable: { fr: "net", en: "notable" },
+  marked: { fr: "marqué", en: "marked" },
+};
+
+export const CATEGORY_VARIATION_LABELS: Record<string, Record<Lang, string>> = {
+  up: { fr: "progression", en: "increase" },
+  down: { fr: "recul", en: "decrease" },
+  stable: { fr: "stabilité", en: "stability" },
 };
 
 export const PREDICTION_UI_MESSAGES: Record<

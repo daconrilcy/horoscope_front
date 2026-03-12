@@ -5,6 +5,9 @@ import {
   PIVOT_LABELS,
   TURNING_POINT_LABELS,
   DRIVER_TYPE_LABELS,
+  MOVEMENT_DIRECTION_LABELS,
+  INTENSITY_LEVEL_LABELS,
+  CATEGORY_VARIATION_LABELS,
   type Lang,
   getLabel,
 } from "../i18n/predictions";
@@ -302,4 +305,46 @@ export function buildTimelineFallbackSummary(
   return lang === "fr"
     ? `Climat ${tone}, accent sur ${joined}.`
     : `${tone} atmosphere, with focus on ${joined}.`;
+}
+
+export function humanizeMovement(
+  movement: { direction: string; strength: number; delta_composite: number } | null | undefined,
+  lang: Lang,
+) {
+  if (!movement) return null;
+
+  const direction = getLabel(MOVEMENT_DIRECTION_LABELS, movement.direction, lang);
+  
+  // Strength Mapping (AC2)
+  let intensity = getLabel(INTENSITY_LEVEL_LABELS, "slight", lang);
+  if (movement.strength > 7) intensity = getLabel(INTENSITY_LEVEL_LABELS, "marked", lang);
+  else if (movement.strength > 3) intensity = getLabel(INTENSITY_LEVEL_LABELS, "notable", lang);
+
+  const isRising = movement.direction === "rising";
+  const isFalling = movement.direction === "falling";
+
+  if (lang === "fr") {
+    if (isRising || isFalling) {
+      return `Mouvement global ${direction} (${intensity}).`;
+    }
+    return `Mouvement global ${direction}.`;
+  } else {
+    if (isRising || isFalling) {
+      return `Global movement is ${direction} (${intensity}).`;
+    }
+    return `Global movement is ${direction}.`;
+  }
+}
+
+export function humanizeCategoryDelta(
+  delta: { code: string; direction: string; delta_intensity: number },
+  lang: Lang,
+) {
+  const cat = getCategoryMeta(delta.code, lang);
+  const dir = getLabel(CATEGORY_VARIATION_LABELS, delta.direction, lang);
+  
+  if (lang === "fr") {
+    return `${cat.icon} ${dir} sur ${cat.label.toLowerCase()}`;
+  }
+  return `${cat.icon} ${cat.label} ${dir}`;
 }
