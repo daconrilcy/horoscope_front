@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createMemoryRouter, RouterProvider } from "react-router-dom"
@@ -285,6 +285,54 @@ describe("RootRedirect", () => {
     
     await waitFor(() => {
       expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
+    })
+  })
+})
+
+describe("Dashboard Path", () => {
+  it("renders DashboardPage on /dashboard", async () => {
+    vi.stubGlobal("fetch", makeFetchMock())
+    setupToken()
+    
+    renderApp(["/dashboard"])
+    
+    await waitFor(() => {
+      // DashboardPage has "Tableau de bord" as title
+      expect(screen.getByText(/Accédez rapidement à toutes les fonctionnalités/i)).toBeInTheDocument()
+    })
+  })
+
+  it("renders DailyHoroscopePage on /dashboard/horoscope", async () => {
+    vi.stubGlobal("fetch", makeFetchMock())
+    setupToken()
+    
+    renderApp(["/dashboard/horoscope"])
+    
+    await waitFor(() => {
+      // DailyHoroscopePage has "Horoscope" heading
+      expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
+    })
+  })
+
+  it("keeps dashboard tab active in BottomNav for both routes", async () => {
+    vi.stubGlobal("fetch", makeFetchMock())
+    setupToken()
+    
+    // Test /dashboard
+    const { unmount } = renderApp(["/dashboard"])
+    await waitFor(() => {
+      const nav = screen.getByRole("navigation", { name: /principale/i })
+      const dashboardLink = within(nav).getByRole("link", { name: /Aujourd'hui/i })
+      expect(dashboardLink).toHaveClass("bottom-nav__item--active")
+    })
+    unmount()
+
+    // Test /dashboard/horoscope
+    renderApp(["/dashboard/horoscope"])
+    await waitFor(() => {
+      const nav = screen.getByRole("navigation", { name: /principale/i })
+      const dashboardLink = within(nav).getByRole("link", { name: /Aujourd'hui/i })
+      expect(dashboardLink).toHaveClass("bottom-nav__item--active")
     })
   })
 })

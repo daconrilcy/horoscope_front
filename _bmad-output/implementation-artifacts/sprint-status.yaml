@@ -397,3 +397,10 @@ development_status:
   44-4-refondre-le-rendu-ui-des-moments-cles-avec-mouvement-et-deltas: done
   44-5-verrouiller-qa-et-garde-fous-de-bruit-sur-les-valeurs-de-bascule: done
   epic-44-retrospective: optional
+
+  epic-45: in-progress
+  45-1-refondre-le-routing-dashboard-et-isoler-la-page-horoscope-detaillee: done
+  45-2-creer-la-landing-dashboard-avec-resume-et-hub-d-activites: ready-for-dev
+  45-3-restaurer-une-page-horoscope-detaillee-avec-retour-dashboard: ready-for-dev
+  45-4-verrouiller-qa-accessibilite-et-coherence-i18n-du-parcours-dashboard: ready-for-dev
+  epic-45-retrospective: optional

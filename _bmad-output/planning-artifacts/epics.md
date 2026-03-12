@@ -2112,3 +2112,69 @@ So that les moments clés enrichis ne sur-vendent pas des micro-variations et re
 - Les garde-fous empêchent l'affichage de chiffres bruts instables, de décimales inutiles et de messages contradictoires entre `Implication` et `Mouvement`.
 
 [Source: user request 2026-03-12 ; frontend/src/tests/TurningPointsEnriched.test.tsx ; frontend/src/tests/TodayPage.test.tsx ; backend/app/tests/integration/test_daily_prediction_api.py]
+
+## Epic 45: Recomposer le parcours dashboard autour d'un résumé puis d'un détail horoscope
+
+Faire évoluer le parcours dashboard pour que l'entrée `/dashboard` devienne une page d'atterrissage légère, centrée sur un résumé court de l'horoscope du jour et les autres activités disponibles, tandis que le détail complet de l'horoscope est déplacé vers une page dédiée accessible depuis ce résumé.
+
+**FRs covered:** FR12, FR16, FR19, NFR2, NFR3, NFR13, NFR14
+
+### Story 45.1: Refondre le routing dashboard et isoler la page horoscope détaillée
+
+As a frontend architect,
+I want séparer explicitement la landing `/dashboard` du détail horoscope `/dashboard/horoscope`,
+so that le menu dashboard ouvre une page d'accueil légère sans perdre la continuité de navigation vers l'horoscope complet.
+
+**Acceptance Criteria:**
+- `/dashboard` n'affiche plus directement la page horoscope détaillée actuelle.
+- Une route dédiée `/dashboard/horoscope` est introduite pour le détail complet du daily.
+- Le bottom nav continue à considérer le parcours détaillé comme appartenant au dashboard.
+- Le header shell n'introduit pas de double titre ou de conflit visuel sur les deux écrans du parcours dashboard.
+- Les gardes d'authentification, redirections racine et deep links existants continuent de fonctionner.
+
+[Source: user request 2026-03-12 ; frontend/src/app/routes.tsx ; frontend/src/components/layout/Header.tsx ; frontend/src/components/layout/BottomNav.tsx]
+
+### Story 45.2: Créer la landing dashboard avec résumé 2 lignes et hub d'activités
+
+As a utilisateur authentifié,
+I want voir sur `/dashboard` uniquement un résumé très court de mon horoscope du jour puis mes autres activités,
+so that j'accède immédiatement à l'essentiel avant de choisir d'aller plus loin ou d'ouvrir un autre parcours.
+
+**Acceptance Criteria:**
+- La landing dashboard affiche un cadre dédié à l'horoscope du jour avec un résumé visuellement limité à 2 lignes maximum.
+- Le clic sur ce cadre ouvre `/dashboard/horoscope`.
+- La section des activités (chat, tirage, etc.) est affichée sous le résumé et reste accessible sans scroller inutilement sur mobile.
+- Les états `loading`, `error` et `empty` de l'horoscope restent gérés sans masquer la section activités.
+- Le frontend réutilise les données du daily existantes, sans nouveau contrat backend.
+
+[Source: user request 2026-03-12 ; frontend/src/components/ShortcutsSection.tsx ; frontend/src/pages/DashboardPage.tsx ; frontend/src/pages/TodayPage.tsx]
+
+### Story 45.3: Restaurer une page horoscope détaillée avec retour explicite vers le dashboard
+
+As a utilisateur consultant l'horoscope du jour,
+I want ouvrir une page dédiée au daily complet avec un bouton retour clair vers le dashboard,
+so that je retrouve tout le détail utile sans perdre mon point d'entrée principal.
+
+**Acceptance Criteria:**
+- `/dashboard/horoscope` affiche le contenu détaillé du daily déjà en place, avec au minimum le résumé, les moments clés du jour et l'agenda du jour.
+- Un bouton de retour explicite permet de revenir vers `/dashboard`.
+- La page détail n'affiche plus la section des autres activités qui appartient désormais à la landing dashboard.
+- Les états `loading`, `error` et `empty` restent cohérents avec la page détail et ne cassent pas la navigation retour.
+- L'ouverture du détail depuis la landing réutilise le cache React Query existant du daily quand les données sont déjà chargées.
+
+[Source: user request 2026-03-12 ; frontend/src/pages/TodayPage.tsx ; frontend/src/api/useDailyPrediction.ts ; frontend/src/types/dailyPrediction.ts]
+
+### Story 45.4: Verrouiller QA, accessibilité et cohérence i18n du nouveau parcours dashboard
+
+As a QA engineer,
+I want verrouiller le nouveau parcours dashboard par des tests de routing, d'états UI et de navigation,
+so that la séparation landing/détail n'introduise ni régression fonctionnelle, ni incohérence visuelle, ni dette i18n supplémentaire.
+
+**Acceptance Criteria:**
+- Les tests couvrent la navigation `/dashboard` -> `/dashboard/horoscope` -> retour `/dashboard`.
+- Les suites vérifient les états `loading`, `error` et `empty` sur la landing et sur la page détail.
+- Le dashboard n'affiche plus les sections détaillées du daily, et la page détail n'affiche plus le hub d'activités.
+- Le header et le bottom nav restent cohérents sur mobile et desktop sur les deux routes.
+- Toute nouvelle chaîne introduite par l'epic 45 est centralisée et testable, sans ajout de hardcode gratuit.
+
+[Source: user request 2026-03-12 ; frontend/src/tests/router.test.tsx ; frontend/src/tests/TodayPage.test.tsx ; frontend/src/tests/DashboardPage.test.tsx ; frontend/src/tests/layout/Header.test.tsx]

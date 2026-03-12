@@ -529,7 +529,7 @@ function setupToken(sub = "42") {
   setAccessToken(`x.${payload}.y`);
 }
 
-function renderDashboard(initialEntries: string[] = ["/dashboard"]) {
+function renderDashboard(initialEntries: string[] = ["/dashboard/horoscope"]) {
   const router = createMemoryRouter(routes, {
     initialEntries,
     future: { v7_relativeSplatPath: true },
@@ -550,7 +550,7 @@ function renderDashboard(initialEntries: string[] = ["/dashboard"]) {
   };
 }
 
-describe("TodayPage", () => {
+describe("DailyHoroscopePage", () => {
   beforeEach(() => {
     localStorage.setItem("lang", "fr");
     setupToken();
@@ -663,6 +663,46 @@ describe("TodayPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Aucune prédiction disponible.")).toBeInTheDocument();
     });
+  });
+
+  it("relance automatiquement le daily quand le premier chargement renvoie un null transitoire", async () => {
+    let predictionCallCount = 0;
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.endsWith("/v1/auth/me")) {
+          return Promise.resolve(jsonResponse(authMeOk));
+        }
+        if (url.includes("/v1/predictions/daily")) {
+          predictionCallCount += 1;
+          if (predictionCallCount === 1) {
+            return Promise.resolve(
+              jsonResponse(
+                {
+                  detail: {
+                    code: "profile_missing",
+                    message: "Profil de naissance introuvable",
+                  },
+                },
+                422,
+              ),
+            );
+          }
+          return Promise.resolve(jsonResponse(predictionOk));
+        }
+        return Promise.resolve(jsonResponse({ error: { code: "not_found", message: "not found" } }, 404));
+      }),
+    );
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
+    });
+
+    expect(predictionCallCount).toBe(2);
   });
 
   it("bascule les libelles de prediction en anglais quand la langue active est en", async () => {

@@ -1,6 +1,6 @@
 /**
  * Static horoscope data per Epic 17 specifications (§13).
- * Shared between TodayPage and integration tests to avoid brittle assertions.
+ * Shared between DailyHoroscopePage and integration tests to avoid brittle assertions.
  */
 export const STATIC_HOROSCOPE = {
   sign: '♒',

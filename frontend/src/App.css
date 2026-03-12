@@ -2690,7 +2690,7 @@ textarea:focus-visible {
   object-fit: cover;
 }
 
-/* === TodayPage === */
+/* === DailyHoroscopePage === */
 .today-page {
   min-height: 100dvh;
 }

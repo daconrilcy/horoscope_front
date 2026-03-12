@@ -46,6 +46,18 @@ describe("Header", () => {
       expect(screen.queryByText("Horoscope")).not.toBeInTheDocument()
     })
 
+    it("ajoute la classe app-header--dashboard sur /dashboard/horoscope", () => {
+      render(
+        <MemoryRouter initialEntries={["/dashboard/horoscope"]}>
+          <Header />
+        </MemoryRouter>
+      )
+      const header = document.querySelector("header.app-header")
+      expect(header).toHaveClass("app-header--dashboard")
+      // Le titre "Horoscope" est caché via condition React sur /dashboard/horoscope
+      expect(screen.queryByText("Horoscope")).not.toBeInTheDocument()
+    })
+
     it("ajoute la classe app-header--dashboard sur /dashboard/ (slash final)", () => {
       render(
         <MemoryRouter initialEntries={["/dashboard/"]}>

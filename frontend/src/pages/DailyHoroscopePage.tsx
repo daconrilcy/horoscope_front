@@ -68,12 +68,13 @@ function deriveChangeType(previousCategories: string[], nextCategories: string[]
   return 'recomposition'
 }
 
-export function TodayPage() {
+export function DailyHoroscopePage() {
   const navigate = useNavigate()
   const accessToken = useAccessTokenSnapshot()
   const detected = detectLang()
   const lang = (detected === 'en' ? 'en' : 'fr') as any
   const manualRefreshPending = useRef(false)
+  const bootstrapPredictionRefetchDoneForToken = useRef<string | null>(null)
 
   const { data: user, isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useAuthMe(accessToken)
 
@@ -96,6 +97,24 @@ export function TodayPage() {
       }
     }
   }, [prediction])
+
+  useEffect(() => {
+    if (!accessToken) {
+      bootstrapPredictionRefetchDoneForToken.current = null
+      return
+    }
+
+    if (isPredictionLoading || isPredictionError || prediction !== null) {
+      return
+    }
+
+    if (bootstrapPredictionRefetchDoneForToken.current === accessToken) {
+      return
+    }
+
+    bootstrapPredictionRefetchDoneForToken.current = accessToken
+    refetchPrediction()
+  }, [accessToken, isPredictionError, isPredictionLoading, prediction, refetchPrediction])
 
   const userName = isUserLoading ? 'loading' : (isUserError ? 'Utilisateur' : getUserDisplayName(user))
 

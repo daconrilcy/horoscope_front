@@ -28,8 +28,8 @@ function getDashboardCardIcon(cardId: DashboardCardId): ReactNode {
 }
 
 /**
- * @deprecated This page has been replaced by TodayPage as the primary dashboard.
- * Kept for legacy reference or future B2B modules per AC7 of Story 17.8.
+ * Primary dashboard landing page (Story 45.1).
+ * Provides quick access to main features and high-level daily insights.
  */
 export function DashboardPage() {
   const { lang } = useAstrologyLabels()
@@ -37,12 +37,6 @@ export function DashboardPage() {
   const accessToken = useAccessTokenSnapshot()
   const { data: user, isLoading: isUserLoading } = useAuthMe(accessToken)
   
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      console.warn("DashboardPage is deprecated. Use TodayPage instead.")
-    }
-  }, [])
-
   const userName = isUserLoading 
     ? "loading" 
     : getUserDisplayName(user)

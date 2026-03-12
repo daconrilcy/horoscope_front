@@ -14,9 +14,9 @@ export function Header() {
     navigate("/login", { replace: true })
   }
 
-  // TodayPage (on /dashboard) has its own header title
+  // Dashboard pages (landing and detailed horoscope) have their own header titles
   const normalizedPath = location.pathname.replace(/\/+$/, "") || "/"
-  const isDashboard = normalizedPath === "/dashboard"
+  const isDashboard = normalizedPath === "/dashboard" || normalizedPath === "/dashboard/horoscope"
   const showTitle = !isDashboard
 
   return (
