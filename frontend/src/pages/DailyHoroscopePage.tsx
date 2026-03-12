@@ -3,7 +3,6 @@ import { useEffect, useRef } from 'react'
 import { RefreshCw } from 'lucide-react'
 
 import { TodayHeader } from '../components/TodayHeader'
-import { ShortcutsSection } from '../components/ShortcutsSection'
 import { DayPredictionCard } from '../components/prediction/DayPredictionCard'
 import { CategoryGrid } from '../components/prediction/CategoryGrid'
 import { TurningPointsList } from '../components/prediction/TurningPointsList'
@@ -239,7 +238,11 @@ export function DailyHoroscopePage() {
 
   return (
     <div className="today-page">
-      <TodayHeader userName={userName} />
+      <TodayHeader 
+        userName={userName} 
+        onBackClick={() => navigate("/dashboard")} 
+        isLoading={isUserLoading}
+      />
 
       {isLoading ? (
         <div className="panel state-loading" style={{ marginTop: '2rem', textAlign: 'center' }}>
@@ -282,8 +285,6 @@ export function DailyHoroscopePage() {
             lang={lang}
             onCategoryClick={handleCategoryClick}
           />
-
-          <ShortcutsSection onHistoryClick={handleHistoryClick} />
         </>
       ) : (
         <div className="panel state-empty" style={{ marginTop: '2rem', textAlign: 'center' }}>

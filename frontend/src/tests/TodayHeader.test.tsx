@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest"
+import { describe, it, expect, afterEach, vi } from "vitest"
 import { render, cleanup, screen, fireEvent } from "@testing-library/react"
 import { TodayHeader } from "../components/TodayHeader"
 import { ThemeProvider } from "../state/ThemeProvider"
@@ -164,6 +164,30 @@ describe("TodayHeader", () => {
       renderWithTheme(<TodayHeader userName="Alice" />)
       const avatar = screen.getByRole("img", { name: "Profil de Alice" })
       expect(avatar).toBeInTheDocument()
+    })
+  })
+
+  describe("AC2: Bouton retour (Story 45.3)", () => {
+    it("affiche un bouton retour au lieu du toggle si onBackClick est fourni", () => {
+      const onBack = vi.fn()
+      renderWithTheme(<TodayHeader onBackClick={onBack} />)
+      
+      const backBtn = screen.getByRole("button", { name: /retour au tableau de bord/i })
+      expect(backBtn).toBeInTheDocument()
+      expect(backBtn).toHaveClass("today-header__back")
+      
+      // Le toggle ne doit plus être là
+      expect(screen.queryByLabelText(/passer en mode/i)).not.toBeInTheDocument()
+    })
+
+    it("appelle onBackClick lors du clic sur le bouton retour", () => {
+      const onBack = vi.fn()
+      renderWithTheme(<TodayHeader onBackClick={onBack} />)
+      
+      const backBtn = screen.getByRole("button", { name: /retour au tableau de bord/i })
+      fireEvent.click(backBtn)
+      
+      expect(onBack).toHaveBeenCalledTimes(1)
     })
   })
 })

@@ -2605,10 +2605,16 @@ textarea:focus-visible {
   padding: 0 44px; /* Espace symétrique : toggle gauche + avatar droite */
 }
 
-.today-header__toggle {
+.today-header__left-actions {
   position: absolute;
   top: 0;
   left: 0;
+  display: flex;
+  align-items: center;
+}
+
+.today-header__toggle,
+.today-header__back {
   width: 40px;
   height: 40px;
   display: flex;
@@ -2623,7 +2629,8 @@ textarea:focus-visible {
   padding: 0;
 }
 
-.today-header__toggle:hover {
+.today-header__toggle:hover,
+.today-header__back:hover {
   background: var(--glass-2);
   color: var(--text-1);
   transform: none;

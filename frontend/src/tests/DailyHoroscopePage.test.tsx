@@ -580,9 +580,23 @@ describe("DailyHoroscopePage", () => {
     expect(screen.getAllByText("Carrière").length).toBeGreaterThan(0);
     expect(screen.getByText("13.6")).toBeInTheDocument();
     expect(screen.getByText("7.2")).toBeInTheDocument();
-    expect(screen.getByText("Chat astrologue")).toBeInTheDocument();
-    expect(screen.getByText("Tirage du jour")).toBeInTheDocument();
   });
+
+  it("affiche un bouton retour vers le dashboard", async () => {
+    installFetchMock()
+    setupToken()
+    
+    const { router } = renderDashboard()
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Retour au tableau de bord/i)).toBeInTheDocument()
+    })
+
+    const backBtn = screen.getByLabelText(/Retour au tableau de bord/i)
+    await userEvent.click(backBtn)
+
+    expect(router.state.location.pathname).toBe("/dashboard")
+  })
 
   it("affiche un etat de chargement explicite pendant la recuperation de la prediction", async () => {
     installFetchMock({
