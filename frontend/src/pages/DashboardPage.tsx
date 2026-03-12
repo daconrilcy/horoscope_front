@@ -1,41 +1,30 @@
-import { useEffect, type ReactNode } from "react"
-import { DashboardCard } from "../components/dashboard"
-import { StarIcon, ChatIcon, CrystalBallIcon, UserIcon, SettingsIcon } from "../components/icons"
+import { type ReactNode } from "react"
 import { useAstrologyLabels } from "../i18n/astrology"
-import type { DashboardCardId } from "../i18n/dashboard"
-import {
-  DASHBOARD_CARD_IDS,
-  DASHBOARD_CARD_PATHS,
-  translateDashboardCard,
-  translateDashboardPage,
-} from "../i18n/dashboard"
+import { translateDashboardPage } from "../i18n/dashboard"
 import { TodayHeader } from "../components/TodayHeader"
-import { DailyInsightsSection } from "../components/DailyInsightsSection"
+import { ShortcutsSection } from "../components/ShortcutsSection"
+import { DashboardHoroscopeSummaryCard } from "../components/dashboard/DashboardHoroscopeSummaryCard"
 
 import { useAccessTokenSnapshot } from "../utils/authToken"
 import { useAuthMe } from "../api/authMe"
 import { getUserDisplayName } from "../utils/user"
-
-function getDashboardCardIcon(cardId: DashboardCardId): ReactNode {
-  const iconMap: Record<DashboardCardId, ReactNode> = {
-    natal: <StarIcon />,
-    chat: <ChatIcon />,
-    consultations: <CrystalBallIcon />,
-    astrologers: <UserIcon />,
-    settings: <SettingsIcon />,
-  }
-  return iconMap[cardId]
-}
+import { useDailyPrediction } from "../api/useDailyPrediction"
 
 /**
- * Primary dashboard landing page (Story 45.1).
- * Provides quick access to main features and high-level daily insights.
+ * Primary dashboard landing page (Story 45.2).
+ * Provides high-level daily insights and quick access to main features.
  */
 export function DashboardPage() {
   const { lang } = useAstrologyLabels()
   const { title, welcome } = translateDashboardPage(lang)
   const accessToken = useAccessTokenSnapshot()
+  
   const { data: user, isLoading: isUserLoading } = useAuthMe(accessToken)
+  const { 
+    data: prediction, 
+    isLoading: isPredictionLoading, 
+    isError: isPredictionError 
+  } = useDailyPrediction(accessToken)
   
   const userName = isUserLoading 
     ? "loading" 
@@ -43,29 +32,21 @@ export function DashboardPage() {
 
   return (
     <div className="panel dashboard-container">
-      <TodayHeader userName={userName} />
+      <TodayHeader userName={userName} isLoading={isUserLoading} />
       
       <div>
         <h2 className="dashboard-title">{title}</h2>
         <p>{welcome}</p>
       </div>
 
-      <nav className="dashboard-grid" aria-label="Navigation rapide">
-        {DASHBOARD_CARD_IDS.map((cardId) => {
-          const { label, description } = translateDashboardCard(cardId, lang)
-          return (
-            <DashboardCard
-              key={cardId}
-              label={label}
-              path={DASHBOARD_CARD_PATHS[cardId]}
-              icon={getDashboardCardIcon(cardId)}
-              description={description}
-            />
-          )
-        })}
-      </nav>
+      <DashboardHoroscopeSummaryCard 
+        prediction={prediction}
+        isLoading={isPredictionLoading}
+        isError={isPredictionError}
+        locale={lang}
+      />
 
-      <DailyInsightsSection />
+      <ShortcutsSection />
     </div>
   )
 }

@@ -31,10 +31,25 @@ const dashboardCardTranslations: Record<SupportedLocale, Record<DashboardCardId,
   },
 }
 
-const dashboardPageTranslations: Record<SupportedLocale, { title: string; welcome: string }> = {
-  fr: { title: "Tableau de bord", welcome: "Bienvenue ! Accédez rapidement à toutes les fonctionnalités." },
-  en: { title: "Dashboard", welcome: "Welcome! Quickly access all features." },
-  es: { title: "Panel", welcome: "¡Bienvenido! Accede rápidamente a todas las funciones." },
+const dashboardPageTranslations: Record<SupportedLocale, { title: string; welcome: string; viewHoroscope: string; noPrediction: string }> = {
+  fr: { 
+    title: "Tableau de bord", 
+    welcome: "Bienvenue ! Accédez rapidement à toutes les fonctionnalités.",
+    viewHoroscope: "Voir l'horoscope complet",
+    noPrediction: "Aucune prédiction disponible."
+  },
+  en: { 
+    title: "Dashboard", 
+    welcome: "Welcome! Quickly access all features.",
+    viewHoroscope: "View full horoscope",
+    noPrediction: "No prediction available."
+  },
+  es: { 
+    title: "Panel", 
+    welcome: "¡Bienvenido! Accede rápidamente a todas las funciones.",
+    viewHoroscope: "Ver horóscopo completo",
+    noPrediction: "No hay predicción disponible."
+  },
 }
 
 export function translateDashboardCard(
@@ -44,7 +59,7 @@ export function translateDashboardCard(
   return dashboardCardTranslations[locale]?.[cardId] ?? dashboardCardTranslations.fr[cardId]
 }
 
-export function translateDashboardPage(locale: SupportedLocale = "fr"): { title: string; welcome: string } {
+export function translateDashboardPage(locale: SupportedLocale = "fr"): { title: string; welcome: string; viewHoroscope: string; noPrediction: string } {
   return dashboardPageTranslations[locale] ?? dashboardPageTranslations.fr
 }
 

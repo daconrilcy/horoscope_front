@@ -400,7 +400,7 @@ development_status:
 
   epic-45: in-progress
   45-1-refondre-le-routing-dashboard-et-isoler-la-page-horoscope-detaillee: done
-  45-2-creer-la-landing-dashboard-avec-resume-et-hub-d-activites: ready-for-dev
+  45-2-creer-la-landing-dashboard-avec-resume-et-hub-d-activites: done
   45-3-restaurer-une-page-horoscope-detaillee-avec-retour-dashboard: ready-for-dev
   45-4-verrouiller-qa-accessibilite-et-coherence-i18n-du-parcours-dashboard: ready-for-dev
   epic-45-retrospective: optional
