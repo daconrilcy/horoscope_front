@@ -27,6 +27,22 @@ export interface DailyPredictionDriver {
   [key: string]: unknown;
 }
 
+export interface DailyPredictionMovement {
+  strength: number;
+  previous_composite: number;
+  next_composite: number;
+  delta_composite: number;
+  direction: "rising" | "falling" | "recomposition";
+}
+
+export interface DailyPredictionCategoryDelta {
+  code: string;
+  direction: "up" | "down" | "stable";
+  delta_score: number;
+  delta_intensity: number;
+  delta_rank: number | null;
+}
+
 export interface DailyPredictionTurningPoint {
   occurred_at_local: string;
   severity: number | string;
@@ -44,6 +60,9 @@ export interface DailyPredictionTurningPoint {
     aspect?: string;
     metadata?: Record<string, unknown>;
   } | null;
+  // Story 44.1
+  movement?: DailyPredictionMovement | null;
+  category_deltas?: DailyPredictionCategoryDelta[];
 }
 
 export interface DailyPredictionTimeBlock {

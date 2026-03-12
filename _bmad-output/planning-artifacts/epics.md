@@ -2031,3 +2031,84 @@ So that le produit ne surinterprète pas les bascules et conserve un wording coh
 - Les régressions sur faux pivots de minuit et disparition complète des moments clés restent verrouillées.
 
 [Source: user request 2026-03-12 ; frontend/src/tests/TodayPage.test.tsx ; frontend/src/utils/dailyAstrology.test.ts ; backend/app/tests/integration/test_daily_prediction_api.py]
+
+## Epic 44: Quantifier les mouvements des moments clés du jour
+
+Faire évoluer les `Moments clés du jour` pour qu'ils n'expliquent pas seulement `ce qui change`, mais aussi `de combien` et `dans quel sens`, avec des valeurs structurées, localisables et assez sobres pour rester compréhensibles sur mobile.
+
+**FRs covered:** FR16, FR18, FR22, FR23, FR36
+
+### Story 44.1: Étendre le contrat public des moments clés avec des indicateurs de mouvement
+
+As a backend maintainer,
+I want enrichir les turning points publics avec un bloc `movement` et des `category_deltas`,
+So that le frontend puisse expliquer l'amplitude et la direction d'une bascule sans recalcul fragile côté client.
+
+**Acceptance Criteria:**
+- Le contrat public des moments clés expose de manière additive un bloc `movement` incluant au minimum `strength`, `previous_composite`, `next_composite`, `delta_composite` et `direction`.
+- Le contrat public expose une liste `category_deltas` structurée, avec au minimum `code`, `direction`, `delta_score`, `delta_intensity` et `delta_rank` si disponible.
+- Les nouveaux champs restent optionnels et backward compatibles pour les consommateurs qui ne les utilisent pas encore.
+- Le schéma distingue explicitement un changement global (`movement.direction`) d'une variation locale par catégorie.
+- Les types backend et frontend partagés restent cohérents et documentés.
+
+[Source: user request 2026-03-12 — “enrichir ces moments clefs avec des valeurs qui justifie le mouvement ?” ; backend/app/prediction/schemas.py ; frontend/src/types/dailyPrediction.ts]
+
+### Story 44.2: Calculer et projeter les deltas de mouvement des bascules
+
+As a backend engineer,
+I want calculer des deltas de mouvement fiables autour de chaque turning point,
+So that les valeurs projetées justifient réellement le passage d'un état à l'autre sans surinterpréter le bruit.
+
+**Acceptance Criteria:**
+- Le backend calcule `previous_composite`, `next_composite` et `delta_composite` à partir de l'état juste avant et juste après la bascule.
+- Le backend calcule `category_deltas` à partir des catégories dominantes avant/après, avec une règle explicite de tri et de limitation aux variations les plus utiles.
+- Le backend classe le mouvement au minimum entre `upshift`, `downshift` et `redistribution`, de façon cohérente avec `change_type`.
+- Des seuils empêchent d'exposer des micro-variations non significatives comme des mouvements forts.
+- Les journées calmes ou bascules faibles restent rendues sans contradiction entre `change_type`, `transition` et valeurs de mouvement.
+
+[Source: user request 2026-03-12 — “expliquer non seulement ce qui change, mais aussi à quel point” ; backend/app/prediction/public_projection.py ; backend/app/prediction/daily_prediction_evidence_builder.py]
+
+### Story 44.3: Introduire un wording i18n des variations et de leur intensité
+
+As a frontend architect,
+I want traduire les variations de mouvement via i18n à partir des valeurs structurées,
+So that les moments clés restent compréhensibles en plusieurs langues sans figer des phrases quantitatives dans le backend.
+
+**Acceptance Criteria:**
+- Le frontend introduit des clés i18n dédiées pour `direction`, `strength`, `delta` et les formulations de montée, recul, stabilité ou redistribution.
+- Le wording sait produire une version qualitative sobre (`léger`, `net`, `marqué`) sans exposer obligatoirement les chiffres bruts.
+- Les helpers i18n gèrent FR et EN à partir du même payload structuré.
+- Les valeurs numériques éventuelles sont formatées côté frontend selon la locale et jamais concaténées en dur.
+- Les règles de formulation évitent les contradictions du type “ça change” alors que les catégories visibles restent identiques faute de contexte.
+
+[Source: user request 2026-03-12 — “le wording doit etre gerer avec i18n” ; frontend/src/utils/predictionI18n.ts ; frontend/src/i18n/predictions.ts]
+
+### Story 44.4: Refondre le rendu UI des moments clés avec mouvement et deltas
+
+As a utilisateur consultant le daily,
+I want voir pour chaque bascule quelles forces montent, reculent ou se redistribuent,
+So that je comprenne visuellement pourquoi le moment mérite mon attention.
+
+**Acceptance Criteria:**
+- Chaque carte `Moment clé` peut afficher un bloc `Mouvement` ou `Évolution` basé sur `movement` et `category_deltas`.
+- Le rendu met en avant au maximum les 2 ou 3 variations les plus utiles, avec une hiérarchie claire et sans surcharge mobile.
+- Les catégories ajoutées, retirées ou stabilisées sont distinguées visuellement.
+- Le composant conserve un fallback lisible quand les nouveaux champs ne sont pas présents.
+- Le rendu reste cohérent avec les sections existantes `Pourquoi`, `Transition`, `Implication` et `Impacts`.
+
+[Source: user request 2026-03-12 — “Travail monte nettement / Argent se retire / Santé reste dominante” ; frontend/src/components/prediction/TurningPointsList.tsx ; frontend/src/pages/TodayPage.tsx]
+
+### Story 44.5: Verrouiller QA et garde-fous de bruit sur les valeurs de bascule
+
+As a QA engineer,
+I want vérifier que les valeurs de mouvement restent vraies, lisibles et non bruitées,
+So that les moments clés enrichis ne sur-vendent pas des micro-variations et restent cohérents en plusieurs langues.
+
+**Acceptance Criteria:**
+- Les tests couvrent au minimum un cas d'augmentation nette, un cas d'atténuation, un cas de redistribution et un cas de mouvement sous seuil non affiché.
+- Les suites backend vérifient les calculs de `movement` et `category_deltas` sur des bascules représentatives.
+- Les suites frontend vérifient les rendus FR et EN avec et sans chiffres détaillés.
+- Les régressions connues restent couvertes: faux pivot de minuit, transition `avant -> après` incohérente, disparition complète des moments clés valides.
+- Les garde-fous empêchent l'affichage de chiffres bruts instables, de décimales inutiles et de messages contradictoires entre `Implication` et `Mouvement`.
+
+[Source: user request 2026-03-12 ; frontend/src/tests/TurningPointsEnriched.test.tsx ; frontend/src/tests/TodayPage.test.tsx ; backend/app/tests/integration/test_daily_prediction_api.py]

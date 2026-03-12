@@ -199,6 +199,28 @@ class V3PrimaryDriver:
 
 
 @dataclass(frozen=True)
+class V3Movement:
+    """Indicator of movement for a turning point (Story 44.1)."""
+
+    strength: float  # Amplitude of the shift (0-10)
+    previous_composite: float
+    next_composite: float
+    delta_composite: float
+    direction: str  # "rising" | "falling" | "recomposition"
+
+
+@dataclass(frozen=True)
+class V3CategoryDelta:
+    """Variation per category at a turning point (Story 44.1)."""
+
+    code: str
+    direction: str  # "up" | "down" | "stable"
+    delta_score: float
+    delta_intensity: float
+    delta_rank: int | None = None
+
+
+@dataclass(frozen=True)
 class V3TurningPoint:
     """A turning point in V3 (Story 42.10)."""
 
@@ -216,6 +238,10 @@ class V3TurningPoint:
     previous_categories: list[str] = field(default_factory=list)
     next_categories: list[str] = field(default_factory=list)
     primary_driver: V3PrimaryDriver | None = None
+
+    # Story 44.1 Movement Indicators
+    movement: V3Movement | None = None
+    category_deltas: list[V3CategoryDelta] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -255,6 +281,10 @@ class V3EvidenceTurningPoint:
     previous_categories: list[str] = field(default_factory=list)
     next_categories: list[str] = field(default_factory=list)
     primary_driver: V3PrimaryDriver | None = None
+
+    # Story 44.1 Movement Indicators
+    movement: V3Movement | None = None
+    category_deltas: list[V3CategoryDelta] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

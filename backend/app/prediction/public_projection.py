@@ -552,6 +552,9 @@ class PublicTurningPointPolicy:
                     "previous_categories": tp.previous_categories,
                     "next_categories": tp.next_categories,
                     "primary_driver": self._serialize_primary_driver(tp.primary_driver),
+                    # Story 44.1
+                    "movement": self._serialize_movement(tp.movement),
+                    "category_deltas": [self._serialize_category_delta(cd) for cd in tp.category_deltas],
                 }
                 for tp in evidence.turning_points
             ]
@@ -604,6 +607,26 @@ class PublicTurningPointPolicy:
             "target": pd.target,
             "aspect": pd.aspect,
             "metadata": pd.metadata,
+        }
+
+    def _serialize_movement(self, m: Any | None) -> dict[str, Any] | None:
+        if not m:
+            return None
+        return {
+            "strength": float(m.strength),
+            "previous_composite": float(m.previous_composite),
+            "next_composite": float(m.next_composite),
+            "delta_composite": float(m.delta_composite),
+            "direction": m.direction,
+        }
+
+    def _serialize_category_delta(self, cd: Any) -> dict[str, Any]:
+        return {
+            "code": cd.code,
+            "direction": cd.direction,
+            "delta_score": float(cd.delta_score),
+            "delta_intensity": float(cd.delta_intensity),
+            "delta_rank": cd.delta_rank,
         }
 
 
@@ -920,10 +943,12 @@ def _is_flat_day(
 
 def _deserialize_evidence_pack(payload: dict[str, Any]) -> V3EvidencePack:
     from .schemas import (
+        V3CategoryDelta,
         V3EvidencePack,
         V3EvidenceTheme,
         V3EvidenceTurningPoint,
         V3EvidenceWindow,
+        V3Movement,
         V3PrimaryDriver,
     )
 
@@ -964,7 +989,29 @@ def _deserialize_evidence_pack(payload: dict[str, Any]) -> V3EvidencePack:
                 aspect=pd_raw.get("aspect"),
                 metadata=dict(pd_raw.get("metadata", {})),
             )
-            
+
+        mv_raw = tp.get("movement")
+        mv = None
+        if mv_raw:
+            mv = V3Movement(
+                strength=float(mv_raw["strength"]),
+                previous_composite=float(mv_raw["previous_composite"]),
+                next_composite=float(mv_raw["next_composite"]),
+                delta_composite=float(mv_raw["delta_composite"]),
+                direction=mv_raw["direction"],
+            )
+
+        cat_deltas = [
+            V3CategoryDelta(
+                code=cd["code"],
+                direction=cd["direction"],
+                delta_score=float(cd["delta_score"]),
+                delta_intensity=float(cd["delta_intensity"]),
+                delta_rank=cd.get("delta_rank"),
+            )
+            for cd in tp.get("category_deltas", [])
+        ]
+
         turning_points.append(
             V3EvidenceTurningPoint(
                 local_time=datetime.fromisoformat(tp["local_time"]),
@@ -978,9 +1025,12 @@ def _deserialize_evidence_pack(payload: dict[str, Any]) -> V3EvidencePack:
                 previous_categories=list(tp.get("previous_categories", [])),
                 next_categories=list(tp.get("next_categories", [])),
                 primary_driver=pd,
+                # Story 44.1
+                movement=mv,
+                category_deltas=cat_deltas,
             )
         )
-        
+
     return V3EvidencePack(
         version=payload["version"],
         generated_at=datetime.fromisoformat(payload["generated_at"]),

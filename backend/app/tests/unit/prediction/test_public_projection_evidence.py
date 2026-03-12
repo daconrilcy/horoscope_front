@@ -234,3 +234,65 @@ def test_assemble_includes_enriched_turning_points():
     assert tp["next_categories"] == ["love"]
     assert tp["primary_driver"]["event_type"] == "aspect_exact_to_personal"
     assert tp["primary_driver"]["metadata"]["house"] == 5
+
+
+def test_assemble_includes_movement_indicators():
+    from app.prediction.schemas import V3CategoryDelta, V3Movement
+
+    evidence_pack = V3EvidencePack(
+        version="3.0.0",
+        generated_at=datetime.now(UTC),
+        day_profile={"tone": "neutral"},
+        themes={"love": V3EvidenceTheme("love", 15.0, 1.0, 10.0, 5.0, 15.0, 10.0, True)},
+        time_windows=[],
+        turning_points=[
+            V3EvidenceTurningPoint(
+                local_time=datetime(2026, 3, 7, 10, 0),
+                reason="regime_change",
+                amplitude=5.0,
+                confidence=0.8,
+                themes=["love"],
+                drivers=["Sun-conjunction-Moon"],
+                movement=V3Movement(
+                    strength=7.5,
+                    previous_composite=5.0,
+                    next_composite=12.5,
+                    delta_composite=7.5,
+                    direction="rising",
+                ),
+                category_deltas=[
+                    V3CategoryDelta(
+                        code="love",
+                        direction="up",
+                        delta_score=2.0,
+                        delta_intensity=5.0,
+                        delta_rank=1,
+                    )
+                ],
+            )
+        ],
+    )
+
+    snapshot = MagicMock(spec=PersistedPredictionSnapshot)
+    snapshot.local_date = date(2026, 3, 7)
+    snapshot.timezone = "UTC"
+    snapshot.computed_at = datetime.now(UTC)
+    snapshot.is_provisional_calibration = False
+    snapshot.calibration_label = "final"
+    snapshot.house_system_effective = "placidus"
+    snapshot.category_scores = []
+    snapshot.time_blocks = []
+    snapshot.relative_scores = {}
+    snapshot.overall_tone = "neutral"
+    snapshot.overall_summary = "Summary"
+    snapshot.v3_metrics = {"evidence_pack": _json_ready(asdict(evidence_pack))}
+
+    assembler = PublicPredictionAssembler()
+    result = assembler.assemble(snapshot, {1: "love"}, reference_version="2.0.0", ruleset_version="2.0.0")
+
+    tp = result["turning_points"][0]
+    assert tp["movement"]["strength"] == 7.5
+    assert tp["movement"]["direction"] == "rising"
+    assert tp["category_deltas"][0]["code"] == "love"
+    assert tp["category_deltas"][0]["direction"] == "up"
+    assert tp["category_deltas"][0]["delta_score"] == 2.0
