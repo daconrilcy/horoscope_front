@@ -77,6 +77,61 @@ describe("TurningPointsList Enriched", () => {
     expect(screen.getByText(/❤️ progression sur amour & relations/i)).toBeInTheDocument();
   });
 
+  it("affiche un mouvement global en baisse (notable)", () => {
+    const fallingMoment = {
+      ...mockEnrichedMoments[0],
+      movement: { direction: "falling", strength: 5.0, delta_composite: -2.5 },
+      category_deltas: [
+        { code: "work", direction: "down", delta_intensity: 2.0 }
+      ]
+    };
+
+    render(
+      <ThemeProvider>
+        <TurningPointsList moments={[fallingMoment] as any} lang="fr" />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByText(/Mouvement global en baisse \(net\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/💼 recul sur travail/i)).toBeInTheDocument();
+  });
+
+  it("affiche un mouvement de mutation sans intensité qualitative", () => {
+    const shiftingMoment = {
+      ...mockEnrichedMoments[0],
+      movement: { direction: "recomposition", strength: 1.0, delta_composite: 0.1 },
+      category_deltas: []
+    };
+
+    render(
+      <ThemeProvider>
+        <TurningPointsList moments={[shiftingMoment] as any} lang="fr" />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByText(/Mouvement global en mutation/i)).toBeInTheDocument();
+    // No qualitative level for recomposition in my humanizeMovement implementation
+  });
+
+  it("ne pollue pas avec des variations locales si vides (sous seuil)", () => {
+    const belowThresholdMoment = {
+      ...mockEnrichedMoments[0],
+      movement: { direction: "rising", strength: 2.0, delta_composite: 1.0 },
+      category_deltas: []
+    };
+
+    render(
+      <ThemeProvider>
+        <TurningPointsList moments={[belowThresholdMoment] as any} lang="fr" />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByText(/Mouvement global en hausse \(léger\)/i)).toBeInTheDocument();
+    // Ensure no category icons/text from deltas section
+    expect(screen.queryByText(/progression sur/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/recul sur/i)).not.toBeInTheDocument();
+  });
+
   it("gère correctement les trois types de changement (FR)", () => {
     render(
       <ThemeProvider>

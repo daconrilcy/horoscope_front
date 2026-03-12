@@ -144,3 +144,107 @@ def test_detect_v3_movement_indicators():
     # Work delta is 0.1, which is < 0.2 threshold in my implementation
     assert work_delta is None
 
+
+def test_detect_v3_movement_attenuation():
+    from app.prediction.schemas import V3SignalLayer, V3ThemeSignal
+
+    detector = TurningPointDetector()
+    start = datetime(2026, 3, 12, 10, 0, tzinfo=UTC)
+
+    blocks = [
+        V3TimeBlock(0, start, start + timedelta(hours=2), "stable", 10.0, 0.8, ["love"]),
+        V3TimeBlock(1, start + timedelta(hours=2), start + timedelta(hours=4), "falling", 2.0, 0.8, ["love"]),
+    ]
+
+    t1 = start + timedelta(hours=1)
+    t2 = start + timedelta(hours=3)
+
+    theme_signals = {
+        "love": V3ThemeSignal(
+            theme_code="love",
+            timeline={
+                t1: V3SignalLayer(0, 0, 0, 0, 10.0),
+                t2: V3SignalLayer(0, 0, 0, 0, 2.0),
+            },
+        ),
+    }
+
+    pivots = detector.detect_v3(blocks, [], theme_signals)
+    tp = pivots[0]
+    assert tp.movement.direction == "falling"
+    assert tp.category_deltas[0].direction == "down"
+
+
+def test_detect_v3_movement_redistribution():
+    from app.prediction.schemas import V3SignalLayer, V3ThemeSignal
+
+    detector = TurningPointDetector()
+    start = datetime(2026, 3, 12, 10, 0, tzinfo=UTC)
+
+    # Orientation change to trigger regime_change + diff >= 1.5
+    blocks = [
+        V3TimeBlock(0, start, start + timedelta(hours=2), "rising", 6.0, 0.8, ["love"]),
+        V3TimeBlock(1, start + timedelta(hours=2), start + timedelta(hours=4), "stable", 7.6, 0.8, ["work"]),
+    ]
+
+    t1 = start + timedelta(hours=1)
+    t2 = start + timedelta(hours=3)
+
+    # Love goes down, Work goes up, total composite stays similar
+    theme_signals = {
+        "love": V3ThemeSignal(
+            theme_code="love",
+            timeline={
+                t1: V3SignalLayer(0, 0, 0, 0, 8.0),
+                t2: V3SignalLayer(0, 0, 0, 0, 2.0),
+            },
+        ),
+        "work": V3ThemeSignal(
+            theme_code="work",
+            timeline={
+                t1: V3SignalLayer(0, 0, 0, 0, 2.0),
+                t2: V3SignalLayer(0, 0, 0, 0, 8.1),
+            },
+        ),
+    }
+
+    pivots = detector.detect_v3(blocks, [], theme_signals)
+    assert len(pivots) == 1
+    tp = pivots[0]
+    assert tp.movement.direction == "recomposition" # Delta is 0.1
+    assert len(tp.category_deltas) == 2
+    assert any(d.code == "love" and d.direction == "down" for d in tp.category_deltas)
+    assert any(d.code == "work" and d.direction == "up" for d in tp.category_deltas)
+
+
+def test_detect_v3_movement_below_threshold():
+    from app.prediction.schemas import V3SignalLayer, V3ThemeSignal
+
+    detector = TurningPointDetector()
+    start = datetime(2026, 3, 12, 10, 0, tzinfo=UTC)
+
+    # intensity_jump >= 3.0
+    blocks = [
+        V3TimeBlock(0, start, start + timedelta(hours=2), "stable", 10.0, 0.8, ["love"]),
+        V3TimeBlock(1, start + timedelta(hours=2), start + timedelta(hours=4), "stable", 13.1, 0.8, ["love"]),
+    ]
+
+    t1 = start + timedelta(hours=1)
+    t2 = start + timedelta(hours=3)
+
+    # Very small variations
+    theme_signals = {
+        "love": V3ThemeSignal(
+            theme_code="love",
+            timeline={
+                t1: V3SignalLayer(0, 0, 0, 0, 5.0),
+                t2: V3SignalLayer(0, 0, 0, 0, 5.1),
+            },
+        ),
+    }
+
+    pivots = detector.detect_v3(blocks, [], theme_signals)
+    assert len(pivots) == 1
+    tp = pivots[0]
+    assert tp.movement.direction == "recomposition"
+    assert len(tp.category_deltas) == 0 # below 0.2 threshold
