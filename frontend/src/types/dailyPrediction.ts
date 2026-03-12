@@ -58,6 +58,10 @@ export interface DailyPredictionTurningPoint {
     body?: string;
     target?: string;
     aspect?: string;
+    orb_deg?: number | null;
+    phase?: string | null;
+    priority?: number | null;
+    base_weight?: number | null;
     metadata?: Record<string, unknown>;
   } | null;
   // Story 44.1

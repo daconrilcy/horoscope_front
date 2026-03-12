@@ -42,10 +42,11 @@ so that les moments clés enrichis ne sur-vendent pas des micro-variations et re
   - `test_detect_v3_movement_attenuation` (falling)
   - `test_detect_v3_movement_redistribution` (recomposition)
   - `test_detect_v3_movement_below_threshold` (noise filtering)
+  - `test_detect_v3_detects_material_theme_rotation_on_stable_day` (flat-day rotation with real enriched turning point)
 - Frontend tests in `TurningPointsEnriched.test.tsx` cover:
   - FR and EN rendering for various movement types.
   - Qualitative intensity labels (slight, notable, marked).
-  - Empty local variations when below threshold.
+  - Measured local variations, including `delta_rank` fallback when raw score delta is too weak.
   - Legacy fallback stability.
 
 ### Project Structure Notes
@@ -63,8 +64,13 @@ so that les moments clés enrichis ne sur-vendent pas des micro-variations et re
 - Comprehensive unit tests added for backend calculation.
 - Comprehensive UI tests added for frontend rendering.
 - All edge cases (rising, falling, redistribution, below threshold) verified.
+- API contract coverage added so enriched turning-point fields are not stripped by FastAPI response serialization.
+- Flat-day rotations are now covered as real turning points, avoiding regression to pure frontend synthesis.
 
 ### File List
 
 - `backend/app/tests/unit/prediction/test_turning_point_semantics.py`
+- `backend/app/tests/integration/test_daily_prediction_api.py`
 - `frontend/src/tests/TurningPointsEnriched.test.tsx`
+- `frontend/src/tests/predictionI18n.test.ts`
+- `frontend/src/tests/TodayPage.test.tsx`

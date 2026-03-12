@@ -47,6 +47,9 @@ so that les valeurs projetées justifient réellement le passage d'un état à l
 - Movement direction: `rising` (delta > 0.5), `falling` (delta < -0.5), `recomposition`.
 - Category delta threshold: 0.2 (composite delta) to filter noise.
 - Limited to top 3 category deltas by absolute intensity.
+- Added `theme_rotation` as a first-class turning-point trigger when dominant themes rotate across stable blocks.
+- Preserved material rotations on flat days, even when orientation and raw intensity stay almost unchanged.
+- Forced inclusion of entered/exited dominant themes in `category_deltas`, with `delta_rank` fallback when raw score deltas are too weak to explain the movement alone.
 
 ### Project Structure Notes
 
@@ -59,6 +62,8 @@ so that les valeurs projetées justifient réellement le passage d'un état à l
 
 - Uses raw composite signals for delta calculation instead of calibrated 0-20 scores to capture real movement.
 - Thresholds are applied on raw composite deltas.
+- The detector now combines 3 triggers: `regime_change`, `intensity_jump`, and `theme_rotation`.
+- `category_deltas` keep the strongest 2-3 useful changes, prioritizing themes that enter or leave the dominant set.
 
 ### Architecture Compliance
 
@@ -109,10 +114,14 @@ GPT-4o
 - Category deltas logic implemented with noise filtering.
 - Evidence builder updated to propagate values.
 - Orchestrator updated to provide necessary data.
+- Flat-day timeline rotations now produce real enriched turning points in the public payload.
+- Quantification remains truthful on low-amplitude days by surfacing `delta_rank` when score deltas are near-flat.
 
 ### File List
 
 - `backend/app/prediction/turning_point_detector.py`
 - `backend/app/prediction/engine_orchestrator.py`
 - `backend/app/prediction/daily_prediction_evidence_builder.py`
+- `backend/app/prediction/public_projection.py`
 - `backend/app/tests/unit/prediction/test_turning_point_semantics.py`
+- `backend/app/tests/integration/test_daily_prediction_api.py`

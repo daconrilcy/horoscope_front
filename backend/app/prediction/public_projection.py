@@ -537,16 +537,14 @@ class PublicTurningPointPolicy:
         is_flat_day: bool = False,
         evidence: V3EvidencePack | None = None,
     ) -> list[dict[str, Any]]:
-        if is_flat_day:
-            return []
-
         if evidence:
             return [
                 {
                     "occurred_at_local": tp.local_time.isoformat(),
                     "severity": tp.amplitude / 10.0,  # Scaled
                     "summary": f"Bascule durable ({tp.reason})",
-                    "drivers": [{"event_type": d} for d in tp.drivers],
+                    "drivers": [{"label": d} for d in tp.drivers],
+                    "impacted_categories": list(tp.themes),
                     # Story 43.1
                     "change_type": tp.change_type,
                     "previous_categories": tp.previous_categories,
@@ -560,6 +558,9 @@ class PublicTurningPointPolicy:
                 }
                 for tp in evidence.turning_points
             ]
+
+        if is_flat_day:
+            return []
 
         # Fallback: Restore nuance for legacy runs (Story 41.x logic)
         if not decision_windows:
@@ -608,6 +609,10 @@ class PublicTurningPointPolicy:
             "body": pd.body,
             "target": pd.target,
             "aspect": pd.aspect,
+            "orb_deg": float(pd.orb_deg) if pd.orb_deg is not None else None,
+            "phase": pd.phase,
+            "priority": pd.priority,
+            "base_weight": float(pd.base_weight) if pd.base_weight is not None else None,
             "metadata": pd.metadata,
         }
 
@@ -988,6 +993,18 @@ def _deserialize_evidence_pack(payload: dict[str, Any]) -> V3EvidencePack:
                 body=pd_raw.get("body"),
                 target=pd_raw.get("target"),
                 aspect=pd_raw.get("aspect"),
+                orb_deg=(
+                    float(pd_raw["orb_deg"])
+                    if pd_raw.get("orb_deg") is not None
+                    else None
+                ),
+                phase=pd_raw.get("phase"),
+                priority=pd_raw.get("priority"),
+                base_weight=(
+                    float(pd_raw["base_weight"])
+                    if pd_raw.get("base_weight") is not None
+                    else None
+                ),
                 metadata=dict(pd_raw.get("metadata", {})),
             )
 

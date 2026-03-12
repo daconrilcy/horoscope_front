@@ -77,12 +77,39 @@ export const TURNING_POINT_LABELS: Record<string, Record<Lang, string>> = {
     en: "The intensity recedes and the atmosphere becomes calmer again.",
   },
   no_driver: { fr: "Évolution naturelle du cycle", en: "Natural evolution of the cycle" },
+  cause_new_priority: {
+    fr: "Une nouvelle priorité entre au premier plan",
+    en: "A new priority moves into the foreground",
+  },
+  cause_priority_fades: {
+    fr: "Une priorité se retire du premier plan",
+    en: "A priority steps back from the foreground",
+  },
+  cause_priorities_rebalance: {
+    fr: "Les priorités du moment se réorganisent",
+    en: "The moment's priorities are rebalancing",
+  },
+  cause_returns_to_calm: {
+    fr: "Le relief du moment s'apaise",
+    en: "The moment is settling back down",
+  },
   from: { fr: "De", en: "From" },
   to: { fr: "vers", en: "to" },
   and: { fr: "et", en: "and" },
   none: { fr: "calme", en: "calm" },
   global_movement: { fr: "Mouvement global", en: "Global movement" },
   local_variations: { fr: "Variations locales", en: "Local variations" },
+  astrology_data: { fr: "Données astrologiques", en: "Astrological data" },
+  quantified_change: { fr: "Variation mesurée", en: "Measured change" },
+  orb: { fr: "Orbe", en: "Orb" },
+  phase: { fr: "Phase", en: "Phase" },
+  applying: { fr: "appliquante", en: "applying" },
+  separating: { fr: "séparante", en: "separating" },
+  houses: { fr: "Maisons", en: "Houses" },
+  score_delta: { fr: "delta score", en: "score delta" },
+  intensity_delta: { fr: "delta intensité", en: "intensity delta" },
+  composite_delta: { fr: "variation globale", en: "global delta" },
+  rank_delta: { fr: "delta rang", en: "rank delta" },
 };
 
 export const DRIVER_TYPE_LABELS: Record<string, Record<Lang, string>> = {

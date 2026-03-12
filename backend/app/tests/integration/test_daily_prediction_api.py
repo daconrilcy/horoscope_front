@@ -797,6 +797,99 @@ def test_daily_prediction_turning_points_expose_numeric_severity():
     assert isinstance(turning_point["severity"], float)
 
 
+def test_daily_prediction_exposes_enriched_turning_point_fields():
+    token = _register_and_get_access_token()
+    snapshot = _build_mock_snapshot()
+    mock_result = ServiceResult(run=snapshot, bundle=None, was_reused=True)
+
+    mock_service = MagicMock()
+    mock_service.get_or_compute.return_value = mock_result
+    _override_service(mock_service)
+
+    assembled_payload = {
+        "meta": {
+            "date_local": "2026-03-08",
+            "timezone": "Europe/Paris",
+            "computed_at": "2026-03-08T10:00:00",
+            "reference_version": settings.active_reference_version,
+            "ruleset_version": settings.ruleset_version,
+            "was_reused": True,
+            "house_system_effective": "placidus",
+            "is_provisional_calibration": False,
+            "calibration_label": None,
+        },
+        "summary": {
+            "overall_tone": "neutral",
+            "overall_summary": "Summary",
+            "calibration_note": None,
+            "top_categories": [],
+            "bottom_categories": [],
+            "best_window": None,
+            "main_turning_point": None,
+            "low_score_variance": False,
+            "flat_day": False,
+            "relative_top_categories": None,
+            "relative_summary": None,
+        },
+        "categories": [],
+        "timeline": [],
+        "decision_windows": None,
+        "micro_trends": None,
+        "turning_points": [
+            {
+                "occurred_at_local": "2026-03-08T08:45:00+01:00",
+                "severity": 0.42,
+                "summary": "Bascule durable (theme_rotation)",
+                "drivers": [{"label": "Moon square Pluto"}],
+                "impacted_categories": ["health", "money", "work"],
+                "change_type": "recomposition",
+                "previous_categories": ["health", "money", "social_network"],
+                "next_categories": ["health", "money", "work"],
+                "primary_driver": {
+                    "event_type": "aspect_exact_to_personal",
+                    "body": "Moon",
+                    "target": "Pluto",
+                    "aspect": "square",
+                    "orb_deg": 0.12,
+                    "phase": "applying",
+                    "priority": 68,
+                    "base_weight": 1.5,
+                    "metadata": {"natal_house_target": 8, "natal_house_transited": 5},
+                },
+                "movement": {
+                    "strength": 0.42,
+                    "previous_composite": 3.07,
+                    "next_composite": 3.19,
+                    "delta_composite": 0.12,
+                    "direction": "recomposition",
+                },
+                "category_deltas": [
+                    {
+                        "code": "work",
+                        "direction": "up",
+                        "delta_score": 1.08,
+                        "delta_intensity": 0.54,
+                        "delta_rank": None,
+                    }
+                ],
+            }
+        ],
+    }
+
+    with patch(
+        "app.api.v1.routers.predictions.PublicPredictionAssembler.assemble",
+        return_value=assembled_payload,
+    ):
+        response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    turning_point = response.json()["turning_points"][0]
+    assert turning_point["change_type"] == "recomposition"
+    assert turning_point["primary_driver"]["body"] == "Moon"
+    assert turning_point["movement"]["delta_composite"] == 0.12
+    assert turning_point["category_deltas"][0]["code"] == "work"
+
+
 def test_daily_prediction_hides_non_actionable_turning_points_when_no_windows():
     token = _register_and_get_access_token()
     snapshot = _build_mock_snapshot(local_date_value=date(2026, 3, 10))

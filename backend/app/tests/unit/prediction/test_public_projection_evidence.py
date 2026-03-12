@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from app.prediction.persisted_snapshot import (
     PersistedCategoryScore,
     PersistedPredictionSnapshot,
+    PersistedTimeBlock,
 )
 from app.prediction.public_projection import PublicPredictionAssembler
 from app.prediction.schemas import (
@@ -211,6 +212,10 @@ def test_assemble_includes_enriched_turning_points():
                     "Sun",
                     "Moon",
                     "conjunction",
+                    0.12,
+                    "applying",
+                    68,
+                    1.5,
                     {"house": 5},
                 ),
             )
@@ -244,6 +249,8 @@ def test_assemble_includes_enriched_turning_points():
     assert tp["previous_categories"] == ["work"]
     assert tp["next_categories"] == ["love"]
     assert tp["primary_driver"]["event_type"] == "aspect_exact_to_personal"
+    assert tp["primary_driver"]["orb_deg"] == 0.12
+    assert tp["primary_driver"]["phase"] == "applying"
     assert tp["primary_driver"]["metadata"]["house"] == 5
 
 
@@ -312,3 +319,68 @@ def test_assemble_includes_movement_indicators():
     assert tp["category_deltas"][0]["code"] == "love"
     assert tp["category_deltas"][0]["direction"] == "up"
     assert tp["category_deltas"][0]["delta_score"] == 2.0
+
+
+def test_assemble_keeps_evidence_turning_points_even_on_flat_day():
+    evidence_pack = V3EvidencePack(
+        version="3.0.0",
+        generated_at=datetime.now(UTC),
+        day_profile={"tone": "neutral"},
+        themes={
+            "health": V3EvidenceTheme("health", 12.0, 0.2, 2.0, 4.0, 15.0, 3.0, False),
+            "work": V3EvidenceTheme("work", 11.5, 0.1, 1.8, 3.0, 15.0, 2.5, False),
+        },
+        time_windows=[],
+        turning_points=[
+            V3EvidenceTurningPoint(
+                local_time=datetime(2026, 3, 12, 8, 45),
+                reason="regime_change",
+                amplitude=3.2,
+                confidence=0.75,
+                themes=["health", "work"],
+                drivers=["Moon-sextile-Mars"],
+            )
+        ],
+    )
+
+    snapshot = PersistedPredictionSnapshot(
+        run_id=1,
+        user_id=42,
+        local_date=date(2026, 3, 12),
+        timezone="Europe/Paris",
+        computed_at=datetime.now(UTC),
+        input_hash="hash",
+        reference_version_id=1,
+        ruleset_id=1,
+        house_system_effective="placidus",
+        is_provisional_calibration=True,
+        calibration_label="provisional",
+        overall_summary="Calm day",
+        overall_tone="neutral",
+        v3_metrics={"evidence_pack": _json_ready(asdict(evidence_pack))},
+        category_scores=[
+            PersistedCategoryScore(1, "health", 12, 0.0, 0.0, 0.0, 1, True, None),
+            PersistedCategoryScore(2, "work", 11, 0.0, 0.0, 0.0, 2, True, None),
+        ],
+        time_blocks=[
+            PersistedTimeBlock(
+                block_index=0,
+                start_at_local=datetime(2026, 3, 12, 0, 0),
+                end_at_local=datetime(2026, 3, 12, 23, 45),
+                tone_code="neutral",
+                dominant_categories=["health", "work"],
+                summary=None,
+            )
+        ],
+    )
+
+    result = PublicPredictionAssembler().assemble(
+        snapshot,
+        {1: "health", 2: "work"},
+        reference_version="2.0.0",
+        ruleset_version="2.0.0",
+    )
+
+    assert result["summary"]["flat_day"] is True
+    assert len(result["turning_points"]) == 1
+    assert result["turning_points"][0]["drivers"][0]["label"] == "Moon-sextile-Mars"

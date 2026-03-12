@@ -96,17 +96,20 @@ GPT-4o
 - Added `V3Movement` and `V3CategoryDelta` to `schemas.py`.
 - Updated `V3TurningPoint` and `V3EvidenceTurningPoint` in `schemas.py`.
 - Updated `PublicTurningPointPolicy` and `_deserialize_evidence_pack` in `public_projection.py`.
+- Extended `DailyPredictionTurningPoint` response model in `backend/app/api/v1/routers/predictions.py` so enriched fields are actually exposed by FastAPI.
 - Updated `DailyPredictionTurningPoint` and added related interfaces in `dailyPrediction.ts`.
 
 ### Completion Notes List
 
 - Contract extended with `movement` and `category_deltas`.
 - Backward compatibility preserved.
+- Public API contract now exposes `change_type`, `primary_driver`, `movement` and `category_deltas` in the `/v1/predictions/daily` response model.
 - Unit tests added for backend serialization.
 
 ### File List
 
 - `backend/app/prediction/schemas.py`
 - `backend/app/prediction/public_projection.py`
+- `backend/app/api/v1/routers/predictions.py`
 - `frontend/src/types/dailyPrediction.ts`
 - `backend/app/tests/unit/prediction/test_public_projection_evidence.py`

@@ -60,6 +60,13 @@ class DailyPredictionTurningPoint(BaseModel):
     severity: float
     summary: str | None
     drivers: list[dict[str, Any]]
+    impacted_categories: list[str] | None = None
+    change_type: str | None = None
+    previous_categories: list[str] | None = None
+    next_categories: list[str] | None = None
+    primary_driver: dict[str, Any] | None = None
+    movement: dict[str, Any] | None = None
+    category_deltas: list[dict[str, Any]] | None = None
 
 
 class DailyPredictionTimeBlock(BaseModel):

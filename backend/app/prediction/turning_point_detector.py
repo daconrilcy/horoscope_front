@@ -29,6 +29,7 @@ class TurningPointDetector:
     MIN_V3_REGIME_AMPLITUDE = 1.5  # Solid threshold for orientation changes
     MIN_V3_DURATION_FOLLOWING = 60  # minutes
     MIN_V3_CONFIDENCE = 0.5
+    MIN_V3_THEME_DELTA_SCORE = 0.2
 
     REASON_PRIORITY = {
         "high_priority_event": 3,
@@ -143,12 +144,20 @@ class TurningPointDetector:
             # Trigger logic: orientation change OR significant intensity jump
             regime_changed = prev.orientation != curr.orientation
             intensity_diff = abs(curr.intensity - prev.intensity)
+            previous_theme_set = set(prev.dominant_themes)
+            current_theme_set = set(curr.dominant_themes)
+            theme_rotation = previous_theme_set != current_theme_set
 
             reason = None
             if regime_changed and intensity_diff >= self.MIN_V3_REGIME_AMPLITUDE:
                 reason = "regime_change"
             elif intensity_diff >= self.MIN_V3_AMPLITUDE:
                 reason = "intensity_jump"
+
+            # Story 44.x: visible timeline shifts on flat/neutral days are still
+            # meaningful if dominant themes materially rotate across a sustained block.
+            if not reason and theme_rotation:
+                reason = "theme_rotation"
 
             if not reason:
                 continue
@@ -182,11 +191,26 @@ class TurningPointDetector:
                 movement = self._calculate_movement(prev, curr, theme_signals)
                 category_deltas = self._calculate_category_deltas(prev, curr, theme_signals)
 
+            # Theme rotation should only surface when it carries a material delta.
+            if reason == "theme_rotation" and not self._is_material_theme_rotation(
+                movement, category_deltas, previous_theme_set, current_theme_set
+            ):
+                continue
+
+            amplitude = intensity_diff
+            if movement is not None:
+                amplitude = max(amplitude, movement.strength)
+            if category_deltas:
+                amplitude = max(
+                    amplitude,
+                    max(abs(delta.delta_score) for delta in category_deltas),
+                )
+
             pivots.append(
                 V3TurningPoint(
                     local_time=curr.start_local,
                     reason=reason,
-                    amplitude=intensity_diff,
+                    amplitude=amplitude,
                     duration_following=duration_following,
                     confidence=confidence,
                     categories_impacted=curr.dominant_themes,
@@ -201,6 +225,23 @@ class TurningPointDetector:
             )
 
         return pivots
+
+    def _is_material_theme_rotation(
+        self,
+        movement: Any | None,
+        category_deltas: list[Any],
+        previous_theme_set: set[str],
+        current_theme_set: set[str],
+    ) -> bool:
+        if previous_theme_set ^ current_theme_set:
+            return True
+        if movement is not None and abs(movement.delta_composite) >= self.MIN_V3_THEME_DELTA_SCORE:
+            return True
+        return any(
+            abs(delta.delta_score) >= self.MIN_V3_THEME_DELTA_SCORE
+            or abs(delta.delta_intensity) >= self.MIN_V3_THEME_DELTA_SCORE
+            for delta in category_deltas
+        )
 
     def _calculate_movement(
         self, prev: V3TimeBlock, curr: V3TimeBlock, theme_signals: dict[str, Any]
@@ -247,6 +288,11 @@ class TurningPointDetector:
         deltas = []
         t_prev = prev.start_local + (prev.end_local - prev.start_local) / 2
         t_curr = curr.start_local + (curr.end_local - curr.start_local) / 2
+        previous_theme_set = set(prev.dominant_themes)
+        current_theme_set = set(curr.dominant_themes)
+
+        prev_values: dict[str, float] = {}
+        curr_values: dict[str, float] = {}
 
         for code, signal in theme_signals.items():
             nearest_prev = min(signal.timeline.keys(), key=lambda dt: abs(dt - t_prev))
@@ -254,16 +300,37 @@ class TurningPointDetector:
 
             val_prev = signal.timeline[nearest_prev].composite
             val_curr = signal.timeline[nearest_curr].composite
-            delta_composite = val_curr - val_prev
+            prev_values[code] = val_prev
+            curr_values[code] = val_curr
 
-            if abs(delta_composite) < 0.2:  # AC4 threshold for micro-variations
+        prev_ranks = self._build_rank_map(prev_values)
+        curr_ranks = self._build_rank_map(curr_values)
+
+        for code in theme_signals:
+            val_prev = prev_values[code]
+            val_curr = curr_values[code]
+            delta_composite = val_curr - val_prev
+            changed_membership = code in (previous_theme_set ^ current_theme_set)
+            rank_delta = prev_ranks.get(code, 0) - curr_ranks.get(code, 0)
+
+            if (
+                abs(delta_composite) < self.MIN_V3_THEME_DELTA_SCORE
+                and not changed_membership
+            ):  # AC4 threshold for micro-variations, except if top themes rotate.
                 continue
 
             direction = "stable"
-            if delta_composite > 0.2:
+            if delta_composite > self.MIN_V3_THEME_DELTA_SCORE:
                 direction = "up"
-            elif delta_composite < -0.2:
+            elif delta_composite < -self.MIN_V3_THEME_DELTA_SCORE:
                 direction = "down"
+            elif changed_membership and code in current_theme_set:
+                direction = "up"
+            elif changed_membership and code in previous_theme_set:
+                direction = "down"
+
+            if changed_membership and rank_delta == 0:
+                rank_delta = 1 if code in current_theme_set else -1
 
             deltas.append(
                 V3CategoryDelta(
@@ -271,13 +338,23 @@ class TurningPointDetector:
                     direction=direction,
                     delta_score=delta_composite * 2.0,  # Approximate score-like delta.
                     delta_intensity=abs(delta_composite),
-                    delta_rank=None,  # Rank change requires a wider comparison window.
+                    delta_rank=rank_delta,
                 )
             )
 
-        # AC2: Sort by absolute amplitude and limit to 3
-        deltas.sort(key=lambda d: abs(d.delta_intensity), reverse=True)
+        # AC2: changed top-theme membership first, then absolute amplitude.
+        deltas.sort(
+            key=lambda d: (
+                d.code not in (previous_theme_set ^ current_theme_set),
+                -abs(d.delta_rank or 0),
+                -abs(d.delta_intensity),
+            )
+        )
         return deltas[:3]
+
+    def _build_rank_map(self, values: dict[str, float]) -> dict[str, int]:
+        ordered = sorted(values.items(), key=lambda item: (-item[1], item[0]))
+        return {code: index + 1 for index, (code, _value) in enumerate(ordered)}
 
     def _derive_change_type(self, prev: V3TimeBlock, curr: V3TimeBlock) -> str:
         intensity_jump = curr.intensity - prev.intensity
@@ -319,9 +396,16 @@ class TurningPointDetector:
     def _to_primary_driver(self, event: AstroEvent) -> Any:
         from app.prediction.schemas import V3PrimaryDriver
 
-        # Filter metadata to keep only useful bits
+        # Keep only stable, user-meaningful calculation details.
         metadata = {}
-        for key in ["house", "sign", "orb_exact"]:
+        for key in [
+            "house",
+            "sign",
+            "orb_exact",
+            "orb_max",
+            "natal_house_target",
+            "natal_house_transited",
+        ]:
             if key in event.metadata:
                 metadata[key] = event.metadata[key]
 
@@ -330,6 +414,10 @@ class TurningPointDetector:
             body=event.body,
             target=event.target,
             aspect=event.aspect,
+            orb_deg=event.orb_deg,
+            phase=event.metadata.get("phase"),
+            priority=event.priority,
+            base_weight=event.base_weight,
             metadata=metadata,
         )
 

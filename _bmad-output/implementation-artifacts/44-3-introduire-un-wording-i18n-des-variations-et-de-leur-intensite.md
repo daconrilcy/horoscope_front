@@ -13,7 +13,7 @@ so that les moments clés restent compréhensibles en plusieurs langues sans fig
 ## Acceptance Criteria
 
 1. Le frontend introduit des clés i18n dédiées pour `direction`, `strength`, `delta` et les formulations de montée, recul, stabilité ou recomposition.
-2. Le wording sait produire une version qualitative sobre (`léger`, `net`, `marqué`) sans exposer de chiffres bruts dans la V1 des cartes.
+2. Le wording sait produire une version qualitative sobre (`léger`, `net`, `marqué`) et peut afficher les valeurs mesurées quand elles sont fournies par le payload enrichi.
 3. Les helpers i18n gèrent FR et EN à partir du même payload structuré.
 4. Si des valeurs numériques sont exposées plus tard, elles sont formatées côté frontend selon la locale et jamais concaténées en dur.
 5. Les règles de formulation évitent les contradictions du type “ça change” alors que les catégories visibles restent identiques faute de contexte.
@@ -40,7 +40,11 @@ so that les moments clés restent compréhensibles en plusieurs langues sans fig
 - Extended `predictions.ts` with `MOVEMENT_DIRECTION_LABELS`, `INTENSITY_LEVEL_LABELS`, and `CATEGORY_VARIATION_LABELS`.
 - Implemented `humanizeMovement` and `humanizeCategoryDelta` in `predictionI18n.ts`.
 - Strength is mapped to qualitative labels: slight (0-3), notable (3-7), marked (7-10).
-- The V1 card keeps movement rendering qualitative and does not expose raw numeric deltas.
+- Added localized helpers for:
+  - primary astrological driver details (`orb`, `phase`, `houses`)
+  - quantified global movement (`previous_composite`, `next_composite`, `delta_composite`)
+  - quantified local deltas (`delta_score`, `delta_intensity`, `delta_rank`)
+- When raw score deltas are too small to be meaningful, the helper prefers rank movement to avoid contradictory wording.
 - Verified with unit tests in `predictionI18n.test.ts`.
 
 ### Project Structure Notes
@@ -63,7 +67,9 @@ so that les moments clés restent compréhensibles en plusieurs langues sans fig
 
 - i18n keys added for movement and variations.
 - Humanization helpers implemented.
-- V1 rendering kept intentionally qualitative without raw numbers in the card.
+- Astro detail helpers added for the primary driver.
+- Measured movement helpers added for global and per-category deltas.
+- Tiny raw deltas are de-emphasized in favor of `delta_rank` when that better explains a visible rotation.
 - Unit tests for both French and English translations.
 
 ### File List

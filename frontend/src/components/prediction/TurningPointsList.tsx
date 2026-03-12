@@ -7,10 +7,13 @@ import {
   getCategoryMeta, 
   getPredictionMessage, 
   humanizePredictionDriverLabel,
+  humanizePrimaryDriver,
   humanizeTurningPointSemantic,
   humanizeTurningPointSummary,
   humanizeMovement,
+  quantifyMovement,
   humanizeCategoryDelta,
+  quantifyCategoryDelta,
 } from "../../utils/predictionI18n";
 import { TURNING_POINT_LABELS, getLabel } from "../../i18n/predictions";
 
@@ -49,6 +52,7 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {moments.map((moment, index) => {
           const semantic = humanizeTurningPointSemantic(moment, lang);
+          const primaryDriver = humanizePrimaryDriver(moment.primary_driver, lang);
           const hasEnrichment = !!moment.change_type;
           const enrichedImpactedCategories =
             moment.impacted_categories?.length
@@ -115,6 +119,11 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
                     <span style={{ fontSize: "1rem", color: "var(--text-1)", fontWeight: "500" }}>
                       {semantic.cause}
                     </span>
+                    {primaryDriver?.details && (
+                      <p style={{ margin: "0.35rem 0 0 0", fontSize: "0.85rem", lineHeight: "1.4", color: "var(--text-2)" }}>
+                        {primaryDriver.details}
+                      </p>
+                    )}
                   </div>
 
                   {/* Section 2: Ce qui change */}
@@ -160,13 +169,21 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
                       <p style={{ margin: 0, fontSize: "0.95rem", color: "var(--text-1)", fontWeight: "500" }}>
                         {humanizeMovement(moment.movement, lang)}
                       </p>
+                      <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.85rem", color: "var(--text-2)" }}>
+                        {quantifyMovement(moment.movement, lang)}
+                      </p>
                       
                       {moment.category_deltas && moment.category_deltas.length > 0 && (
                         <div style={{ marginTop: "0.4rem", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
                           {moment.category_deltas.slice(0, 2).map((delta, i) => (
-                            <span key={`${delta.code}-${i}`} style={{ fontSize: "0.85rem", color: "var(--text-2)" }}>
-                              {humanizeCategoryDelta(delta, lang)}
-                            </span>
+                            <div key={`${delta.code}-${i}`} style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}>
+                              <span style={{ fontSize: "0.85rem", color: "var(--text-2)" }}>
+                                {humanizeCategoryDelta(delta, lang)}
+                              </span>
+                              <span style={{ fontSize: "0.8rem", color: "var(--text-3)" }}>
+                                {quantifyCategoryDelta(delta, lang)}
+                              </span>
+                            </div>
                           ))}
                         </div>
                       )}

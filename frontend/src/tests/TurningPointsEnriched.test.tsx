@@ -15,7 +15,15 @@ const mockEnrichedMoments = [
     change_type: "emergence",
     previous_categories: ["work"],
     next_categories: ["work", "love"],
-    primary_driver: { event_type: "aspect_exact_to_personal" },
+    primary_driver: {
+      event_type: "aspect_exact_to_personal",
+      body: "Moon",
+      target: "Mars",
+      aspect: "sextile",
+      orb_deg: 0.12,
+      phase: "applying",
+      metadata: { natal_house_transited: 5, natal_house_target: 8 },
+    },
     drivers: []
   },
   {
@@ -52,17 +60,27 @@ describe("TurningPointsList Enriched", () => {
     expect(screen.getByText(/Transition/i)).toBeInTheDocument();
     expect(screen.getByText(/Implication/i)).toBeInTheDocument();
     
-    expect(screen.getByText("Résonance avec votre thème natal")).toBeInTheDocument();
+    expect(screen.getByText("Moon sextile Mars")).toBeInTheDocument();
+    expect(screen.getByText(/Orbe 0,12° · Phase appliquante · Maisons 5 -> 8/i)).toBeInTheDocument();
     expect(screen.getByText("Émergence d'un nouveau climat")).toBeInTheDocument();
-    expect(screen.getByText(/De travail vers travail et amour/i)).toBeInTheDocument();
+    expect(screen.getByText(/amour & relations rejoint travail au premier plan/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Le climat s'ouvre davantage à amour & relations, aux côtés de travail/i),
+    ).toBeInTheDocument();
   });
 
   it("affiche la section Mouvement Global et Variations Locales si présentes", () => {
     const movementMoment = {
       ...mockEnrichedMoments[0],
-      movement: { direction: "rising", strength: 8.0, delta_composite: 4.0 },
+      movement: {
+        direction: "rising",
+        strength: 8.0,
+        previous_composite: 5.0,
+        next_composite: 12.5,
+        delta_composite: 4.0,
+      },
       category_deltas: [
-        { code: "love", direction: "up", delta_intensity: 2.5 }
+        { code: "love", direction: "up", delta_score: 2.0, delta_intensity: 5.0 }
       ]
     };
 
@@ -74,15 +92,23 @@ describe("TurningPointsList Enriched", () => {
 
     expect(screen.getAllByText(/Mouvement global/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Mouvement global en hausse \(marqué\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/variation globale \+4,00 \(5,00 -> 12,50\)/i)).toBeInTheDocument();
     expect(screen.getByText(/❤️ progression sur amour & relations/i)).toBeInTheDocument();
+    expect(screen.getByText(/delta score \+2,00 · delta intensité \+5,00/i)).toBeInTheDocument();
   });
 
   it("affiche un mouvement global en baisse (notable)", () => {
     const fallingMoment = {
       ...mockEnrichedMoments[0],
-      movement: { direction: "falling", strength: 5.0, delta_composite: -2.5 },
+      movement: {
+        direction: "falling",
+        strength: 5.0,
+        previous_composite: 12.5,
+        next_composite: 10.0,
+        delta_composite: -2.5,
+      },
       category_deltas: [
-        { code: "work", direction: "down", delta_intensity: 2.0 }
+        { code: "work", direction: "down", delta_score: -1.0, delta_intensity: 2.0 }
       ]
     };
 
@@ -99,7 +125,13 @@ describe("TurningPointsList Enriched", () => {
   it("affiche un mouvement de mutation sans intensité qualitative", () => {
     const shiftingMoment = {
       ...mockEnrichedMoments[0],
-      movement: { direction: "recomposition", strength: 1.0, delta_composite: 0.1 },
+      movement: {
+        direction: "recomposition",
+        strength: 1.0,
+        previous_composite: 8.0,
+        next_composite: 8.1,
+        delta_composite: 0.1,
+      },
       category_deltas: []
     };
 
@@ -116,7 +148,13 @@ describe("TurningPointsList Enriched", () => {
   it("ne pollue pas avec des variations locales si vides (sous seuil)", () => {
     const belowThresholdMoment = {
       ...mockEnrichedMoments[0],
-      movement: { direction: "rising", strength: 2.0, delta_composite: 1.0 },
+      movement: {
+        direction: "rising",
+        strength: 2.0,
+        previous_composite: 6.0,
+        next_composite: 7.0,
+        delta_composite: 1.0,
+      },
       category_deltas: []
     };
 
@@ -163,7 +201,7 @@ describe("TurningPointsList Enriched", () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByText("Évolution naturelle du cycle")).toBeInTheDocument();
+    expect(screen.getByText("Les priorités du moment se réorganisent")).toBeInTheDocument();
   });
 
   it("gère la transition vers le calme (next_categories vide)", () => {
@@ -173,7 +211,32 @@ describe("TurningPointsList Enriched", () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByText(/vers calme/i)).toBeInTheDocument();
+    expect(screen.getByText(/laisse place à un climat plus calme/i)).toBeInTheDocument();
+  });
+
+  it("explicite l'entrée d'un nouveau thème sans driver principal", () => {
+    const enteringMoment = {
+      occurred_at_local: "2026-03-12T08:45:00",
+      severity: 0.5,
+      summary: null,
+      change_type: "emergence",
+      previous_categories: ["health", "money"],
+      next_categories: ["health", "money", "work"],
+      impacted_categories: ["health", "money", "work"],
+      primary_driver: null,
+      drivers: [],
+    };
+
+    render(
+      <ThemeProvider>
+        <TurningPointsList moments={[enteringMoment] as any} lang="fr" />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByText("Une nouvelle priorité entre au premier plan")).toBeInTheDocument();
+    expect(
+      screen.getByText(/travail rejoint santé & hygiène de vie et argent & ressources au premier plan/i),
+    ).toBeInTheDocument();
   });
 
   it("affiche les icônes de catégories dans la transition", () => {

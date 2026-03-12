@@ -418,8 +418,81 @@ const predictionWithInferredEmergence = {
       summary: null,
       drivers: [],
       impacted_categories: ["health", "money", "work"],
+      primary_driver: {
+        event_type: "aspect_exact_to_personal",
+        body: "Moon",
+        target: "Mars",
+        aspect: "sextile",
+        orb_deg: 0.12,
+        phase: "applying",
+        metadata: { natal_house_transited: 5, natal_house_target: 8 },
+      },
+      movement: {
+        direction: "rising",
+        strength: 4.2,
+        previous_composite: 1.45,
+        next_composite: 2.11,
+        delta_composite: 0.66,
+      },
+      category_deltas: [
+        { code: "work", direction: "up", delta_score: 0.31, delta_intensity: 0.27, delta_rank: -1 },
+      ],
     },
   ],
+};
+
+const predictionWithoutApiTurningPointsButClearFallback = {
+  meta: {
+    date_local: "2026-03-12",
+    timezone: "Europe/Paris",
+    computed_at: "2026-03-12T06:00:00Z",
+    reference_version: "2.0.0",
+    ruleset_version: "2.0.0",
+    was_reused: false,
+    house_system_effective: "placidus",
+  },
+  summary: {
+    overall_tone: "neutral",
+    overall_summary: "Journée équilibrée avec des rééquilibrages progressifs.",
+    top_categories: ["health", "work"],
+    bottom_categories: ["energy"],
+    best_window: null,
+    main_turning_point: null,
+  },
+  categories: [
+    { code: "health", note_20: 15, raw_score: 0.4, power: 0.8, volatility: 0.2, rank: 1, summary: null },
+    { code: "money", note_20: 13, raw_score: 0.3, power: 0.6, volatility: 0.2, rank: 2, summary: null },
+    { code: "social_network", note_20: 13, raw_score: 0.3, power: 0.6, volatility: 0.2, rank: 3, summary: null },
+    { code: "work", note_20: 13, raw_score: 0.3, power: 0.6, volatility: 0.2, rank: 4, summary: null },
+  ],
+  timeline: [
+    {
+      start_local: "2026-03-12T00:00:00",
+      end_local: "2026-03-12T08:45:00",
+      tone_code: "neutral",
+      dominant_categories: ["health", "money", "social_network"],
+      summary: null,
+      turning_point: false,
+    },
+    {
+      start_local: "2026-03-12T08:45:00",
+      end_local: "2026-03-12T21:00:00",
+      tone_code: "neutral",
+      dominant_categories: ["health", "money", "work"],
+      summary: null,
+      turning_point: false,
+    },
+    {
+      start_local: "2026-03-12T21:00:00",
+      end_local: "2026-03-12T23:45:00",
+      tone_code: "neutral",
+      dominant_categories: ["health", "work"],
+      summary: null,
+      turning_point: false,
+    },
+  ],
+  turning_points: [],
+  decision_windows: null,
 };
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -732,7 +805,35 @@ describe("TodayPage", () => {
         /^De santé & hygiène de vie et argent & ressources vers santé & hygiène de vie et argent & ressources$/i,
       ),
     ).not.toBeInTheDocument();
-    expect(screen.getByText(/De santé & hygiène de vie et argent & ressources vers santé & hygiène de vie et argent & ressources et travail/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/travail rejoint santé & hygiène de vie et argent & ressources au premier plan/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Moon sextile Mars")).toBeInTheDocument();
+    expect(screen.getByText(/Orbe 0,12° · Phase appliquante · Maisons 5 -> 8/i)).toBeInTheDocument();
+    expect(screen.getByText(/variation globale \+0,66 \(1,45 -> 2,11\)/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/delta score \+0,31 · delta rang -1 · delta intensité \+0,27/i),
+    ).toBeInTheDocument();
+  });
+
+  it("rend le fallback des moments clés plus explicite quand l'API ne fournit aucun turning point", async () => {
+    installFetchMock({
+      prediction: jsonResponse(predictionWithoutApiTurningPointsButClearFallback),
+    });
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Journée équilibrée avec des rééquilibrages progressifs/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Les priorités du moment se réorganisent")).toBeInTheDocument();
+    expect(
+      screen.getByText(/travail prend le relais de vie sociale & réseau, avec santé & hygiène de vie et argent & ressources comme fil conducteur/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Le focus glisse de vie sociale & réseau vers travail, avec santé & hygiène de vie et argent & ressources en fil conducteur/i),
+    ).toBeInTheDocument();
   });
 
   it("ne rend plus la chronologie du jour devenue redondante", async () => {

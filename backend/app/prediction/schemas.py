@@ -195,6 +195,10 @@ class V3PrimaryDriver:
     body: str | None
     target: str | None
     aspect: str | None
+    orb_deg: float | None = None
+    phase: str | None = None
+    priority: int | None = None
+    base_weight: float | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
