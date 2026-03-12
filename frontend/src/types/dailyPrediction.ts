@@ -34,6 +34,7 @@ export interface DailyPredictionTurningPoint {
   drivers: DailyPredictionDriver[];
   // Story 43.1
   change_type?: string;
+  impacted_categories?: string[];
   previous_categories?: string[];
   next_categories?: string[];
   primary_driver?: {

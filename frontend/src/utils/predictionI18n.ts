@@ -182,8 +182,8 @@ export function humanizeTurningPointSummary(
       en: "The day's dominant themes are shifting.",
     },
     high_priority_event: {
-      fr: "Un événement astrologique marqué mérite votre attention.",
-      en: "A strong astrological event deserves your attention.",
+      fr: "Des aspects majeurs demandent votre attention.",
+      en: "Major aspects deserve your attention.",
     },
   };
 
@@ -240,6 +240,7 @@ export function humanizePredictionDriverLabel(
 export function humanizeTurningPointSemantic(
   tp: {
     change_type?: string;
+    impacted_categories?: string[];
     previous_categories?: string[];
     next_categories?: string[];
     primary_driver?: any;
@@ -264,11 +265,24 @@ export function humanizeTurningPointSemantic(
   };
 
   const transitionLabel = `${getLabel(labels, "from", lang)} ${formatCats(prev)} ${getLabel(labels, "to", lang)} ${formatCats(next)}`;
+  const impacted = (tp.impacted_categories?.length ? tp.impacted_categories : next.length > 0 ? next : prev).slice(0, 2);
+  const firstImpacted = impacted[0] ? getCategoryLabel(impacted[0], lang).toLowerCase() : null;
+  const implicationBase = getLabel(
+    labels,
+    `implication_${tp.change_type || "recomposition"}`,
+    lang,
+  );
+  const implication = firstImpacted
+    ? lang === "fr"
+      ? `${implicationBase} L'accent se porte d'abord sur ${firstImpacted}`
+      : `${implicationBase} The emphasis first moves toward ${firstImpacted}`
+    : implicationBase;
 
   return {
     title: changeLabel,
     cause: driverLabel,
-    transition: transitionLabel
+    transition: transitionLabel,
+    implication,
   };
 }
 

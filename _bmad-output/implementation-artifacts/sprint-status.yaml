@@ -383,7 +383,7 @@ development_status:
   42-17-verrouiller-qa-backtesting-et-migration-progressive-du-moteur-v3: done
   epic-42-retrospective: optional
 
-  epic-43: in-progress
+  epic-43: done
   43-1-structurer-une-semantique-explicable-des-bascules: done
   43-2-introduire-un-wording-i18n-pour-les-moments-cles: done
   43-3-refaire-le-rendu-ui-des-moments-cles: done

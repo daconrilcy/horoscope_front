@@ -73,6 +73,8 @@ so that le français, l’anglais et les futures langues restent cohérents sans
 
 - Added i18n keys for turning points and driver types in `frontend/src/i18n/predictions.ts`.
 - Implemented `humanizeTurningPointSemantic` helper in `frontend/src/utils/predictionI18n.ts`.
+- Added localized implication variants per `change_type` and preserved a separate textual transition string for UI rendering.
+- Hardened fallback humanization for legacy summary codes like `high_priority_event` to avoid leaking backend wording in the UI.
 - Updated `DailyPredictionTurningPoint` type in `frontend/src/types/dailyPrediction.ts`.
 - Verified with unit tests in `frontend/src/tests/predictionI18n.test.ts`.
 

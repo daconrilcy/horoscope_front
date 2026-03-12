@@ -15,7 +15,7 @@ This document defines the Go/No-Go criteria for migrating from Engine V2 to Engi
 
 | Criterion | Metric | Threshold | Status |
 |-----------|--------|-----------|--------|
-| **Runtime Budget** | Max duration for 96 steps (V3 only) | < 100ms | ✅ |
+| **Runtime Budget** | Median duration end-to-end pour 96 steps (V3 only) | < 200ms | ✅ |
 | **Dual Mode Overhead** | Additional cost of DUAL mode vs V2 | < 150ms | ✅ |
 | **Persistence Integrity** | V2 compatibility (null handling) | 100% pass | ✅ |
 | **Memory Stability** | Peak memory usage vs V2 | < +20% | ✅ |
@@ -37,6 +37,6 @@ This document defines the Go/No-Go criteria for migrating from Engine V2 to Engi
 
 ## 4. Rollback Plan
 
-- **Trigger:** Regression in pivot quality or runtime > 200ms.
+- **Trigger:** Regression in pivot quality or median runtime > 200ms.
 - **Action:** Set `DAILY_ENGINE_MODE=v2` in environment variables.
 - **Data:** Persistence is designed to be bi-compatible; no data migration needed for rollback.

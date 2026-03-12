@@ -6,7 +6,9 @@ import { getLocale } from "../../utils/locale";
 import { 
   getCategoryMeta, 
   getPredictionMessage, 
-  humanizeTurningPointSemantic
+  humanizePredictionDriverLabel,
+  humanizeTurningPointSemantic,
+  humanizeTurningPointSummary,
 } from "../../utils/predictionI18n";
 import { TURNING_POINT_LABELS, getLabel } from "../../i18n/predictions";
 
@@ -46,6 +48,19 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
         {moments.map((moment, index) => {
           const semantic = humanizeTurningPointSemantic(moment, lang);
           const hasEnrichment = !!moment.change_type;
+          const enrichedImpactedCategories =
+            moment.impacted_categories?.length
+              ? moment.impacted_categories
+              : moment.next_categories?.length
+                ? moment.next_categories
+                : moment.previous_categories || [];
+          const hasExplicitDriverLabel = (moment.drivers || []).some((driver) => !!driver.label?.trim());
+          const legacyImpactedCategories =
+            moment.next_categories?.length
+              ? moment.next_categories
+              : moment.impacted_categories?.length
+                ? moment.impacted_categories
+                : moment.previous_categories || [];
           
           return (
             <div
@@ -129,6 +144,9 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
                         {semantic.title}
                       </span>
                     </div>
+                    <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.9rem", lineHeight: "1.4", color: "var(--text-2)" }}>
+                      {semantic.transition}
+                    </p>
                   </div>
 
                   {/* Section 3: Implication */}
@@ -137,29 +155,44 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
                       {getLabel(TURNING_POINT_LABELS, "implication", lang)}
                     </span>
                     <p style={{ margin: 0, fontSize: "0.95rem", lineHeight: "1.4", color: "var(--text-2)" }}>
-                      {semantic.transition}.
+                      {semantic.implication}.
                     </p>
+                    {enrichedImpactedCategories.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", alignItems: "center", marginTop: "0.6rem" }}>
+                        <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold" }}>
+                          {getPredictionMessage("impacts_label", lang)}
+                        </span>
+                        {enrichedImpactedCategories.map((category) => {
+                          const meta = getCategoryMeta(category, lang);
+                          return (
+                            <span key={category} style={{ fontSize: "0.8rem" }}>
+                              {meta.icon} {meta.label}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
                 /* Fallback Legacy */
                 <>
                   <p style={{ margin: "0 0 0.75rem 0", fontSize: "1rem", lineHeight: "1.5", color: "var(--text-1)" }}>
-                    {moment.summary || getPredictionMessage("aspect_shift_label", lang)}
+                    {humanizeTurningPointSummary(moment.summary, lang) || getPredictionMessage("aspect_shift_label", lang)}
                   </p>
 
-                  {(moment.drivers || []).length > 0 && (
+                  {hasExplicitDriverLabel && (moment.drivers || []).length > 0 && (
                     <div style={{ marginBottom: "0.5rem", fontSize: "0.85rem", color: "var(--text-2)" }}>
-                      {moment.drivers[0].label || moment.drivers[0].event_type}
+                      {humanizePredictionDriverLabel(moment.drivers[0], lang)}
                     </div>
                   )}
 
-                  {(moment.next_categories || []).length > 0 && (
+                  {legacyImpactedCategories.length > 0 && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", alignItems: "center" }}>
                       <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold" }}>
                         {getPredictionMessage("impacts_label", lang)}
                       </span>
-                      {moment.next_categories?.map((category) => {
+                      {legacyImpactedCategories.map((category) => {
                         const meta = getCategoryMeta(category, lang);
                         return (
                           <span key={category} title={meta.label} style={{ fontSize: "0.8rem" }}>

@@ -60,11 +60,14 @@ so that je comprenne la cause astrologique, le passage d’un état à un autre,
 
 - Redesigned `TurningPointsList` component with a structured layout.
 - Integrated `humanizeTurningPointSemantic` for localized content.
-- Updated `TodayPage` to prefer backend `turning_points`.
-- Verified UI consistency and legacy fallback.
+- Updated `TodayPage` to normalize backend `turning_points` with timeline-derived `previous/next/impacted` categories when older payloads are incomplete.
+- Restored visible `Impacts` chips in enriched cards and kept a readable legacy fallback without exposing technical driver codes.
+- Added explicit textual `transition` rendering alongside icons so the state change remains understandable and testable.
+- Verified UI consistency on enriched, legacy, and fallback-generated key moments.
 
 ### File List
 
 - `frontend/src/components/prediction/TurningPointsList.tsx`
 - `frontend/src/pages/TodayPage.tsx`
+- `frontend/src/types/dailyPrediction.ts`
 - `frontend/src/tests/TurningPointsEnriched.test.tsx`

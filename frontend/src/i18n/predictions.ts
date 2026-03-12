@@ -64,6 +64,18 @@ export const TURNING_POINT_LABELS: Record<string, Record<Lang, string>> = {
   emergence: { fr: "Émergence d'un nouveau climat", en: "Emergence of a new climate" },
   recomposition: { fr: "Recomposition des énergies", en: "Recomposition of energies" },
   attenuation: { fr: "Atténuation de l'intensité", en: "Attenuation of intensity" },
+  implication_emergence: {
+    fr: "De nouveaux thèmes prennent de la place dans le climat du moment.",
+    en: "New themes are gaining importance in the current atmosphere.",
+  },
+  implication_recomposition: {
+    fr: "Le centre de gravité de la journée se déplace vers d'autres priorités.",
+    en: "The center of gravity of the day is shifting toward different priorities.",
+  },
+  implication_attenuation: {
+    fr: "L'intensité retombe et le climat redevient plus calme.",
+    en: "The intensity recedes and the atmosphere becomes calmer again.",
+  },
   no_driver: { fr: "Évolution naturelle du cycle", en: "Natural evolution of the cycle" },
   from: { fr: "De", en: "From" },
   to: { fr: "vers", en: "to" },

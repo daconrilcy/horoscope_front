@@ -54,8 +54,11 @@ so that le produit ne surinterprète pas les bascules et conserve un wording coh
 - Created `TurningPointsEnriched.test.tsx` with edge cases: emergence, recomposition, attenuation, missing driver, empty next categories.
 - Verified multilingual support in helpers and components.
 - Validated that midnight pivots remain excluded (backend side logic verified in 43.1).
+- Extended `TodayPage` regression coverage to keep impacts labels, humanized summaries, and non-technical fallbacks stable in FR and EN.
+- Revalidated frontend targeted suites after post-implementation fixes on fallback normalization and enriched card rendering.
 
 ### File List
 
 - `frontend/src/tests/TurningPointsEnriched.test.tsx`
 - `frontend/src/tests/predictionI18n.test.ts`
+- `frontend/src/tests/TodayPage.test.tsx`

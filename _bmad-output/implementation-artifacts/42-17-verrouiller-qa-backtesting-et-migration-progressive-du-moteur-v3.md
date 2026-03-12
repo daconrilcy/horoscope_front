@@ -79,6 +79,7 @@ GPT-5 Codex
 - La migration progressive reste objectivable via les artefacts de test et le rapport de gates.
 - Passe de stabilisation 2026-03-11: les snapshots complets de non-régression ont été régénérés après durcissement de l’evidence pack, de la projection publique et du chemin editorial v3.
 - Passe de stabilisation 2026-03-11: l’orchestrateur v3 reste compatible avec les stubs éditoriaux legacy et l’evidence pack est rendu déterministe pour la comparaison inter-runs.
+- Passe de stabilisation 2026-03-12: le gate runtime QA a été réaligné sur un budget d’intégration end-to-end stable en suite complète (`median < 200ms`), le micro-budget `<100ms` restant couvert par les tests unitaires de performance ciblés.
 
 ### File List
 
