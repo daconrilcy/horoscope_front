@@ -188,7 +188,7 @@ def test_assemble_uses_persisted_evidence_pack_snapshot():
 
 def test_assemble_includes_enriched_turning_points():
     from app.prediction.schemas import V3PrimaryDriver
-    
+
     evidence_pack = V3EvidencePack(
         version="3.0.0",
         generated_at=datetime.now(UTC),
@@ -206,7 +206,13 @@ def test_assemble_includes_enriched_turning_points():
                 change_type="emergence",
                 previous_categories=["work"],
                 next_categories=["love"],
-                primary_driver=V3PrimaryDriver("aspect_exact_to_personal", "Sun", "Moon", "conjunction", {"house": 5})
+                primary_driver=V3PrimaryDriver(
+                    "aspect_exact_to_personal",
+                    "Sun",
+                    "Moon",
+                    "conjunction",
+                    {"house": 5},
+                ),
             )
         ],
     )
@@ -226,7 +232,12 @@ def test_assemble_includes_enriched_turning_points():
     snapshot.v3_metrics = {"evidence_pack": _json_ready(asdict(evidence_pack))}
 
     assembler = PublicPredictionAssembler()
-    result = assembler.assemble(snapshot, {1: "love"}, reference_version="2.0.0", ruleset_version="2.0.0")
+    result = assembler.assemble(
+        snapshot,
+        {1: "love"},
+        reference_version="2.0.0",
+        ruleset_version="2.0.0",
+    )
 
     tp = result["turning_points"][0]
     assert tp["change_type"] == "emergence"
@@ -288,7 +299,12 @@ def test_assemble_includes_movement_indicators():
     snapshot.v3_metrics = {"evidence_pack": _json_ready(asdict(evidence_pack))}
 
     assembler = PublicPredictionAssembler()
-    result = assembler.assemble(snapshot, {1: "love"}, reference_version="2.0.0", ruleset_version="2.0.0")
+    result = assembler.assemble(
+        snapshot,
+        {1: "love"},
+        reference_version="2.0.0",
+        ruleset_version="2.0.0",
+    )
 
     tp = result["turning_points"][0]
     assert tp["movement"]["strength"] == 7.5

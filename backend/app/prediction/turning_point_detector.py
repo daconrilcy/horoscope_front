@@ -124,7 +124,6 @@ class TurningPointDetector:
         theme_signals: dict[str, Any] | None = None,
     ) -> list[V3TurningPoint]:
         """Detect turning points as persistent regime changes (Story 42.10)."""
-        from app.prediction.schemas import V3PrimaryDriver
 
         pivots = []
         if not time_blocks:
@@ -208,41 +207,23 @@ class TurningPointDetector:
     ) -> Any | None:
         from app.prediction.schemas import V3Movement
 
-        # Use the sample point exactly at the transition if available, or just before/after
-        # For simplicity, we can use the intensity from the blocks themselves as a proxy
-        # for previous/next composite if we assume they represent the average or boundary
-        # But AC1 says "à partir de l'état juste avant et juste après la bascule".
-        
-        # Let's find the total composite signal across all themes at prev.end_local and curr.start_local
-        # (they are the same point in time for adjacent blocks).
-        # Wait, we need the state "just before" and "just after".
-        # Let's use the time block boundary as the pivot and compare 15min before vs 15min after.
-        
-        pivot_time = curr.start_local
-        
         def get_total_composite(t: datetime) -> float:
             total = 0.0
             for signal in theme_signals.values():
-                # Finding nearest point in timeline
+                # Use the nearest sampled point in the signal timeline.
                 nearest_time = min(signal.timeline.keys(), key=lambda dt: abs(dt - t))
                 total += signal.timeline[nearest_time].composite
             return total
 
-        # Approximate "just before" and "just after" (e.g. middle of previous block and middle of current)
-        # Actually, let's use the blocks' intensities if they were derived from composites.
-        # But blocks' intensities are 0-20. Composite is raw.
-        
-        # Story 44.2 AC1: delta_composite = next - previous
-        # We'll use the boundary point and look at the trend.
-        
+        # Approximate "just before" and "just after" using the middle of the
+        # previous and current blocks, still on the raw composite scale.
         prev_comp = get_total_composite(prev.start_local + (prev.end_local - prev.start_local) / 2)
         next_comp = get_total_composite(curr.start_local + (curr.end_local - curr.start_local) / 2)
         delta = next_comp - prev_comp
-        
-        # Strength is scaled amplitude (0-10)
-        strength = min(10.0, abs(delta) / 2.0) # Heuristic scaling
-        
-        # Direction
+
+        # Strength is a bounded amplitude proxy on a 0-10 scale.
+        strength = min(10.0, abs(delta) / 2.0)
+
         if delta > 0.5:
             direction = "rising"
         elif delta < -0.5:
@@ -270,27 +251,27 @@ class TurningPointDetector:
         for code, signal in theme_signals.items():
             nearest_prev = min(signal.timeline.keys(), key=lambda dt: abs(dt - t_prev))
             nearest_curr = min(signal.timeline.keys(), key=lambda dt: abs(dt - t_curr))
-            
+
             val_prev = signal.timeline[nearest_prev].composite
             val_curr = signal.timeline[nearest_curr].composite
             delta_composite = val_curr - val_prev
-            
-            if abs(delta_composite) < 0.2: # AC4 threshold for micro-variations
+
+            if abs(delta_composite) < 0.2:  # AC4 threshold for micro-variations
                 continue
-                
+
             direction = "stable"
             if delta_composite > 0.2:
                 direction = "up"
             elif delta_composite < -0.2:
                 direction = "down"
-                
+
             deltas.append(
                 V3CategoryDelta(
                     code=code,
                     direction=direction,
-                    delta_score=delta_composite * 2.0, # Scaled to match score-like range
+                    delta_score=delta_composite * 2.0,  # Approximate score-like delta.
                     delta_intensity=abs(delta_composite),
-                    delta_rank=None, # Rank change requires more complex logic
+                    delta_rank=None,  # Rank change requires a wider comparison window.
                 )
             )
 
@@ -300,20 +281,18 @@ class TurningPointDetector:
 
     def _derive_change_type(self, prev: V3TimeBlock, curr: V3TimeBlock) -> str:
         intensity_jump = curr.intensity - prev.intensity
-        
+
         if intensity_jump >= 2.5:
             return "emergence"
         if intensity_jump <= -2.5:
             return "attenuation"
-        
+
         return "recomposition"
 
     def _select_primary_driver(self, drivers: list[AstroEvent]) -> Any:
-        from app.prediction.schemas import V3PrimaryDriver
-        
         if not drivers:
             return None
-            
+
         # Priority 1: Public exact ASPECTS
         aspect_event_types = {
             "aspect_exact_to_angle",
@@ -323,35 +302,35 @@ class TurningPointDetector:
         for d in drivers:
             if d.event_type in aspect_event_types:
                 return self._to_primary_driver(d)
-                
+
         # Priority 2: Public Ingresses (Moon)
         for d in drivers:
             if d.event_type == "moon_sign_ingress":
                 return self._to_primary_driver(d)
-                
+
         # Priority 3: Other ingresses
         for d in drivers:
             if "ingress" in d.event_type:
                 return self._to_primary_driver(d)
-                
+
         # Priority 4: Strongest event
         return self._to_primary_driver(drivers[0])
 
     def _to_primary_driver(self, event: AstroEvent) -> Any:
         from app.prediction.schemas import V3PrimaryDriver
-        
+
         # Filter metadata to keep only useful bits
         metadata = {}
         for key in ["house", "sign", "orb_exact"]:
             if key in event.metadata:
                 metadata[key] = event.metadata[key]
-                
+
         return V3PrimaryDriver(
             event_type=event.event_type,
             body=event.body,
             target=event.target,
             aspect=event.aspect,
-            metadata=metadata
+            metadata=metadata,
         )
 
     def _top3_codes(self, notes: dict[str, int]) -> frozenset[str]:

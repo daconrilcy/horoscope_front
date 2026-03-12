@@ -14,7 +14,7 @@ so that les valeurs projetées justifient réellement le passage d'un état à l
 
 1. Le backend calcule `previous_composite`, `next_composite` et `delta_composite` à partir de l'état juste avant et juste après la bascule.
 2. Le backend calcule `category_deltas` à partir des catégories dominantes avant/après, avec une règle explicite de tri et de limitation aux variations les plus utiles.
-3. Le backend classe le mouvement au minimum entre `upshift`, `downshift` et `redistribution`, de façon cohérente avec `change_type`.
+3. Le backend classe le mouvement au minimum entre `rising`, `falling` et `recomposition`, de façon cohérente avec `change_type`.
 4. Des seuils empêchent d'exposer des micro-variations non significatives comme des mouvements forts.
 5. Les journées calmes ou bascules faibles restent rendues sans contradiction entre `change_type`, `transition` et valeurs de mouvement.
 

@@ -554,7 +554,9 @@ class PublicTurningPointPolicy:
                     "primary_driver": self._serialize_primary_driver(tp.primary_driver),
                     # Story 44.1
                     "movement": self._serialize_movement(tp.movement),
-                    "category_deltas": [self._serialize_category_delta(cd) for cd in tp.category_deltas],
+                    "category_deltas": [
+                        self._serialize_category_delta(cd) for cd in tp.category_deltas
+                    ],
                 }
                 for tp in evidence.turning_points
             ]
@@ -813,8 +815,7 @@ class PublicSummaryPolicy:
             )
             top_categories = [theme.code for theme in sorted_themes[:3]]
             bottom_categories = [
-                theme.code
-                for theme in sorted(sorted_themes, key=lambda item: item.score_20)[:2]
+                theme.code for theme in sorted(sorted_themes, key=lambda item: item.score_20)[:2]
             ]
             return top_categories, bottom_categories
 

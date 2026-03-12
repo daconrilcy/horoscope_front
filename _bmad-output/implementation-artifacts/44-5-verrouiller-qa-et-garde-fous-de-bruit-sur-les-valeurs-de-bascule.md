@@ -12,9 +12,9 @@ so that les moments clés enrichis ne sur-vendent pas des micro-variations et re
 
 ## Acceptance Criteria
 
-1. Les tests couvrent au minimum un cas d'augmentation nette, un cas d'atténuation, un cas de redistribution et un cas de mouvement sous seuil non affiché.
+1. Les tests couvrent au minimum un cas d'augmentation nette, un cas d'atténuation, un cas de recomposition et un cas de mouvement sous seuil non affiché.
 2. Les suites backend vérifient les calculs de `movement` et `category_deltas` sur des bascules représentatives.
-3. Les suites frontend vérifient les rendus FR et EN avec et sans chiffres détaillés.
+3. Les suites frontend vérifient les rendus FR et EN du mouvement qualitatif et des variations locales.
 4. Les régressions connues restent couvertes: faux pivot de minuit, transition `avant -> après` incohérente, disparition complète des moments clés valides.
 5. Les garde-fous empêchent l'affichage de chiffres bruts instables, de décimales inutiles et de messages contradictoires entre `Implication` et `Mouvement`.
 
@@ -27,7 +27,7 @@ so that les moments clés enrichis ne sur-vendent pas des micro-variations et re
 
 - [x] Task 2: Verrouiller le rendu frontend multilingue (AC: 3, 5)
   - [x] Vérifier FR et EN avec rendu qualitatif
-  - [x] Vérifier FR et EN avec valeurs détaillées si elles sont affichées
+  - [x] Vérifier FR et EN sans exposition de chiffres bruts dans la carte V1
   - [x] Vérifier la stabilité du formatage des nombres et l'absence de décimales bruyantes
 
 - [x] Task 3: Couvrir les régressions et incohérences produit (AC: 4, 5)

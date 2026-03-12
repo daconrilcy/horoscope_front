@@ -2062,7 +2062,7 @@ So that les valeurs projetées justifient réellement le passage d'un état à l
 **Acceptance Criteria:**
 - Le backend calcule `previous_composite`, `next_composite` et `delta_composite` à partir de l'état juste avant et juste après la bascule.
 - Le backend calcule `category_deltas` à partir des catégories dominantes avant/après, avec une règle explicite de tri et de limitation aux variations les plus utiles.
-- Le backend classe le mouvement au minimum entre `upshift`, `downshift` et `redistribution`, de façon cohérente avec `change_type`.
+- Le backend classe le mouvement au minimum entre `rising`, `falling` et `recomposition`, de façon cohérente avec `change_type`.
 - Des seuils empêchent d'exposer des micro-variations non significatives comme des mouvements forts.
 - Les journées calmes ou bascules faibles restent rendues sans contradiction entre `change_type`, `transition` et valeurs de mouvement.
 
@@ -2075,10 +2075,10 @@ I want traduire les variations de mouvement via i18n à partir des valeurs struc
 So that les moments clés restent compréhensibles en plusieurs langues sans figer des phrases quantitatives dans le backend.
 
 **Acceptance Criteria:**
-- Le frontend introduit des clés i18n dédiées pour `direction`, `strength`, `delta` et les formulations de montée, recul, stabilité ou redistribution.
-- Le wording sait produire une version qualitative sobre (`léger`, `net`, `marqué`) sans exposer obligatoirement les chiffres bruts.
+- Le frontend introduit des clés i18n dédiées pour `direction`, `strength`, `delta` et les formulations de montée, recul, stabilité ou recomposition.
+- Le wording sait produire une version qualitative sobre (`léger`, `net`, `marqué`) sans exposer de chiffres bruts dans la V1 des cartes.
 - Les helpers i18n gèrent FR et EN à partir du même payload structuré.
-- Les valeurs numériques éventuelles sont formatées côté frontend selon la locale et jamais concaténées en dur.
+- Si des valeurs numériques sont exposées plus tard, elles devront être formatées côté frontend selon la locale et jamais concaténées en dur.
 - Les règles de formulation évitent les contradictions du type “ça change” alors que les catégories visibles restent identiques faute de contexte.
 
 [Source: user request 2026-03-12 — “le wording doit etre gerer avec i18n” ; frontend/src/utils/predictionI18n.ts ; frontend/src/i18n/predictions.ts]
@@ -2105,9 +2105,9 @@ I want vérifier que les valeurs de mouvement restent vraies, lisibles et non br
 So that les moments clés enrichis ne sur-vendent pas des micro-variations et restent cohérents en plusieurs langues.
 
 **Acceptance Criteria:**
-- Les tests couvrent au minimum un cas d'augmentation nette, un cas d'atténuation, un cas de redistribution et un cas de mouvement sous seuil non affiché.
+- Les tests couvrent au minimum un cas d'augmentation nette, un cas d'atténuation, un cas de recomposition et un cas de mouvement sous seuil non affiché.
 - Les suites backend vérifient les calculs de `movement` et `category_deltas` sur des bascules représentatives.
-- Les suites frontend vérifient les rendus FR et EN avec et sans chiffres détaillés.
+- Les suites frontend vérifient les rendus FR et EN du mouvement qualitatif et des variations locales.
 - Les régressions connues restent couvertes: faux pivot de minuit, transition `avant -> après` incohérente, disparition complète des moments clés valides.
 - Les garde-fous empêchent l'affichage de chiffres bruts instables, de décimales inutiles et de messages contradictoires entre `Implication` et `Mouvement`.
 

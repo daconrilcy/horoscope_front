@@ -390,10 +390,10 @@ development_status:
   43-4-verrouiller-qa-et-coherence-multilingue-des-moments-cles: done
   epic-43-retrospective: optional
 
-  epic-44: in-progress
-  44-1-etendre-le-contrat-public-des-moments-cles-avec-des-indicateurs-de-mouvement: in-progress
-  44-2-calculer-et-projeter-les-deltas-de-mouvement-des-bascules: in-progress
-  44-3-introduire-un-wording-i18n-des-variations-et-de-leur-intensite: in-progress
-  44-4-refondre-le-rendu-ui-des-moments-cles-avec-mouvement-et-deltas: in-progress
-  44-5-verrouiller-qa-et-garde-fous-de-bruit-sur-les-valeurs-de-bascule: in-progress
+  epic-44: done
+  44-1-etendre-le-contrat-public-des-moments-cles-avec-des-indicateurs-de-mouvement: done
+  44-2-calculer-et-projeter-les-deltas-de-mouvement-des-bascules: done
+  44-3-introduire-un-wording-i18n-des-variations-et-de-leur-intensite: done
+  44-4-refondre-le-rendu-ui-des-moments-cles-avec-mouvement-et-deltas: done
+  44-5-verrouiller-qa-et-garde-fous-de-bruit-sur-les-valeurs-de-bascule: done
   epic-44-retrospective: optional
