@@ -85,12 +85,14 @@ export function TodayPage() {
     : []
 
   const keyMoments = prediction
-    ? buildDailyKeyMoments(
-        prediction.meta.date_local,
-        prediction.decision_windows,
-        prediction.timeline,
-        prediction.categories,
-      )
+    ? (prediction.turning_points?.length > 0 
+        ? prediction.turning_points 
+        : buildDailyKeyMoments(
+            prediction.meta.date_local,
+            prediction.decision_windows,
+            prediction.timeline,
+            prediction.categories,
+          ))
     : []
 
   return (

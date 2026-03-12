@@ -1,18 +1,19 @@
 import React from "react";
 
 import type { Lang } from "../../i18n/predictions";
-import type { DailyKeyMoment } from "../../utils/dailyAstrology";
+import type { DailyPredictionTurningPoint } from "../../types/dailyPrediction";
 import { getLocale } from "../../utils/locale";
-import { getCategoryMeta, getPredictionMessage } from "../../utils/predictionI18n";
+import { 
+  getCategoryMeta, 
+  getPredictionMessage, 
+  humanizeTurningPointSemantic
+} from "../../utils/predictionI18n";
+import { TURNING_POINT_LABELS, getLabel } from "../../i18n/predictions";
 
 interface Props {
-  moments: DailyKeyMoment[];
+  moments: DailyPredictionTurningPoint[];
   lang: Lang;
   onTurningPointClick?: (severity: number) => void;
-}
-
-function formatCategoryList(categories: string[], lang: Lang): string {
-  return categories.map((category) => getCategoryMeta(category, lang).label).join(", ");
 }
 
 export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPointClick }) => {
@@ -36,98 +37,143 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
     return `${format(start)} – ${format(end)}`;
   };
 
-  const getSummary = (moment: DailyKeyMoment) => {
-    const formattedTime = new Date(moment.occurredAtLocal).toLocaleTimeString(locale, {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-    if (moment.previousCategories.length === 0 && moment.nextCategories.length > 0) {
-      return `${
-        lang === "fr" ? "À" : "At"
-      } ${formattedTime}, ${lang === "fr" ? "des aspects majeurs émergent" : "major themes emerge"} : ${formatCategoryList(moment.nextCategories, lang)}.`;
-    }
-
-    if (moment.previousCategories.length > 0 && moment.nextCategories.length === 0) {
-      return `${
-        lang === "fr" ? "À" : "At"
-      } ${formattedTime}, ${lang === "fr" ? "les aspects majeurs s'estompent" : "major themes fade"} : ${formatCategoryList(moment.previousCategories, lang)}.`;
-    }
-
-    return `${
-      lang === "fr" ? "À" : "At"
-    } ${formattedTime}, ${
-      lang === "fr" ? "les aspects majeurs changent" : "major themes shift"
-    } : ${formatCategoryList(moment.nextCategories, lang)}.`;
-  };
-
   return (
     <div style={{ marginBottom: "2rem" }}>
       <h3 style={{ marginBottom: "1rem", color: "var(--text-1)" }}>
         {getPredictionMessage("turning_points", lang)}
       </h3>
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-        {moments.map((moment, index) => (
-          <div
-            key={`${moment.occurredAtLocal}-${index}`}
-            className="panel"
-            onClick={() => onTurningPointClick?.(1)}
-            style={{
-              padding: "1rem",
-              border: "1px solid var(--primary)",
-              position: "relative",
-              overflow: "hidden",
-              cursor: onTurningPointClick ? "pointer" : "default",
-            }}
-          >
+        {moments.map((moment, index) => {
+          const semantic = humanizeTurningPointSemantic(moment, lang);
+          const hasEnrichment = !!moment.change_type;
+          
+          return (
             <div
+              key={`${moment.occurred_at_local}-${index}`}
+              className="panel"
+              onClick={() => onTurningPointClick?.(Number(moment.severity) || 0.5)}
               style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "4px",
-                height: "100%",
-                backgroundColor: "var(--primary)",
-              }}
-            />
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "baseline",
-                marginBottom: "0.5rem",
+                padding: "1.25rem",
+                border: "1px solid var(--primary)",
+                position: "relative",
+                overflow: "hidden",
+                cursor: onTurningPointClick ? "pointer" : "default",
+                backgroundColor: "rgba(var(--primary-rgb), 0.03)"
               }}
             >
-              <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--primary)" }}>
-                {getWindowLabel(moment.occurredAtLocal)}
-              </span>
-              <span style={{ fontSize: "0.8rem", color: "var(--text-3)", textTransform: "uppercase" }}>
-                {getPredictionMessage("aspect_shift_label", lang)}
-              </span>
-            </div>
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "4px",
+                  height: "100%",
+                  backgroundColor: "var(--primary)",
+                }}
+              />
 
-            <p style={{ margin: "0 0 0.75rem 0", fontSize: "1rem", lineHeight: "1.5", color: "var(--text-1)" }}>
-              {getSummary(moment)}
-            </p>
-
-            {moment.impactedCategories.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "0.25rem", alignItems: "center" }}>
-                <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold" }}>
-                  {getPredictionMessage("impacts_label", lang)}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                  marginBottom: "1rem",
+                }}
+              >
+                <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--primary)" }}>
+                  {getWindowLabel(moment.occurred_at_local)}
                 </span>
-                {moment.impactedCategories.map((category) => {
-                  const meta = getCategoryMeta(category, lang);
-                  return (
-                    <span key={category} title={meta.label} style={{ fontSize: "0.8rem" }}>
-                      {meta.icon} {meta.label}
-                    </span>
-                  );
-                })}
+                <span style={{ fontSize: "0.8rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "600" }}>
+                  {getPredictionMessage("aspect_shift_label", lang)}
+                </span>
               </div>
-            )}
-          </div>
-        ))}
+
+              {hasEnrichment ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  {/* Section 1: Pourquoi ? */}
+                  <div>
+                    <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold", display: "block", marginBottom: "0.2rem" }}>
+                      {getLabel(TURNING_POINT_LABELS, "why", lang)}
+                    </span>
+                    <span style={{ fontSize: "1rem", color: "var(--text-1)", fontWeight: "500" }}>
+                      {semantic.cause}
+                    </span>
+                  </div>
+
+                  {/* Section 2: Ce qui change */}
+                  <div>
+                    <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold", display: "block", marginBottom: "0.4rem" }}>
+                      {getLabel(TURNING_POINT_LABELS, "before_after", lang)}
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", gap: "0.2rem" }}>
+                        {(moment.previous_categories || []).length > 0 ? (
+                          moment.previous_categories?.slice(0, 2).map(c => (
+                            <span key={c} title={getCategoryMeta(c, lang).label}>{getCategoryMeta(c, lang).icon}</span>
+                          ))
+                        ) : (
+                          <span style={{ fontSize: "0.8rem", color: "var(--text-2)" }}>{getLabel(TURNING_POINT_LABELS, "none", lang)}</span>
+                        )}
+                      </div>
+                      <span style={{ fontSize: "0.8rem", color: "var(--text-3)" }}>→</span>
+                      <div style={{ display: "flex", gap: "0.2rem" }}>
+                        {(moment.next_categories || []).length > 0 ? (
+                          moment.next_categories?.slice(0, 2).map(c => (
+                            <span key={c} title={getCategoryMeta(c, lang).label}>{getCategoryMeta(c, lang).icon}</span>
+                          ))
+                        ) : (
+                          <span style={{ fontSize: "0.8rem", color: "var(--text-2)" }}>{getLabel(TURNING_POINT_LABELS, "none", lang)}</span>
+                        )}
+                      </div>
+                      <span style={{ fontSize: "0.9rem", color: "var(--text-1)", marginLeft: "0.25rem" }}>
+                        {semantic.title}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Section 3: Implication */}
+                  <div>
+                    <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold", display: "block", marginBottom: "0.2rem" }}>
+                      {getLabel(TURNING_POINT_LABELS, "implication", lang)}
+                    </span>
+                    <p style={{ margin: 0, fontSize: "0.95rem", lineHeight: "1.4", color: "var(--text-2)" }}>
+                      {semantic.transition}.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                /* Fallback Legacy */
+                <>
+                  <p style={{ margin: "0 0 0.75rem 0", fontSize: "1rem", lineHeight: "1.5", color: "var(--text-1)" }}>
+                    {moment.summary || getPredictionMessage("aspect_shift_label", lang)}
+                  </p>
+
+                  {(moment.drivers || []).length > 0 && (
+                    <div style={{ marginBottom: "0.5rem", fontSize: "0.85rem", color: "var(--text-2)" }}>
+                      {moment.drivers[0].label || moment.drivers[0].event_type}
+                    </div>
+                  )}
+
+                  {(moment.next_categories || []).length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", alignItems: "center" }}>
+                      <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold" }}>
+                        {getPredictionMessage("impacts_label", lang)}
+                      </span>
+                      {moment.next_categories?.map((category) => {
+                        const meta = getCategoryMeta(category, lang);
+                        return (
+                          <span key={category} title={meta.label} style={{ fontSize: "0.8rem" }}>
+                            {meta.icon} {meta.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
