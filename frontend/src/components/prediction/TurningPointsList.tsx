@@ -9,6 +9,8 @@ import {
   humanizePredictionDriverLabel,
   humanizeTurningPointSemantic,
   humanizeTurningPointSummary,
+  humanizeMovement,
+  humanizeCategoryDelta,
 } from "../../utils/predictionI18n";
 import { TURNING_POINT_LABELS, getLabel } from "../../i18n/predictions";
 
@@ -149,7 +151,29 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
                     </p>
                   </div>
 
-                  {/* Section 3: Implication */}
+                  {/* Section 3: Mouvement (Story 44.4) */}
+                  {moment.movement && (
+                    <div>
+                      <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold", display: "block", marginBottom: "0.2rem" }}>
+                        {getLabel(TURNING_POINT_LABELS, "global_movement", lang)}
+                      </span>
+                      <p style={{ margin: 0, fontSize: "0.95rem", color: "var(--text-1)", fontWeight: "500" }}>
+                        {humanizeMovement(moment.movement, lang)}
+                      </p>
+                      
+                      {moment.category_deltas && moment.category_deltas.length > 0 && (
+                        <div style={{ marginTop: "0.4rem", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                          {moment.category_deltas.slice(0, 2).map((delta, i) => (
+                            <span key={`${delta.code}-${i}`} style={{ fontSize: "0.85rem", color: "var(--text-2)" }}>
+                              {humanizeCategoryDelta(delta, lang)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Section 4: Implication */}
                   <div>
                     <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold", display: "block", marginBottom: "0.2rem" }}>
                       {getLabel(TURNING_POINT_LABELS, "implication", lang)}

@@ -57,6 +57,26 @@ describe("TurningPointsList Enriched", () => {
     expect(screen.getByText(/De travail vers travail et amour/i)).toBeInTheDocument();
   });
 
+  it("affiche la section Mouvement Global et Variations Locales si présentes", () => {
+    const movementMoment = {
+      ...mockEnrichedMoments[0],
+      movement: { direction: "rising", strength: 8.0, delta_composite: 4.0 },
+      category_deltas: [
+        { code: "love", direction: "up", delta_intensity: 2.5 }
+      ]
+    };
+
+    render(
+      <ThemeProvider>
+        <TurningPointsList moments={[movementMoment] as any} lang="fr" />
+      </ThemeProvider>
+    );
+
+    expect(screen.getAllByText(/Mouvement global/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Mouvement global en hausse \(marqué\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/❤️ progression sur amour & relations/i)).toBeInTheDocument();
+  });
+
   it("gère correctement les trois types de changement (FR)", () => {
     render(
       <ThemeProvider>
