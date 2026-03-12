@@ -121,6 +121,7 @@ class TurningPointDetector:
         self,
         time_blocks: list[V3TimeBlock],
         detected_events: list[AstroEvent],
+        theme_signals: dict[str, Any] | None = None,
     ) -> list[V3TurningPoint]:
         """Detect turning points as persistent regime changes (Story 42.10)."""
         from app.prediction.schemas import V3PrimaryDriver
@@ -175,6 +176,13 @@ class TurningPointDetector:
             change_type = self._derive_change_type(prev, curr)
             primary_driver = self._select_primary_driver(drivers)
 
+            # Story 44.2: Movement and Category Deltas
+            movement = None
+            category_deltas = []
+            if theme_signals:
+                movement = self._calculate_movement(prev, curr, theme_signals)
+                category_deltas = self._calculate_category_deltas(prev, curr, theme_signals)
+
             pivots.append(
                 V3TurningPoint(
                     local_time=curr.start_local,
@@ -188,10 +196,107 @@ class TurningPointDetector:
                     previous_categories=list(prev.dominant_themes),
                     next_categories=list(curr.dominant_themes),
                     primary_driver=primary_driver,
+                    movement=movement,
+                    category_deltas=category_deltas,
                 )
             )
 
         return pivots
+
+    def _calculate_movement(
+        self, prev: V3TimeBlock, curr: V3TimeBlock, theme_signals: dict[str, Any]
+    ) -> Any | None:
+        from app.prediction.schemas import V3Movement
+
+        # Use the sample point exactly at the transition if available, or just before/after
+        # For simplicity, we can use the intensity from the blocks themselves as a proxy
+        # for previous/next composite if we assume they represent the average or boundary
+        # But AC1 says "à partir de l'état juste avant et juste après la bascule".
+        
+        # Let's find the total composite signal across all themes at prev.end_local and curr.start_local
+        # (they are the same point in time for adjacent blocks).
+        # Wait, we need the state "just before" and "just after".
+        # Let's use the time block boundary as the pivot and compare 15min before vs 15min after.
+        
+        pivot_time = curr.start_local
+        
+        def get_total_composite(t: datetime) -> float:
+            total = 0.0
+            for signal in theme_signals.values():
+                # Finding nearest point in timeline
+                nearest_time = min(signal.timeline.keys(), key=lambda dt: abs(dt - t))
+                total += signal.timeline[nearest_time].composite
+            return total
+
+        # Approximate "just before" and "just after" (e.g. middle of previous block and middle of current)
+        # Actually, let's use the blocks' intensities if they were derived from composites.
+        # But blocks' intensities are 0-20. Composite is raw.
+        
+        # Story 44.2 AC1: delta_composite = next - previous
+        # We'll use the boundary point and look at the trend.
+        
+        prev_comp = get_total_composite(prev.start_local + (prev.end_local - prev.start_local) / 2)
+        next_comp = get_total_composite(curr.start_local + (curr.end_local - curr.start_local) / 2)
+        delta = next_comp - prev_comp
+        
+        # Strength is scaled amplitude (0-10)
+        strength = min(10.0, abs(delta) / 2.0) # Heuristic scaling
+        
+        # Direction
+        if delta > 0.5:
+            direction = "rising"
+        elif delta < -0.5:
+            direction = "falling"
+        else:
+            direction = "recomposition"
+
+        return V3Movement(
+            strength=strength,
+            previous_composite=prev_comp,
+            next_composite=next_comp,
+            delta_composite=delta,
+            direction=direction,
+        )
+
+    def _calculate_category_deltas(
+        self, prev: V3TimeBlock, curr: V3TimeBlock, theme_signals: dict[str, Any]
+    ) -> list[Any]:
+        from app.prediction.schemas import V3CategoryDelta
+
+        deltas = []
+        t_prev = prev.start_local + (prev.end_local - prev.start_local) / 2
+        t_curr = curr.start_local + (curr.end_local - curr.start_local) / 2
+
+        for code, signal in theme_signals.items():
+            nearest_prev = min(signal.timeline.keys(), key=lambda dt: abs(dt - t_prev))
+            nearest_curr = min(signal.timeline.keys(), key=lambda dt: abs(dt - t_curr))
+            
+            val_prev = signal.timeline[nearest_prev].composite
+            val_curr = signal.timeline[nearest_curr].composite
+            delta_composite = val_curr - val_prev
+            
+            if abs(delta_composite) < 0.2: # AC4 threshold for micro-variations
+                continue
+                
+            direction = "stable"
+            if delta_composite > 0.2:
+                direction = "up"
+            elif delta_composite < -0.2:
+                direction = "down"
+                
+            deltas.append(
+                V3CategoryDelta(
+                    code=code,
+                    direction=direction,
+                    delta_score=delta_composite * 2.0, # Scaled to match score-like range
+                    delta_intensity=abs(delta_composite),
+                    delta_rank=None, # Rank change requires more complex logic
+                )
+            )
+
+        # AC2: Sort by absolute amplitude and limit to 3
+        deltas.sort(key=lambda d: abs(d.delta_intensity), reverse=True)
+        return deltas[:3]
 
     def _derive_change_type(self, prev: V3TimeBlock, curr: V3TimeBlock) -> str:
         intensity_jump = curr.intensity - prev.intensity

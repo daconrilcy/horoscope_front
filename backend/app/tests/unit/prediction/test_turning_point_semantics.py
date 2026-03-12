@@ -92,3 +92,55 @@ def test_primary_driver_selection_priority():
     primary = detector._select_primary_driver(drivers)
     assert primary.event_type == "aspect_exact_to_personal"
 
+
+def test_detect_v3_movement_indicators():
+    from app.prediction.schemas import V3SignalLayer, V3ThemeSignal
+
+    detector = TurningPointDetector()
+    start = datetime(2026, 3, 12, 10, 0, tzinfo=UTC)
+
+    # prev: low composite, curr: high composite
+    blocks = [
+        V3TimeBlock(0, start, start + timedelta(hours=2), "stable", 2.0, 0.8, ["work"]),
+        V3TimeBlock(1, start + timedelta(hours=2), start + timedelta(hours=4), "rising", 10.0, 0.8, ["love"]),
+    ]
+
+    # Mock signals
+    t1 = start + timedelta(hours=1)  # middle of block 0
+    t2 = start + timedelta(hours=3)  # middle of block 1
+
+    theme_signals = {
+        "love": V3ThemeSignal(
+            theme_code="love",
+            timeline={
+                t1: V3SignalLayer(0, 0, 0, 0, 2.0),
+                t2: V3SignalLayer(0, 0, 0, 0, 10.0),
+            },
+        ),
+        "work": V3ThemeSignal(
+            theme_code="work",
+            timeline={
+                t1: V3SignalLayer(0, 0, 0, 0, 5.0),
+                t2: V3SignalLayer(0, 0, 0, 0, 5.1),
+            },
+        ),
+    }
+
+    pivots = detector.detect_v3(blocks, [], theme_signals)
+
+    assert len(pivots) == 1
+    tp = pivots[0]
+    assert tp.movement is not None
+    assert tp.movement.direction == "rising"
+    assert tp.movement.strength > 0
+    assert tp.movement.delta_composite == (10.0 + 5.1) - (2.0 + 5.0)
+
+    # Category deltas
+    love_delta = next(d for d in tp.category_deltas if d.code == "love")
+    assert love_delta.direction == "up"
+    assert love_delta.delta_intensity == 8.0
+
+    work_delta = next((d for d in tp.category_deltas if d.code == "work"), None)
+    # Work delta is 0.1, which is < 0.2 threshold in my implementation
+    assert work_delta is None
+

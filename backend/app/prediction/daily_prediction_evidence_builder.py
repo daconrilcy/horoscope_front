@@ -73,6 +73,9 @@ class DailyPredictionEvidenceBuilder:
                 previous_categories=tp.previous_categories,
                 next_categories=tp.next_categories,
                 primary_driver=tp.primary_driver,
+                # Story 44.1/44.2
+                movement=tp.movement,
+                category_deltas=tp.category_deltas,
             )
             for tp in v3_output.turning_points
         ]

@@ -431,7 +431,7 @@ class EngineOrchestrator:
             daily_metrics[theme_code] = dataclasses.replace(metrics, score_20=calibrated_score)
 
         time_blocks = self._regime_segmenter.segment(theme_signals)
-        turning_points = self._turning_point_detector.detect_v3(time_blocks, detected_events)
+        turning_points = self._turning_point_detector.detect_v3(time_blocks, detected_events, theme_signals)
         
         # AC1/AC2 Story 42.11: V3 Decision Windows
         decision_windows = self._decision_window_builder.build_v3(
