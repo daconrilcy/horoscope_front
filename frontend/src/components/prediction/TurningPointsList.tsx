@@ -123,7 +123,7 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
                       <div style={{ display: "flex", gap: "0.2rem" }}>
                         {(moment.previous_categories || []).length > 0 ? (
-                          moment.previous_categories?.slice(0, 2).map(c => (
+                          moment.previous_categories?.slice(0, 3).map(c => (
                             <span key={c} title={getCategoryMeta(c, lang).label}>{getCategoryMeta(c, lang).icon}</span>
                           ))
                         ) : (
@@ -133,7 +133,7 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
                       <span style={{ fontSize: "0.8rem", color: "var(--text-3)" }}>→</span>
                       <div style={{ display: "flex", gap: "0.2rem" }}>
                         {(moment.next_categories || []).length > 0 ? (
-                          moment.next_categories?.slice(0, 2).map(c => (
+                          moment.next_categories?.slice(0, 3).map(c => (
                             <span key={c} title={getCategoryMeta(c, lang).label}>{getCategoryMeta(c, lang).icon}</span>
                           ))
                         ) : (

@@ -256,8 +256,8 @@ export function humanizeTurningPointSemantic(
     : getLabel(labels, "no_driver", lang);
 
   // 2. Transition
-  const prev = tp.previous_categories?.slice(0, 2) || [];
-  const next = tp.next_categories?.slice(0, 2) || [];
+  const prev = tp.previous_categories?.slice(0, 3) || [];
+  const next = tp.next_categories?.slice(0, 3) || [];
   
   const formatCats = (cats: string[]) => {
     if (cats.length === 0) return getLabel(labels, "none", lang);
@@ -265,7 +265,7 @@ export function humanizeTurningPointSemantic(
   };
 
   const transitionLabel = `${getLabel(labels, "from", lang)} ${formatCats(prev)} ${getLabel(labels, "to", lang)} ${formatCats(next)}`;
-  const impacted = (tp.impacted_categories?.length ? tp.impacted_categories : next.length > 0 ? next : prev).slice(0, 2);
+  const impacted = (tp.impacted_categories?.length ? tp.impacted_categories : next.length > 0 ? next : prev).slice(0, 3);
   const firstImpacted = impacted[0] ? getCategoryLabel(impacted[0], lang).toLowerCase() : null;
   const implicationBase = getLabel(
     labels,

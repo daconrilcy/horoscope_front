@@ -370,6 +370,58 @@ const predictionNeutralTimelineWithLateWindows = {
   ],
 };
 
+const predictionWithInferredEmergence = {
+  meta: {
+    date_local: "2026-03-11",
+    timezone: "Europe/Paris",
+    computed_at: "2026-03-11T06:00:00Z",
+    reference_version: "2.0.0",
+    ruleset_version: "2.0.0",
+    was_reused: false,
+    house_system_effective: "placidus",
+  },
+  summary: {
+    overall_tone: "neutral",
+    overall_summary: "Journée équilibrée avec une transition tardive.",
+    top_categories: ["health", "money"],
+    bottom_categories: ["energy"],
+    best_window: null,
+    main_turning_point: null,
+  },
+  categories: [
+    { code: "health", note_20: 14, raw_score: 0.4, power: 0.8, volatility: 0.2, rank: 1, summary: null },
+    { code: "money", note_20: 13, raw_score: 0.3, power: 0.6, volatility: 0.2, rank: 2, summary: null },
+    { code: "work", note_20: 12, raw_score: 0.2, power: 0.4, volatility: 0.2, rank: 3, summary: null },
+  ],
+  timeline: [
+    {
+      start_local: "2026-03-11T00:00:00+01:00",
+      end_local: "2026-03-11T20:45:00+01:00",
+      tone_code: "neutral",
+      dominant_categories: ["health", "money"],
+      summary: null,
+      turning_point: false,
+    },
+    {
+      start_local: "2026-03-11T20:45:00+01:00",
+      end_local: "2026-03-11T23:30:00+01:00",
+      tone_code: "neutral",
+      dominant_categories: ["health", "money"],
+      summary: null,
+      turning_point: true,
+    },
+  ],
+  turning_points: [
+    {
+      occurred_at_local: "2026-03-11T20:45:00+01:00",
+      severity: 0.7,
+      summary: null,
+      drivers: [],
+      impacted_categories: ["health", "money", "work"],
+    },
+  ],
+};
+
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -662,6 +714,25 @@ describe("TodayPage", () => {
     expect(screen.queryByText("aspect_enter_orb")).not.toBeInTheDocument();
     expect(screen.queryByText("high_priority_event")).not.toBeInTheDocument();
     expect(screen.queryByText("Entrée en orbe d'aspect")).not.toBeInTheDocument();
+  });
+
+  it("n'affiche pas une transition incohérente quand avant et après sont identiques", async () => {
+    installFetchMock({
+      prediction: jsonResponse(predictionWithInferredEmergence),
+    });
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Journée équilibrée avec une transition tardive/i)).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByText(
+        /^De santé & hygiène de vie et argent & ressources vers santé & hygiène de vie et argent & ressources$/i,
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/De santé & hygiène de vie et argent & ressources vers santé & hygiène de vie et argent & ressources et travail/i)).toBeInTheDocument();
   });
 
   it("ne rend plus la chronologie du jour devenue redondante", async () => {

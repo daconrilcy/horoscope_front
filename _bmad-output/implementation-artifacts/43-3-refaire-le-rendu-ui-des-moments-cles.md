@@ -63,6 +63,8 @@ so that je comprenne la cause astrologique, le passage d’un état à un autre,
 - Updated `TodayPage` to normalize backend `turning_points` with timeline-derived `previous/next/impacted` categories when older payloads are incomplete.
 - Restored visible `Impacts` chips in enriched cards and kept a readable legacy fallback without exposing technical driver codes.
 - Added explicit textual `transition` rendering alongside icons so the state change remains understandable and testable.
+- Corrected a UI incoherence where truncated `before/after` categories could display a false `same -> same` transition despite a third impacted category being added.
+- Expanded the transition rendering to preserve up to three categories in text and icons for clearer bascule semantics.
 - Verified UI consistency on enriched, legacy, and fallback-generated key moments.
 
 ### File List
@@ -70,4 +72,5 @@ so that je comprenne la cause astrologique, le passage d’un état à un autre,
 - `frontend/src/components/prediction/TurningPointsList.tsx`
 - `frontend/src/pages/TodayPage.tsx`
 - `frontend/src/types/dailyPrediction.ts`
+- `frontend/src/utils/predictionI18n.ts`
 - `frontend/src/tests/TurningPointsEnriched.test.tsx`

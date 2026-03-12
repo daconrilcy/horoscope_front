@@ -32,6 +32,42 @@ function categoriesEqual(left: string[], right: string[]): boolean {
   return left.length === right.length && left.every((category, index) => category === right[index])
 }
 
+function isSubset(subset: string[], superset: string[]): boolean {
+  return subset.every((category) => superset.includes(category))
+}
+
+function deriveChangeType(previousCategories: string[], nextCategories: string[]): string | undefined {
+  if (previousCategories.length === 0 && nextCategories.length > 0) {
+    return 'emergence'
+  }
+
+  if (previousCategories.length > 0 && nextCategories.length === 0) {
+    return 'attenuation'
+  }
+
+  if (categoriesEqual(previousCategories, nextCategories)) {
+    return undefined
+  }
+
+  if (
+    previousCategories.length > 0 &&
+    nextCategories.length > previousCategories.length &&
+    isSubset(previousCategories, nextCategories)
+  ) {
+    return 'emergence'
+  }
+
+  if (
+    nextCategories.length > 0 &&
+    previousCategories.length > nextCategories.length &&
+    isSubset(nextCategories, previousCategories)
+  ) {
+    return 'attenuation'
+  }
+
+  return 'recomposition'
+}
+
 export function TodayPage() {
   const navigate = useNavigate()
   const accessToken = useAccessTokenSnapshot()
@@ -135,24 +171,23 @@ export function TodayPage() {
               ? nextCategories
               : previousCategories
 
-        const changeType =
-          moment.change_type ||
-          (
-            previousCategories.length === 0 && nextCategories.length > 0
-              ? 'emergence'
-              : previousCategories.length > 0 && nextCategories.length === 0
-                ? 'attenuation'
-                : !categoriesEqual(previousCategories, nextCategories)
-                  ? 'recomposition'
-                  : undefined
-          )
+        const inferredNextCategories =
+          !moment.next_categories?.length &&
+          categoriesEqual(previousCategories, nextCategories) &&
+          impactedCategories.length > 0 &&
+          !categoriesEqual(previousCategories, impactedCategories)
+            ? impactedCategories
+            : nextCategories
+
+        const resolvedChangeType = moment.change_type || deriveChangeType(previousCategories, inferredNextCategories)
+        const hasResolvedTransition = !!resolvedChangeType
 
         return {
           ...moment,
           impacted_categories: impactedCategories,
-          previous_categories: previousCategories,
-          next_categories: nextCategories,
-          change_type: changeType,
+          previous_categories: hasResolvedTransition ? previousCategories : moment.previous_categories,
+          next_categories: hasResolvedTransition ? inferredNextCategories : moment.next_categories,
+          change_type: resolvedChangeType,
         }
       })
     : []
@@ -171,12 +206,7 @@ export function TodayPage() {
         impacted_categories: moment.impactedCategories,
         previous_categories: moment.previousCategories,
         next_categories: moment.nextCategories,
-        change_type:
-          moment.previousCategories.length === 0 && moment.nextCategories.length > 0
-            ? 'emergence'
-            : moment.previousCategories.length > 0 && moment.nextCategories.length === 0
-              ? 'attenuation'
-              : 'recomposition',
+        change_type: deriveChangeType(moment.previousCategories, moment.nextCategories) || 'recomposition',
         primary_driver: null,
       }))
     : []

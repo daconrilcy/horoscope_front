@@ -56,6 +56,7 @@ so that le produit ne surinterprète pas les bascules et conserve un wording coh
 - Validated that midnight pivots remain excluded (backend side logic verified in 43.1).
 - Extended `TodayPage` regression coverage to keep impacts labels, humanized summaries, and non-technical fallbacks stable in FR and EN.
 - Revalidated frontend targeted suites after post-implementation fixes on fallback normalization and enriched card rendering.
+- Added a dedicated regression case to prevent misleading `before == after` wording when the actual movement is an emergence via a third category.
 
 ### File List
 
