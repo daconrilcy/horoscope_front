@@ -48,7 +48,8 @@ so that je puisse explorer les moments clés, l'agenda et les thèmes en détail
 - Updated `TodayHeader` to support `onBackClick`.
 - Added CSS for the back button in `App.css`.
 - Removed `ShortcutsSection` from `DailyHoroscopePage`.
-- All tests updated and passing.
+- Localized the header labels used by the detail page through `frontend/src/i18n/dashboard.tsx`.
+- Removed an unused analytics handler left behind after the dashboard split.
 
 ### Completion Notes List
 
@@ -56,10 +57,12 @@ so that je puisse explorer les moments clés, l'agenda et les thèmes en détail
 - Back button implemented in `TodayHeader` and used in `DailyHoroscopePage`.
 - UI consistency maintained between landing and detail.
 - Verified navigation from detail to landing via tests.
+- Header copy and accessible labels are now aligned with the active locale on the detail route.
 
 ### File List
 
 - `frontend/src/components/TodayHeader.tsx`
+- `frontend/src/i18n/dashboard.tsx`
 - `frontend/src/pages/DailyHoroscopePage.tsx`
 - `frontend/src/App.css`
 - `frontend/src/tests/TodayHeader.test.tsx`

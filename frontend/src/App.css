@@ -2737,6 +2737,11 @@ textarea:focus-visible {
   align-self: flex-end;
 }
 
+.dashboard-summary-card__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .dashboard-summary-card--loading {
   cursor: default;
   pointer-events: none;

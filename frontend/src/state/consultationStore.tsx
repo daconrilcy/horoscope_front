@@ -167,7 +167,7 @@ function loadHistoryFromStorage(): ConsultationResult[] {
     if (!Array.isArray(parsed)) return []
     return parsed.filter(isValidConsultationResult)
   } catch (e) {
-    if (import.meta.env.DEV) {
+    if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
       console.warn("[consultationStore] localStorage load failed:", e)
     }
     return []
@@ -178,7 +178,7 @@ function saveHistoryToStorage(history: ConsultationResult[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(history))
   } catch (e) {
-    if (import.meta.env.DEV) {
+    if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
       console.warn("[consultationStore] localStorage save failed:", e)
     }
   }

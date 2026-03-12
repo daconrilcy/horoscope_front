@@ -24,7 +24,7 @@ export function trackEvent(name: EventName, props: Record<string, unknown> = {})
   }
 
   // console.debug only in development mode
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV && import.meta.env.MODE !== 'test') {
     console.debug('[analytics]', name, props);
   }
 }

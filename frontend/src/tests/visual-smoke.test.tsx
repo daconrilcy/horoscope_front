@@ -251,7 +251,11 @@ describe("AC#6 — Icônes Lucide: size et strokeWidth conformes", () => {
         icon={MessageCircle}
         badgeColor="var(--badge-chat)"
       />,
-      { wrapper: MemoryRouter }
+      {
+        wrapper: ({ children }) => (
+          <MemoryRouter future={routerFutureFlags}>{children}</MemoryRouter>
+        ),
+      }
     )
     const badge = container.querySelector(".shortcut-card__badge")
     const svg = badge?.querySelector("svg")
@@ -263,3 +267,4 @@ describe("AC#6 — Icônes Lucide: size et strokeWidth conformes", () => {
     expect(strokeWidth).toBe("1.75")
   })
 })
+const routerFutureFlags = { v7_startTransition: true, v7_relativeSplatPath: true }

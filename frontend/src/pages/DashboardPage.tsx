@@ -1,4 +1,3 @@
-import { type ReactNode } from "react"
 import { useAstrologyLabels } from "../i18n/astrology"
 import { translateDashboardPage } from "../i18n/dashboard"
 import { TodayHeader } from "../components/TodayHeader"
@@ -23,7 +22,8 @@ export function DashboardPage() {
   const { 
     data: prediction, 
     isLoading: isPredictionLoading, 
-    isError: isPredictionError 
+    isError: isPredictionError,
+    refetch: refetchPrediction,
   } = useDailyPrediction(accessToken)
   
   const userName = isUserLoading 
@@ -40,10 +40,13 @@ export function DashboardPage() {
       </div>
 
       <DashboardHoroscopeSummaryCard 
-        prediction={prediction}
+        prediction={prediction ?? null}
         isLoading={isPredictionLoading}
         isError={isPredictionError}
         locale={lang}
+        onRetry={() => {
+          void refetchPrediction()
+        }}
       />
 
       <ShortcutsSection />

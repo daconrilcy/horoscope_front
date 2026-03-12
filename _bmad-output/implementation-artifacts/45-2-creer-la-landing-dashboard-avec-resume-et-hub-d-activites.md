@@ -64,20 +64,26 @@ so that j'accède immédiatement à l'essentiel avant de choisir d'aller plus lo
 - Created `DashboardHoroscopeSummaryCard` component.
 - Updated `DashboardPage` to use the new summary card and `ShortcutsSection`.
 - Added CSS for the summary card and skeletons.
-- Updated `DashboardPage.test.tsx` with landing-specific scenarios.
+- Centralized landing strings and shortcut labels in `frontend/src/i18n/dashboard.tsx`.
+- Added an explicit retry action for landing error state and keyboard support for both `Enter` and `Space`.
+- Updated `DashboardPage.test.tsx` with landing-specific scenarios and i18n coverage.
 
 ### Completion Notes List
 
 - Dashboard landing now shows a 2-line summary of the daily horoscope.
 - Summary card links to the detailed horoscope page.
 - Shortcuts section is always visible below the summary.
-- Loading and error states are handled gracefully.
-- Accessibility (keyboard, aria-labels) is preserved.
+- Loading, empty and error states are handled without masking activities.
+- Error state now offers a targeted retry instead of a dead-end message.
+- Accessibility is preserved for mouse and keyboard activation, including `Space`.
+- Shortcut labels are localized from the same dashboard translation catalog.
 
 ### File List
 
 - `frontend/src/i18n/dashboard.tsx`
+- `frontend/src/components/ShortcutsSection.tsx`
 - `frontend/src/components/dashboard/DashboardHoroscopeSummaryCard.tsx`
 - `frontend/src/pages/DashboardPage.tsx`
 - `frontend/src/App.css`
 - `frontend/src/tests/DashboardPage.test.tsx`
+- `frontend/src/tests/ShortcutCard.test.tsx`

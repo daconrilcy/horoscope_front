@@ -1,35 +1,7 @@
 import { MessageCircle, Layers, Calendar } from 'lucide-react'
 import { ShortcutCard } from './ShortcutCard'
-
-const SHORTCUTS = [
-  {
-    key: 'chat',
-    title: 'Chat astrologue',
-    subtitle: 'En ligne',
-    icon: MessageCircle,
-    badgeColor: 'var(--badge-chat)',
-    path: '/chat',
-    isOnline: true,
-  },
-  {
-    key: 'tirage',
-    title: 'Tirage du jour',
-    subtitle: '3 cartes',
-    icon: Layers,
-    badgeColor: 'var(--badge-tirage)',
-    path: '/consultations',
-    isOnline: false,
-  },
-  {
-    key: 'history',
-    title: 'Historique',
-    subtitle: 'Mes prédictions',
-    icon: Calendar,
-    badgeColor: 'var(--primary)',
-    path: '/dashboard', // For now, stays on dashboard or a modal
-    isOnline: false,
-  },
-]
+import { useAstrologyLabels } from '../i18n/astrology'
+import { translateDashboardPage } from '../i18n/dashboard'
 
 export interface ShortcutsSectionProps {
   onChatClick?: () => void
@@ -38,11 +10,43 @@ export interface ShortcutsSectionProps {
 }
 
 export function ShortcutsSection({ onChatClick, onTirageClick, onHistoryClick }: ShortcutsSectionProps) {
+  const { lang } = useAstrologyLabels()
+  const { activities, shortcuts } = translateDashboardPage(lang)
+  const shortcutItems = [
+    {
+      key: 'chat',
+      title: shortcuts.chatTitle,
+      subtitle: shortcuts.chatSubtitle,
+      icon: MessageCircle,
+      badgeColor: 'var(--badge-chat)',
+      path: '/chat',
+      isOnline: true,
+    },
+    {
+      key: 'tirage',
+      title: shortcuts.tirageTitle,
+      subtitle: shortcuts.tirageSubtitle,
+      icon: Layers,
+      badgeColor: 'var(--badge-tirage)',
+      path: '/consultations',
+      isOnline: false,
+    },
+    {
+      key: 'history',
+      title: shortcuts.historyTitle,
+      subtitle: shortcuts.historySubtitle,
+      icon: Calendar,
+      badgeColor: 'var(--primary)',
+      path: '/dashboard',
+      isOnline: false,
+    },
+  ]
+
   return (
     <section className="shortcuts-section">
-      <h2 className="shortcuts-section__title">Activités</h2>
+      <h2 className="shortcuts-section__title">{activities}</h2>
       <div className="shortcuts-grid">
-        {SHORTCUTS.map((shortcut) => {
+        {shortcutItems.map((shortcut) => {
           let handleClick = undefined;
           if (shortcut.key === 'chat') handleClick = onChatClick;
           else if (shortcut.key === 'tirage') handleClick = onTirageClick;

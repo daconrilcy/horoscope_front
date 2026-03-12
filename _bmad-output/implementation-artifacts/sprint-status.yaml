@@ -398,7 +398,7 @@ development_status:
   44-5-verrouiller-qa-et-garde-fous-de-bruit-sur-les-valeurs-de-bascule: done
   epic-44-retrospective: optional
 
-  epic-45: in-progress
+  epic-45: done
   45-1-refondre-le-routing-dashboard-et-isoler-la-page-horoscope-detaillee: done
   45-2-creer-la-landing-dashboard-avec-resume-et-hub-d-activites: done
   45-3-restaurer-une-page-horoscope-detaillee-avec-retour-dashboard: done

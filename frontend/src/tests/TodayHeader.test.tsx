@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, vi } from "vitest"
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest"
 import { render, cleanup, screen, fireEvent } from "@testing-library/react"
 import { TodayHeader } from "../components/TodayHeader"
 import { ThemeProvider } from "../state/ThemeProvider"
@@ -8,6 +8,10 @@ function renderWithTheme(ui: React.ReactElement) {
 }
 
 describe("TodayHeader", () => {
+  beforeEach(() => {
+    localStorage.setItem("lang", "fr")
+  })
+
   afterEach(() => {
     cleanup()
     localStorage.clear()
@@ -188,6 +192,15 @@ describe("TodayHeader", () => {
       fireEvent.click(backBtn)
       
       expect(onBack).toHaveBeenCalledTimes(1)
+    })
+
+    it("localise les libellés du header en anglais", () => {
+      localStorage.setItem("lang", "en")
+      renderWithTheme(<TodayHeader userName="Alice" onBackClick={() => undefined} />)
+
+      expect(screen.getByText("Today")).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Back to dashboard" })).toBeInTheDocument()
+      expect(screen.getByRole("img", { name: "Alice's profile" })).toBeInTheDocument()
     })
   })
 })

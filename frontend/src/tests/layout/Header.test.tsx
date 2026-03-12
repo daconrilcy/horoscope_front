@@ -3,6 +3,8 @@ import { render, cleanup, screen } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import { Header } from "../../components/layout/Header"
 
+const routerFutureFlags = { v7_startTransition: true, v7_relativeSplatPath: true }
+
 // Mock dependencies
 vi.mock("../../utils/authToken", () => ({
   useAccessTokenSnapshot: () => "mock-token",
@@ -24,7 +26,7 @@ describe("Header", () => {
   describe("AC1: Masquage du header sur /dashboard mobile", () => {
     it("affiche le header sur d'autres routes (ex: /natal)", () => {
       render(
-        <MemoryRouter initialEntries={["/natal"]}>
+        <MemoryRouter initialEntries={["/natal"]} future={routerFutureFlags}>
           <Header />
         </MemoryRouter>
       )
@@ -36,7 +38,7 @@ describe("Header", () => {
 
     it("ajoute la classe app-header--dashboard sur /dashboard", () => {
       render(
-        <MemoryRouter initialEntries={["/dashboard"]}>
+        <MemoryRouter initialEntries={["/dashboard"]} future={routerFutureFlags}>
           <Header />
         </MemoryRouter>
       )
@@ -48,7 +50,7 @@ describe("Header", () => {
 
     it("ajoute la classe app-header--dashboard sur /dashboard/horoscope", () => {
       render(
-        <MemoryRouter initialEntries={["/dashboard/horoscope"]}>
+        <MemoryRouter initialEntries={["/dashboard/horoscope"]} future={routerFutureFlags}>
           <Header />
         </MemoryRouter>
       )
@@ -60,7 +62,7 @@ describe("Header", () => {
 
     it("ajoute la classe app-header--dashboard sur /dashboard/ (slash final)", () => {
       render(
-        <MemoryRouter initialEntries={["/dashboard/"]}>
+        <MemoryRouter initialEntries={["/dashboard/"]} future={routerFutureFlags}>
           <Header />
         </MemoryRouter>
       )
@@ -70,7 +72,7 @@ describe("Header", () => {
 
     it("ajoute la classe app-header--dashboard sur /dashboard// (multiples slashes)", () => {
       render(
-        <MemoryRouter initialEntries={["/dashboard//"]}>
+        <MemoryRouter initialEntries={["/dashboard//"]} future={routerFutureFlags}>
           <Header />
         </MemoryRouter>
       )
@@ -80,7 +82,7 @@ describe("Header", () => {
 
     it("n'ajoute pas la classe app-header--dashboard sur /", () => {
       render(
-        <MemoryRouter initialEntries={["/"]}>
+        <MemoryRouter initialEntries={["/"]} future={routerFutureFlags}>
           <Header />
         </MemoryRouter>
       )
@@ -90,7 +92,7 @@ describe("Header", () => {
 
     it("affiche les actions utilisateur par défaut", () => {
       render(
-        <MemoryRouter initialEntries={["/natal"]}>
+        <MemoryRouter initialEntries={["/natal"]} future={routerFutureFlags}>
           <Header />
         </MemoryRouter>
       )

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
+import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createMemoryRouter, RouterProvider } from "react-router-dom"
@@ -121,6 +121,24 @@ describe("DashboardPage Landing", () => {
     })
   })
 
+  it("ouvre le détail via la touche espace sur la carte résumé", async () => {
+    vi.stubGlobal("fetch", makeFetchMock())
+
+    const { router } = renderDashboard()
+
+    await waitFor(() => {
+      expect(screen.getByText(/Une excellente journée vous attend/i)).toBeInTheDocument()
+    })
+
+    const summaryCard = screen.getByLabelText(/Voir l'horoscope complet/i)
+    summaryCard.focus()
+    summaryCard.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }))
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/dashboard/horoscope")
+    })
+  })
+
   it("n'affiche plus les sections détaillées (Moments clés, Agenda)", async () => {
     vi.stubGlobal("fetch", makeFetchMock())
     
@@ -160,19 +178,57 @@ describe("DashboardPage Landing", () => {
     })
   })
 
-  it("gère l'erreur de prédiction en affichant un message dédié", async () => {
-    vi.stubGlobal("fetch", makeFetchMock({
-      ok: false,
-      status: 500,
-      json: async () => ({ error: "Internal Server Error" })
-    }))
+  it("gère l'erreur de prédiction en affichant un message dédié et une relance", async () => {
+    let shouldFail = true
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith("/v1/auth/me")) return AUTH_ME_USER
+      if (url.includes("/v1/predictions/daily")) {
+        if (shouldFail) {
+          return {
+            ok: false,
+            status: 500,
+            json: async () => ({ error: "Internal Server Error" })
+          }
+        }
+
+        return PREDICTION_OK
+      }
+
+      return NOT_FOUND
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
 
     renderDashboard()
 
     await waitFor(() => {
-      expect(screen.getByText(/Aucune prédiction disponible/i)).toBeInTheDocument()
+      expect(screen.getByText(/Impossible de charger le résumé du jour/i)).toBeInTheDocument()
     })
-    
+
+    shouldFail = false
+    await userEvent.click(screen.getByRole("button", { name: "Réessayer" }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/Une excellente journée vous attend/i)).toBeInTheDocument()
+    })
+
     expect(screen.getByText("Activités")).toBeInTheDocument()
+  })
+
+  it("localise les nouveaux libellés dashboard en anglais", async () => {
+    localStorage.setItem("lang", "en")
+    vi.stubGlobal("fetch", makeFetchMock())
+
+    renderDashboard()
+
+    await waitFor(() => {
+      expect(screen.getByText(/Une excellente journée vous attend/i)).toBeInTheDocument()
+    })
+
+    expect(screen.getByText("Dashboard")).toBeInTheDocument()
+    expect(screen.getByText("Activities")).toBeInTheDocument()
+    expect(screen.getByText("Astrologer chat")).toBeInTheDocument()
+    expect(screen.getByLabelText(/View full horoscope/i)).toBeInTheDocument()
   })
 })

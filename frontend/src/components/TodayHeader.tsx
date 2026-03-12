@@ -2,6 +2,8 @@ import { useState } from "react"
 import { Moon, Sun, ChevronLeft } from "lucide-react"
 import { getInitials } from "../utils/user"
 import { useTheme } from "../state/ThemeProvider"
+import { useAstrologyLabels } from "../i18n/astrology"
+import { translateDashboardPage } from "../i18n/dashboard"
 
 /**
  * Props for the TodayHeader component
@@ -25,6 +27,8 @@ export interface TodayHeaderProps {
 export function TodayHeader({ userName = "U", avatarUrl, onBackClick, isLoading: forceLoading }: TodayHeaderProps) {
   const [imgError, setImgError] = useState(false)
   const { theme, toggleTheme } = useTheme()
+  const { lang } = useAstrologyLabels()
+  const { header } = translateDashboardPage(lang)
 
   const isLoading = userName === "loading" || forceLoading
   const displayName = isLoading ? "" : userName
@@ -40,7 +44,7 @@ export function TodayHeader({ userName = "U", avatarUrl, onBackClick, isLoading:
             type="button"
             className="today-header__back"
             onClick={onBackClick}
-            aria-label="Retour au tableau de bord"
+            aria-label={header.backToDashboard}
           >
             <ChevronLeft size={24} strokeWidth={2} aria-hidden="true" />
           </button>
@@ -49,7 +53,7 @@ export function TodayHeader({ userName = "U", avatarUrl, onBackClick, isLoading:
             type="button"
             className="today-header__toggle"
             onClick={toggleTheme}
-            aria-label={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
+            aria-label={theme === "dark" ? header.switchToLight : header.switchToDark}
             aria-pressed={theme === "dark"}
           >
             {theme === "dark"
@@ -61,15 +65,15 @@ export function TodayHeader({ userName = "U", avatarUrl, onBackClick, isLoading:
       </div>
 
       <div className="today-header__content">
-        <p className="today-header__kicker">Aujourd'hui</p>
-        <h1 className="today-header__title">Horoscope</h1>
+        <p className="today-header__kicker">{header.kicker}</p>
+        <h1 className="today-header__title">{header.title}</h1>
       </div>
 
       {/* Avatar — top right */}
       <div
         className={`today-header__avatar ${isLoading ? "today-header__avatar--loading" : ""}`}
         role="img"
-        aria-label={isLoading ? "Chargement du profil" : `Profil de ${displayName}`}
+        aria-label={isLoading ? header.profileLoading : header.profileOf(displayName)}
       >
         {showImage ? (
           <img

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { MemoryRouter } from "react-router-dom"
-import { describe, it, expect, vi, afterEach } from "vitest"
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest"
 import { render, cleanup, screen, fireEvent } from "@testing-library/react"
 import { MessageCircle, Layers } from "lucide-react"
 import fs from "fs"
@@ -32,6 +32,11 @@ function getLastCssRuleContent(cssContent: string, selector: string): string {
 
 afterEach(() => {
   cleanup()
+  localStorage.clear()
+})
+
+beforeEach(() => {
+  localStorage.setItem("lang", "fr")
 })
 
 // ─── ShortcutCard ────────────────────────────────────────────────────────────
@@ -134,6 +139,16 @@ describe("ShortcutsSection", () => {
   it("utilise une structure sémantique <section>", () => {
     const { container } = render(<ShortcutsSection />, { wrapper: RouterWrapper })
     expect(container.querySelector("section")).toHaveClass("shortcuts-section")
+  })
+
+  it("localise les raccourcis du dashboard en anglais", () => {
+    localStorage.setItem("lang", "en")
+    render(<ShortcutsSection />, { wrapper: RouterWrapper })
+
+    expect(screen.getByRole("heading", { name: "Activities" })).toBeInTheDocument()
+    expect(screen.getByText("Astrologer chat")).toBeInTheDocument()
+    expect(screen.getByText("Daily spread")).toBeInTheDocument()
+    expect(screen.getByText("History")).toBeInTheDocument()
   })
 })
 

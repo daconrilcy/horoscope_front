@@ -51,7 +51,7 @@ so that le menu dashboard ouvre une page d'accueil légère sans perdre la conti
 - Renamed `TodayPage.tsx` to `DailyHoroscopePage.tsx`.
 - Updated `routes.tsx` with nested dashboard routes.
 - Updated `Header.tsx` to handle the new dashboard structure.
-- All tests updated and passing.
+- Updated redirect-oriented tests outside the dashboard feature itself so they now expect the landing `/dashboard` instead of the former detailed daily page.
 
 ### Completion Notes List
 
@@ -59,7 +59,7 @@ so that le menu dashboard ouvre une page d'accueil légère sans perdre la conti
 - Restored `DashboardPage` as the main landing.
 - Isolated daily horoscope to `DailyHoroscopePage`.
 - Updated `BottomNav` and `Header` logic for both routes.
-- Renamed and fixed all relevant tests.
+- Renamed and fixed all relevant tests, including guard-based redirects landing on `/dashboard`.
 
 ### File List
 
@@ -69,5 +69,6 @@ so that le menu dashboard ouvre une page d'accueil légère sans perdre la conti
 - `frontend/src/pages/DashboardPage.tsx`
 - `frontend/src/pages/DailyHoroscopePage.tsx`
 - `frontend/src/tests/router.test.tsx`
+- `frontend/src/tests/AdminPage.test.tsx`
 - `frontend/src/tests/DailyHoroscopePage.test.tsx`
 - `frontend/src/tests/layout/Header.test.tsx`

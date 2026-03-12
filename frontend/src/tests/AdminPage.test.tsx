@@ -5,7 +5,6 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { TestAppRouter } from "../app/router"
 import { setAccessToken, clearAccessToken } from "../utils/authToken"
-import { STATIC_HOROSCOPE } from "../constants/horoscope"
 import { ThemeProvider } from "../state/ThemeProvider"
 
 afterEach(() => {
@@ -170,7 +169,7 @@ describe("AdminPage - AC#1: Protection d'accès", () => {
     renderApp(["/admin"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: STATIC_HOROSCOPE.headline })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 2, name: "Tableau de bord" })).toBeInTheDocument()
     })
   })
 

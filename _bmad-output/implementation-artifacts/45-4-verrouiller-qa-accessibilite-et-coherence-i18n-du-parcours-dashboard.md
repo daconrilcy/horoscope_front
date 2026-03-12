@@ -64,23 +64,32 @@ so that la séparation landing/détail n'introduise ni régression fonctionnelle
 
 ## Dev Notes
 
-- All tests in `router.test.tsx`, `DashboardPage.test.tsx`, `DailyHoroscopePage.test.tsx`, `TodayHeader.test.tsx`, `Header.test.tsx` and `ShortcutCard.test.tsx` are passing (88 tests total).
-- Centralized all new dashboard strings in `i18n/dashboard.tsx`.
-- Accessibility verified for back button and summary card.
+- The targeted dashboard QA set now passes in `router.test.tsx`, `DashboardPage.test.tsx`, `DailyHoroscopePage.test.tsx`, `TodayHeader.test.tsx`, `Header.test.tsx` and `ShortcutCard.test.tsx` (92 assertions).
+- `frontend/src/i18n/dashboard.tsx` now centralizes the landing, shortcuts and header strings introduced by epic 45.
+- Accessibility is verified for the summary card (`Enter` and `Space`), the detail back button and localized accessible labels.
+- A full `npm test` pass was rerun after the fixes; cross-suite redirect expectations impacted by the new landing were updated accordingly.
+- A final cleanup pass removed noisy frontend test output by silencing dev-only analytics/store logs in test mode and aligning the remaining `MemoryRouter` tests with React Router future flags.
 
 ### Completion Notes List
 
 - Verified full navigation flow: Dashboard -> Horoscope -> Dashboard.
 - All UI states (loading, error, success) covered by tests for both landing and detail pages.
 - Confirmed no regression on Epic 43/44 features.
-- Clean i18n implementation without hardcoded strings.
+- Clean i18n implementation without hardcoded strings in the epic 45 components.
+- Updated legacy tests that still expected the old `/dashboard` detailed page.
+- Test runs are now clean on the dashboard-related frontend suites, without analytics debug noise, consultation store warnings or React Router future-flag warnings.
 
 ### File List
 
 - `frontend/src/tests/router.test.tsx`
+- `frontend/src/tests/AdminPage.test.tsx`
 - `frontend/src/tests/DashboardPage.test.tsx`
 - `frontend/src/tests/DailyHoroscopePage.test.tsx`
 - `frontend/src/tests/layout/Header.test.tsx`
+- `frontend/src/tests/BottomNavPremium.test.tsx`
 - `frontend/src/tests/ShortcutCard.test.tsx`
 - `frontend/src/tests/TodayHeader.test.tsx`
+- `frontend/src/tests/visual-smoke.test.tsx`
 - `frontend/src/i18n/dashboard.tsx`
+- `frontend/src/utils/analytics.ts`
+- `frontend/src/state/consultationStore.tsx`

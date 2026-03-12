@@ -6,6 +6,8 @@ import { BottomNav } from "../components/layout/BottomNav"
 import { readFileSync } from "fs"
 import { resolve } from "path"
 
+const routerFutureFlags = { v7_startTransition: true, v7_relativeSplatPath: true }
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -99,7 +101,7 @@ afterEach(() => {
 function renderWithRouter(initialPath = "/dashboard") {
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[initialPath]}>
+      <MemoryRouter initialEntries={[initialPath]} future={routerFutureFlags}>
         <BottomNav />
       </MemoryRouter>
     </QueryClientProvider>

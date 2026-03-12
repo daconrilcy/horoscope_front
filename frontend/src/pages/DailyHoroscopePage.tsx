@@ -139,10 +139,6 @@ export function DailyHoroscopePage() {
     trackEvent(EVENTS.TURNING_POINT_OPENED, { severity: severityCode })
   }
 
-  const handleHistoryClick = () => {
-    trackEvent(EVENTS.HISTORY_VIEWED)
-  }
-
   const normalizedApiMoments: DailyPredictionTurningPoint[] = prediction
     ? prediction.turning_points.map((moment) => {
         const occurredMinute = parseLocalMinute(moment.occurred_at_local)
