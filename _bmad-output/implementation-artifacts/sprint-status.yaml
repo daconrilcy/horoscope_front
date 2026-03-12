@@ -33,7 +33,7 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-03-11 23:20:00
+generated: 2026-03-12 00:10:00
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -382,3 +382,10 @@ development_status:
   42-16-brancher-la-projection-publique-et-la-future-interpretation-sur-l-evidence-pack: done
   42-17-verrouiller-qa-backtesting-et-migration-progressive-du-moteur-v3: done
   epic-42-retrospective: optional
+
+  epic-43: in-progress
+  43-1-structurer-une-semantique-explicable-des-bascules: done
+  43-2-introduire-un-wording-i18n-pour-les-moments-cles: ready-for-dev
+  43-3-refaire-le-rendu-ui-des-moments-cles: ready-for-dev
+  43-4-verrouiller-qa-et-coherence-multilingue-des-moments-cles: ready-for-dev
+  epic-43-retrospective: optional

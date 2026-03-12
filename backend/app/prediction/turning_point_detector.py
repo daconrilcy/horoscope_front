@@ -123,6 +123,8 @@ class TurningPointDetector:
         detected_events: list[AstroEvent],
     ) -> list[V3TurningPoint]:
         """Detect turning points as persistent regime changes (Story 42.10)."""
+        from app.prediction.schemas import V3PrimaryDriver
+
         pivots = []
         if not time_blocks:
             return pivots
@@ -130,6 +132,13 @@ class TurningPointDetector:
         for i in range(1, len(time_blocks)):
             prev = time_blocks[i - 1]
             curr = time_blocks[i]
+
+            # AC4: Never publish midnight/synthetic boundaries as turning points
+            # 00:00 and 24:00 (or near enough) are ignored
+            if curr.start_local.hour == 0 and curr.start_local.minute == 0:
+                continue
+            if curr.start_local.hour == 23 and curr.start_local.minute == 59:
+                continue
 
             # Trigger logic: orientation change OR significant intensity jump
             regime_changed = prev.orientation != curr.orientation
@@ -162,6 +171,10 @@ class TurningPointDetector:
             # Prioritize priority then intensity of contribution if possible
             drivers = sorted(drivers, key=lambda e: e.priority, reverse=True)[:5]
 
+            # Story 43.1: Semantic Fields
+            change_type = self._derive_change_type(prev, curr)
+            primary_driver = self._select_primary_driver(drivers)
+
             pivots.append(
                 V3TurningPoint(
                     local_time=curr.start_local,
@@ -171,10 +184,70 @@ class TurningPointDetector:
                     confidence=confidence,
                     categories_impacted=curr.dominant_themes,
                     drivers=drivers,
+                    change_type=change_type,
+                    previous_categories=list(prev.dominant_themes),
+                    next_categories=list(curr.dominant_themes),
+                    primary_driver=primary_driver,
                 )
             )
 
         return pivots
+
+    def _derive_change_type(self, prev: V3TimeBlock, curr: V3TimeBlock) -> str:
+        intensity_jump = curr.intensity - prev.intensity
+        
+        if intensity_jump >= 2.5:
+            return "emergence"
+        if intensity_jump <= -2.5:
+            return "attenuation"
+        
+        return "recomposition"
+
+    def _select_primary_driver(self, drivers: list[AstroEvent]) -> Any:
+        from app.prediction.schemas import V3PrimaryDriver
+        
+        if not drivers:
+            return None
+            
+        # Priority 1: Public exact ASPECTS
+        aspect_event_types = {
+            "aspect_exact_to_angle",
+            "aspect_exact_to_luminary",
+            "aspect_exact_to_personal",
+        }
+        for d in drivers:
+            if d.event_type in aspect_event_types:
+                return self._to_primary_driver(d)
+                
+        # Priority 2: Public Ingresses (Moon)
+        for d in drivers:
+            if d.event_type == "moon_sign_ingress":
+                return self._to_primary_driver(d)
+                
+        # Priority 3: Other ingresses
+        for d in drivers:
+            if "ingress" in d.event_type:
+                return self._to_primary_driver(d)
+                
+        # Priority 4: Strongest event
+        return self._to_primary_driver(drivers[0])
+
+    def _to_primary_driver(self, event: AstroEvent) -> Any:
+        from app.prediction.schemas import V3PrimaryDriver
+        
+        # Filter metadata to keep only useful bits
+        metadata = {}
+        for key in ["house", "sign", "orb_exact"]:
+            if key in event.metadata:
+                metadata[key] = event.metadata[key]
+                
+        return V3PrimaryDriver(
+            event_type=event.event_type,
+            body=event.body,
+            target=event.target,
+            aspect=event.aspect,
+            metadata=metadata
+        )
 
     def _top3_codes(self, notes: dict[str, int]) -> frozenset[str]:
         sorted_cats = sorted(notes.items(), key=lambda item: (-item[1], item[0]))

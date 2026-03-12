@@ -186,66 +186,51 @@ def test_assemble_uses_persisted_evidence_pack_snapshot():
     assert result["categories"][0]["code"] == "work"
 
 
-def test_assemble_rebuilds_v3_summary_from_snapshot_local_date_when_evidence_has_no_summary():
+def test_assemble_includes_enriched_turning_points():
+    from app.prediction.schemas import V3PrimaryDriver
+    
     evidence_pack = V3EvidencePack(
-        version="3.1.0",
-        generated_at=datetime(2026, 3, 10, 23, 0, tzinfo=UTC),
-        day_profile={
-            "tone": "positive",
-            "local_date": "2026-03-11",
-        },
-        themes={
-            "health": V3EvidenceTheme(
-                code="health",
-                score_20=16.0,
-                level=0.8,
-                intensity=14.0,
-                dominance=6.0,
-                stability=15.0,
-                rarity=8.0,
-                is_major=True,
-            )
-        },
+        version="3.0.0",
+        generated_at=datetime.now(UTC),
+        day_profile={"tone": "neutral"},
+        themes={"love": V3EvidenceTheme("love", 15.0, 1.0, 10.0, 5.0, 15.0, 10.0, True)},
         time_windows=[],
-        turning_points=[],
-    )
-
-    snapshot = PersistedPredictionSnapshot(
-        run_id=1,
-        user_id=42,
-        local_date=date(2026, 3, 11),
-        timezone="Europe/Paris",
-        computed_at=datetime(2026, 3, 11, 7, 0, tzinfo=UTC),
-        input_hash="hash",
-        reference_version_id=1,
-        ruleset_id=1,
-        house_system_effective="placidus",
-        is_provisional_calibration=False,
-        calibration_label="final",
-        overall_summary="legacy summary with stale date",
-        overall_tone="neutral",
-        v3_metrics={"evidence_pack": _json_ready(asdict(evidence_pack))},
-        category_scores=[
-            PersistedCategoryScore(
-                category_id=1,
-                category_code="health",
-                note_20=16,
-                raw_score=0.8,
-                power=0.7,
-                volatility=0.25,
-                rank=1,
-                is_provisional=False,
-                summary=None,
+        turning_points=[
+            V3EvidenceTurningPoint(
+                local_time=datetime(2026, 3, 7, 10, 0),
+                reason="regime_change",
+                amplitude=5.0,
+                confidence=0.8,
+                themes=["love"],
+                drivers=["Sun-conjunction-Moon"],
+                change_type="emergence",
+                previous_categories=["work"],
+                next_categories=["love"],
+                primary_driver=V3PrimaryDriver("aspect_exact_to_personal", "Sun", "Moon", "conjunction", {"house": 5})
             )
         ],
     )
 
-    result = PublicPredictionAssembler().assemble(
-        snapshot,
-        {1: "health"},
-        reference_version="2.0.0",
-        ruleset_version="2.0.0",
-    )
+    snapshot = MagicMock(spec=PersistedPredictionSnapshot)
+    snapshot.local_date = date(2026, 3, 7)
+    snapshot.timezone = "UTC"
+    snapshot.computed_at = datetime.now(UTC)
+    snapshot.is_provisional_calibration = False
+    snapshot.calibration_label = "final"
+    snapshot.house_system_effective = "placidus"
+    snapshot.category_scores = []
+    snapshot.time_blocks = []
+    snapshot.relative_scores = {}
+    snapshot.overall_tone = "neutral"
+    snapshot.overall_summary = "Summary"
+    snapshot.v3_metrics = {"evidence_pack": _json_ready(asdict(evidence_pack))}
 
-    assert "2026-03-11" in result["summary"]["overall_summary"]
-    assert "Santé & Hygiène de vie" in result["summary"]["overall_summary"]
+    assembler = PublicPredictionAssembler()
+    result = assembler.assemble(snapshot, {1: "love"}, reference_version="2.0.0", ruleset_version="2.0.0")
+
+    tp = result["turning_points"][0]
+    assert tp["change_type"] == "emergence"
+    assert tp["previous_categories"] == ["work"]
+    assert tp["next_categories"] == ["love"]
+    assert tp["primary_driver"]["event_type"] == "aspect_exact_to_personal"
+    assert tp["primary_driver"]["metadata"]["house"] == 5

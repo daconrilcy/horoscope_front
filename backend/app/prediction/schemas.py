@@ -188,6 +188,17 @@ class TimeBlock:
 
 
 @dataclass(frozen=True)
+class V3PrimaryDriver:
+    """Structured primary driver for a turning point (Story 43.1)."""
+
+    event_type: str
+    body: str | None
+    target: str | None
+    aspect: str | None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class V3TurningPoint:
     """A turning point in V3 (Story 42.10)."""
 
@@ -199,6 +210,12 @@ class V3TurningPoint:
     categories_impacted: list[str] = field(default_factory=list)
     drivers: list[AstroEvent] = field(default_factory=list)
     summary: str = ""
+    
+    # Story 43.1 Semantic Fields
+    change_type: str = "recomposition"  # emergence | recomposition | attenuation
+    previous_categories: list[str] = field(default_factory=list)
+    next_categories: list[str] = field(default_factory=list)
+    primary_driver: V3PrimaryDriver | None = None
 
 
 @dataclass(frozen=True)
@@ -232,6 +249,12 @@ class V3EvidenceTurningPoint:
     confidence: float
     themes: list[str]
     drivers: list[str] # List of driver labels
+    
+    # Story 43.1 Semantic Fields
+    change_type: str = "recomposition"
+    previous_categories: list[str] = field(default_factory=list)
+    next_categories: list[str] = field(default_factory=list)
+    primary_driver: V3PrimaryDriver | None = None
 
 
 @dataclass(frozen=True)

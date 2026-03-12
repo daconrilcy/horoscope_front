@@ -1965,3 +1965,69 @@ So that la bascule vers le moteur daily v3 soit objectivable et réversible.
 - Des critères go/no-go explicites de migration sont documentés.
 
 [Source: _bmad-output/planning-artifacts/epic-42-daily-signal-driven-v3.md]
+
+## Epic 43: Moments clés du jour explicables et localisés
+
+Faire évoluer les `Moments clés du jour` d'un simple affichage de bascule vers une explication structurée, compréhensible et localisable, afin que l'utilisateur voie clairement la cause astrologique principale, la transition avant/après et son implication concrète.
+
+**FRs covered:** FR16, FR18, FR22, FR23, FR36
+
+### Story 43.1: Structurer côté backend une sémantique explicable des bascules
+
+As a backend maintainer,
+I want enrichir les turning points publics avec une sémantique structurée de changement,
+So that le frontend puisse afficher pourquoi une bascule existe sans reconstruire la logique métier à partir de phrases fragiles.
+
+**Acceptance Criteria:**
+- Le backend expose de manière additive, pour chaque moment clé public, un `change_type` explicite au minimum parmi `emergence`, `recomposition`, `attenuation`.
+- Le backend expose un diff structuré entre `previous_categories`, `next_categories` et `impacted_categories`, sans imposer de phrase localisée.
+- Le backend expose un `primary_driver` structuré dérivé des drivers existants, avec type d’événement, corps, aspect, cible et métadonnées utiles filtrées.
+- Le backend distingue les bascules réelles des frontières synthétiques de début/fin de journée.
+- Le contrat reste backward compatible avec le payload actuel de `/v1/predictions/daily`.
+
+[Source: user request 2026-03-12 — “expliquer pourquoi ce sont des bascules” ; backend/app/prediction/public_projection.py ; frontend/src/utils/dailyAstrology.ts]
+
+### Story 43.2: Introduire un wording i18n piloté par données structurées pour les moments clés
+
+As a frontend architect,
+I want composer le wording des moments clés via i18n à partir de données structurées,
+So that le français, l’anglais et les futures langues restent cohérents sans figer des phrases métier dans le backend.
+
+**Acceptance Criteria:**
+- Le backend ne renvoie plus de phrase finale localisée comme source primaire pour les moments clés enrichis.
+- Le frontend introduit des clés i18n dédiées pour les causes astrologiques, les transitions `avant/après`, les libellés d’impact et les implications.
+- Le wording distingue au minimum les cas `emergence`, `recomposition` et `attenuation`.
+- Les règles de formulation gèrent l’absence d’un `primary_driver`, un driver unique et plusieurs drivers secondaires sans casser l’UX.
+- Les helpers i18n restent centralisés et testables.
+
+[Source: user request 2026-03-12 — “le wording doit etre gerer avec i18n” ; frontend/src/utils/predictionI18n.ts ; frontend/src/i18n/predictions.ts]
+
+### Story 43.3: Refaire le rendu UI des moments clés autour de “Pourquoi / Ce qui change / Implication”
+
+As a utilisateur consultant le daily,
+I want lire chaque moment clé comme une transition expliquée,
+So that je comprenne la cause astrologique, le passage d’un état à un autre, et ce que cela implique pour la journée.
+
+**Acceptance Criteria:**
+- Chaque carte `Moment clé` affiche trois sections lisibles: `Pourquoi ça bascule`, `Ce qui change`, `Implication`.
+- Le rendu explicite le passage `avant -> après` à partir des catégories dominantes, sans jargon technique brut.
+- Le `primary_driver` astrologique est humanisé et affiché comme cause principale, avec un fallback sobre si aucun driver fort n’est disponible.
+- Les impacts restent visibles sous forme de catégories/pictogrammes et restent cohérents avec l’agenda du jour.
+- Le design mobile et desktop reste compact et ne réintroduit pas de bruit visuel excessif.
+
+[Source: user request 2026-03-12 — “expliquer le changement : on avait ca => ca devient ca” ; frontend/src/components/prediction/TurningPointsList.tsx ; frontend/src/pages/TodayPage.tsx]
+
+### Story 43.4: Verrouiller QA produit, cohérence multilingue et garde-fous d’explicabilité
+
+As a QA engineer,
+I want valider que les moments clés enrichis restent vrais, lisibles et localisés,
+So that le produit ne surinterprète pas les bascules et conserve un wording cohérent en plusieurs langues.
+
+**Acceptance Criteria:**
+- Les tests couvrent au minimum un cas d’émergence, un cas de recomposition et un cas d’atténuation.
+- Les suites frontend vérifient la production des textes FR/EN à partir de la même structure de données.
+- Aucun wording ne dépend directement de chaînes backend non localisées pour les cartes de moments clés enrichis.
+- Les cas sans driver, avec driver exact et avec plusieurs drivers restent stables et lisibles.
+- Les régressions sur faux pivots de minuit et disparition complète des moments clés restent verrouillées.
+
+[Source: user request 2026-03-12 ; frontend/src/tests/TodayPage.test.tsx ; frontend/src/utils/dailyAstrology.test.ts ; backend/app/tests/integration/test_daily_prediction_api.py]

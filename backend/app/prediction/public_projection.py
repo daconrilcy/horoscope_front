@@ -547,6 +547,11 @@ class PublicTurningPointPolicy:
                     "severity": tp.amplitude / 10.0,  # Scaled
                     "summary": f"Bascule durable ({tp.reason})",
                     "drivers": [{"event_type": d} for d in tp.drivers],
+                    # Story 43.1
+                    "change_type": tp.change_type,
+                    "previous_categories": tp.previous_categories,
+                    "next_categories": tp.next_categories,
+                    "primary_driver": self._serialize_primary_driver(tp.primary_driver),
                 }
                 for tp in evidence.turning_points
             ]
@@ -589,6 +594,17 @@ class PublicTurningPointPolicy:
             )
 
         return public_turning_points
+
+    def _serialize_primary_driver(self, pd: Any | None) -> dict[str, Any] | None:
+        if not pd:
+            return None
+        return {
+            "event_type": pd.event_type,
+            "body": pd.body,
+            "target": pd.target,
+            "aspect": pd.aspect,
+            "metadata": pd.metadata,
+        }
 
 
 class PublicTimelinePolicy:
@@ -908,6 +924,7 @@ def _deserialize_evidence_pack(payload: dict[str, Any]) -> V3EvidencePack:
         V3EvidenceTheme,
         V3EvidenceTurningPoint,
         V3EvidenceWindow,
+        V3PrimaryDriver,
     )
 
     themes = {
@@ -935,17 +952,35 @@ def _deserialize_evidence_pack(payload: dict[str, Any]) -> V3EvidencePack:
         )
         for window in payload.get("time_windows", [])
     ]
-    turning_points = [
-        V3EvidenceTurningPoint(
-            local_time=datetime.fromisoformat(turning_point["local_time"]),
-            reason=turning_point["reason"],
-            amplitude=float(turning_point["amplitude"]),
-            confidence=float(turning_point["confidence"]),
-            themes=list(turning_point.get("themes", [])),
-            drivers=list(turning_point.get("drivers", [])),
+    turning_points = []
+    for tp in payload.get("turning_points", []):
+        pd_raw = tp.get("primary_driver")
+        pd = None
+        if pd_raw:
+            pd = V3PrimaryDriver(
+                event_type=pd_raw["event_type"],
+                body=pd_raw.get("body"),
+                target=pd_raw.get("target"),
+                aspect=pd_raw.get("aspect"),
+                metadata=dict(pd_raw.get("metadata", {})),
+            )
+            
+        turning_points.append(
+            V3EvidenceTurningPoint(
+                local_time=datetime.fromisoformat(tp["local_time"]),
+                reason=tp["reason"],
+                amplitude=float(tp["amplitude"]),
+                confidence=float(tp["confidence"]),
+                themes=list(tp.get("themes", [])),
+                drivers=list(tp.get("drivers", [])),
+                # Story 43.1
+                change_type=tp.get("change_type", "recomposition"),
+                previous_categories=list(tp.get("previous_categories", [])),
+                next_categories=list(tp.get("next_categories", [])),
+                primary_driver=pd,
+            )
         )
-        for turning_point in payload.get("turning_points", [])
-    ]
+        
     return V3EvidencePack(
         version=payload["version"],
         generated_at=datetime.fromisoformat(payload["generated_at"]),

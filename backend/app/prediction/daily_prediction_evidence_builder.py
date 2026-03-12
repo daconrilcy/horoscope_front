@@ -68,6 +68,11 @@ class DailyPredictionEvidenceBuilder:
                 confidence=tp.confidence,
                 themes=tp.categories_impacted,
                 drivers=[self._format_driver(d) for d in tp.drivers],
+                # Story 43.1
+                change_type=tp.change_type,
+                previous_categories=tp.previous_categories,
+                next_categories=tp.next_categories,
+                primary_driver=tp.primary_driver,
             )
             for tp in v3_output.turning_points
         ]
