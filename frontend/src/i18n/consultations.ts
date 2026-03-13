@@ -231,6 +231,16 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "free guidance",
     es: "orientación libre",
   },
+  key_points_label: {
+    fr: "Points clés",
+    en: "Key points",
+    es: "Puntos clave",
+  },
+  actionable_advice_label: {
+    fr: "Conseils",
+    en: "Advice",
+    es: "Consejos",
+  },
 }
 
 export function t(key: string, lang: AstrologyLang): string {

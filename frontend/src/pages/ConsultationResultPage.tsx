@@ -6,7 +6,7 @@ import { useContextualGuidance, GuidanceApiError } from "../api/guidance"
 import { useAstrologer } from "../api/astrologers"
 import { detectLang } from "../i18n/astrology"
 import { t } from "../i18n/consultations"
-import { AUTO_ASTROLOGER_ID, WIZARD_STEP_LABELS, getConsultationTypeConfig, getDrawingOptionConfig, getObjectiveForType, type ConsultationResult, type ConsultationType } from "../types/consultation"
+import { AUTO_ASTROLOGER_ID, WIZARD_STEP_LABELS, getConsultationTypeConfig, getObjectiveForType, type ConsultationResult } from "../types/consultation"
 import { generateUniqueId } from "../utils/generateUniqueId"
 import { classNames } from "../utils/classNames"
 
@@ -22,7 +22,8 @@ export function ConsultationResultPage() {
   const [error, setError] = useState<string | null>(null)
 
   const historyId = searchParams.get("id")
-  const currentResult = historyId
+  // @ts-ignore - Handle legacy history items that might be missing new fields during migration
+  const currentResult: ConsultationResult | undefined = historyId
     ? state.history.find((h) => h.id === historyId)
     : state.result
 
@@ -41,17 +42,11 @@ export function ConsultationResultPage() {
 
   const draftType = state.draft.type
   const draftAstrologerId = state.draft.astrologerId
-  const draftDrawingOption = state.draft.drawingOption
   const draftContext = state.draft.context
   const generationStarted = useRef(false)
 
   const typeConfig = useMemo(
     () => (currentResult ? getConsultationTypeConfig(currentResult.type) : undefined),
-    [currentResult]
-  )
-
-  const drawingOptionConfig = useMemo(
-    () => (currentResult ? getDrawingOptionConfig(currentResult.drawingOption) : undefined),
     [currentResult]
   )
 
@@ -65,28 +60,22 @@ export function ConsultationResultPage() {
     setError(null)
 
     try {
+      const objective = t(getObjectiveForType(draftType), lang)
       const guidanceResult = await contextualGuidance.mutateAsync({
         situation: draftContext,
-        objective: t(getObjectiveForType(draftType), lang),
+        objective: objective,
       })
-
-      let drawingResult: ConsultationResult["drawing"]
-      if (draftDrawingOption !== "none") {
-        const drawingLabel = t("drawing_completed", lang)
-        drawingResult =
-          draftDrawingOption === "tarot"
-            ? { cards: [drawingLabel] }
-            : { runes: [drawingLabel] }
-      }
 
       const result: ConsultationResult = {
         id: generateUniqueId(),
         type: draftType,
         astrologerId: draftAstrologerId,
-        drawingOption: draftDrawingOption,
         context: draftContext,
-        drawing: drawingResult,
-        interpretation: guidanceResult.summary,
+        objective: objective,
+        summary: guidanceResult.summary,
+        keyPoints: guidanceResult.key_points,
+        actionableAdvice: guidanceResult.actionable_advice,
+        disclaimer: guidanceResult.disclaimer,
         createdAt: new Date().toISOString(),
       }
 
@@ -100,7 +89,7 @@ export function ConsultationResultPage() {
     } finally {
       setIsGenerating(false)
     }
-  }, [draftType, draftAstrologerId, draftDrawingOption, draftContext, contextualGuidance, setResult, navigate, lang])
+  }, [draftType, draftAstrologerId, draftContext, contextualGuidance, setResult, navigate, lang])
 
   useEffect(() => {
     if (!historyId && !state.result && draftType !== null && !generationStarted.current) {
@@ -118,7 +107,8 @@ export function ConsultationResultPage() {
 
   const handleOpenInChat = useCallback(() => {
     if (currentResult) {
-      const message = `[Consultation ${t(typeConfig?.labelKey ?? "", lang)}]\n\n${currentResult.context}\n\n${t("interpretation_label", lang)}:\n${currentResult.interpretation}`
+      const interpretation = currentResult.summary || (currentResult as any).interpretation || ""
+      const message = `[Consultation ${t(typeConfig?.labelKey ?? "", lang)}]\n\n${currentResult.context}\n\n${t("interpretation_label", lang)}:\n${interpretation}`
       sessionStorage.setItem(CHAT_PREFILL_KEY, message)
       reset()
       const astrologerParam = currentResult.astrologerId !== AUTO_ASTROLOGER_ID
@@ -171,7 +161,7 @@ export function ConsultationResultPage() {
         <h1>{t("result_title", lang)}</h1>
       </header>
 
-      <div className="consultation-result-summary">
+      <div className="consultation-result-summary-section">
         <div className="consultation-result-type">
           <span className="consultation-result-type-icon" aria-hidden="true">
             {typeConfig?.icon}
@@ -185,11 +175,6 @@ export function ConsultationResultPage() {
           <span className="consultation-result-astrologer">
             {t(WIZARD_STEP_LABELS.astrologer, lang)}: {astrologerName}
           </span>
-          {currentResult.drawingOption !== "none" && (
-            <span className="consultation-result-drawing">
-              {t(drawingOptionConfig?.labelKey ?? "", lang)}
-            </span>
-          )}
         </div>
 
         <div className="consultation-result-context">
@@ -198,34 +183,41 @@ export function ConsultationResultPage() {
         </div>
       </div>
 
-      {currentResult.drawing && (
-        <div className="consultation-result-drawing-section">
-          {currentResult.drawing.cards && (
-            <div className="consultation-result-cards">
-              {currentResult.drawing.cards.map((card, index) => (
-                <span key={`card-${index}-${card}`} className="consultation-result-card">
-                  🃏 {card}
-                </span>
-              ))}
-            </div>
-          )}
-          {currentResult.drawing.runes && (
-            <div className="consultation-result-runes">
-              {currentResult.drawing.runes.map((rune, index) => (
-                <span key={`rune-${index}-${rune}`} className="consultation-result-rune">
-                  ᚱ {rune}
-                </span>
-              ))}
-            </div>
-          )}
+      <section className="consultation-result-guidance">
+        <div className="consultation-result-interpretation">
+          <h2>{t("interpretation", lang)}</h2>
+          <p className="consultation-result-interpretation-text">
+            {currentResult.summary || (currentResult as any).interpretation}
+          </p>
         </div>
-      )}
 
-      <section className="consultation-result-interpretation">
-        <h2>{t("interpretation", lang)}</h2>
-        <p className="consultation-result-interpretation-text">
-          {currentResult.interpretation}
-        </p>
+        {currentResult.keyPoints && currentResult.keyPoints.length > 0 && (
+          <div className="consultation-result-key-points">
+            <h3>{t("key_points_label", lang)}</h3>
+            <ul>
+              {currentResult.keyPoints.map((point, idx) => (
+                <li key={idx}>{point}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {currentResult.actionableAdvice && currentResult.actionableAdvice.length > 0 && (
+          <div className="consultation-result-advice">
+            <h3>{t("actionable_advice_label", lang)}</h3>
+            <ul>
+              {currentResult.actionableAdvice.map((advice, idx) => (
+                <li key={idx}>{advice}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {currentResult.disclaimer && (
+          <p className="consultation-result-disclaimer">
+            <em>{currentResult.disclaimer}</em>
+          </p>
+        )}
       </section>
 
       <div className="consultation-result-actions">

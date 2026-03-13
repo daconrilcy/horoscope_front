@@ -7,7 +7,6 @@ import {
   CONTEXT_MAX_LENGTH,
   WIZARD_STEP_LABELS,
   getConsultationTypeConfig,
-  getDrawingOptionConfig,
   type ConsultationDraft,
 } from "../../../types/consultation"
 
@@ -34,11 +33,6 @@ export function ValidationStep({
     [draft.type]
   )
 
-  const drawingConfig = useMemo(
-    () => getDrawingOptionConfig(draft.drawingOption),
-    [draft.drawingOption]
-  )
-
   return (
     <div className="wizard-step">
       <h2 className="wizard-step-title">{t("summary_title", lang)}</h2>
@@ -53,12 +47,6 @@ export function ValidationStep({
         <div className="validation-item">
           <span className="validation-label">{t(WIZARD_STEP_LABELS.astrologer, lang)}:</span>
           <span className="validation-value">{astrologerName}</span>
-        </div>
-        <div className="validation-item">
-          <span className="validation-label">{t(WIZARD_STEP_LABELS.drawing, lang)}:</span>
-          <span className="validation-value">
-            {t(drawingConfig?.labelKey ?? "", lang)}
-          </span>
         </div>
       </div>
 

@@ -5,13 +5,12 @@ import { useConsultation } from "../state/consultationStore"
 import {
   ConsultationTypeStep,
   AstrologerSelectStep,
-  DrawingOptionStep,
   ValidationStep,
   WizardProgress,
 } from "../features/consultations"
 import { detectLang } from "../i18n/astrology"
 import { t } from "../i18n/consultations"
-import { VALID_CONSULTATION_TYPES, type ConsultationType, type DrawingOption } from "../types/consultation"
+import { VALID_CONSULTATION_TYPES, type ConsultationType } from "../types/consultation"
 
 export function ConsultationWizardPage() {
   const navigate = useNavigate()
@@ -22,7 +21,6 @@ export function ConsultationWizardPage() {
     state,
     setType,
     setAstrologer,
-    setDrawingOption,
     setContext,
     nextStep,
     prevStep,
@@ -67,11 +65,6 @@ export function ConsultationWizardPage() {
     nextStep()
   }, [setAstrologer, nextStep])
 
-  const handleDrawingSelect = useCallback((option: DrawingOption) => {
-    setDrawingOption(option)
-    nextStep()
-  }, [setDrawingOption, nextStep])
-
   const renderStep = () => {
     switch (currentStepName) {
       case "type":
@@ -86,13 +79,6 @@ export function ConsultationWizardPage() {
           <AstrologerSelectStep
             selectedId={state.draft.astrologerId}
             onSelect={handleAstrologerSelect}
-          />
-        )
-      case "drawing":
-        return (
-          <DrawingOptionStep
-            selectedOption={state.draft.drawingOption}
-            onSelect={handleDrawingSelect}
           />
         )
       case "validation":

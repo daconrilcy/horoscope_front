@@ -70,13 +70,12 @@ describe("Consultation Reconnection (Story 46.1)", () => {
     })
 
     const TestWrapper = () => {
-      const { setType, setAstrologer, setDrawingOption, setContext } = useConsultation()
+      const { setType, setAstrologer, setContext } = useConsultation()
       React.useEffect(() => {
         setType("dating")
         setAstrologer("1")
-        setDrawingOption("none")
         setContext("Je vais à un premier rendez-vous.")
-      }, [setType, setAstrologer, setDrawingOption, setContext])
+      }, [setType, setAstrologer, setContext])
       return <ConsultationResultPage />
     }
 
@@ -109,13 +108,12 @@ describe("Consultation Reconnection (Story 46.1)", () => {
     mockUseContextualGuidance.mockRejectedValueOnce(new Error("Service Unavailable"))
 
     const TestWrapper = () => {
-      const { setType, setAstrologer, setDrawingOption, setContext } = useConsultation()
+      const { setType, setAstrologer, setContext } = useConsultation()
       React.useEffect(() => {
         setType("dating")
         setAstrologer("1")
-        setDrawingOption("none")
         setContext("Test context")
-      }, [setType, setAstrologer, setDrawingOption, setContext])
+      }, [setType, setAstrologer, setContext])
       return <ConsultationResultPage />
     }
 

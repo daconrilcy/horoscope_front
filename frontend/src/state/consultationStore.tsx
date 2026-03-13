@@ -10,11 +10,9 @@ import {
 import {
   HISTORY_MAX_LENGTH,
   VALID_CONSULTATION_TYPES,
-  VALID_DRAWING_OPTIONS,
   WIZARD_LAST_STEP_INDEX,
   WIZARD_STEPS,
   type ConsultationType,
-  type DrawingOption,
   type ConsultationDraft,
   type ConsultationResult,
   type WizardStep,
@@ -23,7 +21,6 @@ import {
 const INITIAL_DRAFT: ConsultationDraft = {
   type: null,
   astrologerId: null,
-  drawingOption: "none",
   context: "",
 }
 
@@ -37,8 +34,9 @@ export type ConsultationState = {
 export type ConsultationAction =
   | { type: "SET_TYPE"; payload: ConsultationType }
   | { type: "SET_ASTROLOGER"; payload: string }
-  | { type: "SET_DRAWING_OPTION"; payload: DrawingOption }
   | { type: "SET_CONTEXT"; payload: string }
+  | { type: "SET_OBJECTIVE"; payload: string }
+  | { type: "SET_TIME_HORIZON"; payload: string | null }
   | { type: "NEXT_STEP" }
   | { type: "PREV_STEP" }
   | { type: "GO_TO_STEP"; payload: number }
@@ -62,15 +60,20 @@ export function consultationReducer(
         ...state,
         draft: { ...state.draft, astrologerId: action.payload },
       }
-    case "SET_DRAWING_OPTION":
-      return {
-        ...state,
-        draft: { ...state.draft, drawingOption: action.payload },
-      }
     case "SET_CONTEXT":
       return {
         ...state,
         draft: { ...state.draft, context: action.payload },
+      }
+    case "SET_OBJECTIVE":
+      return {
+        ...state,
+        draft: { ...state.draft, objective: action.payload },
+      }
+    case "SET_TIME_HORIZON":
+      return {
+        ...state,
+        draft: { ...state.draft, timeHorizon: action.payload },
       }
     case "NEXT_STEP":
       return {
@@ -122,17 +125,6 @@ export function consultationReducer(
 export const STORAGE_KEY = "horoscope_consultations_history"
 export const CHAT_PREFILL_KEY = "chat_prefill"
 
-function isValidDrawing(drawing: unknown): boolean {
-  if (drawing === undefined) return true
-  if (typeof drawing !== "object" || drawing === null) return false
-  const d = drawing as Record<string, unknown>
-  if (d.cards !== undefined && !Array.isArray(d.cards)) return false
-  if (d.runes !== undefined && !Array.isArray(d.runes)) return false
-  if (d.cards !== undefined && !d.cards.every((c: unknown) => typeof c === "string")) return false
-  if (d.runes !== undefined && !d.runes.every((r: unknown) => typeof r === "string")) return false
-  return true
-}
-
 function isValidISODate(dateStr: unknown): boolean {
   if (typeof dateStr !== "string") return false
   if (dateStr.length === 0) return false
@@ -150,12 +142,9 @@ export function isValidConsultationResult(item: unknown): item is ConsultationRe
     typeof obj.type === "string" &&
     VALID_CONSULTATION_TYPES.includes(obj.type as ConsultationType) &&
     typeof obj.astrologerId === "string" &&
-    typeof obj.drawingOption === "string" &&
-    VALID_DRAWING_OPTIONS.includes(obj.drawingOption as DrawingOption) &&
     typeof obj.context === "string" &&
-    typeof obj.interpretation === "string" &&
-    isValidISODate(obj.createdAt) &&
-    isValidDrawing(obj.drawing)
+    typeof obj.interpretation === "string" && // Legacy compatibility for 46.2, will be cleaned in 46.3
+    isValidISODate(obj.createdAt)
   )
 }
 
@@ -165,7 +154,8 @@ function loadHistoryFromStorage(): ConsultationResult[] {
     if (!stored) return []
     const parsed: unknown = JSON.parse(stored)
     if (!Array.isArray(parsed)) return []
-    return parsed.filter(isValidConsultationResult)
+    // We'll be loose for now to allow migration in 46.3
+    return parsed as ConsultationResult[]
   } catch (e) {
     if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
       console.warn("[consultationStore] localStorage load failed:", e)
@@ -188,8 +178,9 @@ type ConsultationContextValue = {
   state: ConsultationState
   setType: (type: ConsultationType) => void
   setAstrologer: (id: string) => void
-  setDrawingOption: (option: DrawingOption) => void
   setContext: (context: string) => void
+  setObjective: (objective: string) => void
+  setTimeHorizon: (horizon: string | null) => void
   nextStep: () => void
   prevStep: () => void
   goToStep: (step: number) => void
@@ -218,12 +209,16 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "SET_ASTROLOGER", payload: id })
   }, [])
 
-  const setDrawingOption = useCallback((option: DrawingOption) => {
-    dispatch({ type: "SET_DRAWING_OPTION", payload: option })
-  }, [])
-
   const setContext = useCallback((context: string) => {
     dispatch({ type: "SET_CONTEXT", payload: context })
+  }, [])
+
+  const setObjective = useCallback((objective: string) => {
+    dispatch({ type: "SET_OBJECTIVE", payload: objective })
+  }, [])
+
+  const setTimeHorizon = useCallback((horizon: string | null) => {
+    dispatch({ type: "SET_TIME_HORIZON", payload: horizon })
   }, [])
 
   const nextStep = useCallback(() => {
@@ -258,8 +253,6 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
         return state.draft.type !== null
       case "astrologer":
         return state.draft.astrologerId !== null
-      case "drawing":
-        return true
       case "validation":
         return state.draft.context.trim().length > 0
       default:
@@ -272,8 +265,9 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       state,
       setType,
       setAstrologer,
-      setDrawingOption,
       setContext,
+      setObjective,
+      setTimeHorizon,
       nextStep,
       prevStep,
       goToStep,
@@ -287,8 +281,9 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       state,
       setType,
       setAstrologer,
-      setDrawingOption,
       setContext,
+      setObjective,
+      setTimeHorizon,
       nextStep,
       prevStep,
       goToStep,
