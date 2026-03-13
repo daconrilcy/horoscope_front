@@ -18,6 +18,7 @@ const mockNavigate = vi.fn()
 const mockPrecheckMutate = vi.fn()
 const mockGenerateMutateAsync = vi.fn()
 const mockGeocodeCity = vi.fn()
+let mockIsPrechecking = false
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom")
   return {
@@ -67,7 +68,7 @@ vi.mock("../api/consultations", () => ({
         },
       })
     },
-    isPending: false,
+    isPending: mockIsPrechecking,
   }),
   useConsultationGenerate: () => ({
     mutateAsync: mockGenerateMutateAsync,
@@ -126,6 +127,7 @@ describe("ConsultationsPage", () => {
     localStorage.clear()
     sessionStorage.clear()
     vi.clearAllMocks()
+    mockIsPrechecking = false
     mockGeocodeCity.mockResolvedValue({
       place_resolved_id: 777,
       lat: 48.8566,
@@ -172,6 +174,7 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
   beforeEach(() => {
     localStorage.clear()
     vi.clearAllMocks()
+    mockIsPrechecking = false
     mockGeocodeCity.mockResolvedValue({
       place_resolved_id: 777,
       lat: 48.8566,
@@ -252,6 +255,20 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
     // Next should be disabled until form filled (simplified state test)
     const nextBtn2 = screen.getByRole("button", { name: /Next/i })
     expect(nextBtn2).toBeDisabled()
+  })
+
+  it("keeps Next enabled on frame when a direct type link is still running its initial precheck", async () => {
+    mockIsPrechecking = true
+
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=orientation" })
+
+    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), {
+      target: { value: "Je veux clarifier ma direction de vie" },
+    })
+
+    expect(screen.getByRole("button", { name: /Next/i })).toBeEnabled()
   })
 
   it("uses natal geocoding protocol for third-party birth place and propagates resolved coordinates", async () => {

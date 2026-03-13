@@ -244,7 +244,7 @@ export function ConsultationWizardPage() {
               type="button"
               className="btn btn-primary"
               onClick={handleNext}
-              disabled={!canProceed || isPrechecking}
+              disabled={!canProceed}
             >
               {t("next", lang)}
             </button>

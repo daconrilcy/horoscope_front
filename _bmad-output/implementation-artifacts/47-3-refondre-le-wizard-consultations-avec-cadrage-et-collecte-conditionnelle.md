@@ -20,6 +20,7 @@ so that l'utilisateur ne saisisse que les informations nécessaires à la consul
 6. Le wizard gère les choix "je ne connais pas cette information" et prépare un basculement vers un mode dégradé plutôt qu'un abandon brutal.
 7. Les invariants du module consultations restent centralisés (`WIZARD_STEPS`, `canProceed`, draft state, deep links), et les tests couvrent les étapes dynamiques principales.
 8. Si l'utilisateur quitte un wizard en cours pour lancer un autre type de consultation depuis `/consultations`, le nouveau process repart proprement du type choisi et ne réutilise ni l'étape ni le draft du parcours précédent.
+9. Le précheck automatique lancé à l'arrivée sur un type de consultation ne doit pas bloquer le bouton `Suivant` du cadrage une fois les champs requis remplis.
 
 ## Tasks / Subtasks
 
@@ -50,6 +51,7 @@ so that l'utilisateur ne saisisse que les informations nécessaires à la consul
   - [x] Ajouter des scénarios de progression dynamique dans les tests frontend
   - [x] Vérifier que le choix d'astrologue n'est plus un bloquant artificiel
   - [x] Vérifier qu'un changement de type en cours de parcours réinitialise correctement le wizard sur le nouveau type
+  - [x] Vérifier que le précheck d'initialisation n'empêche pas d'avancer depuis le cadrage quand le formulaire est valide
 
 ## Dev Notes
 
@@ -59,6 +61,7 @@ so that l'utilisateur ne saisisse que les informations nécessaires à la consul
 - Astrologer selection moved to `summary` step and made optional.
 - Precheck integrated to inform user about precision and missing data.
 - Changer le `?type=` en cours de parcours réinitialise désormais le wizard au lieu de conserver l'étape précédente.
+- Le précheck lancé à l'arrivée sur un type direct reste informatif mais ne bloque plus `Suivant` au cadrage.
 
 ### Previous Story Intelligence
 
@@ -135,3 +138,4 @@ Gemini CLI
 - 2026-03-13: Initial implementation of story 47.3. Conditional wizard refactor.
 - 2026-03-13: Alignement du lieu de naissance tiers sur le protocole natal (`birth_city` / `birth_country` -> `search` / `resolve` -> `place_resolved_id` + `birth_lat` / `birth_lon`).
 - 2026-03-13: Correction de reprise d'etat: un nouveau type de consultation relance un wizard propre au lieu de reutiliser l'etape du parcours precedent.
+- 2026-03-13: Correction UX: le precheck initial sur un type direct ne grise plus le bouton `Suivant` quand le cadrage est complet.
