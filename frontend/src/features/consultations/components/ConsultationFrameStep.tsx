@@ -1,12 +1,13 @@
 import { detectLang } from "../../../i18n/astrology"
 import { t } from "../../../i18n/consultations"
-import { CONTEXT_MAX_LENGTH, type ConsultationDraft } from "../../../types/consultation"
+import { CONTEXT_MAX_LENGTH, INTERACTION_ELIGIBLE_TYPES, type ConsultationDraft } from "../../../types/consultation"
 
 type ConsultationFrameStepProps = {
   draft: ConsultationDraft
   onContextChange: (context: string) => void
   onObjectiveChange: (objective: string) => void
   onTimeHorizonChange: (timeHorizon: string) => void
+  onInteractionToggle?: (isInteraction: boolean) => void
 }
 
 export function ConsultationFrameStep({
@@ -14,8 +15,11 @@ export function ConsultationFrameStep({
   onContextChange,
   onObjectiveChange,
   onTimeHorizonChange,
+  onInteractionToggle,
 }: ConsultationFrameStepProps) {
   const lang = detectLang()
+  const isInteractionEligible = draft.type && INTERACTION_ELIGIBLE_TYPES.includes(draft.type)
+  const isRelationType = draft.type === "relation"
 
   return (
     <div className="wizard-step">
@@ -63,6 +67,20 @@ export function ConsultationFrameStep({
           placeholder={t("time_horizon_placeholder", lang)}
         />
         <p className="validation-context-hint">{t("time_horizon_hint", lang)}</p>
+
+        {isInteractionEligible && !isRelationType && onInteractionToggle && (
+          <div className="interaction-toggle-section">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={!!draft.isInteraction}
+                onChange={(e) => onInteractionToggle(e.target.checked)}
+              />
+              {t("is_interaction_label", lang)}
+            </label>
+            <p className="interaction-toggle-hint">{t("is_interaction_hint", lang)}</p>
+          </div>
+        )}
       </div>
     </div>
   )

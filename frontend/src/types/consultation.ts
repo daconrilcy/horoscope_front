@@ -23,6 +23,7 @@ export type ConsultationDraft = {
   objective?: string
   timeHorizon?: string | null
   otherPerson?: OtherPersonDraft | null
+  isInteraction?: boolean
 }
 
 export type ConsultationSection = {
@@ -57,6 +58,7 @@ export type ConsultationTypeConfig = {
   isLegacy?: boolean
   requiredData?: ("birth_profile" | "location" | "current_time")[]
   fallbackAllowed?: boolean
+  interactionEligible?: boolean
 }
 
 export const CONSULTATION_TYPES: ConsultationTypeConfig[] = [
@@ -75,6 +77,7 @@ export const CONSULTATION_TYPES: ConsultationTypeConfig[] = [
     icon: "💼",
     requiredData: ["birth_profile"],
     fallbackAllowed: true,
+    interactionEligible: true,
   },
   {
     id: "orientation",
@@ -91,6 +94,7 @@ export const CONSULTATION_TYPES: ConsultationTypeConfig[] = [
     icon: "🤝",
     requiredData: ["birth_profile"],
     fallbackAllowed: true,
+    interactionEligible: true,
   },
   {
     id: "timing",
@@ -133,6 +137,10 @@ export const CONSULTATION_TYPES: ConsultationTypeConfig[] = [
 
 export const VALID_CREATABLE_TYPES: ConsultationType[] = CONSULTATION_TYPES.filter(
   (c) => !c.isLegacy
+).map((c) => c.id)
+
+export const INTERACTION_ELIGIBLE_TYPES: ConsultationType[] = CONSULTATION_TYPES.filter(
+  (c) => c.interactionEligible
 ).map((c) => c.id)
 
 

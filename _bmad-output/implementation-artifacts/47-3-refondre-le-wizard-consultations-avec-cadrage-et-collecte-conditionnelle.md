@@ -1,6 +1,6 @@
 # Story 47.3: Refondre le wizard consultations avec cadrage et collecte conditionnelle
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 

@@ -1,6 +1,6 @@
 # Story 47.6: Refondre la génération et la restitution structurée des consultations
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -118,3 +118,4 @@ Gemini CLI
 ## Change Log
 
 - 2026-03-13: Initial implementation of story 47.6. Structured results and generation API integration.
+- 2026-03-13: Post-implementation verification fixes. `ConsultationResultPage` réalignée avec le contrat `precheck/result`, banner fallback restauré et clés i18n astrologue complétées.

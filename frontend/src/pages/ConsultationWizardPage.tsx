@@ -34,6 +34,7 @@ export function ConsultationWizardPage() {
     setObjective,
     setTimeHorizon,
     setOtherPerson,
+    setIsInteraction,
     setPrecheck,
     nextStep,
     prevStep,
@@ -42,22 +43,57 @@ export function ConsultationWizardPage() {
     currentStepName,
   } = useConsultation()
 
-  useEffect(() => {
-    const typeParam = searchParams.get("type")
-    if (typeParam && currentStepName === "type" && state.draft.type === null) {
-      if (VALID_CREATABLE_TYPES.includes(typeParam as ConsultationType)) {
-        const selectedType = typeParam as ConsultationType
-        setType(selectedType)
-        setObjective(t(getObjectiveForType(selectedType), lang))
-        
-        runPrecheck({ consultation_type: selectedType }, {
+  const startConsultationForType = useCallback(
+    (type: ConsultationType, advanceToNextStep: boolean) => {
+      setType(type)
+      setObjective(t(getObjectiveForType(type), lang))
+      setTimeHorizon(null)
+      setOtherPerson(null)
+      setPrecheck(null)
+
+      trackEvent(EVENTS.CONSULTATION_STARTED, { type })
+
+      runPrecheck(
+        { consultation_type: type },
+        {
           onSuccess: (response) => {
             setPrecheck(response.data)
-          }
-        })
+            trackEvent(EVENTS.CONSULTATION_PRECHECK, {
+              type,
+              status: response.data.status,
+              precision: response.data.precision_level,
+            })
+          },
+        }
+      )
+
+      if (advanceToNextStep) {
+        nextStep()
       }
+    },
+    [
+      setType,
+      setObjective,
+      setTimeHorizon,
+      setOtherPerson,
+      setPrecheck,
+      lang,
+      runPrecheck,
+      nextStep,
+    ]
+  )
+
+  useEffect(() => {
+    const typeParam = searchParams.get("type")
+    if (
+      typeParam &&
+      currentStepName === "type" &&
+      state.draft.type === null &&
+      VALID_CREATABLE_TYPES.includes(typeParam as ConsultationType)
+    ) {
+      startConsultationForType(typeParam as ConsultationType, true)
     }
-  }, [searchParams, currentStepName, state.draft.type, setType, setObjective, lang, runPrecheck, setPrecheck])
+  }, [searchParams, currentStepName, state.draft.type, startConsultationForType])
 
   const handleCancel = useCallback(() => {
     reset()
@@ -105,27 +141,8 @@ export function ConsultationWizardPage() {
   }, [canProceed, navigate])
 
   const handleTypeSelect = useCallback((type: ConsultationType) => {
-    setType(type)
-    setObjective(t(getObjectiveForType(type), lang))
-    setTimeHorizon(null)
-    setOtherPerson(null)
-    setPrecheck(null)
-    
-    trackEvent(EVENTS.CONSULTATION_STARTED, { type })
-    
-    runPrecheck({ consultation_type: type }, {
-      onSuccess: (response) => {
-        setPrecheck(response.data)
-        trackEvent(EVENTS.CONSULTATION_PRECHECK, { 
-          type, 
-          status: response.data.status,
-          precision: response.data.precision_level 
-        })
-      }
-    })
-    
-    nextStep()
-  }, [setType, setObjective, setTimeHorizon, setOtherPerson, setPrecheck, runPrecheck, nextStep, lang])
+    startConsultationForType(type, true)
+  }, [startConsultationForType])
 
   const renderStep = () => {
     switch (currentStepName) {
@@ -143,6 +160,7 @@ export function ConsultationWizardPage() {
             onContextChange={setContext}
             onObjectiveChange={setObjective}
             onTimeHorizonChange={setTimeHorizon}
+            onInteractionToggle={setIsInteraction}
           />
         )
       case "collection":

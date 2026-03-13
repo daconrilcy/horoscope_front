@@ -12,6 +12,7 @@ import {
   VALID_CONSULTATION_TYPES,
   WIZARD_LAST_STEP_INDEX,
   WIZARD_STEPS,
+  INTERACTION_ELIGIBLE_TYPES,
   getObjectiveForType,
   type ConsultationType,
   type ConsultationDraft,
@@ -23,7 +24,7 @@ import { type ConsultationPrecheckData } from "../api/consultations"
 
 const INITIAL_DRAFT: ConsultationDraft = {
   type: null,
-  astrologerId: "auto", // Default to auto
+  astrologerId: "auto",
   context: "",
 }
 
@@ -42,6 +43,7 @@ export type ConsultationAction =
   | { type: "SET_OBJECTIVE"; payload: string }
   | { type: "SET_TIME_HORIZON"; payload: string | null }
   | { type: "SET_OTHER_PERSON"; payload: OtherPersonDraft | null }
+  | { type: "SET_IS_INTERACTION"; payload: boolean }
   | { type: "NEXT_STEP" }
   | { type: "PREV_STEP" }
   | { type: "GO_TO_STEP"; payload: number }
@@ -59,7 +61,11 @@ export function consultationReducer(
     case "SET_TYPE":
       return {
         ...state,
-        draft: { ...state.draft, type: action.payload },
+        draft: { 
+          ...state.draft, 
+          type: action.payload,
+          isInteraction: action.payload === "relation" // Auto-select for relation
+        },
       }
     case "SET_ASTROLOGER":
       return {
@@ -85,6 +91,11 @@ export function consultationReducer(
       return {
         ...state,
         draft: { ...state.draft, otherPerson: action.payload },
+      }
+    case "SET_IS_INTERACTION":
+      return {
+        ...state,
+        draft: { ...state.draft, isInteraction: action.payload },
       }
     case "NEXT_STEP":
       return {
@@ -241,6 +252,7 @@ type ConsultationContextValue = {
   setObjective: (objective: string) => void
   setTimeHorizon: (horizon: string | null) => void
   setOtherPerson: (data: OtherPersonDraft | null) => void
+  setIsInteraction: (isInteraction: boolean) => void
   nextStep: () => void
   prevStep: () => void
   goToStep: (step: number) => void
@@ -287,6 +299,10 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "SET_OTHER_PERSON", payload: data })
   }, [])
 
+  const setIsInteraction = useCallback((isInteraction: boolean) => {
+    dispatch({ type: "SET_IS_INTERACTION", payload: isInteraction })
+  }, [])
+
   const nextStep = useCallback(() => {
     dispatch({ type: "NEXT_STEP" })
   }, [])
@@ -327,8 +343,12 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
           (state.draft.objective ?? "").trim().length > 0
         )
       case "collection":
-        // If precheck says we are blocked because of missing other person in relation path
+        // Required for relation
         if (state.draft.type === "relation" && !state.draft.otherPerson) {
+           return false
+        }
+        // Required if user explicitly asked for interaction on an eligible type
+        if (state.draft.isInteraction && !state.draft.otherPerson) {
            return false
         }
         // Basic other person validation if present
@@ -347,6 +367,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     state.draft.context,
     state.draft.objective,
     state.draft.otherPerson,
+    state.draft.isInteraction,
     state.precheck?.status,
   ])
 
@@ -359,6 +380,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       setObjective,
       setTimeHorizon,
       setOtherPerson,
+      setIsInteraction,
       nextStep,
       prevStep,
       goToStep,
@@ -377,6 +399,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       setObjective,
       setTimeHorizon,
       setOtherPerson,
+      setIsInteraction,
       nextStep,
       prevStep,
       goToStep,

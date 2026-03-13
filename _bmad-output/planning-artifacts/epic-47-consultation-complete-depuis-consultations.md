@@ -133,6 +133,7 @@ Limites actuelles:
 ### Chapitre 3 - Parcours de collecte, fallbacks et restitution
 
 - 47.3 Refondre le wizard consultations avec cadrage et collecte conditionnelle
+- 47.8 Etendre la collecte tiers aux consultations d'interaction ciblee
 - 47.4 Implémenter les modes dégradés et fallbacks des consultations
 - 47.6 Refondre la génération et la restitution structurée des consultations
 
@@ -186,6 +187,14 @@ Mitigation:
 - documenter noir sur blanc que les données tiers brutes ne sont pas persistées côté backend dans l'epic 47
 - verrouiller le wording contractuel par `fallback_mode` dans le module i18n consultations
 
+### Risque 7: limiter à tort la collecte tiers au seul type `relation`
+
+Mitigation:
+
+- expliciter les consultations d'interaction ciblee au-dela de `relation`
+- introduire un critere metier pour l'affichage du module tiers
+- couvrir le cas `work` par une story dediee et des tests wizard explicites
+
 ## Ordre recommandé d'implémentation
 
 ### Lot 1 - Référentiel et précheck
@@ -200,6 +209,7 @@ Mitigation:
 ### Lot 3 - UX conditionnelle et fallbacks
 
 - 47.3
+- 47.8
 - 47.4
 - 47.6
 
@@ -209,7 +219,7 @@ Mitigation:
 
 Chemin critique recommandé:
 
-- 47.1 -> 47.2 -> 47.5 -> 47.3 -> 47.4 -> 47.6 -> 47.7
+- 47.1 -> 47.2 -> 47.5 -> 47.3 -> 47.8 -> 47.4 -> 47.6 -> 47.7
 
 ## Références
 

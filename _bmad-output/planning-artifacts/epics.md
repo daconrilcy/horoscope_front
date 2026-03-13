@@ -2323,6 +2323,20 @@ so that l'utilisateur ne saisisse que les informations nécessaires à la consul
 
 [Source: docs/backlog_epics_consultation_complete.md ; frontend/src/pages/ConsultationWizardPage.tsx ; frontend/src/state/consultationStore.tsx ; frontend/src/api/birthProfile.ts]
 
+### Story 47.8: Etendre la collecte tiers aux consultations d'interaction ciblee
+
+As a consultations product engineer,
+I want permettre la saisie d'un tiers pour les consultations d'interaction ciblee au-dela du seul type `relation`,
+so that les parcours `work` ou assimilés puissent embarquer un contexte bi-profil quand l'utilisateur prepare un entretien, un rendez-vous ou une interaction ciblee avec une personne identifiee.
+
+**Acceptance Criteria:**
+- Le wizard distingue `self_only` et `targeted_interaction` pour les types eligibles, au minimum `work`.
+- Le module `OtherPersonForm` peut s'afficher pour un parcours `work` sans casser `relation`.
+- Les payloads `precheck` et `generate` propagent `other_person` pour ces parcours.
+- Les tests couvrent `work/self_only`, `work/targeted_interaction` et la non-regression `relation`.
+
+[Source: docs/backlog_epics_consultation_complete.md ; frontend/src/features/consultations/components/DataCollectionStep.tsx ; frontend/src/features/consultations/components/OtherPersonForm.tsx ; frontend/src/pages/ConsultationWizardPage.tsx]
+
 ### Story 47.4: Implémenter les modes dégradés et fallbacks des consultations
 
 As a consultation domain engineer,

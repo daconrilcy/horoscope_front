@@ -8,7 +8,6 @@ import { detectLang } from "../i18n/astrology"
 import { t } from "../i18n/consultations"
 import { 
   AUTO_ASTROLOGER_ID, 
-  WIZARD_STEP_LABELS, 
   getConsultationTypeConfig, 
   getObjectiveForType, 
   type ConsultationResult 
@@ -57,7 +56,7 @@ export function ConsultationResultPage() {
       : astrologer?.name ?? t("loading_name", lang)
 
   const draftType = state.draft.type
-  const draftAstrologerId = state.draft.astrologerId
+  const draftAstrologerId = state.draft.astrologerId ?? AUTO_ASTROLOGER_ID
   const draftContext = state.draft.context
   const draftObjective = state.draft.objective
   const draftTimeHorizon = state.draft.timeHorizon
@@ -80,9 +79,15 @@ export function ConsultationResultPage() {
     if (!currentResult?.fallbackMode && !currentResult?.precisionLevel) return null
     return {
       consultation_type: currentResult.type,
-      status: currentResult.fallbackMode ? "degraded" : "nominal",
+      status:
+        currentResult.precisionLevel === "blocked"
+          ? "blocked"
+          : currentResult.fallbackMode
+            ? "degraded"
+            : "nominal",
       precision_level: (currentResult.precisionLevel as any) || "high",
       fallback_mode: currentResult.fallbackMode as any,
+      safeguard_issue: null,
       user_profile_quality: "complete",
       missing_fields: [],
       available_modes: [],
@@ -91,7 +96,7 @@ export function ConsultationResultPage() {
   }, [currentResult])
 
   const generateInterpretation = useCallback(async () => {
-    if (draftType === null || draftAstrologerId === null) {
+    if (draftType === null) {
       navigate("/consultations/new")
       return
     }
@@ -151,7 +156,6 @@ export function ConsultationResultPage() {
     }
   }, [
     draftType,
-    draftAstrologerId,
     draftContext,
     draftObjective,
     draftTimeHorizon,

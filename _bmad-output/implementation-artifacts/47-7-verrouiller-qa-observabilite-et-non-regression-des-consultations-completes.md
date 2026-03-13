@@ -1,6 +1,6 @@
 # Story 47.7: Verrouiller QA, observabilité et non-régression des consultations complètes
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -115,3 +115,4 @@ Gemini CLI
 ## Change Log
 
 - 2026-03-13: Initial implementation of story 47.7. QA, observability and closing gate.
+- 2026-03-13: Post-implementation verification fixes. Suites frontend réalignées sur le contrat consultations v47 et mocks stabilisés pour le wizard/résultat.

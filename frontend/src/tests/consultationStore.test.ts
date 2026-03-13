@@ -26,6 +26,7 @@ const createInitialState = (): ConsultationState => ({
   step: 0,
   result: null,
   history: [],
+  precheck: null,
 })
 
 const createMockResult = (overrides?: Partial<ConsultationResult>): ConsultationResult => ({
@@ -113,6 +114,7 @@ describe("consultationReducer", () => {
       step: WIZARD_LAST_STEP_INDEX,
       result: mockResult,
       history: [mockResult],
+      precheck: null,
     }
 
     const result = consultationReducer(state, { type: "RESET" })
@@ -200,11 +202,12 @@ describe("type exports", () => {
   })
 
   it("exposes wizard steps and labels without drawing step", () => {
-    expect(WIZARD_STEPS).toEqual(["type", "astrologer", "validation"])
+    expect(WIZARD_STEPS).toEqual(["type", "frame", "collection", "summary"])
     expect(WIZARD_STEP_LABELS).toEqual({
       type: "step_type",
-      astrologer: "step_astrologer",
-      validation: "step_validation",
+      frame: "step_frame",
+      collection: "step_collection",
+      summary: "step_summary",
     })
   })
 })

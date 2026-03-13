@@ -1,15 +1,16 @@
-from typing import Dict, Literal, Optional
+from typing import Literal
+
 from app.api.v1.schemas.consultation import (
-    SafeguardIssue, 
-    ConsultationPrecheckData, 
-    ConsultationStatus, 
-    PrecisionLevel, 
-    FallbackMode
+    ConsultationPrecheckData,
+    ConsultationStatus,
+    FallbackMode,
+    PrecisionLevel,
+    SafeguardIssue,
 )
 
 SafeguardResolution = Literal["fallback", "refusal", "reframing"]
 
-SAFEGUARD_MATRIX: Dict[SafeguardIssue, SafeguardResolution] = {
+SAFEGUARD_MATRIX: dict[SafeguardIssue, SafeguardResolution] = {
     SafeguardIssue.health: "refusal",
     SafeguardIssue.emotional_distress: "reframing",
     SafeguardIssue.obsessive_relation: "reframing",
@@ -19,38 +20,41 @@ SAFEGUARD_MATRIX: Dict[SafeguardIssue, SafeguardResolution] = {
     SafeguardIssue.third_party_manipulation: "refusal",
 }
 
+
 class ConsultationFallbackService:
     @staticmethod
     def resolve_safeguard(issue: SafeguardIssue) -> SafeguardResolution:
         return SAFEGUARD_MATRIX.get(issue, "refusal")
 
     @staticmethod
-    def resolve_route_key(data: ConsultationPrecheckData) -> Optional[str]:
-        if data.status == ConsultationStatus.blocked:
+    def resolve_route_key(data: ConsultationPrecheckData) -> str | None:
+        if data.status == ConsultationStatus.blocked or data.fallback_mode in {
+            FallbackMode.safeguard_reframed,
+            FallbackMode.safeguard_refused,
+        }:
             return None
-            
-        t = data.consultation_type
-        p = data.precision_level
-        f = data.fallback_mode
-        
-        if t in ["period", "work", "orientation"]:
-            if p == PrecisionLevel.high:
-                return f"{t}_full"
-            else:
-                return f"{t}_no_birth_time"
-                
-        if t == "relation":
-            if f == FallbackMode.other_no_birth_time:
+
+        consultation_type = data.consultation_type
+        precision = data.precision_level
+        fallback_mode = data.fallback_mode
+
+        if consultation_type in ["period", "work", "orientation"]:
+            if precision == PrecisionLevel.high:
+                return f"{consultation_type}_full"
+            return f"{consultation_type}_no_birth_time"
+
+        if consultation_type == "relation":
+            if fallback_mode == FallbackMode.other_no_birth_time:
                 return "relation_full_other_no_time"
-            if f == FallbackMode.relation_user_only:
+            if fallback_mode == FallbackMode.relation_user_only:
                 return "relation_user_only"
-            if p == PrecisionLevel.high:
+            if precision == PrecisionLevel.high:
                 return "relation_full_full"
-            return "relation_user_only" # Default fallback
-            
-        if t == "timing":
-            if p == PrecisionLevel.high:
+            return "relation_user_only"
+
+        if consultation_type == "timing":
+            if precision == PrecisionLevel.high:
                 return "timing_full"
             return "timing_degraded"
-            
+
         return None

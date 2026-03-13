@@ -19,7 +19,7 @@ export function DataCollectionStep({
   const lang = detectLang()
 
   const isUserMissingData = precheck?.user_profile_quality === "missing" || precheck?.user_profile_quality === "incomplete"
-  const isRelationPath = draft.type === "relation"
+  const isInteractionPath = draft.type === "relation" || draft.isInteraction
 
   return (
     <div className="wizard-step">
@@ -47,7 +47,7 @@ export function DataCollectionStep({
         </div>
       )}
 
-      {isRelationPath && (
+      {isInteractionPath && (
         <div className="relation-data-collection">
           <OtherPersonForm
             value={draft.otherPerson ?? null}
@@ -56,7 +56,7 @@ export function DataCollectionStep({
         </div>
       )}
 
-      {!isUserMissingData && !isRelationPath && (
+      {!isUserMissingData && !isInteractionPath && (
         <div className="nothing-to-collect">
           <p>{t("no_extra_data_needed", lang)}</p>
         </div>

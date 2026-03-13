@@ -1,6 +1,6 @@
 # Story 47.2: Exposer le précheck de complétude et de précision des consultations
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -122,3 +122,4 @@ Gemini CLI
 ## Change Log
 
 - 2026-03-13: Initial implementation of story 47.2. Consultation precheck API and hook.
+- 2026-03-13: Post-implementation verification fixes. Précheck durci sur `UserBirthProfileServiceError` et tests isolés avec `monkeypatch`.

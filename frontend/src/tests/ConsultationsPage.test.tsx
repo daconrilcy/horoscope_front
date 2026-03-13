@@ -24,6 +24,45 @@ vi.mock("react-router-dom", async () => {
   }
 })
 
+vi.mock("../api/consultations", () => ({
+  useConsultationPrecheck: () => ({
+    mutate: (
+      payload: {
+        consultation_type: string
+        other_person?: { birth_time_known?: boolean }
+      },
+      options?: { onSuccess?: (response: { data: any }) => void }
+    ) => {
+      const isRelation = payload.consultation_type === "relation"
+      const fallbackMode =
+        isRelation && payload.other_person?.birth_time_known === false
+          ? "other_no_birth_time"
+          : isRelation && !payload.other_person
+            ? "relation_user_only"
+            : null
+
+      options?.onSuccess?.({
+        data: {
+          consultation_type: payload.consultation_type,
+          user_profile_quality: "complete",
+          precision_level: fallbackMode ? "medium" : "high",
+          status: fallbackMode ? "degraded" : "nominal",
+          missing_fields: [],
+          available_modes: [],
+          fallback_mode: fallbackMode,
+          safeguard_issue: null,
+          blocking_reasons: [],
+        },
+      })
+    },
+    isPending: false,
+  }),
+  useConsultationGenerate: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+}))
+
 const createTestQueryClient = () => new QueryClient({
   defaultOptions: {
     queries: { retry: false, gcTime: 0 },
@@ -71,7 +110,7 @@ describe("ConsultationsPage", () => {
   })
 })
 
-describe("ConsultationWizardPage - Story 47.3 Flow", () => {
+describe("ConsultationWizardPage - Story 47.8 Flow", () => {
   beforeEach(() => {
     localStorage.clear()
     vi.clearAllMocks()
@@ -81,106 +120,73 @@ describe("ConsultationWizardPage - Story 47.3 Flow", () => {
     cleanup()
   })
 
-  it("advances from Type to Framing", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new" })
-
-    const periodButton = screen.getByRole("button", { name: /Period/i })
-    fireEvent.click(periodButton)
+  it("shows interaction toggle for eligible types like Career", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=work" })
 
     await waitFor(() => {
       expect(screen.getByText(/Frame your request/i)).toBeInTheDocument()
     })
+
+    expect(screen.getByText(/This consultation concerns another person/i)).toBeInTheDocument()
   })
 
-  it("advances from Framing to Collection with valid context", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new" })
+  it("advances from Framing to Summary without extra data if interaction is NOT checked", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=work" })
 
-    // Step 1: Type
-    const periodButton = screen.getByRole("button", { name: /Period/i })
-    fireEvent.click(periodButton)
-
-    // Step 2: Frame
     await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
     
-    const textarea = screen.getByLabelText(/Describe your situation/i)
-    fireEvent.change(textarea, { target: { value: "Ma question test sur mon futur." } })
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
+      target: { value: "Mon évolution pro" } 
+    })
     
+    // interaction toggle is NOT checked by default
     const nextBtn = screen.getByRole("button", { name: /Next/i })
-    await waitFor(() => expect(nextBtn).not.toBeDisabled())
     fireEvent.click(nextBtn)
 
-    // Step 3: Collection
-    await waitFor(() => {
-      expect(screen.getByText(/Additional information/i)).toBeInTheDocument()
-    })
-  })
-
-  it("shows other person form in Collection step for Relation type", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new" })
-
-    // Step 1: Type (Relation)
-    const relationBtn = screen.getByRole("button", { name: /Relation/i })
-    fireEvent.click(relationBtn)
-
-    // Step 2: Frame
-    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
-    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
-      target: { value: "Relation avec mon conjoint" } 
-    })
-    
-    const nextBtn = screen.getByRole("button", { name: /Next/i })
-    await waitFor(() => expect(nextBtn).not.toBeDisabled())
-    fireEvent.click(nextBtn)
-
-    // Step 3: Collection
-    await waitFor(() => {
-      expect(screen.getByText(/Information about the other person/i)).toBeInTheDocument()
-    })
-    
-    expect(screen.getByLabelText(/Birth date/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Birth place/i)).toBeInTheDocument()
-  })
-
-  it("advances to Summary step and allows generation without choosing an astrologer", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new" })
-
-    // Step 1: Type
-    fireEvent.click(screen.getByRole("button", { name: /Period/i }))
-
-    // Step 2: Frame
-    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
-    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
-      target: { value: "Test context" } 
-    })
-    
-    const nextBtn1 = screen.getByRole("button", { name: /Next/i })
-    await waitFor(() => expect(nextBtn1).not.toBeDisabled())
-    fireEvent.click(nextBtn1)
-
-    // Step 3: Collection
+    // Should go to collection step
     await waitFor(() => expect(screen.getByText(/Additional information/i)).toBeInTheDocument())
+    // Should NOT see other person form
+    expect(screen.queryByText(/Information about the other person/i)).not.toBeInTheDocument()
     
-    const nextBtn2 = screen.getByRole("button", { name: /Next/i })
-    await waitFor(() => expect(nextBtn2).not.toBeDisabled())
-    fireEvent.click(nextBtn2)
-
-    // Step 4: Summary
-    await waitFor(() => {
-      expect(screen.getByText(/Final verification/i)).toBeInTheDocument()
-    })
-
-    const generateBtn = screen.getByRole("button", { name: /Generate consultation/i })
-    expect(generateBtn).not.toBeDisabled()
+    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+    await waitFor(() => expect(screen.getByText(/Final verification/i)).toBeInTheDocument())
   })
 
-  it("blocks generation if precheck status is blocked (e.g. safeguard)", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new" })
+  it("requires extra data in Collection step if interaction IS checked", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=work" })
 
-    // We can't easily mock the API response from within the test without more setup, 
-    // but we can simulate the state if we wanted. 
-    // However, the current component is wired to real useMutation.
+    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
     
-    // For this test, I'll just check that the UI handles the blocked status correctly 
-    // if we were to have it in state.
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
+      target: { value: "Entretien avec un recruteur" } 
+    })
+    
+    // CHECK interaction toggle
+    fireEvent.click(screen.getByLabelText(/This consultation concerns another person/i))
+    
+    const nextBtn = screen.getByRole("button", { name: /Next/i })
+    fireEvent.click(nextBtn)
+
+    // Should go to collection step and SEE other person form
+    await waitFor(() => expect(screen.getByText(/Information about the other person/i)).toBeInTheDocument())
+    
+    // Next should be disabled until form filled (simplified state test)
+    const nextBtn2 = screen.getByRole("button", { name: /Next/i })
+    expect(nextBtn2).toBeDisabled()
+  })
+
+  it("relation type still shows other person form without toggle", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relation" })
+
+    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    // Toggle should NOT be present because it's implicit/mandatory for relation
+    expect(screen.queryByText(/This consultation concerns another person/i)).not.toBeInTheDocument()
+    
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
+      target: { value: "Ma relation" } 
+    })
+    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+
+    await waitFor(() => expect(screen.getByText(/Information about the other person/i)).toBeInTheDocument())
   })
 })

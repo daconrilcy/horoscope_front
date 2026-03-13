@@ -1,6 +1,6 @@
 # Story 47.5: Construire le dossier de consultation et le routing LLM versionné
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -124,3 +124,4 @@ Gemini CLI
 ## Change Log
 
 - 2026-03-13: Initial implementation of story 47.5. Consultation dossier and LLM routing.
+- 2026-03-13: Post-implementation verification fixes. `route_key` nul en cas de `safeguard_reframed/refused` et génération court-circuitée pour les cas bloquants/recadrés.

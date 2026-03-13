@@ -1,6 +1,6 @@
 # Story 47.4: Implémenter les modes dégradés et fallbacks des consultations
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 

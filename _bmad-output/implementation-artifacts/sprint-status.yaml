@@ -415,11 +415,12 @@ development_status:
   epic-46-retrospective: done
 
   epic-47: in-progress
-  47-1-redefinir-le-catalogue-produit-et-la-taxonomie-des-consultations-completes: ready-for-dev
-  47-2-exposer-le-precheck-de-completude-et-de-precision-des-consultations: ready-for-dev
-  47-3-refondre-le-wizard-consultations-avec-cadrage-et-collecte-conditionnelle: ready-for-dev
-  47-4-implementer-les-modes-degrades-et-fallbacks-des-consultations: ready-for-dev
-  47-5-construire-le-dossier-de-consultation-et-le-routing-llm-versionne: ready-for-dev
-  47-6-refondre-la-generation-et-la-restitution-structuree-des-consultations: ready-for-dev
-  47-7-verrouiller-qa-observabilite-et-non-regression-des-consultations-completes: ready-for-dev
+  47-1-redefinir-le-catalogue-produit-et-la-taxonomie-des-consultations-completes: done
+  47-2-exposer-le-precheck-de-completude-et-de-precision-des-consultations: done
+  47-3-refondre-le-wizard-consultations-avec-cadrage-et-collecte-conditionnelle: done
+  47-4-implementer-les-modes-degrades-et-fallbacks-des-consultations: done
+  47-5-construire-le-dossier-de-consultation-et-le-routing-llm-versionne: done
+  47-6-refondre-la-generation-et-la-restitution-structuree-des-consultations: done
+  47-7-verrouiller-qa-observabilite-et-non-regression-des-consultations-completes: done
+  47-8-etendre-la-collecte-tiers-aux-consultations-d-interaction-ciblee: ready-for-dev
   epic-47-retrospective: optional

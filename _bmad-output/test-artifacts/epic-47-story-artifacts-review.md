@@ -1,7 +1,7 @@
 # Epic 47 Story Artifacts Review
 
 Date: 2026-03-13
-Statut: validé pour lancement en `ready-for-dev`
+Statut: implémentation vérifiée et corrigée
 
 ## Objectif de la revue
 
@@ -27,6 +27,31 @@ Elles respectent les garde-fous suivants:
 - la gouvernance MVP des données tiers est explicitée sans persistance backend implicite
 - le wording de fallback est traité comme un contrat i18n testable, pas comme une simple copie UI
 - les enums partagées et exemples JSON canoniques sont désormais figés avant lancement dev
+
+## Correctifs appliqués après vérification
+
+- Correction backend du précheck: capture ciblée de `UserBirthProfileServiceError` au lieu d'un `except Exception` générique.
+- Correction backend du routing/generate: `route_key` nul et réponse structurée pour les cas `blocked`, `safeguard_refused` et `safeguard_reframed`, sans appel inutile à `GuidanceService`.
+- Correction frontend du résultat: reconstruction du `precheck` embarqué compatible avec le contrat v47 et suppression d'une régression TypeScript sur `draftAstrologerId`.
+- Correction frontend i18n: ajout des clés astrologue manquantes (`auto`, `loading`, `select`, `error`) pour éviter un rendu brut des identifiants de traduction.
+- Correction tests backend: isolation des mocks de profil natal pour éviter la pollution entre unit et integration tests.
+- Correction tests frontend: réalignement du wizard et du résultat sur le contrat `useConsultationPrecheck` / `useConsultationGenerate` de l'epic 47.
+- Correction frontend du wizard: un accès direct depuis le hub `/consultations` avec `?type=` saute maintenant correctement l'étape de sélection du type au lieu de l'afficher deux fois.
+
+## Gap résiduel converti en story
+
+- Le code actuel n'affiche le module tiers que pour `relation` via une condition hardcodée dans `DataCollectionStep.tsx`.
+- Pour `work`, l'absence de saisie tiers n'est donc pas un bug de rendu mais une capacité non implémentée.
+- Une story de suivi a été ajoutée pour ce besoin: `47.8 Etendre la collecte tiers aux consultations d'interaction ciblee`.
+
+## Vérifications exécutées
+
+- Backend: `pytest -q app/tests/unit/services/test_consultation_precheck_service.py app/tests/unit/services/test_consultation_fallback_service.py app/tests/integration/test_consultations_router.py`
+- Backend: `ruff check app/api/v1/schemas/consultation.py app/api/v1/routers/consultations.py app/services/consultation_precheck_service.py app/services/consultation_fallback_service.py app/services/consultation_generation_service.py app/tests/unit/services/test_consultation_precheck_service.py app/tests/unit/services/test_consultation_fallback_service.py app/tests/integration/test_consultations_router.py`
+- Frontend: `npm run lint`
+- Frontend: `npm test -- src/tests/ConsultationsPage.test.tsx src/tests/consultationStore.test.ts src/tests/ConsultationMigration.test.tsx src/tests/ConsultationReconnection.test.tsx`
+- Frontend: `npm run build`
+- Backend smoke: `python -c "from app.main import app; print(app.title)"`
 
 ## Vérification story par story
 

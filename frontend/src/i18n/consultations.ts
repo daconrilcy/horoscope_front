@@ -231,6 +231,16 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Optional, useful to frame the guidance.",
     es: "Opcional, útil para encuadrar la guía.",
   },
+  is_interaction_label: {
+    fr: "Cette consultation concerne une autre personne",
+    en: "This consultation concerns another person",
+    es: "Esta consulta se refiere a otra persona",
+  },
+  is_interaction_hint: {
+    fr: "Cochez pour ajouter les données de naissance d'un tiers (ex: partenaire, collègue, recruteur).",
+    en: "Check to add birth data for a third party (e.g., partner, colleague, recruiter).",
+    es: "Marque para añadir los datos de nacimiento de un tercero (ej: pareja, colega, reclutador).",
+  },
   other_person_title: {
     fr: "Informations sur l'autre personne",
     en: "Information about the other person",
@@ -325,6 +335,36 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     fr: "Choisissez votre astrologue (optionnel)",
     en: "Choose your astrologer (optional)",
     es: "Elija a su astrólogo (opcional)",
+  },
+  select_astrologer: {
+    fr: "Sélectionnez un astrologue",
+    en: "Select an astrologer",
+    es: "Seleccione un astrólogo",
+  },
+  step_astrologer: {
+    fr: "Astrologue",
+    en: "Astrologer",
+    es: "Astrólogo",
+  },
+  auto_astrologer: {
+    fr: "Sélection automatique",
+    en: "Automatic selection",
+    es: "Selección automática",
+  },
+  loading: {
+    fr: "Chargement...",
+    en: "Loading...",
+    es: "Cargando...",
+  },
+  loading_name: {
+    fr: "Chargement du nom...",
+    en: "Loading name...",
+    es: "Cargando nombre...",
+  },
+  error_loading_astrologers: {
+    fr: "Impossible de charger les astrologues.",
+    en: "Unable to load astrologers.",
+    es: "No se pueden cargar los astrólogos.",
   },
   type_label: {
     fr: "Type",

@@ -7,9 +7,9 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
-from datetime import date
 
 client = TestClient(app)
+
 
 def _cleanup_tables() -> None:
     Base.metadata.drop_all(bind=engine)
@@ -18,6 +18,7 @@ def _cleanup_tables() -> None:
         db.execute(delete(UserBirthProfileModel))
         db.execute(delete(UserModel))
         db.commit()
+
 
 def _get_auth_headers(email="user@example.com"):
     register = client.post(
@@ -28,26 +29,32 @@ def _get_auth_headers(email="user@example.com"):
     token = register.json()["data"]["tokens"]["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
+
 def test_precheck_unauthenticated():
     _cleanup_tables()
     response = client.post("/v1/consultations/precheck", json={"consultation_type": "period"})
     assert response.status_code == 401
 
+
 def test_precheck_authenticated_no_profile():
     _cleanup_tables()
     headers = _get_auth_headers()
-    response = client.post("/v1/consultations/precheck", json={"consultation_type": "period"}, headers=headers)
-    
+    response = client.post(
+        "/v1/consultations/precheck",
+        json={"consultation_type": "period"},
+        headers=headers,
+    )
+
     assert response.status_code == 200
     json_data = response.json()
     assert json_data["data"]["user_profile_quality"] == "missing"
     assert json_data["data"]["status"] == "blocked"
 
+
 def test_precheck_authenticated_nominal():
     _cleanup_tables()
     headers = _get_auth_headers()
-    
-    # Create birth profile
+
     client.put(
         "/v1/users/me/birth-data",
         headers=headers,
@@ -58,20 +65,24 @@ def test_precheck_authenticated_nominal():
             "birth_timezone": "Europe/Paris",
         },
     )
-    
-    response = client.post("/v1/consultations/precheck", json={"consultation_type": "period"}, headers=headers)
-    
+
+    response = client.post(
+        "/v1/consultations/precheck",
+        json={"consultation_type": "period"},
+        headers=headers,
+    )
+
     assert response.status_code == 200
     json_data = response.json()
     assert json_data["data"]["consultation_type"] == "period"
     assert json_data["data"]["status"] == "nominal"
     assert json_data["data"]["user_profile_quality"] == "complete"
 
+
 def test_generate_authenticated_nominal():
     _cleanup_tables()
     headers = _get_auth_headers()
-    
-    # Create birth profile
+
     client.put(
         "/v1/users/me/birth-data",
         headers=headers,
@@ -82,16 +93,16 @@ def test_generate_authenticated_nominal():
             "birth_timezone": "Europe/Paris",
         },
     )
-    
+
     response = client.post(
-        "/v1/consultations/generate", 
+        "/v1/consultations/generate",
         json={
             "consultation_type": "period",
-            "question": "Comment va se passer mon mois ?"
-        }, 
-        headers=headers
+            "question": "Comment va se passer mon mois ?",
+        },
+        headers=headers,
     )
-    
+
     assert response.status_code == 200
     json_data = response.json()
     assert json_data["data"]["consultation_type"] == "period"

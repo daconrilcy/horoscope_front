@@ -5,7 +5,6 @@ import { t } from "../../../i18n/consultations"
 import {
   AUTO_ASTROLOGER_ID,
   CONTEXT_MAX_LENGTH,
-  WIZARD_STEP_LABELS,
   getConsultationTypeConfig,
   type ConsultationDraft,
 } from "../../../types/consultation"
@@ -43,17 +42,17 @@ export function ValidationStep({
 
   return (
     <div className="wizard-step">
-      <h2 className="wizard-step-title">{t("summary_title", lang)}</h2>
+      <h2 className="wizard-step-title">{t("summary_step_title", lang)}</h2>
 
       <div className="validation-summary">
         <div className="validation-item">
-          <span className="validation-label">{t(WIZARD_STEP_LABELS.type, lang)}:</span>
+          <span className="validation-label">{t("step_type", lang)}:</span>
           <span className="validation-value">
             {typeConfig && t(typeConfig.labelKey, lang)}
           </span>
         </div>
         <div className="validation-item">
-          <span className="validation-label">{t(WIZARD_STEP_LABELS.astrologer, lang)}:</span>
+          <span className="validation-label">{t("choose_astrologer_optional", lang)}:</span>
           <span className="validation-value">{astrologerName}</span>
         </div>
       </div>

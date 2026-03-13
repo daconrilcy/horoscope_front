@@ -1,6 +1,6 @@
 # Story 47.1: Redéfinir le catalogue produit et la taxonomie des consultations complètes
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
