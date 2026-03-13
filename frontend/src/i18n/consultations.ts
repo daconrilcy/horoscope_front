@@ -486,6 +486,21 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Generate consultation",
     es: "Generar consulta",
   },
+  generating: {
+    fr: "Génération de votre consultation en cours...",
+    en: "Generating your consultation...",
+    es: "Generando su consulta...",
+  },
+  generation_timeout: {
+    fr: "La génération prend trop de temps. Veuillez réessayer.",
+    en: "Generation is taking too long. Please try again.",
+    es: "La generación está tardando demasiado. Inténtelo de nuevo.",
+  },
+  error_generation: {
+    fr: "La génération de la consultation a échoué.",
+    en: "Consultation generation failed.",
+    es: "La generación de la consulta falló.",
+  },
   result_title: {
     fr: "Résultat de votre consultation",
     en: "Your consultation result",
@@ -505,6 +520,41 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     fr: "Conseils",
     en: "Advice",
     es: "Consejos",
+  },
+  back_to_consultations: {
+    fr: "Retour aux consultations",
+    en: "Back to consultations",
+    es: "Volver a consultas",
+  },
+  open_in_chat: {
+    fr: "Ouvrir dans le chat",
+    en: "Open in chat",
+    es: "Abrir en el chat",
+  },
+  save: {
+    fr: "Sauvegarder",
+    en: "Save",
+    es: "Guardar",
+  },
+  saved: {
+    fr: "Sauvegardé",
+    en: "Saved",
+    es: "Guardado",
+  },
+  objective_summary_label: {
+    fr: "Objet",
+    en: "Objective",
+    es: "Objetivo",
+  },
+  time_horizon_summary_label: {
+    fr: "Horizon temporel",
+    en: "Time horizon",
+    es: "Horizonte temporal",
+  },
+  interpretation_label: {
+    fr: "Interprétation",
+    en: "Interpretation",
+    es: "Interpretación",
   },
 }
 

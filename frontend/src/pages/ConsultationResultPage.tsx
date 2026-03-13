@@ -36,6 +36,7 @@ export function ConsultationResultPage() {
   const consultationGenerate = useConsultationGenerate()
 
   const [error, setError] = useState<string | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
 
   const historyId = searchParams.get("id")
   const currentResult: ConsultationResult | undefined = historyId
@@ -102,6 +103,7 @@ export function ConsultationResultPage() {
     }
 
     setError(null)
+    setIsGenerating(true)
 
     try {
       const objective = resolveObjectiveText(draftObjective, draftType, lang)
@@ -110,6 +112,7 @@ export function ConsultationResultPage() {
       const payload = {
         consultation_type: draftType,
         question: draftContext,
+        objective,
         horizon: timeHorizon ?? undefined,
         astrologer_id: draftAstrologerId,
         other_person: draftOtherPerson ? {
@@ -159,14 +162,21 @@ export function ConsultationResultPage() {
 
       setResult(result)
     } catch (err: any) {
-      setError(err.message || t("error_generation", lang))
+      setError(
+        err?.code === "request_timeout" || err?.name === "AbortError"
+          ? t("generation_timeout", lang)
+          : err.message || t("error_generation", lang)
+      )
       trackEvent(EVENTS.CONSULTATION_ERROR, { 
         type: draftType,
         error: err.message || "unknown"
       })
+    } finally {
+      setIsGenerating(false)
     }
   }, [
     draftType,
+    draftAstrologerId,
     draftContext,
     draftObjective,
     draftTimeHorizon,
@@ -214,7 +224,7 @@ export function ConsultationResultPage() {
     }
   }, [currentResult, typeConfig, reset, navigate, lang])
 
-  if (consultationGenerate.isPending) {
+  if (isGenerating && !currentResult && !error) {
     return (
       <div className="panel consultation-result-page">
         <div className="consultation-result-loading" aria-live="polite" aria-busy="true">

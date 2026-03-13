@@ -27,11 +27,13 @@ from app.services.ai_engine_adapter import (
     map_adapter_error_to_codes,
 )
 from app.services.current_context import build_current_prompt_context
+from app.services.natal_interpretation_service import build_natal_chart_summary
 from app.services.persona_config_service import PersonaConfigService
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,
 )
+from app.services.user_natal_chart_service import UserNatalChartService, UserNatalChartServiceError
 
 
 class GuidanceServiceError(Exception):
@@ -75,6 +77,7 @@ class ContextualGuidanceData(BaseModel):
     objective: str
     time_horizon: str | None
     summary: str
+    full_text: str
     key_points: list[str]
     actionable_advice: list[str]
     disclaimer: str
@@ -109,6 +112,57 @@ class GuidanceService:
         "Je prefere reformuler prudemment cette guidance. "
         "Pouvez-vous preciser l enjeu principal et l horizon temporel ?"
     )
+
+    @staticmethod
+    def _detect_degraded_natal_mode(
+        *,
+        birth_time: str | None,
+        birth_place: str | None,
+    ) -> str | None:
+        no_time = birth_time is None or birth_time.strip() == ""
+        no_location = birth_place is None or birth_place.strip() == ""
+        if no_time and no_location:
+            return "no_location_no_time"
+        if no_time:
+            return "no_time"
+        if no_location:
+            return "no_location"
+        return None
+
+    @staticmethod
+    def _build_natal_chart_summary_context(
+        db: Session,
+        *,
+        user_id: int,
+        birth_date: str,
+        birth_time: str | None,
+        birth_place: str | None,
+    ) -> str | None:
+        try:
+            natal_chart = UserNatalChartService.get_latest_for_user(db, user_id=user_id)
+        except UserNatalChartServiceError as error:
+            if error.code == "natal_chart_not_found":
+                return None
+            GuidanceService.logger.warning(
+                "guidance_natal_chart_context_unavailable user_id=%s code=%s",
+                user_id,
+                error.code,
+            )
+            return None
+
+        fallback_birth_time = birth_time or "00:00"
+        fallback_birth_place = birth_place or "Non connu"
+        degraded_mode = GuidanceService._detect_degraded_natal_mode(
+            birth_time=birth_time,
+            birth_place=birth_place,
+        )
+        return build_natal_chart_summary(
+            natal_result=natal_chart.result,
+            birth_place=fallback_birth_place,
+            birth_date=birth_date,
+            birth_time=fallback_birth_time,
+            degraded_mode=degraded_mode,
+        )
 
     @staticmethod
     async def _sleep_before_retry_async(*, attempts: int, max_attempts: int) -> None:
@@ -502,15 +556,21 @@ class GuidanceService:
 
         current_context = build_current_prompt_context(profile)
 
-        # natal_chart_summary: placeholder for future NatalChartService integration.
-        # Templates conditionally render it via {% if context.natal_chart_summary %}.
+        natal_chart_summary = GuidanceService._build_natal_chart_summary_context(
+            db,
+            user_id=user_id,
+            birth_date=profile.birth_date,
+            birth_time=profile.birth_time,
+            birth_place=profile.birth_place,
+        )
+
         context: dict[str, str | None] = {
             "birth_date": profile.birth_date,
             "birth_time": profile.birth_time,
             "birth_timezone": profile.birth_timezone,
             "persona_line": persona_config.to_prompt_line(),
             "context_lines": "\n".join(context_lines),
-            "natal_chart_summary": None,
+            "natal_chart_summary": natal_chart_summary,
             "current_datetime": current_context.current_datetime,
             "current_timezone": current_context.current_timezone,
             "current_location": current_context.current_location,
@@ -739,7 +799,14 @@ class GuidanceService:
 
         current_context = build_current_prompt_context(profile)
 
-        # natal_chart_summary: placeholder for future NatalChartService integration
+        natal_chart_summary = GuidanceService._build_natal_chart_summary_context(
+            db,
+            user_id=user_id,
+            birth_date=profile.birth_date,
+            birth_time=profile.birth_time,
+            birth_place=profile.birth_place,
+        )
+
         context: dict[str, str | None] = {
             "birth_date": profile.birth_date,
             "birth_time": profile.birth_time,
@@ -749,7 +816,7 @@ class GuidanceService:
             "situation": normalized_situation,
             "objective": normalized_objective,
             "time_horizon": normalized_horizon,
-            "natal_chart_summary": None,
+            "natal_chart_summary": natal_chart_summary,
             "current_datetime": current_context.current_datetime,
             "current_timezone": current_context.current_timezone,
             "current_location": current_context.current_location,
@@ -798,6 +865,7 @@ class GuidanceService:
                     objective=normalized_objective,
                     time_horizon=normalized_horizon,
                     summary=summary,
+                    full_text=recovered_text,
                     key_points=[
                         "Votre contexte immediat est integre a la lecture astrologique.",
                         "La recommandation reste prudente et orientee decision progressive.",

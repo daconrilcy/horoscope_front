@@ -77,6 +77,7 @@ class ConsultationPrecheckResponse(BaseModel):
 class ConsultationGenerateRequest(BaseModel):
     consultation_type: str
     question: str = Field(..., max_length=2000)
+    objective: Optional[str] = Field(None, max_length=300)
     horizon: Optional[str] = None
     other_person: Optional[OtherPersonData] = None
     astrologer_id: Optional[str] = "auto"

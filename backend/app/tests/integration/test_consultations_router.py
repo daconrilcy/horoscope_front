@@ -99,6 +99,7 @@ def test_generate_authenticated_nominal():
         json={
             "consultation_type": "period",
             "question": "Comment va se passer mon mois ?",
+            "objective": "Comprendre le climat astrologique de la periode.",
         },
         headers=headers,
     )
@@ -109,6 +110,12 @@ def test_generate_authenticated_nominal():
     assert json_data["data"]["status"] == "nominal"
     assert json_data["data"]["route_key"] == "period_full"
     assert len(json_data["data"]["sections"]) > 0
+    section_ids = {section["id"] for section in json_data["data"]["sections"]}
+    assert "analysis" in section_ids
+    assert "consultation_basis" in section_ids
+    assert json_data["data"]["metadata"]["objective"] == (
+        "Comprendre le climat astrologique de la periode."
+    )
 
 
 def test_precheck_accepts_enriched_other_person_payload():

@@ -445,6 +445,42 @@ def test_request_contextual_guidance_success() -> None:
     assert generator.use_cases[0] == "guidance_contextual"
 
 
+def test_request_contextual_guidance_injects_latest_natal_summary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _cleanup_tables()
+    user_id = _create_user_id("guidance-natal-summary@example.com")
+    _seed_birth_profile(user_id)
+    generator = RecordingGenerator()
+    set_test_generators(generator)
+
+    class _FakeChart:
+        result = object()
+
+    monkeypatch.setattr(
+        "app.services.guidance_service.UserNatalChartService.get_latest_for_user",
+        lambda db, user_id: _FakeChart(),
+    )
+    monkeypatch.setattr(
+        "app.services.guidance_service.build_natal_chart_summary",
+        lambda **kwargs: "SOLEIL: Belier\nLUNE: Cancer",
+    )
+
+    with SessionLocal() as db:
+        response = GuidanceService.request_contextual_guidance(
+            db=db,
+            user_id=user_id,
+            situation="Je veux comprendre le climat de cette periode.",
+            objective="Comprendre le climat astrologique du week-end.",
+            time_horizon="ce week-end",
+        )
+        db.commit()
+
+    assert response.guidance_type == "contextual"
+    assert len(generator.contexts) == 1
+    assert generator.contexts[0]["natal_chart_summary"] == "SOLEIL: Belier\nLUNE: Cancer"
+
+
 def test_request_guidance_applies_recovery_when_off_scope_detected() -> None:
     _cleanup_tables()
     user_id = _create_user_id()

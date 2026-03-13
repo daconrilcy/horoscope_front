@@ -52,6 +52,8 @@ so that la feature `/consultations` cesse d'orchestrer sa logique métier côté
 - `ConsultationGenerationService` leverages existing `GuidanceService` to avoid pipeline duplication.
 - Safeguard refusal is handled before LLM call.
 - JSON payload follows the requested canonical example.
+- The generation contract now accepts an explicit `objective` from the wizard so the backend no longer collapses the request to a generic `Consultation <type>` intent.
+- The consultation orchestration reuses the latest natal chart already generated for the user when available and injects its summary into `guidance_contextual`.
 
 ### Locked MVP `route_key` Enum
 
@@ -111,6 +113,7 @@ Gemini CLI
 - Implemented dedicated generation service and router.
 - Ensured safeguard resolution is integrated into the generation flow.
 - Robust test coverage for the routing logic and API contract.
+- Fixed a production gap where the route resolver existed but the prompt still received a weak objective and no natal chart summary.
 
 ### File List
 
@@ -125,3 +128,4 @@ Gemini CLI
 
 - 2026-03-13: Initial implementation of story 47.5. Consultation dossier and LLM routing.
 - 2026-03-13: Post-implementation verification fixes. `route_key` nul en cas de `safeguard_reframed/refused` et génération court-circuitée pour les cas bloquants/recadrés.
+- 2026-03-13: The consultation generate contract now forwards `objective` explicitly and injects the latest natal chart summary into the contextual guidance path.

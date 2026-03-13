@@ -9,6 +9,7 @@ import { ConsultationProvider, useConsultation } from "../state/consultationStor
 
 const mockGenerate = vi.fn()
 const mockNavigate = vi.fn()
+let mockGenerateIsPending = false
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom")
@@ -28,7 +29,7 @@ vi.mock("../api/astrologers", () => ({
 vi.mock("../api/consultations", () => ({
   useConsultationGenerate: () => ({
     mutateAsync: mockGenerate,
-    isPending: false,
+    isPending: mockGenerateIsPending,
   }),
 }))
 
@@ -67,6 +68,7 @@ describe("Consultation Reconnection", () => {
   beforeEach(() => {
     localStorage.setItem("lang", "fr")
     mockGenerate.mockReset()
+    mockGenerateIsPending = false
   })
 
   afterEach(() => {
@@ -125,9 +127,54 @@ describe("Consultation Reconnection", () => {
     expect(mockGenerate).toHaveBeenCalledWith({
       consultation_type: "dating",
       question: "Je vais à un premier rendez-vous.",
+      objective: "comprendre la dynamique de ce rendez-vous",
       horizon: "ce soir",
       astrologer_id: "1",
       other_person: undefined,
+    })
+  })
+
+  it("affiche le résultat même si le hook mutation reste marqué pending", async () => {
+    mockGenerateIsPending = true
+    mockGenerate.mockResolvedValueOnce({
+      data: {
+        consultation_id: "consult-2",
+        consultation_type: "orientation",
+        status: "nominal",
+        precision_level: "high",
+        fallback_mode: null,
+        safeguard_issue: null,
+        route_key: "orientation_full",
+        summary: "Votre cap devient plus lisible.",
+        sections: [
+          { id: "key_points", title: "Points clés", content: "Point A" },
+          { id: "advice", title: "Conseils", content: "Conseil A" },
+        ],
+        chat_prefill: "prefill",
+        metadata: {},
+      },
+      meta: {
+        request_id: "req-2",
+        contract_version: "consultation-generate.v1",
+      },
+    })
+
+    const TestWrapper = () => {
+      const { setType, setContext, setObjective } = useConsultation()
+
+      React.useEffect(() => {
+        setType("orientation")
+        setContext("Je cherche mon prochain cap.")
+        setObjective("trouver son orientation de vie")
+      }, [setType, setContext, setObjective])
+
+      return <ConsultationResultPage />
+    }
+
+    renderResultPage(<TestWrapper />)
+
+    await waitFor(() => {
+      expect(screen.getByText("Votre cap devient plus lisible.")).toBeInTheDocument()
     })
   })
 
@@ -150,6 +197,31 @@ describe("Consultation Reconnection", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Service Unavailable")).toBeInTheDocument()
+    })
+  })
+
+  it("affiche une erreur claire quand la génération dépasse le timeout client", async () => {
+    const timeoutError = new DOMException("The operation was aborted.", "AbortError")
+    mockGenerate.mockRejectedValueOnce(timeoutError)
+
+    const TestWrapper = () => {
+      const { setType, setContext, setObjective } = useConsultation()
+
+      React.useEffect(() => {
+        setType("period")
+        setContext("Que regarder cette semaine ?")
+        setObjective("comprendre le climat d'une période")
+      }, [setType, setContext, setObjective])
+
+      return <ConsultationResultPage />
+    }
+
+    renderResultPage(<TestWrapper />)
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("La génération prend trop de temps. Veuillez réessayer.")
+      ).toBeInTheDocument()
     })
   })
 

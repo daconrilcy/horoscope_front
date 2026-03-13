@@ -41,6 +41,8 @@ Elles respectent les garde-fous suivants:
 - Correction consultations tiers: le lieu de naissance d'un tiers suit désormais le protocole natal (`birth_city` + `birth_country` -> `geocoding/search` -> `geocoding/resolve`), avec propagation de `place_resolved_id`, `birth_lat`, `birth_lon` quand disponibles et fallback dégradé non bloquant sinon.
 - Correction frontend du wizard: changer de type de consultation en cours de parcours relance maintenant un process propre pour le nouveau type, sans réutiliser l'étape ni le draft de la consultation quittée.
 - Correction frontend du wizard: le précheck automatique déclenché à l'arrivée sur un type direct ne bloque plus le bouton `Suivant` du cadrage quand les champs requis sont remplis.
+- Correction backend de génération consultation: le moteur reçoit maintenant un `objective` explicite issu du wizard et réinjecte le dernier résumé de thème natal disponible au lieu de laisser `natal_chart_summary = None`.
+- Correction backend de restitution consultation: suppression du faux rendu `Points clés / Conseils` codé en dur au profit d'une section de lecture générée et d'une section `Base de lecture` explicitant le cadrage réellement utilisé.
 
 ## Gap résiduel converti en story
 
@@ -53,6 +55,8 @@ Elles respectent les garde-fous suivants:
 
 - Backend: `pytest -q app/tests/unit/services/test_consultation_precheck_service.py app/tests/unit/services/test_consultation_fallback_service.py app/tests/integration/test_consultations_router.py`
 - Backend: `ruff check app/api/v1/schemas/consultation.py app/api/v1/routers/consultations.py app/services/consultation_precheck_service.py app/services/consultation_fallback_service.py app/services/consultation_generation_service.py app/tests/unit/services/test_consultation_precheck_service.py app/tests/unit/services/test_consultation_fallback_service.py app/tests/integration/test_consultations_router.py`
+- Backend: `pytest -q app/tests/unit/test_guidance_service.py app/tests/integration/test_consultations_router.py`
+- Backend: `ruff check app/services/guidance_service.py app/services/consultation_generation_service.py app/api/v1/schemas/consultation.py app/tests/unit/test_guidance_service.py app/tests/integration/test_consultations_router.py`
 - Frontend: `npm run lint`
 - Frontend: `npm test -- src/tests/ConsultationsPage.test.tsx src/tests/consultationStore.test.ts src/tests/ConsultationMigration.test.tsx src/tests/ConsultationReconnection.test.tsx`
 - Frontend: `npm run build`
@@ -183,7 +187,7 @@ Risque de régression: faible
 2. La persistance DB des consultations n'est pas imposée en epic 47 afin d'éviter un chantier transverse non demandé.
 3. Les anciens types `dating/pro/event/free` restent lisibles en historique pour ne pas casser les deep links et le localStorage.
 4. Le précheck et les fallbacks sont backend-driven pour éviter la duplication de règles dans le frontend.
-5. Le réemploi de `guidance_contextual` est encadré comme brique interne, pas comme contrat produit final.
+5. Le réemploi de `guidance_contextual` est encadré comme brique interne, pas comme contrat produit final, et il doit recevoir un `objective` explicite ainsi qu'un `natal_chart_summary` réel pour éviter une consultation générique.
 6. Les safeguards sensibles sont explicitement résolus en `fallback`, `refusal` ou `reframing`.
 7. Les données tiers brutes restent bornées au draft / run et ne deviennent pas une persistance backend implicite.
 8. Le wording affiché à l'utilisateur est contractualisé par `fallback_mode`, notamment pour `relation` et `timing`.

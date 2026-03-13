@@ -18,6 +18,58 @@ class ConsultationGenerationService:
     logger = logging.getLogger(__name__)
 
     @staticmethod
+    def _build_consultation_objective(request: ConsultationGenerateRequest) -> str:
+        explicit_objective = (request.objective or "").strip()
+        if explicit_objective:
+            return explicit_objective
+
+        objective_by_type = {
+            "period": "Comprendre le climat astrologique de la periode demandee.",
+            "work": "Eclairer une interaction ou une decision liee au travail.",
+            "orientation": "Clarifier une direction de vie ou une decision structurante.",
+            "relation": "Lire la dynamique relationnelle de maniere prudente et non fataliste.",
+            "timing": "Identifier le bon tempo d action avec une lecture astrologique prudente.",
+        }
+        return objective_by_type.get(
+            request.consultation_type,
+            f"Approfondir la consultation {request.consultation_type}.",
+        )
+
+    @staticmethod
+    def _build_context_section(
+        *,
+        request: ConsultationGenerateRequest,
+        route_key: str | None,
+    ) -> ConsultationSection:
+        lines = [
+            f"Type de consultation: {request.consultation_type}",
+            f"Question analysee: {request.question}",
+        ]
+        if request.objective:
+            lines.append(f"Objet retenu: {request.objective}")
+        if request.horizon:
+            lines.append(f"Horizon temporel: {request.horizon}")
+        if route_key:
+            lines.append(
+                "Mode astrologique applique: "
+                f"{route_key}."
+            )
+        if request.other_person:
+            lines.append(
+                "Donnees tiers prises en compte: "
+                f"{request.other_person.birth_date} / {request.other_person.birth_place}"
+            )
+        lines.append(
+            "La lecture utilise le profil natal existant de l utilisateur "
+            "quand il est disponible."
+        )
+        return ConsultationSection(
+            id="consultation_basis",
+            title="Base de lecture",
+            content="\n".join(lines),
+        )
+
+    @staticmethod
     async def generate(
         db: Session,
         user_id: int,
@@ -93,25 +145,29 @@ class ConsultationGenerationService:
             )
 
         route_key = ConsultationFallbackService.resolve_route_key(precheck)
+        objective = ConsultationGenerationService._build_consultation_objective(request)
         guidance = await GuidanceService.request_contextual_guidance_async(
             db,
             user_id=user_id,
             situation=request.question,
-            objective=f"Consultation {request.consultation_type}",
+            objective=objective,
             time_horizon=request.horizon,
             request_id=request_id,
         )
 
         sections = [
             ConsultationSection(
-                id="key_points",
-                title="Points clés",
-                content="\n".join(guidance.key_points),
+                id="analysis",
+                title="Lecture astrologique",
+                content=guidance.full_text,
             ),
             ConsultationSection(
-                id="advice",
-                title="Conseils",
-                content="\n".join(guidance.actionable_advice),
+                id="consultation_basis",
+                title="Base de lecture",
+                content=ConsultationGenerationService._build_context_section(
+                    request=request,
+                    route_key=route_key,
+                ).content,
             ),
         ]
 
@@ -133,5 +189,6 @@ class ConsultationGenerationService:
                 "request_id": request_id,
                 "guidance_generated_at": str(guidance.generated_at),
                 "route_key": route_key,
+                "objective": objective,
             },
         )

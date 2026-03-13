@@ -66,6 +66,7 @@ export interface ConsultationPrecheckResponse {
 export interface ConsultationGenerateRequest {
   consultation_type: string
   question: string
+  objective?: string
   horizon?: string
   other_person?: OtherPersonData
   astrologer_id?: string
@@ -122,27 +123,38 @@ export class ConsultationApiError extends Error {
 export async function precheckConsultation(
   payload: ConsultationPrecheckRequest
 ): Promise<ConsultationPrecheckResponse> {
-  const response = await apiFetch(`${API_BASE_URL}/v1/consultations/precheck`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...getAccessTokenAuthHeader(),
-    },
-    body: JSON.stringify(payload),
-  })
+  try {
+    const response = await apiFetch(`${API_BASE_URL}/v1/consultations/precheck`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAccessTokenAuthHeader(),
+      },
+      body: JSON.stringify(payload),
+    })
 
-  const json = await response.json()
+    const json = await response.json()
 
-  if (!response.ok) {
-    throw new ConsultationApiError(
-      json.error?.code || "unknown_error",
-      json.error?.message || "An unknown error occurred",
-      response.status,
-      json.error?.details
-    )
+    if (!response.ok) {
+      throw new ConsultationApiError(
+        json.error?.code || "unknown_error",
+        json.error?.message || "An unknown error occurred",
+        response.status,
+        json.error?.details
+      )
+    }
+
+    return json
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ConsultationApiError(
+        "request_timeout",
+        "The consultation request timed out",
+        0
+      )
+    }
+    throw error
   }
-
-  return json
 }
 
 export function useConsultationPrecheck() {
@@ -154,27 +166,38 @@ export function useConsultationPrecheck() {
 export async function generateConsultation(
   payload: ConsultationGenerateRequest
 ): Promise<ConsultationGenerateResponse> {
-  const response = await apiFetch(`${API_BASE_URL}/v1/consultations/generate`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...getAccessTokenAuthHeader(),
-    },
-    body: JSON.stringify(payload),
-  })
+  try {
+    const response = await apiFetch(`${API_BASE_URL}/v1/consultations/generate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAccessTokenAuthHeader(),
+      },
+      body: JSON.stringify(payload),
+    })
 
-  const json = await response.json()
+    const json = await response.json()
 
-  if (!response.ok) {
-    throw new ConsultationApiError(
-      json.error?.code || "unknown_error",
-      json.error?.message || "An unknown error occurred",
-      response.status,
-      json.error?.details
-    )
+    if (!response.ok) {
+      throw new ConsultationApiError(
+        json.error?.code || "unknown_error",
+        json.error?.message || "An unknown error occurred",
+        response.status,
+        json.error?.details
+      )
+    }
+
+    return json
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ConsultationApiError(
+        "request_timeout",
+        "The consultation request timed out",
+        0
+      )
+    }
+    throw error
   }
-
-  return json
 }
 
 export function useConsultationGenerate() {
