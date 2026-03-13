@@ -4,8 +4,9 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 import { useConsultation } from "../state/consultationStore"
 import {
   ConsultationTypeStep,
-  AstrologerSelectStep,
-  ValidationStep,
+  ConsultationFrameStep,
+  DataCollectionStep,
+  ConsultationSummaryStep,
   WizardProgress,
 } from "../features/consultations"
 import { detectLang } from "../i18n/astrology"
@@ -30,6 +31,7 @@ export function ConsultationWizardPage() {
     setContext,
     setObjective,
     setTimeHorizon,
+    setOtherPerson,
     setPrecheck,
     nextStep,
     prevStep,
@@ -62,9 +64,39 @@ export function ConsultationWizardPage() {
 
   const handleNext = useCallback(() => {
     if (canProceed) {
+      // If moving from frame to collection, we might want to refresh precheck with context/question
+      if (currentStepName === "frame") {
+        runPrecheck({ 
+          consultation_type: state.draft.type!, 
+          question: state.draft.context,
+          horizon: state.draft.timeHorizon ?? undefined
+        }, {
+          onSuccess: (response) => {
+            setPrecheck(response.data)
+          }
+        })
+      }
+      // If moving from collection to summary, we might want to refresh precheck with other person data
+      if (currentStepName === "collection" && state.draft.otherPerson) {
+        runPrecheck({
+          consultation_type: state.draft.type!,
+          question: state.draft.context,
+          horizon: state.draft.timeHorizon ?? undefined,
+          other_person: {
+            birth_date: state.draft.otherPerson.birthDate,
+            birth_time: state.draft.otherPerson.birthTime ?? undefined,
+            birth_time_known: state.draft.otherPerson.birthTimeKnown,
+            birth_place: state.draft.otherPerson.birthPlace
+          }
+        }, {
+          onSuccess: (response) => {
+            setPrecheck(response.data)
+          }
+        })
+      }
       nextStep()
     }
-  }, [canProceed, nextStep])
+  }, [canProceed, currentStepName, nextStep, runPrecheck, state.draft, setPrecheck])
 
   const handleGenerate = useCallback(() => {
     if (canProceed) {
@@ -76,7 +108,8 @@ export function ConsultationWizardPage() {
     setType(type)
     setObjective(t(getObjectiveForType(type), lang))
     setTimeHorizon(null)
-    setPrecheck(null) // Reset precheck for new type
+    setOtherPerson(null)
+    setPrecheck(null)
     
     runPrecheck({ consultation_type: type }, {
       onSuccess: (response) => {
@@ -85,12 +118,7 @@ export function ConsultationWizardPage() {
     })
     
     nextStep()
-  }, [setType, setObjective, setTimeHorizon, setPrecheck, runPrecheck, nextStep, lang])
-
-  const handleAstrologerSelect = useCallback((id: string) => {
-    setAstrologer(id)
-    nextStep()
-  }, [setAstrologer, nextStep])
+  }, [setType, setObjective, setTimeHorizon, setOtherPerson, setPrecheck, runPrecheck, nextStep, lang])
 
   const renderStep = () => {
     switch (currentStepName) {
@@ -101,23 +129,29 @@ export function ConsultationWizardPage() {
             onSelect={handleTypeSelect}
           />
         )
-      case "astrologer":
+      case "frame":
         return (
-          <AstrologerSelectStep
-            selectedId={state.draft.astrologerId}
-            onSelect={handleAstrologerSelect}
-          />
-        )
-      case "validation":
-        return (
-          <ValidationStep
+          <ConsultationFrameStep
             draft={state.draft}
-            context={state.draft.context}
-            objective={state.draft.objective ?? ""}
-            timeHorizon={state.draft.timeHorizon ?? ""}
             onContextChange={setContext}
             onObjectiveChange={setObjective}
-            onTimeHorizonChange={(value) => setTimeHorizon(value)}
+            onTimeHorizonChange={setTimeHorizon}
+          />
+        )
+      case "collection":
+        return (
+          <DataCollectionStep
+            draft={state.draft}
+            precheck={state.precheck}
+            onOtherPersonChange={setOtherPerson}
+          />
+        )
+      case "summary":
+        return (
+          <ConsultationSummaryStep
+            draft={state.draft}
+            precheck={state.precheck}
+            onAstrologerSelect={setAstrologer}
           />
         )
       default:
@@ -151,7 +185,7 @@ export function ConsultationWizardPage() {
             </button>
           )}
 
-          {currentStepName !== "validation" && (
+          {currentStepName !== "summary" && (
             <button
               type="button"
               className="btn btn-primary"
@@ -162,7 +196,7 @@ export function ConsultationWizardPage() {
             </button>
           )}
 
-          {currentStepName === "validation" && (
+          {currentStepName === "summary" && (
             <button
               type="button"
               className="btn btn-primary"

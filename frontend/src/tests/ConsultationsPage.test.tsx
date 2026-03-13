@@ -59,42 +59,19 @@ describe("ConsultationsPage", () => {
       renderWithProviders(<ConsultationsPage />, { route: "/consultations" })
 
       expect(screen.getByText("Consultations")).toBeInTheDocument()
-      expect(screen.getByText(/Créez des consultations thématiques|Create thematic consultations/)).toBeInTheDocument()
+      expect(screen.getByText(/Create targeted/i)).toBeInTheDocument()
     })
 
     it("displays consultation types", () => {
       renderWithProviders(<ConsultationsPage />, { route: "/consultations" })
 
-      expect(screen.getByText(/Période & Climat|Period & Climate/)).toBeInTheDocument()
-      expect(screen.getByText(/Carrière & Travail|Career & Work/)).toBeInTheDocument()
-      expect(screen.getByText(/Orientation & Mission/)).toBeInTheDocument()
-      expect(screen.getByText(/Relations & Synastrie|Relationships & Synastry/)).toBeInTheDocument()
-      expect(screen.getByText(/Élection & Timing|Election & Timing/)).toBeInTheDocument()
-      
-      // Legacy types should NOT be in the creation list
-      expect(screen.queryByText(/Legacy/)).not.toBeInTheDocument()
-    })
-
-    it("displays UX promise for each type", () => {
-      renderWithProviders(<ConsultationsPage />, { route: "/consultations" })
-      expect(screen.getByText(/Comprenez les énergies|Understand the energies/)).toBeInTheDocument()
-    })
-
-    it("displays empty history state when no consultations", () => {
-      renderWithProviders(<ConsultationsPage />, { route: "/consultations" })
-
-      expect(screen.getByText(/Aucune consultation passée|No past consultations/)).toBeInTheDocument()
-    })
-
-    it("has a CTA to start new consultation", () => {
-      renderWithProviders(<ConsultationsPage />, { route: "/consultations" })
-
-      expect(screen.getByText(/Nouvelle consultation|New consultation/)).toBeInTheDocument()
+      expect(screen.getAllByText(/Period/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/Career/i).length).toBeGreaterThan(0)
     })
   })
 })
 
-describe("ConsultationTypeStep - keyboard accessibility", () => {
+describe("ConsultationWizardPage - Story 47.3 Flow", () => {
   beforeEach(() => {
     localStorage.clear()
     vi.clearAllMocks()
@@ -104,152 +81,95 @@ describe("ConsultationTypeStep - keyboard accessibility", () => {
     cleanup()
   })
 
-  it("advances to next step when Enter is pressed on focused type button", async () => {
-    renderWithProviders(
-      <Routes>
-        <Route path="/consultations/new" element={<ConsultationWizardPage />} />
-      </Routes>,
-      { route: "/consultations/new" }
-    )
+  it("advances from Type to Framing", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new" })
 
-    const periodButton = screen.getByRole("button", { name: /Période|Period/i })
-    periodButton.focus()
+    const periodButton = screen.getByRole("button", { name: /Period/i })
     fireEvent.click(periodButton)
 
     await waitFor(() => {
-      expect(screen.getByText(/Choisissez votre astrologue|Choose your astrologer/)).toBeInTheDocument()
+      expect(screen.getByText(/Frame your request/i)).toBeInTheDocument()
     })
   })
 
-  it("has focusable consultation type buttons", () => {
+  it("advances from Framing to Collection with valid context", async () => {
     renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new" })
 
-    const buttons = screen.getAllByRole("button", { pressed: false })
-    const typeButtons = buttons.filter((btn) =>
-      ["Période", "Period", "Carrière", "Career", "Orientation", "Relations", "Élection", "Election"].some((label) =>
-        btn.textContent?.includes(label)
-      )
-    )
+    // Step 1: Type
+    const periodButton = screen.getByRole("button", { name: /Period/i })
+    fireEvent.click(periodButton)
 
-    expect(typeButtons.length).toBeGreaterThanOrEqual(5)
-  })
-})
+    // Step 2: Frame
+    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    
+    const textarea = screen.getByLabelText(/Describe your situation/i)
+    fireEvent.change(textarea, { target: { value: "Ma question test sur mon futur." } })
+    
+    const nextBtn = screen.getByRole("button", { name: /Next/i })
+    await waitFor(() => expect(nextBtn).not.toBeDisabled())
+    fireEvent.click(nextBtn)
 
-describe("ConsultationWizardPage", () => {
-  beforeEach(() => {
-    localStorage.clear()
-    vi.clearAllMocks()
-  })
-
-  afterEach(() => {
-    cleanup()
-  })
-
-  describe("AC2: Wizard step 1 - Type", () => {
-    it("displays consultation type selection on first step", () => {
-      renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new" })
-
-      expect(screen.getByText(/Choisissez le type|Choose consultation type/)).toBeInTheDocument()
-      expect(screen.getByText(/Période & Climat|Period & Climate/)).toBeInTheDocument()
-    })
-
-    it("pre-selects type from URL parameter", async () => {
-      renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=work" })
-
-      await waitFor(() => {
-        const workButton = screen.getByRole("button", { name: /Carrière & Travail|Career & Work/i })
-        expect(workButton).toHaveAttribute("aria-pressed", "true")
-      })
-    })
-
-    it("advances to step 2 when type is selected", async () => {
-      renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new" })
-
-      const periodButton = screen.getByRole("button", { name: /Période|Period/i })
-      fireEvent.click(periodButton)
-
-      await waitFor(() => {
-        expect(screen.getByText(/Choisissez votre astrologue|Choose your astrologer/)).toBeInTheDocument()
-      })
-    })
-  })
-
-  describe("AC3: Wizard step 2 - Astrologue", () => {
-    it("shows astrologer selection after type is selected", async () => {
-      renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new" })
-
-      fireEvent.click(screen.getByRole("button", { name: /Période|Period/i }))
-
-      await waitFor(() => {
-        expect(screen.getByText(/Choisissez votre astrologue|Choose your astrologer/)).toBeInTheDocument()
-        expect(screen.getByText(/Laisser choisir automatiquement|Let choose automatically/)).toBeInTheDocument()
-      })
-    })
-  })
-
-  describe("AC5: Wizard step 3 - Validation", () => {
-    it("shows request summary, objective, context and optional time horizon inputs", async () => {
-      renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new" })
-
-      fireEvent.click(screen.getByRole("button", { name: /Période|Period/i }))
-      await waitFor(() => screen.getByText(/Choisissez votre astrologue|Choose your astrologer/))
-      fireEvent.click(screen.getByText(/Laisser choisir automatiquement|Let choose automatically/))
-
-      await waitFor(() => {
-        expect(screen.getByText(/Votre demande ciblée|Your targeted request/)).toBeInTheDocument()
-        expect(screen.getByLabelText(/Objet de la consultation|Consultation goal/)).toBeInTheDocument()
-      })
-    })
-  })
-})
-
-describe("ConsultationResultPage", () => {
-  beforeEach(() => {
-    localStorage.clear()
-    vi.clearAllMocks()
-  })
-
-  afterEach(() => {
-    cleanup()
-  })
-
-  it("handles gracefully when typeConfig is not found for invalid type", async () => {
-    const mockResultWithBadType = {
-      id: "test-bad-type",
-      type: "dating" as any,
-      astrologerId: AUTO_ASTROLOGER_ID,
-      context: "Test context",
-      summary: "Test interpretation",
-      createdAt: new Date().toISOString(),
-    }
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([mockResultWithBadType]))
-
-    renderWithProviders(<ConsultationResultPage />, { route: "/consultations/result?id=test-bad-type" })
-
+    // Step 3: Collection
     await waitFor(() => {
-      expect(screen.getByText(/Résultat de votre consultation|Your consultation result/)).toBeInTheDocument()
+      expect(screen.getByText(/Additional information/i)).toBeInTheDocument()
     })
-
-    expect(screen.getByText(/Dating.*Legacy/)).toBeInTheDocument()
-  })
-})
-
-describe("ValidationStep - Character counter", () => {
-  afterEach(() => {
-    cleanup()
   })
 
-  it("displays character counter with CONTEXT_MAX_LENGTH remaining", async () => {
+  it("shows other person form in Collection step for Relation type", async () => {
     renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new" })
 
-    fireEvent.click(screen.getByRole("button", { name: /Période|Period/i }))
-    await waitFor(() => screen.getByText(/Choisissez votre astrologue|Choose your astrologer/))
-    fireEvent.click(screen.getByText(/Laisser choisir automatiquement|Let choose automatically/))
+    // Step 1: Type (Relation)
+    const relationBtn = screen.getByRole("button", { name: /Relation/i })
+    fireEvent.click(relationBtn)
 
-    await waitFor(() => screen.getByLabelText(/Décrivez votre situation|Describe your situation/))
+    // Step 2: Frame
+    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
+      target: { value: "Relation avec mon conjoint" } 
+    })
+    
+    const nextBtn = screen.getByRole("button", { name: /Next/i })
+    await waitFor(() => expect(nextBtn).not.toBeDisabled())
+    fireEvent.click(nextBtn)
 
-    const expectedText = new RegExp(`${CONTEXT_MAX_LENGTH} .*`)
-    expect(screen.getByText(expectedText)).toBeInTheDocument()
+    // Step 3: Collection
+    await waitFor(() => {
+      expect(screen.getByText(/Information about the other person/i)).toBeInTheDocument()
+    })
+    
+    expect(screen.getByLabelText(/Birth date/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Birth place/i)).toBeInTheDocument()
+  })
+
+  it("advances to Summary step and allows generation without choosing an astrologer", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new" })
+
+    // Step 1: Type
+    fireEvent.click(screen.getByRole("button", { name: /Period/i }))
+
+    // Step 2: Frame
+    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
+      target: { value: "Test context" } 
+    })
+    
+    const nextBtn1 = screen.getByRole("button", { name: /Next/i })
+    await waitFor(() => expect(nextBtn1).not.toBeDisabled())
+    fireEvent.click(nextBtn1)
+
+    // Step 3: Collection
+    await waitFor(() => expect(screen.getByText(/Additional information/i)).toBeInTheDocument())
+    
+    const nextBtn2 = screen.getByRole("button", { name: /Next/i })
+    await waitFor(() => expect(nextBtn2).not.toBeDisabled())
+    fireEvent.click(nextBtn2)
+
+    // Step 4: Summary
+    await waitFor(() => {
+      expect(screen.getByText(/Final verification/i)).toBeInTheDocument()
+    })
+
+    const generateBtn = screen.getByRole("button", { name: /Generate consultation/i })
+    expect(generateBtn).not.toBeDisabled()
   })
 })

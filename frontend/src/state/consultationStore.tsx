@@ -17,12 +17,13 @@ import {
   type ConsultationDraft,
   type ConsultationResult,
   type WizardStep,
+  type OtherPersonDraft,
 } from "../types/consultation"
 import { type ConsultationPrecheckData } from "../api/consultations"
 
 const INITIAL_DRAFT: ConsultationDraft = {
   type: null,
-  astrologerId: null,
+  astrologerId: "auto", // Default to auto
   context: "",
 }
 
@@ -40,6 +41,7 @@ export type ConsultationAction =
   | { type: "SET_CONTEXT"; payload: string }
   | { type: "SET_OBJECTIVE"; payload: string }
   | { type: "SET_TIME_HORIZON"; payload: string | null }
+  | { type: "SET_OTHER_PERSON"; payload: OtherPersonDraft | null }
   | { type: "NEXT_STEP" }
   | { type: "PREV_STEP" }
   | { type: "GO_TO_STEP"; payload: number }
@@ -78,6 +80,11 @@ export function consultationReducer(
       return {
         ...state,
         draft: { ...state.draft, timeHorizon: action.payload },
+      }
+    case "SET_OTHER_PERSON":
+      return {
+        ...state,
+        draft: { ...state.draft, otherPerson: action.payload },
       }
     case "NEXT_STEP":
       return {
@@ -151,15 +158,10 @@ function normalizeStringList(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
 }
 
-/**
- * Validates and normalizes a consultation result item.
- * Supports legacy format from Story 16.5 and normalizes it to Story 46.2 schema.
- */
 export function normalizeConsultationResult(item: unknown): ConsultationResult | null {
   if (typeof item !== "object" || item === null) return null
   const obj = item as Record<string, unknown>
 
-  // Basic validation required for both legacy and new
   if (
     typeof obj.id !== "string" ||
     typeof obj.type !== "string" ||
@@ -171,7 +173,6 @@ export function normalizeConsultationResult(item: unknown): ConsultationResult |
     return null
   }
 
-  // Normalization logic
   return {
     id: obj.id as string,
     type: obj.type as ConsultationType,
@@ -235,6 +236,7 @@ type ConsultationContextValue = {
   setContext: (context: string) => void
   setObjective: (objective: string) => void
   setTimeHorizon: (horizon: string | null) => void
+  setOtherPerson: (data: OtherPersonDraft | null) => void
   nextStep: () => void
   prevStep: () => void
   goToStep: (step: number) => void
@@ -277,6 +279,10 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "SET_TIME_HORIZON", payload: horizon })
   }, [])
 
+  const setOtherPerson = useCallback((data: OtherPersonDraft | null) => {
+    dispatch({ type: "SET_OTHER_PERSON", payload: data })
+  }, [])
+
   const nextStep = useCallback(() => {
     dispatch({ type: "NEXT_STEP" })
   }, [])
@@ -311,22 +317,33 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     switch (currentStepName) {
       case "type":
         return state.draft.type !== null
-      case "astrologer":
-        return state.draft.astrologerId !== null
-      case "validation":
+      case "frame":
         return (
           state.draft.context.trim().length > 0 &&
           (state.draft.objective ?? "").trim().length > 0
         )
+      case "collection":
+        // If precheck says we are blocked because of missing other person in relation path
+        if (state.draft.type === "relation" && !state.draft.otherPerson) {
+           return false
+        }
+        // Basic other person validation if present
+        if (state.draft.otherPerson) {
+           return !!(state.draft.otherPerson.birthDate && state.draft.otherPerson.birthPlace)
+        }
+        return true
+      case "summary":
+        return state.precheck?.status !== "blocked"
       default:
         return false
     }
   }, [
     currentStepName,
     state.draft.type,
-    state.draft.astrologerId,
     state.draft.context,
     state.draft.objective,
+    state.draft.otherPerson,
+    state.precheck?.status,
   ])
 
   const contextValue = useMemo(
@@ -337,6 +354,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       setContext,
       setObjective,
       setTimeHorizon,
+      setOtherPerson,
       nextStep,
       prevStep,
       goToStep,
@@ -354,6 +372,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       setContext,
       setObjective,
       setTimeHorizon,
+      setOtherPerson,
       nextStep,
       prevStep,
       goToStep,

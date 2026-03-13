@@ -9,12 +9,20 @@ export type ConsultationType =
   | "event"
   | "free"
 
+export type OtherPersonDraft = {
+  birthDate: string
+  birthTime: string | null
+  birthTimeKnown: boolean
+  birthPlace: string
+}
+
 export type ConsultationDraft = {
   type: ConsultationType | null
   astrologerId: string | null
   context: string
   objective?: string
   timeHorizon?: string | null
+  otherPerson?: OtherPersonDraft | null
 }
 
 export type ConsultationResult = {
@@ -118,14 +126,15 @@ export const VALID_CREATABLE_TYPES: ConsultationType[] = CONSULTATION_TYPES.filt
 ).map((c) => c.id)
 
 
-export const WIZARD_STEPS = ["type", "astrologer", "validation"] as const
+export const WIZARD_STEPS = ["type", "frame", "collection", "summary"] as const
 export type WizardStep = (typeof WIZARD_STEPS)[number]
 export const WIZARD_LAST_STEP_INDEX = WIZARD_STEPS.length - 1
 
 export const WIZARD_STEP_LABELS: Record<WizardStep, string> = {
   type: "step_type",
-  astrologer: "step_astrologer",
-  validation: "step_validation",
+  frame: "step_frame",
+  collection: "step_collection",
+  summary: "step_summary",
 }
 
 export const CONTEXT_TRUNCATE_LENGTH = 50
