@@ -1,6 +1,10 @@
-# Story 11.2: Modules tarot/runes derriere feature flags
+# Story 11.2: Modules tarot/runes derriere feature flags (RETIRÉ / DEPRECATED)
 
-Status: done
+> [!CAUTION]
+> Cette fonctionnalité a été entièrement retirée du produit dans l'Epic 46 (mars 2026).
+> Le sous-système tarot/runes n'est plus maintenu et a été supprimé au profit des consultations astrologiques ciblées.
+
+Status: done (retired)
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
 ## Story

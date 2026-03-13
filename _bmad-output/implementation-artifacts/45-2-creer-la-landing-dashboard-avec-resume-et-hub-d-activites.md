@@ -15,7 +15,7 @@ so that j'accède immédiatement à l'essentiel avant de choisir d'aller plus lo
 1. La page `/dashboard` affiche un cadre horoscope dédié contenant uniquement le résumé du jour et non la version détaillée actuelle.
 2. Le résumé affiché provient du daily existant (`summary.overall_summary`) et est limité visuellement à 2 lignes maximum sur mobile et desktop.
 3. Le cadre résumé est entièrement cliquable ou activable au clavier et ouvre `/dashboard/horoscope`.
-4. Sous le cadre résumé, la page affiche la section des autres activités disponibles, en s'appuyant sur les raccourcis déjà présents (`chat`, `tirage`, etc.).
+4. Sous le cadre résumé, la page affiche la section des autres activités disponibles, en s'appuyant sur les raccourcis déjà présents (`chat`, `consultation`, etc.).
 5. Les états `loading`, `error` et `empty` de la donnée daily sont gérés dans la landing sans faire disparaître le hub d'activités.
 6. La landing dashboard n'affiche plus `Moments clés du jour`, `Agenda du jour`, ni les autres sections du détail daily.
 7. Le frontend réutilise le hook `useDailyPrediction` existant et ne demande aucun endpoint backend supplémentaire.

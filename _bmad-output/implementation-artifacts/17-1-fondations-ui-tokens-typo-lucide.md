@@ -71,7 +71,7 @@ Cette story pose les fondations sur lesquelles toutes les stories 17.2 à 17.8 s
 
 **Given** le fichier `frontend/src/ui/nav.ts` existe
 **When** on consulte le tableau `navItems`
-**Then** il contient 5 entrées : Aujourd'hui (`/dashboard`), Chat (`/chat`), Thème (`/natal`), Tirages (`/consultations`), Profil (`/settings/account`) — chacune avec `key`, `label`, `icon`, `path`
+**Then** il contient 5 entrées : Aujourd'hui (`/dashboard`), Chat (`/chat`), Thème (`/natal`), Consultations (`/consultations`), Profil (`/settings/account`) — chacune avec `key`, `label`, `icon`, `path`
 
 ### AC6: Aucune régression sur les tests existants
 **Given** les tokens et la police sont ajoutés

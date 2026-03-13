@@ -61,13 +61,13 @@ La spec §7.3 définit la section "Raccourcis" : un titre de section + 2 cards e
 **And** le titre "Chat astrologue" est en 15px weight 650
 **And** le sous-titre "En ligne" est en 13px `--text-2`
 
-### AC4: Card "Tirage du jour" correcte
-**Given** la card Tirage est rendue
+### AC4: Card "Consultation" correcte
+**Given** la card Consultation est rendue
 **When** on l'observe
-**Then** un badge avec `var(--badge-tirage)` est visible
+**Then** un badge avec `var(--badge-consultation)` est visible
 **And** l'icône `Layers` (size 20, strokeWidth 1.75) est dans le badge
-**And** le titre "Tirage du jour" est en 15px weight 650
-**And** le sous-titre "3 cartes" est en 13px `--text-2`
+**And** le titre "Consultation" est en 15px weight 650
+**And** le sous-titre "Guidance ciblée" est en 13px `--text-2`
 
 ### AC5: Glassmorphism des cards
 **Given** les cards sont montées
