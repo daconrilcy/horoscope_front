@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { MemoryRouter, Route, Routes } from "react-router-dom"
+import { Link, MemoryRouter, Route, Routes } from "react-router-dom"
 import React from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
@@ -103,6 +103,21 @@ const renderWithProviders = (ui: React.ReactElement, { route = "/", queryClient 
         </ConsultationProvider>
       </MemoryRouter>
     </QueryClientProvider>
+  )
+}
+
+function WizardRouteHarness() {
+  return (
+    <>
+      <nav>
+        <Link to="/consultations">Consultations hub</Link>
+        <Link to="/consultations/new?type=relation">Switch to relation</Link>
+      </nav>
+      <Routes>
+        <Route path="/consultations" element={<ConsultationsPage />} />
+        <Route path="/consultations/new" element={<ConsultationWizardPage />} />
+      </Routes>
+    </>
   )
 }
 
@@ -287,6 +302,25 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
         }),
       })
     )
+  })
+
+  it("restarts the wizard from the new type when switching consultation mid-process", async () => {
+    renderWithProviders(<WizardRouteHarness />, { route: "/consultations/new?type=work" })
+
+    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), {
+      target: { value: "Mon évolution pro" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+    await waitFor(() => expect(screen.getByText(/Additional information/i)).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole("link", { name: /Switch to relation/i }))
+
+    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    expect(screen.queryByText(/Additional information/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/This consultation concerns another person/i)).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/Describe your situation/i)).toHaveValue("")
   })
 
   it("relation type still shows other person form without toggle", async () => {

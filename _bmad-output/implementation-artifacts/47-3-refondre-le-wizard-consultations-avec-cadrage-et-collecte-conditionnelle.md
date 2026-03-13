@@ -19,6 +19,7 @@ so that l'utilisateur ne saisisse que les informations nécessaires à la consul
 5. Les compléments utilisateur se limitent aux champs manquants pertinents; les données déjà connues ne sont pas redemandées.
 6. Le wizard gère les choix "je ne connais pas cette information" et prépare un basculement vers un mode dégradé plutôt qu'un abandon brutal.
 7. Les invariants du module consultations restent centralisés (`WIZARD_STEPS`, `canProceed`, draft state, deep links), et les tests couvrent les étapes dynamiques principales.
+8. Si l'utilisateur quitte un wizard en cours pour lancer un autre type de consultation depuis `/consultations`, le nouveau process repart proprement du type choisi et ne réutilise ni l'étape ni le draft du parcours précédent.
 
 ## Tasks / Subtasks
 
@@ -48,6 +49,7 @@ so that l'utilisateur ne saisisse que les informations nécessaires à la consul
 - [x] Task 5: Tester les scénarios dynamiques essentiels (AC: 3, 4, 5, 6)
   - [x] Ajouter des scénarios de progression dynamique dans les tests frontend
   - [x] Vérifier que le choix d'astrologue n'est plus un bloquant artificiel
+  - [x] Vérifier qu'un changement de type en cours de parcours réinitialise correctement le wizard sur le nouveau type
 
 ## Dev Notes
 
@@ -56,6 +58,7 @@ so that l'utilisateur ne saisisse que les informations nécessaires à la consul
 - `OtherPersonForm` aligne le lieu tiers sur le protocole natal de géocodage: saisie `ville/pays`, résolution de lieu et fallback dégradé non bloquant.
 - Astrologer selection moved to `summary` step and made optional.
 - Precheck integrated to inform user about precision and missing data.
+- Changer le `?type=` en cours de parcours réinitialise désormais le wizard au lieu de conserver l'étape précédente.
 
 ### Previous Story Intelligence
 
@@ -131,3 +134,4 @@ Gemini CLI
 
 - 2026-03-13: Initial implementation of story 47.3. Conditional wizard refactor.
 - 2026-03-13: Alignement du lieu de naissance tiers sur le protocole natal (`birth_city` / `birth_country` -> `search` / `resolve` -> `place_resolved_id` + `birth_lat` / `birth_lon`).
+- 2026-03-13: Correction de reprise d'etat: un nouveau type de consultation relance un wizard propre au lieu de reutiliser l'etape du parcours precedent.

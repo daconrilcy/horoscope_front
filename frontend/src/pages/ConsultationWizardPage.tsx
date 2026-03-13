@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react"
+import { useEffect, useCallback, useRef } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 import { useConsultation } from "../state/consultationStore"
@@ -25,6 +25,7 @@ export function ConsultationWizardPage() {
   const [searchParams] = useSearchParams()
   const lang = detectLang()
   const { mutate: runPrecheck, isPending: isPrechecking } = useConsultationPrecheck()
+  const initializedTypeParamRef = useRef<string | null>(null)
 
   const {
     state,
@@ -38,6 +39,7 @@ export function ConsultationWizardPage() {
     setPrecheck,
     nextStep,
     prevStep,
+    goToStep,
     reset,
     canProceed,
     currentStepName,
@@ -45,7 +47,10 @@ export function ConsultationWizardPage() {
 
   const startConsultationForType = useCallback(
     (type: ConsultationType, advanceToNextStep: boolean) => {
+      reset()
       setType(type)
+      setAstrologer("auto")
+      setContext("")
       setObjective(t(getObjectiveForType(type), lang))
       setTimeHorizon(null)
       setOtherPerson(null)
@@ -68,32 +73,39 @@ export function ConsultationWizardPage() {
       )
 
       if (advanceToNextStep) {
-        nextStep()
+        goToStep(1)
       }
     },
     [
+      reset,
       setType,
+      setAstrologer,
+      setContext,
       setObjective,
       setTimeHorizon,
       setOtherPerson,
       setPrecheck,
       lang,
       runPrecheck,
-      nextStep,
+      goToStep,
     ]
   )
 
   useEffect(() => {
     const typeParam = searchParams.get("type")
+    if (!typeParam) {
+      initializedTypeParamRef.current = null
+      return
+    }
+
     if (
-      typeParam &&
-      currentStepName === "type" &&
-      state.draft.type === null &&
-      VALID_CREATABLE_TYPES.includes(typeParam as ConsultationType)
+      VALID_CREATABLE_TYPES.includes(typeParam as ConsultationType) &&
+      initializedTypeParamRef.current !== typeParam
     ) {
+      initializedTypeParamRef.current = typeParam
       startConsultationForType(typeParam as ConsultationType, true)
     }
-  }, [searchParams, currentStepName, state.draft.type, startConsultationForType])
+  }, [searchParams, startConsultationForType])
 
   const handleCancel = useCallback(() => {
     reset()

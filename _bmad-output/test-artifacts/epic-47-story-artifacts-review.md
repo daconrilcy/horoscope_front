@@ -39,6 +39,7 @@ Elles respectent les garde-fous suivants:
 - Correction tests frontend: réalignement du wizard et du résultat sur le contrat `useConsultationPrecheck` / `useConsultationGenerate` de l'epic 47.
 - Correction frontend du wizard: un accès direct depuis le hub `/consultations` avec `?type=` saute maintenant correctement l'étape de sélection du type au lieu de l'afficher deux fois.
 - Correction consultations tiers: le lieu de naissance d'un tiers suit désormais le protocole natal (`birth_city` + `birth_country` -> `geocoding/search` -> `geocoding/resolve`), avec propagation de `place_resolved_id`, `birth_lat`, `birth_lon` quand disponibles et fallback dégradé non bloquant sinon.
+- Correction frontend du wizard: changer de type de consultation en cours de parcours relance maintenant un process propre pour le nouveau type, sans réutiliser l'étape ni le draft de la consultation quittée.
 
 ## Gap résiduel converti en story
 
