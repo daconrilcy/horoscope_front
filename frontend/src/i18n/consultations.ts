@@ -356,6 +356,56 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Quality analysis not available",
     es: "Análisis de calidad no disponible",
   },
+  relation_user_only: {
+    fr: "Analyse basée sur votre profil uniquement",
+    en: "Analysis based on your profile only",
+    es: "Análisis basado únicamente en su perfil",
+  },
+  timing_degraded: {
+    fr: "Timing approximatif (heure de naissance manquante)",
+    en: "Approximate timing (missing birth time)",
+    es: "Tiempo aproximado (falta la hora de nacimiento)",
+  },
+  safeguard_reframed: {
+    fr: "Réponse limitée aux aspects non sensibles",
+    en: "Response limited to non-sensitive aspects",
+    es: "Respuesta limitada a aspectos no sensibles",
+  },
+  safeguard_refused: {
+    fr: "Sujet hors périmètre de conseil astrologique",
+    en: "Subject outside the scope of astrological advice",
+    es: "Tema fuera del alcance del asesoramiento astrológico",
+  },
+  nominal_mode_desc: {
+    fr: "Toutes les données sont présentes pour une analyse optimale.",
+    en: "All data is present for optimal analysis.",
+    es: "Todos los datos están presentes para un análisis óptimo.",
+  },
+  birth_profile_not_found: {
+    fr: "Profil natal non configuré",
+    en: "Birth profile not configured",
+    es: "Perfil natal no configurado",
+  },
+  safeguard_refusal_health: {
+    fr: "Nous ne pouvons pas traiter les questions de santé physique.",
+    en: "We cannot address physical health questions.",
+    es: "No podemos abordar cuestiones de salud física.",
+  },
+  safeguard_refusal_death: {
+    fr: "Les questions liées à la mort sont strictement exclues.",
+    en: "Questions related to death are strictly excluded.",
+    es: "Las cuestiones relacionadas con la muerte están estrictamente excluidas.",
+  },
+  safeguard_refusal_pregnancy: {
+    fr: "Les questions de grossesse relèvent du domaine médical.",
+    en: "Pregnancy questions belong to the medical field.",
+    es: "Las cuestiones sobre el embarazo pertenecen al campo médico.",
+  },
+  safeguard_refusal_third_party_manipulation: {
+    fr: "Nous refusons toute analyse visant à la manipulation d'autrui.",
+    en: "We refuse any analysis aimed at manipulating others.",
+    es: "Rechazamos cualquier análisis destinado a manipular a otros.",
+  },
   cancel: {
     fr: "Annuler",
     en: "Cancel",

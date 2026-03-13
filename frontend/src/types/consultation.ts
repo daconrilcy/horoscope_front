@@ -37,6 +37,8 @@ export type ConsultationResult = {
   actionableAdvice: string[]
   disclaimer?: string
   createdAt: string
+  fallbackMode?: string | null
+  precisionLevel?: string | null
 }
 
 export type ConsultationTypeConfig = {

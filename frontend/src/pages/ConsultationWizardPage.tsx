@@ -8,6 +8,7 @@ import {
   DataCollectionStep,
   ConsultationSummaryStep,
   WizardProgress,
+  ConsultationFallbackBanner,
 } from "../features/consultations"
 import { detectLang } from "../i18n/astrology"
 import { t } from "../i18n/consultations"
@@ -64,7 +65,6 @@ export function ConsultationWizardPage() {
 
   const handleNext = useCallback(() => {
     if (canProceed) {
-      // If moving from frame to collection, we might want to refresh precheck with context/question
       if (currentStepName === "frame") {
         runPrecheck({ 
           consultation_type: state.draft.type!, 
@@ -76,7 +76,6 @@ export function ConsultationWizardPage() {
           }
         })
       }
-      // If moving from collection to summary, we might want to refresh precheck with other person data
       if (currentStepName === "collection" && state.draft.otherPerson) {
         runPrecheck({
           consultation_type: state.draft.type!,
@@ -162,6 +161,10 @@ export function ConsultationWizardPage() {
   return (
     <div className="panel consultation-wizard-page">
       <WizardProgress currentStepName={currentStepName} />
+
+      {state.precheck && currentStepName === "summary" && (
+        <ConsultationFallbackBanner precheck={state.precheck} />
+      )}
 
       <div className="wizard-content">
         {isPrechecking && (

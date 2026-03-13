@@ -6,9 +6,17 @@ import { useContextualGuidance, GuidanceApiError } from "../api/guidance"
 import { useAstrologer } from "../api/astrologers"
 import { detectLang } from "../i18n/astrology"
 import { t } from "../i18n/consultations"
-import { AUTO_ASTROLOGER_ID, WIZARD_STEP_LABELS, getConsultationTypeConfig, getObjectiveForType, type ConsultationResult } from "../types/consultation"
+import { 
+  AUTO_ASTROLOGER_ID, 
+  WIZARD_STEP_LABELS, 
+  getConsultationTypeConfig, 
+  getObjectiveForType, 
+  type ConsultationResult 
+} from "../types/consultation"
+import { ConsultationFallbackBanner } from "../features/consultations"
 import { generateUniqueId } from "../utils/generateUniqueId"
 import { classNames } from "../utils/classNames"
+import { type ConsultationPrecheckData } from "../api/consultations"
 
 function resolveObjectiveText(
   objective: string | undefined,
@@ -69,6 +77,20 @@ export function ConsultationResultPage() {
     [currentResult, lang]
   )
 
+  const resultPrecheck = useMemo<ConsultationPrecheckData | null>(() => {
+    if (!currentResult?.fallbackMode && !currentResult?.precisionLevel) return null
+    return {
+      consultation_type: currentResult.type,
+      status: currentResult.fallbackMode ? "degraded" : "nominal",
+      precision_level: (currentResult.precisionLevel as any) || "high",
+      fallback_mode: currentResult.fallbackMode as any,
+      user_profile_quality: "complete", // Dummy
+      missing_fields: [],
+      available_modes: [],
+      blocking_reasons: []
+    }
+  }, [currentResult])
+
   const generateInterpretation = useCallback(async () => {
     if (draftType === null || draftAstrologerId === null) {
       navigate("/consultations/new")
@@ -99,6 +121,8 @@ export function ConsultationResultPage() {
         actionableAdvice: guidanceResult.actionable_advice,
         disclaimer: guidanceResult.disclaimer,
         createdAt: new Date().toISOString(),
+        fallbackMode: state.precheck?.fallback_mode,
+        precisionLevel: state.precheck?.precision_level,
       }
 
       setResult(result)
@@ -117,6 +141,7 @@ export function ConsultationResultPage() {
     draftContext,
     draftObjective,
     draftTimeHorizon,
+    state.precheck,
     contextualGuidance,
     setResult,
     navigate,
@@ -198,6 +223,10 @@ export function ConsultationResultPage() {
       <header className="consultation-result-header">
         <h1>{t("result_title", lang)}</h1>
       </header>
+
+      {resultPrecheck && (
+        <ConsultationFallbackBanner precheck={resultPrecheck} />
+      )}
 
       <div className="consultation-result-summary-section">
         <div className="consultation-result-type">

@@ -198,6 +198,8 @@ export function normalizeConsultationResult(item: unknown): ConsultationResult |
     actionableAdvice: normalizeStringList(obj.actionableAdvice),
     disclaimer: typeof obj.disclaimer === "string" ? obj.disclaimer : "",
     createdAt: obj.createdAt as string,
+    fallbackMode: typeof obj.fallbackMode === "string" ? obj.fallbackMode : null,
+    precisionLevel: typeof obj.precisionLevel === "string" ? obj.precisionLevel : null,
   }
 }
 
