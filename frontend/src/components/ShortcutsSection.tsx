@@ -5,11 +5,11 @@ import { translateDashboardPage } from '../i18n/dashboard'
 
 export interface ShortcutsSectionProps {
   onChatClick?: () => void
-  onTirageClick?: () => void
+  onConsultationClick?: () => void
   onHistoryClick?: () => void
 }
 
-export function ShortcutsSection({ onChatClick, onTirageClick, onHistoryClick }: ShortcutsSectionProps) {
+export function ShortcutsSection({ onChatClick, onConsultationClick, onHistoryClick }: ShortcutsSectionProps) {
   const { lang } = useAstrologyLabels()
   const { activities, shortcuts } = translateDashboardPage(lang)
   const shortcutItems = [
@@ -23,11 +23,11 @@ export function ShortcutsSection({ onChatClick, onTirageClick, onHistoryClick }:
       isOnline: true,
     },
     {
-      key: 'tirage',
-      title: shortcuts.tirageTitle,
-      subtitle: shortcuts.tirageSubtitle,
+      key: 'consultation',
+      title: shortcuts.consultationTitle,
+      subtitle: shortcuts.consultationSubtitle,
       icon: Layers,
-      badgeColor: 'var(--badge-tirage)',
+      badgeColor: 'var(--badge-consultation)',
       path: '/consultations',
       isOnline: false,
     },
@@ -49,7 +49,7 @@ export function ShortcutsSection({ onChatClick, onTirageClick, onHistoryClick }:
         {shortcutItems.map((shortcut) => {
           let handleClick = undefined;
           if (shortcut.key === 'chat') handleClick = onChatClick;
-          else if (shortcut.key === 'tirage') handleClick = onTirageClick;
+          else if (shortcut.key === 'consultation') handleClick = onConsultationClick;
           else if (shortcut.key === 'history') handleClick = onHistoryClick;
 
           return (

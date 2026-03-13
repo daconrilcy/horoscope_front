@@ -56,11 +56,6 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Astrologer",
     es: "Astrólogo",
   },
-  step_drawing: {
-    fr: "Tirage",
-    en: "Drawing",
-    es: "Tirada",
-  },
   step_validation: {
     fr: "Validation",
     en: "Validation",
@@ -80,26 +75,6 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     fr: "Laisser choisir automatiquement",
     en: "Let choose automatically",
     es: "Dejar elegir automáticamente",
-  },
-  select_drawing: {
-    fr: "Souhaitez-vous un tirage ?",
-    en: "Would you like a drawing?",
-    es: "¿Desea una tirada?",
-  },
-  drawing_none: {
-    fr: "Sans tirage",
-    en: "No drawing",
-    es: "Sin tirada",
-  },
-  drawing_tarot: {
-    fr: "Tirage de cartes",
-    en: "Card drawing",
-    es: "Tirada de cartas",
-  },
-  drawing_runes: {
-    fr: "Tirage de runes",
-    en: "Rune drawing",
-    es: "Tirada de runas",
   },
   enter_context: {
     fr: "Décrivez votre situation ou question",
@@ -200,11 +175,6 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     fr: "caractères restants",
     en: "characters remaining",
     es: "caracteres restantes",
-  },
-  drawing_completed: {
-    fr: "Tirage effectué",
-    en: "Drawing completed",
-    es: "Tirada realizada",
   },
   loading_name: {
     fr: "Chargement...",

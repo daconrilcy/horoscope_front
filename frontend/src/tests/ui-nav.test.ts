@@ -26,7 +26,7 @@ describe("ui/nav configuration", () => {
       { key: "today", label: "Aujourd'hui", path: "/dashboard" },
       { key: "chat", label: "Chat", path: "/chat" },
       { key: "natal", label: "Thème", path: "/natal" },
-      { key: "tirages", label: "Tirages", path: "/consultations" },
+      { key: "consultations", label: "Consultations", path: "/consultations" },
       { key: "profile", label: "Profil", path: "/settings" },
     ]
 

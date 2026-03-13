@@ -28,7 +28,7 @@ export const navItems: NavItem[] = [
   { key: 'today', label: 'Aujourd\'hui', icon: CalendarDays, path: '/dashboard', showOnMobile: true },
   { key: 'chat', label: 'Chat', icon: MessageCircle, path: '/chat', showOnMobile: true },
   { key: 'natal', label: 'Thème', icon: Star, path: '/natal', showOnMobile: true },
-  { key: 'tirages', label: 'Tirages', icon: Layers, path: '/consultations', showOnMobile: true },
+  { key: 'consultations', label: 'Consultations', icon: Layers, path: '/consultations', showOnMobile: true },
   { key: 'profile', label: 'Profil', icon: User, path: '/settings', showOnMobile: true },
   
   // Public

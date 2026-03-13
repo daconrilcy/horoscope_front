@@ -19,8 +19,8 @@ export type DashboardPageTranslation = {
   shortcuts: {
     chatTitle: string
     chatSubtitle: string
-    tirageTitle: string
-    tirageSubtitle: string
+    consultationTitle: string
+    consultationSubtitle: string
     historyTitle: string
     historySubtitle: string
   }
@@ -72,8 +72,8 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
     shortcuts: {
       chatTitle: "Chat astrologue",
       chatSubtitle: "En ligne",
-      tirageTitle: "Tirage du jour",
-      tirageSubtitle: "3 cartes",
+      consultationTitle: "Consultation",
+      consultationSubtitle: "Guidance ciblée",
       historyTitle: "Historique",
       historySubtitle: "Mes prédictions",
     },
@@ -99,8 +99,8 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
     shortcuts: {
       chatTitle: "Astrologer chat",
       chatSubtitle: "Online",
-      tirageTitle: "Daily spread",
-      tirageSubtitle: "3 cards",
+      consultationTitle: "Consultation",
+      consultationSubtitle: "Targeted guidance",
       historyTitle: "History",
       historySubtitle: "My predictions",
     },
@@ -126,8 +126,8 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
     shortcuts: {
       chatTitle: "Chat astrólogo",
       chatSubtitle: "En línea",
-      tirageTitle: "Tirada del día",
-      tirageSubtitle: "3 cartas",
+      consultationTitle: "Consulta",
+      consultationSubtitle: "Guía enfocada",
       historyTitle: "Historial",
       historySubtitle: "Mis predicciones",
     },

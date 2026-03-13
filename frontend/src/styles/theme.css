@@ -48,7 +48,7 @@
 
   /* Badge accents (§2.1) */
   --badge-chat: #E1F0EA;
-  --badge-tirage: #F8CAA5;
+  --badge-consultation: #F8CAA5;
   --badge-amour: #EBA4C9;
   --badge-travail: #AABEEF;
   --badge-energie: #F6D2A7;
@@ -141,7 +141,7 @@
 
   /* Badge accents (§2.2) */
   --badge-chat: #E4F2EC;
-  --badge-tirage: #D5946A;
+  --badge-consultation: #D5946A;
   --badge-amour: #E779B4;
   --badge-travail: #A8ACEF;
   --badge-energie: #E5B270;

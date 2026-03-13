@@ -48,7 +48,7 @@ const requiredTokens = [
   "--shadow-cta",
   "--shadow-cta-dark",
   "--badge-chat",
-  "--badge-tirage",
+  "--badge-consultation",
   "--badge-amour",
   "--badge-travail",
   "--badge-energie",
