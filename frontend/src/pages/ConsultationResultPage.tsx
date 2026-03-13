@@ -2,11 +2,11 @@ import { useEffect, useState, useCallback, useRef, useMemo } from "react"
 import { useNavigate, useSearchParams, Link } from "react-router-dom"
 
 import { useConsultation, CHAT_PREFILL_KEY } from "../state/consultationStore"
-import { useExecuteModule } from "../api/chat"
+import { useContextualGuidance, GuidanceApiError } from "../api/guidance"
 import { useAstrologer } from "../api/astrologers"
 import { detectLang } from "../i18n/astrology"
 import { t } from "../i18n/consultations"
-import { AUTO_ASTROLOGER_ID, WIZARD_STEP_LABELS, getConsultationTypeConfig, getDrawingOptionConfig, type ConsultationResult } from "../types/consultation"
+import { AUTO_ASTROLOGER_ID, WIZARD_STEP_LABELS, getConsultationTypeConfig, getDrawingOptionConfig, getObjectiveForType, type ConsultationResult, type ConsultationType } from "../types/consultation"
 import { generateUniqueId } from "../utils/generateUniqueId"
 import { classNames } from "../utils/classNames"
 
@@ -16,7 +16,7 @@ export function ConsultationResultPage() {
   const lang = detectLang()
 
   const { state, setResult, saveToHistory, reset } = useConsultation()
-  const executeModule = useExecuteModule()
+  const contextualGuidance = useContextualGuidance()
 
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -65,32 +65,18 @@ export function ConsultationResultPage() {
     setError(null)
 
     try {
-      let interpretation = ""
-      let drawingResult: ConsultationResult["drawing"]
+      const guidanceResult = await contextualGuidance.mutateAsync({
+        situation: draftContext,
+        objective: t(getObjectiveForType(draftType), lang),
+      })
 
+      let drawingResult: ConsultationResult["drawing"]
       if (draftDrawingOption !== "none") {
-        const moduleResult = await executeModule.mutateAsync({
-          module: draftDrawingOption as "tarot" | "runes",
-          payload: { question: draftContext, persona_id: draftAstrologerId },
-        })
-        interpretation = moduleResult.interpretation
         const drawingLabel = t("drawing_completed", lang)
         drawingResult =
           draftDrawingOption === "tarot"
             ? { cards: [drawingLabel] }
             : { runes: [drawingLabel] }
-      } else {
-        // Real interpretation API call
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/v1/users/me/natal-chart/latest?include_interpretation=true&persona_id=${draftAstrologerId}`, {
-          headers: {
-            "Authorization": `Bearer ${sessionStorage.getItem("access_token")}`
-          }
-        })
-        const result = await response.json()
-        if (result.error) {
-          throw new Error(result.error.message)
-        }
-        interpretation = result.data.interpretation.text
       }
 
       const result: ConsultationResult = {
@@ -100,17 +86,21 @@ export function ConsultationResultPage() {
         drawingOption: draftDrawingOption,
         context: draftContext,
         drawing: drawingResult,
-        interpretation,
+        interpretation: guidanceResult.summary,
         createdAt: new Date().toISOString(),
       }
 
       setResult(result)
-    } catch {
-      setError(t("error_generation", lang))
+    } catch (err) {
+      if (err instanceof GuidanceApiError) {
+        setError(err.message)
+      } else {
+        setError(t("error_generation", lang))
+      }
     } finally {
       setIsGenerating(false)
     }
-  }, [draftType, draftAstrologerId, draftDrawingOption, draftContext, executeModule, setResult, navigate, lang])
+  }, [draftType, draftAstrologerId, draftDrawingOption, draftContext, contextualGuidance, setResult, navigate, lang])
 
   useEffect(() => {
     if (!historyId && !state.result && draftType !== null && !generationStarted.current) {

@@ -211,6 +211,26 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Loading...",
     es: "Cargando...",
   },
+  objective_dating: {
+    fr: "relation/amour",
+    en: "romantic relationship/love",
+    es: "relación/amor",
+  },
+  objective_pro: {
+    fr: "décision ou évolution professionnelle",
+    en: "professional decision or evolution",
+    es: "decisión o evolución profesional",
+  },
+  objective_event: {
+    fr: "événement spécifique",
+    en: "specific event",
+    es: "evento específico",
+  },
+  objective_free: {
+    fr: "guidance libre",
+    en: "free guidance",
+    es: "orientación libre",
+  },
 }
 
 export function t(key: string, lang: AstrologyLang): string {

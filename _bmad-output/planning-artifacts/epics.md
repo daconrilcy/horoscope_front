@@ -2178,3 +2178,99 @@ so that la séparation landing/détail n'introduise ni régression fonctionnelle
 - Toute nouvelle chaîne introduite par l'epic 45 est centralisée et testable, sans ajout de hardcode gratuit.
 
 [Source: user request 2026-03-12 ; frontend/src/tests/router.test.tsx ; frontend/src/tests/TodayPage.test.tsx ; frontend/src/tests/DashboardPage.test.tsx ; frontend/src/tests/layout/Header.test.tsx]
+
+## Epic 46: Recentrer les consultations sur une guidance astrologique ciblée sans tirage
+
+Faire évoluer `/consultations` pour supprimer toute notion de tirage de cartes ou de runes, tout en conservant des demandes ciblées de type amoureux, professionnel, événementiel ou libre, appuyées sur la guidance contextuelle astrologique existante.
+
+**FRs covered:** FR17, FR19, FR20, FR21, FR23, NFR2, NFR3, NFR13, NFR14
+
+### Story 46.1: Rebrancher les consultations ciblées sur la guidance contextuelle
+
+As a frontend/backend integrator,
+I want faire de la guidance contextuelle existante la source de vérité des consultations ciblées,
+so that les parcours `dating`, `pro`, `event` et `free` restent utiles après la suppression des tirages sans retomber sur une interprétation natale hors sujet.
+
+**Acceptance Criteria:**
+- Le parcours consultations n'utilise plus `useExecuteModule()` ni `/v1/chat/modules/*` pour générer le résultat.
+- Le frontend appelle `POST /v1/guidance/contextual` avec un payload cohérent fondé sur `situation`, `objective` et `time_horizon`.
+- Le mapping des types `dating`, `pro`, `event`, `free` reste explicite et testable.
+- La page résultat ne retombe plus sur l'interprétation natale comme fallback.
+- Les routes `/consultations`, `/consultations/new` et `/consultations/result` restent stables.
+
+[Source: user request 2026-03-13 ; frontend/src/pages/ConsultationResultPage.tsx ; backend/app/api/v1/routers/guidance.py ; backend/app/services/guidance_service.py]
+
+### Story 46.2: Refondre le wizard et le modèle de données des consultations sans tirage
+
+As a frontend architect,
+I want retirer la notion de tirage du wizard, du modèle de données et de la page résultat,
+so that `/consultations` devienne un vrai parcours de guidance astrologique ciblée, cohérent pour l'utilisateur et maintenable pour l'équipe.
+
+**Acceptance Criteria:**
+- Le wizard suit désormais un parcours `type -> astrologue -> demande`.
+- `ConsultationDraft` et `ConsultationResult` ne portent plus `drawingOption` ni `drawing`.
+- La page résultat n'affiche plus de cartes, runes ou section de tirage.
+- Les constantes wizard et l'i18n consultations sont réalignées sans duplication.
+- Les tests frontend couvrent le nouveau wizard et l'absence de rendu tirage.
+
+[Source: user request 2026-03-13 ; frontend/src/types/consultation.ts ; frontend/src/state/consultationStore.tsx ; frontend/src/pages/ConsultationWizardPage.tsx ; frontend/src/pages/ConsultationResultPage.tsx]
+
+### Story 46.3: Migrer l'historique local et préserver l'ouverture dans le chat
+
+As a frontend maintainer,
+I want migrer proprement l'historique local des consultations vers le nouveau schéma sans tirage,
+so that les utilisateurs conservent leurs consultations passées et peuvent toujours ouvrir une guidance dans le chat sans régression.
+
+**Acceptance Criteria:**
+- Les anciennes entrées localStorage avec `drawingOption` et `drawing` restent lisibles via une migration de lecture.
+- Les nouvelles écritures utilisent uniquement le schéma consultation sans tirage.
+- L'historique et les deep links `?id=...` restent fonctionnels.
+- `CHAT_PREFILL_KEY` continue d'ouvrir le chat avec un message utile basé sur la guidance contextuelle.
+- Les tests couvrent migration legacy, nouveau schéma et ouverture chat.
+
+[Source: user request 2026-03-13 ; frontend/src/state/consultationStore.tsx ; frontend/src/pages/ConsultationResultPage.tsx ; _bmad-output/implementation-artifacts/16-5-consultations-pages.md]
+
+### Story 46.4: Revoir navigation, dashboard et wording i18n des consultations
+
+As a product-facing frontend engineer,
+I want remplacer partout la sémantique de tirage par celle de consultations astrologiques ciblées,
+so that l'application ne présente plus de fonctionnalité hors périmètre tout en gardant un accès clair aux parcours `/consultations`.
+
+**Acceptance Criteria:**
+- L'entrée de navigation vers `/consultations` n'est plus libellée `Tirages`.
+- Le dashboard ne promeut plus `Tirage du jour` ni ses variantes localisées.
+- Les chaînes FR/EN/ES visibles ne mentionnent plus `tirage`, `cartes`, `runes`, `tarot` pour ce parcours.
+- Les clés et handlers techniques les plus exposés (`onTirageClick`, `tirageTitle`, `--badge-tirage`) sont réalignés.
+- La route `/consultations` reste inchangée.
+
+[Source: user request 2026-03-13 ; frontend/src/ui/nav.ts ; frontend/src/components/ShortcutsSection.tsx ; frontend/src/i18n/dashboard.tsx ; frontend/src/i18n/consultations.ts]
+
+### Story 46.5: Retirer le sous-système tarot/runes du backend et des contrats LLM
+
+As a backend maintainer,
+I want supprimer l'infrastructure tarot/runes devenue hors périmètre,
+so that le backend et l'orchestration LLM ne portent plus de fonctionnalités mortes ou contradictoires avec la promesse astrologique du produit.
+
+**Acceptance Criteria:**
+- Les flags `tarot_enabled` et `runes_enabled` ainsi que les modules dédiés ne sont plus exposés.
+- Les routes et clients `/v1/chat/modules/*` sont retirés du produit.
+- Les contrats LLM ne référencent plus `tarot_reading`, `tarot_spread` ni `offer_tarot_reading`.
+- La hard policy `astrology` ne mentionne plus le tarot.
+- Les seeds, schémas et tests restent cohérents après suppression.
+
+[Source: user request 2026-03-13 ; backend/app/services/feature_flag_service.py ; frontend/src/api/chat.ts ; backend/app/llm_orchestration/gateway.py ; backend/app/llm_orchestration/seeds/use_cases_seed.py]
+
+### Story 46.6: Verrouiller QA, cohérence BMAD et non-régression de la refonte
+
+As a QA and product consistency owner,
+I want verrouiller la refonte consultations sans tirage par des tests, des gates et un réalignement documentaire BMAD,
+so that le périmètre astrologique soit cohérent dans le produit, dans le code et dans les artefacts de référence.
+
+**Acceptance Criteria:**
+- Une matrice de non-régression couvre navigation, création des 4 types de consultation, historique et ouverture dans le chat.
+- Les tests front/back reflètent le nouveau périmètre sans tirage.
+- Une vérification ciblée confirme l'absence résiduelle de `tirage`, `tarot`, `runes`, `cartes` sur les surfaces critiques.
+- Les artefacts BMAD 11.2, 16.5, 17.1, 17.5 et 45.2 sont réalignés.
+- Un gate final liste validations manuelles, risques restants et limites.
+
+[Source: user request 2026-03-13 ; _bmad-output/implementation-artifacts/11-2-modules-tarot-runes-derriere-feature-flags.md ; _bmad-output/implementation-artifacts/16-5-consultations-pages.md ; _bmad-output/implementation-artifacts/17-1-fondations-ui-tokens-typo-lucide.md ; _bmad-output/implementation-artifacts/17-5-raccourcis-shortcut-card.md ; _bmad-output/implementation-artifacts/45-2-creer-la-landing-dashboard-avec-resume-et-hub-d-activites.md]

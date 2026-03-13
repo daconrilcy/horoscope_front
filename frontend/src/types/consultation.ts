@@ -76,3 +76,17 @@ export function getConsultationTypeConfig(type: ConsultationType): ConsultationT
 export function getDrawingOptionConfig(option: DrawingOption): DrawingOptionConfig | undefined {
   return DRAWING_OPTIONS.find((d) => d.id === option)
 }
+
+export function getObjectiveForType(type: ConsultationType): string {
+  switch (type) {
+    case "dating":
+      return "objective_dating"
+    case "pro":
+      return "objective_pro"
+    case "event":
+      return "objective_event"
+    case "free":
+    default:
+      return "objective_free"
+  }
+}

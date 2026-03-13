@@ -404,3 +404,12 @@ development_status:
   45-3-restaurer-une-page-horoscope-detaillee-avec-retour-dashboard: done
   45-4-verrouiller-qa-accessibilite-et-coherence-i18n-du-parcours-dashboard: done
   epic-45-retrospective: optional
+
+  epic-46: in-progress
+  46-1-rebrancher-les-consultations-ciblees-sur-la-guidance-contextuelle: done
+  46-2-refondre-le-wizard-et-le-modele-de-donnees-des-consultations-sans-tirage: ready-for-dev
+  46-3-migrer-l-historique-local-et-preserver-l-ouverture-dans-le-chat: ready-for-dev
+  46-4-revoir-navigation-dashboard-et-wording-i18n-des-consultations: ready-for-dev
+  46-5-retirer-le-sous-systeme-tarot-runes-du-backend-et-des-contrats-llm: ready-for-dev
+  46-6-verrouiller-qa-coherence-bmad-et-non-regression-de-la-refonte: ready-for-dev
+  epic-46-retrospective: optional
