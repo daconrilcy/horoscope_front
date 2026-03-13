@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef, useMemo } from "react"
 import { useNavigate, useSearchParams, Link } from "react-router-dom"
 
 import { useConsultation, CHAT_PREFILL_KEY } from "../state/consultationStore"
-import { useContextualGuidance, GuidanceApiError } from "../api/guidance"
+import { useConsultationGenerate, type ConsultationPrecheckData } from "../api/consultations"
 import { useAstrologer } from "../api/astrologers"
 import { detectLang } from "../i18n/astrology"
 import { t } from "../i18n/consultations"
@@ -14,9 +14,7 @@ import {
   type ConsultationResult 
 } from "../types/consultation"
 import { ConsultationFallbackBanner } from "../features/consultations"
-import { generateUniqueId } from "../utils/generateUniqueId"
 import { classNames } from "../utils/classNames"
-import { type ConsultationPrecheckData } from "../api/consultations"
 
 function resolveObjectiveText(
   objective: string | undefined,
@@ -35,9 +33,8 @@ export function ConsultationResultPage() {
   const lang = detectLang()
 
   const { state, setResult, saveToHistory, reset } = useConsultation()
-  const contextualGuidance = useContextualGuidance()
+  const consultationGenerate = useConsultationGenerate()
 
-  const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const historyId = searchParams.get("id")
@@ -63,6 +60,7 @@ export function ConsultationResultPage() {
   const draftContext = state.draft.context
   const draftObjective = state.draft.objective
   const draftTimeHorizon = state.draft.timeHorizon
+  const draftOtherPerson = state.draft.otherPerson
   const generationStarted = useRef(false)
 
   const typeConfig = useMemo(
@@ -84,7 +82,7 @@ export function ConsultationResultPage() {
       status: currentResult.fallbackMode ? "degraded" : "nominal",
       precision_level: (currentResult.precisionLevel as any) || "high",
       fallback_mode: currentResult.fallbackMode as any,
-      user_profile_quality: "complete", // Dummy
+      user_profile_quality: "complete",
       missing_fields: [],
       available_modes: [],
       blocking_reasons: []
@@ -97,43 +95,48 @@ export function ConsultationResultPage() {
       return
     }
 
-    setIsGenerating(true)
     setError(null)
 
     try {
       const objective = resolveObjectiveText(draftObjective, draftType, lang)
       const timeHorizon = draftTimeHorizon?.trim() ? draftTimeHorizon.trim() : null
-      const guidanceResult = await contextualGuidance.mutateAsync({
-        situation: draftContext,
-        objective,
-        time_horizon: timeHorizon,
-      })
+      
+      const payload = {
+        consultation_type: draftType,
+        question: draftContext,
+        horizon: timeHorizon ?? undefined,
+        astrologer_id: draftAstrologerId,
+        other_person: draftOtherPerson ? {
+          birth_date: draftOtherPerson.birthDate,
+          birth_time: draftOtherPerson.birthTime ?? undefined,
+          birth_time_known: draftOtherPerson.birthTimeKnown,
+          birth_place: draftOtherPerson.birthPlace
+        } : undefined
+      }
+
+      const response = await consultationGenerate.mutateAsync(payload)
+      const data = response.data
 
       const result: ConsultationResult = {
-        id: generateUniqueId(),
-        type: draftType,
+        id: data.consultation_id,
+        type: data.consultation_type as any,
         astrologerId: draftAstrologerId,
         context: draftContext,
         objective,
         timeHorizon,
-        summary: guidanceResult.summary,
-        keyPoints: guidanceResult.key_points,
-        actionableAdvice: guidanceResult.actionable_advice,
-        disclaimer: guidanceResult.disclaimer,
+        summary: data.summary,
+        keyPoints: data.sections.find(s => s.id === "key_points")?.content.split("\n") || [],
+        actionableAdvice: data.sections.find(s => s.id === "advice")?.content.split("\n") || [],
         createdAt: new Date().toISOString(),
-        fallbackMode: state.precheck?.fallback_mode,
-        precisionLevel: state.precheck?.precision_level,
+        fallbackMode: data.fallback_mode,
+        precisionLevel: data.precision_level,
+        sections: data.sections,
+        routeKey: data.route_key
       }
 
       setResult(result)
-    } catch (err) {
-      if (err instanceof GuidanceApiError) {
-        setError(err.message)
-      } else {
-        setError(t("error_generation", lang))
-      }
-    } finally {
-      setIsGenerating(false)
+    } catch (err: any) {
+      setError(err.message || t("error_generation", lang))
     }
   }, [
     draftType,
@@ -141,8 +144,8 @@ export function ConsultationResultPage() {
     draftContext,
     draftObjective,
     draftTimeHorizon,
-    state.precheck,
-    contextualGuidance,
+    draftOtherPerson,
+    consultationGenerate,
     setResult,
     navigate,
     lang,
@@ -181,7 +184,7 @@ export function ConsultationResultPage() {
     }
   }, [currentResult, typeConfig, reset, navigate, lang])
 
-  if (isGenerating) {
+  if (consultationGenerate.isPending) {
     return (
       <div className="panel consultation-result-page">
         <div className="consultation-result-loading" aria-live="polite" aria-busy="true">
@@ -240,18 +243,18 @@ export function ConsultationResultPage() {
 
         <div className="consultation-result-meta">
           <span className="consultation-result-astrologer">
-            {t(WIZARD_STEP_LABELS.astrologer, lang)}: {astrologerName}
+            {t("step_astrologer", lang)}: {astrologerName}
           </span>
         </div>
 
         <div className="consultation-result-context">
-          <strong>{t("objective_summary_label", lang)}:</strong>
+          <strong>{t("objective_label", lang)}:</strong>
           <p>{currentObjective}</p>
         </div>
 
         {currentResult.timeHorizon && (
           <div className="consultation-result-context">
-            <strong>{t("time_horizon_summary_label", lang)}:</strong>
+            <strong>{t("time_horizon_label", lang)}:</strong>
             <p>{currentResult.timeHorizon}</p>
           </div>
         )}
@@ -264,32 +267,47 @@ export function ConsultationResultPage() {
 
       <section className="consultation-result-guidance">
         <div className="consultation-result-interpretation">
-          <h2>{t("interpretation", lang)}</h2>
+          <h2>{t("summary_label", lang)}</h2>
           <p className="consultation-result-interpretation-text">
             {currentResult.summary}
           </p>
         </div>
 
-        {currentResult.keyPoints && currentResult.keyPoints.length > 0 && (
-          <div className="consultation-result-key-points">
-            <h3>{t("key_points_label", lang)}</h3>
-            <ul>
-              {currentResult.keyPoints.map((point, idx) => (
-                <li key={idx}>{point}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {currentResult.sections && currentResult.sections.length > 0 ? (
+          currentResult.sections.map((section) => (
+            <div key={section.id} className={`consultation-result-section consultation-result-section--${section.id}`}>
+              <h3>{section.title}</h3>
+              <div className="section-content">
+                {section.content.split("\n").map((line, i) => (
+                  <p key={i}>{line}</p>
+                ))}
+              </div>
+            </div>
+          ))
+        ) : (
+          <>
+            {currentResult.keyPoints && currentResult.keyPoints.length > 0 && (
+              <div className="consultation-result-key-points">
+                <h3>{t("key_points_label", lang)}</h3>
+                <ul>
+                  {currentResult.keyPoints.map((point, idx) => (
+                    <li key={idx}>{point}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-        {currentResult.actionableAdvice && currentResult.actionableAdvice.length > 0 && (
-          <div className="consultation-result-advice">
-            <h3>{t("actionable_advice_label", lang)}</h3>
-            <ul>
-              {currentResult.actionableAdvice.map((advice, idx) => (
-                <li key={idx}>{advice}</li>
-              ))}
-            </ul>
-          </div>
+            {currentResult.actionableAdvice && currentResult.actionableAdvice.length > 0 && (
+              <div className="consultation-result-advice">
+                <h3>{t("actionable_advice_label", lang)}</h3>
+                <ul>
+                  {currentResult.actionableAdvice.map((advice, idx) => (
+                    <li key={idx}>{advice}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
         )}
 
         {currentResult.disclaimer && (

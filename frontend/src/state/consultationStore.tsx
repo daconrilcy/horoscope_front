@@ -200,6 +200,8 @@ export function normalizeConsultationResult(item: unknown): ConsultationResult |
     createdAt: obj.createdAt as string,
     fallbackMode: typeof obj.fallbackMode === "string" ? obj.fallbackMode : null,
     precisionLevel: typeof obj.precisionLevel === "string" ? obj.precisionLevel : null,
+    sections: Array.isArray(obj.sections) ? (obj.sections as any) : undefined,
+    routeKey: typeof obj.routeKey === "string" ? obj.routeKey : null,
   }
 }
 

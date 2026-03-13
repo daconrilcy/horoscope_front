@@ -58,6 +58,43 @@ export interface ConsultationPrecheckResponse {
   }
 }
 
+export interface ConsultationGenerateRequest {
+  consultation_type: string
+  question: string
+  horizon?: string
+  other_person?: OtherPersonData
+  astrologer_id?: string
+}
+
+export interface ConsultationSection {
+  id: string
+  title: string
+  content: string
+}
+
+export interface ConsultationGenerateData {
+  consultation_id: string
+  contract_version: string
+  consultation_type: string
+  status: ConsultationStatus
+  precision_level: PrecisionLevel
+  fallback_mode: FallbackMode | null
+  safeguard_issue: SafeguardIssue | null
+  route_key: string | null
+  summary: string
+  sections: ConsultationSection[]
+  chat_prefill: string
+  metadata: any
+}
+
+export interface ConsultationGenerateResponse {
+  data: ConsultationGenerateData
+  meta: {
+    request_id: string
+    contract_version: string
+  }
+}
+
 export class ConsultationApiError extends Error {
   code: string
   status: number
@@ -106,5 +143,37 @@ export async function precheckConsultation(
 export function useConsultationPrecheck() {
   return useMutation({
     mutationFn: precheckConsultation,
+  })
+}
+
+export async function generateConsultation(
+  payload: ConsultationGenerateRequest
+): Promise<ConsultationGenerateResponse> {
+  const response = await apiFetch(`${API_BASE_URL}/v1/consultations/generate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAccessTokenAuthHeader(),
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const json = await response.json()
+
+  if (!response.ok) {
+    throw new ConsultationApiError(
+      json.error?.code || "unknown_error",
+      json.error?.message || "An unknown error occurred",
+      response.status,
+      json.error?.details
+    )
+  }
+
+  return json
+}
+
+export function useConsultationGenerate() {
+  return useMutation({
+    mutationFn: generateConsultation,
   })
 }

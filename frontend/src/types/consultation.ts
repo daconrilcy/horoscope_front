@@ -25,6 +25,12 @@ export type ConsultationDraft = {
   otherPerson?: OtherPersonDraft | null
 }
 
+export type ConsultationSection = {
+  id: string
+  title: string
+  content: string
+}
+
 export type ConsultationResult = {
   id: string
   type: ConsultationType
@@ -39,6 +45,8 @@ export type ConsultationResult = {
   createdAt: string
   fallbackMode?: string | null
   precisionLevel?: string | null
+  sections?: ConsultationSection[]
+  routeKey?: string | null
 }
 
 export type ConsultationTypeConfig = {
