@@ -14,6 +14,11 @@ export type OtherPersonDraft = {
   birthTime: string | null
   birthTimeKnown: boolean
   birthPlace: string
+  birthCity: string
+  birthCountry: string
+  placeResolvedId?: number | null
+  birthLat?: number | null
+  birthLon?: number | null
 }
 
 export type ConsultationDraft = {
@@ -59,6 +64,7 @@ export type ConsultationTypeConfig = {
   requiredData?: ("birth_profile" | "location" | "current_time")[]
   fallbackAllowed?: boolean
   interactionEligible?: boolean
+  defaultInteraction?: boolean
 }
 
 export const CONSULTATION_TYPES: ConsultationTypeConfig[] = [
@@ -95,6 +101,7 @@ export const CONSULTATION_TYPES: ConsultationTypeConfig[] = [
     requiredData: ["birth_profile"],
     fallbackAllowed: true,
     interactionEligible: true,
+    defaultInteraction: true,
   },
   {
     id: "timing",

@@ -276,6 +276,26 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "City, Country",
     es: "Ciudad, País",
   },
+  birth_city_label: {
+    fr: "Ville de naissance",
+    en: "Birth city",
+    es: "Ciudad de nacimiento",
+  },
+  birth_city_placeholder: {
+    fr: "Paris",
+    en: "Paris",
+    es: "Paris",
+  },
+  birth_country_label: {
+    fr: "Pays de naissance",
+    en: "Birth country",
+    es: "País de nacimiento",
+  },
+  birth_country_placeholder: {
+    fr: "France",
+    en: "France",
+    es: "Francia",
+  },
   user_data_missing_hint: {
     fr: "Certaines de vos données de profil sont manquantes pour une précision optimale.",
     en: "Some of your profile data is missing for optimal precision.",

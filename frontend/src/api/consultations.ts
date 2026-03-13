@@ -29,6 +29,11 @@ export interface OtherPersonData {
   birth_time?: string
   birth_time_known: boolean
   birth_place: string
+  birth_city?: string
+  birth_country?: string
+  place_resolved_id?: number
+  birth_lat?: number
+  birth_lon?: number
 }
 
 export interface ConsultationPrecheckRequest {

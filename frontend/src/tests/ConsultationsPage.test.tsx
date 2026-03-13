@@ -4,10 +4,9 @@ import { MemoryRouter, Route, Routes } from "react-router-dom"
 import React from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
-import { AUTO_ASTROLOGER_ID, CONTEXT_MAX_LENGTH } from "../types/consultation"
+import { AUTO_ASTROLOGER_ID, CONTEXT_MAX_LENGTH, INTERACTION_ELIGIBLE_TYPES } from "../types/consultation"
 import { ConsultationsPage } from "../pages/ConsultationsPage"
 import { ConsultationWizardPage } from "../pages/ConsultationWizardPage"
-import { ConsultationResultPage } from "../pages/ConsultationResultPage"
 import { ConsultationProvider, useConsultation, STORAGE_KEY } from "../state/consultationStore"
 
 const routerFutureFlags = {
@@ -16,6 +15,9 @@ const routerFutureFlags = {
 }
 
 const mockNavigate = vi.fn()
+const mockPrecheckMutate = vi.fn()
+const mockGenerateMutateAsync = vi.fn()
+const mockGeocodeCity = vi.fn()
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom")
   return {
@@ -29,15 +31,25 @@ vi.mock("../api/consultations", () => ({
     mutate: (
       payload: {
         consultation_type: string
-        other_person?: { birth_time_known?: boolean }
+        other_person?: {
+          birth_time_known?: boolean
+          birth_city?: string
+          birth_country?: string
+          place_resolved_id?: number
+          birth_lat?: number
+          birth_lon?: number
+        }
       },
       options?: { onSuccess?: (response: { data: any }) => void }
     ) => {
+      mockPrecheckMutate(payload)
+      const hasOtherPerson = !!payload.other_person
+      const missingBirthTime = hasOtherPerson && payload.other_person?.birth_time_known === false
       const isRelation = payload.consultation_type === "relation"
       const fallbackMode =
-        isRelation && payload.other_person?.birth_time_known === false
+        missingBirthTime
           ? "other_no_birth_time"
-          : isRelation && !payload.other_person
+          : isRelation && !hasOtherPerson
             ? "relation_user_only"
             : null
 
@@ -58,9 +70,21 @@ vi.mock("../api/consultations", () => ({
     isPending: false,
   }),
   useConsultationGenerate: () => ({
-    mutateAsync: vi.fn(),
+    mutateAsync: mockGenerateMutateAsync,
     isPending: false,
   }),
+}))
+
+vi.mock("../api/geocoding", () => ({
+  geocodeCity: (...args: unknown[]) => mockGeocodeCity(...args),
+  GeocodingError: class GeocodingError extends Error {
+    code: string
+    constructor(message: string, code = "service_unavailable") {
+      super(message)
+      this.name = "GeocodingError"
+      this.code = code
+    }
+  },
 }))
 
 const createTestQueryClient = () => new QueryClient({
@@ -87,6 +111,12 @@ describe("ConsultationsPage", () => {
     localStorage.clear()
     sessionStorage.clear()
     vi.clearAllMocks()
+    mockGeocodeCity.mockResolvedValue({
+      place_resolved_id: 777,
+      lat: 48.8566,
+      lon: 2.3522,
+      display_name: "Paris, Ile-de-France, France",
+    })
   })
 
   afterEach(() => {
@@ -110,10 +140,42 @@ describe("ConsultationsPage", () => {
   })
 })
 
+describe("INTERACTION_ELIGIBLE_TYPES", () => {
+  it("contains exactly work and relation", () => {
+    expect(INTERACTION_ELIGIBLE_TYPES).toEqual(expect.arrayContaining(["work", "relation"]))
+    expect(INTERACTION_ELIGIBLE_TYPES).toHaveLength(2)
+  })
+
+  it("does not include non-eligible types", () => {
+    expect(INTERACTION_ELIGIBLE_TYPES).not.toContain("period")
+    expect(INTERACTION_ELIGIBLE_TYPES).not.toContain("orientation")
+    expect(INTERACTION_ELIGIBLE_TYPES).not.toContain("timing")
+  })
+})
+
 describe("ConsultationWizardPage - Story 47.8 Flow", () => {
   beforeEach(() => {
     localStorage.clear()
     vi.clearAllMocks()
+    mockGeocodeCity.mockResolvedValue({
+      place_resolved_id: 777,
+      lat: 48.8566,
+      lon: 2.3522,
+      display_name: "Paris, Ile-de-France, France",
+    })
+    mockGenerateMutateAsync.mockResolvedValue({
+      data: {
+        consultation_id: "consult-1",
+        consultation_type: "work",
+        status: "nominal",
+        precision_level: "high",
+        fallback_mode: null,
+        safeguard_issue: null,
+        route_key: "work_full",
+        summary: "Resume",
+        sections: [],
+      },
+    })
   })
 
   afterEach(() => {
@@ -135,11 +197,13 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
 
     await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
     
-    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
-      target: { value: "Mon évolution pro" } 
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), {
+      target: { value: "Mon évolution pro" }
     })
-    
+
     // interaction toggle is NOT checked by default
+    const toggle = screen.getByLabelText(/This consultation concerns another person/i)
+    expect(toggle).not.toBeChecked()
     const nextBtn = screen.getByRole("button", { name: /Next/i })
     fireEvent.click(nextBtn)
 
@@ -173,6 +237,56 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
     // Next should be disabled until form filled (simplified state test)
     const nextBtn2 = screen.getByRole("button", { name: /Next/i })
     expect(nextBtn2).toBeDisabled()
+  })
+
+  it("uses natal geocoding protocol for third-party birth place and propagates resolved coordinates", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=work" })
+
+    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), {
+      target: { value: "Entretien avec un recruteur" },
+    })
+    fireEvent.click(screen.getByLabelText(/This consultation concerns another person/i))
+    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+
+    await waitFor(() =>
+      expect(screen.getByText(/Information about the other person/i)).toBeInTheDocument()
+    )
+
+    fireEvent.change(screen.getByLabelText(/^Birth date$/i), {
+      target: { value: "1990-01-01" },
+    })
+    fireEvent.change(screen.getByLabelText(/Birth city/i), {
+      target: { value: "Paris" },
+    })
+    fireEvent.change(screen.getByLabelText(/Birth country/i), {
+      target: { value: "France" },
+    })
+    fireEvent.blur(screen.getByLabelText(/Birth country/i))
+
+    await waitFor(() => {
+      expect(mockGeocodeCity).toHaveBeenCalledWith("Paris", "France", expect.any(AbortSignal))
+    })
+    await waitFor(() => {
+      expect(screen.getByDisplayValue("Paris, Ile-de-France, France")).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+    await waitFor(() => expect(screen.getByText(/Final verification/i)).toBeInTheDocument())
+
+    expect(mockPrecheckMutate).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        other_person: expect.objectContaining({
+          birth_place: "Paris, Ile-de-France, France",
+          birth_city: "Paris",
+          birth_country: "France",
+          place_resolved_id: 777,
+          birth_lat: 48.8566,
+          birth_lon: 2.3522,
+        }),
+      })
+    )
   })
 
   it("relation type still shows other person form without toggle", async () => {

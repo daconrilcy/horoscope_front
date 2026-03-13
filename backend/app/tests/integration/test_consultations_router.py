@@ -109,3 +109,86 @@ def test_generate_authenticated_nominal():
     assert json_data["data"]["status"] == "nominal"
     assert json_data["data"]["route_key"] == "period_full"
     assert len(json_data["data"]["sections"]) > 0
+
+
+def test_precheck_accepts_enriched_other_person_payload():
+    _cleanup_tables()
+    headers = _get_auth_headers()
+
+    client.put(
+        "/v1/users/me/birth-data",
+        headers=headers,
+        json={
+            "birth_date": "1990-01-01",
+            "birth_time": "12:00",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+
+    response = client.post(
+        "/v1/consultations/precheck",
+        json={
+            "consultation_type": "relation",
+            "question": "Que comprendre de cette rencontre ?",
+            "other_person": {
+                "birth_date": "1992-05-04",
+                "birth_time": "08:15",
+                "birth_time_known": True,
+                "birth_place": "Paris, Ile-de-France, France",
+                "birth_city": "Paris",
+                "birth_country": "France",
+                "place_resolved_id": 777,
+                "birth_lat": 48.8566,
+                "birth_lon": 2.3522,
+            },
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    json_data = response.json()
+    assert json_data["data"]["consultation_type"] == "relation"
+    assert json_data["data"]["status"] == "nominal"
+
+
+def test_generate_accepts_enriched_other_person_payload():
+    _cleanup_tables()
+    headers = _get_auth_headers(email="other@example.com")
+
+    client.put(
+        "/v1/users/me/birth-data",
+        headers=headers,
+        json={
+            "birth_date": "1990-01-01",
+            "birth_time": "12:00",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+
+    response = client.post(
+        "/v1/consultations/generate",
+        json={
+            "consultation_type": "relation",
+            "question": "Quel est le climat de cette relation ?",
+            "other_person": {
+                "birth_date": "1992-05-04",
+                "birth_time": "08:15",
+                "birth_time_known": True,
+                "birth_place": "Paris, Ile-de-France, France",
+                "birth_city": "Paris",
+                "birth_country": "France",
+                "place_resolved_id": 777,
+                "birth_lat": 48.8566,
+                "birth_lon": 2.3522,
+            },
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    json_data = response.json()
+    assert json_data["data"]["consultation_type"] == "relation"
+    assert json_data["data"]["status"] == "nominal"
+    assert json_data["data"]["route_key"] == "relation_full_full"

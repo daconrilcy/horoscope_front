@@ -116,7 +116,18 @@ export function ConsultationResultPage() {
           birth_date: draftOtherPerson.birthDate,
           birth_time: draftOtherPerson.birthTime ?? undefined,
           birth_time_known: draftOtherPerson.birthTimeKnown,
-          birth_place: draftOtherPerson.birthPlace
+          birth_place: draftOtherPerson.birthPlace,
+          birth_city: draftOtherPerson.birthCity,
+          birth_country: draftOtherPerson.birthCountry,
+          ...(draftOtherPerson.placeResolvedId
+            ? { place_resolved_id: draftOtherPerson.placeResolvedId }
+            : {}),
+          ...(draftOtherPerson.birthLat !== null && draftOtherPerson.birthLat !== undefined
+            ? { birth_lat: draftOtherPerson.birthLat }
+            : {}),
+          ...(draftOtherPerson.birthLon !== null && draftOtherPerson.birthLon !== undefined
+            ? { birth_lon: draftOtherPerson.birthLon }
+            : {}),
         } : undefined
       }
 

@@ -15,9 +15,10 @@ so that l'utilisateur ne saisisse que les informations nécessaires à la consul
 1. Le wizard consultations n'impose plus un choix d'astrologue comme étape bloquante de génération; si cette donnée est conservée, elle devient optionnelle ou purement liée à l'ouverture dans le chat.
 2. Le parcours demande au minimum le type de consultation, la question / situation et l'horizon utile, puis affiche uniquement les compléments requis par le précheck et le type de consultation.
 3. Le module "autre personne" n'apparaît que pour les parcours qui l'exigent, au minimum `relation`, accepte explicitement le cas "heure inconnue" et explicite que ces données sont utilisées pour le draft / run courant sans introduire de persistance backend dédiée en epic 47.
-4. Les compléments utilisateur se limitent aux champs manquants pertinents; les données déjà connues ne sont pas redemandées.
-5. Le wizard gère les choix "je ne connais pas cette information" et prépare un basculement vers un mode dégradé plutôt qu'un abandon brutal.
-6. Les invariants du module consultations restent centralisés (`WIZARD_STEPS`, `canProceed`, draft state, deep links), et les tests couvrent les étapes dynamiques principales.
+4. Le lieu de naissance d'un tiers suit le même protocole que le thème natal: saisie `ville + pays`, tentative `geocoding/search -> geocoding/resolve`, propagation de `birth_place`, `birth_city`, `birth_country`, `place_resolved_id`, `birth_lat`, `birth_lon` quand la résolution aboutit, et fallback dégradé non bloquant si elle échoue.
+5. Les compléments utilisateur se limitent aux champs manquants pertinents; les données déjà connues ne sont pas redemandées.
+6. Le wizard gère les choix "je ne connais pas cette information" et prépare un basculement vers un mode dégradé plutôt qu'un abandon brutal.
+7. Les invariants du module consultations restent centralisés (`WIZARD_STEPS`, `canProceed`, draft state, deep links), et les tests couvrent les étapes dynamiques principales.
 
 ## Tasks / Subtasks
 
@@ -37,6 +38,7 @@ so that l'utilisateur ne saisisse que les informations nécessaires à la consul
   - [x] Gérer la saisie "heure inconnue" et les états de validation minimaux
   - [x] Rendre explicite la règle MVP de gouvernance: pas de persistance backend dédiée des données tiers, seulement un usage à la volée dans le draft / run
   - [x] Réutiliser les clients API existants (`birthProfile`, `geocoding`) sans toucher au flow `/profile`
+  - [x] Aligner la saisie du lieu tiers sur le protocole natal (`birth_city`, `birth_country`, géocodage, `place_resolved_id`, `birth_lat`, `birth_lon`)
 
 - [x] Task 4: Réorganiser les composants UI sans régression (AC: 1, 6)
   - [x] Adapter `WizardProgress`, `ValidationStep` (repurposed as FrameStep) et le layout consultations
@@ -51,6 +53,7 @@ so that l'utilisateur ne saisisse que les informations nécessaires à la consul
 
 - Wizard refactored from 3 to 4 steps: `type` -> `frame` -> `collection` -> `summary`.
 - `OtherPersonForm` added for `relation` type.
+- `OtherPersonForm` aligne le lieu tiers sur le protocole natal de géocodage: saisie `ville/pays`, résolution de lieu et fallback dégradé non bloquant.
 - Astrologer selection moved to `summary` step and made optional.
 - Precheck integrated to inform user about precision and missing data.
 
@@ -127,3 +130,4 @@ Gemini CLI
 ## Change Log
 
 - 2026-03-13: Initial implementation of story 47.3. Conditional wizard refactor.
+- 2026-03-13: Alignement du lieu de naissance tiers sur le protocole natal (`birth_city` / `birth_country` -> `search` / `resolve` -> `place_resolved_id` + `birth_lat` / `birth_lon`).

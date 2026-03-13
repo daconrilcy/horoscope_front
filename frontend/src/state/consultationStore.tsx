@@ -12,7 +12,7 @@ import {
   VALID_CONSULTATION_TYPES,
   WIZARD_LAST_STEP_INDEX,
   WIZARD_STEPS,
-  INTERACTION_ELIGIBLE_TYPES,
+  getConsultationTypeConfig,
   getObjectiveForType,
   type ConsultationType,
   type ConsultationDraft,
@@ -61,10 +61,10 @@ export function consultationReducer(
     case "SET_TYPE":
       return {
         ...state,
-        draft: { 
-          ...state.draft, 
+        draft: {
+          ...state.draft,
           type: action.payload,
-          isInteraction: action.payload === "relation" // Auto-select for relation
+          isInteraction: getConsultationTypeConfig(action.payload)?.defaultInteraction ?? false,
         },
       }
     case "SET_ASTROLOGER":
@@ -95,7 +95,11 @@ export function consultationReducer(
     case "SET_IS_INTERACTION":
       return {
         ...state,
-        draft: { ...state.draft, isInteraction: action.payload },
+        draft: {
+          ...state.draft,
+          isInteraction: action.payload,
+          otherPerson: action.payload ? state.draft.otherPerson : null,
+        },
       }
     case "NEXT_STEP":
       return {
@@ -343,17 +347,15 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
           (state.draft.objective ?? "").trim().length > 0
         )
       case "collection":
-        // Required for relation
-        if (state.draft.type === "relation" && !state.draft.otherPerson) {
-           return false
-        }
-        // Required if user explicitly asked for interaction on an eligible type
         if (state.draft.isInteraction && !state.draft.otherPerson) {
-           return false
+          return false
         }
-        // Basic other person validation if present
-        if (state.draft.otherPerson) {
-           return !!(state.draft.otherPerson.birthDate && state.draft.otherPerson.birthPlace)
+        if (state.draft.isInteraction && state.draft.otherPerson) {
+          return !!(
+            state.draft.otherPerson.birthDate &&
+            state.draft.otherPerson.birthCity.trim() &&
+            state.draft.otherPerson.birthCountry.trim()
+          )
         }
         return true
       case "summary":

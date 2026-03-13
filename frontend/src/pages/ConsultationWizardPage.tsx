@@ -122,7 +122,20 @@ export function ConsultationWizardPage() {
             birth_date: state.draft.otherPerson.birthDate,
             birth_time: state.draft.otherPerson.birthTime ?? undefined,
             birth_time_known: state.draft.otherPerson.birthTimeKnown,
-            birth_place: state.draft.otherPerson.birthPlace
+            birth_place: state.draft.otherPerson.birthPlace,
+            birth_city: state.draft.otherPerson.birthCity,
+            birth_country: state.draft.otherPerson.birthCountry,
+            ...(state.draft.otherPerson.placeResolvedId
+              ? { place_resolved_id: state.draft.otherPerson.placeResolvedId }
+              : {}),
+            ...(state.draft.otherPerson.birthLat !== null &&
+            state.draft.otherPerson.birthLat !== undefined
+              ? { birth_lat: state.draft.otherPerson.birthLat }
+              : {}),
+            ...(state.draft.otherPerson.birthLon !== null &&
+            state.draft.otherPerson.birthLon !== undefined
+              ? { birth_lon: state.draft.otherPerson.birthLon }
+              : {}),
           }
         }, {
           onSuccess: (response) => {

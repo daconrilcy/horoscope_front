@@ -70,14 +70,17 @@ export function ConsultationFrameStep({
 
         {isInteractionEligible && !isRelationType && onInteractionToggle && (
           <div className="interaction-toggle-section">
-            <label className="checkbox-label">
+            <div className="checkbox-label">
               <input
+                id="consultation-is-interaction"
                 type="checkbox"
                 checked={!!draft.isInteraction}
                 onChange={(e) => onInteractionToggle(e.target.checked)}
               />
-              {t("is_interaction_label", lang)}
-            </label>
+              <label htmlFor="consultation-is-interaction">
+                {t("is_interaction_label", lang)}
+              </label>
+            </div>
             <p className="interaction-toggle-hint">{t("is_interaction_hint", lang)}</p>
           </div>
         )}

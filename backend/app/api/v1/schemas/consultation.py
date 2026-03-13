@@ -43,6 +43,11 @@ class OtherPersonData(BaseModel):
     birth_time: Optional[str] = Field(None, pattern=r"^\d{2}:\d{2}$")
     birth_time_known: bool = True
     birth_place: str
+    birth_city: Optional[str] = None
+    birth_country: Optional[str] = None
+    place_resolved_id: Optional[int] = Field(default=None, gt=0)
+    birth_lat: Optional[float] = None
+    birth_lon: Optional[float] = None
 
 class ConsultationPrecheckRequest(BaseModel):
     consultation_type: str

@@ -65,6 +65,7 @@ describe("consultationReducer", () => {
       context: "Mon entretien arrive",
       objective: "clarifier la dynamique de l'entretien",
       timeHorizon: "avant vendredi",
+      isInteraction: false,
     })
   })
 

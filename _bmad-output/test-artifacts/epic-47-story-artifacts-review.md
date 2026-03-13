@@ -23,6 +23,7 @@ Elles respectent les garde-fous suivants:
 - l'historique local et l'ouverture dans le chat sont préservés comme invariants
 - la logique métier nouvelle est déplacée vers des contrats consultation dédiés, sans refonte transverse du chat, du profil ou du natal
 - le scope des futures implémentations reste limité au code consultations et à ses tests associés
+- le lieu de naissance tiers réutilise le contrat géocoding déjà stabilisé côté natal au lieu d'introduire un second protocole
 - les safeguards sensibles sont désormais explicités comme matrice consultation `fallback / refusal / reframing`
 - la gouvernance MVP des données tiers est explicitée sans persistance backend implicite
 - le wording de fallback est traité comme un contrat i18n testable, pas comme une simple copie UI
@@ -37,12 +38,14 @@ Elles respectent les garde-fous suivants:
 - Correction tests backend: isolation des mocks de profil natal pour éviter la pollution entre unit et integration tests.
 - Correction tests frontend: réalignement du wizard et du résultat sur le contrat `useConsultationPrecheck` / `useConsultationGenerate` de l'epic 47.
 - Correction frontend du wizard: un accès direct depuis le hub `/consultations` avec `?type=` saute maintenant correctement l'étape de sélection du type au lieu de l'afficher deux fois.
+- Correction consultations tiers: le lieu de naissance d'un tiers suit désormais le protocole natal (`birth_city` + `birth_country` -> `geocoding/search` -> `geocoding/resolve`), avec propagation de `place_resolved_id`, `birth_lat`, `birth_lon` quand disponibles et fallback dégradé non bloquant sinon.
 
 ## Gap résiduel converti en story
 
 - Le code actuel n'affiche le module tiers que pour `relation` via une condition hardcodée dans `DataCollectionStep.tsx`.
 - Pour `work`, l'absence de saisie tiers n'est donc pas un bug de rendu mais une capacité non implémentée.
 - Une story de suivi a été ajoutée pour ce besoin: `47.8 Etendre la collecte tiers aux consultations d'interaction ciblee`.
+- La story 47.8 couvre maintenant explicitement l'alignement du lieu tiers sur les epics natal 14.x / 19.x de geocodage et de `geo_place_resolved`.
 
 ## Vérifications exécutées
 

@@ -41,7 +41,7 @@ export function ConsultationSummaryStep({
           <div className="summary-item">
             <span className="summary-label">{t("other_person_label", lang)}:</span>
             <span className="summary-value">
-              {draft.otherPerson.birthPlace} ({draft.otherPerson.birthDate})
+              {draft.otherPerson.birthPlace || `${draft.otherPerson.birthCity}, ${draft.otherPerson.birthCountry}`} ({draft.otherPerson.birthDate})
             </span>
           </div>
         )}

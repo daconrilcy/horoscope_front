@@ -422,5 +422,5 @@ development_status:
   47-5-construire-le-dossier-de-consultation-et-le-routing-llm-versionne: done
   47-6-refondre-la-generation-et-la-restitution-structuree-des-consultations: done
   47-7-verrouiller-qa-observabilite-et-non-regression-des-consultations-completes: done
-  47-8-etendre-la-collecte-tiers-aux-consultations-d-interaction-ciblee: ready-for-dev
+  47-8-etendre-la-collecte-tiers-aux-consultations-d-interaction-ciblee: done
   epic-47-retrospective: optional
