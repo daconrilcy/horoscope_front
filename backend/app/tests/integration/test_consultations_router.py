@@ -19,13 +19,14 @@ def _cleanup_tables() -> None:
         db.execute(delete(UserModel))
         db.commit()
 
-def _register_and_get_access_token(email="user@example.com") -> str:
+def _get_auth_headers(email="user@example.com"):
     register = client.post(
         "/v1/auth/register",
         json={"email": email, "password": "strong-pass-123"},
     )
     assert register.status_code == 200
-    return register.json()["data"]["tokens"]["access_token"]
+    token = register.json()["data"]["tokens"]["access_token"]
+    return {"Authorization": f"Bearer {token}"}
 
 def test_precheck_unauthenticated():
     _cleanup_tables()
@@ -34,9 +35,7 @@ def test_precheck_unauthenticated():
 
 def test_precheck_authenticated_no_profile():
     _cleanup_tables()
-    access_token = _register_and_get_access_token()
-    headers = {"Authorization": f"Bearer {access_token}"}
-    
+    headers = _get_auth_headers()
     response = client.post("/v1/consultations/precheck", json={"consultation_type": "period"}, headers=headers)
     
     assert response.status_code == 200
@@ -46,8 +45,7 @@ def test_precheck_authenticated_no_profile():
 
 def test_precheck_authenticated_nominal():
     _cleanup_tables()
-    access_token = _register_and_get_access_token()
-    headers = {"Authorization": f"Bearer {access_token}"}
+    headers = _get_auth_headers()
     
     # Create birth profile
     client.put(
@@ -71,8 +69,7 @@ def test_precheck_authenticated_nominal():
 
 def test_generate_authenticated_nominal():
     _cleanup_tables()
-    access_token = _register_and_get_access_token()
-    headers = {"Authorization": f"Bearer {access_token}"}
+    headers = _get_auth_headers()
     
     # Create birth profile
     client.put(
@@ -101,4 +98,3 @@ def test_generate_authenticated_nominal():
     assert json_data["data"]["status"] == "nominal"
     assert json_data["data"]["route_key"] == "period_full"
     assert len(json_data["data"]["sections"]) > 0
-
