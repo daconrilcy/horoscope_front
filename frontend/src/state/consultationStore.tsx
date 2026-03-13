@@ -12,6 +12,7 @@ import {
   VALID_CONSULTATION_TYPES,
   WIZARD_LAST_STEP_INDEX,
   WIZARD_STEPS,
+  getObjectiveForType,
   type ConsultationType,
   type ConsultationDraft,
   type ConsultationResult,
@@ -134,18 +135,39 @@ function isValidISODate(dateStr: unknown): boolean {
   return !isNaN(date.getTime())
 }
 
-export function isValidConsultationResult(item: unknown): item is ConsultationResult {
-  if (typeof item !== "object" || item === null) return false
-  const obj = item as Record<string, unknown>
-  return (
-    typeof obj.id === "string" &&
-    typeof obj.type === "string" &&
-    VALID_CONSULTATION_TYPES.includes(obj.type as ConsultationType) &&
-    typeof obj.astrologerId === "string" &&
-    typeof obj.context === "string" &&
-    typeof obj.interpretation === "string" && // Legacy compatibility for 46.2, will be cleaned in 46.3
-    isValidISODate(obj.createdAt)
-  )
+/**
+ * Validates and normalizes a consultation result item.
+ * Supports legacy format from Story 16.5 and normalizes it to Story 46.2 schema.
+ */
+export function normalizeConsultationResult(item: unknown): ConsultationResult | null {
+  if (typeof item !== "object" || item === null) return null
+  const obj = item as Record<string, any>
+
+  // Basic validation required for both legacy and new
+  if (
+    typeof obj.id !== "string" ||
+    typeof obj.type !== "string" ||
+    !VALID_CONSULTATION_TYPES.includes(obj.type as ConsultationType) ||
+    typeof obj.astrologerId !== "string" ||
+    typeof obj.context !== "string" ||
+    !isValidISODate(obj.createdAt)
+  ) {
+    return null
+  }
+
+  // Normalization logic
+  return {
+    id: obj.id,
+    type: obj.type as ConsultationType,
+    astrologerId: obj.astrologerId,
+    context: obj.context,
+    objective: obj.objective ?? getObjectiveForType(obj.type as ConsultationType),
+    summary: obj.summary ?? obj.interpretation ?? "",
+    keyPoints: Array.isArray(obj.keyPoints) ? obj.keyPoints : [],
+    actionableAdvice: Array.isArray(obj.actionableAdvice) ? obj.actionableAdvice : [],
+    disclaimer: obj.disclaimer ?? "",
+    createdAt: obj.createdAt,
+  }
 }
 
 function loadHistoryFromStorage(): ConsultationResult[] {
@@ -154,8 +176,10 @@ function loadHistoryFromStorage(): ConsultationResult[] {
     if (!stored) return []
     const parsed: unknown = JSON.parse(stored)
     if (!Array.isArray(parsed)) return []
-    // We'll be loose for now to allow migration in 46.3
-    return parsed as ConsultationResult[]
+    
+    return parsed
+      .map(normalizeConsultationResult)
+      .filter((item): item is ConsultationResult => item !== null)
   } catch (e) {
     if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
       console.warn("[consultationStore] localStorage load failed:", e)

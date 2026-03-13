@@ -22,7 +22,6 @@ export function ConsultationResultPage() {
   const [error, setError] = useState<string | null>(null)
 
   const historyId = searchParams.get("id")
-  // @ts-ignore - Handle legacy history items that might be missing new fields during migration
   const currentResult: ConsultationResult | undefined = historyId
     ? state.history.find((h) => h.id === historyId)
     : state.result
@@ -107,7 +106,7 @@ export function ConsultationResultPage() {
 
   const handleOpenInChat = useCallback(() => {
     if (currentResult) {
-      const interpretation = currentResult.summary || (currentResult as any).interpretation || ""
+      const interpretation = currentResult.summary || ""
       const message = `[Consultation ${t(typeConfig?.labelKey ?? "", lang)}]\n\n${currentResult.context}\n\n${t("interpretation_label", lang)}:\n${interpretation}`
       sessionStorage.setItem(CHAT_PREFILL_KEY, message)
       reset()
@@ -187,7 +186,7 @@ export function ConsultationResultPage() {
         <div className="consultation-result-interpretation">
           <h2>{t("interpretation", lang)}</h2>
           <p className="consultation-result-interpretation-text">
-            {currentResult.summary || (currentResult as any).interpretation}
+            {currentResult.summary}
           </p>
         </div>
 
