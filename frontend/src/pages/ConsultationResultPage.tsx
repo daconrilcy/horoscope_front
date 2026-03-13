@@ -15,6 +15,7 @@ import {
 } from "../types/consultation"
 import { ConsultationFallbackBanner } from "../features/consultations"
 import { classNames } from "../utils/classNames"
+import { trackEvent, EVENTS } from "../utils/analytics"
 
 function resolveObjectiveText(
   objective: string | undefined,
@@ -117,6 +118,12 @@ export function ConsultationResultPage() {
       const response = await consultationGenerate.mutateAsync(payload)
       const data = response.data
 
+      trackEvent(EVENTS.CONSULTATION_GENERATED, { 
+        type: data.consultation_type,
+        status: data.status,
+        route: data.route_key
+      })
+
       const result: ConsultationResult = {
         id: data.consultation_id,
         type: data.consultation_type as any,
@@ -137,6 +144,10 @@ export function ConsultationResultPage() {
       setResult(result)
     } catch (err: any) {
       setError(err.message || t("error_generation", lang))
+      trackEvent(EVENTS.CONSULTATION_ERROR, { 
+        type: draftType,
+        error: err.message || "unknown"
+      })
     }
   }, [
     draftType,
@@ -167,6 +178,10 @@ export function ConsultationResultPage() {
 
   const handleOpenInChat = useCallback(() => {
     if (currentResult) {
+      trackEvent(EVENTS.CONSULTATION_CHAT_OPENED, { 
+        type: currentResult.type,
+        precision: currentResult.precisionLevel 
+      })
       const interpretation = currentResult.summary || ""
       const timeHorizonBlock = currentResult.timeHorizon
         ? `\n${t("time_horizon_summary_label", lang)}: ${currentResult.timeHorizon}`

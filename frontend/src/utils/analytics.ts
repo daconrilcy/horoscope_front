@@ -13,6 +13,11 @@ export const EVENTS = {
   TURNING_POINT_OPENED: 'turning_point_opened',
   PREDICTION_REFRESHED: 'prediction_refreshed',
   HISTORY_VIEWED: 'history_viewed',
+  CONSULTATION_STARTED: 'consultation_started',
+  CONSULTATION_PRECHECK: 'consultation_precheck',
+  CONSULTATION_GENERATED: 'consultation_generated',
+  CONSULTATION_ERROR: 'consultation_error',
+  CONSULTATION_CHAT_OPENED: 'consultation_chat_opened',
 } as const;
 
 export type EventName = typeof EVENTS[keyof typeof EVENTS];

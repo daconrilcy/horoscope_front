@@ -18,6 +18,7 @@ import {
   type ConsultationType,
 } from "../types/consultation"
 import { useConsultationPrecheck } from "../api/consultations"
+import { trackEvent, EVENTS } from "../utils/analytics"
 
 export function ConsultationWizardPage() {
   const navigate = useNavigate()
@@ -110,9 +111,16 @@ export function ConsultationWizardPage() {
     setOtherPerson(null)
     setPrecheck(null)
     
+    trackEvent(EVENTS.CONSULTATION_STARTED, { type })
+    
     runPrecheck({ consultation_type: type }, {
       onSuccess: (response) => {
         setPrecheck(response.data)
+        trackEvent(EVENTS.CONSULTATION_PRECHECK, { 
+          type, 
+          status: response.data.status,
+          precision: response.data.precision_level 
+        })
       }
     })
     
