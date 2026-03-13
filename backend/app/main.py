@@ -28,6 +28,7 @@ from app.api.v1.routers.b2b_reconciliation import router as b2b_reconciliation_r
 from app.api.v1.routers.b2b_usage import router as b2b_usage_router
 from app.api.v1.routers.billing import router as billing_router
 from app.api.v1.routers.chat import router as chat_router
+from app.api.v1.routers.consultations import router as consultations_router
 from app.api.v1.routers.enterprise_credentials import router as enterprise_credentials_router
 from app.api.v1.routers.ephemeris import router as ephemeris_router
 from app.api.v1.routers.geocoding import router as geocoding_router
@@ -490,6 +491,7 @@ app.include_router(b2b_editorial_router)
 app.include_router(b2b_reconciliation_router)
 app.include_router(b2b_usage_router)
 app.include_router(chat_router)
+app.include_router(consultations_router, prefix="/v1/consultations", tags=["Consultations"])
 app.include_router(geocoding_router)
 app.include_router(enterprise_credentials_router)
 app.include_router(guidance_router)

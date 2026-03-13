@@ -11,15 +11,17 @@ import {
 import { detectLang } from "../i18n/astrology"
 import { t } from "../i18n/consultations"
 import {
-  VALID_CONSULTATION_TYPES,
+  VALID_CREATABLE_TYPES,
   getObjectiveForType,
   type ConsultationType,
 } from "../types/consultation"
+import { useConsultationPrecheck } from "../api/consultations"
 
 export function ConsultationWizardPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const lang = detectLang()
+  const { mutate: runPrecheck, isPending: isPrechecking } = useConsultationPrecheck()
 
   const {
     state,
@@ -28,6 +30,7 @@ export function ConsultationWizardPage() {
     setContext,
     setObjective,
     setTimeHorizon,
+    setPrecheck,
     nextStep,
     prevStep,
     reset,
@@ -38,13 +41,19 @@ export function ConsultationWizardPage() {
   useEffect(() => {
     const typeParam = searchParams.get("type")
     if (typeParam && currentStepName === "type" && state.draft.type === null) {
-      if (VALID_CONSULTATION_TYPES.includes(typeParam as ConsultationType)) {
+      if (VALID_CREATABLE_TYPES.includes(typeParam as ConsultationType)) {
         const selectedType = typeParam as ConsultationType
         setType(selectedType)
         setObjective(t(getObjectiveForType(selectedType), lang))
+        
+        runPrecheck({ consultation_type: selectedType }, {
+          onSuccess: (response) => {
+            setPrecheck(response.data)
+          }
+        })
       }
     }
-  }, [searchParams, currentStepName, state.draft.type, setType, setObjective, lang])
+  }, [searchParams, currentStepName, state.draft.type, setType, setObjective, lang, runPrecheck, setPrecheck])
 
   const handleCancel = useCallback(() => {
     reset()
@@ -67,8 +76,16 @@ export function ConsultationWizardPage() {
     setType(type)
     setObjective(t(getObjectiveForType(type), lang))
     setTimeHorizon(null)
+    setPrecheck(null) // Reset precheck for new type
+    
+    runPrecheck({ consultation_type: type }, {
+      onSuccess: (response) => {
+        setPrecheck(response.data)
+      }
+    })
+    
     nextStep()
-  }, [setType, setObjective, setTimeHorizon, nextStep, lang])
+  }, [setType, setObjective, setTimeHorizon, setPrecheck, runPrecheck, nextStep, lang])
 
   const handleAstrologerSelect = useCallback((id: string) => {
     setAstrologer(id)
@@ -112,7 +129,15 @@ export function ConsultationWizardPage() {
     <div className="panel consultation-wizard-page">
       <WizardProgress currentStepName={currentStepName} />
 
-      <div className="wizard-content">{renderStep()}</div>
+      <div className="wizard-content">
+        {isPrechecking && (
+          <div className="wizard-loading-overlay">
+            <span className="spinner" aria-hidden="true">⌛</span>
+            <p>{t("precheck_loading", lang)}</p>
+          </div>
+        )}
+        {renderStep()}
+      </div>
 
       <div className="wizard-actions">
         <button type="button" className="btn btn-secondary" onClick={handleCancel}>
@@ -131,7 +156,7 @@ export function ConsultationWizardPage() {
               type="button"
               className="btn btn-primary"
               onClick={handleNext}
-              disabled={!canProceed}
+              disabled={!canProceed || isPrechecking}
             >
               {t("next", lang)}
             </button>
@@ -142,7 +167,7 @@ export function ConsultationWizardPage() {
               type="button"
               className="btn btn-primary"
               onClick={handleGenerate}
-              disabled={!canProceed}
+              disabled={!canProceed || isPrechecking || state.precheck?.status === "blocked"}
             >
               {t("generate", lang)}
             </button>

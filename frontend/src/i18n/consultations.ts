@@ -26,6 +26,11 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "No past consultations",
     es: "Sin consultas pasadas",
   },
+  precheck_loading: {
+    fr: "Analyse de votre profil en cours...",
+    en: "Analyzing your profile...",
+    es: "Analizando su perfil...",
+  },
   type_dating: {
     fr: "Dating / Rendez-vous amoureux (Legacy)",
     en: "Dating / Romantic meetup (Legacy)",

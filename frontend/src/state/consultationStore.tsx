@@ -18,6 +18,7 @@ import {
   type ConsultationResult,
   type WizardStep,
 } from "../types/consultation"
+import { type ConsultationPrecheckData } from "../api/consultations"
 
 const INITIAL_DRAFT: ConsultationDraft = {
   type: null,
@@ -30,6 +31,7 @@ export type ConsultationState = {
   step: number
   result: ConsultationResult | null
   history: ConsultationResult[]
+  precheck: ConsultationPrecheckData | null
 }
 
 export type ConsultationAction =
@@ -45,6 +47,7 @@ export type ConsultationAction =
   | { type: "SAVE_TO_HISTORY"; payload: ConsultationResult }
   | { type: "RESET" }
   | { type: "LOAD_HISTORY"; payload: ConsultationResult[] }
+  | { type: "SET_PRECHECK"; payload: ConsultationPrecheckData | null }
 
 export function consultationReducer(
   state: ConsultationState,
@@ -111,12 +114,18 @@ export function consultationReducer(
         ...state,
         history: action.payload,
       }
+    case "SET_PRECHECK":
+      return {
+        ...state,
+        precheck: action.payload,
+      }
     case "RESET":
       return {
         ...state,
         draft: INITIAL_DRAFT,
         step: 0,
         result: null,
+        precheck: null,
       }
     default:
       return state
@@ -231,6 +240,7 @@ type ConsultationContextValue = {
   goToStep: (step: number) => void
   setResult: (result: ConsultationResult) => void
   saveToHistory: (result: ConsultationResult) => void
+  setPrecheck: (precheck: ConsultationPrecheckData | null) => void
   reset: () => void
   currentStepName: WizardStep
   canProceed: boolean
@@ -244,6 +254,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     step: 0,
     result: null,
     history: loadHistoryFromStorage(),
+    precheck: null,
   })
 
   const setType = useCallback((type: ConsultationType) => {
@@ -284,6 +295,10 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
 
   const saveToHistory = useCallback((result: ConsultationResult) => {
     dispatch({ type: "SAVE_TO_HISTORY", payload: result })
+  }, [])
+
+  const setPrecheck = useCallback((precheck: ConsultationPrecheckData | null) => {
+    dispatch({ type: "SET_PRECHECK", payload: precheck })
   }, [])
 
   const reset = useCallback(() => {
@@ -327,6 +342,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       goToStep,
       setResult,
       saveToHistory,
+      setPrecheck,
       reset,
       currentStepName,
       canProceed,
@@ -343,6 +359,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       goToStep,
       setResult,
       saveToHistory,
+      setPrecheck,
       reset,
       currentStepName,
       canProceed,
