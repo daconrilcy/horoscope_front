@@ -41,7 +41,7 @@ from app.llm_orchestration.services.repair_prompter import build_repair_prompt
 logger = logging.getLogger(__name__)
 
 # Use cases that MUST have a valid output schema (premium paid features)
-PAID_USE_CASES = {"natal_interpretation", "tarot_reading", "event_guidance"}
+PAID_USE_CASES = {"natal_interpretation", "event_guidance"}
 
 _VALID_INTERACTION_MODES = {"structured", "chat"}
 _VALID_QUESTION_POLICIES = {"none", "optional", "required"}
@@ -128,16 +128,6 @@ USE_CASE_STUBS = {
         required_prompt_placeholders=["situation"],
         interaction_mode="chat",
         user_question_policy="required",
-    ),
-    "tarot_reading": UseCaseConfig(
-        model="gpt-4o-mini",
-        temperature=0.7,
-        max_output_tokens=4000,
-        system_core_key="default_v1",
-        developer_prompt="Tirage de tarot.",
-        required_prompt_placeholders=[],
-        interaction_mode="structured",
-        user_question_policy="optional",
     ),
     "event_guidance": UseCaseConfig(
         model="gpt-4o-mini",

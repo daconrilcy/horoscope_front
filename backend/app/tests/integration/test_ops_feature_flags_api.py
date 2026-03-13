@@ -48,11 +48,10 @@ def test_ops_feature_flags_list_and_update() -> None:
     initial = client.get("/v1/ops/feature-flags", headers=headers)
     assert initial.status_code == 200
     keys = {item["key"] for item in initial.json()["data"]["flags"]}
-    assert "tarot_enabled" in keys
-    assert "runes_enabled" in keys
+    assert "test_flag" in keys
 
     updated = client.put(
-        "/v1/ops/feature-flags/tarot_enabled",
+        "/v1/ops/feature-flags/test_flag",
         headers=headers,
         json={
             "enabled": True,
@@ -77,4 +76,4 @@ def test_ops_feature_flags_list_and_update() -> None:
         assert event is not None
         assert event.status == "success"
         assert event.target_type == "feature_flag"
-        assert event.target_id == "tarot_enabled"
+        assert event.target_id == "test_flag"
