@@ -170,10 +170,19 @@ describe("ConsultationsPage", () => {
     it("displays consultation types", () => {
       renderConsultationsPage()
 
-      expect(screen.getByText("Dating / Rendez-vous amoureux")).toBeInTheDocument()
-      expect(screen.getByText("Choix professionnel")).toBeInTheDocument()
-      expect(screen.getByText("Événement important")).toBeInTheDocument()
-      expect(screen.getByText("Question libre")).toBeInTheDocument()
+      expect(screen.getByText("Période & Climat")).toBeInTheDocument()
+      expect(screen.getByText("Carrière & Travail")).toBeInTheDocument()
+      expect(screen.getByText("Orientation & Mission")).toBeInTheDocument()
+      expect(screen.getByText("Relations & Synastrie")).toBeInTheDocument()
+      expect(screen.getByText("Élection & Timing")).toBeInTheDocument()
+      
+      // Legacy types should NOT be in the creation list
+      expect(screen.queryByText("Dating / Rendez-vous amoureux (Legacy)")).not.toBeInTheDocument()
+    })
+
+    it("displays UX promise for each type", () => {
+      renderConsultationsPage()
+      expect(screen.getByText(/Comprenez les énergies qui influencent votre vie/)).toBeInTheDocument()
     })
 
     it("displays empty history state when no consultations", () => {
@@ -196,11 +205,11 @@ describe("ConsultationTypeStep - keyboard accessibility", () => {
   it("advances to next step when Enter is pressed on focused type button", async () => {
     renderWizardPage()
 
-    const datingButton = screen.getByRole("button", { name: /Dating/i })
-    datingButton.focus()
-    expect(document.activeElement).toBe(datingButton)
+    const periodButton = screen.getByRole("button", { name: /Période/i })
+    periodButton.focus()
+    expect(document.activeElement).toBe(periodButton)
 
-    fireEvent.click(datingButton)
+    fireEvent.click(periodButton)
 
     await waitFor(() => {
       expect(screen.getByText("Luna Céleste")).toBeInTheDocument()
@@ -212,12 +221,12 @@ describe("ConsultationTypeStep - keyboard accessibility", () => {
 
     const buttons = screen.getAllByRole("button", { pressed: false })
     const typeButtons = buttons.filter((btn) =>
-      ["Dating", "Choix professionnel", "Événement", "Question libre"].some((label) =>
+      ["Période", "Carrière", "Orientation", "Relations", "Élection"].some((label) =>
         btn.textContent?.includes(label)
       )
     )
 
-    expect(typeButtons.length).toBeGreaterThanOrEqual(4)
+    expect(typeButtons.length).toBeGreaterThanOrEqual(5)
     typeButtons.forEach((btn) => {
       expect(btn).not.toHaveAttribute("tabindex", "-1")
     })
@@ -249,16 +258,16 @@ describe("ConsultationWizardPage", () => {
       renderWizardPage()
 
       expect(screen.getByText("Choisissez le type de consultation")).toBeInTheDocument()
-      expect(screen.getByText("Dating / Rendez-vous amoureux")).toBeInTheDocument()
-      expect(screen.getByText("Choix professionnel")).toBeInTheDocument()
+      expect(screen.getByText("Période & Climat")).toBeInTheDocument()
+      expect(screen.getByText("Carrière & Travail")).toBeInTheDocument()
     })
 
     it("pre-selects type from URL parameter", async () => {
-      renderWizardPageWithType("pro")
+      renderWizardPageWithType("work")
 
       await waitFor(() => {
-        const proButton = screen.getByRole("button", { name: /Choix professionnel/i })
-        expect(proButton).toHaveAttribute("aria-pressed", "true")
+        const workButton = screen.getByRole("button", { name: /Carrière & Travail/i })
+        expect(workButton).toHaveAttribute("aria-pressed", "true")
       })
     })
 
@@ -271,8 +280,8 @@ describe("ConsultationWizardPage", () => {
     it("advances to step 2 when type is selected", async () => {
       renderWizardPage()
 
-      const datingButton = screen.getByRole("button", { name: /Dating/i })
-      fireEvent.click(datingButton)
+      const periodButton = screen.getByRole("button", { name: /Période/i })
+      fireEvent.click(periodButton)
 
       await waitFor(() => {
         expect(screen.getByText("Choisissez votre astrologue")).toBeInTheDocument()
@@ -284,8 +293,8 @@ describe("ConsultationWizardPage", () => {
     it("shows astrologer selection after type is selected", async () => {
       renderWizardPage()
 
-      const datingButton = screen.getByRole("button", { name: /Dating/i })
-      fireEvent.click(datingButton)
+      const periodButton = screen.getByRole("button", { name: /Période/i })
+      fireEvent.click(periodButton)
 
       await waitFor(() => {
         expect(screen.getByText("Choisissez votre astrologue")).toBeInTheDocument()
@@ -297,7 +306,7 @@ describe("ConsultationWizardPage", () => {
     it("advances to step 3 when astrologer is selected", async () => {
       renderWizardPage()
 
-      fireEvent.click(screen.getByRole("button", { name: /Dating/i }))
+      fireEvent.click(screen.getByRole("button", { name: /Période/i }))
 
       await waitFor(() => {
         expect(screen.getByText("Luna Céleste")).toBeInTheDocument()
@@ -315,13 +324,13 @@ describe("ConsultationWizardPage", () => {
     it("shows request summary, objective, context and optional time horizon inputs", async () => {
       renderWizardPage()
 
-      fireEvent.click(screen.getByRole("button", { name: /Dating/i }))
+      fireEvent.click(screen.getByRole("button", { name: /Période/i }))
       await waitFor(() => screen.getByText("Luna Céleste"))
       fireEvent.click(screen.getByText("Luna Céleste"))
 
       await waitFor(() => {
         expect(screen.getByText("Votre demande ciblée")).toBeInTheDocument()
-        expect(screen.getByText("Dating / Rendez-vous amoureux")).toBeInTheDocument()
+        expect(screen.getByText("Période & Climat")).toBeInTheDocument()
         expect(screen.getByText("Luna Céleste")).toBeInTheDocument()
         expect(screen.getByLabelText(/Objet de la consultation/)).toBeInTheDocument()
         expect(screen.getByLabelText(/Décrivez votre situation/)).toBeInTheDocument()
@@ -332,7 +341,7 @@ describe("ConsultationWizardPage", () => {
     it("generate button is disabled without context", async () => {
       renderWizardPage()
 
-      fireEvent.click(screen.getByRole("button", { name: /Dating/i }))
+      fireEvent.click(screen.getByRole("button", { name: /Période/i }))
       await waitFor(() => screen.getByText("Luna Céleste"))
       fireEvent.click(screen.getByText("Luna Céleste"))
 
@@ -345,7 +354,7 @@ describe("ConsultationWizardPage", () => {
     it("generate button is enabled with the default objective and a filled context", async () => {
       renderWizardPage()
 
-      fireEvent.click(screen.getByRole("button", { name: /Dating/i }))
+      fireEvent.click(screen.getByRole("button", { name: /Période/i }))
       await waitFor(() => screen.getByText("Luna Céleste"))
       fireEvent.click(screen.getByText("Luna Céleste"))
 
@@ -363,23 +372,23 @@ describe("ConsultationWizardPage", () => {
     it("lets the user edit objective and time horizon", async () => {
       renderWizardPage()
 
-      fireEvent.click(screen.getByRole("button", { name: /Dating/i }))
+      fireEvent.click(screen.getByRole("button", { name: /Période/i }))
       await waitFor(() => screen.getByText("Luna Céleste"))
       fireEvent.click(screen.getByText("Luna Céleste"))
       await waitFor(() => screen.getByLabelText(/Objet de la consultation/))
 
       fireEvent.change(screen.getByLabelText(/Objet de la consultation/), {
-        target: { value: "préparer ce rendez-vous amoureux" },
+        target: { value: "préparer cette période" },
       })
       fireEvent.change(screen.getByLabelText(/Décrivez votre situation/), {
-        target: { value: "Je rencontre cette personne ce soir." },
+        target: { value: "Je veux comprendre les transits." },
       })
       fireEvent.change(screen.getByLabelText(/Horizon temporel/), {
-        target: { value: "ce soir" },
+        target: { value: "ce mois-ci" },
       })
 
-      expect(screen.getByDisplayValue("préparer ce rendez-vous amoureux")).toBeInTheDocument()
-      expect(screen.getByDisplayValue("ce soir")).toBeInTheDocument()
+      expect(screen.getByDisplayValue("préparer cette période")).toBeInTheDocument()
+      expect(screen.getByDisplayValue("ce mois-ci")).toBeInTheDocument()
       expect(
         screen.getByRole("button", { name: /Générer la consultation/i })
       ).not.toBeDisabled()
@@ -388,7 +397,7 @@ describe("ConsultationWizardPage", () => {
     it("navigates to result page on generate", async () => {
       renderWizardPage()
 
-      fireEvent.click(screen.getByRole("button", { name: /Dating/i }))
+      fireEvent.click(screen.getByRole("button", { name: /Période/i }))
       await waitFor(() => screen.getByText("Luna Céleste"))
       fireEvent.click(screen.getByText("Luna Céleste"))
       await waitFor(() => screen.getByLabelText(/Décrivez votre situation/))
@@ -407,7 +416,7 @@ describe("ConsultationWizardPage", () => {
     it("can navigate back with previous button", async () => {
       renderWizardPage()
 
-      fireEvent.click(screen.getByRole("button", { name: /Dating/i }))
+      fireEvent.click(screen.getByRole("button", { name: /Période/i }))
       await waitFor(() => screen.getByText("Choisissez votre astrologue"))
 
       const prevBtn = screen.getByRole("button", { name: /Précédent/i })
@@ -434,7 +443,7 @@ describe("ConsultationWizardPage", () => {
         const { state, setType } = useConsultation()
         capturedState = state
         React.useEffect(() => {
-          setType("dating")
+          setType("period")
         }, [setType])
         return <ConsultationWizardPage />
       }
@@ -456,7 +465,7 @@ describe("ConsultationWizardPage", () => {
       )
 
       await waitFor(() => {
-        expect(capturedState?.draft.type).toBe("dating")
+        expect(capturedState?.draft.type).toBe("period")
       })
 
       const cancelBtn = screen.getByRole("button", { name: /Annuler/i })
@@ -495,7 +504,7 @@ describe("WizardProgress", () => {
   it("shows completed steps with checkmark after advancing", async () => {
     renderWizardPage()
 
-    fireEvent.click(screen.getByRole("button", { name: /Dating/i }))
+    fireEvent.click(screen.getByRole("button", { name: /Période/i }))
 
     await waitFor(() => {
       expect(screen.getByText("Luna Céleste")).toBeInTheDocument()
@@ -606,17 +615,17 @@ describe("ConsultationResultPage", () => {
         expect(screen.getByText("Résultat de votre consultation")).toBeInTheDocument()
       })
 
-      expect(screen.getByText("Dating / Rendez-vous amoureux")).toBeInTheDocument()
+      expect(screen.getByText("Dating / Rendez-vous amoureux (Legacy)")).toBeInTheDocument()
     })
 
     it("displays result with type, astrologer, context when result exists in history", async () => {
       const mockResult = {
         id: "test-consultation-123",
-        type: "dating" as const,
+        type: "period" as const,
         astrologerId: "1",
-        context: "Ma question test pour le rendez-vous",
-        objective: "préparer ce rendez-vous",
-        timeHorizon: "cette semaine",
+        context: "Ma question test pour la période",
+        objective: "comprendre le climat",
+        timeHorizon: "ce mois-ci",
         summary: "Votre interprétation astrologique...",
         keyPoints: ["Point 1"],
         actionableAdvice: ["Conseil 1"],
@@ -649,10 +658,10 @@ describe("ConsultationResultPage", () => {
         expect(screen.getByText("Résultat de votre consultation")).toBeInTheDocument()
       })
 
-      expect(screen.getByText("Dating / Rendez-vous amoureux")).toBeInTheDocument()
-      expect(screen.getByText("préparer ce rendez-vous")).toBeInTheDocument()
-      expect(screen.getByText("cette semaine")).toBeInTheDocument()
-      expect(screen.getByText(/Ma question test pour le rendez-vous/)).toBeInTheDocument()
+      expect(screen.getByText("Période & Climat")).toBeInTheDocument()
+      expect(screen.getByText("comprendre le climat")).toBeInTheDocument()
+      expect(screen.getByText("ce mois-ci")).toBeInTheDocument()
+      expect(screen.getByText(/Ma question test pour la période/)).toBeInTheDocument()
       expect(screen.getByText("Votre interprétation astrologique...")).toBeInTheDocument()
       expect(screen.getByText("Point 1")).toBeInTheDocument()
       expect(screen.getByText("Conseil 1")).toBeInTheDocument()
@@ -797,7 +806,7 @@ describe("ValidationStep - Character counter", () => {
   it("displays character counter with CONTEXT_MAX_LENGTH remaining", async () => {
     renderWizardPage()
 
-    fireEvent.click(screen.getByRole("button", { name: /Dating/i }))
+    fireEvent.click(screen.getByRole("button", { name: /Période/i }))
     await waitFor(() => screen.getByText("Luna Céleste"))
     fireEvent.click(screen.getByText("Luna Céleste"))
 

@@ -27,24 +27,74 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     es: "Sin consultas pasadas",
   },
   type_dating: {
-    fr: "Dating / Rendez-vous amoureux",
-    en: "Dating / Romantic meetup",
-    es: "Cita / Encuentro romántico",
+    fr: "Dating / Rendez-vous amoureux (Legacy)",
+    en: "Dating / Romantic meetup (Legacy)",
+    es: "Cita / Encuentro romántico (Legacy)",
   },
   type_pro: {
-    fr: "Choix professionnel",
-    en: "Professional choice",
-    es: "Elección profesional",
+    fr: "Choix professionnel (Legacy)",
+    en: "Professional choice (Legacy)",
+    es: "Elección profesional (Legacy)",
   },
   type_event: {
-    fr: "Événement important",
-    en: "Important event",
-    es: "Evento importante",
+    fr: "Événement important (Legacy)",
+    en: "Important event (Legacy)",
+    es: "Evento importante (Legacy)",
   },
   type_free: {
-    fr: "Question libre",
-    en: "Free question",
-    es: "Pregunta libre",
+    fr: "Question libre (Legacy)",
+    en: "Free question (Legacy)",
+    es: "Pregunta libre (Legacy)",
+  },
+  type_period_label: {
+    fr: "Période & Climat",
+    en: "Period & Climate",
+    es: "Periodo y Clima",
+  },
+  type_period_promise: {
+    fr: "Comprenez les énergies qui influencent votre vie sur une période donnée.",
+    en: "Understand the energies influencing your life over a given period.",
+    es: "Comprenda las energías que influyen en su vida en un periodo determinado.",
+  },
+  type_work_label: {
+    fr: "Carrière & Travail",
+    en: "Career & Work",
+    es: "Carrera y Trabajo",
+  },
+  type_work_promise: {
+    fr: "Optimisez vos choix professionnels et saisissez les opportunités.",
+    en: "Optimize your professional choices and seize opportunities.",
+    es: "Optimice sus elecciones profesionales y aproveche las oportunidades.",
+  },
+  type_orientation_label: {
+    fr: "Orientation & Mission",
+    en: "Orientation & Mission",
+    es: "Orientación y Misión",
+  },
+  type_orientation_promise: {
+    fr: "Redonnez du sens à votre parcours et alignez-vous avec votre mission de vie.",
+    en: "Find meaning in your path and align with your life mission.",
+    es: "Encuentre sentido a su camino y alinéese con su misión de vida.",
+  },
+  type_relation_label: {
+    fr: "Relations & Synastrie",
+    en: "Relationships & Synastry",
+    es: "Relaciones y Sinastría",
+  },
+  type_relation_promise: {
+    fr: "Explorez la dynamique de vos relations personnelles ou professionnelles.",
+    en: "Explore the dynamics of your personal or professional relationships.",
+    es: "Explore la dinámica de sus relaciones personales o profesionales.",
+  },
+  type_timing_label: {
+    fr: "Élection & Timing",
+    en: "Election & Timing",
+    es: "Elección y Timing",
+  },
+  type_timing_promise: {
+    fr: "Identifiez le moment idéal pour agir et lancer vos projets.",
+    en: "Identify the ideal moment to act and launch your projects.",
+    es: "Identifique el momento ideal para actuar y lanzar sus proyectos.",
   },
   step_type: {
     fr: "Type",
@@ -235,6 +285,31 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     fr: "guidance libre",
     en: "free guidance",
     es: "orientación libre",
+  },
+  objective_period: {
+    fr: "comprendre le climat d'une période",
+    en: "understand the climate of a period",
+    es: "comprender el clima de un periodo",
+  },
+  objective_work: {
+    fr: "étudier une situation professionnelle",
+    en: "study a professional situation",
+    es: "estudiar una situación profesional",
+  },
+  objective_orientation: {
+    fr: "trouver son orientation de vie",
+    en: "find one's life direction",
+    es: "encontrar su dirección de vida",
+  },
+  objective_relation: {
+    fr: "analyser une dynamique relationnelle",
+    en: "analyze relational dynamics",
+    es: "analizar la dinámica relacional",
+  },
+  objective_timing: {
+    fr: "choisir le bon moment pour agir",
+    en: "choose the right time to act",
+    es: "elegir el momento adecuado para actuar",
   },
   key_points_label: {
     fr: "Points clés",

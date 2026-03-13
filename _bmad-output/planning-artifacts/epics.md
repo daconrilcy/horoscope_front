@@ -2274,3 +2274,107 @@ so that le périmètre astrologique soit cohérent dans le produit, dans le code
 - Un gate final liste validations manuelles, risques restants et limites.
 
 [Source: user request 2026-03-13 ; _bmad-output/implementation-artifacts/11-2-modules-tarot-runes-derriere-feature-flags.md ; _bmad-output/implementation-artifacts/16-5-consultations-pages.md ; _bmad-output/implementation-artifacts/17-1-fondations-ui-tokens-typo-lucide.md ; _bmad-output/implementation-artifacts/17-5-raccourcis-shortcut-card.md ; _bmad-output/implementation-artifacts/45-2-creer-la-landing-dashboard-avec-resume-et-hub-d-activites.md]
+
+## Epic 47: Faire évoluer `/consultations` vers une consultation complète pilotée par précheck, fallback et orchestration métier
+
+Transformer le hub `/consultations` issu de l'epic 46 en une vraie consultation complète MVP, réutilisant les données natales existantes, exposant le niveau réel de précision, demandant uniquement les compléments nécessaires et s'appuyant sur un contrat backend consultation dédié.
+
+**FRs covered:** FR11, FR16, FR17, FR19, FR20, FR21, FR23, NFR2, NFR3, NFR6, NFR13, NFR14, NFR16, NFR20, NFR22
+
+### Story 47.1: Redéfinir le catalogue produit et la taxonomie des consultations complètes
+
+As a product-facing frontend architect,
+I want réaligner `/consultations` sur la taxonomie MVP de la consultation complète,
+so that le parcours expose les bons types de consultation sans casser la route, l'historique existant ni les deep links hérités de l'epic 46.
+
+**Acceptance Criteria:**
+- Le catalogue visible de `/consultations` expose au minimum `period`, `work`, `orientation`, `relation`, `timing`.
+- Les anciens types `dating`, `pro`, `event`, `free` restent lisibles en historique mais ne sont plus créables.
+- Chaque type déclare promesse UX, besoins de données minimaux et mode nominal / dégradé attendu.
+- Les routes `/consultations`, `/consultations/new`, `/consultations/result` restent stables.
+
+[Source: docs/backlog_epics_consultation_complete.md ; frontend/src/types/consultation.ts ; frontend/src/pages/ConsultationsPage.tsx ; frontend/src/state/consultationStore.tsx]
+
+### Story 47.2: Exposer le précheck de complétude et de précision des consultations
+
+As a backend/frontend integrator,
+I want introduire un précheck consultation dédié avant la génération,
+so that `/consultations` sache réutiliser le profil natal existant, afficher le niveau réel de précision et annoncer proprement les modes disponibles avant d'engager l'utilisateur.
+
+**Acceptance Criteria:**
+- Un endpoint consultation dédié retourne `user_profile_quality`, `precision_level`, `missing_fields`, `available_modes` et les cas bloquants.
+- Le calcul réutilise les services existants autour du birth profile et de l'astro profile.
+- Le frontend consomme ce contrat via un client API centralisé sans dupliquer les règles métier.
+- Les tests couvrent au minimum profil complet, sans heure, absent et bloquant.
+
+[Source: docs/backlog_epics_consultation_complete.md ; backend/app/api/v1/routers/users.py ; backend/app/services/user_birth_profile_service.py ; backend/app/services/user_astro_profile_service.py]
+
+### Story 47.3: Refondre le wizard consultations avec cadrage et collecte conditionnelle
+
+As a consultations UX engineer,
+I want transformer le wizard `/consultations/new` en parcours de cadrage et de collecte conditionnelle,
+so that l'utilisateur ne saisisse que les informations nécessaires à la consultation choisie, avec une expérience cohérente avec le précheck et sans friction inutile.
+
+**Acceptance Criteria:**
+- Le wizard n'impose plus le choix d'astrologue comme étape métier bloquante.
+- Le parcours demande uniquement les compléments requis par le type et le précheck.
+- Le module "autre personne" n'apparaît que pour les parcours concernés.
+- Les choix "heure inconnue" et "je ne sais pas" sont gérés proprement.
+
+[Source: docs/backlog_epics_consultation_complete.md ; frontend/src/pages/ConsultationWizardPage.tsx ; frontend/src/state/consultationStore.tsx ; frontend/src/api/birthProfile.ts]
+
+### Story 47.4: Implémenter les modes dégradés et fallbacks des consultations
+
+As a consultation domain engineer,
+I want rendre explicites les modes dégradés et les sorties bloquantes du parcours consultations,
+so that le produit reste honnête sur son niveau de précision et utile même quand les données disponibles sont incomplètes.
+
+**Acceptance Criteria:**
+- Le domaine consultation expose au minimum `user_no_birth_time`, `other_no_birth_time`, `relation_user_only`, `timing_degraded`, `blocking_missing_data`.
+- Le backend distingue `nominal`, `degraded` et `blocked`.
+- Le frontend affiche les limitations et actions de poursuite / retour adaptées.
+- Les résultats et le prefill chat propagent `fallback_mode` et `precision_level`.
+
+[Source: docs/backlog_epics_consultation_complete.md ; backend/app/services/guidance_service.py ; frontend/src/pages/ConsultationResultPage.tsx ; frontend/src/i18n/consultations.ts]
+
+### Story 47.5: Construire le dossier de consultation et le routing LLM versionné
+
+As a backend consultation architect,
+I want introduire un `ConsultationDossier` et un routeur de génération consultation dédiés,
+so that la feature `/consultations` cesse d'orchestrer sa logique métier côté frontend et dispose d'un contrat backend versionné, testable et compatible avec l'infrastructure LLM existante.
+
+**Acceptance Criteria:**
+- Le backend définit un `ConsultationDossier` v1 portant type, question, qualité, précision, fallback et métadonnées utiles.
+- Un endpoint consultation dédié remplace le contrat produit final actuellement tiré de `guidance_contextual`.
+- Le backend calcule un `route_key` déterministe et journalisé.
+- Le routage réutilise la pile `GuidanceService` / `AIEngineAdapter` / `llm_orchestration`.
+
+[Source: docs/backlog_epics_consultation_complete.md ; backend/app/api/v1/routers/guidance.py ; backend/app/services/guidance_service.py ; backend/app/services/ai_engine_adapter.py]
+
+### Story 47.6: Refondre la génération et la restitution structurée des consultations
+
+As a consultations frontend engineer,
+I want consommer le contrat backend consultation complet et refaire la page résultat autour de la précision, des limitations et des sections structurées,
+so that `/consultations/result` reflète réellement la nouvelle consultation complète tout en préservant l'historique local et l'ouverture dans le chat.
+
+**Acceptance Criteria:**
+- Le frontend appelle l'endpoint consultation dédié et non plus directement le payload produit brut de `guidance_contextual`.
+- La page résultat affiche synthèse, sections, limitations, précision et fallback.
+- Le localStorage reste backward-compatible avec les résultats 46.x et legacy.
+- `open in chat` continue de fonctionner avec les nouvelles métadonnées.
+
+[Source: docs/backlog_epics_consultation_complete.md ; frontend/src/pages/ConsultationResultPage.tsx ; frontend/src/state/consultationStore.tsx ; frontend/src/api/guidance.ts]
+
+### Story 47.7: Verrouiller QA, observabilité et non-régression des consultations complètes
+
+As a QA and product consistency owner,
+I want verrouiller la nouvelle mouture des consultations complètes par des tests, du tracking et un gate documentaire final,
+so that l'epic 47 puisse être implémenté sans régression sur les parcours existants et avec une visibilité claire sur précision, fallbacks et erreurs.
+
+**Acceptance Criteria:**
+- Une matrice QA couvre types MVP, nominal / degraded / blocked et legacy history.
+- Les événements et logs consultation couvrent entrée, précheck, fallback, génération, résultat et ouverture chat.
+- Les fixtures de test couvrent profils complets, incomplets et tiers partiels.
+- Un gate final documente validations automatiques, validations manuelles et risques résiduels.
+
+[Source: docs/backlog_epics_consultation_complete.md ; _bmad-output/implementation-artifacts/46-6-verrouiller-qa-coherence-bmad-et-non-regression-de-la-refonte.md ; frontend/src/tests/ConsultationsPage.test.tsx]

@@ -1,4 +1,13 @@
-export type ConsultationType = "dating" | "pro" | "event" | "free"
+export type ConsultationType =
+  | "period"
+  | "work"
+  | "orientation"
+  | "relation"
+  | "timing"
+  | "dating"
+  | "pro"
+  | "event"
+  | "free"
 
 export type ConsultationDraft = {
   type: ConsultationType | null
@@ -25,15 +34,89 @@ export type ConsultationResult = {
 export type ConsultationTypeConfig = {
   id: ConsultationType
   labelKey: string
+  uxPromiseKey: string
   icon: string
+  isLegacy?: boolean
+  requiredData?: ("birth_profile" | "location" | "current_time")[]
+  fallbackAllowed?: boolean
 }
 
 export const CONSULTATION_TYPES: ConsultationTypeConfig[] = [
-  { id: "dating", labelKey: "type_dating", icon: "💕" },
-  { id: "pro", labelKey: "type_pro", icon: "💼" },
-  { id: "event", labelKey: "type_event", icon: "📅" },
-  { id: "free", labelKey: "type_free", icon: "❓" },
+  {
+    id: "period",
+    labelKey: "type_period_label",
+    uxPromiseKey: "type_period_promise",
+    icon: "📅",
+    requiredData: ["birth_profile"],
+    fallbackAllowed: true,
+  },
+  {
+    id: "work",
+    labelKey: "type_work_label",
+    uxPromiseKey: "type_work_promise",
+    icon: "💼",
+    requiredData: ["birth_profile"],
+    fallbackAllowed: true,
+  },
+  {
+    id: "orientation",
+    labelKey: "type_orientation_label",
+    uxPromiseKey: "type_orientation_promise",
+    icon: "🗺️",
+    requiredData: ["birth_profile"],
+    fallbackAllowed: false,
+  },
+  {
+    id: "relation",
+    labelKey: "type_relation_label",
+    uxPromiseKey: "type_relation_promise",
+    icon: "🤝",
+    requiredData: ["birth_profile"],
+    fallbackAllowed: true,
+  },
+  {
+    id: "timing",
+    labelKey: "type_timing_label",
+    uxPromiseKey: "type_timing_promise",
+    icon: "⏱️",
+    requiredData: ["birth_profile", "location"],
+    fallbackAllowed: false,
+  },
+  // Legacy types (hidden from creation but kept for history rendering)
+  {
+    id: "dating",
+    labelKey: "type_dating",
+    uxPromiseKey: "type_dating",
+    icon: "💕",
+    isLegacy: true,
+  },
+  {
+    id: "pro",
+    labelKey: "type_pro",
+    uxPromiseKey: "type_pro",
+    icon: "💼",
+    isLegacy: true,
+  },
+  {
+    id: "event",
+    labelKey: "type_event",
+    uxPromiseKey: "type_event",
+    icon: "📅",
+    isLegacy: true,
+  },
+  {
+    id: "free",
+    labelKey: "type_free",
+    uxPromiseKey: "type_free",
+    icon: "❓",
+    isLegacy: true,
+  },
 ]
+
+export const VALID_CREATABLE_TYPES: ConsultationType[] = CONSULTATION_TYPES.filter(
+  (c) => !c.isLegacy
+).map((c) => c.id)
+
 
 export const WIZARD_STEPS = ["type", "astrologer", "validation"] as const
 export type WizardStep = (typeof WIZARD_STEPS)[number]
@@ -57,15 +140,18 @@ export function getConsultationTypeConfig(type: ConsultationType): ConsultationT
 }
 
 export function getObjectiveForType(type: ConsultationType): string {
-  switch (type) {
-    case "dating":
-      return "objective_dating"
-    case "pro":
-      return "objective_pro"
-    case "event":
-      return "objective_event"
-    case "free":
-    default:
-      return "objective_free"
+  const config = getConsultationTypeConfig(type)
+  if (config?.isLegacy) {
+    switch (type) {
+      case "dating":
+        return "objective_dating"
+      case "pro":
+        return "objective_pro"
+      case "event":
+        return "objective_event"
+      case "free":
+        return "objective_free"
+    }
   }
+  return `objective_${type}`
 }

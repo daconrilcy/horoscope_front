@@ -17,7 +17,7 @@ export function ConsultationTypeStep({
     <div className="wizard-step">
       <h2 className="wizard-step-title">{t("select_type", lang)}</h2>
       <div className="consultation-type-grid">
-        {CONSULTATION_TYPES.map((typeConfig) => {
+        {CONSULTATION_TYPES.filter((t) => !t.isLegacy).map((typeConfig) => {
           const isSelected = selectedType === typeConfig.id
 
           return (

@@ -23,7 +23,7 @@ export function ConsultationsPage() {
         </Link>
 
         <div className="consultations-types-preview">
-          {CONSULTATION_TYPES.map((typeConfig) => (
+          {CONSULTATION_TYPES.filter((t) => !t.isLegacy).map((typeConfig) => (
             <Link
               key={typeConfig.id}
               to={`/consultations/new?type=${typeConfig.id}`}
@@ -32,9 +32,14 @@ export function ConsultationsPage() {
               <span className="consultations-type-preview-icon" aria-hidden="true">
                 {typeConfig.icon}
               </span>
-              <span className="consultations-type-preview-label">
-                {t(typeConfig.labelKey, lang)}
-              </span>
+              <div className="consultations-type-preview-content">
+                <span className="consultations-type-preview-label">
+                  {t(typeConfig.labelKey, lang)}
+                </span>
+                <p className="consultations-type-preview-promise">
+                  {t(typeConfig.uxPromiseKey, lang)}
+                </p>
+              </div>
             </Link>
           ))}
         </div>
