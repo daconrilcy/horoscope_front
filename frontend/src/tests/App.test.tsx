@@ -189,7 +189,7 @@ describe("App", () => {
       expect(screen.getAllByRole("link", { name: "Chat" }).length).toBeGreaterThan(0)
     })
     expect(screen.getAllByRole("link", { name: "Profil" }).length).toBeGreaterThan(0)
-    expect(screen.getAllByRole("link", { name: "Tirages" }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole("link", { name: "Consultations" }).length).toBeGreaterThan(0)
   })
 
   it("redirects to login when logout button is clicked", async () => {

@@ -117,12 +117,12 @@ describe("AC2 : 5 items de navigation présents", () => {
     expect(links).toHaveLength(5)
   })
 
-  it("affiche les labels : Aujourd'hui, Chat, Thème, Tirages, Profil", () => {
+  it("affiche les labels : Aujourd'hui, Chat, Thème, Consultations, Profil", () => {
     renderWithRouter()
     expect(screen.getByText("Aujourd'hui")).toBeInTheDocument()
     expect(screen.getByText("Chat")).toBeInTheDocument()
     expect(screen.getByText("Thème")).toBeInTheDocument()
-    expect(screen.getByText("Tirages")).toBeInTheDocument()
+    expect(screen.getByText("Consultations")).toBeInTheDocument()
     expect(screen.getByText("Profil")).toBeInTheDocument()
   })
 
@@ -208,9 +208,9 @@ describe("AC4 : État actif détecté via la route courante", () => {
     expect(link).toHaveClass("bottom-nav__item--active")
   })
 
-  it("marque 'Tirages' actif sur /consultations", () => {
+  it("marque 'Consultations' actif sur /consultations", () => {
     renderWithRouter("/consultations")
-    const link = screen.getByText("Tirages").closest("a")!
+    const link = screen.getByText("Consultations").closest("a")!
     expect(link).toHaveClass("bottom-nav__item--active")
   })
 
@@ -254,9 +254,9 @@ describe("AC5 : Les liens pointent vers les bonnes routes", () => {
     expect(screen.getByText("Thème").closest("a")).toHaveAttribute("href", "/natal")
   })
 
-  it("'Tirages' pointe vers /consultations", () => {
+  it("'Consultations' pointe vers /consultations", () => {
     renderWithRouter()
-    expect(screen.getByText("Tirages").closest("a")).toHaveAttribute("href", "/consultations")
+    expect(screen.getByText("Consultations").closest("a")).toHaveAttribute("href", "/consultations")
   })
 
   it("'Profil' pointe vers /settings", () => {

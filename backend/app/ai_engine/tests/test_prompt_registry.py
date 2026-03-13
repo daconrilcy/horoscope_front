@@ -15,7 +15,6 @@ class TestPromptRegistry:
         use_cases = PromptRegistry.list_use_cases()
         assert "chat" in use_cases
         assert "natal_chart_interpretation" in use_cases
-        assert "card_reading" in use_cases
         assert "guidance_daily" in use_cases
         assert "guidance_weekly" in use_cases
         assert "guidance_contextual" in use_cases
@@ -100,21 +99,6 @@ class TestPromptRegistry:
         assert "Soleil en Bélier" in prompt
         assert "1990-02-02" in prompt
         assert "Paris" in prompt
-
-    def test_render_prompt_card_reading(self) -> None:
-        """Render prompt for card reading use case."""
-        input_data = GenerateInput(question="Que me réserve cette semaine ?")
-        context = GenerateContext(extra={"cards": "L'Étoile, Le Soleil, La Roue de Fortune"})
-
-        prompt = PromptRegistry.render_prompt(
-            use_case="card_reading",
-            locale="fr-FR",
-            input_data=input_data,
-            context=context,
-        )
-
-        assert "semaine" in prompt
-        assert "Étoile" in prompt or "cartes" in prompt.lower()
 
     def test_render_prompt_raises_for_unknown_use_case(self) -> None:
         """Render prompt raises UnknownUseCaseError for unknown use case."""

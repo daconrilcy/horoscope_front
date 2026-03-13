@@ -113,8 +113,6 @@ def _build_test_chat_fallback(messages: list[dict[str, str]]) -> str:
 
 
 def _build_test_guidance_fallback(use_case: str) -> str:
-    if use_case == "tarot_reading":
-        return "Tirage tarot test hors provider."
     return f"Guidance test hors provider pour {use_case}."
 
 

@@ -100,7 +100,8 @@ describe("DashboardPage Landing", () => {
 
     expect(screen.getByText("Activités")).toBeInTheDocument()
     expect(screen.getByText("Chat astrologue")).toBeInTheDocument()
-    expect(screen.getByText("Tirage du jour")).toBeInTheDocument()
+    expect(screen.getByText("Consultation")).toBeInTheDocument()
+    expect(screen.getByText("Guidance ciblée")).toBeInTheDocument()
   })
 
   it("navigue vers le détail de l'horoscope quand on clique sur le résumé", async () => {

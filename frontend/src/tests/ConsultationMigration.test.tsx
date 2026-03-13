@@ -66,8 +66,7 @@ describe("Consultation Migration (Story 46.3)", () => {
     await waitFor(() => {
       // Should display the interpretation normalized to 'summary'
       expect(screen.getByText("Une interprétation ancienne")).toBeInTheDocument()
-      // Should display default objective since it was missing
-      expect(screen.getByText(/Dating/i)).toBeInTheDocument()
+      expect(screen.getByText("relation/amour")).toBeInTheDocument()
     })
 
     // Verify drawing section is NOT present (AC2 & AC5 of Story 46.2 reinforced here)
@@ -81,6 +80,7 @@ describe("Consultation Migration (Story 46.3)", () => {
       astrologerId: "1",
       context: "Ma question pro",
       objective: "objectif pro",
+      timeHorizon: "ce trimestre",
       summary: "Résumé pro",
       keyPoints: ["Point 1"],
       actionableAdvice: ["Conseil 1"],
@@ -138,6 +138,7 @@ describe("Consultation Migration (Story 46.3)", () => {
 
     const prefill = sessionStorage.getItem(CHAT_PREFILL_KEY)
     expect(prefill).toContain("Mon événement legacy")
+    expect(prefill).toContain("Objectif: événement spécifique")
     expect(prefill).toContain("Interprétation runes")
     // Should NOT contain legacy headers related to drawing
     expect(prefill).not.toContain("Tirage")

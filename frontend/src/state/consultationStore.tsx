@@ -135,13 +135,20 @@ function isValidISODate(dateStr: unknown): boolean {
   return !isNaN(date.getTime())
 }
 
+function normalizeStringList(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+  return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+}
+
 /**
  * Validates and normalizes a consultation result item.
  * Supports legacy format from Story 16.5 and normalizes it to Story 46.2 schema.
  */
 export function normalizeConsultationResult(item: unknown): ConsultationResult | null {
   if (typeof item !== "object" || item === null) return null
-  const obj = item as Record<string, any>
+  const obj = item as Record<string, unknown>
 
   // Basic validation required for both legacy and new
   if (
@@ -157,16 +164,30 @@ export function normalizeConsultationResult(item: unknown): ConsultationResult |
 
   // Normalization logic
   return {
-    id: obj.id,
+    id: obj.id as string,
     type: obj.type as ConsultationType,
-    astrologerId: obj.astrologerId,
-    context: obj.context,
-    objective: obj.objective ?? getObjectiveForType(obj.type as ConsultationType),
-    summary: obj.summary ?? obj.interpretation ?? "",
-    keyPoints: Array.isArray(obj.keyPoints) ? obj.keyPoints : [],
-    actionableAdvice: Array.isArray(obj.actionableAdvice) ? obj.actionableAdvice : [],
-    disclaimer: obj.disclaimer ?? "",
-    createdAt: obj.createdAt,
+    astrologerId: obj.astrologerId as string,
+    context: obj.context as string,
+    objective:
+      typeof obj.objective === "string" && obj.objective.trim().length > 0
+        ? obj.objective
+        : getObjectiveForType(obj.type as ConsultationType),
+    timeHorizon:
+      typeof obj.timeHorizon === "string"
+        ? obj.timeHorizon
+        : typeof obj.time_horizon === "string"
+          ? obj.time_horizon
+          : null,
+    summary:
+      typeof obj.summary === "string"
+        ? obj.summary
+        : typeof obj.interpretation === "string"
+          ? obj.interpretation
+          : "",
+    keyPoints: normalizeStringList(obj.keyPoints),
+    actionableAdvice: normalizeStringList(obj.actionableAdvice),
+    disclaimer: typeof obj.disclaimer === "string" ? obj.disclaimer : "",
+    createdAt: obj.createdAt as string,
   }
 }
 
@@ -278,11 +299,20 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       case "astrologer":
         return state.draft.astrologerId !== null
       case "validation":
-        return state.draft.context.trim().length > 0
+        return (
+          state.draft.context.trim().length > 0 &&
+          (state.draft.objective ?? "").trim().length > 0
+        )
       default:
         return false
     }
-  }, [currentStepName, state.draft.type, state.draft.astrologerId, state.draft.context])
+  }, [
+    currentStepName,
+    state.draft.type,
+    state.draft.astrologerId,
+    state.draft.context,
+    state.draft.objective,
+  ])
 
   const contextValue = useMemo(
     () => ({

@@ -97,6 +97,7 @@ Gemini 2.0 Flash
 - Updated data model to include summary, keyPoints, and actionableAdvice.
 - Refactored result page UI to display structured guidance.
 - Fixed existing tests to match 3-step wizard and new data structure.
+- Post-review correction 2026-03-13: ValidationStep now collecte explicitement `objective` et `timeHorizon`, et la page résultat affiche ces champs au lieu de dériver systématiquement un objectif générique depuis le type.
 
 ### File List
 

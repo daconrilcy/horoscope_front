@@ -6,10 +6,7 @@ import React, { useEffect } from "react"
 import { ConsultationsPage } from "../pages/ConsultationsPage"
 import { ConsultationWizardPage } from "../pages/ConsultationWizardPage"
 import { ConsultationResultPage } from "../pages/ConsultationResultPage"
-import { generateSimpleInterpretation } from "../utils/generateSimpleInterpretation"
-import type { AstrologyLang } from "../i18n/astrology"
 import { ConsultationProvider, useConsultation, STORAGE_KEY, CHAT_PREFILL_KEY } from "../state/consultationStore"
-import { t } from "../i18n/consultations"
 import { AUTO_ASTROLOGER_ID, CONTEXT_MAX_LENGTH, CONTEXT_TRUNCATE_LENGTH } from "../types/consultation"
 
 const mockUseAstrologers = vi.fn()
@@ -309,13 +306,13 @@ describe("ConsultationWizardPage", () => {
       fireEvent.click(screen.getByText("Luna Céleste"))
 
       await waitFor(() => {
-        expect(screen.getByText("Récapitulatif")).toBeInTheDocument()
+        expect(screen.getByText("Votre demande ciblée")).toBeInTheDocument()
       })
     })
   })
 
   describe("AC5: Wizard step 3 - Validation", () => {
-    it("shows summary and context input", async () => {
+    it("shows request summary, objective, context and optional time horizon inputs", async () => {
       renderWizardPage()
 
       fireEvent.click(screen.getByRole("button", { name: /Dating/i }))
@@ -323,10 +320,12 @@ describe("ConsultationWizardPage", () => {
       fireEvent.click(screen.getByText("Luna Céleste"))
 
       await waitFor(() => {
-        expect(screen.getByText("Récapitulatif")).toBeInTheDocument()
+        expect(screen.getByText("Votre demande ciblée")).toBeInTheDocument()
         expect(screen.getByText("Dating / Rendez-vous amoureux")).toBeInTheDocument()
         expect(screen.getByText("Luna Céleste")).toBeInTheDocument()
+        expect(screen.getByLabelText(/Objet de la consultation/)).toBeInTheDocument()
         expect(screen.getByLabelText(/Décrivez votre situation/)).toBeInTheDocument()
+        expect(screen.getByLabelText(/Horizon temporel/)).toBeInTheDocument()
       })
     })
 
@@ -343,7 +342,7 @@ describe("ConsultationWizardPage", () => {
       })
     })
 
-    it("generate button is enabled with context", async () => {
+    it("generate button is enabled with the default objective and a filled context", async () => {
       renderWizardPage()
 
       fireEvent.click(screen.getByRole("button", { name: /Dating/i }))
@@ -359,6 +358,31 @@ describe("ConsultationWizardPage", () => {
         const generateBtn = screen.getByRole("button", { name: /Générer la consultation/i })
         expect(generateBtn).not.toBeDisabled()
       })
+    })
+
+    it("lets the user edit objective and time horizon", async () => {
+      renderWizardPage()
+
+      fireEvent.click(screen.getByRole("button", { name: /Dating/i }))
+      await waitFor(() => screen.getByText("Luna Céleste"))
+      fireEvent.click(screen.getByText("Luna Céleste"))
+      await waitFor(() => screen.getByLabelText(/Objet de la consultation/))
+
+      fireEvent.change(screen.getByLabelText(/Objet de la consultation/), {
+        target: { value: "préparer ce rendez-vous amoureux" },
+      })
+      fireEvent.change(screen.getByLabelText(/Décrivez votre situation/), {
+        target: { value: "Je rencontre cette personne ce soir." },
+      })
+      fireEvent.change(screen.getByLabelText(/Horizon temporel/), {
+        target: { value: "ce soir" },
+      })
+
+      expect(screen.getByDisplayValue("préparer ce rendez-vous amoureux")).toBeInTheDocument()
+      expect(screen.getByDisplayValue("ce soir")).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: /Générer la consultation/i })
+      ).not.toBeDisabled()
     })
 
     it("navigates to result page on generate", async () => {
@@ -448,12 +472,12 @@ describe("WizardProgress", () => {
   it("shows progress indicator with current step highlighted", () => {
     renderWizardPage()
 
-    const progressNav = screen.getByRole("navigation", { name: /Étapes de la consultation/i })
+      const progressNav = screen.getByRole("navigation", { name: /Étapes de la consultation/i })
     expect(progressNav).toBeInTheDocument()
 
     expect(screen.getByText("Type")).toBeInTheDocument()
     expect(screen.getByText("Astrologue")).toBeInTheDocument()
-    expect(screen.getByText("Validation")).toBeInTheDocument()
+    expect(screen.getByText("Demande")).toBeInTheDocument()
     expect(screen.queryByText("Tirage")).not.toBeInTheDocument()
   })
 
@@ -591,6 +615,8 @@ describe("ConsultationResultPage", () => {
         type: "dating" as const,
         astrologerId: "1",
         context: "Ma question test pour le rendez-vous",
+        objective: "préparer ce rendez-vous",
+        timeHorizon: "cette semaine",
         summary: "Votre interprétation astrologique...",
         keyPoints: ["Point 1"],
         actionableAdvice: ["Conseil 1"],
@@ -624,6 +650,8 @@ describe("ConsultationResultPage", () => {
       })
 
       expect(screen.getByText("Dating / Rendez-vous amoureux")).toBeInTheDocument()
+      expect(screen.getByText("préparer ce rendez-vous")).toBeInTheDocument()
+      expect(screen.getByText("cette semaine")).toBeInTheDocument()
       expect(screen.getByText(/Ma question test pour le rendez-vous/)).toBeInTheDocument()
       expect(screen.getByText("Votre interprétation astrologique...")).toBeInTheDocument()
       expect(screen.getByText("Point 1")).toBeInTheDocument()
@@ -679,6 +707,8 @@ describe("ConsultationResultPage", () => {
         type: "event" as const,
         astrologerId: "1",
         context: "Mon événement important",
+        objective: "préparer mon événement",
+        timeHorizon: "cette semaine",
         summary: "L'interprétation de l'événement...",
         createdAt: new Date().toISOString(),
       }
@@ -716,6 +746,8 @@ describe("ConsultationResultPage", () => {
 
       const prefill = sessionStorage.getItem(CHAT_PREFILL_KEY)
       expect(prefill).toBeTruthy()
+      expect(prefill).toContain("Objectif: préparer mon événement")
+      expect(prefill).toContain("Horizon: cette semaine")
       expect(prefill).toContain("Mon événement important")
       expect(prefill).toContain("L'interprétation de l'événement...")
     })

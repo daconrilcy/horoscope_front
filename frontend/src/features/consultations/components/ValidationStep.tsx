@@ -13,13 +13,21 @@ import {
 type ValidationStepProps = {
   draft: ConsultationDraft
   context: string
+  objective: string
+  timeHorizon: string
   onContextChange: (context: string) => void
+  onObjectiveChange: (objective: string) => void
+  onTimeHorizonChange: (timeHorizon: string) => void
 }
 
 export function ValidationStep({
   draft,
   context,
+  objective,
+  timeHorizon,
   onContextChange,
+  onObjectiveChange,
+  onTimeHorizonChange,
 }: ValidationStepProps) {
   const lang = detectLang()
   const astrologerId = draft.astrologerId === AUTO_ASTROLOGER_ID ? undefined : draft.astrologerId ?? undefined
@@ -51,6 +59,18 @@ export function ValidationStep({
       </div>
 
       <div className="validation-context">
+        <label htmlFor="consultation-objective" className="validation-context-label">
+          {t("objective_label", lang)}
+        </label>
+        <input
+          id="consultation-objective"
+          className="validation-context-input"
+          type="text"
+          value={objective}
+          onChange={(e) => onObjectiveChange(e.target.value)}
+          placeholder={t("objective_placeholder", lang)}
+        />
+
         <label htmlFor="consultation-context" className="validation-context-label">
           {t("enter_context", lang)}
         </label>
@@ -67,6 +87,19 @@ export function ValidationStep({
         <div id="consultation-context-counter" className="validation-context-counter">
           {CONTEXT_MAX_LENGTH - context.length} {t("context_max_length_hint", lang)}
         </div>
+
+        <label htmlFor="consultation-time-horizon" className="validation-context-label">
+          {t("time_horizon_label", lang)}
+        </label>
+        <input
+          id="consultation-time-horizon"
+          className="validation-context-input"
+          type="text"
+          value={timeHorizon}
+          onChange={(e) => onTimeHorizonChange(e.target.value)}
+          placeholder={t("time_horizon_placeholder", lang)}
+        />
+        <p className="validation-context-hint">{t("time_horizon_hint", lang)}</p>
       </div>
     </div>
   )

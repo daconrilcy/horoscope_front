@@ -2174,6 +2174,12 @@ textarea:focus-visible {
   text-align: right;
 }
 
+.validation-context-hint {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
 /* Consultation Result Page */
 .consultation-result-page {
   max-width: 800px;
@@ -2260,30 +2266,6 @@ textarea:focus-visible {
   margin: 0;
   color: var(--text-1);
   line-height: 1.5;
-}
-
-.consultation-result-drawing-section {
-  background: rgba(138, 107, 255, 0.08);
-  border: 1px solid rgba(138, 107, 255, 0.3);
-  border-radius: 10px;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.consultation-result-cards,
-.consultation-result-runes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.consultation-result-card,
-.consultation-result-rune {
-  padding: 0.5rem 1rem;
-  background: rgba(138, 107, 255, 0.15);
-  border-radius: 6px;
-  font-size: 0.9rem;
-  color: var(--text-1);
 }
 
 .consultation-result-interpretation {

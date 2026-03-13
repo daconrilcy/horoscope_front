@@ -10,6 +10,17 @@ import { AUTO_ASTROLOGER_ID, WIZARD_STEP_LABELS, getConsultationTypeConfig, getO
 import { generateUniqueId } from "../utils/generateUniqueId"
 import { classNames } from "../utils/classNames"
 
+function resolveObjectiveText(
+  objective: string | undefined,
+  type: ConsultationResult["type"],
+  lang: ReturnType<typeof detectLang>
+): string {
+  if (objective && !objective.startsWith("objective_")) {
+    return objective
+  }
+  return t(getObjectiveForType(type), lang)
+}
+
 export function ConsultationResultPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -24,7 +35,7 @@ export function ConsultationResultPage() {
   const historyId = searchParams.get("id")
   const currentResult: ConsultationResult | undefined = historyId
     ? state.history.find((h) => h.id === historyId)
-    : state.result
+    : state.result ?? undefined
 
   const isAlreadyInHistory = historyId !== null && currentResult !== undefined
   const [isSaved, setIsSaved] = useState(isAlreadyInHistory)
@@ -42,11 +53,20 @@ export function ConsultationResultPage() {
   const draftType = state.draft.type
   const draftAstrologerId = state.draft.astrologerId
   const draftContext = state.draft.context
+  const draftObjective = state.draft.objective
+  const draftTimeHorizon = state.draft.timeHorizon
   const generationStarted = useRef(false)
 
   const typeConfig = useMemo(
     () => (currentResult ? getConsultationTypeConfig(currentResult.type) : undefined),
     [currentResult]
+  )
+  const currentObjective = useMemo(
+    () =>
+      currentResult
+        ? resolveObjectiveText(currentResult.objective, currentResult.type, lang)
+        : "",
+    [currentResult, lang]
   )
 
   const generateInterpretation = useCallback(async () => {
@@ -59,10 +79,12 @@ export function ConsultationResultPage() {
     setError(null)
 
     try {
-      const objective = t(getObjectiveForType(draftType), lang)
+      const objective = resolveObjectiveText(draftObjective, draftType, lang)
+      const timeHorizon = draftTimeHorizon?.trim() ? draftTimeHorizon.trim() : null
       const guidanceResult = await contextualGuidance.mutateAsync({
         situation: draftContext,
-        objective: objective,
+        objective,
+        time_horizon: timeHorizon,
       })
 
       const result: ConsultationResult = {
@@ -70,7 +92,8 @@ export function ConsultationResultPage() {
         type: draftType,
         astrologerId: draftAstrologerId,
         context: draftContext,
-        objective: objective,
+        objective,
+        timeHorizon,
         summary: guidanceResult.summary,
         keyPoints: guidanceResult.key_points,
         actionableAdvice: guidanceResult.actionable_advice,
@@ -88,7 +111,17 @@ export function ConsultationResultPage() {
     } finally {
       setIsGenerating(false)
     }
-  }, [draftType, draftAstrologerId, draftContext, contextualGuidance, setResult, navigate, lang])
+  }, [
+    draftType,
+    draftAstrologerId,
+    draftContext,
+    draftObjective,
+    draftTimeHorizon,
+    contextualGuidance,
+    setResult,
+    navigate,
+    lang,
+  ])
 
   useEffect(() => {
     if (!historyId && !state.result && draftType !== null && !generationStarted.current) {
@@ -107,7 +140,13 @@ export function ConsultationResultPage() {
   const handleOpenInChat = useCallback(() => {
     if (currentResult) {
       const interpretation = currentResult.summary || ""
-      const message = `[Consultation ${t(typeConfig?.labelKey ?? "", lang)}]\n\n${currentResult.context}\n\n${t("interpretation_label", lang)}:\n${interpretation}`
+      const timeHorizonBlock = currentResult.timeHorizon
+        ? `\n${t("time_horizon_summary_label", lang)}: ${currentResult.timeHorizon}`
+        : ""
+      const message =
+        `[Consultation ${t(typeConfig?.labelKey ?? "", lang)}]\n\n` +
+        `${t("objective_summary_label", lang)}: ${resolveObjectiveText(currentResult.objective, currentResult.type, lang)}${timeHorizonBlock}\n\n` +
+        `${currentResult.context}\n\n${t("interpretation_label", lang)}:\n${interpretation}`
       sessionStorage.setItem(CHAT_PREFILL_KEY, message)
       reset()
       const astrologerParam = currentResult.astrologerId !== AUTO_ASTROLOGER_ID
@@ -175,6 +214,18 @@ export function ConsultationResultPage() {
             {t(WIZARD_STEP_LABELS.astrologer, lang)}: {astrologerName}
           </span>
         </div>
+
+        <div className="consultation-result-context">
+          <strong>{t("objective_summary_label", lang)}:</strong>
+          <p>{currentObjective}</p>
+        </div>
+
+        {currentResult.timeHorizon && (
+          <div className="consultation-result-context">
+            <strong>{t("time_horizon_summary_label", lang)}:</strong>
+            <p>{currentResult.timeHorizon}</p>
+          </div>
+        )}
 
         <div className="consultation-result-context">
           <strong>{t("enter_context", lang)}:</strong>

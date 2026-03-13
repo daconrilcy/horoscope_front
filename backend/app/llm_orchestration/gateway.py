@@ -284,7 +284,6 @@ class LLMGateway:
                         "birth_timezone",
                         "chart_json",
                         "tone",
-                        "cards_json",
                         "persona_name",
                         "event_description",
                     }

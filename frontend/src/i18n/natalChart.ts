@@ -197,7 +197,6 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
         daily_life: "Vie quotidienne",
         strengths: "Forces",
         challenges: "Défis",
-        tarot_spread: "Tirage",
         event_context: "Contexte événementiel",
       },
       evidenceCategories: {
@@ -365,7 +364,6 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
         daily_life: "Daily Life",
         strengths: "Strengths",
         challenges: "Challenges",
-        tarot_spread: "Tarot Spread",
         event_context: "Event Context",
       },
       evidenceCategories: {
@@ -532,7 +530,6 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
         daily_life: "Vida diaria",
         strengths: "Fortalezas",
         challenges: "Desafíos",
-        tarot_spread: "Tirada de Tarot",
         event_context: "Contexto del evento",
       },
       evidenceCategories: {

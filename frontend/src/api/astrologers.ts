@@ -27,7 +27,7 @@ const MOCK_ASTROLOGERS: Astrologer[] = [
     id: "22222222-2222-4222-8222-222222222222",
     name: "Orion Mystique",
     avatar_url: "https://api.dicebear.com/7.x/bottts/svg?seed=Orion%20Mystique",
-    specialties: ["Carrière", "Événements", "Tarot"],
+    specialties: ["Carrière", "Événements", "Timing"],
     style: "Analytique et précis",
     bio_short: "Expert en astrologie prévisionnelle et choix de carrière.",
   },
@@ -60,7 +60,7 @@ const MOCK_ASTROLOGER_PROFILES: Record<string, AstrologerProfile> = {
   "22222222-2222-4222-8222-222222222222": {
     ...MOCK_ASTROLOGERS[1],
     bio_full:
-      "Formé à l'astrologie traditionnelle et moderne, je combine analyse rigoureuse et intuition. Mon domaine de prédilection : les questions de carrière et les moments clés de la vie. Je travaille avec le tarot en complément de l'astrologie pour offrir des lectures enrichies. Mon style est analytique et précis - chaque conseil est fondé sur une étude minutieuse de votre thème.",
+      "Formé à l'astrologie traditionnelle et moderne, je combine analyse rigoureuse et intuition. Mon domaine de prédilection : les questions de carrière et les moments clés de la vie. J'utilise les cycles, les transits et le contexte de la personne pour proposer des lectures ciblées. Mon style est analytique et précis - chaque conseil est fondé sur une étude minutieuse de votre thème.",
     languages: ["Français", "Anglais"],
     experience_years: 12,
   },

@@ -163,7 +163,7 @@ class TestAstroResponseV3:
                     "strengths",
                     "challenges",
                     "daily_life",
-                    "tarot_spread",
+                    "event_context",
                     "event_context",
                     "overall",
                 ]

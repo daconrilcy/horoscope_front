@@ -10,7 +10,11 @@ import {
 } from "../features/consultations"
 import { detectLang } from "../i18n/astrology"
 import { t } from "../i18n/consultations"
-import { VALID_CONSULTATION_TYPES, type ConsultationType } from "../types/consultation"
+import {
+  VALID_CONSULTATION_TYPES,
+  getObjectiveForType,
+  type ConsultationType,
+} from "../types/consultation"
 
 export function ConsultationWizardPage() {
   const navigate = useNavigate()
@@ -22,6 +26,8 @@ export function ConsultationWizardPage() {
     setType,
     setAstrologer,
     setContext,
+    setObjective,
+    setTimeHorizon,
     nextStep,
     prevStep,
     reset,
@@ -33,10 +39,12 @@ export function ConsultationWizardPage() {
     const typeParam = searchParams.get("type")
     if (typeParam && currentStepName === "type" && state.draft.type === null) {
       if (VALID_CONSULTATION_TYPES.includes(typeParam as ConsultationType)) {
-        setType(typeParam as ConsultationType)
+        const selectedType = typeParam as ConsultationType
+        setType(selectedType)
+        setObjective(t(getObjectiveForType(selectedType), lang))
       }
     }
-  }, [searchParams, currentStepName, state.draft.type, setType])
+  }, [searchParams, currentStepName, state.draft.type, setType, setObjective, lang])
 
   const handleCancel = useCallback(() => {
     reset()
@@ -57,8 +65,10 @@ export function ConsultationWizardPage() {
 
   const handleTypeSelect = useCallback((type: ConsultationType) => {
     setType(type)
+    setObjective(t(getObjectiveForType(type), lang))
+    setTimeHorizon(null)
     nextStep()
-  }, [setType, nextStep])
+  }, [setType, setObjective, setTimeHorizon, nextStep, lang])
 
   const handleAstrologerSelect = useCallback((id: string) => {
     setAstrologer(id)
@@ -86,7 +96,11 @@ export function ConsultationWizardPage() {
           <ValidationStep
             draft={state.draft}
             context={state.draft.context}
+            objective={state.draft.objective ?? ""}
+            timeHorizon={state.draft.timeHorizon ?? ""}
             onContextChange={setContext}
+            onObjectiveChange={setObjective}
+            onTimeHorizonChange={(value) => setTimeHorizon(value)}
           />
         )
       default:

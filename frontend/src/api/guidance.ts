@@ -12,6 +12,13 @@ export type GuidanceErrorEnvelope = {
   }
 }
 
+export type GuidancePeriod = "daily" | "weekly"
+
+export type GuidanceRequest = {
+  period: GuidancePeriod
+  conversation_id?: number | null
+}
+
 export type ContextualGuidanceRequest = {
   situation: string
   objective: string
@@ -28,6 +35,19 @@ export type GuidanceRecoveryMetadata = {
   recovery_reason: string | null
 }
 
+export type GuidanceData = {
+  period: GuidancePeriod
+  summary: string
+  key_points: string[]
+  actionable_advice: string[]
+  disclaimer: string
+  attempts: number
+  fallback_used: boolean
+  recovery: GuidanceRecoveryMetadata
+  context_message_count: number
+  generated_at: string
+}
+
 export type ContextualGuidanceData = {
   guidance_type: string
   situation: string
@@ -42,6 +62,13 @@ export type ContextualGuidanceData = {
   recovery: GuidanceRecoveryMetadata
   context_message_count: number
   generated_at: string
+}
+
+export type GuidanceApiResponse = {
+  data: GuidanceData
+  meta: {
+    request_id: string
+  }
 }
 
 export type ContextualGuidanceApiResponse = {
@@ -87,11 +114,9 @@ function toTransportError(error: unknown): GuidanceApiError {
   return new GuidanceApiError("network_error", "Erreur réseau. Réessayez plus tard.", 0, {})
 }
 
-async function requestContextualGuidance(
-  payload: ContextualGuidanceRequest
-): Promise<ContextualGuidanceData> {
+async function requestJson<TData>(path: string, payload: object): Promise<TData> {
   try {
-    const response = await apiFetch(`${API_BASE_URL}/v1/guidance/contextual`, {
+    const response = await apiFetch(`${API_BASE_URL}${path}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -117,11 +142,33 @@ async function requestContextualGuidance(
       )
     }
 
-    const result = (await response.json()) as ContextualGuidanceApiResponse
+    const result = (await response.json()) as { data: TData }
     return result.data
   } catch (error) {
     throw toTransportError(error)
   }
+}
+
+export async function requestGuidance(payload: GuidanceRequest): Promise<GuidanceData> {
+  return requestJson<GuidanceData>("/v1/guidance", payload)
+}
+
+export async function requestContextualGuidance(
+  payload: ContextualGuidanceRequest
+): Promise<ContextualGuidanceData> {
+  return requestJson<ContextualGuidanceData>("/v1/guidance/contextual", payload)
+}
+
+export function useRequestGuidance() {
+  return useMutation({
+    mutationFn: requestGuidance,
+  })
+}
+
+export function useRequestContextualGuidance() {
+  return useMutation({
+    mutationFn: requestContextualGuidance,
+  })
 }
 
 export function useContextualGuidance() {

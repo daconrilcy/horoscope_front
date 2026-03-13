@@ -70,12 +70,14 @@ describe("Consultation Reconnection (Story 46.1)", () => {
     })
 
     const TestWrapper = () => {
-      const { setType, setAstrologer, setContext } = useConsultation()
+      const { setType, setAstrologer, setContext, setObjective, setTimeHorizon } = useConsultation()
       React.useEffect(() => {
         setType("dating")
         setAstrologer("1")
         setContext("Je vais à un premier rendez-vous.")
-      }, [setType, setAstrologer, setContext])
+        setObjective("comprendre la dynamique de ce rendez-vous")
+        setTimeHorizon("ce soir")
+      }, [setType, setAstrologer, setContext, setObjective, setTimeHorizon])
       return <ConsultationResultPage />
     }
 
@@ -97,7 +99,8 @@ describe("Consultation Reconnection (Story 46.1)", () => {
     // Verify AC1 & AC2: correct API called with right payload
     expect(mockUseContextualGuidance).toHaveBeenCalledWith({
       situation: "Je vais à un premier rendez-vous.",
-      objective: "relation/amour",
+      objective: "comprendre la dynamique de ce rendez-vous",
+      time_horizon: "ce soir",
     })
 
     // Verify AC1: useExecuteModule was NOT called
@@ -141,6 +144,7 @@ describe("Consultation Reconnection (Story 46.1)", () => {
         astrologerId: "1",
         drawingOption: "none",
         context: "Ma question pro",
+        objective: "préparer ma prochaine décision pro",
         interpretation: "Guidance sauvegardée",
         createdAt: new Date().toISOString(),
       },

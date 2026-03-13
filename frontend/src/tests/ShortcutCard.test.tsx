@@ -117,7 +117,8 @@ describe("ShortcutsSection", () => {
   it("rend les raccourcis par défaut sous forme de liens", () => {
     render(<ShortcutsSection />, { wrapper: RouterWrapper })
     expect(screen.getByText("Chat astrologue")).toBeInTheDocument()
-    expect(screen.getByText("Tirage du jour")).toBeInTheDocument()
+    expect(screen.getByText("Consultation")).toBeInTheDocument()
+    expect(screen.getByText("Guidance ciblée")).toBeInTheDocument()
     expect(screen.getByText("Historique")).toBeInTheDocument()
     expect(screen.getAllByRole("link")).toHaveLength(3)
   })
@@ -129,11 +130,11 @@ describe("ShortcutsSection", () => {
     expect(onChatClick).toHaveBeenCalledTimes(1)
   })
 
-  it("déclenche onTirageClick lors du clic sur le tirage", () => {
-    const onTirageClick = vi.fn()
-    render(<ShortcutsSection onTirageClick={onTirageClick} />, { wrapper: RouterWrapper })
-    fireEvent.click(screen.getByRole("link", { name: /Tirage du jour/i }))
-    expect(onTirageClick).toHaveBeenCalledTimes(1)
+  it("déclenche onConsultationClick lors du clic sur la consultation", () => {
+    const onConsultationClick = vi.fn()
+    render(<ShortcutsSection onConsultationClick={onConsultationClick} />, { wrapper: RouterWrapper })
+    fireEvent.click(screen.getByRole("link", { name: /Consultation/i }))
+    expect(onConsultationClick).toHaveBeenCalledTimes(1)
   })
 
   it("utilise une structure sémantique <section>", () => {
@@ -147,7 +148,8 @@ describe("ShortcutsSection", () => {
 
     expect(screen.getByRole("heading", { name: "Activities" })).toBeInTheDocument()
     expect(screen.getByText("Astrologer chat")).toBeInTheDocument()
-    expect(screen.getByText("Daily spread")).toBeInTheDocument()
+    expect(screen.getByText("Consultation")).toBeInTheDocument()
+    expect(screen.getByText("Targeted guidance")).toBeInTheDocument()
     expect(screen.getByText("History")).toBeInTheDocument()
   })
 })

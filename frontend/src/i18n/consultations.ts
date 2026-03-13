@@ -57,9 +57,9 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     es: "Astrólogo",
   },
   step_validation: {
-    fr: "Validation",
-    en: "Validation",
-    es: "Validación",
+    fr: "Demande",
+    en: "Request",
+    es: "Solicitud",
   },
   select_type: {
     fr: "Choisissez le type de consultation",
@@ -87,9 +87,44 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     es: "Ej.: Debo tomar una decisión importante sobre...",
   },
   summary_title: {
-    fr: "Récapitulatif",
-    en: "Summary",
-    es: "Resumen",
+    fr: "Votre demande ciblée",
+    en: "Your targeted request",
+    es: "Su solicitud enfocada",
+  },
+  objective_label: {
+    fr: "Objet de la consultation",
+    en: "Consultation goal",
+    es: "Objetivo de la consulta",
+  },
+  objective_placeholder: {
+    fr: "Ex: comprendre la dynamique de ce rendez-vous amoureux",
+    en: "E.g. understand the dynamic of this romantic meetup",
+    es: "Ej.: comprender la dinámica de esta cita romántica",
+  },
+  time_horizon_label: {
+    fr: "Horizon temporel",
+    en: "Time horizon",
+    es: "Horizonte temporal",
+  },
+  time_horizon_placeholder: {
+    fr: "Ex: cette semaine, ce mois-ci, avant l'entretien",
+    en: "E.g. this week, this month, before the interview",
+    es: "Ej.: esta semana, este mes, antes de la entrevista",
+  },
+  time_horizon_hint: {
+    fr: "Optionnel, utile pour cadrer la guidance.",
+    en: "Optional, useful to frame the guidance.",
+    es: "Opcional, útil para encuadrar la orientación.",
+  },
+  objective_summary_label: {
+    fr: "Objectif",
+    en: "Goal",
+    es: "Objetivo",
+  },
+  time_horizon_summary_label: {
+    fr: "Horizon",
+    en: "Horizon",
+    es: "Horizonte",
   },
   generate: {
     fr: "Générer la consultation",

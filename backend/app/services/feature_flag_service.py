@@ -2,7 +2,7 @@
 Service de gestion des feature flags.
 
 Ce module gère les drapeaux de fonctionnalités pour le déploiement progressif.
-Les anciens modules tarot/runes ont été retirés.
+Les modules hors périmètre historique ont été retirés.
 """
 
 from __future__ import annotations

@@ -125,7 +125,7 @@ class TestNatalInvalidEvidenceCounter:
         }
         catalog = {"VALID_ID": []}
         raw = json.dumps({"evidence": ["HALLUCINATED_ID"]})
-        validate_output(raw, schema, evidence_catalog=catalog, use_case="tarot_reading")
+        validate_output(raw, schema, evidence_catalog=catalog, use_case="event_guidance")
 
         after = get_metrics_snapshot()["counters"].get(key, 0.0)
-        assert after == before  # tarot_reading doesn't start with "natal"
+        assert after == before  # event_guidance doesn't start with "natal"

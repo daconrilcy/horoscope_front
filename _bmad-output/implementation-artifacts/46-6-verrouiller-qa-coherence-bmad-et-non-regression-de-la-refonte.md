@@ -74,6 +74,7 @@ Gemini 2.0 Flash
 - Backend orchestration fully cleaned from tarot/runes references.
 - Documentation artefacts (11.2, 16.5, 17.1, 17.5, 45.2) updated to reflect the new scope.
 - Migration from legacy history items to V2 schema is robust.
+- Post-review correction 2026-03-13: la matrice QA a été renforcée sur la saisie d'objectif/horizon, la compatibilité de l'API guidance et le nettoyage backend des derniers reliquats tarot.
 
 ### File List
 

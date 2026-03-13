@@ -70,6 +70,7 @@ Gemini 2.0 Flash
 - Updated hard policies to remove mentions of card reading.
 - Cleaned up frontend API clients to remove dead endpoints.
 - Verified system integrity with complete backend test suite.
+- Post-review correction 2026-03-13: suppression complétée des résidus backend encore présents dans `PromptRegistry`, `AIEngineAdapter`, les fixtures d'évaluation tarot et les tests associés.
 
 ### File List
 
@@ -86,3 +87,8 @@ Gemini 2.0 Flash
 - backend/app/tests/unit/test_hard_policy.py
 - backend/app/tests/integration/test_chat_api.py
 - backend/app/tests/integration/test_ops_feature_flags_api.py
+- backend/app/ai_engine/services/prompt_registry.py
+- backend/app/services/ai_engine_adapter.py
+- backend/app/ai_engine/tests/test_prompt_registry.py
+- backend/app/tests/unit/test_natal_metrics.py
+- backend/app/tests/unit/test_schemas_v3.py
