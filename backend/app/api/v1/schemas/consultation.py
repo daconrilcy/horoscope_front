@@ -66,3 +66,33 @@ class ConsultationPrecheckMeta(BaseModel):
 class ConsultationPrecheckResponse(BaseModel):
     data: ConsultationPrecheckData
     meta: ConsultationPrecheckMeta
+
+class ConsultationGenerateRequest(BaseModel):
+    consultation_type: str
+    question: str = Field(..., max_length=2000)
+    horizon: Optional[str] = None
+    other_person: Optional[OtherPersonData] = None
+    astrologer_id: Optional[str] = "auto"
+
+class ConsultationSection(BaseModel):
+    id: str
+    title: str
+    content: str
+
+class ConsultationGenerateData(BaseModel):
+    consultation_id: str
+    contract_version: str = "consultation-generate.v1"
+    consultation_type: str
+    status: ConsultationStatus
+    precision_level: PrecisionLevel
+    fallback_mode: Optional[FallbackMode] = None
+    safeguard_issue: Optional[SafeguardIssue] = None
+    route_key: Optional[str] = None
+    summary: str
+    sections: List[ConsultationSection]
+    chat_prefill: str
+    metadata: dict
+
+class ConsultationGenerateResponse(BaseModel):
+    data: ConsultationGenerateData
+    meta: ConsultationPrecheckMeta

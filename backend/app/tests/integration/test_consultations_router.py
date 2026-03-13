@@ -68,3 +68,37 @@ def test_precheck_authenticated_nominal():
     assert json_data["data"]["consultation_type"] == "period"
     assert json_data["data"]["status"] == "nominal"
     assert json_data["data"]["user_profile_quality"] == "complete"
+
+def test_generate_authenticated_nominal():
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Create birth profile
+    client.put(
+        "/v1/users/me/birth-data",
+        headers=headers,
+        json={
+            "birth_date": "1990-01-01",
+            "birth_time": "12:00",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+    
+    response = client.post(
+        "/v1/consultations/generate", 
+        json={
+            "consultation_type": "period",
+            "question": "Comment va se passer mon mois ?"
+        }, 
+        headers=headers
+    )
+    
+    assert response.status_code == 200
+    json_data = response.json()
+    assert json_data["data"]["consultation_type"] == "period"
+    assert json_data["data"]["status"] == "nominal"
+    assert json_data["data"]["route_key"] == "period_full"
+    assert len(json_data["data"]["sections"]) > 0
+
