@@ -13,6 +13,7 @@ so that le résumé du jour gagne une présence premium sans changer le contrat 
 ## Acceptance Criteria
 
 1. La carte résumé de `/dashboard` utilise `AstroMoodBackground` lorsque la prédiction du jour est disponible, tout en restant cliquable et activable au clavier vers `/dashboard/horoscope`.
+**Mise à jour post-review :** Le Dashboard s'adapte en `min-height: 100dvh`, la section Horoscope a un titre visible, la carte occupe `min-height: 33dvh` et affiche un pill avec le logo du signe.
 2. Le mapping des paramètres visuels (`sign`, `userId`, `dateKey`, `dayScore`) est centralisé dans un module ou hook dédié et ne duplique pas de logique dans le JSX de `DashboardPage` ou `DashboardHoroscopeSummaryCard`.
 3. `sign` vient de `astro_profile.sun_sign_code` via les données de naissance existantes, `dateKey` vient de `prediction.meta.date_local`, `userId` vient du sujet du token ou du profil auth, et `dayScore` est dérivé des catégories daily existantes sans nouveau contrat backend.
 4. Si le signe est absent, la carte utilise un fallback visuel neutre et stable au lieu d'échouer ou de masquer le résumé.

@@ -2720,7 +2720,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 0.5rem;
   padding: 0.35rem 0.75rem;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(139, 92, 246, 0.15);
   border-radius: 999px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -2729,7 +2729,8 @@ textarea:focus-visible {
   color: var(--text-1);
   align-self: flex-start;
   margin-bottom: auto;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
 }
 
 .dashboard-summary-card__pill-icon {
@@ -2854,6 +2855,28 @@ textarea:focus-visible {
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-top: 12px;
+}
+
+/* === Horoscope Page Modifications === */
+.hero-card-astro-bg-wrapper {
+  margin-bottom: 1.5rem;
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  position: relative;
+}
+
+.hero-card-astro-bg-wrapper .astro-mood-background__content {
+  padding: 0;
+}
+
+.hero-card-astro-bg-wrapper .panel.hero-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin-bottom: 0 !important;
+  position: relative;
+  z-index: 2;
 }
 
 @media (max-width: 280px) {

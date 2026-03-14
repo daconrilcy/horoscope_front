@@ -5,7 +5,7 @@
   width: 100%;
   height: 100%;
   /* Dynamic background fallback using theme variables */
-  background: linear-gradient(90deg, var(--bg-top) 0%, var(--bg-mid) 45%, var(--bg-bot) 100%);
+  background: linear-gradient(to top left, var(--bg-bot) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
 .astro-mood-background__canvas {
