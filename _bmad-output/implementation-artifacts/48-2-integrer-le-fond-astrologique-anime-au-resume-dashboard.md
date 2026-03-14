@@ -152,6 +152,8 @@ GPT-5 Codex
 
 - Story context prêt pour implémentation.
 - Mapping `prediction + birth profile + user seed` explicitement cadré pour éviter la duplication.
+- DashboardHoroscopeSummaryCard adaptated to consume `AstroMoodBackground` locally via `astroBackgroundProps`.
+- SVG rendering fixed by dropping Vite's SVG plugin and instead using the previously engineered `getZodiacIcon` React components map. SVGs scaled seamlessly using `stroke: currentColor`.
 
 ### File List
 

@@ -132,6 +132,8 @@ GPT-5 Codex
 
 - Story context prêt pour implémentation.
 - Le verrouillage final cible explicitement reduced motion, cleanup et non-régression dashboard.
+- QA verified SVG colors properly inherit parent container's context, without relying on external svgr plugin. 
+- Horoscope card on `/dashboard/horoscope` layout properly wraps around AstroBackground to preserve background transparency metrics.
 
 ### File List
 

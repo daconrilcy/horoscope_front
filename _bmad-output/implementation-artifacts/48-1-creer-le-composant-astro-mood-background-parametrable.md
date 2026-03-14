@@ -148,6 +148,7 @@ Gemini 2.0 Flash
 - Implemented deterministic rendering using a seed based on `userId`, `sign`, and `dateKey`.
 - Handled accessibility (`aria-hidden`, `prefers-reduced-motion`) and performance (DPR capping, cleanup).
 - Added comprehensive unit tests.
+- Refactored Zodiac SVGs to use pre-existing `getZodiacIcon` and `normalizeSignCode` module instead of dynamic imports or raw SVGR loading.
 
 ### File List
 
