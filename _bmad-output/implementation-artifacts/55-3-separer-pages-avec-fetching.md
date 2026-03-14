@@ -22,7 +22,7 @@ afin de respecter le pattern container/presenter de manière cohérente sur tout
   - [x] Identifier l'utilisation de `useAstrologers` (API).
 
 - [x] Tâche 2 : Extraire `useAstrologers.ts` (AC: 1, 3)
-  - [x] Créer `frontend/src/hooks/useAstrologers.ts` encapsulant l'appel API et la transformation des données (fallback vers `[]`).
+  - [x] Créer `frontend/src/hooks/useAstrologers.ts` encapsulant l'appel API et la transformation des données.
 
 - [x] Tâche 3 : Refactoriser `AstrologersPage.tsx` (AC: 1)
   - [x] Utiliser le nouveau hook et mettre à jour les imports (utilisation de `@hooks` et `@api`).
@@ -39,7 +39,7 @@ afin de respecter le pattern container/presenter de manière cohérente sur tout
 
 ### Standardisation des hooks de page
 
-L'extraction des hooks dans `src/hooks/` permet de clarifier la responsabilité des composants de page. Ils ne s'occupent plus de savoir d'où viennent les données (API vs Store), mais seulement de la manière dont elles sont assemblées et présentées via `PageLayout` et les composants de fonctionnalités.
+L'extraction des hooks dans `src/hooks/` permet de clarifier la responsabilité des composants de page. Ils ne s'occupent plus de savoir d'où viennent les données (API vs Store), mais seulement de la manière dont elles sont assemblées et présentées.
 
 ## Dev Agent Record
 

@@ -27,7 +27,7 @@ import {
   Download,
   Eye
 } from "lucide-react";
-import { ErrorBoundary } from "./ErrorBoundary";
+import { ErrorBoundary } from "@components/ErrorBoundary";
 import { useAccessTokenSnapshot } from "../utils/authToken";
 import "./NatalInterpretation.css";
 
