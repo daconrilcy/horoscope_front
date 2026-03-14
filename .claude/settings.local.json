@@ -15,7 +15,8 @@
       "Bash(.venv/Scripts/python.exe -m:*)",
       "Bash(cd:*)",
       "Bash(../.venv/Scripts/python.exe -m alembic:*)",
-      "Bash(wc -l /c/dev/horoscope_front/frontend/src/i18n/*.ts)"
+      "Bash(wc -l /c/dev/horoscope_front/frontend/src/i18n/*.ts)",
+      "Bash(node -e \":*)"
     ]
   }
 }

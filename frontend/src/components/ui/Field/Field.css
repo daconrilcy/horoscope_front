@@ -1,0 +1,110 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 0.25rem);
+  width: 100%;
+}
+
+.field__label {
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--color-text-secondary, rgba(30,27,46,0.72));
+  cursor: pointer;
+}
+
+.field__input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field__input {
+  width: 100%;
+  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  font-size: var(--font-size-md, 1rem);
+  line-height: var(--line-height-normal, 1.5);
+  background: var(--color-glass-bg, rgba(255,255,255,0.55));
+  border: 1px solid var(--color-glass-border, rgba(255,255,255,0.65));
+  border-radius: var(--radius-md, 14px);
+  color: var(--color-text-primary, #1E1B2E);
+  transition: all var(--duration-fast, 150ms) var(--easing-default, ease);
+}
+
+.field__input::placeholder {
+  color: var(--color-text-muted, rgba(30,27,46,0.55));
+}
+
+.field__input:focus {
+  outline: 2px solid var(--color-primary, #866CD0);
+  outline-offset: 2px;
+  border-color: var(--color-primary, #866CD0);
+  background: var(--color-glass-bg-2, rgba(255,255,255,0.38));
+}
+
+.field__input--error {
+  border-color: var(--color-error, #ff6b81);
+}
+
+.field__input--error:focus {
+  outline-color: var(--color-error, #ff6b81);
+  border-color: var(--color-error, #ff6b81);
+}
+
+.field__input--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--color-glass-mini, rgba(255,255,255,0.40));
+}
+
+.field__input--has-left-icon {
+  padding-left: var(--space-10, 2.5rem);
+}
+
+.field__input--has-right-icon {
+  padding-right: var(--space-10, 2.5rem);
+}
+
+.field__icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted, rgba(30,27,46,0.55));
+  pointer-events: none;
+}
+
+.field__icon-left {
+  left: var(--space-3, 0.75rem);
+}
+
+.field__icon-right {
+  right: var(--space-3, 0.75rem);
+}
+
+.field__password-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto;
+  padding: 0;
+  display: flex;
+  color: var(--color-text-muted, rgba(30,27,46,0.55));
+  transition: color var(--duration-fast, 150ms) ease;
+}
+
+.field__password-toggle:hover:not(:disabled) {
+  color: var(--color-text-primary, #1E1B2E);
+}
+
+.field__error {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-error, #ff6b81);
+  font-weight: var(--font-weight-medium, 500);
+}
+
+.field__hint {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-text-muted, rgba(30,27,46,0.55));
+}

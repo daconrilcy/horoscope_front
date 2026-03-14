@@ -1,6 +1,6 @@
 # Story 50.2: Créer le composant <Input> / <Field> avec types, états et validation
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -22,39 +22,39 @@ afin que tous les champs de saisie du produit aient un comportement, des états 
 
 ## Tasks / Subtasks
 
-- [ ] Tâche 1 : Créer la structure de fichiers (AC: 1)
-  - [ ] `frontend/src/components/ui/Field/Field.tsx`
-  - [ ] `frontend/src/components/ui/Field/Field.css`
-  - [ ] `frontend/src/components/ui/Field/Field.test.tsx`
-  - [ ] `frontend/src/components/ui/Field/index.ts`
-  - [ ] Ajouter `export * from './Field'` dans `frontend/src/components/ui/index.ts`
+- [x] Tâche 1 : Créer la structure de fichiers (AC: 1)
+  - [x] `frontend/src/components/ui/Field/Field.tsx`
+  - [x] `frontend/src/components/ui/Field/Field.css`
+  - [x] `frontend/src/components/ui/Field/Field.test.tsx`
+  - [x] `frontend/src/components/ui/Field/index.ts`
+  - [x] Ajouter `export * from './Field'` dans `frontend/src/components/ui/index.ts`
 
-- [ ] Tâche 2 : Implémenter le composant (AC: 2, 3, 4, 5, 6, 7)
-  - [ ] Interface TypeScript `FieldProps`
-  - [ ] Génération automatique d'un `id` unique si non fourni (pour lier label/input)
-  - [ ] Label rendu si prop `label` fournie
-  - [ ] Hint rendu en gris sous le champ si prop `hint` fournie
-  - [ ] Message d'erreur rendu en rouge si prop `error` fournie
-  - [ ] Toggle show/hide pour `type="password"` (icône Eye/EyeOff de Lucide)
-  - [ ] `leftIcon` et `rightIcon` positionnés avec `padding-left`/`padding-right` adjusté sur l'input
+- [x] Tâche 2 : Implémenter le composant (AC: 2, 3, 4, 5, 6, 7)
+  - [x] Interface TypeScript `FieldProps`
+  - [x] Génération automatique d'un `id` unique si non fourni (pour lier label/input)
+  - [x] Label rendu si prop `label` fournie
+  - [x] Hint rendu en gris sous le champ si prop `hint` fournie
+  - [x] Message d'erreur rendu en rouge si prop `error` fournie
+  - [x] Toggle show/hide pour `type="password"` (icône Eye/EyeOff de Lucide)
+  - [x] `leftIcon` et `rightIcon` positionnés avec `padding-left`/`padding-right` adjusté sur l'input
 
-- [ ] Tâche 3 : Créer `Field.css` (AC: 8)
-  - [ ] `.field` : wrapper flex-column, gap `--space-1`
-  - [ ] `.field__label` : font-size `--font-size-sm`, color `--color-text-secondary`
-  - [ ] `.field__input-wrapper` : position relative (pour les icônes)
-  - [ ] `.field__input` : width 100%, padding, border-radius `--radius-md`, border, background, color, focus ring
-  - [ ] `.field__input--error` : border-color `--color-error`
-  - [ ] `.field__input--has-left-icon` : padding-left augmenté
-  - [ ] `.field__icon-left`, `.field__icon-right` : positionnement absolu centré verticalement
-  - [ ] `.field__error` : color `--color-error`, font-size `--font-size-sm`
-  - [ ] `.field__hint` : color `--color-text-muted`, font-size `--font-size-sm`
-  - [ ] Focus ring visible : `outline: 2px solid var(--color-primary)`, `outline-offset: 2px`
+- [x] Tâche 3 : Créer `Field.css` (AC: 8)
+  - [x] `.field` : wrapper flex-column, gap `--space-1`
+  - [x] `.field__label` : font-size `--font-size-sm`, color `--color-text-secondary`
+  - [x] `.field__input-wrapper` : position relative (pour les icônes)
+  - [x] `.field__input` : width 100%, padding, border-radius `--radius-md`, border, background, color, focus ring
+  - [x] `.field__input--error` : border-color `--color-error`
+  - [x] `.field__input--has-left-icon` : padding-left augmenté
+  - [x] `.field__icon-left`, `.field__icon-right` : positionnement absolu centré verticalement
+  - [x] `.field__error` : color `--color-error`, font-size `--font-size-sm`
+  - [x] `.field__hint` : color `--color-text-muted`, font-size `--font-size-sm`
+  - [x] Focus ring visible : `outline: 2px solid var(--color-primary)`, `outline-offset: 2px`
 
-- [ ] Tâche 4 : Écrire les tests (AC: 9)
-  - [ ] Rendu avec label et input liés (`htmlFor` = `id`)
-  - [ ] Message d'erreur visible quand prop `error` fournie + `aria-invalid="true"`
-  - [ ] Toggle password : icône visible, click change `type` entre `password` et `text`
-  - [ ] `aria-describedby` pointe vers le message d'erreur
+- [x] Tâche 4 : Écrire les tests (AC: 9)
+  - [x] Rendu avec label et input liés (`htmlFor` = `id`)
+  - [x] Message d'erreur visible quand prop `error` fournie + `aria-invalid="true"`
+  - [x] Toggle password : icône visible, click change `type` entre `password` et `text`
+  - [x] `aria-describedby` pointe vers le message d'erreur
 
 ## Dev Notes
 
@@ -174,10 +174,30 @@ Le projet utilise `.chat-error` dans `App.css` pour afficher les erreurs de form
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+gemini-2.0-flash
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Composant `<Field>` implémenté avec support pour labels, hints, erreurs et icônes.
+- Gestion intégrée du toggle de visibilité pour les champs de type `password`.
+- Accessibilité complète avec `useId`, `aria-describedby` et `aria-invalid`.
+- Utilisation systématique des design tokens pour le styling.
+- 7 tests unitaires couvrant les fonctionnalités clés.
+
+### Change Log
+
+- 2026-03-14 : Implémentation complète du composant Field.
+
 ### File List
+
+| Action | Fichier |
+|--------|---------|
+| Créé | `frontend/src/components/ui/Field/Field.tsx` |
+| Créé | `frontend/src/components/ui/Field/Field.css` |
+| Créé | `frontend/src/components/ui/Field/Field.test.tsx` |
+| Créé | `frontend/src/components/ui/Field/index.ts` |
+| Modifié | `frontend/src/components/ui/index.ts` |
+
+Status: done
