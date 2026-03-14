@@ -3,38 +3,38 @@
 
 :root {
   /* Text */
-  --color-purple-1: #977FD3;
-  --color-purple-2: #dfd5fc;
-  --text-1: #1E1B2E;
-  --text-2: rgba(30,27,46,0.72);
-  --text-3: rgba(30,27,46,0.55);
-  --text-headline: rgb(123,109,140); /* H1 muted purple — proche maquette originale */
+  --color-purple-1: var(--color-purple-1); /* keep for external refs if any */
+  --color-purple-2: var(--color-purple-2);
+  --text-1: var(--color-text-primary);
+  --text-2: var(--color-text-secondary);
+  --text-3: var(--color-text-muted);
+  --text-headline: var(--color-text-headline);
 
   /* Background (V5 — gradient original maquette) */
-  --bg-top: #FEF7F9;
-  --bg-mid: #E3D8EC;
-  --bg-bot: hwb(257 62% 2%);
+  --bg-top: var(--color-bg-top);
+  --bg-mid: var(--color-bg-mid);
+  --bg-bot: var(--color-bg-bot);
 
   /* Glass surfaces */
-  --glass: rgba(255,255,255,0.55);
-  --glass-2: rgba(255,255,255,0.38);
-  --glass-border: rgba(255,255,255,0.65);
+  --glass: var(--color-glass-bg);
+  --glass-2: var(--color-glass-bg-2);
+  --glass-border: var(--color-glass-border);
 
   /* Accent / CTA */
-  --cta-l: #866CD0;
-  --cta-r: #A190ED;
+  --cta-l: var(--color-cta-left);
+  --cta-r: var(--color-cta-right);
 
   /* Primary (legacy compatibility) */
-  --primary: #866CD0;
-  --primary-strong: #7355C7;
+  --primary: var(--color-primary);
+  --primary-strong: var(--color-primary-strong);
 
   /* Chips */
   --chip: linear-gradient(90deg,#B3A5DE 0%, var(--color-purple-2) 100%);
 
   /* Nav */
-  --nav-glass: rgba(255,255,255,0.58);
-  --nav-border: rgba(255,255,255,0.70);
-  --nav-active-bg: rgba(134, 108, 208, 0.16);
+  --nav-glass: var(--color-nav-glass);
+  --nav-border: var(--color-nav-border);
+  --nav-active-bg: var(--color-nav-active-bg);
 
   /* Shadows */
   --shadow-hero: 0 18px 40px rgba(20,20,40,0.14);
@@ -44,36 +44,36 @@
   --shadow-cta-dark: 0 14px 30px rgba(0, 0, 0, 0.35);
 
   /* Lines/borders */
-  --line: rgba(30,27,46,0.15);
+  --line: var(--color-line);
 
   /* Badge accents (§2.1) */
-  --badge-chat: #E1F0EA;
-  --badge-consultation: #F8CAA5;
-  --badge-amour: #EBA4C9;
-  --badge-travail: #AABEEF;
-  --badge-energie: #F6D2A7;
+  --badge-chat: var(--color-badge-chat);
+  --badge-consultation: var(--color-badge-consultation);
+  --badge-amour: var(--color-badge-amour);
+  --badge-travail: var(--color-badge-travail);
+  --badge-energie: var(--color-badge-energie);
 
   /* Semantic colors */
-  --success: #166534; /* Darker green for AA contrast (4.5:1+) on light bg */
-  --error: #ff6b81;
-  --btn-text: #1E1B2E;
+  --success: var(--color-success); /* Darker green for AA contrast (4.5:1+) on light bg */
+  --error: var(--color-error);
+  --btn-text: var(--color-btn-text);
 
   /* Background level 2 (for inputs, etc.) */
-  --bg-2: rgba(255,255,255,0.25);
+  --bg-2: var(--color-bg-2);
 
   /* Starfield (not visible in light mode, defined for consistency) */
-  --star-fill: #ffffff;
+  --star-fill: var(--color-star-fill);
 
   /* Constellation SVG (lilas en light mode) */
-  --constellation-color: rgba(134, 100, 220, 0.7);
+  --constellation-color: var(--color-constellation);
 
   /* Glass surfaces spécifiques — Shortcut cards (V5 — plus blanches) */
-  --glass-shortcut: rgba(255,255,255,0.62);
-  --glass-shortcut-border: rgba(255,255,255,0.72);
+  --glass-shortcut: var(--color-glass-shortcut);
+  --glass-shortcut-border: var(--color-glass-shortcut-border);
 
   /* Glass surfaces spécifiques — Mini-insight cards (AC #5) */
-  --glass-mini: rgba(255,255,255,0.40);
-  --glass-mini-border: rgba(255,255,255,0.58);
+  --glass-mini: var(--color-glass-mini);
+  --glass-mini-border: var(--color-glass-mini-border);
 
   /* Hero card gradient (V3) */
   --hero-g1: rgba(172,132,255,0.28);
@@ -88,46 +88,23 @@
   --hero-chip-date-color: var(--text-2);
 
   /* Mini-card gradients (V3) */
-  --love-g1: #F3B5D6;
-  --love-g2: #E69BC6;
-  --work-g1: #B9C7FF;
-  --work-g2: #9FB2F4;
-  --energy-g1: #F9DEB2;
-  --energy-g2: #F0C98F;
+  --love-g1: var(--color-love-g1);
+  --love-g2: var(--color-love-g2);
+  --work-g1: var(--color-work-g1);
+  --work-g2: var(--color-work-g2);
+  --energy-g1: var(--color-energy-g1);
+  --energy-g2: var(--color-energy-g2);
 }
 
 .dark {
-  /* Text */
-  --text-1: rgba(245,245,255,0.92);
-  --text-2: rgba(235,235,245,0.72);
-  --text-3: rgba(235,235,245,0.55);
-  --text-headline: rgba(245,245,255,0.92); /* même que --text-1 dark — lumineux sur fond cosmique */
-
-  /* Background */
-  --bg-top: #181626;
-  --bg-mid: #0F0E18;
-  --bg-bot: #2A2436;
-
-  /* Glass surfaces */
-  --glass: rgba(255,255,255,0.08);
-  --glass-2: rgba(255,255,255,0.06);
-  --glass-border: rgba(255,255,255,0.12);
-
-  /* Accent / CTA */
-  --cta-l: #37226E;
-  --cta-r: #5839B8;
-
-  /* Primary (legacy compatibility) */
-  --primary: #A190ED;
-  --primary-strong: #7355C7;
+  /* Notice: many variables like --text-1 will inherit from :root 
+     which points to var(--color-text-primary) which is already dark 
+     in .dark class in design-tokens.css.
+     We only redefine things that need specific dark mode shadows or complex structures 
+     not yet extracted. */
 
   /* Chips */
   --chip: #4F3F71;
-
-  /* Nav */
-  --nav-glass: rgba(255,255,255,0.08);
-  --nav-border: rgba(255,255,255,0.12);
-  --nav-active-bg: rgba(150, 110, 255, 0.18);
 
   /* Shadows */
   --shadow-hero: 0 18px 40px rgba(0,0,0,0.45);
@@ -136,38 +113,6 @@
   --shadow-cta:  0 10px 18px rgba(60, 20, 120, .18),     /* ombre sous le bouton */ 0 2px 0 rgba(255,255,255,.22) inset,    /* liseré lumineux en haut */ 0 -10px 18px rgba(50, 10, 90, .20) inset; /* assombrissement en bas */
   --shadow-cta-dark: 0 14px 30px rgba(0, 0, 0, 0.35);
 
-  /* Lines/borders */
-  --line: rgba(255,255,255,0.12);
-
-  /* Badge accents (§2.2) */
-  --badge-chat: #E4F2EC;
-  --badge-consultation: #D5946A;
-  --badge-amour: #E779B4;
-  --badge-travail: #A8ACEF;
-  --badge-energie: #E5B270;
-
-  /* Semantic colors */
-  --success: #86CFA2;
-  --error: #ff6b81;
-  --btn-text: #ffffff;
-
-  /* Background level 2 (for inputs, etc.) */
-  --bg-2: rgba(17,25,56,0.75);
-
-  /* Starfield */
-  --star-fill: #ffffff;
-
-  /* Constellation SVG (blanc en dark mode) */
-  --constellation-color: #ffffff;
-
-  /* Glass surfaces spécifiques — Shortcut cards (AC #2) */
-  --glass-shortcut: rgba(255,255,255,0.06);
-  --glass-shortcut-border: rgba(255,255,255,0.10);
-
-  /* Glass surfaces spécifiques — Mini-insight cards (AC #5) */
-  --glass-mini: rgba(255,255,255,0.06);
-  --glass-mini-border: rgba(255,255,255,0.10);
-
   /* Hero card gradient (V3 dark) */
   --hero-g1: rgba(160,120,255,0.22);
   --hero-g2: rgba(90,170,255,0.14);
@@ -175,18 +120,9 @@
   --hero-constellation-filter: drop-shadow(0 10px 22px rgba(170,140,255,0.25)) drop-shadow(0 6px 14px rgba(255,255,255,0.12));
   --hero-cta-panel-bg: rgba(255,255,255,0.06);
   --hero-cta-panel-border: rgba(255,255,255,0.10);
-
-  /* Hero chip sign/date colors (dark) */
+  
   --hero-chip-sign-color: rgba(245,245,255,0.92);
   --hero-chip-date-color: rgba(235,235,245,0.72);
-
-  /* Mini-card gradients (V3 dark) */
-  --love-g1: rgba(231,121,180,0.28);
-  --love-g2: rgba(160,70,130,0.18);
-  --work-g1: rgba(168,172,239,0.26);
-  --work-g2: rgba(90,110,220,0.16);
-  --energy-g1: rgba(229,178,112,0.26);
-  --energy-g2: rgba(170,110,40,0.16);
 }
 
 /* Typography - System font stack (§4.2) */

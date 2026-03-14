@@ -430,3 +430,68 @@ development_status:
   48-1-creer-le-composant-astro-mood-background-parametrable: ready-for-dev
   48-2-integrer-le-fond-astrologique-anime-au-resume-dashboard: ready-for-dev
   48-3-verrouiller-qa-accessibilite-et-performance-du-fond-astrologique: ready-for-dev
+
+  epic-49: in-progress
+  49-1-design-tokens-couleurs-semantiques-et-surfaces: ready-for-dev
+  49-2-design-tokens-typo-espacement-rayons-ombres-animations: ready-for-dev
+  49-3-classes-css-utilitaires-partagees: ready-for-dev
+  49-4-systeme-glassmorphism-mutualise: ready-for-dev
+  49-5-migration-styles-inline-vers-tokens: ready-for-dev
+  epic-49-retrospective: optional
+
+  epic-50: in-progress
+  50-1-composant-button-variants-tailles-etats: ready-for-dev
+  50-2-composant-input-field-types-etats-validation: ready-for-dev
+  50-3-composant-select-searchable-reutilisable: ready-for-dev
+  50-4-composant-form-formfield-wrapper-zod: ready-for-dev
+  50-5-composant-modal-dialog-generique: ready-for-dev
+  50-6-composant-card-variants-slots-composition: ready-for-dev
+  50-7-composants-skeleton-et-emptystate: ready-for-dev
+  50-8-composants-badge-et-iconbadge: ready-for-dev
+  epic-50-retrospective: optional
+
+  epic-51: in-progress
+  51-1-rootlayout-et-authlayout: ready-for-dev
+  51-2-applayout-et-pagelayout: ready-for-dev
+  51-3-twocolumnlayout-et-wizardlayout: ready-for-dev
+  51-4-settingslayout-et-adminlayout: ready-for-dev
+  51-5-migration-pages-vers-layouts-et-validation: ready-for-dev
+  epic-51-retrospective: optional
+
+  epic-52: in-progress
+  52-1-i18n-auth-signinform-signupform: ready-for-dev
+  52-2-i18n-common-textes-transversaux: ready-for-dev
+  52-3-i18n-navigation-labels-nav: ready-for-dev
+  52-4-hook-usetranslation-centralise: ready-for-dev
+  52-5-schemas-zod-externalises-i18n: ready-for-dev
+  52-6-migration-panneaux-b2b-admin-et-audit-final: ready-for-dev
+  epic-52-retrospective: optional
+
+  epic-53: in-progress
+  53-1-variables-css-adaptatives-dark-mode: ready-for-dev
+  53-2-variables-css-contextuelles-astrotheme: ready-for-dev
+  53-3-audit-nettoyage-usetheme-composants-presentation: ready-for-dev
+  epic-53-retrospective: optional
+
+  epic-54: in-progress
+  54-1-configurer-path-aliases-vite-typescript: ready-for-dev
+  54-2-barrel-exports-domaine-et-migration-imports: ready-for-dev
+  epic-54-retrospective: optional
+
+  epic-55: in-progress
+  55-1-separer-composants-dashboard-complexes: ready-for-dev
+  55-2-separer-composants-prediction: ready-for-dev
+  55-3-separer-pages-avec-fetching: ready-for-dev
+  epic-55-retrospective: optional
+
+  epic-56: in-progress
+  56-1-page-et-section-error-boundaries: ready-for-dev
+  56-2-composant-errorstate-unifie: ready-for-dev
+  56-3-deployer-error-boundaries-toutes-pages: ready-for-dev
+  epic-56-retrospective: optional
+
+  epic-57: in-progress
+  57-1-tests-button-field-select: ready-for-dev
+  57-2-tests-form-modal-card: ready-for-dev
+  57-3-tests-skeleton-emptystate-badge: ready-for-dev
+  epic-57-retrospective: optional
