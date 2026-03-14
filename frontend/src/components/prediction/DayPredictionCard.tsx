@@ -11,6 +11,7 @@ import {
 
 import { AstroMoodBackground } from "../astro/AstroMoodBackground";
 import type { ZodiacSign } from "../astro/zodiacPatterns";
+import { useThemeSafe } from "../../state/ThemeProvider";
 
 interface Props {
   prediction: DailyPredictionResponse;
@@ -37,9 +38,12 @@ export const DayPredictionCard: React.FC<Props> = ({ prediction, lang, astroBack
     year: "numeric",
   });
 
+  const themeContext = useThemeSafe();
+  const theme = themeContext?.theme || 'light';
+
   const isAstro = !!astroBackgroundProps;
-  const textColor = isAstro ? "white" : "var(--text-1)";
-  const textMuted = isAstro ? "rgba(255, 255, 255, 0.7)" : "var(--text-2)";
+  const textColor = isAstro && theme === 'dark' ? "white" : "var(--text-1)";
+  const textMuted = isAstro && theme === 'dark' ? "rgba(255, 255, 255, 0.7)" : "var(--text-2)";
 
   const bodyContent = (
     <div className={`day-prediction-card__body ${isAstro ? 'astro-text' : ''}`} style={{ marginTop: '1.5rem' }}>
@@ -53,8 +57,8 @@ export const DayPredictionCard: React.FC<Props> = ({ prediction, lang, astroBack
             marginTop: "0.75rem",
             padding: "0.75rem 1rem",
             borderRadius: "0.75rem",
-            backgroundColor: isAstro ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 184, 77, 0.12)",
-            border: isAstro ? "1px solid rgba(255, 255, 255, 0.3)" : "1px solid rgba(255, 184, 77, 0.35)",
+            backgroundColor: isAstro && theme === 'dark' ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 184, 77, 0.12)",
+            border: isAstro && theme === 'dark' ? "1px solid rgba(255, 255, 255, 0.3)" : "1px solid rgba(255, 184, 77, 0.35)",
             color: textColor,
             fontSize: "0.9rem",
           }}
@@ -68,10 +72,10 @@ export const DayPredictionCard: React.FC<Props> = ({ prediction, lang, astroBack
           marginTop: "1.5rem", 
           padding: "1rem", 
           borderRadius: "0.75rem", 
-          backgroundColor: isAstro ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.05)",
-          border: isAstro ? "1px solid rgba(255, 255, 255, 0.2)" : "1px solid rgba(255, 255, 255, 0.1)"
+          backgroundColor: isAstro && theme === 'dark' ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.05)",
+          border: isAstro && theme === 'dark' ? "1px solid rgba(255, 255, 255, 0.2)" : "1px solid rgba(255, 255, 255, 0.1)"
         }}>
-          <h4 style={{ margin: "0 0 0.5rem 0", fontSize: "0.9rem", color: isAstro ? "rgba(255, 255, 255, 0.85)" : "var(--text-3)", textTransform: "uppercase" }}>
+          <h4 style={{ margin: "0 0 0.5rem 0", fontSize: "0.9rem", color: isAstro && theme === 'dark' ? "rgba(255, 255, 255, 0.85)" : "var(--text-3)", textTransform: "uppercase" }}>
             {getPredictionMessage("best_window", lang)}
           </h4>
           <div style={{ fontSize: "1rem", fontWeight: "500", color: textColor }}>
@@ -90,14 +94,14 @@ export const DayPredictionCard: React.FC<Props> = ({ prediction, lang, astroBack
   const headerContent = (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
       <div>
-        <h2 style={{ margin: 0, fontSize: "1.5rem", color: isAstro ? "white" : "inherit" }}>{formattedDate}</h2>
+        <h2 style={{ margin: 0, fontSize: "1.5rem", color: textColor }}>{formattedDate}</h2>
         <span style={{ 
           display: "inline-block", 
           marginTop: "0.5rem",
           padding: "0.25rem 0.75rem", 
           borderRadius: "1rem", 
-          backgroundColor: isAstro ? "rgba(255,255,255,0.2)" : toneColor, 
-          color: "white",
+          backgroundColor: isAstro && theme === 'dark' ? "rgba(255,255,255,0.3)" : toneColor, 
+          color: isAstro && theme === 'dark' ? "var(--background)" : "white",
           fontSize: "0.875rem",
           fontWeight: "bold",
           backdropFilter: isAstro ? "blur(4px)" : "none",
