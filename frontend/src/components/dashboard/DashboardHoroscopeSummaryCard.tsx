@@ -7,6 +7,7 @@ import { translateSign } from "../../i18n/astrology"
 import { AstroMoodBackground } from "../astro/AstroMoodBackground"
 import { getZodiacIcon } from "../../components/zodiacSignIconMap"
 import type { ZodiacSign } from "../astro/zodiacPatterns"
+import { useThemeSafe } from "../../state/ThemeProvider"
 
 interface Props {
   prediction: DailyPredictionResponse | null
@@ -33,6 +34,8 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
 }) => {
   const navigate = useNavigate()
   const { viewHoroscope, noPrediction, errorPrediction, retry, summaryLoading } = translateDashboardPage(locale)
+  const themeContext = useThemeSafe()
+  const theme = themeContext?.theme || 'light'
 
   const formattedDate = dateKey
     ? new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(dateKey))
@@ -115,12 +118,20 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
       >
         <div className="dashboard-summary-card__content">
           {ZodiacIcon && (
-            <div className="dashboard-summary-card__pill">
+            <div 
+              className="dashboard-summary-card__pill"
+              style={{ color: theme === 'dark' ? 'white' : undefined }}
+            >
               <ZodiacIcon className="dashboard-summary-card__pill-icon" />
               <span>{translateSign(sign, locale)} • {formattedDate}</span>
             </div>
           )}
-          <p className="dashboard-summary-card__text">{summary}</p>
+          <p 
+            className="dashboard-summary-card__text"
+            style={{ color: theme === 'dark' ? 'white' : undefined }}
+          >
+            {summary}
+          </p>
         </div>
         <div className="dashboard-summary-card__link">
           <span>{viewHoroscope}</span>
