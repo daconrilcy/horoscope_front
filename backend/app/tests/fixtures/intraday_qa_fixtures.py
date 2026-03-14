@@ -105,7 +105,7 @@ def get_calm_day() -> dict[str, Any]:
         step_times=make_step_times(n_steps),
         expected_pivot_range=(0, 0),
         expected_window_range=(0, 0),
-        mock_engine=True, # Force calm for QA test reliability
+        mock_engine=True,  # Force calm for QA test reliability
     )
 
 
@@ -124,25 +124,29 @@ def get_flat_day_with_micro_trends() -> dict[str, Any]:
         current_lon=5.3698,
         current_timezone="Europe/Paris",
     )
-    
+
     # Baseline with low mean for love, making 10.0 a strong relative score
     baselines = {
         "love": {
             "mean_raw_score": 5.0,
-            "std_raw_score": 2.0, # Z = (10 - 5) / 2 = 2.5
-            "p10": 2.0, "p50": 5.0, "p90": 8.0
+            "std_raw_score": 2.0,  # Z = (10 - 5) / 2 = 2.5
+            "p10": 2.0,
+            "p50": 5.0,
+            "p90": 8.0,
         },
         "work": {
             "mean_raw_score": 10.0,
-            "std_raw_score": 2.0, # Z = 0
-            "p10": 7.0, "p50": 10.0, "p90": 13.0
-        }
+            "std_raw_score": 2.0,  # Z = 0
+            "p10": 7.0,
+            "p50": 10.0,
+            "p90": 13.0,
+        },
     }
-    
+
     return _build_fixture(
         target_date=date(2026, 3, 12),
         simulated_natal_profile=natal,
-        notes_by_step=make_notes(n_steps, default=10), # raw_score defaults to ~10.0 in mock engine
+        notes_by_step=make_notes(n_steps, default=10),  # raw_score defaults to ~10.0 in mock engine
         events_by_step=[[] for _ in range(n_steps)],
         step_times=make_step_times(n_steps),
         expected_pivot_range=(0, 0),
@@ -167,16 +171,12 @@ def get_flat_day_no_signal() -> dict[str, Any]:
         current_lon=3.0573,
         current_timezone="Europe/Paris",
     )
-    
+
     # Baseline matching the current scores
     baselines = {
-        "love": {
-            "mean_raw_score": 10.0,
-            "std_raw_score": 2.0,
-            "p10": 7.0, "p50": 10.0, "p90": 13.0
-        }
+        "love": {"mean_raw_score": 10.0, "std_raw_score": 2.0, "p10": 7.0, "p50": 10.0, "p90": 13.0}
     }
-    
+
     return _build_fixture(
         target_date=date(2026, 3, 13),
         simulated_natal_profile=natal,
@@ -303,7 +303,7 @@ def get_intense_neutral_day() -> dict[str, Any]:
     events = [[] for _ in range(n_steps)]
     for i in range(10, 90, 10):
         events[i] = [make_event("aspect_minor", 55, i)]
-        
+
     return _build_fixture(
         target_date=date(2026, 3, 25),
         simulated_natal_profile=natal,

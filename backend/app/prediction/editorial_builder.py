@@ -48,28 +48,24 @@ class EditorialOutputBuilder:
         Ensures wording cannot invent relief absent from evidence.
         """
         # 1. Themes
-        sorted_themes = sorted(
-            evidence.themes.values(), 
-            key=lambda t: t.score_20, 
-            reverse=True
-        )
+        sorted_themes = sorted(evidence.themes.values(), key=lambda t: t.score_20, reverse=True)
         top3 = [
             CategorySummary(
                 code=t.code,
                 note_20=round(t.score_20),
                 power=t.intensity / 20.0,
-                volatility=1.0 - t.stability / 20.0
+                volatility=1.0 - t.stability / 20.0,
             )
             for t in sorted_themes[:3]
         ]
-        
+
         remaining = sorted_themes[3:]
         bottom2 = [
             CategorySummary(
                 code=t.code,
                 note_20=round(t.score_20),
                 power=t.intensity / 20.0,
-                volatility=1.0 - t.stability / 20.0
+                volatility=1.0 - t.stability / 20.0,
             )
             for t in sorted(remaining, key=lambda t: t.score_20)[:2]
         ]
@@ -79,10 +75,11 @@ class EditorialOutputBuilder:
         if evidence.turning_points:
             main_tp = max(evidence.turning_points, key=lambda tp: tp.amplitude)
             from types import SimpleNamespace
+
             main_pivot = SimpleNamespace(
                 local_time=main_tp.local_time,
                 severity=main_tp.amplitude / 10.0,
-                summary=f"Bascule ({main_tp.reason})"
+                summary=f"Bascule ({main_tp.reason})",
             )
 
         # 3. Best Window
@@ -95,7 +92,7 @@ class EditorialOutputBuilder:
                 best_window = BestWindow(
                     start_local=bw.start_local,
                     end_local=bw.end_local,
-                    dominant_category=bw.themes[0] if bw.themes else "unknown"
+                    dominant_category=bw.themes[0] if bw.themes else "unknown",
                 )
 
         # 4. Tone
@@ -109,9 +106,9 @@ class EditorialOutputBuilder:
             bottom2_categories=bottom2,
             main_pivot=main_pivot,
             best_window=best_window,
-            caution_flags={}, # Will be derived later if needed
+            caution_flags={},  # Will be derived later if needed
             overall_tone=overall_tone,
-            top3_contributors_per_category={}, # Handled by evidence drivers in interpretation
+            top3_contributors_per_category={},  # Handled by evidence drivers in interpretation
         )
 
     def _resolve_evidence_local_date(self, evidence: V3EvidencePack):

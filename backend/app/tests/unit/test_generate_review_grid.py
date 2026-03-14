@@ -76,8 +76,7 @@ def test_generate_grid_markdown_has_required_columns_and_enrichment(monkeypatch)
         "Top Contributeurs | Commentaire |"
     ) in md
     assert (
-        "| 2024-01-01 | love | 0.5 | 15 | porteur | 1.25 | 0.375 | "
-        "venus_trine, transit\\|mars |  |"
+        "| 2024-01-01 | love | 0.5 | 15 | porteur | 1.25 | 0.375 | venus_trine, transit\\|mars |  |"
     ) in md
 
 

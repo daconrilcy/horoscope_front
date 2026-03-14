@@ -82,7 +82,7 @@ class TemporalSampler:
         tz_name: str = "UTC",
     ) -> list[SamplePoint]:
         """Generate 1-minute samples symmetrically around a Julian Day.
-        
+
         Args:
             ut_jd: The Julian Day center point.
             radius_minutes: How many minutes to sample on each side.

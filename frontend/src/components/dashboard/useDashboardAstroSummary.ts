@@ -16,7 +16,7 @@ export interface DashboardAstroSummary {
 
 export function useDashboardAstroSummary(token: string | null): DashboardAstroSummary {
   const { data: prediction, isLoading: isLoadingPrediction, isError: isPredictionError } = useDailyPrediction(token);
-  const { data: birthData, isLoading: isLoadingBirth } = useBirthData(token);
+  const { data: birthData } = useBirthData(token);
 
   const userId = useMemo(() => getSubjectFromAccessToken(token) || 'anonymous', [token]);
 

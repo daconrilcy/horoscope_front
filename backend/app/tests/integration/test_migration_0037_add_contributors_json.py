@@ -28,10 +28,7 @@ def test_migration_0037_is_idempotent_when_column_already_exists(
     engine = create_engine(database_url, future=True)
     with engine.begin() as connection:
         connection.execute(
-            text(
-                "ALTER TABLE daily_prediction_category_scores "
-                "ADD COLUMN contributors_json TEXT"
-            )
+            text("ALTER TABLE daily_prediction_category_scores ADD COLUMN contributors_json TEXT")
         )
 
     command.upgrade(config, "head")

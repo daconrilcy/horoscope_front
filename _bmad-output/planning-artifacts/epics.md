@@ -2408,3 +2408,60 @@ so that l'epic 47 puisse être implémenté sans régression sur les parcours ex
 - Un gate final documente validations automatiques, validations manuelles et risques résiduels.
 
 [Source: docs/backlog_epics_consultation_complete.md ; _bmad-output/implementation-artifacts/46-6-verrouiller-qa-coherence-bmad-et-non-regression-de-la-refonte.md ; frontend/src/tests/ConsultationsPage.test.tsx]
+
+## Epic 48: Animer le résumé astrologique du dashboard avec un fond astrologique déterministe et maintenable
+
+Faire évoluer la carte résumé de `/dashboard` pour lui donner un fond astrologique animé, doux et premium, déterministe selon le signe, l'utilisateur et la date, tout en restant accessible, performant et facilement modifiable.
+
+**FRs covered:** FR16, NFR3, NFR13, NFR14
+
+### Story 48.1: Créer le composant `AstroMoodBackground` paramétrable et maintenable
+
+As a frontend UI architect,
+I want encapsuler le fond astrologique animé dans un composant React réutilisable et facilement modifiable,
+so that l'équipe puisse ajuster les motifs, palettes et micro-animations sans réécrire la carte résumé dashboard.
+
+**Acceptance Criteria:**
+- Un composant `frontend/src/components/astro/AstroMoodBackground.tsx` expose un contrat de props explicite au minimum `sign`, `userId`, `dateKey`, `dayScore`, `className`, `children`.
+- Le rendu combine un fond stable en CSS et une surcouche Canvas 2D pour les étoiles, halos et constellation.
+- La variation est déterministe pour une journée donnée à partir d'une seed issue de `userId + sign + dateKey`.
+- Les 12 signes astrologiques sont pris en charge via une configuration extraite dans un module dédié plutôt que codés en dur dans la carte dashboard.
+- Un variant `neutral` explicite couvre les cas sans signe exploitable.
+- Le composant gère `prefers-reduced-motion`, nettoie `requestAnimationFrame` et `ResizeObserver`, et borne le `devicePixelRatio`.
+- Des tests verrouillent le contrat du composant et les garde-fous critiques de seed, cleanup et accessibilité décorative.
+
+[Source: docs/interfaces/integration_fond_astrologique_dashboard.md ; frontend/src/components/HeroHoroscopeCard.tsx ; frontend/src/components/HeroHoroscopeCard.css]
+
+### Story 48.2: Intégrer le fond astrologique animé au résumé dashboard
+
+As a product-facing frontend engineer,
+I want brancher le composant `AstroMoodBackground` sur la carte résumé de `/dashboard`,
+so that le résumé du jour gagne une présence premium sans changer le contrat backend ni casser les états existants de la landing.
+
+**Acceptance Criteria:**
+- La carte résumé dashboard utilise le nouveau fond animé lorsque la prédiction du jour est disponible, tout en restant cliquable et activable au clavier vers `/dashboard/horoscope`.
+- Le mapping des paramètres visuels (`sign`, `userId`, `dateKey`, `dayScore`) est centralisé dans un module ou hook dédié et ne duplique pas de logique dans le JSX de page.
+- `sign` vient de `astro_profile.sun_sign_code` via les données de naissance existantes, `dateKey` vient de `prediction.meta.date_local`, `userId` vient du token ou du profil auth, et `dayScore` est dérivé des catégories daily existantes selon une formule normative unique, sans nouveau backend.
+- Les états `loading`, `error` et `empty` du dashboard restent cohérents et ne masquent jamais la section activités.
+- Le résumé dashboard reste affichable sans attendre `birth-data`; un rendu `neutral` est utilisé tant que `sun_sign_code` n'est pas disponible.
+- Le texte résumé reste lisible, la zone gauche reste respirante et aucune nouvelle chaîne inutile n'est hardcodée hors i18n.
+- Les tests dashboard couvrent le nouveau rendu et les fallback visuels quand le signe ou la prédiction ne sont pas disponibles.
+
+[Source: docs/interfaces/integration_fond_astrologique_dashboard.md ; frontend/src/pages/DashboardPage.tsx ; frontend/src/components/dashboard/DashboardHoroscopeSummaryCard.tsx ; frontend/src/api/useDailyPrediction.ts ; frontend/src/api/birthProfile.ts]
+
+### Story 48.3: Verrouiller QA, accessibilité et performance du fond astrologique
+
+As a QA and frontend quality owner,
+I want verrouiller le fond astrologique animé par des tests et garde-fous ciblés,
+so that l'évolution du résumé dashboard n'introduise ni régression de navigation, ni dette d'accessibilité, ni animation coûteuse ou instable.
+
+**Acceptance Criteria:**
+- Les tests couvrent les états `success`, `loading`, `error` et `empty` de `/dashboard` avec le nouveau résumé.
+- Les garde-fous d'accessibilité sont vérifiés explicitement: `canvas` décoratif, `prefers-reduced-motion`, activation clavier de la carte, lisibilité des contenus.
+- Les suites vérifient que l'animation nettoie bien ses ressources au démontage et au remount de type Strict Mode.
+- Les assertions de non-régression confirment que `/dashboard` n'affiche toujours pas le détail daily complet et que `/dashboard/horoscope` reste inchangé.
+- Les contraintes de performance minimales sont documentées et verrouillées dans les tests ou la revue de code ciblée: pas d'état React à chaque frame, DPR plafonné, pas de dépendance graphique supplémentaire.
+- Les contrastes du texte nominal respectent WCAG AA sur le chemin nominal.
+- Les fichiers BMAD de l'epic 48 reflètent explicitement ces garde-fous et les risques résiduels.
+
+[Source: docs/interfaces/integration_fond_astrologique_dashboard.md ; _bmad-output/implementation-artifacts/45-4-verrouiller-qa-accessibilite-et-coherence-i18n-du-parcours-dashboard.md ; frontend/src/tests/DashboardPage.test.tsx ; frontend/src/tests/router.test.tsx]

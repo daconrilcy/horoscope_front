@@ -124,9 +124,9 @@ class DailyPredictionService:
         # 3. Mode force_recompute : cleanup if needed
         if mode == ComputeMode.force_recompute:
             old_run = DailyPredictionRepository(db).get_run(
-                user_id, 
-                resolved_request.resolved_date, 
-                resolved_request.reference_version_id, 
+                user_id,
+                resolved_request.resolved_date,
+                resolved_request.reference_version_id,
                 resolved_request.ruleset_id,
                 engine_mode=settings.daily_engine_mode.value,
             )
@@ -136,7 +136,7 @@ class DailyPredictionService:
 
         # 4. Compute and Save
         try:
-            if reuse_decision.should_compute and reuse_decision.existing_run:  
+            if reuse_decision.should_compute and reuse_decision.existing_run:
                 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 
                 run_model = db.get(
@@ -157,9 +157,7 @@ class DailyPredictionService:
                 logger.warning("prediction.enrich_failed error=%s", str(e))
 
             result = ServiceResult(
-                run=enriched_run,
-                bundle=result.bundle,
-                was_reused=result.was_reused
+                run=enriched_run, bundle=result.bundle, was_reused=result.was_reused
             )
 
             self._log_and_metrics(
@@ -184,9 +182,7 @@ class DailyPredictionService:
                         logger.warning("prediction.enrich_failed error=%s", str(enrich_error))
 
                     result = ServiceResult(
-                        run=enriched_run,
-                        bundle=result.bundle,
-                        was_reused=result.was_reused
+                        run=enriched_run, bundle=result.bundle, was_reused=result.was_reused
                     )
 
                     self._log_and_metrics(
@@ -252,14 +248,12 @@ class DailyPredictionService:
     ) -> ServiceResult:
         if request.engine_input is None:
             raise ValueError("engine_input is required for execution")
-        
+
         # AC2 - Pass engine mode from settings
         compute_result = self.compute_runner.run_with_timeout(
-            db, 
-            request.engine_input,
-            engine_mode=settings.daily_engine_mode
+            db, request.engine_input, engine_mode=settings.daily_engine_mode
         )
-        
+
         save_result = self.persistence_service.save(
             bundle=compute_result.bundle,
             user_id=request.user_id,
@@ -314,7 +308,7 @@ class DailyPredictionService:
 
         has_pivots = False
         overall_tone = None
-        
+
         # Use typed snapshot fields (AC1)
         if result.bundle:
             has_pivots = len(result.bundle.core.turning_points) > 0

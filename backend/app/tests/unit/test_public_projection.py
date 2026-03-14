@@ -235,24 +235,30 @@ def test_assembler_summary_uses_provisional_flag(cat_map, sample_snapshot):
 
 def test_category_policy_ignores_internal_relative_scores(cat_map):
     from app.prediction.persisted_relative_score import PersistedRelativeScore
-    
+
     snapshot = PersistedPredictionSnapshot(
-        run_id=1, user_id=1, local_date=date(2026, 3, 10), timezone="UTC",
-        computed_at=datetime.now(), input_hash="h", reference_version_id=1,
-        ruleset_id=1, house_system_effective="placidus",
-        is_provisional_calibration=False, calibration_label="v1",
-        overall_summary="s", overall_tone="neutral",
+        run_id=1,
+        user_id=1,
+        local_date=date(2026, 3, 10),
+        timezone="UTC",
+        computed_at=datetime.now(),
+        input_hash="h",
+        reference_version_id=1,
+        ruleset_id=1,
+        house_system_effective="placidus",
+        is_provisional_calibration=False,
+        calibration_label="v1",
+        overall_summary="s",
+        overall_tone="neutral",
         category_scores=[
             PersistedCategoryScore(1, "love", 15, 10.0, 1.0, 1.0, 1, False, None),
         ],
-        relative_scores={
-            "love": PersistedRelativeScore("love", 2.5, 0.95, 1, True)
-        }
+        relative_scores={"love": PersistedRelativeScore("love", 2.5, 0.95, 1, True)},
     )
-    
+
     policy = PublicCategoryPolicy()
     categories = policy.build(snapshot, cat_map)
-    
+
     assert len(categories) == 1
     assert categories[0]["code"] == "love"
     assert "relative" not in categories[0]

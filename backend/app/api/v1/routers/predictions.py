@@ -96,7 +96,7 @@ class DailyPredictionSummary(BaseModel):
     best_window: dict[str, Any] | None
     main_turning_point: dict[str, Any] | None
     low_score_variance: bool = False
-    
+
     # Story 41.14: Relative nuance fields
     flat_day: bool = False
     relative_top_categories: list[str] | None = None
@@ -118,7 +118,7 @@ class DailyPredictionResponse(BaseModel):
     timeline: list[DailyPredictionTimeBlock]
     turning_points: list[DailyPredictionTurningPoint]
     decision_windows: list[DailyPredictionDecisionWindow] | None = None
-    
+
     # Story 41.14: Micro trends for flat days
     micro_trends: list[DailyPredictionMicroTrend] | None = None
 
@@ -190,8 +190,7 @@ def _raise_daily_prediction_service_error(
             detail={
                 "code": error.code,
                 "message": (
-                    "Service temporairement indisponible. "
-                    "Veuillez réessayer dans quelques minutes."
+                    "Service temporairement indisponible. Veuillez réessayer dans quelques minutes."
                 ),
             },
         )

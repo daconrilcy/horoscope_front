@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class RegimeSegmenter:
     """
     Segments a day into coherent regimes based on V3 signals (Story 42.9).
-    
+
     Instead of a fixed grid, it identifies turning points and stability shifts
     in the continuous signal to produce 4 to 8 readable blocks.
     """
@@ -29,7 +29,8 @@ class RegimeSegmenter:
         # 1. Get a unified signal (average of all composite signals)
         # We focus on themes that are active (non-constant baseline)
         active_signals = [
-            s.timeline for s in theme_signals.values()
+            s.timeline
+            for s in theme_signals.values()
             if any(abs(layer.composite - layer.baseline) > 0.01 for layer in s.timeline.values())
         ]
         if not active_signals:
@@ -52,7 +53,7 @@ class RegimeSegmenter:
 
         # 3. Detect change points
         change_indices = self._detect_change_points(smoothed, sorted_times)
-        
+
         # 4. Merge until we have a reasonable amount of segments
         merged_indices = self._merge_segments(change_indices, smoothed, sorted_times, quiet_day)
 
@@ -111,7 +112,7 @@ class RegimeSegmenter:
                 derivatives[i] < 0 and derivatives[i - 1] > 0
             ):
                 indices.append(i)
-        
+
         # Threshold crossing (Zero-crossing of net signal relative to baseline 1.0)
         for i in range(1, len(smoothed)):
             if (smoothed[i] > 1.0 and smoothed[i - 1] <= 1.0) or (
@@ -122,7 +123,7 @@ class RegimeSegmenter:
 
         if len(smoothed) - 1 not in indices:
             indices.append(len(smoothed) - 1)
-        
+
         return sorted(list(set(indices)))
 
     def _merge_segments(
@@ -151,17 +152,17 @@ class RegimeSegmenter:
             min_diff = float("inf")
             for j in range(1, len(current) - 1):
                 # Slopes
-                slope_prev = (
-                    smoothed[current[j]] - smoothed[current[j - 1]]
-                ) / max(1, current[j] - current[j - 1])
-                slope_next = (
-                    smoothed[current[j + 1]] - smoothed[current[j]]
-                ) / max(1, current[j + 1] - current[j])
+                slope_prev = (smoothed[current[j]] - smoothed[current[j - 1]]) / max(
+                    1, current[j] - current[j - 1]
+                )
+                slope_next = (smoothed[current[j + 1]] - smoothed[current[j]]) / max(
+                    1, current[j + 1] - current[j]
+                )
                 diff = abs(slope_next - slope_prev)
                 if diff < min_diff:
                     min_diff = diff
                     best_to_remove = j
-            
+
             if best_to_remove != -1:
                 current.pop(best_to_remove)
             else:
@@ -215,7 +216,7 @@ class RegimeSegmenter:
             # Check for volatility within the block using the RAW signal
             if len(raw) > 2:
                 std = statistics.stdev(raw)
-                if std > 0.3: # Volatility is higher in raw signal
+                if std > 0.3:  # Volatility is higher in raw signal
                     return "volatile"
             return "stable"
 

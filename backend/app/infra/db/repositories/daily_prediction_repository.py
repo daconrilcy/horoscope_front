@@ -213,9 +213,7 @@ class DailyPredictionRepository:
         ]
         if engine_mode is not None:
             predicates.append(DailyPredictionRunModel.engine_mode == engine_mode)
-        return self.db.scalar(
-            select(DailyPredictionRunModel).where(*predicates)
-        )
+        return self.db.scalar(select(DailyPredictionRunModel).where(*predicates))
 
     def get_snapshot(
         self, run: DailyPredictionRunModel | None

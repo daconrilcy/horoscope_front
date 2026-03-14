@@ -57,8 +57,9 @@ class RelativeScoringCalculator:
                     if ranked_code == code:
                         rank = i + 1
                         break
-            
+
             from dataclasses import replace
+
             ranked_results[code] = replace(score, relative_rank=rank)
 
         return ranked_results
@@ -72,21 +73,21 @@ class RelativeScoringCalculator:
         day_baseline = baselines.get("day")
         slot_baseline = baselines.get("slot")
         season_baseline = baselines.get("season")
-        
+
         # 1. Day metrics (z_abs, pct_abs)
         z_abs, pct_abs, fallback_day = self._calculate_stats(raw_score, day_baseline)
-        
+
         # 2. Slot metrics (z_slot, pct_rel)
         z_slot, pct_rel, _ = self._calculate_stats(raw_score, slot_baseline)
-        
+
         # 3. Season metrics (z_season, pct_season)
         z_season, pct_season, _ = self._calculate_stats(raw_score, season_baseline)
-        
+
         # 4. Rarity derivation (AC1)
         # Fallback to percentile if z is missing
         rarity: float | None = None
         if z_abs is not None:
-            # 0.0 to 1.0 index of how unusual this is. 
+            # 0.0 to 1.0 index of how unusual this is.
             # 2.0 sigma -> ~0.74, 3.0 sigma -> ~0.86
             rarity = 1.0 - math.exp(-abs(z_abs) / 1.5)
         elif pct_abs is not None:
@@ -95,7 +96,7 @@ class RelativeScoringCalculator:
 
         return PersistedRelativeScore(
             category_code=category_code,
-            relative_z_score=z_abs,  
+            relative_z_score=z_abs,
             relative_percentile=pct_abs,
             relative_rank=None,
             z_abs=z_abs,

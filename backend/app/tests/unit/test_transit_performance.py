@@ -17,8 +17,16 @@ from app.prediction.transit_signal_builder import TransitSignalBuilder
 def test_v3_layers_performance_benchmark():
     # 96 steps
     planets_list = [
-        "Sun", "Moon", "Mercury", "Venus", "Mars", 
-        "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"
+        "Sun",
+        "Moon",
+        "Mercury",
+        "Venus",
+        "Mars",
+        "Jupiter",
+        "Saturn",
+        "Uranus",
+        "Neptune",
+        "Pluto",
     ]
     targets_list = planets_list + ["Asc", "MC"]
 
@@ -54,18 +62,23 @@ def test_v3_layers_performance_benchmark():
         planet_positions={p: 10.0 * i for i, p in enumerate(targets_list)},
         planet_houses={p: (i % 12) + 1 for i, p in enumerate(targets_list)},
         house_sign_rulers={},
-        natal_aspects=[]
+        natal_aspects=[],
     )
 
     steps = []
     base_time = datetime(2026, 3, 11, 0, 0, tzinfo=UTC)
     for i in range(96):
-        steps.append(StepAstroState(
-            ut_jd=0.0,
-            local_time=base_time + timedelta(minutes=15 * i),
-            ascendant_deg=1.0 * i, mc_deg=0.0, house_cusps=[], house_system_effective="",
-            planets={p: PlanetState(p, 1.0 * i, 1.0, False, 0, 1) for p in planets_list}
-        ))
+        steps.append(
+            StepAstroState(
+                ut_jd=0.0,
+                local_time=base_time + timedelta(minutes=15 * i),
+                ascendant_deg=1.0 * i,
+                mc_deg=0.0,
+                house_cusps=[],
+                house_system_effective="",
+                planets={p: PlanetState(p, 1.0 * i, 1.0, False, 0, 1) for p in planets_list},
+            )
+        )
 
     # Benchmark T(c,t)
     t_builder = TransitSignalBuilder()
@@ -87,10 +100,7 @@ def test_v3_layers_performance_benchmark():
     for tc in [f"cat_{i}" for i in range(10)]:
         theme_signals[tc] = V3ThemeSignal(
             theme_code=tc,
-            timeline={
-                s.local_time: V3SignalLayer(1.0, 0.0, 0.0, 0.0, 1.0)
-                for s in steps
-            }
+            timeline={s.local_time: V3SignalLayer(1.0, 0.0, 0.0, 0.0, 1.0) for s in steps},
         )
 
     start_agg = time.perf_counter()
@@ -115,4 +125,3 @@ def test_v3_layers_performance_benchmark():
         == IntradayActivationBuilder.TARGET_BUDGET_MS
     )
     assert activation_result.diagnostics["performance"]["sample_count"] == 96
-

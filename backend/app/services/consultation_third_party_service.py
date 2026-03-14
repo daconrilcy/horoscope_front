@@ -17,7 +17,7 @@ class ConsultationThirdPartyService:
     def list_third_parties(db: Session, user_id: int) -> list[ConsultationThirdPartyProfile]:
         repo = ConsultationThirdPartyRepository(db)
         models = repo.list_for_user(user_id)
-        
+
         results = []
         for m in models:
             usages = repo.list_usages(m.id)
@@ -54,7 +54,7 @@ class ConsultationThirdPartyService:
         db: Session, user_id: int, payload: ConsultationThirdPartyProfileCreate
     ) -> ConsultationThirdPartyProfile:
         repo = ConsultationThirdPartyRepository(db)
-        
+
         birth_timezone = payload.birth_timezone or "UTC"
 
         model = repo.create_profile(
@@ -71,8 +71,8 @@ class ConsultationThirdPartyService:
             birth_lon=payload.birth_lon,
             birth_place_resolved_id=payload.place_resolved_id,
         )
-        db.commit() # Ensure it's committed in tests too if not using shared session
-        
+        db.commit()  # Ensure it's committed in tests too if not using shared session
+
         return ConsultationThirdPartyProfile(
             external_id=model.external_id,
             nickname=model.nickname,

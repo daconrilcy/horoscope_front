@@ -75,7 +75,7 @@ class PredictionPersistenceService:
         editorial_text = self._get_editorial_text(bundle, editorial)
         input_hash = core.effective_context.input_hash
         engine_mode = str(core.run_metadata.get("engine_mode", "v2"))
-        
+
         if v3_core:
             engine_version = v3_core.engine_version
             snapshot_version = v3_core.snapshot_version
@@ -140,7 +140,7 @@ class PredictionPersistenceService:
 
         # AC6 - Single transaction (flush)
         db.flush()
-        
+
         # Reload full run to get typed snapshot
         snapshot = repo.get_full_run(run_model.id)
         if snapshot is None:
@@ -188,9 +188,7 @@ class PredictionPersistenceService:
 
             editorial_summary = None
             if editorial_text is not None:
-                editorial_summary = editorial_text.category_summaries.get(
-                    category.code
-                )
+                editorial_summary = editorial_text.category_summaries.get(category.code)
 
             v3_metrics = None
             if v3_core and category.code in v3_core.daily_metrics:
@@ -207,7 +205,9 @@ class PredictionPersistenceService:
                 score_20=v3_metrics.score_20 if v3_metrics else score_data.get("score_20"),
                 intensity_20=score_data.get("intensity_20"),
                 confidence_20=score_data.get("confidence_20"),
-                rarity_percentile=v3_metrics.rarity_percentile if v3_metrics else score_data.get("rarity_percentile"),
+                rarity_percentile=v3_metrics.rarity_percentile
+                if v3_metrics
+                else score_data.get("rarity_percentile"),
                 level_day=v3_metrics.level_day if v3_metrics else None,
                 dominance_day=v3_metrics.dominance_day if v3_metrics else None,
                 stability_day=v3_metrics.stability_day if v3_metrics else None,

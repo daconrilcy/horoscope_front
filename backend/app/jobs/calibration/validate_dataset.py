@@ -23,9 +23,7 @@ def validate() -> bool:
     for profile in CALIBRATION_PROFILES:
         missing = REQUIRED_KEYS - profile.keys()
         if missing:
-            errors.append(
-                f"Profil {profile.get('label', '?')}: clés manquantes {sorted(missing)}"
-            )
+            errors.append(f"Profil {profile.get('label', '?')}: clés manquantes {sorted(missing)}")
 
     timezones = {
         profile["timezone"]

@@ -111,7 +111,7 @@ def generate() -> int:
                 editorial_output = result.bundle.editorial
                 metadata = core_output.run_metadata
                 case_data = {
-                    "case_id": f"QA-{i+1:02d}",
+                    "case_id": f"QA-{i + 1:02d}",
                     "profile": profile["label"],
                     "date": qa_date.isoformat(),
                     "overall_tone": (
@@ -130,9 +130,7 @@ def generate() -> int:
                 with open(output_file, "w", encoding="utf-8") as f:
                     json.dump(case_data, f, indent=2, ensure_ascii=False, default=str)
 
-                scores_summary = {
-                    k: v["note_20"] for k, v in case_data["category_scores"].items()
-                }
+                scores_summary = {k: v["note_20"] for k, v in case_data["category_scores"].items()}
                 logger.info(f"  Result: Tone={case_data['overall_tone']}, Scores={scores_summary}")
                 generated_count += 1
             else:

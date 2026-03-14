@@ -7,8 +7,8 @@ from app.prediction.schemas import DecisionWindow
 
 if TYPE_CHECKING:
     from app.prediction.block_generator import TimeBlock
-    from app.prediction.turning_point_detector import TurningPoint
     from app.prediction.schemas import V3TimeBlock, V3TurningPoint
+    from app.prediction.turning_point_detector import TurningPoint
 
 
 class DecisionWindowBuilder:
@@ -24,7 +24,7 @@ class DecisionWindowBuilder:
 
     MAX_PIVOT_WINDOW_DURATION = timedelta(minutes=90)
     PIVOT_SCORE = 12.0
-    
+
     # V3 Thresholds for Actionability (AC3, AC4)
     MIN_V3_WINDOW_INTENSITY = 4.0
     MIN_V3_WINDOW_CONFIDENCE = 0.4
@@ -79,10 +79,9 @@ class DecisionWindowBuilder:
         for block in v3_blocks:
             # 1. Actionability Filter (AC3, AC4)
             # Sobriety on weak days: ignore low intensity or low confidence blocks
-            if (block.intensity < self.MIN_V3_WINDOW_INTENSITY 
-                and block.orientation == "stable"):
+            if block.intensity < self.MIN_V3_WINDOW_INTENSITY and block.orientation == "stable":
                 continue
-            
+
             if block.confidence < self.MIN_V3_WINDOW_CONFIDENCE:
                 continue
 
@@ -92,14 +91,14 @@ class DecisionWindowBuilder:
                 None,
             )
             has_pivot = pivot_time is not None
-            
+
             window_type = self._classify_v3(block, has_pivot)
             if window_type == "neutral":
                 continue
 
             # 3. Calculate Score (Backward compatibility or V3 metrics)
             score = self._block_score_v3(block, category_scores, window_type)
-            
+
             # 4. Bounds and Dominant Themes
             start_local, end_local = self._window_bounds_v3(block, window_type, pivot_time)
             dominant = list(block.dominant_themes[:2])
@@ -138,7 +137,7 @@ class DecisionWindowBuilder:
             return "pivot"
         # High intensity stable can be interesting
         if block.orientation == "stable" and block.intensity > 10.0:
-            return "favorable" # Assume high intensity stable is notable
+            return "favorable"  # Assume high intensity stable is notable
         return "neutral"
 
     def _window_bounds(
@@ -187,7 +186,7 @@ class DecisionWindowBuilder:
     ) -> float:
         if window_type == "pivot":
             return self.PIVOT_SCORE
-        
+
         # In V3, intensity is already on 0-20 scale
         # But we might want to blend with category notes for backward compat in UI
         notes: list[float] = []
@@ -200,7 +199,7 @@ class DecisionWindowBuilder:
                     # V3DailyMetrics uses score_20, legacy uses note_20
                     note = getattr(s, "score_20", getattr(s, "note_20", 0))
                 notes.append(float(note))
-        
+
         avg_note = sum(notes) / len(notes) if notes else 10.0
         # Blend: 70% V3 intensity, 30% day-level note
         return (block.intensity * 0.7) + (avg_note * 0.3)

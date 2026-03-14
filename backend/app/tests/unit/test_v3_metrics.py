@@ -11,8 +11,7 @@ def _build_signal(
     layers: list[V3SignalLayer],
 ) -> V3ThemeSignal:
     timeline = {
-        datetime(2026, 3, 11, index, 0, tzinfo=UTC): layer
-        for index, layer in enumerate(layers)
+        datetime(2026, 3, 11, index, 0, tzinfo=UTC): layer for index, layer in enumerate(layers)
     }
     return V3ThemeSignal(theme_code=theme_code, timeline=timeline)
 

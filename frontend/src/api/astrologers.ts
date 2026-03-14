@@ -94,6 +94,45 @@ export class AstrologersApiError extends Error {
 }
 
 const USE_MOCK_FALLBACK = import.meta.env.DEV
+const ASTROLOGERS_LOCAL_CACHE_KEY = "astrologers_last_successful_list"
+
+function loadCachedAstrologers(): Astrologer[] {
+  if (typeof window === "undefined") {
+    return []
+  }
+  try {
+    const raw = window.localStorage.getItem(ASTROLOGERS_LOCAL_CACHE_KEY)
+    if (!raw) {
+      return []
+    }
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) {
+      return []
+    }
+    return parsed.filter(
+      (item): item is Astrologer =>
+        typeof item === "object" &&
+        item !== null &&
+        typeof (item as Astrologer).id === "string" &&
+        typeof (item as Astrologer).name === "string" &&
+        Array.isArray((item as Astrologer).specialties) &&
+        typeof (item as Astrologer).style === "string" &&
+        typeof (item as Astrologer).bio_short === "string"
+    )
+  } catch {
+    return []
+  }
+}
+
+function storeCachedAstrologers(astrologers: Astrologer[]): void {
+  if (typeof window === "undefined" || astrologers.length === 0) {
+    return
+  }
+  window.localStorage.setItem(
+    ASTROLOGERS_LOCAL_CACHE_KEY,
+    JSON.stringify(astrologers)
+  )
+}
 
 async function getAstrologers(): Promise<Astrologer[]> {
   try {
@@ -123,13 +162,36 @@ async function getAstrologers(): Promise<Astrologer[]> {
     }
 
     const payload = (await response.json()) as { data: Astrologer[] }
-    return payload.data
+    const astrologers = Array.isArray(payload.data) ? payload.data : []
+    if (astrologers.length > 0) {
+      storeCachedAstrologers(astrologers)
+      return astrologers
+    }
+
+    const cachedAstrologers = loadCachedAstrologers()
+    if (cachedAstrologers.length > 0) {
+      return cachedAstrologers
+    }
+
+    if (USE_MOCK_FALLBACK) {
+      return MOCK_ASTROLOGERS
+    }
+
+    return []
   } catch (error) {
     if (error instanceof AstrologersApiError) {
+      const cachedAstrologers = loadCachedAstrologers()
+      if (cachedAstrologers.length > 0) {
+        return cachedAstrologers
+      }
       throw error
     }
     if (error instanceof TypeError && USE_MOCK_FALLBACK) {
       return MOCK_ASTROLOGERS
+    }
+    const cachedAstrologers = loadCachedAstrologers()
+    if (cachedAstrologers.length > 0) {
+      return cachedAstrologers
     }
     throw error
   }

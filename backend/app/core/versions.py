@@ -15,9 +15,11 @@ ACTIVE_RULESET_VERSION: str = "2.0.0"
 # Legacy ruleset version for deprecation monitoring
 LEGACY_RULESET_VERSION: str = "1.0.0"
 
+
 def validate_version_format(version: str) -> bool:
     """Validate that version follows X.Y.Z format."""
     return bool(re.match(r"^\d+\.\d+\.\d+$", version))
+
 
 if not validate_version_format(ACTIVE_REFERENCE_VERSION):
     raise ValueError(f"Invalid ACTIVE_REFERENCE_VERSION format: {ACTIVE_REFERENCE_VERSION}")
@@ -28,8 +30,10 @@ if not validate_version_format(ACTIVE_RULESET_VERSION):
 if not validate_version_format(LEGACY_RULESET_VERSION):
     raise ValueError(f"Invalid LEGACY_RULESET_VERSION format: {LEGACY_RULESET_VERSION}")
 
+
 def get_active_reference_version() -> str:
     return ACTIVE_REFERENCE_VERSION
+
 
 def get_active_ruleset_version() -> str:
     return ACTIVE_RULESET_VERSION

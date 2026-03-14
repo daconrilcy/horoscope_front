@@ -2680,12 +2680,38 @@ textarea:focus-visible {
 }
 
 /* === DashboardHoroscopeSummaryCard === */
+.dashboard-summary-card-wrapper {
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  position: relative;
+}
+
+.dashboard-summary-card-wrapper:hover, .dashboard-summary-card-wrapper:focus {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+  border-color: var(--primary);
+  outline: none;
+}
+
+.dashboard-summary-card-bg .astro-mood-background__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  min-height: 140px;
+  justify-content: space-between;
+}
+
 .dashboard-summary-card {
   margin-bottom: 1.5rem;
   padding: 1.25rem;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid rgba(var(--primary-rgb), 0.2);
+  border: 1px solid var(--line);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;

@@ -16,6 +16,7 @@ from app.prediction.temporal_kernel import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_samples(n: int, step_jd: float = 1 / 96) -> list[SamplePoint]:
     """Créé n SamplePoints espacés de step_jd (≈ 15 min par défaut)."""
     base_jd = 2460000.0
@@ -50,17 +51,21 @@ def _make_event(event_type: str, step_index: int, samples: list[SamplePoint]) ->
 # AC1 — Les poids sont normalisés (somme = 1.0)
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("event_type", [
-    "aspect_exact_to_angle",
-    "aspect_exact_to_luminary",
-    "aspect_exact_to_personal",
-    "aspect_enter_orb",
-    "aspect_exit_orb",
-    "moon_sign_ingress",
-    "asc_sign_change",
-    "planetary_hour_change",
-    "unknown_future_event",
-])
+
+@pytest.mark.parametrize(
+    "event_type",
+    [
+        "aspect_exact_to_angle",
+        "aspect_exact_to_luminary",
+        "aspect_exact_to_personal",
+        "aspect_enter_orb",
+        "aspect_exit_orb",
+        "moon_sign_ingress",
+        "asc_sign_change",
+        "planetary_hour_change",
+        "unknown_future_event",
+    ],
+)
 def test_weights_sum_to_one(event_type: str) -> None:
     """Les poids normalisés doivent sommer à 1.0 (conservation d'énergie)."""
     samples = _make_samples(96)
@@ -73,6 +78,7 @@ def test_weights_sum_to_one(event_type: str) -> None:
 # ---------------------------------------------------------------------------
 # AC2 — La fenêtre dépend du type d'événement
 # ---------------------------------------------------------------------------
+
 
 def test_exact_aspect_to_angle_wider_than_planetary_hour() -> None:
     """aspect_exact_to_angle doit couvrir plus de steps que planetary_hour_change."""
@@ -102,6 +108,7 @@ def test_half_width_governs_coverage() -> None:
 # AC3 — Profil montée / plateau / retombée
 # ---------------------------------------------------------------------------
 
+
 def test_center_step_has_highest_weight() -> None:
     """Le step central (peak) doit avoir le poids maximum."""
     samples = _make_samples(96)
@@ -129,7 +136,7 @@ def test_weights_decrease_from_center() -> None:
     center_pos = next(pos for pos, (idx, _) in enumerate(sorted_result) if idx == 48)
 
     # Côté gauche : décroissant vers la gauche
-    left_weights = weights[:center_pos + 1]
+    left_weights = weights[: center_pos + 1]
     for i in range(len(left_weights) - 1):
         assert left_weights[i] <= left_weights[i + 1], (
             f"Poids gauche non croissant vers le centre: {left_weights}"
@@ -146,6 +153,7 @@ def test_weights_decrease_from_center() -> None:
 # ---------------------------------------------------------------------------
 # AC4 — Traçabilité : un seul step reçoit l'événement (centre)
 # ---------------------------------------------------------------------------
+
 
 def test_center_index_is_nearest_step() -> None:
     """Le step de poids maximum correspond au step le plus proche de l'événement."""
@@ -172,6 +180,7 @@ def test_center_index_is_nearest_step() -> None:
 # ---------------------------------------------------------------------------
 # AC5 — Cas limites : bords du jour
 # ---------------------------------------------------------------------------
+
 
 def test_spread_clipped_at_start() -> None:
     """Un événement en début de journée ne produit pas d'index négatif."""
@@ -228,6 +237,7 @@ def test_single_sample_returns_full_weight() -> None:
 # Conservation d'énergie : somme totale journalière inchangée
 # ---------------------------------------------------------------------------
 
+
 def test_energy_conservation_multi_event() -> None:
     """La somme des contributions étalées = somme des contributions brutes."""
     samples = _make_samples(96)
@@ -259,6 +269,7 @@ def test_energy_conservation_multi_event() -> None:
 # ---------------------------------------------------------------------------
 # Default fallback pour event_type inconnu
 # ---------------------------------------------------------------------------
+
 
 def test_unknown_event_type_uses_default_half_width() -> None:
     """Un type inconnu utilise _DEFAULT_HALF_WIDTH."""

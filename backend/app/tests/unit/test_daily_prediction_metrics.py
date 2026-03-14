@@ -15,16 +15,18 @@ def mock_deps():
     return {
         "context_loader": MagicMock(),
         "persistence_service": MagicMock(),
-        "orchestrator": MagicMock()
+        "orchestrator": MagicMock(),
     }
+
 
 @pytest.fixture
 def service(mock_deps):
     return DailyPredictionService(
         mock_deps["context_loader"],
         mock_deps["persistence_service"],
-        orchestrator=mock_deps["orchestrator"]
+        orchestrator=mock_deps["orchestrator"],
     )
+
 
 def _make_bundle(*, overall_tone: str | None = None, turning_points: list | None = None):
     bundle = MagicMock()
@@ -55,9 +57,10 @@ def test_compute_counter_incremented(mock_increment, service, mock_deps, db_sess
     mock_deps["persistence_service"].save.return_value = MagicMock(run=MagicMock())
 
     service.get_or_compute(user_id=1, db=db_session)
-    
+
     # Verify increment_counter("prediction.compute") called
     mock_increment.assert_any_call("prediction.compute")
+
 
 @patch("app.services.daily_prediction_service.increment_counter")
 def test_reused_counter_incremented(mock_increment, service, db_session):
@@ -79,6 +82,7 @@ def test_reused_counter_incremented(mock_increment, service, db_session):
     mock_increment.assert_any_call("prediction.compute")
     mock_increment.assert_any_call("prediction.reused")
 
+
 def test_log_includes_tone_and_pivot_count(caplog, service, mock_deps, db_session):
     resolved_request = SimpleNamespace(
         user_id=1,
@@ -99,7 +103,7 @@ def test_log_includes_tone_and_pivot_count(caplog, service, mock_deps, db_sessio
 
     with caplog.at_level(logging.INFO):
         service.get_or_compute(user_id=1, db=db_session)
-    
+
     record = next(r for r in caplog.records if "prediction.run" in r.message)
     assert record.user_id == 1
     assert "duration_ms" in record.__dict__

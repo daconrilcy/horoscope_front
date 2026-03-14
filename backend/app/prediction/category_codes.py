@@ -11,13 +11,15 @@ _FRENCH_TO_CANONICAL = {
     "mental": "mood",
 }
 
+
 def normalize_category_code(code: str) -> str:
     """Normalizes a category code to its canonical English version."""
     if not code:
         return "general"
-    
+
     lowered = code.lower().strip()
     return _FRENCH_TO_CANONICAL.get(lowered, lowered)
+
 
 def normalize_category_codes(codes: Iterable[str]) -> list[str]:
     """Normalizes a list of category codes."""

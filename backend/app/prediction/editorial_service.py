@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class PredictionEditorialService:
     """
-    Service responsible for transforming raw engine output into human-readable 
+    Service responsible for transforming raw engine output into human-readable
     editorial content.
     """
 

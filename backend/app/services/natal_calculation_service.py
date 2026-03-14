@@ -409,6 +409,7 @@ class NatalCalculationService:
 
         # Story 24-1: aspect school and versioned rules identifier.
         from app.core.config import AspectSchoolType
+
         resolved_ruleset_version = str(reference_data.get("version") or settings.ruleset_version)
 
         aspect_school_str = (aspect_school or "").strip().lower()

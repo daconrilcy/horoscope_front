@@ -12,6 +12,7 @@ from app.infra.db.base import Base
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
+
 def generate_uuid() -> str:
     return str(uuid4())
 
@@ -20,9 +21,11 @@ class ConsultationThirdPartyProfileModel(Base):
     __tablename__ = "consultation_third_party_profiles"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    external_id: Mapped[str] = mapped_column(String(36), unique=True, index=True, default=generate_uuid)
+    external_id: Mapped[str] = mapped_column(
+        String(36), unique=True, index=True, default=generate_uuid
+    )
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
-    
+
     nickname: Mapped[str] = mapped_column(String(100))
     birth_date: Mapped[date] = mapped_column(Date)
     birth_time: Mapped[str | None] = mapped_column(String(8), nullable=True)
@@ -38,7 +41,7 @@ class ConsultationThirdPartyProfileModel(Base):
         nullable=True,
         index=True,
     )
-    
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -51,9 +54,13 @@ class ConsultationThirdPartyUsageModel(Base):
     __tablename__ = "consultation_third_party_usages"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    third_party_profile_id: Mapped[int] = mapped_column(ForeignKey("consultation_third_party_profiles.id"), index=True)
-    consultation_id: Mapped[str] = mapped_column(String(100), index=True) # External ID from consultation generate
+    third_party_profile_id: Mapped[int] = mapped_column(
+        ForeignKey("consultation_third_party_profiles.id"), index=True
+    )
+    consultation_id: Mapped[str] = mapped_column(
+        String(100), index=True
+    )  # External ID from consultation generate
     consultation_type: Mapped[str] = mapped_column(String(50))
     context_summary: Mapped[str] = mapped_column(Text)
-    
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

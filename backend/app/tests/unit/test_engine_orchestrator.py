@@ -709,9 +709,7 @@ def test_build_natal_chart_uses_contextual_aspect_profiles(base_input):
         loaded_context,
     )
 
-    square = next(
-        aspect for aspect in natal_chart.natal_aspects if aspect.aspect == "square"
-    )
+    square = next(aspect for aspect in natal_chart.natal_aspects if aspect.aspect == "square")
     assert square.base_weight == pytest.approx(1.8)
     assert square.metadata["default_valence"] == "negative"
     assert square.metadata["orb_max"] == pytest.approx(2.5)
@@ -1087,9 +1085,7 @@ def test_run_v3_exposes_intraday_activation_diagnostics_and_secondary_runtime(ba
         layer.aspect for layer in bundle.v3_core.theme_signals["work"].timeline.values()
     ]
     assert max(aspect_values) > 0.0
-    assert (
-        bundle.v3_core.run_metadata["v3_intraday_activation"]["performance"]["sample_count"] == 2
-    )
+    assert bundle.v3_core.run_metadata["v3_intraday_activation"]["performance"]["sample_count"] == 2
     assert bundle.v3_core.run_metadata["v3_intraday_activation"]["themes"]["work"][
         "top_contributors"
     ]
@@ -1316,8 +1312,7 @@ def test_run_v3_exposes_impulse_diagnostics_and_keeps_moon_ingress_out_of_a_laye
     assert first_layer.aspect == 0.0
     assert first_layer.event > 0.0
     assert (
-        bundle.v3_core.run_metadata["v3_impulse_signal"]["performance"]["impulse_event_count"]
-        == 2
+        bundle.v3_core.run_metadata["v3_impulse_signal"]["performance"]["impulse_event_count"] == 2
     )
     assert bundle.v3_core.run_metadata["v3_impulse_signal"]["themes"]["work"]["top_contributors"]
 

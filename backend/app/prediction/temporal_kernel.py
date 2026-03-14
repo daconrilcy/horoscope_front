@@ -26,17 +26,17 @@ from app.prediction.schemas import AstroEvent, SamplePoint
 # Wider windows = more spreading = smoother intraday signal.
 _FAMILY_HALF_WIDTH: dict[str, int] = {
     # Exact aspects — strongest structuring events
-    "aspect_exact_to_angle": 4,       # ±60 min
-    "aspect_exact_to_luminary": 3,    # ±45 min
-    "aspect_exact_to_personal": 2,    # ±30 min
+    "aspect_exact_to_angle": 4,  # ±60 min
+    "aspect_exact_to_luminary": 3,  # ±45 min
+    "aspect_exact_to_personal": 2,  # ±30 min
     # Orb crossings — secondary structural events
-    "aspect_enter_orb": 2,            # ±30 min
-    "aspect_exit_orb": 1,             # ±15 min
+    "aspect_enter_orb": 2,  # ±30 min
+    "aspect_exit_orb": 1,  # ±15 min
     # Ingresses — notable but briefer
-    "moon_sign_ingress": 2,           # ±30 min
-    "asc_sign_change": 3,             # ±45 min
+    "moon_sign_ingress": 2,  # ±30 min
+    "asc_sign_change": 3,  # ±45 min
     # Timing — narrow, rhythmic pulse
-    "planetary_hour_change": 1,       # ±15 min
+    "planetary_hour_change": 1,  # ±15 min
 }
 
 _DEFAULT_HALF_WIDTH = 1  # fallback for any unknown event type

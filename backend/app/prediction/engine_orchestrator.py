@@ -128,16 +128,14 @@ class EngineOrchestrator:
         self._explainability_builder = explainability_builder or ExplainabilityBuilder()
         self._editorial_service = editorial_service or PredictionEditorialService()
         self._decision_window_builder = decision_window_builder or DecisionWindowBuilder()
-        self._transit_signal_builder = (
-            transit_signal_builder or TransitSignalBuilder(self._contribution_calculator)
+        self._transit_signal_builder = transit_signal_builder or TransitSignalBuilder(
+            self._contribution_calculator
         )
         self._intraday_activation_builder = (
             intraday_activation_builder or IntradayActivationBuilder(self._contribution_calculator)
         )
-        self._impulse_signal_builder = (
-            impulse_signal_builder or ImpulseSignalBuilder(
-                self._domain_router, self._contribution_calculator
-            )
+        self._impulse_signal_builder = impulse_signal_builder or ImpulseSignalBuilder(
+            self._domain_router, self._contribution_calculator
         )
         self._v3_theme_aggregator = v3_theme_aggregator or V3ThemeAggregator()
         self._regime_segmenter = regime_segmenter or RegimeSegmenter()
@@ -431,8 +429,10 @@ class EngineOrchestrator:
             daily_metrics[theme_code] = dataclasses.replace(metrics, score_20=calibrated_score)
 
         time_blocks = self._regime_segmenter.segment(theme_signals)
-        turning_points = self._turning_point_detector.detect_v3(time_blocks, detected_events, theme_signals)
-        
+        turning_points = self._turning_point_detector.detect_v3(
+            time_blocks, detected_events, theme_signals
+        )
+
         # AC1/AC2 Story 42.11: V3 Decision Windows
         decision_windows = self._decision_window_builder.build_v3(
             time_blocks, turning_points, daily_metrics
@@ -472,7 +472,7 @@ class EngineOrchestrator:
             },
             computed_at=computed_at,
         )
-        
+
         # AC1 Story 42.15: Build the stable evidence pack
         evidence_pack = self._v3_evidence_builder.build(v3_output)
         return dataclasses.replace(v3_output, evidence_pack=evidence_pack)
@@ -931,10 +931,9 @@ class EngineOrchestrator:
             t_timeline = t_timelines.get(theme_code, {})
             a_timeline = a_timelines.get(theme_code, {})
             for sample in samples:
-                theme_support[sample.local_time] = (
-                    t_timeline.get(sample.local_time, 0.0)
-                    + a_timeline.get(sample.local_time, 0.0)
-                )
+                theme_support[sample.local_time] = t_timeline.get(
+                    sample.local_time, 0.0
+                ) + a_timeline.get(sample.local_time, 0.0)
             support_timelines[theme_code] = theme_support
         return support_timelines
 
@@ -1124,9 +1123,7 @@ class EngineOrchestrator:
                     default_valence = None
                     if aspect_profile is not None:
                         orb_max *= float(getattr(aspect_profile, "orb_multiplier", 1.0) or 1.0)
-                        base_weight = float(
-                            getattr(aspect_profile, "intensity_weight", 1.0) or 1.0
-                        )
+                        base_weight = float(getattr(aspect_profile, "intensity_weight", 1.0) or 1.0)
                         default_valence = getattr(aspect_profile, "default_valence", None)
 
                     if orb <= orb_max:

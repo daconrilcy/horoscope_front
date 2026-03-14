@@ -425,3 +425,8 @@ development_status:
   47-8-etendre-la-collecte-tiers-aux-consultations-d-interaction-ciblee: done
   47-9-persister-et-reutiliser-des-profils-tiers-de-consultation: done
   epic-47-retrospective: optional
+
+  epic-48: in-progress
+  48-1-creer-le-composant-astro-mood-background-parametrable: ready-for-dev
+  48-2-integrer-le-fond-astrologique-anime-au-resume-dashboard: ready-for-dev
+  48-3-verrouiller-qa-accessibilite-et-performance-du-fond-astrologique: ready-for-dev

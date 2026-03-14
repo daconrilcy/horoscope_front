@@ -416,6 +416,16 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Unable to load astrologers.",
     es: "No se pueden cargar los astrólogos.",
   },
+  retry_loading_astrologers: {
+    fr: "Réessayer",
+    en: "Retry",
+    es: "Reintentar",
+  },
+  no_astrologers_available: {
+    fr: "Aucun astrologue spécifique n'est disponible pour le moment.",
+    en: "No specific astrologer is available at the moment.",
+    es: "No hay astrólogo específico disponible por el momento.",
+  },
   type_label: {
     fr: "Type",
     en: "Type",

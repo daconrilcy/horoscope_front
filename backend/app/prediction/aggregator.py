@@ -22,7 +22,7 @@ BASELINE_TOLERANCE = 1.2
 
 @dataclass
 class CategoryAggregation:
-# ... (rest of CategoryAggregation remains same)
+    # ... (rest of CategoryAggregation remains same)
     category_code: str
     raw_steps: list[float] = field(default_factory=list)
     mean: float = 0.0
@@ -99,9 +99,7 @@ class V3ThemeAggregator:
         avg_e = statistics.mean(layer.event for layer in layers)
         drivers = [avg_t, avg_a, avg_e]
         signs = [
-            math.copysign(1, driver)
-            for driver in drivers
-            if abs(driver) > MIN_SIGNAL_THRESHOLD
+            math.copysign(1, driver) for driver in drivers if abs(driver) > MIN_SIGNAL_THRESHOLD
         ]
         if not signs:
             coherence = 0.75

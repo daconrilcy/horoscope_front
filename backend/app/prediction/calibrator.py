@@ -75,10 +75,7 @@ class PercentileCalibrator:
         expressive_factor = 0.7 + (intensity_factor * 0.8)
         reliability_factor = 0.4 + (stability_factor * 0.6)
         dominant_relief = (
-            metrics.dominance_day
-            * (0.4 + (intensity_factor * 0.6))
-            * 4.0
-            * reliability_factor
+            metrics.dominance_day * (0.4 + (intensity_factor * 0.6)) * 4.0 * reliability_factor
         )
 
         score_20 = 10.0 + (deviation * expressive_factor * reliability_factor) + dominant_relief
@@ -157,15 +154,15 @@ class PercentileCalibrator:
         return provisional_cats
 
     def compute_day_relative_calibration(self, raw_days: list[float]) -> CalibrationData:
-        """ Calibration jour-relative : p05/p25/p50/p75/p95 sur les raw_day de la journée. """
+        """Calibration jour-relative : p05/p25/p50/p75/p95 sur les raw_day de la journée."""
         if len(raw_days) < 3:
             return DEFAULT_CALIBRATION
-            
+
         sorted_days = sorted(raw_days)
         # Vérifier la variance : si tous identiques -> dégénéré
         if sorted_days[-1] == sorted_days[0]:
             return DEFAULT_CALIBRATION
-            
+
         n = len(sorted_days)
 
         def _pct(p: float) -> float:

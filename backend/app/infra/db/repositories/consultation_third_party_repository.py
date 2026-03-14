@@ -79,13 +79,13 @@ class ConsultationThirdPartyRepository:
         )
         self.db.add(model)
         self.db.flush()
-        
+
         # Also update the updated_at of the profile
         profile = self.db.get(ConsultationThirdPartyProfileModel, third_party_profile_id)
         if profile:
             profile.updated_at = datetime.now(timezone.utc)
             self.db.flush()
-            
+
         return model
 
     def list_usages(self, third_party_profile_id: int) -> list[ConsultationThirdPartyUsageModel]:

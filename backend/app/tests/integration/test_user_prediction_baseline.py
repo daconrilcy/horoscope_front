@@ -108,9 +108,7 @@ def _seed_data(session: Session):
     return user, ref_version, ruleset, category
 
 
-def test_migration_baseline_table_exists(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_migration_baseline_table_exists(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     engine = _setup_engine(monkeypatch, tmp_path, "test-baseline-migration.db")
     inspector = inspect(engine)
     tables = set(inspector.get_table_names())

@@ -162,15 +162,15 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
         ruleset_v1 = session.scalar(
             select(PredictionRulesetModel).where(
                 PredictionRulesetModel.reference_version_id == v2.id,
-                PredictionRulesetModel.version == "1.0.0"
+                PredictionRulesetModel.version == "1.0.0",
             )
         )
         assert ruleset_v1 is not None
-        
+
         ruleset_v2 = session.scalar(
             select(PredictionRulesetModel).where(
                 PredictionRulesetModel.reference_version_id == v2.id,
-                PredictionRulesetModel.version == "2.0.0"
+                PredictionRulesetModel.version == "2.0.0",
             )
         )
         assert ruleset_v2 is not None

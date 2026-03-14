@@ -115,12 +115,12 @@ class PredictionRunReusePolicy:
                     },
                 )
                 return ReuseDecision(
-                    should_compute=True, 
-                    existing_run=existing_run, 
-                    input_hash=input_hash, 
-                    reason="stale_run"
+                    should_compute=True,
+                    existing_run=existing_run,
+                    input_hash=input_hash,
+                    reason="stale_run",
                 )
-            
+
             return ReuseDecision(
                 should_compute=False,
                 existing_run=existing_run,

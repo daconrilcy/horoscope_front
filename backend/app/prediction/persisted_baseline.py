@@ -37,7 +37,7 @@ class PersistedUserBaseline:
 
     sample_size_days: int
     computed_at: datetime
-    
+
     granularity_type: str = "day"
     granularity_value: str = "all"
 

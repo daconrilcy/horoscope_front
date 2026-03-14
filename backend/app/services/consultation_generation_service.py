@@ -118,14 +118,12 @@ class ConsultationGenerationService:
             if bullet_match:
                 ConsultationGenerationService._flush_paragraph(paragraph_lines, blocks)
                 bullet_items.append(
-                    ConsultationGenerationService._clean_inline_formatting(
-                        bullet_match.group(1)
-                    )
+                    ConsultationGenerationService._clean_inline_formatting(bullet_match.group(1))
                 )
                 continue
 
-            numbered_heading_match = (
-                ConsultationGenerationService._numbered_heading_pattern.match(line)
+            numbered_heading_match = ConsultationGenerationService._numbered_heading_pattern.match(
+                line
             )
             if numbered_heading_match and not line.lower().startswith("http"):
                 ConsultationGenerationService._flush_paragraph(paragraph_lines, blocks)
@@ -317,27 +315,21 @@ class ConsultationGenerationService:
         if request.horizon:
             lines.append(f"Horizon temporel: {request.horizon}")
         if route_key:
-            lines.append(
-                "Mode astrologique applique: "
-                f"{route_key}."
-            )
+            lines.append(f"Mode astrologique applique: {route_key}.")
         if request.other_person:
             lines.append(
                 "Donnees tiers prises en compte: "
                 f"{request.other_person.birth_date} / {request.other_person.birth_place}"
             )
             if other_person_chart_used:
-                lines.append(
-                    "Theme natal tiers calcule et integre dans la lecture relationnelle."
-                )
+                lines.append("Theme natal tiers calcule et integre dans la lecture relationnelle.")
             else:
                 lines.append(
                     "Donnees tiers recues, mais theme natal tiers non exploite comme "
                     "contexte astrologique complet."
                 )
         lines.append(
-            "La lecture utilise le profil natal existant de l utilisateur "
-            "quand il est disponible."
+            "La lecture utilise le profil natal existant de l utilisateur quand il est disponible."
         )
         return ConsultationSection(
             id="consultation_basis",
@@ -526,9 +518,7 @@ class ConsultationGenerationService:
                 id="analysis",
                 title="Lecture astrologique",
                 content=guidance.full_text,
-                blocks=ConsultationGenerationService._parse_section_blocks(
-                    guidance.full_text
-                ),
+                blocks=ConsultationGenerationService._parse_section_blocks(guidance.full_text),
             ),
             ConsultationGenerationService._build_context_section(
                 request=request,

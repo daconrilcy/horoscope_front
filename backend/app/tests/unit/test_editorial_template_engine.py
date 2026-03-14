@@ -22,42 +22,44 @@ def sample_editorial():
         best_window=BestWindow(
             start_local=datetime(2024, 1, 1, 10, 0),
             end_local=datetime(2024, 1, 1, 12, 0),
-            dominant_category="love"
+            dominant_category="love",
         ),
         caution_flags={"health": True, "money": False},
         overall_tone="positive",
-        top3_contributors_per_category={}
+        top3_contributors_per_category={},
     )
+
 
 def test_template_renders_correctly(sample_editorial):
     engine = EditorialTemplateEngine()
     output = engine.render(sample_editorial)
-    
+
     assert "2024-01-01" in output.intro
     assert "très porteuse" in output.intro
     assert "Amour & Relations" in output.intro
-    
+
     assert "love" in output.category_summaries
     assert "15/20" in output.category_summaries["love"]
     assert "porteur" in output.category_summaries["love"]
-    
+
     assert "14:30" in output.pivot_phrase
     # SEVERITY_LABELS: low <= 0.25, medium <= 0.5, high <= 0.75, critical > 0.75
     # 0.6 -> labels["high"] -> "majeur"
     assert "majeur" in output.pivot_phrase
-    
+
     assert "10:00" in output.window_phrase
     assert "12:00" in output.window_phrase
     assert "Amour & Relations" in output.window_phrase
-    
+
     assert output.caution_sante is not None
     assert "vigilance" in output.caution_sante
     assert output.caution_argent is None
 
+
 def test_variables_from_engine(sample_editorial):
     # [AI-Review] Verifies that injected variables match EditorialOutput
     engine = EditorialTemplateEngine()
-    
+
     # Custom sample to verify specific values
     custom_editorial = EditorialOutput(
         local_date=date(2025, 5, 20),
@@ -69,16 +71,17 @@ def test_variables_from_engine(sample_editorial):
         best_window=None,
         caution_flags={},
         overall_tone="mixed",
-        top3_contributors_per_category={}
+        top3_contributors_per_category={},
     )
-    
+
     output = engine.render(custom_editorial)
     assert "2025-05-20" in output.intro
-    assert "contrastée" in output.intro # mixed -> contrastée
+    assert "contrastée" in output.intro  # mixed -> contrastée
     assert "20/20" in output.category_summaries["love"]
     assert "très favorable" in output.category_summaries["love"]
     assert "08:15" in output.pivot_phrase
-    assert "mineur" in output.pivot_phrase # 0.1 -> mineur
+    assert "mineur" in output.pivot_phrase  # 0.1 -> mineur
+
 
 def test_missing_pivot_none(sample_editorial):
     engine = EditorialTemplateEngine()
@@ -90,14 +93,15 @@ def test_missing_pivot_none(sample_editorial):
     editorial.main_pivot = None
     editorial.best_window = None
     editorial.caution_flags = {}
-    
+
     output = engine.render(editorial)
     assert output.pivot_phrase is None
     assert output.window_phrase is None
 
+
 def test_no_free_text_generated(sample_editorial):
     engine = EditorialTemplateEngine()
-    
+
     def mock_load(lang, name):
         if name == "intro_du_jour":
             return "MOCK {date_local} {overall_tone_label} {top3_labels}"
@@ -108,20 +112,19 @@ def test_no_free_text_generated(sample_editorial):
         if name == "meilleure_fenetre":
             return "MOCK {window_start} {window_end} {dominant_category_label}"
         return "MOCK"
-        
+
     with patch.object(EditorialTemplateEngine, "_load_template", side_effect=mock_load):
         output = engine.render(sample_editorial)
-        expected = (
-            "MOCK 2024-01-01 très porteuse "
-            "Amour & Relations, Travail, Énergie & Vitalité"
-        )
+        expected = "MOCK 2024-01-01 très porteuse Amour & Relations, Travail, Énergie & Vitalité"
         assert output.intro == expected
+
 
 def test_load_template_fail_explicitly():
     # [AI-Review] Verifies that missing template raises FileNotFoundError
     engine = EditorialTemplateEngine()
     with pytest.raises(FileNotFoundError):
         engine._load_template("fr", "non_existent_template")
+
 
 def test_caution_sante_prudent_wording(sample_editorial):
     engine = EditorialTemplateEngine()
@@ -130,6 +133,7 @@ def test_caution_sante_prudent_wording(sample_editorial):
     forbidden = ["diagnostic", "médecin", "docteur", "soigner", "guérir", "maladie"]
     for word in forbidden:
         assert word not in output.caution_sante.lower()
+
 
 def test_caution_argent_prudent_wording():
     engine = EditorialTemplateEngine()
@@ -140,7 +144,7 @@ def test_caution_argent_prudent_wording():
     editorial.main_pivot = None
     editorial.best_window = None
     editorial.caution_flags = {"money": True}
-    
+
     output = engine.render(editorial)
     # AC3: ni "investissez" ni "achetez" ni injonction financière directe
     forbidden = ["investissez", "achetez", "vendez", "bourse", "spéculez"]
@@ -167,6 +171,7 @@ def test_legacy_french_codes_are_normalized_for_labels_and_cautions():
     assert output.caution_sante is not None
     assert output.caution_argent is not None
 
+
 def test_render_time_block_summary_fr():
     engine = EditorialTemplateEngine()
     block = MagicMock()
@@ -174,7 +179,7 @@ def test_render_time_block_summary_fr():
     block.dominant_categories = ["work", "energy"]
     block.start_local = datetime(2026, 3, 8, 8, 0)
     block.end_local = datetime(2026, 3, 8, 11, 30)
-    
+
     summary = engine._render_time_block_summary(block, "fr")
     assert "08:00" in summary
     assert "11:30" in summary
@@ -182,23 +187,26 @@ def test_render_time_block_summary_fr():
     assert "Travail" in summary
     assert "Énergie & Vitalité" in summary
 
+
 def test_render_turning_point_summary_fr():
     engine = EditorialTemplateEngine()
     tp = MagicMock()
     tp.severity = 0.9
     tp.categories_impacted = ["love"]
     tp.local_time = datetime(2026, 3, 8, 14, 15)
-    
+
     summary = engine._render_turning_point_summary(tp, "fr")
     assert "14:15" in summary
-    assert "critique" in summary # 0.9 -> labels["critical"] -> "critique"
+    assert "critique" in summary  # 0.9 -> labels["critical"] -> "critique"
     assert "Amour & Relations" in summary
+
 
 def test_render_fallback_when_no_blocks(sample_editorial):
     engine = EditorialTemplateEngine()
     output = engine.render(sample_editorial, time_blocks=[], turning_points=[])
     assert output.time_block_summaries == []
     assert output.turning_point_summaries == []
+
 
 def test_render_full_with_blocks(sample_editorial):
     engine = EditorialTemplateEngine()
@@ -252,4 +260,3 @@ def test_render_unknown_tone_code_uses_raw_value():
     block.end_local = datetime(2026, 3, 8, 9, 0)
     summary = engine._render_time_block_summary(block, "fr")
     assert "unknown_tone" in summary
-

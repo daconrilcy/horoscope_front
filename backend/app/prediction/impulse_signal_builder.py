@@ -89,18 +89,13 @@ class ImpulseSignalBuilder:
         """
         start_perf = time.perf_counter()
         enabled_themes = [
-            category.code
-            for category in ctx.prediction_context.categories
-            if category.is_enabled
+            category.code for category in ctx.prediction_context.categories if category.is_enabled
         ]
         timeline: dict[str, dict[datetime, float]] = {
-            theme: {sample.local_time: 0.0 for sample in samples}
-            for theme in enabled_themes
+            theme: {sample.local_time: 0.0 for sample in samples} for theme in enabled_themes
         }
         diagnostics = self._initialize_diagnostics(enabled_themes)
-        impulse_events = [
-            event for event in events if event.event_type in self.IMPULSE_EVENT_TYPES
-        ]
+        impulse_events = [event for event in events if event.event_type in self.IMPULSE_EVENT_TYPES]
         neutral_ns_map = {theme: 1.0 for theme in enabled_themes}
 
         for event in impulse_events:

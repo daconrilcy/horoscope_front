@@ -51,10 +51,11 @@ class PredictionComputeRunner:
     ) -> ComputeResult:
         """
         Executes the engine with a 30s timeout.
-        
+
         ⚠️ GIL Limitation: The compute thread continues in background after timeout.
         The session remains non thread-safe for ~30s after timeout.
         """
+
         def ctx_loader(ref: str, rule: str, dt: date) -> object:
             return self.context_loader.load(db, ref, rule, dt)
 

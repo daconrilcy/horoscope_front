@@ -59,15 +59,15 @@ class PredictionRequestResolver:
     ) -> ResolvedPredictionRequest:
         resolved_reference_version = reference_version or settings.active_reference_version
         resolved_ruleset_version = ruleset_version or settings.active_ruleset_version
-        
+
         profile = self._resolve_profile(db, user_id)
         tz_str = self._resolve_timezone(profile, timezone_override)
         lat, lon = self._resolve_location(db, profile, location_override)
         resolved_date = self._resolve_date(date_local, tz_str)
-        
+
         reference_version_id = self._resolve_reference_version_id(db, resolved_reference_version)
         ruleset_id = self._resolve_ruleset_id(db, resolved_ruleset_version, reference_version_id)
-        
+
         engine_input: EngineInput | None = None
         if include_engine_input:
             natal_chart = self._resolve_natal_chart(db, user_id)
@@ -95,6 +95,7 @@ class PredictionRequestResolver:
 
     def _resolve_profile(self, db: Session, user_id: int) -> UserBirthProfileModel:
         from app.services.daily_prediction_types import DailyPredictionServiceError
+
         profile = UserBirthProfileRepository(db).get_by_user_id(user_id)
         if profile is None:
             raise DailyPredictionServiceError("profile_missing", "Profil de naissance introuvable")
@@ -102,6 +103,7 @@ class PredictionRequestResolver:
 
     def _resolve_timezone(self, profile: UserBirthProfileModel, override: str | None) -> str:
         from app.services.daily_prediction_types import DailyPredictionServiceError
+
         tz_str = (
             self._coerce_timezone_value(override)
             or self._coerce_timezone_value(profile.current_timezone)
@@ -128,6 +130,7 @@ class PredictionRequestResolver:
         override: tuple[float, float] | None,
     ) -> tuple[float, float]:
         from app.services.daily_prediction_types import DailyPredictionServiceError
+
         if override:
             return override
         if profile.current_lat is not None and profile.current_lon is not None:
@@ -145,6 +148,7 @@ class PredictionRequestResolver:
 
     def _resolve_natal_chart(self, db: Session, user_id: int) -> dict[str, Any]:
         from app.services.daily_prediction_types import DailyPredictionServiceError
+
         chart = ChartResultRepository(db).get_latest_by_user_id(user_id)
         if chart is None:
             raise DailyPredictionServiceError("natal_missing", "Aucun thème natal trouvé")
@@ -175,6 +179,7 @@ class PredictionRequestResolver:
 
     def _resolve_reference_version_id(self, db: Session, version: str) -> int:
         from app.services.daily_prediction_types import DailyPredictionServiceError
+
         rv_id = db.scalar(
             select(ReferenceVersionModel.id).where(ReferenceVersionModel.version == version)
         )
@@ -193,15 +198,16 @@ class PredictionRequestResolver:
         self, db: Session, version: str, expected_reference_version_id: int | None = None
     ) -> int:
         from app.services.daily_prediction_types import DailyPredictionServiceError
+
         repo = PredictionRulesetRepository(db)
         ruleset = repo.get_ruleset(version)
         if ruleset is None and self._repair_service:
             # Note: We pass empty reference_version as try_repair handles its own logic for rulesets
             if self._repair_service.try_repair(
-                db, 
-                reference_version=settings.active_reference_version, 
+                db,
+                reference_version=settings.active_reference_version,
                 ruleset_version=version,
-                reference_version_id=expected_reference_version_id
+                reference_version_id=expected_reference_version_id,
             ):
                 ruleset = repo.get_ruleset(version)
 

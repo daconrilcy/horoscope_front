@@ -13,7 +13,7 @@ class PersistedRelativeScore:
     """
 
     category_code: str
-    
+
     # V2 Fields (keeping for compatibility)
     relative_z_score: float | None  # (raw - mean) / std. None if std == 0 or baseline missing
     relative_percentile: float | None  # 0.0 - 1.0. Based on percentiles in baseline

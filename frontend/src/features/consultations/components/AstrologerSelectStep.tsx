@@ -14,7 +14,8 @@ export function AstrologerSelectStep({
   onSelect,
 }: AstrologerSelectStepProps) {
   const lang = detectLang()
-  const { data: astrologers, isPending, error } = useAstrologers()
+  const { data: astrologers, isPending, error, refetch, isFetching } = useAstrologers()
+  const hasSelectableAstrologers = Boolean(astrologers && astrologers.length > 0)
 
   return (
     <div className="wizard-step">
@@ -40,13 +41,21 @@ export function AstrologerSelectStep({
         <div className="wizard-loading" aria-live="polite">{t("loading", lang)}</div>
       )}
 
-      {error && (
+      {error && !hasSelectableAstrologers && (
         <div className="wizard-error" role="alert" aria-live="assertive">
-          {t("error_loading_astrologers", lang)}
+          <p>{t("error_loading_astrologers", lang)}</p>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+          >
+            {t("retry_loading_astrologers", lang)}
+          </button>
         </div>
       )}
 
-      {!isPending && !error && astrologers && (
+      {!isPending && hasSelectableAstrologers && astrologers && (
         <div className="astrologer-select-grid">
           {astrologers.map((astrologer: Astrologer) => {
             const isSelected = selectedId === astrologer.id
@@ -84,6 +93,20 @@ export function AstrologerSelectStep({
               </button>
             )
           })}
+        </div>
+      )}
+
+      {!isPending && !error && !hasSelectableAstrologers && (
+        <div className="wizard-error" role="status" aria-live="polite">
+          <p>{t("no_astrologers_available", lang)}</p>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+          >
+            {t("retry_loading_astrologers", lang)}
+          </button>
         </div>
       )}
     </div>

@@ -13,12 +13,10 @@ from app.services.daily_prediction_types import ComputeMode, DailyPredictionServ
 def mock_db():
     return MagicMock(spec=Session)
 
+
 @pytest.fixture
 def service():
-    return DailyPredictionService(
-        context_loader=MagicMock(),
-        persistence_service=MagicMock()
-    )
+    return DailyPredictionService(context_loader=MagicMock(), persistence_service=MagicMock())
 
 
 def test_get_or_compute_reads_runtime_versions_at_call_time(
@@ -58,6 +56,7 @@ def test_get_or_compute_reads_runtime_versions_at_call_time(
     resolve_ref.assert_called_once_with(mock_db, "9.9.9")
     resolve_ruleset.assert_called_once_with(mock_db, "8.8.8", 101)
 
+
 def test_resolve_ruleset_id_consistency_check_fails(service, mock_db):
     # Setup: Ruleset 2.0.0 is linked to reference version 1 (not 2)
     mock_ruleset = RulesetData(
@@ -70,21 +69,22 @@ def test_resolve_ruleset_id_consistency_check_fails(service, mock_db):
         time_step_minutes=30,
         is_locked=True,
     )
-    
+
     with patch("app.services.prediction_request_resolver.PredictionRulesetRepository") as MockRepo:
         mock_repo_instance = MockRepo.return_value
         mock_repo_instance.get_ruleset.return_value = mock_ruleset
-        
+
         with pytest.raises(DailyPredictionServiceError) as excinfo:
             service.resolver._resolve_ruleset_id(
                 mock_db,
                 "2.0.0",
                 expected_reference_version_id=2,
             )
-        
+
         assert excinfo.value.code == "ruleset_inconsistent"
         assert "rattaché à la référence ID 1" in excinfo.value.message
         assert "référence active demandée est ID 2" in excinfo.value.message
+
 
 def test_resolve_ruleset_id_consistency_check_passes(service, mock_db):
     # Setup: Ruleset 2.0.0 is correctly linked to reference version 2
@@ -98,18 +98,19 @@ def test_resolve_ruleset_id_consistency_check_passes(service, mock_db):
         time_step_minutes=30,
         is_locked=True,
     )
-    
+
     with patch("app.services.prediction_request_resolver.PredictionRulesetRepository") as MockRepo:
         mock_repo_instance = MockRepo.return_value
         mock_repo_instance.get_ruleset.return_value = mock_ruleset
-        
+
         ruleset_id = service.resolver._resolve_ruleset_id(
             mock_db,
             "2.0.0",
             expected_reference_version_id=2,
         )
-        
+
         assert ruleset_id == 10
+
 
 def test_resolve_ruleset_id_without_expected_ref_passes(service, mock_db):
     # Setup: No expected reference ID provided (legacy behavior)
@@ -123,11 +124,11 @@ def test_resolve_ruleset_id_without_expected_ref_passes(service, mock_db):
         time_step_minutes=30,
         is_locked=True,
     )
-    
+
     with patch("app.services.prediction_request_resolver.PredictionRulesetRepository") as MockRepo:
         mock_repo_instance = MockRepo.return_value
         mock_repo_instance.get_ruleset.return_value = mock_ruleset
-        
+
         ruleset_id = service.resolver._resolve_ruleset_id(mock_db, "2.0.0")
-        
+
         assert ruleset_id == 10

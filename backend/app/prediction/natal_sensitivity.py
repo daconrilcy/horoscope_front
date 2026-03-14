@@ -159,9 +159,7 @@ class NatalSensitivityCalculator:
 
         return results
 
-    def _compute_natal_aspects_contribution(
-        self, natal: NatalChart, theme_code: str, pc
-    ) -> float:
+    def _compute_natal_aspects_contribution(self, natal: NatalChart, theme_code: str, pc) -> float:
         """Computes contribution from natal aspects involving significators of the theme (AC1)."""
         significators = self._significator_weight_map(theme_code, pc)
         if not significators:

@@ -16,7 +16,6 @@ from app.core.config import settings  # noqa: E402
 from app.core.ephemeris import bootstrap_swisseph  # noqa: E402
 from app.domain.astrology.ephemeris_provider import calculate_planets  # noqa: E402
 from app.domain.astrology.houses_provider import calculate_houses  # noqa: E402
-from app.domain.astrology.natal_calculation import sign_from_longitude  # noqa: E402
 from app.domain.astrology.natal_preparation import BirthInput, prepare_birth_data  # noqa: E402
 from app.services.cross_tool_report import (  # noqa: E402
     build_run_report,

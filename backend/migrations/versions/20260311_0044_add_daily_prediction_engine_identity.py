@@ -28,9 +28,7 @@ def upgrade() -> None:
         )
         batch_op.add_column(sa.Column("engine_version", sa.String(length=32), nullable=True))
         batch_op.add_column(sa.Column("snapshot_version", sa.String(length=32), nullable=True))
-        batch_op.add_column(
-            sa.Column("evidence_pack_version", sa.String(length=32), nullable=True)
-        )
+        batch_op.add_column(sa.Column("evidence_pack_version", sa.String(length=32), nullable=True))
         batch_op.drop_constraint(OLD_CONSTRAINT, type_="unique")
         batch_op.create_unique_constraint(
             OLD_CONSTRAINT,

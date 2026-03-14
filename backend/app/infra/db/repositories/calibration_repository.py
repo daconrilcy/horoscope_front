@@ -37,27 +37,33 @@ class CalibrationRepository:
         reference_version: str,
         ruleset_version: str,
     ) -> bool:
-        return self.db.scalar(
-            select(CalibrationRawDayModel).where(
-                CalibrationRawDayModel.profile_label == profile_label,
-                CalibrationRawDayModel.local_date == local_date,
-                CalibrationRawDayModel.category_code == category_code,
-                CalibrationRawDayModel.reference_version == reference_version,
-                CalibrationRawDayModel.ruleset_version == ruleset_version,
+        return (
+            self.db.scalar(
+                select(CalibrationRawDayModel).where(
+                    CalibrationRawDayModel.profile_label == profile_label,
+                    CalibrationRawDayModel.local_date == local_date,
+                    CalibrationRawDayModel.category_code == category_code,
+                    CalibrationRawDayModel.reference_version == reference_version,
+                    CalibrationRawDayModel.ruleset_version == ruleset_version,
+                )
             )
-        ) is not None
+            is not None
+        )
 
     def save(self, raw_day: CalibrationRawDayModel) -> None:
         self.db.add(raw_day)
         self.db.flush()
 
     def count(self, reference_version: str, ruleset_version: str) -> int:
-        return self.db.scalar(
-            select(func.count(CalibrationRawDayModel.id)).where(
-                CalibrationRawDayModel.reference_version == reference_version,
-                CalibrationRawDayModel.ruleset_version == ruleset_version,
+        return (
+            self.db.scalar(
+                select(func.count(CalibrationRawDayModel.id)).where(
+                    CalibrationRawDayModel.reference_version == reference_version,
+                    CalibrationRawDayModel.ruleset_version == ruleset_version,
+                )
             )
-        ) or 0
+            or 0
+        )
 
     def get_raw_scores_by_category(
         self, reference_version: str, ruleset_version: str

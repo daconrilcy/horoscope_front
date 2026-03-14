@@ -314,8 +314,7 @@ class TurningPointDetector:
             rank_delta = prev_ranks.get(code, 0) - curr_ranks.get(code, 0)
 
             if (
-                abs(delta_composite) < self.MIN_V3_THEME_DELTA_SCORE
-                and not changed_membership
+                abs(delta_composite) < self.MIN_V3_THEME_DELTA_SCORE and not changed_membership
             ):  # AC4 threshold for micro-variations, except if top themes rotate.
                 continue
 

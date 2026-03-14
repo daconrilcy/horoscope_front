@@ -23,9 +23,9 @@ from app.infra.db.models.daily_prediction import (
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentialModel
 from app.infra.db.models.enterprise_billing import (
-    EnterpriseBillingPlanModel,
     EnterpriseAccountBillingPlanModel,
     EnterpriseBillingCycleModel,
+    EnterpriseBillingPlanModel,
 )
 from app.infra.db.models.enterprise_editorial_config import EnterpriseEditorialConfigModel
 from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
@@ -39,15 +39,15 @@ from app.infra.db.models.llm_prompt import LlmPromptVersionModel, LlmUseCaseConf
 from app.infra.db.models.pdf_template import PdfTemplateModel
 from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.prediction_reference import (
-    PredictionCategoryModel,
-    PlanetProfileModel,
+    AspectProfileModel,
+    AstroPointModel,
+    HouseCategoryWeightModel,
     HouseProfileModel,
     PlanetCategoryWeightModel,
-    HouseCategoryWeightModel,
-    AstroPointModel,
+    PlanetProfileModel,
     PointCategoryWeightModel,
+    PredictionCategoryModel,
     SignRulershipModel,
-    AspectProfileModel,
 )
 from app.infra.db.models.prediction_ruleset import (
     CategoryCalibrationModel,

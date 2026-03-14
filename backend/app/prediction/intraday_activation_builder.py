@@ -496,8 +496,8 @@ class IntradayActivationBuilder:
         for theme in enabled_themes:
             house_projection = 0.0
             for house_num, vector_weight in house_vector.items():
-                house_projection += (
-                    vector_weight * routing_indexes["houses"][theme].get(house_num, 0.0)
+                house_projection += vector_weight * routing_indexes["houses"][theme].get(
+                    house_num, 0.0
                 )
 
             planet_weight = routing_indexes["planets"][theme].get(body_code, 0.0)
@@ -526,8 +526,8 @@ class IntradayActivationBuilder:
         for theme in enabled_themes:
             house_projection = 0.0
             for house_num, vector_weight in house_vector.items():
-                house_projection += (
-                    vector_weight * routing_indexes["houses"][theme].get(house_num, 0.0)
+                house_projection += vector_weight * routing_indexes["houses"][theme].get(
+                    house_num, 0.0
                 )
 
             if body_code in {"asc", "mc"}:

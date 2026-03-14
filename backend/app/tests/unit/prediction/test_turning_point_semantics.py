@@ -464,6 +464,5 @@ def test_detect_v3_detects_material_theme_rotation_on_stable_day():
     assert tp.amplitude > 0.2
     assert any(delta.code == "work" and delta.direction == "up" for delta in tp.category_deltas)
     assert any(
-        delta.code == "social_network" and delta.direction == "down"
-        for delta in tp.category_deltas
+        delta.code == "social_network" and delta.direction == "down" for delta in tp.category_deltas
     )

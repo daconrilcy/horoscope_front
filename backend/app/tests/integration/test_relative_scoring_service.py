@@ -29,18 +29,30 @@ def test_relative_scoring_service_enrichment():
         overall_tone="neutral",
         category_scores=[
             PersistedCategoryScore(1, "love", 15, 10.0, 1.0, 1.0, 1, False, None),
-        ]
+        ],
     )
 
     # 2. Setup mock baseline
     mock_baseline = PersistedUserBaseline(
-        id=1, user_id=42, category_id=1, category_code="love",
-        reference_version_id=1, ruleset_id=1, house_system_effective="placidus",
-        window_days=365, window_start_date=None, window_end_date=None,
-        mean_raw_score=5.0, std_raw_score=2.0,  # Z = (10 - 5) / 2 = 2.5
-        mean_note_20=12.0, std_note_20=1.0,
-        p10=2.0, p50=5.0, p90=8.0,
-        sample_size_days=365, computed_at=datetime.now()
+        id=1,
+        user_id=42,
+        category_id=1,
+        category_code="love",
+        reference_version_id=1,
+        ruleset_id=1,
+        house_system_effective="placidus",
+        window_days=365,
+        window_start_date=None,
+        window_end_date=None,
+        mean_raw_score=5.0,
+        std_raw_score=2.0,  # Z = (10 - 5) / 2 = 2.5
+        mean_note_20=12.0,
+        std_note_20=1.0,
+        p10=2.0,
+        p50=5.0,
+        p90=8.0,
+        sample_size_days=365,
+        computed_at=datetime.now(),
     )
 
     # 3. Mock Repository
@@ -61,7 +73,7 @@ def test_relative_scoring_service_enrichment():
         assert rel_score.relative_z_score == 2.5
         assert rel_score.is_available is True
         assert rel_score.relative_rank == 1
-        
+
         # Verify original data is preserved (AC3)
         assert enriched.category_scores[0].note_20 == 15
         assert enriched.category_scores[0].raw_score == 10.0

@@ -1,7 +1,7 @@
 # backend/app/tests/integration/test_daily_prediction_qa.py
-import uuid
-import time
 import statistics
+import time
+import uuid
 from datetime import date, datetime, timedelta
 from unittest.mock import patch
 
@@ -9,7 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
-from app.core.config import settings, DailyEngineMode
+from app.core.config import DailyEngineMode, settings
 from app.core.versions import ACTIVE_REFERENCE_VERSION, ACTIVE_RULESET_VERSION
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
@@ -48,12 +48,12 @@ from app.services.auth_service import AuthService
 from app.services.reference_data_service import ReferenceDataService
 from app.tests.fixtures.intraday_qa_fixtures import (
     get_active_day,
+    get_ambiguous_day,
     get_calm_day,
     get_flat_day_no_signal,
     get_flat_day_with_micro_trends,
-    get_transition_day,
-    get_ambiguous_day,
     get_intense_neutral_day,
+    get_transition_day,
 )
 from app.tests.helpers.intraday_qa_report import (
     assert_fixture_expectations,
@@ -492,9 +492,10 @@ def test_decision_windows_within_budget():
         assert dw["window_type"] in {"favorable", "prudence", "pivot"}
 
 
-@pytest.mark.parametrize("fixture_name", [
-    "calm_day", "active_day", "transition_day", "ambiguous_day", "intense_neutral_day"
-])
+@pytest.mark.parametrize(
+    "fixture_name",
+    ["calm_day", "active_day", "transition_day", "ambiguous_day", "intense_neutral_day"],
+)
 def test_fixture_expectations_match_api_response(fixture_name: str):
     result = _fetch_prediction_for_fixture(fixture_name)
     fixture_data = result["fixture"]
@@ -503,7 +504,7 @@ def test_fixture_expectations_match_api_response(fixture_name: str):
     # AC2 Story 42.17: More flexible ranges for V2/V3 comparison
     pivot_range = fixture_data["expected_pivot_range"]
     window_range = fixture_data["expected_window_range"]
-    
+
     if fixture_name == "active_day":
         pivot_range = (pivot_range[0], 6)
         window_range = (window_range[0], 6)
@@ -543,10 +544,10 @@ def test_intraday_go_nogo():
         try:
             assert_within_budget(
                 report,
-                max_windows=0, # AC2: No windows on flat days
+                max_windows=0,  # AC2: No windows on flat days
                 max_identical_blocks=MAX_IDENTICAL_CONSECUTIVE_BLOCKS,
                 max_technical_drivers=MAX_TECHNICAL_DRIVERS_VISIBLE,
-                max_micro_trends=3, # Story 41.14 AC3
+                max_micro_trends=3,  # Story 41.14 AC3
             )
         except AssertionError as e:
             pytest.fail(
@@ -556,6 +557,7 @@ def test_intraday_go_nogo():
 
 # --- Relative Calibration QA Tests (Story 41.16) ---
 
+
 def test_flat_day_with_micro_trends_qa():
     """
     Vérifie qu'une journée plate avec signal relatif expose des micro-tendances
@@ -563,10 +565,10 @@ def test_flat_day_with_micro_trends_qa():
     """
     result = _fetch_prediction_for_fixture("flat_day_with_micro_trends")
     payload = result["payload"]
-    
+
     # 1. Vérification du flag flat_day (AC1)
     assert payload["summary"]["flat_day"] is True
-    
+
     # 2. Vérification des micro-tendances (AC1)
     assert payload["micro_trends"] is not None
     assert len(payload["micro_trends"]) > 0
@@ -574,12 +576,12 @@ def test_flat_day_with_micro_trends_qa():
     love_trend = next((t for t in payload["micro_trends"] if t["category_code"] == "love"), None)
     assert love_trend is not None
     assert love_trend["z_score"] == 2.5
-    
+
     # 3. Garde-fous (AC2)
     assert payload["summary"]["best_window"] is None
     assert payload["decision_windows"] is None or payload["decision_windows"] == []
     assert payload["turning_points"] == []
-    
+
     # 4. Cohérence éditoriale (AC2)
     assert payload["summary"]["relative_summary"] is not None
     assert "amour" in payload["summary"]["relative_summary"].lower()
@@ -591,7 +593,7 @@ def test_flat_day_no_signal_qa():
     """
     result = _fetch_prediction_for_fixture("flat_day_no_signal")
     payload = result["payload"]
-    
+
     assert payload["summary"]["flat_day"] is True
     # Z-score pour "love" est 0 (10-10)/2
     # La policy filtre les Z < 0.5
@@ -604,7 +606,7 @@ def test_active_day_unchanged_by_relative_calibration():
     """
     result = _fetch_prediction_for_fixture("active_day")
     payload = result["payload"]
-    
+
     assert payload["summary"]["flat_day"] is False
     assert payload["summary"]["best_window"] is not None
     assert len(payload.get("decision_windows", [])) > 0
@@ -617,57 +619,72 @@ def test_v2_v3_dual_comparison_qa():
     AC1/AC3 Story 42.17: Compare V2 and V3 in DUAL mode.
     Implements all Gates from v3-migration-gates.md.
     """
+    from app.prediction.context_loader import PredictionContextLoader
     from app.services.prediction_compute_runner import PredictionComputeRunner
     from app.services.prediction_request_resolver import PredictionRequestResolver
-    from app.prediction.context_loader import PredictionContextLoader
-    
+
     # Use calm_day for Sobriety check
     fixture_data = get_calm_day()
-    
+
     with SessionLocal() as db:
-        token = _setup_qa_user_and_natal(db, fixture_data=fixture_data)
+        _setup_qa_user_and_natal(db, fixture_data=fixture_data)
         resolver = PredictionRequestResolver()
-        resolved = resolver.resolve(db, user_id=1, date_local=date.fromisoformat(fixture_data["target_date"]), include_engine_input=True)
-        
+        resolved = resolver.resolve(
+            db,
+            user_id=1,
+            date_local=date.fromisoformat(fixture_data["target_date"]),
+            include_engine_input=True,
+        )
+
         runner = PredictionComputeRunner(context_loader=PredictionContextLoader())
         # AC1: Use DUAL mode
-        result = runner.run_with_timeout(db, resolved.engine_input, engine_mode=DailyEngineMode.DUAL)
+        result = runner.run_with_timeout(
+            db, resolved.engine_input, engine_mode=DailyEngineMode.DUAL
+        )
         bundle = result.bundle
-        
-        assert bundle.core is not None # V2
-        assert bundle.v3_core is not None # V3
-        
+
+        assert bundle.core is not None  # V2
+        assert bundle.v3_core is not None  # V3
+
         # GATE 1: Pivot Sobriety (Ratio V3/V2 < 0.5 on calm days)
         # Note: If V2 has 0 pivots, ratio is undefined, we expect V3 to also have 0 or very few.
         v2_pivots = len(bundle.core.turning_points)
         v3_pivots = len(bundle.v3_core.turning_points)
-        
+
         if v2_pivots > 0:
             ratio = v3_pivots / v2_pivots
             assert ratio <= 0.5, f"Sobriety Gate failed: Ratio V3/V2={ratio} > 0.5"
         else:
-            assert v3_pivots <= 1, "Sobriety Gate failed: V3 produced pivots on calm day where V2 produced 0"
+            assert v3_pivots <= 1, (
+                "Sobriety Gate failed: V3 produced pivots on calm day where V2 produced 0"
+            )
 
         # GATE 2: Scoring Expressivity (StdDev V3 > StdDev V2)
         v2_scores = [c["raw_score"] for c in bundle.core.category_scores.values()]
         v3_scores = [c.avg_score for c in bundle.v3_core.daily_metrics.values()]
-        
+
         v2_std = statistics.stdev(v2_scores) if len(v2_scores) > 1 else 0
         v3_std = statistics.stdev(v3_scores) if len(v3_scores) > 1 else 0
-        
-        assert v3_std >= v2_std, f"Expressivity Gate failed: V3 StdDev({v3_std}) < V2 StdDev({v2_std})"
+
+        assert v3_std >= v2_std, (
+            f"Expressivity Gate failed: V3 StdDev({v3_std}) < V2 StdDev({v2_std})"
+        )
 
         # GATE 3: Window Precision (confidence > 0.7 for V3)
         if bundle.v3_core.decision_windows:
             for dw in bundle.v3_core.decision_windows:
-                assert dw.confidence >= 0.7, f"Precision Gate failed: Window confidence {dw.confidence} < 0.7"
+                assert dw.confidence >= 0.7, (
+                    f"Precision Gate failed: Window confidence {dw.confidence} < 0.7"
+                )
 
         # GATE 4: Flat Day Integrity (No windows on intensity < 3.0)
         # We simulate this by checking calm_day (which is low intensity)
-        if fixture_name := "calm_day": # logic placeholder
-            assert len(bundle.v3_core.decision_windows) == 0, "Flat Day Integrity Gate failed: V3 produced windows on calm day"
+        if True:  # logic placeholder for calm day
+            assert len(bundle.v3_core.decision_windows) == 0, (
+                "Flat Day Integrity Gate failed: V3 produced windows on calm day"
+            )
 
-        print(f"\nQA V3 Gates Validation Success:")
+        print("\nQA V3 Gates Validation Success:")
         print(f"  Pivots: V2={v2_pivots}, V3={v3_pivots}")
         print(f"  Expressivity: V2 StdDev={v2_std:.2f}, V3 StdDev={v3_std:.2f}")
 
@@ -676,27 +693,31 @@ def test_v3_inter_run_stability():
     """
     Task 4 Story 42.17: Vérifier la stabilité inter-runs (idempotence).
     """
+    from app.prediction.context_loader import PredictionContextLoader
     from app.services.prediction_compute_runner import PredictionComputeRunner
     from app.services.prediction_request_resolver import PredictionRequestResolver
-    from app.prediction.context_loader import PredictionContextLoader
 
     with SessionLocal() as db:
-        token = _setup_qa_user_and_natal(db)
+        _setup_qa_user_and_natal(db)
         resolver = PredictionRequestResolver()
-        resolved = resolver.resolve(db, user_id=1, date_local=date(2026, 3, 8), include_engine_input=True)
-        
+        resolved = resolver.resolve(
+            db, user_id=1, date_local=date(2026, 3, 8), include_engine_input=True
+        )
+
         runner = PredictionComputeRunner(context_loader=PredictionContextLoader())
-        
+
         # Run 1
         res1 = runner.run_with_timeout(db, resolved.engine_input, engine_mode=DailyEngineMode.V3)
         # Run 2
         res2 = runner.run_with_timeout(db, resolved.engine_input, engine_mode=DailyEngineMode.V3)
-        
+
         # Compare category scores
         scores1 = {c_code: s.avg_score for c_code, s in res1.bundle.v3_core.daily_metrics.items()}
         scores2 = {c_code: s.avg_score for c_code, s in res2.bundle.v3_core.daily_metrics.items()}
-        
-        assert scores1 == scores2, "Stability check failed: consecutive runs produced different scores"
+
+        assert scores1 == scores2, (
+            "Stability check failed: consecutive runs produced different scores"
+        )
         assert len(res1.bundle.v3_core.turning_points) == len(res2.bundle.v3_core.turning_points)
 
 
@@ -708,17 +729,19 @@ def test_v3_runtime_slo():
     - Le budget micro-performance <100ms reste couvert par les tests unitaires ciblés.
     - Ici on verrouille un budget d'intégration plus stable en suite complète Windows/CI.
     """
+    from app.prediction.context_loader import PredictionContextLoader
     from app.services.prediction_compute_runner import PredictionComputeRunner
     from app.services.prediction_request_resolver import PredictionRequestResolver
-    from app.prediction.context_loader import PredictionContextLoader
 
     with SessionLocal() as db:
-        token = _setup_qa_user_and_natal(db)
+        _setup_qa_user_and_natal(db)
         resolver = PredictionRequestResolver()
-        resolved = resolver.resolve(db, user_id=1, date_local=date(2026, 3, 8), include_engine_input=True)
-        
+        resolved = resolver.resolve(
+            db, user_id=1, date_local=date(2026, 3, 8), include_engine_input=True
+        )
+
         runner = PredictionComputeRunner(context_loader=PredictionContextLoader())
-        
+
         # Warmup
         runner.run_with_timeout(db, resolved.engine_input, engine_mode=DailyEngineMode.V3)
 
@@ -733,6 +756,5 @@ def test_v3_runtime_slo():
         print(f"\nV3 Runtime samples: {[round(sample, 2) for sample in samples_ms]}")
         print(f"V3 Runtime median: {median_ms:.2f}ms")
         assert median_ms < 200.0, (
-            f"Runtime SLO failed: median {median_ms:.2f}ms > 200ms "
-            f"(samples={samples_ms!r})"
+            f"Runtime SLO failed: median {median_ms:.2f}ms > 200ms (samples={samples_ms!r})"
         )

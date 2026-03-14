@@ -98,10 +98,10 @@ class V3SignalLayer:
     """A continuous signal layer for a specific category and time step (AC1)."""
 
     baseline: float  # B(c): natal structural susceptibility
-    transit: float   # T(c,t): transit climate
-    aspect: float    # A(c,t): aspect dynamics
-    event: float     # E(c,t): event triggers
-    composite: float # Final combined signal for this step
+    transit: float  # T(c,t): transit climate
+    aspect: float  # A(c,t): aspect dynamics
+    event: float  # E(c,t): event triggers
+    composite: float  # Final combined signal for this step
 
 
 @dataclass(frozen=True)
@@ -115,18 +115,18 @@ class V3ThemeSignal:
 @dataclass(frozen=True)
 class V3DailyMetrics:
     """Daily derived metrics for a theme in v3 (AC1).
-    
+
     All _20 metrics are normalized on a [0, 20] scale.
     """
 
-    score_20: float       # Final calibrated score
-    level_day: float      # AC1: Average signal relative to neutral
+    score_20: float  # Final calibrated score
+    level_day: float  # AC1: Average signal relative to neutral
     intensity_day: float  # AC1: Total energy/relief of the day
     dominance_day: float  # AC1: Asymmetry of peaks
     stability_day: float  # AC1: Signal clarity/reliability
-    
-    rarity_percentile: float # rarity index on 0-20, not a statistical percentile
-    
+
+    rarity_percentile: float  # rarity index on 0-20, not a statistical percentile
+
     # Raw stats (retained for traceability)
     avg_score: float
     max_score: float
@@ -153,7 +153,7 @@ class V3TimeBlock:
     end_local: datetime
     orientation: str  # "rising" | "falling" | "stable" | "volatile"
     intensity: float  # 0-20
-    confidence: float # 0-1
+    confidence: float  # 0-1
     dominant_themes: list[str] = field(default_factory=list)
     summary: str = ""
 
@@ -236,7 +236,7 @@ class V3TurningPoint:
     categories_impacted: list[str] = field(default_factory=list)
     drivers: list[AstroEvent] = field(default_factory=list)
     summary: str = ""
-    
+
     # Story 43.1 Semantic Fields
     change_type: str = "recomposition"  # emergence | recomposition | attenuation
     previous_categories: list[str] = field(default_factory=list)
@@ -278,8 +278,8 @@ class V3EvidenceTurningPoint:
     amplitude: float
     confidence: float
     themes: list[str]
-    drivers: list[str] # List of driver labels
-    
+    drivers: list[str]  # List of driver labels
+
     # Story 43.1 Semantic Fields
     change_type: str = "recomposition"
     previous_categories: list[str] = field(default_factory=list)
@@ -297,22 +297,22 @@ class V3EvidencePack:
 
     version: str
     generated_at: datetime
-    
+
     day_profile: dict[str, Any]
     themes: dict[str, V3EvidenceTheme]
     time_windows: list[V3EvidenceWindow]
     turning_points: list[V3EvidenceTurningPoint]
-    
+
     v3_natal_structural: dict[str, Any] = field(default_factory=dict)
     v3_layer_diagnostics: dict[str, Any] = field(default_factory=dict)
-    
+
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
 class V3EngineOutput:
     """Engine v3 calculation results (AC1).
-    
+
     Attributes:
         engine_version: Explicit version of the calculation logic (AC4)
         snapshot_version: Version of the internal data structure (AC4)
@@ -322,15 +322,15 @@ class V3EngineOutput:
     engine_version: str = "v3"
     snapshot_version: str = "1.0"
     evidence_pack_version: str = "1.0"
-    
+
     theme_signals: dict[str, V3ThemeSignal] = field(default_factory=dict)
     daily_metrics: dict[str, V3DailyMetrics] = field(default_factory=dict)
     time_blocks: list[V3TimeBlock] = field(default_factory=list)
     turning_points: list[V3TurningPoint] = field(default_factory=list)
     decision_windows: list[DecisionWindow] = field(default_factory=list)
-    
-    evidence_pack: V3EvidencePack | None = None # Story 42.15
-    
+
+    evidence_pack: V3EvidencePack | None = None  # Story 42.15
+
     run_metadata: dict[str, Any] = field(default_factory=dict)
     computed_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
@@ -346,7 +346,9 @@ class DecisionWindow:
     confidence: float  # 0-1, inverse of volatility
     dominant_categories: list[str]
     orientation: str | None = None  # AC2: V3 orientation
-    intensity: float | None = None    # AC2: V3 intensity
+    intensity: float | None = None  # AC2: V3 intensity
+
+
 @dataclass(frozen=True)
 class BestWindow:
     start_local: datetime
@@ -371,7 +373,7 @@ class EditorialOutput:
     best_window: BestWindow | None
     caution_flags: dict[str, bool]
     overall_tone: str
-    top3_contributors_per_category: dict[str, list[Any]] # ContributorEntry
+    top3_contributors_per_category: dict[str, list[Any]]  # ContributorEntry
 
 
 @dataclass(frozen=True)
@@ -400,7 +402,7 @@ class CoreEngineOutput:
     decision_windows: list[DecisionWindow]
     detected_events: list[AstroEvent] = field(default_factory=list)
     sampling_timeline: list[SamplePoint] = field(default_factory=list)
-    explainability: Any | None = None # ExplainabilityReport
+    explainability: Any | None = None  # ExplainabilityReport
 
 
 @dataclass(frozen=True)
@@ -474,7 +476,7 @@ class EngineOutput:
     category_scores: dict[str, Any] = field(default_factory=dict)
     time_blocks: list[Any] = field(default_factory=list)
     turning_points: list[Any] = field(default_factory=list)
-    explainability: Any | None = None # ExplainabilityReport
+    explainability: Any | None = None  # ExplainabilityReport
     editorial: EditorialOutput | None = None
     editorial_text: EditorialTextOutput | None = None
     decision_windows: list[Any] = field(default_factory=list)

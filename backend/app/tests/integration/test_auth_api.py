@@ -17,9 +17,7 @@ client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def _isolated_auth_database(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def _isolated_auth_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     database_url = f"sqlite:///{(tmp_path / 'auth-api.db').as_posix()}"
     test_engine = create_engine(
         database_url,

@@ -993,17 +993,11 @@ def _deserialize_evidence_pack(payload: dict[str, Any]) -> V3EvidencePack:
                 body=pd_raw.get("body"),
                 target=pd_raw.get("target"),
                 aspect=pd_raw.get("aspect"),
-                orb_deg=(
-                    float(pd_raw["orb_deg"])
-                    if pd_raw.get("orb_deg") is not None
-                    else None
-                ),
+                orb_deg=(float(pd_raw["orb_deg"]) if pd_raw.get("orb_deg") is not None else None),
                 phase=pd_raw.get("phase"),
                 priority=pd_raw.get("priority"),
                 base_weight=(
-                    float(pd_raw["base_weight"])
-                    if pd_raw.get("base_weight") is not None
-                    else None
+                    float(pd_raw["base_weight"]) if pd_raw.get("base_weight") is not None else None
                 ),
                 metadata=dict(pd_raw.get("metadata", {})),
             )

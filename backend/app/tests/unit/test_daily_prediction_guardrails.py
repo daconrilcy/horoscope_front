@@ -34,6 +34,7 @@ def service(mock_deps):
         orchestrator=mock_deps["orchestrator"],
     )
 
+
 def _make_bundle(*, overall_tone: str | None = None, turning_points: list | None = None):
     bundle = MagicMock()
     bundle.core.turning_points = turning_points or []

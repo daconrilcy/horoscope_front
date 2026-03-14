@@ -19,8 +19,7 @@ def _canonicalize_value(value: Any) -> Any:
     if isinstance(value, (str, int, float, bool)) or value is None:
         return value
     raise TypeError(
-        "Unsupported value in engine input hash canonicalization: "
-        f"{type(value).__name__}"
+        f"Unsupported value in engine input hash canonicalization: {type(value).__name__}"
     )
 
 
@@ -40,8 +39,8 @@ def compute_engine_input_hash(
 ) -> str:
     """
     Computes a stable, canonical SHA-256 hash for EngineInput.
-    
-    This function is used by both the application service (to check for 
+
+    This function is used by both the application service (to check for
     existing runs) and the engine (to stamp the output).
     """
     canonical = _canonicalize_value(
