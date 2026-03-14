@@ -116,12 +116,12 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
       >
         <div className="dashboard-summary-card__content">
           {ZodiacIcon && (
-            <div className="dashboard-summary-card__pill text-adaptive">
+            <div className="dashboard-summary-card__pill">
               <ZodiacIcon className="dashboard-summary-card__pill-icon" />
               <span>{translateSign(sign, locale)} • {formattedDate}</span>
             </div>
           )}
-          <p className="dashboard-summary-card__text text-adaptive">
+          <p className="dashboard-summary-card__text">
             {summary}
           </p>
         </div>

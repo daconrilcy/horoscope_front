@@ -22,3 +22,9 @@
   min-height: inherit;
   padding: 32px 28px;
 }
+
+.astro-context {
+  --color-text-primary: var(--color-text-on-astro);
+  --color-text-secondary: var(--color-text-muted-on-astro);
+  color: var(--color-text-primary);
+}

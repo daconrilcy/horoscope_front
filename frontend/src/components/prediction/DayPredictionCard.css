@@ -2,6 +2,7 @@
 
 .day-prediction-card__body {
   margin-top: var(--space-6, 1.5rem);
+  color: var(--color-text-primary);
 }
 
 .day-prediction-card__summary {
@@ -16,13 +17,11 @@
   font-size: 0.9rem;
   background-color: rgba(255, 184, 77, 0.12);
   border: 1px solid rgba(255, 184, 77, 0.35);
-  color: var(--color-text-primary);
 }
 
-.dark .day-prediction-card--astro .day-prediction-card__calibration {
+.astro-context .day-prediction-card__calibration {
   background-color: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
 }
 
 .day-prediction-card__best-window {
@@ -33,7 +32,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.dark .day-prediction-card--astro .day-prediction-card__best-window {
+.astro-context .day-prediction-card__best-window {
   background-color: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
@@ -41,12 +40,8 @@
 .day-prediction-card__best-window-title {
   margin: 0 0 var(--space-2, 0.5rem) 0;
   font-size: 0.9rem;
-  color: var(--text-3);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
-}
-
-.dark .day-prediction-card--astro .day-prediction-card__best-window-title {
-  color: rgba(255, 255, 255, 0.85);
 }
 
 .day-prediction-card__best-window-time {
@@ -57,11 +52,13 @@
 .day-prediction-card__best-window-desc {
   margin: var(--space-1, 0.25rem) 0 0 0;
   font-size: 0.875rem;
+  color: var(--color-text-secondary);
 }
 
 .day-prediction-card__date {
   margin: 0;
   font-size: 1.5rem;
+  color: var(--color-text-primary);
 }
 
 .day-prediction-card__tone {
@@ -74,9 +71,9 @@
   color: white;
 }
 
-.dark .day-prediction-card--astro .day-prediction-card__tone {
+.astro-context .day-prediction-card__tone {
   background-color: rgba(255, 255, 255, 0.3) !important;
-  color: var(--background);
+  color: var(--color-text-primary);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }

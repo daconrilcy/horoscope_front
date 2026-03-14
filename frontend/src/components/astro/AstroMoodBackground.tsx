@@ -377,7 +377,7 @@ export const AstroMoodBackground: React.FC<AstroMoodBackgroundProps> = ({
         aria-hidden="true"
         className="astro-mood-background__canvas"
       />
-      <div className="astro-mood-background__content">{children}</div>
+      <div className="astro-mood-background__content astro-context">{children}</div>
     </div>
   );
 };

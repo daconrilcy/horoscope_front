@@ -11,7 +11,6 @@ import {
 
 import { AstroMoodBackground } from "../astro/AstroMoodBackground";
 import type { ZodiacSign } from "../astro/zodiacPatterns";
-import { useThemeSafe } from "../../state/ThemeProvider";
 import "./DayPredictionCard.css";
 
 interface Props {
@@ -39,14 +38,11 @@ export const DayPredictionCard: React.FC<Props> = ({ prediction, lang, astroBack
     year: "numeric",
   });
 
-  const themeContext = useThemeSafe();
-  const theme = themeContext?.theme || 'light';
-
   const isAstro = !!astroBackgroundProps;
 
   const bodyContent = (
-    <div className={`day-prediction-card__body ${isAstro ? 'astro-text' : ''}`}>
-      <p className="day-prediction-card__summary text-adaptive">
+    <div className="day-prediction-card__body">
+      <p className="day-prediction-card__summary">
         {summary.overall_summary || getPredictionMessage("pending_summary", lang)}
       </p>
 
@@ -61,12 +57,12 @@ export const DayPredictionCard: React.FC<Props> = ({ prediction, lang, astroBack
           <h4 className="day-prediction-card__best-window-title">
             {getPredictionMessage("best_window", lang)}
           </h4>
-          <div className="day-prediction-card__best-window-time text-adaptive">
+          <div className="day-prediction-card__best-window-time">
             {new Date(summary.best_window.start_local).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
             {" - "}
             {new Date(summary.best_window.end_local).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
           </div>
-          <p className="day-prediction-card__best-window-desc text-muted">
+          <p className="day-prediction-card__best-window-desc">
             {getPredictionMessage("dominant", lang)} : {getCategoryLabel(summary.best_window.dominant_category, lang)}
           </p>
         </div>
@@ -77,10 +73,10 @@ export const DayPredictionCard: React.FC<Props> = ({ prediction, lang, astroBack
   const headerContent = (
     <div className="day-prediction-card__header">
       <div>
-        <h2 className="day-prediction-card__date text-adaptive">{formattedDate}</h2>
+        <h2 className="day-prediction-card__date">{formattedDate}</h2>
         <span 
           className="day-prediction-card__tone"
-          style={{ backgroundColor: isAstro && theme === 'dark' ? undefined : toneColor }}
+          style={isAstro ? undefined : { backgroundColor: toneColor }}
         >
           {toneLabel}
         </span>

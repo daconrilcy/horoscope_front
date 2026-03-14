@@ -2726,7 +2726,7 @@ textarea:focus-visible {
   -webkit-backdrop-filter: blur(12px);
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   align-self: flex-start;
   margin-bottom: auto;
   border: 1px solid rgba(139, 92, 246, 0.25);
@@ -2766,7 +2766,7 @@ textarea:focus-visible {
   margin: 0;
   font-size: 1rem;
   line-height: 1.5;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;

@@ -121,6 +121,10 @@
   --layout-page-max-width: 900px;
   --layout-page-padding: var(--space-6);
   --layout-sidebar-width: 220px;
+
+  /* === ASTRO CONTEXT === */
+  --color-text-on-astro: white;
+  --color-text-muted-on-astro: rgba(255, 255, 255, 0.7);
 }
 
 .dark {
