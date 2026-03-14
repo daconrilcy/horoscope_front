@@ -22,49 +22,49 @@ afin de ne plus recoder des overlays ad-hoc pour chaque nouvelle modale du produ
 
 ## Tasks / Subtasks
 
-- [ ] Tâche 1 : Analyser `DeleteAccountModal.tsx` (AC: 7)
-  - [ ] Lire le composant pour identifier sa structure HTML et son comportement
-  - [ ] Identifier les props à préserver pour la rétrocompatibilité
-  - [ ] Identifier les styles à migrer vers `Modal.css`
+- [x] Tâche 1 : Analyser `DeleteAccountModal.tsx` (AC: 7)
+  - [x] Lire le composant pour identifier sa structure HTML et son comportement
+  - [x] Identifier les props à préserver pour la rétrocompatibilité
+  - [x] Identifier les styles à migrer vers `Modal.css`
 
-- [ ] Tâche 2 : Créer la structure de fichiers (AC: 1)
-  - [ ] `frontend/src/components/ui/Modal/Modal.tsx`
-  - [ ] `frontend/src/components/ui/Modal/Modal.css`
-  - [ ] `frontend/src/components/ui/Modal/Modal.test.tsx`
-  - [ ] `frontend/src/components/ui/Modal/index.ts`
-  - [ ] Ajouter `export * from './Modal'` dans `frontend/src/components/ui/index.ts`
+- [x] Tâche 2 : Créer la structure de fichiers (AC: 1)
+  - [x] `frontend/src/components/ui/Modal/Modal.tsx`
+  - [x] `frontend/src/components/ui/Modal/Modal.css`
+  - [x] `frontend/src/components/ui/Modal/Modal.test.tsx`
+  - [x] `frontend/src/components/ui/Modal/index.ts`
+  - [x] Ajouter `export * from './Modal'` dans `frontend/src/components/ui/index.ts`
 
-- [ ] Tâche 3 : Implémenter `<Modal>` (AC: 2, 3, 4, 5, 6)
-  - [ ] Rendu via `ReactDOM.createPortal` dans `document.body`
-  - [ ] Overlay semi-transparent + contenu centré
-  - [ ] Bouton ✕ dans le header
-  - [ ] Fermeture au clic overlay (stopPropagation sur le contenu)
-  - [ ] Fermeture à Échap via `useEffect` + listener `keydown`
-  - [ ] `useEffect` pour bloquer/débloquer le scroll body
-  - [ ] Focus trap : quand modale ouverte, Tab/Shift+Tab reste dans le contenu modal
+- [x] Tâche 3 : Implémenter `<Modal>` (AC: 2, 3, 4, 5, 6)
+  - [x] Rendu via `ReactDOM.createPortal` dans `document.body`
+  - [x] Overlay semi-transparent + contenu centré
+  - [x] Bouton ✕ dans le header
+  - [x] Fermeture au clic overlay (stopPropagation sur le contenu)
+  - [x] Fermeture à Échap via `useEffect` + listener `keydown`
+  - [x] `useEffect` pour bloquer/débloquer le scroll body
+  - [x] Focus trap : quand modale ouverte, Tab/Shift+Tab reste dans le contenu modal
 
-- [ ] Tâche 4 : Créer `Modal.css` (AC: 8)
-  - [ ] `.modal-overlay` : fixed inset-0, background rgba semi-transparent, z-index élevé, flex center
-  - [ ] `.modal` : background `--color-bg-elevated`, border-radius `--radius-lg`, shadow `--shadow-hero`, max-width, width
-  - [ ] `.modal--danger` : couleur accent header variant danger
-  - [ ] `.modal__header` : padding, flex between, border-bottom
-  - [ ] `.modal__title` : font-size `--font-size-lg`, font-weight semibold
-  - [ ] `.modal__close` : bouton ghost icône ✕
-  - [ ] `.modal__body` : padding `--space-6`
-  - [ ] `.modal__footer` : padding, flex end, gap `--space-3`, border-top
-  - [ ] Animation : `@keyframes modal-enter` avec opacity + translateY
+- [x] Tâche 4 : Créer `Modal.css` (AC: 8)
+  - [x] `.modal-overlay` : fixed inset-0, background rgba semi-transparent, z-index élevé, flex center
+  - [x] `.modal` : background `--color-bg-elevated`, border-radius `--radius-lg`, shadow `--shadow-hero`, max-width, width
+  - [x] `.modal--danger` : couleur accent header variant danger
+  - [x] `.modal__header` : padding, flex between, border-bottom
+  - [x] `.modal__title` : font-size `--font-size-lg`, font-weight semibold
+  - [x] `.modal__close` : bouton ghost icône ✕
+  - [x] `.modal__body` : padding `--space-6`
+  - [x] `.modal__footer` : padding, flex end, gap `--space-3`, border-top
+  - [x] Animation : `@keyframes modal-enter` avec opacity + translateY
 
-- [ ] Tâche 5 : Refactoriser `DeleteAccountModal.tsx` (AC: 7)
-  - [ ] Wrapper thin autour de `<Modal variant="danger">`
-  - [ ] Conserver exactement les mêmes props externes
-  - [ ] Les boutons internes utilisent `<Button>` (story 50.1)
+- [x] Tâche 5 : Refactoriser `DeleteAccountModal.tsx` (AC: 7)
+  - [x] Wrapper thin autour de `<Modal variant="danger">`
+  - [x] Conserver exactement les mêmes props externes
+  - [x] Les boutons internes utilisent `<Button>` (story 50.1)
 
-- [ ] Tâche 6 : Écrire les tests (AC: 9)
-  - [ ] Modal fermée par défaut
-  - [ ] Modal ouverte : contenu visible, `role="dialog"` présent
-  - [ ] Fermeture via bouton ✕
-  - [ ] Fermeture via touche Échap
-  - [ ] `aria-modal="true"` et `aria-labelledby` corrects
+- [x] Tâche 6 : Écrire les tests (AC: 9)
+  - [x] Modal fermée par défaut
+  - [x] Modal ouverte : contenu visible, `role="dialog"` présent
+  - [x] Fermeture via bouton ✕
+  - [x] Fermeture via touche Échap
+  - [x] `aria-modal="true"` et `aria-labelledby` corrects
 
 ## Dev Notes
 
@@ -196,10 +196,33 @@ interface ModalProps {
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+gemini-2.0-flash
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Composant `<Modal>` générique implémenté avec `createPortal` pour un rendu propre hors du flux DOM.
+- Gestion automatique du scroll lock sur le `body` lors de l'ouverture.
+- Accessibilité native : focus trap, support de la touche Échap, rôles ARIA et labels.
+- Support des variants (`default`, `danger`, `info`) et des tailles (`sm`, `md`, `lg`).
+- Refactorisation réussie de `DeleteAccountModal` utilisant le nouveau composant.
+- 6 tests unitaires couvrant l'ouverture, la fermeture, le clic overlay et l'accessibilité.
+
+### Change Log
+
+- 2026-03-14 : Implémentation du composant Modal et refacto DeleteAccountModal.
+
 ### File List
+
+| Action | Fichier |
+|--------|---------|
+| Créé | `frontend/src/components/ui/Modal/Modal.tsx` |
+| Créé | `frontend/src/components/ui/Modal/Modal.css` |
+| Créé | `frontend/src/components/ui/Modal/Modal.test.tsx` |
+| Créé | `frontend/src/components/ui/Modal/index.ts` |
+| Modifié | `frontend/src/components/ui/index.ts` |
+| Modifié | `frontend/src/components/settings/DeleteAccountModal.tsx` |
+| Modifié | `frontend/src/components/settings/DeleteAccountModal.css` |
+
+Status: done

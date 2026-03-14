@@ -444,7 +444,7 @@ development_status:
   50-2-composant-input-field-types-etats-validation: done
   50-3-composant-select-searchable-reutilisable: done
   50-4-composant-form-formfield-wrapper-zod: done
-  50-5-composant-modal-dialog-generique: ready-for-dev
+  50-5-composant-modal-dialog-generique: done
   50-6-composant-card-variants-slots-composition: ready-for-dev
   50-7-composants-skeleton-et-emptystate: ready-for-dev
   50-8-composants-badge-et-iconbadge: ready-for-dev

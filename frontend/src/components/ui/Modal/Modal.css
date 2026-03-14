@@ -1,0 +1,99 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: var(--z-index-modal, 2000);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4, 1rem);
+}
+
+.modal {
+  background: var(--color-bg-surface, #ffffff);
+  border: 1px solid var(--color-glass-border, rgba(255,255,255,0.65));
+  border-radius: var(--radius-lg, 24px);
+  box-shadow: var(--shadow-hero, 0 20px 50px rgba(0,0,0,0.3));
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: modal-enter var(--duration-normal, 250ms) var(--easing-default, ease);
+}
+
+@keyframes modal-enter {
+  from { 
+    opacity: 0; 
+    transform: translateY(-8px) scale(0.98); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+.modal--sm { max-width: 400px; }
+.modal--md { max-width: 560px; }
+.modal--lg { max-width: 800px; }
+
+.modal__header {
+  padding: var(--space-4, 1rem) var(--space-6, 1.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-glass-border, rgba(255,255,255,0.65));
+}
+
+.modal__title {
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--color-text-primary, #1E1B2E);
+  margin: 0;
+}
+
+.modal__close {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted, rgba(30,27,46,0.55));
+  cursor: pointer;
+  padding: var(--space-1, 0.25rem);
+  border-radius: var(--radius-full, 999px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-fast, 150ms) ease;
+}
+
+.modal__close:hover {
+  background: var(--color-glass-bg, rgba(255,255,255,0.55));
+  color: var(--color-text-primary, #1E1B2E);
+}
+
+.modal__body {
+  padding: var(--space-6, 1.5rem);
+  overflow-y: auto;
+  color: var(--color-text-secondary, rgba(30,27,46,0.72));
+  font-size: var(--font-size-md, 1rem);
+  line-height: var(--line-height-normal, 1.5);
+}
+
+.modal__footer {
+  padding: var(--space-4, 1rem) var(--space-6, 1.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3, 0.75rem);
+  border-top: 1px solid var(--color-glass-border, rgba(255,255,255,0.65));
+  background: var(--color-glass-mini, rgba(255,255,255,0.40));
+}
+
+/* VARIANTS */
+.modal--danger .modal__title {
+  color: var(--color-error, #ff6b81);
+}
+
+.modal--info .modal__title {
+  color: var(--color-primary, #866CD0);
+}
