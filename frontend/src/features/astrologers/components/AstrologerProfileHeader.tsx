@@ -1,7 +1,7 @@
 import { useState } from "react"
-import type { AstrologerProfile } from "../../../api/astrologers"
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/astrologers"
+import type { AstrologerProfile } from "@api/astrologers"
+import { detectLang } from "@i18n/astrology"
+import { tAstrologers as t } from "@i18n/astrologers"
 
 type AstrologerProfileHeaderProps = {
   profile: AstrologerProfile
@@ -77,3 +77,6 @@ export function AstrologerProfileHeader({
     </header>
   )
 }
+
+
+

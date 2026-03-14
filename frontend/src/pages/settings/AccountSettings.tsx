@@ -1,12 +1,12 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { useAccessTokenSnapshot } from "../../utils/authToken"
-import { useAuthMe } from "../../api/authMe"
-import { PrivacyPanel } from "../../components/PrivacyPanel"
-import { DeleteAccountModal } from "../../components/settings/DeleteAccountModal"
-import { detectLang } from "../../i18n/astrology"
-import { settingsTranslations } from "../../i18n/settings"
-import { getLocale } from "../../utils/locale"
+import { useAccessTokenSnapshot } from "@utils/authToken"
+import { useAuthMe } from "@api/authMe"
+import { PrivacyPanel } from "@components/PrivacyPanel"
+import { DeleteAccountModal } from "@components/settings/DeleteAccountModal"
+import { detectLang } from "@i18n/astrology"
+import { settingsTranslations } from "@i18n/settings"
+import { getLocale } from "@utils/locale"
 
 export function AccountSettings() {
   const lang = detectLang()

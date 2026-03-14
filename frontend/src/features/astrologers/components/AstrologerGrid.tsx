@@ -1,6 +1,6 @@
-import type { Astrologer } from "../../../api/astrologers"
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/astrologers"
+import type { Astrologer } from "@api/astrologers"
+import { detectLang } from "@i18n/astrology"
+import { tAstrologers as t } from "@i18n/astrologers"
 import { AstrologerCard } from "./AstrologerCard"
 
 type AstrologerGridProps = {
@@ -34,3 +34,6 @@ export function AstrologerGrid({ astrologers, onSelectAstrologer }: AstrologerGr
     </div>
   )
 }
+
+
+

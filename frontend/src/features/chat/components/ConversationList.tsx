@@ -1,9 +1,9 @@
 import { useState } from "react"
 import { Plus } from "lucide-react"
 
-import type { ChatConversationSummary } from "../../../api/chat"
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/astrologers"
+import type { ChatConversationSummary } from "@api/chat"
+import { detectLang } from "@i18n/astrology"
+import { tAstrologers as t } from "@i18n/astrologers"
 import { ConversationItem, ConversationItemSkeleton } from "./ConversationItem"
 
 type ConversationListProps = {
@@ -94,3 +94,6 @@ export function ConversationList({
     </div>
   )
 }
+
+
+

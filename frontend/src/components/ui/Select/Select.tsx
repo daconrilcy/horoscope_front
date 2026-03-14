@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect, useId } from 'react';
 import { ChevronDown, Search, X } from 'lucide-react';
-import { classNames } from '../../../utils/classNames';
+import { classNames } from '@utils/classNames';
 import './Select.css';
 
 export interface SelectOption {
@@ -249,3 +249,4 @@ export const Select: React.FC<SelectProps> = ({
     </div>
   );
 };
+

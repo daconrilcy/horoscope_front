@@ -6,8 +6,8 @@ import { z } from "zod"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
 
-import { getBirthData, saveBirthData, BirthProfileApiError, type BirthProfileData } from "../api/birthProfile"
-import { generateNatalChart, ApiError, type LatestNatalChart } from "../api/natalChart"
+import { getBirthData, saveBirthData, BirthProfileApiError, type BirthProfileData } from "@api"
+import { generateNatalChart, ApiError, type LatestNatalChart } from "@api"
 import { geocodeCity, GeocodingError, reverseGeocode } from "../api/geocoding"
 import { useAccessTokenSnapshot, getSubjectFromAccessToken } from "../utils/authToken"
 import { ANONYMOUS_SUBJECT, GENERATION_TIMEOUT_LABEL, logSupportRequestId, formatBirthPlace } from "../utils/constants"
@@ -851,3 +851,4 @@ export function BirthProfilePage() {
     </PageLayout>
   )
 }
+

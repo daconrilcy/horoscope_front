@@ -1,5 +1,5 @@
 import React from 'react';
-import { classNames } from '../../../utils/classNames';
+import { classNames } from '@utils/classNames';
 import './Badge.css';
 
 export const BADGE_COLORS = {
@@ -55,3 +55,4 @@ export const IconBadge: React.FC<IconBadgeProps> = ({
     </Badge>
   );
 };
+

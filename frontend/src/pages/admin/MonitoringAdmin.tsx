@@ -1,6 +1,6 @@
-import { detectLang } from "../../i18n/astrology"
-import { adminTranslations } from "../../i18n/admin"
-import { OpsMonitoringPanel } from "../../components/OpsMonitoringPanel"
+import { detectLang } from "@i18n/astrology"
+import { adminTranslations } from "@i18n/admin"
+import { OpsMonitoringPanel } from "@components/OpsMonitoringPanel"
 
 export function MonitoringAdmin() {
   const lang = detectLang()

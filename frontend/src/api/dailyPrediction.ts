@@ -1,5 +1,5 @@
-import { API_BASE_URL, apiFetch } from "./client";
-import type { DailyPredictionResponse, DailyHistoryResponse } from "../types/dailyPrediction";
+import { API_BASE_URL, apiFetch, ApiError } from "./client";
+import type { DailyPredictionResponse, DailyHistoryResponse } from "@app-types/dailyPrediction";
 
 type ErrorEnvelope = {
   error: {
@@ -12,19 +12,6 @@ type ErrorEnvelope = {
 type FastApiDetailEnvelope = {
   detail?: unknown;
 };
-
-export class ApiError extends Error {
-  readonly code: string;
-  readonly status: number;
-  readonly requestId?: string;
-
-  constructor(code: string, message: string, status: number, requestId?: string) {
-    super(message);
-    this.code = code;
-    this.status = status;
-    this.requestId = requestId;
-  }
-}
 
 function toApiErrorPayload(raw: Record<string, unknown>): ErrorEnvelope | null {
   if (raw?.error && typeof raw.error === "object") {

@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
-import { registerApi, AuthApiError } from "../api/auth"
+import { registerApi, AuthApiError } from "@api"
 import { setAccessToken } from "../utils/authToken"
 import { detectLang } from "../i18n/astrology"
 import { authTranslations } from "../i18n/auth"
@@ -118,3 +118,4 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
     </section>
   )
 }
+

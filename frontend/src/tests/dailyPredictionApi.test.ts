@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ApiError, getDailyHistory, getDailyPrediction } from "../api/dailyPrediction";
+import { ApiError, getDailyHistory, getDailyPrediction } from "@api";
 
 describe("dailyPrediction api", () => {
   afterEach(() => {
@@ -102,3 +102,4 @@ describe("dailyPrediction api", () => {
     }
   });
 });
+

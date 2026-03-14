@@ -1,13 +1,13 @@
 import { useMemo } from "react"
-import { useAstrologer } from "../../../api/astrologers"
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/consultations"
+import { useAstrologer } from "@api/astrologers"
+import { detectLang } from "@i18n/astrology"
+import { tConsultations as t } from "@i18n/consultations"
 import {
   AUTO_ASTROLOGER_ID,
   CONTEXT_MAX_LENGTH,
   getConsultationTypeConfig,
   type ConsultationDraft,
-} from "../../../types/consultation"
+} from "@app-types/consultation"
 
 type ValidationStepProps = {
   draft: ConsultationDraft
@@ -103,3 +103,8 @@ export function ValidationStep({
     </div>
   )
 }
+
+
+
+
+

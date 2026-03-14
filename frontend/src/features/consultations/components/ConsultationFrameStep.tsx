@@ -1,6 +1,6 @@
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/consultations"
-import { CONTEXT_MAX_LENGTH, INTERACTION_ELIGIBLE_TYPES, type ConsultationDraft } from "../../../types/consultation"
+import { detectLang } from "@i18n/astrology"
+import { tConsultations as t } from "@i18n/consultations"
+import { CONTEXT_MAX_LENGTH, INTERACTION_ELIGIBLE_TYPES, type ConsultationDraft } from "@app-types/consultation"
 
 type ConsultationFrameStepProps = {
   draft: ConsultationDraft
@@ -88,3 +88,7 @@ export function ConsultationFrameStep({
     </div>
   )
 }
+
+
+
+

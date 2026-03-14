@@ -9,8 +9,8 @@ import { getGuideTranslations, natalChartTranslations } from "../i18n/natalChart
  * ApiError est importé pour créer des instances dans les tests (new ApiError(...)).
  * vi.mock remplace la classe réelle par notre mock défini ci-dessous.
  */
+import { ApiError } from "@api"
 import {
-  ApiError,
   useLatestNatalChart,
   generateNatalChart,
   useNatalInterpretation,

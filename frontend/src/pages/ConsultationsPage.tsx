@@ -2,7 +2,7 @@ import { Link } from "react-router-dom"
 
 import { useConsultation } from "../state/consultationStore"
 import { detectLang } from "../i18n/astrology"
-import { t } from "../i18n/consultations"
+import { tConsultations as t } from "@i18n/consultations"
 import { CONSULTATION_TYPES, CONTEXT_TRUNCATE_LENGTH, getConsultationTypeConfig } from "../types/consultation"
 import { formatDate } from "../utils/formatDate"
 
@@ -85,3 +85,4 @@ export function ConsultationsPage() {
     </div>
   )
 }
+

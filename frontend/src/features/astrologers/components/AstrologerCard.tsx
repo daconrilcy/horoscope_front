@@ -1,7 +1,7 @@
 import { useState } from "react"
-import type { Astrologer } from "../../../api/astrologers"
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/astrologers"
+import type { Astrologer } from "@api/astrologers"
+import { detectLang } from "@i18n/astrology"
+import { tAstrologers as t } from "@i18n/astrologers"
 
 type AstrologerCardProps = {
   astrologer: Astrologer
@@ -47,3 +47,6 @@ export function AstrologerCard({ astrologer, onClick }: AstrologerCardProps) {
     </button>
   )
 }
+
+
+

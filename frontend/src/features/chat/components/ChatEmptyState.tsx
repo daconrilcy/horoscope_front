@@ -1,7 +1,7 @@
 import { MessageCircle } from "lucide-react"
 
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/astrologers"
+import { detectLang } from "@i18n/astrology"
+import { tAstrologers as t } from "@i18n/astrologers"
 
 type ChatEmptyStateProps = {
   onStartConversation: () => void
@@ -27,3 +27,5 @@ export function ChatEmptyState({ onStartConversation }: ChatEmptyStateProps) {
     </div>
   )
 }
+
+

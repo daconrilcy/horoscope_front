@@ -1,7 +1,7 @@
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/consultations"
-import { WIZARD_STEPS, WIZARD_STEP_LABELS, type WizardStep } from "../../../types/consultation"
-import { classNames } from "../../../utils/classNames"
+import { detectLang } from "@i18n/astrology"
+import { tConsultations as t } from "@i18n/consultations"
+import { WIZARD_STEPS, WIZARD_STEP_LABELS, type WizardStep } from "@app-types/consultation"
+import { classNames } from "@utils/classNames"
 
 type WizardProgressProps = {
   currentStepName: WizardStep
@@ -39,3 +39,8 @@ export function WizardProgress({ currentStepName }: WizardProgressProps) {
     </nav>
   )
 }
+
+
+
+
+

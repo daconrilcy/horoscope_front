@@ -7,6 +7,19 @@ export const API_TIMEOUT_MS = Number.isFinite(configuredTimeout) && configuredTi
   ? configuredTimeout
   : DEFAULT_TIMEOUT_MS
 
+export class ApiError extends Error {
+  readonly code: string;
+  readonly status: number;
+  readonly requestId?: string;
+
+  constructor(code: string, message: string, status: number, requestId?: string) {
+    super(message);
+    this.code = code;
+    this.status = status;
+    this.requestId = requestId;
+  }
+}
+
 export async function apiFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
   const controller = new AbortController()
   const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS)

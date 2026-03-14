@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import { B2BUsageApiError, useB2BUsageSummary } from "../api/b2bUsage"
+import { B2BUsageApiError, useB2BUsageSummary } from "@api"
 
 export function B2BUsagePanel() {
   const [apiKey, setApiKey] = useState("")
@@ -63,3 +63,4 @@ export function B2BUsagePanel() {
     </section>
   )
 }
+

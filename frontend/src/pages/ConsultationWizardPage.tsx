@@ -11,7 +11,7 @@ import {
   ConsultationFallbackBanner,
 } from "../features/consultations"
 import { detectLang } from "../i18n/astrology"
-import { t } from "../i18n/consultations"
+import { tConsultations as t } from "@i18n/consultations"
 import {
   VALID_CREATABLE_TYPES,
   getObjectiveForType,
@@ -273,3 +273,4 @@ export function ConsultationWizardPage() {
     </div>
   )
 }
+

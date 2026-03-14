@@ -1,6 +1,6 @@
 import React from 'react';
 import './Button.css';
-import { classNames } from '../../../utils/classNames';
+import { classNames } from '@utils/classNames';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -61,3 +61,4 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 
 Button.displayName = 'Button';
+

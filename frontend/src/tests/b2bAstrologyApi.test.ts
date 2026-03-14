@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { B2BAstrologyApiError, useB2BWeeklyBySign } from "../api/b2bAstrology"
+import { B2BAstrologyApiError, useB2BWeeklyBySign } from "@api"
 
 vi.mock("@tanstack/react-query", () => ({
   useMutation: (options: unknown) => options,
@@ -85,4 +85,5 @@ describe("b2b astrology api", () => {
     }
   })
 })
+
 

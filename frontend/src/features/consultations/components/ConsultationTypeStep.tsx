@@ -1,7 +1,7 @@
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/consultations"
-import { CONSULTATION_TYPES, type ConsultationType } from "../../../types/consultation"
-import { classNames } from "../../../utils/classNames"
+import { detectLang } from "@i18n/astrology"
+import { tConsultations as t } from "@i18n/consultations"
+import { CONSULTATION_TYPES, type ConsultationType } from "@app-types/consultation"
+import { classNames } from "@utils/classNames"
 
 type ConsultationTypeStepProps = {
   selectedType: ConsultationType | null
@@ -44,3 +44,8 @@ export function ConsultationTypeStep({
     </div>
   )
 }
+
+
+
+
+

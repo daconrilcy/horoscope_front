@@ -3,12 +3,12 @@ import {
   detectLang,
   GEOCODING_MESSAGES,
   type GeocodingMessageKey,
-} from "../../../i18n/astrology"
-import { geocodeCity, GeocodingError } from "../../../api/geocoding"
-import { t } from "../../../i18n/consultations"
-import { formatBirthPlace } from "../../../utils/constants"
-import { type OtherPersonDraft } from "../../../types/consultation"
-import { useConsultationThirdParties } from "../../../api/consultations"
+} from "@i18n/astrology"
+import { geocodeCity, GeocodingError } from "@api/geocoding"
+import { tConsultations as t } from "@i18n/consultations"
+import { formatBirthPlace } from "@utils/constants"
+import { type OtherPersonDraft } from "@app-types/consultation"
+import { useConsultationThirdParties } from "@api/consultations"
 
 type OtherPersonFormProps = {
   value: OtherPersonDraft | null
@@ -316,3 +316,9 @@ export function OtherPersonForm({
     </div>
   )
 }
+
+
+
+
+
+

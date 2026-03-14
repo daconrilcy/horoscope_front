@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { B2BUsageApiError, useB2BUsageSummary } from "../api/b2bUsage"
+import { B2BUsageApiError, useB2BUsageSummary } from "@api"
 
 vi.mock("@tanstack/react-query", () => ({
   useMutation: (options: unknown) => options,
@@ -95,4 +95,5 @@ describe("b2b usage api", () => {
     }
   })
 })
+
 

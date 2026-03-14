@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import { useAstrologer } from "../api/astrologers"
 import { AstrologerProfileHeader } from "../features/astrologers"
 import { detectLang } from "../i18n/astrology"
-import { t } from "../i18n/astrologers"
+import { tAstrologers as t } from "@i18n/astrologers"
 
 export function AstrologerProfilePage() {
   const { id } = useParams<{ id: string }>()
@@ -68,3 +68,4 @@ export function AstrologerProfilePage() {
     </div>
   )
 }
+

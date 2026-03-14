@@ -21,7 +21,7 @@ import type { MobileView } from "../features/chat"
 import { AstrologerPickerModal } from "../features/chat/components/AstrologerPickerModal"
 import { ChatEmptyState } from "../features/chat/components/ChatEmptyState"
 import { detectLang } from "../i18n/astrology"
-import { t } from "../i18n/astrologers"
+import { tAstrologers as t } from "@i18n/astrologers"
 
 type ChatUiMessage = {
   id: string
@@ -374,3 +374,4 @@ export function ChatPage() {
     </>
   )
 }
+

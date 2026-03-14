@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import { type MonitoringWindow, OpsMonitoringApiError, useConversationKpis } from "../api/opsMonitoring"
+import { type MonitoringWindow, OpsMonitoringApiError, useConversationKpis } from "@api"
 import { useRollbackPersonaConfig } from "../api/opsPersona"
 
 function formatPercent(value: number): string {
@@ -82,3 +82,4 @@ function OpsMonitoringPanelContent() {
     </section>
   )
 }
+

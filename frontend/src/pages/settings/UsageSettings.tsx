@@ -1,7 +1,7 @@
-import { useBillingQuota, type BillingApiError } from "../../api/billing"
-import { detectLang, type AstrologyLang } from "../../i18n/astrology"
-import { settingsTranslations } from "../../i18n/settings"
-import { getLocale } from "../../utils/locale"
+import { useBillingQuota, type BillingApiError } from "@api/billing"
+import { detectLang, type AstrologyLang } from "@i18n/astrology"
+import { settingsTranslations } from "@i18n/settings"
+import { getLocale } from "@utils/locale"
 
 function getErrorMessage(error: BillingApiError | null, lang: AstrologyLang): string {
   const errorMessages = settingsTranslations.usageErrors

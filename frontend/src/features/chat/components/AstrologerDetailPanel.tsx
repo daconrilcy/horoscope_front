@@ -1,8 +1,8 @@
 import { useState } from "react"
-import type { AstrologerProfile } from "../../../api/astrologers"
-import type { AstrologyLang } from "../../../i18n/astrology"
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/astrologers"
+import type { AstrologerProfile } from "@api/astrologers"
+import type { AstrologyLang } from "@i18n/astrology"
+import { detectLang } from "@i18n/astrology"
+import { tAstrologers as t } from "@i18n/astrologers"
 
 type AstrologerDetailPanelProps = {
   conversationId: number | null
@@ -103,3 +103,6 @@ export function AstrologerDetailPanel({
     </aside>
   )
 }
+
+
+

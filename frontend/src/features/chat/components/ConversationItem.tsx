@@ -1,8 +1,8 @@
 import { useState } from "react"
-import type { ChatConversationSummary } from "../../../api/chat"
-import { detectLang } from "../../../i18n/astrology"
-import type { AstrologyLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/astrologers"
+import type { ChatConversationSummary } from "@api/chat"
+import { detectLang } from "@i18n/astrology"
+import type { AstrologyLang } from "@i18n/astrology"
+import { tAstrologers as t } from "@i18n/astrologers"
 
 const LOCALE_MAP: Record<AstrologyLang, string> = {
   fr: "fr-FR",
@@ -90,3 +90,6 @@ export function ConversationItemSkeleton() {
     </div>
   )
 }
+
+
+

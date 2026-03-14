@@ -1,5 +1,5 @@
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/astrologers"
+import { detectLang } from "@i18n/astrology"
+import { tAstrologers as t } from "@i18n/astrologers"
 
 export function TypingIndicator() {
   const lang = detectLang()
@@ -17,3 +17,5 @@ export function TypingIndicator() {
     </div>
   )
 }
+
+

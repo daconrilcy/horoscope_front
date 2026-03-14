@@ -1,8 +1,8 @@
-import { useAstrologers, type Astrologer } from "../../../api/astrologers"
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/consultations"
-import { AUTO_ASTROLOGER_ID } from "../../../types/consultation"
-import { classNames } from "../../../utils/classNames"
+import { useAstrologers, type Astrologer } from "@api/astrologers"
+import { detectLang } from "@i18n/astrology"
+import { tConsultations as t } from "@i18n/consultations"
+import { AUTO_ASTROLOGER_ID } from "@app-types/consultation"
+import { classNames } from "@utils/classNames"
 
 type AstrologerSelectStepProps = {
   selectedId: string | null
@@ -112,3 +112,9 @@ export function AstrologerSelectStep({
     </div>
   )
 }
+
+
+
+
+
+

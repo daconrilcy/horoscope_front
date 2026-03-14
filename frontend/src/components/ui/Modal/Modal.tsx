@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
-import { classNames } from '../../../utils/classNames';
-import { detectLang } from '../../../i18n/astrology';
-import { commonTranslations } from '../../../i18n/common';
+import { classNames } from '@utils/classNames';
+import { detectLang } from '@i18n/astrology';
+import { commonTranslations } from '@i18n/common';
 import './Modal.css';
 
 export interface ModalProps {
@@ -139,3 +139,5 @@ export const Modal: React.FC<ModalProps> = ({
     document.body
   );
 };
+
+

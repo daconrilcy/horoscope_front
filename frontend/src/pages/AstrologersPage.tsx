@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useAstrologers, type Astrologer } from "../api/astrologers"
 import { AstrologerGrid } from "../features/astrologers"
 import { detectLang } from "../i18n/astrology"
-import { t } from "../i18n/astrologers"
+import { tAstrologers as t } from "@i18n/astrologers"
 
 export function AstrologersPage() {
   const navigate = useNavigate()
@@ -40,3 +40,4 @@ export function AstrologersPage() {
     </div>
   )
 }
+

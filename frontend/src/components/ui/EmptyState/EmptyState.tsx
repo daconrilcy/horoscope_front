@@ -1,5 +1,5 @@
 import React from 'react';
-import { classNames } from '../../../utils/classNames';
+import { classNames } from '@utils/classNames';
 import './EmptyState.css';
 
 export interface EmptyStateProps {
@@ -26,3 +26,4 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     </div>
   );
 };
+

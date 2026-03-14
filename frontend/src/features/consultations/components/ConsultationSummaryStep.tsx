@@ -1,7 +1,7 @@
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/consultations"
-import { type ConsultationDraft, getConsultationTypeConfig } from "../../../types/consultation"
-import { type ConsultationPrecheckData } from "../../../api/consultations"
+import { detectLang } from "@i18n/astrology"
+import { tConsultations as t } from "@i18n/consultations"
+import { type ConsultationDraft, getConsultationTypeConfig } from "@app-types/consultation"
+import { type ConsultationPrecheckData } from "@api/consultations"
 import { AstrologerSelectStep } from "./AstrologerSelectStep"
 
 type ConsultationSummaryStepProps = {
@@ -73,3 +73,8 @@ export function ConsultationSummaryStep({
     </div>
   )
 }
+
+
+
+
+

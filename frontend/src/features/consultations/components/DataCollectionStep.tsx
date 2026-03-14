@@ -1,7 +1,7 @@
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/consultations"
-import { type ConsultationDraft, type OtherPersonDraft } from "../../../types/consultation"
-import { type ConsultationPrecheckData } from "../../../api/consultations"
+import { detectLang } from "@i18n/astrology"
+import { tConsultations as t } from "@i18n/consultations"
+import { type ConsultationDraft, type OtherPersonDraft } from "@app-types/consultation"
+import { type ConsultationPrecheckData } from "@api/consultations"
 import { OtherPersonForm } from "./OtherPersonForm"
 import { Link } from "react-router-dom"
 
@@ -79,3 +79,8 @@ export function DataCollectionStep({
     </div>
   )
 }
+
+
+
+
+

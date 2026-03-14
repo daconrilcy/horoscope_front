@@ -1,5 +1,5 @@
 import React from 'react';
-import { classNames } from '../../../utils/classNames';
+import { classNames } from '@utils/classNames';
 import './Card.css';
 
 export interface CardProps {
@@ -66,3 +66,4 @@ export const Card: React.FC<CardProps> & {
 Card.Header = CardHeader;
 Card.Body = CardBody;
 Card.Footer = CardFooter;
+

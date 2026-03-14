@@ -4,8 +4,8 @@ import { MessageBubble } from "./MessageBubble"
 import { TypingIndicator } from "./TypingIndicator"
 import { ChatComposer } from "./ChatComposer"
 import { useAutoScroll } from "../hooks/useAutoScroll"
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/astrologers"
+import { detectLang } from "@i18n/astrology"
+import { tAstrologers as t } from "@i18n/astrologers"
 
 type ChatMessage = {
   id: string
@@ -175,3 +175,5 @@ export function ChatWindow({
     </div>
   )
 }
+
+

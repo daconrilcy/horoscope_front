@@ -1,6 +1,6 @@
-import { detectLang } from "../../i18n/astrology"
-import { adminTranslations } from "../../i18n/admin"
-import { OpsPersonaPanel } from "../../components/OpsPersonaPanel"
+import { detectLang } from "@i18n/astrology"
+import { adminTranslations } from "@i18n/admin"
+import { OpsPersonaPanel } from "@components/OpsPersonaPanel"
 
 export function PersonasAdmin() {
   const lang = detectLang()

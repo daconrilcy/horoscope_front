@@ -6,7 +6,7 @@ import { useConsultation, CHAT_PREFILL_KEY } from "../state/consultationStore"
 import { useConsultationGenerate, type ConsultationPrecheckData } from "../api/consultations"
 import { useAstrologer } from "../api/astrologers"
 import { detectLang } from "../i18n/astrology"
-import { t } from "../i18n/consultations"
+import { tConsultations as t } from "@i18n/consultations"
 import { 
   AUTO_ASTROLOGER_ID, 
   getConsultationTypeConfig, 
@@ -502,3 +502,4 @@ export function ConsultationResultPage() {
     </div>
   )
 }
+

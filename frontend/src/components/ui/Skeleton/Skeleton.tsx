@@ -1,5 +1,5 @@
 import React from 'react';
-import { classNames } from '../../../utils/classNames';
+import { classNames } from '@utils/classNames';
 import './Skeleton.css';
 
 export interface SkeletonProps {
@@ -62,3 +62,4 @@ export const SkeletonGroup: React.FC<SkeletonGroupProps> = ({
     </div>
   );
 };
+

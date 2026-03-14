@@ -1,6 +1,6 @@
 import React, { useId, useState, forwardRef } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import { classNames } from '../../../utils/classNames';
+import { classNames } from '@utils/classNames';
 import './Field.css';
 
 export interface FieldProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'id'> {
@@ -107,3 +107,4 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(
 );
 
 Field.displayName = 'Field';
+

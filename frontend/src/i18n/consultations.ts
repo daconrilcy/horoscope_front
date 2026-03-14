@@ -598,7 +598,7 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
   },
 }
 
-export function t(key: string, lang: AstrologyLang): string {
+export function tConsultations(key: string, lang: AstrologyLang): string {
   const entry = CONSULTATIONS_I18N[key]
   return entry?.[lang] ?? key
 }

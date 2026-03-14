@@ -1,6 +1,6 @@
-import { BillingPanel } from "../../components/BillingPanel"
-import { detectLang } from "../../i18n/astrology"
-import { settingsTranslations } from "../../i18n/settings"
+import { BillingPanel } from "@components/BillingPanel"
+import { detectLang } from "@i18n/astrology"
+import { settingsTranslations } from "@i18n/settings"
 
 export function SubscriptionSettings() {
   const lang = detectLang()

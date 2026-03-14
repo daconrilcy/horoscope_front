@@ -1,6 +1,6 @@
-import { detectLang } from "../../i18n/astrology"
-import { adminTranslations } from "../../i18n/admin"
-import { B2BReconciliationPanel } from "../../components/B2BReconciliationPanel"
+import { detectLang } from "@i18n/astrology"
+import { adminTranslations } from "@i18n/admin"
+import { B2BReconciliationPanel } from "@components/B2BReconciliationPanel"
 
 export function ReconciliationAdmin() {
   const lang = detectLang()

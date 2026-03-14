@@ -1,6 +1,6 @@
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/consultations"
-import { type ConsultationPrecheckData } from "../../../api/consultations"
+import { detectLang } from "@i18n/astrology"
+import { tConsultations as t } from "@i18n/consultations"
+import { type ConsultationPrecheckData } from "@api/consultations"
 
 type ConsultationFallbackBannerProps = {
   precheck: ConsultationPrecheckData
@@ -51,3 +51,6 @@ export function ConsultationFallbackBanner({ precheck }: ConsultationFallbackBan
 
   return null
 }
+
+
+

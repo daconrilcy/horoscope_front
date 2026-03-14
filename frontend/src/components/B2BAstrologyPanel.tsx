@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import { B2BAstrologyApiError, useB2BWeeklyBySign } from "../api/b2bAstrology"
+import { B2BAstrologyApiError, useB2BWeeklyBySign } from "@api"
 
 export function B2BAstrologyPanel() {
   const [apiKey, setApiKey] = useState("")
@@ -61,3 +61,4 @@ export function B2BAstrologyPanel() {
     </section>
   )
 }
+

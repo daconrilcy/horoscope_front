@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query"
 
-import { API_BASE_URL, apiFetch } from "../../api/client"
-import { getAccessTokenAuthHeader } from "../../utils/authToken"
-import { detectLang } from "../../i18n/astrology"
-import { adminTranslations } from "../../i18n/admin"
-import { getLocale } from "../../utils/locale"
+import { API_BASE_URL, apiFetch } from "@api/client"
+import { getAccessTokenAuthHeader } from "@utils/authToken"
+import { detectLang } from "@i18n/astrology"
+import { adminTranslations } from "@i18n/admin"
+import { getLocale } from "@utils/locale"
 
 type BillingPlan = {
   code: string

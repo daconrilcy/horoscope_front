@@ -1,7 +1,7 @@
 import { PageLayout } from "../layouts"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { ApiError, useLatestNatalChart } from "../api/natalChart"
+import { ApiError, useLatestNatalChart } from "@api"
 import { generateNatalChart } from "../api/natalChart"
 import { useAstrologyLabels, DEGRADED_MODE_MESSAGES } from "../i18n/astrology"
 import { natalChartTranslations } from "../i18n/natalChart"
@@ -274,3 +274,4 @@ export function NatalChartPage() {
     </PageLayout>
   )
 }
+

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 
-import { API_BASE_URL, apiFetch } from "./client"
+import { API_BASE_URL, apiFetch, ApiError } from "./client"
 import { getSubjectFromAccessToken, useAccessTokenSnapshot } from "../utils/authToken"
 import { ANONYMOUS_SUBJECT } from "../utils/constants"
 
@@ -76,19 +76,6 @@ type ErrorEnvelope = {
     code: string
     message: string
     request_id?: string
-  }
-}
-
-export class ApiError extends Error {
-  readonly code: string
-  readonly status: number
-  readonly requestId?: string
-
-  constructor(code: string, message: string, status: number, requestId?: string) {
-    super(message)
-    this.code = code
-    this.status = status
-    this.requestId = requestId
   }
 }
 

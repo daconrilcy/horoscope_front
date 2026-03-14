@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
-import { detectLang } from "../../../i18n/astrology"
-import { t } from "../../../i18n/astrologers"
+import { detectLang } from "@i18n/astrology"
+import { tAstrologers as t } from "@i18n/astrologers"
 
 type MobileView = "list" | "chat"
 
@@ -63,3 +63,5 @@ export function ChatLayout({
 }
 
 export type { MobileView }
+
+

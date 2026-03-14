@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { ApiError, generateNatalChart, useLatestNatalChart } from "../api/natalChart"
+import { ApiError, generateNatalChart, useLatestNatalChart } from "@api"
 import { getBirthData, type BirthProfileData } from "../api/birthProfile"
 import { ANONYMOUS_SUBJECT } from "../utils/constants"
 
@@ -390,3 +390,4 @@ describe("useLatestNatalChart", () => {
     expect(shouldRetry404).toBe(false)
   })
 })
+
