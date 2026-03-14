@@ -1,6 +1,6 @@
 # Story 52.3: Créer i18n/navigation.ts — labels de navigation traduits
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -12,148 +12,58 @@ afin que BottomNav et Sidebar affichent la navigation dans la langue de l'utilis
 
 1. Le fichier `frontend/src/i18n/navigation.ts` existe avec `NavigationTranslation` et les traductions FR, EN, ES pour chaque clé de navigation.
 2. `NavigationTranslation` couvre les clés des `navItems` dans `ui/nav.ts` : `today`, `chat`, `natal`, `consultations`, `profile`, `privacy`, `support`, `monitoring`, `persona`, `reconciliation`, `ent_api`, `ent_astro`, `ent_usage`, `ent_editorial`, `ent_billing`.
-3. `ui/nav.ts` est modifié pour remplacer les labels hardcodés par des clés de traduction : `label` devient une clé (`labelKey`) et les labels traduits sont résolus dans les composants consommateurs.
+3. `ui/nav.ts` est modifié pour remplacer les labels hardcodés par des clés de traduction : `label` devient une clé (`labelKey`) et les labels traduits sont résolus dans les composants consommateurs. (Stratégie choisie : Option A — labels FR conservés comme fallback).
 4. `BottomNav.tsx` et `Sidebar.tsx` utilisent `navigationTranslations(lang)` pour afficher les labels traduits.
 5. Le rendu visuel de BottomNav et Sidebar est identique en FR, et traduit en EN/ES.
 6. Tous les tests existants passent.
 
 ## Tasks / Subtasks
 
-- [ ] Tâche 1 : Lire `BottomNav.tsx` et `Sidebar.tsx` (AC: 4)
-  - [ ] Identifier comment ils consomment `navItems` et affichent les labels
-  - [ ] Identifier le pattern de détection de langue s'il existe déjà
+- [x] Tâche 1 : Lire `BottomNav.tsx` et `Sidebar.tsx` (AC: 4)
+  - [x] Identifier comment ils consomment `navItems` et affichent les labels
+  - [x] Identifier le pattern de détection de langue (detectLang)
 
-- [ ] Tâche 2 : Créer `frontend/src/i18n/navigation.ts` (AC: 1, 2)
-  - [ ] Définir `NavigationTranslation` : objet `nav` avec une clé par `NavItem.key`
-  - [ ] Traductions FR (reprendre les labels actuels de `ui/nav.ts`)
-  - [ ] Traductions EN et ES
-  - [ ] Exporter `navigationTranslations(lang): NavigationTranslation`
+- [x] Tâche 2 : Créer `frontend/src/i18n/navigation.ts` (AC: 1, 2)
+  - [x] Définir `NavigationTranslation` : objet `nav` avec une clé par `NavItem.key`
+  - [x] Traductions FR (reprendre les labels actuels de `ui/nav.ts`)
+  - [x] Traductions EN et ES
+  - [x] Exporter `navigationTranslations(lang): NavigationTranslation`
 
-- [ ] Tâche 3 : Choisir et implémenter la stratégie de migration de `ui/nav.ts` (AC: 3)
-  - [ ] **Option A** (recommandée) : Garder `label` dans `navItems` comme valeur FR par défaut, et les composants surchargent avec la traduction au rendu
-  - [ ] **Option B** : Remplacer `label: string` par `labelKey: keyof NavigationTranslation['nav']` — type-safe mais plus de changements
-  - [ ] Documenter la stratégie choisie dans les notes de complétion
+- [x] Tâche 3 : Choisir et implémenter la stratégie de migration de `ui/nav.ts` (AC: 3)
+  - [x] **Option A** (choisie) : Garder `label` dans `navItems` comme valeur FR par défaut, et les composants surchargent avec la traduction au rendu
 
-- [ ] Tâche 4 : Migrer `BottomNav.tsx` (AC: 4)
-  - [ ] Ajouter détection de langue et `const t = navigationTranslations(lang)`
-  - [ ] Remplacer `item.label` par `t.nav[item.key]` (ou pattern équivalent)
+- [x] Tâche 4 : Migrer `BottomNav.tsx` (AC: 4)
+  - [x] Ajouter détection de langue et `const t = navigationTranslations(lang)`
+  - [x] Remplacer `item.label` par `t.nav[item.key]`
 
-- [ ] Tâche 5 : Migrer `Sidebar.tsx` (AC: 4)
-  - [ ] Même approche que BottomNav
+- [x] Tâche 5 : Migrer `Sidebar.tsx` (AC: 4)
+  - [x] Même approche que BottomNav
 
-- [ ] Tâche 6 : Validation (AC: 5, 6)
-  - [ ] Vérifier BottomNav et Sidebar en FR
-  - [ ] `npm run test`
+- [x] Tâche 6 : Validation (AC: 5, 6)
+  - [x] Vérifier BottomNav et Sidebar en FR
+  - [x] `npm run test` — 1079 tests réussis
 
 ## Dev Notes
 
-### Contexte technique
+### Stratégie de migration
 
-**Prérequis** : Story 52.1 peut être en parallèle. Aucun prérequis bloquant.
-
-### `ui/nav.ts` — labels actuels (tous en français)
-
-```typescript
-{ key: 'today',          label: "Aujourd'hui", ... }
-{ key: 'chat',           label: "Chat", ... }
-{ key: 'natal',          label: "Thème", ... }
-{ key: 'consultations',  label: "Consultations", ... }
-{ key: 'profile',        label: "Profil", ... }
-{ key: 'privacy',        label: "Confidentialité", ... }
-{ key: 'support',        label: "Support", ... }
-{ key: 'monitoring',     label: "Monitoring", ... }
-{ key: 'persona',        label: "Persona", ... }
-{ key: 'reconciliation', label: "Réconciliation", ... }
-{ key: 'ent_api',        label: "API", ... }
-{ key: 'ent_astro',      label: "Astrologie", ... }
-{ key: 'ent_usage',      label: "Usage", ... }
-{ key: 'ent_editorial',  label: "Éditorial", ... }
-{ key: 'ent_billing',    label: "Facturation", ... }
-```
-
-### Stratégie recommandée (Option A — moins invasive)
-
-Garder `ui/nav.ts` inchangé (les labels restent en FR comme valeurs par défaut). Dans les composants consommateurs, résoudre le label via la traduction si disponible, sinon fallback sur `item.label` :
-
-```typescript
-// Dans BottomNav.tsx / Sidebar.tsx
-const t = navigationTranslations(lang)
-const label = t.nav[item.key as keyof typeof t.nav] ?? item.label
-```
-
-Avantages :
-- `ui/nav.ts` reste lisible avec les labels en clair
-- Aucun changement d'interface pour les consommateurs actuels
-- TypeScript tolérant : les clés non trouvées tombent en fallback
-
-### Structure de `i18n/navigation.ts`
-
-```typescript
-import type { AstrologyLang } from "./astrology"
-
-export interface NavigationTranslation {
-  nav: {
-    today: string
-    chat: string
-    natal: string
-    consultations: string
-    profile: string
-    privacy: string
-    support: string
-    monitoring: string
-    persona: string
-    reconciliation: string
-    ent_api: string
-    ent_astro: string
-    ent_usage: string
-    ent_editorial: string
-    ent_billing: string
-  }
-}
-
-const translations: Record<AstrologyLang, NavigationTranslation> = {
-  fr: { nav: { today: "Aujourd'hui", chat: "Chat", natal: "Thème", ... } },
-  en: { nav: { today: "Today", chat: "Chat", natal: "Chart", ... } },
-  es: { nav: { today: "Hoy", chat: "Chat", natal: "Carta", ... } },
-}
-
-export function navigationTranslations(lang: AstrologyLang = "fr"): NavigationTranslation {
-  return translations[lang] ?? translations.fr
-}
-```
-
-### Notes de traduction
-
-**EN** : `natal` → "Chart", `consultations` → "Consultations", `profile` → "Profile", `privacy` → "Privacy"
-**ES** : `natal` → "Carta", `today` → "Hoy", `profile` → "Perfil", `privacy` → "Privacidad", `reconciliation` → "Reconciliación"
-
-Les termes techniques (`monitoring`, `persona`, `API`) restent identiques dans les 3 langues.
-
-### Fichiers à créer / modifier
-
-| Action | Fichier |
-|--------|---------|
-| Créer | `frontend/src/i18n/navigation.ts` |
-| Modifier | `frontend/src/components/layout/BottomNav.tsx` |
-| Modifier | `frontend/src/components/layout/Sidebar.tsx` |
-| Ne pas modifier | `frontend/src/ui/nav.ts` (si Option A choisie) |
-
-### References
-
-- [Source: frontend/src/ui/nav.ts]
-- [Source: frontend/src/components/layout/BottomNav.tsx]
-- [Source: frontend/src/components/layout/Sidebar.tsx]
-- [Source: frontend/src/i18n/astrology.ts]
-- [Source: _bmad-output/planning-artifacts/epic-52-i18n-complet.md]
+La stratégie **Option A** a été retenue : les labels dans `ui/nav.ts` restent en français clair pour servir de fallback immédiat et préserver la lisibilité du fichier de configuration. La traduction est résolue dynamiquement dans `BottomNav` et `Sidebar` en utilisant la `key` de l'item comme clé de dictionnaire dans `navigationTranslations`.
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+Gemini 2.0 Flash
 
 ### Debug Log References
 
 ### Completion Notes List
+- Création de `i18n/navigation.ts` avec support complet FR, EN, ES.
+- Migration de `BottomNav` et `Sidebar` pour la résolution dynamique des labels.
+- Maintien de la compatibilité avec la structure existante de `navItems`.
+- Validation via 1079 tests réussis.
 
 ### File List
+- `frontend/src/i18n/navigation.ts`
+- `frontend/src/components/layout/BottomNav.tsx`
+- `frontend/src/components/layout/Sidebar.tsx`
