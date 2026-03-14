@@ -26,5 +26,6 @@
 .astro-context {
   --color-text-primary: var(--color-text-on-astro);
   --color-text-secondary: var(--color-text-muted-on-astro);
+  --color-surface-current: var(--color-surface-astro);
   color: var(--color-text-primary);
 }
