@@ -43,6 +43,7 @@ Elles respectent les garde-fous suivants:
 - Correction frontend du wizard: le précheck automatique déclenché à l'arrivée sur un type direct ne bloque plus le bouton `Suivant` du cadrage quand les champs requis sont remplis.
 - Correction backend de génération consultation: le moteur reçoit maintenant un `objective` explicite issu du wizard et réinjecte le dernier résumé de thème natal disponible au lieu de laisser `natal_chart_summary = None`.
 - Correction backend de restitution consultation: suppression du faux rendu `Points clés / Conseils` codé en dur au profit d'une section de lecture générée et d'une section `Base de lecture` explicitant le cadrage réellement utilisé.
+- Correction backend des consultations relationnelles: les données `other_person` enrichies sont maintenant transformées en thème natal calculé et injectées dans la lecture quand la route relationnelle le permet, au lieu de rester un simple rappel descriptif.
 
 ## Gap résiduel converti en story
 
@@ -57,6 +58,7 @@ Elles respectent les garde-fous suivants:
 - Backend: `ruff check app/api/v1/schemas/consultation.py app/api/v1/routers/consultations.py app/services/consultation_precheck_service.py app/services/consultation_fallback_service.py app/services/consultation_generation_service.py app/tests/unit/services/test_consultation_precheck_service.py app/tests/unit/services/test_consultation_fallback_service.py app/tests/integration/test_consultations_router.py`
 - Backend: `pytest -q app/tests/unit/test_guidance_service.py app/tests/integration/test_consultations_router.py`
 - Backend: `ruff check app/services/guidance_service.py app/services/consultation_generation_service.py app/api/v1/schemas/consultation.py app/tests/unit/test_guidance_service.py app/tests/integration/test_consultations_router.py`
+- Backend: `pytest -q app/tests/unit/test_guidance_service.py app/tests/integration/test_consultations_router.py` avec assertion `other_person_chart_used = true` sur le cas `relation_full_full`
 - Frontend: `npm run lint`
 - Frontend: `npm test -- src/tests/ConsultationsPage.test.tsx src/tests/consultationStore.test.ts src/tests/ConsultationMigration.test.tsx src/tests/ConsultationReconnection.test.tsx`
 - Frontend: `npm run build`

@@ -130,7 +130,7 @@ class GuidanceService:
         return None
 
     @staticmethod
-    def _build_natal_chart_summary_context(
+    def build_natal_chart_summary_context(
         db: Session,
         *,
         user_id: int,
@@ -556,7 +556,7 @@ class GuidanceService:
 
         current_context = build_current_prompt_context(profile)
 
-        natal_chart_summary = GuidanceService._build_natal_chart_summary_context(
+        natal_chart_summary = GuidanceService.build_natal_chart_summary_context(
             db,
             user_id=user_id,
             birth_date=profile.birth_date,
@@ -681,6 +681,7 @@ class GuidanceService:
         situation: str,
         objective: str,
         time_horizon: str | None = None,
+        natal_chart_summary_override: str | None = None,
         conversation_id: int | None = None,
         request_id: str = "n/a",
     ) -> ContextualGuidanceData:
@@ -713,6 +714,7 @@ class GuidanceService:
                 situation=situation,
                 objective=objective,
                 time_horizon=time_horizon,
+                natal_chart_summary_override=natal_chart_summary_override,
                 conversation_id=conversation_id,
                 request_id=request_id,
             )
@@ -726,6 +728,7 @@ class GuidanceService:
         situation: str,
         objective: str,
         time_horizon: str | None = None,
+        natal_chart_summary_override: str | None = None,
         conversation_id: int | None = None,
         request_id: str = "n/a",
         trace_id: str | None = None,
@@ -799,13 +802,15 @@ class GuidanceService:
 
         current_context = build_current_prompt_context(profile)
 
-        natal_chart_summary = GuidanceService._build_natal_chart_summary_context(
-            db,
-            user_id=user_id,
-            birth_date=profile.birth_date,
-            birth_time=profile.birth_time,
-            birth_place=profile.birth_place,
-        )
+        natal_chart_summary = natal_chart_summary_override
+        if natal_chart_summary is None:
+            natal_chart_summary = GuidanceService.build_natal_chart_summary_context(
+                db,
+                user_id=user_id,
+                birth_date=profile.birth_date,
+                birth_time=profile.birth_time,
+                birth_place=profile.birth_place,
+            )
 
         context: dict[str, str | None] = {
             "birth_date": profile.birth_date,
