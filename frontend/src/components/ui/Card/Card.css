@@ -1,0 +1,71 @@
+@import "../../../styles/glass.css";
+
+.card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg, 24px);
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--duration-fast, 150ms) var(--easing-default, ease),
+              box-shadow var(--duration-fast, 150ms) var(--easing-default, ease);
+}
+
+/* VARIANTS */
+.card--solid {
+  background: var(--color-bg-surface, #ffffff);
+  border: 1px solid var(--color-glass-border, rgba(255,255,255,0.65));
+}
+
+.card--elevated {
+  background: var(--color-bg-surface, #ffffff);
+  box-shadow: var(--shadow-card, 0 18px 40px rgba(0,0,0,0.45));
+}
+
+/* .card--glass styles come from .glass-card in glass.css */
+
+/* CLICKABLE */
+.card--clickable {
+  cursor: pointer;
+}
+
+.card--clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hero, 0 20px 50px rgba(0,0,0,0.3));
+}
+
+.card--clickable:active {
+  transform: translateY(0);
+}
+
+/* PADDINGS */
+.card--padding-none { padding: 0; }
+.card--padding-sm { padding: var(--space-4, 1rem); }
+.card--padding-md { padding: var(--space-6, 1.5rem); }
+.card--padding-lg { padding: var(--space-8, 2rem); }
+
+/* SLOTS */
+.card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-4, 1rem);
+  margin-bottom: var(--space-4, 1rem);
+  border-bottom: 1px solid var(--color-glass-border, rgba(255,255,255,0.65));
+}
+
+.card__body {
+  flex: 1;
+}
+
+.card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: var(--space-4, 1rem);
+  margin-top: var(--space-4, 1rem);
+  border-top: 1px solid var(--color-glass-border, rgba(255,255,255,0.65));
+  gap: var(--space-3, 0.75rem);
+}
+
+/* Fix for cases where Card has global padding but we want header/footer borders to touch edges */
+/* (Currently implemented as nested containers with their own padding/margin) */

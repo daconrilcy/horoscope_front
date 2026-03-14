@@ -21,34 +21,34 @@ afin de créer rapidement des conteneurs de contenu cohérents sans recoder la s
 
 ## Tasks / Subtasks
 
-- [ ] Tâche 1 : Créer la structure de fichiers (AC: 1)
-  - [ ] `frontend/src/components/ui/Card/Card.tsx`
-  - [ ] `frontend/src/components/ui/Card/Card.css`
-  - [ ] `frontend/src/components/ui/Card/Card.test.tsx`
-  - [ ] `frontend/src/components/ui/Card/index.ts`
-  - [ ] Ajouter `export * from './Card'` dans `frontend/src/components/ui/index.ts`
+- [x] Tâche 1 : Créer la structure de fichiers (AC: 1)
+  - [x] `frontend/src/components/ui/Card/Card.tsx`
+  - [x] `frontend/src/components/ui/Card/Card.css`
+  - [x] `frontend/src/components/ui/Card/Card.test.tsx`
+  - [x] `frontend/src/components/ui/Card/index.ts`
+  - [x] Ajouter `export * from './Card'` dans `frontend/src/components/ui/index.ts`
 
-- [ ] Tâche 2 : Implémenter `<Card>` et ses sous-composants (AC: 2, 3, 4, 5, 6)
-  - [ ] `Card` : composant principal avec polymorphisme `as`
-  - [ ] `Card.Header` : slot header avec padding et border-bottom optionnel
-  - [ ] `Card.Body` : slot body avec padding configurable
-  - [ ] `Card.Footer` : slot footer avec padding et border-top optionnel
-  - [ ] Pattern composé : `Card.Header = CardHeader` etc. (dot notation)
+- [x] Tâche 2 : Implémenter `<Card>` et ses sous-composants (AC: 2, 3, 4, 5, 6)
+  - [x] `Card` : composant principal avec polymorphisme `as`
+  - [x] `Card.Header` : slot header avec padding et border-bottom optionnel
+  - [x] `Card.Body` : slot body avec padding configurable
+  - [x] `Card.Footer` : slot footer avec padding et border-top optionnel
+  - [x] Pattern composé : `Card.Header = CardHeader` etc. (dot notation)
 
-- [ ] Tâche 3 : Créer `Card.css` (AC: 7)
-  - [ ] `.card` : base reset, overflow hidden, border-radius `--radius-lg`
-  - [ ] `.card--glass` : délègue à `.glass-card` (Epic 49.4) + import depuis glass.css
-  - [ ] `.card--solid` : background `--color-bg-surface`, border `--color-glass-border`
-  - [ ] `.card--elevated` : background `--color-bg-elevated`, shadow `--shadow-card`
-  - [ ] `.card--clickable` : cursor pointer, hover lift (transform translateY -2px), transition
-  - [ ] `.card--padding-none`, `.card--padding-sm`, `.card--padding-md`, `.card--padding-lg`
-  - [ ] `.card__header`, `.card__body`, `.card__footer`
+- [x] Tâche 3 : Créer `Card.css` (AC: 7)
+  - [x] `.card` : base reset, overflow hidden, border-radius `--radius-lg`
+  - [x] `.card--glass` : délègue à `.glass-card` (Epic 49.4) + import depuis glass.css
+  - [x] `.card--solid` : background `--color-bg-surface`, border `--color-glass-border`
+  - [x] `.card--elevated` : background `--color-bg-elevated`, shadow `--shadow-card`
+  - [x] `.card--clickable` : cursor pointer, hover lift (transform translateY -2px), transition
+  - [x] `.card--padding-none`, `.card--padding-sm`, `.card--padding-md`, `.card--padding-lg`
+  - [x] `.card__header`, `.card__body`, `.card__footer`
 
-- [ ] Tâche 4 : Écrire les tests (AC: 8)
-  - [ ] Rendu de chaque variant sans crash
-  - [ ] `as="article"` rend un `<article>`
-  - [ ] `clickable` ajoute le cursor pointer
-  - [ ] Sous-composants Card.Header et Card.Body rendus
+- [x] Tâche 4 : Écrire les tests (AC: 8)
+  - [x] Rendu de chaque variant sans crash
+  - [x] `as="article"` rend un `<article>`
+  - [x] `clickable` ajoute le cursor pointer
+  - [x] Sous-composants Card.Header et Card.Body rendus
 
 ## Dev Notes
 
@@ -158,10 +158,31 @@ Le composant `<Card>` sera utilisé lors de la migration des pages (Epic 51+) po
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+gemini-2.0-flash
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Composant `<Card>` implémenté avec support du polymorphisme (`as`).
+- Support des variants `glass`, `solid` et `elevated`.
+- Architecture en "Compound Components" avec `Card.Header`, `Card.Body` et `Card.Footer`.
+- Intégration native avec `glass.css` pour le variant `glass`.
+- Gestion des paddings (`none` à `lg`) et de l'état cliquable (hover lift).
+- 6 tests unitaires validant les variants, le polymorphisme et la composition.
+
+### Change Log
+
+- 2026-03-14 : Création du composant Card et de ses sous-composants.
+
 ### File List
+
+| Action | Fichier |
+|--------|---------|
+| Créé | `frontend/src/components/ui/Card/Card.tsx` |
+| Créé | `frontend/src/components/ui/Card/Card.css` |
+| Créé | `frontend/src/components/ui/Card/Card.test.tsx` |
+| Créé | `frontend/src/components/ui/Card/index.ts` |
+| Modifié | `frontend/src/components/ui/index.ts` |
+
+Status: done
