@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { useNavigate, useSearchParams, Link } from "react-router-dom"
 
 import { useConsultation, CHAT_PREFILL_KEY } from "../state/consultationStore"
@@ -134,6 +135,7 @@ function renderSectionBlock(block: ConsultationBlock, index: number) {
 
 export function ConsultationResultPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const lang = detectLang()
 
@@ -222,6 +224,8 @@ export function ConsultationResultPage() {
         astrologer_id: draftAstrologerId,
         save_third_party: state.draft.saveThirdParty,
         third_party_nickname: state.draft.thirdPartyNickname,
+        third_party_external_id:
+          state.draft.selectedThirdPartyExternalId ?? undefined,
         other_person: draftOtherPerson ? {
           birth_date: draftOtherPerson.birthDate,
           birth_time: draftOtherPerson.birthTime ?? undefined,
@@ -270,6 +274,11 @@ export function ConsultationResultPage() {
       setResult(result)
       saveToHistory(result)
       setIsSaved(true)
+      if (state.draft.saveThirdParty) {
+        void queryClient.invalidateQueries({
+          queryKey: ["consultation-third-parties"],
+        })
+      }
     } catch (err: any) {
       setError(
         err?.code === "request_timeout" || err?.name === "AbortError"
@@ -295,6 +304,7 @@ export function ConsultationResultPage() {
     consultationGenerate,
     setResult,
     saveToHistory,
+    queryClient,
     navigate,
     lang,
   ])

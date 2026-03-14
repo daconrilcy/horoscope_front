@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
-from typing import List, Optional
 
-from sqlalchemy import select, desc
+from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.consultation_third_party import (
@@ -23,7 +22,7 @@ class ConsultationThirdPartyRepository:
             )
         )
 
-    def list_for_user(self, user_id: int) -> List[ConsultationThirdPartyProfileModel]:
+    def list_for_user(self, user_id: int) -> list[ConsultationThirdPartyProfileModel]:
         return list(
             self.db.scalars(
                 select(ConsultationThirdPartyProfileModel)
@@ -39,13 +38,13 @@ class ConsultationThirdPartyRepository:
         birth_date: date,
         birth_place: str,
         birth_timezone: str,
-        birth_time: Optional[str] = None,
+        birth_time: str | None = None,
         birth_time_known: bool = True,
-        birth_city: Optional[str] = None,
-        birth_country: Optional[str] = None,
-        birth_lat: Optional[float] = None,
-        birth_lon: Optional[float] = None,
-        birth_place_resolved_id: Optional[int] = None,
+        birth_city: str | None = None,
+        birth_country: str | None = None,
+        birth_lat: float | None = None,
+        birth_lon: float | None = None,
+        birth_place_resolved_id: int | None = None,
     ) -> ConsultationThirdPartyProfileModel:
         model = ConsultationThirdPartyProfileModel(
             user_id=user_id,
@@ -89,11 +88,14 @@ class ConsultationThirdPartyRepository:
             
         return model
 
-    def list_usages(self, third_party_profile_id: int) -> List[ConsultationThirdPartyUsageModel]:
+    def list_usages(self, third_party_profile_id: int) -> list[ConsultationThirdPartyUsageModel]:
         return list(
             self.db.scalars(
                 select(ConsultationThirdPartyUsageModel)
-                .where(ConsultationThirdPartyUsageModel.third_party_profile_id == third_party_profile_id)
+                .where(
+                    ConsultationThirdPartyUsageModel.third_party_profile_id
+                    == third_party_profile_id
+                )
                 .order_by(desc(ConsultationThirdPartyUsageModel.created_at))
             ).all()
         )

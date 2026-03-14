@@ -12,7 +12,7 @@ import {
   VALID_CONSULTATION_TYPES,
   WIZARD_LAST_STEP_INDEX,
   WIZARD_STEPS,
-  INTERACTION_ELIGIBLE_TYPES,
+  getConsultationTypeConfig,
   getObjectiveForType,
   type ConsultationType,
   type ConsultationDraft,
@@ -28,6 +28,7 @@ const INITIAL_DRAFT: ConsultationDraft = {
   context: "",
   saveThirdParty: false,
   thirdPartyNickname: "",
+  selectedThirdPartyExternalId: null,
 }
 
 export type ConsultationState = {
@@ -48,6 +49,7 @@ export type ConsultationAction =
   | { type: "SET_IS_INTERACTION"; payload: boolean }
   | { type: "SET_SAVE_THIRD_PARTY"; payload: boolean }
   | { type: "SET_THIRD_PARTY_NICKNAME"; payload: string }
+  | { type: "SET_SELECTED_THIRD_PARTY_EXTERNAL_ID"; payload: string | null }
   | { type: "NEXT_STEP" }
   | { type: "PREV_STEP" }
   | { type: "GO_TO_STEP"; payload: number }
@@ -63,12 +65,17 @@ export function consultationReducer(
 ): ConsultationState {
   switch (action.type) {
     case "SET_TYPE":
+      const config = getConsultationTypeConfig(action.payload)
       return {
         ...state,
         draft: { 
           ...state.draft, 
           type: action.payload,
-          isInteraction: action.payload === "relation"
+          isInteraction: config?.defaultInteraction ?? false,
+          otherPerson: null,
+          saveThirdParty: false,
+          thirdPartyNickname: "",
+          selectedThirdPartyExternalId: null,
         },
       }
     case "SET_ASTROLOGER":
@@ -99,17 +106,35 @@ export function consultationReducer(
     case "SET_IS_INTERACTION":
       return {
         ...state,
-        draft: { ...state.draft, isInteraction: action.payload },
+        draft: {
+          ...state.draft,
+          isInteraction: action.payload,
+          otherPerson: action.payload ? state.draft.otherPerson : null,
+          saveThirdParty: action.payload ? state.draft.saveThirdParty : false,
+          thirdPartyNickname: action.payload ? state.draft.thirdPartyNickname : "",
+          selectedThirdPartyExternalId: action.payload
+            ? state.draft.selectedThirdPartyExternalId
+            : null,
+        },
       }
     case "SET_SAVE_THIRD_PARTY":
       return {
         ...state,
-        draft: { ...state.draft, saveThirdParty: action.payload },
+        draft: {
+          ...state.draft,
+          saveThirdParty: action.payload,
+          thirdPartyNickname: action.payload ? state.draft.thirdPartyNickname : "",
+        },
       }
     case "SET_THIRD_PARTY_NICKNAME":
       return {
         ...state,
         draft: { ...state.draft, thirdPartyNickname: action.payload },
+      }
+    case "SET_SELECTED_THIRD_PARTY_EXTERNAL_ID":
+      return {
+        ...state,
+        draft: { ...state.draft, selectedThirdPartyExternalId: action.payload },
       }
     case "NEXT_STEP":
       return {
@@ -271,6 +296,7 @@ type ConsultationContextValue = {
   setIsInteraction: (isInteraction: boolean) => void
   setSaveThirdParty: (save: boolean) => void
   setThirdPartyNickname: (nickname: string) => void
+  setSelectedThirdPartyExternalId: (externalId: string | null) => void
   nextStep: () => void
   prevStep: () => void
   goToStep: (step: number) => void
@@ -327,6 +353,10 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
 
   const setThirdPartyNickname = useCallback((nickname: string) => {
     dispatch({ type: "SET_THIRD_PARTY_NICKNAME", payload: nickname })
+  }, [])
+
+  const setSelectedThirdPartyExternalId = useCallback((externalId: string | null) => {
+    dispatch({ type: "SET_SELECTED_THIRD_PARTY_EXTERNAL_ID", payload: externalId })
   }, [])
 
   const nextStep = useCallback(() => {
@@ -412,6 +442,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       setIsInteraction,
       setSaveThirdParty,
       setThirdPartyNickname,
+      setSelectedThirdPartyExternalId,
       nextStep,
       prevStep,
       goToStep,
@@ -433,6 +464,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       setIsInteraction,
       setSaveThirdParty,
       setThirdPartyNickname,
+      setSelectedThirdPartyExternalId,
       nextStep,
       prevStep,
       goToStep,

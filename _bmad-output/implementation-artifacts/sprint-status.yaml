@@ -414,7 +414,7 @@ development_status:
   46-6-verrouiller-qa-coherence-bmad-et-non-regression-de-la-refonte: done
   epic-46-retrospective: done
 
-  epic-47: in-progress
+  epic-47: done
   47-1-redefinir-le-catalogue-produit-et-la-taxonomie-des-consultations-completes: done
   47-2-exposer-le-precheck-de-completude-et-de-precision-des-consultations: done
   47-3-refondre-le-wizard-consultations-avec-cadrage-et-collecte-conditionnelle: done

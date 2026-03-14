@@ -66,6 +66,10 @@ describe("consultationReducer", () => {
       objective: "clarifier la dynamique de l'entretien",
       timeHorizon: "avant vendredi",
       isInteraction: false,
+      otherPerson: null,
+      saveThirdParty: false,
+      thirdPartyNickname: "",
+      selectedThirdPartyExternalId: null,
     })
   })
 
@@ -111,6 +115,9 @@ describe("consultationReducer", () => {
         context: "Question libre",
         objective: "aller droit au point",
         timeHorizon: "ce mois-ci",
+        saveThirdParty: false,
+        thirdPartyNickname: "",
+        selectedThirdPartyExternalId: null,
       },
       step: WIZARD_LAST_STEP_INDEX,
       result: mockResult,
@@ -210,6 +217,38 @@ describe("type exports", () => {
       collection: "step_collection",
       summary: "step_summary",
     })
+  })
+
+  it("clears third-party state when interaction is disabled", () => {
+    const state: ConsultationState = {
+      ...createInitialState(),
+      draft: {
+        ...INITIAL_DRAFT,
+        type: "work",
+        isInteraction: true,
+        otherPerson: {
+          birthDate: "1990-01-01",
+          birthTime: "12:00",
+          birthTimeKnown: true,
+          birthPlace: "Paris, France",
+          birthCity: "Paris",
+          birthCountry: "France",
+        },
+        saveThirdParty: true,
+        thirdPartyNickname: "Collegue",
+        selectedThirdPartyExternalId: "tp_123",
+      },
+    }
+
+    const result = consultationReducer(state, {
+      type: "SET_IS_INTERACTION",
+      payload: false,
+    })
+
+    expect(result.draft.otherPerson).toBeNull()
+    expect(result.draft.saveThirdParty).toBe(false)
+    expect(result.draft.thirdPartyNickname).toBe("")
+    expect(result.draft.selectedThirdPartyExternalId).toBeNull()
   })
 })
 

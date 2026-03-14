@@ -212,3 +212,50 @@ def test_generate_accepts_enriched_other_person_payload():
     )
     assert "Theme natal tiers calcule et integre" in basis_section["content"]
     assert all(block["kind"] == "paragraph" for block in basis_section["blocks"])
+
+
+def test_generate_work_with_other_person_keeps_work_context():
+    _cleanup_tables()
+    headers = _get_auth_headers(email="work-other@example.com")
+
+    client.put(
+        "/v1/users/me/birth-data",
+        headers=headers,
+        json={
+            "birth_date": "1990-01-01",
+            "birth_time": "12:00",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+
+    response = client.post(
+        "/v1/consultations/generate",
+        json={
+            "consultation_type": "work",
+            "question": "Comment preparer cet entretien avec cette personne ?",
+            "other_person": {
+                "birth_date": "1992-05-04",
+                "birth_time": "08:15",
+                "birth_time_known": True,
+                "birth_place": "Paris, Ile-de-France, France",
+                "birth_city": "Paris",
+                "birth_country": "France",
+                "place_resolved_id": 777,
+                "birth_lat": 48.8566,
+                "birth_lon": 2.3522,
+            },
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    json_data = response.json()
+    assert json_data["data"]["consultation_type"] == "work"
+    assert json_data["data"]["metadata"]["other_person_chart_used"] is False
+    basis_section = next(
+        section
+        for section in json_data["data"]["sections"]
+        if section["id"] == "consultation_basis"
+    )
+    assert "Donnees tiers recues" in basis_section["content"]

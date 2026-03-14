@@ -8,7 +8,7 @@ import { geocodeCity, GeocodingError } from "../../../api/geocoding"
 import { t } from "../../../i18n/consultations"
 import { formatBirthPlace } from "../../../utils/constants"
 import { type OtherPersonDraft } from "../../../types/consultation"
-import { useConsultationThirdParties, type ConsultationThirdPartyProfile } from "../../../api/consultations"
+import { useConsultationThirdParties } from "../../../api/consultations"
 
 type OtherPersonFormProps = {
   value: OtherPersonDraft | null
@@ -17,6 +17,7 @@ type OtherPersonFormProps = {
   onSaveOptInChange?: (checked: boolean) => void
   nickname?: string
   onNicknameChange?: (nickname: string) => void
+  onSelectedExistingChange?: (externalId: string | null) => void
 }
 
 type GeocodingState = "idle" | "loading" | "success" | "error_not_found" | "error_unavailable"
@@ -39,7 +40,8 @@ export function OtherPersonForm({
   saveOptIn,
   onSaveOptInChange,
   nickname,
-  onNicknameChange
+  onNicknameChange,
+  onSelectedExistingChange,
 }: OtherPersonFormProps) {
   const lang = detectLang()
   const { data: thirdParties } = useConsultationThirdParties()
@@ -103,6 +105,7 @@ export function OtherPersonForm({
       setResolvedGeoLabel(selected.birth_place)
       setGeocodingState(selected.place_resolved_id ? "success" : "idle")
       onChange(newValue)
+      onSelectedExistingChange?.(selected.external_id)
       if (onNicknameChange) onNicknameChange(selected.nickname)
     }
   }

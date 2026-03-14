@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from app.api.v1.schemas.consultation import (
@@ -8,12 +7,14 @@ from app.api.v1.schemas.consultation import (
     ConsultationThirdPartyProfileCreate,
     ConsultationThirdPartyUsage,
 )
-from app.infra.db.repositories.consultation_third_party_repository import ConsultationThirdPartyRepository
+from app.infra.db.repositories.consultation_third_party_repository import (
+    ConsultationThirdPartyRepository,
+)
 
 
 class ConsultationThirdPartyService:
     @staticmethod
-    def list_third_parties(db: Session, user_id: int) -> List[ConsultationThirdPartyProfile]:
+    def list_third_parties(db: Session, user_id: int) -> list[ConsultationThirdPartyProfile]:
         repo = ConsultationThirdPartyRepository(db)
         models = repo.list_for_user(user_id)
         

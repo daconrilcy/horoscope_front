@@ -10,13 +10,17 @@ from app.api.v1.schemas.consultation import (
     ConsultationGenerateRequest,
     ConsultationSection,
     ConsultationStatus,
-    FallbackMode,
     ConsultationThirdPartyProfileCreate,
+    FallbackMode,
 )
 from app.domain.astrology.natal_calculation import NatalCalculationError
-from app.domain.astrology.natal_preparation import BirthInput
+from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
+from app.infra.db.repositories.consultation_third_party_repository import (
+    ConsultationThirdPartyRepository,
+)
 from app.services.consultation_fallback_service import ConsultationFallbackService
 from app.services.consultation_precheck_service import ConsultationPrecheckService
+from app.services.consultation_third_party_service import ConsultationThirdPartyService
 from app.services.guidance_service import GuidanceService
 from app.services.natal_calculation_service import NatalCalculationService
 from app.services.natal_interpretation_service import build_natal_chart_summary
@@ -25,8 +29,6 @@ from app.services.user_birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,
 )
-from app.services.consultation_third_party_service import ConsultationThirdPartyService
-from app.infra.db.repositories.consultation_third_party_repository import ConsultationThirdPartyRepository
 
 
 class ConsultationGenerationService:
@@ -207,18 +209,31 @@ class ConsultationGenerationService:
             should_auto_seed = error.code == "reference_version_not_found"
             if should_auto_seed:
                 ReferenceDataService.seed_reference_version(db)
-                natal_result = NatalCalculationService.calculate(
-                    db,
-                    birth_input=birth_input,
-                    accurate=False,
-                    derive_enabled=True,
-                )
+                try:
+                    natal_result = NatalCalculationService.calculate(
+                        db,
+                        birth_input=birth_input,
+                        accurate=False,
+                        derive_enabled=True,
+                    )
+                except (BirthPreparationError, NatalCalculationError) as recalculation_error:
+                    ConsultationGenerationService.logger.warning(
+                        "consultation_other_person_chart_unavailable code=%s",
+                        getattr(recalculation_error, "code", "unknown"),
+                    )
+                    return None
             else:
                 ConsultationGenerationService.logger.warning(
                     "consultation_other_person_chart_unavailable code=%s",
                     error.code,
                 )
                 return None
+        except BirthPreparationError as error:
+            ConsultationGenerationService.logger.warning(
+                "consultation_other_person_chart_unavailable code=%s",
+                error.code,
+            )
+            return None
 
         degraded_mode = ConsultationGenerationService._detect_degraded_mode(
             birth_time=other_person.birth_time if other_person.birth_time_known else None,
@@ -332,6 +347,61 @@ class ConsultationGenerationService:
         )
 
     @staticmethod
+    def _record_third_party_usage(
+        db: Session,
+        *,
+        user_id: int,
+        consultation_id: str,
+        consultation_type: str,
+        context_summary: str,
+        third_party_external_id: str | None = None,
+        request: ConsultationGenerateRequest | None = None,
+    ) -> None:
+        repo = ConsultationThirdPartyRepository(db)
+        profile = None
+
+        if third_party_external_id:
+            profile = repo.get_by_external_id(third_party_external_id)
+            if profile is not None and profile.user_id != user_id:
+                profile = None
+
+        if (
+            profile is None
+            and request is not None
+            and request.save_third_party
+            and request.other_person
+            and request.third_party_nickname
+        ):
+            created_profile = ConsultationThirdPartyService.create_third_party(
+                db,
+                user_id,
+                ConsultationThirdPartyProfileCreate(
+                    nickname=request.third_party_nickname,
+                    birth_date=request.other_person.birth_date,
+                    birth_time=request.other_person.birth_time,
+                    birth_time_known=request.other_person.birth_time_known,
+                    birth_place=request.other_person.birth_place,
+                    birth_city=request.other_person.birth_city,
+                    birth_country=request.other_person.birth_country,
+                    birth_lat=request.other_person.birth_lat,
+                    birth_lon=request.other_person.birth_lon,
+                    place_resolved_id=request.other_person.place_resolved_id,
+                ),
+            )
+            profile = repo.get_by_external_id(created_profile.external_id)
+
+        if profile is None:
+            return
+
+        repo.record_usage(
+            third_party_profile_id=profile.id,
+            consultation_id=consultation_id,
+            consultation_type=consultation_type,
+            context_summary=context_summary[:255],
+        )
+        db.commit()
+
+    @staticmethod
     async def generate(
         db: Session,
         user_id: int,
@@ -414,7 +484,7 @@ class ConsultationGenerationService:
         objective = ConsultationGenerationService._build_consultation_objective(request)
         natal_chart_summary_override: str | None = None
         other_person_chart_used = False
-        if request.other_person is not None:
+        if request.consultation_type == "relation" and request.other_person is not None:
             (
                 natal_chart_summary_override,
                 other_person_chart_used,
@@ -434,37 +504,22 @@ class ConsultationGenerationService:
         )
 
         consultation_id = f"consult_{request_id}"
-
-        # OPT-IN Third Party Storage
-        if request.save_third_party and request.other_person and request.third_party_nickname:
+        if request.other_person is not None:
             try:
-                third_party_payload = ConsultationThirdPartyProfileCreate(
-                    nickname=request.third_party_nickname,
-                    birth_date=request.other_person.birth_date,
-                    birth_time=request.other_person.birth_time,
-                    birth_time_known=request.other_person.birth_time_known,
-                    birth_place=request.other_person.birth_place,
-                    birth_city=request.other_person.birth_city,
-                    birth_country=request.other_person.birth_country,
-                    birth_lat=request.other_person.birth_lat,
-                    birth_lon=request.other_person.birth_lon,
-                    place_resolved_id=request.other_person.place_resolved_id
+                ConsultationGenerationService._record_third_party_usage(
+                    db,
+                    user_id=user_id,
+                    consultation_id=consultation_id,
+                    consultation_type=request.consultation_type,
+                    context_summary=guidance.summary or "",
+                    third_party_external_id=request.third_party_external_id,
+                    request=request,
                 )
-                tp_profile = ConsultationThirdPartyService.create_third_party(db, user_id, third_party_payload)
-                
-                # Record usage
-                repo = ConsultationThirdPartyRepository(db)
-                db_tp_profile = repo.get_by_external_id(tp_profile.external_id)
-                if db_tp_profile:
-                    repo.record_usage(
-                        third_party_profile_id=db_tp_profile.id,
-                        consultation_id=consultation_id,
-                        consultation_type=request.consultation_type,
-                        context_summary=(guidance.summary or "")[:255],
-                    )
-                    db.commit()
-            except Exception as e:
-                ConsultationGenerationService.logger.exception("failed_to_save_third_party error=%s", e)
+            except Exception as error:
+                ConsultationGenerationService.logger.exception(
+                    "failed_to_record_third_party_usage error=%s",
+                    error,
+                )
 
         sections = [
             ConsultationSection(

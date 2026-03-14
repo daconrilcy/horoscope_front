@@ -130,6 +130,9 @@ describe("Consultation Reconnection", () => {
       objective: "comprendre la dynamique de ce rendez-vous",
       horizon: "ce soir",
       astrologer_id: "1",
+      save_third_party: false,
+      third_party_nickname: "",
+      third_party_external_id: undefined,
       other_person: undefined,
     })
 

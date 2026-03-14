@@ -76,6 +76,10 @@ so that je n'aie pas a ressaisir ses donnees (date, heure, lieu) a chaque nouvel
 
 - GDPR compliance: nickname recommended, explicit privacy warning.
 - Usage tracking: update `updated_at` on profile when used in a new consultation.
+- The consultation runtime keeps sending a full `other_person` snapshot to `/precheck` and `/generate`; selecting a saved contact is an acceleration path, not a replacement contract.
+- Reusing an existing saved contact must propagate `third_party_external_id` so backend usage history is recorded on the persisted profile.
+- The frontend must not keep a stale empty cache of `GET /v1/consultations/third-parties` after a successful generation with `save_third_party=true`; query invalidation/refetch is required.
+- If a saved third-party profile lacks enough geodata to compute a natal chart, generation must degrade safely instead of failing with a server error.
 
 ### Architecture Compliance
 
@@ -84,8 +88,8 @@ so that je n'aie pas a ressaisir ses donnees (date, heure, lieu) a chaque nouvel
 
 ### Testing Requirements
 
-- Backend integration tests: 3 passed.
-- Frontend tests: 12 passed.
+- Backend integration tests cover list, create, usage refresh, generation with existing saved third party, and generation with opt-in save.
+- Frontend tests cover selection of an existing contact, save opt-in gating, nickname requirement, and store cleanup when interaction is disabled.
 
 ### References
 
@@ -111,6 +115,10 @@ Gemini CLI
 - Users can now save and reuse birth data for partners, recruiters, etc.
 - Usage history recorded for each saved profile.
 - Privacy warning integrated in the UI.
+- Reusing a saved contact now records usage through `third_party_external_id` while preserving the native `other_person` payload expected by the consultations contract.
+- The third-party list now refreshes immediately after a consultation saves a new contact, removing the stale-cache behavior that made saved contacts appear missing.
+- Relation-only natal comparison logic is no longer applied accidentally to non-relation consultations with `other_person`.
+- Missing third-party coordinates no longer trigger a `500` during generation; the backend falls back cleanly to degraded consultation context.
 
 ### File List
 
@@ -136,3 +144,4 @@ Gemini CLI
 
 - 2026-03-13: Implementation of story 47.9. Third-party profile persistence and reuse.
 - 2026-03-14: Code review fixes — birth_timezone propagated via schema, usage record now committed, datetime.now(timezone.utc) in record_usage, guidance.summary None-safe, staleTime on query, ?? null for coords, ConsultationThirdPartyListMeta decoupled from ConsultationPrecheckMeta, 2 new backend tests (usage recording + updated_at), 4 new frontend tests (AC3/AC4), File List completed, cleanup test simplified.
+- 2026-03-14: Post-implementation verification fixes — `third_party_external_id` propagated from frontend to backend, usage history recorded for reused contacts, frontend cache invalidated after opt-in save, relation natal context restricted to `relation`, and safe degraded fallback added when saved third-party geodata is incomplete.

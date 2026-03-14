@@ -29,6 +29,9 @@ export type ConsultationDraft = {
   timeHorizon?: string | null
   otherPerson?: OtherPersonDraft | null
   isInteraction?: boolean
+  saveThirdParty?: boolean
+  thirdPartyNickname?: string
+  selectedThirdPartyExternalId?: string | null
 }
 
 export type ConsultationSection = {

@@ -47,6 +47,11 @@ Elles respectent les garde-fous suivants:
 - Correction backend/frontend de restitution consultation: les sections exposent désormais des `blocks` structurés et la page résultat rend de vrais titres, sous-titres et listes sans afficher les marqueurs `#`, `*` ou bullets bruts du moteur.
 - Correction backend de normalisation contextuelle: le résumé n'est plus tronqué par un `[:500]` arbitraire et reprend maintenant le premier paragraphe propre, nettoyé du markdown résiduel.
 - Correction prompt `guidance_contextual`: le moteur est désormais explicitement prié de ne pas produire de markdown décoratif et de laisser la mise en page au contrat JSON de l'application.
+- Correction story 47.9 frontend/backend: la réutilisation d'un tiers enregistré propage désormais `third_party_external_id` jusqu'à `/generate`, tout en conservant le snapshot `other_person` attendu par le contrat consultations.
+- Correction story 47.9 frontend: invalidation/refetch de `consultation-third-parties` après une génération avec `save_third_party=true`, pour éviter qu'un cache vide masque le contact nouvellement sauvegardé.
+- Correction story 47.9 backend: journalisation d'usage sur un tiers déjà enregistré lors d'une consultation réutilisant ce profil.
+- Correction story 47.9 backend: limitation stricte du contexte natal relationnel au seul type `relation`, sans contaminer `work` quand un tiers est renseigné.
+- Correction story 47.9 backend: si un tiers enregistré n'a pas les coordonnées nécessaires au calcul natal, la génération bascule désormais en mode dégradé au lieu de renvoyer une erreur 500.
 
 ## Gap résiduel converti en story
 
@@ -62,6 +67,7 @@ Elles respectent les garde-fous suivants:
 - Backend: `pytest -q app/tests/unit/test_guidance_service.py app/tests/integration/test_consultations_router.py`
 - Backend: `ruff check app/services/guidance_service.py app/services/consultation_generation_service.py app/api/v1/schemas/consultation.py app/tests/unit/test_guidance_service.py app/tests/integration/test_consultations_router.py`
 - Backend: `pytest -q app/tests/unit/test_guidance_service.py app/tests/integration/test_consultations_router.py` avec assertion `other_person_chart_used = true` sur le cas `relation_full_full`
+- Backend: `pytest -q app/tests/integration/test_consultation_third_party.py`
 - Frontend: `npm run lint`
 - Frontend: `npm test -- src/tests/ConsultationsPage.test.tsx src/tests/consultationStore.test.ts src/tests/ConsultationMigration.test.tsx src/tests/ConsultationReconnection.test.tsx`
 - Frontend: `npm run build`

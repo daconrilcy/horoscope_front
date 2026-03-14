@@ -38,6 +38,7 @@ export function ConsultationWizardPage() {
     setIsInteraction,
     setSaveThirdParty,
     setThirdPartyNickname,
+    setSelectedThirdPartyExternalId,
     setPrecheck,
     nextStep,
     prevStep,
@@ -200,6 +201,7 @@ export function ConsultationWizardPage() {
             onSaveOptInChange={setSaveThirdParty}
             nickname={state.draft.thirdPartyNickname}
             onNicknameChange={setThirdPartyNickname}
+            onSelectedExistingChange={setSelectedThirdPartyExternalId}
           />
         )
       case "summary":

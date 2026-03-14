@@ -13,6 +13,7 @@ type DataCollectionStepProps = {
   onSaveOptInChange?: (checked: boolean) => void
   nickname?: string
   onNicknameChange?: (nickname: string) => void
+  onSelectedExistingChange?: (externalId: string | null) => void
 }
 
 export function DataCollectionStep({
@@ -23,6 +24,7 @@ export function DataCollectionStep({
   onSaveOptInChange,
   nickname,
   onNicknameChange,
+  onSelectedExistingChange,
 }: DataCollectionStepProps) {
   const lang = detectLang()
 
@@ -64,6 +66,7 @@ export function DataCollectionStep({
             onSaveOptInChange={onSaveOptInChange}
             nickname={nickname}
             onNicknameChange={onNicknameChange}
+            onSelectedExistingChange={onSelectedExistingChange}
           />
         </div>
       )}

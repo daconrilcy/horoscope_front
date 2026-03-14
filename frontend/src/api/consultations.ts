@@ -72,12 +72,18 @@ export interface ConsultationGenerateRequest {
   astrologer_id?: string
   save_third_party?: boolean
   third_party_nickname?: string
+  third_party_external_id?: string
 }
 
 export interface ConsultationSection {
   id: string
   title: string
   content: string
+  blocks?: {
+    kind: "paragraph" | "title" | "subtitle" | "bullet_list"
+    text?: string | null
+    items?: string[]
+  }[]
 }
 
 export interface ConsultationGenerateData {
@@ -256,7 +262,8 @@ export function useConsultationThirdParties() {
   return useQuery({
     queryKey: ["consultation-third-parties"],
     queryFn: listThirdParties,
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: "always",
   })
 }
 
