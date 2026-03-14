@@ -128,10 +128,22 @@ export const AstroMoodBackground: React.FC<AstroMoodBackgroundProps> = ({
       }
 
       // Constellation stars from pattern (AC 3, 4)
+      const designAspect = 2.5; 
+      const currentAspect = width / height;
+
       for (const p of pattern.points) {
+        let adjX = p.x;
+        let adjY = p.y;
+
+        if (currentAspect > designAspect) {
+          adjX = 0.8 + (p.x - 0.8) * (designAspect / currentAspect);
+        } else {
+          adjY = 0.5 + (p.y - 0.5) * (currentAspect / designAspect);
+        }
+
         mainStars.push({
-          x: p.x + range(rand, -0.018, 0.018),
-          y: p.y + range(rand, -0.018, 0.018),
+          x: adjX + range(rand, -0.015, 0.015),
+          y: adjY + range(rand, -0.015, 0.015),
           r: range(rand, 2.4, 4.1) * dpr,
           pulseSpeed: range(rand, 0.45, 0.95),
           pulseOffset: range(rand, 0, Math.PI * 2),
