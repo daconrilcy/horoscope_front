@@ -5,7 +5,7 @@ import type { DailyPredictionResponse } from "../../types/dailyPrediction"
 import { translateDashboardPage, type SupportedLocale } from "../../i18n/dashboard"
 import { translateSign } from "../../i18n/astrology"
 import { AstroMoodBackground } from "../astro/AstroMoodBackground"
-import { lazy, Suspense } from "react"
+import { getZodiacIcon } from "../../components/zodiacSignIconMap"
 import type { ZodiacSign } from "../astro/zodiacPatterns"
 
 interface Props {
@@ -19,8 +19,6 @@ interface Props {
   dayScore?: number
   onRetry?: () => void
 }
-
-const ZodiacIconFallback = () => <div className="dashboard-summary-card__pill-icon" />
 
 export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
   prediction,
@@ -36,13 +34,11 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
   const navigate = useNavigate()
   const { viewHoroscope, noPrediction, errorPrediction, retry, summaryLoading } = translateDashboardPage(locale)
 
-  const formattedDate = dateKey 
+  const formattedDate = dateKey
     ? new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(dateKey))
     : '';
 
-  const ZodiacIcon = sign && sign !== 'neutral' 
-    ? lazy(() => import(`../../assets/zodiac/${sign}.svg?react`).catch(() => ({ default: ZodiacIconFallback })))
-    : null;
+  const ZodiacIcon = getZodiacIcon(sign);
 
   const handleNavigate = () => {
     navigate("/dashboard/horoscope")
@@ -54,7 +50,6 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
       handleNavigate()
     }
   }
-
   if (isLoading) {
     return (
       <div
@@ -103,7 +98,7 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
   const summary = prediction.summary.overall_summary
 
   return (
-    <div 
+    <div
       className="dashboard-summary-card-wrapper"
       onClick={handleNavigate}
       role="button"
@@ -121,9 +116,7 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
         <div className="dashboard-summary-card__content">
           {ZodiacIcon && (
             <div className="dashboard-summary-card__pill">
-              <Suspense fallback={<ZodiacIconFallback />}>
-                <ZodiacIcon className="dashboard-summary-card__pill-icon" />
-              </Suspense>
+              <ZodiacIcon className="dashboard-summary-card__pill-icon" />
               <span>{translateSign(sign, locale)} • {formattedDate}</span>
             </div>
           )}
