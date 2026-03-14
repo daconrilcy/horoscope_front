@@ -23,48 +23,48 @@ afin de pouvoir proposer une liste déroulante filtrée pour n'importe quelle do
 
 ## Tasks / Subtasks
 
-- [ ] Tâche 1 : Analyser `TimezoneSelect.tsx` et `TimezoneSelect.css` (AC: 8)
-  - [ ] Lire le composant entier et identifier son API (props, état, comportement dropdown)
-  - [ ] Identifier les patterns réutilisables vs spécifiques aux fuseaux horaires
-  - [ ] Lister les styles à migrer vers `Select.css`
+- [x] Tâche 1 : Analyser `TimezoneSelect.tsx` et `TimezoneSelect.css` (AC: 8)
+  - [x] Lire le composant entier et identifier son API (props, état, comportement dropdown)
+  - [x] Identifier les patterns réutilisables vs spécifiques aux fuseaux horaires
+  - [x] Lister les styles à migrer vers `Select.css`
 
-- [ ] Tâche 2 : Créer la structure de fichiers (AC: 1)
-  - [ ] `frontend/src/components/ui/Select/Select.tsx`
-  - [ ] `frontend/src/components/ui/Select/Select.css`
-  - [ ] `frontend/src/components/ui/Select/Select.test.tsx`
-  - [ ] `frontend/src/components/ui/Select/index.ts`
-  - [ ] Ajouter `export * from './Select'` dans `frontend/src/components/ui/index.ts`
+- [x] Tâche 2 : Créer la structure de fichiers (AC: 1)
+  - [x] `frontend/src/components/ui/Select/Select.tsx`
+  - [x] `frontend/src/components/ui/Select/Select.css`
+  - [x] `frontend/src/components/ui/Select/Select.test.tsx`
+  - [x] `frontend/src/components/ui/Select/index.ts`
+  - [x] Ajouter `export * from './Select'` dans `frontend/src/components/ui/index.ts`
 
-- [ ] Tâche 3 : Implémenter le composant Select générique (AC: 2, 3, 4, 5, 6, 7)
-  - [ ] Interface TypeScript `SelectOption` et `SelectProps`
-  - [ ] État interne : `isOpen`, `search`, `activeIndex` pour navigation clavier
-  - [ ] Filtre insensible à la casse sur `label`
-  - [ ] Rendu des groupes avec en-têtes si `group` fourni
-  - [ ] Fermeture au clic extérieur (useEffect + listener)
-  - [ ] Navigation clavier : ArrowDown/ArrowUp (index actif), Entrée (sélectionner), Échap (fermer)
-  - [ ] `aria-expanded`, `aria-activedescendant`, `role="listbox"` sur la liste
+- [x] Tâche 3 : Implémenter le composant Select générique (AC: 2, 3, 4, 5, 6, 7)
+  - [x] Interface TypeScript `SelectOption` et `SelectProps`
+  - [x] État interne : `isOpen`, `search`, `activeIndex` pour navigation clavier
+  - [x] Filtre insensible à la casse sur `label`
+  - [x] Rendu des groupes avec en-têtes si `group` fourni
+  - [x] Fermeture au clic extérieur (useEffect + listener)
+  - [x] Navigation clavier : ArrowDown/ArrowUp (index actif), Entrée (sélectionner), Échap (fermer)
+  - [x] `aria-expanded`, `aria-activedescendant`, `role="listbox"` sur la liste
 
-- [ ] Tâche 4 : Refactoriser `TimezoneSelect` pour utiliser `<Select>` (AC: 8)
-  - [ ] Transformer les données de `data/timezones.ts` en format `SelectOption[]`
-  - [ ] Remplacer l'implémentation interne par `<Select options={...} />`
-  - [ ] Conserver exactement la même interface externe (props) de `TimezoneSelect`
-  - [ ] Vérifier que le comportement est identique à BirthProfilePage
+- [x] Tâche 4 : Refactoriser `TimezoneSelect` pour utiliser `<Select>` (AC: 8)
+  - [x] Transformer les données de `data/timezones.ts` en format `SelectOption[]`
+  - [x] Remplacer l'implémentation interne par `<Select options={...} />`
+  - [x] Conserver exactement la même interface externe (props) de `TimezoneSelect`
+  - [x] Vérifier que le comportement est identique à BirthProfilePage
 
-- [ ] Tâche 5 : Créer `Select.css` (AC: 9)
-  - [ ] `.select` : wrapper position relative
-  - [ ] `.select__trigger` : styles de bouton dropdown (fond, bordure, radius, chevron)
-  - [ ] `.select__dropdown` : position absolute, z-index, shadow, border-radius, overflow hidden
-  - [ ] `.select__search` : input de recherche en haut du dropdown
-  - [ ] `.select__list` : overflow-y auto, max-height
-  - [ ] `.select__group-header` : label de groupe, font-weight semibold, couleur muted
-  - [ ] `.select__option` : padding, hover, `.select__option--active`, `.select__option--selected`
+- [x] Tâche 5 : Créer `Select.css` (AC: 9)
+  - [x] `.select` : wrapper position relative
+  - [x] `.select__trigger` : styles de bouton dropdown (fond, bordure, radius, chevron)
+  - [x] `.select__dropdown` : position absolute, z-index, shadow, border-radius, overflow hidden
+  - [x] `.select__search` : input de recherche en haut du dropdown
+  - [x] `.select__list` : overflow-y auto, max-height
+  - [x] `.select__group-header` : label de groupe, font-weight semibold, couleur muted
+  - [x] `.select__option` : padding, hover, `.select__option--active`, `.select__option--selected`
 
-- [ ] Tâche 6 : Écrire les tests (AC: 10)
-  - [ ] Options rendues quand ouvert
-  - [ ] Filtrage par texte de recherche
-  - [ ] Sélection d'une option → onChange appelé avec la valeur
-  - [ ] Navigation clavier : ArrowDown → focus option suivante
-  - [ ] Fermeture avec Échap
+- [x] Tâche 6 : Écrire les tests (AC: 10)
+  - [x] Options rendues quand ouvert
+  - [x] Filtrage par texte de recherche
+  - [x] Sélection d'une option → onChange appelé avec la valeur
+  - [x] Navigation clavier : ArrowDown → focus option suivante
+  - [x] Fermeture avec Échap
 
 ## Dev Notes
 
@@ -190,10 +190,33 @@ Le composant est un custom dropdown (pas `<select>` HTML natif) pour permettre l
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+gemini-2.0-flash
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Composant `<Select>` générique implémenté avec recherche intégrée et support des groupes.
+- Refactorisation de `TimezoneSelect` pour utiliser `Select` tout en conservant son API.
+- Accessibilité ARIA complète (role combobox, listbox, option).
+- Navigation clavier fluide (flèches, Entrée, Échap, Tab).
+- Styles alignés sur les design tokens et glassmorphism.
+- 7 tests unitaires couvrant le filtrage, la sélection et le clavier.
+
+### Change Log
+
+- 2026-03-14 : Implémentation du composant Select et refacto TimezoneSelect.
+
 ### File List
+
+| Action | Fichier |
+|--------|---------|
+| Créé | `frontend/src/components/ui/Select/Select.tsx` |
+| Créé | `frontend/src/components/ui/Select/Select.css` |
+| Créé | `frontend/src/components/ui/Select/Select.test.tsx` |
+| Créé | `frontend/src/components/ui/Select/index.ts` |
+| Modifié | `frontend/src/components/ui/index.ts` |
+| Modifié | `frontend/src/components/TimezoneSelect.tsx` |
+| Modifié | `frontend/src/components/TimezoneSelect.css` |
+
+Status: done
