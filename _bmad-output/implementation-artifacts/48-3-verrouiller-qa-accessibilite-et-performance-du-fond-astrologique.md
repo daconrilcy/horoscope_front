@@ -134,6 +134,7 @@ GPT-5 Codex
 - Le verrouillage final cible explicitement reduced motion, cleanup et non-régression dashboard.
 - QA verified SVG colors properly inherit parent container's context, without relying on external svgr plugin. 
 - Horoscope card on `/dashboard/horoscope` layout properly wraps around AstroBackground to preserve background transparency metrics.
+- QA verified light/dark theme typography updates correctly inside `AstroMoodBackground` using `useThemeSafe` context API on both `DayPredictionCard` and `DashboardHoroscopeSummaryCard`.
 
 ### File List
 

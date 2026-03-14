@@ -149,6 +149,7 @@ Gemini 2.0 Flash
 - Handled accessibility (`aria-hidden`, `prefers-reduced-motion`) and performance (DPR capping, cleanup).
 - Added comprehensive unit tests.
 - Refactored Zodiac SVGs to use pre-existing `getZodiacIcon` and `normalizeSignCode` module instead of dynamic imports or raw SVGR loading.
+- Fixed aspect ratio for Zodiac Constellation rendering on `AstroMoodBackground` by adding dynamic width/height aspect modifiers.
 
 ### File List
 

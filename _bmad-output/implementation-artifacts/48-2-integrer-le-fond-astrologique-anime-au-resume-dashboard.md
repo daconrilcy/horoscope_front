@@ -154,6 +154,7 @@ GPT-5 Codex
 - Mapping `prediction + birth profile + user seed` explicitement cadré pour éviter la duplication.
 - DashboardHoroscopeSummaryCard adaptated to consume `AstroMoodBackground` locally via `astroBackgroundProps`.
 - SVG rendering fixed by dropping Vite's SVG plugin and instead using the previously engineered `getZodiacIcon` React components map. SVGs scaled seamlessly using `stroke: currentColor`.
+- Injected `useThemeSafe` context to ensure the `DashboardHoroscopeSummaryCard` text elements flip to white during `dark` mode and remain high contrast `var(--text-1)` during light mode to remain readable over the `AstroMoodBackground`.
 
 ### File List
 
