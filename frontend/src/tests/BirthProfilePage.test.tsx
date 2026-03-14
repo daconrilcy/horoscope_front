@@ -160,7 +160,7 @@ describe("BirthProfilePage", () => {
     expect(screen.getByLabelText(/Heure de naissance/i)).toHaveValue("10:30")
     expect(screen.getByLabelText(/Ville de naissance/i)).toHaveValue("Paris")
     expect(screen.getByLabelText(/Pays de naissance/i)).toHaveValue("France")
-    expect(screen.getByLabelText(/Fuseau horaire/i)).toHaveValue("Europe/Paris")
+    expect(screen.getByLabelText(/Fuseau horaire/i)).toHaveTextContent("Europe/Paris")
   })
 
   it("falls back to birth_place parsing when birth_city and birth_country are missing", async () => {

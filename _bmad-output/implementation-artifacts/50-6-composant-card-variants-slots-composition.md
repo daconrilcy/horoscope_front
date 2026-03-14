@@ -1,6 +1,6 @@
 # Story 50.6: Créer le composant <Card> avec variants et slots de composition
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -184,5 +184,3 @@ gemini-2.0-flash
 | Créé | `frontend/src/components/ui/Card/Card.test.tsx` |
 | Créé | `frontend/src/components/ui/Card/index.ts` |
 | Modifié | `frontend/src/components/ui/index.ts` |
-
-Status: done

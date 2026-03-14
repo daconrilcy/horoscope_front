@@ -1,6 +1,6 @@
 # Story 50.7: Créer les composants <Skeleton> et <EmptyState>
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -201,5 +201,3 @@ gemini-2.0-flash
 | Créé | `frontend/src/components/ui/EmptyState/index.ts` |
 | Modifié | `frontend/src/components/ui/index.ts` |
 | Modifié | `frontend/src/components/dashboard/DashboardHoroscopeSummaryCard.tsx` |
-
-Status: done

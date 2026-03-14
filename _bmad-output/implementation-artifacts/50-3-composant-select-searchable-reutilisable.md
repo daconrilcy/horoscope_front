@@ -1,6 +1,6 @@
 # Story 50.3: Généraliser TimezoneSelect en composant <Select> searchable réutilisable
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -218,5 +218,3 @@ gemini-2.0-flash
 | Modifié | `frontend/src/components/ui/index.ts` |
 | Modifié | `frontend/src/components/TimezoneSelect.tsx` |
 | Modifié | `frontend/src/components/TimezoneSelect.css` |
-
-Status: done

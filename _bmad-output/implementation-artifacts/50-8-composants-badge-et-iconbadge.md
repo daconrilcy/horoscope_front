@@ -1,6 +1,6 @@
 # Story 50.8: Créer les composants <Badge> et <IconBadge>
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -193,5 +193,3 @@ gemini-2.0-flash
 | Modifié | `frontend/src/components/ShortcutCard.css` |
 | Modifié | `frontend/src/components/MiniInsightCard.tsx` |
 | Modifié | `frontend/src/components/MiniInsightCard.css` |
-
-Status: done

@@ -1,6 +1,6 @@
 # Story 50.4: Créer le wrapper <Form> + <FormField> avec intégration Zod
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -190,5 +190,3 @@ gemini-2.0-flash
 | Créé | `frontend/src/components/ui/Form/Form.test.tsx` |
 | Créé | `frontend/src/components/ui/Form/index.ts` |
 | Modifié | `frontend/src/components/ui/index.ts` |
-
-Status: done

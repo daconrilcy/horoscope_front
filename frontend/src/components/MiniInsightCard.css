@@ -55,8 +55,10 @@
 }
 
 .mini-card__badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 14px;
   margin-bottom: 8px;
-  /* Other styles (size, border, etc.) are handled by IconBadge size="sm" */
 }
 
 .mini-card__title {

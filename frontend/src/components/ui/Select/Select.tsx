@@ -36,6 +36,7 @@ export const Select: React.FC<SelectProps> = ({
 }) => {
   const generatedId = useId();
   const id = providedId ?? generatedId;
+  const labelId = `${id}-label`;
   const listboxId = `${id}-listbox`;
   
   const [isOpen, setIsOpen] = useState(false);
@@ -161,7 +162,7 @@ export const Select: React.FC<SelectProps> = ({
       ref={containerRef}
       onKeyDown={handleKeyDown}
     >
-      {label && <label htmlFor={id} className="select__label">{label}</label>}
+      {label && <label id={labelId} className="select__label">{label}</label>}
       
       <div className="select__wrapper">
         <button
@@ -172,7 +173,7 @@ export const Select: React.FC<SelectProps> = ({
           disabled={disabled}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
-          aria-labelledby={label ? undefined : id}
+          aria-labelledby={label ? labelId : undefined}
           aria-invalid={!!error}
         >
           <span className={classNames('select__value', !selectedOption && 'select__value--placeholder')}>

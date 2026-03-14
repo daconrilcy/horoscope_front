@@ -1,6 +1,6 @@
 # Story 50.5: Créer le composant <Modal> / <Dialog> générique
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -224,5 +224,3 @@ gemini-2.0-flash
 | Modifié | `frontend/src/components/ui/index.ts` |
 | Modifié | `frontend/src/components/settings/DeleteAccountModal.tsx` |
 | Modifié | `frontend/src/components/settings/DeleteAccountModal.css` |
-
-Status: done

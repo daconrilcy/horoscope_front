@@ -2,6 +2,7 @@ import type { RouteObject } from "react-router-dom"
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom"
 
 import { AppShell } from "../components/AppShell"
+import { RootLayout, AuthLayout } from "../layouts"
 import { EnterpriseLayout } from "../components/layout"
 import { AuthGuard } from "./guards/AuthGuard"
 import { RoleGuard } from "./guards/RoleGuard"
@@ -59,20 +60,28 @@ export const routes: RouteObject[] = [
     element: <RootRedirect />,
   },
   {
-    path: "/login",
-    element: <LoginPage />,
-  },
-  {
-    path: "/register",
-    element: <RegisterPage />,
-  },
-  {
-    element: (
-      <AuthGuard>
-        <AppShell />
-      </AuthGuard>
-    ),
+    element: <RootLayout />,
     children: [
+      {
+        element: <AuthLayout />,
+        children: [
+          {
+            path: "/login",
+            element: <LoginPage />,
+          },
+          {
+            path: "/register",
+            element: <RegisterPage />,
+          },
+        ],
+      },
+      {
+        element: (
+          <AuthGuard>
+            <AppShell />
+          </AuthGuard>
+        ),
+        children: [
       {
         path: "/dashboard",
         children: [
@@ -224,5 +233,7 @@ export const routes: RouteObject[] = [
     path: "*",
     element: <NotFoundPage />,
   },
+],
+},
 ]
 

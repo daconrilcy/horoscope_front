@@ -1,6 +1,6 @@
 # Story 50.2: Créer le composant <Input> / <Field> avec types, états et validation
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -199,5 +199,3 @@ gemini-2.0-flash
 | Créé | `frontend/src/components/ui/Field/Field.test.tsx` |
 | Créé | `frontend/src/components/ui/Field/index.ts` |
 | Modifié | `frontend/src/components/ui/index.ts` |
-
-Status: done

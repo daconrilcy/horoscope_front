@@ -26,11 +26,11 @@ export function ShortcutCard({
 
   const content = (
     <>
-      <IconBadge 
-        icon={<Icon strokeWidth={1.75} />} 
-        color={badgeColor} 
-        size="lg" 
-        className="shortcut-card__badge" 
+      <IconBadge
+        icon={<Icon size={20} strokeWidth={1.75} />}
+        color={badgeColor}
+        size="lg"
+        className="shortcut-card__badge"
       />
       <div className="shortcut-card__content">
         <h3 className="shortcut-card__title">{title}</h3>

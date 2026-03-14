@@ -25,11 +25,11 @@ export function MiniInsightCard({ title, description, icon: Icon, badgeColor, ty
       data-type={type}
     >
       <div className="mini-card__content">
-        <IconBadge 
-          icon={<Icon strokeWidth={1.75} />} 
-          color={badgeColor} 
-          size="sm" 
-          className="mini-card__badge" 
+        <IconBadge
+          icon={<Icon size={20} strokeWidth={1.75} />}
+          color={badgeColor}
+          size="sm"
+          className="mini-card__badge"
         />
         <h3 className="mini-card__title">{title}</h3>
         <p className="mini-card__desc">{description}</p>
