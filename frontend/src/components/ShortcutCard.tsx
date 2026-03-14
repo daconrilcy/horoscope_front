@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { LucideIcon } from 'lucide-react'
+import { IconBadge } from './ui'
 import './ShortcutCard.css'
 
 export interface ShortcutCardProps {
@@ -25,9 +26,12 @@ export function ShortcutCard({
 
   const content = (
     <>
-      <div className="shortcut-card__badge" style={{ background: badgeColor }} aria-hidden="true">
-        <Icon size={20} strokeWidth={1.75} />
-      </div>
+      <IconBadge 
+        icon={<Icon strokeWidth={1.75} />} 
+        color={badgeColor} 
+        size="lg" 
+        className="shortcut-card__badge" 
+      />
       <div className="shortcut-card__content">
         <h3 className="shortcut-card__title">{title}</h3>
         <p className={subtitleClass}>

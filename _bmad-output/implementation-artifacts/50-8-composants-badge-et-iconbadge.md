@@ -20,34 +20,34 @@ afin de ne plus recoder le pattern icône-dans-un-badge-coloré dans chaque comp
 
 ## Tasks / Subtasks
 
-- [ ] Tâche 1 : Lire `ShortcutCard.tsx` et `MiniInsightCard.tsx` (AC: 4)
-  - [ ] Identifier le pattern badge actuel dans chaque composant
-  - [ ] Noter la taille et les styles du badge (44px dans ShortcutCard)
-  - [ ] Identifier comment `badgeColor` est passé en prop
+- [x] Tâche 1 : Lire `ShortcutCard.tsx` et `MiniInsightCard.tsx` (AC: 4)
+  - [x] Identifier le pattern badge actuel dans chaque composant
+  - [x] Noter la taille et les styles du badge (44px dans ShortcutCard)
+  - [x] Identifier comment `badgeColor` est passé en prop
 
-- [ ] Tâche 2 : Créer `<Badge>` et `<IconBadge>` (AC: 1, 2, 3)
-  - [ ] `frontend/src/components/ui/Badge/Badge.tsx`
-  - [ ] `frontend/src/components/ui/Badge/Badge.css`
-  - [ ] `frontend/src/components/ui/Badge/Badge.test.tsx`
-  - [ ] `frontend/src/components/ui/Badge/index.ts`
-  - [ ] `BADGE_COLORS` mapping TypeScript exporté
-  - [ ] Ajouter `export * from './Badge'` dans `frontend/src/components/ui/index.ts`
+- [x] Tâche 2 : Créer `<Badge>` et `<IconBadge>` (AC: 1, 2, 3)
+  - [x] `frontend/src/components/ui/Badge/Badge.tsx`
+  - [x] `frontend/src/components/ui/Badge/Badge.css`
+  - [x] `frontend/src/components/ui/Badge/Badge.test.tsx`
+  - [x] `frontend/src/components/ui/Badge/index.ts`
+  - [x] `BADGE_COLORS` mapping TypeScript exporté
+  - [x] Ajouter `export * from './Badge'` dans `frontend/src/components/ui/index.ts`
 
-- [ ] Tâche 3 : Refactoriser `ShortcutCard.tsx` (AC: 4)
-  - [ ] Remplacer le badge inline par `<IconBadge>`
-  - [ ] Utiliser `BADGE_COLORS` si la couleur vient d'une constante
+- [x] Tâche 3 : Refactoriser `ShortcutCard.tsx` (AC: 4)
+  - [x] Remplacer le badge inline par `<IconBadge>`
+  - [x] Utiliser `BADGE_COLORS` si la couleur vient d'une constante
 
-- [ ] Tâche 4 : Refactoriser `MiniInsightCard.tsx` (AC: 4)
-  - [ ] Remplacer le badge inline par `<IconBadge>`
-  - [ ] Utiliser `BADGE_COLORS` si applicable
+- [x] Tâche 4 : Refactoriser `MiniInsightCard.tsx` (AC: 4)
+  - [x] Remplacer le badge inline par `<IconBadge>`
+  - [x] Utiliser `BADGE_COLORS` si applicable
 
-- [ ] Tâche 5 : Validation visuelle (AC: 5)
-  - [ ] Dashboard : ShortcutCard et MiniInsightCard visuellement identiques
+- [x] Tâche 5 : Validation visuelle (AC: 5)
+  - [x] Dashboard : ShortcutCard et MiniInsightCard visuellement identiques
 
-- [ ] Tâche 6 : Écrire les tests (AC: 7)
-  - [ ] Rendu Badge sm/md/lg
-  - [ ] IconBadge avec icône Lucide
-  - [ ] BADGE_COLORS contient les clés attendues
+- [x] Tâche 6 : Écrire les tests (AC: 7)
+  - [x] Rendu Badge sm/md/lg
+  - [x] IconBadge avec icône Lucide
+  - [x] BADGE_COLORS contient les clés attendues
 
 ## Dev Notes
 
@@ -162,10 +162,36 @@ Ne pas casser le rendu pixel-perfect.
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+gemini-2.0-flash
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Composant `<Badge>` implémenté avec support des tailles `sm` (36px), `md` (40px) et `lg` (44px).
+- Composant `<IconBadge>` pour simplifier l'usage des icônes dans les badges.
+- Mapping `BADGE_COLORS` exporté pour centraliser les variables CSS des badges.
+- Refactorisation de `ShortcutCard` pour utiliser `<IconBadge size="lg">`.
+- Refactorisation de `MiniInsightCard` pour utiliser `<IconBadge size="sm">`.
+- Nettoyage des styles CSS redondants dans les composants refactorisés.
+- 6 tests unitaires validant les tailles, les couleurs et le rendu des icônes.
+
+### Change Log
+
+- 2026-03-14 : Création des composants Badge et IconBadge et refactorisation des cartes.
+
 ### File List
+
+| Action | Fichier |
+|--------|---------|
+| Créé | `frontend/src/components/ui/Badge/Badge.tsx` |
+| Créé | `frontend/src/components/ui/Badge/Badge.css` |
+| Créé | `frontend/src/components/ui/Badge/Badge.test.tsx` |
+| Créé | `frontend/src/components/ui/Badge/index.ts` |
+| Modifié | `frontend/src/components/ui/index.ts` |
+| Modifié | `frontend/src/components/ShortcutCard.tsx` |
+| Modifié | `frontend/src/components/ShortcutCard.css` |
+| Modifié | `frontend/src/components/MiniInsightCard.tsx` |
+| Modifié | `frontend/src/components/MiniInsightCard.css` |
+
+Status: done

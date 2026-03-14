@@ -1,0 +1,35 @@
+.badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 18px rgba(20, 20, 40, 0.1);
+}
+
+.badge--sm {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md, 14px);
+}
+
+.badge--md {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md, 14px);
+}
+
+.badge--lg {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px; /* Specific to ShortcutCard */
+}
+
+.badge--icon svg {
+  display: block;
+}
+
+/* Adjust icon sizes based on badge size */
+.badge--sm svg { width: 18px; height: 18px; }
+.badge--md svg { width: 20px; height: 20px; }
+.badge--lg svg { width: 20px; height: 20px; }

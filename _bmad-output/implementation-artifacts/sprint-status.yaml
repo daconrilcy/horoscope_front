@@ -447,7 +447,7 @@ development_status:
   50-5-composant-modal-dialog-generique: done
   50-6-composant-card-variants-slots-composition: done
   50-7-composants-skeleton-et-emptystate: done
-  50-8-composants-badge-et-iconbadge: ready-for-dev
+  50-8-composants-badge-et-iconbadge: done
   epic-50-retrospective: optional
 
   epic-51: in-progress

@@ -55,15 +55,8 @@
 }
 
 .mini-card__badge {
-  width: 36px;
-  height: 36px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   margin-bottom: 8px;
-  background: rgba(255,255,255,0.26);
-  border: 1px solid rgba(255,255,255,0.55);
+  /* Other styles (size, border, etc.) are handled by IconBadge size="sm" */
 }
 
 .mini-card__title {
