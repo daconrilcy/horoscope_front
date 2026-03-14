@@ -5,6 +5,7 @@ import type { DailyPredictionResponse } from "../../types/dailyPrediction"
 import { translateDashboardPage, type SupportedLocale } from "../../i18n/dashboard"
 import { translateSign } from "../../i18n/astrology"
 import { AstroMoodBackground } from "../astro/AstroMoodBackground"
+import { lazy, Suspense } from "react"
 import type { ZodiacSign } from "../astro/zodiacPatterns"
 
 interface Props {
@@ -18,6 +19,8 @@ interface Props {
   dayScore?: number
   onRetry?: () => void
 }
+
+const ZodiacIconFallback = () => <div className="dashboard-summary-card__pill-icon" />
 
 export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
   prediction,
@@ -36,6 +39,10 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
   const formattedDate = dateKey 
     ? new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(dateKey))
     : '';
+
+  const ZodiacIcon = sign && sign !== 'neutral' 
+    ? lazy(() => import(`../../assets/zodiac/${sign}.svg?react`).catch(() => ({ default: ZodiacIconFallback })))
+    : null;
 
   const handleNavigate = () => {
     navigate("/dashboard/horoscope")
@@ -112,10 +119,14 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
         className="dashboard-summary-card-bg"
       >
         <div className="dashboard-summary-card__content">
-          <div className="dashboard-summary-card__pill">
-            <img src={`/zodiac/${sign}.svg`} alt="" className="dashboard-summary-card__pill-icon" />
-            <span>{translateSign(sign, locale)} • {formattedDate}</span>
-          </div>
+          {ZodiacIcon && (
+            <div className="dashboard-summary-card__pill">
+              <Suspense fallback={<ZodiacIconFallback />}>
+                <ZodiacIcon className="dashboard-summary-card__pill-icon" />
+              </Suspense>
+              <span>{translateSign(sign, locale)} • {formattedDate}</span>
+            </div>
+          )}
           <p className="dashboard-summary-card__text">{summary}</p>
         </div>
         <div className="dashboard-summary-card__link">

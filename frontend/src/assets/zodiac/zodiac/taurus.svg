@@ -1,0 +1,26 @@
+<svg class="icon-taurus" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Taureau (Taurus)">
+  <!-- Background (modifiable in CSS) -->
+  <rect class="tr-bg" x="4" y="4" width="56" height="56" rx="14"></rect>
+
+  <!-- Keep original proportions (506x729) and fit into the 64x64 square without distortion -->
+  <!-- scale = 60/729 = 0.08231 ; x = (64 - 506*scale)/2 ≈ 11.17 ; y = 2 -->
+  <g transform="translate(11.17,2) scale(0.08231)">
+    <circle class="tr-stroke" cx="253" cy="481" r="223" vector-effect="non-scaling-stroke"></circle>
+    <path class="tr-stroke" vector-effect="non-scaling-stroke" d="M25 25.0002
+         C28.9903 148.382 128.055 244.823 251.5 245.5
+         C375.646 246.181 476.487 149.084 480.5 25.0002"></path>
+  </g>
+
+  <style>
+    .tr-bg { fill: var(--taurus-bg, #0b0b0b); }
+
+    .tr-stroke{
+      fill: none;
+      stroke: var(--taurus-stroke, #ffffff);
+      /* on garde la même épaisseur que le modèle (50) car le stroke ne scale pas */
+      stroke-width: var(--taurus-stroke-width, 50);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+</svg>

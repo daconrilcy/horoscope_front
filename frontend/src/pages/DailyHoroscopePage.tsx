@@ -17,6 +17,7 @@ import { useAuthMe } from '../api/authMe'
 import { useDailyPrediction } from '../api/useDailyPrediction'
 import { getUserDisplayName } from '../utils/user'
 import { trackEvent, EVENTS } from '../utils/analytics'
+import { useDashboardAstroSummary } from '../components/dashboard/useDashboardAstroSummary'
 
 function parseLocalMinute(iso: string): number | null {
   const match = iso.match(/T(\d{2}):(\d{2})/)
@@ -83,6 +84,8 @@ export function DailyHoroscopePage() {
     isError: isPredictionError,
     refetch: refetchPrediction
   } = useDailyPrediction(accessToken)
+
+  const { sign, dayScore } = useDashboardAstroSummary(accessToken)
 
   useEffect(() => {
     if (prediction) {
@@ -263,7 +266,16 @@ export function DailyHoroscopePage() {
             </button>
           </div>
 
-          <DayPredictionCard prediction={prediction} lang={lang} />
+          <DayPredictionCard
+            prediction={prediction}
+            lang={lang}
+            astroBackgroundProps={{
+              sign,
+              userId: user?.id ? String(user.id) : 'anonymous',
+              dateKey: prediction.meta.date_local,
+              dayScore
+            }}
+          />
 
           <TurningPointsList
             moments={keyMoments}

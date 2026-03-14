@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useDailyPrediction } from '../../api/useDailyPrediction';
 import { useBirthData } from '../../api/useBirthData';
 import { getSubjectFromAccessToken } from '../../utils/authToken';
+import { normalizeSignCode } from '../../i18n/astrology';
 import type { ZodiacSign } from '../astro/zodiacPatterns';
 import { clamp } from '../astro/astroMoodBackgroundUtils';
 
@@ -30,7 +31,7 @@ export function useDashboardAstroSummary(token: string | null): DashboardAstroSu
   const sign = useMemo((): ZodiacSign => {
     const code = birthData?.astro_profile?.sun_sign_code;
     if (code) {
-      return code.toLowerCase() as ZodiacSign;
+      return normalizeSignCode(code) as ZodiacSign;
     }
     return 'neutral';
   }, [birthData]);

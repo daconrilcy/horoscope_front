@@ -139,8 +139,37 @@ export const SUPPORTED_LANGS: AstrologyLang[] = ["fr", "en", "es"]
  * @returns Traduction ou code brut si non trouvé (fallback AC3)
  */
 export function translateSign(code: string, lang: AstrologyLang): string {
-  const entry = SIGNS[code.toLowerCase()]
+  const norm = normalizeSignCode(code)
+  const entry = SIGNS[norm]
   return entry?.[lang] ?? code
+}
+
+/**
+ * Normalise un code de signe (fr, en, es) vers sa clé standard anglaise.
+ * Utile car le backend peut renvoyer des codes localisés ("verseau", "aries").
+ */
+export function normalizeSignCode(code: string): string {
+  if (!code) return "neutral"
+  const search = code.toLowerCase().trim()
+  
+  // Direct match first
+  if (SIGNS[search]) return search
+
+  // Reverse lookup
+  for (const [key, translations] of Object.entries(SIGNS)) {
+    if (
+      translations.fr.toLowerCase() === search ||
+      translations.en.toLowerCase() === search ||
+      translations.es.toLowerCase() === search ||
+      // Plural/accents edge cases often sent by APIs
+      search.replace(/[éèê]/g, 'e') === translations.fr.toLowerCase().replace(/[éèê]/g, 'e') ||
+      search === "poisson" && key === "pisces"
+    ) {
+      return key
+    }
+  }
+
+  return search // Fallback
 }
 
 /**

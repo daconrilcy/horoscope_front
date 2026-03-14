@@ -1,0 +1,25 @@
+<svg class="icon-libra" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Balance (Libra)">
+  <!-- Background (modifiable in CSS) -->
+  <rect class="li-bg" x="4" y="4" width="56" height="56" rx="14"></rect>
+
+  <!-- Keep original proportions (853x451) and fit into the 64x64 square -->
+  <!-- scale = 0.07034 (60/853), translated to center vertically -->
+  <g transform="translate(2,16.15) scale(0.07034)">
+    <path class="li-stroke" vector-effect="non-scaling-stroke" d="M25 425.042H828
+         M25 224.042C25 224.042 148 224.042 225.5 224.042
+         C225.5 130.542 298.5 22.579 431 25.0421
+         C563.5 27.5051 629 130.542 629 224.042
+         C692.5 224.042 828 224.042 828 224.042"></path>
+  </g>
+
+  <style>
+    .li-bg { fill: var(--libra-bg, #0b0b0b); }
+    .li-stroke{
+      fill: none;
+      stroke: var(--libra-stroke, #ffffff);
+      stroke-width: var(--libra-stroke-width, 50);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+</svg>

@@ -2736,7 +2736,12 @@ textarea:focus-visible {
 .dashboard-summary-card__pill-icon {
   width: 16px;
   height: 16px;
-  object-fit: contain;
+  stroke: currentColor;
+}
+
+.dashboard-summary-card__pill-icon * {
+  stroke: currentColor;
+  fill: none;
 }
 
 .dashboard-summary-card {
@@ -2858,25 +2863,30 @@ textarea:focus-visible {
 }
 
 /* === Horoscope Page Modifications === */
-.hero-card-astro-bg-wrapper {
-  margin-bottom: 1.5rem;
-  border-radius: 28px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  position: relative;
-}
-
-.hero-card-astro-bg-wrapper .astro-mood-background__content {
+.day-prediction-card.panel.hero-card {
   padding: 0;
-}
-
-.hero-card-astro-bg-wrapper .panel.hero-card {
+  overflow: hidden;
+  margin-bottom: 24px;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  margin-bottom: 0 !important;
-  position: relative;
-  z-index: 2;
+}
+
+.day-prediction-card__header-bg-wrapper .astro-mood-background {
+  border-radius: 0;
+}
+
+.day-prediction-card__header-bg-wrapper .astro-mood-background__content {
+  padding: 1.5rem;
+  min-height: auto;
+}
+
+.day-prediction-card__header-fallback {
+  padding: 1.5rem 1.5rem 0 1.5rem;
+}
+
+.day-prediction-card__body {
+  padding: 1rem 1.5rem 1.5rem 1.5rem;
 }
 
 @media (max-width: 280px) {
