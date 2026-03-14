@@ -29,12 +29,27 @@ const PREDICTION_OK = {
     summary: {
       overall_summary: "Une excellente journée vous attend avec de belles opportunités.",
     },
-    categories: [],
+    categories: [
+      { code: 'love', note_20: 18 },
+      { code: 'work', note_20: 14 }
+    ],
     timeline: [],
     turning_points: [],
   }),
 }
 
+const BIRTH_DATA_OK = {
+  ok: true,
+  status: 200,
+  json: async () => ({
+    data: {
+      astro_profile: {
+        sun_sign_code: 'Aries'
+      },
+      geolocation_consent: true
+    }
+  })
+}
 
 const NOT_FOUND = {
   ok: false,
@@ -42,45 +57,48 @@ const NOT_FOUND = {
   json: async () => ({ error: { code: "not_found", message: "not found" } }),
 }
 
-function makeFetchMock(predictionResponse: object = PREDICTION_OK) {
-  return vi.fn(async (input: RequestInfo | URL) => {
-    const url = String(input)
-    if (url.endsWith("/v1/auth/me")) return AUTH_ME_USER
-    if (url.includes("/v1/predictions/daily")) return predictionResponse
-    return NOT_FOUND
-  })
-}
-
-function setupToken(sub = "42") {
-  const payload = btoa(JSON.stringify({ sub, role: "user" }))
-  setAccessToken(`x.${payload}.y`)
-}
-
-function renderDashboard() {
-  const router = createMemoryRouter(routes, {
-    initialEntries: ["/dashboard"],
-    future: { v7_relativeSplatPath: true },
-  })
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, staleTime: Infinity } },
-  })
-
-  return {
-    router,
-    ...render(
-      <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} future={{ v7_startTransition: true }} />
-        </QueryClientProvider>
-      </ThemeProvider>
-    ),
-  }
-}
-
 describe("DashboardPage Landing", () => {
   beforeEach(() => {
     localStorage.setItem("lang", "fr")
     setupToken()
+
+    // Mock ResizeObserver
+    class ResizeObserverMock {
+      observe = vi.fn();
+      unobserve = vi.fn();
+      disconnect = vi.fn();
+    }
+    vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+
+    // Mock matchMedia
+    vi.stubGlobal('matchMedia', vi.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(), // deprecated
+      removeListener: vi.fn(), // deprecated
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })));
+
+    // Mock Canvas getContext
+    // @ts-ignore
+    HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
+      clearRect: vi.fn(),
+      beginPath: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
+      stroke: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      translate: vi.fn(),
+      createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+      createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+      fillRect: vi.fn(),
+    }));
   })
 
   afterEach(() => {
@@ -232,4 +250,65 @@ describe("DashboardPage Landing", () => {
     expect(screen.getByText("Astrologer chat")).toBeInTheDocument()
     expect(screen.getByLabelText(/View full horoscope/i)).toBeInTheDocument()
   })
+
+  it("utilise un fallback neutre quand le signe est absent des données de naissance", async () => {
+    const birthMissingSign = {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        data: {
+          astro_profile: { sun_sign_code: null },
+          geolocation_consent: true
+        }
+      })
+    }
+    vi.stubGlobal("fetch", makeFetchMock(PREDICTION_OK, birthMissingSign))
+
+    renderDashboard()
+
+    await waitFor(() => {
+      expect(screen.getByText(/Une excellente journée vous attend/i)).toBeInTheDocument()
+    })
+
+    // On vérifie que ça n'a pas crashé et que le canvas est là
+    expect(document.querySelector('canvas')).toBeInTheDocument()
+  })
 })
+
+function setupToken(sub = "42") {
+  const payload = btoa(JSON.stringify({ sub, exp: Math.floor(Date.now() / 1000) + 3600 }))
+  setAccessToken(`header.${payload}.signature`)
+}
+
+function makeFetchMock(predictionResp = PREDICTION_OK, birthResp = BIRTH_DATA_OK) {
+  return vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input)
+    if (url.endsWith("/v1/auth/me")) return AUTH_ME_USER
+    if (url.includes("/v1/predictions/daily")) return predictionResp
+    if (url.includes("/v1/birth-profiles/me") || url.includes("birth-data")) return birthResp
+    return NOT_FOUND
+  })
+}
+
+function renderDashboard() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  
+  const router = createMemoryRouter(routes, {
+    initialEntries: ["/dashboard"],
+  })
+
+  return {
+    ...render(
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <RouterProvider router={router} />
+        </ThemeProvider>
+      </QueryClientProvider>
+    ),
+    router,
+    queryClient
+  }
+}
+

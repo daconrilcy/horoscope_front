@@ -3,12 +3,18 @@ import { useNavigate } from "react-router-dom"
 import { ChevronRight } from "lucide-react"
 import type { DailyPredictionResponse } from "../../types/dailyPrediction"
 import { translateDashboardPage, type SupportedLocale } from "../../i18n/dashboard"
+import { AstroMoodBackground } from "../astro/AstroMoodBackground"
+import type { ZodiacSign } from "../astro/zodiacPatterns"
 
 interface Props {
   prediction: DailyPredictionResponse | null
   isLoading: boolean
   isError: boolean
   locale: SupportedLocale
+  sign?: ZodiacSign
+  userId?: string
+  dateKey?: string
+  dayScore?: number
   onRetry?: () => void
 }
 
@@ -17,6 +23,10 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
   isLoading,
   isError,
   locale,
+  sign = 'neutral',
+  userId = 'anonymous',
+  dateKey = '',
+  dayScore = 12,
   onRetry,
 }) => {
   const navigate = useNavigate()
@@ -82,20 +92,28 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
 
   return (
     <div 
-      className="panel dashboard-summary-card"
+      className="dashboard-summary-card-wrapper"
       onClick={handleNavigate}
       role="button"
       tabIndex={0}
       onKeyDown={handleKeyDown}
       aria-label={`${viewHoroscope}: ${summary}`}
     >
-      <div className="dashboard-summary-card__content">
-        <p className="dashboard-summary-card__text">{summary}</p>
-      </div>
-      <div className="dashboard-summary-card__link">
-        <span>{viewHoroscope}</span>
-        <ChevronRight size={16} />
-      </div>
+      <AstroMoodBackground
+        sign={sign}
+        userId={userId}
+        dateKey={dateKey}
+        dayScore={dayScore}
+        className="dashboard-summary-card-bg"
+      >
+        <div className="dashboard-summary-card__content">
+          <p className="dashboard-summary-card__text">{summary}</p>
+        </div>
+        <div className="dashboard-summary-card__link">
+          <span>{viewHoroscope}</span>
+          <ChevronRight size={16} />
+        </div>
+      </AstroMoodBackground>
     </div>
   )
 }

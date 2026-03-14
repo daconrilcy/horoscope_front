@@ -8,6 +8,7 @@ import { useAccessTokenSnapshot } from "../utils/authToken"
 import { useAuthMe } from "../api/authMe"
 import { getUserDisplayName } from "../utils/user"
 import { useDailyPrediction } from "../api/useDailyPrediction"
+import { useDashboardAstroSummary } from "../components/dashboard/useDashboardAstroSummary"
 
 /**
  * Primary dashboard landing page (Story 45.2).
@@ -25,6 +26,8 @@ export function DashboardPage() {
     isError: isPredictionError,
     refetch: refetchPrediction,
   } = useDailyPrediction(accessToken)
+
+  const astroSummary = useDashboardAstroSummary(accessToken)
   
   const userName = isUserLoading 
     ? "loading" 
@@ -44,6 +47,10 @@ export function DashboardPage() {
         isLoading={isPredictionLoading}
         isError={isPredictionError}
         locale={lang}
+        sign={astroSummary.sign}
+        userId={astroSummary.userId}
+        dateKey={astroSummary.dateKey}
+        dayScore={astroSummary.dayScore}
         onRetry={() => {
           void refetchPrediction()
         }}
