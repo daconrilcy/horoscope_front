@@ -1,0 +1,50 @@
+<svg class="icon-scorpio" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Scorpion (Scorpio)">
+  <!-- Background (modifiable in CSS) -->
+  <rect class="sc-bg" x="4" y="4" width="56" height="56" rx="14"></rect>
+
+  <!-- Scorpio stroke (model path scaled to 64x64) -->
+  <path class="sc-stroke" d="
+    M4.336 19.621
+    C4.336 19.621 1.838 16.748 1.838 11.537
+    C1.838 6.326 5.231 2.428 9.22 2.428
+    C12.377 2.428 16.044 5.924 16.667 9.624
+
+    M16.667 9.624
+    C16.667 26.821 16.667 46.568 16.667 46.568
+
+    M16.667 9.624
+    C17.254 6.12 20.502 2.659 23.642 2.428
+    C27.119 2.172 30.899 5.586 31.596 9.624
+
+    M31.596 9.624
+    C31.596 26.821 31.596 46.568 31.596 46.568
+
+    M31.596 9.624
+    C32.328 5.586 35.246 2.428 38.295 2.428
+    C41.626 2.428 43.86 3.456 45.14 5.83
+    C46.313 8.001 45.91 14.646 45.91 17.114
+    C45.91 26.995 45.91 35.637 45.91 46.568
+    C45.91 50.776 48.998 54.288 52.952 54.288
+    C56.907 54.288 60.096 50.527 60.096 46.568
+    C60.096 41.883 57.275 40.03 54.052 36.986
+
+    M54.052 36.986
+    C54.052 39.934 54.052 44.542 54.052 44.542
+
+    M54.052 36.986
+    C56.943 36.986 61.458 36.986 61.458 36.986
+  "></path>
+
+  <style>
+    .sc-bg { fill: var(--scorpio-bg, #0b0b0b); }
+
+    .sc-stroke{
+      fill: none;
+      stroke: var(--scorpio-stroke, #ffffff);
+      /* équivalent stroke 50 sur 871px -&gt; ~3.67 sur 64px */
+      stroke-width: var(--scorpio-stroke-width, 3.7);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+</svg>

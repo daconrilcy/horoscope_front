@@ -1,0 +1,30 @@
+<svg class="icon-cancer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Cancer">
+  <!-- Background (modifiable in CSS) -->
+  <rect class="ca-bg" x="4" y="4" width="56" height="56" rx="14"></rect>
+
+  <!-- Cancer mark (model shapes scaled to 64x64) -->
+  <circle class="ca-stroke" cx="12.025" cy="32.073" r="10.128"></circle>
+  <circle class="ca-stroke" cx="51.969" cy="32.073" r="10.128"></circle>
+
+  <path class="ca-stroke" d="
+    M1.89 31.242
+    C1.89 63.744 39.832 69.748 53.231 53.418
+  "></path>
+  <path class="ca-stroke" d="
+    M61.961 31.993
+    C61.961 -0.509 24.019 -6.514 10.62 9.817
+  "></path>
+
+  <style>
+    .ca-bg { fill: var(--cancer-bg, #0b0b0b); }
+
+    .ca-stroke{
+      fill: none;
+      stroke: var(--cancer-stroke, #ffffff);
+      /* équivalent stroke 50 sur 847px -&gt; ~3.78 sur 64px */
+      stroke-width: var(--cancer-stroke-width, 3.8);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+</svg>

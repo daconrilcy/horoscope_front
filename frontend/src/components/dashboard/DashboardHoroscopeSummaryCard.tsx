@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { ChevronRight } from "lucide-react"
 import type { DailyPredictionResponse } from "../../types/dailyPrediction"
 import { translateDashboardPage, type SupportedLocale } from "../../i18n/dashboard"
+import { translateSign } from "../../i18n/astrology"
 import { AstroMoodBackground } from "../astro/AstroMoodBackground"
 import type { ZodiacSign } from "../astro/zodiacPatterns"
 
@@ -31,6 +32,10 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
 }) => {
   const navigate = useNavigate()
   const { viewHoroscope, noPrediction, errorPrediction, retry, summaryLoading } = translateDashboardPage(locale)
+
+  const formattedDate = dateKey 
+    ? new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(dateKey))
+    : '';
 
   const handleNavigate = () => {
     navigate("/dashboard/horoscope")
@@ -107,6 +112,10 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
         className="dashboard-summary-card-bg"
       >
         <div className="dashboard-summary-card__content">
+          <div className="dashboard-summary-card__pill">
+            <img src={`/zodiac/${sign}.svg`} alt="" className="dashboard-summary-card__pill-icon" />
+            <span>{translateSign(sign, locale)} • {formattedDate}</span>
+          </div>
           <p className="dashboard-summary-card__text">{summary}</p>
         </div>
         <div className="dashboard-summary-card__link">

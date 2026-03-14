@@ -16,7 +16,7 @@ import { useDashboardAstroSummary } from "../components/dashboard/useDashboardAs
  */
 export function DashboardPage() {
   const { lang } = useAstrologyLabels()
-  const { title, welcome } = translateDashboardPage(lang)
+  const { title, welcome, header } = translateDashboardPage(lang)
   const accessToken = useAccessTokenSnapshot()
   
   const { data: user, isLoading: isUserLoading } = useAuthMe(accessToken)
@@ -40,6 +40,10 @@ export function DashboardPage() {
       <div>
         <h2 className="dashboard-title">{title}</h2>
         <p>{welcome}</p>
+      </div>
+
+      <div className="section-header">
+        <h3 className="section-header__title">{header.title}</h3>
       </div>
 
       <DashboardHoroscopeSummaryCard 
