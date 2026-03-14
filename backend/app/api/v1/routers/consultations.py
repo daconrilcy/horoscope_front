@@ -8,6 +8,7 @@ from app.api.v1.schemas.consultation import (
     ConsultationGenerateRequest,
     ConsultationGenerateResponse,
     ConsultationThirdPartyListResponse,
+    ConsultationThirdPartyListMeta,
     ConsultationThirdPartyProfileCreate,
     ConsultationThirdPartyProfile,
 )
@@ -75,7 +76,7 @@ def list_third_parties(
     
     return ConsultationThirdPartyListResponse(
         items=items,
-        meta=ConsultationPrecheckMeta(request_id=request_id)
+        meta=ConsultationThirdPartyListMeta(request_id=request_id)
     )
 
 @router.post("/third-parties", response_model=ConsultationThirdPartyProfile)

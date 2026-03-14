@@ -423,5 +423,5 @@ development_status:
   47-6-refondre-la-generation-et-la-restitution-structuree-des-consultations: done
   47-7-verrouiller-qa-observabilite-et-non-regression-des-consultations-completes: done
   47-8-etendre-la-collecte-tiers-aux-consultations-d-interaction-ciblee: done
-  47-9-persister-et-reutiliser-des-profils-tiers-de-consultation: ready-for-dev
+  47-9-persister-et-reutiliser-des-profils-tiers-de-consultation: done
   epic-47-retrospective: optional

@@ -155,7 +155,11 @@ class ConsultationThirdPartyProfileCreate(BaseModel):
     birth_lat: Optional[float] = None
     birth_lon: Optional[float] = None
     place_resolved_id: Optional[int] = None
+    birth_timezone: Optional[str] = Field(None, max_length=64)
+
+class ConsultationThirdPartyListMeta(BaseModel):
+    request_id: str
 
 class ConsultationThirdPartyListResponse(BaseModel):
     items: List[ConsultationThirdPartyProfile]
-    meta: ConsultationPrecheckMeta
+    meta: ConsultationThirdPartyListMeta

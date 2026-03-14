@@ -460,8 +460,9 @@ class ConsultationGenerationService:
                         third_party_profile_id=db_tp_profile.id,
                         consultation_id=consultation_id,
                         consultation_type=request.consultation_type,
-                        context_summary=guidance.summary[:255] # Minimal non-sensitive summary
+                        context_summary=(guidance.summary or "")[:255],
                     )
+                    db.commit()
             except Exception as e:
                 ConsultationGenerationService.logger.exception("failed_to_save_third_party error=%s", e)
 

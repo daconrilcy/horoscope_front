@@ -270,12 +270,60 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
     fireEvent.click(screen.getByRole("button", { name: /Next/i }))
 
     await waitFor(() => expect(screen.getByLabelText(/Use an existing contact/i)).toBeInTheDocument())
-    
+
     fireEvent.change(screen.getByLabelText(/Use an existing contact/i), { target: { value: "tp-1" } })
-    
+
     await waitFor(() => {
       expect(screen.getByDisplayValue("1990-01-01")).toBeInTheDocument()
       expect(screen.getByDisplayValue("Paris")).toBeInTheDocument()
     })
+  })
+
+  it("AC3: shows save-to-contacts checkbox on other person form", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relation" })
+
+    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { target: { value: "Synastrie" } })
+    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+
+    await waitFor(() => expect(screen.getByText(/Information about the other person/i)).toBeInTheDocument())
+    expect(screen.getByLabelText(/Save to my contacts/i)).toBeInTheDocument()
+  })
+
+  it("AC4: shows nickname field and privacy warning when save-to-contacts is checked", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relation" })
+
+    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { target: { value: "Synastrie" } })
+    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+
+    await waitFor(() => expect(screen.getByLabelText(/Save to my contacts/i)).toBeInTheDocument())
+    fireEvent.click(screen.getByLabelText(/Save to my contacts/i))
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Nickname/i)).toBeInTheDocument()
+      expect(screen.getByText(/do not use full names/i)).toBeInTheDocument()
+    })
+  })
+
+  it("AC4: Next is blocked if save-to-contacts is checked but nickname is empty", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relation" })
+
+    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { target: { value: "Synastrie" } })
+    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+
+    await waitFor(() => expect(screen.getByLabelText(/Birth city/i)).toBeInTheDocument())
+
+    fireEvent.change(screen.getByLabelText(/Birth date/i), { target: { value: "1990-01-01" } })
+    fireEvent.change(screen.getByLabelText(/Birth city/i), { target: { value: "Paris" } })
+    fireEvent.change(screen.getByLabelText(/Birth country/i), { target: { value: "France" } })
+
+    fireEvent.click(screen.getByLabelText(/Save to my contacts/i))
+
+    await waitFor(() => expect(screen.getByLabelText(/Nickname/i)).toBeInTheDocument())
+
+    const nextBtn = screen.getByRole("button", { name: /Next/i })
+    expect(nextBtn).toBeDisabled()
   })
 })

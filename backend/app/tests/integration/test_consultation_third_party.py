@@ -4,7 +4,8 @@ from sqlalchemy import delete
 import app.infra.db.models  # noqa: F401
 from app.infra.db.base import Base
 from app.infra.db.models.user import UserModel
-from app.infra.db.models.consultation_third_party import ConsultationThirdPartyProfileModel
+from app.infra.db.models.consultation_third_party import ConsultationThirdPartyProfileModel, ConsultationThirdPartyUsageModel
+from app.infra.db.repositories.consultation_third_party_repository import ConsultationThirdPartyRepository
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 
@@ -13,10 +14,6 @@ client = TestClient(app)
 def _cleanup_tables() -> None:
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
-        db.execute(delete(ConsultationThirdPartyProfileModel))
-        db.execute(delete(UserModel))
-        db.commit()
 
 def _get_auth_headers(email="user_tp@example.com"):
     register = client.post(
@@ -61,9 +58,78 @@ def test_list_third_parties_with_data():
         "birth_city": "Paris",
         "birth_country": "France"
     }, headers=headers)
-    
+
     response = client.get("/v1/consultations/third-parties", headers=headers)
     assert response.status_code == 200
     items = response.json()["items"]
     assert len(items) == 1
     assert items[0]["nickname"] == "Friend"
+
+
+def test_usage_recorded_and_returned():
+    """AC8: la mise à jour de l'usage est tracée et retournée dans le listing."""
+    _cleanup_tables()
+    headers = _get_auth_headers(email="user_tp_usage@example.com")
+    create_resp = client.post("/v1/consultations/third-parties", json={
+        "nickname": "Colleague",
+        "birth_date": "1988-03-22",
+        "birth_place": "Lyon, France",
+        "birth_city": "Lyon",
+        "birth_country": "France"
+    }, headers=headers)
+    assert create_resp.status_code == 200
+    external_id = create_resp.json()["external_id"]
+
+    with SessionLocal() as db:
+        repo = ConsultationThirdPartyRepository(db)
+        profile = repo.get_by_external_id(external_id)
+        assert profile is not None
+        repo.record_usage(
+            third_party_profile_id=profile.id,
+            consultation_id="consult_test_001",
+            consultation_type="work",
+            context_summary="Entretien avec un recruteur",
+        )
+        db.commit()
+
+    list_resp = client.get("/v1/consultations/third-parties", headers=headers)
+    assert list_resp.status_code == 200
+    items = list_resp.json()["items"]
+    assert len(items) == 1
+    assert len(items[0]["usage_history"]) == 1
+    usage = items[0]["usage_history"][0]
+    assert usage["consultation_id"] == "consult_test_001"
+    assert usage["consultation_type"] == "work"
+    assert usage["context_summary"] == "Entretien avec un recruteur"
+
+
+def test_updated_at_refreshed_on_usage():
+    """AC5: updated_at du profil est mis à jour lors d'un enregistrement d'usage."""
+    _cleanup_tables()
+    headers = _get_auth_headers(email="user_tp_updated@example.com")
+    create_resp = client.post("/v1/consultations/third-parties", json={
+        "nickname": "OldContact",
+        "birth_date": "1975-07-14",
+        "birth_place": "Bordeaux",
+        "birth_city": "Bordeaux",
+        "birth_country": "France"
+    }, headers=headers)
+    assert create_resp.status_code == 200
+    external_id = create_resp.json()["external_id"]
+
+    with SessionLocal() as db:
+        repo = ConsultationThirdPartyRepository(db)
+        profile = repo.get_by_external_id(external_id)
+        assert profile is not None
+        created_updated_at = profile.updated_at
+        repo.record_usage(
+            third_party_profile_id=profile.id,
+            consultation_id="consult_test_002",
+            consultation_type="relation",
+            context_summary="Synastrie",
+        )
+        db.commit()
+        db.expire(profile)
+        profile = repo.get_by_external_id(external_id)
+        assert profile is not None
+        assert profile.updated_at >= created_updated_at

@@ -256,6 +256,7 @@ export function useConsultationThirdParties() {
   return useQuery({
     queryKey: ["consultation-third-parties"],
     queryFn: listThirdParties,
+    staleTime: 60_000,
   })
 }
 

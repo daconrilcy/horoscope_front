@@ -1,6 +1,6 @@
 # Story 47.9: Persister et reutiliser des profils tiers de consultation
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -115,14 +115,18 @@ Gemini CLI
 ### File List
 
 - `backend/app/infra/db/models/consultation_third_party.py`
+- `backend/app/infra/db/models/__init__.py`
 - `backend/app/infra/db/repositories/consultation_third_party_repository.py`
 - `backend/app/services/consultation_third_party_service.py`
+- `backend/app/services/consultation_generation_service.py`
 - `backend/app/api/v1/routers/consultations.py`
 - `backend/app/api/v1/schemas/consultation.py`
 - `backend/app/tests/integration/test_consultation_third_party.py`
 - `frontend/src/api/consultations.ts`
+- `frontend/src/features/consultations/components/DataCollectionStep.tsx`
 - `frontend/src/features/consultations/components/OtherPersonForm.tsx`
 - `frontend/src/state/consultationStore.tsx`
+- `frontend/src/types/consultation.ts`
 - `frontend/src/pages/ConsultationWizardPage.tsx`
 - `frontend/src/pages/ConsultationResultPage.tsx`
 - `frontend/src/i18n/consultations.ts`
@@ -131,3 +135,4 @@ Gemini CLI
 ## Change Log
 
 - 2026-03-13: Implementation of story 47.9. Third-party profile persistence and reuse.
+- 2026-03-14: Code review fixes — birth_timezone propagated via schema, usage record now committed, datetime.now(timezone.utc) in record_usage, guidance.summary None-safe, staleTime on query, ?? null for coords, ConsultationThirdPartyListMeta decoupled from ConsultationPrecheckMeta, 2 new backend tests (usage recording + updated_at), 4 new frontend tests (AC3/AC4), File List completed, cleanup test simplified.

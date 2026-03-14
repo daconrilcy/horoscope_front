@@ -95,9 +95,9 @@ export function OtherPersonForm({
         birthPlace: selected.birth_place,
         birthCity: selected.birth_city || "",
         birthCountry: selected.birth_country || "",
-        placeResolvedId: selected.place_resolved_id || null,
-        birthLat: selected.birth_lat || null,
-        birthLon: selected.birth_lon || null,
+        placeResolvedId: selected.place_resolved_id ?? null,
+        birthLat: selected.birth_lat ?? null,
+        birthLon: selected.birth_lon ?? null,
       }
       setInternalValue(newValue)
       setResolvedGeoLabel(selected.birth_place)

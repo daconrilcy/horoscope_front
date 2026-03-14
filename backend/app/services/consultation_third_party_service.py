@@ -54,8 +54,8 @@ class ConsultationThirdPartyService:
     ) -> ConsultationThirdPartyProfile:
         repo = ConsultationThirdPartyRepository(db)
         
-        birth_timezone = "UTC" # TODO: Improve this
-        
+        birth_timezone = payload.birth_timezone or "UTC"
+
         model = repo.create_profile(
             user_id=user_id,
             nickname=payload.nickname,
