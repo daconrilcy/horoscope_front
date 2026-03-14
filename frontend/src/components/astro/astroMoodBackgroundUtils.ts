@@ -38,6 +38,7 @@ export function getPalette(dayScore: number, theme: Theme = 'light') {
     if (score <= 7) {
       return {
         left: '#181626',
+        mid: '#21193a',
         right: '#2A2436',
         mist: 'rgba(120, 100, 200, 0.15)',
         starCore: 'rgba(235, 235, 255, 0.95)',
@@ -49,6 +50,7 @@ export function getPalette(dayScore: number, theme: Theme = 'light') {
     if (score >= 15) {
       return {
         left: '#1e1b2e',
+        mid: '#2a1f4a',
         right: '#37226E',
         mist: 'rgba(170, 140, 255, 0.22)',
         starCore: 'rgba(255, 255, 255, 1)',
@@ -59,6 +61,7 @@ export function getPalette(dayScore: number, theme: Theme = 'light') {
     }
     return {
       left: '#181626',
+      mid: '#13111f',
       right: '#0F0E18',
       mist: 'rgba(140, 120, 230, 0.18)',
       starCore: 'rgba(245, 245, 255, 0.98)',
@@ -72,6 +75,7 @@ export function getPalette(dayScore: number, theme: Theme = 'light') {
   if (score <= 7) {
     return {
       left: '#fbf7f8',
+      mid: '#efe6f7',
       right: '#d9cafb',
       mist: 'rgba(196, 173, 255, 0.22)',
       starCore: 'rgba(255, 255, 255, 0.98)',
@@ -84,6 +88,7 @@ export function getPalette(dayScore: number, theme: Theme = 'light') {
   if (score >= 15) {
     return {
       left: '#fffaf9',
+      mid: '#ede4ff',
       right: '#cdc1ff',
       mist: 'rgba(189, 176, 255, 0.24)',
       starCore: 'rgba(255, 255, 255, 1)',
@@ -95,6 +100,7 @@ export function getPalette(dayScore: number, theme: Theme = 'light') {
 
   return {
     left: '#fcf8f9',
+    mid: '#ede5fb',
     right: '#d5c9fb',
     mist: 'rgba(192, 178, 255, 0.23)',
     starCore: 'rgba(255, 255, 255, 0.99)',

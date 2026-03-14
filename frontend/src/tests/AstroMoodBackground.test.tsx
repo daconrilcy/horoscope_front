@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
 import AstroMoodBackground from '../components/astro/AstroMoodBackground';
 import {
   hashString,
@@ -75,17 +75,20 @@ describe('AstroMoodBackground', () => {
     expect(screen.getByText('Content')).toBeInTheDocument();
   });
 
-  it('handles theme changes', () => {
+  it('handles theme changes by re-running the effect', () => {
+    const cancelSpy = vi.spyOn(window, 'cancelAnimationFrame');
     const useThemeSpy = vi.spyOn(ThemeProvider, 'useThemeSafe');
     useThemeSpy.mockReturnValue({ theme: 'light', toggleTheme: vi.fn() });
-    
-    const { rerender } = render(
+
+    const { rerender, container } = render(
       <AstroMoodBackground
         sign="aries"
         userId="user-1"
         dateKey="2026-03-14"
       />
     );
+
+    const cancelCallsBefore = cancelSpy.mock.calls.length;
 
     useThemeSpy.mockReturnValue({ theme: 'dark', toggleTheme: vi.fn() });
     rerender(
@@ -95,9 +98,11 @@ describe('AstroMoodBackground', () => {
         dateKey="2026-03-14"
       />
     );
-    
-    // getPalette should have been called with 'dark'
-    // We can verify this if we export getPalette and spy on it or check the canvas calls if they changed
+
+    // theme is in the useEffect deps, so switching theme triggers cleanup + re-setup
+    // cancelAnimationFrame is called in the cleanup of the previous effect
+    expect(cancelSpy.mock.calls.length).toBeGreaterThan(cancelCallsBefore);
+    expect(container.querySelector('canvas')).toBeTruthy();
   });
 
   it('has aria-hidden="true" on canvas for accessibility', () => {
@@ -198,5 +203,3 @@ describe('AstroMoodBackground', () => {
     expect(cancelSpy.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 });
-
-import { screen } from '@testing-library/react';

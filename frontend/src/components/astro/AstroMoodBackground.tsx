@@ -154,7 +154,7 @@ export const AstroMoodBackground: React.FC<AstroMoodBackgroundProps> = ({
       if (!ctx) return;
       const linear = ctx.createLinearGradient(0, 0, width, 0);
       linear.addColorStop(0, palette.left);
-      linear.addColorStop(0.45, '#efe6f7');
+      linear.addColorStop(0.45, palette.mid);
       linear.addColorStop(1, palette.right);
 
       ctx.fillStyle = linear;
@@ -345,7 +345,7 @@ export const AstroMoodBackground: React.FC<AstroMoodBackgroundProps> = ({
       window.cancelAnimationFrame(animationId);
       resizeObserver.disconnect();
     };
-  }, [sign, userId, dateKey, dayScore]);
+  }, [sign, userId, dateKey, dayScore, theme]);
 
   return (
     <div className={`astro-mood-background ${className}`}>
