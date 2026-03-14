@@ -62,7 +62,6 @@ export const AstroMoodBackground: React.FC<AstroMoodBackgroundProps> = ({
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const seed = hashString(`${userId}|${sign}|${dateKey}`);
-    const rand = mulberry32(seed);
     const palette = getPalette(dayScore, theme);
     const pattern = SIGN_PATTERNS[sign] || SIGN_PATTERNS['neutral'];
 
@@ -83,6 +82,8 @@ export const AstroMoodBackground: React.FC<AstroMoodBackgroundProps> = ({
 
     function rebuildScene() {
       if (!canvas) return;
+      // Rebuild from the raw seed every time to keep the layout deterministic across resizes.
+      const rand = mulberry32(seed);
       const rect = canvas.getBoundingClientRect();
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       width = Math.max(1, Math.floor(rect.width * dpr));
@@ -329,17 +330,27 @@ export const AstroMoodBackground: React.FC<AstroMoodBackgroundProps> = ({
       drawBackground(time);
       drawField(time);
       drawConstellation(reduceMotion ? 0 : time);
-      animationId = window.requestAnimationFrame(render);
+      if (!reduceMotion) {
+        animationId = window.requestAnimationFrame(render);
+      }
     }
 
     rebuildScene();
 
     const resizeObserver = new ResizeObserver(() => {
       rebuildScene();
+      if (reduceMotion) {
+        render(0);
+      }
     });
 
     resizeObserver.observe(canvas);
-    animationId = window.requestAnimationFrame(render);
+
+    if (reduceMotion) {
+      render(0);
+    } else {
+      animationId = window.requestAnimationFrame(render);
+    }
 
     return () => {
       window.cancelAnimationFrame(animationId);
