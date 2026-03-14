@@ -35,6 +35,13 @@ export type ConsultationSection = {
   id: string
   title: string
   content: string
+  blocks?: ConsultationBlock[]
+}
+
+export type ConsultationBlock = {
+  kind: "paragraph" | "title" | "subtitle" | "bullet_list"
+  text?: string | null
+  items?: string[]
 }
 
 export type ConsultationResult = {

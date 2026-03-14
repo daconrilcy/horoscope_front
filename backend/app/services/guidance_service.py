@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
+import re
 from datetime import datetime, timezone
 from time import monotonic
 
@@ -112,6 +113,10 @@ class GuidanceService:
         "Je prefere reformuler prudemment cette guidance. "
         "Pouvez-vous preciser l enjeu principal et l horizon temporel ?"
     )
+    _markdown_heading_pattern = re.compile(r"^#{1,6}\s*")
+    _markdown_bullet_pattern = re.compile(r"^\s*[-*•]\s+")
+    _markdown_numbered_pattern = re.compile(r"^\s*\d+[\).\s]+")
+    _markdown_bold_pattern = re.compile(r"\*\*(?P<text>[^*]+)\*\*")
 
     @staticmethod
     def _detect_degraded_natal_mode(
@@ -294,7 +299,40 @@ class GuidanceService:
                 "Votre guidance contextuelle met l accent sur des actions concretes, "
                 "prudemment alignees avec votre situation."
             )
-        return raw_summary[:500]
+        lines = [line.strip() for line in raw_summary.splitlines()]
+        paragraph_lines: list[str] = []
+        for line in lines:
+            if not line:
+                if paragraph_lines:
+                    break
+                continue
+            if GuidanceService._markdown_heading_pattern.match(line):
+                if paragraph_lines:
+                    break
+                continue
+
+            cleaned = GuidanceService._markdown_bold_pattern.sub(
+                lambda match: match.group("text").strip(),
+                line,
+            )
+            cleaned = GuidanceService._markdown_bullet_pattern.sub("", cleaned)
+            cleaned = GuidanceService._markdown_numbered_pattern.sub("", cleaned)
+            cleaned = re.sub(r"\s+", " ", cleaned).strip(" :-")
+            if not cleaned:
+                continue
+            paragraph_lines.append(cleaned)
+            if len(" ".join(paragraph_lines)) >= 600:
+                break
+
+        if not paragraph_lines:
+            return raw_summary[:500]
+
+        summary = " ".join(paragraph_lines).strip()
+        sentence_endings = [summary.rfind(marker) for marker in (". ", "! ", "? ")]
+        last_sentence_end = max(sentence_endings)
+        if 80 <= last_sentence_end < len(summary) - 1:
+            summary = summary[: last_sentence_end + 1].strip()
+        return summary[:600].strip()
 
     @staticmethod
     def _validate_contextual_input(

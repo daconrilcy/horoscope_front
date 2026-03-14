@@ -76,6 +76,15 @@ export interface ConsultationSection {
   id: string
   title: string
   content: string
+  blocks?: ConsultationBlock[]
+}
+
+export type ConsultationBlockKind = "paragraph" | "title" | "subtitle" | "bullet_list"
+
+export interface ConsultationBlock {
+  kind: ConsultationBlockKind
+  text?: string | null
+  items?: string[]
 }
 
 export interface ConsultationGenerateData {

@@ -50,9 +50,11 @@ so that `/consultations/result` reflète réellement la nouvelle consultation co
 - `ConsultationResultPage` now uses `useConsultationGenerate`.
 - Result is persisted in local storage with `sections`, `fallbackMode`, and `precisionLevel`.
 - Structured sections are rendered dynamically.
+- Structured sections now rely on explicit `blocks` (`paragraph`, `title`, `subtitle`, `bullet_list`) and the result page also keeps a legacy parser fallback for older entries that still contain raw text only.
 - Backward compatibility for legacy results is preserved via `normalizeConsultationResult`.
 - The frontend now forwards `objective` in the generate payload so the backend can preserve the real consultation framing.
 - Result rendering no longer depends on static `key_points/advice` sections for Epic 47 responses and can display the full generated reading plus its consultation basis.
+- The summary normalization no longer truncates contextual guidance mid-sentence; it extracts the first clean paragraph and strips residual markdown markers.
 
 ### Previous Story Intelligence
 
@@ -123,3 +125,4 @@ Gemini CLI
 - 2026-03-13: Initial implementation of story 47.6. Structured results and generation API integration.
 - 2026-03-13: Post-implementation verification fixes. `ConsultationResultPage` réalignée avec le contrat `precheck/result`, banner fallback restauré et clés i18n astrologue complétées.
 - 2026-03-13: Consultation generation payload now includes `objective`, and result rendering supports the new `analysis` / `consultation_basis` sections returned by the backend.
+- 2026-03-14: Consultation result rendering now maps structured `blocks` to real headings and lists, while absorbing legacy markdownish content without exposing `#`, `*` or raw bullet characters to end users.

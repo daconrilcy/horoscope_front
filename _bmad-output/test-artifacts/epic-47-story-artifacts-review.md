@@ -44,6 +44,9 @@ Elles respectent les garde-fous suivants:
 - Correction backend de génération consultation: le moteur reçoit maintenant un `objective` explicite issu du wizard et réinjecte le dernier résumé de thème natal disponible au lieu de laisser `natal_chart_summary = None`.
 - Correction backend de restitution consultation: suppression du faux rendu `Points clés / Conseils` codé en dur au profit d'une section de lecture générée et d'une section `Base de lecture` explicitant le cadrage réellement utilisé.
 - Correction backend des consultations relationnelles: les données `other_person` enrichies sont maintenant transformées en thème natal calculé et injectées dans la lecture quand la route relationnelle le permet, au lieu de rester un simple rappel descriptif.
+- Correction backend/frontend de restitution consultation: les sections exposent désormais des `blocks` structurés et la page résultat rend de vrais titres, sous-titres et listes sans afficher les marqueurs `#`, `*` ou bullets bruts du moteur.
+- Correction backend de normalisation contextuelle: le résumé n'est plus tronqué par un `[:500]` arbitraire et reprend maintenant le premier paragraphe propre, nettoyé du markdown résiduel.
+- Correction prompt `guidance_contextual`: le moteur est désormais explicitement prié de ne pas produire de markdown décoratif et de laisser la mise en page au contrat JSON de l'application.
 
 ## Gap résiduel converti en story
 

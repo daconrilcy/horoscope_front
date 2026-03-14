@@ -116,6 +116,11 @@ def test_generate_authenticated_nominal():
     assert json_data["data"]["metadata"]["objective"] == (
         "Comprendre le climat astrologique de la periode."
     )
+    analysis_section = next(
+        section for section in json_data["data"]["sections"] if section["id"] == "analysis"
+    )
+    assert "blocks" in analysis_section
+    assert isinstance(analysis_section["blocks"], list)
 
 
 def test_precheck_accepts_enriched_other_person_payload():
@@ -206,3 +211,4 @@ def test_generate_accepts_enriched_other_person_payload():
         if section["id"] == "consultation_basis"
     )
     assert "Theme natal tiers calcule et integre" in basis_section["content"]
+    assert all(block["kind"] == "paragraph" for block in basis_section["blocks"])

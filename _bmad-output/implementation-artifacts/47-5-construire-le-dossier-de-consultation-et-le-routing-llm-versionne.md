@@ -55,6 +55,8 @@ so that la feature `/consultations` cesse d'orchestrer sa logique métier côté
 - The generation contract now accepts an explicit `objective` from the wizard so the backend no longer collapses the request to a generic `Consultation <type>` intent.
 - The consultation orchestration reuses the latest natal chart already generated for the user when available and injects its summary into `guidance_contextual`.
 - For `relation` routes with `other_person`, the backend now computes a third-party natal chart on the fly from the enriched payload and injects a combined user/other natal context into the interpretation.
+- The generation contract now exposes structured `blocks` inside each consultation section so the frontend controls titles, subtitles and bullet rendering instead of displaying raw LLM markdown.
+- The contextual guidance prompt was hardened to forbid decorative markdown markers and to favor plain semantic sections, with backend parsing kept as a compatibility layer.
 
 ### Locked MVP `route_key` Enum
 
@@ -132,3 +134,4 @@ Gemini CLI
 - 2026-03-13: Post-implementation verification fixes. `route_key` nul en cas de `safeguard_reframed/refused` et génération court-circuitée pour les cas bloquants/recadrés.
 - 2026-03-13: The consultation generate contract now forwards `objective` explicitly and injects the latest natal chart summary into the contextual guidance path.
 - 2026-03-14: Relation consultations now calculate the third-party natal chart from the enriched payload and merge both natal summaries into the generated reading when the route allows it.
+- 2026-03-14: Generation sections now include structured `blocks`, and the prompt/backend pair now suppresses raw markdown formatting from leaking into the consultation product contract.

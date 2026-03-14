@@ -10,7 +10,9 @@ import {
   AUTO_ASTROLOGER_ID, 
   getConsultationTypeConfig, 
   getObjectiveForType, 
-  type ConsultationResult 
+  type ConsultationResult,
+  type ConsultationSection,
+  type ConsultationBlock,
 } from "../types/consultation"
 import { ConsultationFallbackBanner } from "../features/consultations"
 import { classNames } from "../utils/classNames"
@@ -25,6 +27,109 @@ function resolveObjectiveText(
     return objective
   }
   return t(getObjectiveForType(type), lang)
+}
+
+function cleanStructuredText(text: string): string {
+  return text
+    .replace(/^#{1,6}\s*/u, "")
+    .replace(/^\s*[-*•]\s+/u, "")
+    .replace(/^\s*\d+[\).\s]+/u, "")
+    .replace(/\*\*([^*]+)\*\*/gu, "$1")
+    .trim()
+}
+
+function buildLegacyBlocks(content: string): ConsultationBlock[] {
+  const blocks: ConsultationBlock[] = []
+  let paragraphLines: string[] = []
+  let bulletItems: string[] = []
+
+  const flushParagraph = () => {
+    if (paragraphLines.length === 0) return
+    blocks.push({
+      kind: "paragraph",
+      text: paragraphLines.join(" ").trim(),
+    })
+    paragraphLines = []
+  }
+
+  const flushBullets = () => {
+    if (bulletItems.length === 0) return
+    blocks.push({
+      kind: "bullet_list",
+      items: [...bulletItems],
+    })
+    bulletItems = []
+  }
+
+  for (const rawLine of content.split("\n")) {
+    const line = rawLine.trim()
+    if (!line) {
+      flushParagraph()
+      flushBullets()
+      continue
+    }
+
+    if (/^#{1,6}\s+/u.test(line)) {
+      flushParagraph()
+      flushBullets()
+      blocks.push({
+        kind: line.startsWith("##") ? "subtitle" : "title",
+        text: cleanStructuredText(line),
+      })
+      continue
+    }
+
+    if (/^\s*[-*•]\s+/u.test(line)) {
+      flushParagraph()
+      bulletItems.push(cleanStructuredText(line))
+      continue
+    }
+
+    if (/^\s*\d+[\).\s]+/u.test(line)) {
+      flushParagraph()
+      flushBullets()
+      blocks.push({
+        kind: "subtitle",
+        text: cleanStructuredText(line),
+      })
+      continue
+    }
+
+    paragraphLines.push(cleanStructuredText(line))
+  }
+
+  flushParagraph()
+  flushBullets()
+  return blocks
+}
+
+function getRenderableBlocks(section: ConsultationSection): ConsultationBlock[] {
+  if (section.blocks && section.blocks.length > 0) {
+    return section.blocks
+  }
+  return buildLegacyBlocks(section.content)
+}
+
+function renderSectionBlock(block: ConsultationBlock, index: number) {
+  if (block.kind === "title" && block.text) {
+    return <h4 key={index}>{block.text}</h4>
+  }
+  if (block.kind === "subtitle" && block.text) {
+    return <h5 key={index}>{block.text}</h5>
+  }
+  if (block.kind === "bullet_list" && block.items && block.items.length > 0) {
+    return (
+      <ul key={index}>
+        {block.items.map((item, itemIndex) => (
+          <li key={`${index}-${itemIndex}`}>{item}</li>
+        ))}
+      </ul>
+    )
+  }
+  if (block.text) {
+    return <p key={index}>{block.text}</p>
+  }
+  return null
 }
 
 export function ConsultationResultPage() {
@@ -161,6 +266,8 @@ export function ConsultationResultPage() {
       }
 
       setResult(result)
+      saveToHistory(result)
+      setIsSaved(true)
     } catch (err: any) {
       setError(
         err?.code === "request_timeout" || err?.name === "AbortError"
@@ -183,6 +290,7 @@ export function ConsultationResultPage() {
     draftOtherPerson,
     consultationGenerate,
     setResult,
+    saveToHistory,
     navigate,
     lang,
   ])
@@ -318,9 +426,9 @@ export function ConsultationResultPage() {
             <div key={section.id} className={`consultation-result-section consultation-result-section--${section.id}`}>
               <h3>{section.title}</h3>
               <div className="section-content">
-                {section.content.split("\n").map((line, i) => (
-                  <p key={i}>{line}</p>
-                ))}
+                {getRenderableBlocks(section).map((block, index) =>
+                  renderSectionBlock(block, index)
+                )}
               </div>
             </div>
           ))

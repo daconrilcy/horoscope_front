@@ -82,10 +82,22 @@ class ConsultationGenerateRequest(BaseModel):
     other_person: Optional[OtherPersonData] = None
     astrologer_id: Optional[str] = "auto"
 
+class ConsultationBlockKind(str, Enum):
+    paragraph = "paragraph"
+    title = "title"
+    subtitle = "subtitle"
+    bullet_list = "bullet_list"
+
+class ConsultationBlock(BaseModel):
+    kind: ConsultationBlockKind
+    text: Optional[str] = None
+    items: List[str] = Field(default_factory=list)
+
 class ConsultationSection(BaseModel):
     id: str
     title: str
     content: str
+    blocks: List[ConsultationBlock] = Field(default_factory=list)
 
 class ConsultationGenerateData(BaseModel):
     consultation_id: str

@@ -565,6 +565,40 @@ def test_request_contextual_guidance_never_leaks_internal_prompt_in_summary() ->
     assert "semaine" not in response.summary.lower()
 
 
+def test_request_contextual_guidance_summary_uses_first_clean_paragraph() -> None:
+    _cleanup_tables()
+    user_id = _create_user_id("guidance-context-summary@example.com")
+    _seed_birth_profile(user_id)
+
+    class StructuredContextualGenerator:
+        async def generate_guidance(self, use_case, context, *args, **kwargs) -> str:
+            return (
+                "Pour explorer votre dynamique relationnelle, je regarde d abord les points "
+                "d accord les plus stables.\n\n"
+                "### Alignements\n"
+                "1. **Communication**\n"
+                "- Vous partagez une base de dialogue claire."
+            )
+
+    set_test_generators(StructuredContextualGenerator())
+
+    with SessionLocal() as db:
+        response = GuidanceService.request_contextual_guidance(
+            db=db,
+            user_id=user_id,
+            situation="Je veux comprendre ma relation.",
+            objective="Lire la dynamique relationnelle.",
+        )
+        db.commit()
+
+    assert response.summary == (
+        "Pour explorer votre dynamique relationnelle, je regarde d abord les points "
+        "d accord les plus stables."
+    )
+    assert "#" not in response.summary
+    assert "*" not in response.summary
+
+
 def test_request_contextual_guidance_invalid_context_rejected() -> None:
     _cleanup_tables()
     user_id = _create_user_id()

@@ -47,6 +47,7 @@ so that l'epic 47 puisse être implémenté sans régression sur les parcours ex
 - Analytics events added for consultation lifecycle.
 - Migration tests updated to ensure 46.x -> 47.x compatibility.
 - Closing gate documentation produced.
+- Result rendering is now covered against markdown leakage and truncated contextual summaries.
 
 ### Previous Story Intelligence
 
@@ -116,3 +117,4 @@ Gemini CLI
 
 - 2026-03-13: Initial implementation of story 47.7. QA, observability and closing gate.
 - 2026-03-13: Post-implementation verification fixes. Suites frontend réalignées sur le contrat consultations v47 et mocks stabilisés pour le wizard/résultat.
+- 2026-03-14: Added non-regression coverage for structured consultation blocks, markdown marker suppression in UI, and first-paragraph summary normalization on contextual guidance.

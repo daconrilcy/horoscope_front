@@ -1,8 +1,11 @@
 import logging
+import re
 
 from sqlalchemy.orm import Session
 
 from app.api.v1.schemas.consultation import (
+    ConsultationBlock,
+    ConsultationBlockKind,
     ConsultationGenerateData,
     ConsultationGenerateRequest,
     ConsultationSection,
@@ -25,6 +28,133 @@ from app.services.user_birth_profile_service import (
 
 class ConsultationGenerationService:
     logger = logging.getLogger(__name__)
+    _inline_formatting_pattern = re.compile(r"\*\*(?P<bold>[^*]+)\*\*")
+    _heading_pattern = re.compile(r"^(#{1,6})\s*(.+)$")
+    _numbered_heading_pattern = re.compile(r"^\d+[\).\s]+(.+)$")
+    _bullet_pattern = re.compile(r"^[-*•]\s+(.+)$")
+    _blank_line_pattern = re.compile(r"^\s*$")
+
+    @staticmethod
+    def _clean_inline_formatting(text: str) -> str:
+        cleaned = text.strip()
+        cleaned = ConsultationGenerationService._inline_formatting_pattern.sub(
+            lambda match: match.group("bold").strip(),
+            cleaned,
+        )
+        cleaned = re.sub(r"\s+", " ", cleaned)
+        return cleaned.strip(" :.-")
+
+    @staticmethod
+    def _flush_paragraph(
+        paragraph_lines: list[str],
+        blocks: list[ConsultationBlock],
+    ) -> None:
+        if not paragraph_lines:
+            return
+        paragraph = " ".join(line.strip() for line in paragraph_lines if line.strip()).strip()
+        if paragraph:
+            blocks.append(
+                ConsultationBlock(
+                    kind=ConsultationBlockKind.paragraph,
+                    text=paragraph,
+                )
+            )
+        paragraph_lines.clear()
+
+    @staticmethod
+    def _flush_bullets(
+        bullet_items: list[str],
+        blocks: list[ConsultationBlock],
+    ) -> None:
+        if not bullet_items:
+            return
+        blocks.append(
+            ConsultationBlock(
+                kind=ConsultationBlockKind.bullet_list,
+                items=bullet_items.copy(),
+            )
+        )
+        bullet_items.clear()
+
+    @staticmethod
+    def _parse_section_blocks(content: str) -> list[ConsultationBlock]:
+        blocks: list[ConsultationBlock] = []
+        paragraph_lines: list[str] = []
+        bullet_items: list[str] = []
+
+        for raw_line in content.splitlines():
+            line = raw_line.strip()
+            if ConsultationGenerationService._blank_line_pattern.match(line):
+                ConsultationGenerationService._flush_paragraph(paragraph_lines, blocks)
+                ConsultationGenerationService._flush_bullets(bullet_items, blocks)
+                continue
+
+            heading_match = ConsultationGenerationService._heading_pattern.match(line)
+            if heading_match:
+                ConsultationGenerationService._flush_paragraph(paragraph_lines, blocks)
+                ConsultationGenerationService._flush_bullets(bullet_items, blocks)
+                heading_text = ConsultationGenerationService._clean_inline_formatting(
+                    heading_match.group(2)
+                )
+                heading_level = len(heading_match.group(1))
+                blocks.append(
+                    ConsultationBlock(
+                        kind=(
+                            ConsultationBlockKind.title
+                            if heading_level <= 2
+                            else ConsultationBlockKind.subtitle
+                        ),
+                        text=heading_text,
+                    )
+                )
+                continue
+
+            bullet_match = ConsultationGenerationService._bullet_pattern.match(line)
+            if bullet_match:
+                ConsultationGenerationService._flush_paragraph(paragraph_lines, blocks)
+                bullet_items.append(
+                    ConsultationGenerationService._clean_inline_formatting(
+                        bullet_match.group(1)
+                    )
+                )
+                continue
+
+            numbered_heading_match = (
+                ConsultationGenerationService._numbered_heading_pattern.match(line)
+            )
+            if numbered_heading_match and not line.lower().startswith("http"):
+                ConsultationGenerationService._flush_paragraph(paragraph_lines, blocks)
+                ConsultationGenerationService._flush_bullets(bullet_items, blocks)
+                blocks.append(
+                    ConsultationBlock(
+                        kind=ConsultationBlockKind.subtitle,
+                        text=ConsultationGenerationService._clean_inline_formatting(
+                            numbered_heading_match.group(1)
+                        ),
+                    )
+                )
+                continue
+
+            paragraph_lines.append(ConsultationGenerationService._clean_inline_formatting(line))
+
+        ConsultationGenerationService._flush_paragraph(paragraph_lines, blocks)
+        ConsultationGenerationService._flush_bullets(bullet_items, blocks)
+        return blocks
+
+    @staticmethod
+    def _build_text_blocks(content: str) -> list[ConsultationBlock]:
+        blocks: list[ConsultationBlock] = []
+        for line in content.splitlines():
+            normalized = line.strip()
+            if not normalized:
+                continue
+            blocks.append(
+                ConsultationBlock(
+                    kind=ConsultationBlockKind.paragraph,
+                    text=normalized,
+                )
+            )
+        return blocks
 
     @staticmethod
     def _detect_degraded_mode(
@@ -195,6 +325,7 @@ class ConsultationGenerationService:
             id="consultation_basis",
             title="Base de lecture",
             content="\n".join(lines),
+            blocks=ConsultationGenerationService._build_text_blocks("\n".join(lines)),
         )
 
     @staticmethod
@@ -263,6 +394,10 @@ class ConsultationGenerationService:
                             "Cette demande touche un domaine sensible. La réponse "
                             "reste volontairement générale et non prescriptive."
                         ),
+                        blocks=ConsultationGenerationService._build_text_blocks(
+                            "Cette demande touche un domaine sensible. La réponse "
+                            "reste volontairement generale et non prescriptive."
+                        ),
                     )
                 ],
                 chat_prefill=(
@@ -300,15 +435,14 @@ class ConsultationGenerationService:
                 id="analysis",
                 title="Lecture astrologique",
                 content=guidance.full_text,
+                blocks=ConsultationGenerationService._parse_section_blocks(
+                    guidance.full_text
+                ),
             ),
-            ConsultationSection(
-                id="consultation_basis",
-                title="Base de lecture",
-                content=ConsultationGenerationService._build_context_section(
-                    request=request,
-                    route_key=route_key,
-                    other_person_chart_used=other_person_chart_used,
-                ).content,
+            ConsultationGenerationService._build_context_section(
+                request=request,
+                route_key=route_key,
+                other_person_chart_used=other_person_chart_used,
             ),
         ]
 

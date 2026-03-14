@@ -132,6 +132,10 @@ describe("Consultation Reconnection", () => {
       astrologer_id: "1",
       other_person: undefined,
     })
+
+    const storedHistory = JSON.parse(localStorage.getItem("horoscope_consultations_history") || "[]")
+    expect(storedHistory).toHaveLength(1)
+    expect(storedHistory[0].id).toBe("consult-1")
   })
 
   it("affiche le résultat même si le hook mutation reste marqué pending", async () => {
@@ -176,6 +180,65 @@ describe("Consultation Reconnection", () => {
     await waitFor(() => {
       expect(screen.getByText("Votre cap devient plus lisible.")).toBeInTheDocument()
     })
+  })
+
+  it("rend les blocs structures sans afficher les marqueurs markdown bruts", async () => {
+    mockGenerate.mockResolvedValueOnce({
+      data: {
+        consultation_id: "consult-3",
+        consultation_type: "relation",
+        status: "nominal",
+        precision_level: "high",
+        fallback_mode: null,
+        safeguard_issue: null,
+        route_key: "relation_full_full",
+        summary: "Une dynamique relationnelle stable ressort en premier.",
+        sections: [
+          {
+            id: "analysis",
+            title: "Lecture astrologique",
+            content:
+              "### Alignements\n1. **Communication**\n- Vous partagez une base de dialogue claire.",
+            blocks: [
+              { kind: "subtitle", text: "Alignements" },
+              { kind: "subtitle", text: "Communication" },
+              { kind: "bullet_list", items: ["Vous partagez une base de dialogue claire."] },
+            ],
+          },
+        ],
+        chat_prefill: "prefill",
+        metadata: {},
+      },
+      meta: {
+        request_id: "req-3",
+        contract_version: "consultation-generate.v1",
+      },
+    })
+
+    const TestWrapper = () => {
+      const { setType, setContext, setObjective } = useConsultation()
+
+      React.useEffect(() => {
+        setType("relation")
+        setContext("Je veux comprendre notre dynamique.")
+        setObjective("analyser une dynamique relationnelle")
+      }, [setType, setContext, setObjective])
+
+      return <ConsultationResultPage />
+    }
+
+    renderResultPage(<TestWrapper />)
+
+    await waitFor(() => {
+      expect(screen.getByText("Alignements")).toBeInTheDocument()
+    })
+
+    expect(screen.getByText("Communication")).toBeInTheDocument()
+    expect(screen.getByRole("list")).toBeInTheDocument()
+    expect(
+      screen.getByText("Vous partagez une base de dialogue claire.")
+    ).toBeInTheDocument()
+    expect(screen.queryByText("### Alignements")).not.toBeInTheDocument()
   })
 
   it("affiche une erreur backend de génération", async () => {
