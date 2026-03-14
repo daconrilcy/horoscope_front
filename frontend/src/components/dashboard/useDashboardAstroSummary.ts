@@ -5,6 +5,7 @@ import { getSubjectFromAccessToken } from '../../utils/authToken';
 import { normalizeSignCode } from '../../i18n/astrology';
 import type { ZodiacSign } from '../astro/zodiacPatterns';
 import { clamp } from '../astro/astroMoodBackgroundUtils';
+import type { DailyPredictionResponse } from '../../types/dailyPrediction';
 
 export interface DashboardAstroSummary {
   sign: ZodiacSign;
@@ -13,10 +14,18 @@ export interface DashboardAstroSummary {
   dayScore: number;
   isLoading: boolean;
   isError: boolean;
+  prediction: DailyPredictionResponse | null;
+  refetch: () => void;
 }
 
 export function useDashboardAstroSummary(token: string | null): DashboardAstroSummary {
-  const { data: prediction, isLoading: isLoadingPrediction, isError: isPredictionError } = useDailyPrediction(token);
+  const { 
+    data: prediction, 
+    isLoading: isLoadingPrediction, 
+    isError: isPredictionError,
+    refetch,
+  } = useDailyPrediction(token);
+  
   const { data: birthData } = useBirthData(token);
 
   const userId = useMemo(() => getSubjectFromAccessToken(token) || 'anonymous', [token]);
@@ -58,7 +67,9 @@ export function useDashboardAstroSummary(token: string | null): DashboardAstroSu
     userId,
     dateKey,
     dayScore,
-    isLoading: isLoadingPrediction, // Note: We don't block on isLoadingBirth as per AC 9
+    isLoading: isLoadingPrediction,
     isError: isPredictionError,
+    prediction: prediction ?? null,
+    refetch,
   };
 }
