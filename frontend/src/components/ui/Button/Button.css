@@ -1,0 +1,118 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full, 999px);
+  transition: all var(--duration-fast, 150ms) var(--easing-default, ease);
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  font-weight: var(--font-weight-semibold, 600);
+  text-decoration: none;
+  gap: var(--space-2, 0.5rem);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--loading {
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.btn--full-width {
+  width: 100%;
+}
+
+/* VARIANTS */
+.btn--primary {
+  background: linear-gradient(135deg, var(--color-cta-left), var(--color-cta-right));
+  color: var(--color-btn-text);
+  box-shadow: var(--shadow-cta, 0 14px 30px rgba(90, 120, 255, 0.25));
+}
+
+.btn--primary:not(:disabled):hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.btn--primary:not(:disabled):active {
+  filter: brightness(0.9);
+  transform: translateY(1px);
+}
+
+.btn--secondary {
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+  color: var(--color-text-primary);
+}
+
+.btn--secondary:not(:disabled):hover {
+  background: var(--color-glass-shortcut);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--color-text-primary);
+}
+
+.btn--ghost:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn--danger {
+  background: var(--color-danger);
+  color: #ffffff;
+}
+
+.btn--danger:not(:disabled):hover {
+  filter: brightness(1.1);
+}
+
+/* SIZES */
+.btn--sm {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm, 0.875rem);
+}
+
+.btn--md {
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--font-size-md, 1rem);
+}
+
+.btn--lg {
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--font-size-lg, 1.125rem);
+}
+
+/* SPINNER & ICONS */
+.btn__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn__spinner-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn__spinner {
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin var(--duration-normal, 250ms) linear infinite;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

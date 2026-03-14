@@ -440,7 +440,7 @@ development_status:
   epic-49-retrospective: optional
 
   epic-50: in-progress
-  50-1-composant-button-variants-tailles-etats: ready-for-dev
+  50-1-composant-button-variants-tailles-etats: done
   50-2-composant-input-field-types-etats-validation: ready-for-dev
   50-3-composant-select-searchable-reutilisable: ready-for-dev
   50-4-composant-form-formfield-wrapper-zod: ready-for-dev

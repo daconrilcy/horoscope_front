@@ -1,6 +1,6 @@
 # Story 50.1: Créer le composant <Button> avec variants, tailles et états
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -23,37 +23,37 @@ afin que tous les boutons du produit soient visuellement cohérents et modifiabl
 
 ## Tasks / Subtasks
 
-- [ ] Tâche 1 : Créer la structure de fichiers (AC: 1)
-  - [ ] `frontend/src/components/ui/Button/Button.tsx`
-  - [ ] `frontend/src/components/ui/Button/Button.css`
-  - [ ] `frontend/src/components/ui/Button/Button.test.tsx`
-  - [ ] `frontend/src/components/ui/Button/index.ts` (re-export)
-  - [ ] Créer `frontend/src/components/ui/index.ts` avec export `export * from './Button'`
+- [x] Tâche 1 : Créer la structure de fichiers (AC: 1)
+  - [x] `frontend/src/components/ui/Button/Button.tsx`
+  - [x] `frontend/src/components/ui/Button/Button.css`
+  - [x] `frontend/src/components/ui/Button/Button.test.tsx`
+  - [x] `frontend/src/components/ui/Button/index.ts` (re-export)
+  - [x] Créer `frontend/src/components/ui/index.ts` avec export `export * from './Button'`
 
-- [ ] Tâche 2 : Implémenter le composant (AC: 2, 3, 4, 5, 6, 7, 8)
-  - [ ] Interface TypeScript `ButtonProps`
-  - [ ] Variante `primary` : fond gradient `--color-cta-left` → `--color-cta-right`, texte `--color-btn-text`
-  - [ ] Variante `secondary` : fond `--color-glass-bg`, bordure `--color-glass-border`, texte `--color-text-primary`
-  - [ ] Variante `ghost` : fond transparent, texte `--color-text-primary`, hover léger
-  - [ ] Variante `danger` : fond `--color-danger`, texte blanc
-  - [ ] Tailles via padding et font-size depuis les tokens
-  - [ ] Spinner SVG ou CSS animé pour l'état `loading`
-  - [ ] `aria-busy="true"` quand `loading`, `aria-disabled="true"` quand `disabled`
+- [x] Tâche 2 : Implémenter le composant (AC: 2, 3, 4, 5, 6, 7, 8)
+  - [x] Interface TypeScript `ButtonProps`
+  - [x] Variante `primary` : fond gradient `--color-cta-left` → `--color-cta-right`, texte `--color-btn-text`
+  - [x] Variante `secondary` : fond `--color-glass-bg`, bordure `--color-glass-border`, texte `--color-text-primary`
+  - [x] Variante `ghost` : fond transparent, texte `--color-text-primary`, hover léger
+  - [x] Variante `danger` : fond `--color-danger`, texte blanc
+  - [x] Tailles via padding et font-size depuis les tokens
+  - [x] Spinner SVG ou CSS animé pour l'état `loading`
+  - [x] `aria-busy="true"` quand `loading`, `aria-disabled="true"` quand `disabled`
 
-- [ ] Tâche 3 : Créer `Button.css` (AC: 9)
-  - [ ] Base `.btn` : display flex, align-center, border-radius `--radius-full`, transition, cursor
-  - [ ] `.btn--primary`, `.btn--secondary`, `.btn--ghost`, `.btn--danger`
-  - [ ] `.btn--sm`, `.btn--md`, `.btn--lg`
-  - [ ] `.btn--loading` : opacity réduite, pointer-events none
-  - [ ] `.btn--full-width` : width 100%
-  - [ ] `.btn:disabled` : opacity 0.5, cursor not-allowed
-  - [ ] `.btn__spinner` : animation rotation
+- [x] Tâche 3 : Créer `Button.css` (AC: 9)
+  - [x] Base `.btn` : display flex, align-center, border-radius `--radius-full`, transition, cursor
+  - [x] `.btn--primary`, `.btn--secondary`, `.btn--ghost`, `.btn--danger`
+  - [x] `.btn--sm`, `.btn--md`, `.btn--lg`
+  - [x] `.btn--loading` : opacity réduite, pointer-events none
+  - [x] `.btn--full-width` : width 100%
+  - [x] `.btn:disabled` : opacity 0.5, cursor not-allowed
+  - [x] `.btn__spinner` : animation rotation
 
-- [ ] Tâche 4 : Écrire les tests (AC: 10)
-  - [ ] Rendu de chaque variant sans crash
-  - [ ] État loading : spinner présent, `aria-busy="true"`, bouton non cliquable
-  - [ ] État disabled : `aria-disabled="true"`, onClick non déclenché
-  - [ ] Props leftIcon/rightIcon renduées
+- [x] Tâche 4 : Écrire les tests (AC: 10)
+  - [x] Rendu de chaque variant sans crash
+  - [x] État loading : spinner présent, `aria-busy="true"`, bouton non cliquable
+  - [x] État disabled : `aria-disabled="true"`, onClick non déclenché
+  - [x] Props leftIcon/rightIcon renduées
 
 ## Dev Notes
 
@@ -189,10 +189,33 @@ test('shows spinner when loading', () => {
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+claude-opus-4-6
 
 ### Debug Log References
 
+- Corrigé un problème de cleanup entre tests dans `setup.ts` (ajout de `cleanup()` après chaque test via `afterEach`) — le test "does not render icons when loading" échouait car le DOM du test précédent n'était pas nettoyé.
+
 ### Completion Notes List
 
+- Composant `<Button>` implémenté avec `React.forwardRef`, 4 variants (primary/secondary/ghost/danger), 3 tailles (sm/md/lg), états loading/disabled, props leftIcon/rightIcon, fullWidth
+- Spinner CSS pur avec animation `btn-spin` et `border-top-color: transparent`
+- Tous les styles utilisent les tokens de `design-tokens.css` (Epic 49)
+- `type="button"` par défaut pour éviter les soumissions accidentelles
+- 16 tests unitaires couvrant variants, tailles, états, icônes et props passthrough
+- Correction du setup de test global (`setup.ts`) pour ajouter le cleanup automatique entre tests
+- Suite complète : 72 fichiers de tests, 1042 tests, 0 régression
+
+### Change Log
+
+- 2026-03-14 : Implémentation complète du composant Button et correction du setup de test global
+
 ### File List
+
+| Action | Fichier |
+|--------|---------|
+| Créé | `frontend/src/components/ui/Button/Button.tsx` |
+| Créé | `frontend/src/components/ui/Button/Button.css` |
+| Créé | `frontend/src/components/ui/Button/Button.test.tsx` |
+| Créé | `frontend/src/components/ui/Button/index.ts` |
+| Créé | `frontend/src/components/ui/index.ts` |
+| Modifié | `frontend/src/tests/setup.ts` (ajout cleanup afterEach) |
