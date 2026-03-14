@@ -36,6 +36,8 @@ export function ConsultationWizardPage() {
     setTimeHorizon,
     setOtherPerson,
     setIsInteraction,
+    setSaveThirdParty,
+    setThirdPartyNickname,
     setPrecheck,
     nextStep,
     prevStep,
@@ -194,6 +196,10 @@ export function ConsultationWizardPage() {
             draft={state.draft}
             precheck={state.precheck}
             onOtherPersonChange={setOtherPerson}
+            saveOptIn={state.draft.saveThirdParty}
+            onSaveOptInChange={setSaveThirdParty}
+            nickname={state.draft.thirdPartyNickname}
+            onNicknameChange={setThirdPartyNickname}
           />
         )
       case "summary":

@@ -2337,6 +2337,22 @@ so that les parcours `work` ou assimilés puissent embarquer un contexte bi-prof
 
 [Source: docs/backlog_epics_consultation_complete.md ; frontend/src/features/consultations/components/DataCollectionStep.tsx ; frontend/src/features/consultations/components/OtherPersonForm.tsx ; frontend/src/pages/ConsultationWizardPage.tsx]
 
+### Story 47.9: Persister et reutiliser les profils tiers de consultation
+
+As a utilisateur des consultations,
+I want pouvoir enregistrer un tiers avec un pseudonyme non identifiant et le reutiliser dans de futures consultations,
+so that je n'aie pas a ressaisir ses donnees de naissance et que je puisse retrouver l'historique des consultations dans lesquelles ce tiers a ete utilise.
+
+**Acceptance Criteria:**
+- Le backend expose un stockage explicite des profils tiers rattaches a l'utilisateur, avec au minimum `nickname`, `birth_date`, `birth_time`, `birth_time_known`, `birth_place`, `birth_city`, `birth_country`, `place_resolved_id`, `birth_lat`, `birth_lon`.
+- Le wizard consultation affiche, sur les parcours eligibles a un tiers, un acces a une liste de tiers deja enregistres et permet de pre-remplir le formulaire a partir d'une selection.
+- Le formulaire tiers permet un enregistrement opt-in pendant la consultation via une action du type `Enregistrer dans mes contacts`, sans sauvegarde implicite.
+- L'interface affiche un avertissement explicite demandant de ne pas utiliser un pseudonyme identifiant (nom, prenom, element reconnaissable).
+- Chaque profil tiers expose la liste des consultations ou il a ete utilisee, sous forme de journal minimal consultation-centric, sans imposer une persistance complete de toutes les consultations.
+- Les tests couvrent creation d'un tiers, reutilisation dans une consultation eligibile, affichage du warning de pseudonyme et journal minimal des usages.
+
+[Source: docs/backlog_epics_consultation_complete.md#story-cc-03-04 ; docs/backlog_epics_consultation_complete.md#story-cc-03-05 ; frontend/src/features/consultations/components/OtherPersonForm.tsx ; frontend/src/pages/ConsultationWizardPage.tsx ; frontend/src/state/consultationStore.tsx]
+
 ### Story 47.4: Implémenter les modes dégradés et fallbacks des consultations
 
 As a consultation domain engineer,

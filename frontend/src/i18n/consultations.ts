@@ -241,6 +241,36 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Check to add birth data for a third party (e.g., partner, colleague, recruiter).",
     es: "Marque para añadir los datos de nacimiento de un tercero (ej: pareja, colega, reclutador).",
   },
+  save_to_contacts_label: {
+    fr: "Enregistrer dans mes contacts",
+    en: "Save to my contacts",
+    es: "Guardar en mis contactos",
+  },
+  nickname_label: {
+    fr: "Pseudonyme (pour vos contacts)",
+    en: "Nickname (for your contacts)",
+    es: "Pseudónimo (para sus contactos)",
+  },
+  nickname_placeholder: {
+    fr: "Ex: Mon partenaire, Recruteur A...",
+    en: "E.g. My partner, Recruiter A...",
+    es: "Ej: Mi pareja, Reclutador A...",
+  },
+  pseudonym_warning: {
+    fr: "Attention : Pour votre vie privée, n'utilisez pas de nom complet ou d'information permettant d'identifier directement la personne.",
+    en: "Warning: For your privacy, do not use full names or information that directly identifies the person.",
+    es: "Atención: Por su privacidad, no utilice nombres completos o información que identifique directamente a la persona.",
+  },
+  existing_contact_label: {
+    fr: "Utiliser un contact enregistré",
+    en: "Use an existing contact",
+    es: "Utilizar un contacto guardado",
+  },
+  select_contact_placeholder: {
+    fr: "-- Choisir un contact --",
+    en: "-- Choose a contact --",
+    es: "-- Elegir un contacto --",
+  },
   other_person_title: {
     fr: "Informations sur l'autre personne",
     en: "Information about the other person",

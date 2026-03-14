@@ -8,10 +8,15 @@ import { geocodeCity, GeocodingError } from "../../../api/geocoding"
 import { t } from "../../../i18n/consultations"
 import { formatBirthPlace } from "../../../utils/constants"
 import { type OtherPersonDraft } from "../../../types/consultation"
+import { useConsultationThirdParties, type ConsultationThirdPartyProfile } from "../../../api/consultations"
 
 type OtherPersonFormProps = {
   value: OtherPersonDraft | null
   onChange: (value: OtherPersonDraft | null) => void
+  saveOptIn?: boolean
+  onSaveOptInChange?: (checked: boolean) => void
+  nickname?: string
+  onNicknameChange?: (nickname: string) => void
 }
 
 type GeocodingState = "idle" | "loading" | "success" | "error_not_found" | "error_unavailable"
@@ -28,8 +33,17 @@ const EMPTY_VALUE: OtherPersonDraft = {
   birthLon: null,
 }
 
-export function OtherPersonForm({ value, onChange }: OtherPersonFormProps) {
+export function OtherPersonForm({ 
+  value, 
+  onChange,
+  saveOptIn,
+  onSaveOptInChange,
+  nickname,
+  onNicknameChange
+}: OtherPersonFormProps) {
   const lang = detectLang()
+  const { data: thirdParties } = useConsultationThirdParties()
+  
   const [internalValue, setInternalValue] = useState<OtherPersonDraft>(value ?? EMPTY_VALUE)
   const [geocodingState, setGeocodingState] = useState<GeocodingState>("idle")
   const [resolvedGeoLabel, setResolvedGeoLabel] = useState<string | null>(value?.birthPlace ?? null)
@@ -69,6 +83,28 @@ export function OtherPersonForm({ value, onChange }: OtherPersonFormProps) {
     }
     setInternalValue(newValue)
     notifyParent(newValue)
+  }
+
+  const handleSelectExisting = (externalId: string) => {
+    const selected = thirdParties?.items.find(tp => tp.external_id === externalId)
+    if (selected) {
+      const newValue: OtherPersonDraft = {
+        birthDate: selected.birth_date,
+        birthTime: selected.birth_time || "",
+        birthTimeKnown: selected.birth_time_known,
+        birthPlace: selected.birth_place,
+        birthCity: selected.birth_city || "",
+        birthCountry: selected.birth_country || "",
+        placeResolvedId: selected.place_resolved_id || null,
+        birthLat: selected.birth_lat || null,
+        birthLon: selected.birth_lon || null,
+      }
+      setInternalValue(newValue)
+      setResolvedGeoLabel(selected.birth_place)
+      setGeocodingState(selected.place_resolved_id ? "success" : "idle")
+      onChange(newValue)
+      if (onNicknameChange) onNicknameChange(selected.nickname)
+    }
   }
 
   const handleResolveBirthPlace = async () => {
@@ -131,6 +167,24 @@ export function OtherPersonForm({ value, onChange }: OtherPersonFormProps) {
   return (
     <div className="other-person-form">
       <h3 className="other-person-form-title">{t("other_person_title", lang)}</h3>
+      
+      {thirdParties && thirdParties.items.length > 0 && (
+        <div className="form-group existing-contacts">
+          <label htmlFor="select-contact">{t("existing_contact_label", lang)}</label>
+          <select 
+            id="select-contact" 
+            className="validation-context-input"
+            onChange={(e) => handleSelectExisting(e.target.value)}
+            defaultValue=""
+          >
+            <option value="" disabled>{t("select_contact_placeholder", lang)}</option>
+            {thirdParties.items.map(tp => (
+              <option key={tp.external_id} value={tp.external_id}>{tp.nickname}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <p className="other-person-form-hint">{t("other_person_hint", lang)}</p>
 
       <div className="form-group">
@@ -227,6 +281,35 @@ export function OtherPersonForm({ value, onChange }: OtherPersonFormProps) {
           </p>
         )}
       </div>
+
+      {onSaveOptInChange && (
+        <div className="save-opt-in-section">
+          <label className="checkbox-label">
+            <input 
+              type="checkbox" 
+              checked={!!saveOptIn} 
+              onChange={(e) => onSaveOptInChange(e.target.checked)} 
+            />
+            {t("save_to_contacts_label", lang)}
+          </label>
+          
+          {saveOptIn && (
+            <div className="nickname-input-group">
+              <label htmlFor="tp-nickname">{t("nickname_label", lang)}</label>
+              <input 
+                id="tp-nickname"
+                type="text"
+                className="validation-context-input"
+                value={nickname ?? ""}
+                onChange={(e) => onNicknameChange?.(e.target.value)}
+                placeholder={t("nickname_placeholder", lang)}
+                required
+              />
+              <p className="degraded-warning privacy-warning">{t("pseudonym_warning", lang)}</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

@@ -134,6 +134,7 @@ Limites actuelles:
 
 - 47.3 Refondre le wizard consultations avec cadrage et collecte conditionnelle
 - 47.8 Etendre la collecte tiers aux consultations d'interaction ciblee
+- 47.9 Persister et reutiliser les profils tiers de consultation
 - 47.4 Implémenter les modes dégradés et fallbacks des consultations
 - 47.6 Refondre la génération et la restitution structurée des consultations
 
@@ -195,6 +196,15 @@ Mitigation:
 - introduire un critere metier pour l'affichage du module tiers
 - couvrir le cas `work` par une story dediee et des tests wizard explicites
 
+### Risque 8: laisser les profils tiers en simple saisie jetable, sans reutilisation ni gouvernance explicite
+
+Mitigation:
+
+- introduire une persistance opt-in des profils tiers avec pseudonyme non identifiant
+- documenter clairement qu'un tiers peut etre enregistre a la demande pendant la consultation, pas automatiquement
+- ajouter une reutilisation depuis les parcours eligibles pour eviter la ressaisie
+- stocker un journal minimal des consultations ayant utilise ce tiers, sans refonte transverse de la persistance globale des consultations
+
 ## Ordre recommandé d'implémentation
 
 ### Lot 1 - Référentiel et précheck
@@ -210,6 +220,7 @@ Mitigation:
 
 - 47.3
 - 47.8
+- 47.9
 - 47.4
 - 47.6
 
@@ -220,6 +231,7 @@ Mitigation:
 Chemin critique recommandé:
 
 - 47.1 -> 47.2 -> 47.5 -> 47.3 -> 47.8 -> 47.4 -> 47.6 -> 47.7
+- 47.1 -> 47.2 -> 47.5 -> 47.3 -> 47.8 -> 47.9 -> 47.4 -> 47.6 -> 47.7
 
 ## Références
 

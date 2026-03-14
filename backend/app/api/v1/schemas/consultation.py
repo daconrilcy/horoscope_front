@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import List, Optional
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
@@ -81,6 +82,8 @@ class ConsultationGenerateRequest(BaseModel):
     horizon: Optional[str] = None
     other_person: Optional[OtherPersonData] = None
     astrologer_id: Optional[str] = "auto"
+    save_third_party: bool = False
+    third_party_nickname: Optional[str] = Field(None, max_length=100)
 
 class ConsultationBlockKind(str, Enum):
     paragraph = "paragraph"
@@ -115,4 +118,44 @@ class ConsultationGenerateData(BaseModel):
 
 class ConsultationGenerateResponse(BaseModel):
     data: ConsultationGenerateData
+    meta: ConsultationPrecheckMeta
+
+# Third Party Profile Schemas
+
+class ConsultationThirdPartyUsage(BaseModel):
+    consultation_id: str
+    consultation_type: str
+    context_summary: str
+    created_at: datetime
+
+class ConsultationThirdPartyProfile(BaseModel):
+    external_id: str
+    nickname: str
+    birth_date: date
+    birth_time: Optional[str]
+    birth_time_known: bool
+    birth_place: str
+    birth_city: Optional[str]
+    birth_country: Optional[str]
+    birth_lat: Optional[float]
+    birth_lon: Optional[float]
+    place_resolved_id: Optional[int]
+    created_at: datetime
+    updated_at: datetime
+    usage_history: List[ConsultationThirdPartyUsage] = Field(default_factory=list)
+
+class ConsultationThirdPartyProfileCreate(BaseModel):
+    nickname: str = Field(..., min_length=1, max_length=100)
+    birth_date: date
+    birth_time: Optional[str] = Field(None, pattern=r"^\d{2}:\d{2}$")
+    birth_time_known: bool = True
+    birth_place: str = Field(..., min_length=1, max_length=255)
+    birth_city: Optional[str] = None
+    birth_country: Optional[str] = None
+    birth_lat: Optional[float] = None
+    birth_lon: Optional[float] = None
+    place_resolved_id: Optional[int] = None
+
+class ConsultationThirdPartyListResponse(BaseModel):
+    items: List[ConsultationThirdPartyProfile]
     meta: ConsultationPrecheckMeta

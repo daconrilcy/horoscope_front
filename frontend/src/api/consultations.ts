@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { API_BASE_URL, apiFetch } from "./client"
 import { getAccessTokenAuthHeader } from "../utils/authToken"
 
@@ -70,21 +70,14 @@ export interface ConsultationGenerateRequest {
   horizon?: string
   other_person?: OtherPersonData
   astrologer_id?: string
+  save_third_party?: boolean
+  third_party_nickname?: string
 }
 
 export interface ConsultationSection {
   id: string
   title: string
   content: string
-  blocks?: ConsultationBlock[]
-}
-
-export type ConsultationBlockKind = "paragraph" | "title" | "subtitle" | "bullet_list"
-
-export interface ConsultationBlock {
-  kind: ConsultationBlockKind
-  text?: string | null
-  items?: string[]
 }
 
 export interface ConsultationGenerateData {
@@ -110,6 +103,50 @@ export interface ConsultationGenerateResponse {
   }
 }
 
+export interface ConsultationThirdPartyUsage {
+  consultation_id: string
+  consultation_type: string
+  context_summary: string
+  created_at: string
+}
+
+export interface ConsultationThirdPartyProfile {
+  external_id: string
+  nickname: string
+  birth_date: string
+  birth_time?: string
+  birth_time_known: boolean
+  birth_place: string
+  birth_city?: string
+  birth_country?: string
+  birth_lat?: number
+  birth_lon?: number
+  place_resolved_id?: number
+  created_at: string
+  updated_at: string
+  usage_history: ConsultationThirdPartyUsage[]
+}
+
+export interface ConsultationThirdPartyProfileCreate {
+  nickname: string
+  birth_date: string
+  birth_time?: string
+  birth_time_known: boolean
+  birth_place: string
+  birth_city?: string
+  birth_country?: string
+  birth_lat?: number
+  birth_lon?: number
+  place_resolved_id?: number
+}
+
+export interface ConsultationThirdPartyListResponse {
+  items: ConsultationThirdPartyProfile[]
+  meta: {
+    request_id: string
+  }
+}
+
 export class ConsultationApiError extends Error {
   code: string
   status: number
@@ -132,38 +169,27 @@ export class ConsultationApiError extends Error {
 export async function precheckConsultation(
   payload: ConsultationPrecheckRequest
 ): Promise<ConsultationPrecheckResponse> {
-  try {
-    const response = await apiFetch(`${API_BASE_URL}/v1/consultations/precheck`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAccessTokenAuthHeader(),
-      },
-      body: JSON.stringify(payload),
-    })
+  const response = await apiFetch(`${API_BASE_URL}/v1/consultations/precheck`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAccessTokenAuthHeader(),
+    },
+    body: JSON.stringify(payload),
+  })
 
-    const json = await response.json()
+  const json = await response.json()
 
-    if (!response.ok) {
-      throw new ConsultationApiError(
-        json.error?.code || "unknown_error",
-        json.error?.message || "An unknown error occurred",
-        response.status,
-        json.error?.details
-      )
-    }
-
-    return json
-  } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      throw new ConsultationApiError(
-        "request_timeout",
-        "The consultation request timed out",
-        0
-      )
-    }
-    throw error
+  if (!response.ok) {
+    throw new ConsultationApiError(
+      json.error?.code || "unknown_error",
+      json.error?.message || "An unknown error occurred",
+      response.status,
+      json.error?.details
+    )
   }
+
+  return json
 }
 
 export function useConsultationPrecheck() {
@@ -175,42 +201,92 @@ export function useConsultationPrecheck() {
 export async function generateConsultation(
   payload: ConsultationGenerateRequest
 ): Promise<ConsultationGenerateResponse> {
-  try {
-    const response = await apiFetch(`${API_BASE_URL}/v1/consultations/generate`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAccessTokenAuthHeader(),
-      },
-      body: JSON.stringify(payload),
-    })
+  const response = await apiFetch(`${API_BASE_URL}/v1/consultations/generate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAccessTokenAuthHeader(),
+    },
+    body: JSON.stringify(payload),
+  })
 
-    const json = await response.json()
+  const json = await response.json()
 
-    if (!response.ok) {
-      throw new ConsultationApiError(
-        json.error?.code || "unknown_error",
-        json.error?.message || "An unknown error occurred",
-        response.status,
-        json.error?.details
-      )
-    }
-
-    return json
-  } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      throw new ConsultationApiError(
-        "request_timeout",
-        "The consultation request timed out",
-        0
-      )
-    }
-    throw error
+  if (!response.ok) {
+    throw new ConsultationApiError(
+      json.error?.code || "unknown_error",
+      json.error?.message || "An unknown error occurred",
+      response.status,
+      json.error?.details
+    )
   }
+
+  return json
 }
 
 export function useConsultationGenerate() {
   return useMutation({
     mutationFn: generateConsultation,
+  })
+}
+
+export async function listThirdParties(): Promise<ConsultationThirdPartyListResponse> {
+  const response = await apiFetch(`${API_BASE_URL}/v1/consultations/third-parties`, {
+    method: "GET",
+    headers: {
+      ...getAccessTokenAuthHeader(),
+    },
+  })
+
+  const json = await response.json()
+
+  if (!response.ok) {
+    throw new ConsultationApiError(
+      json.error?.code || "unknown_error",
+      json.error?.message || "An unknown error occurred",
+      response.status,
+      json.error?.details
+    )
+  }
+
+  return json
+}
+
+export function useConsultationThirdParties() {
+  return useQuery({
+    queryKey: ["consultation-third-parties"],
+    queryFn: listThirdParties,
+  })
+}
+
+export async function createThirdParty(
+  payload: ConsultationThirdPartyProfileCreate
+): Promise<ConsultationThirdPartyProfile> {
+  const response = await apiFetch(`${API_BASE_URL}/v1/consultations/third-parties`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAccessTokenAuthHeader(),
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const json = await response.json()
+
+  if (!response.ok) {
+    throw new ConsultationApiError(
+      json.error?.code || "unknown_error",
+      json.error?.message || "An unknown error occurred",
+      response.status,
+      json.error?.details
+    )
+  }
+
+  return json
+}
+
+export function useCreateConsultationThirdParty() {
+  return useMutation({
+    mutationFn: createThirdParty,
   })
 }

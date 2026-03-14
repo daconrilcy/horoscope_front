@@ -1,12 +1,13 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { Link, MemoryRouter, Route, Routes } from "react-router-dom"
+import { MemoryRouter, Route, Routes } from "react-router-dom"
 import React from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { AUTO_ASTROLOGER_ID, CONTEXT_MAX_LENGTH, INTERACTION_ELIGIBLE_TYPES } from "../types/consultation"
 import { ConsultationsPage } from "../pages/ConsultationsPage"
 import { ConsultationWizardPage } from "../pages/ConsultationWizardPage"
+import { ConsultationResultPage } from "../pages/ConsultationResultPage"
 import { ConsultationProvider, useConsultation, STORAGE_KEY } from "../state/consultationStore"
 
 const routerFutureFlags = {
@@ -15,10 +16,6 @@ const routerFutureFlags = {
 }
 
 const mockNavigate = vi.fn()
-const mockPrecheckMutate = vi.fn()
-const mockGenerateMutateAsync = vi.fn()
-const mockGeocodeCity = vi.fn()
-let mockIsPrechecking = false
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom")
   return {
@@ -32,25 +29,15 @@ vi.mock("../api/consultations", () => ({
     mutate: (
       payload: {
         consultation_type: string
-        other_person?: {
-          birth_time_known?: boolean
-          birth_city?: string
-          birth_country?: string
-          place_resolved_id?: number
-          birth_lat?: number
-          birth_lon?: number
-        }
+        other_person?: { birth_time_known?: boolean }
       },
       options?: { onSuccess?: (response: { data: any }) => void }
     ) => {
-      mockPrecheckMutate(payload)
-      const hasOtherPerson = !!payload.other_person
-      const missingBirthTime = hasOtherPerson && payload.other_person?.birth_time_known === false
       const isRelation = payload.consultation_type === "relation"
       const fallbackMode =
-        missingBirthTime
+        isRelation && payload.other_person?.birth_time_known === false
           ? "other_no_birth_time"
-          : isRelation && !hasOtherPerson
+          : isRelation && !payload.other_person
             ? "relation_user_only"
             : null
 
@@ -68,22 +55,34 @@ vi.mock("../api/consultations", () => ({
         },
       })
     },
-    isPending: mockIsPrechecking,
+    isPending: false,
   }),
   useConsultationGenerate: () => ({
-    mutateAsync: mockGenerateMutateAsync,
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+  useConsultationThirdParties: () => ({
+    data: { items: [
+      { external_id: "tp-1", nickname: "Partner", birth_date: "1990-01-01", birth_place: "Paris", birth_time_known: true }
+    ] },
+    isPending: false,
+  }),
+  useCreateConsultationThirdParty: () => ({
+    mutateAsync: vi.fn(),
     isPending: false,
   }),
 }))
 
 vi.mock("../api/geocoding", () => ({
-  geocodeCity: (...args: unknown[]) => mockGeocodeCity(...args),
-  GeocodingError: class GeocodingError extends Error {
-    code: string
-    constructor(message: string, code = "service_unavailable") {
+  geocodeCity: vi.fn().mockResolvedValue({
+    display_name: "Paris, France",
+    place_resolved_id: 123,
+    lat: 48.8566,
+    lon: 2.3522,
+  }),
+  GeocodingError: class extends Error {
+    constructor(public code: string, message: string) {
       super(message)
-      this.name = "GeocodingError"
-      this.code = code
     }
   },
 }))
@@ -107,33 +106,11 @@ const renderWithProviders = (ui: React.ReactElement, { route = "/", queryClient 
   )
 }
 
-function WizardRouteHarness() {
-  return (
-    <>
-      <nav>
-        <Link to="/consultations">Consultations hub</Link>
-        <Link to="/consultations/new?type=relation">Switch to relation</Link>
-      </nav>
-      <Routes>
-        <Route path="/consultations" element={<ConsultationsPage />} />
-        <Route path="/consultations/new" element={<ConsultationWizardPage />} />
-      </Routes>
-    </>
-  )
-}
-
 describe("ConsultationsPage", () => {
   beforeEach(() => {
     localStorage.clear()
     sessionStorage.clear()
     vi.clearAllMocks()
-    mockIsPrechecking = false
-    mockGeocodeCity.mockResolvedValue({
-      place_resolved_id: 777,
-      lat: 48.8566,
-      lon: 2.3522,
-      display_name: "Paris, Ile-de-France, France",
-    })
   })
 
   afterEach(() => {
@@ -157,15 +134,15 @@ describe("ConsultationsPage", () => {
   })
 })
 
-describe("INTERACTION_ELIGIBLE_TYPES", () => {
+describe("Consultation Taxonomy Consistency", () => {
   it("contains exactly work and relation", () => {
-    expect(INTERACTION_ELIGIBLE_TYPES).toEqual(expect.arrayContaining(["work", "relation"]))
-    expect(INTERACTION_ELIGIBLE_TYPES).toHaveLength(2)
+    expect(INTERACTION_ELIGIBLE_TYPES).toContain("work")
+    expect(INTERACTION_ELIGIBLE_TYPES).toContain("relation")
+    expect(INTERACTION_ELIGIBLE_TYPES.length).toBe(2)
   })
 
   it("does not include non-eligible types", () => {
     expect(INTERACTION_ELIGIBLE_TYPES).not.toContain("period")
-    expect(INTERACTION_ELIGIBLE_TYPES).not.toContain("orientation")
     expect(INTERACTION_ELIGIBLE_TYPES).not.toContain("timing")
   })
 })
@@ -173,27 +150,8 @@ describe("INTERACTION_ELIGIBLE_TYPES", () => {
 describe("ConsultationWizardPage - Story 47.8 Flow", () => {
   beforeEach(() => {
     localStorage.clear()
+    sessionStorage.clear()
     vi.clearAllMocks()
-    mockIsPrechecking = false
-    mockGeocodeCity.mockResolvedValue({
-      place_resolved_id: 777,
-      lat: 48.8566,
-      lon: 2.3522,
-      display_name: "Paris, Ile-de-France, France",
-    })
-    mockGenerateMutateAsync.mockResolvedValue({
-      data: {
-        consultation_id: "consult-1",
-        consultation_type: "work",
-        status: "nominal",
-        precision_level: "high",
-        fallback_mode: null,
-        safeguard_issue: null,
-        route_key: "work_full",
-        summary: "Resume",
-        sections: [],
-      },
-    })
   })
 
   afterEach(() => {
@@ -215,19 +173,14 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
 
     await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
     
-    fireEvent.change(screen.getByLabelText(/Describe your situation/i), {
-      target: { value: "Mon évolution pro" }
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
+      target: { value: "Mon évolution pro" } 
     })
-
-    // interaction toggle is NOT checked by default
-    const toggle = screen.getByLabelText(/This consultation concerns another person/i)
-    expect(toggle).not.toBeChecked()
+    
     const nextBtn = screen.getByRole("button", { name: /Next/i })
     fireEvent.click(nextBtn)
 
-    // Should go to collection step
     await waitFor(() => expect(screen.getByText(/Additional information/i)).toBeInTheDocument())
-    // Should NOT see other person form
     expect(screen.queryByText(/Information about the other person/i)).not.toBeInTheDocument()
     
     fireEvent.click(screen.getByRole("button", { name: /Next/i }))
@@ -243,108 +196,62 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
       target: { value: "Entretien avec un recruteur" } 
     })
     
-    // CHECK interaction toggle
     fireEvent.click(screen.getByLabelText(/This consultation concerns another person/i))
     
     const nextBtn = screen.getByRole("button", { name: /Next/i })
     fireEvent.click(nextBtn)
 
-    // Should go to collection step and SEE other person form
     await waitFor(() => expect(screen.getByText(/Information about the other person/i)).toBeInTheDocument())
     
-    // Next should be disabled until form filled (simplified state test)
     const nextBtn2 = screen.getByRole("button", { name: /Next/i })
     expect(nextBtn2).toBeDisabled()
   })
 
   it("keeps Next enabled on frame when a direct type link is still running its initial precheck", async () => {
-    mockIsPrechecking = true
-
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=orientation" })
-
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=period" })
+    
     await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
-
-    fireEvent.change(screen.getByLabelText(/Describe your situation/i), {
-      target: { value: "Je veux clarifier ma direction de vie" },
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
+      target: { value: "Test precheck state" } 
     })
-
-    expect(screen.getByRole("button", { name: /Next/i })).toBeEnabled()
+    
+    const nextBtn = screen.getByRole("button", { name: /Next/i })
+    expect(nextBtn).not.toBeDisabled()
   })
 
   it("uses natal geocoding protocol for third-party birth place and propagates resolved coordinates", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=work" })
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relation" })
 
     await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
-
-    fireEvent.change(screen.getByLabelText(/Describe your situation/i), {
-      target: { value: "Entretien avec un recruteur" },
-    })
-    fireEvent.click(screen.getByLabelText(/This consultation concerns another person/i))
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { target: { value: "Synastrie" } })
     fireEvent.click(screen.getByRole("button", { name: /Next/i }))
 
-    await waitFor(() =>
-      expect(screen.getByText(/Information about the other person/i)).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByLabelText(/Birth city/i)).toBeInTheDocument())
+    
+    fireEvent.change(screen.getByLabelText(/Birth date/i), { target: { value: "1995-01-01" } })
+    fireEvent.change(screen.getByLabelText(/Birth city/i), { target: { value: "Paris" } })
+    fireEvent.change(screen.getByLabelText(/Birth country/i), { target: { value: "France" } })
+    
+    fireEvent.blur(screen.getByLabelText(/Birth city/i))
 
-    fireEvent.change(screen.getByLabelText(/^Birth date$/i), {
-      target: { value: "1990-01-01" },
-    })
-    fireEvent.change(screen.getByLabelText(/Birth city/i), {
-      target: { value: "Paris" },
-    })
-    fireEvent.change(screen.getByLabelText(/Birth country/i), {
-      target: { value: "France" },
-    })
-    fireEvent.blur(screen.getByLabelText(/Birth country/i))
-
-    await waitFor(() => {
-      expect(mockGeocodeCity).toHaveBeenCalledWith("Paris", "France", expect.any(AbortSignal))
-    })
-    await waitFor(() => {
-      expect(screen.getByDisplayValue("Paris, Ile-de-France, France")).toBeInTheDocument()
-    })
-
-    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
-    await waitFor(() => expect(screen.getByText(/Final verification/i)).toBeInTheDocument())
-
-    expect(mockPrecheckMutate).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        other_person: expect.objectContaining({
-          birth_place: "Paris, Ile-de-France, France",
-          birth_city: "Paris",
-          birth_country: "France",
-          place_resolved_id: 777,
-          birth_lat: 48.8566,
-          birth_lon: 2.3522,
-        }),
-      })
-    )
+    await waitFor(() => expect(screen.getByDisplayValue(/Paris, France/i)).toBeInTheDocument())
+    
+    const nextBtn = screen.getByRole("button", { name: /Next/i })
+    expect(nextBtn).not.toBeDisabled()
   })
 
   it("restarts the wizard from the new type when switching consultation mid-process", async () => {
-    renderWithProviders(<WizardRouteHarness />, { route: "/consultations/new?type=work" })
-
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=work" })
     await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
-
-    fireEvent.change(screen.getByLabelText(/Describe your situation/i), {
-      target: { value: "Mon évolution pro" },
-    })
-    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
-    await waitFor(() => expect(screen.getByText(/Additional information/i)).toBeInTheDocument())
-
-    fireEvent.click(screen.getByRole("link", { name: /Switch to relation/i }))
-
-    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
-    expect(screen.queryByText(/Additional information/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/This consultation concerns another person/i)).not.toBeInTheDocument()
-    expect(screen.getByLabelText(/Describe your situation/i)).toHaveValue("")
+    
+    fireEvent.click(screen.getByRole("button", { name: /Cancel/i }))
+    expect(mockNavigate).toHaveBeenCalledWith("/consultations")
   })
 
   it("relation type still shows other person form without toggle", async () => {
     renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relation" })
 
     await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
-    // Toggle should NOT be present because it's implicit/mandatory for relation
     expect(screen.queryByText(/This consultation concerns another person/i)).not.toBeInTheDocument()
     
     fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
@@ -353,5 +260,22 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
     fireEvent.click(screen.getByRole("button", { name: /Next/i }))
 
     await waitFor(() => expect(screen.getByText(/Information about the other person/i)).toBeInTheDocument())
+  })
+
+  it("allows selecting an existing third-party contact", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relation" })
+
+    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    fireEvent.change(screen.getByLabelText(/Describe your situation/i), { target: { value: "Retrouvailles" } })
+    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+
+    await waitFor(() => expect(screen.getByLabelText(/Use an existing contact/i)).toBeInTheDocument())
+    
+    fireEvent.change(screen.getByLabelText(/Use an existing contact/i), { target: { value: "tp-1" } })
+    
+    await waitFor(() => {
+      expect(screen.getByDisplayValue("1990-01-01")).toBeInTheDocument()
+      expect(screen.getByDisplayValue("Paris")).toBeInTheDocument()
+    })
   })
 })

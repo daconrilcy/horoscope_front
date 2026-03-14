@@ -9,12 +9,20 @@ type DataCollectionStepProps = {
   draft: ConsultationDraft
   precheck: ConsultationPrecheckData | null
   onOtherPersonChange: (data: OtherPersonDraft | null) => void
+  saveOptIn?: boolean
+  onSaveOptInChange?: (checked: boolean) => void
+  nickname?: string
+  onNicknameChange?: (nickname: string) => void
 }
 
 export function DataCollectionStep({
   draft,
   precheck,
   onOtherPersonChange,
+  saveOptIn,
+  onSaveOptInChange,
+  nickname,
+  onNicknameChange,
 }: DataCollectionStepProps) {
   const lang = detectLang()
 
@@ -52,6 +60,10 @@ export function DataCollectionStep({
           <OtherPersonForm
             value={draft.otherPerson ?? null}
             onChange={onOtherPersonChange}
+            saveOptIn={saveOptIn}
+            onSaveOptInChange={onSaveOptInChange}
+            nickname={nickname}
+            onNicknameChange={onNicknameChange}
           />
         </div>
       )}

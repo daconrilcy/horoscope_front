@@ -12,7 +12,7 @@ import {
   VALID_CONSULTATION_TYPES,
   WIZARD_LAST_STEP_INDEX,
   WIZARD_STEPS,
-  getConsultationTypeConfig,
+  INTERACTION_ELIGIBLE_TYPES,
   getObjectiveForType,
   type ConsultationType,
   type ConsultationDraft,
@@ -26,6 +26,8 @@ const INITIAL_DRAFT: ConsultationDraft = {
   type: null,
   astrologerId: "auto",
   context: "",
+  saveThirdParty: false,
+  thirdPartyNickname: "",
 }
 
 export type ConsultationState = {
@@ -44,6 +46,8 @@ export type ConsultationAction =
   | { type: "SET_TIME_HORIZON"; payload: string | null }
   | { type: "SET_OTHER_PERSON"; payload: OtherPersonDraft | null }
   | { type: "SET_IS_INTERACTION"; payload: boolean }
+  | { type: "SET_SAVE_THIRD_PARTY"; payload: boolean }
+  | { type: "SET_THIRD_PARTY_NICKNAME"; payload: string }
   | { type: "NEXT_STEP" }
   | { type: "PREV_STEP" }
   | { type: "GO_TO_STEP"; payload: number }
@@ -61,10 +65,10 @@ export function consultationReducer(
     case "SET_TYPE":
       return {
         ...state,
-        draft: {
-          ...state.draft,
+        draft: { 
+          ...state.draft, 
           type: action.payload,
-          isInteraction: getConsultationTypeConfig(action.payload)?.defaultInteraction ?? false,
+          isInteraction: action.payload === "relation"
         },
       }
     case "SET_ASTROLOGER":
@@ -95,11 +99,17 @@ export function consultationReducer(
     case "SET_IS_INTERACTION":
       return {
         ...state,
-        draft: {
-          ...state.draft,
-          isInteraction: action.payload,
-          otherPerson: action.payload ? state.draft.otherPerson : null,
-        },
+        draft: { ...state.draft, isInteraction: action.payload },
+      }
+    case "SET_SAVE_THIRD_PARTY":
+      return {
+        ...state,
+        draft: { ...state.draft, saveThirdParty: action.payload },
+      }
+    case "SET_THIRD_PARTY_NICKNAME":
+      return {
+        ...state,
+        draft: { ...state.draft, thirdPartyNickname: action.payload },
       }
     case "NEXT_STEP":
       return {
@@ -217,6 +227,8 @@ export function normalizeConsultationResult(item: unknown): ConsultationResult |
     precisionLevel: typeof obj.precisionLevel === "string" ? obj.precisionLevel : null,
     sections: Array.isArray(obj.sections) ? (obj.sections as any) : undefined,
     routeKey: typeof obj.routeKey === "string" ? obj.routeKey : null,
+    saveThirdParty: typeof obj.saveThirdParty === "boolean" ? obj.saveThirdParty : undefined,
+    thirdPartyNickname: typeof obj.thirdPartyNickname === "string" ? obj.thirdPartyNickname : undefined,
   }
 }
 
@@ -257,6 +269,8 @@ type ConsultationContextValue = {
   setTimeHorizon: (horizon: string | null) => void
   setOtherPerson: (data: OtherPersonDraft | null) => void
   setIsInteraction: (isInteraction: boolean) => void
+  setSaveThirdParty: (save: boolean) => void
+  setThirdPartyNickname: (nickname: string) => void
   nextStep: () => void
   prevStep: () => void
   goToStep: (step: number) => void
@@ -307,6 +321,14 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "SET_IS_INTERACTION", payload: isInteraction })
   }, [])
 
+  const setSaveThirdParty = useCallback((save: boolean) => {
+    dispatch({ type: "SET_SAVE_THIRD_PARTY", payload: save })
+  }, [])
+
+  const setThirdPartyNickname = useCallback((nickname: string) => {
+    dispatch({ type: "SET_THIRD_PARTY_NICKNAME", payload: nickname })
+  }, [])
+
   const nextStep = useCallback(() => {
     dispatch({ type: "NEXT_STEP" })
   }, [])
@@ -347,15 +369,18 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
           (state.draft.objective ?? "").trim().length > 0
         )
       case "collection":
-        if (state.draft.isInteraction && !state.draft.otherPerson) {
-          return false
+        if (state.draft.type === "relation" && !state.draft.otherPerson) {
+           return false
         }
-        if (state.draft.isInteraction && state.draft.otherPerson) {
-          return !!(
-            state.draft.otherPerson.birthDate &&
-            state.draft.otherPerson.birthCity.trim() &&
-            state.draft.otherPerson.birthCountry.trim()
-          )
+        if (state.draft.isInteraction && !state.draft.otherPerson) {
+           return false
+        }
+        // Nickname required if saving
+        if (state.draft.saveThirdParty && !state.draft.thirdPartyNickname?.trim()) {
+           return false
+        }
+        if (state.draft.otherPerson) {
+           return !!(state.draft.otherPerson.birthDate && state.draft.otherPerson.birthCity && state.draft.otherPerson.birthCountry)
         }
         return true
       case "summary":
@@ -370,6 +395,8 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     state.draft.objective,
     state.draft.otherPerson,
     state.draft.isInteraction,
+    state.draft.saveThirdParty,
+    state.draft.thirdPartyNickname,
     state.precheck?.status,
   ])
 
@@ -383,6 +410,8 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       setTimeHorizon,
       setOtherPerson,
       setIsInteraction,
+      setSaveThirdParty,
+      setThirdPartyNickname,
       nextStep,
       prevStep,
       goToStep,
@@ -402,6 +431,8 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
       setTimeHorizon,
       setOtherPerson,
       setIsInteraction,
+      setSaveThirdParty,
+      setThirdPartyNickname,
       nextStep,
       prevStep,
       goToStep,

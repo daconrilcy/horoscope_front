@@ -220,6 +220,8 @@ export function ConsultationResultPage() {
         objective,
         horizon: timeHorizon ?? undefined,
         astrologer_id: draftAstrologerId,
+        save_third_party: state.draft.saveThirdParty,
+        third_party_nickname: state.draft.thirdPartyNickname,
         other_person: draftOtherPerson ? {
           birth_date: draftOtherPerson.birthDate,
           birth_time: draftOtherPerson.birthTime ?? undefined,
@@ -288,6 +290,8 @@ export function ConsultationResultPage() {
     draftObjective,
     draftTimeHorizon,
     draftOtherPerson,
+    state.draft.saveThirdParty,
+    state.draft.thirdPartyNickname,
     consultationGenerate,
     setResult,
     saveToHistory,

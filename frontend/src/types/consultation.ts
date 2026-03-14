@@ -60,6 +60,8 @@ export type ConsultationResult = {
   precisionLevel?: string | null
   sections?: ConsultationSection[]
   routeKey?: string | null
+  saveThirdParty?: boolean
+  thirdPartyNickname?: string
 }
 
 export type ConsultationTypeConfig = {

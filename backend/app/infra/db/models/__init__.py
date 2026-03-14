@@ -10,6 +10,10 @@ from app.infra.db.models.calibration import CalibrationRawDayModel
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
+from app.infra.db.models.consultation_third_party import (
+    ConsultationThirdPartyProfileModel,
+    ConsultationThirdPartyUsageModel,
+)
 from app.infra.db.models.daily_prediction import (
     DailyPredictionCategoryScoreModel,
     DailyPredictionRunModel,
@@ -19,9 +23,9 @@ from app.infra.db.models.daily_prediction import (
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentialModel
 from app.infra.db.models.enterprise_billing import (
+    EnterpriseBillingPlanModel,
     EnterpriseAccountBillingPlanModel,
     EnterpriseBillingCycleModel,
-    EnterpriseBillingPlanModel,
 )
 from app.infra.db.models.enterprise_editorial_config import EnterpriseEditorialConfigModel
 from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
@@ -32,18 +36,18 @@ from app.infra.db.models.llm_observability import LlmCallLogModel, LlmReplaySnap
 from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
-from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
+from app.infra.db.models.pdf_template import PdfTemplateModel
 from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.prediction_reference import (
-    AspectProfileModel,
-    AstroPointModel,
-    HouseCategoryWeightModel,
+    PredictionCategoryModel,
+    PlanetProfileModel,
     HouseProfileModel,
     PlanetCategoryWeightModel,
-    PlanetProfileModel,
+    HouseCategoryWeightModel,
+    AstroPointModel,
     PointCategoryWeightModel,
-    PredictionCategoryModel,
     SignRulershipModel,
+    AspectProfileModel,
 )
 from app.infra.db.models.prediction_ruleset import (
     CategoryCalibrationModel,
@@ -51,10 +55,11 @@ from app.infra.db.models.prediction_ruleset import (
     RulesetEventTypeModel,
     RulesetParameterModel,
 )
-from app.infra.db.models.privacy import UserPrivacyRequestModel
+from app.infra.db.models.privacy import (
+    UserPrivacyRequestModel,
+)
 from app.infra.db.models.reference import (
     AspectModel,
-    AstroCharacteristicModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -64,29 +69,28 @@ from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.models.user_natal_interpretation import (
-    InterpretationLevel,
     UserNatalInterpretationModel,
 )
 from app.infra.db.models.user_prediction_baseline import UserPredictionBaselineModel
 from app.infra.db.models.user_refresh_token import UserRefreshTokenModel
 
 __all__ = [
-    "ChatConversationModel",
-    "ChatMessageModel",
-    "CalibrationRawDayModel",
-    "ChartResultModel",
     "AuditEventModel",
     "BillingPlanModel",
-    "UserSubscriptionModel",
     "PaymentAttemptModel",
     "SubscriptionPlanChangeModel",
     "UserDailyQuotaUsageModel",
-    "UserModel",
-    "UserBirthProfileModel",
-    "UserNatalInterpretationModel",
-    "InterpretationLevel",
-    "UserRefreshTokenModel",
-    "UserPredictionBaselineModel",
+    "UserSubscriptionModel",
+    "CalibrationRawDayModel",
+    "ChartResultModel",
+    "ChatConversationModel",
+    "ChatMessageModel",
+    "ConsultationThirdPartyProfileModel",
+    "ConsultationThirdPartyUsageModel",
+    "DailyPredictionCategoryScoreModel",
+    "DailyPredictionRunModel",
+    "DailyPredictionTimeBlockModel",
+    "DailyPredictionTurningPointModel",
     "EnterpriseAccountModel",
     "EnterpriseApiCredentialModel",
     "EnterpriseBillingPlanModel",
@@ -94,30 +98,17 @@ __all__ = [
     "EnterpriseBillingCycleModel",
     "EnterpriseEditorialConfigModel",
     "EnterpriseDailyUsageModel",
-    "DailyPredictionRunModel",
-    "DailyPredictionCategoryScoreModel",
-    "DailyPredictionTurningPointModel",
-    "DailyPredictionTimeBlockModel",
     "FeatureFlagModel",
     "GeoPlaceResolvedModel",
     "GeocodingQueryCacheModel",
-    "LlmUseCaseConfigModel",
-    "LlmPromptVersionModel",
-    "LlmPersonaModel",
-    "LlmOutputSchemaModel",
     "LlmCallLogModel",
     "LlmReplaySnapshotModel",
+    "LlmOutputSchemaModel",
+    "LlmPersonaModel",
+    "LlmPromptVersionModel",
+    "LlmUseCaseConfigModel",
     "PdfTemplateModel",
-    "PdfTemplateStatus",
     "PersonaConfigModel",
-    "UserPrivacyRequestModel",
-    "ReferenceVersionModel",
-    "PlanetModel",
-    "SignModel",
-    "HouseModel",
-    "AspectModel",
-    "AstroCharacteristicModel",
-    "SupportIncidentModel",
     "PredictionCategoryModel",
     "PlanetProfileModel",
     "HouseProfileModel",
@@ -127,6 +118,18 @@ __all__ = [
     "PointCategoryWeightModel",
     "SignRulershipModel",
     "AspectProfileModel",
+    "UserPrivacyRequestModel",
+    "SupportIncidentModel",
+    "UserModel",
+    "UserBirthProfileModel",
+    "UserNatalInterpretationModel",
+    "UserPredictionBaselineModel",
+    "UserRefreshTokenModel",
+    "AspectModel",
+    "HouseModel",
+    "PlanetModel",
+    "ReferenceVersionModel",
+    "SignModel",
     "PredictionRulesetModel",
     "RulesetEventTypeModel",
     "RulesetParameterModel",

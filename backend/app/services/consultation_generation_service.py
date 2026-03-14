@@ -11,6 +11,7 @@ from app.api.v1.schemas.consultation import (
     ConsultationSection,
     ConsultationStatus,
     FallbackMode,
+    ConsultationThirdPartyProfileCreate,
 )
 from app.domain.astrology.natal_calculation import NatalCalculationError
 from app.domain.astrology.natal_preparation import BirthInput
@@ -24,6 +25,8 @@ from app.services.user_birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,
 )
+from app.services.consultation_third_party_service import ConsultationThirdPartyService
+from app.infra.db.repositories.consultation_third_party_repository import ConsultationThirdPartyRepository
 
 
 class ConsultationGenerationService:
@@ -411,7 +414,7 @@ class ConsultationGenerationService:
         objective = ConsultationGenerationService._build_consultation_objective(request)
         natal_chart_summary_override: str | None = None
         other_person_chart_used = False
-        if request.consultation_type == "relation" and request.other_person is not None:
+        if request.other_person is not None:
             (
                 natal_chart_summary_override,
                 other_person_chart_used,
@@ -430,6 +433,38 @@ class ConsultationGenerationService:
             request_id=request_id,
         )
 
+        consultation_id = f"consult_{request_id}"
+
+        # OPT-IN Third Party Storage
+        if request.save_third_party and request.other_person and request.third_party_nickname:
+            try:
+                third_party_payload = ConsultationThirdPartyProfileCreate(
+                    nickname=request.third_party_nickname,
+                    birth_date=request.other_person.birth_date,
+                    birth_time=request.other_person.birth_time,
+                    birth_time_known=request.other_person.birth_time_known,
+                    birth_place=request.other_person.birth_place,
+                    birth_city=request.other_person.birth_city,
+                    birth_country=request.other_person.birth_country,
+                    birth_lat=request.other_person.birth_lat,
+                    birth_lon=request.other_person.birth_lon,
+                    place_resolved_id=request.other_person.place_resolved_id
+                )
+                tp_profile = ConsultationThirdPartyService.create_third_party(db, user_id, third_party_payload)
+                
+                # Record usage
+                repo = ConsultationThirdPartyRepository(db)
+                db_tp_profile = repo.get_by_external_id(tp_profile.external_id)
+                if db_tp_profile:
+                    repo.record_usage(
+                        third_party_profile_id=db_tp_profile.id,
+                        consultation_id=consultation_id,
+                        consultation_type=request.consultation_type,
+                        context_summary=guidance.summary[:255] # Minimal non-sensitive summary
+                    )
+            except Exception as e:
+                ConsultationGenerationService.logger.exception("failed_to_save_third_party error=%s", e)
+
         sections = [
             ConsultationSection(
                 id="analysis",
@@ -447,7 +482,7 @@ class ConsultationGenerationService:
         ]
 
         return ConsultationGenerateData(
-            consultation_id=f"consult_{request_id}",
+            consultation_id=consultation_id,
             consultation_type=request.consultation_type,
             status=precheck.status,
             precision_level=precheck.precision_level,
