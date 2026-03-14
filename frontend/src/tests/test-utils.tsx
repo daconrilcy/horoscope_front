@@ -34,11 +34,21 @@ export function createWrapper(initialEntries: string[] = ["/"]) {
   }
 }
 
+/**
+ * Custom render helper for tests involving routing.
+ * story 52.1 fix: Force French as default for tests using this utility
+ * to maintain backward compatibility with tests expecting French strings.
+ */
 export function renderWithRouter(
   ui: React.ReactElement,
   options?: Omit<RenderOptions, "wrapper"> & { initialEntries?: string[] }
 ) {
   const { initialEntries = ["/"], ...renderOptions } = options ?? {}
+  
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem("lang", "fr")
+  }
+
   return render(ui, {
     wrapper: createWrapper(initialEntries),
     ...renderOptions,

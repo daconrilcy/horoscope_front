@@ -6,6 +6,8 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 
 import { loginApi, AuthApiError } from "../api/auth"
 import { setAccessToken } from "../utils/authToken"
+import { detectLang } from "../i18n/astrology"
+import { authTranslations } from "../i18n/auth"
 
 const signInSchema = z.object({
   email: z.string().email("Adresse e-mail invalide."),
@@ -19,6 +21,8 @@ type SignInFormProps = {
 }
 
 export function SignInForm({ onRegister }: SignInFormProps = {}) {
+  const lang = detectLang()
+  const t = authTranslations(lang)
   const [apiError, setApiError] = useState<string | null>(null)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -44,19 +48,19 @@ export function SignInForm({ onRegister }: SignInFormProps = {}) {
       }
     } catch (err) {
       if (err instanceof AuthApiError) {
-        setApiError("Identifiants incorrects. Veuillez réessayer.")
+        setApiError(t.signIn.errorInvalidCredentials)
       } else {
-        setApiError("Une erreur est survenue. Veuillez réessayer.")
+        setApiError(t.signIn.errorGeneric)
       }
     }
   }
 
   return (
     <section className="panel">
-      <h2>Connexion</h2>
+      <h2>{t.signIn.title}</h2>
       <form className="chat-form" onSubmit={handleSubmit(onSubmit)} noValidate>
         <div>
-          <label htmlFor="signin-email">Adresse e-mail</label>
+          <label htmlFor="signin-email">{t.signIn.emailLabel}</label>
           <input
             id="signin-email"
             type="email"
@@ -72,7 +76,7 @@ export function SignInForm({ onRegister }: SignInFormProps = {}) {
           )}
         </div>
         <div>
-          <label htmlFor="signin-password">Mot de passe</label>
+          <label htmlFor="signin-password">{t.signIn.passwordLabel}</label>
           <input
             id="signin-password"
             type="password"
@@ -96,18 +100,18 @@ export function SignInForm({ onRegister }: SignInFormProps = {}) {
           {isSubmitting ? (
             <span className="state-line">
               <span className="state-loading" aria-hidden="true" />
-              Connexion en cours...
+              {t.signIn.submitLoading}
             </span>
           ) : (
-            "Se connecter"
+            t.signIn.submitButton
           )}
         </button>
       </form>
       {onRegister && (
         <p>
-          Pas encore de compte ?{" "}
+          {t.signIn.noAccount}{" "}
           <button type="button" onClick={onRegister}>
-            Créer un compte
+            {t.signIn.createAccount}
           </button>
         </p>
       )}

@@ -6,6 +6,8 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 
 import { registerApi, AuthApiError } from "../api/auth"
 import { setAccessToken } from "../utils/authToken"
+import { detectLang } from "../i18n/astrology"
+import { authTranslations } from "../i18n/auth"
 
 const signUpSchema = z.object({
   email: z.string().email("Adresse e-mail invalide."),
@@ -19,6 +21,8 @@ type SignUpFormProps = {
 }
 
 export function SignUpForm({ onSignIn }: SignUpFormProps) {
+  const lang = detectLang()
+  const t = authTranslations(lang)
   const [apiError, setApiError] = useState<string | null>(null)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -44,21 +48,21 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
       }
     } catch (err) {
       if (err instanceof AuthApiError && err.code === "email_already_registered") {
-        setApiError("Cette adresse e-mail est déjà utilisée.")
+        setApiError(t.signUp.errorEmailTaken)
       } else if (err instanceof AuthApiError) {
-        setApiError("Inscription impossible. Veuillez réessayer.")
+        setApiError(t.signUp.errorRegistrationFailed)
       } else {
-        setApiError("Une erreur est survenue. Veuillez réessayer.")
+        setApiError(t.signUp.errorGeneric)
       }
     }
   }
 
   return (
     <section className="panel">
-      <h2>Créer un compte</h2>
+      <h2>{t.signUp.title}</h2>
       <form className="chat-form" onSubmit={handleSubmit(onSubmit)} noValidate>
         <div>
-          <label htmlFor="signup-email">Adresse e-mail</label>
+          <label htmlFor="signup-email">{t.signUp.emailLabel}</label>
           <input
             id="signup-email"
             type="email"
@@ -74,7 +78,7 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
           )}
         </div>
         <div>
-          <label htmlFor="signup-password">Mot de passe</label>
+          <label htmlFor="signup-password">{t.signUp.passwordLabel}</label>
           <input
             id="signup-password"
             type="password"
@@ -98,17 +102,17 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
           {isSubmitting ? (
             <span className="state-line">
               <span className="state-loading" aria-hidden="true" />
-              Inscription en cours...
+              {t.signUp.submitLoading}
             </span>
           ) : (
-            "Créer mon compte"
+            t.signUp.submitButton
           )}
         </button>
       </form>
       <p>
-        Déjà un compte ?{" "}
+        {t.signUp.alreadyHaveAccount}{" "}
         <button type="button" onClick={onSignIn}>
-          Se connecter
+          {t.signUp.signInLink}
         </button>
       </p>
     </section>
