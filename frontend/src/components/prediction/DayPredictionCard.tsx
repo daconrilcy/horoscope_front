@@ -11,11 +11,15 @@ import {
 
 import { AstroMoodBackground } from "../astro/AstroMoodBackground";
 import type { ZodiacSign } from "../astro/zodiacPatterns";
+import { SkeletonGroup } from "../ui";
 import "./DayPredictionCard.css";
 
 interface Props {
-  prediction: DailyPredictionResponse;
+  prediction: DailyPredictionResponse | null;
   lang: Lang;
+  isLoading?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
   astroBackgroundProps?: {
     sign: ZodiacSign;
     userId: string;
@@ -24,9 +28,44 @@ interface Props {
   };
 }
 
-export const DayPredictionCard: React.FC<Props> = ({ prediction, lang, astroBackgroundProps }) => {
-  const { summary, meta } = prediction;
+export const DayPredictionCard: React.FC<Props> = ({ 
+  prediction, 
+  lang, 
+  isLoading, 
+  isError, 
+  onRetry,
+  astroBackgroundProps 
+}) => {
   const locale = getLocale(lang);
+
+  if (isLoading) {
+    return (
+      <div className="panel day-prediction-card day-prediction-card--loading p-6" aria-busy="true">
+        <SkeletonGroup count={3} widths={["40%", "90%", "70%"]} height="1.25rem" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="panel day-prediction-card day-prediction-card--error p-6" role="status">
+        <p>{getPredictionMessage("error", lang)}</p>
+        <button type="button" className="button-ghost mt-4" onClick={onRetry}>
+          {getPredictionMessage("retry", lang)}
+        </button>
+      </div>
+    );
+  }
+
+  if (!prediction) {
+    return (
+      <div className="panel day-prediction-card day-prediction-card--empty p-6">
+        <p>{getPredictionMessage("empty", lang)}</p>
+      </div>
+    );
+  }
+
+  const { summary, meta } = prediction;
   const toneLabel = getToneLabel(summary.overall_tone, lang);
   const toneColor = getToneColor(summary.overall_tone);
   const calibrationMessage =
