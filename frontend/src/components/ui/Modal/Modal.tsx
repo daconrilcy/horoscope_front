@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { classNames } from '../../../utils/classNames';
+import { detectLang } from '../../../i18n/astrology';
+import { commonTranslations } from '../../../i18n/common';
 import './Modal.css';
 
 export interface ModalProps {
@@ -13,6 +15,7 @@ export interface ModalProps {
   variant?: 'default' | 'danger' | 'info';
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  closeAriaLabel?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -24,9 +27,14 @@ export const Modal: React.FC<ModalProps> = ({
   variant = 'default',
   className,
   size = 'md',
+  closeAriaLabel,
 }) => {
+  const lang = detectLang();
+  const t = commonTranslations(lang);
   const modalRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
+
+  const resolvedCloseAriaLabel = closeAriaLabel ?? t.actions.close;
 
   // Handle Escape key
   useEffect(() => {
@@ -117,7 +125,7 @@ export const Modal: React.FC<ModalProps> = ({
             type="button"
             className="modal__close"
             onClick={onClose}
-            aria-label="Fermer la modale"
+            aria-label={resolvedCloseAriaLabel}
           >
             <X size={20} />
           </button>

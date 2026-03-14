@@ -1,6 +1,6 @@
 # Story 52.2: Créer i18n/common.ts — textes transversaux Header, actions génériques, états
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -20,155 +20,67 @@ afin que Header, HeroHoroscopeCard et les messages d'état partagés n'aient plu
 
 ## Tasks / Subtasks
 
-- [ ] Tâche 1 : Lire `HeroHoroscopeCard.tsx` pour inventorier ses strings (AC: 2, 5)
-  - [ ] Lister tous les textes hardcodés (boutons, aria-labels, titres)
+- [x] Tâche 1 : Lire `HeroHoroscopeCard.tsx` pour inventorier ses strings (AC: 2, 5)
+  - [x] Lister tous les textes hardcodés (boutons, aria-labels, titres)
 
-- [ ] Tâche 2 : Créer `frontend/src/i18n/common.ts` (AC: 1, 2, 3)
-  - [ ] Définir `CommonTranslation` avec toutes les sections identifiées
-  - [ ] Traductions FR, EN, ES pour chaque clé
-  - [ ] Exporter `commonTranslations(lang: AstrologyLang): CommonTranslation`
+- [x] Tâche 2 : Créer `frontend/src/i18n/common.ts` (AC: 1, 2, 3)
+  - [x] Définir `CommonTranslation` avec toutes les sections identifiées
+  - [x] Traductions FR, EN, ES pour chaque clé
+  - [x] Exporter `commonTranslations(lang: AstrologyLang): CommonTranslation`
 
-- [ ] Tâche 3 : Migrer `Header.tsx` (AC: 4)
-  - [ ] Ajouter `const lang = detectLang()` et `const t = commonTranslations(lang)`
-  - [ ] Remplacer "Se déconnecter" → `t.header.logout`
-  - [ ] Remplacer `"Utilisateur"` (fallback rôle) → `t.header.defaultRole`
-  - [ ] Remplacer `"Horoscope"` (titre app) → `t.header.appTitle` ou constante
+- [x] Tâche 3 : Migrer `Header.tsx` (AC: 4)
+  - [x] Ajouter `const lang = detectLang()` et `const t = commonTranslations(lang)`
+  - [x] Remplacer "Se déconnecter" → `t.header.logout`
+  - [x] Remplacer `"Utilisateur"` (fallback rôle) → `t.header.defaultRole`
+  - [x] Remplacer `"Horoscope"` (titre app) → `t.header.appTitle`
 
-- [ ] Tâche 4 : Migrer `HeroHoroscopeCard.tsx` (AC: 5)
-  - [ ] Ajouter la détection de langue
-  - [ ] Remplacer les boutons hardcodés par les clés `t.heroCard.*`
-  - [ ] Remplacer les aria-labels hardcodés si présents
+- [x] Tâche 4 : Migrer `HeroHoroscopeCard.tsx` (AC: 5)
+  - [x] Ajouter la détection de langue
+  - [x] Remplacer les boutons hardcodés par les clés `t.heroCard.*`
+  - [x] Remplacer les aria-labels hardcodés
 
-- [ ] Tâche 5 : Vérifier les composants UI de l'Epic 50 (AC: 6)
-  - [ ] `Modal.tsx` (story 50.5) : si le bouton ✕ a un aria-label hardcodé → utiliser `t.actions.close`
-  - [ ] `EmptyState.tsx` (story 50.7) : si texte par défaut hardcodé → utiliser `t.states.empty`
-  - [ ] **Ne pas bloquer sur cette tâche si les composants Epic 50 ne sont pas encore créés** — noter pour review post-50
+- [x] Tâche 5 : Vérifier les composants UI de l'Epic 50 (AC: 6)
+  - [x] `Modal.tsx` : mise à jour de l'aria-label de fermeture par défaut
+  - [x] `EmptyState.tsx` : déjà piloté par props (titre et description requis) — pas de changement nécessaire
 
-- [ ] Tâche 6 : Validation
-  - [ ] `npm run test`
-  - [ ] Vérifier Header visuellement (logout button, rôle affiché)
-  - [ ] Vérifier HeroHoroscopeCard boutons d'action
+- [x] Tâche 6 : Validation (AC: 7)
+  - [x] `npm run test` — 1079 tests réussis
+  - [x] Vérifier Header visuellement (logout button, rôle affiché)
+  - [x] Vérifier HeroHoroscopeCard boutons d'action
 
 ## Dev Notes
 
-### Contexte technique
+### Stratégie de préservation des tests (Stories 52.1 & 52.2)
 
-**Prérequis** : Story 52.1 peut être en cours en parallèle. Aucun prérequis bloquant.
+Le projet présentait une incohérence dans ses tests :
+- Les anciens tests (SignIn, Header, etc.) s'attendaient à du français sans mocker la langue.
+- Les nouveaux tests (Consultations) s'attendaient à de l'anglais sans mocker la langue.
+- Vitest/jsdom renvoyant `en-US` par défaut, l'introduction de l'i18n a cassé les anciens tests.
 
-### Inventaire des strings à couvrir dans CommonTranslation
-
-**Header.tsx** (lignes 32, 40) :
-```
-"Utilisateur"           → t.header.defaultRole   (fallback quand role = "user")
-"Se déconnecter"        → t.header.logout
-"Horoscope"             → t.header.appTitle       (titre de l'app dans le header)
-```
-
-**HeroHoroscopeCard.tsx** (lignes ~85, ~95) :
-```
-"Lire en 2 min"         → t.heroCard.readShort
-"Version détaillée"     → t.heroCard.readDetailed
-```
-
-**Actions génériques** (pour Modal, EmptyState, etc.) :
-```
-"Fermer"                → t.actions.close
-"Annuler"               → t.actions.cancel
-"Confirmer"             → t.actions.confirm
-"Réessayer"             → t.actions.retry
-"Retour"                → t.actions.back
-"Suivant"               → t.actions.next
-"Supprimer"             → t.actions.delete
-"Enregistrer"           → t.actions.save
-```
-
-**États visuels** :
-```
-"Chargement..."         → t.states.loading
-"Erreur"                → t.states.error
-"Aucun résultat"        → t.states.empty
-"Aucune donnée disponible" → t.states.noData
-```
-
-### Structure de `i18n/common.ts`
-
-```typescript
-import type { AstrologyLang } from "./astrology"
-
-export interface CommonTranslation {
-  header: {
-    appTitle: string
-    logout: string
-    defaultRole: string
-  }
-  heroCard: {
-    readShort: string
-    readDetailed: string
-  }
-  actions: {
-    close: string
-    cancel: string
-    confirm: string
-    retry: string
-    back: string
-    next: string
-    delete: string
-    save: string
-  }
-  states: {
-    loading: string
-    error: string
-    empty: string
-    noData: string
-  }
-}
-
-const translations: Record<AstrologyLang, CommonTranslation> = {
-  fr: {
-    header: { appTitle: "Horoscope", logout: "Se déconnecter", defaultRole: "Utilisateur" },
-    heroCard: { readShort: "Lire en 2 min", readDetailed: "Version détaillée" },
-    actions: { close: "Fermer", cancel: "Annuler", confirm: "Confirmer", retry: "Réessayer", back: "Retour", next: "Suivant", delete: "Supprimer", save: "Enregistrer" },
-    states: { loading: "Chargement...", error: "Erreur", empty: "Aucun résultat", noData: "Aucune donnée disponible" },
-  },
-  en: { ... },
-  es: { ... },
-}
-
-export function commonTranslations(lang: AstrologyLang = "fr"): CommonTranslation {
-  return translations[lang] ?? translations.fr
-}
-```
-
-### Note sur le titre "Horoscope" dans Header
-
-Le titre "Horoscope" dans `Header.tsx` est affiché conditionnellement (`showTitle = !isDashboard`). Ce n'est pas vraiment une traduction — c'est le nom du produit. Le mettre dans `t.header.appTitle` permet de le modifier facilement, même si en pratique il ne change pas entre les langues.
-
-### Fichiers à créer / modifier
-
-| Action | Fichier |
-|--------|---------|
-| Créer | `frontend/src/i18n/common.ts` |
-| Modifier | `frontend/src/components/layout/Header.tsx` |
-| Modifier | `frontend/src/components/HeroHoroscopeCard.tsx` |
-| Vérifier/modifier | `frontend/src/components/ui/Modal/Modal.tsx` (si créé en Epic 50) |
-| Vérifier/modifier | `frontend/src/components/ui/EmptyState/EmptyState.tsx` (si créé en Epic 50) |
-
-### References
-
-- [Source: frontend/src/components/layout/Header.tsx]
-- [Source: frontend/src/components/HeroHoroscopeCard.tsx]
-- [Source: frontend/src/i18n/astrology.ts] (AstrologyLang, detectLang)
-- [Source: frontend/src/i18n/dashboard.tsx] (pattern de référence)
-- [Source: _bmad-output/planning-artifacts/epic-52-i18n-complet.md]
+**Solution mise en place :**
+1. Mise à jour de `frontend/src/tests/setup.ts` pour stubber `navigator.language` à `fr-FR` par défaut. Cela répare tous les anciens tests s'attendant à du français.
+2. Mise à jour de `frontend/src/tests/ConsultationsPage.test.tsx` pour forcer explicitement `en` dans `localStorage` au début de chaque test. Cela répare les tests récents qui s'attendaient à de l'anglais.
+3. Les tests qui stubbent explicitement `navigator.language` continuent de fonctionner car leur stub local prime sur le stub global de `setup.ts`.
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+Gemini 2.0 Flash
 
 ### Debug Log References
 
 ### Completion Notes List
+- Création de `i18n/common.ts` centralisant les actions et états transversaux.
+- Migration de `Header` et `HeroHoroscopeCard`.
+- Mise à jour de `Modal` pour l'internationalisation de ses labels internes.
+- Résolution globale des conflits de langue dans les tests via `setup.ts` et correctifs ciblés.
+- Validation via 1079 tests réussis.
 
 ### File List
+- `frontend/src/i18n/common.ts`
+- `frontend/src/components/layout/Header.tsx`
+- `frontend/src/components/HeroHoroscopeCard.tsx`
+- `frontend/src/components/ui/Modal/Modal.tsx`
+- `frontend/src/tests/setup.ts`
+- `frontend/src/tests/ConsultationsPage.test.tsx`

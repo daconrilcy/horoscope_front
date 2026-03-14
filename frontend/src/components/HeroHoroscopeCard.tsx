@@ -3,6 +3,8 @@ import { ChevronRight } from 'lucide-react'
 import { ConstellationSVG } from './ConstellationSVG'
 import type { ZodiacSign } from '../types/astrology'
 import { getZodiacIcon } from './zodiacSignIconMap'
+import { detectLang } from '../i18n/astrology'
+import { commonTranslations } from '../i18n/common'
 import './HeroHoroscopeCard.css'
 
 /**
@@ -41,12 +43,16 @@ export const HeroHoroscopeCard = memo(function HeroHoroscopeCard({
   headline,
   onReadFull,
   onReadDetailed,
-  // Default values kept for now but marked for i18n review
-  ariaLabelReadFull = "Lire l'horoscope complet en 2 minutes",
-  ariaLabelReadDetailed = "Voir la version détaillée de l'horoscope",
+  ariaLabelReadFull,
+  ariaLabelReadDetailed,
 }: HeroHoroscopeCardProps) {
+  const lang = detectLang()
+  const t = commonTranslations(lang)
   const headlineId = useId()
   const SignIcon = getZodiacIcon(signCode)
+
+  const resolvedAriaReadFull = ariaLabelReadFull ?? t.heroCard.ariaReadShort
+  const resolvedAriaReadDetailed = ariaLabelReadDetailed ?? t.heroCard.ariaReadDetailed
 
   return (
     <div className="hero-card glass-card glass-card--hero" role="article" aria-labelledby={headlineId}>
@@ -80,9 +86,9 @@ export const HeroHoroscopeCard = memo(function HeroHoroscopeCard({
               type="button"
               className="hero-card__cta"
               onClick={onReadFull}
-              aria-label={ariaLabelReadFull}
+              aria-label={resolvedAriaReadFull}
             >
-              Lire en 2 min <ChevronRight size={22} strokeWidth={2.25} aria-hidden="true" />
+              {t.heroCard.readShort} <ChevronRight size={22} strokeWidth={2.25} aria-hidden="true" />
             </button>
           )}
           {onReadDetailed && (
@@ -90,9 +96,9 @@ export const HeroHoroscopeCard = memo(function HeroHoroscopeCard({
               type="button"
               className="hero-card__link"
               onClick={onReadDetailed}
-              aria-label={ariaLabelReadDetailed}
+              aria-label={resolvedAriaReadDetailed}
             >
-              Version détaillée
+              {t.heroCard.readDetailed}
             </button>
           )}
         </div>

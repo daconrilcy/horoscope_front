@@ -109,6 +109,7 @@ const renderWithProviders = (ui: React.ReactElement, { route = "/", queryClient 
 describe("ConsultationsPage", () => {
   beforeEach(() => {
     localStorage.clear()
+    localStorage.setItem("lang", "en")
     sessionStorage.clear()
     vi.clearAllMocks()
   })
@@ -150,6 +151,7 @@ describe("Consultation Taxonomy Consistency", () => {
 describe("ConsultationWizardPage - Story 47.8 Flow", () => {
   beforeEach(() => {
     localStorage.clear()
+    localStorage.setItem("lang", "en")
     sessionStorage.clear()
     vi.clearAllMocks()
   })

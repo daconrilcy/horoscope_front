@@ -2,8 +2,12 @@ import { useNavigate, useLocation } from "react-router-dom"
 
 import { clearAccessToken, useAccessTokenSnapshot } from "../../utils/authToken"
 import { useAuthMe } from "../../api/authMe"
+import { detectLang } from "../../i18n/astrology"
+import { commonTranslations } from "../../i18n/common"
 
 export function Header() {
+  const lang = detectLang()
+  const t = commonTranslations(lang)
   const token = useAccessTokenSnapshot()
   const authMe = useAuthMe(token)
   const navigate = useNavigate()
@@ -22,14 +26,14 @@ export function Header() {
   return (
     <header className={`app-header${isDashboard ? " app-header--dashboard" : ""}`}>
       <div className="app-header-brand">
-        {showTitle && <h1 className="app-header-title">Horoscope</h1>}
+        {showTitle && <h1 className="app-header-title">{t.header.appTitle}</h1>}
       </div>
       {token && (
         <div className="app-header-actions">
           {authMe.data && (
             <span className="app-header-user">
               <span className="app-header-role">
-                {authMe.data.role === "user" ? "Utilisateur" : authMe.data.role}
+                {authMe.data.role === "user" ? t.header.defaultRole : authMe.data.role}
               </span>
             </span>
           )}
@@ -38,7 +42,7 @@ export function Header() {
             className="app-header-logout"
             onClick={handleLogout}
           >
-            Se déconnecter
+            {t.header.logout}
           </button>
         </div>
       )}
