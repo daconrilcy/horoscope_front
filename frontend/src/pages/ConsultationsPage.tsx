@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom"
 
-import { useConsultation } from "../state/consultationStore"
+import { useConsultations } from "@hooks/useConsultations"
 import { detectLang } from "../i18n/astrology"
 import { tConsultations as t } from "@i18n/consultations"
 import { CONSULTATION_TYPES, CONTEXT_TRUNCATE_LENGTH, getConsultationTypeConfig } from "../types/consultation"
 import { formatDate } from "../utils/formatDate"
 
 export function ConsultationsPage() {
-  const { state } = useConsultation()
+  const { history, isLoading } = useConsultations()
   const lang = detectLang()
 
   return (
@@ -47,11 +47,13 @@ export function ConsultationsPage() {
 
       <section className="consultations-history-section" aria-live="polite">
         <h2>{t("history_title", lang)}</h2>
-        {state.history.length === 0 ? (
+        {isLoading ? (
+          <div className="state-line state-loading">{t("loading", lang)}</div>
+        ) : history.length === 0 ? (
           <div className="state-line state-empty">{t("no_history", lang)}</div>
         ) : (
           <ul className="consultations-history-list">
-            {state.history.map((consultation) => {
+            {history.map((consultation) => {
               const typeConfig = getConsultationTypeConfig(consultation.type)
               return (
               <li key={consultation.id} className="consultations-history-item">

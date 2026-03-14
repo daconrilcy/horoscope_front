@@ -1,13 +1,14 @@
 import { useNavigate } from "react-router-dom"
 
-import { useAstrologers, type Astrologer } from "../api/astrologers"
+import { useAstrologers } from "@hooks/useAstrologers"
 import { AstrologerGrid } from "../features/astrologers"
 import { detectLang } from "../i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
+import type { Astrologer } from "@api"
 
 export function AstrologersPage() {
   const navigate = useNavigate()
-  const { data: astrologers, isPending, error } = useAstrologers()
+  const { astrologers, isLoading, error } = useAstrologers()
   const lang = detectLang()
 
   const handleSelectAstrologer = (astrologer: Astrologer) => {
@@ -21,7 +22,7 @@ export function AstrologersPage() {
         <p>{t("page_subtitle", lang)}</p>
       </header>
 
-      {isPending && (
+      {isLoading && (
         <div className="astrologers-page-loading">{t("loading", lang)}</div>
       )}
 
@@ -31,9 +32,9 @@ export function AstrologersPage() {
         </div>
       )}
 
-      {!isPending && !error && (
+      {!isLoading && !error && (
         <AstrologerGrid
-          astrologers={astrologers ?? []}
+          astrologers={astrologers}
           onSelectAstrologer={handleSelectAstrologer}
         />
       )}
