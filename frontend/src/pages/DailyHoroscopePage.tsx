@@ -19,6 +19,7 @@ import { useDailyPrediction } from '../api/useDailyPrediction'
 import { getUserDisplayName } from '../utils/user'
 import { trackEvent, EVENTS } from '../utils/analytics'
 import { useDashboardAstroSummary } from '../components/dashboard/useDashboardAstroSummary'
+import { SectionErrorBoundary } from '../components/ErrorBoundary'
 import './DailyHoroscopePage.css'
 
 function parseLocalMinute(iso: string): number | null {
@@ -270,16 +271,18 @@ export function DailyHoroscopePage() {
             </button>
           </div>
 
-          <DayPredictionCard
-            prediction={prediction}
-            lang={lang}
-            astroBackgroundProps={{
-              sign,
-              userId: user?.id ? String(user.id) : 'anonymous',
-              dateKey: prediction.meta.date_local,
-              dayScore
-            }}
-          />
+          <SectionErrorBoundary onRetry={handleRefresh}>
+            <DayPredictionCard
+              prediction={prediction}
+              lang={lang}
+              astroBackgroundProps={{
+                sign,
+                userId: user?.id ? String(user.id) : 'anonymous',
+                dateKey: prediction.meta.date_local,
+                dayScore
+              }}
+            />
+          </SectionErrorBoundary>
 
           <TurningPointsList
             moments={keyMoments}

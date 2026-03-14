@@ -4,6 +4,7 @@ import { translateDashboardPage } from "../i18n/dashboard"
 import { TodayHeader } from "../components/TodayHeader"
 import { ShortcutsSection } from "../components/ShortcutsSection"
 import { DashboardHoroscopeSummaryCardContainer } from "../components/dashboard/DashboardHoroscopeSummaryCardContainer"
+import { SectionErrorBoundary } from "../components/ErrorBoundary"
 
 import { useAccessTokenSnapshot } from "../utils/authToken"
 import { useAuthMe } from "../api/authMe"
@@ -39,7 +40,9 @@ export function DashboardPage() {
         <h3 className="section-header__title">{header.title}</h3>
       </div>
 
-      <DashboardHoroscopeSummaryCardContainer />
+      <SectionErrorBoundary>
+        <DashboardHoroscopeSummaryCardContainer />
+      </SectionErrorBoundary>
 
       <ShortcutsSection />
     </PageLayout>

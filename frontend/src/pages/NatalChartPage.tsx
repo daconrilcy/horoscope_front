@@ -1,4 +1,5 @@
 import { PageLayout } from "../layouts"
+import { ErrorState } from "@ui"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { ApiError, useLatestNatalChart } from "@api"
@@ -122,11 +123,11 @@ export function NatalChartPage() {
 
     return (
       <PageLayout className="panel">
-        <h1>{t.title}</h1>
-        <p>{t.genericError}</p>
-        <button type="button" onClick={() => void latestChart.refetch()} className="retry-button">
-          {t.retry}
-        </button>
+        <ErrorState 
+          title={t.title}
+          message={t.genericError}
+          onRetry={() => void latestChart.refetch()}
+        />
       </PageLayout>
     )
   }
