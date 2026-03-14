@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
 import AstroMoodBackground from '../components/astro/AstroMoodBackground';
@@ -160,6 +161,41 @@ describe('AstroMoodBackground', () => {
 
     unmount();
     expect(cancelSpy).toHaveBeenCalled();
+  });
+
+  it('respects prefers-reduced-motion without crashing', () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockImplementation(query => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })));
+
+    const { container } = render(
+      <AstroMoodBackground sign="gemini" userId="u2" dateKey="2026-03-14" />
+    );
+    expect(container.querySelector('.astro-mood-background')).toBeInTheDocument();
+  });
+
+  it('cleans up animation frame and observer in StrictMode', () => {
+    const cancelSpy = vi.spyOn(window, 'cancelAnimationFrame');
+    const { unmount } = render(
+      <React.StrictMode>
+        <AstroMoodBackground sign="cancer" userId="u3" dateKey="2026-03-14" />
+      </React.StrictMode>
+    );
+    
+    // In React 18+ StrictMode, the component mounts, unmounts, and remounts immediately.
+    // So cancelAnimationFrame is called at least once before we even unmount manually.
+    expect(cancelSpy).toHaveBeenCalled();
+    
+    unmount();
+    // After unmount, it should be called again
+    expect(cancelSpy.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 });
 
