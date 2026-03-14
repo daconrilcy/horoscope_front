@@ -1,3 +1,4 @@
+import { PageLayout } from "../layouts"
 import { useAstrologyLabels } from "../i18n/astrology"
 import { translateDashboardPage } from "../i18n/dashboard"
 import { TodayHeader } from "../components/TodayHeader"
@@ -34,7 +35,9 @@ export function DashboardPage() {
     : getUserDisplayName(user)
 
   return (
-    <div className="panel dashboard-container">
+    <PageLayout
+      className="panel dashboard-container"
+    >
       <TodayHeader userName={userName} isLoading={isUserLoading} />
       
       <div>
@@ -61,6 +64,6 @@ export function DashboardPage() {
       />
 
       <ShortcutsSection />
-    </div>
+    </PageLayout>
   )
 }

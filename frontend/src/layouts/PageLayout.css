@@ -1,0 +1,28 @@
+.page-layout {
+  max-width: var(--layout-page-max-width, 900px);
+  margin: 0 auto;
+  padding: var(--layout-page-padding, var(--space-6));
+  width: 100%;
+}
+
+.page-layout__header {
+  margin-bottom: var(--space-6);
+}
+
+.page-layout__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-headline);
+}
+
+.page-layout__body--with-aside {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .page-layout__body--with-aside {
+    grid-template-columns: 1fr;
+  }
+}

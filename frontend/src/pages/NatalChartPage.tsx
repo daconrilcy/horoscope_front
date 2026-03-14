@@ -1,3 +1,4 @@
+import { PageLayout } from "../layouts"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { ApiError, useLatestNatalChart } from "../api/natalChart"
@@ -64,17 +65,17 @@ export function NatalChartPage() {
 
   if (latestChart.isLoading) {
     return (
-      <section className="panel" aria-busy="true">
+      <PageLayout className="panel" aria-busy="true">
         <h1>{t.title}</h1>
         <p>{t.loading}</p>
-      </section>
+      </PageLayout>
     )
   }
 
   if (latestChart.isError) {
     if (apiError?.code === "natal_chart_not_found") {
       return (
-        <section className="panel">
+        <PageLayout className="panel">
           <h1>{t.title}</h1>
           <p>{t.notFound}</p>
           <p>{t.notFoundSub}</p>
@@ -94,7 +95,7 @@ export function NatalChartPage() {
           <Link to="/profile" className="btn-link">
             {t.completeProfile}
           </Link>
-        </section>
+        </PageLayout>
       )
     }
 
@@ -104,7 +105,7 @@ export function NatalChartPage() {
       apiError?.status === 422
     ) {
       return (
-        <section className="panel">
+        <PageLayout className="panel">
           <h1>{t.title}</h1>
           <div className="chat-error degraded-warning" role="alert">
             <p>
@@ -115,28 +116,28 @@ export function NatalChartPage() {
           <Link to="/profile" className="btn-link complete-profile-link">
             {t.completeProfile}
           </Link>
-        </section>
+        </PageLayout>
       )
     }
 
     return (
-      <section className="panel">
+      <PageLayout className="panel">
         <h1>{t.title}</h1>
         <p>{t.genericError}</p>
         <button type="button" onClick={() => void latestChart.refetch()} className="retry-button">
           {t.retry}
         </button>
-      </section>
+      </PageLayout>
     )
   }
 
   const chart = latestChart.data
   if (!chart) {
     return (
-      <section className="panel">
+      <PageLayout className="panel">
         <h1>{t.title}</h1>
         <p>{t.noData}</p>
-      </section>
+      </PageLayout>
     )
   }
 
@@ -174,7 +175,7 @@ export function NatalChartPage() {
   const missingBirthTime = astroProfile?.missing_birth_time ?? false
 
   return (
-    <section className="panel">
+    <PageLayout className="panel">
       <h1>{t.title}</h1>
       <p>
         {t.generatedOn} {formatDateTime(chart.created_at)} · {t.referenceVersion} {chart.metadata.reference_version}
@@ -270,6 +271,6 @@ export function NatalChartPage() {
         chartId={chart.chart_id}
         lang={lang} 
       />
-    </section>
+    </PageLayout>
   )
 }

@@ -1,3 +1,4 @@
+import { PageLayout } from "../layouts"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -546,7 +547,7 @@ export function BirthProfilePage() {
   }
 
   return (
-    <section className="panel">
+    <PageLayout className="panel">
       <h2 id="birth-profile-title">{t.title}</h2>
 
       {isLoading ? (
@@ -847,6 +848,6 @@ export function BirthProfilePage() {
           </button>
         </div>
       ) : null}
-    </section>
+    </PageLayout>
   )
 }

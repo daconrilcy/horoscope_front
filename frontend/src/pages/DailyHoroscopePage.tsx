@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { PageLayout } from '../layouts'
 import { useEffect, useRef } from 'react'
 import { RefreshCw } from 'lucide-react'
 
@@ -237,13 +238,16 @@ export function DailyHoroscopePage() {
     : []
 
   return (
-    <div className="today-page">
-      <TodayHeader 
-        userName={userName} 
-        onBackClick={() => navigate("/dashboard")} 
-        isLoading={isUserLoading}
-      />
-
+    <PageLayout
+      header={
+        <TodayHeader 
+          userName={userName} 
+          onBackClick={() => navigate("/dashboard")} 
+          isLoading={isUserLoading}
+        />
+      }
+      className="today-page"
+    >
       {isLoading ? (
         <div className="panel state-loading daily-page-state">
           <p>{getPredictionMessage('loading', lang)}</p>
@@ -300,6 +304,6 @@ export function DailyHoroscopePage() {
           <button type="button" onClick={() => navigate('/natal')}>{getPredictionMessage('setup_profile', lang)}</button>
         </div>
       )}
-    </div>
+    </PageLayout>
   )
 }
