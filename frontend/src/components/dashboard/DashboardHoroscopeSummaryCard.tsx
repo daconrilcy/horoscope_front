@@ -8,6 +8,8 @@ import { AstroMoodBackground } from "../astro/AstroMoodBackground"
 import { getZodiacIcon } from "../../components/zodiacSignIconMap"
 import type { ZodiacSign } from "../astro/zodiacPatterns"
 
+import { SkeletonGroup } from "../ui"
+
 interface Props {
   prediction: DailyPredictionResponse | null
   isLoading: boolean
@@ -57,8 +59,7 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
         aria-busy="true"
         aria-label={summaryLoading}
       >
-        <div className="skeleton-line skeleton--wide" />
-        <div className="skeleton-line skeleton--narrow" />
+        <SkeletonGroup count={2} widths={["80%", "60%"]} height="1.25rem" />
       </div>
     )
   }
