@@ -1,6 +1,7 @@
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
+import "./ErrorBoundary.css";
 
 interface Props {
   children: ReactNode;
@@ -37,58 +38,21 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div style={{
-          padding: "1.5rem",
-          backgroundColor: "rgba(254, 242, 242, 1)",
-          border: "1px solid rgba(252, 165, 165, 1)",
-          borderRadius: "0.75rem",
-          textAlign: "center",
-          margin: "1rem 0"
-        }}>
-          <div style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "3rem",
-            height: "3rem",
-            borderRadius: "9999px",
-            backgroundColor: "rgba(254, 226, 226, 1)",
-            marginBottom: "1rem"
-          }}>
-            <AlertCircle style={{ width: "1.5rem", height: "1.5rem", color: "rgba(220, 38, 38, 1)" }} />
+        <div className="error-boundary">
+          <div className="error-boundary__icon-wrapper">
+            <AlertCircle className="error-boundary__icon" />
           </div>
-          <h3 style={{
-            fontSize: "1.125rem",
-            fontWeight: "bold",
-            color: "rgba(127, 29, 29, 1)",
-            marginBottom: "0.5rem",
-            marginTop: "0"
-          }}>
+          <h3 className="error-boundary__title">
             Une erreur est survenue
           </h3>
-          <p style={{
-            fontSize: "0.875rem",
-            color: "rgba(185, 28, 28, 1)",
-            marginBottom: "1rem"
-          }}>
+          <p className="error-boundary__text">
             L'affichage de cette section a échoué.
           </p>
           <button
             onClick={this.handleReset}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              padding: "0.5rem 1rem",
-              borderRadius: "0.375rem",
-              backgroundColor: "rgba(220, 38, 38, 1)",
-              color: "white",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "0.875rem",
-              fontWeight: "500"
-            }}
+            className="error-boundary__button"
           >
-            <RefreshCw style={{ width: "1rem", height: "1rem", marginRight: "0.5rem" }} />
+            <RefreshCw className="error-boundary__button-icon" />
             Réessayer
           </button>
         </div>

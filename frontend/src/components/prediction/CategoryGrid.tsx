@@ -2,6 +2,7 @@ import React from "react";
 import type { DailyPredictionCategory } from "../../types/dailyPrediction";
 import type { Lang } from "../../i18n/predictions";
 import { getNoteBand, getCategoryMeta } from "../../utils/predictionBands";
+import "./CategoryGrid.css";
 
 interface Props {
   categories: DailyPredictionCategory[];
@@ -10,16 +11,10 @@ interface Props {
 }
 
 export const CategoryGrid: React.FC<Props> = ({ categories, lang, onCategoryClick }) => {
-  // Sort by rank asc
   const sortedCategories = [...categories].sort((a, b) => a.rank - b.rank);
 
   return (
-    <div style={{ 
-      display: "grid", 
-      gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", 
-      gap: "1rem",
-      marginBottom: "2rem" 
-    }}>
+    <div className="category-grid gap-4 mb-8">
       {sortedCategories.map((cat) => {
         const band = getNoteBand(cat.note_20, lang);
         const meta = getCategoryMeta(cat.code, lang);
@@ -31,34 +26,27 @@ export const CategoryGrid: React.FC<Props> = ({ categories, lang, onCategoryClic
         return (
           <div 
             key={cat.code} 
-            className="panel" 
+            className={`panel p-4 category-grid__item ${onCategoryClick ? "category-grid__item--clickable" : ""}`}
             onClick={() => onCategoryClick?.(cat.code)}
-            style={{ 
-              padding: "1rem", 
-              display: "flex", 
-              flexDirection: "column", 
-              alignItems: "center",
-              textAlign: "center",
-              cursor: onCategoryClick ? "pointer" : "default"
-            }}
           >
-            <span style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>{meta.icon}</span>
-            <span style={{ fontSize: "0.8rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold" }}>
+            <span className="category-grid__icon mb-2">{meta.icon}</span>
+            <span className="category-grid__label text-muted">
               {meta.label}
             </span>
-            <div style={{ 
-              fontSize: "1.75rem", 
-              fontWeight: "bold", 
-              color: band.colorVar,
-              margin: "0.25rem 0"
-            }}>
+            <div 
+              className="category-grid__score"
+              style={{ color: band.colorVar }}
+            >
               {cat.note_20}
             </div>
-            <span style={{ fontSize: "0.75rem", color: band.colorVar, fontWeight: "500" }}>
+            <span 
+              className="category-grid__band"
+              style={{ color: band.colorVar }}
+            >
               {band.label}
             </span>
             {shouldShowSummary && (
-              <p style={{ marginTop: "0.75rem", fontSize: "0.8rem", lineHeight: "1.4", color: "var(--text-2)" }}>
+              <p className="category-grid__summary mt-4 text-secondary">
                 {cat.summary}
               </p>
             )}

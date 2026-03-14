@@ -1,0 +1,93 @@
+/* Styles components DayPredictionCard sans inlines */
+
+.day-prediction-card__body {
+  margin-top: var(--space-6, 1.5rem);
+}
+
+.day-prediction-card__summary {
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+.day-prediction-card__calibration {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+  background-color: rgba(255, 184, 77, 0.12);
+  border: 1px solid rgba(255, 184, 77, 0.35);
+  color: var(--color-text-primary);
+}
+
+.dark .day-prediction-card--astro .day-prediction-card__calibration {
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.day-prediction-card__best-window {
+  margin-top: var(--space-6, 1.5rem);
+  padding: var(--space-4, 1rem);
+  border-radius: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .day-prediction-card--astro .day-prediction-card__best-window {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.day-prediction-card__best-window-title {
+  margin: 0 0 var(--space-2, 0.5rem) 0;
+  font-size: 0.9rem;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.dark .day-prediction-card--astro .day-prediction-card__best-window-title {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.day-prediction-card__best-window-time {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.day-prediction-card__best-window-desc {
+  margin: var(--space-1, 0.25rem) 0 0 0;
+  font-size: 0.875rem;
+}
+
+.day-prediction-card__date {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.day-prediction-card__tone {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: white;
+}
+
+.dark .day-prediction-card--astro .day-prediction-card__tone {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+  color: var(--background);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.day-prediction-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.day-prediction-card__content-wrapper {
+  position: relative;
+  z-index: 10;
+}

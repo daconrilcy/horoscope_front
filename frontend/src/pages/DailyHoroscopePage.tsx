@@ -18,6 +18,7 @@ import { useDailyPrediction } from '../api/useDailyPrediction'
 import { getUserDisplayName } from '../utils/user'
 import { trackEvent, EVENTS } from '../utils/analytics'
 import { useDashboardAstroSummary } from '../components/dashboard/useDashboardAstroSummary'
+import './DailyHoroscopePage.css'
 
 function parseLocalMinute(iso: string): number | null {
   const match = iso.match(/T(\d{2}):(\d{2})/)
@@ -244,22 +245,21 @@ export function DailyHoroscopePage() {
       />
 
       {isLoading ? (
-        <div className="panel state-loading" style={{ marginTop: '2rem', textAlign: 'center' }}>
+        <div className="panel state-loading daily-page-state">
           <p>{getPredictionMessage('loading', lang)}</p>
         </div>
       ) : isError ? (
-        <div className="panel state-error-centered" style={{ marginTop: '2rem' }}>
+        <div className="panel state-error-centered daily-page-state">
           <p>{getPredictionMessage('error', lang)}</p>
           <button type="button" onClick={handleRetry}>{getPredictionMessage('retry', lang)}</button>
         </div>
       ) : prediction ? (
         <>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+          <div className="daily-page-refresh-wrapper mb-4">
             <button 
               type="button" 
-              className="button-ghost" 
+              className="button-ghost daily-page-refresh-button" 
               onClick={handleRefresh}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}
             >
               <RefreshCw size={16} />
               {getPredictionMessage('refresh', lang)}
@@ -295,7 +295,7 @@ export function DailyHoroscopePage() {
           />
         </>
       ) : (
-        <div className="panel state-empty" style={{ marginTop: '2rem', textAlign: 'center' }}>
+        <div className="panel state-empty daily-page-state">
           <p>{getPredictionMessage('empty', lang)}</p>
           <button type="button" onClick={() => navigate('/natal')}>{getPredictionMessage('setup_profile', lang)}</button>
         </div>

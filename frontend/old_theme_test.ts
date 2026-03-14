@@ -4,8 +4,7 @@ import path from "path"
 
 // Resolve path to theme.css
 const themePath = path.resolve(__dirname, "../styles/theme.css")
-const designTokensPath = path.resolve(__dirname, "../styles/design-tokens.css")
-const themeContent = fs.readFileSync(designTokensPath, "utf-8") + "\n" + fs.readFileSync(themePath, "utf-8")
+const themeContent = fs.readFileSync(themePath, "utf-8")
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -70,26 +69,11 @@ describe("theme.css validation (Static Analysis)", () => {
   })
 
   describe(":root (light) tokens", () => {
-    const rootMatches = [...themeContent.matchAll(/:root\s*\{([^}]*)\}/g)]
-    const rootContent = rootMatches.map(m => m[1]).join("\n")
+    const rootMatch = themeContent.match(/:root\s*{([^}]*)}/)
+    const rootContent = rootMatch ? rootMatch[1] : ""
 
     it.each(requiredTokens)("contains %s variable in :root", (token) => {
-      const originalToken = token;
-      let mappedToken = token.startsWith("--color-") ? token : `--color-${token.replace("--", "")}`;
-      if (token === "--text-1") mappedToken = "--color-text-primary";
-      if (token === "--text-2") mappedToken = "--color-text-secondary";
-      if (token === "--text-3") mappedToken = "--color-text-muted";
-      if (token === "--glass") mappedToken = "--color-glass-bg";
-      if (token === "--glass-2") mappedToken = "--color-glass-bg-2";
-      if (token === "--cta-l") mappedToken = "--color-cta-left";
-      if (token === "--cta-r") mappedToken = "--color-cta-right";
-      
-      const pattern = new RegExp(`(${originalToken}|${mappedToken}):`);
-      // Relax the test for dark-specific legacy tokens in :root
-      if (token === "--shadow-cta-dark" && !rootContent.match(pattern)) {
-        return; // Accept missing legacy dark tokens in modern :root
-      }
-      expect(rootContent).toMatch(pattern)
+      expect(rootContent).toContain(`${token}:`)
     })
 
     it("has exactly 21 premium tokens + extra compatibility tokens", () => {
@@ -99,26 +83,11 @@ describe("theme.css validation (Static Analysis)", () => {
   })
 
   describe(".dark tokens", () => {
-    const darkMatches = [...themeContent.matchAll(/\.dark\s*\{([^}]*)\}/g)]
-    const darkContent = darkMatches.map(m => m[1]).join("\n")
+    const darkMatch = themeContent.match(/\.dark\s*{([^}]*)}/)
+    const darkContent = darkMatch ? darkMatch[1] : ""
 
     it.each(requiredTokens)("contains %s variable in .dark", (token) => {
-      const originalToken = token;
-      let mappedToken = token.startsWith("--color-") ? token : `--color-${token.replace("--", "")}`;
-      if (token === "--text-1") mappedToken = "--color-text-primary";
-      if (token === "--text-2") mappedToken = "--color-text-secondary";
-      if (token === "--text-3") mappedToken = "--color-text-muted";
-      if (token === "--glass") mappedToken = "--color-glass-bg";
-      if (token === "--glass-2") mappedToken = "--color-glass-bg-2";
-      if (token === "--cta-l") mappedToken = "--color-cta-left";
-      if (token === "--cta-r") mappedToken = "--color-cta-right";
-
-      const pattern = new RegExp(`(${originalToken}|${mappedToken}):`);
-      // Not all tokens need to be overridden in .dark
-      if (!darkContent.match(pattern)) {
-        return; // Skip asserting presence in .dark if it's inherited from :root
-      }
-      expect(darkContent).toMatch(pattern)
+      expect(darkContent).toContain(`${token}:`)
     })
 
     it("overrides at least 21 tokens in .dark", () => {
@@ -136,117 +105,117 @@ describe("theme.css validation (Static Analysis)", () => {
 
 describe("AC#2 — Valeurs exactes des tokens critiques (story 17-10)", () => {
   it("light --text-1 est #1E1B2E (texte dark ink lisible sur fond clair)", () => {
-    const rootMatches = [...themeContent.matchAll(/:root\s*\{([^}]*)\}/g)]
-    const rootContent = rootMatches.map(m => m[1]).join("\n")
-    expect(rootContent).toMatch(/--color-text-primary\s*:\s*#1E1B2E/)
+    const rootMatch = themeContent.match(/:root\s*\{([^}]*)\}/)   
+    const rootContent = rootMatch ? rootMatch[1] : ""
+    expect(rootContent).toMatch(/--text-1\s*:\s*#1E1B2E/)
   })
 
   it("dark --text-1 est rgba(245,245,255,0.92) (texte clair sur fond cosmique)", () => {
-    const darkMatches = [...themeContent.matchAll(/\.dark\s*\{([^}]*)\}/g)]
-    const darkContent = darkMatches.map(m => m[1]).join("\n")
-    expect(darkContent).toMatch(/--color-text-primary\s*:\s*rgba\s*\(\s*245\s*,\s*245\s*,\s*255\s*,\s*0\.92\s*\)/)
+    const darkMatch = themeContent.match(/\.dark\s*\{([^}]*)\}/)  
+    const darkContent = darkMatch ? darkMatch[1] : ""
+    expect(darkContent).toMatch(/--text-1\s*:\s*rgba\s*\(\s*245\s*,\s*245\s*,\s*255\s*,\s*0\.92\s*\)/)
   })
 
   it("light --glass a une opacité alpha élevée (>0.5) pour fond semi-transparent", () => {
-    const rootMatches = [...themeContent.matchAll(/:root\s*\{([^}]*)\}/g)]
-    const rootContent = rootMatches.map(m => m[1]).join("\n")
+    const rootMatch = themeContent.match(/:root\s*\{([^}]*)\}/)   
+    const rootContent = rootMatch ? rootMatch[1] : ""
     // Extraire la valeur de --glass en light
-    const glassMatch = rootContent.match(/--color-glass-bg\s*:\s*rgba\s*\(\s*255\s*,\s*255\s*,\s*255\s*,\s*([\d.]+)\s*\)/)
+    const glassMatch = rootContent.match(/--glass\s*:\s*rgba\s*\(\s*255\s*,\s*255\s*,\s*255\s*,\s*([\d.]+)\s*\)/)
     expect(glassMatch).toBeTruthy()
     const alphaVal = parseFloat(glassMatch![1])
     expect(alphaVal).toBeGreaterThanOrEqual(0.5)
   })
 
   it("dark --glass a une opacité alpha faible (<0.15) pour glassmorphism cosmique", () => {
-    const darkMatches = [...themeContent.matchAll(/\.dark\s*\{([^}]*)\}/g)]
-    const darkContent = darkMatches.map(m => m[1]).join("\n")
-    const glassMatch = darkContent.match(/--color-glass-bg\s*:\s*rgba\s*\(\s*255\s*,\s*255\s*,\s*255\s*,\s*([\d.]+)\s*\)/)
+    const darkMatch = themeContent.match(/\.dark\s*\{([^}]*)\}/)  
+    const darkContent = darkMatch ? darkMatch[1] : ""
+    const glassMatch = darkContent.match(/--glass\s*:\s*rgba\s*\(\s*255\s*,\s*255\s*,\s*255\s*,\s*([\d.]+)\s*\)/)
     expect(glassMatch).toBeTruthy()
     const alphaVal = parseFloat(glassMatch![1])
     expect(alphaVal).toBeLessThanOrEqual(0.15)
   })
   it("AC-17-15 — light --glass-shortcut = rgba(255,255,255,0.62) pour shortcut cards (plus blanches)", () => {
-    const value = getTokenValue(themeContent, ":root", "--color-glass-shortcut")
+    const value = getTokenValue(themeContent, ":root", "--glass-shortcut")
     expect(normalizeCssValue(value)).toBe("rgba(255,255,255,0.62)")
   })
 
   it("AC-17-12 — dark --glass-shortcut = rgba(255,255,255,0.06) pour shortcut cards", () => {
-    const value = getTokenValue(themeContent, ".dark", "--color-glass-shortcut")
+    const value = getTokenValue(themeContent, ".dark", "--glass-shortcut")
     expect(normalizeCssValue(value)).toBe("rgba(255,255,255,0.06)")
   })
 
   it("AC-17-15 — light --glass-mini = rgba(255,255,255,0.40) pour mini-insight cards", () => {
-    const value = getTokenValue(themeContent, ":root", "--color-glass-mini")
+    const value = getTokenValue(themeContent, ":root", "--glass-mini")
     expect(normalizeCssValue(value)).toBe("rgba(255,255,255,0.40)")
   })
 
   it("AC-17-12 — dark --glass-mini = rgba(255,255,255,0.06) pour mini-insight cards", () => {
-    const value = getTokenValue(themeContent, ".dark", "--color-glass-mini")
+    const value = getTokenValue(themeContent, ".dark", "--glass-mini")
     expect(normalizeCssValue(value)).toBe("rgba(255,255,255,0.06)")
   })
 
   it("AC-17-12 — dark --success reste un vert doux (non fluo) pour 'En ligne'", () => {
-    const value = getTokenValue(themeContent, ".dark", "--color-success")
+    const value = getTokenValue(themeContent, ".dark", "--success")
     expect(value).toBe("#86CFA2")
   })
 
   it("AC-17-15 — light --bg-top est #FEF7F9 (gradient original proche maquette)", () => {
-    const value = getTokenValue(themeContent, ":root", "--color-bg-top")
+    const value = getTokenValue(themeContent, ":root", "--bg-top")
     expect(value).toBe("#FEF7F9")
   })
 
   it("AC-17-15 — light --bg-mid est #E3D8EC (gradient original proche maquette)", () => {
-    const value = getTokenValue(themeContent, ":root", "--color-bg-mid")
+    const value = getTokenValue(themeContent, ":root", "--bg-mid")
     expect(value).toBe("#E3D8EC")
   })
 
   it("AC-17-15 — light --bg-bot est défini (gradient original proche maquette)", () => {
-    const value = getTokenValue(themeContent, ":root", "--color-bg-bot") || getTokenValue(themeContent, ":root", "--bg-bot")
+    const value = getTokenValue(themeContent, ":root", "--bg-bot")
     expect(value).toBeTruthy()
   })
 
   it("AC-17-14 — light --hero-g1 est rgba(172,132,255,0.28)", () => {
-    const value = getTokenValue(themeContent, ":root", "--color-hero-g1")
+    const value = getTokenValue(themeContent, ":root", "--hero-g1")
     expect(normalizeCssValue(value)).toBe("rgba(172,132,255,0.28)")
   })
 
   it("AC-17-14 — dark --hero-g1 est rgba(160,120,255,0.22)", () => {
-    const value = getTokenValue(themeContent, ".dark", "--color-hero-g1")
+    const value = getTokenValue(themeContent, ".dark", "--hero-g1")
     expect(normalizeCssValue(value)).toBe("rgba(160,120,255,0.22)")
   })
 
   it("AC-17-14 — light --love-g1 est #F3B5D6", () => {
-    const value = getTokenValue(themeContent, ":root", "--color-love-g1")
+    const value = getTokenValue(themeContent, ":root", "--love-g1")
     expect(value).toBe("#F3B5D6")
   })
 
   it("AC-17-14 — light --work-g1 est #B9C7FF", () => {
-    const value = getTokenValue(themeContent, ":root", "--color-work-g1")
+    const value = getTokenValue(themeContent, ":root", "--work-g1")
     expect(value).toBe("#B9C7FF")
   })
 
   it("AC-17-14 — light --energy-g1 est #F9DEB2", () => {
-    const value = getTokenValue(themeContent, ":root", "--color-energy-g1")
+    const value = getTokenValue(themeContent, ":root", "--energy-g1")
     expect(value).toBe("#F9DEB2")
   })
 
   it("AC-17-15 — light --text-headline est rgb(123,109,140) (H1 muted purple proche maquette)", () => {
-    const value = getTokenValue(themeContent, ":root", "--color-text-headline")
+    const value = getTokenValue(themeContent, ":root", "--text-headline")
     expect(normalizeCssValue(value)).toBe("rgb(123,109,140)")
   })
 
   it("AC-17-15 — dark --text-headline est rgba(245,245,255,0.92) (même que --text-1 dark)", () => {
-    const value = getTokenValue(themeContent, ".dark", "--color-text-headline")
+    const value = getTokenValue(themeContent, ".dark", "--text-headline")
     expect(normalizeCssValue(value)).toBe("rgba(245,245,255,0.92)")
   })
 
   it("AC-17-15 — light --glass-shortcut-border = rgba(255,255,255,0.72) pour shortcut cards", () => {
-    const value = getTokenValue(themeContent, ":root", "--color-glass-shortcut-border")
+    const value = getTokenValue(themeContent, ":root", "--glass-shortcut-border")
     expect(normalizeCssValue(value)).toBe("rgba(255,255,255,0.72)")
   })
 
   it("AC-17-15 — light --nav-active-bg = rgba(134,108,208,0.16) pour item actif bottom-nav", () => {
-    const value = getTokenValue(themeContent, ":root", "--color-nav-active-bg")
+    const value = getTokenValue(themeContent, ":root", "--nav-active-bg")
     expect(normalizeCssValue(value)).toBe("rgba(134,108,208,0.16)")
   })
 

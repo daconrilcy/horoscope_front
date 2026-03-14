@@ -7,7 +7,6 @@ import { translateSign } from "../../i18n/astrology"
 import { AstroMoodBackground } from "../astro/AstroMoodBackground"
 import { getZodiacIcon } from "../../components/zodiacSignIconMap"
 import type { ZodiacSign } from "../astro/zodiacPatterns"
-import { useThemeSafe } from "../../state/ThemeProvider"
 
 interface Props {
   prediction: DailyPredictionResponse | null
@@ -34,8 +33,6 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
 }) => {
   const navigate = useNavigate()
   const { viewHoroscope, noPrediction, errorPrediction, retry, summaryLoading } = translateDashboardPage(locale)
-  const themeContext = useThemeSafe()
-  const theme = themeContext?.theme || 'light'
 
   const formattedDate = dateKey
     ? new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(dateKey))
@@ -60,8 +57,8 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
         aria-busy="true"
         aria-label={summaryLoading}
       >
-        <div className="skeleton-line" style={{ width: "80%", marginBottom: "0.5rem" }} />
-        <div className="skeleton-line" style={{ width: "60%" }} />
+        <div className="skeleton-line skeleton--wide" />
+        <div className="skeleton-line skeleton--narrow" />
       </div>
     )
   }
@@ -118,18 +115,12 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
       >
         <div className="dashboard-summary-card__content">
           {ZodiacIcon && (
-            <div 
-              className="dashboard-summary-card__pill"
-              style={{ color: theme === 'dark' ? 'white' : undefined }}
-            >
+            <div className="dashboard-summary-card__pill text-adaptive">
               <ZodiacIcon className="dashboard-summary-card__pill-icon" />
               <span>{translateSign(sign, locale)} • {formattedDate}</span>
             </div>
           )}
-          <p 
-            className="dashboard-summary-card__text"
-            style={{ color: theme === 'dark' ? 'white' : undefined }}
-          >
+          <p className="dashboard-summary-card__text text-adaptive">
             {summary}
           </p>
         </div>

@@ -1,0 +1,141 @@
+
+> frontend@0.0.0 test
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/dev/horoscope_front/frontend[39m
+
+ [31mÔØ»[39m src/tests/visual-smoke.test.tsx [2m([22m[2m0 test[22m[2m)[22m
+ [31mÔØ»[39m src/tests/MiniInsightCard.test.tsx [2m([22m[2m37 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 290[2mms[22m[39m
+       [32mÔ£ô[39m affiche le titre[32m 31[2mms[22m[39m
+       [32mÔ£ô[39m affiche la description[32m 5[2mms[22m[39m
+       [32mÔ£ô[39m le titre est un h3 avec la classe mini-card__title[32m 8[2mms[22m[39m
+       [32mÔ£ô[39m la description a la classe mini-card__desc[32m 3[2mms[22m[39m
+       [32mÔ£ô[39m le badge applique la couleur de fond via la prop badgeColor[32m 4[2mms[22m[39m
+       [32mÔ£ô[39m le badge est cach├® pour les lecteurs d'├®cran (aria-hidden)[32m 3[2mms[22m[39m
+       [32mÔ£ô[39m le badge a la classe mini-card__badge[32m 2[2mms[22m[39m
+       [32mÔ£ô[39m rend un SVG dans le badge[32m 2[2mms[22m[39m
+       [32mÔ£ô[39m le conteneur a la classe mini-card[32m 3[2mms[22m[39m
+       [32mÔ£ô[39m n'affiche pas de titre de section en h2[32m 6[2mms[22m[39m
+       [32mÔ£ô[39m n'affiche pas d'en-t├¬te section-header[32m 4[2mms[22m[39m
+       [32mÔ£ô[39m expose un label de r├®gion pour l'accessibilit├®[32m 111[2mms[22m[39m
+       [32mÔ£ô[39m n'affiche pas de bouton de header m├¬me si onSectionClick est pr├®sent[32m 55[2mms[22m[39m
+       [32mÔ£ô[39m rend exactement 3 MiniInsightCards[32m 3[2mms[22m[39m
+       [32mÔ£ô[39m la grille a la classe mini-cards-grid[32m 5[2mms[22m[39m
+       [32mÔ£ô[39m affiche le titre 'Amour' dans une card[32m 4[2mms[22m[39m
+       [32mÔ£ô[39m affiche la description 'Balance dans ta relation'[32m 4[2mms[22m[39m
+       [32mÔ£ô[39m affiche le titre 'Travail'[32m 4[2mms[22m[39m
+       [32mÔ£ô[39m affiche la description 'Nouvelle opportunit├® ├á saisir'[32m 4[2mms[22m[39m
+       [32mÔ£ô[39m affiche le titre '├ënergie'[32m 4[2mms[22m[39m
+       [32mÔ£ô[39m affiche la description '├ënergie haute, humeur positive'[32m 4[2mms[22m[39m
+       [32mÔ£ô[39m la card Amour a le badge avec var(--badge-amour)[32m 3[2mms[22m[39m
+       [32mÔ£ô[39m la card Travail a le badge avec var(--badge-travail)[32m 2[2mms[22m[39m
+       [32mÔ£ô[39m la card ├ënergie a le badge avec var(--badge-energie)[32m 3[2mms[22m[39m
+     [32mÔ£ô[39m AC#5 ÔÇö .mini-card__title est 15px semibold[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m AC#5 ÔÇö .glass-card--mini utilise --color-glass-mini pour le fond[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m AC#5 ÔÇö .glass-card--mini utilise --color-glass-mini-border pour la bordure[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m AC#3 ÔÇö .mini-card__badge est 36x36 radius 14[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m AC-17-14 ÔÇö .mini-card--love::before utilise linear-gradient avec --love-g1/g2[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m AC-17-14 ÔÇö .mini-card--work::before utilise linear-gradient avec --work-g1/g2[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m AC-17-14 ÔÇö .mini-card--energy::before utilise linear-gradient avec --energy-g1/g2[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m AC-17-14 ÔÇö .mini-card__content a z-index 2[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-15 ÔÇö .glass-card--mini a une box-shadow (profondeur, d├®tache du fond)[39m[32m 3[2mms[22m[39m
+     [32mÔ£ô[39m la card Amour a data-type='love'[32m 2[2mms[22m[39m
+     [32mÔ£ô[39m la card Travail a data-type='work'[32m 2[2mms[22m[39m
+     [32mÔ£ô[39m la card ├ënergie a data-type='energy'[32m 1[2mms[22m[39m
+     [32mÔ£ô[39m le contenu est dans mini-card__content (z-index 2)[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/OpsPersonaPanel.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 219[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/SupportOpsPanel.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 214[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/B2BEditorialPanel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 259[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/PrivacyPanel.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 266[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/BillingPanel.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 279[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/StarfieldBackground.test.tsx [2m([22m[2m30 tests[22m[2m)[22m[32m 288[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/B2BReconciliationPanel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 307[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/EnterpriseCredentialsPanel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 275[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/BottomNavPremium.test.tsx [2m([22m[2m29 tests[22m[2m)[22m[33m 456[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/TodayHeader.test.tsx [2m([22m[2m24 tests[22m[2m)[22m[33m 599[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ShortcutCard.test.tsx [2m([22m[2m21 tests[22m[2m)[22m[33m 612[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/AstrologersPage.test.tsx [2m([22m[2m15 tests[22m[2m)[22m[33m 502[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ConsultationReconnection.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 369[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/SignUpForm.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 718[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/SignInForm.test.tsx [2m([22m[2m14 tests[22m[2m)[22m[33m 816[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/chat/ChatComponents.test.tsx [2m([22m[2m51 tests[22m[2m)[22m[33m 710[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/HeroHoroscopeCard.test.tsx [2m([22m[2m36 tests[22m[2m)[22m[33m 650[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/natalInterpretation.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 923[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ChatPage.test.tsx [2m([22m[2m21 tests[22m[2m)[22m[33m 942[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ThemeProvider.test.tsx [2m([22m[2m22 tests[22m[2m)[22m[33m 338[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ConsultationsPage.test.tsx [2m([22m[2m15 tests[22m[2m)[22m[33m 1205[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m advances from Framing to Summary without extra data if interaction is NOT checked [33m 312[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/App.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 852[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/DashboardPage.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 903[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m navigue vers le d├®tail de l'horoscope quand on clique sur le r├®sum├® [33m 328[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/NatalChartPage.test.tsx [2m([22m[2m59 tests[22m[2m)[22m[33m 1981[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/B2BBillingPanel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 239[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/OpsMonitoringPanel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 247[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/DailyHoroscopePage.test.tsx [2m([22m[2m16 tests[22m[2m)[22m[33m 1422[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m affiche la prediction API, les categories dynamiques et les heures en HH:mm [33m 403[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ui-icons.test.tsx [2m([22m[2m33 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/AstroMoodBackground.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[32m 66[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/TurningPointsEnriched.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[32m 227[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/B2BUsagePanel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 211[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/layout/Header.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[32m 64[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/AstrologerSelectStep.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 250[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/B2BAstrologyPanel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 244[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/natalChartApi.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/formatDate.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ConsultationMigration.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/astrology-i18n.test.ts [2m([22m[2m69 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/predictionI18n.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/geocodingApi.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/useDailyPrediction.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/b2bReconciliationApi.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/router.test.tsx [2m([22m[2m17 tests[22m[2m)[22m[33m 2119[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m navigates between routes using sidebar links [33m 373[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m supports browser back/forward navigation [33m 327[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/consultationStore.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/enterpriseCredentialsApi.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32mÔ£ô[39m src/utils/dailyAstrology.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/BirthProfilePage.test.tsx [2m([22m[2m41 tests[22m[2m)[22m[33m 3498[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/b2bEditorialApi.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/b2bAstrologyApi.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/b2bBillingApi.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/AdminPage.test.tsx [2m([22m[2m16 tests[22m[2m)[22m[33m 2773[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m redirects non-ops/admin user from /admin to /dashboard [33m 366[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m navigates to monitoring subpage when clicked [33m 356[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m navigates to personas subpage when clicked [33m 338[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/theme-tokens.test.ts [2m([22m[2m92 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/AppBgStyles.test.ts [2m([22m[2m47 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/b2bUsageApi.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/apiClient.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/dailyPredictionApi.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/privacyApi.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/timezones.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/guidanceApi.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/generateUniqueId.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/opsPersonaApi.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ui-nav.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/predictionBands.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/classNames.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/authToken.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/astrologers-validation.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ui-barrel.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/TimezoneSelect.test.tsx [2m([22m[2m23 tests[22m[2m)[22m[33m 4843[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m filters timezones based on search term [33m 433[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m calls onChange when option is selected [33m 387[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m highlights current selection in dropdown [33m 419[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m scrolls highlighted option into view [33m 327[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m shows hint when displaying max visible options without search [33m 346[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m keyboard navigation stays within valid options when hint is visible [33m 419[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/SettingsPage.test.tsx [2m([22m[2m19 tests[22m[2m)[22m[33m 4165[2mms[22m[39m
+       [33m[2mÔ£ô[22m[39m affiche les onglets Compte, Abonnement, Usage [33m 417[2mms[22m[39m
+       [33m[2mÔ£ô[22m[39m navigue entre les onglets [33m 315[2mms[22m[39m
+       [33m[2mÔ£ô[22m[39m navigue entre les onglets avec les touches fl├¿ches [33m 324[2mms[22m[39m
+       [33m[2mÔ£ô[22m[39m refuse la suppression si le mot ne correspond pas [33m 546[2mms[22m[39m
+       [33m[2mÔ£ô[22m[39m supprime le compte et redirige vers /login [33m 498[2mms[22m[39m
+       [33m[2mÔ£ô[22m[39m affiche un message d'erreur quand l'API de suppression ├®choue [33m 482[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m69 passed[39m[22m[90m (71)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1009 passed[39m[22m[90m (1010)[39m
+[2m   Start at [22m 23:11:53
+[2m   Duration [22m 8.23s[2m (transform 16.13s, setup 14.20s, import 35.43s, tests 35.79s, environment 105.06s)[22m
+

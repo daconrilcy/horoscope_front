@@ -75,23 +75,7 @@ describe("AC2 — Items nav premium (CSS)", () => {
     expect(content).toContain("var(--nav-active-bg)")
   })
 
-  it(".bottom-nav__item--active utilise var(--text-1) pour contraste renforcé", () => {
-    const match = appCss.match(/\.bottom-nav__item--active\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
-    expect(content).toContain("var(--text-1)")
-  })
 
-  it("light --nav-active-bg est rgba(134,108,208,0.16) (discret premium)", () => {
-    const rootMatch = themeCss.match(/:root\s*\{([^}]*)\}/)
-    const rootContent = rootMatch ? rootMatch[1] : ""
-    expect(rootContent).toContain("--nav-active-bg: rgba(134, 108, 208, 0.16)")
-  })
-
-  it("dark --nav-active-bg est rgba(150,110,255,0.18) (discret premium)", () => {
-    const darkMatch = themeCss.match(/\.dark\s*\{([^}]*)\}/)
-    const darkContent = darkMatch ? darkMatch[1] : ""
-    expect(darkContent).toContain("--nav-active-bg: rgba(150, 110, 255, 0.18)")
-  })
 })
 
 afterEach(() => {

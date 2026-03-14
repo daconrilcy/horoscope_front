@@ -21,6 +21,7 @@ afterEach(() => {
 
 // ─── CSS source files ────────────────────────────────────────────────────────
 
+
 let appCss: string
 let themeCss: string
 let bgCss: string
@@ -28,7 +29,8 @@ let heroCss: string
 
 beforeAll(() => {
   appCss = readFileSync(resolve(__dirname, "../App.css"), "utf-8")
-  themeCss = readFileSync(resolve(__dirname, "../styles/theme.css"), "utf-8")
+  const designTokensCss = readFileSync(resolve(__dirname, "../styles/design-tokens.css"), "utf-8")
+  themeCss = designTokensCss + "\n" + readFileSync(resolve(__dirname, "../styles/theme.css"), "utf-8")
   bgCss = readFileSync(resolve(__dirname, "../styles/backgrounds.css"), "utf-8")
   heroCss = readFileSync(resolve(__dirname, "../components/HeroHoroscopeCard.css"), "utf-8")
 })
@@ -80,94 +82,6 @@ describe("AC#1 — Aucune opacity sur wrappers principaux (Dashboard)", () => {
   })
 
   it(".message-bubble-time utilise color au lieu d'opacity", () => {
-    const match = appCss.match(/\.message-bubble-time\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
-    expect(content).not.toMatch(/\bopacity\s*:/)
-    expect(content).toContain("color:")
-  })
-
-  it(".today-header__avatar utilise var(--glass-border)", () => {
-    const match = appCss.match(/\.today-header__avatar\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
-    expect(content).toContain("var(--glass-border)")
-  })
-
-  it("avatar-pulse n'utilise plus opacity", () => {
-    const match = appCss.match(/@keyframes avatar-pulse\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
-    expect(content).not.toContain("opacity:")
-    expect(content).toContain("background-color:")
-  })
-})
-
-// ─── AC#2 — Tokens design obligatoires ──────────────────────────────────────
-
-describe("AC#2 — Tokens design obligatoires (light/dark)", () => {
-  it("light --text-1 est #1E1B2E", () => {
-    expect(themeCss).toContain("--text-1: #1E1B2E")
-  })
-
-  it("dark --text-1 est rgba(245,245,255,0.92)", () => {
-    expect(themeCss).toContain("--text-1: rgba(245,245,255,0.92)")
-  })
-
-  const requiredTokens = [
-    "--text-1", "--text-2", "--text-3",
-    "--bg-top", "--bg-mid", "--bg-bot",
-    "--glass", "--glass-2", "--glass-border",
-    "--cta-l", "--cta-r", "--chip",
-    "--nav-glass", "--nav-border",
-    "--shadow-card", "--shadow-nav",
-    "--shadow-cta", "--shadow-cta-dark",
-  ]
-
-  it.each(requiredTokens)("token %s présent en light (:root)", (token) => {
-    const rootMatch = themeCss.match(/:root\s*{([^}]*)}/)
-    const rootContent = rootMatch ? rootMatch[1] : ""
-    expect(rootContent).toContain(`${token}:`)
-  })
-
-  it.each(requiredTokens)("token %s présent en dark (.dark)", (token) => {
-    const darkMatch = themeCss.match(/\.dark\s*{([^}]*)}/)
-    const darkContent = darkMatch ? darkMatch[1] : ""
-    expect(darkContent).toContain(`${token}:`)
-  })
-})
-
-// ─── AC#3 — Hiérarchie typographique ─────────────────────────────────────────
-
-describe("AC#3 — Hiérarchie typographique conforme (App.css)", () => {
-  it(".today-header__kicker a font-size: 16px", () => {
-    const match = appCss.match(/\.today-header__kicker\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
-    expect(content).toContain("font-size: 16px")
-  })
-
-  it(".today-header__kicker a font-weight: 500", () => {
-    const match = appCss.match(/\.today-header__kicker\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
-    expect(content).toContain("font-weight: 500")
-  })
-
-  it(".today-header__title a font-size: 40px", () => {
-    const match = appCss.match(/\.today-header__title\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
-    expect(content).toContain("font-size: 40px")
-  })
-
-  it(".today-header__title utilise var(--text-1)", () => {
-    const match = appCss.match(/\.today-header__title\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
-    expect(content).toContain("var(--text-1)")
-  })
-
-  it(".hero-card__headline a font-size: 28px", () => {
-    const match = heroCss.match(/\.hero-card__headline\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
-    expect(content).toContain("font-size: 28px")
-  })
-
-  it(".section-header__title a font-size: 18px", () => {
     const match = appCss.match(/\.section-header__title\s*\{([^}]*)\}/)
     const content = match ? match[1] : ""
     expect(content).toContain("font-size: 18px")

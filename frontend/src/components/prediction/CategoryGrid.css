@@ -1,0 +1,41 @@
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.category-grid__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.category-grid__item--clickable {
+  cursor: pointer;
+}
+
+.category-grid__icon {
+  font-size: 1.5rem;
+}
+
+.category-grid__label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.category-grid__score {
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin: var(--space-1, 0.25rem) 0;
+}
+
+.category-grid__band {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.category-grid__summary {
+  font-size: 0.8rem;
+  line-height: 1.4;
+}

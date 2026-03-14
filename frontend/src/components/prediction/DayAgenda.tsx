@@ -4,6 +4,7 @@ import { ArrowRightLeft, Zap } from "lucide-react";
 import type { Lang } from "../../i18n/predictions";
 import type { DailyAgendaSlot } from "../../utils/dailyAstrology";
 import { getCategoryMeta, getPredictionMessage } from "../../utils/predictionI18n";
+import "./DayAgenda.css";
 
 interface Props {
   slots: DailyAgendaSlot[];
@@ -12,60 +13,27 @@ interface Props {
 
 export const DayAgenda: React.FC<Props> = ({ slots, lang }) => {
   return (
-    <div style={{ marginBottom: "2.5rem" }}>
-      <h3 style={{ marginBottom: "1.25rem", color: "var(--text-1)", fontWeight: "600" }}>
+    <div className="day-agenda">
+      <h3 className="day-agenda__title">
         {getPredictionMessage("decision_windows_title", lang)}
       </h3>
 
-      <div
-        className="agenda-grid"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-          gap: "0.75rem",
-        }}
-      >
+      <div className="agenda-grid gap-4">
         {slots.map((slot) => (
           <div
             key={slot.label}
-            className="panel"
+            className={`panel agenda-slot p-4 ${slot.hasTurningPoint ? "agenda-slot--pivot" : ""}`}
             data-testid="agenda-slot"
             data-slot-label={slot.label}
-            style={{
-              padding: "0.75rem",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "0.5rem",
-              position: "relative",
-              border: slot.hasTurningPoint ? "1px solid var(--primary)" : "1px solid rgba(255,255,255,0.05)",
-              backgroundColor: slot.hasTurningPoint ? "rgba(var(--primary-rgb), 0.05)" : undefined,
-              minHeight: "120px",
-              justifyContent: "center",
-            }}
           >
-            <span
-              style={{
-                fontSize: "0.75rem",
-                color: "var(--text-3)",
-                fontWeight: "bold",
-                position: "absolute",
-                top: "0.5rem",
-                left: "0.5rem",
-              }}
-            >
+            <span className="agenda-slot__label">
               {slot.label}
             </span>
 
             {slot.hasTurningPoint && (
               <div
+                className="agenda-slot__pivot-icon"
                 data-testid="agenda-slot-pivot"
-                style={{
-                  position: "absolute",
-                  top: "0.4rem",
-                  right: "0.4rem",
-                  color: "var(--primary)",
-                }}
                 title={getPredictionMessage("pivot_badge", lang)}
               >
                 <Zap size={14} fill="currentColor" />
@@ -74,20 +42,8 @@ export const DayAgenda: React.FC<Props> = ({ slots, lang }) => {
 
             {slot.hasTurningPoint && (
               <div
+                className="agenda-slot__shift-marker mt-4"
                 data-testid="agenda-slot-shift-marker"
-                style={{
-                  marginTop: "1rem",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "1.75rem",
-                  height: "1.75rem",
-                  borderRadius: "999px",
-                  background: "rgba(var(--primary-rgb), 0.14)",
-                  color: "var(--primary)",
-                  border: "1px solid rgba(var(--primary-rgb), 0.28)",
-                  boxShadow: "0 0 0 1px rgba(var(--primary-rgb), 0.08) inset",
-                }}
                 aria-label={getPredictionMessage("pivot_badge", lang)}
                 title={getPredictionMessage("pivot_badge", lang)}
               >
@@ -97,76 +53,33 @@ export const DayAgenda: React.FC<Props> = ({ slots, lang }) => {
 
             {slot.topCategories.length > 0 ? (
               <>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "0.3rem",
-                    marginTop: slot.hasTurningPoint ? "0.25rem" : "1rem",
-                    flexWrap: "wrap",
-                    justifyContent: "center",
-                  }}
-                >
+                <div className={`agenda-slot__categories ${slot.hasTurningPoint ? "agenda-slot__categories--compact" : "mt-4"}`}>
                   {slot.topCategories.map((category) => {
                     const meta = getCategoryMeta(category, lang);
                     return (
-                      <span key={category} title={meta.label} style={{ fontSize: "1.25rem" }}>
+                      <span key={category} title={meta.label} className="agenda-slot__category-icon">
                         {meta.icon}
                       </span>
                     );
                   })}
                 </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "0.15rem",
-                  }}
-                >
+                <div className="agenda-slot__category-labels">
                   {slot.topCategories.map((category) => (
-                    <span
-                      key={category}
-                      style={{
-                        fontSize: "0.65rem",
-                        color: "var(--text-2)",
-                        textAlign: "center",
-                        lineHeight: "1.2",
-                      }}
-                    >
+                    <span key={category} className="agenda-slot__category-label">
                       {getCategoryMeta(category, lang).label}
                     </span>
                   ))}
                 </div>
               </>
             ) : (
-              <span
-                style={{
-                  marginTop: "1rem",
-                  fontSize: "0.7rem",
-                  color: "var(--text-3)",
-                  textAlign: "center",
-                  lineHeight: "1.3",
-                }}
-              >
+              <span className="agenda-slot__empty mt-4">
                 {getPredictionMessage("no_major_aspect", lang)}
               </span>
             )}
           </div>
         ))}
       </div>
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            @media (min-width: 768px) {
-              .agenda-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-              }
-            }
-          `,
-        }}
-      />
     </div>
   );
 };

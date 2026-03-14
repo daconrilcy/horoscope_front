@@ -1,0 +1,16 @@
+.daily-page-state {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.daily-page-refresh-wrapper {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.daily-page-refresh-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}

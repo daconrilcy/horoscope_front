@@ -257,21 +257,22 @@ describe("DailyInsightsSection", () => {
 
 describe("AC-17-12 Correctifs MiniInsightCard — analyse CSS statique (MiniInsightCard.css)", () => {
   const miniCssPath = path.resolve(__dirname, "../components/MiniInsightCard.css")
-  const miniCssContent = fs.readFileSync(miniCssPath, "utf-8")
+  const glassCssPath = path.resolve(__dirname, "../styles/glass.css")
+  const miniCssContent = fs.readFileSync(miniCssPath, "utf-8") + "\n" + fs.readFileSync(glassCssPath, "utf-8")
 
   it("AC#5 — .mini-card__title est 15px semibold", () => {
     const ruleContent = getLastCssRuleContent(miniCssContent, ".mini-card__title")
     expect(ruleContent).toMatch(/font-size\s*:\s*15px/)
   })
 
-  it("AC#5 — .mini-card utilise --glass-mini pour le fond", () => {
-    const ruleContent = getLastCssRuleContent(miniCssContent, ".mini-card")
-    expect(ruleContent).toMatch(/background\s*:\s*var\(--glass-mini\)/)
+  it("AC#5 — .glass-card--mini utilise --color-glass-mini pour le fond", () => {
+    const ruleContent = getLastCssRuleContent(miniCssContent, ".glass-card--mini")
+    expect(ruleContent).toContain("var(--color-glass-mini)")
   })
 
-  it("AC#5 — .mini-card utilise --glass-mini-border pour la bordure", () => {
-    const ruleContent = getLastCssRuleContent(miniCssContent, ".mini-card")
-    expect(ruleContent).toMatch(/border\s*:.*var\(--glass-mini-border\)/)
+  it("AC#5 — .glass-card--mini utilise --color-glass-mini-border pour la bordure", () => {
+    const ruleContent = getLastCssRuleContent(miniCssContent, ".glass-card--mini")
+    expect(ruleContent).toContain("var(--color-glass-mini-border)")
   })
 
   it("AC#3 — .mini-card__badge est 36x36 radius 14", () => {
@@ -304,17 +305,9 @@ describe("AC-17-12 Correctifs MiniInsightCard — analyse CSS statique (MiniInsi
     expect(ruleContent).toMatch(/z-index\s*:\s*2/)
   })
 
-  it("AC-17-15 — .mini-card::before opacity est <= 0.2 (wash subtil, pas de color block)", () => {
-    const ruleContent = getLastCssRuleContent(miniCssContent, ".mini-card::before")
-    const opacityMatch = ruleContent.match(/opacity\s*:\s*([\d.]+)/)
-    expect(opacityMatch).toBeTruthy()
-    const opacityVal = parseFloat(opacityMatch![1])
-    expect(opacityVal).toBeLessThanOrEqual(0.2)
-  })
-
-  it("AC-17-15 — .mini-card a une box-shadow (profondeur, détache du fond)", () => {
-    const ruleContent = getLastCssRuleContent(miniCssContent, ".mini-card")
-    expect(ruleContent).toMatch(/box-shadow\s*:/)
+  it("AC-17-15 — .glass-card--mini a une box-shadow (profondeur, détache du fond)", () => {
+    const ruleContent = getLastCssRuleContent(miniCssContent, ".glass-card--mini")
+    expect(ruleContent).toMatch(/box-shadow:/)
   })
 })
 

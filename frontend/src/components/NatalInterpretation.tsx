@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { useAccessTokenSnapshot } from "../utils/authToken";
+import "./NatalInterpretation.css";
 
 interface Props {
   chartLoaded: boolean;
@@ -422,7 +423,7 @@ function ConfirmDeleteModal({ t, onConfirm, onCancel, isDeleting }: { t: Interpr
       aria-modal="true"
       aria-labelledby="delete-confirm-title"
     >
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+      <div className="modal-content natal-interpretation__modal" onClick={e => e.stopPropagation()}>
         <div className="flex items-center gap-3 text-red-600 mb-4">
           <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
             <AlertCircle className="w-6 h-6" />
@@ -897,8 +898,7 @@ function PersonaSelector({
       aria-labelledby="persona-selector-title"
     >
       <div
-        className="modal-content"
-        style={{ width: "min(980px, 92vw)", maxHeight: "88vh", overflowY: "auto" }}
+        className="modal-content natal-interpretation__fullscreen-modal"
         onClick={(event) => event.stopPropagation()}
       >
         <h4 className="modal-title" id="persona-selector-title">

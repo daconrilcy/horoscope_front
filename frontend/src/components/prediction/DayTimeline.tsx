@@ -7,6 +7,7 @@ import {
   getCategoryMeta,
   getPredictionMessage,
 } from "../../utils/predictionI18n";
+import "./DayTimeline.css";
 
 interface Props {
   timeline: DailyPredictionTimeBlock[];
@@ -26,14 +27,14 @@ export const DayTimeline: React.FC<Props> = ({ timeline, lang, onTimelineClick }
   };
 
   return (
-    <div style={{ marginBottom: "2rem" }}>
+    <div className="day-timeline">
       <h3
-        style={{ marginBottom: "1rem", color: "var(--text-1)", cursor: onTimelineClick ? "pointer" : "default" }}
+        className={`day-timeline__title ${onTimelineClick ? "day-timeline__title--clickable" : ""}`}
         onClick={onTimelineClick}
       >
         {getPredictionMessage("timeline", lang)}
       </h3>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+      <div className="day-timeline__list">
         {condensedTimeline.map((block, idx) => {
           const isPivot = block.turning_point;
           const label = block.summary || buildTimelineFallbackSummary(block.dominant_categories, block.tone_code, lang);
@@ -42,42 +43,22 @@ export const DayTimeline: React.FC<Props> = ({ timeline, lang, onTimelineClick }
           return (
             <div 
               key={idx} 
-              className="panel" 
-              style={{ 
-                padding: "0.75rem 1rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                borderLeft: isPivot ? "4px solid var(--primary)" : "4px solid transparent",
-                backgroundColor: isPivot ? "rgba(255, 255, 255, 0.08)" : undefined
-              }}
+              className={`panel day-timeline__block py-4 px-6 ${isPivot ? "day-timeline__block--pivot" : ""}`}
             >
-              <div style={{ 
-                minWidth: "80px", 
-                fontSize: "0.875rem", 
-                color: "var(--text-3)",
-                fontWeight: "bold"
-              }}>
+              <div className="day-timeline__time">
                 {timeLabel}
               </div>
               
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <span style={{ fontSize: "1rem", fontWeight: "500" }}>{label}</span>
+              <div className="day-timeline__content">
+                <div className="day-timeline__label-row">
+                  <span className="day-timeline__label">{label}</span>
                   {isPivot && (
-                    <span style={{ 
-                      fontSize: "0.7rem", 
-                      backgroundColor: "var(--primary)", 
-                      color: "white", 
-                      padding: "0.1rem 0.4rem", 
-                      borderRadius: "4px",
-                      textTransform: "uppercase"
-                    }}>
+                    <span className="day-timeline__badge">
                       {getPredictionMessage("pivot_badge", lang)}
                     </span>
                   )}
                 </div>
-                <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.25rem" }}>
+                <div className="day-timeline__categories">
                   {block.dominant_categories.map((cat) => {
                     const meta = getCategoryMeta(cat, lang);
                     return (

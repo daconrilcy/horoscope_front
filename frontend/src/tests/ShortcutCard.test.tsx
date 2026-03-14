@@ -158,7 +158,8 @@ describe("ShortcutsSection", () => {
 
 describe("AC-17-12 & AC-17-14 Correctifs ShortcutCard — analyse CSS statique (ShortcutCard.css)", () => {
   const shortcutCssPath = path.resolve(__dirname, "../components/ShortcutCard.css")
-  const shortcutCssContent = fs.readFileSync(shortcutCssPath, "utf-8")
+  const glassCssPath = path.resolve(__dirname, "../styles/glass.css")
+  const shortcutCssContent = fs.readFileSync(shortcutCssPath, "utf-8") + "\n" + fs.readFileSync(glassCssPath, "utf-8")
 
   it("AC#1 — .shortcut-card a text-decoration: none (pas de soulignement sur lien)", () => {
     const ruleContent = getLastCssRuleContent(shortcutCssContent, ".shortcut-card")
@@ -176,14 +177,16 @@ describe("AC-17-12 & AC-17-14 Correctifs ShortcutCard — analyse CSS statique (
     expect(badgeContent).toMatch(/border-radius\s*:\s*16px/)
   })
 
-  it("AC#2 — .shortcut-card utilise --glass-shortcut pour le fond", () => {
-    const ruleContent = getLastCssRuleContent(shortcutCssContent, ".shortcut-card")
-    expect(ruleContent).toMatch(/background\s*:\s*var\(--glass-shortcut\)/)
+  it("AC#2 — .glass-card--shortcut utilise --color-glass-shortcut pour le fond", () => {
+    const match = shortcutCssContent.match(/\.glass-card--shortcut\s*\{([^}]*)\}/)
+    const content = match ? match[1] : ""
+    expect(content).toContain("var(--color-glass-shortcut)")
   })
 
-  it("AC#2 — .shortcut-card utilise --glass-shortcut-border pour la bordure", () => {
-    const ruleContent = getLastCssRuleContent(shortcutCssContent, ".shortcut-card")
-    expect(ruleContent).toMatch(/border\s*:.*var\(--glass-shortcut-border\)/)
+  it("AC#2 — .glass-card--shortcut utilise --color-glass-shortcut-border pour la bordure", () => {
+    const match = shortcutCssContent.match(/\.glass-card--shortcut\s*\{([^}]*)\}/)
+    const content = match ? match[1] : ""
+    expect(content).toContain("var(--color-glass-shortcut-border)")
   })
 
   it("AC-17-14 — .shortcut-card__title a font-size: 15px et font-weight: 650", () => {
@@ -192,8 +195,9 @@ describe("AC-17-12 & AC-17-14 Correctifs ShortcutCard — analyse CSS statique (
     expect(ruleContent).toMatch(/font-weight\s*:\s*650/)
   })
 
-  it("AC-17-15 — .shortcut-card a une box-shadow (profondeur, détache du fond)", () => {
-    const ruleContent = getLastCssRuleContent(shortcutCssContent, ".shortcut-card")
-    expect(ruleContent).toMatch(/box-shadow\s*:/)
+  it("AC-17-15 — .glass-card--shortcut a une box-shadow (profondeur, détache du fond)", () => {
+    const match = shortcutCssContent.match(/\.glass-card--shortcut\s*\{([^}]*)\}/)
+    const content = match ? match[1] : ""
+    expect(content).toMatch(/box-shadow:/)
   })
 })

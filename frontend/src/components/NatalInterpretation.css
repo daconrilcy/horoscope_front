@@ -1,0 +1,9 @@
+.natal-interpretation__modal {
+  max-width: 400px;
+}
+
+.natal-interpretation__fullscreen-modal {
+  width: min(980px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+}

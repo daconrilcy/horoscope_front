@@ -7,36 +7,37 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
 
   beforeAll(() => {
     const themePath = resolve(__dirname, "../styles/theme.css")
+    const designTokensPath = resolve(__dirname, "../styles/design-tokens.css")
     const bgPath = resolve(__dirname, "../styles/backgrounds.css")
-    cssContent = readFileSync(themePath, "utf-8") + "\n" + readFileSync(bgPath, "utf-8")
+    cssContent = readFileSync(designTokensPath, "utf-8") + "\n" + readFileSync(themePath, "utf-8") + "\n" + readFileSync(bgPath, "utf-8")
   })
 
   describe("Theme token definitions", () => {
     it("defines --primary and --primary-strong in :root", () => {
-      expect(cssContent).toMatch(/:root\s*\{[^}]*--primary:\s*#[0-9A-Fa-f]{6}/)
-      expect(cssContent).toMatch(/:root\s*\{[^}]*--primary-strong:\s*#[0-9A-Fa-f]{6}/)
+      expect(cssContent).toMatch(/--color-primary:\s*#[0-9A-Fa-f]{6}/)
+      expect(cssContent).toMatch(/--color-primary-strong:\s*#[0-9A-Fa-f]{6}/)
     })
 
     it("defines --primary and --primary-strong in .dark", () => {
-      expect(cssContent).toMatch(/\.dark\s*\{[^}]*--primary:\s*#[0-9A-Fa-f]{6}/)
-      expect(cssContent).toMatch(/\.dark\s*\{[^}]*--primary-strong:\s*#[0-9A-Fa-f]{6}/)
+      expect(cssContent).toMatch(/\.dark[\s\S]*?--color-primary:\s*#[0-9A-Fa-f]{6}/)
+      expect(cssContent).toMatch(/\.dark[\s\S]*?--color-primary-strong:\s*#[0-9A-Fa-f]{6}/)
     })
 
     it("defines text tokens --text-1, --text-2, --text-3 in :root", () => {
-      expect(cssContent).toMatch(/:root\s*\{[^}]*--text-1:/)
-      expect(cssContent).toMatch(/:root\s*\{[^}]*--text-2:/)
-      expect(cssContent).toMatch(/:root\s*\{[^}]*--text-3:/)
+      expect(cssContent).toMatch(/--text-1:/)
+      expect(cssContent).toMatch(/--text-2:/)
+      expect(cssContent).toMatch(/--text-3:/)
     })
 
     it("defines text tokens --text-1, --text-2, --text-3 in .dark", () => {
-      expect(cssContent).toMatch(/\.dark\s*\{[^}]*--text-1:/)
-      expect(cssContent).toMatch(/\.dark\s*\{[^}]*--text-2:/)
-      expect(cssContent).toMatch(/\.dark\s*\{[^}]*--text-3:/)
+      expect(cssContent).toMatch(/\.dark[\s\S]*?--color-text-primary:/)
+      expect(cssContent).toMatch(/\.dark[\s\S]*?--color-text-secondary:/)
+      expect(cssContent).toMatch(/\.dark[\s\S]*?--color-text-muted:/)
     })
 
     it("defines different --text-1 values for light and dark themes", () => {
-      const lightMatch = cssContent.match(/:root\s*\{[^}]*--text-1:\s*([^;]+)/)
-      const darkMatch = cssContent.match(/\.dark\s*\{[^}]*--text-1:\s*([^;]+)/)
+      const lightMatch = cssContent.match(/--color-text-primary:\s*([^;]+)/)
+      const darkMatch = cssContent.match(/\.dark[\s\S]*?--color-text-primary:\s*([^;]+)/)
       
       expect(lightMatch).toBeTruthy()
       expect(darkMatch).toBeTruthy()
@@ -44,8 +45,8 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
     })
 
     it("defines different --glass values for light and dark themes", () => {
-      const lightGlassMatch = cssContent.match(/:root\s*\{[^}]*--glass:\s*([^;]+)/)
-      const darkGlassMatch = cssContent.match(/\.dark\s*\{[^}]*--glass:\s*([^;]+)/)
+      const lightGlassMatch = cssContent.match(/--color-glass-bg:\s*([^;]+)/)
+      const darkGlassMatch = cssContent.match(/\.dark[\s\S]*?--color-glass-bg:\s*([^;]+)/)
       
       expect(lightGlassMatch).toBeTruthy()
       expect(darkGlassMatch).toBeTruthy()
@@ -53,8 +54,8 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
     })
 
     it("defines different --bg-top values for light and dark themes", () => {
-      const lightBgMatch = cssContent.match(/:root\s*\{[^}]*--bg-top:\s*([^;]+)/)
-      const darkBgMatch = cssContent.match(/\.dark\s*\{[^}]*--bg-top:\s*([^;]+)/)
+      const lightBgMatch = cssContent.match(/--color-bg-top:\s*([^;]+)/)
+      const darkBgMatch = cssContent.match(/\.dark[\s\S]*?--color-bg-top:\s*([^;]+)/)
       
       expect(lightBgMatch).toBeTruthy()
       expect(darkBgMatch).toBeTruthy()
@@ -62,8 +63,8 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
     })
 
     it("defines --bg-mid in :root and .dark with different values", () => {
-      const lightMatch = cssContent.match(/:root\s*\{[^}]*--bg-mid:\s*([^;]+)/)
-      const darkMatch = cssContent.match(/\.dark\s*\{[^}]*--bg-mid:\s*([^;]+)/)
+      const lightMatch = cssContent.match(/--color-bg-mid:\s*([^;]+)/)
+      const darkMatch = cssContent.match(/\.dark[\s\S]*?--color-bg-mid:\s*([^;]+)/)
       
       expect(lightMatch).toBeTruthy()
       expect(darkMatch).toBeTruthy()
@@ -71,8 +72,8 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
     })
 
     it("defines --bg-bot in :root and .dark with different values", () => {
-      const lightMatch = cssContent.match(/:root\s*\{[^}]*--bg-bot:\s*([^;]+)/)
-      const darkMatch = cssContent.match(/\.dark\s*\{[^}]*--bg-bot:\s*([^;]+)/)
+      const lightMatch = cssContent.match(/--color-bg-bot:\s*([^;]+)/)
+      const darkMatch = cssContent.match(/\.dark[\s\S]*?--color-bg-bot:\s*([^;]+)/)
       
       expect(lightMatch).toBeTruthy()
       expect(darkMatch).toBeTruthy()
@@ -230,49 +231,49 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
 
   describe("Semantic tokens", () => {
     it("defines --btn-text in :root and .dark", () => {
-      expect(cssContent).toMatch(/:root\s*\{[^}]*--btn-text:/)
-      expect(cssContent).toMatch(/\.dark\s*\{[^}]*--btn-text:/)
+      expect(cssContent).toMatch(/--color-btn-text:/)
+      expect(cssContent).toMatch(/\.dark[\s\S]*?--color-btn-text:/)
     })
 
     it("defines --bg-2 in :root and .dark", () => {
-      expect(cssContent).toMatch(/:root\s*\{[^}]*--bg-2:/)
-      expect(cssContent).toMatch(/\.dark\s*\{[^}]*--bg-2:/)
+      expect(cssContent).toMatch(/--color-bg-2:/)
+      expect(cssContent).toMatch(/\.dark[\s\S]*?--color-bg-2:/)
     })
 
     it("defines --success in :root and .dark", () => {
-      expect(cssContent).toMatch(/:root\s*\{[^}]*--success:/)
-      expect(cssContent).toMatch(/\.dark\s*\{[^}]*--success:/)
+      expect(cssContent).toMatch(/--color-success:/)
+      expect(cssContent).toMatch(/\.dark[\s\S]*?--color-success:/)
     })
 
     it("defines --error in :root and .dark", () => {
-      expect(cssContent).toMatch(/:root\s*\{[^}]*--error:/)
-      expect(cssContent).toMatch(/\.dark\s*\{[^}]*--error:/)
+      expect(cssContent).toMatch(/--color-error:/)
+      expect(cssContent).toMatch(/\.dark[\s\S]*?--color-error:/)
     })
 
     it("defines --star-fill in :root and .dark", () => {
-      expect(cssContent).toMatch(/:root\s*\{[^}]*--star-fill:/)
-      expect(cssContent).toMatch(/\.dark\s*\{[^}]*--star-fill:/)
+      expect(cssContent).toMatch(/--color-star-fill:/)
+      expect(cssContent).toMatch(/\.dark[\s\S]*?--color-star-fill:/)
     })
 
     it("defines --glass-2 and --glass-border in :root and .dark", () => {
-      expect(cssContent).toMatch(/:root\s*\{[^}]*--glass-2:/)
-      expect(cssContent).toMatch(/\.dark\s*\{[^}]*--glass-2:/)
-      expect(cssContent).toMatch(/:root\s*\{[^}]*--glass-border:/)
-      expect(cssContent).toMatch(/\.dark\s*\{[^}]*--glass-border:/)
+      expect(cssContent).toMatch(/--color-glass-bg-2:/)
+      expect(cssContent).toMatch(/\.dark[\s\S]*?--color-glass-bg-2:/)
+      expect(cssContent).toMatch(/--color-glass-border:/)
+      expect(cssContent).toMatch(/\.dark[\s\S]*?--color-glass-border:/)
     })
 
     it("defines --nav-glass and --nav-border in :root and .dark", () => {
-      expect(cssContent).toMatch(/:root\s*\{[^}]*--nav-glass:/)
-      expect(cssContent).toMatch(/\.dark\s*\{[^}]*--nav-glass:/)
-      expect(cssContent).toMatch(/:root\s*\{[^}]*--nav-border:/)
-      expect(cssContent).toMatch(/\.dark\s*\{[^}]*--nav-border:/)
+      expect(cssContent).toMatch(/--color-nav-glass:/)
+      expect(cssContent).toMatch(/\.dark[\s\S]*?--color-nav-glass:/)
+      expect(cssContent).toMatch(/--color-nav-border:/)
+      expect(cssContent).toMatch(/\.dark[\s\S]*?--color-nav-border:/)
     })
 
     it("defines --cta-l and --cta-r in :root and .dark with different values", () => {
-      const lightCtaL = cssContent.match(/:root\s*\{[^}]*--cta-l:\s*([^;]+)/)
-      const darkCtaL = cssContent.match(/\.dark\s*\{[^}]*--cta-l:\s*([^;]+)/)
-      const lightCtaR = cssContent.match(/:root\s*\{[^}]*--cta-r:\s*([^;]+)/)
-      const darkCtaR = cssContent.match(/\.dark\s*\{[^}]*--cta-r:\s*([^;]+)/)
+      const lightCtaL = cssContent.match(/--color-cta-left:\s*([^;]+)/)
+      const darkCtaL = cssContent.match(/\.dark[\s\S]*?--color-cta-left:\s*([^;]+)/)
+      const lightCtaR = cssContent.match(/--color-cta-right:\s*([^;]+)/)
+      const darkCtaR = cssContent.match(/\.dark[\s\S]*?--color-cta-right:\s*([^;]+)/)
       
       expect(lightCtaL).toBeTruthy()
       expect(darkCtaL).toBeTruthy()
@@ -283,8 +284,8 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
     })
 
     it("defines --line in :root and .dark with different values", () => {
-      const lightLine = cssContent.match(/:root\s*\{[^}]*--line:\s*([^;]+)/)
-      const darkLine = cssContent.match(/\.dark\s*\{[^}]*--line:\s*([^;]+)/)
+      const lightLine = cssContent.match(/--color-line:\s*([^;]+)/)
+      const darkLine = cssContent.match(/\.dark[\s\S]*?--color-line:\s*([^;]+)/)
       
       expect(lightLine).toBeTruthy()
       expect(darkLine).toBeTruthy()

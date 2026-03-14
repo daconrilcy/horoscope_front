@@ -1,0 +1,395 @@
+
+> frontend@0.0.0 test
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/dev/horoscope_front/frontend[39m
+
+ [31mÔØ»[39m src/tests/AppBgStyles.test.ts [2m([22m[2m47 tests[22m[2m | [22m[31m17 failed[39m[2m)[22m[32m 13[2mms[22m[39m
+[31m       [31m├ù[31m defines --primary and --primary-strong in :root[39m[32m 4[2mms[22m[39m
+[31m       [31m├ù[31m defines --primary and --primary-strong in .dark[39m[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m defines text tokens --text-1, --text-2, --text-3 in :root[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines text tokens --text-1, --text-2, --text-3 in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines different --text-1 values for light and dark themes[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines different --glass values for light and dark themes[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines different --bg-top values for light and dark themes[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines --bg-mid in :root and .dark with different values[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines --bg-bot in :root and .dark with different values[39m[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m defines .app-bg class with min-height 100dvh[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m defines .app-bg class with position relative[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m defines light gradient with radial-gradient[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m defines light gradient with linear-gradient using tokens[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m defines .app-bg::after pseudo-element for noise[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets content: '' for ::after pseudo-element[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets noise opacity approximately 0.08[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets mix-blend-mode: soft-light for noise[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m hides noise layer in dark mode[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m defines .dark .app-bg class with dark gradients[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m uses different radial-gradient opacities for dark mode[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m defines .app-bg-container class with max-width 1100px on desktop[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m centers container with auto margins[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets z-index for proper layering[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets min-height 100dvh for full viewport[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets position relative for stacking context[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m increases max-width to 1100px on desktop[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m defines .starfield-bg class[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets starfield position fixed with inset 0[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets starfield pointer-events none[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets starfield opacity 0.4[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets starfield z-index 0 for proper layering[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m uses feTurbulence SVG filter in ::after[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m uses correct feTurbulence parameters[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets noise ::after z-index 0 for proper layering[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets noise background-size 200px 200px[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets noise ::after position fixed for full-screen coverage[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets noise ::after pointer-events none to avoid UI interference[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m sets noise ::after inset 0 for full-screen coverage[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines --btn-text in :root and .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines --bg-2 in :root and .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines --success in :root and .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines --error in :root and .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines --star-fill in :root and .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines --glass-2 and --glass-border in :root and .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines --nav-glass and --nav-border in :root and .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines --cta-l and --cta-r in :root and .dark with different values[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m defines --line in :root and .dark with different values[39m[32m 0[2mms[22m[39m
+ [31mÔØ»[39m src/tests/theme-tokens.test.ts [2m([22m[2m92 tests[22m[2m | [22m[31m78 failed[39m[2m)[22m[32m 37[2mms[22m[39m
+     [32mÔ£ô[39m exists at frontend/src/styles/theme.css[32m 1[2mms[22m[39m
+[31m       [31m├ù[31m contains --text-1 variable in :root[39m[32m 5[2mms[22m[39m
+[31m       [31m├ù[31m contains --text-2 variable in :root[39m[32m 2[2mms[22m[39m
+[31m       [31m├ù[31m contains --text-3 variable in :root[39m[32m 1[2mms[22m[39m
+[31m       [31m├ù[31m contains --bg-top variable in :root[39m[32m 1[2mms[22m[39m
+[31m       [31m├ù[31m contains --bg-mid variable in :root[39m[32m 1[2mms[22m[39m
+[31m       [31m├ù[31m contains --bg-bot variable in :root[39m[32m 1[2mms[22m[39m
+[31m       [31m├ù[31m contains --glass variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --glass-2 variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --glass-border variable in :root[39m[32m 1[2mms[22m[39m
+[31m       [31m├ù[31m contains --cta-l variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --cta-r variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --chip variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --nav-glass variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --nav-border variable in :root[39m[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m contains --shadow-hero variable in :root[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m contains --shadow-card variable in :root[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m contains --shadow-nav variable in :root[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m contains --shadow-cta variable in :root[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m contains --shadow-cta-dark variable in :root[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --badge-chat variable in :root[39m[32m 1[2mms[22m[39m
+[31m       [31m├ù[31m contains --badge-consultation variable in :root[39m[32m 1[2mms[22m[39m
+[31m       [31m├ù[31m contains --badge-amour variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --badge-travail variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --badge-energie variable in :root[39m[32m 1[2mms[22m[39m
+[31m       [31m├ù[31m contains --hero-g1 variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --hero-g2 variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --love-g1 variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --love-g2 variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --work-g1 variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --work-g2 variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --energy-g1 variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --energy-g2 variable in :root[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --text-headline variable in :root[39m[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m has exactly 21 premium tokens + extra compatibility tokens[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --text-1 variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --text-2 variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --text-3 variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --bg-top variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --bg-mid variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --bg-bot variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --glass variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --glass-2 variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --glass-border variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --cta-l variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --cta-r variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --chip variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --nav-glass variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --nav-border variable in .dark[39m[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m contains --shadow-hero variable in .dark[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m contains --shadow-card variable in .dark[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m contains --shadow-nav variable in .dark[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m contains --shadow-cta variable in .dark[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --shadow-cta-dark variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --badge-chat variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --badge-consultation variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --badge-amour variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --badge-travail variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --badge-energie variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --hero-g1 variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --hero-g2 variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --love-g1 variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --love-g2 variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --work-g1 variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --work-g2 variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --energy-g1 variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --energy-g2 variable in .dark[39m[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m contains --text-headline variable in .dark[39m[32m 0[2mms[22m[39m
+       [32mÔ£ô[39m overrides at least 21 tokens in .dark[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m applies system font stack to html, body[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m light --text-1 est #1E1B2E (texte dark ink lisible sur fond clair)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m dark --text-1 est rgba(245,245,255,0.92) (texte clair sur fond cosmique)[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m light --glass a une opacit├® alpha ├®lev├®e (>0.5) pour fond semi-transparent[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m dark --glass a une opacit├® alpha faible (<0.15) pour glassmorphism cosmique[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-15 ÔÇö light --glass-shortcut = rgba(255,255,255,0.62) pour shortcut cards (plus blanches)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-12 ÔÇö dark --glass-shortcut = rgba(255,255,255,0.06) pour shortcut cards[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-15 ÔÇö light --glass-mini = rgba(255,255,255,0.40) pour mini-insight cards[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-12 ÔÇö dark --glass-mini = rgba(255,255,255,0.06) pour mini-insight cards[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-12 ÔÇö dark --success reste un vert doux (non fluo) pour 'En ligne'[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-15 ÔÇö light --bg-top est #FEF7F9 (gradient original proche maquette)[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-15 ÔÇö light --bg-mid est #E3D8EC (gradient original proche maquette)[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-15 ÔÇö light --bg-bot est d├®fini (gradient original proche maquette)[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-14 ÔÇö light --hero-g1 est rgba(172,132,255,0.28)[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-14 ÔÇö dark --hero-g1 est rgba(160,120,255,0.22)[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-14 ÔÇö light --love-g1 est #F3B5D6[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-14 ÔÇö light --work-g1 est #B9C7FF[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-14 ÔÇö light --energy-g1 est #F9DEB2[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-15 ÔÇö light --text-headline est rgb(123,109,140) (H1 muted purple proche maquette)[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-15 ÔÇö dark --text-headline est rgba(245,245,255,0.92) (m├¬me que --text-1 dark)[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-15 ÔÇö light --glass-shortcut-border = rgba(255,255,255,0.72) pour shortcut cards[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-15 ÔÇö light --nav-active-bg = rgba(134,108,208,0.16) pour item actif bottom-nav[39m[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m no opacity property on .app-bg-container or .app-shell classes in App.css (AC#1)[32m 0[2mms[22m[39m
+ [31mÔØ»[39m src/tests/visual-smoke.test.tsx [2m([22m[2m62 tests[22m[2m | [22m[31m31 failed[39m[2m)[22m[32m 87[2mms[22m[39m
+     [32mÔ£ô[39m .app-shell n'a pas de propri├®t├® opacity[32m 1[2mms[22m[39m
+     [32mÔ£ô[39m .today-page n'a pas de propri├®t├® opacity[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .app-bg-container n'a pas de propri├®t├® opacity[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .hero-card n'a pas de propri├®t├® opacity (container)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .message-bubble--assistant n'a plus d'opacity globale (alpha cibl├® uniquement)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .typing-indicator n'a plus d'opacity globale[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .message-bubble-author utilise color au lieu d'opacity[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .message-bubble-time utilise color au lieu d'opacity[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .today-header__avatar utilise var(--glass-border)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m avatar-pulse n'utilise plus opacity[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m light --text-1 est #1E1B2E[39m[32m 12[2mms[22m[39m
+[31m     [31m├ù[31m dark --text-1 est rgba(245,245,255,0.92)[39m[32m 6[2mms[22m[39m
+[31m     [31m├ù[31m token --text-1 pr├®sent en light (:root)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --text-2 pr├®sent en light (:root)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --text-3 pr├®sent en light (:root)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --bg-top pr├®sent en light (:root)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --bg-mid pr├®sent en light (:root)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --bg-bot pr├®sent en light (:root)[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m token --glass pr├®sent en light (:root)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --glass-2 pr├®sent en light (:root)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --glass-border pr├®sent en light (:root)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --cta-l pr├®sent en light (:root)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --cta-r pr├®sent en light (:root)[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m token --chip pr├®sent en light (:root)[39m[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m token --nav-glass pr├®sent en light (:root)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --nav-border pr├®sent en light (:root)[39m[32m 1[2mms[22m[39m
+     [32mÔ£ô[39m token --shadow-card pr├®sent en light (:root)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m token --shadow-nav pr├®sent en light (:root)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m token --shadow-cta pr├®sent en light (:root)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m token --shadow-cta-dark pr├®sent en light (:root)[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m token --text-1 pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --text-2 pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --text-3 pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --bg-top pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --bg-mid pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --bg-bot pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --glass pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --glass-2 pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --glass-border pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --cta-l pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --cta-r pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --chip pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --nav-glass pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m token --nav-border pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+     [32mÔ£ô[39m token --shadow-card pr├®sent en dark (.dark)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m token --shadow-nav pr├®sent en dark (.dark)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m token --shadow-cta pr├®sent en dark (.dark)[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m token --shadow-cta-dark pr├®sent en dark (.dark)[39m[32m 1[2mms[22m[39m
+     [32mÔ£ô[39m .today-header__kicker a font-size: 16px[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .today-header__kicker a font-weight: 500[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .today-header__title a font-size: 40px[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .today-header__title utilise var(--text-1)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .hero-card__headline a font-size: 28px[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .section-header__title a font-size: 18px[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .bottom-nav__label a font-size: 12px et font-weight: 500[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .starfield-bg est position: fixed plein ├®cran pointer-events: none[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .dark .app-bg a des gradients cosmiques violet/bleu[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .app-bg::after (noise) opacity entre 0.06 et 0.10[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .dark .app-bg::after est masqu├® (display: none)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .app-bg::after pointer-events: none (non interactif)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m MiniInsightCard badge icon a size=20 (cards) et strokeWidth=1.75[32m 31[2mms[22m[39m
+     [32mÔ£ô[39m ShortcutCard badge icon a size=20 (cards) et strokeWidth=1.75[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ThemeProvider.test.tsx [2m([22m[2m22 tests[22m[2m)[22m[33m 307[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/OpsPersonaPanel.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 223[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/PrivacyPanel.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 275[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/BillingPanel.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 271[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/StarfieldBackground.test.tsx [2m([22m[2m30 tests[22m[2m)[22m[33m 343[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/B2BReconciliationPanel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 326[2mms[22m[39m
+ [31mÔØ»[39m src/tests/MiniInsightCard.test.tsx [2m([22m[2m38 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[33m 377[2mms[22m[39m
+       [32mÔ£ô[39m affiche le titre[32m 28[2mms[22m[39m
+       [32mÔ£ô[39m affiche la description[32m 5[2mms[22m[39m
+       [32mÔ£ô[39m le titre est un h3 avec la classe mini-card__title[32m 6[2mms[22m[39m
+       [32mÔ£ô[39m la description a la classe mini-card__desc[32m 3[2mms[22m[39m
+       [32mÔ£ô[39m le badge applique la couleur de fond via la prop badgeColor[32m 3[2mms[22m[39m
+       [32mÔ£ô[39m le badge est cach├® pour les lecteurs d'├®cran (aria-hidden)[32m 2[2mms[22m[39m
+       [32mÔ£ô[39m le badge a la classe mini-card__badge[32m 2[2mms[22m[39m
+       [32mÔ£ô[39m rend un SVG dans le badge[32m 2[2mms[22m[39m
+       [32mÔ£ô[39m le conteneur a la classe mini-card[32m 2[2mms[22m[39m
+       [32mÔ£ô[39m n'affiche pas de titre de section en h2[32m 7[2mms[22m[39m
+       [32mÔ£ô[39m n'affiche pas d'en-t├¬te section-header[32m 4[2mms[22m[39m
+       [32mÔ£ô[39m expose un label de r├®gion pour l'accessibilit├®[32m 142[2mms[22m[39m
+       [32mÔ£ô[39m n'affiche pas de bouton de header m├¬me si onSectionClick est pr├®sent[32m 100[2mms[22m[39m
+       [32mÔ£ô[39m rend exactement 3 MiniInsightCards[32m 6[2mms[22m[39m
+       [32mÔ£ô[39m la grille a la classe mini-cards-grid[32m 6[2mms[22m[39m
+       [32mÔ£ô[39m affiche le titre 'Amour' dans une card[32m 5[2mms[22m[39m
+       [32mÔ£ô[39m affiche la description 'Balance dans ta relation'[32m 5[2mms[22m[39m
+       [32mÔ£ô[39m affiche le titre 'Travail'[32m 6[2mms[22m[39m
+       [32mÔ£ô[39m affiche la description 'Nouvelle opportunit├® ├á saisir'[32m 5[2mms[22m[39m
+       [32mÔ£ô[39m affiche le titre '├ënergie'[32m 5[2mms[22m[39m
+       [32mÔ£ô[39m affiche la description '├ënergie haute, humeur positive'[32m 5[2mms[22m[39m
+       [32mÔ£ô[39m la card Amour a le badge avec var(--badge-amour)[32m 4[2mms[22m[39m
+       [32mÔ£ô[39m la card Travail a le badge avec var(--badge-travail)[32m 4[2mms[22m[39m
+       [32mÔ£ô[39m la card ├ënergie a le badge avec var(--badge-energie)[32m 4[2mms[22m[39m
+     [32mÔ£ô[39m AC#5 ÔÇö .mini-card__title est 15px semibold[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC#5 ÔÇö .glass-card--mini utilise --glass-mini pour le fond[39m[32m 5[2mms[22m[39m
+[31m     [31m├ù[31m AC#5 ÔÇö .glass-card--mini utilise --glass-mini-border pour la bordure[39m[32m 1[2mms[22m[39m
+     [32mÔ£ô[39m AC#3 ÔÇö .mini-card__badge est 36x36 radius 14[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m AC-17-14 ÔÇö .mini-card--love::before utilise linear-gradient avec --love-g1/g2[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m AC-17-14 ÔÇö .mini-card--work::before utilise linear-gradient avec --work-g1/g2[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m AC-17-14 ÔÇö .mini-card--energy::before utilise linear-gradient avec --energy-g1/g2[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m AC-17-14 ÔÇö .mini-card__content a z-index 2[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-15 ÔÇö .glass-card::before opacity est <= 0.2 (wash subtil, pas de color block)[39m[32m 1[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-15 ÔÇö .glass-card a une box-shadow (profondeur, d├®tache du fond)[39m[32m 1[2mms[22m[39m
+     [32mÔ£ô[39m la card Amour a data-type='love'[32m 2[2mms[22m[39m
+     [32mÔ£ô[39m la card Travail a data-type='work'[32m 2[2mms[22m[39m
+     [32mÔ£ô[39m la card ├ënergie a data-type='energy'[32m 2[2mms[22m[39m
+     [32mÔ£ô[39m le contenu est dans mini-card__content (z-index 2)[32m 2[2mms[22m[39m
+ [31mÔØ»[39m src/tests/BottomNavPremium.test.tsx [2m([22m[2m32 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 508[2mms[22m[39m
+     [32mÔ£ô[39m a position: fixed et bottom/left/right ├á 16px[32m 1[2mms[22m[39m
+     [32mÔ£ô[39m a border-radius 24px et padding 10px[32m 2[2mms[22m[39m
+     [32mÔ£ô[39m applique backdrop-filter (blur 14px via --glass-blur)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m utilise --nav-glass, --nav-border et --shadow-nav[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .bottom-nav__item a border-radius 18px (premium, non-tile)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .bottom-nav__item--active utilise var(--nav-active-bg)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m .bottom-nav__item--active utilise var(--text-1) pour contraste renforc├®[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m light --nav-active-bg est rgba(134,108,208,0.16) (discret premium)[39m[32m 17[2mms[22m[39m
+[31m     [31m├ù[31m dark --nav-active-bg est rgba(150,110,255,0.18) (discret premium)[39m[32m 6[2mms[22m[39m
+     [32mÔ£ô[39m affiche exactement 5 liens[32m 225[2mms[22m[39m
+     [32mÔ£ô[39m affiche les labels : Aujourd'hui, Chat, Th├¿me, Consultations, Profil[32m 32[2mms[22m[39m
+     [32mÔ£ô[39m chaque item a la classe bottom-nav__item[32m 49[2mms[22m[39m
+     [32mÔ£ô[39m chaque item contient une ic├┤ne SVG[32m 5[2mms[22m[39m
+     [32mÔ£ô[39m chaque item contient un span avec classe bottom-nav__label[32m 8[2mms[22m[39m
+     [32mÔ£ô[39m les SVG ont strokeWidth=1.75[32m 5[2mms[22m[39m
+     [32mÔ£ô[39m les SVG ont width=24 et height=24[32m 6[2mms[22m[39m
+     [32mÔ£ô[39m marque 'Aujourd'hui' actif sur /dashboard[32m 6[2mms[22m[39m
+     [32mÔ£ô[39m ne marque pas 'Aujourd'hui' actif sur /chat[32m 7[2mms[22m[39m
+     [32mÔ£ô[39m marque 'Chat' actif sur /chat[32m 6[2mms[22m[39m
+     [32mÔ£ô[39m marque 'Chat' actif sur /chat/123 (sous-route)[32m 5[2mms[22m[39m
+     [32mÔ£ô[39m marque 'Th├¿me' actif sur /natal[32m 5[2mms[22m[39m
+     [32mÔ£ô[39m marque 'Consultations' actif sur /consultations[32m 6[2mms[22m[39m
+     [32mÔ£ô[39m marque 'Profil' actif sur /settings/account[32m 6[2mms[22m[39m
+     [32mÔ£ô[39m marque 'Profil' actif sur /settings/subscription (sous-page)[32m 7[2mms[22m[39m
+     [32mÔ£ô[39m n'a qu'un seul item actif ├á la fois sur /dashboard[32m 33[2mms[22m[39m
+     [32mÔ£ô[39m 'Aujourd'hui' pointe vers /dashboard[32m 5[2mms[22m[39m
+     [32mÔ£ô[39m 'Chat' pointe vers /chat[32m 8[2mms[22m[39m
+     [32mÔ£ô[39m 'Th├¿me' pointe vers /natal[32m 9[2mms[22m[39m
+     [32mÔ£ô[39m 'Consultations' pointe vers /consultations[32m 6[2mms[22m[39m
+     [32mÔ£ô[39m 'Profil' pointe vers /settings[32m 6[2mms[22m[39m
+     [32mÔ£ô[39m rend un <nav> avec aria-label='Navigation principale'[32m 27[2mms[22m[39m
+     [32mÔ£ô[39m les items inactifs n'ont pas d'aria-current[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/TodayHeader.test.tsx [2m([22m[2m24 tests[22m[2m)[22m[33m 637[2mms[22m[39m
+ [31mÔØ»[39m src/tests/ShortcutCard.test.tsx [2m([22m[2m21 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[33m 696[2mms[22m[39m
+       [32mÔ£ô[39m affiche le titre et le sous-titre[32m 33[2mms[22m[39m
+       [32mÔ£ô[39m applique la classe subtitle--online quand isOnline est true[32m 8[2mms[22m[39m
+       [32mÔ£ô[39m n'applique pas la classe subtitle--online quand isOnline est false ou absent[32m 3[2mms[22m[39m
+       [32mÔ£ô[39m est un bouton par d├®faut si 'to' est absent[32m 154[2mms[22m[39m
+       [32mÔ£ô[39m est un lien si 'to' est pr├®sent[32m 24[2mms[22m[39m
+       [32mÔ£ô[39m rend le badge avec la bonne couleur[32m 29[2mms[22m[39m
+       [32mÔ£ô[39m appelle onClick lors du clic sur bouton[32m 24[2mms[22m[39m
+       [32mÔ£ô[39m appelle onClick lors du clic sur lien[32m 24[2mms[22m[39m
+     [32mÔ£ô[39m affiche le titre de section 'Activit├®s'[32m 86[2mms[22m[39m
+     [32mÔ£ô[39m rend les raccourcis par d├®faut sous forme de liens[32m 44[2mms[22m[39m
+     [32mÔ£ô[39m d├®clenche onChatClick lors du clic sur le chat[32m 98[2mms[22m[39m
+     [32mÔ£ô[39m d├®clenche onConsultationClick lors du clic sur la consultation[32m 89[2mms[22m[39m
+     [32mÔ£ô[39m utilise une structure s├®mantique <section>[32m 19[2mms[22m[39m
+     [32mÔ£ô[39m localise les raccourcis du dashboard en anglais[32m 51[2mms[22m[39m
+     [32mÔ£ô[39m AC#1 ÔÇö .shortcut-card a text-decoration: none (pas de soulignement sur lien)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m AC-17-14 ÔÇö .shortcut-card__badge est 44x44 (badges plus grands)[32m 0[2mms[22m[39m
+     [32mÔ£ô[39m AC-17-14 ÔÇö .shortcut-card__badge a border-radius: 16px[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC#2 ÔÇö .glass-card--shortcut utilise --glass-shortcut pour le fond[39m[32m 4[2mms[22m[39m
+[31m     [31m├ù[31m AC#2 ÔÇö .glass-card--shortcut utilise --glass-shortcut-border pour la bordure[39m[32m 1[2mms[22m[39m
+     [32mÔ£ô[39m AC-17-14 ÔÇö .shortcut-card__title a font-size: 15px et font-weight: 650[32m 0[2mms[22m[39m
+[31m     [31m├ù[31m AC-17-15 ÔÇö .glass-card a une box-shadow (profondeur, d├®tache du fond)[39m[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/AstrologersPage.test.tsx [2m([22m[2m15 tests[22m[2m)[22m[33m 531[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ConsultationReconnection.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 382[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/SignUpForm.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 750[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/SignInForm.test.tsx [2m([22m[2m14 tests[22m[2m)[22m[33m 783[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/chat/ChatComponents.test.tsx [2m([22m[2m51 tests[22m[2m)[22m[33m 711[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/HeroHoroscopeCard.test.tsx [2m([22m[2m36 tests[22m[2m)[22m[33m 658[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/natalInterpretation.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 936[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ChatPage.test.tsx [2m([22m[2m21 tests[22m[2m)[22m[33m 936[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ConsultationsPage.test.tsx [2m([22m[2m15 tests[22m[2m)[22m[33m 1225[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m advances from Framing to Summary without extra data if interaction is NOT checked [33m 330[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/EnterpriseCredentialsPanel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 299[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/B2BEditorialPanel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 271[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/App.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 899[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/DashboardPage.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 936[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/NatalChartPage.test.tsx [2m([22m[2m59 tests[22m[2m)[22m[33m 1978[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/TurningPointsEnriched.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[32m 225[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/DailyHoroscopePage.test.tsx [2m([22m[2m16 tests[22m[2m)[22m[33m 1295[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m affiche la prediction API, les categories dynamiques et les heures en HH:mm [33m 363[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/SupportOpsPanel.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 255[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/AstrologerSelectStep.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 243[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/B2BUsagePanel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 223[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/layout/Header.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[32m 69[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/B2BBillingPanel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 244[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/OpsMonitoringPanel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 234[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/B2BAstrologyPanel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 238[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/formatDate.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/predictionI18n.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/AstroMoodBackground.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[32m 67[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ui-icons.test.tsx [2m([22m[2m33 tests[22m[2m)[22m[32m 59[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/astrology-i18n.test.ts [2m([22m[2m69 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/natalChartApi.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ConsultationMigration.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 59[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/router.test.tsx [2m([22m[2m17 tests[22m[2m)[22m[33m 2082[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m navigates between routes using sidebar links [33m 383[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m supports browser back/forward navigation [33m 361[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/geocodingApi.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/useDailyPrediction.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/consultationStore.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/b2bReconciliationApi.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/b2bBillingApi.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/BirthProfilePage.test.tsx [2m([22m[2m41 tests[22m[2m)[22m[33m 3608[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/enterpriseCredentialsApi.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/b2bUsageApi.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/AdminPage.test.tsx [2m([22m[2m16 tests[22m[2m)[22m[33m 2785[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m redirects non-ops/admin user from /admin to /dashboard [33m 315[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m navigates to monitoring subpage when clicked [33m 349[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m navigates to personas subpage when clicked [33m 343[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/b2bAstrologyApi.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/b2bEditorialApi.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m src/utils/dailyAstrology.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/dailyPredictionApi.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/privacyApi.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/apiClient.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/timezones.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/generateUniqueId.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/guidanceApi.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/opsPersonaApi.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/predictionBands.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ui-nav.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/classNames.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/authToken.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/astrologers-validation.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/ui-barrel.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/TimezoneSelect.test.tsx [2m([22m[2m23 tests[22m[2m)[22m[33m 4969[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m filters timezones based on search term [33m 518[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m calls onChange when option is selected [33m 406[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m highlights current selection in dropdown [33m 395[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m scrolls highlighted option into view [33m 323[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m shows hint when displaying max visible options without search [33m 358[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m keyboard navigation stays within valid options when hint is visible [33m 416[2mms[22m[39m
+ [32mÔ£ô[39m src/tests/SettingsPage.test.tsx [2m([22m[2m19 tests[22m[2m)[22m[33m 4131[2mms[22m[39m
+       [33m[2mÔ£ô[22m[39m affiche les onglets Compte, Abonnement, Usage [33m 346[2mms[22m[39m
+       [33m[2mÔ£ô[22m[39m navigue entre les onglets [33m 325[2mms[22m[39m
+       [33m[2mÔ£ô[22m[39m passe ├á l'├®tape de confirmation avec le mot SUPPRIMER [33m 311[2mms[22m[39m
+       [33m[2mÔ£ô[22m[39m refuse la suppression si le mot ne correspond pas [33m 531[2mms[22m[39m
+       [33m[2mÔ£ô[22m[39m supprime le compte et redirige vers /login [33m 526[2mms[22m[39m
+       [33m[2mÔ£ô[22m[39m affiche un message d'erreur quand l'API de suppression ├®choue [33m 448[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m6 failed[39m[22m[2m | [22m[1m[32m65 passed[39m[22m[90m (71)[39m
+[2m      Tests [22m [1m[31m135 failed[39m[22m[2m | [22m[1m[32m941 passed[39m[22m[90m (1076)[39m
+[2m   Start at [22m 23:01:44
+[2m   Duration [22m 8.25s[2m (transform 15.57s, setup 14.60s, import 35.53s, tests 36.51s, environment 105.56s)[22m
+
