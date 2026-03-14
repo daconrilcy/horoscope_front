@@ -49,7 +49,7 @@ export const HeroHoroscopeCard = memo(function HeroHoroscopeCard({
   const SignIcon = getZodiacIcon(signCode)
 
   return (
-    <div className="hero-card" role="article" aria-labelledby={headlineId}>
+    <div className="hero-card glass-card glass-card--hero" role="article" aria-labelledby={headlineId}>
       {/* Top row */}
       <div className="hero-card__top-row">
         <div className="hero-card__chip">

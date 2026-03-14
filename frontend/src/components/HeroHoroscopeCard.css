@@ -1,13 +1,6 @@
 /* HeroHoroscopeCard — glassmorphism + gradient cosmique */
 
 .hero-card {
-  border-radius: 26px;
-  padding: 18px;
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-hero);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   position: relative;
   overflow: hidden;
   display: flex;

@@ -1,13 +1,6 @@
 /* MiniInsightCard — glassmorphism + gradient coloré par thème */
 
 .mini-card {
-  padding: 14px;
-  border-radius: 18px;
-  background: var(--glass-mini);
-  border: 1px solid var(--glass-mini-border);
-  box-shadow: 0 14px 28px rgba(20,20,40,0.10);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   position: relative;
   overflow: hidden;
 }

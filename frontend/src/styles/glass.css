@@ -1,0 +1,30 @@
+/* Système Glassmorphism mutualisé */
+
+.glass-card {
+  backdrop-filter: blur(var(--surface-glass-blur, 14px));
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur, 14px));
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+}
+
+.glass-card--hero {
+  border-radius: 26px;
+  padding: 18px;
+  box-shadow: var(--shadow-hero);
+}
+
+.glass-card--mini {
+  border-radius: 18px;
+  padding: 14px;
+  background: var(--color-glass-mini);
+  border-color: var(--color-glass-mini-border);
+  box-shadow: 0 14px 28px rgba(20,20,40,0.10);
+}
+
+.glass-card--shortcut {
+  border-radius: 18px;
+  padding: 14px;
+  background: var(--color-glass-shortcut);
+  border-color: var(--color-glass-shortcut-border);
+  box-shadow: 0 14px 28px rgba(20,20,40,0.12);
+}

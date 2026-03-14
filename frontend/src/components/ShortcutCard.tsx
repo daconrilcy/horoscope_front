@@ -39,14 +39,14 @@ export function ShortcutCard({
 
   if (to) {
     return (
-      <Link to={to} className="shortcut-card" onClick={onClick}>
+      <Link to={to} className="shortcut-card glass-card glass-card--shortcut" onClick={onClick}>
         {content}
       </Link>
     )
   }
 
   return (
-    <button type="button" className="shortcut-card" onClick={onClick}>
+    <button type="button" className="shortcut-card glass-card glass-card--shortcut" onClick={onClick}>
       {content}
     </button>
   )

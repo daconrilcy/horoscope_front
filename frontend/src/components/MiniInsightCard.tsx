@@ -18,7 +18,7 @@ export function MiniInsightCard({ title, description, icon: Icon, badgeColor, ty
 
   return (
     <Wrapper
-      className={`mini-card${typeClass} ${onClick ? 'mini-card--clickable' : ''}`}
+      className={`mini-card glass-card glass-card--mini${typeClass} ${onClick ? 'mini-card--clickable' : ''}`}
       onClick={onClick}
       type={onClick ? 'button' : undefined}
       data-type={type}
