@@ -1,3 +1,4 @@
+import { PageLayout } from "../layouts"
 import {
   PrivacyApiError,
   useDeleteStatus,
@@ -16,7 +17,7 @@ export function PrivacyPanel() {
   const deleteError = requestDelete.error as PrivacyApiError | null
 
   return (
-    <section className="panel">
+    <PageLayout className="panel">
       <h2>Confidentialité et données</h2>
       <p>Demandez un export de vos données ou la suppression de votre compte.</p>
 
@@ -78,6 +79,6 @@ export function PrivacyPanel() {
 
       {exportError ? <p className="chat-error">Erreur demande export: {exportError.message}</p> : null}
       {deleteError ? <p className="chat-error">Erreur demande suppression: {deleteError.message}</p> : null}
-    </section>
+    </PageLayout>
   )
 }

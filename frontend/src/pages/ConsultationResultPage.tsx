@@ -18,6 +18,7 @@ import {
 import { ConsultationFallbackBanner } from "../features/consultations"
 import { classNames } from "../utils/classNames"
 import { trackEvent, EVENTS } from "../utils/analytics"
+import { PageLayout } from "../layouts"
 
 function resolveObjectiveText(
   objective: string | undefined,
@@ -384,7 +385,7 @@ export function ConsultationResultPage() {
   }
 
   return (
-    <div className="panel consultation-result-page">
+    <PageLayout className="panel consultation-result-page">
       <header className="consultation-result-header">
         <h1>{t("result_title", lang)}</h1>
       </header>
@@ -499,7 +500,7 @@ export function ConsultationResultPage() {
           {t("back_to_consultations", lang)}
         </Link>
       </div>
-    </div>
+    </PageLayout>
   )
 }
 

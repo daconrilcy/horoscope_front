@@ -5,13 +5,14 @@ import { detectLang } from "../i18n/astrology"
 import { tConsultations as t } from "@i18n/consultations"
 import { CONSULTATION_TYPES, CONTEXT_TRUNCATE_LENGTH, getConsultationTypeConfig } from "../types/consultation"
 import { formatDate } from "../utils/formatDate"
+import { PageLayout } from "../layouts"
 
 export function ConsultationsPage() {
   const { history, isLoading } = useConsultations()
   const lang = detectLang()
 
   return (
-    <div className="panel consultations-page">
+    <PageLayout className="panel consultations-page">
       <header className="consultations-page-header">
         <h1>{t("page_title", lang)}</h1>
         <p>{t("page_subtitle", lang)}</p>
@@ -84,7 +85,7 @@ export function ConsultationsPage() {
           </ul>
         )}
       </section>
-    </div>
+    </PageLayout>
   )
 }
 

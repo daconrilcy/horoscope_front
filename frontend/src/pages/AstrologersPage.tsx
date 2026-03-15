@@ -5,6 +5,7 @@ import { AstrologerGrid } from "../features/astrologers"
 import { detectLang } from "../i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
 import type { Astrologer } from "@api"
+import { PageLayout } from "../layouts"
 
 export function AstrologersPage() {
   const navigate = useNavigate()
@@ -16,7 +17,7 @@ export function AstrologersPage() {
   }
 
   return (
-    <div className="panel">
+    <PageLayout className="panel">
       <header className="astrologers-page-header">
         <h1>{t("page_title", lang)}</h1>
         <p>{t("page_subtitle", lang)}</p>
@@ -38,7 +39,7 @@ export function AstrologersPage() {
           onSelectAstrologer={handleSelectAstrologer}
         />
       )}
-    </div>
+    </PageLayout>
   )
 }
 

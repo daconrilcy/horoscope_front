@@ -1,3 +1,4 @@
+import { PageLayout } from "../layouts"
 import { useMemo, useState } from "react"
 
 import {
@@ -44,7 +45,7 @@ export function BillingPanel() {
   const targetPlanLimitLabel = targetPlanCode === "premium-unlimited" ? "1000 messages/jour" : "5 messages/jour"
 
   return (
-    <section className="panel">
+    <PageLayout className="panel">
       <h2>Abonnement</h2>
       <p>Souscrivez au plan Basic pour activer le service payant.</p>
 
@@ -174,6 +175,6 @@ export function BillingPanel() {
       {checkoutError ? <p className="chat-error">Erreur souscription: {checkoutError.message}</p> : null}
       {retryError ? <p className="chat-error">Erreur retry paiement: {retryError.message}</p> : null}
       {changePlanError ? <p className="chat-error">Erreur changement de plan: {changePlanError.message}</p> : null}
-    </section>
+    </PageLayout>
   )
 }
