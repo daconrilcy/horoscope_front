@@ -1,6 +1,6 @@
 # Story 58.5 : Menu utilisateur flottant (overlay au clic sur l'avatar)
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -26,8 +26,8 @@ afin d'accéder à mon profil, mes paramètres et la déconnexion sans quitter l
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Étendre `CommonTranslation` avec les labels du menu utilisateur (AC: 7)
-  - [ ] T1.1 Dans `frontend/src/i18n/common.ts`, ajouter dans l'interface :
+- [x] T1 — Étendre `CommonTranslation` avec les labels du menu utilisateur (AC: 7)
+  - [x] T1.1 Dans `frontend/src/i18n/common.ts`, ajouter dans l'interface :
     ```ts
     userMenu: {
       editAccount: string    // "Modifier mon compte" / "Edit account" / "Editar cuenta"
@@ -35,12 +35,12 @@ afin d'accéder à mon profil, mes paramètres et la déconnexion sans quitter l
       settings: string       // "Paramètres" / "Settings" / "Configuración"
     }
     ```
-  - [ ] T1.2 Ajouter les traductions pour fr, en, es
-  - [ ] T1.3 Note : `header.logout` existant peut rester (utilisé ailleurs) — `userMenu.logout` peut avoir le même libellé
+  - [x] T1.2 Ajouter les traductions pour fr, en, es
+  - [x] T1.3 Note : `header.logout` existant peut rester (utilisé ailleurs) — `userMenu.logout` peut avoir le même libellé
 
-- [ ] T2 — Créer `UserMenu.tsx` (AC: 1-8)
-  - [ ] T2.1 Créer le dossier `frontend/src/components/ui/UserMenu/`
-  - [ ] T2.2 Créer `frontend/src/components/ui/UserMenu/UserMenu.tsx` :
+- [x] T2 — Créer `UserMenu.tsx` (AC: 1-8)
+  - [x] T2.1 Créer le dossier `frontend/src/components/ui/UserMenu/`
+  - [x] T2.2 Créer `frontend/src/components/ui/UserMenu/UserMenu.tsx` :
     ```tsx
     import { useEffect, useRef } from "react"
     import { useNavigate } from "react-router-dom"
@@ -150,8 +150,8 @@ afin d'accéder à mon profil, mes paramètres et la déconnexion sans quitter l
     }
     ```
 
-- [ ] T3 — Créer `UserMenu.css` (AC: 1, 6)
-  - [ ] T3.1 Créer `frontend/src/components/ui/UserMenu/UserMenu.css` :
+- [x] T3 — Créer `UserMenu.css` (AC: 1, 6)
+  - [x] T3.1 Créer `frontend/src/components/ui/UserMenu/UserMenu.css` :
     ```css
     .user-menu {
       position: absolute;
@@ -229,14 +229,14 @@ afin d'accéder à mon profil, mes paramètres et la déconnexion sans quitter l
     }
     ```
 
-- [ ] T4 — Exporter depuis le barrel UI (AC: 7)
-  - [ ] T4.1 Dans `frontend/src/components/ui/index.ts`, ajouter :
+- [x] T4 — Exporter depuis le barrel UI (AC: 7)
+  - [x] T4.1 Dans `frontend/src/components/ui/index.ts`, ajouter :
     ```ts
     export * from './UserMenu/UserMenu';
     ```
 
-- [ ] T5 — Tests unitaires (AC: 10)
-  - [ ] T5.1 Créer `frontend/src/tests/UserMenu.test.tsx` :
+- [x] T5 — Tests unitaires (AC: 10)
+  - [x] T5.1 Créer `frontend/src/tests/UserMenu.test.tsx` :
     ```tsx
     // Mock navigate
     const mockNavigate = vi.fn()
@@ -302,7 +302,7 @@ afin d'accéder à mon profil, mes paramètres et la déconnexion sans quitter l
 
 - [ ] T6 — Vérification (AC: 9)
   - [ ] T6.1 `tsc --noEmit` sans erreur
-  - [ ] T6.2 `npx vitest run` — 1052+ tests passent (+ nouveaux tests UserMenu)
+  - [x] T6.2 `npx vitest run` — 1052+ tests passent (+ nouveaux tests UserMenu)
 
 ## Dev Notes
 
@@ -381,12 +381,25 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+- `npm test`
+- `npm run lint`
+
 ### Completion Notes List
+
+- Ajout des traductions `userMenu.*` dans `common.ts` pour les trois langues.
+- Création du composant `UserMenu` avec fermeture sur clic extérieur, `Escape`, navigation vers `/settings` et déconnexion via `clearAccessToken()`.
+- Ajout des styles d'overlay et d'une suite de tests couvrant ouverture conditionnelle, fermeture, navigation et logout.
+- Validation incomplète : `npm run lint` reste bloqué par un passif TypeScript global hors scope ; `npm test` est vert à 1067 tests.
 
 ### File List
 
 - `frontend/src/components/ui/UserMenu/UserMenu.tsx` (créé)
 - `frontend/src/components/ui/UserMenu/UserMenu.css` (créé)
 - `frontend/src/components/ui/index.ts` (modifié — ajout UserMenu)
+- `frontend/src/components/ui/UserMenu/index.ts` (créé — barrel interne)
 - `frontend/src/i18n/common.ts` (modifié — ajout userMenu translations)
 - `frontend/src/tests/UserMenu.test.tsx` (créé)
+
+### Change Log
+
+- 2026-03-15 : Implémentation initiale de la story 58.5 avec composant `UserMenu`, traductions associées et tests unitaires.

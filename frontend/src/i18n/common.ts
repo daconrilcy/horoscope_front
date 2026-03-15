@@ -8,6 +8,11 @@ export interface CommonTranslation {
     logout: string
     defaultRole: string
   }
+  userMenu: {
+    editAccount: string
+    logout: string
+    settings: string
+  }
   heroCard: {
     readShort: string
     readDetailed: string
@@ -39,6 +44,11 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
       logout: "Se déconnecter",
       defaultRole: "Utilisateur",
     },
+    userMenu: {
+      editAccount: "Modifier mon compte",
+      logout: "Se déconnecter",
+      settings: "Paramètres",
+    },
     heroCard: {
       readShort: "Lire en 2 min",
       readDetailed: "Version détaillée",
@@ -68,6 +78,11 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
       logout: "Log out",
       defaultRole: "User",
     },
+    userMenu: {
+      editAccount: "Edit account",
+      logout: "Log out",
+      settings: "Settings",
+    },
     heroCard: {
       readShort: "2 min read",
       readDetailed: "Detailed version",
@@ -96,6 +111,11 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
       appTitle: APP_NAME,
       logout: "Cerrar sesión",
       defaultRole: "Usuario",
+    },
+    userMenu: {
+      editAccount: "Editar cuenta",
+      logout: "Cerrar sesión",
+      settings: "Configuración",
     },
     heroCard: {
       readShort: "Lectura 2 min",

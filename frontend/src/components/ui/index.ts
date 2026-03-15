@@ -9,3 +9,4 @@ export * from './EmptyState';
 export * from './Badge';
 export * from './ErrorState';
 export * from './UserAvatar';
+export * from './UserMenu';
