@@ -135,6 +135,11 @@ GPT-5 Codex
 - QA verified SVG colors properly inherit parent container's context, without relying on external svgr plugin. 
 - Horoscope card on `/dashboard/horoscope` layout properly wraps around AstroBackground to preserve background transparency metrics.
 - QA verified light/dark theme typography updates correctly inside `AstroMoodBackground` using `useThemeSafe` context API on both `DayPredictionCard` and `DashboardHoroscopeSummaryCard`.
+- Additional post-QA visual hardening: shooting stars were made visible then throttled, secondary star appearance/disappearance slowed to avoid flicker, halos were softened in both themes, and tertiary star background texture was added without changing the component contract or tests.
+
+### Change Log
+
+- 2026-03-15 : Passe finale d’affinage visuel sur les animations et halos du fond astrologique, sans changement de contrat public.
 
 ### File List
 

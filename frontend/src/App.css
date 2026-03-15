@@ -2666,7 +2666,7 @@ textarea:focus-visible {
   font-weight: 500;
   color: var(--text-1);
   align-self: flex-start;
-  margin-bottom: auto;
+  margin-bottom: 16px;
   border: 1px solid rgba(var(--purple_base), 0.5);
   box-shadow: var(--default_dropshadow), inset -4px -4px 12px rgba(0, 0, 0, 0.15);
 }
