@@ -3,6 +3,7 @@
   --bg-sheen: var(--color-bg-sheen);
   --surface-1: #0b1020;
   --surface-2: #111938;
+  --purple_base: 93, 37, 223;
   --text-1: var(--color-text-primary);
   --text-2: var(--color-text-secondary);
   --line: var(--color-line);
@@ -10,6 +11,7 @@
   --primary-strong: var(--color-primary-strong);
   --danger: var(--color-danger);
   --success: var(--color-success);
+  --default_dropshadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 
   font-family: "DM Sans", "Nunito Sans", "Trebuchet MS", sans-serif;
   line-height: 1.5;
@@ -24,6 +26,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
 
 * {
   box-sizing: border-box;

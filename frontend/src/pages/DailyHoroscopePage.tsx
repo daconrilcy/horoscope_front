@@ -259,7 +259,7 @@ export function DailyHoroscopePage() {
           <div className="daily-page-refresh-wrapper mb-4">
             <button 
               type="button" 
-              className="button-ghost daily-page-refresh-button" 
+              className="daily-page-refresh-button" 
               onClick={handleRefresh}
             >
               <RefreshCw size={16} />

@@ -20,7 +20,7 @@ export function SectionErrorBoundary({ children, onRetry }: Props) {
           action={
             <button 
               onClick={() => onRetry?.()} 
-              className="button-ghost button-sm"
+              className="button-sm"
             >
               <RefreshCw size={16} className="mr-2" />
               Réessayer

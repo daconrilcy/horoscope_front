@@ -262,6 +262,7 @@ claude-sonnet-4-6
 - Création de `AppShell.test.tsx` pour couvrir le cycle sidebar complet, l'ouverture/fermeture/logout du `UserMenu` et la bascule dark/light.
 - Suppression des contrôles dupliqués de l'ancien header local dans `DashboardPage` et `DailyHoroscopePage` : le dashboard n'instancie plus `TodayHeader`, et la page `/dashboard/horoscope` masque désormais l'avatar local pour laisser le top menu porter ces actions globales.
 - Ajout de garde-fous dans `DashboardPage.test.tsx`, `DailyHoroscopePage.test.tsx` et `TodayHeader.test.tsx` pour empêcher le retour des doublons avatar / toggle dans le contenu central.
+- Harmonisation des classes et styles de la zone dashboard/horoscope : retrait définitif de `button-ghost`, ajustement du bouton refresh dédié, et renommage de la pill résumé dashboard vers `default_card_pill` pour coller au nouveau vocabulaire CSS.
 - `npm test` passe désormais à 1071 tests verts ; `npm run lint` reste bloqué par une dette TypeScript préexistante hors story 58.6.
 
 ### File List
@@ -271,6 +272,9 @@ claude-sonnet-4-6
 - `frontend/src/pages/DashboardPage.tsx` (modifié — retrait du header local résiduel)
 - `frontend/src/pages/DailyHoroscopePage.tsx` (modifié — avatar local masqué)
 - `frontend/src/components/TodayHeader.tsx` (modifié — avatar optionnel)
+- `frontend/src/components/dashboard/DashboardHoroscopeSummaryCard.tsx` (modifié — pill dashboard renommée et alignée sur les nouveaux tokens)
+- `frontend/src/pages/DailyHoroscopePage.css` (modifié — bouton refresh ajusté)
+- `frontend/src/index.css` (modifié — nouveaux tokens globaux violet/glass)
 - `frontend/src/tests/DashboardPage.test.tsx` (modifié — non-régression doublons dashboard)
 - `frontend/src/tests/DailyHoroscopePage.test.tsx` (modifié — non-régression doublons horoscope)
 - `frontend/src/tests/TodayHeader.test.tsx` (modifié — variante sans avatar)
@@ -279,3 +283,4 @@ claude-sonnet-4-6
 
 - 2026-03-15 : Ajout de la couverture d'intégration AppShell et validation complète non-régressive du nouvel app shell.
 - 2026-03-15 : Nettoyage post-review des doublons de contrôles utilisateur dans `/dashboard` et `/dashboard/horoscope`, avec tests de non-régression.
+- 2026-03-15 : Nettoyage du vocabulaire CSS et convergence vers les nouveaux styles glass/purple sur dashboard et page horoscope.

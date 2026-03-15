@@ -1,5 +1,5 @@
 :root {
-  --glass-blur: 14px;
+  --glass-blur: 8px;
 }
 
 #root {
@@ -142,19 +142,25 @@
 }
 
 button {
-  border: 1px solid rgba(102, 230, 255, 0.35);
-  border-radius: 8px;
-  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-strong) 100%);
+  border: 1px solid rgba(var(--purple_base), 0.5);
+  border-radius: 18px;
+  background: linear-gradient(170deg,
+      rgba(var(--purple_base), 0.1) 0%,
+      rgba(var(--purple_base), 0.3) 100%);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   color: var(--btn-text);
-  font-weight: 700;
-  padding: 0.55rem 0.95rem;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.12), inset -4px -4px 12px rgba(0, 0, 0, 0.12);
 }
 
 button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(46, 200, 255, 0.3);
+  box-shadow: 0 8px 12px rgba(46, 200, 255, 0.3);
 }
 
 button:disabled {
@@ -260,7 +266,7 @@ textarea:focus-visible {
   align-items: center;
 }
 
-.action-row > * {
+.action-row>* {
   flex: 1 1 220px;
 }
 
@@ -740,9 +746,13 @@ textarea:focus-visible {
 }
 
 @keyframes typing-bounce {
-  0%, 60%, 100% {
+
+  0%,
+  60%,
+  100% {
     transform: translateY(0);
   }
+
   30% {
     transform: translateY(-4px);
   }
@@ -1011,8 +1021,13 @@ textarea:focus-visible {
 }
 
 @keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* Chat Empty State */
@@ -1799,8 +1814,15 @@ textarea:focus-visible {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .wizard-step-title {
@@ -2485,11 +2507,13 @@ textarea:focus-visible {
   padding-top: 6px;
   padding-bottom: 18px;
   text-align: center;
-  min-height: 48px; /* Prevents layout shift during avatar load */
+  min-height: 48px;
+  /* Prevents layout shift during avatar load */
 }
 
 .today-header__content {
-  padding: 0 44px; /* Espace symétrique : toggle gauche + avatar droite */
+  padding: 0 44px;
+  /* Espace symétrique : toggle gauche + avatar droite */
 }
 
 .today-header__left-actions {
@@ -2539,7 +2563,7 @@ textarea:focus-visible {
 }
 
 .today-header__title {
-  padding-top:6px;
+  padding-top: 6px;
   font-size: 40px;
   font-weight: 500;
   line-height: 1.05;
@@ -2573,9 +2597,17 @@ textarea:focus-visible {
 }
 
 @keyframes avatar-pulse {
-  0% { background-color: var(--glass-2); }
-  50% { background-color: var(--glass); }
-  100% { background-color: var(--glass-2); }
+  0% {
+    background-color: var(--glass-2);
+  }
+
+  50% {
+    background-color: var(--glass);
+  }
+
+  100% {
+    background-color: var(--glass-2);
+  }
 }
 
 .today-header__avatar img {
@@ -2598,7 +2630,8 @@ textarea:focus-visible {
   flex-direction: column;
 }
 
-.dashboard-summary-card-wrapper:hover, .dashboard-summary-card-wrapper:focus {
+.dashboard-summary-card-wrapper:hover,
+.dashboard-summary-card-wrapper:focus {
   transform: translateY(-2px);
   box-shadow: var(--shadow-card);
   border-color: var(--primary);
@@ -2620,31 +2653,31 @@ textarea:focus-visible {
   flex-direction: column;
 }
 
-.dashboard-summary-card__pill {
+.default_card_pill {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 0.75rem;
-  background: rgba(139, 92, 246, 0.15);
+  padding: 0.5rem 1rem;
+  background-color: rgba(var(--purple_base), 0.15);
   border-radius: 999px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  font-size: 0.85rem;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  font-size: 1rem;
   font-weight: 500;
-  color: var(--color-text-primary);
+  color: var(--text-1);
   align-self: flex-start;
   margin-bottom: auto;
-  border: 1px solid rgba(139, 92, 246, 0.25);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(var(--purple_base), 0.5);
+  box-shadow: var(--default_dropshadow), inset -4px -4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.dashboard-summary-card__pill-icon {
+.default_card_pill-icon {
   width: 16px;
   height: 16px;
   stroke: currentColor;
 }
 
-.dashboard-summary-card__pill-icon * {
+.default_card_pill-icon * {
   stroke: currentColor;
   fill: none;
 }
@@ -2660,7 +2693,8 @@ textarea:focus-visible {
   gap: 0.75rem;
 }
 
-.dashboard-summary-card:hover, .dashboard-summary-card:focus {
+.dashboard-summary-card:hover,
+.dashboard-summary-card:focus {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-color: var(--primary);
@@ -2708,8 +2742,13 @@ textarea:focus-visible {
 }
 
 @keyframes skeleton-loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* === DailyHoroscopePage === */

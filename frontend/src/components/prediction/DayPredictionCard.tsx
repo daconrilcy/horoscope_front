@@ -50,7 +50,7 @@ export const DayPredictionCard: React.FC<Props> = ({
     return (
       <div className="panel day-prediction-card day-prediction-card--error p-6" role="status">
         <p>{getPredictionMessage("error", lang)}</p>
-        <button type="button" className="button-ghost mt-4" onClick={onRetry}>
+        <button type="button" className="mt-4" onClick={onRetry}>
           {getPredictionMessage("retry", lang)}
         </button>
       </div>

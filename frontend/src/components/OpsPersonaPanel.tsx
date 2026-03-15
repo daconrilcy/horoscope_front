@@ -1,7 +1,17 @@
-import { useState, useEffect } from "react"
+import { useEffect, useState, type ChangeEvent } from "react"
 
-import { useOpsPersonaConfig, useUpdateOpsPersonaConfig, useRollbackOpsPersonaConfig } from "@api"
+import {
+  useOpsPersonaConfig,
+  useUpdateOpsPersonaConfig,
+  useRollbackOpsPersonaConfig,
+  type OpsPersonaApiError,
+} from "@api"
 import { useTranslation } from "../i18n"
+
+type Tone = "calm" | "direct" | "empathetic"
+type PrudenceLevel = "high" | "standard"
+type ScopePolicy = "strict" | "balanced"
+type ResponseStyle = "concise" | "detailed"
 
 export function OpsPersonaPanel() {
   const t = useTranslation("admin").b2b.opsPersona
@@ -9,31 +19,47 @@ export function OpsPersonaPanel() {
   const updateConfig = useUpdateOpsPersonaConfig()
   const rollbackConfig = useRollbackOpsPersonaConfig()
 
-  const [tone, setTone] = useState<"calm" | "direct" | "empathetic">("calm")
-  const [prudence, setPrudence] = useState<"high" | "standard">("standard")
-  const [scope, setScope] = useState<"strict" | "balanced">("balanced")
-  const [style, setStyle] = useState<"concise" | "detailed">("concise")
+  const [tone, setTone] = useState<Tone>("calm")
+  const [prudenceLevel, setPrudenceLevel] = useState<PrudenceLevel>("standard")
+  const [scopePolicy, setScopePolicy] = useState<ScopePolicy>("balanced")
+  const [responseStyle, setResponseStyle] = useState<ResponseStyle>("concise")
 
   useEffect(() => {
     if (configQuery.data) {
       setTone(configQuery.data.tone)
-      setPrudence(configQuery.data.prudence)
-      setScope(configQuery.data.scope)
-      setStyle(configQuery.data.style)
+      setPrudenceLevel(configQuery.data.prudence_level)
+      setScopePolicy(configQuery.data.scope_policy)
+      setResponseStyle(configQuery.data.response_style)
     }
   }, [configQuery.data])
+
+  const handleToneChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    setTone(event.target.value as Tone)
+  }
+
+  const handlePrudenceChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    setPrudenceLevel(event.target.value as PrudenceLevel)
+  }
+
+  const handleScopeChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    setScopePolicy(event.target.value as ScopePolicy)
+  }
+
+  const handleStyleChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    setResponseStyle(event.target.value as ResponseStyle)
+  }
 
   const handleUpdate = () => {
     updateConfig.mutate({
       tone,
-      prudence,
-      scope,
-      style,
+      prudence_level: prudenceLevel,
+      scope_policy: scopePolicy,
+      response_style: responseStyle,
     })
   }
 
-  const updateError = updateConfig.error as Error | null
-  const rollbackError = rollbackConfig.error as Error | null
+  const updateError = updateConfig.error as OpsPersonaApiError | null
+  const rollbackError = rollbackConfig.error as OpsPersonaApiError | null
 
   return (
     <section className="panel">
@@ -49,7 +75,7 @@ export function OpsPersonaPanel() {
             <select
               id="persona-tone"
               value={tone}
-              onChange={(e) => setTone(e.target.value as any)}
+              onChange={handleToneChange}
             >
               <option value="calm">calm</option>
               <option value="direct">direct</option>
@@ -61,8 +87,8 @@ export function OpsPersonaPanel() {
             <label htmlFor="persona-prudence">{t.prudenceLabel}</label>
             <select
               id="persona-prudence"
-              value={prudence}
-              onChange={(e) => setPrudence(e.target.value as any)}
+              value={prudenceLevel}
+              onChange={handlePrudenceChange}
             >
               <option value="high">high</option>
               <option value="standard">standard</option>
@@ -73,8 +99,8 @@ export function OpsPersonaPanel() {
             <label htmlFor="persona-scope">{t.scopeLabel}</label>
             <select
               id="persona-scope"
-              value={scope}
-              onChange={(e) => setScope(e.target.value as any)}
+              value={scopePolicy}
+              onChange={handleScopeChange}
             >
               <option value="strict">strict</option>
               <option value="balanced">balanced</option>
@@ -85,8 +111,8 @@ export function OpsPersonaPanel() {
             <label htmlFor="persona-style">{t.styleLabel}</label>
             <select
               id="persona-style"
-              value={style}
-              onChange={(e) => setStyle(e.target.value as any)}
+              value={responseStyle}
+              onChange={handleStyleChange}
             >
               <option value="concise">concise</option>
               <option value="detailed">detailed</option>
@@ -105,7 +131,6 @@ export function OpsPersonaPanel() {
         </button>
         <button
           type="button"
-          className="button-ghost"
           onClick={() => rollbackConfig.mutate()}
           disabled={rollbackConfig.isPending}
         >

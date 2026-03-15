@@ -69,7 +69,7 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
       <div className="panel dashboard-summary-card dashboard-summary-card--empty" role="status">
         <p>{errorPrediction}</p>
         <div className="dashboard-summary-card__actions">
-          <button type="button" className="button-ghost" onClick={onRetry}>
+          <button type="button" onClick={onRetry}>
             {retry}
           </button>
         </div>
@@ -116,8 +116,8 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
       >
         <div className="dashboard-summary-card__content">
           {ZodiacIcon && (
-            <div className="dashboard-summary-card__pill">
-              <ZodiacIcon className="dashboard-summary-card__pill-icon" />
+            <div className="default_card_pill">
+              <ZodiacIcon className="default_card_pill-icon" />
               <span>{translateSign(sign, locale)} • {formattedDate}</span>
             </div>
           )}

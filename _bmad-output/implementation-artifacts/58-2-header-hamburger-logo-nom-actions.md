@@ -216,6 +216,7 @@ claude-sonnet-4-6
 - Le header utilise finalement `useTheme()` en mode strict, avec alignement sur `AppProviders` et les harness de tests pour éviter tout toggle thème silencieusement inerte.
 - Ajout d'un `Header.css` dédié avec cibles tactiles 44px, branding calé à gauche, top bar pleine largeur, glassmorphism renforcé et ombre basse.
 - Le logo applicatif a été agrandi et le contraste du nom "Astrorizon" a été renforcé en dark mode pour mieux se détacher du fond.
+- Les tokens de style globaux ont été resserrés autour d'un rendu plus "glass" violet : blur global réduit, boutons standards harmonisés sur une surface translucide arrondie, et nouveau socle `--purple_base` / `--default_dropshadow` dans `index.css`.
 - Mise à jour des tests de layout, du scénario d'app logout, des tests router et settings pour refléter le nouveau contrat du header.
 - `npm test` passe désormais à 1071 tests verts ; `npm run lint` reste bloqué par une dette TypeScript préexistante hors périmètre de la story.
 
@@ -234,3 +235,4 @@ claude-sonnet-4-6
 - 2026-03-15 : Implémentation initiale de la story 58.2 avec nouveau header, i18n des actions et tests mis à jour.
 - 2026-03-15 : Correction de la compatibilité ThemeProvider hors contexte strict et stabilisation des tests d'intégration.
 - 2026-03-15 : Raffinement visuel du top bar (pleine largeur, glassmorphism plus marqué, logo plus grand, branding aligné à gauche, meilleur contraste dark mode).
+- 2026-03-15 : Harmonisation supplémentaire des styles globaux (boutons, blur, tokens violet/glass) et remplacement des anciennes classes de pill dashboard par `default_card_pill`.

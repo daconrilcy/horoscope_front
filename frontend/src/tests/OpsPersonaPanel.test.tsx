@@ -30,9 +30,9 @@ describe("OpsPersonaPanel", () => {
       data: {
         version: 2,
         tone: "direct",
-        prudence: "high",
-        scope: "strict",
-        style: "concise",
+        prudence_level: "high",
+        scope_policy: "strict",
+        response_style: "concise",
       },
     })
     mockUseUpdateOpsPersonaConfig.mockReturnValue({
@@ -60,9 +60,9 @@ describe("OpsPersonaPanel", () => {
 
     expect(mutateUpdate).toHaveBeenCalledWith({
       tone: "empathetic",
-      prudence: "standard",
-      scope: "balanced",
-      style: "detailed",
+      prudence_level: "standard",
+      scope_policy: "balanced",
+      response_style: "detailed",
     })
 
     fireEvent.click(screen.getByRole("button", { name: "Rollback persona effectué." }))
