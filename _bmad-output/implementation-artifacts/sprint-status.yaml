@@ -495,3 +495,12 @@ development_status:
   57-2-tests-form-modal-card: done
   57-3-tests-skeleton-emptystate-badge: done
   epic-57-retrospective: optional
+
+  epic-58: in-progress
+  58-1-app-name-constante-et-config-centrale: ready-for-dev
+  58-2-header-hamburger-logo-nom-actions: ready-for-dev
+  58-3-sidebar-context-et-overlay-3-etats: ready-for-dev
+  58-4-composant-user-avatar: ready-for-dev
+  58-5-menu-utilisateur-flottant: ready-for-dev
+  58-6-integration-applayout-et-qa: ready-for-dev
+  epic-58-retrospective: optional
