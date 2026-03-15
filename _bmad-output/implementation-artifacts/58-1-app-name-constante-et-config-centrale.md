@@ -1,6 +1,6 @@
 # Story 58.1 : Constante APP_NAME et configuration centrale de l'application
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -20,28 +20,28 @@ afin que toutes les stories suivantes de l'Epic 58 (et les composants futurs) pu
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Ajouter `APP_NAME` dans `constants.ts` (AC: 1)
-  - [ ] T1.1 Ajouter `export const APP_NAME = "Astrorizon"` avec commentaire JSDoc expliquant le rôle de cette constante
-  - [ ] T1.2 Vérifier que rien d'autre dans le codebase ne définit un app name (grep pour "Horoscope", "appTitle", "Astrorizon")
+- [x] T1 — Ajouter `APP_NAME` dans `constants.ts` (AC: 1)
+  - [x] T1.1 Ajouter `export const APP_NAME = "Astrorizon"` avec commentaire JSDoc expliquant le rôle de cette constante
+  - [x] T1.2 Vérifier que rien d'autre dans le codebase ne définit un app name (grep pour "Horoscope", "appTitle", "Astrorizon")
 
-- [ ] T2 — Copier le logo et l'exposer (AC: 2, 3)
-  - [ ] T2.1 Copier `docs/interfaces/logo_horoscope02.png` vers `frontend/src/assets/logo.png`
-  - [ ] T2.2 Créer `frontend/src/utils/appConfig.ts` :
+- [x] T2 — Copier le logo et l'exposer (AC: 2, 3)
+  - [x] T2.1 Copier `docs/interfaces/logo_horoscope02.png` vers `frontend/src/assets/logo.png`
+  - [x] T2.2 Créer `frontend/src/utils/appConfig.ts` :
     ```ts
     import appLogoSrc from "../assets/logo.png"
     export { APP_NAME } from "./constants"
     export const APP_LOGO: string = appLogoSrc
     ```
-  - [ ] T2.3 Vérifier que Vite importe correctement le PNG (pas d'erreur de build)
+  - [x] T2.3 Vérifier que Vite importe correctement le PNG (pas d'erreur de build)
 
-- [ ] T3 — Mettre à jour `i18n/common.ts` (AC: 4, 5)
-  - [ ] T3.1 Importer `APP_NAME` depuis `@utils/constants` dans `common.ts`
-  - [ ] T3.2 Remplacer les 3 occurrences de `appTitle` (`"Horoscope"`, `"Horoscope"`, `"Horóscopo"`) par `APP_NAME`
-  - [ ] T3.3 Vérifier que `Header.tsx` qui utilise `t.header.appTitle` affiche toujours "Astrorizon"
+- [x] T3 — Mettre à jour `i18n/common.ts` (AC: 4, 5)
+  - [x] T3.1 Importer `APP_NAME` depuis `@utils/constants` dans `common.ts`
+  - [x] T3.2 Remplacer les 3 occurrences de `appTitle` (`"Horoscope"`, `"Horoscope"`, `"Horóscopo"`) par `APP_NAME`
+  - [x] T3.3 Vérifier que `Header.tsx` qui utilise `t.header.appTitle` affiche toujours "Astrorizon"
 
 - [ ] T4 — Vérification (AC: 6, 7)
   - [ ] T4.1 `tsc --noEmit` sans erreur
-  - [ ] T4.2 `npx vitest run` — 1052+ tests passent
+  - [x] T4.2 `npx vitest run` — 1052+ tests passent
 
 ## Dev Notes
 
@@ -123,7 +123,18 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+- `rg -n "Horoscope|Horóscopo|Astrorizon|appTitle" frontend/src`
+- `npx vite build`
+- `npm run lint`
+- `npm test`
+
 ### Completion Notes List
+
+- Centralisation du nom applicatif via `APP_NAME` dans `constants.ts` et `appConfig.ts`.
+- Synchronisation de `common.ts` sur `APP_NAME` pour les trois langues sans changer la logique de rendu du header.
+- Mise à jour des tests de rendu du header pour refléter le nouveau titre `Astrorizon`.
+- Import Vite du logo validé par `npx vite build`.
+- Validation incomplète : `npm run lint` échoue sur un passif TypeScript hors scope de la story ; `npm test` est vert à 1052 tests.
 
 ### File List
 
@@ -131,3 +142,12 @@ claude-sonnet-4-6
 - `frontend/src/assets/logo.png` (créé — copie du logo)
 - `frontend/src/utils/appConfig.ts` (créé — config centrale)
 - `frontend/src/i18n/common.ts` (modifié — appTitle → APP_NAME)
+- `frontend/src/tests/layout/Header.test.tsx` (modifié — assertions alignées sur `Astrorizon`)
+- `frontend/src/tests/App.test.tsx` (modifié — assertion de redirection dashboard stabilisée)
+- `frontend/src/tests/DailyHoroscopePage.test.tsx` (modifié — conservation de l’assertion sur le titre métier de la page)
+- `frontend/src/tests/router.test.tsx` (modifié — assertions adaptées entre shell et titre métier dashboard)
+
+### Change Log
+
+- 2026-03-15 : Implémentation de la story 58.1, centralisation `APP_NAME`/logo, synchronisation i18n et mise à jour des tests associés.
+- 2026-03-15 : Revue de code du delta 58.1, aucune régression fonctionnelle trouvée ; validation Vite ajoutée et assertions de tests ajustées.

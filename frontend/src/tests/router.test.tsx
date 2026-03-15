@@ -221,7 +221,7 @@ describe("AuthGuard", () => {
     renderApp(["/dashboard"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 2, name: "Tableau de bord" })).toBeInTheDocument()
     })
   })
 })
@@ -234,7 +234,7 @@ describe("RoleGuard", () => {
     renderApp(["/admin/monitoring"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 1, name: "Astrorizon" })).toBeInTheDocument()
     })
   })
 

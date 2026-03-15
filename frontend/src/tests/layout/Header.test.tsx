@@ -33,7 +33,7 @@ describe("Header", () => {
       const header = document.querySelector("header.app-header")
       expect(header).toBeInTheDocument()
       expect(header).not.toHaveClass("app-header--dashboard")
-      expect(screen.getByText("Horoscope")).toBeInTheDocument()
+      expect(screen.getByText("Astrorizon")).toBeInTheDocument()
     })
 
     it("ajoute la classe app-header--dashboard sur /dashboard", () => {
@@ -44,8 +44,8 @@ describe("Header", () => {
       )
       const header = document.querySelector("header.app-header")
       expect(header).toHaveClass("app-header--dashboard")
-      // Le titre "Horoscope" est caché via condition React sur /dashboard
-      expect(screen.queryByText("Horoscope")).not.toBeInTheDocument()
+      // Le titre "Astrorizon" est caché via condition React sur /dashboard
+      expect(screen.queryByText("Astrorizon")).not.toBeInTheDocument()
     })
 
     it("ajoute la classe app-header--dashboard sur /dashboard/horoscope", () => {
@@ -56,8 +56,8 @@ describe("Header", () => {
       )
       const header = document.querySelector("header.app-header")
       expect(header).toHaveClass("app-header--dashboard")
-      // Le titre "Horoscope" est caché via condition React sur /dashboard/horoscope
-      expect(screen.queryByText("Horoscope")).not.toBeInTheDocument()
+      // Le titre "Astrorizon" est caché via condition React sur /dashboard/horoscope
+      expect(screen.queryByText("Astrorizon")).not.toBeInTheDocument()
     })
 
     it("ajoute la classe app-header--dashboard sur /dashboard/ (slash final)", () => {

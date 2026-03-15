@@ -1,3 +1,9 @@
+/** 
+ * Nom officiel de l'application. 
+ * Point de vérité unique pour l'identité de marque Astrorizon.
+ */
+export const APP_NAME = "Astrorizon"
+
 /**
  * Label affiché à l'utilisateur pour le timeout de génération du thème natal.
  * @note Cette valeur doit rester synchronisée avec le timeout backend configuré dans

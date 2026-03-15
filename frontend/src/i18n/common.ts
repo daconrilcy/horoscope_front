@@ -1,3 +1,5 @@
+import { APP_NAME } from "@utils/constants"
+
 import type { AstrologyLang } from "./astrology"
 
 export interface CommonTranslation {
@@ -33,7 +35,7 @@ export interface CommonTranslation {
 const translations: Record<AstrologyLang, CommonTranslation> = {
   fr: {
     header: {
-      appTitle: "Horoscope",
+      appTitle: APP_NAME,
       logout: "Se déconnecter",
       defaultRole: "Utilisateur",
     },
@@ -62,7 +64,7 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
   },
   en: {
     header: {
-      appTitle: "Horoscope",
+      appTitle: APP_NAME,
       logout: "Log out",
       defaultRole: "User",
     },
@@ -91,7 +93,7 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
   },
   es: {
     header: {
-      appTitle: "Horóscopo",
+      appTitle: APP_NAME,
       logout: "Cerrar sesión",
       defaultRole: "Usuario",
     },

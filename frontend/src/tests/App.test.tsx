@@ -174,7 +174,7 @@ describe("App", () => {
     renderApp(["/"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 2, name: "Tableau de bord" })).toBeInTheDocument()
     })
   })
 
