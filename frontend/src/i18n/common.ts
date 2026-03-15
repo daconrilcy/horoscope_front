@@ -7,6 +7,10 @@ export interface CommonTranslation {
     appTitle: string
     logout: string
     defaultRole: string
+    openMenu: string
+    closeMenu: string
+    toggleTheme: string
+    openUserMenu: string
   }
   userMenu: {
     editAccount: string
@@ -43,6 +47,10 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
       appTitle: APP_NAME,
       logout: "Se déconnecter",
       defaultRole: "Utilisateur",
+      openMenu: "Ouvrir le menu",
+      closeMenu: "Fermer le menu",
+      toggleTheme: "Changer le thème",
+      openUserMenu: "Menu utilisateur",
     },
     userMenu: {
       editAccount: "Modifier mon compte",
@@ -77,6 +85,10 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
       appTitle: APP_NAME,
       logout: "Log out",
       defaultRole: "User",
+      openMenu: "Open menu",
+      closeMenu: "Close menu",
+      toggleTheme: "Toggle theme",
+      openUserMenu: "User menu",
     },
     userMenu: {
       editAccount: "Edit account",
@@ -111,6 +123,10 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
       appTitle: APP_NAME,
       logout: "Cerrar sesión",
       defaultRole: "Usuario",
+      openMenu: "Abrir menú",
+      closeMenu: "Cerrar menú",
+      toggleTheme: "Cambiar tema",
+      openUserMenu: "Menú de usuario",
     },
     userMenu: {
       editAccount: "Editar cuenta",

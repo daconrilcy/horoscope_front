@@ -1,51 +1,75 @@
-import { useNavigate, useLocation } from "react-router-dom"
+import "./Header.css"
 
-import { clearAccessToken, useAccessTokenSnapshot } from "../../utils/authToken"
-import { useAuthMe } from "../../api/authMe"
-import { detectLang } from "../../i18n/astrology"
-import { commonTranslations } from "../../i18n/common"
+import { Menu, Moon, Sun, X } from "lucide-react"
+import { useState } from "react"
+
+import { useAuthMe } from "@api/authMe"
+import { detectLang } from "@i18n/astrology"
+import { commonTranslations } from "@i18n/common"
+import { useSidebarContext } from "@state/SidebarContext"
+import { useThemeSafe } from "@state/ThemeProvider"
+import { UserAvatar, UserMenu } from "@ui"
+import { APP_LOGO, APP_NAME } from "@utils/appConfig"
+import { useAccessTokenSnapshot } from "@utils/authToken"
 
 export function Header() {
   const lang = detectLang()
   const t = commonTranslations(lang)
   const token = useAccessTokenSnapshot()
   const authMe = useAuthMe(token)
-  const navigate = useNavigate()
-  const location = useLocation()
+  const { sidebarState, toggleSidebar } = useSidebarContext()
+  const themeContext = useThemeSafe()
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const theme = themeContext?.theme ?? "light"
+  const toggleTheme = themeContext?.toggleTheme ?? (() => {})
 
-  function handleLogout() {
-    clearAccessToken()
-    navigate("/login", { replace: true })
-  }
-
-  // Dashboard pages (landing and detailed horoscope) have their own header titles
-  const normalizedPath = location.pathname.replace(/\/+$/, "") || "/"
-  const isDashboard = normalizedPath === "/dashboard" || normalizedPath === "/dashboard/horoscope"
-  const showTitle = !isDashboard
+  const hamburgerLabel = sidebarState === "hidden" ? t.header.openMenu : t.header.closeMenu
+  const avatarEmail = authMe.data?.email ?? "?"
+  const avatarRole = authMe.data?.role ?? "user"
 
   return (
-    <header className={`app-header${isDashboard ? " app-header--dashboard" : ""}`}>
-      <div className="app-header-brand">
-        {showTitle && <h1 className="app-header-title">{t.header.appTitle}</h1>}
+    <header className="app-header">
+      <div className="app-header-left">
+        <button
+          type="button"
+          className="app-header-hamburger"
+          onClick={toggleSidebar}
+          aria-label={hamburgerLabel}
+        >
+          {sidebarState === "hidden" ? <Menu size={24} aria-hidden="true" /> : <X size={24} aria-hidden="true" />}
+        </button>
       </div>
-      {token && (
-        <div className="app-header-actions">
-          {authMe.data && (
-            <span className="app-header-user">
-              <span className="app-header-role">
-                {authMe.data.role === "user" ? t.header.defaultRole : authMe.data.role}
-              </span>
-            </span>
-          )}
-          <button
-            type="button"
-            className="app-header-logout"
-            onClick={handleLogout}
-          >
-            {t.header.logout}
-          </button>
+      <div className="app-header-brand">
+        <img src={APP_LOGO} alt={APP_NAME} className="app-header-logo" />
+        <span className="app-header-title">{APP_NAME}</span>
+      </div>
+      <div className="app-header-actions">
+        <button
+          type="button"
+          className="app-header-theme-toggle"
+          onClick={toggleTheme}
+          aria-label={t.header.toggleTheme}
+        >
+          {theme === "dark"
+            ? <Sun size={20} aria-hidden="true" />
+            : <Moon size={20} aria-hidden="true" />
+          }
+        </button>
+        <div className="app-header-avatar-wrapper">
+          <UserAvatar
+            email={avatarEmail}
+            displayName={t.header.openUserMenu}
+            onClick={() => setIsUserMenuOpen((value) => !value)}
+            aria-expanded={isUserMenuOpen}
+          />
+          <UserMenu
+            email={avatarEmail}
+            role={avatarRole}
+            isOpen={isUserMenuOpen}
+            onClose={() => setIsUserMenuOpen(false)}
+          />
         </div>
-      )}
+      </div>
     </header>
   )
 }

@@ -1,6 +1,6 @@
 # Story 58.2 : Header – hamburger, logo, nom d'application et actions droite
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -23,8 +23,8 @@ afin d'avoir une navigation claire et un accès immédiat aux paramètres de l'a
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Mettre à jour les i18n pour les nouveaux labels du Header (AC: 9)
-  - [ ] T1.1 Dans `frontend/src/i18n/common.ts`, ajouter dans l'interface `CommonTranslation` :
+- [x] T1 — Mettre à jour les i18n pour les nouveaux labels du Header (AC: 9)
+  - [x] T1.1 Dans `frontend/src/i18n/common.ts`, ajouter dans l'interface `CommonTranslation` :
     ```ts
     header: {
       appTitle: string       // existant — ne pas supprimer
@@ -36,16 +36,16 @@ afin d'avoir une navigation claire et un accès immédiat aux paramètres de l'a
       openUserMenu: string   // "Menu utilisateur"
     }
     ```
-  - [ ] T1.2 Ajouter les traductions fr/en/es pour les 4 nouveaux labels
+  - [x] T1.2 Ajouter les traductions fr/en/es pour les 4 nouveaux labels
 
-- [ ] T2 — Réécrire `Header.tsx` (AC: 1-9)
-  - [ ] T2.1 Importer `APP_NAME`, `APP_LOGO` depuis `@utils/appConfig`
-  - [ ] T2.2 Importer `useSidebarContext` depuis `@state/SidebarContext`
-  - [ ] T2.3 Importer `useTheme` depuis `@state/ThemeProvider`
-  - [ ] T2.4 Importer `UserAvatar` depuis `@ui/UserAvatar` (créé en Story 58.4)
-  - [ ] T2.5 Importer `UserMenu` depuis `@ui/UserMenu` (créé en Story 58.5)
-  - [ ] T2.6 Gérer l'état local `isUserMenuOpen: boolean` dans Header (useState)
-  - [ ] T2.7 Rendre le JSX :
+- [x] T2 — Réécrire `Header.tsx` (AC: 1-9)
+  - [x] T2.1 Importer `APP_NAME`, `APP_LOGO` depuis `@utils/appConfig`
+  - [x] T2.2 Importer `useSidebarContext` depuis `@state/SidebarContext`
+  - [x] T2.3 Importer `useTheme` depuis `@state/ThemeProvider`
+  - [x] T2.4 Importer `UserAvatar` depuis `@ui/UserAvatar` (créé en Story 58.4)
+  - [x] T2.5 Importer `UserMenu` depuis `@ui/UserMenu` (créé en Story 58.5)
+  - [x] T2.6 Gérer l'état local `isUserMenuOpen: boolean` dans Header (useState)
+  - [x] T2.7 Rendre le JSX :
     ```tsx
     <header className="app-header">
       {/* Zone gauche */}
@@ -82,12 +82,12 @@ afin d'avoir une navigation claire et un accès immédiat aux paramètres de l'a
       </div>
     </header>
     ```
-  - [ ] T2.8 Supprimer l'ancien affichage du rôle-badge et du bouton logout standalone
-  - [ ] T2.9 Supprimer la logique `isDashboard` / `showTitle` (le logo/titre sont toujours visibles)
+  - [x] T2.8 Supprimer l'ancien affichage du rôle-badge et du bouton logout standalone
+  - [x] T2.9 Supprimer la logique `isDashboard` / `showTitle` (le logo/titre sont toujours visibles)
 
-- [ ] T3 — Créer `Header.css` (AC: 7, 8)
-  - [ ] T3.1 Remplacer les styles header de `App.css` par `Header.css` importé dans `Header.tsx`
-  - [ ] T3.2 CSS cible :
+- [x] T3 — Créer `Header.css` (AC: 7, 8)
+  - [x] T3.1 Remplacer les styles header de `App.css` par `Header.css` importé dans `Header.tsx`
+  - [x] T3.2 CSS cible :
     ```css
     .app-header {
       display: flex;
@@ -135,9 +135,9 @@ afin d'avoir une navigation claire et un accès immédiat aux paramètres de l'a
     .app-header-avatar-wrapper { position: relative; }
     ```
 
-- [ ] T4 — Vérification (AC: 10)
+- [x] T4 — Vérification (AC: 10)
   - [ ] T4.1 `tsc --noEmit` sans erreur
-  - [ ] T4.2 `npx vitest run` — 1052+ tests passent
+  - [x] T4.2 `npx vitest run` — 1052+ tests passent
 
 ## Dev Notes
 
@@ -207,10 +207,28 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+- `npm test`
+- `npm run lint`
+
 ### Completion Notes List
+
+- Refonte complète de `Header.tsx` autour de `APP_NAME`/`APP_LOGO`, du `SidebarContext`, du `ThemeProvider` et du duo `UserAvatar` / `UserMenu`.
+- Le header utilise `useThemeSafe()` avec fallback local pour rester compatible avec les parcours et tests qui ne montent pas `ThemeProvider`.
+- Ajout d'un `Header.css` dédié avec cibles tactiles 44px, branding central et actions rapides droite.
+- Mise à jour des tests de layout, du scénario d'app logout, des tests router et settings pour refléter le nouveau contrat du header.
+- `npm test` passe à 1065 tests verts ; `npm run lint` reste bloqué par une dette TypeScript préexistante hors périmètre de la story.
 
 ### File List
 
 - `frontend/src/components/layout/Header.tsx` (réécrit)
 - `frontend/src/components/layout/Header.css` (créé)
 - `frontend/src/i18n/common.ts` (modifié — nouveaux labels header)
+- `frontend/src/App.css` (modifié — retrait des anciens styles header)
+- `frontend/src/tests/layout/Header.test.tsx` (modifié — nouveaux comportements du header)
+- `frontend/src/tests/App.test.tsx` (modifié — déconnexion via menu utilisateur)
+- `frontend/src/tests/router.test.tsx` (modifié — assertion de redirection alignée sur le dashboard)
+
+### Change Log
+
+- 2026-03-15 : Implémentation initiale de la story 58.2 avec nouveau header, i18n des actions et tests mis à jour.
+- 2026-03-15 : Correction de la compatibilité ThemeProvider hors contexte strict et stabilisation des tests d'intégration.

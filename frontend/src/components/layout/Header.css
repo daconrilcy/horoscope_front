@@ -1,0 +1,90 @@
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-4, 1rem);
+  height: 56px;
+  background: var(--glass);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--glass-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: var(--space-3, 0.75rem);
+}
+
+.app-header-left {
+  display: flex;
+  align-items: center;
+}
+
+.app-header-hamburger,
+.app-header-theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-2, 0.5rem);
+  border-radius: var(--radius-md, 0.5rem);
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  transform: none;
+}
+
+.app-header-hamburger {
+  color: var(--text-1);
+}
+
+.app-header-hamburger:hover,
+.app-header-theme-toggle:hover {
+  background: var(--glass-2);
+  transform: none;
+}
+
+.app-header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+}
+
+.app-header-logo {
+  height: 32px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.app-header-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(90deg, var(--cta-l) 0%, var(--cta-r) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+}
+
+.app-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+}
+
+.app-header-theme-toggle {
+  color: var(--text-2);
+}
+
+.app-header-theme-toggle:hover {
+  color: var(--text-1);
+}
+
+.app-header-avatar-wrapper {
+  position: relative;
+}

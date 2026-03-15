@@ -192,7 +192,7 @@ describe("App", () => {
     expect(screen.getAllByRole("link", { name: "Consultations" }).length).toBeGreaterThan(0)
   })
 
-  it("redirects to login when logout button is clicked", async () => {
+  it("redirects to login when logout is clicked from the user menu", async () => {
     vi.stubGlobal("fetch", makeFetchMock())
     const payload = btoa(JSON.stringify({ sub: "42", role: "user" }))
     setAccessToken(`x.${payload}.y`)
@@ -200,10 +200,11 @@ describe("App", () => {
     renderApp(["/dashboard"])
     
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Se déconnecter" })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Menu utilisateur" })).toBeInTheDocument()
     })
-    
-    fireEvent.click(screen.getByRole("button", { name: "Se déconnecter" }))
+
+    fireEvent.click(screen.getByRole("button", { name: "Menu utilisateur" }))
+    fireEvent.click(screen.getByRole("menuitem", { name: "Se déconnecter" }))
     
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Connexion" })).toBeInTheDocument()
