@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -7,14 +7,16 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 import { registerApi, AuthApiError } from "@api"
 import { setAccessToken } from "../utils/authToken"
 import { detectLang } from "../i18n/astrology"
-import { authTranslations } from "../i18n/auth"
+import { authTranslations, type AuthTranslation } from "../i18n/auth"
 
-const signUpSchema = z.object({
-  email: z.string().email("Adresse e-mail invalide."),
-  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères."),
-})
+export function createSignUpSchema(t: AuthTranslation) {
+  return z.object({
+    email: z.string().email(t.validation.emailInvalid),
+    password: z.string().min(8, t.validation.passwordTooShort),
+  })
+}
 
-type SignUpFormData = z.infer<typeof signUpSchema>
+type SignUpFormData = z.infer<ReturnType<typeof createSignUpSchema>>
 
 type SignUpFormProps = {
   onSignIn: () => void
@@ -23,6 +25,7 @@ type SignUpFormProps = {
 export function SignUpForm({ onSignIn }: SignUpFormProps) {
   const lang = detectLang()
   const t = authTranslations(lang)
+  const schema = useMemo(() => createSignUpSchema(t), [t])
   const [apiError, setApiError] = useState<string | null>(null)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -32,7 +35,7 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormData>({
-    resolver: zodResolver(signUpSchema),
+    resolver: zodResolver(schema),
   })
 
   async function onSubmit(data: SignUpFormData) {

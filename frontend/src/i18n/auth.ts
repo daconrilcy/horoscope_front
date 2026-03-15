@@ -24,6 +24,12 @@ export interface AuthTranslation {
     alreadyHaveAccount: string
     signInLink: string
   }
+  validation: {
+    emailInvalid: string
+    emailRequired: string
+    passwordRequired: string
+    passwordTooShort: string
+  }
 }
 
 const translations: Record<AstrologyLang, AuthTranslation> = {
@@ -51,6 +57,12 @@ const translations: Record<AstrologyLang, AuthTranslation> = {
       alreadyHaveAccount: "Déjà un compte ?",
       signInLink: "Se connecter",
     },
+    validation: {
+      emailInvalid: "Adresse e-mail invalide.",
+      emailRequired: "L'adresse e-mail est requise.",
+      passwordRequired: "Le mot de passe est requis.",
+      passwordTooShort: "Le mot de passe doit contenir au moins 8 caractères.",
+    },
   },
   en: {
     signIn: {
@@ -76,6 +88,12 @@ const translations: Record<AstrologyLang, AuthTranslation> = {
       alreadyHaveAccount: "Already have an account?",
       signInLink: "Sign In",
     },
+    validation: {
+      emailInvalid: "Invalid email address.",
+      emailRequired: "Email address is required.",
+      passwordRequired: "Password is required.",
+      passwordTooShort: "Password must be at least 8 characters long.",
+    },
   },
   es: {
     signIn: {
@@ -100,6 +118,12 @@ const translations: Record<AstrologyLang, AuthTranslation> = {
       errorGeneric: "Ha ocurrido un error. Por favor, inténtelo de nuevo.",
       alreadyHaveAccount: "¿Ya tienes una cuenta?",
       signInLink: "Iniciar sesión",
+    },
+    validation: {
+      emailInvalid: "Dirección de correo electrónico no válida.",
+      emailRequired: "El correo electrónico es obligatorio.",
+      passwordRequired: "La contraseña es obligatoria.",
+      passwordTooShort: "La contraseña debe tener al menos 8 caracteres.",
     },
   },
 }
