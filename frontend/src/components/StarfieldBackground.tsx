@@ -78,8 +78,8 @@ export const STARS = generateStars(STAR_COUNT, STAR_SEED)
 
 /**
  * Renders a starfield background for dark theme.
- * Only visible when theme is "dark", returns null otherwise.
- * Uses pre-generated deterministic star positions for consistent rendering.
+ * useThemeSafe needed: Starfield is conditionally rendered in the DOM 
+ * to optimize performance and respect legacy test assertions.
  */
 export function StarfieldBackground() {
   const themeContext = useThemeSafe()

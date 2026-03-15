@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Moon, Sun, ChevronLeft } from "lucide-react"
 import { getInitials } from "../utils/user"
+// useTheme needed: TodayHeader provides the global dark/light toggle for the entire application
 import { useTheme } from "../state/ThemeProvider"
 import { useAstrologyLabels } from "../i18n/astrology"
 import { translateDashboardPage } from "../i18n/dashboard"

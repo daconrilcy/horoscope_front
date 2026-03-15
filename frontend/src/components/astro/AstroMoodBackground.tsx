@@ -9,6 +9,7 @@ import {
   mulberry32,
   range,
 } from './astroMoodBackgroundUtils';
+// useThemeSafe needed: Canvas WebGL rendering requires the theme to pick correct color palettes
 import { useThemeSafe } from '../../state/ThemeProvider';
 import './AstroMoodBackground.css';
 

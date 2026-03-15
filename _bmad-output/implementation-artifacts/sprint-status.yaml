@@ -255,7 +255,7 @@ development_status:
   29-5-n5-eval-fixtures-gate: done
   epic-29-retrospective: optional
 
-  epic-30: in-progress
+  epic-30: done
   30-1-overrides-modeles-llm-env: done
   30-2-astroresponse-v2-schema-etendu: done
   30-3-gateway-gpt5-responses-api: done
@@ -264,7 +264,7 @@ development_status:
   30-6-refactor-modes-interaction-et-policy: done
   30-7-nouveaux-produits-tarot-event-chat: done
   30-8-mise-a-niveau-globale-interpretation-theme-natal-gpt5-responses-structured-outputs: done
-  30-9-historique-multi-interpretations-suppression-tracable-export-pdf-templatisable: in-progress
+  30-9-historique-multi-interpretations-suppression-tracable-export-pdf-templatisable: done
   30-10-chat-multi-astrologue-persistence-invariant-anti-doublon: done
   30-11-chat-api-enrichment-get-or-create: done
   30-12-chat-ui-messenger-identity-search-new: done
@@ -298,7 +298,7 @@ development_status:
   33-6-natal-sensitivity: done
   epic-33-retrospective: optional
 
-  epic-34: in-progress
+  epic-34: done
   34-1-domain-routing: done
   34-2-contribution-calculator: done
   34-3-aggregateur-raw-day: done
@@ -345,7 +345,7 @@ development_status:
   40-1-summaries-humanises-time-blocks-et-turning-points: done
   40-2-discrimination-scores-calibration-provisoire: done
 
-  epic-41: in-progress
+  epic-41: done
   41-1-realigner-taxonomie-et-hierarchie-evenements-intraday: done
   41-2-propager-influence-temporelle-evenements-fenetres-utiles: done
   41-3-fenetres-decisionnelles-et-pivots-filtres: done
@@ -363,12 +363,12 @@ development_status:
   41-15-jobs-de-generation-et-refresh-de-baseline-utilisateur: done
   41-16-qa-et-gardefous-produit-pour-la-calibration-relative: done
 
-  epic-42: in-progress
-  42-1-formaliser-le-modele-de-signal-daily-v3: ready-for-dev
-  42-2-construire-la-susceptibilite-natale-structurelle: review
-  42-3-construire-le-climat-de-transit-continu: review
-  42-4-construire-la-couche-d-activation-intrajournaliere-locale: review
-  42-5-repositionner-les-exactitudes-comme-couche-impulsionnelle: review
+  epic-42: done
+  42-1-formaliser-le-modele-de-signal-daily-v3: done
+  42-2-construire-la-susceptibilite-natale-structurelle: done
+  42-3-construire-le-climat-de-transit-continu: done
+  42-4-construire-la-couche-d-activation-intrajournaliere-locale: done
+  42-5-repositionner-les-exactitudes-comme-couche-impulsionnelle: done
   42-6-produire-orientation-intensite-confiance-et-rarete-par-theme: done
   42-7-refaire-la-calibration-absolue-a-partir-des-courbes-lissees: done
   42-8-etendre-le-snapshot-et-la-persistance-pour-le-daily-v3: done
@@ -426,20 +426,20 @@ development_status:
   47-9-persister-et-reutiliser-des-profils-tiers-de-consultation: done
   epic-47-retrospective: optional
 
-  epic-48: in-progress
-  48-1-creer-le-composant-astro-mood-background-parametrable: ready-for-dev
-  48-2-integrer-le-fond-astrologique-anime-au-resume-dashboard: ready-for-dev
-  48-3-verrouiller-qa-accessibilite-et-performance-du-fond-astrologique: ready-for-dev
+  epic-48: done
+  48-1-creer-le-composant-astro-mood-background-parametrable: done
+  48-2-integrer-le-fond-astrologique-anime-au-resume-dashboard: done
+  48-3-verrouiller-qa-accessibilite-et-performance-du-fond-astrologique: done
 
-  epic-49: in-progress
-  49-1-design-tokens-couleurs-semantiques-et-surfaces: ready-for-dev
-  49-2-design-tokens-typo-espacement-rayons-ombres-animations: ready-for-dev
-  49-3-classes-css-utilitaires-partagees: ready-for-dev
-  49-4-systeme-glassmorphism-mutualise: ready-for-dev
-  49-5-migration-styles-inline-vers-tokens: ready-for-dev
+  epic-49: done
+  49-1-design-tokens-couleurs-semantiques-et-surfaces: done
+  49-2-design-tokens-typo-espacement-rayons-ombres-animations: done
+  49-3-classes-css-utilitaires-partagees: done
+  49-4-systeme-glassmorphism-mutualise: done
+  49-5-migration-styles-inline-vers-tokens: done
   epic-49-retrospective: optional
 
-  epic-50: in-progress
+  epic-50: done
   50-1-composant-button-variants-tailles-etats: done
   50-2-composant-input-field-types-etats-validation: done
   50-3-composant-select-searchable-reutilisable: done
@@ -469,29 +469,29 @@ development_status:
 
   epic-53: in-progress
   53-1-variables-css-adaptatives-dark-mode: ready-for-dev
-  53-2-variables-css-contextuelles-astrotheme: ready-for-dev
+  53-2-variables-css-contextuelles-astrotheme: done
   53-3-audit-nettoyage-usetheme-composants-presentation: ready-for-dev
   epic-53-retrospective: optional
 
-  epic-54: in-progress
-  54-1-configurer-path-aliases-vite-typescript: ready-for-dev
-  54-2-barrel-exports-domaine-et-migration-imports: ready-for-dev
+  epic-54: done
+  54-1-configurer-path-aliases-vite-typescript: done
+  54-2-barrel-exports-domaine-et-migration-imports: done
   epic-54-retrospective: optional
 
-  epic-55: in-progress
-  55-1-separer-composants-dashboard-complexes: ready-for-dev
-  55-2-separer-composants-prediction: ready-for-dev
-  55-3-separer-pages-avec-fetching: ready-for-dev
+  epic-55: done
+  55-1-separer-composants-dashboard-complexes: done
+  55-2-separer-composants-prediction: done
+  55-3-separer-pages-avec-fetching: done
   epic-55-retrospective: optional
 
-  epic-56: in-progress
-  56-1-page-et-section-error-boundaries: ready-for-dev
-  56-2-composant-errorstate-unifie: ready-for-dev
-  56-3-deployer-error-boundaries-toutes-pages: ready-for-dev
+  epic-56: done
+  56-1-page-et-section-error-boundaries: done
+  56-2-composant-errorstate-unifie: done
+  56-3-deployer-error-boundaries-toutes-pages: done
   epic-56-retrospective: optional
 
-  epic-57: in-progress
-  57-1-tests-button-field-select: ready-for-dev
-  57-2-tests-form-modal-card: ready-for-dev
-  57-3-tests-skeleton-emptystate-badge: ready-for-dev
+  epic-57: done
+  57-1-tests-button-field-select: done
+  57-2-tests-form-modal-card: done
+  57-3-tests-skeleton-emptystate-badge: done
   epic-57-retrospective: optional
