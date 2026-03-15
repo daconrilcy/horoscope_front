@@ -9,7 +9,7 @@ export function NotFoundPage() {
       <section className="panel" style={{ textAlign: 'center' }}>
         <h1>Page non trouvée</h1>
         <p>La page que vous recherchez n'existe pas ou a été déplacée.</p>
-        <button type="button" onClick={() => navigate("/dashboard")} className="btn btn-primary mt-4">
+        <button type="button" onClick={() => navigate("/dashboard")} className="btn btn--primary" style={{ marginTop: 'var(--space-4)' }}>
           Retour au tableau de bord
         </button>
       </section>

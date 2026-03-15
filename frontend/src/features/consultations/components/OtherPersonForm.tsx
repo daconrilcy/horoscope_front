@@ -5,6 +5,7 @@ import {
   type GeocodingMessageKey,
 } from "@i18n/astrology"
 import { geocodeCity, GeocodingError } from "@api/geocoding"
+import { type GeocodingState } from "@utils/geocoding"
 import { tConsultations as t } from "@i18n/consultations"
 import { formatBirthPlace } from "@utils/constants"
 import { type OtherPersonDraft } from "@app-types/consultation"
@@ -19,8 +20,6 @@ type OtherPersonFormProps = {
   onNicknameChange?: (nickname: string) => void
   onSelectedExistingChange?: (externalId: string | null) => void
 }
-
-type GeocodingState = "idle" | "loading" | "success" | "error_not_found" | "error_unavailable"
 
 const EMPTY_VALUE: OtherPersonDraft = {
   birthDate: "",

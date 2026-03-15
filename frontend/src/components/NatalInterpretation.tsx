@@ -30,6 +30,7 @@ import {
 import { ErrorBoundary } from "@components/ErrorBoundary";
 import { Button } from "@ui/Button";
 import { useAccessTokenSnapshot } from "../utils/authToken";
+import { stripLeadingNumbering, stripLeadingNumber } from "@utils/strings";
 import "./NatalInterpretation.css";
 
 interface Props {
@@ -534,7 +535,7 @@ function HighlightsChips({ highlights }: { highlights: string[] }) {
           <div className="ni-highlight-icon">
             <Star size={16} style={{ color: 'var(--color-primary-strong)', fill: 'currentColor' }} />
           </div>
-          <p className="ni-highlight-text">{h.replace(/^[\d\-\.\s]+/, "")}</p>
+          <p className="ni-highlight-text">{stripLeadingNumbering(h)}</p>
         </div>
       ))}
     </div>
@@ -588,7 +589,7 @@ function AdviceList({ advice }: { advice: string[] }) {
           <div className="ni-advice-icon">
             <Star size={12} style={{ fill: 'currentColor' }} />
           </div>
-          <p className="ni-advice-text">{item.replace(/^\d+[\.\s]*/, "")}</p>
+          <p className="ni-advice-text">{stripLeadingNumber(item)}</p>
         </div>
       ))}
     </div>

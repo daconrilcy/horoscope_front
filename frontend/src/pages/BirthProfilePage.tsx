@@ -10,7 +10,8 @@ import { Button } from "@ui/Button"
 
 import { getBirthData, saveBirthData, BirthProfileApiError, type BirthProfileData } from "@api"
 import { generateNatalChart, ApiError, type LatestNatalChart } from "@api"
-import { geocodeCity, GeocodingError, reverseGeocode } from "../api/geocoding"
+import { GeocodingError, reverseGeocode } from "../api/geocoding"
+import { type GeocodingState, inferCityCountryFromBirthPlace, performGeocode } from "@utils/geocoding"
 import { useAccessTokenSnapshot, getSubjectFromAccessToken } from "../utils/authToken"
 import { ANONYMOUS_SUBJECT, GENERATION_TIMEOUT_LABEL, logSupportRequestId, formatBirthPlace } from "../utils/constants"
 import { TimezoneSelect } from "../components/TimezoneSelect"
@@ -54,35 +55,10 @@ function createBirthProfileSchema(v: BirthProfileValidation) {
 
 type BirthProfileFormData = z.infer<ReturnType<typeof createBirthProfileSchema>>
 
-type GeocodingState = "idle" | "loading" | "success" | "error_not_found" | "error_unavailable"
 type CurrentLocationState = "idle" | "detecting" | "resolving" | "success" | "error"
-
-type GeoResult = {
-  place_resolved_id: number
-  lat: number
-  lon: number
-  display_name: string
-  timezone_iana?: string | null
-} | null
 
 function shouldLogSupportForApiError(error: { status: number }): boolean {
   return error.status >= 500
-}
-
-function inferCityCountryFromBirthPlace(
-  birthPlace: string | undefined,
-): { city: string; country: string } {
-  if (!birthPlace) return { city: "", country: "" }
-  const chunks = birthPlace
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean)
-  if (chunks.length === 0) return { city: "", country: "" }
-  if (chunks.length === 1) return { city: chunks[0], country: "" }
-  return {
-    city: chunks[0],
-    country: chunks[chunks.length - 1],
-  }
 }
 
 export function BirthProfilePage() {
@@ -247,23 +223,6 @@ export function BirthProfilePage() {
     setGenerationError(null)
   }
 
-  /**
-   * Exécute le géocodage avec gestion d'annulation.
-   */
-  async function performGeocode(city: string, country: string): Promise<{ result: GeoResult; isServiceUnavailable: boolean }> {
-    if (!city || !country) return { result: null, isServiceUnavailable: false }
-
-    const controller = new AbortController()
-    geocodeAbortRef.current = controller
-
-    try {
-      const result = await geocodeCity(city, country, controller.signal)
-      return { result, isServiceUnavailable: false }
-    } catch (err) {
-      return { result: null, isServiceUnavailable: err instanceof GeocodingError }
-    }
-  }
-
   async function resolveCurrentLocation(
     city: string,
     country: string,
@@ -288,7 +247,9 @@ export function BirthProfilePage() {
       }
     }
 
-    const { result, isServiceUnavailable } = await performGeocode(trimmedCity, trimmedCountry)
+    const controller = new AbortController()
+    geocodeAbortRef.current = controller
+    const { result, isServiceUnavailable } = await performGeocode(trimmedCity, trimmedCountry, controller.signal)
     if (result === null) {
       throw new GeocodingError(
         "Current location could not be resolved",
@@ -455,7 +416,9 @@ export function BirthProfilePage() {
     const currentCountry = formData.current_country?.trim() ?? ""
 
     setGeocodingState("loading")
-    const { result: geoResult, isServiceUnavailable } = await performGeocode(city, country)
+    const submitController = new AbortController()
+    geocodeAbortRef.current = submitController
+    const { result: geoResult, isServiceUnavailable } = await performGeocode(city, country, submitController.signal)
 
     let coords: { lat: number; lon: number } | null = null
     let resolvedPlaceId: number | null = null
