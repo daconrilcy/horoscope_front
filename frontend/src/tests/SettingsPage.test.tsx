@@ -7,6 +7,7 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import { setAccessToken } from "../utils/authToken"
 import { routes } from "../app/routes"
 import { settingsTranslations } from "../i18n/settings"
+import { ThemeProvider } from "../state/ThemeProvider"
 
 beforeEach(() => {
   localStorage.setItem("lang", "fr")
@@ -119,9 +120,11 @@ function renderWithRouter(initialEntries: string[] = ["/settings"]) {
   return {
     router,
     ...render(
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} future={{ v7_startTransition: true }} />
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} future={{ v7_startTransition: true }} />
+        </QueryClientProvider>
+      </ThemeProvider>
     ),
   }
 }

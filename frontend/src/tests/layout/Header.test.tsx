@@ -20,7 +20,7 @@ vi.mock("../../api/authMe", () => ({
 }))
 
 vi.mock("../../state/ThemeProvider", () => ({
-  useThemeSafe: () => ({
+  useTheme: () => ({
     theme: "light",
     toggleTheme: toggleThemeMock,
   }),

@@ -7,7 +7,7 @@ import { useAuthMe } from "@api/authMe"
 import { detectLang } from "@i18n/astrology"
 import { commonTranslations } from "@i18n/common"
 import { useSidebarContext } from "@state/SidebarContext"
-import { useThemeSafe } from "@state/ThemeProvider"
+import { useTheme } from "@state/ThemeProvider"
 import { UserAvatar, UserMenu } from "@ui"
 import { APP_LOGO, APP_NAME } from "@utils/appConfig"
 import { useAccessTokenSnapshot } from "@utils/authToken"
@@ -18,10 +18,8 @@ export function Header() {
   const token = useAccessTokenSnapshot()
   const authMe = useAuthMe(token)
   const { sidebarState, toggleSidebar } = useSidebarContext()
-  const themeContext = useThemeSafe()
+  const { theme, toggleTheme } = useTheme()
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
-  const theme = themeContext?.theme ?? "light"
-  const toggleTheme = themeContext?.toggleTheme ?? (() => {})
 
   const hamburgerLabel = sidebarState === "hidden" ? t.header.openMenu : t.header.closeMenu
   const avatarEmail = authMe.data?.email ?? "?"
