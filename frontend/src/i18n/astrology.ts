@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react"
+import type { AppLocale } from "./types"
 
 /** Langues supportées pour la traduction astrologique */
-export type AstrologyLang = "fr" | "en" | "es"
+export type AstrologyLang = AppLocale
 
 /** Préfixes de fallback pour les maisons non répertoriées, par langue */
 const HOUSE_FALLBACK_PREFIX: Record<AstrologyLang, string> = {

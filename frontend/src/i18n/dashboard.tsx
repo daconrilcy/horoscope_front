@@ -1,4 +1,6 @@
-export type SupportedLocale = "fr" | "en" | "es"
+import type { AppLocale } from "./types"
+
+export type SupportedLocale = AppLocale
 
 export type DashboardCardId = "natal" | "chat" | "consultations" | "astrologers" | "settings"
 

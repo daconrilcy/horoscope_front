@@ -1,6 +1,5 @@
 import { Outlet } from "react-router-dom"
-import { detectLang } from "../i18n/astrology"
-import { adminTranslations } from "../i18n/admin"
+import { useTranslation } from "../i18n"
 import { AdminLayout, type AdminSection } from "../layouts"
 
 function PricingIcon({ className }: { className?: string }) {
@@ -78,9 +77,9 @@ function ReconciliationIcon({ className }: { className?: string }) {
 }
 
 export function AdminPage() {
-  const lang = detectLang()
-  const tPage = adminTranslations.page[lang]
-  const tSections = adminTranslations.sections[lang]
+  const t = useTranslation("admin")
+  const tPage = t.page
+  const tSections = t.sections
 
   const adminSections: AdminSection[] = [
     { path: "/admin/pricing", label: tSections.pricing, Icon: PricingIcon },

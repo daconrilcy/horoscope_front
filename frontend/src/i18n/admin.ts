@@ -23,6 +23,16 @@ type PricingTranslations = {
   upcomingNote: string
 }
 
+export interface AdminTranslation {
+  page: { title: string; backToHub: string }
+  sections: {
+    pricing: string
+    monitoring: string
+    personas: string
+    reconciliation: string
+  }
+}
+
 export const adminTranslations = {
   page: {
     fr: { title: "Administration", backToHub: "← Retour au hub" },
@@ -143,4 +153,11 @@ export const adminTranslations = {
     en: { title: "B2B Reconciliation" },
     es: { title: "Reconciliación B2B" },
   } as Record<AstrologyLang, { title: string }>,
+}
+
+export function translateAdmin(lang: AstrologyLang = "fr"): AdminTranslation {
+  return {
+    page: adminTranslations.page[lang],
+    sections: adminTranslations.sections[lang],
+  }
 }
