@@ -1,85 +1,66 @@
 import { useState } from "react"
 
-import { type MonitoringWindow, OpsMonitoringApiError, useConversationKpis } from "@api"
-import { useRollbackPersonaConfig } from "../api/opsPersona"
+import { useOpsMonitoring, useRollbackOpsPersonaConfig } from "@api"
+import { useTranslation } from "../i18n"
 
-function formatPercent(value: number): string {
-  return `${(value * 100).toFixed(1)}%`
-}
-
-function formatLatencyMs(value: number): string {
-  return `${Math.round(value)} ms`
+function formatLatencyMs(ms: number | null): string {
+  if (ms === null) return "N/A"
+  return `${ms.toFixed(0)}ms`
 }
 
 export function OpsMonitoringPanel() {
-  return <OpsMonitoringPanelContent />
-}
+  const t = useTranslation("admin").b2b.opsMonitoring
+  const [windowMinutes, setWindowWindowMinutes] = useState(60)
+  const monitoring = useOpsMonitoring(windowMinutes)
+  const rollbackPersona = useRollbackOpsPersonaConfig()
 
-function OpsMonitoringPanelContent() {
-  const [window, setWindow] = useState<MonitoringWindow>("24h")
-  const monitoring = useConversationKpis(window, true)
-  const rollbackPersona = useRollbackPersonaConfig()
-
-  const monitoringError = monitoring.error as OpsMonitoringApiError | null
-  const isEmpty = !monitoring.isPending && !monitoring.error && monitoring.data?.messages_total === 0
+  const monitoringError = monitoring.error as Error | null
+  const isEmpty = monitoring.isSuccess && monitoring.data === null
 
   return (
     <section className="panel">
-      <h2>Monitoring conversationnel Ops</h2>
-      <p>Suivi de la qualite conversationnelle et action rapide de rollback.</p>
+      <h2>{t.title}</h2>
+      <p>{t.description}</p>
 
-      <label htmlFor="ops-monitoring-window">Fenetre</label>
+      <label htmlFor="ops-monitoring-window">{t.windowLabel}</label>
       <select
         id="ops-monitoring-window"
-        value={window}
-        onChange={(event) => setWindow(event.target.value as MonitoringWindow)}
+        value={windowMinutes}
+        onChange={(e) => setWindowWindowMinutes(Number(e.target.value))}
       >
-        <option value="1h">1h</option>
-        <option value="24h">24h</option>
-        <option value="7d">7d</option>
+        <option value={15}>15 min</option>
+        <option value={60}>1 hour</option>
+        <option value={1440}>24 hours</option>
       </select>
-      <div className="action-row">
-        <button type="button" onClick={() => void monitoring.refetch()} disabled={monitoring.isFetching}>
-          Rafraichir KPI
-        </button>
-      </div>
 
-      {monitoring.isPending ? (
-        <p aria-busy="true" className="state-line state-loading">
-          Chargement KPI monitoring...
-        </p>
-      ) : null}
-      {monitoringError ? <p role="alert" className="chat-error">Erreur monitoring: {monitoringError.message}</p> : null}
-      {isEmpty ? <p className="state-line state-empty">Aucune donnee conversationnelle sur cette fenetre.</p> : null}
+      {monitoring.isPending ? <p className="state-line state-loading">Loading...</p> : null}
+      {monitoringError ? <p role="alert" className="chat-error">{t.error(monitoringError.message)}</p> : null}
+      {isEmpty ? <p className="state-line state-empty">{t.empty}</p> : null}
 
-      {monitoring.data && !isEmpty ? (
+      {monitoring.data && (
         <ul className="chat-list compact-list">
-          <li className="chat-item">Portee aggregation: {monitoring.data.aggregation_scope}</li>
-          <li className="chat-item">Messages total: {monitoring.data.messages_total}</li>
-          <li className="chat-item">
-            Hors-scope: {monitoring.data.out_of_scope_count} ({formatPercent(monitoring.data.out_of_scope_rate)})
-          </li>
-          <li className="chat-item">
-            Erreurs LLM: {monitoring.data.llm_error_count} ({formatPercent(monitoring.data.llm_error_rate)})
-          </li>
-          <li className="chat-item">Latence p95: {formatLatencyMs(monitoring.data.p95_latency_ms)}</li>
+          <li className="chat-item">{t.scope(monitoring.data.aggregation_scope)}</li>
+          <li className="chat-item">{t.totalMessages(monitoring.data.messages_total)}</li>
+          <li className="chat-item">Quality avg: {(monitoring.data.quality_score_avg * 100).toFixed(1)}%</li>
+          <li className="chat-item">{t.p95Latency(formatLatencyMs(monitoring.data.p95_latency_ms))}</li>
         </ul>
-      ) : null}
+      )}
 
-      <div className="action-row">
+      <div className="action-row mt-6">
         <button
           type="button"
-          disabled={rollbackPersona.isPending}
+          className="button-danger"
           onClick={() => rollbackPersona.mutate()}
+          disabled={rollbackPersona.isPending}
         >
-          Rollback configuration persona
+          Emergency Rollback Persona
         </button>
       </div>
-      {rollbackPersona.isSuccess ? <p className="state-line state-success">Rollback persona effectue.</p> : null}
-      {rollbackPersona.error ? (
-        <p role="alert" className="chat-error">Erreur rollback persona: {(rollbackPersona.error as Error).message}</p>
-      ) : null}
+
+      {rollbackPersona.isSuccess ? <p className="state-line state-success">{t.successRollback}</p> : null}
+      {rollbackPersona.isError && (
+        <p role="alert" className="chat-error">{(rollbackPersona.error as Error).message}</p>
+      )}
     </section>
   )
 }
-

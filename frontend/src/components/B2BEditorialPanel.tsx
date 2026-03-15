@@ -6,6 +6,7 @@ import {
   useUpdateB2BEditorialConfig,
 } from "../api/b2bEditorial"
 import type { B2BEditorialConfig } from "../api/b2bEditorial"
+import { useTranslation } from "../i18n"
 
 function parseTerms(value: string): string[] {
   return value
@@ -25,6 +26,7 @@ function formatErrorDetails(details: Record<string, unknown>): string {
 }
 
 export function B2BEditorialPanel() {
+  const t = useTranslation("admin").b2b.editorial
   const [apiKey, setApiKey] = useState("")
   const [loadedConfig, setLoadedConfig] = useState<B2BEditorialConfig | null>(null)
   const [tone, setTone] = useState<"neutral" | "friendly" | "premium">("neutral")
@@ -43,10 +45,10 @@ export function B2BEditorialPanel() {
 
   return (
     <section className="panel">
-      <h2>Personnalisation éditoriale B2B</h2>
-      <p>Configurez le style des réponses astrologiques selon votre ligne éditoriale.</p>
+      <h2>{t.title}</h2>
+      <p>{t.description}</p>
 
-      <label htmlFor="b2b-editorial-api-key">Clé API B2B</label>
+      <label htmlFor="b2b-editorial-api-key">{t.apiKeyLabel}</label>
       <div className="action-row">
         <input
           id="b2b-editorial-api-key"
@@ -67,18 +69,18 @@ export function B2BEditorialPanel() {
             setAvoidedTerms(config.avoided_terms.join(", "))
           }}
         >
-          Charger la configuration
+          {t.submitLoad}
         </button>
       </div>
 
       {isBusy ? (
         <p aria-busy="true" className="state-line state-loading">
-          Chargement configuration éditoriale...
+          {t.loading}
         </p>
       ) : null}
       {readError ? (
         <p role="alert" className="chat-error">
-          Erreur lecture éditoriale: {readError.message} ({readError.code})
+          {t.errorRead(readError.message, readError.code)}
           {readError.requestId ? ` [request_id=${readError.requestId}]` : ""}
           {Object.keys(readError.details).length > 0
             ? ` [details=${formatErrorDetails(readError.details)}]`
@@ -87,54 +89,54 @@ export function B2BEditorialPanel() {
       ) : null}
       {updateError ? (
         <p role="alert" className="chat-error">
-          Erreur mise à jour éditoriale: {updateError.message} ({updateError.code})
+          {t.errorUpdate(updateError.message, updateError.code)}
           {updateError.requestId ? ` [request_id=${updateError.requestId}]` : ""}
           {Object.keys(updateError.details).length > 0
             ? ` [details=${formatErrorDetails(updateError.details)}]`
             : ""}
         </p>
       ) : null}
-      {isEmpty ? <p className="state-line state-empty">Aucune configuration chargée.</p> : null}
+      {isEmpty ? <p className="state-line state-empty">{t.empty}</p> : null}
 
       {loadedConfig ? (
         <>
           <p className="state-line state-success">
-            Version active: {loadedConfig.version_number} ({loadedConfig.is_active ? "active" : "inactive"})
+            {t.activeVersion(String(loadedConfig.version_number), loadedConfig.is_active ? t.statusActive : t.statusInactive)}
           </p>
 
-          <label htmlFor="b2b-editorial-tone">Ton</label>
+          <label htmlFor="b2b-editorial-tone">{t.toneLabel}</label>
           <select
             id="b2b-editorial-tone"
             value={tone}
             onChange={(event) => setTone(event.target.value as "neutral" | "friendly" | "premium")}
           >
-            <option value="neutral">Neutre</option>
-            <option value="friendly">Amical</option>
-            <option value="premium">Premium</option>
+            <option value="neutral">{t.tones.neutral}</option>
+            <option value="friendly">{t.tones.friendly}</option>
+            <option value="premium">{t.tones.premium}</option>
           </select>
 
-          <label htmlFor="b2b-editorial-length">Longueur</label>
+          <label htmlFor="b2b-editorial-length">{t.lengthLabel}</label>
           <select
             id="b2b-editorial-length"
             value={lengthStyle}
             onChange={(event) => setLengthStyle(event.target.value as "short" | "medium" | "long")}
           >
-            <option value="short">Court</option>
-            <option value="medium">Moyen</option>
-            <option value="long">Long</option>
+            <option value="short">{t.lengths.short}</option>
+            <option value="medium">{t.lengths.medium}</option>
+            <option value="long">{t.lengths.long}</option>
           </select>
 
-          <label htmlFor="b2b-editorial-format">Format</label>
+          <label htmlFor="b2b-editorial-format">{t.formatLabel}</label>
           <select
             id="b2b-editorial-format"
             value={outputFormat}
             onChange={(event) => setOutputFormat(event.target.value as "paragraph" | "bullet")}
           >
-            <option value="paragraph">Paragraphe</option>
-            <option value="bullet">Liste à puces</option>
+            <option value="paragraph">{t.formats.paragraph}</option>
+            <option value="bullet">{t.formats.bullet}</option>
           </select>
 
-          <label htmlFor="b2b-editorial-preferred">Mots à privilégier (séparés par des virgules)</label>
+          <label htmlFor="b2b-editorial-preferred">{t.preferredLabel}</label>
           <input
             id="b2b-editorial-preferred"
             value={preferredTerms}
@@ -142,7 +144,7 @@ export function B2BEditorialPanel() {
             placeholder="focus, clarté"
           />
 
-          <label htmlFor="b2b-editorial-avoided">Mots à éviter (séparés par des virgules)</label>
+          <label htmlFor="b2b-editorial-avoided">{t.avoidedLabel}</label>
           <input
             id="b2b-editorial-avoided"
             value={avoidedTerms}
@@ -169,7 +171,7 @@ export function B2BEditorialPanel() {
               setAvoidedTerms(updated.avoided_terms.join(", "))
             }}
           >
-            Enregistrer la configuration
+            {t.submitSave}
           </button>
         </>
       ) : null}

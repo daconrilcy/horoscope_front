@@ -8,6 +8,7 @@ import {
   useB2BReconciliationIssueDetail,
   useB2BReconciliationIssues,
 } from "../api/b2bReconciliation"
+import { useTranslation } from "../i18n"
 
 function describeIssue(issue: ReconciliationIssue): string {
   return `A${issue.account_id} ${issue.period_start} -> ${issue.period_end} (${issue.severity})`
@@ -33,6 +34,7 @@ export function B2BReconciliationPanel() {
 }
 
 function B2BReconciliationPanelContent() {
+  const t = useTranslation("admin").b2b.reconciliation
   const [accountIdText, setAccountIdText] = useState("")
   const [severity, setSeverity] = useState<"" | "none" | "minor" | "major">("")
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null)
@@ -79,10 +81,10 @@ function B2BReconciliationPanelContent() {
 
   return (
     <section className="panel">
-      <h2>Réconciliation B2B Ops</h2>
-      <p>Compare l'usage mesuré et la facturation afin de détecter les écarts avant impact client.</p>
+      <h2>{t.title}</h2>
+      <p>{t.description}</p>
 
-      <label htmlFor="reco-account">Compte entreprise (optionnel)</label>
+      <label htmlFor="reco-account">{t.accountLabel}</label>
       <input
         id="reco-account"
         value={accountIdText}
@@ -90,16 +92,16 @@ function B2BReconciliationPanelContent() {
         placeholder="42"
       />
 
-      <label htmlFor="reco-severity">Sévérité</label>
+      <label htmlFor="reco-severity">{t.severityLabel}</label>
       <select
         id="reco-severity"
         value={severity}
         onChange={(event) => setSeverity(event.target.value as "" | "none" | "minor" | "major")}
       >
-        <option value="">Toutes</option>
-        <option value="major">Majeure</option>
-        <option value="minor">Mineure</option>
-        <option value="none">Aucune</option>
+        <option value="">{t.severities.all}</option>
+        <option value="major">{t.severities.major}</option>
+        <option value="minor">{t.severities.minor}</option>
+        <option value="none">{t.severities.none}</option>
       </select>
 
       <div className="action-row">
@@ -111,32 +113,32 @@ function B2BReconciliationPanelContent() {
           }}
           disabled={issuesQuery.isFetching}
         >
-          Charger la réconciliation
+          {t.submit}
         </button>
       </div>
 
       {isLoading ? (
         <p aria-busy="true" className="state-line state-loading">
-          Chargement réconciliation...
+          {t.loading}
         </p>
       ) : null}
       {listError ? (
         <p role="alert" className="chat-error">
-          Erreur réconciliation liste: {listError.message} ({listError.code})
+          {t.errorList(listError.message, listError.code)}
           {listError.requestId ? ` [request_id=${listError.requestId}]` : ""}
         </p>
       ) : null}
       {detailError ? (
         <p role="alert" className="chat-error">
-          Erreur réconciliation détail: {detailError.message} ({detailError.code})
+          {t.errorDetail(detailError.message, detailError.code)}
           {detailError.requestId ? ` [request_id=${detailError.requestId}]` : ""}
         </p>
       ) : null}
-      {isEmpty ? <p className="state-line state-empty">Aucun écart de réconciliation pour ces filtres.</p> : null}
+      {isEmpty ? <p className="state-line state-empty">{t.empty}</p> : null}
 
       {issuesQuery.data && issuesQuery.data.items.length > 0 ? (
         <>
-          <h3>Écarts identifiés ({issuesQuery.data.total})</h3>
+          <h3>{t.resultsTitle(issuesQuery.data.total)}</h3>
           <ul className="chat-list compact-list">
             {issuesQuery.data.items.map((issue) => (
               <li key={issue.issue_id} className="chat-item">
@@ -156,7 +158,7 @@ function B2BReconciliationPanelContent() {
 
       {activeIssue ? (
         <>
-          <h3>Détail écart</h3>
+          <h3>{t.detailTitle}</h3>
           <ul className="chat-list compact-list">
             <li className="chat-item">Issue: {activeIssue.issue_id}</li>
             <li className="chat-item">Type: {activeIssue.mismatch_type}</li>
@@ -165,7 +167,7 @@ function B2BReconciliationPanelContent() {
             <li className="chat-item">Trace source: usage_rows={(activeIssue.source_trace.usage_rows as number) ?? 0}</li>
           </ul>
 
-          <label htmlFor="reco-note">Note action (optionnel)</label>
+          <label htmlFor="reco-note">{t.noteLabel}</label>
           <input
             id="reco-note"
             value={note}
@@ -188,12 +190,12 @@ function B2BReconciliationPanelContent() {
 
           {actionMutation.isSuccess ? (
             <p className="state-line state-success">
-              Action exécutée: {actionMutation.data.action} ({actionMutation.data.correction_state})
+              {t.actionExecuted(actionMutation.data.action, actionMutation.data.correction_state)}
             </p>
           ) : null}
           {actionError ? (
             <p role="alert" className="chat-error">
-              Erreur action réconciliation: {actionError.message} ({actionError.code})
+              {t.errorAction(actionError.message, actionError.code)}
               {actionError.requestId ? ` [request_id=${actionError.requestId}]` : ""}
             </p>
           ) : null}

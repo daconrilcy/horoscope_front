@@ -1,4 +1,3 @@
-import { PageLayout } from "../layouts"
 import { useMemo, useState } from "react"
 
 import {
@@ -9,172 +8,143 @@ import {
   useChangePlan,
   useBillingSubscription,
   useCheckoutEntryPlan,
-  useRetryCheckout,
-} from "../api/billing"
+  useRetryPayment,
+} from "@api"
+import { useTranslation } from "../i18n"
 
 export function BillingPanel() {
+  const t = useTranslation("admin").b2b.billing_v2
+  const quota = useBillingQuota()
   const subscription = useBillingSubscription()
   const checkout = useCheckoutEntryPlan()
-  const retryCheckout = useRetryCheckout()
+  const retry = useRetryPayment()
   const changePlan = useChangePlan()
-  const quota = useBillingQuota()
+
   const [paymentToken, setPaymentToken] = useState("pm_card_ok")
-  const [targetPlanCode, setTargetPlanCode] = useState("premium-unlimited")
-  const [lastFailedIdempotencyKey, setLastFailedIdempotencyKey] = useState<string | null>(null)
-  const [lastCheckoutResult, setLastCheckoutResult] = useState<BillingCheckoutData | null>(null)
-  const [lastRetryResult, setLastRetryResult] = useState<BillingCheckoutData | null>(null)
-  const [lastPlanChangeResult, setLastPlanChangeResult] = useState<BillingPlanChangeData | null>(null)
+  const [targetPlanCode, setTargetPlanCode] = useState("basic-entry")
+
+  const lastCheckoutResult = checkout.data
+  const lastRetryResult = retry.data
+  const lastChangeResult = changePlan.data
 
   const checkoutError = checkout.error as BillingApiError | null
-  const retryError = retryCheckout.error as BillingApiError | null
+  const retryError = retry.error as BillingApiError | null
   const changePlanError = changePlan.error as BillingApiError | null
 
-  const busy = checkout.isPending || retryCheckout.isPending || changePlan.isPending
-  const failedReason = useMemo(() => {
-    if (lastRetryResult?.subscription.failure_reason) {
-      return lastRetryResult.subscription.failure_reason
+  const handleCheckout = () => {
+    const payload: BillingCheckoutData = {
+      plan_code: "basic-entry",
+      payment_method_token: paymentToken,
     }
-    if (lastCheckoutResult?.subscription.failure_reason) {
-      return lastCheckoutResult.subscription.failure_reason
-    }
-    return subscription.data?.failure_reason ?? null
-  }, [lastCheckoutResult, lastRetryResult, subscription.data])
+    checkout.mutate(payload)
+  }
 
+  const handleRetry = () => {
+    if (!lastCheckoutResult?.checkout_id && !subscription.data?.last_failed_checkout_id) return
+    const checkoutId = lastCheckoutResult?.checkout_id || subscription.data!.last_failed_checkout_id!
+    retry.mutate({ checkoutId, paymentMethodToken: paymentToken })
+  }
+
+  const handleChangePlan = () => {
+    const payload: BillingPlanChangeData = {
+      new_plan_code: targetPlanCode,
+    }
+    changePlan.mutate(payload)
+  }
+
+  const failedReason = lastCheckoutResult?.payment_failure_reason || lastRetryResult?.payment_failure_reason
   const showRetryAction =
     lastCheckoutResult?.payment_status === "failed" || lastRetryResult?.payment_status === "failed"
   const targetPlanLimitLabel = targetPlanCode === "premium-unlimited" ? "1000 messages/jour" : "5 messages/jour"
 
   return (
-    <PageLayout className="panel">
-      <h2>Abonnement</h2>
-      <p>Souscrivez au plan Basic pour activer le service payant.</p>
+    <section className="panel">
+      <h2>{t.title}</h2>
+      <p>{t.description}</p>
 
       {subscription.isLoading ? (
         <p aria-busy="true" className="state-line state-loading">
-          Chargement du statut abonnement...
+          Loading...
         </p>
       ) : null}
       {subscription.isError ? (
-        <div role="alert" className="chat-error">
-          <p>Erreur abonnement: {(subscription.error as BillingApiError).message}</p>
-          <button type="button" onClick={() => void subscription.refetch()}>
-            Réessayer
-          </button>
+        <div className="chat-error" role="alert">
+          <p>{t.error((subscription.error as BillingApiError).message)}</p>
         </div>
       ) : null}
 
-      {subscription.data ? (
-        <p>
-          Statut: {subscription.data.status === "active" ? "actif" : "inactif"}
-          {subscription.data.plan
-            ? ` · Plan: ${subscription.data.plan.display_name} · Limite: ${subscription.data.plan.daily_message_limit}/jour`
-            : ""}
-        </p>
-      ) : null}
-
-      <label htmlFor="billing-payment-token">Simulation paiement</label>
-      <div className="action-row">
+      <div className="action-row mt-6">
+        <label htmlFor="billing-payment-token">{t.paymentSimLabel}</label>
         <select
           id="billing-payment-token"
           value={paymentToken}
-          onChange={(event) => setPaymentToken(event.target.value)}
+          onChange={(e) => setPaymentToken(e.target.value)}
         >
-          <option value="pm_card_ok">Paiement valide</option>
-          <option value="pm_fail">Paiement refuse</option>
+          <option value="pm_card_ok">{t.paymentOptions.ok}</option>
+          <option value="pm_fail">{t.paymentOptions.fail}</option>
         </select>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={async () => {
-            const idempotencyKey = crypto.randomUUID()
-            const result = await checkout.mutateAsync({
-              plan_code: "basic-entry",
-              payment_method_token: paymentToken,
-              idempotency_key: idempotencyKey,
-            })
-            setLastCheckoutResult(result)
-            setLastRetryResult(null)
-            if (result.payment_status === "failed") {
-              setLastFailedIdempotencyKey(idempotencyKey)
-            } else {
-              setLastFailedIdempotencyKey(null)
-            }
-            void subscription.refetch()
-            void quota.refetch()
-          }}
-        >
-          Souscrire au plan Basic (5 EUR/mois)
-        </button>
-        {showRetryAction ? (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={async () => {
-              const retryKey = lastFailedIdempotencyKey
-                ? `${lastFailedIdempotencyKey}-retry`
-                : crypto.randomUUID()
-              const result = await retryCheckout.mutateAsync({
-                plan_code: "basic-entry",
-                payment_method_token: "pm_card_ok",
-                idempotency_key: retryKey,
-              })
-              setLastRetryResult(result)
-              void subscription.refetch()
-              void quota.refetch()
-            }}
-          >
-            Réessayer le paiement
-          </button>
-        ) : null}
       </div>
 
-      {subscription.data?.status === "active" ? (
-        <>
-          <label htmlFor="billing-target-plan">Changer de plan</label>
+      <div className="billing-actions mt-4">
+        {!subscription.data?.is_active && (
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleCheckout}
+            disabled={checkout.isPending || retry.isPending}
+          >
+            Subscribe Basic
+          </button>
+        )}
+
+        {showRetryAction && (
+          <button
+            type="button"
+            className="btn btn-danger ml-2"
+            onClick={handleRetry}
+            disabled={retry.isPending}
+          >
+            Retry Payment
+          </button>
+        )}
+      </div>
+
+      {subscription.data?.is_active && (
+        <div className="plan-change-section mt-8 border-t pt-6">
+          <label htmlFor="billing-target-plan">{t.changePlanLabel}</label>
           <div className="action-row">
             <select
               id="billing-target-plan"
               value={targetPlanCode}
-              onChange={(event) => setTargetPlanCode(event.target.value)}
+              onChange={(e) => setTargetPlanCode(e.target.value)}
             >
-              <option value="basic-entry">Basic 5 EUR/mois</option>
-              <option value="premium-unlimited">Premium 20 EUR/mois</option>
+              <option value="basic-entry">{t.planOptions.basic}</option>
+              <option value="premium-unlimited">{t.planOptions.premium}</option>
             </select>
             <button
               type="button"
-              disabled={busy}
-              onClick={async () => {
-                const result = await changePlan.mutateAsync({
-                  target_plan_code: targetPlanCode,
-                  idempotency_key: crypto.randomUUID(),
-                })
-                setLastPlanChangeResult(result)
-                void subscription.refetch()
-                void quota.refetch()
-              }}
+              className="btn btn-secondary"
+              onClick={handleChangePlan}
+              disabled={changePlan.isPending}
             >
-              Changer de plan
+              Apply Change
             </button>
           </div>
-          <p className="state-line">Impact quota cible: {targetPlanLimitLabel}</p>
-        </>
-      ) : null}
+          <p className="state-line">{t.impactQuota(targetPlanLimitLabel)}</p>
+        </div>
+      )}
 
-      {lastCheckoutResult?.payment_status === "succeeded" ||
-      lastRetryResult?.payment_status === "succeeded" ? (
-        <p className="state-line state-success">Abonnement actif.</p>
-      ) : null}
-      {lastPlanChangeResult?.plan_change_status === "succeeded" ? (
-        <p className="state-line state-success">
-          Plan mis a jour: {lastPlanChangeResult.previous_plan_code} -&gt;{" "}
-          {lastPlanChangeResult.target_plan_code}
+      {subscription.data?.is_active ? <p className="state-line state-success">{t.statusActive}</p> : null}
+      {quota.data && (
+        <p className="state-line">
+          Quota: {quota.data.consumed}/{quota.data.limit}
         </p>
-      ) : null}
+      )}
 
-      {failedReason ? <p className="state-line state-empty">Motif echec paiement: {failedReason}</p> : null}
-      {checkoutError ? <p className="chat-error">Erreur souscription: {checkoutError.message}</p> : null}
-      {retryError ? <p className="chat-error">Erreur retry paiement: {retryError.message}</p> : null}
-      {changePlanError ? <p className="chat-error">Erreur changement de plan: {changePlanError.message}</p> : null}
-    </PageLayout>
+      {failedReason ? <p className="state-line state-empty">{t.failedReason(failedReason)}</p> : null}
+      {checkoutError ? <p className="chat-error">{t.errorCheckout(checkoutError.message)}</p> : null}
+      {retryError ? <p className="chat-error">{t.errorRetry(retryError.message)}</p> : null}
+      {changePlanError ? <p className="chat-error">{t.errorChange(changePlanError.message)}</p> : null}
+    </section>
   )
 }

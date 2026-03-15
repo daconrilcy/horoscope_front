@@ -1,103 +1,71 @@
-import { useEffect, useState } from "react"
-
+import React from "react"
+import { useTranslation } from "../i18n"
 import {
-  useEnterpriseCredentials,
-  useGenerateEnterpriseCredential,
-  useRotateEnterpriseCredential,
-  type EnterpriseCredentialsApiError,
+  useB2BCredentials,
+  useGenerateB2BCredential,
+  useRotateB2BCredential,
 } from "../api/enterpriseCredentials"
 
 export function EnterpriseCredentialsPanel() {
-  const [lastGeneratedSecret, setLastGeneratedSecret] = useState<string | null>(null)
-  const [isSecretVisible, setIsSecretVisible] = useState(false)
+  const t = useTranslation("admin").b2b.credentials
+  const credentials = useB2BCredentials()
+  const generateCredential = useGenerateB2BCredential()
+  const rotateCredential = useRotateB2BCredential()
 
-  const credentials = useEnterpriseCredentials()
-
-  const generateCredential = useGenerateEnterpriseCredential()
-  const rotateCredential = useRotateEnterpriseCredential()
-
-  const isBusy = generateCredential.isPending || rotateCredential.isPending
-  const generateError = generateCredential.error as EnterpriseCredentialsApiError | null
-  const rotateError = rotateCredential.error as EnterpriseCredentialsApiError | null
-
-  useEffect(() => {
-    if (!lastGeneratedSecret) {
-      return
-    }
-    const timer = setTimeout(() => {
-      setLastGeneratedSecret(null)
-    }, 30000)
-    return () => clearTimeout(timer)
-  }, [lastGeneratedSecret])
+  const generateError = generateCredential.error as Error | null
+  const rotateError = rotateCredential.error as Error | null
 
   return (
     <section className="panel">
-      <h2>API Entreprise</h2>
-      <p>Générez et régénérez vos clés API B2B.</p>
+      <h2>{t.title}</h2>
+      <p>{t.description}</p>
 
-      {credentials.isLoading ? <p>Chargement des credentials...</p> : null}
+      {credentials.isLoading ? <p>{t.loading}</p> : null}
       {credentials.isError ? (
-        <p className="chat-error">Impossible de charger les credentials.</p>
+        <p className="chat-error">{t.errorLoad}</p>
       ) : null}
 
-      {credentials.data ? (
-        <div className="grid">
-          <article className="card">
-            <h3>Compte: {credentials.data.company_name}</h3>
-            <p>Status compte: <strong>{credentials.data.status}</strong></p>
-          </article>
-          {credentials.data.credentials.map((cred) => (
-            <article key={cred.credential_id} className="card">
-              <h3>Clé: {cred.key_prefix}***</h3>
-              <p>
-                Status: <strong>{cred.status}</strong>
-              </p>
-              <p>Créée le: {new Date(cred.created_at).toLocaleDateString()}</p>
-            </article>
-          ))}
-        </div>
-      ) : null}
+      {credentials.data && (
+        <div className="credentials-container">
+          <div className="company-info mb-6">
+            <h3>{t.accountTitle(credentials.data.company_name)}</h3>
+            <p>{t.accountStatus(credentials.data.status)}</p>
+          </div>
 
-      <div className="chat-form">
-        <button
-          type="button"
-          disabled={isBusy}
-          onClick={async () => {
-            const data = await generateCredential.mutateAsync()
-            setLastGeneratedSecret(data.api_key)
-            setIsSecretVisible(false)
-            void credentials.refetch()
-          }}
-        >
-          Générer une clé API
-        </button>
-        <button
-          type="button"
-          disabled={isBusy}
-          onClick={async () => {
-            const data = await rotateCredential.mutateAsync()
-            setLastGeneratedSecret(data.api_key)
-            setIsSecretVisible(false)
-            void credentials.refetch()
-          }}
-        >
-          Régénérer la clé active
-        </button>
-      </div>
+          <div className="credentials-list">
+            {credentials.data.credentials.map((cred) => (
+              <div key={cred.credential_id} className="credential-card mb-4 p-4 border rounded">
+                <h3>{t.keyTitle(cred.key_prefix)}</h3>
+                <p>
+                  Scope: {cred.scope} | Status: {cred.is_active ? "active" : "inactive"}
+                </p>
+                <p>{t.createdDate(new Date(cred.created_at).toLocaleDateString())}</p>
+                
+                <button
+                  type="button"
+                  className="btn btn-secondary mt-2"
+                  disabled={rotateCredential.isPending}
+                  onClick={() => rotateCredential.mutate(cred.credential_id)}
+                >
+                  Regenerate Key
+                </button>
+              </div>
+            ))}
+          </div>
 
-      {lastGeneratedSecret ? (
-        <>
-          <p role="status" className="state-line state-success">
-            Nouvelle clé API (expirée de l'écran dans 30s):{" "}
-            {isSecretVisible ? lastGeneratedSecret : "************************"}
-          </p>
-          <button type="button" onClick={() => setIsSecretVisible((current) => !current)}>
-            {isSecretVisible ? "Masquer la clé" : "Afficher la clé"}
+          <button
+            type="button"
+            className="btn btn-primary mt-4"
+            disabled={generateCredential.isPending}
+            onClick={() => generateCredential.mutate({ scope: "full" })}
+          >
+            Generate New Key
           </button>
-        </>
-      ) : null}
-      {generateError ? <p role="alert" className="chat-error">Erreur génération clé: {generateError.message}</p> : null}
-      {rotateError ? <p role="alert" className="chat-error">Erreur régénération clé: {rotateError.message}</p> : null}
+        </div>
+      )}
+
+      {generateError ? <p role="alert" className="chat-error">{t.errorGenerate(generateError.message)}</p> : null}
+      {rotateError ? <p role="alert" className="chat-error">{t.errorRotate(rotateError.message)}</p> : null}
     </section>
   )
 }

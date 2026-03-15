@@ -1,8 +1,10 @@
 import { useState } from "react"
 
 import { B2BAstrologyApiError, useB2BWeeklyBySign } from "@api"
+import { useTranslation } from "../i18n"
 
 export function B2BAstrologyPanel() {
+  const t = useTranslation("admin").b2b.astrology
   const [apiKey, setApiKey] = useState("")
   const weeklyBySign = useB2BWeeklyBySign()
   const error = weeklyBySign.error as B2BAstrologyApiError | null
@@ -11,10 +13,10 @@ export function B2BAstrologyPanel() {
 
   return (
     <section className="panel">
-      <h2>API B2B Astrologie</h2>
-      <p>Testez l'endpoint contractuel hebdomadaire par signe avec une clé API entreprise.</p>
+      <h2>{t.title}</h2>
+      <p>{t.description}</p>
 
-      <label htmlFor="b2b-api-key">Clé API B2B</label>
+      <label htmlFor="b2b-api-key">{t.apiKeyLabel}</label>
       <div className="action-row">
         <input
           id="b2b-api-key"
@@ -27,27 +29,27 @@ export function B2BAstrologyPanel() {
           disabled={weeklyBySign.isPending}
           onClick={() => weeklyBySign.mutate(apiKey.trim())}
         >
-          Récupérer weekly-by-sign
+          {t.submit}
         </button>
       </div>
 
       {weeklyBySign.isPending ? (
         <p aria-busy="true" className="state-line state-loading">
-          Chargement weekly-by-sign...
+          {t.loading}
         </p>
       ) : null}
       {error ? (
         <p role="alert" className="chat-error">
-          Erreur API B2B: {error.message} ({error.code})
+          {t.error(error.message, error.code)}
           {error.requestId ? ` [request_id=${error.requestId}]` : ""}
         </p>
       ) : null}
-      {isEmpty ? <p className="state-line state-empty">Aucun contenu astrologique disponible pour cette période.</p> : null}
+      {isEmpty ? <p className="state-line state-empty">{t.empty}</p> : null}
 
       {weeklyBySign.data && !isEmpty ? (
         <>
           <p className="state-line state-success">
-            Version API: {weeklyBySign.data.api_version} · Référence: {weeklyBySign.data.reference_version}
+            {t.apiVersion(weeklyBySign.data.api_version, weeklyBySign.data.reference_version)}
           </p>
           <ul className="chat-list compact-list">
             {weeklyBySign.data.items.map((item) => (

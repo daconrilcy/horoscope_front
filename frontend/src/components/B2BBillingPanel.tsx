@@ -6,6 +6,7 @@ import {
   useB2BBillingLatestCycle,
 } from "../api/b2bBilling"
 import type { B2BBillingCycle } from "../api/b2bBilling"
+import { useTranslation } from "../i18n"
 
 function formatEuro(cents: number): string {
   return `${(cents / 100).toFixed(2)} EUR`
@@ -22,6 +23,7 @@ function formatErrorDetails(details: Record<string, unknown>): string {
 }
 
 export function B2BBillingPanel() {
+  const t = useTranslation("admin").b2b.billing
   const [apiKey, setApiKey] = useState("")
   const [historyItems, setHistoryItems] = useState<B2BBillingCycle[]>([])
   const billingLatest = useB2BBillingLatestCycle()
@@ -34,10 +36,10 @@ export function B2BBillingPanel() {
 
   return (
     <section className="panel">
-      <h2>Facturation B2B</h2>
-      <p>Consultez votre relevé facturé (fixe + volume) pour la dernière période clôturée.</p>
+      <h2>{t.title}</h2>
+      <p>{t.description}</p>
 
-      <label htmlFor="b2b-billing-api-key">Clé API B2B</label>
+      <label htmlFor="b2b-billing-api-key">{t.apiKeyLabel}</label>
       <div className="action-row">
         <input
           id="b2b-billing-api-key"
@@ -58,39 +60,39 @@ export function B2BBillingPanel() {
             }
           }}
         >
-          Récupérer le relevé facturé
+          {t.submit}
         </button>
       </div>
 
       {isBusy ? (
         <p aria-busy="true" className="state-line state-loading">
-          Chargement facturation B2B...
+          {t.loading}
         </p>
       ) : null}
       {error ? (
         <p role="alert" className="chat-error">
-          Erreur facturation B2B: {error.message} ({error.code})
+          {t.error(error.message, error.code)}
           {error.requestId ? ` [request_id=${error.requestId}]` : ""}
           {Object.keys(error.details).length > 0 ? ` [details=${formatErrorDetails(error.details)}]` : ""}
         </p>
       ) : null}
-      {isEmpty ? <p className="state-line state-empty">Aucun cycle de facturation clôturé pour ce compte.</p> : null}
+      {isEmpty ? <p className="state-line state-empty">{t.empty}</p> : null}
 
       {billingLatest.data ? (
         <ul className="chat-list compact-list">
           <li className="chat-item">
-            Période: {billingLatest.data.period_start} {"->"} {billingLatest.data.period_end}
+            {t.period(billingLatest.data.period_start, billingLatest.data.period_end)}
           </li>
-          <li className="chat-item">Plan: {billingLatest.data.plan_display_name}</li>
-          <li className="chat-item">Fixe: {formatEuro(billingLatest.data.fixed_amount_cents)}</li>
-          <li className="chat-item">Variable: {formatEuro(billingLatest.data.variable_amount_cents)}</li>
-          <li className="chat-item">Total: {formatEuro(billingLatest.data.total_amount_cents)}</li>
+          <li className="chat-item">{t.plan(billingLatest.data.plan_display_name)}</li>
+          <li className="chat-item">{t.fixed(formatEuro(billingLatest.data.fixed_amount_cents))}</li>
+          <li className="chat-item">{t.variable(formatEuro(billingLatest.data.variable_amount_cents))}</li>
+          <li className="chat-item">{t.total(formatEuro(billingLatest.data.total_amount_cents))}</li>
         </ul>
       ) : null}
 
       {historyItems.length > 0 ? (
         <>
-          <h3>Historique récent</h3>
+          <h3>{t.historyTitle}</h3>
           <ul className="chat-list compact-list">
             {historyItems.map((item) => (
               <li key={item.cycle_id} className="chat-item">
