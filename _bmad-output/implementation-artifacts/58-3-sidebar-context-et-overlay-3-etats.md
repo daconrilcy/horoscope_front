@@ -1,6 +1,6 @@
 # Story 58.3 : SidebarContext et Sidebar overlay à 3 états
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -219,8 +219,8 @@ afin de bénéficier d'un accès contextuel à la navigation sans perdre la visi
     ```
   - **Note** : l'intégration complète de AppLayout est dans Story 58.6. Dans cette story, implémenter uniquement le SidebarProvider et les composants Sidebar/SidebarContext.
 
-- [ ] T5 — Vérification (AC: 10)
-  - [ ] T5.1 `tsc --noEmit` sans erreur
+- [x] T5 — Vérification (AC: 10)
+  - [x] T5.1 `tsc --noEmit` sans erreur
   - [x] T5.2 `npx vitest run` — 1052+ tests passent
 
 ## Dev Notes

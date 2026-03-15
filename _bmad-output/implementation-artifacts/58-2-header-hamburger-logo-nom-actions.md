@@ -1,6 +1,6 @@
 # Story 58.2 : Header – hamburger, logo, nom d'application et actions droite
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -136,7 +136,7 @@ afin d'avoir une navigation claire et un accès immédiat aux paramètres de l'a
     ```
 
 - [x] T4 — Vérification (AC: 10)
-  - [ ] T4.1 `tsc --noEmit` sans erreur
+  - [x] T4.1 `tsc --noEmit` sans erreur
   - [x] T4.2 `npx vitest run` — 1052+ tests passent
 
 ## Dev Notes

@@ -1,6 +1,6 @@
 # Story 58.6 : Intégration AppLayout, nettoyage CSS et QA complète
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -156,7 +156,7 @@ afin que le nouvel app shell soit cohérent, fonctionnel sur tous les écrans, a
     ```
 
 - [x] T6 — Vérifications finales (AC: 7, 8, 9)
-  - [ ] T6.1 `tsc --noEmit` — 0 erreur
+  - [x] T6.1 `tsc --noEmit` — 0 erreur
   - [x] T6.2 `npx vitest run` — tous les tests passent (≥ 1052 existants + nouveaux)
   - [ ] T6.3 Vérification manuelle (si serveur dev disponible) :
     - [ ] Dashboard, Chat, Natal, Consultations, Settings → chaque page affiche header + sidebar corrects

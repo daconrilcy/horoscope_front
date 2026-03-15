@@ -496,11 +496,11 @@ development_status:
   57-3-tests-skeleton-emptystate-badge: done
   epic-57-retrospective: optional
 
-  epic-58: in-progress
-  58-1-app-name-constante-et-config-centrale: in-progress
-  58-2-header-hamburger-logo-nom-actions: in-progress
-  58-3-sidebar-context-et-overlay-3-etats: in-progress
-  58-4-composant-user-avatar: in-progress
-  58-5-menu-utilisateur-flottant: in-progress
-  58-6-integration-applayout-et-qa: in-progress
+  epic-58: done
+  58-1-app-name-constante-et-config-centrale: done
+  58-2-header-hamburger-logo-nom-actions: done
+  58-3-sidebar-context-et-overlay-3-etats: done
+  58-4-composant-user-avatar: done
+  58-5-menu-utilisateur-flottant: done
+  58-6-integration-applayout-et-qa: done
   epic-58-retrospective: optional

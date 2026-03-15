@@ -1,6 +1,6 @@
 # Story 58.5 : Menu utilisateur flottant (overlay au clic sur l'avatar)
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -300,8 +300,8 @@ afin d'accéder à mon profil, mes paramètres et la déconnexion sans quitter l
     })
     ```
 
-- [ ] T6 — Vérification (AC: 9)
-  - [ ] T6.1 `tsc --noEmit` sans erreur
+- [x] T6 — Vérification (AC: 9)
+  - [x] T6.1 `tsc --noEmit` sans erreur
   - [x] T6.2 `npx vitest run` — 1052+ tests passent (+ nouveaux tests UserMenu)
 
 ## Dev Notes

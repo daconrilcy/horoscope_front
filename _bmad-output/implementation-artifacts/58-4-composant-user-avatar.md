@@ -1,6 +1,6 @@
 # Story 58.4 : Composant UserAvatar (initiales ou image uploadée)
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -177,8 +177,8 @@ afin d'identifier immédiatement mon compte connecté et d'accéder au menu util
     })
     ```
 
-- [ ] T5 — Vérification (AC: 8)
-  - [ ] T5.1 `tsc --noEmit` sans erreur
+- [x] T5 — Vérification (AC: 8)
+  - [x] T5.1 `tsc --noEmit` sans erreur
   - [x] T5.2 `npx vitest run` — 1052+ tests passent (+ nouveaux tests UserAvatar)
 
 ## Dev Notes

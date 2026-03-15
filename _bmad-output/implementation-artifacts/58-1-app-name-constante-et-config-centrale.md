@@ -1,6 +1,6 @@
 # Story 58.1 : Constante APP_NAME et configuration centrale de l'application
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -39,8 +39,8 @@ afin que toutes les stories suivantes de l'Epic 58 (et les composants futurs) pu
   - [x] T3.2 Remplacer les 3 occurrences de `appTitle` (`"Horoscope"`, `"Horoscope"`, `"Horóscopo"`) par `APP_NAME`
   - [x] T3.3 Vérifier que `Header.tsx` qui utilise `t.header.appTitle` affiche toujours "Astrorizon"
 
-- [ ] T4 — Vérification (AC: 6, 7)
-  - [ ] T4.1 `tsc --noEmit` sans erreur
+- [x] T4 — Vérification (AC: 6, 7)
+  - [x] T4.1 `tsc --noEmit` sans erreur
   - [x] T4.2 `npx vitest run` — 1052+ tests passent
 
 ## Dev Notes
