@@ -1,6 +1,6 @@
 # Story 58.4 : Composant UserAvatar (initiales ou image uploadée)
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -22,9 +22,9 @@ afin d'identifier immédiatement mon compte connecté et d'accéder au menu util
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Créer `UserAvatar.tsx` (AC: 1-6)
-  - [ ] T1.1 Créer le dossier `frontend/src/components/ui/UserAvatar/`
-  - [ ] T1.2 Créer `frontend/src/components/ui/UserAvatar/UserAvatar.tsx` :
+- [x] T1 — Créer `UserAvatar.tsx` (AC: 1-6)
+  - [x] T1.1 Créer le dossier `frontend/src/components/ui/UserAvatar/`
+  - [x] T1.2 Créer `frontend/src/components/ui/UserAvatar/UserAvatar.tsx` :
     ```tsx
     import { useState } from "react"
     import "./UserAvatar.css"
@@ -87,8 +87,8 @@ afin d'identifier immédiatement mon compte connecté et d'accéder au menu util
     }
     ```
 
-- [ ] T2 — Créer `UserAvatar.css` (AC: 3, 4)
-  - [ ] T2.1 Créer `frontend/src/components/ui/UserAvatar/UserAvatar.css` :
+- [x] T2 — Créer `UserAvatar.css` (AC: 3, 4)
+  - [x] T2.1 Créer `frontend/src/components/ui/UserAvatar/UserAvatar.css` :
     ```css
     .user-avatar {
       border-radius: 50%;
@@ -129,18 +129,18 @@ afin d'identifier immédiatement mon compte connecté et d'accéder au menu util
     }
     ```
 
-- [ ] T3 — Exporter depuis le barrel UI (AC: 7)
-  - [ ] T3.1 Dans `frontend/src/components/ui/index.ts`, ajouter :
+- [x] T3 — Exporter depuis le barrel UI (AC: 7)
+  - [x] T3.1 Dans `frontend/src/components/ui/index.ts`, ajouter :
     ```ts
     export * from './UserAvatar/UserAvatar';
     ```
-  - [ ] T3.2 Créer `frontend/src/components/ui/UserAvatar/index.ts` si nécessaire (barrel interne) :
+  - [x] T3.2 Créer `frontend/src/components/ui/UserAvatar/index.ts` si nécessaire (barrel interne) :
     ```ts
     export * from './UserAvatar';
     ```
 
-- [ ] T4 — Tests unitaires (AC: 9)
-  - [ ] T4.1 Créer `frontend/src/tests/UserAvatar.test.tsx` :
+- [x] T4 — Tests unitaires (AC: 9)
+  - [x] T4.1 Créer `frontend/src/tests/UserAvatar.test.tsx` :
     ```tsx
     describe("UserAvatar", () => {
       it("affiche l'initiale de l'email quand pas d'avatarUrl", () => {
@@ -179,7 +179,7 @@ afin d'identifier immédiatement mon compte connecté et d'accéder au menu util
 
 - [ ] T5 — Vérification (AC: 8)
   - [ ] T5.1 `tsc --noEmit` sans erreur
-  - [ ] T5.2 `npx vitest run` — 1052+ tests passent (+ nouveaux tests UserAvatar)
+  - [x] T5.2 `npx vitest run` — 1052+ tests passent (+ nouveaux tests UserAvatar)
 
 ## Dev Notes
 
@@ -225,11 +225,24 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+- `npm test`
+- `npm run lint`
+
 ### Completion Notes List
+
+- Création du composant `UserAvatar` avec fallback initiale, gestion d'erreur d'image et mode bouton pour l'ouverture du menu utilisateur.
+- Ajout des styles dédiés pour les tailles `sm` / `md` / `lg` avec couleur de fond basée sur `--primary`.
+- Export du composant via le barrel UI et ajout d'une suite de tests couvrant image, fallback et accessibilité.
+- Validation incomplète : `npm run lint` reste bloqué par un passif TypeScript global hors scope ; `npm test` est vert à 1061 tests.
 
 ### File List
 
 - `frontend/src/components/ui/UserAvatar/UserAvatar.tsx` (créé)
 - `frontend/src/components/ui/UserAvatar/UserAvatar.css` (créé)
 - `frontend/src/components/ui/index.ts` (modifié — ajout UserAvatar)
+- `frontend/src/components/ui/UserAvatar/index.ts` (créé — barrel interne)
 - `frontend/src/tests/UserAvatar.test.tsx` (créé)
+
+### Change Log
+
+- 2026-03-15 : Implémentation initiale de la story 58.4 avec composant `UserAvatar`, styles dédiés, export barrel et tests unitaires.
