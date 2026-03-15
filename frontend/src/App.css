@@ -24,6 +24,10 @@
   padding: 22px 18px;
 }
 
+.app-shell-main--with-sidebar-offset {
+  margin-left: 48px;
+}
+
 /* Header */
 .app-header {
   display: flex;
@@ -78,43 +82,6 @@
 .app-header-logout {
   font-size: 0.85rem;
   padding: 0.4rem 0.75rem;
-}
-
-/* Sidebar */
-.app-sidebar {
-  width: 220px;
-  background: var(--glass);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border-right: 1px solid var(--glass-border);
-  padding: 1rem 0;
-  flex-shrink: 0;
-}
-
-.app-sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.app-sidebar-link {
-  display: block;
-  padding: 0.65rem 1.25rem;
-  color: var(--text-2);
-  text-decoration: none;
-  border-left: 3px solid transparent;
-  transition: all 0.15s ease;
-}
-
-.app-sidebar-link:hover {
-  color: var(--text-1);
-  background: var(--glass-2);
-}
-
-.app-sidebar-link--active {
-  color: var(--text-1);
-  background: var(--glass-2);
-  border-left-color: var(--cta-l);
 }
 
 /* === BottomNav === */
@@ -174,16 +141,16 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .app-sidebar {
-    display: none;
-  }
-
   .bottom-nav {
     display: flex;
   }
 
   .app-shell-main {
     padding-bottom: 110px;
+  }
+
+  .app-shell-main--with-sidebar-offset {
+    margin-left: 0;
   }
 
   .app-header-title {

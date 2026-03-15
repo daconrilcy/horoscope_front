@@ -1,6 +1,6 @@
 # Story 58.3 : SidebarContext et Sidebar overlay à 3 états
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -28,8 +28,8 @@ afin de bénéficier d'un accès contextuel à la navigation sans perdre la visi
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Créer `SidebarContext.tsx` (AC: 1, 2, 8, 9)
-  - [ ] T1.1 Créer `frontend/src/state/SidebarContext.tsx` :
+- [x] T1 — Créer `SidebarContext.tsx` (AC: 1, 2, 8, 9)
+  - [x] T1.1 Créer `frontend/src/state/SidebarContext.tsx` :
     ```ts
     export type SidebarState = "hidden" | "expanded" | "icon-only"
 
@@ -70,14 +70,14 @@ afin de bénéficier d'un accès contextuel à la navigation sans perdre la visi
       return ctx
     }
     ```
-  - [ ] T1.2 Exporter `SidebarProvider`, `useSidebarContext`, `type SidebarState` depuis ce fichier
+  - [x] T1.2 Exporter `SidebarProvider`, `useSidebarContext`, `type SidebarState` depuis ce fichier
 
-- [ ] T2 — Réécrire `Sidebar.tsx` (AC: 3, 4, 5, 6, 7)
-  - [ ] T2.1 Importer `useSidebarContext` depuis `@state/SidebarContext`
-  - [ ] T2.2 Importer `getAllNavItems` depuis `@ui/nav`
-  - [ ] T2.3 Importer `navigationTranslations` depuis `@i18n/navigation`
-  - [ ] T2.4 Importer `useAuthMe`, `useAccessTokenSnapshot` pour le filtrage par rôle
-  - [ ] T2.5 Structure JSX :
+- [x] T2 — Réécrire `Sidebar.tsx` (AC: 3, 4, 5, 6, 7)
+  - [x] T2.1 Importer `useSidebarContext` depuis `@state/SidebarContext`
+  - [x] T2.2 Importer `getAllNavItems` depuis `@ui/nav`
+  - [x] T2.3 Importer `navigationTranslations` depuis `@i18n/navigation`
+  - [x] T2.4 Importer `useAuthMe`, `useAccessTokenSnapshot` pour le filtrage par rôle
+  - [x] T2.5 Structure JSX :
     ```tsx
     <>
       {/* Backdrop — visible uniquement en état expanded */}
@@ -113,10 +113,10 @@ afin de bénéficier d'un accès contextuel à la navigation sans perdre la visi
       </aside>
     </>
     ```
-  - [ ] T2.6 Ajouter `import "./Sidebar.css"`
+  - [x] T2.6 Ajouter `import "./Sidebar.css"`
 
-- [ ] T3 — Créer `Sidebar.css` (AC: 3, 4, 5, 6)
-  - [ ] T3.1 CSS complet :
+- [x] T3 — Créer `Sidebar.css` (AC: 3, 4, 5, 6)
+  - [x] T3.1 CSS complet :
     ```css
     /* Backdrop */
     .sidebar-backdrop {
@@ -210,9 +210,9 @@ afin de bénéficier d'un accès contextuel à la navigation sans perdre la visi
     }
     ```
 
-- [ ] T4 — Ajuster `AppLayout.tsx` pour le décalage du contenu (AC: 8)
-  - [ ] T4.1 Importer `SidebarProvider` et l'utiliser comme wrapper dans `AppLayout`
-  - [ ] T4.2 Ajouter un `style` dynamique sur `.app-shell-main` pour le margin-left :
+- [x] T4 — Ajuster `AppLayout.tsx` pour le décalage du contenu (AC: 8)
+  - [x] T4.1 Importer `SidebarProvider` et l'utiliser comme wrapper dans `AppLayout`
+  - [x] T4.2 Ajouter un `style` dynamique sur `.app-shell-main` pour le margin-left :
     ```tsx
     // Dans AppLayout, après intégration SidebarContext :
     // margin-left: 0 si hidden, 48px si icon-only, 0 si expanded (overlay)
@@ -221,7 +221,7 @@ afin de bénéficier d'un accès contextuel à la navigation sans perdre la visi
 
 - [ ] T5 — Vérification (AC: 10)
   - [ ] T5.1 `tsc --noEmit` sans erreur
-  - [ ] T5.2 `npx vitest run` — 1052+ tests passent
+  - [x] T5.2 `npx vitest run` — 1052+ tests passent
 
 ## Dev Notes
 
@@ -293,7 +293,16 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+- `npm test`
+- `npm run lint`
+
 ### Completion Notes List
+
+- Création de `SidebarContext` avec la machine d'état `hidden` / `expanded` / `icon-only` et les gardes d'usage hors provider.
+- Refonte de `Sidebar.tsx` en overlay piloté par contexte avec backdrop, icônes Lucide, labels traduits et collapse sur clic de navigation.
+- Intégration minimale dans `AppLayout` via `SidebarProvider` et décalage dynamique du contenu en mode `icon-only`.
+- Le décalage du contenu est neutralisé sur mobile pour rester cohérent avec le masquage CSS du rail `icon-only`.
+- Validation incomplète : `npm run lint` reste bloqué par un passif TypeScript global hors scope ; `npm test` est vert à 1056 tests.
 
 ### File List
 
@@ -301,3 +310,10 @@ claude-sonnet-4-6
 - `frontend/src/components/layout/Sidebar.tsx` (réécrit)
 - `frontend/src/components/layout/Sidebar.css` (créé)
 - `frontend/src/App.css` (suppressions styles sidebar obsolètes)
+- `frontend/src/layouts/AppLayout.tsx` (modifié — intégration du provider et margin-left dynamique)
+- `frontend/src/tests/SidebarContext.test.tsx` (créé)
+- `frontend/src/tests/layout/Sidebar.test.tsx` (créé)
+
+### Change Log
+
+- 2026-03-15 : Implémentation initiale de la story 58.3 avec contexte sidebar, overlay 3 états, styles dédiés et tests ciblés.

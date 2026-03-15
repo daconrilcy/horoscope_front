@@ -1,0 +1,109 @@
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  animation: sidebar-backdrop-fade-in 0.2s ease-out;
+}
+
+@keyframes sidebar-backdrop-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.app-sidebar {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  bottom: 0;
+  background: var(--glass);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-right: 1px solid var(--glass-border);
+  overflow: hidden;
+  z-index: 201;
+  transition:
+    width 0.2s ease-out,
+    transform 0.2s ease-out,
+    opacity 0.2s ease-out;
+}
+
+.app-sidebar--hidden {
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-100%);
+}
+
+.app-sidebar--expanded {
+  width: 240px;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.app-sidebar--icon-only {
+  width: 48px;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.app-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 0.25rem);
+  padding: var(--space-4, 1rem) 0;
+}
+
+.app-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-3, 0.75rem);
+  color: var(--text-2);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.app-sidebar-link:hover {
+  color: var(--text-1);
+  background: var(--glass-2);
+}
+
+.app-sidebar-link--active {
+  color: var(--text-1);
+  background: var(--glass-2);
+  border-left-color: var(--cta-l);
+}
+
+.app-sidebar-link__icon {
+  flex-shrink: 0;
+}
+
+.app-sidebar--icon-only .app-sidebar-link {
+  justify-content: center;
+  padding: var(--space-3, 0.75rem);
+  border-left: none;
+}
+
+.app-sidebar--icon-only .app-sidebar-link--active {
+  border-left: none;
+  border-radius: var(--radius-md, 0.5rem);
+}
+
+.app-sidebar--icon-only .app-sidebar-link__label {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .app-sidebar--icon-only {
+    display: none;
+  }
+}
