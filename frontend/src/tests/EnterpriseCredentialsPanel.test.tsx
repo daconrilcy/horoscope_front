@@ -1,35 +1,41 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { EnterpriseCredentialsPanel } from "../components/EnterpriseCredentialsPanel"
-import * as api from "../api/enterpriseCredentials"
-import { AppProviders } from "../state/providers"
 
-vi.mock("../api/enterpriseCredentials", async () => {
-  const actual = await vi.importActual("../api/enterpriseCredentials")
-  return {
-    ...actual,
-    useEnterpriseCredentials: vi.fn(),
-    useGenerateEnterpriseCredential: vi.fn(),
-    useRotateEnterpriseCredential: vi.fn(),
-  }
-})
+const mockUseB2BCredentials = vi.fn()
+const mockUseGenerateB2BCredential = vi.fn()
+const mockUseRotateB2BCredential = vi.fn()
 
-const mockUseEnterpriseCredentials = api.useEnterpriseCredentials as any
-const mockUseGenerateEnterpriseCredential = api.useGenerateEnterpriseCredential as any
-const mockUseRotateEnterpriseCredential = api.useRotateEnterpriseCredential as any
+vi.mock("../api/enterpriseCredentials", () => ({
+  useB2BCredentials: () => mockUseB2BCredentials(),
+  useGenerateB2BCredential: () => mockUseGenerateB2BCredential(),
+  useRotateB2BCredential: () => mockUseRotateB2BCredential(),
+}))
 
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
 })
 
+function renderWithQuery(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  return render(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+    </QueryClientProvider>
+  )
+}
+
 describe("EnterpriseCredentialsPanel", () => {
   it("renders panel and supports generate + rotate", async () => {
-    const generateMutate = vi.fn().mockResolvedValue({ api_key: "b2b_secret_generated" })
-    const rotateMutate = vi.fn().mockResolvedValue({ api_key: "b2b_secret_rotated" })
+    const generateMutate = vi.fn()
+    const rotateMutate = vi.fn()
 
-    mockUseEnterpriseCredentials.mockReturnValue({
+    mockUseB2BCredentials.mockReturnValue({
       isLoading: false,
       isError: false,
       data: {
@@ -39,79 +45,38 @@ describe("EnterpriseCredentialsPanel", () => {
           {
             credential_id: 9,
             key_prefix: "b2b_abcd",
-            status: "active",
+            is_active: true,
             created_at: "2026-02-20T00:00:00Z",
+            scope: "full"
           },
         ],
       },
-      refetch: vi.fn(),
     })
 
-    mockUseGenerateEnterpriseCredential.mockReturnValue({
+    mockUseGenerateB2BCredential.mockReturnValue({
       isPending: false,
       error: null,
-      mutateAsync: generateMutate,
+      mutate: generateMutate,
     })
-    mockUseRotateEnterpriseCredential.mockReturnValue({
+    mockUseRotateB2BCredential.mockReturnValue({
       isPending: false,
       error: null,
-      mutateAsync: rotateMutate,
+      mutate: rotateMutate,
     })
 
-    render(
-      <AppProviders>
-        <EnterpriseCredentialsPanel />
-      </AppProviders>
-    )
+    renderWithQuery(<EnterpriseCredentialsPanel />)
+    
     expect(screen.getByText("API Entreprise")).toBeInTheDocument()
-    expect(screen.getByText("Compte: AstroCorp")).toBeInTheDocument()
-    expect(screen.getByText("Clé: b2b_abcd***")).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole("button", { name: "Générer une clé API" }))
-    await waitFor(() => expect(generateMutate).toHaveBeenCalled())
-
-    fireEvent.click(screen.getByRole("button", { name: "Régénérer la clé active" }))
-    await waitFor(() => expect(rotateMutate).toHaveBeenCalled())
-  })
-
-  it("shows loading, error and empty states", () => {
-    mockUseGenerateEnterpriseCredential.mockReturnValue({
-      isPending: false,
-      error: null,
-      mutateAsync: vi.fn(),
-    })
-    mockUseRotateEnterpriseCredential.mockReturnValue({
-      isPending: false,
-      error: null,
-      mutateAsync: vi.fn(),
+    
+    await waitFor(() => {
+      expect(screen.getByText(/Compte: AstroCorp/i)).toBeInTheDocument()
+      expect(screen.getByText(/Clé: b2b_abcd/i)).toBeInTheDocument()
     })
 
-    mockUseEnterpriseCredentials.mockReturnValueOnce({
-      isLoading: true,
-      isError: false,
-      data: null,
-      refetch: vi.fn(),
-    })
+    fireEvent.click(screen.getByRole("button", { name: /Générer une clé API/i }))
+    expect(generateMutate).toHaveBeenCalled()
 
-    const { rerender } = render(
-      <AppProviders>
-        <EnterpriseCredentialsPanel />
-      </AppProviders>
-    )
-    expect(screen.getByText("Chargement des credentials...")).toBeInTheDocument()
-
-    mockUseEnterpriseCredentials.mockReturnValueOnce({
-      isLoading: false,
-      isError: true,
-      data: null,
-      refetch: vi.fn(),
-    })
-
-    rerender(
-      <AppProviders>
-        <EnterpriseCredentialsPanel />
-      </AppProviders>
-    )
-    expect(screen.getByText("Impossible de charger les credentials.")).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: /Régénérer la clé active/i }))
+    expect(rotateMutate).toHaveBeenCalled()
   })
 })

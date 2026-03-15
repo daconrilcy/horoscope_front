@@ -3,29 +3,24 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { OpsMonitoringPanel } from "../components/OpsMonitoringPanel"
 
-const mockUseConversationKpis = vi.fn()
-const mockUseRollbackPersonaConfig = vi.fn()
+const mockUseOpsMonitoring = vi.fn()
+const mockUseRollbackOpsPersonaConfig = vi.fn()
 
-vi.mock("../api/opsMonitoring", () => ({
-  OpsMonitoringApiError: class extends Error {},
-  useConversationKpis: (...args: unknown[]) => mockUseConversationKpis(...args),
-}))
-
-vi.mock("../api/opsPersona", () => ({
-  useRollbackPersonaConfig: () => mockUseRollbackPersonaConfig(),
+vi.mock("@api", () => ({
+  useOpsMonitoring: (...args: unknown[]) => mockUseOpsMonitoring(...args),
+  useRollbackOpsPersonaConfig: () => mockUseRollbackOpsPersonaConfig(),
 }))
 
 afterEach(() => {
   cleanup()
-  mockUseConversationKpis.mockReset()
-  mockUseRollbackPersonaConfig.mockReset()
+  mockUseOpsMonitoring.mockReset()
+  mockUseRollbackOpsPersonaConfig.mockReset()
 })
 
 describe("OpsMonitoringPanel", () => {
   it("renders kpis and triggers rollback", () => {
-    const refetch = vi.fn()
     const rollbackMutate = vi.fn()
-    mockUseConversationKpis.mockReturnValue({
+    mockUseOpsMonitoring.mockReturnValue({
       isPending: false,
       isFetching: false,
       error: null,
@@ -33,15 +28,11 @@ describe("OpsMonitoringPanel", () => {
         window: "24h",
         aggregation_scope: "instance_local",
         messages_total: 100,
-        out_of_scope_count: 8,
-        out_of_scope_rate: 0.08,
-        llm_error_count: 3,
-        llm_error_rate: 0.03,
+        quality_score_avg: 0.85,
         p95_latency_ms: 420,
       },
-      refetch,
     })
-    mockUseRollbackPersonaConfig.mockReturnValue({
+    mockUseRollbackOpsPersonaConfig.mockReturnValue({
       isPending: false,
       isSuccess: false,
       error: null,
@@ -50,64 +41,49 @@ describe("OpsMonitoringPanel", () => {
 
     render(<OpsMonitoringPanel />)
 
-    expect(screen.getByText("Portee aggregation: instance_local")).toBeInTheDocument()
+    expect(screen.getByText("Portée agrégation: instance_local")).toBeInTheDocument()
     expect(screen.getByText("Messages total: 100")).toBeInTheDocument()
-    expect(screen.getByText("Hors-scope: 8 (8.0%)")).toBeInTheDocument()
-    expect(screen.getByText("Erreurs LLM: 3 (3.0%)")).toBeInTheDocument()
-    expect(screen.getByText("Latence p95: 420 ms")).toBeInTheDocument()
+    expect(screen.getByText("Quality avg: 85.0%")).toBeInTheDocument()
+    expect(screen.getByText("Latence p95: 420ms")).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole("button", { name: "Rafraichir KPI" }))
-    expect(refetch).toHaveBeenCalled()
-
-    fireEvent.click(screen.getByRole("button", { name: "Rollback configuration persona" }))
+    fireEvent.click(screen.getByRole("button", { name: /Emergency Rollback Persona/i }))
     expect(rollbackMutate).toHaveBeenCalled()
   })
 
   it("shows loading, error and empty states", () => {
-    mockUseRollbackPersonaConfig.mockReturnValue({
+    mockUseRollbackOpsPersonaConfig.mockReturnValue({
       isPending: false,
       isSuccess: false,
       error: null,
       mutate: vi.fn(),
     })
 
-    mockUseConversationKpis.mockReturnValueOnce({
+    mockUseOpsMonitoring.mockReturnValueOnce({
       isPending: true,
       isFetching: true,
       error: null,
       data: null,
-      refetch: vi.fn(),
     })
     const { rerender } = render(<OpsMonitoringPanel />)
-    expect(screen.getByText("Chargement KPI monitoring...")).toBeInTheDocument()
+    expect(screen.getByText("Loading...")).toBeInTheDocument()
 
-    mockUseConversationKpis.mockReturnValueOnce({
+    mockUseOpsMonitoring.mockReturnValueOnce({
       isPending: false,
       isFetching: false,
       error: new Error("network down"),
       data: null,
-      refetch: vi.fn(),
     })
     rerender(<OpsMonitoringPanel />)
     expect(screen.getByText("Erreur monitoring: network down")).toBeInTheDocument()
 
-    mockUseConversationKpis.mockReturnValueOnce({
+    mockUseOpsMonitoring.mockReturnValueOnce({
       isPending: false,
       isFetching: false,
       error: null,
-      data: {
-        window: "24h",
-        aggregation_scope: "instance_local",
-        messages_total: 0,
-        out_of_scope_count: 0,
-        out_of_scope_rate: 0,
-        llm_error_count: 0,
-        llm_error_rate: 0,
-        p95_latency_ms: 0,
-      },
-      refetch: vi.fn(),
+      data: null,
+      isSuccess: true,
     })
     rerender(<OpsMonitoringPanel />)
-    expect(screen.getByText("Aucune donnee conversationnelle sur cette fenetre.")).toBeInTheDocument()
+    expect(screen.getByText("Aucune donnée conversationnelle sur cette fenêtre.")).toBeInTheDocument()
   })
 })

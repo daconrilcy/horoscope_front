@@ -113,7 +113,7 @@ async function rotateCredential(): Promise<EnterpriseCredentialSecret> {
   return body.data
 }
 
-export function useEnterpriseCredentials(enabled = true) {
+export function useB2BCredentials(enabled = true) {
   return useQuery({
     queryKey: ["enterprise-credentials"],
     queryFn: listEnterpriseCredentials,
@@ -121,13 +121,13 @@ export function useEnterpriseCredentials(enabled = true) {
   })
 }
 
-export function useGenerateEnterpriseCredential() {
+export function useGenerateB2BCredential() {
   return useMutation({
     mutationFn: generateCredential,
   })
 }
 
-export function useRotateEnterpriseCredential() {
+export function useRotateB2BCredential() {
   return useMutation({
     mutationFn: rotateCredential,
   })

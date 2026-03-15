@@ -227,6 +227,87 @@ def _recent_audit_events_for_user(
 
 
 @router.get(
+    "/users/context",
+    response_model=SupportContextApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def get_support_context_by_query(
+    request: Request,
+    user_id: int | None = Query(default=None),
+    email: str | None = Query(default=None),
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    role_error = _ensure_support_role(current_user, request_id)
+    if role_error is not None:
+        return role_error
+    rate_error = _enforce_support_limits(
+        role=current_user.role,
+        user_id=current_user.id,
+        operation="get_user_context",
+        request_id=request_id,
+    )
+    if rate_error is not None:
+        return rate_error
+
+    user = None
+    if user_id is not None:
+        user = db.get(UserModel, user_id)
+    elif email is not None:
+        user = db.scalars(select(UserModel).where(UserModel.email == email)).first()
+
+    if user is None:
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="support_context_not_found",
+            message="user support context was not found",
+            details={"user_id": str(user_id), "email": email or ""},
+        )
+
+    subscription = BillingService.get_subscription_status_readonly(db, user_id=user.id)
+    privacy_requests_models = db.scalars(
+        select(UserPrivacyRequestModel)
+        .where(UserPrivacyRequestModel.user_id == user.id)
+        .order_by(desc(UserPrivacyRequestModel.requested_at), desc(UserPrivacyRequestModel.id))
+        .limit(20)
+    ).all()
+    incidents = IncidentService.list_incidents_for_user(db, user_id=user.id, limit=20)
+    incident_ids = [item.incident_id for item in incidents]
+    audit_events = _recent_audit_events_for_user(db, user_id=user.id, incident_ids=incident_ids)
+
+    data = SupportContextData(
+        user=SupportContextUserData(
+            user_id=user.id,
+            email=user.email,
+            role=user.role,
+            created_at=user.created_at,
+        ),
+        subscription=subscription,
+        privacy_requests=[
+            PrivacyRequestSummary(
+                request_id=model.id,
+                request_kind=model.request_kind,
+                status=model.status,
+                requested_at=model.requested_at,
+                completed_at=model.completed_at,
+                error_reason=model.error_reason,
+            )
+            for model in privacy_requests_models
+        ],
+        incidents=incidents,
+        audit_events=audit_events,
+    )
+    return {"data": data.model_dump(mode="json"), "meta": {"request_id": request_id}}
+
+
+@router.get(
     "/users/{user_id}/context",
     response_model=SupportContextApiResponse,
     responses={

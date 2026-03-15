@@ -196,6 +196,30 @@ async function updateSupportIncident(
   return body.data
 }
 
+import { useRollbackOpsPersonaConfig as useOpsRollbackPersona } from "./opsPersona"
+
+export { useOpsRollbackPersona }
+
+export function useOpsSearchUser(email: string) {
+  // This is a placeholder implementation that should ideally call a backend search-by-email endpoint
+  // For now, we'll return a query that is disabled if email is empty.
+  return useQuery({
+    queryKey: ["support-search-user", email],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE_URL}/v1/support/users/context?email=${encodeURIComponent(email)}`, {
+        method: "GET",
+        headers: getAccessTokenAuthHeader(),
+      })
+      if (!response.ok) {
+        return parseError(response)
+      }
+      const body = (await response.json()) as ResponseEnvelope<SupportUserContext>
+      return body.data
+    },
+    enabled: email.length > 0,
+  })
+}
+
 export function useSupportContext(userId: number, enabled = true) {
   return useQuery({
     queryKey: ["support-context", userId],

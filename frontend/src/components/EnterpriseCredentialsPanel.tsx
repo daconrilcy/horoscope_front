@@ -47,7 +47,7 @@ export function EnterpriseCredentialsPanel() {
                   disabled={rotateCredential.isPending}
                   onClick={() => rotateCredential.mutate(cred.credential_id)}
                 >
-                  Regenerate Key
+                  {t.rotateLabel}
                 </button>
               </div>
             ))}
@@ -59,7 +59,7 @@ export function EnterpriseCredentialsPanel() {
             disabled={generateCredential.isPending}
             onClick={() => generateCredential.mutate({ scope: "full" })}
           >
-            Generate New Key
+            {t.generateLabel}
           </button>
         </div>
       )}

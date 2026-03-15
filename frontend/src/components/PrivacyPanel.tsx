@@ -28,7 +28,7 @@ export function PrivacyPanel() {
           disabled={requestExport.isPending}
           onClick={() => requestExport.mutate()}
         >
-          Request Data Export
+          {t.requestExport}
         </button>
         <button
           type="button"
@@ -36,7 +36,7 @@ export function PrivacyPanel() {
           disabled={requestDelete.isPending}
           onClick={() => requestDelete.mutate()}
         >
-          Request Account Deletion
+          {t.requestDelete}
         </button>
       </div>
 

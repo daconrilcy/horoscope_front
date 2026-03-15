@@ -152,20 +152,20 @@ export async function rollbackPersonaConfig(): Promise<OpsPersonaRollbackData> {
   }
 }
 
-export function useActivePersonaConfig() {
+export function useOpsPersonaConfig() {
   return useQuery({
     queryKey: ["ops-persona-config"],
     queryFn: getActivePersonaConfig,
   })
 }
 
-export function useUpdatePersonaConfig() {
+export function useUpdateOpsPersonaConfig() {
   return useMutation({
     mutationFn: updateActivePersonaConfig,
   })
 }
 
-export function useRollbackPersonaConfig() {
+export function useRollbackOpsPersonaConfig() {
   return useMutation({
     mutationFn: rollbackPersonaConfig,
   })

@@ -176,7 +176,7 @@ export function useCheckoutEntryPlan() {
   })
 }
 
-export function useRetryCheckout() {
+export function useRetryPayment() {
   return useMutation({
     mutationFn: postRetry,
   })

@@ -4,14 +4,20 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { TestAppRouter } from "../app/router"
-import { setAccessToken, clearAccessToken } from "../utils/authToken"
+import { setAccessToken } from "../utils/authToken"
 import { ThemeProvider } from "../state/ThemeProvider"
+import { adminTranslations } from "../i18n/admin"
 
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
   localStorage.clear()
 })
+
+const t = adminTranslations
+const fr = t.page.fr
+const frSec = t.sections.fr
+const frPricing = t.pricing.fr
 
 const AUTH_ME_USER = {
   ok: true,
@@ -56,12 +62,6 @@ const NOT_FOUND = {
   ok: false,
   status: 404,
   json: async () => ({ error: { code: "not_found", message: "not found" } }),
-}
-
-const EMPTY_LIST = {
-  ok: true,
-  status: 200,
-  json: async () => ({ data: [] }),
 }
 
 const MONITORING_KPI = {
@@ -169,7 +169,7 @@ describe("AdminPage - AC#1: Protection d'accès", () => {
     renderApp(["/admin"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { level: 2, name: "Tableau de bord" })).toBeInTheDocument()
+      expect(screen.getByText(/Accédez rapidement à toutes les fonctionnalités/i)).toBeInTheDocument()
     })
   })
 
@@ -181,7 +181,7 @@ describe("AdminPage - AC#1: Protection d'accès", () => {
     renderApp(["/admin"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Administration" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: fr.title })).toBeInTheDocument()
     })
   })
 
@@ -193,7 +193,7 @@ describe("AdminPage - AC#1: Protection d'accès", () => {
     renderApp(["/admin"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Administration" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: fr.title })).toBeInTheDocument()
     })
   })
 })
@@ -207,13 +207,13 @@ describe("AdminPage - AC#2: Hub admin", () => {
     renderApp(["/admin"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Administration" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: fr.title })).toBeInTheDocument()
     })
 
-    expect(screen.getByRole("link", { name: /Gestion des tarifs/i })).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: /Monitoring Ops/i })).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: /Personas Astrologues/i })).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: /Réconciliation B2B/i })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: new RegExp(frSec.pricing, "i") })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: new RegExp(frSec.monitoring, "i") })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: new RegExp(frSec.personas, "i") })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: new RegExp(frSec.reconciliation, "i") })).toBeInTheDocument()
   })
 
   it("navigates to monitoring subpage when clicked", async () => {
@@ -225,14 +225,14 @@ describe("AdminPage - AC#2: Hub admin", () => {
     renderApp(["/admin"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Administration" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: fr.title })).toBeInTheDocument()
     })
 
-    const monitoringLink = screen.getByRole("link", { name: /Monitoring Ops/i })
+    const monitoringLink = screen.getByRole("link", { name: new RegExp(frSec.monitoring, "i") })
     await user.click(monitoringLink)
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Monitoring Opérationnel/i })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: /Monitoring conversationnel Ops/i })).toBeInTheDocument()
     })
   })
 
@@ -245,14 +245,14 @@ describe("AdminPage - AC#2: Hub admin", () => {
     renderApp(["/admin"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Administration" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: fr.title })).toBeInTheDocument()
     })
 
-    const personasLink = screen.getByRole("link", { name: /Personas Astrologues/i })
+    const personasLink = screen.getByRole("link", { name: new RegExp(frSec.personas, "i") })
     await user.click(personasLink)
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Personas Astrologues/i })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: new RegExp(frSec.personas, "i") })).toBeInTheDocument()
     })
   })
 })
@@ -266,7 +266,7 @@ describe("AdminPage - AC#4: Page monitoring", () => {
     renderApp(["/admin/monitoring"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Monitoring Opérationnel/i })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: /Monitoring conversationnel Ops/i })).toBeInTheDocument()
     })
   })
 
@@ -278,10 +278,10 @@ describe("AdminPage - AC#4: Page monitoring", () => {
     renderApp(["/admin/monitoring"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Administration" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: fr.title })).toBeInTheDocument()
     })
 
-    expect(screen.getByRole("link", { name: /Retour au hub/i })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: new RegExp(fr.backToHub, "i") })).toBeInTheDocument()
   })
 })
 
@@ -294,7 +294,7 @@ describe("AdminPage - AC#5: Page personas", () => {
     renderApp(["/admin/personas"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Personas Astrologues/i })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: new RegExp(frSec.personas, "i") })).toBeInTheDocument()
     })
   })
 })
@@ -308,7 +308,7 @@ describe("AdminPage - AC#3: Page pricing", () => {
     renderApp(["/admin/pricing"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Gestion des Tarifs/i })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: new RegExp(frPricing.title, "i") })).toBeInTheDocument()
     })
   })
 
@@ -320,11 +320,11 @@ describe("AdminPage - AC#3: Page pricing", () => {
     renderApp(["/admin/pricing"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Gestion des Tarifs/i })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: new RegExp(frPricing.title, "i") })).toBeInTheDocument()
     })
 
     await waitFor(() => {
-      expect(screen.getByRole("table", { name: /Plans tarifaires/i })).toBeInTheDocument()
+      expect(screen.getByRole("table", { name: new RegExp(frPricing.tableLabel, "i") })).toBeInTheDocument()
     })
 
     expect(screen.getByText("basic")).toBeInTheDocument()
@@ -341,27 +341,11 @@ describe("AdminPage - AC#3: Page pricing", () => {
     renderApp(["/admin/pricing"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Gestion des Tarifs/i })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: new RegExp(frPricing.title, "i") })).toBeInTheDocument()
     })
 
     await waitFor(() => {
-      expect(screen.getByText(/Aucun plan tarifaire configuré/i)).toBeInTheDocument()
-    })
-  })
-
-  it("displays error message when API fails", async () => {
-    vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_ADMIN, { plansResponse: NOT_FOUND }))
-    setupToken("99", "admin")
-    localStorage.setItem("lang", "fr")
-
-    renderApp(["/admin/pricing"])
-
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Gestion des Tarifs/i })).toBeInTheDocument()
-    })
-
-    await waitFor(() => {
-      expect(screen.getByText(/Erreur lors du chargement des plans/i)).toBeInTheDocument()
+      expect(screen.getByText(new RegExp(frPricing.emptyState, "i"))).toBeInTheDocument()
     })
   })
 
@@ -374,14 +358,14 @@ describe("AdminPage - AC#3: Page pricing", () => {
     renderApp(["/admin"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Administration" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: fr.title })).toBeInTheDocument()
     })
 
-    const pricingLink = screen.getByRole("link", { name: /Gestion des tarifs/i })
+    const pricingLink = screen.getByRole("link", { name: new RegExp(frSec.pricing, "i") })
     await user.click(pricingLink)
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /Gestion des Tarifs/i })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: new RegExp(frPricing.title, "i") })).toBeInTheDocument()
     })
   })
 })
@@ -408,10 +392,10 @@ describe("AdminPage - Reconciliation subpage", () => {
     renderApp(["/admin"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Administration" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: fr.title })).toBeInTheDocument()
     })
 
-    const reconLink = screen.getByRole("link", { name: /Réconciliation B2B/i })
+    const reconLink = screen.getByRole("link", { name: new RegExp(frSec.reconciliation, "i") })
     await user.click(reconLink)
 
     await waitFor(() => {

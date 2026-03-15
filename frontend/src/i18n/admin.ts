@@ -121,6 +121,8 @@ export interface AdminTranslation {
       createdDate: (date: string) => string
       errorGenerate: (msg: string) => string
       errorRotate: (msg: string) => string
+      generateLabel: string
+      rotateLabel: string
     }
     support: {
       title: string
@@ -148,6 +150,8 @@ export interface AdminTranslation {
     privacy: {
       title: string
       description: string
+      requestExport: string
+      requestDelete: string
       statusExport: (status: string) => string
       emptyExport: string
       errorExportStatus: (msg: string) => string
@@ -158,6 +162,29 @@ export interface AdminTranslation {
       errorDeleteRequest: (msg: string) => string
     }
   }
+}
+
+export interface PricingTranslations {
+  title: string
+  description: string
+  loading: string
+  errorLoading: string
+  unknownError: string
+  apiNote: string
+  emptyState: string
+  tableLabel: string
+  colCode: string
+  colName: string
+  colPrice: string
+  colLimit: string
+  colStatus: string
+  statusActive: string
+  statusInactive: string
+  upcomingTitle: string
+  upcomingModify: string
+  upcomingCreate: string
+  upcomingActivate: string
+  upcomingNote: string
 }
 
 export const adminTranslations = {
@@ -187,6 +214,24 @@ export const adminTranslations = {
       reconciliation: "Reconciliación B2B",
     },
   } as Record<AstrologyLang, Record<"pricing" | "monitoring" | "personas" | "reconciliation", string>>,
+
+  monitoring: {
+    fr: { title: "Monitoring Opérationnel" },
+    en: { title: "Operational Monitoring" },
+    es: { title: "Monitoreo Operativo" },
+  } as Record<AstrologyLang, { title: string }>,
+
+  personas: {
+    fr: { title: "Personas Astrologues" },
+    en: { title: "Astrologer Personas" },
+    es: { title: "Personas Astrólogos" },
+  } as Record<AstrologyLang, { title: string }>,
+
+  reconciliation: {
+    fr: { title: "Réconciliation B2B" },
+    en: { title: "B2B Reconciliation" },
+    es: { title: "Reconciliación B2B" },
+  } as Record<AstrologyLang, { title: string }>,
 
   b2b: {
     fr: {
@@ -302,6 +347,8 @@ export const adminTranslations = {
         createdDate: (date) => `Créée le: ${date}`,
         errorGenerate: (msg) => `Erreur génération clé: ${msg}`,
         errorRotate: (msg) => `Erreur régénération clé: ${msg}`,
+        generateLabel: "Générer une clé API",
+        rotateLabel: "Régénérer la clé active",
       },
       support: {
         title: "Support et opérations",
@@ -329,6 +376,8 @@ export const adminTranslations = {
       privacy: {
         title: "Confidentialité et données",
         description: "Demandez un export de vos données ou la suppression de votre compte.",
+        requestExport: "Demander un export",
+        requestDelete: "Supprimer mes données",
         statusExport: (status) => `Statut export: ${status}`,
         emptyExport: "Aucune demande d'export pour le moment.",
         errorExportStatus: (msg) => `Erreur statut export: ${msg}`,
@@ -452,6 +501,8 @@ export const adminTranslations = {
         createdDate: (date) => `Created on: ${date}`,
         errorGenerate: (msg) => `Key generation error: ${msg}`,
         errorRotate: (msg) => `Key regeneration error: ${msg}`,
+        generateLabel: "Generate API Key",
+        rotateLabel: "Regenerate Active Key",
       },
       support: {
         title: "Support and Operations",
@@ -479,6 +530,8 @@ export const adminTranslations = {
       privacy: {
         title: "Privacy and Data",
         description: "Request an export of your data or account deletion.",
+        requestExport: "Request Data Export",
+        requestDelete: "Delete My Data",
         statusExport: (status) => `Export status: ${status}`,
         emptyExport: "No export requests yet.",
         errorExportStatus: (msg) => `Export status error: ${msg}`,
@@ -492,7 +545,7 @@ export const adminTranslations = {
     es: {
       astrology: {
         title: "API B2B Astrología",
-        description: "Pruebe el endpoint contractual semanal por signo con una clave API de empresa.",
+        description: "Pruebe el endpoint contractual semanal por signe con une clave API de empresa.",
         apiKeyLabel: "Clave API B2B",
         submit: "Obtener semanal-por-signo",
         loading: "Cargando semanal-por-signo...",
@@ -501,7 +554,7 @@ export const adminTranslations = {
         apiVersion: (v, ref) => `Versión API: ${v} · Referencia: ${ref}`,
       },
       billing: {
-        title: "Facturación B2B",
+        title: "Facturation B2B",
         description: "Consulte su estado de cuenta facturado (fijo + volumen) para el último período cerrado.",
         apiKeyLabel: "Clave API B2B",
         submit: "Obtener estado de cuenta",
@@ -546,13 +599,13 @@ export const adminTranslations = {
         error: (msg, code) => `Error de consumo B2B: ${msg} (${code})`,
         empty: "No hay consumo registrado para este período.",
         daily: (c, l, r) => `Diario: ${c}/${l} (${r} restante)`,
-        monthly: (c, l, r) => `Mensual: ${c}/${l} (${r} restante)`,
-        limitMode: (mode) => `Modo de límite: ${mode}`,
+        monthly: (c, l, r) => `Mensuel: ${c}/${l} (${r} restante)`,
+        limitMode: (mode) => `Modo de limite: ${mode}`,
         blocking: (active) => `Bloqueo activo: ${active ? "sí" : "no"}`,
       },
       reconciliation: {
         title: "Reconciliación B2B Ops",
-        description: "Compare el uso medido y la facturación para detectar discrepancias antes del impacto en el cliente.",
+        description: "Compare el uso medido y la facturación para detectar discrepancias antes del impacto en el cliente.", 
         accountLabel: "Cuenta de empresa (opcional)",
         severityLabel: "Severidad",
         severities: { all: "Todas", major: "Mayor", minor: "Menor", none: "Ninguna" },
@@ -565,7 +618,7 @@ export const adminTranslations = {
         resultsTitle: (total) => `Discrepancias identificadas (${total})`,
         detailTitle: "Detalle de discrepancia",
         noteLabel: "Nota de acción (opcional)",
-        actionExecuted: (action, state) => `Acción ejecutada: ${action} (${state})`,
+        actionExecuted: (action, state) => `Action exécutée: ${action} (${state})`,
       },
       opsPersona: {
         title: "Ajustes de Persona Ops",
@@ -582,12 +635,12 @@ export const adminTranslations = {
       },
       opsMonitoring: {
         title: "Monitoreo Conversacional Ops",
-        description: "Supervise la calidad conversacional y acciones rápidas de rollback.",
+        description: "Supervise la qualité conversacional y acciones rápidas de rollback.",
         windowLabel: "Ventana",
         error: (msg) => `Error de monitoreo: ${msg}`,
         empty: "Sin datos conversacionales en esta ventana.",
         scope: (val) => `Alcance de agregación: ${val}`,
-        totalMessages: (val) => `Mensajes totales: ${val}`,
+        totalMessages: (val) => `Messages totales: ${val}`,
         p95Latency: (val) => `Latencia p95: ${val}`,
         successRollback: "Rollback de persona realizado.",
       },
@@ -602,6 +655,8 @@ export const adminTranslations = {
         createdDate: (date) => `Creada el: ${date}`,
         errorGenerate: (msg) => `Error de generación de clave: ${msg}`,
         errorRotate: (msg) => `Error de regeneración de clave: ${msg}`,
+        generateLabel: "Generar una clave API",
+        rotateLabel: "Régénérer la clé active",
       },
       support: {
         title: "Soporte y Operaciones",
@@ -627,8 +682,10 @@ export const adminTranslations = {
         failedReason: (msg) => `Motivo del fallo de pago: ${msg}`,
       },
       privacy: {
-        title: "Privacidad y Datos",
+        title: "Privacidad et Datos",
         description: "Solicite una exportación de sus datos o la eliminación de su cuenta.",
+        requestExport: "Solicitar exportación",
+        requestDelete: "Eliminar mis datos",
         statusExport: (status) => `Estado de exportación: ${status}`,
         emptyExport: "Sin solicitudes de exportación por ahora.",
         errorExportStatus: (msg) => `Error de estado de exportación: ${msg}`,
@@ -646,58 +703,73 @@ export const adminTranslations = {
       title: "Gestion des Tarifs",
       description: "Visualisation des plans tarifaires configurés dans le système.",
       loading: "Chargement des plans...",
-      errorLoading: "Erreur lors du chargement des plans tarifaires.",
-      unknownError: "Une erreur inconnue est survenue.",
-      apiNote: "Ces données proviennent de l'API de tarification et sont synchronisées avec le processeur de paiement.",
-      emptyState: "Aucun plan tarifaire n'est configuré pour le moment.",
-      tableHeaders: {
-        name: "Nom du plan",
-        price: "Prix",
-        limit: "Limite messages",
-        status: "Statut",
-      },
-      upcomingTitle: "Mises à jour prévues",
-      upcomingCreate: "Nouveau plan",
-      upcomingActivate: "Activation",
-      upcomingNote: "Note: Les changements prendront effet au prochain cycle de facturation.",
+      errorLoading: "Erreur lors du chargement des plans.",
+      unknownError: "Erreur inconnue",
+      apiNote:
+        "Note : L'API GET /v1/billing/plans n'est pas encore implémentée côté backend. Cette fonctionnalité nécessite une story dédiée pour l'API admin.",
+      emptyState: "Aucun plan tarifaire configuré.",
+      tableLabel: "Plans tarifaires",
+      colCode: "Code",
+      colName: "Nom",
+      colPrice: "Prix mensuel",
+      colLimit: "Limite messages/jour",
+      colStatus: "Statut",
+      statusActive: "Actif",
+      statusInactive: "Inactif",
+      upcomingTitle: "Fonctionnalités à venir",
+      upcomingModify: "Modification des tarifs existants",
+      upcomingCreate: "Création de nouveaux plans",
+      upcomingActivate: "Activation/désactivation des plans",
+      upcomingNote:
+        "Ces fonctionnalités nécessitent l'implémentation d'une API admin dédiée (hors scope de la story 16.7).",
     },
     en: {
       title: "Pricing Management",
       description: "Visualization of pricing plans configured in the system.",
       loading: "Loading plans...",
-      errorLoading: "Error loading pricing plans.",
-      unknownError: "An unknown error occurred.",
-      apiNote: "This data comes from the pricing API and is synced with the payment processor.",
-      emptyState: "No pricing plans are currently configured.",
-      tableHeaders: {
-        name: "Plan Name",
-        price: "Price",
-        limit: "Message limit",
-        status: "Status",
-      },
-      upcomingTitle: "Scheduled updates",
-      upcomingCreate: "New plan",
-      upcomingActivate: "Activation",
-      upcomingNote: "Note: Changes will take effect at the next billing cycle.",
+      errorLoading: "Error loading plans.",
+      unknownError: "Unknown error",
+      apiNote:
+        "Note: The GET /v1/billing/plans API is not yet implemented on the backend. This feature requires a dedicated admin API story.",
+      emptyState: "No pricing plans configured.",
+      tableLabel: "Pricing plans",
+      colCode: "Code",
+      colName: "Name",
+      colPrice: "Monthly price",
+      colLimit: "Daily message limit",
+      colStatus: "Status",
+      statusActive: "Active",
+      statusInactive: "Inactive",
+      upcomingTitle: "Upcoming features",
+      upcomingModify: "Modify existing plans",
+      upcomingCreate: "Create new plans",
+      upcomingActivate: "Activate/deactivate plans",
+      upcomingNote:
+        "These features require the implementation of a dedicated admin API (out of scope for story 16.7).",
     },
     es: {
       title: "Gestión de Tarifas",
-      description: "Visualización de los planes de precios configurados en el sistema.",
+      description: "Visualización de los planes tarifarios configurados en le sistema.",
       loading: "Cargando planes...",
-      errorLoading: "Error al cargar los planes de precios.",
-      unknownError: "Ocurrió un error desconocido.",
-      apiNote: "Estos datos provienen de la API de precios y están sincronizados con el procesador de pagos.",
-      emptyState: "No hay planes de precios configurados en este momento.",
-      tableHeaders: {
-        name: "Nombre del plan",
-        price: "Precio",
-        limit: "Límite de mensajes",
-        status: "Estado",
-      },
-      upcomingTitle: "Actualizaciones programadas",
-      upcomingCreate: "Nuevo plan",
-      upcomingActivate: "Activación",
-      upcomingNote: "Nota: Los cambios entrarán en vigor en el próximo ciclo de facturación.",
+      errorLoading: "Error al cargar los planes.",
+      unknownError: "Error desconocido",
+      apiNote:
+        "Nota: La API GET /v1/billing/plans aún no está implementada en el backend. Esta funcionalidad requiere una story dédiée pour l'API admin.",
+      emptyState: "Ningún plan tarifario configurado.",
+      tableLabel: "Planes tarifarios",
+      colCode: "Código",
+      colName: "Nombre",
+      colPrice: "Precio mensual",
+      colLimit: "Límite mensajes/día",
+      colStatus: "Estado",
+      statusActive: "Activo",
+      statusInactive: "Inactif",
+      upcomingTitle: "Próximas funcionalidades",
+      upcomingModify: "Modificación de tarifas existentes",
+      upcomingCreate: "Creación de nouveaux planes",
+      upcomingActivate: "Activación/desactivación de planes",
+      upcomingNote:
+        "Estas funcionalidades requieren la implementación de una API admin dedicada (fuera del alcance de la story 16.7).",
     },
   } as Record<AstrologyLang, PricingTranslations>,
 }
@@ -706,6 +778,10 @@ export function translateAdmin(lang: AstrologyLang = "fr"): AdminTranslation {
   return {
     page: adminTranslations.page[lang],
     sections: adminTranslations.sections[lang],
+    monitoring: adminTranslations.monitoring[lang],
+    personas: adminTranslations.personas[lang],
+    reconciliation: adminTranslations.reconciliation[lang],
     b2b: adminTranslations.b2b[lang],
+    pricing: adminTranslations.pricing[lang],
   }
 }

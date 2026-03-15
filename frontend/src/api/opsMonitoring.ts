@@ -61,7 +61,8 @@ async function getConversationKpis(window: MonitoringWindow): Promise<OpsMonitor
   return payload.data
 }
 
-export function useConversationKpis(window: MonitoringWindow, enabled = true) {
+export function useOpsMonitoring(windowMinutes: number, enabled = true) {
+  const window: MonitoringWindow = windowMinutes >= 1440 ? "24h" : windowMinutes >= 60 ? "1h" : "1h" // Simplified mapping
   return useQuery({
     queryKey: ["ops-monitoring-kpis", window],
     queryFn: () => getConversationKpis(window),

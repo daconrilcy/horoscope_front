@@ -2,9 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
   EnterpriseCredentialsApiError,
-  useEnterpriseCredentials,
-  useGenerateEnterpriseCredential,
-  useRotateEnterpriseCredential,
+  useB2BCredentials,
+  useGenerateB2BCredential,
+  useRotateB2BCredential,
 } from "../api/enterpriseCredentials"
 
 vi.mock("@tanstack/react-query", () => ({
@@ -38,7 +38,8 @@ describe("enterprise credentials api", () => {
       ),
     )
 
-    const { queryFn } = useEnterpriseCredentials(true)
+    const result = useB2BCredentials(true)
+    const { queryFn } = result as any
     const data = await queryFn()
     expect(data.company_name).toBe("Acme Media")
     expect(fetch).toHaveBeenCalledWith(
@@ -85,8 +86,11 @@ describe("enterprise credentials api", () => {
         ),
     )
 
-    const { mutationFn: generateMutationFn } = useGenerateEnterpriseCredential()
-    const { mutationFn: rotateMutationFn } = useRotateEnterpriseCredential()
+    const genResult = useGenerateB2BCredential() as any
+    const rotResult = useRotateB2BCredential() as any
+    const { mutationFn: generateMutationFn } = genResult
+    const { mutationFn: rotateMutationFn } = rotResult
+    
     const generated = await generateMutationFn()
     const rotated = await rotateMutationFn()
 
@@ -129,7 +133,8 @@ describe("enterprise credentials api", () => {
       ),
     )
 
-    const { queryFn } = useEnterpriseCredentials(true)
+    const result = useB2BCredentials(true) as any
+    const { queryFn } = result
     await expect(queryFn()).rejects.toEqual(
       expect.objectContaining({
         code: "forbidden",
@@ -143,7 +148,8 @@ describe("enterprise credentials api", () => {
   it("falls back to unknown_error for non json error body", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("oops", { status: 500 })))
 
-    const { mutationFn } = useGenerateEnterpriseCredential()
+    const result = useGenerateB2BCredential() as any
+    const { mutationFn } = result
     try {
       await mutationFn()
     } catch (error) {
@@ -155,4 +161,3 @@ describe("enterprise credentials api", () => {
     }
   })
 })
-
