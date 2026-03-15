@@ -1,25 +1,26 @@
 .admin-page {
-  padding: 1.5rem;
-  max-width: 1200px;
+  padding: var(--space-6);
+  max-width: var(--layout-page-max-width, 1200px);
   margin: 0 auto;
+  width: 100%;
 }
 
 .admin-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
 }
 
 .admin-header h1 {
   margin: 0;
-  font-size: 1.75rem;
-  color: var(--color-text-primary, #1f2937);
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-headline);
 }
 
 .admin-back-link {
-  font-size: 0.875rem;
-  color: var(--color-primary, #6366f1);
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
   text-decoration: none;
 }
 
@@ -34,7 +35,7 @@
 .admin-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 
 .admin-card {
@@ -42,30 +43,31 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1.5rem;
-  background: var(--color-bg-card, #ffffff);
-  border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 12px;
+  padding: var(--space-8) var(--space-6);
+  background: var(--glass);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
   text-decoration: none;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
 }
 
 .admin-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
 }
 
 .admin-card-icon-svg {
   width: 2.5rem;
   height: 2.5rem;
-  margin-bottom: 0.75rem;
-  color: var(--color-primary, #6366f1);
+  margin-bottom: var(--space-3);
+  color: var(--color-primary);
 }
 
 .admin-card-label {
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   font-weight: 500;
-  color: var(--color-text-primary, #1f2937);
+  color: var(--color-text-primary);
   text-align: center;
 }
 
@@ -73,18 +75,19 @@
   width: 100%;
 }
 
+/* Page specific styles previously in AdminPage.css */
 .pricing-admin,
 .monitoring-admin,
 .personas-admin,
 .reconciliation-admin {
-  padding: 1rem;
+  padding: var(--space-4);
 }
 
 .pricing-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
-  background: var(--color-bg-card, #ffffff);
+  margin-top: var(--space-4);
+  background: var(--glass);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -93,43 +96,43 @@
 .pricing-table td {
   padding: 0.75rem 1rem;
   text-align: left;
-  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .pricing-table th {
-  background: var(--color-bg-secondary, #f9fafb);
+  background: rgba(255, 255, 255, 0.05);
   font-weight: 600;
-  color: var(--color-text-secondary, #6b7280);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .pricing-table tbody tr:hover {
-  background: var(--color-bg-hover, #f3f4f6);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .status-active {
-  color: var(--color-success, #10b981);
+  color: var(--success);
   font-weight: 500;
 }
 
 .status-inactive {
-  color: var(--color-text-muted, #9ca3af);
+  color: var(--color-text-muted);
 }
 
 .admin-notice {
-  margin-top: 2rem;
-  padding: 1rem;
-  background: var(--color-bg-secondary, #f9fafb);
+  margin-top: var(--space-8);
+  padding: var(--space-4);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
-  border-left: 4px solid var(--color-primary, #6366f1);
+  border-left: 4px solid var(--color-primary);
 }
 
 .admin-notice h3 {
-  margin: 0 0 0.5rem;
+  margin: 0 0 var(--space-2);
   font-size: 1rem;
-  color: var(--color-text-primary, #1f2937);
+  color: var(--color-text-primary);
 }
 
 .admin-notice ul {
@@ -138,19 +141,19 @@
 }
 
 .admin-notice li {
-  color: var(--color-text-secondary, #6b7280);
+  color: var(--color-text-secondary);
   margin-bottom: 0.25rem;
 }
 
 .info-note {
   font-size: 0.875rem;
-  color: var(--color-text-muted, #9ca3af);
+  color: var(--color-text-muted);
   margin-top: 0.5rem;
   font-style: italic;
 }
 
 .error-detail {
   font-size: 0.875rem;
-  color: var(--color-error, #ef4444);
+  color: var(--error);
   margin: 0.5rem 0;
 }

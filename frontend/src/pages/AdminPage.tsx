@@ -1,12 +1,12 @@
-import { Link, Outlet, useLocation } from "react-router-dom"
+import { Outlet } from "react-router-dom"
 import { detectLang } from "../i18n/astrology"
 import { adminTranslations } from "../i18n/admin"
-import "./AdminPage.css"
+import { AdminLayout, type AdminSection } from "../layouts"
 
-function PricingIcon() {
+function PricingIcon({ className }: { className?: string }) {
   return (
     <svg
-      className="admin-card-icon-svg"
+      className={className}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -21,10 +21,10 @@ function PricingIcon() {
   )
 }
 
-function MonitoringIcon() {
+function MonitoringIcon({ className }: { className?: string }) {
   return (
     <svg
-      className="admin-card-icon-svg"
+      className={className}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -41,10 +41,10 @@ function MonitoringIcon() {
   )
 }
 
-function PersonasIcon() {
+function PersonasIcon({ className }: { className?: string }) {
   return (
     <svg
-      className="admin-card-icon-svg"
+      className={className}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -59,10 +59,10 @@ function PersonasIcon() {
   )
 }
 
-function ReconciliationIcon() {
+function ReconciliationIcon({ className }: { className?: string }) {
   return (
     <svg
-      className="admin-card-icon-svg"
+      className={className}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -82,49 +82,20 @@ export function AdminPage() {
   const tPage = adminTranslations.page[lang]
   const tSections = adminTranslations.sections[lang]
 
-  const adminSections = [
+  const adminSections: AdminSection[] = [
     { path: "/admin/pricing", label: tSections.pricing, Icon: PricingIcon },
     { path: "/admin/monitoring", label: tSections.monitoring, Icon: MonitoringIcon },
     { path: "/admin/personas", label: tSections.personas, Icon: PersonasIcon },
     { path: "/admin/reconciliation", label: tSections.reconciliation, Icon: ReconciliationIcon },
   ]
 
-  const location = useLocation()
-  const normalizedPath = location.pathname.replace(/\/$/, "")
-  const isHub = normalizedPath === "/admin"
-
   return (
-    <div className="admin-page">
-      <header className="admin-header">
-        <h1>{tPage.title}</h1>
-        {!isHub && (
-          <Link to="/admin" className="admin-back-link">
-            {tPage.backToHub}
-          </Link>
-        )}
-      </header>
-
-      {isHub ? (
-        <section className="admin-hub" aria-label="Sections d'administration">
-          <div className="admin-grid">
-            {adminSections.map((section) => (
-              <Link
-                key={section.path}
-                to={section.path}
-                className="admin-card"
-                aria-label={section.label}
-              >
-                <section.Icon />
-                <span className="admin-card-label">{section.label}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : (
-        <div className="admin-content">
-          <Outlet />
-        </div>
-      )}
-    </div>
+    <AdminLayout 
+      title={tPage.title} 
+      sections={adminSections} 
+      backToHubLabel={tPage.backToHub}
+    >
+      <Outlet />
+    </AdminLayout>
   )
 }
