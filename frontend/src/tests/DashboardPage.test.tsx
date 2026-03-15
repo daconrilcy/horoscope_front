@@ -171,6 +171,18 @@ describe("DashboardPage Landing", () => {
     expect(screen.queryByText("Agenda du jour")).not.toBeInTheDocument()
   })
 
+  it("ne duplique plus les controles avatar et theme dans le contenu du dashboard", async () => {
+    vi.stubGlobal("fetch", makeFetchMock())
+
+    const { container } = renderDashboard()
+
+    await waitFor(() => {
+      expect(screen.getByText(/Une excellente journée vous attend/i)).toBeInTheDocument()
+    })
+
+    expect(container.querySelector(".today-header")).not.toBeInTheDocument()
+  })
+
   it("gère l'état de chargement du résumé sans masquer les activités", async () => {
     let resolvePrediction: (value: any) => void
     const predictionPromise = new Promise((resolve) => {

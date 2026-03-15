@@ -14,6 +14,8 @@ export interface TodayHeaderProps {
   userName?: string
   /** URL of the user's avatar image */
   avatarUrl?: string
+  /** Whether the avatar block should be displayed */
+  showAvatar?: boolean
   /** Optional callback for back navigation */
   onBackClick?: () => void
   /** Loading state */
@@ -25,7 +27,13 @@ export interface TodayHeaderProps {
  * and the user profile avatar top-right.
  * It automatically handles initials fallback if the image fails to load.
  */
-export function TodayHeader({ userName = "U", avatarUrl, onBackClick, isLoading: forceLoading }: TodayHeaderProps) {
+export function TodayHeader({
+  userName = "U",
+  avatarUrl,
+  showAvatar = true,
+  onBackClick,
+  isLoading: forceLoading,
+}: TodayHeaderProps) {
   const [imgError, setImgError] = useState(false)
   const { theme, toggleTheme } = useTheme()
   const { lang } = useAstrologyLabels()
@@ -70,23 +78,24 @@ export function TodayHeader({ userName = "U", avatarUrl, onBackClick, isLoading:
         <h1 className="today-header__title">{header.title}</h1>
       </div>
 
-      {/* Avatar — top right */}
-      <div
-        className={`today-header__avatar ${isLoading ? "today-header__avatar--loading" : ""}`}
-        role="img"
-        aria-label={isLoading ? header.profileLoading : header.profileOf(displayName)}
-      >
-        {showImage ? (
-          <img
-            src={avatarUrl}
-            alt=""
-            onError={() => setImgError(true)}
-            decoding="async"
-          />
-        ) : (
-          !isLoading && <span aria-hidden="true">{initials}</span>
-        )}
-      </div>
+      {showAvatar ? (
+        <div
+          className={`today-header__avatar ${isLoading ? "today-header__avatar--loading" : ""}`}
+          role="img"
+          aria-label={isLoading ? header.profileLoading : header.profileOf(displayName)}
+        >
+          {showImage ? (
+            <img
+              src={avatarUrl}
+              alt=""
+              onError={() => setImgError(true)}
+              decoding="async"
+            />
+          ) : (
+            !isLoading && <span aria-hidden="true">{initials}</span>
+          )}
+        </div>
+      ) : null}
     </header>
   )
 }

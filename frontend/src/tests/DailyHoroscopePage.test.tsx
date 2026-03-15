@@ -598,6 +598,18 @@ describe("DailyHoroscopePage", () => {
     expect(router.state.location.pathname).toBe("/dashboard")
   })
 
+  it("ne duplique plus l'avatar utilisateur dans le header local", async () => {
+    installFetchMock()
+
+    const { container } = renderDashboard()
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
+    })
+
+    expect(container.querySelector(".today-header__avatar")).not.toBeInTheDocument()
+  })
+
   it("affiche un etat de chargement explicite pendant la recuperation de la prediction", async () => {
     installFetchMock({
       prediction: new Promise<Response>(() => undefined),
@@ -606,7 +618,7 @@ describe("DailyHoroscopePage", () => {
     renderDashboard();
 
     expect(screen.getByText("Chargement de votre ciel du jour...")).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: /Chargement du profil/i })).toBeInTheDocument();
+    expect(document.querySelector(".today-header__avatar")).not.toBeInTheDocument();
   });
 
   it("affiche un message d'erreur explicite et permet de relancer", async () => {

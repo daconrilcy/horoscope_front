@@ -202,5 +202,11 @@ describe("TodayHeader", () => {
       expect(screen.getByRole("button", { name: "Back to dashboard" })).toBeInTheDocument()
       expect(screen.getByRole("img", { name: "Alice's profile" })).toBeInTheDocument()
     })
+
+    it("peut masquer l'avatar quand la page delegue ce controle au top menu", () => {
+      renderWithTheme(<TodayHeader onBackClick={() => undefined} showAvatar={false} />)
+
+      expect(document.querySelector(".today-header__avatar")).not.toBeInTheDocument()
+    })
   })
 })

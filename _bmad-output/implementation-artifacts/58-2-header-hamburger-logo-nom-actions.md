@@ -213,10 +213,11 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 - Refonte complète de `Header.tsx` autour de `APP_NAME`/`APP_LOGO`, du `SidebarContext`, du `ThemeProvider` et du duo `UserAvatar` / `UserMenu`.
-- Le header utilise `useThemeSafe()` avec fallback local pour rester compatible avec les parcours et tests qui ne montent pas `ThemeProvider`.
-- Ajout d'un `Header.css` dédié avec cibles tactiles 44px, branding central et actions rapides droite.
+- Le header utilise finalement `useTheme()` en mode strict, avec alignement sur `AppProviders` et les harness de tests pour éviter tout toggle thème silencieusement inerte.
+- Ajout d'un `Header.css` dédié avec cibles tactiles 44px, branding calé à gauche, top bar pleine largeur, glassmorphism renforcé et ombre basse.
+- Le logo applicatif a été agrandi et le contraste du nom "Astrorizon" a été renforcé en dark mode pour mieux se détacher du fond.
 - Mise à jour des tests de layout, du scénario d'app logout, des tests router et settings pour refléter le nouveau contrat du header.
-- `npm test` passe à 1065 tests verts ; `npm run lint` reste bloqué par une dette TypeScript préexistante hors périmètre de la story.
+- `npm test` passe désormais à 1071 tests verts ; `npm run lint` reste bloqué par une dette TypeScript préexistante hors périmètre de la story.
 
 ### File List
 
@@ -232,3 +233,4 @@ claude-sonnet-4-6
 
 - 2026-03-15 : Implémentation initiale de la story 58.2 avec nouveau header, i18n des actions et tests mis à jour.
 - 2026-03-15 : Correction de la compatibilité ThemeProvider hors contexte strict et stabilisation des tests d'intégration.
+- 2026-03-15 : Raffinement visuel du top bar (pleine largeur, glassmorphism plus marqué, logo plus grand, branding aligné à gauche, meilleur contraste dark mode).

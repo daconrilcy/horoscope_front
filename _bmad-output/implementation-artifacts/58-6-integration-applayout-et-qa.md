@@ -260,13 +260,22 @@ claude-sonnet-4-6
 - Validation de l'intégration `AppLayout` existante avec `SidebarProvider`, `Header`, `Sidebar` et `BottomNav` sans refactor supplémentaire inutile.
 - Ajout d'une transition explicite sur `.app-shell-main` pour lisser le décalage de 48px en mode sidebar `icon-only`.
 - Création de `AppShell.test.tsx` pour couvrir le cycle sidebar complet, l'ouverture/fermeture/logout du `UserMenu` et la bascule dark/light.
-- `npm test` passe à 1068 tests verts ; `npm run lint` reste bloqué par une dette TypeScript préexistante hors story 58.6.
+- Suppression des contrôles dupliqués de l'ancien header local dans `DashboardPage` et `DailyHoroscopePage` : le dashboard n'instancie plus `TodayHeader`, et la page `/dashboard/horoscope` masque désormais l'avatar local pour laisser le top menu porter ces actions globales.
+- Ajout de garde-fous dans `DashboardPage.test.tsx`, `DailyHoroscopePage.test.tsx` et `TodayHeader.test.tsx` pour empêcher le retour des doublons avatar / toggle dans le contenu central.
+- `npm test` passe désormais à 1071 tests verts ; `npm run lint` reste bloqué par une dette TypeScript préexistante hors story 58.6.
 
 ### File List
 
 - `frontend/src/App.css` (modifié — transition du contenu principal)
 - `frontend/src/tests/AppShell.test.tsx` (créé)
+- `frontend/src/pages/DashboardPage.tsx` (modifié — retrait du header local résiduel)
+- `frontend/src/pages/DailyHoroscopePage.tsx` (modifié — avatar local masqué)
+- `frontend/src/components/TodayHeader.tsx` (modifié — avatar optionnel)
+- `frontend/src/tests/DashboardPage.test.tsx` (modifié — non-régression doublons dashboard)
+- `frontend/src/tests/DailyHoroscopePage.test.tsx` (modifié — non-régression doublons horoscope)
+- `frontend/src/tests/TodayHeader.test.tsx` (modifié — variante sans avatar)
 
 ### Change Log
 
 - 2026-03-15 : Ajout de la couverture d'intégration AppShell et validation complète non-régressive du nouvel app shell.
+- 2026-03-15 : Nettoyage post-review des doublons de contrôles utilisateur dans `/dashboard` et `/dashboard/horoscope`, avec tests de non-régression.

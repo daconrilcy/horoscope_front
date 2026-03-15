@@ -16,7 +16,6 @@ import { getPredictionMessage } from '../utils/predictionI18n'
 import { useAccessTokenSnapshot } from '../utils/authToken'
 import { useAuthMe } from '../api/authMe'
 import { useDailyPrediction } from '../api/useDailyPrediction'
-import { getUserDisplayName } from '../utils/user'
 import { trackEvent, EVENTS } from '../utils/analytics'
 import { useDashboardAstroSummary } from '../components/dashboard/useDashboardAstroSummary'
 import { SectionErrorBoundary } from '../components/ErrorBoundary'
@@ -120,8 +119,6 @@ export function DailyHoroscopePage() {
     bootstrapPredictionRefetchDoneForToken.current = accessToken
     refetchPrediction()
   }, [accessToken, isPredictionError, isPredictionLoading, prediction, refetchPrediction])
-
-  const userName = isUserLoading ? 'loading' : (isUserError ? 'Utilisateur' : getUserDisplayName(user))
 
   const isLoading = isUserLoading || isPredictionLoading
   const isError = isUserError || isPredictionError
@@ -242,9 +239,8 @@ export function DailyHoroscopePage() {
     <PageLayout
       header={
         <TodayHeader 
-          userName={userName} 
+          showAvatar={false}
           onBackClick={() => navigate("/dashboard")} 
-          isLoading={isUserLoading}
         />
       }
       className="today-page"
