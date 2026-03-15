@@ -1,3 +1,4 @@
+import { WizardLayout } from "../layouts"
 import { useEffect, useCallback, useRef } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
@@ -219,57 +220,60 @@ export function ConsultationWizardPage() {
 
   return (
     <div className="panel consultation-wizard-page">
-      <WizardProgress currentStepName={currentStepName} />
-
-      {state.precheck && currentStepName === "summary" && (
-        <ConsultationFallbackBanner precheck={state.precheck} />
-      )}
-
-      <div className="wizard-content">
-        {isPrechecking && (
-          <div className="wizard-loading-overlay">
-            <span className="spinner" aria-hidden="true">⌛</span>
-            <p>{t("precheck_loading", lang)}</p>
-          </div>
+      <WizardLayout
+        customProgress={<WizardProgress currentStepName={currentStepName} />}
+        onBack={currentStepName !== "type" ? prevStep : undefined}
+      >
+        {state.precheck && currentStepName === "summary" && (
+          <ConsultationFallbackBanner precheck={state.precheck} />
         )}
-        {renderStep()}
-      </div>
 
-      <div className="wizard-actions">
-        <button type="button" className="btn btn-secondary" onClick={handleCancel}>
-          {t("cancel", lang)}
-        </button>
-
-        <div className="wizard-actions-nav">
-          {currentStepName !== "type" && (
-            <button type="button" className="btn btn-secondary" onClick={prevStep}>
-              {t("previous", lang)}
-            </button>
+        <div className="wizard-content">
+          {isPrechecking && (
+            <div className="wizard-loading-overlay">
+              <span className="spinner" aria-hidden="true">⌛</span>
+              <p>{t("precheck_loading", lang)}</p>
+            </div>
           )}
-
-          {currentStepName !== "summary" && (
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleNext}
-              disabled={!canProceed}
-            >
-              {t("next", lang)}
-            </button>
-          )}
-
-          {currentStepName === "summary" && (
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleGenerate}
-              disabled={!canProceed || isPrechecking || state.precheck?.status === "blocked"}
-            >
-              {t("generate", lang)}
-            </button>
-          )}
+          {renderStep()}
         </div>
-      </div>
+
+        <div className="wizard-actions">
+          <button type="button" className="btn btn-secondary" onClick={handleCancel}>
+            {t("cancel", lang)}
+          </button>
+
+          <div className="wizard-actions-nav">
+            {currentStepName !== "type" && (
+              <button type="button" className="btn btn-secondary" onClick={prevStep}>
+                {t("previous", lang)}
+              </button>
+            )}
+
+            {currentStepName !== "summary" && (
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleNext}
+                disabled={!canProceed}
+              >
+                {t("next", lang)}
+              </button>
+            )}
+
+            {currentStepName === "summary" && (
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleGenerate}
+                disabled={!canProceed || isPrechecking || state.precheck?.status === "blocked"}
+              >
+                {t("generate", lang)}
+              </button>
+            )}
+          </div>
+        </div>
+      </WizardLayout>
     </div>
   )
 }

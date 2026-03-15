@@ -1,0 +1,27 @@
+.two-col-layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width, 320px) 1fr;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.two-col-layout__sidebar {
+  border-right: 1px solid var(--glass-border);
+  height: 100%;
+  overflow-y: auto;
+}
+
+.two-col-layout__main {
+  height: 100%;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .two-col-layout__sidebar--collapsible {
+    display: none;
+  }
+  .two-col-layout {
+    grid-template-columns: 1fr;
+  }
+}

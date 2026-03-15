@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { detectLang } from "@i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
+import { TwoColumnLayout } from "../../../layouts/TwoColumnLayout"
 
 type MobileView = "list" | "chat"
 
@@ -51,14 +52,11 @@ export function ChatLayout({
   }
 
   return (
-    <div className="chat-layout chat-layout--desktop">
-      <div className="chat-layout-panel chat-layout-panel--left">
-        {leftPanel}
-      </div>
-      <div className="chat-layout-panel chat-layout-panel--center">
-        {centerPanel}
-      </div>
-    </div>
+    <TwoColumnLayout
+      sidebar={leftPanel}
+      main={centerPanel}
+      className="chat-layout chat-layout--desktop"
+    />
   )
 }
 
