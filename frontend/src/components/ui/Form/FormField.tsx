@@ -1,8 +1,8 @@
 import React from 'react';
 import { Controller } from 'react-hook-form';
 import { useFormContext } from './Form';
-import { Field, FieldProps } from '../Field/Field';
-import { Select, SelectProps } from '../Select/Select';
+import { Field, type FieldProps } from '../Field/Field';
+import { Select, type SelectProps } from '../Select/Select';
 
 interface FormFieldBaseProps {
   name: string;

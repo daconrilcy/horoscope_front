@@ -92,7 +92,7 @@ describe("SignUpForm", () => {
     renderWithRouter(<SignUpForm onSignIn={onSignInMock} />)
 
     const emailInput = screen.getByLabelText("Adresse e-mail")
-    expect(emailInput).toHaveAttribute("aria-invalid", "false")
+    expect(emailInput).not.toHaveAttribute("aria-invalid")
 
     fireEvent.change(emailInput, { target: { value: "bad" } })
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "password123" } })

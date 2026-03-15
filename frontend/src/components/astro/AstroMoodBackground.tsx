@@ -63,7 +63,7 @@ export const AstroMoodBackground: React.FC<AstroMoodBackgroundProps> = ({
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const seed = hashString(`${userId}|${sign}|${dateKey}`);
-    const palette = getPalette(dayScore, theme);
+    const palette = getPalette(dayScore, theme === 'dark');
     const pattern = SIGN_PATTERNS[sign] || SIGN_PATTERNS['neutral'];
 
     let width = 0;

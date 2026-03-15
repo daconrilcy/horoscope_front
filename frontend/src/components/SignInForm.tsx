@@ -1,31 +1,27 @@
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 import { loginApi, AuthApiError } from "@api"
 import { setAccessToken } from "../utils/authToken"
-import { detectLang } from "../i18n/astrology"
-import { authTranslations, type AuthTranslation } from "../i18n/auth"
+import { useTranslation } from "@i18n"
+import { createSignInSchema } from "@i18n/zod/auth"
+import { Field } from "@ui/Field"
+import { Button } from "@ui/Button"
 
-export function createSignInSchema(t: AuthTranslation) {
-  return z.object({
-    email: z.string().email(t.validation.emailInvalid),
-    password: z.string().min(1, t.validation.passwordRequired),
-  })
+type SignInFormData = {
+  email: string
+  password: string
 }
-
-type SignInFormData = z.infer<ReturnType<typeof createSignInSchema>>
 
 type SignInFormProps = {
   onRegister?: () => void
 }
 
 export function SignInForm({ onRegister }: SignInFormProps = {}) {
-  const lang = detectLang()
-  const t = authTranslations(lang)
-  const schema = useMemo(() => createSignInSchema(t), [t])
+  const t = useTranslation("auth")
+  const schema = createSignInSchema(t)
   const [apiError, setApiError] = useState<string | null>(null)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -62,53 +58,30 @@ export function SignInForm({ onRegister }: SignInFormProps = {}) {
     <section className="panel">
       <h2>{t.signIn.title}</h2>
       <form className="chat-form" onSubmit={handleSubmit(onSubmit)} noValidate>
-        <div>
-          <label htmlFor="signin-email">{t.signIn.emailLabel}</label>
-          <input
-            id="signin-email"
-            type="email"
-            autoComplete="email"
-            aria-describedby={errors.email ? "signin-email-error" : undefined}
-            aria-invalid={Boolean(errors.email)}
-            {...register("email")}
-          />
-          {errors.email && (
-            <span id="signin-email-error" className="chat-error" role="alert">
-              {errors.email.message}
-            </span>
-          )}
-        </div>
-        <div>
-          <label htmlFor="signin-password">{t.signIn.passwordLabel}</label>
-          <input
-            id="signin-password"
-            type="password"
-            autoComplete="current-password"
-            aria-describedby={errors.password ? "signin-password-error" : undefined}
-            aria-invalid={Boolean(errors.password)}
-            {...register("password")}
-          />
-          {errors.password && (
-            <span id="signin-password-error" className="chat-error" role="alert">
-              {errors.password.message}
-            </span>
-          )}
-        </div>
+        <Field
+          id="signin-email"
+          label={t.signIn.emailLabel}
+          type="email"
+          autoComplete="email"
+          error={errors.email?.message}
+          {...register("email")}
+        />
+        <Field
+          id="signin-password"
+          label={t.signIn.passwordLabel}
+          type="password"
+          autoComplete="current-password"
+          error={errors.password?.message}
+          {...register("password")}
+        />
         {apiError && (
           <span className="chat-error" role="alert">
             {apiError}
           </span>
         )}
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <span className="state-line">
-              <span className="state-loading" aria-hidden="true" />
-              {t.signIn.submitLoading}
-            </span>
-          ) : (
-            t.signIn.submitButton
-          )}
-        </button>
+        <Button type="submit" loading={isSubmitting} fullWidth>
+          {isSubmitting ? t.signIn.submitLoading : t.signIn.submitButton}
+        </Button>
       </form>
       {onRegister && (
         <p>
@@ -121,4 +94,3 @@ export function SignInForm({ onRegister }: SignInFormProps = {}) {
     </section>
   )
 }
-

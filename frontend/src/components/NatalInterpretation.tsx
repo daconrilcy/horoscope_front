@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { 
-  useNatalInterpretation, 
+import {
+  useNatalInterpretation,
   useNatalInterpretationsList,
   useNatalPdfTemplates,
   useNatalInterpretationById,
   deleteNatalInterpretation,
   downloadNatalInterpretationPdf,
   previewNatalInterpretationPdf,
-  type NatalInterpretationResult, 
+  type NatalInterpretationResult,
   type AstroSection,
   type NatalInterpretationListItem
 } from "../api/natalChart";
@@ -15,19 +15,20 @@ import { useAstrologers, type Astrologer } from "../api/astrologers";
 import { AstrologerGrid } from "../features/astrologers";
 import { natalChartTranslations } from "../i18n/natalChart";
 import { type AstrologyLang } from "../i18n/astrology";
-import { 
-  ChevronDown, 
-  ChevronUp, 
-  Lock, 
-  RefreshCw, 
-  Star, 
-  AlertCircle, 
-  Trash2, 
+import {
+  ChevronDown,
+  ChevronUp,
+  Lock,
+  RefreshCw,
+  Star,
+  AlertCircle,
+  Trash2,
   History,
   Download,
   Eye
 } from "lucide-react";
 import { ErrorBoundary } from "@components/ErrorBoundary";
+import { Button } from "@ui/Button";
 import { useAccessTokenSnapshot } from "../utils/authToken";
 import "./NatalInterpretation.css";
 
@@ -42,20 +43,18 @@ type InterpretationTranslations = typeof natalChartTranslations['fr']['interpret
 export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props) {
   const t = natalChartTranslations[lang].interpretation;
   const accessToken = useAccessTokenSnapshot();
-  
+
   const [useCaseLevel, setUseCaseLevel] = useState<"short" | "complete">("short");
   const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null);
   const [isUpsellOpen, setIsUpsellOpen] = useState(false);
   const [forceRefresh, setForceRefresh] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  
-  // New state for history
+
   const [selectedInterpretationId, setSelectedInterpretationId] = useState<number | null>(null);
   const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // 1. Fetch versions list
   const historyQuery = useNatalInterpretationsList({
     enabled: chartLoaded && !!chartId,
     chartId,
@@ -65,7 +64,6 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
     locale: lang === "fr" ? "fr" : lang,
   });
 
-  // 2. Main interpretation query (POST) - used for auto-load/generate
   const mainQuery = useNatalInterpretation({
     enabled: chartLoaded && !selectedInterpretationId,
     useCaseLevel,
@@ -75,14 +73,12 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
     refreshKey,
   });
 
-  // 3. Specific interpretation query (GET by ID) - used when selecting from history
   const idQuery = useNatalInterpretationById({
     enabled: !!selectedInterpretationId,
     interpretationId: selectedInterpretationId ?? undefined,
     locale: lang === "fr" ? "fr-FR" : lang === "en" ? "en-US" : "es-ES",
   });
 
-  // Determine which data to show
   const activeQuery = selectedInterpretationId ? idQuery : mainQuery;
   const { data, isLoading, error, refetch } = activeQuery;
 
@@ -98,7 +94,7 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
     setSelectedPersonaId(personaId);
     setUseCaseLevel("complete");
     setIsUpsellOpen(false);
-    setSelectedInterpretationId(null); // Clear selected ID to trigger new generation
+    setSelectedInterpretationId(null);
     setForceRefresh(true);
     setRefreshKey((previous) => previous + 1);
   };
@@ -121,7 +117,6 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
   const handleSelectVersion = (id: number | null) => {
     setSelectedInterpretationId(id);
     if (id === null) {
-      // Reset to default latest behavior
       setUseCaseLevel("short");
       setSelectedPersonaId(null);
     }
@@ -133,9 +128,8 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
     try {
       await deleteNatalInterpretation(accessToken, id);
       const updatedHistory = await historyQuery.refetch();
-      
+
       if (selectedInterpretationId === id) {
-        // Find next available version if any
         const remaining = updatedHistory.data?.items || [];
         if (remaining.length > 0) {
           setSelectedInterpretationId(remaining[0].id);
@@ -156,6 +150,7 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
     data?.meta.id ??
     historyQuery.data?.items.find((i) => i.created_at === data?.meta.persisted_at)?.id ??
     historyQuery.data?.items[0]?.id;
+
   const usedPersonaIds = new Set(
     (historyQuery.data?.items ?? [])
       .filter((item) => item.level === "complete" && Boolean(item.persona_id))
@@ -177,7 +172,6 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
   };
 
   const handleDownloadPdf = async () => {
-    
     if (!accessToken || !currentInterpretationId) return;
     try {
       await downloadNatalInterpretationPdf(
@@ -194,24 +188,21 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
   if (!chartLoaded) return null;
 
   return (
-    <section className="mt-8 border-t pt-8 border-gray-200 dark:border-gray-800">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-        <div className="flex flex-col">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white uppercase tracking-wide">
-            {t.title}
-          </h2>
+    <section className="ni-section">
+      <div className="ni-header">
+        <div className="ni-header__title">
+          <h2 className="ni-title">{t.title}</h2>
           {data?.meta.persisted_at && (
-            <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
+            <span className="ni-date">
               Généré le {new Date(data.meta.persisted_at).toLocaleDateString(lang, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
         </div>
-        
-        <div className="flex flex-wrap items-center gap-2">
-          {/* History Selector */}
+
+        <div className="ni-actions">
           {historyQuery.data && historyQuery.data.items.length > 0 && (
-            <VersionSelector 
-              items={historyQuery.data.items} 
+            <VersionSelector
+              items={historyQuery.data.items}
               selectedId={selectedInterpretationId || (historyQuery.data.items.find(i => i.created_at === data?.meta.persisted_at)?.id ?? null)}
               onSelect={handleSelectVersion}
               onDeleteRequest={(id) => setShowDeleteConfirm(id)}
@@ -222,10 +213,9 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
 
           {data && !isLoading && (
             <>
-              <label className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-full dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700">
+              <label className="ni-template-label">
                 <span>{t.templateLabel}</span>
                 <select
-                  className="bg-transparent border-none focus:outline-none text-xs"
                   value={selectedTemplateKey}
                   onChange={(event) => setSelectedTemplateKey(event.target.value)}
                   aria-label={t.templateLabel}
@@ -241,39 +231,37 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
                 </select>
               </label>
 
-              <button 
+              <button
                 onClick={handlePreviewPdf}
                 title={t.previewPdf}
-                className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-full hover:bg-slate-100 transition-colors dark:bg-slate-900/20 dark:text-slate-300 dark:border-slate-700"
+                className="ni-action-btn ni-action-btn--preview"
               >
-                <Eye className="w-4 h-4" />
-                <span className="hidden sm:inline">{t.previewPdf}</span>
+                <Eye size={16} />
+                <span className="ni-action-btn__label">{t.previewPdf}</span>
               </button>
 
-              <button 
+              <button
                 onClick={handleDownloadPdf}
                 title={t.downloadPdf}
-                className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-full hover:bg-blue-100 transition-colors dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
+                className="ni-action-btn ni-action-btn--download"
               >
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">{t.downloadPdf}</span>
+                <Download size={16} />
+                <span className="ni-action-btn__label">{t.downloadPdf}</span>
               </button>
 
-              <button 
+              <button
                 onClick={handleRegenerate}
                 title={t.regenerate}
-                className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-full hover:bg-purple-100 transition-colors dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800"
+                className="ni-action-btn ni-action-btn--regenerate"
               >
-                <RefreshCw className="w-4 h-4" />
-                <span className="hidden sm:inline">{t.regenerate}</span>
+                <RefreshCw size={16} />
+                <span className="ni-action-btn__label">{t.regenerate}</span>
               </button>
             </>
           )}
-          
+
           {data?.meta.level === "complete" && (
-            <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-purple-900 dark:text-purple-300 border border-purple-400">
-              {t.completeBadge}
-            </span>
+            <span className="ni-level-badge">{t.completeBadge}</span>
           )}
         </div>
       </div>
@@ -286,16 +274,16 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
         ) : data ? (
           <>
             <InterpretationContent data={data} lang={lang} />
-            
+
             {useCaseLevel === "short" && !isUpsellOpen && !selectedInterpretationId && (
               <UpsellBlock t={t} onOpenSelector={() => setIsUpsellOpen(true)} />
             )}
 
             {isUpsellOpen && (
-              <PersonaSelector 
-                t={t} 
-                onConfirm={handleUpgrade} 
-                onCancel={() => setIsUpsellOpen(false)} 
+              <PersonaSelector
+                t={t}
+                onConfirm={handleUpgrade}
+                onCancel={() => setIsUpsellOpen(false)}
                 isSubmitting={isLoading && useCaseLevel === "complete"}
                 excludedPersonaIds={usedPersonaIds}
               />
@@ -305,9 +293,9 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
       </ErrorBoundary>
 
       {showDeleteConfirm && (
-        <ConfirmDeleteModal 
-          t={t} 
-          onConfirm={() => handleDelete(showDeleteConfirm)} 
+        <ConfirmDeleteModal
+          t={t}
+          onConfirm={() => handleDelete(showDeleteConfirm)}
           onCancel={() => setShowDeleteConfirm(null)}
           isDeleting={isDeleting}
         />
@@ -316,16 +304,16 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
   );
 }
 
-function VersionSelector({ 
-  items, 
-  selectedId, 
-  onSelect, 
+function VersionSelector({
+  items,
+  selectedId,
+  onSelect,
   onDeleteRequest,
   t,
-  lang 
-}: { 
-  items: NatalInterpretationListItem[], 
-  selectedId: number | null, 
+  lang
+}: {
+  items: NatalInterpretationListItem[],
+  selectedId: number | null,
   onSelect: (id: number | null) => void,
   onDeleteRequest: (id: number) => void,
   t: InterpretationTranslations,
@@ -354,61 +342,62 @@ function VersionSelector({
   }, [isOpen]);
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="ni-version-selector" ref={containerRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 shadow-sm"
+        className="ni-version-btn"
       >
-        <History className="w-4 h-4 text-purple-500" />
+        <History size={16} style={{ color: 'var(--color-primary-strong)' }} />
         <span>
-          {selectedItem 
-            ? `${new Date(selectedItem.created_at).toLocaleDateString(lang)} - ${selectedItem.persona_name || 'Standard'}` 
+          {selectedItem
+            ? `${new Date(selectedItem.created_at).toLocaleDateString(lang)} - ${selectedItem.persona_name || 'Standard'}`
             : t.historyTitle}
         </span>
-        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          size={12}
+          className={`ni-version-btn__chevron${isOpen ? ' ni-version-btn__chevron--open' : ''}`}
+        />
       </button>
 
       {isOpen && (
-          <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-40 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-            <div className="p-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                {t.historyTitle}
-              </span>
-            </div>
-            <div className="max-h-64 overflow-y-auto">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className={`group flex items-center justify-between p-3 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors ${selectedId === item.id ? 'bg-purple-50/50 dark:bg-purple-900/10' : ''}`}
-                >
-                  <button
-                    type="button"
-                    className="flex flex-col min-w-0 text-left flex-1"
-                    onClick={() => {
-                      onSelect(item.id);
-                      setIsOpen(false);
-                    }}
-                  >
-                    <span className={`text-xs font-medium truncate ${selectedId === item.id ? 'text-purple-700 dark:text-purple-400' : 'text-gray-700 dark:text-gray-300'}`}>
-                      {item.persona_name || 'Standard'}
-                    </span>
-                    <span className="text-[10px] text-gray-500 dark:text-gray-500">
-                      {new Date(item.created_at).toLocaleString(lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} · {item.level === 'complete' ? t.completeBadge : 'Short'}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onDeleteRequest(item.id); }}
-                    className="opacity-70 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-500 transition-all rounded-md hover:bg-red-50 dark:hover:bg-red-900/30"
-                    title={t.deleteCta}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
+        <div className="ni-version-dropdown">
+          <div className="ni-version-dropdown__header">
+            <span className="ni-version-dropdown__label">{t.historyTitle}</span>
           </div>
+          <div className="ni-version-dropdown__list">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className={`ni-version-item${selectedId === item.id ? ' ni-version-item--selected' : ''}`}
+              >
+                <button
+                  type="button"
+                  className="ni-version-item__btn"
+                  onClick={() => {
+                    onSelect(item.id);
+                    setIsOpen(false);
+                  }}
+                >
+                  <span className={`ni-version-item__name${selectedId === item.id ? ' ni-version-item__name--selected' : ''}`}>
+                    {item.persona_name || 'Standard'}
+                  </span>
+                  <span className="ni-version-item__date">
+                    {new Date(item.created_at).toLocaleString(lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} · {item.level === 'complete' ? t.completeBadge : 'Short'}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onDeleteRequest(item.id); }}
+                  className="ni-version-item__delete"
+                  title={t.deleteCta}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
@@ -416,39 +405,28 @@ function VersionSelector({
 
 function ConfirmDeleteModal({ t, onConfirm, onCancel, isDeleting }: { t: InterpretationTranslations, onConfirm: () => void, onCancel: () => void, isDeleting: boolean }) {
   return (
-    <div 
-      className="modal-overlay" 
+    <div
+      className="modal-overlay"
       onClick={onCancel}
       role="dialog"
       aria-modal="true"
       aria-labelledby="delete-confirm-title"
     >
       <div className="modal-content natal-interpretation__modal" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center gap-3 text-red-600 mb-4">
-          <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
-            <AlertCircle className="w-6 h-6" />
+        <div className="ni-modal-header">
+          <div className="ni-modal-icon">
+            <AlertCircle size={24} />
           </div>
-          <h4 className="text-lg font-bold m-0" id="delete-confirm-title">{t.deleteConfirm}</h4>
+          <h4 className="ni-modal-heading" id="delete-confirm-title">{t.deleteConfirm}</h4>
         </div>
-        <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
-          {t.deleteConfirmSub}
-        </p>
-        <div className="flex justify-end gap-3">
-          <button 
-            onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-            disabled={isDeleting}
-          >
+        <p className="ni-modal-body">{t.deleteConfirmSub}</p>
+        <div className="ni-modal-footer">
+          <Button variant="ghost" onClick={onCancel} disabled={isDeleting}>
             {t.cancel}
-          </button>
-          <button 
-            onClick={onConfirm}
-            className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-2"
-            disabled={isDeleting}
-          >
-            {isDeleting && <RefreshCw className="w-3 h-3 animate-spin" />}
+          </Button>
+          <Button variant="danger" onClick={onConfirm} loading={isDeleting} leftIcon={<RefreshCw size={12} />}>
             {t.deleteCta}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -457,19 +435,15 @@ function ConfirmDeleteModal({ t, onConfirm, onCancel, isDeleting }: { t: Interpr
 
 function InterpretationSkeleton({ t, isComplete }: { t: InterpretationTranslations, isComplete?: boolean }) {
   return (
-    <div className="animate-pulse space-y-4">
-      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-      <div className="space-y-2">
-        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
-        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+    <div className="ni-skeleton">
+      <div className="ni-skeleton__line" style={{ height: '1rem', width: '75%' }} />
+      <div className="ni-skeleton__line" style={{ height: '0.75rem' }} />
+      <div className="ni-skeleton__line" style={{ height: '0.75rem', width: '83%' }} />
+      <div className="ni-skeleton__tabs">
+        {[1, 2, 3].map(i => <div key={i} className="ni-skeleton__tab" />)}
       </div>
-      <div className="flex gap-2 py-4">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="h-8 bg-gray-200 dark:bg-gray-700 rounded-full w-20"></div>
-        ))}
-      </div>
-      <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-      <p className="text-sm text-gray-500 italic text-center py-4">
+      <div className="ni-skeleton__block" />
+      <p className="ni-skeleton__caption">
         {isComplete ? t.requestingComplete : t.loading}
       </p>
     </div>
@@ -478,15 +452,11 @@ function InterpretationSkeleton({ t, isComplete }: { t: InterpretationTranslatio
 
 function InterpretationError({ t, onRetry }: { t: InterpretationTranslations, onRetry: () => void }) {
   return (
-    <div className="p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-center">
-      <p className="text-red-800 dark:text-red-400 mb-4">{t.error}</p>
-      <button 
-        onClick={onRetry}
-        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-      >
-        <RefreshCw className="w-4 h-4 mr-2" />
+    <div className="ni-error">
+      <p className="ni-error__message">{t.error}</p>
+      <Button variant="danger" onClick={onRetry} leftIcon={<RefreshCw size={16} />}>
         {t.retry}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -505,56 +475,48 @@ function InterpretationContent({ data, lang }: { data: NatalInterpretationResult
       : [];
 
   return (
-    <div className="space-y-8">
+    <div className="ni-content">
       {degraded_mode && (
-        <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-800 dark:text-amber-400 flex items-center">
-          <Star className="w-4 h-4 mr-2 fill-current" />
+        <div className="ni-degraded-notice">
+          <Star size={16} style={{ fill: 'currentColor', flexShrink: 0 }} />
           {t.degradedNotice}
         </div>
       )}
 
       <div>
-        <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">
-          {interpretation.title}
-        </h3>
+        <h3 className="ni-interpretation-title">{interpretation.title}</h3>
         {meta.persona_name && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 italic">
-            {t.completeBy} <span className="font-medium text-purple-600 dark:text-purple-400">{meta.persona_name}</span>
+          <p className="ni-persona-text">
+            {t.completeBy} <strong>{meta.persona_name}</strong>
           </p>
         )}
-        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-          {interpretation.summary}
-        </p>
+        <p className="ni-summary">{interpretation.summary}</p>
       </div>
 
       <div>
-        <h4 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4">
-          {t.highlightsTitle}
-        </h4>
+        <p className="ni-section-label">{t.highlightsTitle}</p>
         <HighlightsChips highlights={highlights} />
       </div>
 
       <SectionAccordion sections={sections} sectionsMap={t.sectionsMap} />
 
-      <div className="bg-blue-50 dark:bg-blue-900/10 p-6 rounded-2xl">
-        <h4 className="text-lg font-bold text-blue-900 dark:text-blue-300 mb-4">
-          {t.adviceTitle}
-        </h4>
+      <div className="ni-advice-block">
+        <h4 className="ni-advice-title">{t.adviceTitle}</h4>
         <AdviceList advice={advice} />
       </div>
 
       <EvidenceTags evidence={evidence} title={t.evidenceTitle} t={t} />
 
       {disclaimers.length > 0 && (
-        <footer className="mt-2 border-t border-gray-200 dark:border-gray-800 pt-4">
-          <div className="rounded-xl bg-amber-50/70 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4">
-            <p className="font-bold uppercase tracking-tight text-[11px] text-amber-900 dark:text-amber-300 mb-2 flex items-center gap-2">
-              <AlertCircle className="w-3.5 h-3.5" />
+        <footer style={{ marginTop: 'var(--space-2)', borderTop: '1px solid var(--color-border-subtle)', paddingTop: 'var(--space-4)' }}>
+          <div className="ni-degraded-notice" style={{ display: 'block', background: 'var(--color-warning-surface, rgba(217,119,6,0.07))', borderColor: 'var(--color-warning-border, rgba(217,119,6,0.2))' }}>
+            <p style={{ fontWeight: 'var(--font-weight-bold)', textTransform: 'uppercase', fontSize: '0.6875rem', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 'var(--space-1)', marginBottom: 'var(--space-2)', color: 'var(--color-warning-text, #92400e)' }}>
+              <AlertCircle size={14} />
               {t.disclaimerTitle}
             </p>
-            <div className="space-y-2 text-xs text-amber-900/90 dark:text-amber-200/90">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', fontSize: 'var(--font-size-xs)', color: 'var(--color-warning-text, #92400e)' }}>
               {disclaimers.map((d, i) => (
-                <p key={i}>{d}</p>
+                <p key={i} style={{ margin: 0 }}>{d}</p>
               ))}
             </div>
           </div>
@@ -566,18 +528,13 @@ function InterpretationContent({ data, lang }: { data: NatalInterpretationResult
 
 function HighlightsChips({ highlights }: { highlights: string[] }) {
   return (
-    <div className="grid grid-cols-1 gap-3">
+    <div className="ni-highlights">
       {highlights.map((h, i) => (
-        <div 
-          key={i} 
-          className="flex items-center p-3 bg-purple-50/30 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30 rounded-xl shadow-sm hover:shadow-md transition-shadow"
-        >
-          <div className="flex-shrink-0 w-8 h-8 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center mr-3 shadow-sm border border-purple-100 dark:border-purple-800">
-            <Star className="w-4 h-4 text-purple-500 fill-current" />
+        <div key={i} className="ni-highlight-chip">
+          <div className="ni-highlight-icon">
+            <Star size={16} style={{ color: 'var(--color-primary-strong)', fill: 'currentColor' }} />
           </div>
-          <p className="text-gray-700 dark:text-gray-300 text-sm leading-snug font-medium">
-            {h.replace(/^[\d\-\.\s]+/, "")}
-          </p>
+          <p className="ni-highlight-text">{h.replace(/^[\d\-\.\s]+/, "")}</p>
         </div>
       ))}
     </div>
@@ -596,26 +553,24 @@ function SectionAccordion({ sections, sectionsMap }: { sections: AstroSection[],
   };
 
   return (
-    <div className="space-y-3">
+    <div className="ni-accordion">
       {sections.map((section, index) => {
         const sectionId = `${section.key}-${index}`;
         const isOpen = openIds.includes(sectionId);
         return (
-          <div key={sectionId} className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm bg-white dark:bg-gray-900">
-            <button
-              onClick={() => toggleSection(sectionId)}
-              className="w-full flex items-center justify-between p-4 text-left bg-gray-50/30 dark:bg-gray-800/30 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              <span className="font-bold text-gray-800 dark:text-gray-200">
+          <div key={sectionId} className="ni-accordion-item">
+            <button onClick={() => toggleSection(sectionId)} className="ni-accordion-header">
+              <span className="ni-accordion-title">
                 {sectionsMap[section.key] || section.heading}
               </span>
-              {isOpen ? <ChevronUp className="w-5 h-4 text-purple-500" /> : <ChevronDown className="w-5 h-4 text-gray-400" />}
+              {isOpen
+                ? <ChevronUp size={20} style={{ color: 'var(--color-primary-strong)' }} />
+                : <ChevronDown size={20} style={{ color: 'var(--color-text-muted)' }} />
+              }
             </button>
             {isOpen && (
-              <div className="p-4 border-t border-gray-100 dark:border-gray-800 animate-in fade-in duration-300">
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
-                  {section.content}
-                </p>
+              <div className="ni-accordion-body">
+                <p className="ni-accordion-text">{section.content}</p>
               </div>
             )}
           </div>
@@ -627,17 +582,13 @@ function SectionAccordion({ sections, sectionsMap }: { sections: AstroSection[],
 
 function AdviceList({ advice }: { advice: string[] }) {
   return (
-    <div className="space-y-4">
+    <div className="ni-advice-list">
       {advice.map((item, i) => (
-        <div key={i} className="flex items-start gap-3">
-          <div className="flex-shrink-0 mt-0.5">
-            <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center">
-              <Star className="w-3 h-3 text-blue-600 dark:text-blue-400 fill-current" />
-            </div>
+        <div key={i} className="ni-advice-item">
+          <div className="ni-advice-icon">
+            <Star size={12} style={{ fill: 'currentColor' }} />
           </div>
-          <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed m-0">
-            {item.replace(/^\d+[\.\s]*/, "")}
-          </p>
+          <p className="ni-advice-text">{item.replace(/^\d+[\.\s]*/, "")}</p>
         </div>
       ))}
     </div>
@@ -790,37 +741,35 @@ function EvidenceTags({
   const totalCount = deduped.length;
 
   return (
-    <div className="evidence-tags border border-gray-200 dark:border-gray-800 rounded-2xl p-4 bg-gray-50/50 dark:bg-gray-900/30">
+    <div className="evidence-tags" style={{ border: '1px solid var(--color-border-default)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-4)', background: 'var(--color-surface-overlay)' }}>
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="w-full flex items-center justify-between gap-3 text-left"
+        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
       >
         <div>
-          <p className="evidence-tags__title font-semibold text-sm text-gray-700 dark:text-gray-200">
+          <p className="evidence-tags__title" style={{ fontWeight: 'var(--font-weight-semibold)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', margin: 0 }}>
             {title}
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t.evidenceIntro}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p className="ni-evidence-count">{t.evidenceIntro}</p>
+          <p className="ni-evidence-count">
             {totalCount} élément{totalCount > 1 ? "s" : ""} dédupliqué{totalCount > 1 ? "s" : ""}
           </p>
         </div>
-        <span className="inline-flex items-center gap-2 text-xs font-medium text-purple-700 dark:text-purple-300">
+        <span className="ni-evidence-toggle">
           {open ? t.hideEvidence : t.showEvidence}
-          {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </span>
       </button>
 
       {open && (
-        <div className="mt-4 space-y-4">
+        <div className="ni-evidence-content">
           {orderedKeys.map((key) => {
             const items = grouped[key];
             if (items.length === 0) return null;
             return (
               <div key={key}>
-                <p className="text-[11px] uppercase tracking-wide font-semibold text-gray-500 dark:text-gray-400 mb-2">
-                  {categoryLabels[key]}
-                </p>
+                <p className="ni-evidence-category-label">{categoryLabels[key]}</p>
                 <div className="evidence-tags__list">
                   {items.map((item, i) => {
                     const isAspect = item.eid.startsWith("ASPECT_");
@@ -851,19 +800,14 @@ function EvidenceTags({
 
 function UpsellBlock({ t, onOpenSelector }: { t: InterpretationTranslations, onOpenSelector: () => void }) {
   return (
-    <div className="mt-12 p-8 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-3xl text-white text-center shadow-xl shadow-purple-500/20 relative overflow-hidden">
-      <div className="absolute top-0 right-0 p-4 opacity-10">
-        <Lock className="w-32 h-32 -rotate-12 translate-x-12" />
+    <div className="ni-upsell">
+      <div className="ni-upsell__icon-bg">
+        <Lock size={128} style={{ transform: 'rotate(-12deg) translateX(3rem)' }} />
       </div>
-      <div className="relative z-10">
-        <h4 className="text-2xl font-bold mb-3">{t.upsellTitle}</h4>
-        <p className="text-purple-100 mb-6 max-w-md mx-auto">
-          {t.upsellDescription}
-        </p>
-        <button
-          onClick={onOpenSelector}
-          className="px-8 py-3 bg-white text-purple-700 font-bold rounded-full hover:bg-purple-50 transition-colors shadow-lg"
-        >
+      <div className="ni-upsell__content">
+        <h4 className="ni-upsell__title">{t.upsellTitle}</h4>
+        <p className="ni-upsell__desc">{t.upsellDescription}</p>
+        <button onClick={onOpenSelector} className="ni-upsell__cta">
           {t.upsellCta}
         </button>
       </div>
@@ -871,15 +815,15 @@ function UpsellBlock({ t, onOpenSelector }: { t: InterpretationTranslations, onO
   );
 }
 
-function PersonaSelector({ 
-  t, 
-  onConfirm, 
+function PersonaSelector({
+  t,
+  onConfirm,
   onCancel,
   isSubmitting,
   excludedPersonaIds,
-}: { 
-  t: InterpretationTranslations, 
-  onConfirm: (id: string) => void, 
+}: {
+  t: InterpretationTranslations,
+  onConfirm: (id: string) => void,
   onCancel: () => void,
   isSubmitting?: boolean,
   excludedPersonaIds?: Set<string>,
@@ -906,21 +850,16 @@ function PersonaSelector({
         </h4>
 
         {isLoading ? (
-          <div className="flex justify-center py-8">
-            <RefreshCw className="w-8 h-8 animate-spin text-purple-600" />
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-8)' }}>
+            <RefreshCw size={32} style={{ animation: 'spin 1s linear infinite', color: 'var(--color-primary-strong)' }} />
           </div>
         ) : isError ? (
-          <div className="py-8 text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
-              <AlertCircle className="w-6 h-6 text-red-600" />
+          <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '3rem', height: '3rem', borderRadius: 'var(--radius-full)', background: 'var(--color-danger-surface, rgba(220,38,38,0.1))', marginBottom: 'var(--space-4)' }}>
+              <AlertCircle size={24} style={{ color: 'var(--color-danger)' }} />
             </div>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">{t.error}</p>
-            <button 
-              onClick={() => refetch()}
-              className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-            >
-              {t.retry}
-            </button>
+            <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)' }}>{t.error}</p>
+            <Button variant="secondary" onClick={() => refetch()}>{t.retry}</Button>
           </div>
         ) : availableAstrologers.length > 0 ? (
           <AstrologerGrid
@@ -931,16 +870,13 @@ function PersonaSelector({
             }}
           />
         ) : (
-          <div className="py-8 text-center text-sm text-gray-600 dark:text-gray-400">
+          <p style={{ padding: 'var(--space-8)', textAlign: 'center', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
             Tous les astrologues disponibles ont deja une interpretation.
-          </div>
+          </p>
         )}
 
         <div className="modal-actions">
-          <button
-            onClick={onCancel}
-            disabled={isSubmitting}
-          >
+          <button onClick={onCancel} disabled={isSubmitting}>
             {t.cancel}
           </button>
         </div>

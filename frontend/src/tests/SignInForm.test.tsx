@@ -83,7 +83,7 @@ describe("SignInForm", () => {
     await waitFor(() => {
       expect(screen.getByText("Connexion en cours...")).toBeInTheDocument()
     })
-    expect(screen.getByRole("button")).toBeDisabled()
+    expect(screen.getByRole("button", { name: /connexion en cours/i })).toBeDisabled()
 
     resolveLogin(SUCCESS_RESPONSE)
     await waitFor(() => {
@@ -162,7 +162,7 @@ describe("SignInForm", () => {
     renderWithRouter(<SignInForm />)
 
     const emailInput = screen.getByLabelText("Adresse e-mail")
-    expect(emailInput).toHaveAttribute("aria-invalid", "false")
+    expect(emailInput).not.toHaveAttribute("aria-invalid")
 
     fireEvent.change(emailInput, { target: { value: "not-an-email" } })
     fireEvent.change(screen.getByLabelText("Mot de passe"), { target: { value: "secret" } })
@@ -179,7 +179,7 @@ describe("SignInForm", () => {
     renderWithRouter(<SignInForm />)
 
     const passwordInput = screen.getByLabelText("Mot de passe")
-    expect(passwordInput).toHaveAttribute("aria-invalid", "false")
+    expect(passwordInput).not.toHaveAttribute("aria-invalid")
 
     fireEvent.change(screen.getByLabelText("Adresse e-mail"), { target: { value: "test@example.com" } })
     fireEvent.click(screen.getByRole("button", { name: "Se connecter" }))

@@ -7,7 +7,7 @@ import { settingsTranslations, type SettingsTranslation } from "./settings"
 import { adminTranslations, translateAdmin, type AdminTranslation } from "./admin"
 import { natalChartTranslations, type NatalChartTranslation } from "./natalChart"
 import { birthProfileTranslations, type BirthProfileTranslation } from "./birthProfile"
-import { predictionsTranslations, type PredictionsTranslation } from "./predictions"
+import { TONE_LABELS, CATEGORY_LABELS, PREDICTION_UI_MESSAGES, type Lang as PredictionsLang } from "./predictions"
 import { tConsultations, type ConsultationsTranslation } from "./consultations"
 import { tAstrologers, type AstrologersTranslation } from "./astrologers"
 import { translateInsight, translateInsightSection, type InsightsTranslation } from "./insights"
@@ -37,7 +37,11 @@ export type TranslationMap = {
   admin: AdminTranslation
   natalChart: NatalChartTranslation
   birthProfile: BirthProfileTranslation
-  predictions: PredictionsTranslation
+  predictions: {
+    getToneLabel: (tone: string) => string
+    getMessage: (key: string) => string
+    getCategoryLabel: (cat: string) => string
+  }
   consultations: ConsultationsTranslation
   astrologers: AstrologersTranslation
   insights: InsightsTranslation
@@ -56,12 +60,14 @@ const translationFunctions: {
   admin: translateAdmin,
   natalChart: natalChartTranslations,
   birthProfile: birthProfileTranslations,
-  predictions: (lang) => ({
-    getToneLabel: (tone: any) => predictionsTranslations.tones[tone][lang],
-    getToneColor: (tone: any) => predictionsTranslations.toneColors[tone],
-    getMessage: (key: any) => predictionsTranslations.messages[key][lang],
-    getCategoryLabel: (cat: any) => predictionsTranslations.categories[cat][lang]
-  }) as any,
+  predictions: (lang) => {
+    const l: PredictionsLang = lang === 'es' ? 'fr' : lang
+    return {
+      getToneLabel: (tone: string) => TONE_LABELS[tone]?.[l] ?? tone,
+      getMessage: (key: string) => PREDICTION_UI_MESSAGES[key as keyof typeof PREDICTION_UI_MESSAGES]?.[l] ?? key,
+      getCategoryLabel: (cat: string) => CATEGORY_LABELS[cat]?.[l] ?? cat,
+    }
+  },
   consultations: (lang) => ({ t: (key: string) => tConsultations(key, lang) }) as any,
   astrologers: (lang) => ({ t: (key: string) => tAstrologers(key, lang) }) as any,
   insights: (lang) => ({ 

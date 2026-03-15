@@ -1,31 +1,27 @@
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 import { registerApi, AuthApiError } from "@api"
 import { setAccessToken } from "../utils/authToken"
-import { detectLang } from "../i18n/astrology"
-import { authTranslations, type AuthTranslation } from "../i18n/auth"
+import { useTranslation } from "@i18n"
+import { createSignUpSchema } from "@i18n/zod/auth"
+import { Field } from "@ui/Field"
+import { Button } from "@ui/Button"
 
-export function createSignUpSchema(t: AuthTranslation) {
-  return z.object({
-    email: z.string().email(t.validation.emailInvalid),
-    password: z.string().min(8, t.validation.passwordTooShort),
-  })
+type SignUpFormData = {
+  email: string
+  password: string
 }
-
-type SignUpFormData = z.infer<ReturnType<typeof createSignUpSchema>>
 
 type SignUpFormProps = {
   onSignIn: () => void
 }
 
 export function SignUpForm({ onSignIn }: SignUpFormProps) {
-  const lang = detectLang()
-  const t = authTranslations(lang)
-  const schema = useMemo(() => createSignUpSchema(t), [t])
+  const t = useTranslation("auth")
+  const schema = createSignUpSchema(t)
   const [apiError, setApiError] = useState<string | null>(null)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -64,53 +60,30 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
     <section className="panel">
       <h2>{t.signUp.title}</h2>
       <form className="chat-form" onSubmit={handleSubmit(onSubmit)} noValidate>
-        <div>
-          <label htmlFor="signup-email">{t.signUp.emailLabel}</label>
-          <input
-            id="signup-email"
-            type="email"
-            autoComplete="email"
-            aria-describedby={errors.email ? "signup-email-error" : undefined}
-            aria-invalid={Boolean(errors.email)}
-            {...register("email")}
-          />
-          {errors.email && (
-            <span id="signup-email-error" className="chat-error" role="alert">
-              {errors.email.message}
-            </span>
-          )}
-        </div>
-        <div>
-          <label htmlFor="signup-password">{t.signUp.passwordLabel}</label>
-          <input
-            id="signup-password"
-            type="password"
-            autoComplete="new-password"
-            aria-describedby={errors.password ? "signup-password-error" : undefined}
-            aria-invalid={Boolean(errors.password)}
-            {...register("password")}
-          />
-          {errors.password && (
-            <span id="signup-password-error" className="chat-error" role="alert">
-              {errors.password.message}
-            </span>
-          )}
-        </div>
+        <Field
+          id="signup-email"
+          label={t.signUp.emailLabel}
+          type="email"
+          autoComplete="email"
+          error={errors.email?.message}
+          {...register("email")}
+        />
+        <Field
+          id="signup-password"
+          label={t.signUp.passwordLabel}
+          type="password"
+          autoComplete="new-password"
+          error={errors.password?.message}
+          {...register("password")}
+        />
         {apiError && (
           <span className="chat-error" role="alert">
             {apiError}
           </span>
         )}
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <span className="state-line">
-              <span className="state-loading" aria-hidden="true" />
-              {t.signUp.submitLoading}
-            </span>
-          ) : (
-            t.signUp.submitButton
-          )}
-        </button>
+        <Button type="submit" loading={isSubmitting} fullWidth>
+          {isSubmitting ? t.signUp.submitLoading : t.signUp.submitButton}
+        </Button>
       </form>
       <p>
         {t.signUp.alreadyHaveAccount}{" "}
@@ -121,4 +94,3 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
     </section>
   )
 }
-

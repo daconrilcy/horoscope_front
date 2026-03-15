@@ -1,5 +1,3 @@
-import type { Theme } from '../../state/ThemeProvider';
-
 export function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
@@ -31,10 +29,10 @@ export function biasRight(rand: () => number) {
   return 1 - Math.pow(rand(), 1.85);
 }
 
-export function getPalette(dayScore: number, theme: Theme = 'light') {
+export function getPalette(dayScore: number, isDark: boolean = false) {
   const score = clamp(dayScore, 1, 20);
 
-  if (theme === 'dark') {
+  if (isDark) {
     if (score <= 7) {
       return {
         left: '#181626',

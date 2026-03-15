@@ -5,6 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
+import { Field } from "@ui/Field"
+import { Button } from "@ui/Button"
 
 import { getBirthData, saveBirthData, BirthProfileApiError, type BirthProfileData } from "@api"
 import { generateNatalChart, ApiError, type LatestNatalChart } from "@api"
@@ -578,38 +580,26 @@ export function BirthProfilePage() {
             <h3>{t.labels.birthInfo || "Informations de naissance"}</h3>
           </div>
 
-          <div>
-            <label htmlFor="birth-date">{t.labels.birthDate}</label>
-            <input
-              id="birth-date"
-              type="text"
-              placeholder="1990-01-15"
-              aria-invalid={Boolean(errors.birth_date)}
-              aria-describedby={errors.birth_date ? "birth-date-error" : undefined}
-              {...register("birth_date")}
-            />
-            {errors.birth_date && (
-              <span id="birth-date-error" className="chat-error" role="alert">
-                {errors.birth_date.message}
-              </span>
-            )}
-          </div>
+          <Field
+            id="birth-date"
+            label={t.labels.birthDate}
+            type="text"
+            placeholder="1990-01-15"
+            error={errors.birth_date?.message}
+            {...register("birth_date")}
+          />
 
           <div>
-            <label htmlFor="birth-time">{t.labels.birthTime}</label>
-            <input
+            <Field
               id="birth-time"
+              label={t.labels.birthTime}
               type="text"
               placeholder="10:30"
               disabled={birthTimeUnknown}
-              aria-invalid={!birthTimeUnknown && Boolean(errors.birth_time)}
-              aria-describedby={!birthTimeUnknown && errors.birth_time ? "birth-time-error" : undefined}
+              error={!birthTimeUnknown ? errors.birth_time?.message : undefined}
               {...register("birth_time")}
             />
-            <label
-              htmlFor="birth-time-unknown"
-              className="birth-time-unknown-label"
-            >
+            <label htmlFor="birth-time-unknown" className="birth-time-unknown-label">
               <input
                 id="birth-time-unknown"
                 type="checkbox"
@@ -622,49 +612,28 @@ export function BirthProfilePage() {
               />
               {t.labels.unknownTime}
             </label>
-            {!birthTimeUnknown && errors.birth_time && (
-              <span id="birth-time-error" className="chat-error" role="alert">
-                {errors.birth_time.message}
-              </span>
-            )}
           </div>
 
           <div className="birth-location-row">
             <div className="birth-location-field">
-              <label htmlFor="birth-city">{t.labels.birthCity}</label>
-              <input
+              <Field
                 id="birth-city"
+                label={t.labels.birthCity}
                 type="text"
                 placeholder="Paris"
-                aria-invalid={Boolean(errors.birth_city)}
-                aria-describedby={errors.birth_city ? "birth-city-error" : undefined}
-                {...register("birth_city", {
-                  onChange: resetGeocodingState,
-                })}
+                error={errors.birth_city?.message}
+                {...register("birth_city", { onChange: resetGeocodingState })}
               />
-              {errors.birth_city && (
-                <span id="birth-city-error" className="chat-error" role="alert">
-                  {errors.birth_city.message}
-                </span>
-              )}
             </div>
             <div className="birth-location-field">
-              <label htmlFor="birth-country">{t.labels.birthCountry}</label>
-              <input
+              <Field
                 id="birth-country"
+                label={t.labels.birthCountry}
                 type="text"
                 placeholder="France"
-                aria-invalid={Boolean(errors.birth_country)}
-                aria-describedby={errors.birth_country ? "birth-country-error" : undefined}
-                {...register("birth_country", {
-                  onChange: resetGeocodingState,
-                })}
+                error={errors.birth_country?.message}
+                {...register("birth_country", { onChange: resetGeocodingState })}
               />
-              {errors.birth_country && (
-                <span id="birth-country-error" className="chat-error" role="alert">
-                  {errors.birth_country.message}
-                </span>
-              )}
             </div>
           </div>
 
@@ -773,18 +742,18 @@ export function BirthProfilePage() {
                 </p>
                 <div className="birth-location-row">
                   <div className="birth-location-field">
-                    <label htmlFor="current-city">{t.labels.currentCity}</label>
-                    <input
+                    <Field
                       id="current-city"
+                      label={t.labels.currentCity}
                       type="text"
                       placeholder="Paris"
                       {...register("current_city")}
                     />
                   </div>
                   <div className="birth-location-field">
-                    <label htmlFor="current-country">{t.labels.currentCountry}</label>
-                    <input
+                    <Field
                       id="current-country"
+                      label={t.labels.currentCountry}
                       type="text"
                       placeholder="France"
                       {...register("current_country")}
@@ -807,16 +776,9 @@ export function BirthProfilePage() {
             </p>
           )}
 
-          <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting}>
-            {isSubmitting ? (
-              <span className="state-line">
-                <span className="state-loading" aria-hidden="true" />
-                {t.buttons.saving}
-              </span>
-            ) : (
-              t.buttons.save
-            )}
-          </button>
+          <Button type="submit" loading={isSubmitting} fullWidth>
+            {t.buttons.save}
+          </Button>
         </form>
       ) : null}
 
@@ -828,24 +790,18 @@ export function BirthProfilePage() {
               <p>{generationError}</p>
             </div>
           )}
-          <button
+          <Button
             type="button"
+            loading={generationMutation.isPending}
             onClick={() => {
               setGenerationError(null)
               generationMutation.mutate()
             }}
-            disabled={generationMutation.isPending}
-            aria-busy={generationMutation.isPending}
           >
-            {generationMutation.isPending ? (
-              <span className="state-line" role="status">
-                <span className="state-loading" aria-hidden="true" />
-                {t.buttons.generating.replace("{timeout}", GENERATION_TIMEOUT_LABEL)}
-              </span>
-            ) : (
-              t.buttons.generate
-            )}
-          </button>
+            {generationMutation.isPending
+              ? t.buttons.generating.replace("{timeout}", GENERATION_TIMEOUT_LABEL)
+              : t.buttons.generate}
+          </Button>
         </div>
       ) : null}
     </PageLayout>
