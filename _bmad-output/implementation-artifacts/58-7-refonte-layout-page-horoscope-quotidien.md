@@ -87,6 +87,11 @@ gemini-2.0-flash
 - Layout is now structured and responsive.
 - i18n support added for new section titles.
 
+### Post-implementation visual refinements (2026-03-16)
+
+- **KeyPointCard** : ajout d'une barre d'accent violette `3px` en bas de chaque carte via `::after` (`linear-gradient(90deg, --color-primary, transparent)`). Reproduit le style de l'inspiration design.
+- **Titres de section** : `.daily-layout__section-title` revu — suppression de `text-transform: uppercase` et `letter-spacing`, taille passée à `0.95rem` semibold, ajout d'un bullet `•` violet via `::before`. Correspond au traitement "• En 3 points clés" de l'inspiration.
+
 ### File List
 
 - `frontend/src/i18n/predictions.ts`
@@ -99,3 +104,4 @@ gemini-2.0-flash
 ## Change Log
 
 - 2026-03-16: Initial implementation of story 58.7.
+- 2026-03-16: Post-implementation refinements — KeyPointCard accent bar, section titles with bullet prefix.

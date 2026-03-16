@@ -31,38 +31,18 @@
   margin: 0;
   font-size: clamp(2rem, 4vw, 3.25rem);
   line-height: 1.02;
-  font-weight: var(--font-weight-medium, 500);
+  font-weight: var(--font-weight-bold, 700);
   letter-spacing: -0.04em;
   color: var(--color-text-primary);
 }
 
-/* Décoration (droite) — desktop seulement */
-.daily-page-header__decoration {
-  display: none;
-  position: relative;
-  width: 80px;
-  flex-shrink: 0;
+.header-date__day {
+  font-weight: 900;
+  letter-spacing: -0.05em;
 }
 
-@media (min-width: 768px) {
-  .daily-page-header__decoration {
-    display: block;
-  }
+.header-date__rest {
+  font-weight: var(--font-weight-medium, 500);
+  opacity: 0.85;
 }
 
-/* Ambient glow décoratif */
-.daily-page-header__ambient-glow {
-  position: absolute;
-  top: -20px;
-  right: -10px;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at center,
-    rgba(134, 108, 208, 0.18) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
-  filter: blur(16px);
-}

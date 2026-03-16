@@ -238,9 +238,38 @@ gemini-2.0-flash-exp (orchestrated by Gemini CLI)
 - ✅ All existing tests in `DailyHoroscopePage.test.tsx` are passing.
 - ✅ No TypeScript errors.
 
+### Post-implementation visual refinements (2026-03-16)
+
+Suite à review visuelle sur inspiration de design, les ajustements suivants ont été apportés :
+
+**Mapper (`heroSummaryCardMapper.ts`)**
+- Préfixe titre changé : `'Journée '` → `'Une journée '` (FR) / `'A '` (EN)
+- Nouveau champ `astroTheme: string | null` dans `HeroSummaryCardModel` — phrase construite depuis `top_categories` + `overall_tone` (ex : "Journée équilibrée, principalement orientée sur Carrière et Travail."). Les `category.summary` de l'API sont **exclus** car ils contiennent des payloads techniques.
+
+**Composant (`HeroSummaryCard.tsx`)**
+- Zone `hero-summary-card__astro-theme` (icône ✦ + texte italique) remplace la `calibration` au centre.
+- `calibrationNote` déplacé en bas : classe `hero-summary-card__calibration-nb` avec préfixe `NB` discret (0.72rem, couleur subtle).
+
+**CSS (`HeroSummaryCard.css`)**
+- Overlay `::before` sur `.hero-summary-card` entre canvas et contenu : `rgba(255,255,255,0.90→0)` pour faire basculer le fond étoilé vers le blanc dès la colonne gauche. Désactivé en dark mode (`.dark .hero-summary-card::before { background: none }`).
+- Colonne visuelle droite : 3 sphères en verre superposées — orbe principal via `.hero-summary-card__visual-orb`, petite sphère via `.hero-summary-card__visual::before`, micro sphère via `.hero-summary-card__visual::after`. Chacune a reflets internes, ombres violettes et flottement décalé.
+- Barre soulignée sous le titre via `::after` (gradient `--color-hero-ink-muted → transparent`).
+- Titre highlight : `font-weight: 700` (bold).
+
+**`AstroMoodBackground.tsx`**
+- Stops du gradient canvas décalés de `(0 / 0.35 / 0.72 / 1)` à `(0 / 0.52 / 0.84 / 1)` pour que `palette.left` (blanc/lavande clair) reste dominant sur la moitié gauche.
+
+**`design-tokens.css`**
+- 5 nouvelles variables centralisées (light + dark mode) :
+  - `--color-hero-ink` : `#3B2874` (light) / `rgba(245,240,255,0.92)` (dark)
+  - `--color-hero-ink-muted`, `--color-hero-ink-subtle`, `--color-hero-ink-accent`
+  - `--shadow-hero-card` : ombre décalée bas-droite violet
+
 ### File List
 
 - `frontend/src/utils/heroSummaryCardMapper.ts`
 - `frontend/src/components/prediction/HeroSummaryCard.tsx`
 - `frontend/src/components/prediction/HeroSummaryCard.css`
 - `frontend/src/pages/DailyHoroscopePage.tsx`
+- `frontend/src/components/astro/AstroMoodBackground.tsx`
+- `frontend/src/styles/design-tokens.css`

@@ -126,6 +126,13 @@
   --color-text-on-astro: white;
   --color-text-muted-on-astro: rgba(255, 255, 255, 0.7);
   --color-surface-astro: rgba(10, 5, 30, 0.85);
+
+  /* === HERO CARD INK (violet foncé lisible sur fond astro lumineux) === */
+  --color-hero-ink: #3B2874;
+  --color-hero-ink-muted: rgba(59, 40, 116, 0.72);
+  --color-hero-ink-subtle: rgba(59, 40, 116, 0.50);
+  --color-hero-ink-accent: var(--color-primary-strong);
+  --shadow-hero-card: 12px 14px 40px rgba(44, 28, 100, 0.30);
   }
 
   .dark {
@@ -199,4 +206,11 @@
   --shadow-card: 0 18px 40px rgba(0,0,0,0.45);
   --shadow-nav:  0 10px 30px rgba(0,0,0,0.55);
   --shadow-cta:  0 10px 18px rgba(60, 20, 120, .18), 0 2px 0 rgba(255,255,255,.22) inset, 0 -10px 18px rgba(50, 10, 90, .20) inset;
+
+  /* === HERO CARD INK dark mode === */
+  --color-hero-ink: rgba(245, 240, 255, 0.92);
+  --color-hero-ink-muted: rgba(223, 213, 252, 0.78);
+  --color-hero-ink-subtle: rgba(223, 213, 252, 0.52);
+  --color-hero-ink-accent: var(--color-purple-2);
+  --shadow-hero-card: 12px 14px 40px rgba(10, 5, 40, 0.55);
 }

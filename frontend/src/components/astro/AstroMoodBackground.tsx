@@ -229,8 +229,8 @@ export const AstroMoodBackground: React.FC<AstroMoodBackgroundProps> = ({
       if (!ctx) return;
       const linear = ctx.createLinearGradient(0, 0, width, height);
       linear.addColorStop(0, palette.left);
-      linear.addColorStop(0.35, palette.mid);
-      linear.addColorStop(0.72, palette.right);
+      linear.addColorStop(0.52, palette.mid);
+      linear.addColorStop(0.84, palette.right);
       linear.addColorStop(1, palette.deep);
 
       ctx.fillStyle = linear;

@@ -1,8 +1,26 @@
 .key-point-card {
-  padding: var(--space-4, 1rem);
+  position: relative;
+  padding: var(--space-4, 1rem) var(--space-4, 1rem) calc(var(--space-4, 1rem) + 6px);
   display: flex;
   flex-direction: column;
   gap: var(--space-2, 0.5rem);
+  overflow: hidden;
+}
+
+/* Barre d'accent violette en bas (comme l'inspiration) */
+.key-point-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: var(--space-4, 1rem);
+  right: var(--space-4, 1rem);
+  height: 3px;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(
+    90deg,
+    var(--color-primary, #866CD0),
+    rgba(134, 108, 208, 0.0)
+  );
 }
 
 .key-point-card__time {

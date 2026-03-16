@@ -15,21 +15,21 @@ export const DailyPageHeader: React.FC<Props> = ({ date, tone, lang }) => {
   const locale = getLocale(lang)
   const toneLabel = getToneLabel(tone, lang)
 
-  const formattedDate = new Date(date).toLocaleDateString(locale, {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
+  const d = new Date(date)
+  const dayNum = d.toLocaleDateString(locale, { day: 'numeric' })
+  const monthYear = d.toLocaleDateString(locale, { month: 'long', year: 'numeric' })
 
   return (
     <header className="daily-page-header">
       <div className="daily-page-header__content">
-        <h2 className="header-date">{formattedDate}</h2>
+        <h2 className="header-date">
+          <span className="header-date__day">{dayNum}</span>
+          {' '}
+          <span className="header-date__rest">{monthYear}</span>
+        </h2>
         <DayStateBadge label={toneLabel} tone={tone} lang={lang} />
       </div>
-      <div className="daily-page-header__decoration" aria-hidden="true">
-        <div className="daily-page-header__ambient-glow" />
-      </div>
+
     </header>
   )
 }

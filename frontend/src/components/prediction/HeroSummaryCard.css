@@ -2,11 +2,34 @@
    HeroSummaryCard — shell AstroMoodBackground étendu
    ===================================================== */
 
-/* Le shell est posé par AstroMoodBackground, on surcharge juste
-   le border-radius et le min-height via le className "hero-summary-card" */
 .hero-summary-card {
   border-radius: 32px !important;
   min-height: 280px;
+  box-shadow:
+    var(--shadow-hero-card),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62),
+    inset 1px 0 0 rgba(255, 255, 255, 0.40);
+}
+
+/* Overlay entre canvas et contenu — fait basculer vers le blanc dès la gauche */
+.hero-summary-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.90) 0%,
+    rgba(255, 255, 255, 0.60) 30%,
+    rgba(255, 255, 255, 0.10) 55%,
+    rgba(255, 255, 255, 0.0) 70%
+  );
+}
+
+.dark .hero-summary-card::before {
+  background: none;
 }
 
 @media (min-width: 768px) {
@@ -47,6 +70,7 @@
 
 /* =====================================================
    Zone contenu textuel (colonne gauche)
+   Overlay blanc pour détacher le texte du fond étoilé
    ===================================================== */
 .hero-summary-card__content {
   display: flex;
@@ -71,20 +95,40 @@
 }
 
 /* =====================================================
-   Titre — "Journée [tone]"
+   Titre — "Une journée [tone]"
    ===================================================== */
 .hero-summary-card__title {
   margin: 0;
+  padding-bottom: var(--space-4, 1rem);
+  position: relative;
   font-size: clamp(1.75rem, 3.5vw, 2.75rem);
   line-height: 1.06;
   font-weight: var(--font-weight-medium, 500);
   letter-spacing: -0.03em;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--color-hero-ink);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55),
+    0 0 24px rgba(255, 255, 255, 0.40);
+}
+
+/* Trait léger sous le titre */
+.hero-summary-card__title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: min(280px, 70%);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--color-hero-ink-muted),
+    rgba(255, 255, 255, 0.0)
+  );
 }
 
 .hero-summary-card__title-highlight {
-  color: var(--color-purple-2, #dfd5fc);
-  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-hero-ink-accent);
+  font-weight: var(--font-weight-bold, 700);
 }
 
 /* =====================================================
@@ -94,22 +138,51 @@
   margin: 0;
   font-size: clamp(0.875rem, 1.5vw, 1.05rem);
   line-height: 1.55;
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--color-hero-ink-muted);
   font-weight: var(--font-weight-regular, 400);
 }
 
 /* =====================================================
-   Note de calibration provisoire
+   Zone thème astro du jour (interprétation narrative)
    ===================================================== */
-.hero-summary-card__calibration {
+.hero-summary-card__astro-theme {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2, 0.5rem);
+}
+
+.hero-summary-card__astro-theme-icon {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--color-hero-ink-accent);
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.hero-summary-card__astro-theme-text {
   margin: 0;
-  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-  border-radius: var(--radius-md, 14px);
-  font-size: 0.85rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-hero-ink-muted);
+  font-style: italic;
+}
+
+/* =====================================================
+   Note de calibration provisoire — NB discret en bas
+   ===================================================== */
+.hero-summary-card__calibration-nb {
+  margin: var(--space-1, 0.25rem) 0 0;
+  font-size: 0.72rem;
   line-height: 1.45;
-  color: rgba(255, 255, 255, 0.72);
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--color-hero-ink-subtle);
+}
+
+.hero-summary-card__calibration-nb-label {
+  font-weight: var(--font-weight-bold, 700);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-right: 0.35em;
 }
 
 /* =====================================================
@@ -120,8 +193,8 @@
   height: 1px;
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.20),
-    rgba(255, 255, 255, 0.04)
+    var(--color-hero-ink-subtle),
+    rgba(255, 255, 255, 0.0)
   );
 }
 
@@ -137,7 +210,7 @@
 .hero-summary-card__insight-icon {
   flex-shrink: 0;
   font-size: 0.75rem;
-  color: var(--color-purple-2, #dfd5fc);
+  color: var(--color-hero-ink-accent);
   opacity: 0.8;
   margin-top: 3px;
 }
@@ -153,18 +226,18 @@
   font-weight: var(--font-weight-bold, 700);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--color-hero-ink-subtle);
 }
 
 .hero-summary-card__insight-time {
   font-size: 1rem;
   font-weight: var(--font-weight-semibold, 600);
-  color: rgba(255, 255, 255, 0.90);
+  color: var(--color-hero-ink);
 }
 
 .hero-summary-card__insight-category {
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--color-hero-ink-muted);
 }
 
 /* =====================================================
@@ -183,13 +256,16 @@
   min-height: 38px;
   padding: 0 var(--space-4, 1rem);
   border-radius: var(--radius-full, 999px);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(16px) saturate(1.6);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  box-shadow:
+    3px 4px 12px rgba(44, 28, 100, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.70);
   font-size: 0.8rem;
   font-weight: var(--font-weight-medium, 500);
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--color-hero-ink);
   white-space: nowrap;
   cursor: default;
   user-select: none;
@@ -201,7 +277,8 @@
 }
 
 /* =====================================================
-   Visual zone (colonne droite, décor CSS)
+   Visual zone (colonne droite)
+   Sphères de verre empilées pour l'effet glass 3D
    ===================================================== */
 .hero-summary-card__visual {
   display: none;
@@ -224,35 +301,88 @@
   }
 }
 
-/* Glow décoratif principal */
+/* Halo de fond radial */
 .hero-summary-card__visual-glow {
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    circle at 60% 50%,
-    rgba(161, 144, 237, 0.28) 0%,
-    rgba(134, 108, 208, 0.12) 45%,
+    circle at 55% 50%,
+    rgba(161, 144, 237, 0.32) 0%,
+    rgba(134, 108, 208, 0.14) 45%,
     transparent 70%
   );
   pointer-events: none;
 }
 
-/* Orbe décoratif flottant */
+/* Sphère principale (grande) */
 .hero-summary-card__visual-orb {
-  width: clamp(100px, 14vw, 180px);
-  height: clamp(100px, 14vw, 180px);
+  position: relative;
+  z-index: 2;
+  width: clamp(120px, 16vw, 200px);
+  height: clamp(120px, 16vw, 200px);
   border-radius: 50%;
   background: radial-gradient(
-    circle at 40% 38%,
-    rgba(223, 213, 252, 0.22) 0%,
-    rgba(161, 144, 237, 0.12) 50%,
+    circle at 33% 28%,
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(223, 213, 252, 0.38) 28%,
+    rgba(161, 144, 237, 0.18) 55%,
     transparent 75%
   );
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.55);
   box-shadow:
-    0 0 40px rgba(134, 108, 208, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.20);
+    0 8px 40px rgba(134, 108, 208, 0.28),
+    0 2px 8px rgba(134, 108, 208, 0.18),
+    inset 0 2px 6px rgba(255, 255, 255, 0.65),
+    inset -3px -3px 12px rgba(134, 108, 208, 0.22);
   animation: hero-orb-float 6s ease-in-out infinite;
+}
+
+/* Petite sphère secondaire en haut-droite */
+.hero-summary-card__visual::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  top: 14%;
+  right: 12%;
+  width: clamp(50px, 6vw, 80px);
+  height: clamp(50px, 6vw, 80px);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 38% 30%,
+    rgba(255, 255, 255, 0.80) 0%,
+    rgba(223, 213, 252, 0.45) 35%,
+    rgba(134, 108, 208, 0.15) 65%,
+    transparent 80%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.60);
+  box-shadow:
+    0 4px 16px rgba(134, 108, 208, 0.22),
+    inset 0 1px 4px rgba(255, 255, 255, 0.70);
+  animation: hero-orb-float 8s ease-in-out infinite reverse;
+}
+
+/* Micro sphère en bas-gauche */
+.hero-summary-card__visual::after {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  bottom: 18%;
+  left: 14%;
+  width: clamp(30px, 3.5vw, 52px);
+  height: clamp(30px, 3.5vw, 52px);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 28%,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(161, 144, 237, 0.40) 45%,
+    transparent 70%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    0 2px 10px rgba(134, 108, 208, 0.20),
+    inset 0 1px 3px rgba(255, 255, 255, 0.75);
+  animation: hero-orb-float 5s ease-in-out infinite;
+  animation-delay: -2s;
 }
 
 @keyframes hero-orb-float {
@@ -261,7 +391,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-summary-card__visual-orb {
+  .hero-summary-card__visual-orb,
+  .hero-summary-card__visual::before,
+  .hero-summary-card__visual::after {
     animation: none;
   }
 }

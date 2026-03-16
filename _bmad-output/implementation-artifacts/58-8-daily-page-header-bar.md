@@ -53,6 +53,11 @@ gemini-2.0-flash
 - Header is now editorial and visually rich with glassmorphism and ambient glow.
 - Refactoring from story 58.7 successful.
 
+### Post-implementation visual refinements (2026-03-16)
+
+- **Date typographique** : la date est désormais rendue en deux `<span>` distincts — `header-date__day` (`font-weight: 900`) pour le numéro du jour et `header-date__rest` (`font-weight: 500, opacity: 0.85`) pour le mois/année. Correspond à la hiérarchie typographique de l'inspiration.
+- **Décoration supprimée** : le bloc `<div class="daily-page-header__decoration">` avec son `ambient-glow` a été retiré du JSX et du CSS — il n'apportait aucune valeur visuelle perceptible.
+
 ### File List
 
 - `frontend/src/components/prediction/DayStateBadge.tsx`
@@ -66,3 +71,4 @@ gemini-2.0-flash
 ## Change Log
 
 - 2026-03-16: Implementation of story 58.8.
+- 2026-03-16: Post-implementation refinements — date split day/rest, decoration removed.

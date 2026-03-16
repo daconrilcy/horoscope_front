@@ -41,8 +41,11 @@ export const HeroSummaryCard: React.FC<Props> = ({ model, lang }) => {
             <p className="hero-summary-card__subtitle">{model.subtitle}</p>
           )}
 
-          {model.calibrationNote && (
-            <p className="hero-summary-card__calibration">{model.calibrationNote}</p>
+          {model.astroTheme && (
+            <div className="hero-summary-card__astro-theme">
+              <span className="hero-summary-card__astro-theme-icon" aria-hidden="true">✦</span>
+              <p className="hero-summary-card__astro-theme-text">{model.astroTheme}</p>
+            </div>
           )}
 
           <div className="hero-summary-card__divider" aria-hidden="true" />
@@ -82,6 +85,13 @@ export const HeroSummaryCard: React.FC<Props> = ({ model, lang }) => {
                 </span>
               ))}
             </div>
+          )}
+
+          {model.calibrationNote && (
+            <p className="hero-summary-card__calibration-nb">
+              <span className="hero-summary-card__calibration-nb-label">NB</span>
+              {model.calibrationNote}
+            </p>
           )}
         </section>
 

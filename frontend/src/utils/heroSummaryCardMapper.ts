@@ -16,6 +16,7 @@ export interface HeroInsight {
 export interface HeroSummaryCardModel {
   titleParts: HeroTitlePart[]
   subtitle: string | null
+  astroTheme: string | null
   calibrationNote: string | null
   insight: HeroInsight | null
   tags: HeroTag[]
@@ -28,6 +29,19 @@ export interface HeroSummaryCardModel {
   }
 }
 
+function buildAstroThemeText(
+  prediction: DailyPredictionResponse,
+  lang: Lang,
+): string | null {
+  const topCats = prediction.summary.top_categories.slice(0, 2)
+  if (topCats.length === 0) return null
+  const catLabels = topCats.map(c => getCategoryLabel(c, lang))
+  const toneLabel = getToneLabel(prediction.summary.overall_tone, lang).toLowerCase()
+  return lang === 'fr'
+    ? `Journée ${toneLabel}, principalement orientée sur ${catLabels.join(' et ')}.`
+    : `A ${toneLabel} day, primarily oriented toward ${catLabels.join(' and ')}.`
+}
+
 export function buildHeroSummaryCardModel(
   prediction: DailyPredictionResponse,
   sign: ZodiacSign,
@@ -38,8 +52,8 @@ export function buildHeroSummaryCardModel(
   const locale = getLocale(lang)
   const toneLabel = getToneLabel(prediction.summary.overall_tone, lang)
 
-  // Title: "Journée [toneLabel]" ou "Day: [toneLabel]" en EN
-  const titlePrefix = lang === 'fr' ? 'Journée ' : 'Day: '
+  // Title: "Une journée [toneLabel]" ou "A [toneLabel] day" en EN
+  const titlePrefix = lang === 'fr' ? 'Une journée ' : 'A '
   const titleParts: HeroTitlePart[] = [
     { text: titlePrefix },
     { text: toneLabel, highlight: true },
@@ -47,6 +61,9 @@ export function buildHeroSummaryCardModel(
 
   // Subtitle = overall_summary (texte narratif IA principal)
   const subtitle = prediction.summary.overall_summary || null
+
+  // Thème astro du jour (zone dédiée, pas la calibration)
+  const astroTheme = buildAstroThemeText(prediction, lang)
 
   // Calibration note
   const calibrationNote = prediction.meta.is_provisional_calibration
@@ -77,6 +94,7 @@ export function buildHeroSummaryCardModel(
   return {
     titleParts,
     subtitle,
+    astroTheme,
     calibrationNote,
     insight,
     tags,
