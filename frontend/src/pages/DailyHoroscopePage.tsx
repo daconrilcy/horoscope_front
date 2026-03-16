@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import { RefreshCw } from 'lucide-react'
 
 import { TodayHeader } from '../components/TodayHeader'
-import { DayPredictionCard } from '../components/prediction/DayPredictionCard'
+import { HeroSummaryCard } from '../components/prediction/HeroSummaryCard'
 import { CategoryGrid } from '../components/prediction/CategoryGrid'
 import { TurningPointsList } from '../components/prediction/TurningPointsList'
 import { DayAgenda } from '../components/prediction/DayAgenda'
@@ -22,6 +22,7 @@ import { useDailyPrediction } from '../api/useDailyPrediction'
 import { trackEvent, EVENTS } from '../utils/analytics'
 import { useDashboardAstroSummary } from '../components/dashboard/useDashboardAstroSummary'
 import { SectionErrorBoundary } from '../components/ErrorBoundary'
+import { buildHeroSummaryCardModel } from '../utils/heroSummaryCardMapper'
 import './DailyHoroscopePage.css'
 
 function parseLocalMinute(iso: string): number | null {
@@ -286,15 +287,15 @@ export function DailyHoroscopePage() {
 
           {/* Zone 2 : HeroSummaryCard */}
           <SectionErrorBoundary onRetry={handleRefresh}>
-            <DayPredictionCard
-              prediction={prediction}
-              lang={lang}
-              astroBackgroundProps={{
+            <HeroSummaryCard
+              model={buildHeroSummaryCardModel(
+                prediction,
                 sign,
-                userId: user?.id ? String(user.id) : 'anonymous',
-                dateKey: prediction.meta.date_local,
-                dayScore
-              }}
+                user?.id ? String(user.id) : 'anonymous',
+                dayScore,
+                lang
+              )}
+              lang={lang}
             />
           </SectionErrorBoundary>
 

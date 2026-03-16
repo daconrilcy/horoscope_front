@@ -1,0 +1,267 @@
+/* =====================================================
+   HeroSummaryCard — shell AstroMoodBackground étendu
+   ===================================================== */
+
+/* Le shell est posé par AstroMoodBackground, on surcharge juste
+   le border-radius et le min-height via le className "hero-summary-card" */
+.hero-summary-card {
+  border-radius: 32px !important;
+  min-height: 280px;
+}
+
+@media (min-width: 768px) {
+  .hero-summary-card {
+    min-height: 320px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-summary-card {
+    min-height: 360px;
+  }
+}
+
+/* =====================================================
+   Layout interne : 1 col mobile, 2 col tablet+
+   ===================================================== */
+.hero-summary-card__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  height: 100%;
+}
+
+@media (min-width: 768px) {
+  .hero-summary-card__inner {
+    grid-template-columns: minmax(0, 1.2fr) minmax(180px, 0.8fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-summary-card__inner {
+    grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.85fr);
+  }
+}
+
+/* =====================================================
+   Zone contenu textuel (colonne gauche)
+   ===================================================== */
+.hero-summary-card__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-4, 1rem);
+  padding: var(--space-6, 1.5rem) var(--space-5, 1.25rem) var(--space-5, 1.25rem);
+}
+
+@media (min-width: 768px) {
+  .hero-summary-card__content {
+    padding: 28px 24px 24px;
+    max-width: 560px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-summary-card__content {
+    padding: 34px 32px 28px;
+    gap: var(--space-5, 1.25rem);
+  }
+}
+
+/* =====================================================
+   Titre — "Journée [tone]"
+   ===================================================== */
+.hero-summary-card__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+  line-height: 1.06;
+  font-weight: var(--font-weight-medium, 500);
+  letter-spacing: -0.03em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.hero-summary-card__title-highlight {
+  color: var(--color-purple-2, #dfd5fc);
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+/* =====================================================
+   Sous-titre — overall_summary
+   ===================================================== */
+.hero-summary-card__subtitle {
+  margin: 0;
+  font-size: clamp(0.875rem, 1.5vw, 1.05rem);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: var(--font-weight-regular, 400);
+}
+
+/* =====================================================
+   Note de calibration provisoire
+   ===================================================== */
+.hero-summary-card__calibration {
+  margin: 0;
+  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  border-radius: var(--radius-md, 14px);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* =====================================================
+   Divider
+   ===================================================== */
+.hero-summary-card__divider {
+  width: min(420px, 100%);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.20),
+    rgba(255, 255, 255, 0.04)
+  );
+}
+
+/* =====================================================
+   Insight row — best_window
+   ===================================================== */
+.hero-summary-card__insight-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3, 0.75rem);
+}
+
+.hero-summary-card__insight-icon {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--color-purple-2, #dfd5fc);
+  opacity: 0.8;
+  margin-top: 3px;
+}
+
+.hero-summary-card__insight-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 0.25rem);
+}
+
+.hero-summary-card__insight-label {
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-bold, 700);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.hero-summary-card__insight-time {
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold, 600);
+  color: rgba(255, 255, 255, 0.90);
+}
+
+.hero-summary-card__insight-category {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* =====================================================
+   Tags row — domaines
+   ===================================================== */
+.hero-summary-card__tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+}
+
+.hero-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  min-height: 38px;
+  padding: 0 var(--space-4, 1rem);
+  border-radius: var(--radius-full, 999px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-medium, 500);
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+}
+
+.hero-tag-chip__icon {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+/* =====================================================
+   Visual zone (colonne droite, décor CSS)
+   ===================================================== */
+.hero-summary-card__visual {
+  display: none;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .hero-summary-card__visual {
+    display: flex;
+    min-height: 240px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-summary-card__visual {
+    min-height: 320px;
+  }
+}
+
+/* Glow décoratif principal */
+.hero-summary-card__visual-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 60% 50%,
+    rgba(161, 144, 237, 0.28) 0%,
+    rgba(134, 108, 208, 0.12) 45%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* Orbe décoratif flottant */
+.hero-summary-card__visual-orb {
+  width: clamp(100px, 14vw, 180px);
+  height: clamp(100px, 14vw, 180px);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 40% 38%,
+    rgba(223, 213, 252, 0.22) 0%,
+    rgba(161, 144, 237, 0.12) 50%,
+    transparent 75%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 40px rgba(134, 108, 208, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20);
+  animation: hero-orb-float 6s ease-in-out infinite;
+}
+
+@keyframes hero-orb-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-summary-card__visual-orb {
+    animation: none;
+  }
+}
