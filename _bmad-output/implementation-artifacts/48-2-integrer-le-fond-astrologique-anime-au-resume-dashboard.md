@@ -156,10 +156,12 @@ GPT-5 Codex
 - SVG rendering fixed by dropping Vite's SVG plugin and instead using the previously engineered `getZodiacIcon` React components map. SVGs scaled seamlessly using `stroke: currentColor`.
 - Injected `useThemeSafe` context to ensure the `DashboardHoroscopeSummaryCard` text elements flip to white during `dark` mode and remain high contrast `var(--text-1)` during light mode to remain readable over the `AstroMoodBackground`.
 - Integration refined visually after rollout: the dashboard/day card now benefits from the updated astro background palette, softer halo treatment in day mode, richer star field layering, and adjusted card styling for the horoscope detail wrapper.
+- The horoscope detail tone pill was also rebalanced visually with larger padding, a light shadow, and a purple-tinted translucent treatment inside astro contexts to stay coherent with the refined background language.
 
 ### Change Log
 
 - 2026-03-15 : Ajustements visuels complémentaires de l’intégration dashboard/horoscope autour du fond astrologique et de la carte jour.
+- 2026-03-16 : Harmonisation complémentaire de la pill de tonalité sur la carte jour avec le langage visuel astro.
 
 ### File List
 

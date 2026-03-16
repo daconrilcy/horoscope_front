@@ -212,10 +212,10 @@ export const AstroMoodBackground: React.FC<AstroMoodBackgroundProps> = ({
 
       for (let i = 0; i < 4; i++) {
         shootingStars.push({
-          startX: range(rand, width * 0.1, width * 0.82),
-          startY: range(rand, height * 0.04, height * 0.4),
-          length: range(rand, width * 0.12, width * 0.22),
-          angle: range(rand, 0.58, 0.82),
+          startX: range(rand, width * 0.02, width * 0.94),
+          startY: range(rand, height * 0.02, height * 0.68),
+          length: range(rand, width * 0.1, width * 0.2),
+          angle: range(rand, 0.45, 1.02),
           width: range(rand, 1.4, 3.6) * dpr,
           alpha: range(rand, 0.32, 0.58),
           speed: range(rand, 0.95, 1.4),
@@ -419,7 +419,7 @@ export const AstroMoodBackground: React.FC<AstroMoodBackgroundProps> = ({
       }
 
       for (const s of dustStars) {
-        const twinkleBase = Math.sin(time * 0.0016 * s.twinkleSpeed + s.twinkleOffset);
+        const twinkleBase = Math.sin(time * 0.00072 * s.twinkleSpeed + s.twinkleOffset);
         const twinkle = 0.38 + 0.72 * twinkleBase;
         const a =
           s.alpha *
@@ -443,8 +443,8 @@ export const AstroMoodBackground: React.FC<AstroMoodBackgroundProps> = ({
       }
 
       for (const s of fieldStars) {
-        const twinkleBase = Math.sin(time * 0.0021 * s.twinkleSpeed + s.twinkleOffset);
-        const appearPhase = Math.sin(time * 0.00022 + s.twinkleOffset * 1.7);
+        const twinkleBase = Math.sin(time * 0.00082 * s.twinkleSpeed + s.twinkleOffset);
+        const appearPhase = Math.sin(time * 0.000085 + s.twinkleOffset * 1.7);
         const twinkle = 0.24 + 0.84 * twinkleBase;
         const appearance = Math.max(0, appearPhase);
         const a =

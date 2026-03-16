@@ -151,10 +151,12 @@ Gemini 2.0 Flash
 - Refactored Zodiac SVGs to use pre-existing `getZodiacIcon` and `normalizeSignCode` module instead of dynamic imports or raw SVGR loading.
 - Fixed aspect ratio for Zodiac Constellation rendering on `AstroMoodBackground` by adding dynamic width/height aspect modifiers.
 - Palette and animation pass refined after implementation: diagonal gradient corrected (clair haut-gauche -> fonce bas-droite), stronger mauve intensity, darker secondary tones (`deep`), softened day-mode halos, dimmer dark-mode halos, tertiary micro-stars, colored diffraction on secondary stars, and visible but rarer shooting stars with variable width.
+- Final animation tuning widened the shooting-star spawn area and angle spread to avoid a center-clustered pattern, while slowing secondary-star twinkle/appearance cycles for a calmer cadence.
 
 ### Change Log
 
 - 2026-03-15 : Raffinements visuels post-implémentation sur le composant AstroMoodBackground (gradient diagonal, halos, densité stellaire, micro-étoiles et étoiles filantes).
+- 2026-03-16 : Répartition des étoiles filantes rendue plus aléatoire et ralentissement du scintillement des étoiles secondaires pour réduire l'effet de flash.
 
 ### File List
 

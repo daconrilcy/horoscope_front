@@ -136,10 +136,12 @@ GPT-5 Codex
 - Horoscope card on `/dashboard/horoscope` layout properly wraps around AstroBackground to preserve background transparency metrics.
 - QA verified light/dark theme typography updates correctly inside `AstroMoodBackground` using `useThemeSafe` context API on both `DayPredictionCard` and `DashboardHoroscopeSummaryCard`.
 - Additional post-QA visual hardening: shooting stars were made visible then throttled, secondary star appearance/disappearance slowed to avoid flicker, halos were softened in both themes, and tertiary star background texture was added without changing the component contract or tests.
+- Post-QA tuning was completed without contract drift: shooting-star spawn coordinates are now distributed across a wider area of the canvas, and secondary-star flash cadence was reduced further to keep the animation readable and less noisy.
 
 ### Change Log
 
 - 2026-03-15 : Passe finale d’affinage visuel sur les animations et halos du fond astrologique, sans changement de contrat public.
+- 2026-03-16 : Ajustement complémentaire de la dispersion des étoiles filantes et du rythme de scintillement secondaire, validé sans changement de contrat ni de couverture ciblée.
 
 ### File List
 
