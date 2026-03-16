@@ -67,6 +67,13 @@ const MESSAGES: Record<string, Record<Lang, string>> = {
     fr: "Lecture provisoire : ces scores restent indicatifs tant que l'historique de calibration n'est pas complet.",
     en: "Provisional reading: these scores remain indicative until calibration history is complete.",
   },
+  key_points_title: { fr: "Points clés du jour", en: "Key points" },
+  timeline_title: { fr: "Moments de la journée", en: "Day timeline" },
+  focus_title: { fr: "Focus du créneau", en: "Slot focus" },
+  domains_title: { fr: "Domaines du jour", en: "Daily domains" },
+  advice_title: { fr: "Conseil du jour", en: "Today's advice" },
+  advice_cta: { fr: "Voir les moments clés", en: "View key moments" },
+  day_mood_label: { fr: "Tonalité", en: "Mood" },
   // Agenda du jour (ex-fenêtres décisionnelles)
   decision_windows_title: { fr: "Agenda du jour", en: "Daily Agenda" },
   window_type_favorable: { fr: "Fenêtre favorable", en: "Favorable window" },

@@ -8,11 +8,13 @@ import { DayPredictionCard } from '../components/prediction/DayPredictionCard'
 import { CategoryGrid } from '../components/prediction/CategoryGrid'
 import { TurningPointsList } from '../components/prediction/TurningPointsList'
 import { DayAgenda } from '../components/prediction/DayAgenda'
+import { KeyPointCard } from '../components/prediction/KeyPointCard'
 import type { DailyPredictionTurningPoint } from '../types/dailyPrediction'
 
 import { detectLang } from '../i18n/astrology'
 import { buildDailyAgendaSlots, buildDailyKeyMoments } from '../utils/dailyAstrology'
-import { getPredictionMessage } from '../utils/predictionI18n'
+import { getPredictionMessage, getToneLabel, getToneColor, getCategoryLabel } from '../utils/predictionI18n'
+import { getLocale } from '../utils/locale'
 import { useAccessTokenSnapshot } from '../utils/authToken'
 import { useAuthMe } from '../api/authMe'
 import { useDailyPrediction } from '../api/useDailyPrediction'
@@ -68,6 +70,10 @@ function deriveChangeType(previousCategories: string[], nextCategories: string[]
   }
 
   return 'recomposition'
+}
+
+function formatTime(iso: string, locale: string) {
+  return new Date(iso).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
 }
 
 export function DailyHoroscopePage() {
@@ -235,6 +241,15 @@ export function DailyHoroscopePage() {
       )
     : []
 
+  const locale = getLocale(lang)
+  const toneLabel = prediction ? getToneLabel(prediction.summary.overall_tone, lang) : ''
+  const toneColor = prediction ? getToneColor(prediction.summary.overall_tone) : ''
+  const formattedDate = prediction ? new Date(prediction.meta.date_local).toLocaleDateString(locale, { 
+    weekday: 'long', 
+    day: 'numeric', 
+    month: 'long' 
+  }) : ''
+
   return (
     <PageLayout
       header={
@@ -255,18 +270,19 @@ export function DailyHoroscopePage() {
           <button type="button" onClick={handleRetry}>{getPredictionMessage('retry', lang)}</button>
         </div>
       ) : prediction ? (
-        <>
-          <div className="daily-page-refresh-wrapper mb-4">
-            <button 
-              type="button" 
-              className="daily-page-refresh-button" 
-              onClick={handleRefresh}
-            >
-              <RefreshCw size={16} />
-              {getPredictionMessage('refresh', lang)}
+        <div className="daily-layout">
+          {/* Zone 1 : HeaderBar léger */}
+          <div className="daily-layout__header-bar">
+            <div className="daily-layout__date-mood">
+              <span className="daily-layout__date">{formattedDate}</span>
+              <span className="daily-layout__mood-badge" style={{ color: toneColor }}>{toneLabel}</span>
+            </div>
+            <button type="button" className="daily-page-refresh-button" onClick={handleRefresh}>
+              <RefreshCw size={15} />
             </button>
           </div>
 
+          {/* Zone 2 : HeroSummaryCard */}
           <SectionErrorBoundary onRetry={handleRefresh}>
             <DayPredictionCard
               prediction={prediction}
@@ -280,23 +296,85 @@ export function DailyHoroscopePage() {
             />
           </SectionErrorBoundary>
 
-          <TurningPointsList
-            moments={keyMoments}
-            lang={lang}
-            onTurningPointClick={handleTurningPointClick}
-          />
+          {/* Zone 3 : KeyPointsSection — 3 premiers turning points */}
+          {keyMoments.length > 0 && (
+            <section className="daily-layout__section" id="key-points">
+              <h3 className="daily-layout__section-title">
+                {getPredictionMessage('key_points_title', lang)}
+              </h3>
+              <div className="daily-layout__key-points-grid">
+                {keyMoments.slice(0, 3).map((moment, i) => (
+                  <KeyPointCard key={i} moment={moment} lang={lang} />
+                ))}
+              </div>
+            </section>
+          )}
 
-          <DayAgenda
-            slots={agendaSlots}
-            lang={lang}
-          />
+          {/* Zone 4 : DayTimelineSection */}
+          {agendaSlots.length > 0 && (
+            <section className="daily-layout__section" id="timeline">
+              <h3 className="daily-layout__section-title">
+                {getPredictionMessage('timeline_title', lang)}
+              </h3>
+              <DayAgenda slots={agendaSlots} lang={lang} />
+            </section>
+          )}
 
-          <CategoryGrid
-            categories={prediction.categories}
-            lang={lang}
-            onCategoryClick={handleCategoryClick}
-          />
-        </>
+          {/* Zone 5 : DetailAndScoresSection (2 col sur ≥768px) */}
+          <section className="daily-layout__section daily-layout__detail-scores">
+            <div className="daily-layout__detail-scores-inner">
+              {/* FocusMomentCard : premier turning point */}
+              {keyMoments.length > 0 && (
+                <div className="daily-layout__focus">
+                  <h3 className="daily-layout__section-title">
+                    {getPredictionMessage('focus_title', lang)}
+                  </h3>
+                  <TurningPointsList
+                    moments={keyMoments.slice(0, 1)}
+                    lang={lang}
+                    onTurningPointClick={handleTurningPointClick}
+                  />
+                </div>
+              )}
+              {/* DailyDomainsCard */}
+              <div className="daily-layout__domains">
+                <h3 className="daily-layout__section-title">
+                  {getPredictionMessage('domains_title', lang)}
+                </h3>
+                <CategoryGrid
+                  categories={prediction.categories}
+                  lang={lang}
+                  onCategoryClick={handleCategoryClick}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Zone 6 : AdviceCard + CTA */}
+          {prediction.summary.best_window && (
+            <section className="daily-layout__section daily-layout__advice">
+              <div className="panel daily-layout__advice-card">
+                <h3 className="daily-layout__advice-title">
+                  {getPredictionMessage('advice_title', lang)}
+                </h3>
+                <p className="daily-layout__advice-text">
+                  {getPredictionMessage('best_window', lang)} ({getCategoryLabel(prediction.summary.best_window.dominant_category, lang)}) :{' '}
+                  {formatTime(prediction.summary.best_window.start_local, locale)} –{' '}
+                  {formatTime(prediction.summary.best_window.end_local, locale)}
+                </p>
+                <a
+                  href="#key-points"
+                  className="daily-layout__advice-cta"
+                >
+                  {getPredictionMessage('advice_cta', lang)}
+                </a>
+              </div>
+            </section>
+          )}
+
+          {/* BottomSpacer */}
+          <div className="daily-layout__bottom-spacer" />
+        </div>
       ) : (
         <div className="panel state-empty daily-page-state">
           <p>{getPredictionMessage('empty', lang)}</p>

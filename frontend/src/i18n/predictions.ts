@@ -154,7 +154,14 @@ export const PREDICTION_UI_MESSAGES: Record<
   | "no_major_aspect"
   | "aspect_shift_label"
   | "intensity"
-  | "pending_summary",
+  | "pending_summary"
+  | "key_points_title"
+  | "timeline_title"
+  | "focus_title"
+  | "domains_title"
+  | "advice_title"
+  | "advice_cta"
+  | "day_mood_label",
   Record<Lang, string>
 > = {
   loading: { fr: "Chargement de votre ciel du jour...", en: "Loading your forecast for today..." },
@@ -172,6 +179,13 @@ export const PREDICTION_UI_MESSAGES: Record<
   aspect_shift_label: { fr: "Bascule", en: "Shift" },
   intensity: { fr: "Intensité", en: "Intensity" },
   pending_summary: { fr: "Calcul de votre tendance en cours...", en: "Calculating your daily trend..." },
+  key_points_title: { fr: "Points clés du jour", en: "Key points" },
+  timeline_title: { fr: "Moments de la journée", en: "Day timeline" },
+  focus_title: { fr: "Focus du créneau", en: "Slot focus" },
+  domains_title: { fr: "Domaines du jour", en: "Daily domains" },
+  advice_title: { fr: "Conseil du jour", en: "Today's advice" },
+  advice_cta: { fr: "Voir les moments clés", en: "View key moments" },
+  day_mood_label: { fr: "Tonalité", en: "Mood" },
 };
 
 /**
