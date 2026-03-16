@@ -1,0 +1,90 @@
+/* Base pill glassmorphism */
+.day-state-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  min-height: 40px;
+  padding: 0 var(--space-4, 1rem);
+  border-radius: var(--radius-full, 999px);
+  border: 1px solid rgba(140, 120, 210, 0.22);
+  background: var(--color-glass-bg, rgba(255,255,255,0.55));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(122, 88, 220, 0.08);
+}
+
+.day-state-badge--sm {
+  min-height: 32px;
+  padding: 0 var(--space-3, 0.75rem);
+  gap: var(--space-2, 0.5rem);
+}
+
+/* Label */
+.day-state-badge__label {
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-semibold, 600);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+/* Icon */
+.day-state-badge__icon {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  color: var(--color-primary);
+}
+
+/* Dot */
+.day-state-badge__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* === Variantes de tone === */
+
+/* balanced — violet doux */
+.day-state-badge--balanced .day-state-badge__dot {
+  background-color: var(--color-primary, #866CD0);
+}
+
+/* dynamic — violet lumineux */
+.day-state-badge--dynamic {
+  border-color: rgba(161, 144, 237, 0.35);
+  box-shadow: 0 8px 24px rgba(122, 88, 220, 0.14);
+}
+.day-state-badge--dynamic .day-state-badge__dot {
+  background-color: var(--color-primary-strong, #7355C7);
+}
+.day-state-badge--dynamic .day-state-badge__label {
+  color: var(--color-primary, #866CD0);
+}
+
+/* calm — lavande/gris */
+.day-state-badge--calm .day-state-badge__dot {
+  background-color: var(--color-purple-2, #dfd5fc);
+}
+
+/* intense — prune dense */
+.day-state-badge--intense {
+  border-color: rgba(100, 60, 170, 0.30);
+}
+.day-state-badge--intense .day-state-badge__dot {
+  background-color: #6B3FA0;
+}
+
+/* reflective — bleu-violet froid */
+.day-state-badge--reflective {
+  border-color: rgba(100, 130, 200, 0.28);
+}
+.day-state-badge--reflective .day-state-badge__dot {
+  background-color: #7A9BD4;
+}
+
+/* dark mode : renforcer le fond glass */
+.dark .day-state-badge {
+  background: var(--color-glass-bg, rgba(255,255,255,0.08));
+  border-color: var(--color-glass-border, rgba(255,255,255,0.12));
+}

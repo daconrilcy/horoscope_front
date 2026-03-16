@@ -74,6 +74,7 @@ const MESSAGES: Record<string, Record<Lang, string>> = {
   advice_title: { fr: "Conseil du jour", en: "Today's advice" },
   advice_cta: { fr: "Voir les moments clés", en: "View key moments" },
   day_mood_label: { fr: "Tonalité", en: "Mood" },
+  day_state_label: { fr: 'Tonalité du jour', en: 'Day mood' },
   // Agenda du jour (ex-fenêtres décisionnelles)
   decision_windows_title: { fr: "Agenda du jour", en: "Daily Agenda" },
   window_type_favorable: { fr: "Fenêtre favorable", en: "Favorable window" },

@@ -1,0 +1,68 @@
+/* Conteneur principal */
+.daily-page-header {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4, 1rem);
+  padding: var(--space-1, 0.25rem) 0 var(--space-2, 0.5rem);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+@media (max-width: 767px) {
+  .daily-page-header {
+    margin-bottom: 18px;
+  }
+}
+
+/* Zone contenu (gauche) */
+.daily-page-header__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Date dominante */
+.header-date {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.02;
+  font-weight: var(--font-weight-medium, 500);
+  letter-spacing: -0.04em;
+  color: var(--color-text-primary);
+}
+
+/* Décoration (droite) — desktop seulement */
+.daily-page-header__decoration {
+  display: none;
+  position: relative;
+  width: 80px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .daily-page-header__decoration {
+    display: block;
+  }
+}
+
+/* Ambient glow décoratif */
+.daily-page-header__ambient-glow {
+  position: absolute;
+  top: -20px;
+  right: -10px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(134, 108, 208, 0.18) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  filter: blur(16px);
+}

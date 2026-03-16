@@ -9,6 +9,7 @@ import { CategoryGrid } from '../components/prediction/CategoryGrid'
 import { TurningPointsList } from '../components/prediction/TurningPointsList'
 import { DayAgenda } from '../components/prediction/DayAgenda'
 import { KeyPointCard } from '../components/prediction/KeyPointCard'
+import { DailyPageHeader } from '../components/prediction/DailyPageHeader'
 import type { DailyPredictionTurningPoint } from '../types/dailyPrediction'
 
 import { detectLang } from '../i18n/astrology'
@@ -242,13 +243,6 @@ export function DailyHoroscopePage() {
     : []
 
   const locale = getLocale(lang)
-  const toneLabel = prediction ? getToneLabel(prediction.summary.overall_tone, lang) : ''
-  const toneColor = prediction ? getToneColor(prediction.summary.overall_tone) : ''
-  const formattedDate = prediction ? new Date(prediction.meta.date_local).toLocaleDateString(locale, { 
-    weekday: 'long', 
-    day: 'numeric', 
-    month: 'long' 
-  }) : ''
 
   return (
     <PageLayout
@@ -271,14 +265,22 @@ export function DailyHoroscopePage() {
         </div>
       ) : prediction ? (
         <div className="daily-layout">
-          {/* Zone 1 : HeaderBar léger */}
-          <div className="daily-layout__header-bar">
-            <div className="daily-layout__date-mood">
-              <span className="daily-layout__date">{formattedDate}</span>
-              <span className="daily-layout__mood-badge" style={{ color: toneColor }}>{toneLabel}</span>
-            </div>
-            <button type="button" className="daily-page-refresh-button" onClick={handleRefresh}>
-              <RefreshCw size={15} />
+          {/* Zone 1 : DailyPageHeader éditorial */}
+          <DailyPageHeader
+            date={prediction.meta.date_local}
+            tone={prediction.summary.overall_tone}
+            lang={lang}
+          />
+
+          {/* Bouton refresh — séparé du header éditorial */}
+          <div className="daily-layout__refresh-row">
+            <button
+              type="button"
+              className="daily-page-refresh-button"
+              onClick={handleRefresh}
+              aria-label={getPredictionMessage('refresh', lang)}
+            >
+              <RefreshCw size={15} aria-hidden="true" />
             </button>
           </div>
 
