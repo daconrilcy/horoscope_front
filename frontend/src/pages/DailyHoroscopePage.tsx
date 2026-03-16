@@ -8,7 +8,7 @@ import { HeroSummaryCard } from '../components/prediction/HeroSummaryCard'
 import { CategoryGrid } from '../components/prediction/CategoryGrid'
 import { TurningPointsList } from '../components/prediction/TurningPointsList'
 import { DayAgenda } from '../components/prediction/DayAgenda'
-import { KeyPointCard } from '../components/prediction/KeyPointCard'
+import { KeyPointsSection } from '../components/prediction/KeyPointsSection'
 import { DailyPageHeader } from '../components/prediction/DailyPageHeader'
 import type { DailyPredictionTurningPoint } from '../types/dailyPrediction'
 
@@ -23,6 +23,7 @@ import { trackEvent, EVENTS } from '../utils/analytics'
 import { useDashboardAstroSummary } from '../components/dashboard/useDashboardAstroSummary'
 import { SectionErrorBoundary } from '../components/ErrorBoundary'
 import { buildHeroSummaryCardModel } from '../utils/heroSummaryCardMapper'
+import { buildKeyPointsSectionModel } from '../utils/keyPointsSectionMapper'
 import './DailyHoroscopePage.css'
 
 function parseLocalMinute(iso: string): number | null {
@@ -300,18 +301,7 @@ export function DailyHoroscopePage() {
           </SectionErrorBoundary>
 
           {/* Zone 3 : KeyPointsSection — 3 premiers turning points */}
-          {keyMoments.length > 0 && (
-            <section className="daily-layout__section" id="key-points">
-              <h3 className="daily-layout__section-title">
-                {getPredictionMessage('key_points_title', lang)}
-              </h3>
-              <div className="daily-layout__key-points-grid">
-                {keyMoments.slice(0, 3).map((moment, i) => (
-                  <KeyPointCard key={i} moment={moment} lang={lang} />
-                ))}
-              </div>
-            </section>
-          )}
+          <KeyPointsSection model={buildKeyPointsSectionModel(prediction, lang)} />
 
           {/* Zone 4 : DayTimelineSection */}
           {agendaSlots.length > 0 && (

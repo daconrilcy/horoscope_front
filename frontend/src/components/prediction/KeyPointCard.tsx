@@ -1,35 +1,28 @@
 import React from 'react'
-import type { DailyPredictionTurningPoint } from '../../types/dailyPrediction'
-import type { Lang } from '../../i18n/predictions'
-import { getLocale } from '../../utils/locale'
-import { getCategoryMeta, humanizeTurningPointSemantic } from '../../utils/predictionI18n'
+import type { KeyPointItem } from '../../types/keyPointsSection'
 import './KeyPointCard.css'
 
-interface Props {
-  moment: DailyPredictionTurningPoint
-  lang: Lang
+interface KeyPointCardProps {
+  item: KeyPointItem
 }
 
-export const KeyPointCard: React.FC<Props> = ({ moment, lang }) => {
-  const locale = getLocale(lang)
-  const time = new Date(moment.occurred_at_local).toLocaleTimeString(locale, {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-  const semantic = humanizeTurningPointSemantic(moment, lang)
-  const categories = (moment.impacted_categories ?? moment.next_categories ?? []).slice(0, 3)
-
+export const KeyPointCard: React.FC<KeyPointCardProps> = ({ item }) => {
   return (
-    <div className="panel key-point-card">
-      <span className="key-point-card__time">{time}</span>
-      <span className="key-point-card__title">{semantic.title || semantic.cause}</span>
-      <div className="key-point-card__categories">
-        {categories.map((c) => (
-          <span key={c} title={getCategoryMeta(c, lang).label}>
-            {getCategoryMeta(c, lang).icon}
-          </span>
-        ))}
+    <article className="key-point-card">
+      <div className="key-point-card__top">
+        <div className="key-point-card__icon-pill">
+          {item.icon}
+        </div>
+        <span className="key-point-card__label">{item.label}</span>
       </div>
-    </div>
+      <div className="key-point-card__gauge" aria-hidden="true">
+        <div className="key-point-card__gauge-track">
+          <div 
+            className="key-point-card__gauge-fill" 
+            style={{ width: `${item.strength}%` }} 
+          />
+        </div>
+      </div>
+    </article>
   )
 }
