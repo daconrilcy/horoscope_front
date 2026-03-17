@@ -875,7 +875,7 @@ describe("DailyHoroscopePage", () => {
     expect(
       screen.getByText(/travail rejoint santé & hygiène de vie et argent & ressources au premier plan/i),
     ).toBeInTheDocument();
-    expect(screen.getByText("Moon sextile Mars")).toBeInTheDocument();
+    expect(screen.getAllByText("Moon sextile Mars")[0]).toBeInTheDocument();
     expect(screen.getByText(/Orbe 0,12° · Phase appliquante · Maisons 5 -> 8/i)).toBeInTheDocument();
     expect(screen.getByText(/variation globale \+0,66 \(1,45 -> 2,11\)/i)).toBeInTheDocument();
     expect(
@@ -894,7 +894,7 @@ describe("DailyHoroscopePage", () => {
       expect(screen.getByText(/Journée équilibrée avec des rééquilibrages progressifs/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Les priorités du moment se réorganisent")).toBeInTheDocument();
+    expect(screen.getAllByText("Les priorités du moment se réorganisent")[0]).toBeInTheDocument();
     expect(
       screen.getByText(/travail prend le relais de vie sociale & réseau, avec santé & hygiène de vie et argent & ressources comme fil conducteur/i),
     ).toBeInTheDocument();

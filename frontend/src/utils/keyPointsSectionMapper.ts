@@ -4,12 +4,20 @@ import type { KeyPointsSectionModel, KeyPointItem } from '../types/keyPointsSect
 import { humanizeTurningPointSemantic, getCategoryMeta, getPredictionMessage } from './predictionI18n'
 import { buildDailyKeyMoments } from './dailyAstrology'
 
+function deriveChangeType(prev: string[], next: string[]): string {
+  if (prev.length === 0 && next.length > 0) return 'emergence'
+  if (prev.length > 0 && next.length === 0) return 'attenuation'
+  if (next.length > prev.length && prev.every(c => next.includes(c))) return 'emergence'
+  if (prev.length > next.length && next.every(c => prev.includes(c))) return 'attenuation'
+  return 'recomposition'
+}
+
 function toFallbackTurningPoint(m: ReturnType<typeof buildDailyKeyMoments>[number]): DailyPredictionTurningPoint {
   return {
     occurred_at_local: m.occurredAtLocal,
     severity: 0.5,
     impacted_categories: m.impactedCategories,
-    change_type: 'recomposition',
+    change_type: deriveChangeType(m.previousCategories, m.nextCategories),
     summary: null,
     drivers: [],
     primary_driver: null,
@@ -41,7 +49,7 @@ export function buildKeyPointsSectionModel(
 
   const items: KeyPointItem[] = sourceMoments.map((moment) => {
     const semantic = humanizeTurningPointSemantic(moment, lang)
-    const label = semantic.title || semantic.cause || '—'
+    const label = semantic.cause || semantic.title || '—'
 
     const categories = moment.impacted_categories?.length
       ? moment.impacted_categories
