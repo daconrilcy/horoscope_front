@@ -125,16 +125,24 @@ gemini-2.0-flash-exp (orchestrated by Gemini CLI)
 - Verified with tsc and vitest.
 - Code review (claude-sonnet-4-6, 2026-03-17): fixed `item.strength ?? 0` guard in KeyPointCard, removed `as any` cast in mapper (typed `sourceMoments` as `DailyPredictionTurningPoint[]`).
 
+### Post-implementation fixes (2026-03-17)
+
+- **1 seule carte affichée** : le mapper ne complétait pas jusqu'à 3 items quand `turning_points.length < 3`. Fix : supplément avec `buildDailyKeyMoments` pour toujours proposer jusqu'à 3 cartes.
+- **Barre d'intensité vide** : `severity = 0` (falsy) bypass le `?? 0.5` nullish. Fix : `Number(severity) || 0.5` pour gérer aussi les zéros et les NaN.
+- **Toutes les cartes avec le même titre** : le mapper utilisait `semantic.title` (= nom du `change_type`, identique pour tous) au lieu de `semantic.cause` (= label basé sur les transitions de catégories, unique par moment). Fix : priorité inversée en `semantic.cause || semantic.title`. Fix complémentaire : `change_type` des moments fallback dérivé des vraies catégories (`deriveChangeType`) au lieu de `'recomposition'` hardcodé.
+- **Label brut `asc_sign_change` affiché** : `DRIVER_TYPE_LABELS` dans `predictions.ts` manquait `asc_sign_change` et 8 autres `event_type` présents dans `eventLabels` de `predictionI18n.ts`. `getLabel()` retournait la clé brute faute d'entrée. Fix : synchronisation des deux dictionnaires.
+- **Tests cassés** : 2 assertions `getByText(...)` (singular) échouaient car les labels apparaissent désormais dans KeyPointsSection ET TurningPointsList. Fix : migration vers `getAllByText(...)[0]`.
+
 ### Completion Notes List
 
-- [x] AC 1, 2: Types created.
-- [x] AC 3: Mapper buildKeyPointsSectionModel implemented.
-- [x] AC 4, 7: SectionTitle component and CSS created.
-- [x] AC 5, 8: KeyPointCard rewritten.
-- [x] AC 6, 9: KeyPointsSection created with responsive grid/scroll.
-- [x] AC 10: Integrated in DailyHoroscopePage.
-- [x] AC 11: tsc and vitest passed.
-- [x] AC 12: No Tailwind used.
+- [x] AC 1, 2: Types créés.
+- [x] AC 3: Mapper buildKeyPointsSectionModel implémenté avec fallback et supplement.
+- [x] AC 4, 7: Composant SectionTitle et CSS créés.
+- [x] AC 5, 8: KeyPointCard réécrit avec glassmorphisme et jauge.
+- [x] AC 6, 9: KeyPointsSection créé avec grille responsive / scroll horizontal.
+- [x] AC 10: Intégré dans DailyHoroscopePage.
+- [x] AC 11: tsc et vitest 1071 tests verts.
+- [x] AC 12: Zéro Tailwind.
 
 ### File List
 
@@ -147,4 +155,6 @@ gemini-2.0-flash-exp (orchestrated by Gemini CLI)
 - `frontend/src/components/prediction/KeyPointsSection.tsx`
 - `frontend/src/components/prediction/KeyPointsSection.css`
 - `frontend/src/pages/DailyHoroscopePage.tsx`
+- `frontend/src/i18n/predictions.ts`
+- `frontend/src/tests/DailyHoroscopePage.test.tsx`
 
