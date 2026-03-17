@@ -1,4 +1,13 @@
+import type { DayPeriodKey } from "../types/dayTimeline";
+
 export type Lang = "fr" | "en";
+
+export const PERIOD_LABELS: Record<DayPeriodKey, Record<Lang, string>> = {
+  nuit: { fr: "Nuit", en: "Night" },
+  matin: { fr: "Matin", en: "Morning" },
+  apres_midi: { fr: "Après-midi", en: "Afternoon" },
+  soiree: { fr: "Soirée", en: "Evening" },
+};
 
 export const CATEGORY_LABELS: Record<string, Record<Lang, string>> = {
   love: { fr: "Amour & Relations", en: "Love & Relationships" },

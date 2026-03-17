@@ -7,8 +7,8 @@ import { TodayHeader } from '../components/TodayHeader'
 import { HeroSummaryCard } from '../components/prediction/HeroSummaryCard'
 import { CategoryGrid } from '../components/prediction/CategoryGrid'
 import { TurningPointsList } from '../components/prediction/TurningPointsList'
-import { DayAgenda } from '../components/prediction/DayAgenda'
 import { KeyPointsSection } from '../components/prediction/KeyPointsSection'
+import { DayTimelineSection } from '../components/prediction/DayTimelineSection'
 import { DailyPageHeader } from '../components/prediction/DailyPageHeader'
 import type { DailyPredictionTurningPoint } from '../types/dailyPrediction'
 
@@ -24,6 +24,7 @@ import { useDashboardAstroSummary } from '../components/dashboard/useDashboardAs
 import { SectionErrorBoundary } from '../components/ErrorBoundary'
 import { buildHeroSummaryCardModel } from '../utils/heroSummaryCardMapper'
 import { buildKeyPointsSectionModel } from '../utils/keyPointsSectionMapper'
+import { buildDayTimelineSectionModel } from '../utils/dayTimelineSectionMapper'
 import './DailyHoroscopePage.css'
 
 function parseLocalMinute(iso: string): number | null {
@@ -305,12 +306,11 @@ export function DailyHoroscopePage() {
 
           {/* Zone 4 : DayTimelineSection */}
           {agendaSlots.length > 0 && (
-            <section className="daily-layout__section" id="timeline">
-              <h3 className="daily-layout__section-title">
-                {getPredictionMessage('timeline_title', lang)}
-              </h3>
-              <DayAgenda slots={agendaSlots} lang={lang} />
-            </section>
+            <DayTimelineSection
+              model={buildDayTimelineSectionModel(prediction, lang)}
+              lang={lang}
+              agendaSlots={agendaSlots}
+            />
           )}
 
           {/* Zone 5 : DetailAndScoresSection (2 col sur ≥768px) */}

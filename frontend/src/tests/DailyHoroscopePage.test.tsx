@@ -574,6 +574,10 @@ describe("DailyHoroscopePage", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument();
     expect(screen.getByText("11:00 – 11:30")).toBeInTheDocument();
     expect(screen.getByText("Moments clés du jour")).toBeInTheDocument();
+
+    const matinCard = screen.getByRole("button", { name: /Matin/i });
+    await userEvent.click(matinCard);
+
     expect(screen.getByText("Agenda du jour")).toBeInTheDocument();
     expect(screen.getAllByText("Bascule").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Impacts :").length).toBeGreaterThan(0);
@@ -759,6 +763,10 @@ describe("DailyHoroscopePage", () => {
 
     expect(screen.getByText(/Les scores sont calculés sans données historiques/i)).toBeInTheDocument();
     expect(screen.queryByText("delta_note")).not.toBeInTheDocument();
+
+    const nuitCard = screen.getByRole("button", { name: /Nuit/i });
+    await userEvent.click(nuitCard);
+
     const midnightSlot = screen
       .getAllByTestId("agenda-slot")
       .find((element) => element.getAttribute("data-slot-label") === "00:00");
@@ -779,9 +787,12 @@ describe("DailyHoroscopePage", () => {
       expect(screen.getByText(/Journée avec des créneaux décisionnels bien définis/i)).toBeInTheDocument();
     });
 
+    const matinCard = screen.getByRole("button", { name: /Matin/i });
+    await userEvent.click(matinCard);
+
     expect(screen.getByText("Agenda du jour")).toBeInTheDocument();
     expect(screen.getByText("Moments clés du jour")).toBeInTheDocument();
-    expect(screen.getAllByTestId("agenda-slot")).toHaveLength(12);
+    expect(screen.getAllByTestId("agenda-slot")).toHaveLength(3);
     expect(screen.getAllByTestId("agenda-slot-pivot").length).toBeGreaterThan(0);
 
     const morningSlot = screen
@@ -789,6 +800,9 @@ describe("DailyHoroscopePage", () => {
       .find((element) => element.getAttribute("data-slot-label") === "08:00");
     expect(morningSlot).toBeDefined();
     expect(within(morningSlot!).getByText("Amour & Relations")).toBeInTheDocument();
+
+    const apresMidiCard = screen.getByRole("button", { name: /Après-midi/i });
+    await userEvent.click(apresMidiCard);
 
     const pivotSlot = screen
       .getAllByTestId("agenda-slot")
@@ -825,6 +839,9 @@ describe("DailyHoroscopePage", () => {
       expect(screen.getByText("Votre journée du 2026-03-10 s'annonce très porteuse.")).toBeInTheDocument();
     });
 
+    const nuitCard = screen.getByRole("button", { name: /Nuit/i });
+    await userEvent.click(nuitCard);
+
     const midnightSlot = screen
       .getAllByTestId("agenda-slot")
       .find((element) => element.getAttribute("data-slot-label") === "00:00");
@@ -832,12 +849,20 @@ describe("DailyHoroscopePage", () => {
     expect(within(midnightSlot!).queryByText("Carrière")).not.toBeInTheDocument();
     expect(within(midnightSlot!).queryByText("Communication")).not.toBeInTheDocument();
 
+    const soireeCard = screen.getByRole("button", { name: /Soirée/i });
+    await userEvent.click(soireeCard);
+
     const eveningSlot = screen
       .getAllByTestId("agenda-slot")
       .find((element) => element.getAttribute("data-slot-label") === "20:00");
     expect(eveningSlot).toBeDefined();
     expect(within(eveningSlot!).getByText("Plaisir & Créativité")).toBeInTheDocument();
-    expect(within(midnightSlot!).getByText("Pas d'aspect majeur")).toBeInTheDocument();
+
+    await userEvent.click(nuitCard);
+    const updatedMidnightSlot = screen
+      .getAllByTestId("agenda-slot")
+      .find((element) => element.getAttribute("data-slot-label") === "00:00");
+    expect(within(updatedMidnightSlot!).getByText("Pas d'aspect majeur")).toBeInTheDocument();
   });
 
   it("n'expose pas de codes techniques backend dans l'interface", async () => {
@@ -902,11 +927,17 @@ describe("DailyHoroscopePage", () => {
       screen.getByText(/Le focus glisse de vie sociale & réseau vers travail, avec santé & hygiène de vie et argent & ressources en fil conducteur/i),
     ).toBeInTheDocument();
 
+    const matinCard = screen.getByRole("button", { name: /Matin/i });
+    await userEvent.click(matinCard);
+
     const morningShiftSlot = screen
       .getAllByTestId("agenda-slot")
       .find((element) => element.getAttribute("data-slot-label") === "08:00");
     expect(morningShiftSlot).toBeDefined();
     expect(within(morningShiftSlot!).getByTestId("agenda-slot-shift-marker")).toBeInTheDocument();
+
+    const soireeCard = screen.getByRole("button", { name: /Soirée/i });
+    await userEvent.click(soireeCard);
 
     const eveningShiftSlot = screen
       .getAllByTestId("agenda-slot")

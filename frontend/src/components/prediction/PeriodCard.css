@@ -1,0 +1,77 @@
+.period-card {
+  position: relative;
+  /* Glassmorphism */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.32); /* Light default */
+  border: 1.5px solid var(--color-glass-border);
+  border-radius: 16px;
+  padding: var(--space-3) var(--space-2);
+  min-width: 0;
+  flex: 1;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s;
+  outline: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .period-card {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.dark .period-card {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.period-card:active {
+  transform: scale(0.97);
+}
+
+.period-card--selected {
+  border-color: var(--color-primary);
+  background: rgba(134, 108, 208, 0.12);
+  box-shadow: 0 0 0 2px rgba(134, 108, 208, 0.25);
+}
+
+.period-card__pivot-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  background: var(--color-primary);
+  border-radius: 50%;
+}
+
+.period-card__icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.period-card__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.period-card__categories {
+  display: flex;
+  gap: 2px;
+  font-size: 0.85rem;
+  min-height: 1.2rem;
+  align-items: center;
+}
+
+.period-card__cat-icon {
+  line-height: 1;
+}
