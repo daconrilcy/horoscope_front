@@ -6,26 +6,29 @@
 }
 
 .section-title__dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   background-color: var(--color-primary);
   border-radius: 50%;
   flex-shrink: 0;
+  opacity: 0.7;
 }
 
 .section-title__text {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 600;
-  color: var(--color-text-primary);
+  /* Prune foncé plutôt que noir plein */
+  color: var(--color-text-secondary, rgba(30, 27, 46, 0.72));
   margin: 0;
   white-space: nowrap;
+  letter-spacing: 0.01em;
 }
 
 .section-title__line {
   flex: 1;
   height: 1px;
   border: none;
-  background: linear-gradient(90deg, var(--color-primary), transparent);
-  opacity: 0.3;
+  background: linear-gradient(90deg, rgba(134, 108, 208, 0.35), transparent);
+  opacity: 0.45;
   margin: 0;
 }

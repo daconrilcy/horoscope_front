@@ -45,7 +45,7 @@ export const DayTimelineSection: React.FC<DayTimelineSectionProps> = ({ model, l
         onSelect={handleSelect} 
         lang={lang}
       />
-      <TimelineRail periods={model.periods} selectedPeriod={selectedPeriod} />
+      <TimelineRail selectedPeriod={selectedPeriod} />
       {selectedPeriod && (
         <div className="day-timeline-section__agenda">
           <DayAgenda slots={filteredSlots} lang={lang} />

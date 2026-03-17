@@ -113,12 +113,33 @@ gemini-2.0-flash-exp (orchestrated by Gemini CLI)
 - Adapted `DailyHoroscopePage.test.tsx` to handle conditional rendering of the agenda (now requires a period click).
 - Verified with `tsc` and `vitest`.
 
+### Post-implementation design corrections (claude-sonnet-4-6, 2026-03-17)
+
+Suite à un audit visuel comparatif avec la maquette, plusieurs corrections ont été apportées :
+
+**Icônes** — Remplacement des emojis (`🌙☀️🌤️🌆`) par des icônes Lucide (`Moon`, `Sunrise`, `Sun`, `Sunset`) avec `strokeWidth={3}`. Constante `STROKE_ICON = 3` dans `PeriodCard.tsx`. Champ `icon: string` retiré de `AggregatedDayPeriod` et du mapper.
+
+**PeriodCard — état actif premium** — Abandon du contour violet intégral. Remplacement par : barre d'accent 12px en haut (`::before`, gradient primary → lavande), `radial-gradient` fond pour l'état sélectionné, `scale(1.15)` + `box-shadow` 3 niveaux. Fond en `radial-gradient` clair en dark mode.
+
+**PeriodCard — hover** — `scale(1.05)` sur survol (cartes non sélectionnées), `scale(1.15)` sur les cartes actives et au clic. `z-index: 1` pour éviter le chevauchement.
+
+**PeriodCard — matière glassmorphism** — `border: 2px solid rgba(200,190,240,0.35)` (plus prononcée), `padding: var(--space-4)`, `transition: 0.25s ease` simplifié. Fond light : `rgba(252,250,255,0.58)`, fond dark : `radial-gradient` blanc-lavande.
+
+**PeriodCard — hiérarchie typographique** — Nom : `1rem, 700, padding-top space-2`. Horaire : `0.7rem, muted`. Tone label : `0.9rem, 600`. Tone dot : `8px × 8px` avec `margin: 8px`.
+
+**TimelineRail** — Refactorisé en rail continu unique (suppression des 4 mini-barres segmentées). Track complet + fill progressif jusqu'au thumb + 5 tick marks aux frontières + thumb circle animé. Prop `periods` supprimée (plus de coloration par segment). `DayTimelineSection` mis à jour en conséquence.
+
+**SectionTitle** — Texte en `color-text-secondary` (prune, moins noir), dot 6px + opacity 0.7, ligne `opacity: 0.45`.
+
+**DayAgenda pivot slots** — Différenciation macro/micro : les créneaux 2h pivot passent de `border-color: var(--primary)` (identique au signal période) à `border-top: 2px solid rgba(134,108,208,0.38)` + fond très léger, sans border complète.
+
 ### Completion Notes List
 
-- Section "Moments de la journée" implemented with 4 period cards.
-- Interactive filtering: agenda only shows when a period is selected.
-- Timeline rail provides visual tone overview.
-- Tests updated to simulate user interaction (period selection).
+- Section "Moments de la journée" implémentée avec 4 cartes de période.
+- Filtrage interactif : l'agenda n'est affiché que lorsqu'une période est sélectionnée.
+- Rail temporel continu avec progression et thumb animés.
+- Tests mis à jour pour simuler l'interaction utilisateur (sélection de période).
+- Corrections visuelles post-implémentation alignées sur la maquette premium.
 
 ### File List
 
@@ -132,6 +153,8 @@ gemini-2.0-flash-exp (orchestrated by Gemini CLI)
 - `frontend/src/components/prediction/TimelineRail.css`
 - `frontend/src/components/prediction/DayTimelineSection.tsx`
 - `frontend/src/components/prediction/DayTimelineSection.css`
+- `frontend/src/components/prediction/SectionTitle.css`
+- `frontend/src/components/prediction/DayAgenda.css`
 - `frontend/src/i18n/predictions.ts`
 - `frontend/src/pages/DailyHoroscopePage.tsx`
 - `frontend/src/tests/DailyHoroscopePage.test.tsx`

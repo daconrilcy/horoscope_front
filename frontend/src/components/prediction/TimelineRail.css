@@ -1,43 +1,61 @@
+/* ── TimelineRail ── rail continu unique, logique de progression */
+
 .timeline-rail {
-  display: flex;
-  height: 6px;
-  border-radius: 3px;
-  overflow: visible; /* Allow scaleY to be visible */
-  margin-bottom: var(--space-4);
-  background: rgba(255, 255, 255, 0.08);
+  padding: var(--space-1) 0 var(--space-3);
+}
+
+.timeline-rail__track {
+  position: relative;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(134, 108, 208, 0.10);
   width: 100%;
-  gap: 2px;
 }
 
-.timeline-rail__segment {
-  flex: 1;
-  transition: opacity 0.2s, transform 0.2s;
-  opacity: 0.45;
-  border-radius: 3px;
+/* Fill progressif : de gauche jusqu'au thumb */
+.timeline-rail__fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(134, 108, 208, 0.25) 0%,
+    var(--color-primary) 100%
+  );
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
 }
 
-.timeline-rail__segment[data-tone="positive"] {
-  background: var(--color-success, #5cb85c);
+/* Repères de frontières entre périodes */
+.timeline-rail__tick {
+  position: absolute;
+  top: -3px;
+  width: 1px;
+  height: 9px;
+  background: rgba(134, 108, 208, 0.18);
+  transform: translateX(-50%);
+  border-radius: 1px;
 }
 
-.timeline-rail__segment[data-tone="negative"] {
-  background: var(--color-error, #d9534f);
+/* Tick du début et de la fin : un peu moins visible */
+.timeline-rail__tick:first-of-type,
+.timeline-rail__tick:last-of-type {
+  opacity: 0.5;
 }
 
-.timeline-rail__segment[data-tone="neutral"] {
-  background: var(--color-primary, #866cd0);
-}
-
-.timeline-rail__segment[data-tone="mixed"] {
-  background: hwb(32 10% 5%); /* Using a warning-like color if --warning not defined */
-}
-
-.timeline-rail__segment--active {
-  opacity: 1;
-  transform: scaleY(1.4);
-  z-index: 1;
-}
-
-.timeline-rail__segment--pivot {
-  box-shadow: 0 0 0 1px var(--color-primary);
+/* Thumb : cercle sur la période active */
+.timeline-rail__thumb {
+  position: absolute;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 0 0 3px rgba(134, 108, 208, 0.18),
+    0 1px 4px rgba(134, 108, 208, 0.25);
+  transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }

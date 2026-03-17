@@ -31,8 +31,11 @@
 }
 
 .agenda-slot--pivot {
-  border-color: var(--primary);
-  background-color: rgba(var(--primary-rgb, 134, 108, 208), 0.05); /* cta-l rgb fallback */
+  /* Langage micro (créneau 2h) : accent top subtil, fond très léger
+     ≠ langage macro (période sélectionnée) qui a border complète + glow */
+  border: 1px solid rgba(134, 108, 208, 0.12);
+  border-top: 2px solid rgba(134, 108, 208, 0.38);
+  background-color: rgba(134, 108, 208, 0.04);
 }
 
 .agenda-slot__label {
