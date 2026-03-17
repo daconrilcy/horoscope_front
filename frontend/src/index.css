@@ -25,6 +25,9 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --background-unselected-cell: radial-gradient(rgba(253, 251, 253, 0.15) 40%, rgba(253, 251, 253, 0.7) 100%);
+  --background-selected-cell: radial-gradient(rgba(255, 255, 255, 0.1) 60%, rgba(255, 255, 255, 0.8) 100%);
 }
 
 

@@ -32,17 +32,25 @@ export const DayTimelineSection: React.FC<DayTimelineSectionProps> = ({ model, l
     setSelectedPeriod(prev => (prev === key ? null : key))
   }
 
-  const filteredSlots = selectedPeriod 
+  // Recalcule hasTurningPoint depuis les agendaSlots réels (qui incluent les keyMoments
+  // non présents dans les slots internes du mapper).
+  const periods = model.periods.map(period => {
+    const [start, end] = PERIOD_INDICES[period.key]
+    const hasTurningPoint = agendaSlots.slice(start, end).some(s => s.hasTurningPoint)
+    return { ...period, hasTurningPoint }
+  })
+
+  const filteredSlots = selectedPeriod
     ? agendaSlots.slice(PERIOD_INDICES[selectedPeriod][0], PERIOD_INDICES[selectedPeriod][1])
     : []
 
   return (
     <section className="day-timeline-section" id="timeline">
       <SectionTitle title={model.title} />
-      <PeriodCardsRow 
-        periods={model.periods} 
-        selectedPeriod={selectedPeriod} 
-        onSelect={handleSelect} 
+      <PeriodCardsRow
+        periods={periods}
+        selectedPeriod={selectedPeriod}
+        onSelect={handleSelect}
         lang={lang}
       />
       <TimelineRail selectedPeriod={selectedPeriod} />

@@ -6,8 +6,8 @@
   min-width: 0;
   cursor: pointer;
   /* Glassmorphism léger */
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   background: rgba(252, 250, 255, 0.58);
   border: 2px solid rgba(200, 190, 240, 0.35);
   border-radius: 18px;
@@ -38,10 +38,18 @@
   transform: scale(1.15) !important;
 }
 
+/* Badge pivot — positionné en absolu, indépendant du mode couleur */
+.period-card__pivot-badge {
+  position: absolute;
+  top: 1rem;
+  right: 0.5rem;
+  color: var(--primary);
+  opacity: 0.85;
+}
 
 @media (prefers-color-scheme: dark) {
   .period-card {
-    background: radial-gradient(rgba(250, 246, 251, 0.2) 20%, rgba(250, 246, 251, 0.5) 100%);
+    background: var(--background-unselected-cell);
     border-color: rgba(255, 255, 255, 0.82);
   }
 
@@ -52,14 +60,16 @@
 
   /* ── État actif : accent top + glow, PAS de contour intégral violet ── */
   .period-card--selected {
-    background: radial-gradient(rgba(250, 246, 251, 0.5) 20%, rgba(250, 246, 251, 0.85) 100%);
-    border-color: rgba(134, 108, 208, 0.22);
+    background: var(--background-selected-cell);
+    border-color: rgba(134, 108, 208, 0.3);
     box-shadow:
       0 6px 28px rgba(134, 108, 208, 0.14),
       0 1px 6px rgba(134, 108, 208, 0.08),
-      4px 4px 24px rgba(0, 0, 0, 0.1);
+      4px 4px 24px rgba(0, 0, 0, 0.1),
+      0px 0px 12px rgba(255, 255, 255, 0.4);
     transform: scale(1.15);
     z-index: 1;
+
   }
 
   /* Accent bar en haut de la carte sélectionnée */
@@ -150,7 +160,9 @@
 
   /* Dot de tonalité */
   .period-card__tone-dot {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 8px;
     height: 8px;
     margin: 8px;
@@ -158,6 +170,20 @@
     flex-shrink: 0;
     background: rgba(30, 27, 46, 0.28);
     box-shadow: 0 0 4px rgba(30, 27, 46, 0.4);
+  }
+
+  .period-card__tone-dot--pivot {
+    width: 18px;
+    height: 18px;
+    margin: 4px;
+    background: rgba(134, 108, 208, 0.15);
+    color: white;
+    box-shadow: 0 0 0 1px rgba(134, 108, 208, 0.3);
+  }
+
+  .period-card--selected .period-card__tone-dot--pivot {
+    background: rgba(134, 108, 208, 0.25);
+    box-shadow: 0 0 0 3px rgb(206 187 255 / 78%);
   }
 
   .period-card__tone-dot[data-tone="positive"] {
@@ -191,7 +217,8 @@
     box-shadow: 0 0 0px 4px rgb(206 187 255 / 78%);
   }
 
-  .period-card__tone-label {
+  .period-card__tone-label,
+  period-card__pivot-label {
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--color-text-muted, rgba(30, 27, 46, 0.55));
@@ -204,6 +231,16 @@
     color: var(--color-text-secondary, rgba(30, 27, 46, 0.72));
   }
 
+  /* Badge pivot (top-right de la carte) */
+  .period-card__pivot-badge {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.5rem;
+    color: var(--color-primary);
+    opacity: 0.82;
+    flex-shrink: 0;
+  }
+
   /* Pivot footer */
   .period-card__pivot-icon {
     color: var(--color-primary);
@@ -211,12 +248,12 @@
     opacity: 0.85;
   }
 
-  .period-card__pivot-label {
+  /* .period-card__pivot-label {
     font-size: 0.68rem;
     font-weight: 600;
     color: var(--color-primary);
     white-space: nowrap;
-  }
+  } */
 
   .period-card__sep {
     color: var(--color-text-muted, rgba(30, 27, 46, 0.35));

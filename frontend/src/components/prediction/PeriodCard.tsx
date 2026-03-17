@@ -1,5 +1,5 @@
 import React from 'react'
-import { Moon, Sunrise, Sun, Sunset, ArrowRightLeft } from 'lucide-react'
+import { Moon, Sunrise, Sun, Sunset, ArrowRightLeft, Zap } from 'lucide-react'
 import type { AggregatedDayPeriod, DayPeriodKey } from '../../types/dayTimeline'
 import type { Lang } from '../../i18n/predictions'
 import { getCategoryMeta, getPredictionMessage } from '../../utils/predictionI18n'
@@ -40,6 +40,15 @@ export const PeriodCard: React.FC<PeriodCardProps> = ({ period, isSelected, onCl
       onClick={onClick}
       aria-pressed={isSelected}
     >
+      {period.hasTurningPoint && (
+        <Zap
+          size={12}
+          fill="currentColor"
+          className="period-card__pivot-badge"
+          aria-hidden="true"
+          style={{ position: 'absolute', top: '1rem', right: '0.5rem', color: 'var(--primary)', opacity: 0.85 }}
+        />
+      )}
       <div className="period-card__header">
         <IconComponent
           size={18}
@@ -54,7 +63,9 @@ export const PeriodCard: React.FC<PeriodCardProps> = ({ period, isSelected, onCl
       <div className="period-card__footer">
         {period.hasTurningPoint ? (
           <>
-            <ArrowRightLeft size={10} className="period-card__pivot-icon" aria-hidden="true" />
+            <span className="period-card__tone-dot period-card__tone-dot--pivot" aria-hidden="true">
+              <ArrowRightLeft size={10} />
+            </span>
             <span className="period-card__pivot-label">{pivotLabel}</span>
             {firstCatLabel && (
               <>

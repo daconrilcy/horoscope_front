@@ -113,7 +113,7 @@ gemini-2.0-flash-exp (orchestrated by Gemini CLI)
 - Adapted `DailyHoroscopePage.test.tsx` to handle conditional rendering of the agenda (now requires a period click).
 - Verified with `tsc` and `vitest`.
 
-### Post-implementation design corrections (claude-sonnet-4-6, 2026-03-17)
+### Post-implementation design corrections (claude-sonnet-4-6, 2026-03-17) — round 2
 
 Suite à un audit visuel comparatif avec la maquette, plusieurs corrections ont été apportées :
 
@@ -134,6 +134,12 @@ Suite à un audit visuel comparatif avec la maquette, plusieurs corrections ont 
 **DayAgenda pivot slots** — Différenciation macro/micro : les créneaux 2h pivot passent de `border-color: var(--primary)` (identique au signal période) à `border-top: 2px solid rgba(134,108,208,0.38)` + fond très léger, sans border complète.
 
 **DayAgenda slots** — Même langage glassmorphism que `.period-card` non sélectionné : `backdrop-filter: blur(16px)`, fond blanc-lavande `rgba(252,250,255,0.58)`, `border: 2px solid rgba(200,190,240,0.35)`, `border-radius: 18px`, ombre diffuse `0 2px 12px rgba(134,108,208,0.06)`. Cohérence visuelle entre cartes de période et créneaux d'agenda.
+
+### Post-implementation design corrections (claude-sonnet-4-6, 2026-03-17) — round 3
+
+**agenda-slot__shift-marker repositionné** — L'icône `ArrowRightLeft` des créneaux pivot est désormais extraite du flux interne de la carte et rendue comme enfant direct du `.pivot-corona-wrapper`. Position : `absolute; top: 0; left: 50%; transform: translate(-50%, -50%); z-index: 4` → l'icône chevauche le bord supérieur de la carte et passe au-dessus de la corona (z-index 3) et du contenu (z-index 2). Glassmorphism ajouté : `backdrop-filter: blur(6px)`, fond blanc-lavande `rgba(252,250,255,0.72)`, bordure subtile, `box-shadow` violet + highlight intérieur. `overflow: visible` ajouté sur `.pivot-corona-wrapper` et `.agenda-slot--pivot`.
+
+**PeriodCard — indicateur pivot dans le footer** — L'icône `ArrowRightLeft` qui précède le label « Bascule » est désormais enveloppée dans un `span.period-card__tone-dot.period-card__tone-dot--pivot` (même classe que le dot de tonalité des autres cartes). Modifier `--pivot` : cercle 18×18px, fond `rgba(134,108,208,0.15)`, `color: white` (stroke blanc), anneau `box-shadow` primary. État sélectionné : fond et halo accentués.
 
 ### Completion Notes List
 
