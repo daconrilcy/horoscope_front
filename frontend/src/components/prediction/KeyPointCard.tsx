@@ -19,7 +19,7 @@ export const KeyPointCard: React.FC<KeyPointCardProps> = ({ item }) => {
         <div className="key-point-card__gauge-track">
           <div 
             className="key-point-card__gauge-fill" 
-            style={{ width: `${item.strength}%` }} 
+            style={{ width: `${item.strength ?? 0}%` }}
           />
         </div>
       </div>

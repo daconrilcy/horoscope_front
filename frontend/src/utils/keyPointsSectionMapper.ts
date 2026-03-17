@@ -1,4 +1,4 @@
-import type { DailyPredictionResponse } from '../types/dailyPrediction'
+import type { DailyPredictionResponse, DailyPredictionTurningPoint } from '../types/dailyPrediction'
 import type { Lang } from '../i18n/predictions'
 import type { KeyPointsSectionModel, KeyPointItem } from '../types/keyPointsSection'
 import { humanizeTurningPointSemantic, getCategoryMeta, getPredictionMessage } from './predictionI18n'
@@ -11,7 +11,7 @@ export function buildKeyPointsSectionModel(
   const title = getPredictionMessage('key_points_title', lang)
   
   // Use turning_points if present, otherwise fallback to built moments
-  const sourceMoments = prediction.turning_points.length > 0
+  const sourceMoments: DailyPredictionTurningPoint[] = prediction.turning_points.length > 0
     ? prediction.turning_points.slice(0, 3)
     : buildDailyKeyMoments(
         prediction.meta.date_local,
@@ -28,10 +28,10 @@ export function buildKeyPointsSectionModel(
         primary_driver: null,
         previous_categories: m.previousCategories,
         next_categories: m.nextCategories
-      }))
+      } as DailyPredictionTurningPoint))
 
   const items: KeyPointItem[] = sourceMoments.map((moment) => {
-    const semantic = humanizeTurningPointSemantic(moment as any, lang)
+    const semantic = humanizeTurningPointSemantic(moment, lang)
     const label = semantic.title || semantic.cause || '—'
     
     // Get icon from the first impacted or next category
