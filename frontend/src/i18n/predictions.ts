@@ -113,11 +113,22 @@ export const TURNING_POINT_LABELS: Record<string, Record<Lang, string>> = {
 };
 
 export const DRIVER_TYPE_LABELS: Record<string, Record<Lang, string>> = {
+  // Taxonomy V2
   aspect_exact_to_angle: { fr: "Alignement angulaire exact", en: "Exact angular alignment" },
   aspect_exact_to_luminary: { fr: "Point culminant d'un luminaire", en: "Culmination of a luminary" },
   aspect_exact_to_personal: { fr: "Résonance avec votre thème natal", en: "Resonance with your natal chart" },
-  moon_sign_ingress: { fr: "Changement de signe lunaire", en: "Moon sign change" },
+  aspect_enter_orb: { fr: "Entrée en orbe d'aspect", en: "Aspect orb opening" },
+  aspect_exit_orb: { fr: "Sortie d'orbe d'aspect", en: "Aspect orb closing" },
+  moon_sign_ingress: { fr: "Changement de signe de la Lune", en: "Moon sign change" },
+  asc_sign_change: { fr: "Changement de signe à l'Ascendant", en: "Ascendant sign change" },
   planet_ingress: { fr: "Changement de signe planétaire", en: "Planetary sign change" },
+  planetary_hour_change: { fr: "Changement d'heure planétaire", en: "Planetary hour change" },
+  // Legacy codes
+  exact: { fr: "Aspect exact", en: "Exact aspect" },
+  ingress: { fr: "Changement de signe", en: "Sign ingress" },
+  station: { fr: "Station planétaire", en: "Planetary station" },
+  enter_orb: { fr: "Entrée en orbe", en: "Orb opening" },
+  exit_orb: { fr: "Sortie d'orbe", en: "Orb closing" },
   generic_event: { fr: "Configuration céleste notable", en: "Notable celestial configuration" },
 };
 
