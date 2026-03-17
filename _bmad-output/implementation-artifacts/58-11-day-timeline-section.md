@@ -133,6 +133,8 @@ Suite à un audit visuel comparatif avec la maquette, plusieurs corrections ont 
 
 **DayAgenda pivot slots** — Différenciation macro/micro : les créneaux 2h pivot passent de `border-color: var(--primary)` (identique au signal période) à `border-top: 2px solid rgba(134,108,208,0.38)` + fond très léger, sans border complète.
 
+**DayAgenda slots** — Même langage glassmorphism que `.period-card` non sélectionné : `backdrop-filter: blur(16px)`, fond blanc-lavande `rgba(252,250,255,0.58)`, `border: 2px solid rgba(200,190,240,0.35)`, `border-radius: 18px`, ombre diffuse `0 2px 12px rgba(134,108,208,0.06)`. Cohérence visuelle entre cartes de période et créneaux d'agenda.
+
 ### Completion Notes List
 
 - Section "Moments de la journée" implémentée avec 4 cartes de période.

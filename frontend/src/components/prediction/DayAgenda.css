@@ -27,7 +27,13 @@
   position: relative;
   gap: 0.5rem;
   min-height: 120px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  /* Même langage glassmorphism que .period-card non sélectionné */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(252, 250, 255, 0.58);
+  border: 2px solid rgba(200, 190, 240, 0.35);
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(134, 108, 208, 0.06);
 }
 
 .agenda-slot--pivot {
