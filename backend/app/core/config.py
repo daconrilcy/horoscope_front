@@ -270,6 +270,9 @@ class Settings:
         )
         self.daily_engine_mode = self._parse_daily_engine_mode(os.getenv("DAILY_ENGINE_MODE"))
 
+        # LLM Engine Configuration
+        self.openai_model_default = os.getenv("OPENAI_MODEL_DEFAULT", "gpt-4o-mini").strip()
+
         # V3 Engine Conventions (AC4)
         self.v3_engine_version = os.getenv("V3_ENGINE_VERSION", "v3.0.0-alpha").strip()
         self.v3_snapshot_version = os.getenv("V3_SNAPSHOT_VERSION", "1.0").strip()

@@ -37,6 +37,7 @@ from app.llm_orchestration.services.persona_composer import compose_persona_bloc
 from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
 from app.llm_orchestration.services.prompt_renderer import PromptRenderer
 from app.llm_orchestration.services.repair_prompter import build_repair_prompt
+from app.prompts.catalog import resolve_model
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,7 @@ SYSTEM_CORES = {
 # Stub use cases
 USE_CASE_STUBS = {
     "natal_interpretation": UseCaseConfig(
-        model="gpt-4o-mini",
+        model=settings.openai_model_default,
         temperature=0.7,
         max_output_tokens=4000,
         system_core_key="default_v1",
@@ -70,7 +71,7 @@ USE_CASE_STUBS = {
         required_prompt_placeholders=["birth_date", "chart_json"],
     ),
     "natal_interpretation_short": UseCaseConfig(
-        model="gpt-4o-mini",
+        model=settings.openai_model_default,
         temperature=0.7,
         max_output_tokens=4000,
         system_core_key="default_v1",
@@ -80,7 +81,7 @@ USE_CASE_STUBS = {
         user_question_policy="optional",
     ),
     "chat": UseCaseConfig(
-        model="gpt-4o-mini",
+        model=settings.openai_model_default,
         temperature=0.7,
         max_output_tokens=2000,
         system_core_key="default_v1",
@@ -90,7 +91,7 @@ USE_CASE_STUBS = {
         user_question_policy="required",
     ),
     "chat_astrologer": UseCaseConfig(
-        model="gpt-4o-mini",
+        model=settings.openai_model_default,
         temperature=0.7,
         max_output_tokens=2000,
         system_core_key="default_v1",
@@ -100,7 +101,7 @@ USE_CASE_STUBS = {
         user_question_policy="required",
     ),
     "guidance_daily": UseCaseConfig(
-        model="gpt-4o-mini",
+        model=settings.openai_model_default,
         temperature=0.7,
         max_output_tokens=2000,
         system_core_key="default_v1",
@@ -110,7 +111,7 @@ USE_CASE_STUBS = {
         user_question_policy="optional",
     ),
     "guidance_weekly": UseCaseConfig(
-        model="gpt-4o-mini",
+        model=settings.openai_model_default,
         temperature=0.7,
         max_output_tokens=2000,
         system_core_key="default_v1",
@@ -120,7 +121,7 @@ USE_CASE_STUBS = {
         user_question_policy="none",
     ),
     "guidance_contextual": UseCaseConfig(
-        model="gpt-4o-mini",
+        model=settings.openai_model_default,
         temperature=0.7,
         max_output_tokens=2000,
         system_core_key="default_v1",
@@ -130,7 +131,7 @@ USE_CASE_STUBS = {
         user_question_policy="required",
     ),
     "event_guidance": UseCaseConfig(
-        model="gpt-4o-mini",
+        model=settings.openai_model_default,
         temperature=0.7,
         max_output_tokens=4000,
         system_core_key="default_v1",
@@ -346,21 +347,20 @@ class LLMGateway:
         if not config:
             raise UnknownUseCaseError(f"Use case '{use_case}' not found in registry.")
 
-        # 1.1 Model override from environment
-        safe_uc_key = re.sub(r"[^a-zA-Z0-9_]", "_", use_case).upper()
-        env_override_key = f"LLM_MODEL_OVERRIDE_{safe_uc_key}"
-        env_override_model = os.getenv(env_override_key)
-        if env_override_model:
-            config = config.model_copy(update={"model": env_override_model})
-            config = self._adjust_reasoning_config(config)
+        # 1.1 Centralized model resolution (Story 59.3)
+        # Order: OS Granular > OS Legacy > config.model (DB/Stub) > settings.default
+        resolved_model = resolve_model(use_case, fallback_model=config.model)
+        
+        if resolved_model != config.model:
+            config = config.model_copy(update={"model": resolved_model})
             logger.info(
-                "gateway_model_override use_case=%s model=%s -> %s",
+                "gateway_model_resolved use_case=%s model=%s (override active)",
                 use_case,
-                config.model,
-                env_override_model,
+                resolved_model,
             )
-        else:
-            config = self._adjust_reasoning_config(config)
+
+        # 1.2 Auto-adjust for reasoning models (o1, etc.)
+        config = self._adjust_reasoning_config(config)
 
         return config
 
@@ -769,7 +769,7 @@ class LLMGateway:
             try:
                 result = await self.client.execute(
                     messages=messages,
-                    model=config.model,
+                    model=config.model,  # Story 59.3: Final resolved model from config
                     temperature=config.temperature,
                     max_output_tokens=config.max_output_tokens,
                     timeout_seconds=config.timeout_seconds,

@@ -54,3 +54,27 @@ def test_validate_catalog_vs_db_failure() -> None:
     
     assert "Database use cases missing from Python catalog" in str(exc_info.value)
     assert "non_existent_use_case" in str(exc_info.value)
+
+def test_resolve_model_default(monkeypatch) -> None:
+    """Test that resolve_model returns default when no env is set."""
+    from app.prompts.catalog import resolve_model
+    from app.core.config import settings
+    
+    monkeypatch.delenv("OPENAI_ENGINE_GUIDANCE_DAILY", raising=False)
+    # Default from settings
+    expected = settings.openai_model_default
+    assert resolve_model("guidance_daily") == expected
+
+def test_resolve_model_from_env(monkeypatch) -> None:
+    """Test that resolve_model returns value from env."""
+    from app.prompts.catalog import resolve_model
+    
+    monkeypatch.setenv("OPENAI_ENGINE_GUIDANCE_DAILY", "gpt-4-test")
+    assert resolve_model("guidance_daily") == "gpt-4-test"
+
+def test_resolve_model_unknown_use_case(monkeypatch) -> None:
+    """Test that resolve_model returns default for unknown use case."""
+    from app.prompts.catalog import resolve_model
+    from app.core.config import settings
+    
+    assert resolve_model("unknown_key") == settings.openai_model_default

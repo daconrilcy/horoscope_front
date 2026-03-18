@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.infra.db.models.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
@@ -25,7 +26,7 @@ def seed_llm_registry(db: Session, admin_user_id: str = "system-seed") -> None:
             "key": "natal_interpretation",
             "display_name": "Interprétation du thème natal",
             "description": "Analyse complète du thème natal (Soleil, Lune, Ascendant, Aspects, Maisons)",  # noqa: E501
-            "model": "gpt-4o-mini",
+            "model": settings.openai_model_default,
             "temperature": 0.7,
             "max_output_tokens": 1800,
             "developer_prompt": """Tu es un astrologue expert et bienveillant. Tu vas interpréter le thème natal de l'utilisateur.
@@ -50,7 +51,7 @@ Important:
             "key": "guidance_daily",
             "display_name": "Guidance quotidienne",
             "description": "Conseils astrologiques pour la journée en cours",
-            "model": "gpt-4o-mini",
+            "model": settings.openai_model_default,
             "temperature": 0.7,
             "max_output_tokens": 1000,
             "developer_prompt": """Génère une guidance quotidienne pour {{locale}}.
@@ -64,7 +65,7 @@ Reste focalisé sur des conseils pratiques pour la journée. {{use_case}}""",
             "key": "chat",
             "display_name": "Chat Assistant",
             "description": "Conversation interactive avec l'assistant astrologique",
-            "model": "gpt-4o-mini",
+            "model": settings.openai_model_default,
             "temperature": 0.7,
             "max_output_tokens": 1000,
             "developer_prompt": """Tu es un assistant astrologique expert pour {{locale}}.
