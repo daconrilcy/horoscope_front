@@ -1,6 +1,6 @@
 # Story 60.3 : Séparer clairement le climat global du classement des domaines
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -23,24 +23,24 @@ afin de comprendre le ton général sans avoir à parcourir la liste des domaine
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Créer `PublicDayClimatePolicy` dans `public_projection.py` (AC: 1, 2)
-  - [ ] T1.1 Lire entièrement `backend/app/prediction/public_projection.py` (classes: PublicSummaryPolicy, PublicCategoryPolicy)
-  - [ ] T1.2 Créer classe `PublicDayClimatePolicy` avec méthode `build(engine_output, domain_ranking, decision_windows) -> dict`
-  - [ ] T1.3 `label` : choisir parmi un dictionnaire statique selon `tone + intensity` combinés
-  - [ ] T1.4 `top_domains` : prendre les 2 premiers items de `domain_ranking` (Story 60.1 → keys publics)
-  - [ ] T1.5 `watchout` : dernier domaine si score_10 < 5.0
-  - [ ] T1.6 `best_window_ref` : formatter `start_local` de la meilleure `decision_window`
+- [x] T1 — Créer `PublicDayClimatePolicy` dans `public_projection.py` (AC: 1, 2)
+  - [x] T1.1 Lire entièrement `backend/app/prediction/public_projection.py` (classes: PublicSummaryPolicy, PublicCategoryPolicy)
+  - [x] T1.2 Créer classe `PublicDayClimatePolicy` avec méthode `build(engine_output, domain_ranking, decision_windows) -> dict`
+  - [x] T1.3 `label` : choisir parmi un dictionnaire statique selon `tone + intensity` combinés
+  - [x] T1.4 `top_domains` : prendre les 2 premiers items de `domain_ranking` (Story 60.1 → keys publics)
+  - [x] T1.5 `watchout` : dernier domaine si score_10 < 5.0
+  - [x] T1.6 `best_window_ref` : formatter `start_local` de la meilleure `decision_window`
 
-- [ ] T2 — Dériver `intensity` et `stability` depuis les métriques V3 (AC: 5)
-  - [ ] T2.1 Lire `backend/app/prediction/aggregator.py` — `V3DailyMetrics.intensity_day`, `V3DailyMetrics.stability_day`
-  - [ ] T2.2 `intensity = round(avg_intensity_day / 2, 1)` — normalise [0-20] → [0-10]
-  - [ ] T2.3 `stability = round(avg_stability_day / 2, 1)` — idem
-  - [ ] T2.4 Si métriques V3 absentes → fallback depuis `summary.overall_tone` avec valeurs nominales
+- [x] T2 — Dériver `intensity` et `stability` depuis les métriques V3 (AC: 5)
+  - [x] T2.1 Lire `backend/app/prediction/aggregator.py` — `V3DailyMetrics.intensity_day`, `V3DailyMetrics.stability_day`
+  - [x] T2.2 `intensity = round(avg_intensity_day / 2, 1)` — normalise [0-20] → [0-10]
+  - [x] T2.3 `stability = round(avg_stability_day / 2, 1)` — idem
+  - [x] T2.4 Si métriques V3 absentes → fallback depuis `summary.overall_tone` avec valeurs nominales
 
-- [ ] T3 — Dictionnaire de labels (AC: 3)
-  - [ ] T3.1 Créer `CLIMATE_LABELS: dict[(tone, intensity_bucket), str]` dans `public_domain_taxonomy.py` ou nouveau fichier `public_label_catalog.py`
-  - [ ] T3.2 `intensity_bucket` : "low" (0–3.9), "medium" (4.0–6.9), "high" (7.0–10.0)
-  - [ ] T3.3 Exemples de labels (à compléter exhaustivement) :
+- [x] T3 — Dictionnaire de labels (AC: 3)
+  - [x] T3.1 Créer `CLIMATE_LABELS: dict[(tone, intensity_bucket), str]` dans `public_domain_taxonomy.py` ou nouveau fichier `public_label_catalog.py`
+  - [x] T3.2 `intensity_bucket` : "low" (0–3.9), "medium" (4.0–6.9), "high" (7.0–10.0)
+  - [x] T3.3 Exemples de labels (à compléter exhaustivement) :
     - (positive, high) → "Journée de forte progression"
     - (positive, medium) → "Élan favorable"
     - (positive, low) → "Douceur portante"
@@ -49,20 +49,20 @@ afin de comprendre le ton général sans avoir à parcourir la liste des domaine
     - (negative, high) → "Journée exigeante"
     - Fallback → "Journée en cours"
 
-- [ ] T4 — Intégrer dans `PublicPredictionAssembler.assemble()` (AC: 1, 9)
-  - [ ] T4.1 Appeler `PublicDayClimatePolicy.build()` après `PublicCategoryPolicy` et `PublicDecisionWindowPolicy`
-  - [ ] T4.2 Ajouter `day_climate: dict` dans le dict de retour de `assemble()`
-  - [ ] T4.3 Ne pas supprimer `summary` existant
+- [x] T4 — Intégrer dans `PublicPredictionAssembler.assemble()` (AC: 1, 9)
+  - [x] T4.1 Appeler `PublicDayClimatePolicy.build()` après `PublicCategoryPolicy` et `PublicDecisionWindowPolicy`
+  - [x] T4.2 Ajouter `day_climate: dict` dans le dict de retour de `assemble()`
+  - [x] T4.3 Ne pas supprimer `summary` existant
 
-- [ ] T5 — Mettre à jour le DTO Pydantic (AC: 1)
-  - [ ] T5.1 Créer `DailyPredictionDayClimate(BaseModel)` dans `predictions.py`
-  - [ ] T5.2 Ajouter `day_climate: DailyPredictionDayClimate | None = None` dans `DailyPredictionResponse`
+- [x] T5 — Mettre à jour le DTO Pydantic (AC: 1)
+  - [x] T5.1 Créer `DailyPredictionDayClimate(BaseModel)` dans `predictions.py`
+  - [x] T5.2 Ajouter `day_climate: DailyPredictionDayClimate | None = None` dans `DailyPredictionResponse`
 
-- [ ] T6 — Tests (AC: 10)
-  - [ ] T6.1 Test : `build()` retourne un `day_climate` avec tous les champs requis
-  - [ ] T6.2 Test : `top_domains` ≤ 2 items
-  - [ ] T6.3 Test : `watchout = None` si tous les scores > 5.0
-  - [ ] T6.4 Test : `watchout` renseigné si domaine public score_10 < 5.0
+- [x] T6 — Tests (AC: 10)
+  - [x] T6.1 Test : `build()` retourne un `day_climate` avec tous les champs requis
+  - [x] T6.2 Test : `top_domains` ≤ 2 items
+  - [x] T6.3 Test : `watchout = None` si tous les scores > 5.0
+  - [x] T6.4 Test : `watchout` renseigné si domaine public score_10 < 5.0
 
 ## Dev Notes
 
@@ -105,3 +105,8 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+- `backend/app/prediction/public_label_catalog.py` (NEW)
+- `backend/app/prediction/public_projection.py` (MOD)
+- `backend/app/api/v1/routers/predictions.py` (MOD)
+- `backend/tests/unit/prediction/test_public_day_climate.py` (NEW)

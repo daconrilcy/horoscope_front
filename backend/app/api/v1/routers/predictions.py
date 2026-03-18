@@ -123,9 +123,21 @@ class DailyPredictionMicroTrend(BaseModel):
     wording: str
 
 
+class DailyPredictionDayClimate(BaseModel):
+    label: str
+    tone: str
+    intensity: float
+    stability: float
+    summary: str
+    top_domains: list[str]
+    watchout: str | None = None
+    best_window_ref: str | None = None
+
+
 class DailyPredictionResponse(BaseModel):
     meta: DailyPredictionMeta
     summary: DailyPredictionSummary
+    day_climate: DailyPredictionDayClimate | None = None
     categories: list[DailyPredictionCategory]
     categories_internal: list[DailyPredictionCategory] | None = None
     domain_ranking: list[DailyPredictionPublicDomainScore] | None = None

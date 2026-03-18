@@ -11,6 +11,7 @@ from app.prediction.public_domain_taxonomy import (
     PUBLIC_DOMAINS,
     aggregate_public_domain_score,
 )
+from app.prediction.public_label_catalog import get_climate_label
 from app.prediction.public_score_mapper import (
     PublicDomainScore,
     rank_domains,
@@ -105,6 +106,14 @@ class PublicPredictionAssembler:
             evidence=evidence,
         )
 
+        # New: Day Climate (V4)
+        day_climate = PublicDayClimatePolicy().build(
+            snapshot,
+            domain_ranking=public_domains,
+            decision_windows=decision_windows,
+            evidence=evidence,
+        )
+
         # 7. Meta
         house_system_effective = snapshot.house_system_effective
         if house_system_effective is None and engine_output is not None:
@@ -131,9 +140,10 @@ class PublicPredictionAssembler:
         return {
             "meta": meta,
             "summary": summary,
+            "day_climate": day_climate,
             "categories": internal_categories,  # Keep for retrocompat
             "categories_internal": internal_categories,
-            "public_domains": public_domains,
+            "domain_ranking": public_domains,
             "timeline": timeline,
             "turning_points": turning_points,
             "decision_windows": decision_windows,
@@ -159,6 +169,118 @@ class PublicPredictionAssembler:
                 return _deserialize_evidence_pack(evidence)
 
         return None
+
+
+class PublicDayClimatePolicy:
+    """
+    Builds the hero climate summary for the day (Story 60.3).
+    Separates global climate narration from domain ranking.
+    """
+
+    def build(
+        self,
+        snapshot: PersistedPredictionSnapshot,
+        domain_ranking: list[dict[str, Any]],
+        decision_windows: list[dict[str, Any]] | None,
+        evidence: V3EvidencePack | None = None,
+    ) -> dict[str, Any]:
+        # 1. Resolve Tone
+        tone = snapshot.overall_tone or "neutral"
+        if evidence:
+            tone = (
+                evidence.day_profile.get("overall_tone")
+                or evidence.day_profile.get("tone")
+                or tone
+            )
+
+        # 2. Resolve Intensity & Stability (normalized 0-10)
+        intensity = 5.0  # nominal
+        stability = 5.0  # nominal
+
+        if evidence and evidence.themes:
+            # Try to get from day_profile
+            avg_i = evidence.day_profile.get("avg_intensity") or evidence.day_profile.get(
+                "intensity"
+            )
+            avg_s = evidence.day_profile.get("avg_stability") or evidence.day_profile.get(
+                "stability"
+            )
+
+            if avg_i is None:
+                avg_i = sum(t.intensity for t in evidence.themes.values()) / len(evidence.themes)
+            if avg_s is None:
+                avg_s = sum(t.stability for t in evidence.themes.values()) / len(evidence.themes)
+
+            intensity = round(avg_i / 2.0, 1)
+            stability = round(avg_s / 2.0, 1)
+        else:
+            # Fallback values based on tone if no V3 evidence
+            tone_map = {
+                "positive": (6.5, 7.5),
+                "mixed": (7.0, 4.0),
+                "neutral": (4.0, 8.0),
+                "negative": (7.5, 3.5),
+            }
+            intensity, stability = tone_map.get(tone, (5.0, 5.0))
+
+        # 3. Label from catalog
+        label = get_climate_label(tone, intensity)
+
+        # 4. Top Domains (max 2 keys)
+        top_domains = [d["key"] for d in domain_ranking[:2]]
+
+        # 5. Watchout (last domain if score < 5.0)
+        watchout = None
+        if domain_ranking:
+            last = domain_ranking[-1]
+            if last["score_10"] < 5.0:
+                watchout = last["key"]
+
+        # 6. Best window reference
+        best_window_ref = None
+        if decision_windows:
+            # Filter for favorable windows
+            fav = [w for w in decision_windows if w["window_type"] == "favorable"]
+            if fav:
+                # Sort by score then confidence
+                fav.sort(key=lambda w: (w["score"], w["confidence"]), reverse=True)
+                best = fav[0]
+                start = datetime.fromisoformat(best["start_local"])
+                end = datetime.fromisoformat(best["end_local"])
+                best_window_ref = f"{start.strftime('%H:%M')}–{end.strftime('%H:%M')}"
+
+        # 7. Short synthetic summary
+        summary = self._build_short_summary(tone, top_domains, label)
+
+        return {
+            "label": label,
+            "tone": tone,
+            "intensity": intensity,
+            "stability": stability,
+            "summary": summary,
+            "top_domains": top_domains,
+            "watchout": watchout,
+            "best_window_ref": best_window_ref,
+        }
+
+    def _build_short_summary(self, tone: str, top_domains: list[str], label: str) -> str:
+        if not top_domains:
+            return f"{label}."
+
+        # Map keys to readable names (FR)
+        from app.prediction.public_domain_taxonomy import PUBLIC_DOMAINS
+
+        names = [PUBLIC_DOMAINS[k].label_fr.lower() for k in top_domains if k in PUBLIC_DOMAINS]
+        joined_names = " et ".join(names)
+
+        if tone == "positive":
+            return f"{label} avec un bel accent sur {joined_names}."
+        if tone == "mixed":
+            return f"{label}, contrastant entre {joined_names}."
+        if tone == "negative":
+            return f"{label}, vigilance requise sur {joined_names}."
+
+        return f"{label}, focus sur {joined_names}."
 
 
 class PublicDomainRankingPolicy:
