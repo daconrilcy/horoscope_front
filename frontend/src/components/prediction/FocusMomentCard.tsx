@@ -1,5 +1,5 @@
 import React from 'react'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, ArrowRight } from 'lucide-react'
 import type { FocusMomentCardModel } from '../../types/detailScores'
 import { CategoryIcon } from './CategoryIcon'
 import './FocusMomentCard.css'
@@ -39,6 +39,7 @@ export const FocusMomentCard: React.FC<FocusMomentCardProps> = ({ model }) => {
       <footer className="focus-moment-card__footer">
         <button type="button" className="focus-moment-card__cta">
           {model.ctaLabel}
+          <ArrowRight size={15} strokeWidth={3} className="focus-moment-card__cta-arrow" aria-hidden="true" />
         </button>
       </footer>
     </article>
