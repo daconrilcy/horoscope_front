@@ -73,13 +73,18 @@ export function buildFocusMomentCardModel(
   const slotEndIso = `${prediction.meta.date_local}T${String(endHour).padStart(2, '0')}:00:00`
   const matchingTP = prediction.turning_points.find(tp => tp.occurred_at_local >= slotStartIso && tp.occurred_at_local < slotEndIso)
 
-  let description = matchingBlock?.summary || getPredictionMessage('no_detail_available', lang)
-  let title = matchingBlock?.tone_code ? getToneLabel(matchingBlock.tone_code, lang) : getPredictionMessage('focus_moment_default_title', lang)
+  // Titre : summary narratif du TP ou du bloc timeline ("Le relief du moment s'apaise")
+  // Description : explication sémantique de la transition, ou summary en fallback
+  const narrativeSummary = matchingTP?.summary || matchingBlock?.summary || null
+
+  let title = narrativeSummary || getPredictionMessage('focus_moment_default_title', lang)
+  let description = getPredictionMessage('no_detail_available', lang)
 
   if (matchingTP) {
     const semantic = humanizeTurningPointSemantic(matchingTP, lang)
-    description = semantic.transition || semantic.implication || description
-    title = semantic.cause || semantic.title || title
+    description = semantic.transition || semantic.implication || matchingBlock?.summary || getPredictionMessage('no_detail_available', lang)
+  } else if (matchingBlock?.summary) {
+    description = matchingBlock.summary
   }
 
   return {

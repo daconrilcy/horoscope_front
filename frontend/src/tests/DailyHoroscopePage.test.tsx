@@ -186,7 +186,7 @@ const predictionTechnical = {
     main_turning_point: {
       occurred_at_local: "2026-03-08T07:30:00",
       severity: 0.8,
-      summary: "delta_note",
+      summary: null,
     },
   },
   categories: [
@@ -256,7 +256,7 @@ const predictionTechnical = {
     {
       occurred_at_local: "2026-03-08T07:30:00+01:00",
       severity: 0.8,
-      summary: "delta_note",
+      summary: null,
       drivers: [
         {
           event_type: "exact",
