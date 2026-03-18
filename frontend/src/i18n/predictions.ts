@@ -188,7 +188,14 @@ export const PREDICTION_UI_MESSAGES: Record<
   | "domains_title"
   | "advice_title"
   | "advice_cta"
-  | "day_mood_label",
+  | "day_mood_label"
+  | "see_details_cta"
+  | "no_detail_available"
+  | "focus_moment_default_title"
+  | "optimize_day_cta"
+  | "daily_advice_title"
+  | "daily_advice_placeholder"
+  | "daily_advice_emphasis_placeholder",
   Record<Lang, string>
 > = {
   loading: { fr: "Chargement de votre ciel du jour...", en: "Loading your forecast for today..." },

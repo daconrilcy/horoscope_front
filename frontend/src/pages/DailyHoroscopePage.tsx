@@ -1,86 +1,34 @@
 import { useNavigate } from 'react-router-dom'
 import { PageLayout } from '../layouts'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { RefreshCw } from 'lucide-react'
 
 import { TodayHeader } from '../components/TodayHeader'
-import { HeroSummaryCard } from '../components/prediction/HeroSummaryCard'
-import { KeyPointsSection } from '../components/prediction/KeyPointsSection'
-import { DayTimelineSection } from '../components/prediction/DayTimelineSection'
-import { DetailAndScoresSection } from '../components/prediction/DetailAndScoresSection'
+import { DayClimateHero } from '../components/DayClimateHero'
+import { DomainRankingCard } from '../components/DomainRankingCard'
+import { DayTimelineSectionV4 } from '../components/prediction/DayTimelineSectionV4'
+import { TurningPointCard } from '../components/TurningPointCard'
+import { BestWindowCard } from '../components/BestWindowCard'
 import { DailyAdviceCard } from '../components/prediction/DailyAdviceCard'
+import { AstroFoundationSection } from '../components/AstroFoundationSection'
 import { DailyPageHeader } from '../components/prediction/DailyPageHeader'
-import type { DailyPredictionTurningPoint } from '../types/dailyPrediction'
-import type { DayPeriodKey } from '../types/dayTimeline'
 
 import { detectLang } from '../i18n/astrology'
-import { buildDailyAgendaSlots, buildDailyKeyMoments } from '../utils/dailyAstrology'
-import { getPredictionMessage, getCategoryLabel } from '../utils/predictionI18n'
-import { getLocale } from '../utils/locale'
+import { getPredictionMessage } from '../utils/predictionI18n'
 import { useAccessTokenSnapshot } from '../utils/authToken'
 import { useAuthMe } from '../api/authMe'
 import { useDailyPrediction } from '../api/useDailyPrediction'
 import { trackEvent, EVENTS } from '../utils/analytics'
-import { useDashboardAstroSummary } from '../components/dashboard/useDashboardAstroSummary'
 import { SectionErrorBoundary } from '../components/ErrorBoundary'
-import { buildHeroSummaryCardModel } from '../utils/heroSummaryCardMapper'
-import { buildKeyPointsSectionModel } from '../utils/keyPointsSectionMapper'
-import { buildDayTimelineSectionModel } from '../utils/dayTimelineSectionMapper'
+
+import { mapDayClimate } from '../utils/dayClimateHeroMapper'
+import { mapDomainRanking } from '../utils/domainRankingCardMapper'
+import { mapTurningPoint } from '../utils/turningPointCardMapper'
+import { mapBestWindow } from '../utils/bestWindowCardMapper'
+import { mapAstroFoundation } from '../utils/astroFoundationSectionMapper'
 import { buildDailyAdviceCardModel } from '../utils/dailyAdviceCardMapper'
+
 import './DailyHoroscopePage.css'
-
-function parseLocalMinute(iso: string): number | null {
-  const match = iso.match(/T(\d{2}):(\d{2})/)
-  if (!match) {
-    return null
-  }
-
-  return Number(match[1]) * 60 + Number(match[2])
-}
-
-function categoriesEqual(left: string[], right: string[]): boolean {
-  return left.length === right.length && left.every((category, index) => category === right[index])
-}
-
-function isSubset(subset: string[], superset: string[]): boolean {
-  return subset.every((category) => superset.includes(category))
-}
-
-function deriveChangeType(previousCategories: string[], nextCategories: string[]): string | undefined {
-  if (previousCategories.length === 0 && nextCategories.length > 0) {
-    return 'emergence'
-  }
-
-  if (previousCategories.length > 0 && nextCategories.length === 0) {
-    return 'attenuation'
-  }
-
-  if (categoriesEqual(previousCategories, nextCategories)) {
-    return undefined
-  }
-
-  if (
-    previousCategories.length > 0 &&
-    nextCategories.length > previousCategories.length &&
-    isSubset(previousCategories, nextCategories)
-  ) {
-    return 'emergence'
-  }
-
-  if (
-    nextCategories.length > 0 &&
-    previousCategories.length > nextCategories.length &&
-    isSubset(nextCategories, previousCategories)
-  ) {
-    return 'attenuation'
-  }
-
-  return 'recomposition'
-}
-
-function formatTime(iso: string, locale: string) {
-  return new Date(iso).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
-}
 
 export function DailyHoroscopePage() {
   const navigate = useNavigate()
@@ -90,9 +38,7 @@ export function DailyHoroscopePage() {
   const manualRefreshPending = useRef(false)
   const bootstrapPredictionRefetchDoneForToken = useRef<string | null>(null)
 
-  const [selectedPeriod, setSelectedPeriod] = useState<DayPeriodKey | null>(null)
-
-  const { data: user, isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useAuthMe(accessToken)
+  const { isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useAuthMe(accessToken)
 
   const { 
     data: prediction, 
@@ -100,8 +46,6 @@ export function DailyHoroscopePage() {
     isError: isPredictionError,
     refetch: refetchPrediction
   } = useDailyPrediction(accessToken)
-
-  const { sign, dayScore } = useDashboardAstroSummary(accessToken)
 
   useEffect(() => {
     if (prediction) {
@@ -147,110 +91,6 @@ export function DailyHoroscopePage() {
     refetchPrediction()
   }
 
-  const handleCategoryClick = (categoryCode: string) => {
-    trackEvent(EVENTS.CATEGORY_CLICKED, { category_code: categoryCode })
-  }
-
-  const handleTurningPointClick = (severity: number) => {
-    const severityCode = severity > 0.75 ? 'critical' : severity > 0.5 ? 'high' : severity > 0.25 ? 'medium' : 'low'
-    trackEvent(EVENTS.TURNING_POINT_OPENED, { severity: severityCode })
-  }
-
-  const normalizedApiMoments: DailyPredictionTurningPoint[] = prediction
-    ? prediction.turning_points.map((moment) => {
-        const occurredMinute = parseLocalMinute(moment.occurred_at_local)
-        const timelineBlocks = prediction.timeline
-        const currentIndex = occurredMinute === null
-          ? -1
-          : timelineBlocks.findIndex((block) => {
-              const startMinute = parseLocalMinute(block.start_local)
-              const endMinute = parseLocalMinute(block.end_local)
-              if (startMinute === null || endMinute === null) {
-                return false
-              }
-
-              return occurredMinute >= startMinute && occurredMinute < endMinute
-            })
-
-        const previousCategories =
-          moment.previous_categories && moment.previous_categories.length > 0
-            ? moment.previous_categories
-            : currentIndex > 0
-              ? timelineBlocks[currentIndex - 1].dominant_categories
-              : []
-
-        const nextCategories =
-          moment.next_categories && moment.next_categories.length > 0
-            ? moment.next_categories
-            : currentIndex >= 0
-              ? timelineBlocks[currentIndex].dominant_categories
-              : []
-
-        const impactedCategories =
-          moment.impacted_categories && moment.impacted_categories.length > 0
-            ? moment.impacted_categories
-            : nextCategories.length > 0
-              ? nextCategories
-              : previousCategories
-
-        const inferredNextCategories =
-          !moment.next_categories?.length &&
-          categoriesEqual(previousCategories, nextCategories) &&
-          impactedCategories.length > 0 &&
-          !categoriesEqual(previousCategories, impactedCategories)
-            ? impactedCategories
-            : nextCategories
-
-        const resolvedChangeType = moment.change_type || deriveChangeType(previousCategories, inferredNextCategories)
-        const hasResolvedTransition = !!resolvedChangeType
-
-        return {
-          ...moment,
-          impacted_categories: impactedCategories,
-          previous_categories: hasResolvedTransition ? previousCategories : moment.previous_categories,
-          next_categories: hasResolvedTransition ? inferredNextCategories : moment.next_categories,
-          change_type: resolvedChangeType,
-        }
-      })
-    : []
-
-  const normalizedFallbackMoments: DailyPredictionTurningPoint[] = prediction
-    ? buildDailyKeyMoments(
-        prediction.meta.date_local,
-        prediction.decision_windows,
-        prediction.timeline,
-        prediction.categories,
-      ).map((moment) => ({
-        occurred_at_local: moment.occurredAtLocal,
-        severity: 0.5,
-        summary: null,
-        drivers: [],
-        impacted_categories: moment.impactedCategories,
-        previous_categories: moment.previousCategories,
-        next_categories: moment.nextCategories,
-        change_type: deriveChangeType(moment.previousCategories, moment.nextCategories) || 'recomposition',
-        primary_driver: null,
-      }))
-    : []
-
-  const keyMoments = prediction
-    ? (prediction.turning_points?.length > 0 
-        ? normalizedApiMoments 
-        : normalizedFallbackMoments)
-    : []
-
-  const agendaSlots = prediction
-    ? buildDailyAgendaSlots(
-        prediction.meta.date_local,
-        prediction.decision_windows,
-        prediction.timeline,
-        prediction.categories,
-        keyMoments.map((moment) => ({ occurred_at_local: moment.occurred_at_local })),
-      )
-    : []
-
-  const locale = getLocale(lang)
-
   return (
     <PageLayout
       header={
@@ -275,7 +115,7 @@ export function DailyHoroscopePage() {
           {/* Zone 1 : DailyPageHeader éditorial */}
           <DailyPageHeader
             date={prediction.meta.date_local}
-            tone={prediction.summary.overall_tone}
+            tone={prediction.day_climate?.tone || prediction.summary.overall_tone}
             lang={lang}
           />
 
@@ -291,67 +131,48 @@ export function DailyHoroscopePage() {
             </button>
           </div>
 
-          {/* Zone 2 : HeroSummaryCard */}
+          {/* Zone 2 : DayClimateHero (V4) */}
           <SectionErrorBoundary onRetry={handleRefresh}>
-            <HeroSummaryCard
-              model={buildHeroSummaryCardModel(
-                prediction,
-                sign,
-                user?.id ? String(user.id) : 'anonymous',
-                dayScore,
-                lang
-              )}
-              lang={lang}
-            />
+            {(() => {
+              const climate = mapDayClimate(prediction);
+              return climate ? <DayClimateHero climate={climate} lang={lang} /> : null;
+            })()}
           </SectionErrorBoundary>
 
-          {/* Zone 3 : KeyPointsSection — 3 premiers turning points */}
-          <KeyPointsSection model={buildKeyPointsSectionModel(prediction, lang)} />
+          {/* Zone 3 : DomainRankingCard (V4) */}
+          <DomainRankingCard 
+            domains={mapDomainRanking(prediction)} 
+            lang={lang} 
+          />
 
-          {/* Zone 4 : DayTimelineSection */}
-          {agendaSlots.length > 0 && (
-            <DayTimelineSection
-              model={buildDayTimelineSectionModel(prediction, lang)}
-              lang={lang}
-              agendaSlots={agendaSlots}
-              selectedPeriod={selectedPeriod}
-              onPeriodChange={setSelectedPeriod}
+          {/* Zone 4 : DayTimelineSectionV4 (V4) */}
+          {prediction.time_windows && (
+            <DayTimelineSectionV4 
+              timeWindows={prediction.time_windows} 
+              lang={lang} 
             />
           )}
 
-          {/* Zone 5 : DetailAndScoresSection (2 col sur ≥768px) */}
-          <DetailAndScoresSection
-            selectedPeriodKey={selectedPeriod}
-            agendaSlots={agendaSlots}
-            prediction={prediction}
-            lang={lang}
-            keyMoments={keyMoments}
+          {/* Zone 5 : TurningPointCard (V4) */}
+          <TurningPointCard 
+            turningPoint={mapTurningPoint(prediction)} 
+            lang={lang} 
           />
 
-          {/* Zone 6 : DailyAdviceCard — Conseil du jour */}
+          {/* Zone 6 : BestWindowCard (V4) */}
+          <BestWindowCard 
+            bestWindow={mapBestWindow(prediction)} 
+            lang={lang} 
+          />
+
+          {/* Zone 7 : DailyAdviceCard — Conseil du jour */}
           <DailyAdviceCard model={buildDailyAdviceCardModel(prediction, lang)} />
 
-          {/* Zone 7 : AdviceCard + CTA */}
-          {prediction.summary.best_window && (
-            <section className="daily-layout__section daily-layout__advice">
-              <div className="panel daily-layout__advice-card">
-                <h3 className="daily-layout__advice-title">
-                  {getPredictionMessage('advice_title', lang)}
-                </h3>
-                <p className="daily-layout__advice-text">
-                  {getPredictionMessage('best_window', lang)} ({getCategoryLabel(prediction.summary.best_window.dominant_category, lang)}) :{' '}
-                  {formatTime(prediction.summary.best_window.start_local, locale)} –{' '}
-                  {formatTime(prediction.summary.best_window.end_local, locale)}
-                </p>
-                <a
-                  href="#key-points"
-                  className="daily-layout__advice-cta"
-                >
-                  {getPredictionMessage('advice_cta', lang)}
-                </a>
-              </div>
-            </section>
-          )}
+          {/* Zone 8 : AstroFoundationSection (V4) */}
+          <AstroFoundationSection 
+            foundation={mapAstroFoundation(prediction)} 
+            lang={lang} 
+          />
 
           {/* BottomSpacer */}
           <div className="daily-layout__bottom-spacer" />

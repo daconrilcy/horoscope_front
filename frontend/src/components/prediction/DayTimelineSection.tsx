@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import type { DayTimelineSectionModel, DayPeriodKey } from '../../types/dayTimeline'
 import type { Lang } from '../../i18n/predictions'
 import type { DailyAgendaSlot } from '../../utils/dailyAstrology'

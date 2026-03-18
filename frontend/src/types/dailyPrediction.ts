@@ -106,13 +106,108 @@ export interface DailyPredictionDecisionWindow {
   dominant_categories: string[];
 }
 
+export interface DailyPredictionDayClimate {
+  label: string;
+  tone: string;
+  intensity: number;
+  stability: number;
+  summary: string;
+  top_domains: string[];
+  watchout: string | null;
+  best_window_ref: string | null;
+}
+
+export interface DailyPredictionPublicDomainScore {
+  key: string;
+  label: string;
+  internal_codes: string[];
+  display_order: number;
+  score_10: number;
+  level: string;
+  rank: number;
+  note_20_internal: number;
+  signal_label: string | null;
+}
+
+export interface DailyPredictionTimeWindow {
+  time_range: string;
+  label: string;
+  regime: string;
+  top_domains: string[];
+  action_hint: string;
+}
+
+export interface DailyPredictionTurningPointPublic {
+  time: string;
+  title: string;
+  change_type: string;
+  affected_domains: string[];
+  what_changes: string;
+  do: string;
+  avoid: string;
+}
+
+export interface DailyPredictionBestWindow {
+  time_range: string;
+  label: string;
+  why: string;
+  recommended_actions: string[];
+  is_pivot?: boolean;
+}
+
+export interface AstroKeyMovement {
+  planet: string;
+  event_type: string;
+  target: string | null;
+  orb_deg: number | null;
+  effect_label: string;
+}
+
+export interface AstroActivatedHouse {
+  house_number: number;
+  house_label: string;
+  domain_label: string;
+}
+
+export interface AstroDominantAspect {
+  aspect_type: string;
+  planet_a: string;
+  planet_b: string | null;
+  tonality: string;
+  effect_label: string;
+}
+
+export interface DailyPredictionAstroFoundation {
+  headline: string;
+  key_movements: AstroKeyMovement[];
+  activated_houses: AstroActivatedHouse[];
+  dominant_aspects: AstroDominantAspect[];
+  interpretation_bridge: string;
+}
+
+export interface DailyPredictionMicroTrend {
+  category_code: string;
+  z_score: number | null;
+  percentile: number;
+  rank: number;
+  wording: string;
+}
+
 export interface DailyPredictionResponse {
   meta: DailyPredictionMeta;
   summary: DailyPredictionSummary;
+  day_climate?: DailyPredictionDayClimate;
+  domain_ranking?: DailyPredictionPublicDomainScore[];
+  time_windows?: DailyPredictionTimeWindow[];
+  turning_point?: DailyPredictionTurningPointPublic;
+  best_window?: DailyPredictionBestWindow;
+  astro_foundation?: DailyPredictionAstroFoundation;
   categories: DailyPredictionCategory[];
+  categories_internal?: DailyPredictionCategory[];
   timeline: DailyPredictionTimeBlock[];
   turning_points: DailyPredictionTurningPoint[];
   decision_windows?: DailyPredictionDecisionWindow[] | null;
+  micro_trends?: DailyPredictionMicroTrend[];
 }
 
 export interface DailyHistoryItem {

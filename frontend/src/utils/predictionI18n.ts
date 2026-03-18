@@ -119,6 +119,10 @@ export function getCategoryLabel(code: string, lang: Lang): string {
   return getLabel(CATEGORY_LABELS, code, lang);
 }
 
+export function getCategoryIcon(code: string): string {
+  return CATEGORY_ICONS[code] || "✨";
+}
+
 export function getNoteBand(note: number, lang: Lang) {
   const bandKey = note <= 5 ? "fragile" : note <= 9 ? "tendu" : note <= 12 ? "neutre" : note <= 16 ? "porteur" : "très favorable";
   
