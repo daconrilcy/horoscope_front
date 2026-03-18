@@ -68,18 +68,27 @@ export function buildFocusMomentCardModel(
   // On cherche le bloc de timeline correspondant à ce slot pour avoir le summary
   const slotStartIso = `${prediction.meta.date_local}T${String(startHour).padStart(2, '0')}:00:00`
   const matchingBlock = prediction.timeline.find(b => b.start_local <= slotStartIso && b.end_local > slotStartIso)
-  
-  // On cherche aussi s'il y a un turning point dans ce créneau de 2h
-  const slotEndIso = `${prediction.meta.date_local}T${String(endHour).padStart(2, '0')}:00:00`
-  const matchingTP = prediction.turning_points.find(tp => tp.occurred_at_local >= slotStartIso && tp.occurred_at_local < slotEndIso)
+
+  // TP pertinent : cherche dans la période sélectionnée, sinon prend le premier du jour
+  // (même logique que keyPointsSectionMapper — non contraint au slot de 2h)
+  let relevantTP = prediction.turning_points[0] as typeof prediction.turning_points[number] | undefined
+  if (selectedPeriodKey) {
+    const [pStart, pEnd] = PERIOD_SLOT_RANGES[selectedPeriodKey]
+    const pStartIso = `${prediction.meta.date_local}T${String(pStart * 2).padStart(2, '0')}:00:00`
+    const pEndIso   = `${prediction.meta.date_local}T${String(pEnd   * 2).padStart(2, '0')}:00:00`
+    const periodTP = prediction.turning_points.find(
+      tp => tp.occurred_at_local >= pStartIso && tp.occurred_at_local < pEndIso
+    )
+    relevantTP = periodTP ?? prediction.turning_points[0]
+  }
 
   // Titre : même source que key-point-card__label (semantic.cause || semantic.title)
   // Description : explication sémantique de la transition, ou summary en fallback
   let title = getPredictionMessage('focus_moment_default_title', lang)
   let description = getPredictionMessage('no_detail_available', lang)
 
-  if (matchingTP) {
-    const semantic = humanizeTurningPointSemantic(matchingTP, lang)
+  if (relevantTP) {
+    const semantic = humanizeTurningPointSemantic(relevantTP, lang)
     title = semantic.cause || semantic.title || title
     description = semantic.transition || semantic.implication || matchingBlock?.summary || getPredictionMessage('no_detail_available', lang)
   } else if (matchingBlock?.summary) {
