@@ -42,11 +42,13 @@ export const DailyDomainsCard: React.FC<DailyDomainsCardProps> = ({ model, lang 
         ))}
       </div>
 
-      <div className="daily-domains-card__secondary-list">
-        {model.secondaryDomains.map(domain => (
-          <DomainItem key={domain.code} domain={domain} isPrimary={false} lang={lang} />
-        ))}
-      </div>
+      {model.secondaryDomains.length > 0 && (
+        <div className="daily-domains-card__secondary-list">
+          {model.secondaryDomains.map(domain => (
+            <DomainItem key={domain.code} domain={domain} isPrimary={false} lang={lang} />
+          ))}
+        </div>
+      )}
 
       <footer className="daily-domains-card__footer">
         <button type="button" className="daily-domains-card__cta">
