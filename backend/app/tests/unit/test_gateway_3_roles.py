@@ -74,6 +74,7 @@ async def test_chart_json_in_user_message_not_developer(db_session: Session):
         context={"locale": "fr", "use_case": use_case, "chart_json": chart_data},
         request_id="test-req",
         trace_id="test-trace",
+        user_id=1,
         db=db_session,
     )
 
@@ -130,6 +131,7 @@ async def test_chart_json_still_in_user_when_placeholder_required_but_absent_in_
         context={"locale": "fr", "use_case": use_case, "chart_json": chart_data},
         request_id="test-req",
         trace_id="test-trace",
+        user_id=1,
         db=db_session,
     )
 

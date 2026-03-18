@@ -37,6 +37,7 @@ async def test_gateway_composes_4_layers():
         context={"chart_json": '{"sun": "Aries"}', "persona_id": "p-123"},
         request_id="req-123",
         trace_id="trace-456",
+        user_id=1,
     )
 
     # Assert
@@ -95,6 +96,7 @@ async def test_gateway_context_overrides_user_input():
         context={"situation": "overridden_situation"},
         request_id="req-1",
         trace_id="trace-1",
+        user_id=1,
     )
 
     # Assert
@@ -132,6 +134,7 @@ async def test_gateway_filters_extra_variables():
         context={},
         request_id="req-1",
         trace_id="trace-1",
+        user_id=1,
     )
 
     # Assert

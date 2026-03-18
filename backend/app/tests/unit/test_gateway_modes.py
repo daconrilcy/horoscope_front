@@ -71,6 +71,7 @@ async def test_structured_mode_no_question(db_session):
         {"locale": "fr", "use_case": "test_none"},
         "r",
         "t",
+        user_id=1,
         db=db_session,
     )
 
@@ -114,6 +115,7 @@ async def test_structured_mode_optional_question(db_session):
         {"locale": "fr", "use_case": "test_opt"},
         "r1",
         "t",
+        user_id=1,
         db=db_session,
     )
     user_msg = next(
@@ -123,7 +125,13 @@ async def test_structured_mode_optional_question(db_session):
 
     # Without question
     await gateway.execute(
-        "test_opt", {}, {"locale": "fr", "use_case": "test_opt"}, "r2", "t", db=db_session
+        "test_opt",
+        {},
+        {"locale": "fr", "use_case": "test_opt"},
+        "r2",
+        "t",
+        user_id=1,
+        db=db_session,
     )
     user_msg = next(
         m for m in mock_client.execute.call_args.kwargs["messages"] if m["role"] == "user"
@@ -157,7 +165,13 @@ async def test_structured_mode_required_question(db_session, monkeypatch):
     # Missing question
     with pytest.raises(InputValidationError) as exc:
         await gateway.execute(
-            "test_req", {}, {"locale": "fr", "use_case": "test_req"}, "r", "t", db=db_session
+            "test_req",
+            {},
+            {"locale": "fr", "use_case": "test_req"},
+            "r",
+            "t",
+            user_id=1,
+            db=db_session,
         )
     assert "User question is required" in str(exc.value)
 
@@ -195,6 +209,7 @@ async def test_chat_mode_with_history(db_session, monkeypatch):
         {"locale": "fr", "use_case": "test_chat", "history": history},
         "r",
         "t",
+        user_id=1,
         db=db_session,
     )
 
@@ -236,6 +251,7 @@ async def test_schema_blocking_paid_use_case(db_session, monkeypatch):
             {"locale": "fr", "use_case": "natal_interpretation"},
             "r",
             "t",
+            user_id=1,
             db=db_session,
         )
     assert "Mandatory output schema missing" in str(exc.value)
@@ -266,7 +282,13 @@ async def test_schema_name_in_payload(db_session, monkeypatch):
 
     gateway = LLMGateway(responses_client=mock_client)
     await gateway.execute(
-        "test_schema", {}, {"locale": "fr", "use_case": "test_schema"}, "r", "t", db=db_session
+        "test_schema",
+        {},
+        {"locale": "fr", "use_case": "test_schema"},
+        "r",
+        "t",
+        user_id=1,
+        db=db_session,
     )
 
     args = mock_client.execute.call_args.kwargs

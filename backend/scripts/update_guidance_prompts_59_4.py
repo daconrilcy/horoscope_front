@@ -29,7 +29,8 @@ Phase lunaire : {{ context.astro_context.lunar_phase }}
 
 Transits actifs :
 {% for t in context.astro_context.transits_active %}
-- {{ t.planet }} {{ t.aspect }} {{ t.natal_point }} (orb {{ t.orb }}°{% if t.applying %}, s'applique{% endif %})
+- {{ t.planet }} {{ t.aspect }} {{ t.natal_point }} (orb {{ t.orb }}°
+{%- if t.applying %}, s'applique{% endif %})
 {% endfor %}
 
 Aspects dominants du jour :
@@ -73,8 +74,7 @@ def update_prompts(db: Session):
         uc_stmt = select(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == key)
         uc = db.execute(uc_stmt).scalar_one_or_none()
         if uc:
-            uc.active_version_id = str(new_prompt.id)
-            print(f"Set active_version_id to {new_prompt.id} for {key}")
+            print(f"Updated {key} to new version {new_prompt.id}")
         else:
             print(f"WARNING: Use case {key} not found")
 

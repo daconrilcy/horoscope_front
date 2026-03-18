@@ -487,6 +487,7 @@ class LLMGateway:
         user_input: Dict[str, Any],
         request_id: str,
         trace_id: str,
+        user_id: Optional[int],
         is_repair_call: bool,
         visited: List[str],
     ) -> GatewayResult:
@@ -553,6 +554,7 @@ class LLMGateway:
                 context=repair_context,
                 request_id=f"{request_id}-repair",
                 trace_id=trace_id,
+                user_id=user_id,
                 db=db,
                 is_repair_call=True,
             )
@@ -587,6 +589,7 @@ class LLMGateway:
                 context=fallback_context,
                 request_id=f"{request_id}-fallback",
                 trace_id=trace_id,
+                user_id=user_id,
                 db=db,
             )
             fallback_result.meta.fallback_triggered = True
@@ -624,6 +627,7 @@ class LLMGateway:
         context: Dict[str, Any],
         request_id: str,
         trace_id: str,
+        user_id: Optional[int] = None,
         db: Optional[Session] = None,
         is_repair_call: bool = False,
     ) -> GatewayResult:
@@ -645,6 +649,30 @@ class LLMGateway:
 
             # 1. Resolve config
             config = await self._resolve_config(db, use_case, context)
+
+            # Story 59.5: Build and merge common context
+            if db and user_id is not None:
+                try:
+                    from app.prompts.common_context import CommonContextBuilder
+                    # Detect period from context or use_case
+                    period = "daily"
+                    if "weekly" in use_case or context.get("period") == "weekly":
+                        period = "weekly"
+                    
+                    common_ctx = CommonContextBuilder.build(
+                        user_id=user_id,
+                        use_case_key=use_case,
+                        period=period,
+                        db=db
+                    )
+                    # Merge common context (use_case context has priority)
+                    context = {**common_ctx.model_dump(), **context}
+                except Exception as e:
+                    logger.warning(
+                        "gateway_common_context_failed use_case=%s error=%s",
+                        use_case,
+                        e
+                    )
 
             # 2. Log start
             if not is_repair_call:
@@ -815,6 +843,7 @@ class LLMGateway:
                 user_input=user_input,
                 request_id=request_id,
                 trace_id=trace_id,
+                user_id=user_id,
                 is_repair_call=is_repair_call,
                 visited=visited,
             )

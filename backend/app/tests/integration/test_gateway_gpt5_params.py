@@ -77,6 +77,7 @@ async def test_gateway_transmits_gpt5_params_from_db(db_session: Session):
             context={"locale": "fr", "use_case": use_case},
             request_id="test-req",
             trace_id="test-trace",
+            user_id=1,
             db=db_session,
         )
 
@@ -128,6 +129,7 @@ async def test_gateway_does_not_pass_reasoning_for_gpt4o(db_session: Session):
             context={"locale": "fr", "use_case": use_case},
             request_id="test-req-4o",
             trace_id="test-trace-4o",
+            user_id=1,
             db=db_session,
         )
 

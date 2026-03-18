@@ -151,7 +151,9 @@ class AstroContextBuilder:
             seen_transits = set()
             for score in res.run.category_scores:
                 for c in score.contributors:
-                    # Contributor format: {'body': 'jupiter', 'target': 'sun', 'aspect': 'trine', 'orb_deg': 1.2, 'phase': 'applying'}
+                    # Contributor format:
+                    # {'body': 'jupiter', 'target': 'sun', 'aspect': 'trine',
+                    #  'orb_deg': 1.2, 'phase': 'applying'}
                     key = (c.get("body"), c.get("target"), c.get("aspect"))
                     if key not in seen_transits:
                         transits.append(TransitEntry(

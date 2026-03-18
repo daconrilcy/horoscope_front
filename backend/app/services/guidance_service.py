@@ -13,9 +13,9 @@ import random
 import re
 from datetime import datetime, timezone
 from time import monotonic
+from typing import Any
 
 from pydantic import BaseModel
-from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.config import settings

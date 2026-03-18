@@ -86,7 +86,13 @@ async def test_check_1_fallback_priority(db_session):
 
     gateway = LLMGateway(responses_client=mock_client)
     result = await gateway.execute(
-        "primary", {}, {"locale": "fr", "use_case": "primary"}, "r", "t", db=db_session
+        "primary",
+        {},
+        {"locale": "fr", "use_case": "primary"},
+        "r",
+        "t",
+        user_id=1,
+        db=db_session,
     )
 
     assert result.use_case == "fallback_A"
@@ -122,7 +128,15 @@ async def test_check_3_repair_call_stable_prompt(db_session):
     )
 
     gateway = LLMGateway(responses_client=mock_client)
-    await gateway.execute("test", {}, {"locale": "fr", "use_case": "test"}, "r", "t", db=db_session)
+    await gateway.execute(
+        "test",
+        {},
+        {"locale": "fr", "use_case": "test"},
+        "r",
+        "t",
+        user_id=1,
+        db=db_session,
+    )
 
     # Verify 2nd call messages
     repair_call_args = mock_client.execute.call_args_list[1]
@@ -185,7 +199,15 @@ async def test_check_4_repair_limit_and_anti_loop(db_session):
     gateway = LLMGateway(responses_client=mock_client)
 
     with pytest.raises(GatewayError) as exc:
-        await gateway.execute("A", {}, {"locale": "fr", "use_case": "A"}, "r", "t", db=db_session)
+        await gateway.execute(
+            "A",
+            {},
+            {"locale": "fr", "use_case": "A"},
+            "r",
+            "t",
+            user_id=1,
+            db=db_session,
+        )
 
     assert "Infinite fallback loop detected" in str(exc.value)
     # Total calls: A(init), A(repair), B(init), B(repair)
@@ -198,9 +220,11 @@ async def test_check_2_fail_fast_missing_vars(db_session):
     gateway = LLMGateway()
 
     with pytest.raises(GatewayConfigError) as exc:
-        await gateway.execute("chat", {}, {}, "r", "t", db=db_session)
+        await gateway.execute("chat", {}, {}, "r", "t", user_id=1, db=db_session)
     assert "Missing mandatory platform variable: 'locale'" in str(exc.value)
 
     with pytest.raises(GatewayConfigError) as exc:
-        await gateway.execute("chat", {}, {"locale": "fr"}, "r", "t", db=db_session)
+        await gateway.execute(
+            "chat", {}, {"locale": "fr"}, "r", "t", user_id=1, db=db_session
+        )
     assert "Missing mandatory platform variable: 'use_case'" in str(exc.value)

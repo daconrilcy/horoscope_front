@@ -332,6 +332,7 @@ class NatalInterpretationServiceV2:
             context=context,
             request_id=request_id,
             trace_id=trace_id,
+            user_id=user_id,
             db=db,
         )
 

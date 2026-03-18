@@ -445,6 +445,7 @@ class AIEngineAdapter:
                 },
                 request_id=request_id,
                 trace_id=trace_id,
+                user_id=user_id,
                 db=db,
             )
 
@@ -562,6 +563,7 @@ class AIEngineAdapter:
                 context=gateway_context,
                 request_id=request_id,
                 trace_id=trace_id,
+                user_id=user_id,
                 db=db,
             )
             return result

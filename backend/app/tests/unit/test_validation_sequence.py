@@ -81,6 +81,7 @@ async def test_gateway_repair_sequence(db_session, monkeypatch):
         context={"locale": "fr", "use_case": "test_repair"},
         request_id="req-repair",
         trace_id="trace-repair",
+        user_id=1,
         db=db_session,
     )
 
@@ -155,6 +156,7 @@ async def test_gateway_fallback_sequence(db_session, monkeypatch):
         context={"locale": "fr", "use_case": "primary"},
         request_id="req-fallback",
         trace_id="trace-fallback",
+        user_id=1,
         db=db_session,
     )
 
