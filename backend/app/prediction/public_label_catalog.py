@@ -118,3 +118,56 @@ def get_do_avoid(change_type: str, domain: str | None) -> tuple[str, str]:
 
     # absolute fallback
     return ("Rester à l'écoute", "Agir avec précipitation")
+
+
+WINDOW_ACTIONS: dict[str, list[str]] = {
+    "pro_ambition": [
+        "Prendre des décisions importantes",
+        "Négocier ou conclure",
+        "Avancer sur un projet bloqué",
+    ],
+    "relations_echanges": [
+        "Avoir une conversation difficile",
+        "Proposer, inviter, connecter",
+        "Résoudre un conflit",
+    ],
+    "energie_bienetre": [
+        "Faire du sport",
+        "S'aérer, sortir",
+        "Commencer une nouvelle habitude",
+    ],
+    "argent_ressources": [
+        "Signer, valider, investir",
+        "Réviser un budget",
+        "Contacter un prestataire",
+    ],
+    "vie_personnelle": [
+        "Lancer un projet créatif",
+        "Passer du temps en famille",
+        "Se faire plaisir",
+    ],
+}
+
+WHY_TEMPLATES: dict[str, str] = {
+    "pro_ambition": "Les conditions pro sont au maximum de leur dynamique.",
+    "relations_echanges": "Les échanges sont fluides et réceptifs.",
+    "energie_bienetre": "Votre vitalité est à son pic.",
+    "argent_ressources": "Les décisions financières bénéficient d'un soutien fort.",
+    "vie_personnelle": "L'énergie créative et personnelle est au sommet.",
+}
+
+
+def get_best_window_why(domain: str | None) -> str:
+    if domain:
+        why = WHY_TEMPLATES.get(domain)
+        if why:
+            return why
+    return "Les conditions astrologiques convergent favorablement."
+
+
+def get_recommended_actions(domain: str | None) -> list[str]:
+    if domain:
+        actions = WINDOW_ACTIONS.get(domain)
+        if actions:
+            return actions[:3]
+    return ["Suivez votre intuition", "Restez à l'écoute de votre rythme"]

@@ -14,8 +14,10 @@ from app.prediction.public_domain_taxonomy import (
 )
 from app.prediction.public_label_catalog import (
     get_action_hint,
+    get_best_window_why,
     get_climate_label,
     get_do_avoid,
+    get_recommended_actions,
     get_regime_label,
     get_turning_point_title,
 )
@@ -85,6 +87,13 @@ class PublicPredictionAssembler:
             snapshot, decision_windows or [], is_flat_day=is_flat_day, evidence=evidence
         )
 
+        # New: Best Window (V4)
+        best_window = PublicBestWindowPolicy().build(
+            snapshot,
+            decision_windows=decision_windows,
+            turning_points=turning_points,
+        )
+
         # 4. Timeline
         turning_point_times = [
             datetime.fromisoformat(tp["occurred_at_local"])
@@ -120,6 +129,8 @@ class PublicPredictionAssembler:
             decision_windows=decision_windows,
             evidence=evidence,
         )
+        if best_window:
+            day_climate["best_window_ref"] = best_window["time_range"]
 
         # New: Time Windows (V4)
         time_windows = PublicTimeWindowPolicy().build(
@@ -163,6 +174,7 @@ class PublicPredictionAssembler:
             "meta": meta,
             "summary": summary,
             "day_climate": day_climate,
+            "best_window": best_window,
             "time_windows": time_windows,
             "turning_point": main_turning_point,
             "categories": internal_categories,  # Keep for retrocompat
@@ -193,6 +205,81 @@ class PublicPredictionAssembler:
                 return _deserialize_evidence_pack(evidence)
 
         return None
+
+
+class PublicBestWindowPolicy:
+    """
+    Builds the best opportunity window for the day (Story 60.6).
+    Selects the most favorable window and projects it for the public.
+    """
+
+    def build(
+        self,
+        snapshot: PersistedPredictionSnapshot,
+        *,
+        decision_windows: list[dict[str, Any]] | None,
+        turning_points: list[dict[str, Any]],
+    ) -> dict[str, Any] | None:
+        if not decision_windows:
+            return None
+
+        # 1. Filter & Select (AC6: window_type="favorable", highest score)
+        favorable = [dw for dw in decision_windows if dw.get("window_type") == "favorable"]
+        if not favorable:
+            return None
+
+        # Sort by score descending, then confidence
+        favorable.sort(key=lambda x: (x["score"], x.get("confidence", 0)), reverse=True)
+        best = favorable[0]
+
+        # 2. Build Public Object
+        start = datetime.fromisoformat(best["start_local"])
+        end = datetime.fromisoformat(best["end_local"])
+        time_range = f"{start.strftime('%H:%M')}–{end.strftime('%H:%M')}"
+
+        # Intensity-based label (AC2)
+        intensity = best.get("intensity", 10.0)
+        label = "Moment favorable"
+        if intensity >= 14.0:
+            label = "Pic du jour"
+        elif intensity >= 10.0:
+            label = "Votre meilleur créneau"
+        else:
+            label = "Fenêtre d'opportunité"
+
+        # Domain-based why and actions
+        dominant = best.get("dominant_categories", [])
+        primary_domain = None
+        if dominant:
+            primary_domain = map_internal_to_public(dominant[0])
+
+        why = get_best_window_why(primary_domain)
+        actions = get_recommended_actions(primary_domain)
+
+        # Pivot detection (AC5)
+        is_pivot = False
+        if best.get("window_type") == "pivot":
+            is_pivot = True
+        else:
+            # Check if any turning point falls inside
+            s_wall = start.replace(tzinfo=None)
+            e_wall = end.replace(tzinfo=None)
+            for tp in turning_points:
+                tp_time_str = tp.get("occurred_at_local")
+                if not tp_time_str:
+                    continue
+                tp_time = datetime.fromisoformat(tp_time_str).replace(tzinfo=None)
+                if s_wall <= tp_time < e_wall:
+                    is_pivot = True
+                    break
+
+        return {
+            "time_range": time_range,
+            "label": label,
+            "why": why,
+            "recommended_actions": actions,
+            "is_pivot": is_pivot,
+        }
 
 
 class PublicMainTurningPointPolicy:
