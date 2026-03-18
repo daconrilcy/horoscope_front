@@ -84,9 +84,13 @@ gemini-2.0-flash-thinking-exp
 - `focusMomentCardMapper` : `prediction.turning_points` peut être vide (API sans TPs explicites) — dans ce cas `keyPointsSectionMapper` utilisait son fallback interne (`buildDailyKeyMoments`) mais `focusMomentCardMapper` tombait sur le titre par défaut. Correction : `keyMoments` (moments enrichis + fallback, déjà calculés dans `DailyHoroscopePage`) est maintenant passé en paramètre via `DetailAndScoresSection`.
 - `DailyHoroscopePage.test.tsx` : fixture `predictionTechnical` — `turning_point.summary: "delta_note"` (valeur technique brute) remplacé par `null` ; le mapper affiche maintenant le titre sémantique calculé, pas la valeur brute.
 
-**Corrections visuelles — passe 3 (polish manuel) :**
+**Corrections visuelles — passe 3 (polish manuel FocusMomentCard) :**
 
 - `FocusMomentCard.css` — time badge : pill supprimée (`background: transparent`, `border: none`) ; texte horaire `0.9rem weight-600 var(--text-2)`. Titre `clamp(1.75rem, 1.7vw, 2.9rem)`. Tags : padding `0.5rem 1rem`, fond `var(--background-unselected-cell)`, border `rgba(220,210,255,0.7)`, `weight-600`, `box-shadow` léger ; icône tag `stroke-width: 3` + `fill: var(--primary)`. Description : `max-width: 32ch` supprimé. CTA : fond `var(--background-unselected-cell)`, border `rgba(230,220,255,0.8)` ; flèche `ArrowRight` ajoutée à droite (`strokeWidth 3, color: var(--primary)`).
+
+**Corrections visuelles — passe 4 (polish manuel DailyDomainsCard) :**
+
+- `DailyDomainsCard.css` — shell : gradient → `var(--background-unselected-cell)`. Titre : `1rem` (était `0.72rem`), suppression uppercase/letter-spacing/opacity, `padding: 0.5rem 1rem`. Items primaires : fond → `var(--background-unselected-cell)`, border `2px rgba(225,245,255,0.7)`. Liste secondaire : encadrement complet `border: 2px solid rgba(225,245,255,0.7)` + `border-radius: 18px` + `background: var(--background-unselected-cell)` (mini-carte). Items secondaires : `padding: 0.25rem 0`, label `var(--text-1)` sans opacité, score sans `opacity: 0.50`. Barres : track `0.12→0.30`, secondaires `2px→3px`, fill secondaire `0.35→0.70`.
 
 ### File List
 
