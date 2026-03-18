@@ -1,5 +1,5 @@
 import React from 'react'
-import type { DailyPredictionResponse } from '../../types/dailyPrediction'
+import type { DailyPredictionResponse, DailyPredictionTurningPoint } from '../../types/dailyPrediction'
 import type { DayPeriodKey } from '../../types/dayTimeline'
 import type { DailyAgendaSlot } from '../../utils/dailyAstrology'
 import type { Lang } from '../../i18n/predictions'
@@ -14,15 +14,17 @@ interface DetailAndScoresSectionProps {
   agendaSlots: DailyAgendaSlot[]
   prediction: DailyPredictionResponse
   lang: Lang
+  keyMoments?: DailyPredictionTurningPoint[]
 }
 
 export const DetailAndScoresSection: React.FC<DetailAndScoresSectionProps> = ({
   selectedPeriodKey,
   agendaSlots,
   prediction,
-  lang
+  lang,
+  keyMoments = []
 }) => {
-  const focusModel = buildFocusMomentCardModel(selectedPeriodKey, agendaSlots, prediction, lang)
+  const focusModel = buildFocusMomentCardModel(selectedPeriodKey, agendaSlots, prediction, lang, keyMoments)
   const domainsModel = buildDailyDomainsCardModel(prediction.categories, lang)
 
   return (

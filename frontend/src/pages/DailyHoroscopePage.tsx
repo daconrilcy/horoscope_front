@@ -323,6 +323,7 @@ export function DailyHoroscopePage() {
             agendaSlots={agendaSlots}
             prediction={prediction}
             lang={lang}
+            keyMoments={keyMoments}
           />
 
           {/* Zone 6 : AdviceCard + CTA */}

@@ -1,4 +1,4 @@
-import type { DailyPredictionResponse } from '../types/dailyPrediction'
+import type { DailyPredictionResponse, DailyPredictionTurningPoint } from '../types/dailyPrediction'
 import type { DailyAgendaSlot } from './dailyAstrology'
 import type { Lang } from '../i18n/predictions'
 import type { DayPeriodKey } from '../types/dayTimeline'
@@ -15,17 +15,19 @@ const PERIOD_SLOT_RANGES: Record<DayPeriodKey, [number, number]> = {
 /**
  * Construit le modèle de données pour FocusMomentCard.
  * AC 4: affiche le slot 2h le plus significatif de la période sélectionnée (ou de la journée).
+ * keyMoments : moments enrichis issus de DailyHoroscopePage (turning_points normalisés + fallback)
  */
 export function buildFocusMomentCardModel(
   selectedPeriodKey: DayPeriodKey | null,
   agendaSlots: DailyAgendaSlot[],
   prediction: DailyPredictionResponse,
-  lang: Lang
+  lang: Lang,
+  keyMoments: DailyPredictionTurningPoint[] = []
 ): FocusMomentCardModel {
   // 1. Déterminer les slots à considérer
   let startIdx = 0
   let endIdx = agendaSlots.length
-  
+
   if (selectedPeriodKey) {
     const [s, e] = PERIOD_SLOT_RANGES[selectedPeriodKey]
     startIdx = s
@@ -39,20 +41,18 @@ export function buildFocusMomentCardModel(
   if (bestCandidateIdx === -1) {
     bestCandidateIdx = candidateSlots.findIndex(s => s.topCategories.length > 0)
   }
-  
-  // Si rien trouvé dans la période (ou si pas de période et rien dans la journée)
+
+  // Si rien trouvé dans la période, on retombe sur la journée complète
   if (bestCandidateIdx === -1) {
     if (selectedPeriodKey) {
-        // On retombe sur le meilleur de la journée complète si la période est vide
-        return buildFocusMomentCardModel(null, agendaSlots, prediction, lang)
+      return buildFocusMomentCardModel(null, agendaSlots, prediction, lang, keyMoments)
     }
     bestCandidateIdx = 0
   }
 
-  const finalIdxInCandidates = bestCandidateIdx
-  const globalSlotIdx = startIdx + finalIdxInCandidates
+  const globalSlotIdx = startIdx + bestCandidateIdx
   const bestSlot = agendaSlots[globalSlotIdx]
-  
+
   // 3. Formater le timeRange (ex: "14:00 – 16:00")
   const startHour = globalSlotIdx * 2
   const endHour = (globalSlotIdx + 1) * 2
@@ -65,21 +65,23 @@ export function buildFocusMomentCardModel(
   }))
 
   // 5. Description et Titre
-  // On cherche le bloc de timeline correspondant à ce slot pour avoir le summary
+  // Bloc de timeline correspondant au slot (pour la description fallback)
   const slotStartIso = `${prediction.meta.date_local}T${String(startHour).padStart(2, '0')}:00:00`
   const matchingBlock = prediction.timeline.find(b => b.start_local <= slotStartIso && b.end_local > slotStartIso)
 
-  // TP pertinent : cherche dans la période sélectionnée, sinon prend le premier du jour
-  // (même logique que keyPointsSectionMapper — non contraint au slot de 2h)
-  let relevantTP = prediction.turning_points[0] as typeof prediction.turning_points[number] | undefined
+  // TP pertinent : même source que keyPointsSectionMapper (keyMoments enrichis + fallback)
+  // Cherche dans la période sélectionnée, sinon prend le premier du jour
+  const sourceMoments = keyMoments.length > 0 ? keyMoments : prediction.turning_points
+  let relevantTP: DailyPredictionTurningPoint | undefined
   if (selectedPeriodKey) {
     const [pStart, pEnd] = PERIOD_SLOT_RANGES[selectedPeriodKey]
     const pStartIso = `${prediction.meta.date_local}T${String(pStart * 2).padStart(2, '0')}:00:00`
     const pEndIso   = `${prediction.meta.date_local}T${String(pEnd   * 2).padStart(2, '0')}:00:00`
-    const periodTP = prediction.turning_points.find(
+    relevantTP = sourceMoments.find(
       tp => tp.occurred_at_local >= pStartIso && tp.occurred_at_local < pEndIso
-    )
-    relevantTP = periodTP ?? prediction.turning_points[0]
+    ) ?? sourceMoments[0]
+  } else {
+    relevantTP = sourceMoments[0]
   }
 
   // Titre : même source que key-point-card__label (semantic.cause || semantic.title)
