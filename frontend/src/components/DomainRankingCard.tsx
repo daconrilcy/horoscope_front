@@ -1,7 +1,7 @@
 import React from 'react';
 import type { DailyPredictionPublicDomainScore } from '../types/dailyPrediction';
 import type { Lang } from '../i18n/predictions';
-import { getCategoryIcon } from '../utils/predictionI18n';
+import { getDomainLabel, getLevelLabel, LEVEL_LABELS, DOMAIN_LABELS } from '../i18n/horoscope_copy';
 
 interface Props {
   domains: DailyPredictionPublicDomainScore[];
@@ -10,25 +10,15 @@ interface Props {
 
 export const DomainRankingCard: React.FC<Props> = ({ domains, lang }) => {
   const getLevelColor = (level: string) => {
-    switch (level) {
-      case 'très_favorable': return 'var(--success)';
-      case 'favorable': return '#a8e6cf'; // light green
-      case 'stable': return 'var(--text-2)';
-      case 'mitigé': return '#ffd3b6'; // light orange
-      case 'exigeant': return 'var(--danger)';
+    const hint = LEVEL_LABELS[level]?.color_hint;
+    switch (hint) {
+      case 'success': return 'var(--success)';
+      case 'success-light': return '#a8e6cf';
+      case 'neutral': return 'var(--text-2)';
+      case 'warning': return '#ffd3b6';
+      case 'danger': return 'var(--danger)';
       default: return 'var(--text-2)';
     }
-  };
-
-  const getLevelLabel = (level: string, lang: Lang) => {
-    const labels: Record<string, Record<Lang, string>> = {
-      'très_favorable': { fr: 'Très favorable', en: 'Very favorable' },
-      'favorable': { fr: 'Favorable', en: 'Favorable' },
-      'stable': { fr: 'Stable', en: 'Stable' },
-      'mitigé': { fr: 'Mitigé', en: 'Mixed' },
-      'exigeant': { fr: 'Exigeant', en: 'Demanding' },
-    };
-    return labels[level]?.[lang] || level;
   };
 
   return (
@@ -48,8 +38,8 @@ export const DomainRankingCard: React.FC<Props> = ({ domains, lang }) => {
           <div key={domain.key} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '20px' }}>{getCategoryIcon(domain.key)}</span>
-                <span style={{ fontWeight: '500', color: 'var(--text-1)' }}>{domain.label}</span>
+                <span style={{ fontSize: '20px' }}>{DOMAIN_LABELS[domain.key]?.icon || '✨'}</span>
+                <span style={{ fontWeight: '500', color: 'var(--text-1)' }}>{getDomainLabel(domain.key, lang)}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '14px', fontWeight: 'bold', color: getLevelColor(domain.level) }}>

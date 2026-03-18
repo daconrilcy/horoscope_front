@@ -1,7 +1,7 @@
 import React from 'react';
 import type { DailyPredictionTimeWindow } from '../../types/dailyPrediction';
 import type { Lang } from '../../i18n/predictions';
-import { getCategoryLabel, getCategoryIcon } from '../../utils/predictionI18n';
+import { getDomainLabel, getRegimeLabel, DOMAIN_LABELS } from '../../i18n/horoscope_copy';
 
 interface Props {
   timeWindows: DailyPredictionTimeWindow[];
@@ -72,7 +72,7 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => 
                 padding: '2px 6px',
                 borderRadius: '4px'
               }}>
-                {window.regime}
+                {getRegimeLabel(window.regime, lang)}
               </span>
             </div>
 
@@ -86,8 +86,8 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => 
 
             <div style={{ display: 'flex', gap: '4px' }}>
               {window.top_domains.map(key => (
-                <span key={key} title={getCategoryLabel(key, lang)} style={{ fontSize: '14px' }}>
-                  {getCategoryIcon(key)}
+                <span key={key} title={getDomainLabel(key, lang)} style={{ fontSize: '14px' }}>
+                  {DOMAIN_LABELS[key]?.icon || '✨'}
                 </span>
               ))}
             </div>

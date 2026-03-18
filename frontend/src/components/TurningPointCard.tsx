@@ -1,7 +1,7 @@
 import React from 'react';
 import type { DailyPredictionTurningPointPublic } from '../types/dailyPrediction';
 import type { Lang } from '../i18n/predictions';
-import { getCategoryLabel, getCategoryIcon } from '../utils/predictionI18n';
+import { getDomainLabel, getChangeTypeLabel, DOMAIN_LABELS } from '../i18n/horoscope_copy';
 
 interface Props {
   turningPoint: DailyPredictionTurningPointPublic | null;
@@ -13,10 +13,10 @@ export const TurningPointCard: React.FC<Props> = ({ turningPoint, lang }) => {
 
   const getBadgeStyle = (type: string) => {
     switch (type) {
-      case 'emergence': return { bg: 'rgba(76, 175, 80, 0.1)', color: 'var(--success)', label: lang === 'fr' ? 'Émergence' : 'Emergence' };
-      case 'recomposition': return { bg: 'rgba(33, 150, 243, 0.1)', color: 'var(--primary)', label: lang === 'fr' ? 'Virage' : 'Shift' };
-      case 'attenuation': return { bg: 'rgba(158, 158, 158, 0.1)', color: 'var(--text-2)', label: lang === 'fr' ? 'Atténuation' : 'Softening' };
-      default: return { bg: 'var(--glass-2)', color: 'var(--text-2)', label: type };
+      case 'emergence': return { bg: 'rgba(76, 175, 80, 0.1)', color: 'var(--success)' };
+      case 'recomposition': return { bg: 'rgba(33, 150, 243, 0.1)', color: 'var(--primary)' };
+      case 'attenuation': return { bg: 'rgba(158, 158, 158, 0.1)', color: 'var(--text-2)' };
+      default: return { bg: 'var(--glass-2)', color: 'var(--text-2)' };
     }
   };
 
@@ -62,7 +62,7 @@ export const TurningPointCard: React.FC<Props> = ({ turningPoint, lang }) => {
             padding: '4px 8px',
             borderRadius: '4px'
           }}>
-            {badge.label}
+            {getChangeTypeLabel(turningPoint.change_type, lang)}
           </span>
         </div>
       </div>
@@ -85,7 +85,7 @@ export const TurningPointCard: React.FC<Props> = ({ turningPoint, lang }) => {
             background: 'var(--glass-2)',
             border: '1px solid var(--glass-border)'
           }}>
-            {getCategoryIcon(key)} {getCategoryLabel(key, lang)}
+            {DOMAIN_LABELS[key]?.icon || '✨'} {getDomainLabel(key, lang)}
           </span>
         ))}
       </div>
