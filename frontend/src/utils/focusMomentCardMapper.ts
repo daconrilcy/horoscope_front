@@ -79,7 +79,7 @@ export function buildFocusMomentCardModel(
   if (matchingTP) {
     const semantic = humanizeTurningPointSemantic(matchingTP, lang)
     description = semantic.transition || semantic.implication || description
-    title = semantic.title || title
+    title = semantic.cause || semantic.title || title
   }
 
   return {
