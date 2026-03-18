@@ -49,12 +49,6 @@ export const DailyDomainsCard: React.FC<DailyDomainsCardProps> = ({ model, lang 
           ))}
         </div>
       )}
-
-      <footer className="daily-domains-card__footer">
-        <button type="button" className="daily-domains-card__cta">
-          {model.ctaLabel}
-        </button>
-      </footer>
     </aside>
   )
 }

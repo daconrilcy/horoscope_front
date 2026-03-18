@@ -1,0 +1,66 @@
+/* ── DailyAdviceCard — conseil du jour, glassmorphism PeriodCard ── */
+
+.daily-advice-card {
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: rgba(252, 250, 255, 0.58);
+  border: 2px solid rgba(200, 190, 240, 0.35);
+  box-shadow: 0 2px 12px rgba(134, 108, 208, 0.06);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.dark .daily-advice-card {
+  background: var(--background-unselected-cell);
+  border-color: rgba(134, 108, 208, 0.18);
+}
+
+.daily-advice-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.daily-advice-card__icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(134, 108, 208, 0.15);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.daily-advice-card__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin: 0;
+}
+
+.daily-advice-card__body {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-2);
+  margin: 0;
+  padding-left: 40px; /* aligne sous le titre, après badge */
+}
+
+.daily-advice-card__emphasis {
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+@media (max-width: 768px) {
+  .daily-advice-card {
+    padding: 14px 16px;
+  }
+
+  .daily-advice-card__body {
+    padding-left: 0;
+  }
+}

@@ -79,6 +79,9 @@ const MESSAGES: Record<string, Record<Lang, string>> = {
   no_detail_available: { fr: "Détails non disponibles pour ce créneau.", en: "Details not available for this slot." },
   focus_moment_default_title: { fr: "Moment de la journée", en: "Moment of the day" },
   optimize_day_cta: { fr: "Optimiser ma journée", en: "Optimize my day" },
+  daily_advice_title: { fr: 'Conseil du jour', en: 'Daily advice' },
+  daily_advice_placeholder: { fr: "Prenez le temps d'ajuster votre espace et d'organiser votre soirée.", en: 'Take time to adjust your space and organize your evening.' },
+  daily_advice_emphasis_placeholder: { fr: 'Un apaisement profond vous attend.', en: 'A deep sense of calm awaits you.' },
   // Agenda du jour (ex-fenêtres décisionnelles)
   decision_windows_title: { fr: "Agenda du jour", en: "Daily Agenda" },
   window_type_favorable: { fr: "Fenêtre favorable", en: "Favorable window" },

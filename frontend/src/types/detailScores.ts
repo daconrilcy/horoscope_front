@@ -22,5 +22,10 @@ export interface DailyDomainsCardModel {
   title: string;
   primaryDomains: DailyDomainScore[];
   secondaryDomains: DailyDomainScore[];
-  ctaLabel: string;
+}
+
+export interface DailyAdviceCardModel {
+  title: string;
+  advice: string;
+  emphasis: string;
 }

@@ -8,6 +8,7 @@ import { HeroSummaryCard } from '../components/prediction/HeroSummaryCard'
 import { KeyPointsSection } from '../components/prediction/KeyPointsSection'
 import { DayTimelineSection } from '../components/prediction/DayTimelineSection'
 import { DetailAndScoresSection } from '../components/prediction/DetailAndScoresSection'
+import { DailyAdviceCard } from '../components/prediction/DailyAdviceCard'
 import { DailyPageHeader } from '../components/prediction/DailyPageHeader'
 import type { DailyPredictionTurningPoint } from '../types/dailyPrediction'
 import type { DayPeriodKey } from '../types/dayTimeline'
@@ -25,6 +26,7 @@ import { SectionErrorBoundary } from '../components/ErrorBoundary'
 import { buildHeroSummaryCardModel } from '../utils/heroSummaryCardMapper'
 import { buildKeyPointsSectionModel } from '../utils/keyPointsSectionMapper'
 import { buildDayTimelineSectionModel } from '../utils/dayTimelineSectionMapper'
+import { buildDailyAdviceCardModel } from '../utils/dailyAdviceCardMapper'
 import './DailyHoroscopePage.css'
 
 function parseLocalMinute(iso: string): number | null {
@@ -326,7 +328,10 @@ export function DailyHoroscopePage() {
             keyMoments={keyMoments}
           />
 
-          {/* Zone 6 : AdviceCard + CTA */}
+          {/* Zone 6 : DailyAdviceCard — Conseil du jour */}
+          <DailyAdviceCard model={buildDailyAdviceCardModel(prediction, lang)} />
+
+          {/* Zone 7 : AdviceCard + CTA */}
           {prediction.summary.best_window && (
             <section className="daily-layout__section daily-layout__advice">
               <div className="panel daily-layout__advice-card">

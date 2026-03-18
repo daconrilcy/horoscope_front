@@ -18,7 +18,8 @@
       "Bash(.venv/Scripts/python:*)",
       "Bash(pip install:*)",
       "Bash(cd:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(grep:*)"
     ],
     "additionalDirectories": [
       "c:\\dev\\horoscope_front\\_bmad-output\\implementation-artifacts"
