@@ -504,6 +504,21 @@ development_status:
   59-5-socle-commun-prompts: done
   epic-59-retrospective: optional
 
+  epic-60: in-progress
+  60-1-taxonomie-domaines-publics: ready-for-dev
+  60-2-scores-publics-sur-10: ready-for-dev
+  60-3-day-climate: ready-for-dev
+  60-4-time-windows: ready-for-dev
+  60-5-turning-point: ready-for-dev
+  60-6-best-window: ready-for-dev
+  60-7-astro-foundation: ready-for-dev
+  60-8-refonte-front: ready-for-dev
+  60-9-wording-microcopies: ready-for-dev
+  60-10-migration-api: ready-for-dev
+  60-11-tests-fixtures-qa: ready-for-dev
+  60-12-cleanup-legacy: ready-for-dev
+  epic-60-retrospective: optional
+
   epic-58: in-progress
   58-1-app-name-constante-et-config-centrale: done
   58-2-header-hamburger-logo-nom-actions: done
