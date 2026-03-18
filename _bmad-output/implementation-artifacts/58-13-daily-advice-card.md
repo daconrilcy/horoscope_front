@@ -87,6 +87,10 @@ afin d'avoir une recommandation actionnable pour orienter ma journée.
 
 gemini-2.0-flash-thinking-exp
 
+### Post-implementation fixes (claude-sonnet-4-6, 2026-03-18)
+
+- `dailyDomainsCardMapper.ts` : `secondaryDomains: allDomains.slice(3)` → `slice(3, 6)` — le générateur avait omis la limite supérieure, exposant potentiellement plus de 3 domaines secondaires.
+
 ### File List
 
 - `frontend/src/types/detailScores.ts`
