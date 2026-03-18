@@ -75,6 +75,19 @@ gemini-2.0-flash-thinking-exp
 - `FocusMomentCard.css` : surface encore plus claire et perlée (`rgba(255,255,255,.62→.44)`), border `rgba(230,220,255,.30)`. Badge temps 26px / 0.68rem poids 500 très discret, border `rgba(160,130,220,.14)`. Tags 28px pills `rgba(.55)` border `rgba(220,210,255,.28)` 0.76rem poids 500. Description `1.02rem max-width 32ch`. Décor halo élargi blur 22px + second glow `rgba(210,195,255,.12)`. CTA 46px `rgba(.78)` ombre 0.08. `justify-content: space-between` pour meilleure répartition verticale.
 - `DailyDomainsCard.css` : surface unifiée avec FocusMomentCard (`rgba(.58→.40)`). Titre `opacity 0.60`. Items primaires `rgba(.60)` gap 9px. Séparation top 3 / secondaires par `border-top rgba(220,210,255,.20)` + `padding-top 12px`. Icônes secondaires `opacity 0.45`. Labels secondaires `0.72rem weight-400 opacity 0.70`. Scores secondaires `opacity 0.50`. Barres secondaires 2px fills plats `rgba(.35)`. CTA 50px `padding-top 22px` ombre `rgba(.18)`.
 
+### Post-implementation fixes (claude-sonnet-4-6, 2026-03-18) — round 2
+
+**Bugs corrigés :**
+
+- `focusMomentCardMapper` : source du titre corrigée — utilise désormais `semantic.cause || semantic.title` (même source que `key-point-card__label`), au lieu du tone label ou du timeline block summary.
+- `focusMomentCardMapper` : le lookup du TP était contraint au slot de 2h exact, qui pouvait être vide si `hasTurningPoint` était positionné par une frontière de timeline (pas un TP de `turning_points`). Désormais, le TP est recherché au niveau de la période sélectionnée, avec fallback sur `turning_points[0]`.
+- `focusMomentCardMapper` : `prediction.turning_points` peut être vide (API sans TPs explicites) — dans ce cas `keyPointsSectionMapper` utilisait son fallback interne (`buildDailyKeyMoments`) mais `focusMomentCardMapper` tombait sur le titre par défaut. Correction : `keyMoments` (moments enrichis + fallback, déjà calculés dans `DailyHoroscopePage`) est maintenant passé en paramètre via `DetailAndScoresSection`.
+- `DailyHoroscopePage.test.tsx` : fixture `predictionTechnical` — `turning_point.summary: "delta_note"` (valeur technique brute) remplacé par `null` ; le mapper affiche maintenant le titre sémantique calculé, pas la valeur brute.
+
+**Correction visuelle — passe 3 (ajustement taille titre) :**
+
+- `FocusMomentCard.css` : titre `clamp(1.85rem, 1.8vw, 2.9rem)` — valeur fluide réduite de `2.8vw` à `1.8vw` pour éviter un titre trop imposant sur desktop moyen.
+
 ### File List
 
 - `frontend/src/types/detailScores.ts`

@@ -47,7 +47,7 @@
 }
 
 /* Contenu au-dessus du décor */
-.focus-moment-card > *:not(.focus-moment-card__background-glow) {
+.focus-moment-card>*:not(.focus-moment-card__background-glow) {
   position: relative;
   z-index: 1;
 }
@@ -85,7 +85,7 @@
 
 /* ── Titre — point focal dominant ── */
 .focus-moment-card__title {
-  font-size: clamp(1.85rem, 2.8vw, 2.9rem);
+  font-size: clamp(1.85rem, 1.8vw, 2.9rem);
   font-weight: 600;
   color: var(--text-1);
   line-height: 1.04;
