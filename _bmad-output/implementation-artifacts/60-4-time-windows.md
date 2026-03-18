@@ -1,6 +1,6 @@
 # Story 60.4 : Refondre la projection des fenêtres temporelles
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -22,11 +22,11 @@ afin de ne plus voir quatre cartes répétant "équilibré" et de comprendre com
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Créer `PublicTimeWindowPolicy` dans `public_projection.py` (AC: 1, 6)
-  - [ ] T1.1 Lire entièrement `backend/app/prediction/decision_window_builder.py` (méthode `build_v3()`, classe `DecisionWindow`)
-  - [ ] T1.2 Lire `backend/app/prediction/schemas.py` — `V3TimeBlock.orientation`, `V3TimeBlock.dominant_themes`
-  - [ ] T1.3 Créer classe `PublicTimeWindowPolicy` avec méthode `build(time_blocks: list[V3TimeBlock], turning_points, domain_mapping) -> list[dict]`
-  - [ ] T1.4 Mapper `orientation` → `regime` :
+- [x] T1 — Créer `PublicTimeWindowPolicy` dans `public_projection.py` (AC: 1, 6)
+  - [x] T1.1 Lire entièrement `backend/app/prediction/decision_window_builder.py` (méthode `build_v3()`, classe `DecisionWindow`)
+  - [x] T1.2 Lire `backend/app/prediction/schemas.py` — `V3TimeBlock.orientation`, `V3TimeBlock.dominant_themes`
+  - [x] T1.3 Créer classe `PublicTimeWindowPolicy` avec méthode `build(time_blocks: list[V3TimeBlock], turning_points, domain_mapping) -> list[dict]`
+  - [x] T1.4 Mapper `orientation` → `regime` :
     ```python
     ORIENTATION_TO_REGIME = {
         "rising": "progression",
@@ -36,11 +36,11 @@ afin de ne plus voir quatre cartes répétant "équilibré" et de comprendre com
     }
     # Si bloc contient turning point → override vers "pivot"
     ```
-  - [ ] T1.5 Enrichir avec `recentrage` (fin de journée + tone neutre/négatif) et `récupération` (nuit) via heure du bloc
+  - [x] T1.5 Enrichir avec `recentrage` (fin de journée + tone neutre/négatif) et `récupération` (nuit) via heure du bloc
 
-- [ ] T2 — Construire les labels dynamiques (AC: 3, 5)
-  - [ ] T2.1 Créer `REGIME_LABELS: dict[str, list[str]]` dans `public_label_catalog.py` (pool de labels par régime)
-  - [ ] T2.2 Exemples :
+- [x] T2 — Construire les labels dynamiques (AC: 3, 5)
+  - [x] T2.1 Créer `REGIME_LABELS: dict[str, list[str]]` dans `public_label_catalog.py` (pool de labels par régime)
+  - [x] T2.2 Exemples :
     - `progression` → ["Moment porteur", "Cap sur l'action", "Élan favorable"]
     - `fluidité` → ["Rythme fluide", "Douceur active", "Progression régulière"]
     - `prudence` → ["Fenêtre sensible", "Ralentir le rythme", "Gérer avec soin"]
@@ -49,11 +49,11 @@ afin de ne plus voir quatre cartes répétant "équilibré" et de comprendre com
     - `retombée` → ["Retour au calme", "L'élan s'apaise"]
     - `mise_en_route` → ["Démarrage progressif", "Mise en mouvement"]
     - `recentrage` → ["Temps de bilan", "Ralenti créatif"]
-  - [ ] T2.3 Choisir le label en fonction de `top_domains` dominant (si pro_ambition → label orienté action, etc.)
+  - [x] T2.3 Choisir le label en fonction de `top_domains` dominant (si pro_ambition → label orienté action, etc.)
 
-- [ ] T3 — Construire `action_hint` (AC: 4)
-  - [ ] T3.1 Créer `ACTION_HINTS: dict[str, str]` par régime (hint générique)
-  - [ ] T3.2 Exemples :
+- [x] T3 — Construire `action_hint` (AC: 4)
+  - [x] T3.1 Créer `ACTION_HINTS: dict[str, str]` par régime (hint générique)
+  - [x] T3.2 Exemples :
     - `progression` → "Avancez sur vos priorités"
     - `fluidité` → "Maintenez le cap"
     - `prudence` → "Évitez les décisions engageantes"
@@ -63,29 +63,29 @@ afin de ne plus voir quatre cartes répétant "équilibré" et de comprendre com
     - `récupération` → "Reposez-vous"
     - `mise_en_route` → "Lancez doucement"
 
-- [ ] T4 — Mapper `top_domains` vers clefs publiques (AC: 7)
-  - [ ] T4.1 `V3TimeBlock.dominant_themes` contient des codes internes
-  - [ ] T4.2 Appeler `map_internal_to_public()` (Story 60.1) sur chaque code
-  - [ ] T4.3 Déduplication (plusieurs internes → même public)
-  - [ ] T4.4 Garder max 2 domaines publics par fenêtre
+- [x] T4 — Mapper `top_domains` vers clefs publiques (AC: 7)
+  - [x] T4.1 `V3TimeBlock.dominant_themes` contient des codes internes
+  - [x] T4.2 Appeler `map_internal_to_public()` (Story 60.1) sur chaque code
+  - [x] T4.3 Déduplication (plusieurs internes → même public)
+  - [x] T4.4 Garder max 2 domaines publics par fenêtre
 
-- [ ] T5 — Formatter `time_range` (AC: 1)
-  - [ ] T5.1 Formatter `start_local` → `end_local` en `"HH:MM–HH:MM"` (locale française, format 24h)
-  - [ ] T5.2 Si bloc couvre minuit → `"23:00–01:00"` (ne pas casser)
+- [x] T5 — Formatter `time_range` (AC: 1)
+  - [x] T5.1 Formatter `start_local` → `end_local` en `"HH:MM–HH:MM"` (locale française, format 24h)
+  - [x] T5.2 Si bloc couvre minuit → `"23:00–01:00"` (ne pas casser)
 
-- [ ] T6 — Intégrer dans `assemble()` et DTO (AC: 8)
-  - [ ] T6.1 Appeler `PublicTimeWindowPolicy.build()` dans `PublicPredictionAssembler.assemble()`
-  - [ ] T6.2 Ajouter `time_windows: list[...]` dans le dict de retour
-  - [ ] T6.3 Conserver `timeline` existant (rétrocompat)
-  - [ ] T6.4 Créer `DailyPredictionTimeWindow(BaseModel)` dans `predictions.py`
-  - [ ] T6.5 Ajouter `time_windows: list[DailyPredictionTimeWindow] | None = None` dans `DailyPredictionResponse`
+- [x] T6 — Intégrer dans `assemble()` et DTO (AC: 8)
+  - [x] T6.1 Appeler `PublicTimeWindowPolicy.build()` dans `PublicPredictionAssembler.assemble()`
+  - [x] T6.2 Ajouter `time_windows: list[...]` dans le dict de retour
+  - [x] T6.3 Conserver `timeline` existant (rétrocompat)
+  - [x] T6.4 Créer `DailyPredictionTimeWindow(BaseModel)` dans `predictions.py`
+  - [x] T6.5 Ajouter `time_windows: list[DailyPredictionTimeWindow] | None = None` dans `DailyPredictionResponse`
 
-- [ ] T7 — Tests (AC: 9)
-  - [ ] T7.1 Test : orientation `rising` → regime `"progression"`
-  - [ ] T7.2 Test : bloc avec turning_point → regime `"pivot"` (override)
-  - [ ] T7.3 Test : 4 fenêtres → 4 régimes différents (pas de doublon)
-  - [ ] T7.4 Test : `top_domains` ≤ 2 items
-  - [ ] T7.5 Test : `action_hint` non vide pour chaque régime
+- [x] T7 — Tests (AC: 9)
+  - [x] T7.1 Test : orientation `rising` → regime `"progression"`
+  - [x] T7.2 Test : bloc avec turning_point → regime `"pivot"` (override)
+  - [x] T7.3 Test : 4 fenêtres → 4 régimes différents (pas de doublon)
+  - [x] T7.4 Test : `top_domains` ≤ 2 items
+  - [x] T7.5 Test : `action_hint` non vide pour chaque régime
 
 ## Dev Notes
 
@@ -140,3 +140,8 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+- `backend/app/prediction/public_label_catalog.py` (MOD)
+- `backend/app/prediction/public_projection.py` (MOD)
+- `backend/app/api/v1/routers/predictions.py` (MOD)
+- `backend/tests/unit/prediction/test_public_time_window.py` (NEW)

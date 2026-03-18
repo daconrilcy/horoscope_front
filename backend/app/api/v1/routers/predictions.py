@@ -90,6 +90,14 @@ class DailyPredictionTimeBlock(BaseModel):
     turning_point: bool
 
 
+class DailyPredictionTimeWindow(BaseModel):
+    time_range: str
+    label: str
+    regime: str
+    top_domains: list[str]
+    action_hint: str
+
+
 class DailyPredictionDecisionWindow(BaseModel):
     start_local: str
     end_local: str
@@ -141,6 +149,7 @@ class DailyPredictionResponse(BaseModel):
     categories: list[DailyPredictionCategory]
     categories_internal: list[DailyPredictionCategory] | None = None
     domain_ranking: list[DailyPredictionPublicDomainScore] | None = None
+    time_windows: list[DailyPredictionTimeWindow] | None = None
     timeline: list[DailyPredictionTimeBlock]
     turning_points: list[DailyPredictionTurningPoint]
     decision_windows: list[DailyPredictionDecisionWindow] | None = None

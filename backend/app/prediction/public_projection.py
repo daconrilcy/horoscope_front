@@ -10,8 +10,13 @@ from app.prediction.public_domain_taxonomy import (
     DISPLAY_ORDER,
     PUBLIC_DOMAINS,
     aggregate_public_domain_score,
+    map_internal_to_public,
 )
-from app.prediction.public_label_catalog import get_climate_label
+from app.prediction.public_label_catalog import (
+    get_action_hint,
+    get_climate_label,
+    get_regime_label,
+)
 from app.prediction.public_score_mapper import (
     PublicDomainScore,
     rank_domains,
@@ -114,6 +119,14 @@ class PublicPredictionAssembler:
             evidence=evidence,
         )
 
+        # New: Time Windows (V4)
+        time_windows = PublicTimeWindowPolicy().build(
+            snapshot,
+            turning_points=turning_points,
+            engine_output=engine_output,
+            evidence=evidence,
+        )
+
         # 7. Meta
         house_system_effective = snapshot.house_system_effective
         if house_system_effective is None and engine_output is not None:
@@ -141,6 +154,7 @@ class PublicPredictionAssembler:
             "meta": meta,
             "summary": summary,
             "day_climate": day_climate,
+            "time_windows": time_windows,
             "categories": internal_categories,  # Keep for retrocompat
             "categories_internal": internal_categories,
             "domain_ranking": public_domains,
@@ -169,6 +183,121 @@ class PublicPredictionAssembler:
                 return _deserialize_evidence_pack(evidence)
 
         return None
+
+
+class PublicTimeWindowPolicy:
+    """
+    Builds the narrative time windows for the day (Story 60.4).
+    Mappers V3 orientation -> regime -> label/action.
+    """
+
+    def build(
+        self,
+        snapshot: PersistedPredictionSnapshot,
+        turning_points: list[dict[str, Any]],
+        *,
+        engine_output: Any | None = None,
+        evidence: V3EvidencePack | None = None,
+    ) -> list[dict[str, Any]]:
+        # 1. Resolve Time Blocks (V3)
+        v3_blocks = []
+        if evidence:
+            v3_blocks = evidence.time_windows
+        else:
+            core_output = _resolve_core_engine_output(engine_output)
+            if core_output is not None:
+                v3_blocks = getattr(core_output, "time_blocks", [])
+
+        if not v3_blocks:
+            return []
+
+        # 2. Build Windows
+        windows = []
+        for block in v3_blocks:
+            # Resolve properties
+            # Note: block can be V3EvidenceWindow or V3TimeBlock
+            start = (
+                block.start_local
+                if hasattr(block, "start_local")
+                else getattr(block, "start_at_local", None)
+            )
+            end = (
+                block.end_local
+                if hasattr(block, "end_local")
+                else getattr(block, "end_at_local", None)
+            )
+            orientation = getattr(block, "orientation", "stable")
+            dominant_themes = getattr(block, "dominant_themes", [])
+            if not dominant_themes and hasattr(block, "themes"):
+                dominant_themes = block.themes
+
+            # A. Determine Regime
+            regime = self._resolve_regime(start, end, orientation, turning_points)
+
+            # B. Map Domains
+            top_domains = self._map_domains(dominant_themes)
+
+            # C. Label & Action
+            label = get_regime_label(regime, top_domains)
+            action_hint = get_action_hint(regime)
+
+            windows.append(
+                {
+                    "time_range": f"{start.strftime('%H:%M')}–{end.strftime('%H:%M')}",
+                    "label": label,
+                    "regime": regime,
+                    "top_domains": top_domains,
+                    "action_hint": action_hint,
+                }
+            )
+
+        return windows
+
+    def _resolve_regime(
+        self, start: datetime, end: datetime, orientation: str, turning_points: list[dict[str, Any]]
+    ) -> str:
+        # Priority 1: Pivot if turning point inside
+        for tp in turning_points:
+            tp_time_str = tp.get("occurred_at_local")
+            if not tp_time_str:
+                continue
+            tp_time = datetime.fromisoformat(tp_time_str).replace(tzinfo=None)
+            s_wall = start.replace(tzinfo=None)
+            e_wall = end.replace(tzinfo=None)
+            if s_wall <= tp_time < e_wall:
+                return "pivot"
+
+        # Priority 2: Recovery for night
+        hour_start = start.hour
+        if 0 <= hour_start <= 5:
+            return "récupération"
+
+        # Priority 3: Orientation mapping
+        ORIENTATION_TO_REGIME = {
+            "rising": "progression",
+            "falling": "retombée",
+            "volatile": "prudence",
+            "stable": "fluidité",
+        }
+        regime = ORIENTATION_TO_REGIME.get(orientation, "fluidité")
+
+        # Special cases based on time
+        if regime == "fluidité" and 6 <= hour_start <= 9:
+            return "mise_en_route"
+
+        hour_end = end.hour
+        if regime in ("fluidité", "retombée") and 21 <= hour_end <= 23:
+            return "recentrage"
+
+        return regime
+
+    def _map_domains(self, internal_themes: list[str]) -> list[str]:
+        public_keys = []
+        for code in internal_themes:
+            pk = map_internal_to_public(code)
+            if pk and pk not in public_keys:
+                public_keys.append(pk)
+        return public_keys[:2]
 
 
 class PublicDayClimatePolicy:

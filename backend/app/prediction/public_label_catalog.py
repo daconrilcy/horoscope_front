@@ -30,3 +30,37 @@ def get_intensity_bucket(intensity: float) -> str:
 def get_climate_label(tone: str, intensity: float) -> str:
     bucket = get_intensity_bucket(intensity)
     return CLIMATE_LABELS.get((tone, bucket), "Journée en cours")
+
+
+REGIME_LABELS: dict[str, list[str]] = {
+    "progression": ["Moment porteur", "Cap sur l'action", "Élan favorable"],
+    "fluidité": ["Rythme fluide", "Douceur active", "Progression régulière"],
+    "prudence": ["Fenêtre sensible", "Ralentir le rythme", "Gérer avec soin"],
+    "pivot": ["Virage de la journée", "Moment charnière", "Tournant"],
+    "récupération": ["Phase de repos", "Recharge tranquille"],
+    "retombée": ["Retour au calme", "L'élan s'apaise"],
+    "mise_en_route": ["Démarrage progressif", "Mise en mouvement"],
+    "recentrage": ["Temps de bilan", "Ralenti créatif"],
+}
+
+ACTION_HINTS: dict[str, str] = {
+    "progression": "Avancez sur vos priorités",
+    "fluidité": "Maintenez le cap",
+    "prudence": "Évitez les décisions engageantes",
+    "pivot": "Observez avant d'agir",
+    "recentrage": "Faites le point",
+    "retombée": "Laissez poser",
+    "récupération": "Reposez-vous",
+    "mise_en_route": "Lancez doucement",
+}
+
+
+def get_regime_label(regime: str, top_domains: list[str]) -> str:
+    pool = REGIME_LABELS.get(regime, ["Moment de la journée"])
+    # Simple selection logic: index based on first domain if available
+    idx = (ord(top_domains[0][0]) % len(pool)) if top_domains else 0
+    return pool[idx % len(pool)]
+
+
+def get_action_hint(regime: str) -> str:
+    return ACTION_HINTS.get(regime, "Suivez votre rythme")
