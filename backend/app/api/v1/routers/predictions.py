@@ -116,6 +116,36 @@ class DailyPredictionBestWindow(BaseModel):
     is_pivot: bool = False
 
 
+class DailyPredictionKeyMovement(BaseModel):
+    planet: str
+    event_type: str
+    target: str | None = None
+    orb_deg: float | None = None
+    effect_label: str
+
+
+class DailyPredictionActivatedHouse(BaseModel):
+    house_number: int
+    house_label: str
+    domain_label: str
+
+
+class DailyPredictionDominantAspect(BaseModel):
+    aspect_type: str
+    planet_a: str
+    planet_b: str | None = None
+    tonality: str
+    effect_label: str
+
+
+class DailyPredictionAstroFoundation(BaseModel):
+    headline: str
+    key_movements: list[DailyPredictionKeyMovement]
+    activated_houses: list[DailyPredictionActivatedHouse]
+    dominant_aspects: list[DailyPredictionDominantAspect]
+    interpretation_bridge: str
+
+
 class DailyPredictionDecisionWindow(BaseModel):
     start_local: str
     end_local: str
@@ -170,6 +200,7 @@ class DailyPredictionResponse(BaseModel):
     turning_point: DailyPredictionTurningPointPublic | None = None
     best_window: DailyPredictionBestWindow | None = None
     time_windows: list[DailyPredictionTimeWindow] | None = None
+    astro_foundation: DailyPredictionAstroFoundation | None = None
     timeline: list[DailyPredictionTimeBlock]
     turning_points: list[DailyPredictionTurningPoint]
     decision_windows: list[DailyPredictionDecisionWindow] | None = None
