@@ -75,6 +75,10 @@ const MESSAGES: Record<string, Record<Lang, string>> = {
   advice_cta: { fr: "Voir les moments clés", en: "View key moments" },
   day_mood_label: { fr: "Tonalité", en: "Mood" },
   day_state_label: { fr: 'Tonalité du jour', en: 'Day mood' },
+  see_details_cta: { fr: "Voir le détail", en: "See details" },
+  no_detail_available: { fr: "Détails non disponibles pour ce créneau.", en: "Details not available for this slot." },
+  focus_moment_default_title: { fr: "Moment de la journée", en: "Moment of the day" },
+  optimize_day_cta: { fr: "Optimiser ma journée", en: "Optimize my day" },
   // Agenda du jour (ex-fenêtres décisionnelles)
   decision_windows_title: { fr: "Agenda du jour", en: "Daily Agenda" },
   window_type_favorable: { fr: "Fenêtre favorable", en: "Favorable window" },

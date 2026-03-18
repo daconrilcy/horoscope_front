@@ -69,7 +69,7 @@ export const DayAgenda: React.FC<Props> = ({ slots, lang }) => {
 
           /* Pivot slot: shift-marker sorti du slot pour passer au-dessus de la corona */
           return (
-            <div key={slot.label} className="pivot-corona-wrapper">
+            <div key={slot.label} className="pivot-corona-wrapper" data-testid="agenda-slot-pivot">
               <div
                 className="panel agenda-slot agenda-slot--pivot p-4"
                 data-testid="agenda-slot"

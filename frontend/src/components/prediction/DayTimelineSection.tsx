@@ -12,6 +12,8 @@ interface DayTimelineSectionProps {
   model: DayTimelineSectionModel
   lang: Lang
   agendaSlots: DailyAgendaSlot[]
+  selectedPeriod: DayPeriodKey | null
+  onPeriodChange: (key: DayPeriodKey | null) => void
 }
 
 const PERIOD_INDICES: Record<DayPeriodKey, [number, number]> = {
@@ -21,15 +23,19 @@ const PERIOD_INDICES: Record<DayPeriodKey, [number, number]> = {
   soiree: [9, 12]
 }
 
-export const DayTimelineSection: React.FC<DayTimelineSectionProps> = ({ model, lang, agendaSlots }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<DayPeriodKey | null>(null)
-
+export const DayTimelineSection: React.FC<DayTimelineSectionProps> = ({ 
+  model, 
+  lang, 
+  agendaSlots,
+  selectedPeriod,
+  onPeriodChange
+}) => {
   if (model.periods.length === 0) {
     return null
   }
 
   const handleSelect = (key: DayPeriodKey) => {
-    setSelectedPeriod(prev => (prev === key ? null : key))
+    onPeriodChange(selectedPeriod === key ? null : key)
   }
 
   // Recalcule hasTurningPoint depuis les agendaSlots réels (qui incluent les keyMoments

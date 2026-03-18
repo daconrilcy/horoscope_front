@@ -206,6 +206,10 @@ export const PREDICTION_UI_MESSAGES: Record<
   advice_title: { fr: "Conseil du jour", en: "Today's advice" },
   advice_cta: { fr: "Voir les moments clés", en: "View key moments" },
   day_mood_label: { fr: "Tonalité", en: "Mood" },
+  see_details_cta: { fr: "Voir le détail", en: "See details" },
+  no_detail_available: { fr: "Détails non disponibles pour ce créneau.", en: "Details not available for this slot." },
+  focus_moment_default_title: { fr: "Moment de la journée", en: "Moment of the day" },
+  optimize_day_cta: { fr: "Optimiser ma journée", en: "Optimize my day" },
 };
 
 /**

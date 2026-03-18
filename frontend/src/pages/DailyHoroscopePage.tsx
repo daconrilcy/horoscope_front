@@ -1,20 +1,20 @@
 import { useNavigate } from 'react-router-dom'
 import { PageLayout } from '../layouts'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 
 import { TodayHeader } from '../components/TodayHeader'
 import { HeroSummaryCard } from '../components/prediction/HeroSummaryCard'
-import { CategoryGrid } from '../components/prediction/CategoryGrid'
-import { TurningPointsList } from '../components/prediction/TurningPointsList'
 import { KeyPointsSection } from '../components/prediction/KeyPointsSection'
 import { DayTimelineSection } from '../components/prediction/DayTimelineSection'
+import { DetailAndScoresSection } from '../components/prediction/DetailAndScoresSection'
 import { DailyPageHeader } from '../components/prediction/DailyPageHeader'
 import type { DailyPredictionTurningPoint } from '../types/dailyPrediction'
+import type { DayPeriodKey } from '../types/dayTimeline'
 
 import { detectLang } from '../i18n/astrology'
 import { buildDailyAgendaSlots, buildDailyKeyMoments } from '../utils/dailyAstrology'
-import { getPredictionMessage, getToneLabel, getToneColor, getCategoryLabel } from '../utils/predictionI18n'
+import { getPredictionMessage, getCategoryLabel } from '../utils/predictionI18n'
 import { getLocale } from '../utils/locale'
 import { useAccessTokenSnapshot } from '../utils/authToken'
 import { useAuthMe } from '../api/authMe'
@@ -87,6 +87,8 @@ export function DailyHoroscopePage() {
   const lang = (detected === 'en' ? 'en' : 'fr') as any
   const manualRefreshPending = useRef(false)
   const bootstrapPredictionRefetchDoneForToken = useRef<string | null>(null)
+
+  const [selectedPeriod, setSelectedPeriod] = useState<DayPeriodKey | null>(null)
 
   const { data: user, isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useAuthMe(accessToken)
 
@@ -310,38 +312,18 @@ export function DailyHoroscopePage() {
               model={buildDayTimelineSectionModel(prediction, lang)}
               lang={lang}
               agendaSlots={agendaSlots}
+              selectedPeriod={selectedPeriod}
+              onPeriodChange={setSelectedPeriod}
             />
           )}
 
           {/* Zone 5 : DetailAndScoresSection (2 col sur ≥768px) */}
-          <section className="daily-layout__section daily-layout__detail-scores">
-            <div className="daily-layout__detail-scores-inner">
-              {/* FocusMomentCard : premier turning point */}
-              {keyMoments.length > 0 && (
-                <div className="daily-layout__focus">
-                  <h3 className="daily-layout__section-title">
-                    {getPredictionMessage('focus_title', lang)}
-                  </h3>
-                  <TurningPointsList
-                    moments={keyMoments.slice(0, 1)}
-                    lang={lang}
-                    onTurningPointClick={handleTurningPointClick}
-                  />
-                </div>
-              )}
-              {/* DailyDomainsCard */}
-              <div className="daily-layout__domains">
-                <h3 className="daily-layout__section-title">
-                  {getPredictionMessage('domains_title', lang)}
-                </h3>
-                <CategoryGrid
-                  categories={prediction.categories}
-                  lang={lang}
-                  onCategoryClick={handleCategoryClick}
-                />
-              </div>
-            </div>
-          </section>
+          <DetailAndScoresSection
+            selectedPeriodKey={selectedPeriod}
+            agendaSlots={agendaSlots}
+            prediction={prediction}
+            lang={lang}
+          />
 
           {/* Zone 6 : AdviceCard + CTA */}
           {prediction.summary.best_window && (
