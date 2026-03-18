@@ -3,7 +3,7 @@ import type { DailyAgendaSlot } from './dailyAstrology'
 import type { Lang } from '../i18n/predictions'
 import type { DayPeriodKey } from '../types/dayTimeline'
 import type { FocusMomentCardModel, FocusMomentTag } from '../types/detailScores'
-import { getCategoryMeta, getPredictionMessage, getToneLabel, humanizeTurningPointSemantic } from './predictionI18n'
+import { getCategoryMeta, getPredictionMessage, humanizeTurningPointSemantic } from './predictionI18n'
 
 const PERIOD_SLOT_RANGES: Record<DayPeriodKey, [number, number]> = {
   nuit: [0, 3],
@@ -73,15 +73,14 @@ export function buildFocusMomentCardModel(
   const slotEndIso = `${prediction.meta.date_local}T${String(endHour).padStart(2, '0')}:00:00`
   const matchingTP = prediction.turning_points.find(tp => tp.occurred_at_local >= slotStartIso && tp.occurred_at_local < slotEndIso)
 
-  // Titre : summary narratif du TP ou du bloc timeline ("Le relief du moment s'apaise")
+  // Titre : même source que key-point-card__label (semantic.cause || semantic.title)
   // Description : explication sémantique de la transition, ou summary en fallback
-  const narrativeSummary = matchingTP?.summary || matchingBlock?.summary || null
-
-  let title = narrativeSummary || getPredictionMessage('focus_moment_default_title', lang)
+  let title = getPredictionMessage('focus_moment_default_title', lang)
   let description = getPredictionMessage('no_detail_available', lang)
 
   if (matchingTP) {
     const semantic = humanizeTurningPointSemantic(matchingTP, lang)
+    title = semantic.cause || semantic.title || title
     description = semantic.transition || semantic.implication || matchingBlock?.summary || getPredictionMessage('no_detail_available', lang)
   } else if (matchingBlock?.summary) {
     description = matchingBlock.summary
