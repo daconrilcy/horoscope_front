@@ -22,6 +22,13 @@ export const CATEGORY_LABELS: Record<string, Record<Lang, string>> = {
   social_network: { fr: "Vie sociale & Réseau", en: "Social Network" },
   communication: { fr: "Communication", en: "Communication" },
   pleasure_creativity: { fr: "Plaisir & Créativité", en: "Pleasure & Creativity" },
+  // Public Domains V4
+  pro_ambition: { fr: "Pro & Ambition", en: "Pro & Ambition" },
+  relations_echanges: { fr: "Relations & échanges", en: "Relations & Exchanges" },
+  energie_bienetre: { fr: "Énergie & bien-être", en: "Energy & Well-being" },
+  argent_ressources: { fr: "Argent & ressources", en: "Money & Resources" },
+  vie_personnelle: { fr: "Vie personnelle", en: "Personal Life" },
+  // Legacy
   amour: { fr: "Amour & Relations", en: "Love & Relationships" },
   travail: { fr: "Travail", en: "Work" },
   carriere: { fr: "Carrière", en: "Career" },

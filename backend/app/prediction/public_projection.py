@@ -6,6 +6,11 @@ from typing import TYPE_CHECKING, Any
 
 from app.prediction.decision_window_builder import DecisionWindowBuilder
 from app.prediction.editorial_template_engine import EditorialTemplateEngine
+from app.prediction.public_domain_taxonomy import (
+    DISPLAY_ORDER,
+    PUBLIC_DOMAINS,
+    aggregate_public_domain_score,
+)
 
 if TYPE_CHECKING:
     from .persisted_snapshot import PersistedPredictionSnapshot
@@ -41,9 +46,14 @@ class PublicPredictionAssembler:
         # AC1 Story 42.16: Resolve evidence pack
         evidence = self._resolve_evidence_pack(snapshot, engine_output)
 
-        # 1. Categories
-        categories = PublicCategoryPolicy().build(snapshot, cat_id_to_code, evidence=evidence)
-        category_note_by_code = {c["code"]: c["note_20"] for c in categories}
+        # 1. Categories (V4: Public domains, keep internal for retrocompat)
+        internal_categories = PublicCategoryPolicy().build(
+            snapshot, cat_id_to_code, evidence=evidence
+        )
+        category_note_by_code = {c["code"]: c["note_20"] for c in internal_categories}
+
+        # New: Public Domains (V4)
+        public_domains = PublicDomainRankingPolicy().build(internal_categories)
 
         # 2. Decision Windows
         decision_windows = PublicDecisionWindowPolicy().build(
@@ -54,7 +64,7 @@ class PublicPredictionAssembler:
             evidence=evidence,
         )
 
-        is_flat_day = _is_flat_day(snapshot, decision_windows, categories)
+        is_flat_day = _is_flat_day(snapshot, decision_windows, internal_categories)
 
         # 3. Turning Points
         turning_points = PublicTurningPointPolicy().build(
@@ -115,7 +125,9 @@ class PublicPredictionAssembler:
         return {
             "meta": meta,
             "summary": summary,
-            "categories": categories,
+            "categories": internal_categories,  # Keep for retrocompat
+            "categories_internal": internal_categories,
+            "public_domains": public_domains,
             "timeline": timeline,
             "turning_points": turning_points,
             "decision_windows": decision_windows,
@@ -141,6 +153,55 @@ class PublicPredictionAssembler:
                 return _deserialize_evidence_pack(evidence)
 
         return None
+
+
+class PublicDomainRankingPolicy:
+    """
+    Builds the public domain ranking by aggregating internal category scores.
+    AC: Fusion of 12 internal domains into 5 public ones.
+    Rule: Take the max() score for each public domain.
+    """
+
+    def build(self, internal_categories: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        internal_scores = {c["code"]: c["score_20"] for c in internal_categories}
+        aggregated = aggregate_public_domain_score(internal_scores)
+
+        public_list = []
+        for key in DISPLAY_ORDER:
+            entry = PUBLIC_DOMAINS[key]
+            score_20 = aggregated.get(key)
+            if score_20 is None:
+                continue
+
+            score_10 = score_20 / 2.0
+            level = self._resolve_level(score_10)
+
+            public_list.append(
+                {
+                    "key": key,
+                    "label": entry.label_fr,  # Defaulting to FR as requested in many parts
+                    "internal_codes": entry.internal_codes,
+                    "display_order": entry.display_order,
+                    "score_10": round(score_10, 1),
+                    "level": level,
+                    "rank": 99,  # placeholder
+                }
+            )
+
+        # Rank by score descending
+        public_list.sort(key=lambda x: x["score_10"], reverse=True)
+        for i, domain in enumerate(public_list):
+            domain["rank"] = i + 1
+
+        # Re-sort by display_order for fixed UI order (AC: 6)
+        return sorted(public_list, key=lambda x: x["display_order"])
+
+    def _resolve_level(self, score_10: float) -> str:
+        if score_10 >= 7.0:
+            return "favorable"
+        if score_10 >= 4.0:
+            return "neutre"
+        return "exigeante"
 
 
 class PublicMicroTrendPolicy:

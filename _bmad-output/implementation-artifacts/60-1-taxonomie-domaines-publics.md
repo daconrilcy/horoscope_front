@@ -1,6 +1,6 @@
 # Story 60.1 : Cadrer la taxonomie publique des domaines
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -26,41 +26,41 @@ afin que le front n'affiche plus "Carrière" et "Travail" séparément et que le
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Créer `backend/app/prediction/public_domain_taxonomy.py` (AC: 1, 2, 3, 6, 7)
-  - [ ] T1.1 Définir `PublicDomainEntry(BaseModel)` : `key: str`, `label_fr: str`, `label_en: str`, `icon: str`, `internal_codes: list[str]`, `display_order: int`
-  - [ ] T1.2 Remplir `PUBLIC_DOMAINS: dict[str, PublicDomainEntry]` avec les 5 entrées
-  - [ ] T1.3 Implémenter `map_internal_to_public(code: str) -> str | None` — reverse lookup depuis `internal_codes`
-  - [ ] T1.4 Implémenter `DISPLAY_ORDER: list[str]` = ordre d'affichage fixe
-  - [ ] T1.5 Vérifier que tous les 12 codes internes sont couverts (assertion au module load ou test)
+- [x] T1 — Créer `backend/app/prediction/public_domain_taxonomy.py` (AC: 1, 2, 3, 6, 7)
+  - [x] T1.1 Définir `PublicDomainEntry(BaseModel)` : `key: str`, `label_fr: str`, `label_en: str`, `icon: str`, `internal_codes: list[str]`, `display_order: int`
+  - [x] T1.2 Remplir `PUBLIC_DOMAINS: dict[str, PublicDomainEntry]` avec les 5 entrées
+  - [x] T1.3 Implémenter `map_internal_to_public(code: str) -> str | None` — reverse lookup depuis `internal_codes`
+  - [x] T1.4 Implémenter `DISPLAY_ORDER: list[str]` = ordre d'affichage fixe
+  - [x] T1.5 Vérifier que tous les 12 codes internes sont couverts (assertion au module load ou test)
 
-- [ ] T2 — Implémenter la règle de fusion de score (AC: 5)
-  - [ ] T2.1 Créer `aggregate_public_domain_score(internal_scores: dict[str, float]) -> dict[str, float]`
-  - [ ] T2.2 Règle : pour chaque domaine public, prendre le `max()` des scores des domaines internes qui lui appartiennent
-  - [ ] T2.3 Si aucun code interne n'a de score → `None` (domaine absent du run)
+- [x] T2 — Implémenter la règle de fusion de score (AC: 5)
+  - [x] T2.1 Créer `aggregate_public_domain_score(internal_scores: dict[str, float]) -> dict[str, float]`
+  - [x] T2.2 Règle : pour chaque domaine public, prendre le `max()` des scores des domaines internes qui lui appartiennent
+  - [x] T2.3 Si aucun code interne n'a de score → `None` (domaine absent du run)
 
-- [ ] T3 — Brancher dans `PublicPredictionAssembler` (AC: 4)
-  - [ ] T3.1 Lire `backend/app/prediction/public_projection.py` — classe `PublicPredictionAssembler`, méthode `assemble()`
-  - [ ] T3.2 Dans `PublicCategoryPolicy`, ajouter une étape de mapping public avant construction des catégories
-  - [ ] T3.3 Garder les catégories internes dans `_internal_categories` pour usage interne du moteur
-  - [ ] T3.4 Ne pas supprimer les catégories internes du payload — les ajouter sous `categories_internal` (champ nouveau, rétrocompat)
+- [x] T3 — Brancher dans `PublicPredictionAssembler` (AC: 4)
+  - [x] T3.1 Lire `backend/app/prediction/public_projection.py` — classe `PublicPredictionAssembler`, méthode `assemble()`
+  - [x] T3.2 Dans `PublicCategoryPolicy`, ajouter une étape de mapping public avant construction des catégories
+  - [x] T3.3 Garder les catégories internes dans `_internal_categories` pour usage interne du moteur
+  - [x] T3.4 Ne pas supprimer les catégories internes du payload — les ajouter sous `categories_internal` (champ nouveau, rétrocompat)
 
-- [ ] T4 — Mettre à jour les DTOs Pydantic (AC: 6)
-  - [ ] T4.1 Dans `backend/app/api/v1/routers/predictions.py`, ajouter `DailyPredictionPublicDomain(BaseModel)` :
+- [x] T4 — Mettre à jour les DTOs Pydantic (AC: 6)
+  - [x] T4.1 Dans `backend/app/api/v1/routers/predictions.py`, ajouter `DailyPredictionPublicDomain(BaseModel)` :
     `key: str, label: str, internal_codes: list[str], display_order: int`
-  - [ ] T4.2 Ajouter champ `public_domains: list[DailyPredictionPublicDomain] | None = None` dans `DailyPredictionResponse`
+  - [x] T4.2 Ajouter champ `public_domains: list[DailyPredictionPublicDomain] | None = None` dans `DailyPredictionResponse`
 
-- [ ] T5 — Mettre à jour les libellés i18n front (AC: 4)
-  - [ ] T5.1 Localiser `frontend/src/utils/predictionI18n.ts`
-  - [ ] T5.2 Ajouter les 5 entrées publiques en FR et EN
-  - [ ] T5.3 Conserver les anciens codes internes (rétrocompat)
+- [x] T5 — Mettre à jour les libellés i18n front (AC: 4)
+  - [x] T5.1 Localiser `frontend/src/utils/predictionI18n.ts`
+  - [x] T5.2 Ajouter les 5 entrées publiques en FR et EN
+  - [x] T5.3 Conserver les anciens codes internes (rétrocompat)
 
-- [ ] T6 — Tests unitaires (AC: 8)
-  - [ ] T6.1 Test : `map_internal_to_public("work")` → `"pro_ambition"`
-  - [ ] T6.2 Test : `map_internal_to_public("career")` → `"pro_ambition"`
-  - [ ] T6.3 Test : `map_internal_to_public("love")` → `"relations_echanges"`
-  - [ ] T6.4 Test : tous les 12 codes internes ont un mapping valide
-  - [ ] T6.5 Test : `aggregate_public_domain_score({"work": 14, "career": 18})` → `{"pro_ambition": 18}`
-  - [ ] T6.6 Test : `PUBLIC_DOMAINS` contient exactement 5 entrées
+- [x] T6 — Tests unitaires (AC: 8)
+  - [x] T6.1 Test : `map_internal_to_public("work")` → `"pro_ambition"`
+  - [x] T6.2 Test : `map_internal_to_public("career")` → `"pro_ambition"`
+  - [x] T6.3 Test : `map_internal_to_public("love")` → `"relations_echanges"`
+  - [x] T6.4 Test : tous les 12 codes internes ont un mapping valide
+  - [x] T6.5 Test : `aggregate_public_domain_score({"work": 14, "career": 18})` → `{"pro_ambition": 18}`
+  - [x] T6.6 Test : `PUBLIC_DOMAINS` contient exactement 5 entrées
 
 ## Dev Notes
 
@@ -131,3 +131,10 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+- `backend/app/prediction/public_domain_taxonomy.py` (NEW)
+- `backend/app/prediction/public_projection.py` (MOD)
+- `backend/app/api/v1/routers/predictions.py` (MOD)
+- `frontend/src/i18n/predictions.ts` (MOD)
+- `frontend/src/utils/predictionI18n.ts` (MOD)
+- `backend/tests/unit/prediction/test_public_domain_taxonomy.py` (NEW)

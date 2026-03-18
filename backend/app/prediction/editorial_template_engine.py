@@ -33,6 +33,12 @@ class EditorialTemplateEngine:
             "social_network": "Vie sociale & Réseau",
             "communication": "Communication",
             "pleasure_creativity": "Plaisir & Créativité",
+            # Public Domains V4
+            "pro_ambition": "Pro & Ambition",
+            "relations_echanges": "Relations & échanges",
+            "energie_bienetre": "Énergie & bien-être",
+            "argent_ressources": "Argent & ressources",
+            "vie_personnelle": "Vie personnelle",
         },
         "en": {
             "love": "Love & Relationships",
@@ -47,6 +53,12 @@ class EditorialTemplateEngine:
             "social_network": "Social Network",
             "communication": "Communication",
             "pleasure_creativity": "Pleasure & Creativity",
+            # Public Domains V4
+            "pro_ambition": "Pro & Ambition",
+            "relations_echanges": "Relations & Exchanges",
+            "energie_bienetre": "Energy & Well-being",
+            "argent_ressources": "Money & Resources",
+            "vie_personnelle": "Personal Life",
         },
     }
 

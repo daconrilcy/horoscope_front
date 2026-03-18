@@ -32,6 +32,12 @@ const CATEGORY_ICONS: Record<string, string> = {
   social_network: "🤝",
   communication: "💬",
   pleasure_creativity: "🎨",
+  // Public Domains V4
+  pro_ambition: "💼",
+  relations_echanges: "🤝",
+  energie_bienetre: "⚡",
+  argent_ressources: "💰",
+  vie_personnelle: "🎨",
 };
 
 const TONE_COLORS: Record<string, string> = {
