@@ -81,6 +81,16 @@ class DailyPredictionTurningPoint(BaseModel):
     category_deltas: list[dict[str, Any]] | None = None
 
 
+class DailyPredictionTurningPointPublic(BaseModel):
+    time: str
+    title: str
+    change_type: str
+    affected_domains: list[str]
+    what_changes: str
+    do: str
+    avoid: str
+
+
 class DailyPredictionTimeBlock(BaseModel):
     start_local: str
     end_local: str
@@ -149,6 +159,7 @@ class DailyPredictionResponse(BaseModel):
     categories: list[DailyPredictionCategory]
     categories_internal: list[DailyPredictionCategory] | None = None
     domain_ranking: list[DailyPredictionPublicDomainScore] | None = None
+    turning_point: DailyPredictionTurningPointPublic | None = None
     time_windows: list[DailyPredictionTimeWindow] | None = None
     timeline: list[DailyPredictionTimeBlock]
     turning_points: list[DailyPredictionTurningPoint]

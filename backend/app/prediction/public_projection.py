@@ -15,7 +15,9 @@ from app.prediction.public_domain_taxonomy import (
 from app.prediction.public_label_catalog import (
     get_action_hint,
     get_climate_label,
+    get_do_avoid,
     get_regime_label,
+    get_turning_point_title,
 )
 from app.prediction.public_score_mapper import (
     PublicDomainScore,
@@ -127,6 +129,13 @@ class PublicPredictionAssembler:
             evidence=evidence,
         )
 
+        # New: Main Turning Point (V4)
+        main_turning_point = PublicMainTurningPointPolicy().build(
+            snapshot,
+            engine_output=engine_output,
+            evidence=evidence,
+        )
+
         # 7. Meta
         house_system_effective = snapshot.house_system_effective
         if house_system_effective is None and engine_output is not None:
@@ -155,6 +164,7 @@ class PublicPredictionAssembler:
             "summary": summary,
             "day_climate": day_climate,
             "time_windows": time_windows,
+            "turning_point": main_turning_point,
             "categories": internal_categories,  # Keep for retrocompat
             "categories_internal": internal_categories,
             "domain_ranking": public_domains,
@@ -183,6 +193,95 @@ class PublicPredictionAssembler:
                 return _deserialize_evidence_pack(evidence)
 
         return None
+
+
+class PublicMainTurningPointPolicy:
+    """
+    Builds the main narrative turning point for the day (Story 60.5).
+    Selects the most significant change and projects it for the public.
+    """
+
+    def build(
+        self,
+        snapshot: PersistedPredictionSnapshot,
+        *,
+        engine_output: Any | None = None,
+        evidence: V3EvidencePack | None = None,
+    ) -> dict[str, Any] | None:
+        # 1. Resolve Turning Points
+        raw_tps = []
+        if evidence:
+            raw_tps = evidence.turning_points
+        else:
+            core_output = _resolve_core_engine_output(engine_output)
+            if core_output is not None:
+                raw_tps = getattr(core_output, "turning_points", [])
+
+        if not raw_tps:
+            return None
+
+        # 2. Filter & Sort (AC8: severity >= 0.3, confidence >= 0.5)
+        significant = [
+            tp for tp in raw_tps if float(tp.severity) >= 0.3 and float(tp.confidence) >= 0.5
+        ]
+
+        if not significant:
+            return None
+
+        # Sort by severity descending, then time
+        significant.sort(key=lambda x: (float(x.severity), x.local_time), reverse=True)
+        best = significant[0]
+
+        # 3. Project for Public
+        change_type = getattr(best, "change_type", "recomposition")
+        impacted = getattr(best, "categories_impacted", [])
+        if not impacted and hasattr(best, "themes"):
+            impacted = best.themes
+
+        affected_domains = self._map_domains(impacted)
+        primary_domain = affected_domains[0] if affected_domains else None
+
+        title = get_turning_point_title(change_type, primary_domain)
+        do_hint, avoid_hint = get_do_avoid(change_type, primary_domain)
+
+        what_changes = self._build_what_changes(best, primary_domain)
+
+        return {
+            "time": best.local_time.strftime("%H:%M"),
+            "title": title,
+            "change_type": change_type,
+            "affected_domains": affected_domains,
+            "what_changes": what_changes,
+            "do": do_hint,
+            "avoid": avoid_hint,
+        }
+
+    def _map_domains(self, internal_themes: list[str]) -> list[str]:
+        public_keys = []
+        for code in internal_themes:
+            pk = map_internal_to_public(code)
+            if pk and pk not in public_keys:
+                public_keys.append(pk)
+        return public_keys[:3]
+
+    def _build_what_changes(self, tp: Any, primary_domain: str | None) -> str:
+        change_type = getattr(tp, "change_type", "recomposition")
+        from app.prediction.public_domain_taxonomy import PUBLIC_DOMAINS
+
+        domain_label = (
+            PUBLIC_DOMAINS[primary_domain].label_fr.lower()
+            if primary_domain in PUBLIC_DOMAINS
+            else "votre focus"
+        )
+
+        if change_type == "emergence":
+            return f"L'énergie monte et {domain_label} devient prioritaire."
+        if change_type == "recomposition":
+            return f"Le focus de votre journée se déplace vers {domain_label}."
+        if change_type == "attenuation":
+            return "La tension retombe et laisse place à une phase d'intégration."
+
+        return getattr(tp, "summary", "Changement de dynamique dans votre journée.")
 
 
 class PublicTimeWindowPolicy:

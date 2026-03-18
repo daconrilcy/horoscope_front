@@ -64,3 +64,57 @@ def get_regime_label(regime: str, top_domains: list[str]) -> str:
 
 def get_action_hint(regime: str) -> str:
     return ACTION_HINTS.get(regime, "Suivez votre rythme")
+
+
+TITLE_TEMPLATES: dict[tuple[str, str], str] = {
+    ("emergence", "pro_ambition"): "Montée en puissance côté pro",
+    ("emergence", "relations_echanges"): "Ouverture relationnelle",
+    ("emergence", "energie_bienetre"): "Regain d'énergie",
+    ("emergence", "argent_ressources"): "Opportunité matérielle",
+    ("emergence", "vie_personnelle"): "Élan créatif et perso",
+    ("recomposition", "pro_ambition"): "Virage stratégique pro",
+    ("recomposition", "relations_echanges"): "Nouvelle donne relationnelle",
+    ("recomposition", "energie_bienetre"): "Changement de rythme intérieur",
+    ("attenuation", "pro_ambition"): "L'exigence pro s'apaise",
+    ("attenuation", "relations_echanges"): "Retour au calme relationnel",
+    ("attenuation", "energie_bienetre"): "Détente et récupération",
+}
+
+FALLBACK_TITLES: dict[str, str] = {
+    "emergence": "Montée en puissance",
+    "recomposition": "Virage de la journée",
+    "attenuation": "Retour au calme",
+}
+
+DO_AVOID_CATALOG: dict[tuple[str, str | None], tuple[str, str]] = {
+    ("emergence", "pro_ambition"): ("Avancez, décidez, lancez", "Reporter, attendre"),
+    ("emergence", "relations_echanges"): ("Échanger, sortir, proposer", "S'isoler, ruminer"),
+    ("recomposition", "relations_echanges"): ("Écouter, dialoguer", "Imposer, forcer"),
+    ("attenuation", None): ("Clôturer, ranger, ralentir", "Forcer une décision"),
+    ("recomposition", None): ("Observer, s'adapter", "S'obstiner"),
+    ("emergence", None): ("Saisir l'élan", "Douter"),
+}
+
+
+def get_turning_point_title(change_type: str, domain: str | None) -> str:
+    if domain:
+        title = TITLE_TEMPLATES.get((change_type, domain))
+        if title:
+            return title
+    return FALLBACK_TITLES.get(change_type, "Moment de bascule")
+
+
+def get_do_avoid(change_type: str, domain: str | None) -> tuple[str, str]:
+    # Try specific match
+    if domain:
+        res = DO_AVOID_CATALOG.get((change_type, domain))
+        if res:
+            return res
+
+    # Try change_type match with None domain
+    res = DO_AVOID_CATALOG.get((change_type, None))
+    if res:
+        return res
+
+    # absolute fallback
+    return ("Rester à l'écoute", "Agir avec précipitation")
