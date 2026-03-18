@@ -84,9 +84,9 @@ gemini-2.0-flash-thinking-exp
 - `focusMomentCardMapper` : `prediction.turning_points` peut être vide (API sans TPs explicites) — dans ce cas `keyPointsSectionMapper` utilisait son fallback interne (`buildDailyKeyMoments`) mais `focusMomentCardMapper` tombait sur le titre par défaut. Correction : `keyMoments` (moments enrichis + fallback, déjà calculés dans `DailyHoroscopePage`) est maintenant passé en paramètre via `DetailAndScoresSection`.
 - `DailyHoroscopePage.test.tsx` : fixture `predictionTechnical` — `turning_point.summary: "delta_note"` (valeur technique brute) remplacé par `null` ; le mapper affiche maintenant le titre sémantique calculé, pas la valeur brute.
 
-**Correction visuelle — passe 3 (ajustement taille titre) :**
+**Corrections visuelles — passe 3 (polish manuel) :**
 
-- `FocusMomentCard.css` : titre `clamp(1.85rem, 1.8vw, 2.9rem)` — valeur fluide réduite de `2.8vw` à `1.8vw` pour éviter un titre trop imposant sur desktop moyen.
+- `FocusMomentCard.css` — time badge : pill supprimée (`background: transparent`, `border: none`) ; texte horaire `0.9rem weight-600 var(--text-2)`. Titre `clamp(1.75rem, 1.7vw, 2.9rem)`. Tags : padding `0.5rem 1rem`, fond `var(--background-unselected-cell)`, border `rgba(220,210,255,0.7)`, `weight-600`, `box-shadow` léger ; icône tag `stroke-width: 3` + `fill: var(--primary)`. Description : `max-width: 32ch` supprimé. CTA : fond `var(--background-unselected-cell)`, border `rgba(230,220,255,0.8)` ; flèche `ArrowRight` ajoutée à droite (`strokeWidth 3, color: var(--primary)`).
 
 ### File List
 
