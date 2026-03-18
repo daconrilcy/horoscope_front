@@ -4,48 +4,49 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 28px 24px 22px;
+  justify-content: space-between;
+  padding: 26px 22px 20px;
   border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.22));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(230, 220, 255, 0.30);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.62), rgba(248, 245, 255, 0.44));
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
   box-shadow:
-    0 12px 36px rgba(88, 55, 170, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.30);
+    0 14px 40px rgba(88, 55, 170, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
   overflow: hidden;
   height: 100%;
 }
 
-/* Décor abstrait mauve — bas-droite */
+/* Décor principal — halo mauve bas-droite */
 .focus-moment-card::after {
   content: "";
   position: absolute;
-  right: -8%;
-  bottom: -12%;
-  width: 52%;
-  height: 58%;
+  right: -12%;
+  bottom: -15%;
+  width: 60%;
+  height: 62%;
   pointer-events: none;
-  background: radial-gradient(circle at 38% 42%, rgba(154, 117, 244, 0.22), rgba(154, 117, 244, 0) 68%);
-  filter: blur(14px);
+  background: radial-gradient(circle at 38% 44%, rgba(154, 117, 244, 0.18), rgba(154, 117, 244, 0) 65%);
+  filter: blur(22px);
   z-index: 0;
 }
 
-/* Second halo plus doux, décalé */
+/* Second halo — plus large, plus doux */
 .focus-moment-card__background-glow {
   position: absolute;
-  bottom: 18%;
-  right: 6%;
-  width: 180px;
-  height: 180px;
-  background: radial-gradient(circle, rgba(200, 180, 255, 0.14) 0%, transparent 70%);
+  bottom: 10%;
+  right: 4%;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(210, 195, 255, 0.12) 0%, transparent 72%);
   border-radius: 50%;
   pointer-events: none;
-  filter: blur(32px);
+  filter: blur(38px);
   z-index: 0;
 }
 
-/* Tout le contenu passe au-dessus du décor */
+/* Contenu au-dessus du décor */
 .focus-moment-card > *:not(.focus-moment-card__background-glow) {
   position: relative;
   z-index: 1;
@@ -53,72 +54,73 @@
 
 /* ── Header ── */
 .focus-moment-card__header {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
-/* ── Badge horaire ── */
+/* ── Badge horaire — annotation fine ── */
 .focus-moment-card__time-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 30px;
-  padding: 0 14px;
-  background: rgba(255, 255, 255, 0.40);
-  border: 1px solid rgba(160, 130, 220, 0.18);
+  gap: 5px;
+  min-height: 26px;
+  padding: 0 11px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(160, 130, 220, 0.14);
   border-radius: 999px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .focus-moment-card__sparkle {
   color: var(--primary);
-  opacity: 0.75;
+  opacity: 0.65;
 }
 
 .focus-moment-card__time {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 500;
   color: var(--primary);
-  letter-spacing: 0.02em;
+  opacity: 0.85;
+  letter-spacing: 0.01em;
 }
 
-/* ── Titre — point focal de la carte ── */
+/* ── Titre — point focal dominant ── */
 .focus-moment-card__title {
-  font-size: clamp(1.9rem, 3vw, 3rem);
+  font-size: clamp(1.85rem, 2.8vw, 2.9rem);
   font-weight: 600;
   color: var(--text-1);
-  line-height: 1.02;
+  line-height: 1.04;
   margin: 0;
   letter-spacing: -0.03em;
 }
 
-/* ── Tags ── */
+/* ── Tags — pills douces, intégrées ── */
 .focus-moment-card__tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 6px;
+  margin-bottom: 14px;
 }
 
 .focus-moment-card__tag {
   display: inline-flex;
   align-items: center;
-  min-height: 32px;
-  padding: 0 12px;
-  background: rgba(255, 255, 255, 0.42);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  min-height: 28px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(220, 210, 255, 0.28);
   border-radius: 999px;
   color: var(--text-2);
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 500;
 }
 
 /* ── Description ── */
 .focus-moment-card__description {
-  font-size: 1.06rem;
-  line-height: 1.55;
+  font-size: 1.02rem;
+  line-height: 1.58;
   color: var(--text-2);
-  max-width: 36ch;
-  margin: 0 0 20px 0;
+  max-width: 32ch;
+  margin: 0 0 18px 0;
   flex-grow: 1;
 }
 
@@ -131,32 +133,36 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  min-height: 48px;
-  padding: 0 20px;
+  min-height: 46px;
+  padding: 0 18px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.48);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(230, 220, 255, 0.45);
+  background: rgba(255, 255, 255, 0.78);
   color: var(--primary);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(100, 70, 190, 0.10);
+  box-shadow: 0 6px 18px rgba(100, 70, 190, 0.08);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .focus-moment-card__cta:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(100, 70, 190, 0.16);
+  box-shadow: 0 10px 24px rgba(100, 70, 190, 0.13);
 }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .focus-moment-card {
-    padding: 22px 18px 18px;
+    padding: 20px 16px 16px;
     border-radius: 22px;
   }
 
   .focus-moment-card__title {
-    font-size: clamp(1.6rem, 5vw, 2rem);
+    font-size: clamp(1.55rem, 5vw, 1.9rem);
+  }
+
+  .focus-moment-card__description {
+    max-width: 100%;
   }
 }
