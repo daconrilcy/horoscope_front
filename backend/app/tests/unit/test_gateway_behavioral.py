@@ -41,7 +41,7 @@ def create_mock_result(use_case, raw_output):
 
 
 @pytest.mark.asyncio
-async def test_check_1_fallback_priority(db_session, monkeypatch):
+async def test_check_1_fallback_priority(db_session):
     """Point 1: Priorité fallback UseCaseConfig > PromptVersion."""
     schema = LlmOutputSchemaModel(name="s", json_schema={"type": "object", "required": ["ok"]})
     db_session.add(schema)
@@ -75,10 +75,6 @@ async def test_check_1_fallback_priority(db_session, monkeypatch):
     db_session.add_all([p1, p_A])
     db_session.commit()
 
-    monkeypatch.setattr(
-        "app.llm_orchestration.gateway.settings", MagicMock(llm_orchestration_v2=True)
-    )
-
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(
         side_effect=[
@@ -98,7 +94,7 @@ async def test_check_1_fallback_priority(db_session, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_check_3_repair_call_stable_prompt(db_session, monkeypatch):
+async def test_check_3_repair_call_stable_prompt(db_session):
     """Point 3: Repair call utilise un developer_prompt technique minimal."""
     schema = LlmOutputSchemaModel(name="s", json_schema={"type": "object", "required": ["ok"]})
     db_session.add(schema)
@@ -116,10 +112,6 @@ async def test_check_3_repair_call_stable_prompt(db_session, monkeypatch):
     )
     db_session.add_all([uc, p])
     db_session.commit()
-
-    monkeypatch.setattr(
-        "app.llm_orchestration.gateway.settings", MagicMock(llm_orchestration_v2=True)
-    )
 
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(
@@ -141,7 +133,7 @@ async def test_check_3_repair_call_stable_prompt(db_session, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_check_4_repair_limit_and_anti_loop(db_session, monkeypatch):
+async def test_check_4_repair_limit_and_anti_loop(db_session):
     """Point 4 & B: Une seule tentative de repair + protection anti-boucle fallback."""
     schema = LlmOutputSchemaModel(name="s", json_schema={"type": "object", "required": ["ok"]})
     db_session.add(schema)
@@ -179,10 +171,6 @@ async def test_check_4_repair_limit_and_anti_loop(db_session, monkeypatch):
     db_session.add_all([uc_a, uc_b, p_a, p_b])
     db_session.commit()
 
-    monkeypatch.setattr(
-        "app.llm_orchestration.gateway.settings", MagicMock(llm_orchestration_v2=True)
-    )
-
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(
         side_effect=[
@@ -205,11 +193,8 @@ async def test_check_4_repair_limit_and_anti_loop(db_session, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_check_2_fail_fast_missing_vars(db_session, monkeypatch):
+async def test_check_2_fail_fast_missing_vars(db_session):
     """Point 2: Validation runtime locale et use_case."""
-    monkeypatch.setattr(
-        "app.llm_orchestration.gateway.settings", MagicMock(llm_orchestration_v2=True)
-    )
     gateway = LLMGateway()
 
     with pytest.raises(GatewayConfigError) as exc:

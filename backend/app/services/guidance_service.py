@@ -403,7 +403,7 @@ class GuidanceService:
         recovery_attempts = 0
         try:
             recovery_attempts += 1
-            reformulated = await AIEngineAdapter.generate_guidance(
+            result = await AIEngineAdapter.generate_guidance(
                 use_case=use_case,
                 context=context,
                 user_id=user_id,
@@ -411,6 +411,7 @@ class GuidanceService:
                 trace_id=trace_id,
                 db=db,
             )
+            reformulated = result.raw_output
             reformulate_off_scope, _, _ = GuidanceService._assess_off_scope(reformulated)
             if not reformulate_off_scope:
                 increment_counter("guidance_recovery_success_total", 1.0)
@@ -438,7 +439,7 @@ class GuidanceService:
 
         try:
             recovery_attempts += 1
-            retried = await AIEngineAdapter.generate_guidance(
+            result = await AIEngineAdapter.generate_guidance(
                 use_case=use_case,
                 context=context,
                 user_id=user_id,
@@ -446,6 +447,7 @@ class GuidanceService:
                 trace_id=trace_id,
                 db=db,
             )
+            retried = result.raw_output
             retry_off_scope, _, _ = GuidanceService._assess_off_scope(retried)
             if not retry_off_scope:
                 increment_counter("guidance_recovery_success_total", 1.0)
@@ -622,7 +624,7 @@ class GuidanceService:
         for _ in range(max_attempts):
             attempts += 1
             try:
-                generated_text = await AIEngineAdapter.generate_guidance(
+                result = await AIEngineAdapter.generate_guidance(
                     use_case=use_case,
                     context=context,
                     user_id=user_id,
@@ -641,11 +643,59 @@ class GuidanceService:
                     user_id=user_id,
                     request_id=request_id,
                     trace_id=trace_id,
-                    assistant_content=generated_text,
+                    assistant_content=result.raw_output,
                     persona_profile_code=persona_profile_code,
                 )
-                summary = GuidanceService._normalize_summary(recovered_text, normalized_period)
+
+                # If recovery happened, we might have lost structured output or have new one
+                # For now, let's assume we use structured output if no recovery,
+                # or we try to parse if recovery happened (as recovery might return fallback)
+
+                if not recovery_metadata.recovery_applied and result.structured_output:
+                    s = result.structured_output
+                    summary_raw = s.get("summary") or s.get("text") or result.raw_output
+                    key_points = s.get("key_points") or []
+                    advice = s.get("actionable_advice") or s.get("advice") or []
+                    disclaimer_raw = s.get("disclaimer") or ""
+                else:
+                    # If recovery was applied, we might have a raw text from fallback
+                    # In _apply_off_scope_recovery_async, it returns a string for now.
+                    # TODO: If we want full structure on recovery, we'd need to change it.
+                    # For now, let's do a simple extraction from the recovered_text.
+                    # No, AC says structure is guaranteed by Gateway V2.
+                    # If recovery returned a new result, we should have used it.
+                    
+                    # Manual fallback/parsing for recovery text if it's not structured
+                    summary_raw = recovered_text
+                    key_points = []
+                    advice = []
+                    disclaimer_raw = ""
+
+                summary = GuidanceService._normalize_summary(summary_raw, normalized_period)
                 period_label = "jour" if normalized_period == "daily" else "semaine"
+
+                # Fallback for key_points if parsing failed or returned empty
+                if not key_points:
+                    key_points = [
+                        (
+                            f"Tendance astrologique du {period_label} "
+                            "calculee depuis votre profil natal."
+                        ),
+                        "Lecture prudente: utilisez cette guidance comme aide de reflexion.",
+                    ]
+
+                # Fallback for advice if parsing failed or returned empty
+                if not advice:
+                    advice = [
+                        "Prenez un moment de recul avant une decision importante.",
+                        "Notez les evenements marquants pour comparer avec la guidance.",
+                    ]
+
+                disclaimer = disclaimer_raw or (
+                    "Cette guidance est informative et ne remplace pas un avis professionnel "
+                    "medical, legal ou financier."
+                )
+
                 elapsed_seconds = monotonic() - start
                 observe_duration("guidance_latency_seconds", elapsed_seconds)
                 observe_duration(
@@ -655,21 +705,9 @@ class GuidanceService:
                 return GuidanceData(
                     period=normalized_period,
                     summary=summary,
-                    key_points=[
-                        (
-                            f"Tendance astrologique du {period_label} "
-                            "calculee depuis votre profil natal."
-                        ),
-                        "Lecture prudente: utilisez cette guidance comme aide de reflexion.",
-                    ],
-                    actionable_advice=[
-                        "Prenez un moment de recul avant une decision importante.",
-                        "Notez les evenements marquants pour comparer avec la guidance.",
-                    ],
-                    disclaimer=(
-                        "Cette guidance est informative et ne remplace pas un avis professionnel "
-                        "medical, legal ou financier."
-                    ),
+                    key_points=key_points[:2],  # Cap at 2 as per audit
+                    actionable_advice=advice[:2],  # Cap at 2 as per audit
+                    disclaimer=disclaimer,
                     attempts=attempts,
                     fallback_used=fallback_used,
                     recovery=recovery_metadata,
@@ -873,7 +911,7 @@ class GuidanceService:
         for _ in range(max_attempts):
             attempts += 1
             try:
-                generated_text = await AIEngineAdapter.generate_guidance(
+                result = await AIEngineAdapter.generate_guidance(
                     use_case=use_case,
                     context=context,
                     user_id=user_id,
@@ -892,10 +930,43 @@ class GuidanceService:
                     user_id=user_id,
                     request_id=request_id,
                     trace_id=trace_id,
-                    assistant_content=generated_text,
+                    assistant_content=result.raw_output,
                     persona_profile_code=persona_profile_code,
                 )
-                summary = GuidanceService._normalize_contextual_summary(recovered_text)
+
+                if not recovery_metadata.recovery_applied and result.structured_output:
+                    s = result.structured_output
+                    summary_raw = s.get("summary") or s.get("text") or result.raw_output
+                    key_points = s.get("key_points") or []
+                    advice = s.get("actionable_advice") or s.get("advice") or []
+                    disclaimer_raw = s.get("disclaimer") or ""
+                else:
+                    summary_raw = recovered_text
+                    key_points = []
+                    advice = []
+                    disclaimer_raw = ""
+
+                summary = GuidanceService._normalize_contextual_summary(summary_raw)
+
+                # Fallback for key_points if parsing failed or returned empty
+                if not key_points:
+                    key_points = [
+                        "Votre contexte immediat est integre a la lecture astrologique.",
+                        "La recommandation reste prudente et orientee decision progressive.",
+                    ]
+
+                # Fallback for advice if parsing failed or returned empty
+                if not advice:
+                    advice = [
+                        "Priorisez une action simple dans les prochaines 24h.",
+                        "Re-evaluez apres le premier signal concret observe.",
+                    ]
+
+                disclaimer = disclaimer_raw or (
+                    "Cette guidance est informative et ne remplace pas un avis professionnel "
+                    "medical, legal ou financier."
+                )
+
                 elapsed_seconds = monotonic() - start
                 observe_duration("guidance_latency_seconds", elapsed_seconds)
                 observe_duration(
@@ -909,18 +980,9 @@ class GuidanceService:
                     time_horizon=normalized_horizon,
                     summary=summary,
                     full_text=recovered_text,
-                    key_points=[
-                        "Votre contexte immediat est integre a la lecture astrologique.",
-                        "La recommandation reste prudente et orientee decision progressive.",
-                    ],
-                    actionable_advice=[
-                        "Priorisez une action simple dans les prochaines 24h.",
-                        "Re-evaluez apres le premier signal concret observe.",
-                    ],
-                    disclaimer=(
-                        "Cette guidance est informative et ne remplace pas un avis professionnel "
-                        "medical, legal ou financier."
-                    ),
+                    key_points=key_points[:2],  # Cap at 2 as per audit
+                    actionable_advice=advice[:2],  # Cap at 2 as per audit
+                    disclaimer=disclaimer,
                     attempts=attempts,
                     fallback_used=fallback_used,
                     recovery=recovery_metadata,

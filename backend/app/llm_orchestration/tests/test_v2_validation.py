@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -99,29 +99,22 @@ async def test_error_mapping_reaches_client_v2(db):
     # natal_chart_summary IS in allowlist, so it IS in 'required_prompt_placeholders'.
     # If missing from context, it will raise PromptRenderError.
 
-    from app.ai_engine.config import ai_engine_settings
-
-    with patch.object(ai_engine_settings, "llm_orchestration_v2", True):
-        # We need to mock settings inside LLMGateway again or use a broader patch
-        with patch("app.llm_orchestration.gateway.settings") as mock_settings:
-            mock_settings.llm_orchestration_v2 = True
-
-            try:
-                await AIEngineAdapter.generate_chat_reply(
-                    messages=[{"role": "user", "content": "hi"}],
-                    context={"locale": "fr"},  # Missing natal_chart_summary
-                    user_id=1,
-                    request_id="r1",
-                    trace_id="t1",
-                    db=db,
-                )
-                pytest.fail("Should have raised AIEngineAdapterError")
-            except AIEngineAdapterError as err:
-                # Assert
-                assert err.code == "prompt_render_error"
-                assert err.status_code == 500
-            except ConnectionError as err:
-                pytest.fail(f"Should have raised AIEngineAdapterError, not ConnectionError: {err}")
+    try:
+        await AIEngineAdapter.generate_chat_reply(
+            messages=[{"role": "user", "content": "hi"}],
+            context={"locale": "fr"},  # Missing natal_chart_summary
+            user_id=1,
+            request_id="r1",
+            trace_id="t1",
+            db=db,
+        )
+        pytest.fail("Should have raised AIEngineAdapterError")
+    except AIEngineAdapterError as err:
+        # Assert
+        assert err.code == "prompt_render_error"
+        assert err.status_code == 500
+    except ConnectionError as err:
+        pytest.fail(f"Should have raised AIEngineAdapterError, not ConnectionError: {err}")
 
 
 def test_cache_field_completeness(db):

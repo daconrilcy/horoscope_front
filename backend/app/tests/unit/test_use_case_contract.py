@@ -41,10 +41,6 @@ async def test_persona_strategy_forbidden(db_session, monkeypatch):
     db_session.add(p)
     db_session.commit()
 
-    monkeypatch.setattr(
-        "app.llm_orchestration.gateway.settings", MagicMock(llm_orchestration_v2=True)
-    )
-
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(return_value=MagicMock(meta=MagicMock()))
 
@@ -91,10 +87,6 @@ async def test_persona_override_rejected(db_session, monkeypatch):
     db_session.add(p)
     db_session.commit()
 
-    monkeypatch.setattr(
-        "app.llm_orchestration.gateway.settings", MagicMock(llm_orchestration_v2=True)
-    )
-
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(return_value=MagicMock(meta=MagicMock()))
 
@@ -139,10 +131,6 @@ async def test_persona_override_authorized(db_session, monkeypatch):
     )
     db_session.add(p)
     db_session.commit()
-
-    monkeypatch.setattr(
-        "app.llm_orchestration.gateway.settings", MagicMock(llm_orchestration_v2=True)
-    )
 
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(return_value=MagicMock(meta=MagicMock()))
@@ -201,10 +189,6 @@ async def test_input_validation_failure(db_session, monkeypatch):
     )
     db_session.add(p)
     db_session.commit()
-
-    monkeypatch.setattr(
-        "app.llm_orchestration.gateway.settings", MagicMock(llm_orchestration_v2=True)
-    )
 
     gateway = LLMGateway()
 

@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -7,12 +7,8 @@ from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 
 
 @pytest.mark.asyncio
-async def test_gateway_composes_4_layers(monkeypatch):
+async def test_gateway_composes_4_layers():
     # Arrange
-    monkeypatch.setattr(
-        "app.llm_orchestration.gateway.settings",
-        MagicMock(llm_orchestration_v2=True),
-    )
     mock_client = AsyncMock()
     # Mock result
     mock_result = GatewayResult(

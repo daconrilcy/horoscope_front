@@ -37,16 +37,11 @@ def _make_result(use_case: str) -> GatewayResult:
 
 
 @pytest.mark.asyncio
-async def test_chart_json_in_user_message_not_developer(db_session: Session, monkeypatch):
+async def test_chart_json_in_user_message_not_developer(db_session: Session):
     """
     Vérifie que chart_json est placé dans le message user si absent de required_prompt_placeholders.
     """
     use_case = "test_3_roles"
-
-    monkeypatch.setattr(
-        "app.llm_orchestration.gateway.settings",
-        MagicMock(llm_orchestration_v2=True),
-    )
 
     # Config WITHOUT chart_json in placeholders
     uc = LlmUseCaseConfigModel(
@@ -97,18 +92,13 @@ async def test_chart_json_in_user_message_not_developer(db_session: Session, mon
 
 @pytest.mark.asyncio
 async def test_chart_json_still_in_user_when_placeholder_required_but_absent_in_prompt(
-    db_session: Session, monkeypatch
+    db_session: Session
 ):
     """
     Régression: si chart_json est dans required_prompt_placeholders
     mais absent du template developer_prompt, il doit rester dans le message user.
     """
     use_case = "test_chart_json_required_but_not_rendered"
-
-    monkeypatch.setattr(
-        "app.llm_orchestration.gateway.settings",
-        MagicMock(llm_orchestration_v2=True),
-    )
 
     uc = LlmUseCaseConfigModel(
         key=use_case,

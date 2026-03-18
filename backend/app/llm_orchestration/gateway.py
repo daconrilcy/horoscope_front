@@ -252,11 +252,11 @@ class LLMGateway:
         return messages
 
     async def _resolve_config(
-        self, db: Optional[Session], use_case: str, context: Dict[str, Any], llm_v2_enabled: bool
+        self, db: Optional[Session], use_case: str, context: Dict[str, Any]
     ) -> UseCaseConfig:
         """Resolves use case configuration from DB or stubs."""
         config = None
-        if db and llm_v2_enabled:
+        if db:
             try:
                 # Replay support: override prompt version if requested in context
                 override_id = context.get("_override_prompt_version_id")
@@ -341,8 +341,7 @@ class LLMGateway:
 
         if not config:
             config = USE_CASE_STUBS.get(use_case)
-            if llm_v2_enabled:
-                logger.warning("gateway_fallback_to_stub use_case=%s", use_case)
+            logger.warning("gateway_fallback_to_stub use_case=%s", use_case)
 
         if not config:
             raise UnknownUseCaseError(f"Use case '{use_case}' not found in registry.")
@@ -371,14 +370,13 @@ class LLMGateway:
         """Resolves persona and returns (persona_block, persona_id)."""
         persona_block = None
         resolved_persona_id = context.get("persona_id")
-        llm_v2_enabled = getattr(settings, "llm_orchestration_v2", False)
 
         if config.persona_strategy == "forbidden":
             if resolved_persona_id:
                 logger.warning("gateway_persona_forbidden_but_provided use_case=%s", use_case)
             return None, None
 
-        if db and llm_v2_enabled and context.get("allowed_persona_ids"):
+        if db and context.get("allowed_persona_ids"):
             allowed_ids = context["allowed_persona_ids"]
             uuid_ids = []
             for pid in allowed_ids:
@@ -441,7 +439,7 @@ class LLMGateway:
                 f"No active persona available for required use case '{use_case}'"
             )  # noqa: E501
 
-        if not persona_block and not llm_v2_enabled:
+        if not persona_block:
             persona_block = context.get("persona_block") or context.get("persona_line")
 
         return persona_block, resolved_persona_id
@@ -570,7 +568,7 @@ class LLMGateway:
             )
         # Fallback support
         config = await self._resolve_config(
-            db, use_case, context, getattr(settings, "llm_orchestration_v2", False)
+            db, use_case, context
         )
         if config.fallback_use_case:
             logger.warning(
@@ -647,8 +645,7 @@ class LLMGateway:
                 )
 
             # 1. Resolve config
-            llm_v2_enabled = getattr(settings, "llm_orchestration_v2", False)
-            config = await self._resolve_config(db, use_case, context, llm_v2_enabled)
+            config = await self._resolve_config(db, use_case, context)
 
             # 2. Log start
             if not is_repair_call:
@@ -727,13 +724,10 @@ class LLMGateway:
                 raise
 
             # 7. Layer 1 (Hard Policy)
-            if llm_v2_enabled:
-                try:
-                    system_core = get_hard_policy(config.safety_profile)
-                except ValueError as e:
-                    raise GatewayConfigError(str(e))
-            else:
-                system_core = SYSTEM_CORES.get(config.system_core_key, SYSTEM_CORES["default_v1"])
+            try:
+                system_core = get_hard_policy(config.safety_profile)
+            except ValueError as e:
+                raise GatewayConfigError(str(e))
 
             # 8. Layer 3 (Persona)
             persona_block, resolved_persona_id = await self._resolve_persona(

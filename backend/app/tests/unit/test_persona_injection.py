@@ -56,14 +56,6 @@ async def test_persona_injection_success(db_session, monkeypatch):
     db_session.add(prompt_version)
     db_session.commit()
 
-    # Mock settings to enable V2
-    class MockSettings:
-        llm_orchestration_v2 = True
-        app_env = "test"
-        database_url = "sqlite:///:memory:"
-
-    monkeypatch.setattr("app.llm_orchestration.gateway.settings", MockSettings())
-
     # Mock ResponsesClient
     mock_client = MagicMock()
     # Mock return value of execute
@@ -127,14 +119,6 @@ async def test_persona_injection_disabled(db_session, monkeypatch):
     db_session.add(prompt_version)
     db_session.commit()
 
-    # Mock settings to enable V2
-    class MockSettings:
-        llm_orchestration_v2 = True
-        app_env = "test"
-        database_url = "sqlite:///:memory:"
-
-    monkeypatch.setattr("app.llm_orchestration.gateway.settings", MockSettings())
-
     # Mock ResponsesClient
     mock_client = MagicMock()
     mock_result = MagicMock()
@@ -192,14 +176,6 @@ async def test_persona_required_but_missing(db_session, monkeypatch):
     )
     db_session.add(prompt_version)
     db_session.commit()
-
-    # Mock settings to enable V2
-    class MockSettings:
-        llm_orchestration_v2 = True
-        app_env = "test"
-        database_url = "sqlite:///:memory:"
-
-    monkeypatch.setattr("app.llm_orchestration.gateway.settings", MockSettings())
 
     gateway = LLMGateway()
 

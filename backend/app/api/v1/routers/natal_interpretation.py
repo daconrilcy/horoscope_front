@@ -90,15 +90,6 @@ async def interpret_natal_chart(
     current_step = "init"
     debug_errors_enabled = request.headers.get("x-debug-errors") == "1"
 
-    # AC7 — Feature flag check
-    if not getattr(settings, "llm_orchestration_v2", False):
-        return _create_error_response(
-            status_code=501,
-            code="feature_disabled",
-            message="LLM Orchestration V2 is not enabled.",
-            request_id=request_id,
-        )
-
     try:
         # Step A: Load last natal chart and profile
         current_step = "load_chart_and_profile"

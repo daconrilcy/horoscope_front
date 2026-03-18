@@ -236,37 +236,6 @@ def test_persona_context_isolation_no_cross_contamination() -> None:
     assert "chaleureux" not in (ctx_b.get("persona_style_markers") or "")
 
 
-def test_persona_prompt_rendering_contains_all_fields() -> None:
-    """AC2 : Le prompt système rendu contient bien tous les champs du persona."""
-    from app.ai_engine.schemas import GenerateContext, GenerateInput
-    from app.ai_engine.services.prompt_registry import PromptRegistry
-
-    context = GenerateContext(
-        natal_chart_summary="SOLEIL: Bélier",
-        extra={
-            "persona_name": "Astrologue Test",
-            "persona_tone": "ironique",
-            "persona_verbosity": "minimale",
-            "persona_style_markers": "sarcastique, bref",
-            "persona_boundaries": "Pas de compassion",
-            "persona_line": "LIGNE_LEGACY_TEST",
-        },
-    )
-
-    rendered = PromptRegistry.render_prompt(
-        use_case="chat", locale="fr-FR", input_data=GenerateInput(), context=context
-    )
-
-    assert "Astrologue Test" in rendered
-    assert "ironique" in rendered
-    assert "minimale" in rendered
-    assert "sarcastique, bref" in rendered
-    assert "Pas de compassion" in rendered
-    assert "SOLEIL: Bélier" in rendered
-    assert "LIGNE_LEGACY_TEST" in rendered
-    assert "diagnostic médical" in rendered  # Safety guidelines check
-
-
 def test_persona_fallback_on_none_persona_id_returns_default(
     caplog: pytest.LogCaptureFixture,
 ) -> None:

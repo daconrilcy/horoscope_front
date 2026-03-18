@@ -41,10 +41,9 @@ client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    # Ensure v2 is disabled and no API key is present for these tests to use stubs
+    # Ensure no API key is present for these tests to use stubs
     from app.ai_engine.config import ai_engine_settings
 
-    ai_engine_settings.llm_orchestration_v2 = False
     ai_engine_settings.openai_api_key = ""
 
     BillingService.reset_subscription_status_cache()

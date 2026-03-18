@@ -496,6 +496,14 @@ development_status:
   57-3-tests-skeleton-emptystate-badge: done
   epic-57-retrospective: optional
 
+  epic-59: in-progress
+  59-1-suppression-v1-migration-v2: ready-for-dev
+  59-2-centralisation-prompts-catalogue: ready-for-dev
+  59-3-config-engine-env: ready-for-dev
+  59-4-precalcul-astral: ready-for-dev
+  59-5-socle-commun-prompts: ready-for-dev
+  epic-59-retrospective: optional
+
   epic-58: in-progress
   58-1-app-name-constante-et-config-centrale: done
   58-2-header-hamburger-logo-nom-actions: done

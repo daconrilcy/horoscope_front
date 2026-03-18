@@ -59,8 +59,6 @@ from app.services.pricing_experiment_service import PricingExperimentService
 
 def _ensure_llm_registry_seeded() -> None:
     """Auto-reseed LLM registry in local/dev when critical entries are missing."""
-    if not settings.llm_orchestration_v2:
-        return
     if settings.app_env in {"production", "prod"}:
         return
 
@@ -190,12 +188,18 @@ def _ensure_llm_registry_seeded() -> None:
         placeholder_drift,
         degraded_registry,
     )
-    with SessionLocal() as db:
-        seed_astrologers(db)
-        seed_use_cases(db)
-    seed_prompts()
-    seed_natal_v3_prompts()
-    seed_chat_prompt_v2()
+    from sqlalchemy.exc import IntegrityError
+    try:
+        with SessionLocal() as db:
+            seed_astrologers(db)
+            seed_use_cases(db)
+        seed_prompts()
+        seed_natal_v3_prompts()
+        seed_chat_prompt_v2()
+    except IntegrityError:
+        logger.debug("llm_registry_auto_heal_concurrent_skip")
+    except Exception as e:
+        logger.error("llm_registry_auto_heal_failed error=%s", e)
 
 
 @asynccontextmanager

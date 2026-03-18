@@ -70,11 +70,6 @@ async def test_gateway_transmits_gpt5_params_from_db(db_session: Session):
 
     gateway = LLMGateway(responses_client=mock_client)
 
-    from app.core.config import settings
-
-    original_v2 = settings.llm_orchestration_v2
-    settings.llm_orchestration_v2 = True
-
     try:
         await gateway.execute(
             use_case=use_case,
@@ -91,7 +86,6 @@ async def test_gateway_transmits_gpt5_params_from_db(db_session: Session):
         assert kwargs["verbosity"] == "high"
 
     finally:
-        settings.llm_orchestration_v2 = original_v2
         db_session.delete(prompt)
         db_session.delete(uc)
         db_session.commit()
@@ -127,11 +121,6 @@ async def test_gateway_does_not_pass_reasoning_for_gpt4o(db_session: Session):
 
     gateway = LLMGateway(responses_client=mock_client)
 
-    from app.core.config import settings
-
-    original_v2 = settings.llm_orchestration_v2
-    settings.llm_orchestration_v2 = True
-
     try:
         await gateway.execute(
             use_case=use_case,
@@ -148,7 +137,6 @@ async def test_gateway_does_not_pass_reasoning_for_gpt4o(db_session: Session):
         assert kwargs.get("verbosity") is None
 
     finally:
-        settings.llm_orchestration_v2 = original_v2
         db_session.delete(prompt)
         db_session.delete(uc)
         db_session.commit()

@@ -268,7 +268,6 @@ class Settings:
         self.natal_engine_compare_enabled = self._parse_bool_env(
             "NATAL_ENGINE_COMPARE_ENABLED", default=False
         )
-        self.llm_orchestration_v2 = self._parse_bool_env("LLM_ORCHESTRATION_V2", default=False)
         self.daily_engine_mode = self._parse_daily_engine_mode(os.getenv("DAILY_ENGINE_MODE"))
 
         # V3 Engine Conventions (AC4)

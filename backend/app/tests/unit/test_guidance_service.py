@@ -67,8 +67,10 @@ class RecordingGenerator:
         self.contexts.append(context)
         self.use_cases.append(use_case)
         return (
-            "**Guidance du jour**\n\n* Points cles: Energie haute.\n* Conseil: Agissez.\n\n"
-            "Attention: Ceci n'est pas un conseil medical."
+            "1. Synthesis of the day. High energy.\n"
+            "2. Point 1: Positive vibes.\nPoint 2: Clarity.\n"
+            "3. Advice 1: Act now.\nAdvice 2: Keep moving.\n"
+            "4. Disclaimer: Not medical advice."
         )
 
     async def generate_chat(self, *args, **kwargs) -> str:
@@ -78,8 +80,10 @@ class RecordingGenerator:
         self.use_cases.append(use_case)
         self.contexts.append(context)
         return (
-            "**Guidance du jour**\n\n* Points cles: Energie haute.\n* Conseil: Agissez.\n\n"
-            "Attention: Ceci n'est pas un conseil medical."
+            "1. Synthesis of the day. High energy.\n"
+            "2. Point 1: Positive vibes.\nPoint 2: Clarity.\n"
+            "3. Advice 1: Act now.\nAdvice 2: Keep moving.\n"
+            "4. Disclaimer: Not medical advice."
         )
 
 
@@ -115,7 +119,12 @@ class OffScopeThenRecoveredGenerator:
         self.calls += 1
         if self.calls == 1:
             return "[off_scope] Je ne sais pas."
-        return "**Guidance recalibre**\n\nPoints cles: Tout va bien."
+        return (
+            "1. Recovery synthesis.\n"
+            "2. Point 1: Everything is fine.\nPoint 2: Clarity.\n"
+            "3. Advice 1: Keep going.\nAdvice 2: Positive outlook.\n"
+            "4. Disclaimer: None."
+        )
 
 
 class AlwaysOffScopeGenerator:

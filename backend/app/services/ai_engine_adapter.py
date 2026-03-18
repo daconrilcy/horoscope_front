@@ -20,37 +20,25 @@ __all__ = [
 ]
 
 import logging
-from typing import TYPE_CHECKING, Awaitable, Callable, NoReturn, Optional
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, NoReturn, Optional
 
 from sqlalchemy.orm import Session
 
-from app.ai_engine.config import ai_engine_settings
 from app.ai_engine.exceptions import (
     AIEngineError,
     ContextTooLargeError,
     ProviderNotConfiguredError,
     RateLimitExceededError,
-    UpstreamError,
     UpstreamRateLimitError,
     UpstreamTimeoutError,
 )
 from app.ai_engine.exceptions import (
     ValidationError as AIEngineValidationError,
 )
-from app.ai_engine.schemas import (
-    ChatContext,
-    ChatMessage,
-    ChatRequest,
-    GenerateContext,
-    GenerateInput,
-    GenerateRequest,
-    ProviderConfig,
-)
-from app.ai_engine.services import chat_service, generate_service
 from app.core.config import settings
 
 if TYPE_CHECKING:
-    from app.ai_engine.schemas import ChatResponse, GenerateResponse
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -417,155 +405,101 @@ class AIEngineAdapter:
             )
 
         logger.info(
-            "chat_reply_path request_id=%s path=%s history_count=%d has_natal=%s conversation_id=%s",  # noqa: E501
+            "chat_reply_path request_id=%s history_count=%d has_natal=%s conversation_id=%s",
             request_id,
-            "v2_gateway" if ai_engine_settings.llm_orchestration_v2 else "v1_jinja2",
             len(messages),
             bool(context.get("natal_chart_summary")),
             context.get("conversation_id", "none"),
         )
 
-        if ai_engine_settings.llm_orchestration_v2:
-            try:
-                from app.llm_orchestration.gateway import LLMGateway
-                from app.llm_orchestration.models import GatewayError
-
-                gateway = LLMGateway()
-                # For chat, we use the 'chat_astrologer' use case from DB
-                # user_input: includes 'message' (for schema) and 'last_user_msg' (for prompt)
-                last_user_msg = ""
-                for msg in reversed(messages):
-                    if msg.get("role") == "user":
-                        last_user_msg = msg.get("content", "")
-                        break
-
-                gateway_user_input = {
-                    "message": last_user_msg,
-                    "last_user_msg": last_user_msg,
-                    "use_case": "chat_astrologer",
-                    "locale": locale,
-                }
-                conversation_id = context.get("conversation_id")
-                if conversation_id is not None:
-                    gateway_user_input["conversation_id"] = str(conversation_id)
-
-                result = await gateway.execute(
-                    use_case="chat_astrologer",
-                    user_input=gateway_user_input,
-                    context={
-                        **context,
-                        "history": messages[
-                            :-1
-                        ],  # Exclude the last message which is sent as user_input
-                    },
-                    request_id=request_id,
-                    trace_id=trace_id,
-                    db=db,
-                )
-
-                # If structured output is available (canonical ChatResponse_v1), return the message
-                if result.structured_output and "message" in result.structured_output:
-                    validation_status = getattr(
-                        getattr(result, "meta", None), "validation_status", "unknown"
-                    )
-                    logger.info(
-                        "chat_reply_v2_output request_id=%s output=structured validation=%s",
-                        request_id,
-                        validation_status,
-                    )
-                    return result.structured_output["message"]
-
-                meta = getattr(result, "meta", None)
-                validation_status = getattr(meta, "validation_status", "unknown")
-                validation_errors = getattr(meta, "validation_errors", None) or []
-                raw_snippet = (result.raw_output or "")[:120].replace("\n", " ")
-                logger.warning(
-                    "chat_reply_v2_output request_id=%s output=raw_fallback "
-                    "validation=%s errors=%s raw_snippet=%r",
-                    request_id,
-                    validation_status,
-                    validation_errors,
-                    raw_snippet,
-                )
-                return result.raw_output
-            except Exception as err:
-                if _can_use_test_fallback(err):
-                    return _build_test_chat_fallback(messages)
-                # Preserve typed upstream errors so callers get correct HTTP codes (429/504/502).
-                if isinstance(err, UpstreamRateLimitError):
-                    raise AIEngineAdapterError(
-                        code="rate_limit_exceeded",
-                        message="rate limit exceeded",
-                        status_code=429,
-                        details={"retry_after_ms": str(err.retry_after_ms or 60000)},
-                    ) from err
-                if isinstance(err, UpstreamTimeoutError):
-                    raise AIEngineAdapterError(
-                        code="upstream_timeout",
-                        message="llm provider timeout",
-                        status_code=504,
-                    ) from err
-                from app.llm_orchestration.models import GatewayError
-
-                if isinstance(err, GatewayError):
-                    _handle_gateway_error(err, request_id, "chat")
-                logger.error(
-                    "ai_engine_adapter_v2_unexpected_error request_id=%s error=%s",
-                    request_id,
-                    str(err),
-                )
-                raise ConnectionError("llm provider unavailable (v2)") from err
-
-        chat_messages = [ChatMessage(role=msg["role"], content=msg["content"]) for msg in messages]
-
-        persona_memory: dict[str, str] = {}
-        for key in (
-            "persona_name",
-            "persona_tone",
-            "persona_verbosity",
-            "persona_style_markers",
-            "persona_boundaries",
-            "persona_line",  # backward-compat si présent
-        ):
-            val = context.get(key)
-            if val:
-                persona_memory[key] = str(val)
-        chat_context = ChatContext(
-            natal_chart_summary=context.get("natal_chart_summary"),
-            current_datetime=context.get("current_datetime"),
-            current_timezone=context.get("current_timezone"),
-            current_location=context.get("current_location"),
-            memory=persona_memory if persona_memory else None,
-        )
-
-        request = ChatRequest(
-            locale=locale,
-            request_id=request_id,
-            trace_id=trace_id,
-            messages=chat_messages,
-            context=chat_context,
-            provider=ProviderConfig(name=DEFAULT_PROVIDER, model=DEFAULT_MODEL),
-        )
-
         try:
-            response: ChatResponse = await chat_service.chat(
-                request,
+            from app.llm_orchestration.gateway import LLMGateway
+
+            gateway = LLMGateway()
+            # For chat, we use the 'chat_astrologer' use case from DB
+            # user_input: includes 'message' (for schema) and 'last_user_msg' (for prompt)
+            last_user_msg = ""
+            for msg in reversed(messages):
+                if msg.get("role") == "user":
+                    last_user_msg = msg.get("content", "")
+                    break
+
+            gateway_user_input = {
+                "message": last_user_msg,
+                "last_user_msg": last_user_msg,
+                "use_case": "chat_astrologer",
+                "locale": locale,
+            }
+            conversation_id = context.get("conversation_id")
+            if conversation_id is not None:
+                gateway_user_input["conversation_id"] = str(conversation_id)
+
+            result = await gateway.execute(
+                use_case="chat_astrologer",
+                user_input=gateway_user_input,
+                context={
+                    **context,
+                    "history": messages[
+                        :-1
+                    ],  # Exclude the last message which is sent as user_input
+                },
                 request_id=request_id,
                 trace_id=trace_id,
-                user_id=user_id,
+                db=db,
             )
-            return response.text
-        except UpstreamTimeoutError as err:
+
+            # If structured output is available (canonical ChatResponse_v1), return the message
+            if result.structured_output and "message" in result.structured_output:
+                validation_status = getattr(
+                    getattr(result, "meta", None), "validation_status", "unknown"
+                )
+                logger.info(
+                    "chat_reply_v2_output request_id=%s output=structured validation=%s",
+                    request_id,
+                    validation_status,
+                )
+                return result.structured_output["message"]
+
+            meta = getattr(result, "meta", None)
+            validation_status = getattr(meta, "validation_status", "unknown")
+            validation_errors = getattr(meta, "validation_errors", None) or []
+            raw_snippet = (result.raw_output or "")[:120].replace("\n", " ")
             logger.warning(
-                "ai_engine_adapter_timeout request_id=%s error=%s",
+                "chat_reply_v2_output request_id=%s output=raw_fallback "
+                "validation=%s errors=%s raw_snippet=%r",
+                request_id,
+                validation_status,
+                validation_errors,
+                raw_snippet,
+            )
+            return result.raw_output
+        except Exception as err:
+            if _can_use_test_fallback(err):
+                return _build_test_chat_fallback(messages)
+            # Preserve typed upstream errors so callers get correct HTTP codes (429/504/502).
+            if isinstance(err, UpstreamRateLimitError):
+                raise AIEngineAdapterError(
+                    code="rate_limit_exceeded",
+                    message="rate limit exceeded",
+                    status_code=429,
+                    details={"retry_after_ms": str(err.retry_after_ms or 60000)},
+                ) from err
+            if isinstance(err, UpstreamTimeoutError):
+                raise AIEngineAdapterError(
+                    code="upstream_timeout",
+                    message="llm provider timeout",
+                    status_code=504,
+                ) from err
+            from app.llm_orchestration.models import GatewayError
+
+            if isinstance(err, GatewayError):
+                _handle_gateway_error(err, request_id, "chat")
+            logger.error(
+                "ai_engine_adapter_v2_unexpected_error request_id=%s error=%s",
                 request_id,
                 str(err),
             )
-            raise TimeoutError("llm provider timeout") from err
-        except (UpstreamError, AIEngineError) as err:
-            if _can_use_test_fallback(err):
-                return _build_test_chat_fallback(messages)
-            _handle_ai_engine_error(err, request_id, "chat")
+            raise ConnectionError("llm provider unavailable (v2)") from err
 
     @staticmethod
     async def generate_guidance(
@@ -576,7 +510,7 @@ class AIEngineAdapter:
         trace_id: str,
         locale: str = "fr-FR",
         db: Optional[Session] = None,
-    ) -> str:
+    ) -> Any:
         """
         Generate guidance via the AI Engine.
 
@@ -592,126 +526,78 @@ class AIEngineAdapter:
             db: Database session for orchestration v2.
 
         Returns:
-            Generated guidance text.
+            GatewayResult from the LLMGateway.
 
         Raises:
             AIEngineAdapterError: On generation error.
-            TimeoutError: If the provider exceeds the timeout.
             ConnectionError: If the provider is unavailable.
         """
         if _test_guidance_generator is not None:
-            return await _test_guidance_generator(
+            # For testing, we mock a result object
+            text = await _test_guidance_generator(
                 use_case, context, user_id, request_id, trace_id, locale
             )
-
-        if ai_engine_settings.llm_orchestration_v2:
-            try:
-                from app.llm_orchestration.gateway import LLMGateway
-                from app.llm_orchestration.models import GatewayError
-
-                gateway = LLMGateway()
-                gateway_user_input, gateway_context = _build_guidance_gateway_payload(
-                    use_case,
-                    context,
-                    locale,
-                )
-                result = await gateway.execute(
-                    use_case=use_case,
-                    user_input=gateway_user_input,
-                    context=gateway_context,
-                    request_id=request_id,
-                    trace_id=trace_id,
-                    db=db,
-                )
-                if result.structured_output:
-                    for key in ("text", "message", "content"):
-                        if key in result.structured_output:
-                            return result.structured_output[key]
-                return result.raw_output
-            except Exception as err:
-                if _can_use_test_fallback(err):
-                    return _build_test_guidance_fallback(use_case)
-                # Preserve typed upstream errors so callers get correct HTTP codes (429/504/502).
-                if isinstance(err, UpstreamRateLimitError):
-                    raise AIEngineAdapterError(
-                        code="rate_limit_exceeded",
-                        message="rate limit exceeded",
-                        status_code=429,
-                        details={"retry_after_ms": str(err.retry_after_ms or 60000)},
-                    ) from err
-                if isinstance(err, UpstreamTimeoutError):
-                    raise AIEngineAdapterError(
-                        code="upstream_timeout",
-                        message="llm provider timeout",
-                        status_code=504,
-                    ) from err
-                from app.llm_orchestration.models import GatewayError
-
-                if isinstance(err, GatewayError):
-                    _handle_gateway_error(err, request_id, use_case)
-                logger.error(
-                    "ai_engine_adapter_v2_unexpected_error use_case=%s request_id=%s error=%s",
-                    use_case,
-                    request_id,
-                    str(err),
-                )
-                raise ConnectionError("llm provider unavailable (v2)") from err
-
-        birth_data = None
-        if context.get("birth_date"):
-            birth_data = {
-                "birth_date": context.get("birth_date", ""),
-                "birth_time": context.get("birth_time", ""),
-                "birth_timezone": context.get("birth_timezone", ""),
-            }
-
-        extra_context: dict[str, str] = {}
-        if context.get("persona_line"):
-            extra_context["persona_line"] = str(context["persona_line"])
-        if context.get("context_lines"):
-            extra_context["context_lines"] = str(context["context_lines"])
-        if context.get("situation"):
-            extra_context["situation"] = str(context["situation"])
-        if context.get("objective"):
-            extra_context["objective"] = str(context["objective"])
-        if context.get("time_horizon"):
-            extra_context["time_horizon"] = str(context["time_horizon"])
-
-        generate_context = GenerateContext(
-            natal_chart_summary=context.get("natal_chart_summary"),
-            birth_data=birth_data,
-            current_datetime=context.get("current_datetime"),
-            current_timezone=context.get("current_timezone"),
-            current_location=context.get("current_location"),
-            extra=extra_context if extra_context else None,
-        )
-
-        request = GenerateRequest(
-            use_case=use_case,
-            locale=locale,
-            request_id=request_id,
-            trace_id=trace_id,
-            input=GenerateInput(),
-            context=generate_context,
-            provider=ProviderConfig(name=DEFAULT_PROVIDER, model=DEFAULT_MODEL),
-        )
-
-        try:
-            response: GenerateResponse = await generate_service.generate_text(
-                request,
+            from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+            return GatewayResult(
+                use_case=use_case,
                 request_id=request_id,
                 trace_id=trace_id,
-                user_id=user_id,
+                raw_output=text,
+                usage=UsageInfo(),
+                meta=GatewayMeta(latency_ms=0, model="test-model"),
             )
-            return response.text
-        except UpstreamTimeoutError as err:
-            logger.warning(
-                "ai_engine_adapter_timeout request_id=%s error=%s",
+
+        try:
+            from app.llm_orchestration.gateway import LLMGateway
+
+            gateway = LLMGateway()
+            gateway_user_input, gateway_context = _build_guidance_gateway_payload(
+                use_case,
+                context,
+                locale,
+            )
+            result = await gateway.execute(
+                use_case=use_case,
+                user_input=gateway_user_input,
+                context=gateway_context,
+                request_id=request_id,
+                trace_id=trace_id,
+                db=db,
+            )
+            return result
+        except Exception as err:
+            if _can_use_test_fallback(err):
+                from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+                return GatewayResult(
+                    use_case=use_case,
+                    request_id=request_id,
+                    trace_id=trace_id,
+                    raw_output=_build_test_guidance_fallback(use_case),
+                    usage=UsageInfo(),
+                    meta=GatewayMeta(latency_ms=0, model="test-model"),
+                )
+            # Preserve typed upstream errors so callers get correct HTTP codes (429/504/502).
+            if isinstance(err, UpstreamRateLimitError):
+                raise AIEngineAdapterError(
+                    code="rate_limit_exceeded",
+                    message="rate limit exceeded",
+                    status_code=429,
+                    details={"retry_after_ms": str(err.retry_after_ms or 60000)},
+                ) from err
+            if isinstance(err, UpstreamTimeoutError):
+                raise AIEngineAdapterError(
+                    code="upstream_timeout",
+                    message="llm provider timeout",
+                    status_code=504,
+                ) from err
+            from app.llm_orchestration.models import GatewayError
+
+            if isinstance(err, GatewayError):
+                _handle_gateway_error(err, request_id, use_case)
+            logger.error(
+                "ai_engine_adapter_v2_unexpected_error use_case=%s request_id=%s error=%s",
+                use_case,
                 request_id,
                 str(err),
             )
-            raise TimeoutError("llm provider timeout") from err
-        except (UpstreamError, AIEngineError) as err:
-            if _can_use_test_fallback(err):
-                return _build_test_guidance_fallback(use_case)
-            _handle_ai_engine_error(err, request_id, "guidance")
+            raise ConnectionError("llm provider unavailable (v2)") from err

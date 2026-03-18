@@ -20,7 +20,6 @@ from app.services.natal_interpretation_service import (
     _detect_degraded_mode,
     _format_longitude,
     _longitude_to_sign,
-    _parse_interpretation_sections,
     build_natal_chart_summary,
 )
 from app.services.user_birth_profile_service import UserBirthProfileData
@@ -272,41 +271,6 @@ class TestBuildNatalChartSummary:
         assert "Non connu (Ascendant non disponible)" in summary
 
 
-class TestParseInterpretationSections:
-    """Tests pour _parse_interpretation_sections."""
-
-    def test_parse_four_sections(self) -> None:
-        text = """1. Votre thème natal révèle une personnalité dynamique et créative.
-
-2. Points clés:
-- Soleil en Gémeaux vous confère une grande adaptabilité
-- Lune en Cancer renforce votre sensibilité émotionnelle
-- Ascendant Balance apporte diplomatie
-
-3. Conseils:
-- Cultivez votre curiosité intellectuelle
-- Équilibrez travail et repos
-
-4. Note importante: Ces indications sont des tendances générales."""
-
-        summary, key_points, advice, disclaimer = _parse_interpretation_sections(text)
-
-        assert "personnalité dynamique" in summary
-        assert len(key_points) >= 2
-        assert len(advice) >= 1
-        assert "tendances générales" in disclaimer
-
-    def test_parse_minimal_text(self) -> None:
-        text = "Une simple interprétation sans sections."
-
-        summary, key_points, advice, disclaimer = _parse_interpretation_sections(text)
-
-        assert summary == text.strip()
-        assert key_points == []
-        assert advice == []
-        assert disclaimer == ""
-
-
 class TestNatalInterpretationService:
     """Tests pour NatalInterpretationService."""
 
@@ -315,31 +279,22 @@ class TestNatalInterpretationService:
         natal_chart = _make_natal_chart_read_data()
         birth_profile = _make_birth_profile()
 
-        mock_response = MagicMock()
-        mock_response.text = """1. Synthèse du thème.
+        mock_result = MagicMock()
+        mock_result.raw_output = "Raw text"
+        mock_result.structured_output = {
+            "summary": "Synthèse du thème.",
+            "key_points": ["Point A", "Point B"],
+            "actionable_advice": ["Conseil A"],
+            "disclaimer": "Disclaimer important.",
+        }
+        mock_result.meta.cached = False
+        mock_result.meta.latency_ms = 1200
+        mock_result.usage.total_tokens = 500
 
-2. Points clés:
-- Point A
-- Point B
-
-3. Conseils:
-- Conseil A
-
-4. Disclaimer important."""
-        mock_response.meta.cached = False
-        mock_response.meta.latency_ms = 1200
-        mock_response.usage.total_tokens = 500
-
-        with (
-            patch(
-                "app.ai_engine.config.ai_engine_settings",
-                MagicMock(llm_orchestration_v2=False),
-            ),
-            patch(
-                "app.services.natal_interpretation_service.generate_text",
-                new_callable=AsyncMock,
-                return_value=mock_response,
-            ),
+        with patch(
+            "app.services.ai_engine_adapter.AIEngineAdapter.generate_guidance",
+            new_callable=AsyncMock,
+            return_value=mock_result,
         ):
             result = await NatalInterpretationService.interpret_chart(
                 natal_chart=natal_chart,
@@ -349,9 +304,9 @@ class TestNatalInterpretationService:
             )
 
         assert result.chart_id == "chart-123"
-        assert result.text == mock_response.text
-        assert "Synthèse" in result.summary
-        assert len(result.key_points) >= 1
+        assert result.text == "Raw text"
+        assert result.summary == "Synthèse du thème."
+        assert len(result.key_points) == 2
         assert result.metadata.cached is False
         assert result.metadata.tokens_used == 500
 
@@ -365,22 +320,22 @@ class TestNatalInterpretationService:
             birth_timezone="Europe/Paris",
         )
 
-        mock_response = MagicMock()
-        mock_response.text = "1. Synthèse\n2. Points\n3. Conseils\n4. Disclaimer"
-        mock_response.meta.cached = False
-        mock_response.meta.latency_ms = 1000
-        mock_response.usage.total_tokens = 300
+        mock_result = MagicMock()
+        mock_result.raw_output = "Raw"
+        mock_result.structured_output = {
+            "summary": "Synthèse",
+            "key_points": ["Points"],
+            "actionable_advice": ["Conseils"],
+            "disclaimer": "Disclaimer",
+        }
+        mock_result.meta.cached = False
+        mock_result.meta.latency_ms = 1000
+        mock_result.usage.total_tokens = 300
 
-        with (
-            patch(
-                "app.ai_engine.config.ai_engine_settings",
-                MagicMock(llm_orchestration_v2=False),
-            ),
-            patch(
-                "app.services.natal_interpretation_service.generate_text",
-                new_callable=AsyncMock,
-                return_value=mock_response,
-            ),
+        with patch(
+            "app.services.ai_engine_adapter.AIEngineAdapter.generate_guidance",
+            new_callable=AsyncMock,
+            return_value=mock_result,
         ):
             result = await NatalInterpretationService.interpret_chart(
                 natal_chart=natal_chart,
@@ -392,51 +347,14 @@ class TestNatalInterpretationService:
         assert result.metadata.degraded_mode == "no_time"
 
     @pytest.mark.asyncio
-    async def test_interpret_chart_cached(self) -> None:
-        natal_chart = _make_natal_chart_read_data()
-        birth_profile = _make_birth_profile()
-
-        mock_response = MagicMock()
-        mock_response.text = "1. Cached response\n2. Keys\n3. Advice\n4. Note"
-        mock_response.meta.cached = True
-        mock_response.meta.latency_ms = 50
-        mock_response.usage.total_tokens = 0
-
-        with (
-            patch(
-                "app.ai_engine.config.ai_engine_settings",
-                MagicMock(llm_orchestration_v2=False),
-            ),
-            patch(
-                "app.services.natal_interpretation_service.generate_text",
-                new_callable=AsyncMock,
-                return_value=mock_response,
-            ),
-        ):
-            result = await NatalInterpretationService.interpret_chart(
-                natal_chart=natal_chart,
-                birth_profile=birth_profile,
-                user_id=1,
-                request_id="req-789",
-            )
-
-        assert result.metadata.cached is True
-
-    @pytest.mark.asyncio
     async def test_interpret_chart_timeout_error(self) -> None:
         natal_chart = _make_natal_chart_read_data()
         birth_profile = _make_birth_profile()
 
-        with (
-            patch(
-                "app.ai_engine.config.ai_engine_settings",
-                MagicMock(llm_orchestration_v2=False),
-            ),
-            patch(
-                "app.services.natal_interpretation_service.generate_text",
-                new_callable=AsyncMock,
-                side_effect=TimeoutError("AI Engine timeout"),
-            ),
+        with patch(
+            "app.services.ai_engine_adapter.AIEngineAdapter.generate_guidance",
+            new_callable=AsyncMock,
+            side_effect=TimeoutError("AI Engine timeout"),
         ):
             with pytest.raises(NatalInterpretationServiceError) as exc_info:
                 await NatalInterpretationService.interpret_chart(
@@ -447,32 +365,3 @@ class TestNatalInterpretationService:
                 )
 
         assert exc_info.value.code == "ai_engine_timeout"
-
-    @pytest.mark.asyncio
-    async def test_interpret_chart_ai_engine_error(self) -> None:
-        natal_chart = _make_natal_chart_read_data()
-        birth_profile = _make_birth_profile()
-
-        class AIError(Exception):
-            code = "provider_error"
-
-        with (
-            patch(
-                "app.ai_engine.config.ai_engine_settings",
-                MagicMock(llm_orchestration_v2=False),
-            ),
-            patch(
-                "app.services.natal_interpretation_service.generate_text",
-                new_callable=AsyncMock,
-                side_effect=AIError("Provider failure"),
-            ),
-        ):
-            with pytest.raises(NatalInterpretationServiceError) as exc_info:
-                await NatalInterpretationService.interpret_chart(
-                    natal_chart=natal_chart,
-                    birth_profile=birth_profile,
-                    user_id=1,
-                    request_id="req-error",
-                )
-
-        assert exc_info.value.code == "provider_error"

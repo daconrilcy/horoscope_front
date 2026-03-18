@@ -6,20 +6,24 @@ import logging
 import uuid
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
 from app.ai_engine.exceptions import AIEngineError, RateLimitExceededError
 from app.ai_engine.schemas import (
     ChatRequest,
     ChatResponse,
+    GenerateMeta,
     GenerateRequest,
     GenerateResponse,
+    UsageInfo,
 )
-from app.ai_engine.services import chat_service, generate_service
 from app.ai_engine.services.rate_limiter import RateLimiter
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.core.request_id import resolve_request_id
+from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
+from app.services.ai_engine_adapter import AIEngineAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -78,12 +82,12 @@ async def generate(
     request: Request,
     body: GenerateRequest,
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
 ) -> GenerateResponse | JSONResponse:
     """
     Generate text using the AI engine.
 
-    Selects appropriate prompt from registry based on use_case,
-    renders template with provided context, and calls the LLM provider.
+    Routes to LLMGateway via AIEngineAdapter.
     """
     request_id = body.request_id or resolve_request_id(request)
     trace_id = _resolve_trace_id(request, body.trace_id)
@@ -91,13 +95,43 @@ async def generate(
     try:
         _check_rate_limit(current_user.id)
 
-        response = await generate_service.generate_text(
-            body,
+        # Convert GenerateContext to dict for adapter
+        context_dict = body.context.model_dump()
+        
+        result = await AIEngineAdapter.generate_guidance(
+            use_case=body.use_case,
+            context=context_dict,
+            user_id=current_user.id,
             request_id=request_id,
             trace_id=trace_id,
-            user_id=current_user.id,
+            locale=body.locale,
+            db=db,
         )
-        return response
+        
+        # Return GenerateResponse compatible payload
+        usage = UsageInfo(
+            input_tokens=getattr(result.usage, "input_tokens", 0)
+            if hasattr(result, "usage")
+            else 0,
+            output_tokens=getattr(result.usage, "output_tokens", 0)
+            if hasattr(result, "usage")
+            else 0,
+            total_tokens=getattr(result.usage, "total_tokens", 0)
+            if hasattr(result, "usage")
+            else 0,
+        )
+        return GenerateResponse(
+            request_id=request_id,
+            trace_id=trace_id,
+            provider=getattr(result, "provider", "unknown"),
+            model=getattr(result, "model", "unknown"),
+            text=result.raw_output,
+            usage=usage,
+            meta=GenerateMeta(
+                cached=getattr(result.meta, "cached", False),
+                latency_ms=getattr(result.meta, "latency_ms", 0),
+            ),
+        )
     except AIEngineError as err:
         increment_counter(
             f"ai_engine_requests_total|use_case={body.use_case}|status=error",
@@ -112,49 +146,59 @@ async def generate(
             err.message,
         )
         return _build_error_response(err, request_id, trace_id)
+    except Exception as err:
+        logger.exception("unexpected_ai_generate_error")
+        return JSONResponse(status_code=500, content={"error": {"message": str(err)}})
 
 
-@router.post("/chat", response_model=None)
+@router.post("/chat", response_model=ChatResponse)
 async def chat(
     request: Request,
     body: ChatRequest,
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
-) -> ChatResponse | StreamingResponse | JSONResponse:
+    db: Session = Depends(get_db_session),
+) -> ChatResponse | JSONResponse:
     """
     Generate a chat completion.
 
-    Supports both streaming (SSE) and non-streaming responses
-    based on output.stream flag.
+    Routes to LLMGateway via AIEngineAdapter.
+    SSE streaming is currently not supported via AIEngineAdapter simplified interface.
     """
     request_id = body.request_id or resolve_request_id(request)
     trace_id = _resolve_trace_id(request, body.trace_id)
 
+    if body.output.stream:
+        return JSONResponse(
+            status_code=501,
+            content={"error": {"message": "Streaming not supported in V2 migration path."}}
+        )
+
     try:
         _check_rate_limit(current_user.id)
 
-        if body.output.stream:
-            return StreamingResponse(
-                chat_service.chat_stream(
-                    body,
-                    request_id=request_id,
-                    trace_id=trace_id,
-                    user_id=current_user.id,
-                ),
-                media_type="text/event-stream",
-                headers={
-                    "Cache-Control": "no-cache",
-                    "Connection": "keep-alive",
-                    "X-Request-Id": request_id,
-                    "X-Trace-Id": trace_id,
-                },
-            )
-        response = await chat_service.chat(
-            body,
+        # Convert ChatContext to dict for adapter
+        context_dict = body.context.model_dump()
+        messages_list = [m.model_dump() for m in body.messages]
+
+        response_text = await AIEngineAdapter.generate_chat_reply(
+            messages=messages_list,
+            context=context_dict,
+            user_id=current_user.id,
             request_id=request_id,
             trace_id=trace_id,
-            user_id=current_user.id,
+            locale=body.locale,
+            db=db,
         )
-        return response
+        
+        return ChatResponse(
+            request_id=request_id,
+            trace_id=trace_id,
+            provider="openai", # Default
+            model="AUTO",
+            text=response_text,
+            usage=UsageInfo(),  # Not easily available from current generate_chat_reply
+            meta=GenerateMeta(),
+        )
     except AIEngineError as err:
         increment_counter("ai_engine_requests_total|use_case=chat|status=error", 1.0)
         logger.warning(
@@ -166,3 +210,6 @@ async def chat(
             err.message,
         )
         return _build_error_response(err, request_id, trace_id)
+    except Exception as err:
+        logger.exception("unexpected_ai_chat_error")
+        return JSONResponse(status_code=500, content={"error": {"message": str(err)}})

@@ -8,15 +8,12 @@ des thèmes natals en utilisant le AI Engine.
 from __future__ import annotations
 
 import logging
-import re
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.ai_engine.schemas import GenerateContext, GenerateInput, GenerateRequest
-from app.ai_engine.services.generate_service import generate_text
 from app.services.ai_engine_adapter import AIEngineAdapter, AIEngineAdapterError
 from app.services.current_context import build_current_prompt_context
 from app.services.user_birth_profile_service import UserBirthProfileData
@@ -289,65 +286,6 @@ def build_chat_natal_hint(
     return " · ".join(parts)
 
 
-def _parse_interpretation_sections(text: str) -> tuple[str, list[str], list[str], str]:
-    """
-    Parse le texte structuré retourné par l'IA.
-
-    Le template impose 4 sections numérotées :
-    1. Synthèse (2-3 phrases)
-    2. Points clés (Soleil, Lune, Ascendant, aspects majeurs)
-    3. Conseils actionnables et positifs
-    4. Note de prudence
-
-    Args:
-        text: Texte brut retourné par l'IA.
-
-    Returns:
-        Tuple (summary, key_points, advice, disclaimer).
-    """
-    section_pattern = re.compile(r"^\d+\.\s*", re.MULTILINE)
-    parts = section_pattern.split(text)
-
-    if len(parts) < 2:
-        logger.warning(
-            "interpretation_parse_failed sections_found=0 text_length=%d",
-            len(text),
-        )
-        return text.strip(), [], [], ""
-
-    parts = [p.strip() for p in parts if p.strip()]
-
-    if len(parts) < 4:
-        logger.warning(
-            "interpretation_parse_partial sections_found=%d expected=4",
-            len(parts),
-        )
-
-    summary = parts[0] if len(parts) > 0 else ""
-
-    key_points: list[str] = []
-    if len(parts) > 1:
-        key_points_raw = parts[1]
-        bullet_pattern = re.compile(r"[-•]\s*")
-        bullets = bullet_pattern.split(key_points_raw)
-        key_points = [b.strip() for b in bullets if b.strip()]
-        if not key_points:
-            key_points = [line.strip() for line in key_points_raw.split("\n") if line.strip()]
-
-    advice: list[str] = []
-    if len(parts) > 2:
-        advice_raw = parts[2]
-        bullet_pattern = re.compile(r"[-•]\s*")
-        bullets = bullet_pattern.split(advice_raw)
-        advice = [b.strip() for b in bullets if b.strip()]
-        if not advice:
-            advice = [line.strip() for line in advice_raw.split("\n") if line.strip()]
-
-    disclaimer = parts[3].strip() if len(parts) > 3 else ""
-
-    return summary, key_points, advice, disclaimer
-
-
 class NatalInterpretationService:
     """Service d'interprétation textuelle du thème natal."""
 
@@ -399,67 +337,57 @@ class NatalInterpretationService:
             else "Non connu (Ascendant non disponible)",
         }
 
-        generate_request = GenerateRequest(
-            use_case=USE_CASE,
-            locale="fr-FR",
-            request_id=request_id,
-            trace_id=trace_id or request_id,
-            input=GenerateInput(tone="warm"),
-            context=GenerateContext(
-                natal_chart_summary=natal_chart_summary,
-                birth_data=birth_data,
-                current_datetime=current_context.current_datetime,
-                current_timezone=current_context.current_timezone,
-                current_location=current_context.current_location,
-            ),
-        )
-
         try:
-            from app.ai_engine.config import ai_engine_settings
+            # Generate interpretation via Gateway V2
+            result = await AIEngineAdapter.generate_guidance(
+                use_case="natal_interpretation",
+                context={
+                    "natal_chart_summary": natal_chart_summary,
+                    "birth_date": birth_data["date"],
+                    "birth_time": birth_data["time"],
+                    "birth_place": birth_data["place"],
+                    "current_datetime": current_context.current_datetime,
+                    "current_timezone": current_context.current_timezone,
+                    "current_location": current_context.current_location,
+                    "locale": "fr-FR",
+                    "persona_id": persona_id,
+                },
+                user_id=user_id,
+                request_id=request_id,
+                trace_id=trace_id or request_id,
+                locale="fr-FR",
+                db=db,
+            )
 
-            if ai_engine_settings.llm_orchestration_v2:
-                # Support gateway v2
-                response_text = await AIEngineAdapter.generate_guidance(
-                    use_case="natal_interpretation",
-                    context={
-                        "natal_chart_summary": natal_chart_summary,
-                        "birth_date": birth_data["date"],
-                        "birth_time": birth_data["time"],
-                        "birth_place": birth_data["place"],
-                        "current_datetime": current_context.current_datetime,
-                        "current_timezone": current_context.current_timezone,
-                        "current_location": current_context.current_location,
-                        "locale": "fr-FR",
-                        "persona_id": persona_id,
-                    },
-                    user_id=user_id,
-                    request_id=request_id,
-                    trace_id=trace_id or request_id,
-                    locale="fr-FR",
-                    db=db,
-                )
-
-                # Mock response for compatibility with existing parsing logic
-                class MockMeta:
-                    cached = False
-                    latency_ms = 0
-
-                class MockUsage:
-                    total_tokens = 0
-
-                class MockResponse:
-                    text = response_text
-                    meta = MockMeta()
-                    usage = MockUsage()
-
-                response = MockResponse()
+            # Extract structured sections or fallback to raw
+            if result.structured_output:
+                s = result.structured_output
+                summary = s.get("summary") or s.get("text") or result.raw_output
+                key_points = s.get("key_points") or []
+                advice = s.get("actionable_advice") or s.get("advice") or []
+                disclaimer = s.get("disclaimer") or ""
             else:
-                response = await generate_text(
-                    request=generate_request,
-                    request_id=request_id,
-                    trace_id=trace_id or request_id,
-                    user_id=user_id,
-                )
+                summary = result.raw_output
+                key_points = []
+                advice = []
+                disclaimer = ""
+
+            return NatalInterpretationData(
+                chart_id=natal_chart.chart_id,
+                text=result.raw_output,
+                summary=summary,
+                key_points=key_points,
+                advice=advice,
+                disclaimer=disclaimer,
+                metadata=NatalInterpretationMetadata(
+                    cached=getattr(result.meta, "cached", False),
+                    degraded_mode=degraded_mode,
+                    tokens_used=getattr(result.usage, "total_tokens", 0)
+                    if hasattr(result, "usage")
+                    else 0,
+                    latency_ms=getattr(result.meta, "latency_ms", 0),
+                ),
+            )
         except (AIEngineAdapterError, TimeoutError) as error:
             raise NatalInterpretationServiceError(
                 code="ai_engine_timeout",
@@ -473,20 +401,3 @@ class NatalInterpretationService:
                 message=f"AI Engine error: {error}",
                 details={"request_id": request_id},
             ) from error
-
-        summary, key_points, advice, disclaimer = _parse_interpretation_sections(response.text)
-
-        return NatalInterpretationData(
-            chart_id=natal_chart.chart_id,
-            text=response.text,
-            summary=summary,
-            key_points=key_points,
-            advice=advice,
-            disclaimer=disclaimer,
-            metadata=NatalInterpretationMetadata(
-                cached=response.meta.cached,
-                degraded_mode=degraded_mode,
-                tokens_used=response.usage.total_tokens,
-                latency_ms=response.meta.latency_ms,
-            ),
-        )

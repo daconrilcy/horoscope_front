@@ -53,12 +53,6 @@ async def test_gateway_repair_sequence(db_session, monkeypatch):
     db_session.add(prompt)
     db_session.commit()
 
-    # 2. Mock settings
-    class MockSettings:
-        llm_orchestration_v2 = True
-
-    monkeypatch.setattr("app.llm_orchestration.gateway.settings", MockSettings())
-
     # 3. Mock ResponsesClient to fail once then succeed
     mock_client = MagicMock()
 
@@ -134,12 +128,6 @@ async def test_gateway_fallback_sequence(db_session, monkeypatch):
     )
     db_session.add_all([p1, p2])
     db_session.commit()
-
-    # 2. Mock settings
-    class MockSettings:
-        llm_orchestration_v2 = True
-
-    monkeypatch.setattr("app.llm_orchestration.gateway.settings", MockSettings())
 
     # 3. Mock ResponsesClient to always fail primary, then succeed fallback
     mock_client = MagicMock()

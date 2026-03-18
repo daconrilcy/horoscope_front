@@ -189,8 +189,7 @@ def test_client(mock_db):
     app.dependency_overrides[require_authenticated_user] = _override_auth
     app.dependency_overrides[get_db_session] = lambda: mock_db
     client = TestClient(app)
-    with patch("app.core.config.settings.llm_orchestration_v2", True):
-        yield client
+    yield client
     app.dependency_overrides.clear()
 
 
@@ -367,11 +366,3 @@ class TestNatalInterpretationEndpointV2:
             )
         assert response.status_code == 504
         assert response.json()["error"]["code"] == "llm_upstream_timeout"
-
-    def test_feature_disabled(self, test_client) -> None:
-        with patch("app.core.config.settings.llm_orchestration_v2", False):
-            response = test_client.post(
-                "/v1/natal/interpretation", json={"use_case_level": "short"}
-            )
-        assert response.status_code == 501
-        assert response.json()["error"]["code"] == "feature_disabled"
