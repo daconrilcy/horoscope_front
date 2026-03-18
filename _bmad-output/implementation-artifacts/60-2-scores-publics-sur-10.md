@@ -1,6 +1,6 @@
 # Story 60.2 : Introduire les scores publics sur 10 sans casser le moteur interne
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -27,20 +27,20 @@ afin de comprendre d'un coup d'œil quels domaines sont soutenus sans avoir à d
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Créer `backend/app/prediction/public_score_mapper.py` (AC: 2, 3, 4)
-  - [ ] T1.1 Implémenter `to_score_10(note_20: float) -> float` → `round(note_20 / 2, 1)`
-  - [ ] T1.2 Implémenter `to_level(score_10: float) -> str` avec les 5 seuils
-  - [ ] T1.3 Implémenter `rank_domains(domains: list[PublicDomainScore]) -> list[PublicDomainScore]` — tri décroissant, rank 1-based
-  - [ ] T1.4 Définir dataclass `PublicDomainScore` : `key, label, score_10, level, rank, signal_label, note_20_internal`
+- [x] T1 — Créer `backend/app/prediction/public_score_mapper.py` (AC: 2, 3, 4)
+  - [x] T1.1 Implémenter `to_score_10(note_20: float) -> float` → `round(note_20 / 2, 1)`
+  - [x] T1.2 Implémenter `to_level(score_10: float) -> str` avec les 5 seuils
+  - [x] T1.3 Implémenter `rank_domains(domains: list[PublicDomainScore]) -> list[PublicDomainScore]` — tri décroissant, rank 1-based
+  - [x] T1.4 Définir dataclass `PublicDomainScore` : `key, label, score_10, level, rank, signal_label, note_20_internal`
 
-- [ ] T2 — Brancher dans `PublicPredictionAssembler` (AC: 1, 5)
-  - [ ] T2.1 Après agrégation publique (Story 60.1), appeler `to_score_10()` et `to_level()` pour chaque domaine public
-  - [ ] T2.2 Appeler `rank_domains()` pour calculer les rangs
-  - [ ] T2.3 Inclure dans la réponse `domain_ranking: list[PublicDomainScore]`
-  - [ ] T2.4 Conserver `categories: list[DailyPredictionCategory]` inchangé (note_20 présent)
+- [x] T2 — Brancher dans `PublicPredictionAssembler` (AC: 1, 5)
+  - [x] T2.1 Après agrégation publique (Story 60.1), appeler `to_score_10()` et `to_level()` pour chaque domaine public
+  - [x] T2.2 Appeler `rank_domains()` pour calculer les rangs
+  - [x] T2.3 Inclure dans la réponse `domain_ranking: list[PublicDomainScore]`
+  - [x] T2.4 Conserver `categories: list[DailyPredictionCategory]` inchangé (note_20 présent)
 
-- [ ] T3 — Mettre à jour les DTOs Pydantic (AC: 6)
-  - [ ] T3.1 Dans `backend/app/api/v1/routers/predictions.py`, créer `DailyPredictionPublicDomainScore(BaseModel)` :
+- [x] T3 — Mettre à jour les DTOs Pydantic (AC: 6)
+  - [x] T3.1 Dans `backend/app/api/v1/routers/predictions.py`, créer `DailyPredictionPublicDomainScore(BaseModel)` :
     ```python
     key: str
     label: str
@@ -50,19 +50,19 @@ afin de comprendre d'un coup d'œil quels domaines sont soutenus sans avoir à d
     signal_label: str | None = None
     note_20_internal: float  # rétrocompat
     ```
-  - [ ] T3.2 Ajouter `domain_ranking: list[DailyPredictionPublicDomainScore] | None = None` dans `DailyPredictionResponse`
+  - [x] T3.2 Ajouter `domain_ranking: list[DailyPredictionPublicDomainScore] | None = None` dans `DailyPredictionResponse`
 
-- [ ] T4 — Tests unitaires (AC: 8)
-  - [ ] T4.1 Test : `to_score_10(20.0)` → `10.0`
-  - [ ] T4.2 Test : `to_score_10(0.0)` → `0.0`
-  - [ ] T4.3 Test : `to_score_10(15.0)` → `7.5` (frontière favorable)
-  - [ ] T4.4 Test : `to_level(9.0)` → `"très_favorable"` (frontière basse)
-  - [ ] T4.5 Test : `to_level(7.5)` → `"favorable"` (frontière basse)
-  - [ ] T4.6 Test : `to_level(6.0)` → `"stable"` (frontière basse)
-  - [ ] T4.7 Test : `to_level(4.5)` → `"mitigé"` (frontière basse)
-  - [ ] T4.8 Test : `to_level(4.4)` → `"exigeant"` (frontière haute)
-  - [ ] T4.9 Test : `rank_domains([...])` — les rangs sont 1-based et en ordre décroissant
-  - [ ] T4.10 Test : `rank_domains([])` → `[]` sans erreur
+- [x] T4 — Tests unitaires (AC: 8)
+  - [x] T4.1 Test : `to_score_10(20.0)` → `10.0`
+  - [x] T4.2 Test : `to_score_10(0.0)` → `0.0`
+  - [x] T4.3 Test : `to_score_10(15.0)` → `7.5` (frontière favorable)
+  - [x] T4.4 Test : `to_level(9.0)` → `"très_favorable"` (frontière basse)
+  - [x] T4.5 Test : `to_level(7.5)` → `"favorable"` (frontière basse)
+  - [x] T4.6 Test : `to_level(6.0)` → `"stable"` (frontière basse)
+  - [x] T4.7 Test : `to_level(4.5)` → `"mitigé"` (frontière basse)
+  - [x] T4.8 Test : `to_level(4.4)` → `"exigeant"` (frontière haute)
+  - [x] T4.9 Test : `rank_domains([...])` — les rangs sont 1-based et en ordre décroissant
+  - [x] T4.10 Test : `rank_domains([])` → `[]` sans erreur
 
 ## Dev Notes
 
@@ -120,3 +120,8 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+- `backend/app/prediction/public_score_mapper.py` (NEW)
+- `backend/app/prediction/public_projection.py` (MOD)
+- `backend/app/api/v1/routers/predictions.py` (MOD)
+- `backend/tests/unit/prediction/test_public_score_mapper.py` (NEW)

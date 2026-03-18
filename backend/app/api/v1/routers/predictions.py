@@ -55,14 +55,16 @@ class DailyPredictionCategory(BaseModel):
     summary: str | None
 
 
-class DailyPredictionPublicDomain(BaseModel):
+class DailyPredictionPublicDomainScore(BaseModel):
     key: str
     label: str
     internal_codes: list[str]
     display_order: int
     score_10: float
-    level: str  # "favorable", "neutre", "exigeante"
+    level: str  # e.g., "favorable", "neutre", "exigeante"
     rank: int
+    note_20_internal: float
+    signal_label: str | None = None
 
 
 class DailyPredictionTurningPoint(BaseModel):
@@ -126,7 +128,7 @@ class DailyPredictionResponse(BaseModel):
     summary: DailyPredictionSummary
     categories: list[DailyPredictionCategory]
     categories_internal: list[DailyPredictionCategory] | None = None
-    public_domains: list[DailyPredictionPublicDomain] | None = None
+    domain_ranking: list[DailyPredictionPublicDomainScore] | None = None
     timeline: list[DailyPredictionTimeBlock]
     turning_points: list[DailyPredictionTurningPoint]
     decision_windows: list[DailyPredictionDecisionWindow] | None = None

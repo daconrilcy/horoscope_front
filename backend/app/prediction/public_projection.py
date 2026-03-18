@@ -11,6 +11,12 @@ from app.prediction.public_domain_taxonomy import (
     PUBLIC_DOMAINS,
     aggregate_public_domain_score,
 )
+from app.prediction.public_score_mapper import (
+    PublicDomainScore,
+    rank_domains,
+    to_level,
+    to_score_10,
+)
 
 if TYPE_CHECKING:
     from .persisted_snapshot import PersistedPredictionSnapshot
@@ -166,42 +172,49 @@ class PublicDomainRankingPolicy:
         internal_scores = {c["code"]: c["score_20"] for c in internal_categories}
         aggregated = aggregate_public_domain_score(internal_scores)
 
-        public_list = []
+        public_scores = []
         for key in DISPLAY_ORDER:
             entry = PUBLIC_DOMAINS[key]
-            score_20 = aggregated.get(key)
-            if score_20 is None:
+            note_20 = aggregated.get(key)
+            if note_20 is None:
                 continue
 
-            score_10 = score_20 / 2.0
-            level = self._resolve_level(score_10)
+            score_10 = to_score_10(note_20)
+            level = to_level(score_10)
 
-            public_list.append(
-                {
-                    "key": key,
-                    "label": entry.label_fr,  # Defaulting to FR as requested in many parts
-                    "internal_codes": entry.internal_codes,
-                    "display_order": entry.display_order,
-                    "score_10": round(score_10, 1),
-                    "level": level,
-                    "rank": 99,  # placeholder
-                }
+            public_scores.append(
+                PublicDomainScore(
+                    key=key,
+                    label=entry.label_fr,
+                    score_10=score_10,
+                    level=level,
+                    rank=99,  # Placeholder
+                    note_20_internal=note_20,
+                    internal_codes=entry.internal_codes,
+                    display_order=entry.display_order,
+                    signal_label=None,
+                )
             )
 
-        # Rank by score descending
-        public_list.sort(key=lambda x: x["score_10"], reverse=True)
-        for i, domain in enumerate(public_list):
-            domain["rank"] = i + 1
+        # Rank domains
+        ranked = rank_domains(public_scores)
 
-        # Re-sort by display_order for fixed UI order (AC: 6)
-        return sorted(public_list, key=lambda x: x["display_order"])
-
-    def _resolve_level(self, score_10: float) -> str:
-        if score_10 >= 7.0:
-            return "favorable"
-        if score_10 >= 4.0:
-            return "neutre"
-        return "exigeante"
+        # Convert back to dict for API (and re-sort by display_order for fixed UI order)
+        as_dict = [
+            {
+                "key": d.key,
+                "label": d.label,
+                "internal_codes": d.internal_codes,
+                "display_order": d.display_order,
+                "score_10": d.score_10,
+                "level": d.level,
+                "rank": d.rank,
+                "note_20_internal": d.note_20_internal,
+                "signal_label": d.signal_label,
+            }
+            for d in ranked
+        ]
+        return sorted(as_dict, key=lambda x: x["display_order"])
 
 
 class PublicMicroTrendPolicy:
