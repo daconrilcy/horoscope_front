@@ -1,6 +1,7 @@
 import React from 'react'
 import { Sparkles } from 'lucide-react'
 import type { FocusMomentCardModel } from '../../types/detailScores'
+import { CategoryIcon } from './CategoryIcon'
 import './FocusMomentCard.css'
 
 interface FocusMomentCardProps {
@@ -25,6 +26,7 @@ export const FocusMomentCard: React.FC<FocusMomentCardProps> = ({ model }) => {
       <div className="focus-moment-card__tags">
         {model.tags.map(tag => (
           <span key={tag.code} className="focus-moment-card__tag">
+            <CategoryIcon code={tag.code} className="focus-moment-card__tag-icon" />
             {tag.label}
           </span>
         ))}
