@@ -587,8 +587,8 @@ describe("DailyHoroscopePage", () => {
     // On cherche les libellés via aria-label ou dans le document (selon le composant qui les rend)
     expect(screen.getAllByLabelText(/Changement/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Carrière/i).length).toBeGreaterThan(0);
-    expect(screen.getByText("13.6")).toBeInTheDocument();
-    expect(screen.getByText("7.2")).toBeInTheDocument();
+    expect(screen.getByText("14")).toBeInTheDocument();
+    expect(screen.getByText("7")).toBeInTheDocument();
   });
 
   it("affiche un bouton retour vers le dashboard", async () => {

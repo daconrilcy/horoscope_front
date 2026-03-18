@@ -17,7 +17,7 @@ const DomainItem: React.FC<{ domain: DailyDomainScore; isPrimary: boolean; lang:
       <div className="daily-domains-card__item-header">
         <span className="daily-domains-card__item-icon" aria-hidden="true">{icon}</span>
         <span className="daily-domains-card__item-label">{domain.label}</span>
-        <span className="daily-domains-card__item-score">{domain.score.toFixed(1)}</span>
+        <span className="daily-domains-card__item-score">{Math.round(domain.score)}</span>
       </div>
       <div className="daily-domains-card__progress-bg" aria-hidden="true">
         <div 

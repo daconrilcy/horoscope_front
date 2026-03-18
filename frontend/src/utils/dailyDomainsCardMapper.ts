@@ -27,7 +27,7 @@ export function buildDailyDomainsCardModel(
   return {
     title: getPredictionMessage('domains_title', lang),
     primaryDomains: allDomains.slice(0, 3),
-    secondaryDomains: allDomains.slice(3),
+    secondaryDomains: allDomains.slice(3, 6),
     ctaLabel: getPredictionMessage('optimize_day_cta', lang)
   }
 }

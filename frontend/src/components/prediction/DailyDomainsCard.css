@@ -1,66 +1,92 @@
+/* ── DailyDomainsCard — carte analytique premium ── */
+
 .daily-domains-card {
   display: flex;
   flex-direction: column;
-  padding: var(--space-6);
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1.5rem;
+  padding: 24px 20px 20px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.22));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    0 12px 36px rgba(88, 55, 170, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.30);
   height: 100%;
 }
 
-.dark .daily-domains-card {
-  background: rgba(40, 32, 72, 0.35);
-  border: 1px solid rgba(134, 108, 208, 0.15);
-}
-
+/* ── Titre ── */
 .daily-domains-card__title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--text-1);
-  margin: 0 0 var(--space-5) 0;
+  margin: 0 0 16px 0;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  opacity: 0.8;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
 }
 
+/* ── Top 3 — mini-cartes internes ── */
 .daily-domains-card__primary-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
+  gap: 10px;
+  margin-bottom: 18px;
 }
 
-.daily-domains-card__secondary-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: var(--space-4) var(--space-3);
-  margin-bottom: var(--space-6);
-}
-
-/* Item styling */
-.daily-domains-card__item {
+.daily-domains-card__item--primary {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.50);
+  border: 1px solid rgba(220, 210, 255, 0.30);
 }
 
+/* ── Liste secondaire ── */
+.daily-domains-card__secondary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.daily-domains-card__item--secondary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 2px;
+}
+
+/* ── Header d'item ── */
 .daily-domains-card__item-header {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 8px;
 }
 
-.daily-domains-card__item-icon {
-  font-size: 1.15rem;
-  width: 1.5rem;
+/* ── Icône ── */
+.daily-domains-card__item--primary .daily-domains-card__item-icon {
+  font-size: 1.1rem;
+  width: 1.4rem;
   display: inline-flex;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.daily-domains-card__item-label {
-  font-size: 0.85rem;
+.daily-domains-card__item--secondary .daily-domains-card__item-icon {
+  font-size: 0.9rem;
+  width: 1.1rem;
+  display: inline-flex;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.65;
+}
+
+/* ── Label ── */
+.daily-domains-card__item--primary .daily-domains-card__item-label {
+  font-size: 0.88rem;
   font-weight: 600;
   color: var(--text-1);
   flex-grow: 1;
@@ -70,80 +96,97 @@
   letter-spacing: -0.01em;
 }
 
-.daily-domains-card__item-score {
-  font-size: 0.85rem;
+.daily-domains-card__item--secondary .daily-domains-card__item-label {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--text-2);
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Score ── */
+.daily-domains-card__item--primary .daily-domains-card__item-score {
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--primary);
   font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
 
+.daily-domains-card__item--secondary .daily-domains-card__item-score {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  opacity: 0.80;
+}
+
+/* ── Barres de progression ── */
 .daily-domains-card__progress-bg {
   width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
+  border-radius: 999px;
+  background: rgba(173, 146, 238, 0.14);
   overflow: hidden;
+}
+
+.daily-domains-card__item--primary .daily-domains-card__progress-bg {
+  height: 5px;
+}
+
+.daily-domains-card__item--secondary .daily-domains-card__progress-bg {
+  height: 3px;
 }
 
 .daily-domains-card__progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), #A190ED);
-  border-radius: 4px;
-  transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: inherit;
+  transition: width 1.1s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Secondary variant */
-.daily-domains-card__item--secondary .daily-domains-card__item-icon {
-  font-size: 0.95rem;
-}
-
-.daily-domains-card__item--secondary .daily-domains-card__item-label {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--text-2);
-  opacity: 0.85;
-}
-
-.daily-domains-card__item--secondary .daily-domains-card__item-score {
-  font-size: 0.75rem;
-  opacity: 0.9;
-}
-
-.daily-domains-card__item--secondary .daily-domains-card__progress-bg {
-  height: 4px;
-  opacity: 0.6;
+.daily-domains-card__item--primary .daily-domains-card__progress-bar {
+  background: linear-gradient(90deg, rgba(112, 70, 228, 0.92), rgba(146, 103, 243, 0.88));
 }
 
 .daily-domains-card__item--secondary .daily-domains-card__progress-bar {
-  opacity: 0.7;
+  background: linear-gradient(90deg, rgba(134, 108, 208, 0.55), rgba(161, 140, 230, 0.45));
 }
 
+/* ── Footer + CTA ── */
 .daily-domains-card__footer {
   margin-top: auto;
+  padding-top: 18px;
 }
 
 .daily-domains-card__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   width: 100%;
-  background: linear-gradient(135deg, #5D25DF, #866CD0);
+  min-height: 52px;
+  border-radius: 999px;
   border: none;
-  color: white;
-  padding: 0.85rem;
-  border-radius: 1rem;
-  font-size: 0.9rem;
-  font-weight: 700;
+  background: linear-gradient(180deg, rgba(122, 78, 236, 1), rgba(86, 43, 204, 1));
+  box-shadow: 0 10px 28px rgba(98, 54, 214, 0.20);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px rgba(93, 37, 223, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .daily-domains-card__cta:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(93, 37, 223, 0.3);
-  filter: brightness(1.1);
+  box-shadow: 0 14px 34px rgba(98, 54, 214, 0.28);
 }
 
-@media (max-width: 480px) {
-  .daily-domains-card__secondary-list {
-    grid-template-columns: 1fr 1fr;
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .daily-domains-card {
+    padding: 20px 16px 18px;
+    border-radius: 22px;
   }
 }
