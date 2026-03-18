@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from time import monotonic
 
 from pydantic import BaseModel
+from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -604,7 +605,27 @@ class GuidanceService:
             birth_place=profile.birth_place,
         )
 
-        context: dict[str, str | None] = {
+        # Story 59.4: Build astro context before LLM call
+        from datetime import date
+
+        from app.services.astro_context_builder import AstroContextBuilder
+        
+        astro_context = None
+        try:
+            today = date.today() # Simplification for now, should ideally use current_context date
+            normalized_period = GuidanceService._validate_period(period)
+            if normalized_period == "daily":
+                astro_context = AstroContextBuilder.build_daily(
+                    user_id, today, current_context.current_timezone, db
+                )
+            else:
+                astro_context = AstroContextBuilder.build_weekly(
+                    user_id, today, current_context.current_timezone, db
+                )
+        except Exception as e:
+            GuidanceService.logger.warning("astro_context_build_failed user_id=%d: %s", user_id, e)
+
+        context: dict[str, Any] = {
             "birth_date": profile.birth_date,
             "birth_time": profile.birth_time,
             "birth_timezone": profile.birth_timezone,
@@ -614,6 +635,7 @@ class GuidanceService:
             "current_datetime": current_context.current_datetime,
             "current_timezone": current_context.current_timezone,
             "current_location": current_context.current_location,
+            "astro_context": astro_context.model_dump() if astro_context else None,
         }
 
         attempts = 0

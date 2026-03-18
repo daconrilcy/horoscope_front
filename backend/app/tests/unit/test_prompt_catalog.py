@@ -57,8 +57,8 @@ def test_validate_catalog_vs_db_failure() -> None:
 
 def test_resolve_model_default(monkeypatch) -> None:
     """Test that resolve_model returns default when no env is set."""
-    from app.prompts.catalog import resolve_model
     from app.core.config import settings
+    from app.prompts.catalog import resolve_model
     
     monkeypatch.delenv("OPENAI_ENGINE_GUIDANCE_DAILY", raising=False)
     # Default from settings
@@ -74,7 +74,7 @@ def test_resolve_model_from_env(monkeypatch) -> None:
 
 def test_resolve_model_unknown_use_case(monkeypatch) -> None:
     """Test that resolve_model returns default for unknown use case."""
-    from app.prompts.catalog import resolve_model
     from app.core.config import settings
+    from app.prompts.catalog import resolve_model
     
     assert resolve_model("unknown_key") == settings.openai_model_default

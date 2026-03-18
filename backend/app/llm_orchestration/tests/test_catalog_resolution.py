@@ -3,9 +3,7 @@ from __future__ import annotations
 import os
 from unittest.mock import patch
 
-import pytest
-
-from app.prompts.catalog import resolve_model, PROMPT_CATALOG
+from app.prompts.catalog import PROMPT_CATALOG, resolve_model
 
 
 def test_resolve_model_granular_override():

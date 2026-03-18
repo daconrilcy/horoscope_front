@@ -406,6 +406,32 @@ USE_CASES_CONTRACTS = [
             },
         },
     },
+    {
+        "key": "guidance_daily",
+        "display_name": "Guidance Quotidienne",
+        "description": "Conseils astrologiques pour la journée.",
+        "output_schema_name": "AstroResponse_v1",
+        "persona_strategy": "optional",
+        "safety_profile": "astrology",
+        "fallback_use_case_key": "natal_interpretation_short",
+        "required_prompt_placeholders": ["natal_chart_summary"],
+        "interaction_mode": "chat",
+        "user_question_policy": "optional",
+        "input_schema": None,
+    },
+    {
+        "key": "guidance_weekly",
+        "display_name": "Guidance Hebdomadaire",
+        "description": "Conseils astrologiques pour la semaine.",
+        "output_schema_name": "AstroResponse_v1",
+        "persona_strategy": "optional",
+        "safety_profile": "astrology",
+        "fallback_use_case_key": "natal_interpretation_short",
+        "required_prompt_placeholders": ["natal_chart_summary"],
+        "interaction_mode": "chat",
+        "user_question_policy": "none",
+        "input_schema": None,
+    },
 ]
 
 
