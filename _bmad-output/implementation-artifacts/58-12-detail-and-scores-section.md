@@ -57,6 +57,24 @@ afin d'avoir une lecture à la fois narrative et analytique de ma journée astro
 
 gemini-2.0-flash-thinking-exp
 
+### Post-implementation design corrections (claude-sonnet-4-6, 2026-03-18) — round 1
+
+**Bugs corrigés :**
+
+- `focusMomentCardMapper` : `semantic.description` → `semantic.transition || semantic.implication` — le champ `description` n'existe pas sur le retour de `humanizeTurningPointSemantic` ; la description enrichie des turning points n'était jamais affichée.
+- `DailyDomainsCard` : garde ajoutée sur `secondaryDomains.length > 0` pour éviter un espace mort `var(--space-6)` quand la liste secondaire est vide.
+
+**Corrections visuelles — passe 1 (audit comparatif maquette) :**
+
+- `DetailAndScoresSection.css` : grid `minmax(0, 1.55fr) minmax(300px, 0.95fr)`, gap 18px.
+- `FocusMomentCard.css` : surface blanche/lavande dominante (`rgba(255,255,255,.34→.22)`), border `rgba(255,255,255,.42)`, ombre diffuse. Décor `::after` radial mauve bas-droite + `.background-glow` second halo. Badge temps pill fine `rgba(.40)`. Titre `clamp(1.9rem, 3vw, 3rem)` poids 600. Tags pills soft normal-case `rgba(.42)`. Description `1.06rem max-width 36ch`. CTA capsule 48px `rgba(.72)` ombre violette légère.
+- `DailyDomainsCard.css` : même glassmorphism. Top 3 : mini-cartes internes `rgba(.50)`, barres 5px. Secondaires : layout flex colonne, barres 3px, limités à 3 items (`slice(3,6)`). Scores : `Math.round()` (entiers, suppression des `.0`). CTA 52px `padding-top 18px`.
+
+**Corrections visuelles — passe 2 (polish glass-premium) :**
+
+- `FocusMomentCard.css` : surface encore plus claire et perlée (`rgba(255,255,255,.62→.44)`), border `rgba(230,220,255,.30)`. Badge temps 26px / 0.68rem poids 500 très discret, border `rgba(160,130,220,.14)`. Tags 28px pills `rgba(.55)` border `rgba(220,210,255,.28)` 0.76rem poids 500. Description `1.02rem max-width 32ch`. Décor halo élargi blur 22px + second glow `rgba(210,195,255,.12)`. CTA 46px `rgba(.78)` ombre 0.08. `justify-content: space-between` pour meilleure répartition verticale.
+- `DailyDomainsCard.css` : surface unifiée avec FocusMomentCard (`rgba(.58→.40)`). Titre `opacity 0.60`. Items primaires `rgba(.60)` gap 9px. Séparation top 3 / secondaires par `border-top rgba(220,210,255,.20)` + `padding-top 12px`. Icônes secondaires `opacity 0.45`. Labels secondaires `0.72rem weight-400 opacity 0.70`. Scores secondaires `opacity 0.50`. Barres secondaires 2px fills plats `rgba(.35)`. CTA 50px `padding-top 22px` ombre `rgba(.18)`.
+
 ### File List
 
 - `frontend/src/types/detailScores.ts`
