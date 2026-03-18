@@ -1,6 +1,6 @@
 # Story 59.3 : Configuration engine OpenAI par prompt via `.env`
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -123,4 +123,13 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Implémentation complète : `engine_env_key` dans chaque `PromptEntry`, `resolve_model()` dans `catalog.py`, gateway branché dessus, aucune valeur hardcodée dans le code Python.
+- **Code review (post-implémentation) :**
+  - ISSUE-06 (Majeur) : 10 clefs `OPENAI_ENGINE_*` manquantes dans `.env.example` (`NATAL_SHORT`, `EVENT_GUIDANCE`, `NATAL_PSY`, `NATAL_SHADOW`, `NATAL_WORK`, `NATAL_JOY`, `NATAL_RELATIONSHIP`, `NATAL_COMMUNITY`, `NATAL_VALUES`, `NATAL_EVOLUTION`) — toutes ajoutées avec les modèles par défaut appropriés.
+- Tests : 1342 passed, ruff clean.
+
 ### File List
+
+- `backend/app/prompts/catalog.py` — engine_env_key par entrée, resolve_model()
+- `backend/app/llm_orchestration/gateway.py` — branchement resolve_model()
+- `backend/.env.example` — 10 clefs OPENAI_ENGINE_* ajoutées

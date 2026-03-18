@@ -274,6 +274,7 @@ class LLMGateway:
 
                 if db_prompt:
                     authorized_vars = {
+                        # Use-case specific vars
                         "locale",
                         "use_case",
                         "natal_chart_summary",
@@ -286,6 +287,17 @@ class LLMGateway:
                         "tone",
                         "persona_name",
                         "event_description",
+                        # Story 59.4 — astro context
+                        "astro_context",
+                        # Story 59.5 — common context (PromptCommonContext fields)
+                        "natal_interpretation",
+                        "natal_data",
+                        "precision_level",
+                        "astrologer_profile",
+                        "period_covered",
+                        "today_date",
+                        "use_case_name",
+                        "use_case_key",
                     }
 
                     # Point 28.5 AC4: Use contract (db_use_case) as

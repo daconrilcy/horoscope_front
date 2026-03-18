@@ -612,8 +612,7 @@ class GuidanceService:
         
         astro_context = None
         try:
-            today = date.today() # Simplification for now, should ideally use current_context date
-            normalized_period = GuidanceService._validate_period(period)
+            today = date.today()
             if normalized_period == "daily":
                 astro_context = AstroContextBuilder.build_daily(
                     user_id, today, current_context.current_timezone, db

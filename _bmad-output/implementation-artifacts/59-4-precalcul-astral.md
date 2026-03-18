@@ -1,6 +1,6 @@
 # Story 59.4 : Précalcul des données astrales avant injection dans les prompts horoscope
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -157,4 +157,14 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Implémentation complète : `AstroContextBuilder` avec `build_daily()` et `build_weekly()`, injection dans `GuidanceService`, dégradé gracieux si précalcul échoue.
+- **Code review (post-implémentation) :**
+  - ISSUE-07 (Moyen) : `datetime.utcnow()` déprécié depuis Python 3.12 dans `AstroContextData.computed_at` — remplacé par `datetime.now(timezone.utc)`.
+  - ISSUE-08 (Info) : construction obscure `datetime.min.time().replace(hour=12)` — remplacée par `time(12, 0)`.
+  - ISSUE-09 (Moyen) : dans `build_weekly()`, `precision="full"` par défaut même si les 7 jours échouent tous (donnée mensongère) — changé en `precision: str | None = None` avec fallback `or "degraded"` à la construction de `AstroContextData`.
+- Tests : 1342 passed, ruff clean.
+
 ### File List
+
+- `backend/app/services/astro_context_builder.py` — AstroContextBuilder, AstroContextData, TransitEntry, AspectEntry, PeriodCovered
+- `backend/app/services/guidance_service.py` — injection astro_context avant appel LLM

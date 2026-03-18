@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import os
+import re
 from typing import Any
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 
 
 class PromptEntry(BaseModel):
@@ -16,13 +18,7 @@ class PromptEntry(BaseModel):
     engine_env_key: str  # .env key for the engine/model
     max_tokens: int
     temperature: float
-    output_schema: dict[str, Any] | None = None
-
-    @model_validator(mode="after")
-    def validate_keys_match(self) -> PromptEntry:
-        """Ensure use_case_key matches if we want to be strict,
-        but mainly here for extensibility."""
-        return self
+    output_schema: dict[str, Any] | None = None  # None = text output, no JSON schema
 
 
 # Canonical Output Schemas (simplified for metadata)
@@ -225,11 +221,9 @@ def resolve_model(use_case_key: str, fallback_model: str | None = None) -> str:
     Returns:
         The model name (e.g., 'gpt-4o-mini').
     """
-    import os
-    import re
-
+    # Lazy import to avoid circular dependency at module load time
     from app.core.config import settings
-    
+
     # 1. New granular override
     entry = PROMPT_CATALOG.get(use_case_key)
     if entry:

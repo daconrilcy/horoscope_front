@@ -1,6 +1,6 @@
 # Story 59.1 : Suppression du chemin V1 et migration V2 comme voie unique d'exécution
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -167,4 +167,11 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Implémentation complète : flag `LLM_ORCHESTRATION_V2` supprimé, fichiers V1 supprimés, `AIEngineAdapter` simplifié en façade directe sur `LLMGateway.execute()`.
+- **Code review (post-implémentation) :**
+  - ISSUE-01 (Mineur) : bloc mort `if TYPE_CHECKING: pass` + import `TYPE_CHECKING` inutilisé dans `ai_engine_adapter.py` — supprimés.
+- Tests : 1342 passed, ruff clean.
+
 ### File List
+
+- `backend/app/services/ai_engine_adapter.py` — façade directe gateway, nettoyage imports

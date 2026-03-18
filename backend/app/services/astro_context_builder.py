@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, time, timezone
 from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
@@ -39,7 +39,7 @@ class PeriodCovered(BaseModel):
 class AstroContextData(BaseModel):
     """Aggregated astro data for LLM injection."""
     user_id: int
-    computed_at: datetime = Field(default_factory=datetime.utcnow)
+    computed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     period_covered: PeriodCovered
     precision_level: Literal["full", "degraded"]
     lunar_phase: str
@@ -175,7 +175,7 @@ class AstroContextBuilder:
             
             # 4. Lunar Phase
             # Approx JD at noon local
-            dt_noon = datetime.combine(target_date, datetime.min.time().replace(hour=12))
+            dt_noon = datetime.combine(target_date, time(12, 0))
             timestamp = dt_noon.timestamp()
             jd = 2440587.5 + timestamp / 86400.0
             lunar_phase = cls._get_lunar_phase_label(jd)
@@ -208,16 +208,17 @@ class AstroContextBuilder:
         # Aggregate over 7 days
         # This is a bit heavy, but AC says to reuse build_daily
         
-        precision = "full"
+        precision: str | None = None  # Will be set from first successful day
         lunar_phase_mid = ""
-        
+
         try:
             seen_keys = {}
             for i in range(7):
                 day = week_start + timedelta(days=i)
                 day_data = cls.build_daily(user_id, day, timezone, db)
                 if day_data:
-                    precision = day_data.precision_level # Should be same for all days
+                    if precision is None:
+                        precision = day_data.precision_level  # Same for all days of a given user
                     if i == 3: # Mid-week phase
                         lunar_phase_mid = day_data.lunar_phase
                     
@@ -235,7 +236,7 @@ class AstroContextBuilder:
                     date_end=week_start + timedelta(days=6),
                     label=f"semaine du {week_start.strftime('%d %B %Y')}"
                 ),
-                precision_level=precision,
+                precision_level=precision or "degraded",
                 lunar_phase=lunar_phase_mid or "Phase variable",
                 transits_active=all_transits,
                 dominant_aspects=[],

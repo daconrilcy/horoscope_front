@@ -1,6 +1,6 @@
 # Story 59.5 : Socle commun des prompts — PromptCommonContext
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -176,4 +176,15 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Implémentation complète : `PromptCommonContext` Pydantic, `CommonContextBuilder.build()`, fusion dans `LLMGateway.execute()` pour tous les use_cases.
+- **Code review (post-implémentation) :**
+  - ISSUE-10 (Info) : double appel à `_validate_period()` dans `guidance_service.py` (déjà appelé ligne 559, rappelé inutilement ligne 616 dans le bloc astro_context) — appel redondant supprimé.
+  - ISSUE-11 (Bug critique) : `validate_natal_source()` dans `PromptCommonContext` vérifiait `use_case_name` (le nom lisible du catalogue, qui tombe back sur `use_case_key` string si l'entrée catalogue est absente) — comparaison fragile. Correction : ajout du champ `use_case_key: str` dans `PromptCommonContext` pour le branchement logique stable, validator migré sur `self.use_case_key.startswith("natal_interpretation")`. Le `CommonContextBuilder.build()` passe maintenant `use_case_key=use_case_key` en plus.
+  - ISSUE-12 (Bug critique) : `authorized_vars` dans `gateway.py` ne contenait pas les variables du socle commun ni `astro_context` — les templates de prompts ne pouvaient donc pas les utiliser comme variables de rendu. Ajout des 9 variables manquantes : `astro_context`, `natal_interpretation`, `natal_data`, `precision_level`, `astrologer_profile`, `period_covered`, `today_date`, `use_case_name`, `use_case_key`.
+- Tests : 1342 passed, ruff clean.
+
 ### File List
+
+- `backend/app/prompts/common_context.py` — PromptCommonContext (+ champ use_case_key), CommonContextBuilder
+- `backend/app/llm_orchestration/gateway.py` — authorized_vars étendu (9 variables), appel CommonContextBuilder.build()
+- `backend/app/services/guidance_service.py` — suppression appel _validate_period() dupliqué

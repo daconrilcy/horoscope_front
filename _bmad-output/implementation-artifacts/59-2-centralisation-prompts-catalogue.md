@@ -1,6 +1,6 @@
 # Story 59.2 : Répertoire centralisé des prompts et catalogue unifié
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -154,4 +154,15 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Implémentation complète : `backend/app/prompts/catalog.py` créé avec `PROMPT_CATALOG` (17 use_cases), `PromptEntry` Pydantic, `validate_catalog()`, et `resolve_model()`. Validation au démarrage branchée dans le lifespan.
+- **Code review (post-implémentation) :**
+  - ISSUE-02 (Info) : `output_schema=None` sans commentaire — ajouté `# None = text output, no JSON schema`.
+  - ISSUE-03 (Mineur) : `@model_validator` no-op dans `PromptEntry` donnant une fausse impression de validation (la vraie validation est dans `validate_catalog()`) — supprimé.
+  - ISSUE-04 (Mineur) : `import os, re` dans le corps de `resolve_model()` (anti-pattern) — montés au niveau module.
+  - ISSUE-05 (Info) : import lazy de `settings` dans `resolve_model()` non documenté — commentaire ajouté `# Lazy import to avoid circular dependency at module load time`.
+- Tests : 1342 passed, ruff clean.
+
 ### File List
+
+- `backend/app/prompts/__init__.py` — module init
+- `backend/app/prompts/catalog.py` — PROMPT_CATALOG, PromptEntry, validate_catalog(), resolve_model()

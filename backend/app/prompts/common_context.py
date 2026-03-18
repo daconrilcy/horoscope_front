@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class PromptCommonContext(BaseModel):
     """Socle commun de contexte pour chaque prompt."""
-    
+
     natal_interpretation: Optional[str] = None
     natal_data: Optional[dict[str, Any]] = None
     precision_level: str
@@ -30,14 +30,18 @@ class PromptCommonContext(BaseModel):
     period_covered: str
     today_date: str
     use_case_name: str
+    use_case_key: str  # Raw key used for logic branching (e.g. "natal_interpretation")
 
     @model_validator(mode="after")
     def validate_natal_source(self) -> PromptCommonContext:
-        """S'assure qu'on a soit l'interprétation, soit les données brutes."""
-        if self.use_case_name in ("natal-interpretation-v3", "natal-interpretation-short-v1"):
-            # For these use cases, interpretation is None as it's being produced
+        """S'assure qu'on a soit l'interprétation, soit les données brutes.
+
+        Les use_cases de type 'natal_interpretation*' produisent l'interprétation
+        — ils ne la consomment pas — donc la contrainte ne s'applique pas.
+        """
+        if self.use_case_key.startswith("natal_interpretation"):
             return self
-            
+
         if self.natal_interpretation is None and self.natal_data is None:
             raise ValueError("Either natal_interpretation or natal_data must be provided")
         return self
@@ -125,4 +129,5 @@ class CommonContextBuilder:
             period_covered=period_label,
             today_date=today_date,
             use_case_name=use_case_name,
+            use_case_key=use_case_key,
         )

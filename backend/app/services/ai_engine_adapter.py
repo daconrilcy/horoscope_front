@@ -20,7 +20,7 @@ __all__ = [
 ]
 
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, NoReturn, Optional
+from typing import Any, Awaitable, Callable, NoReturn, Optional
 
 from sqlalchemy.orm import Session
 
@@ -36,9 +36,6 @@ from app.ai_engine.exceptions import (
     ValidationError as AIEngineValidationError,
 )
 from app.core.config import settings
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 
