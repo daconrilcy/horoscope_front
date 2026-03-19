@@ -364,7 +364,10 @@ class PublicBestWindowPolicy:
         time_range = f"{start.strftime('%H:%M')}–{end.strftime('%H:%M')}"
 
         # Intensity-based label (AC2)
-        intensity = best.get("intensity", 10.0)
+        try:
+            intensity = float(best.get("intensity") or 10.0)
+        except (TypeError, ValueError):
+            intensity = 10.0
         label = "Moment favorable"
         if intensity >= 14.0:
             label = "Pic du jour"
@@ -548,6 +551,9 @@ class PublicTimeWindowPolicy:
                 if hasattr(block, "end_local")
                 else getattr(block, "end_at_local", None)
             )
+            if start is None or end is None:
+                continue
+
             orientation = getattr(block, "orientation", "stable")
             dominant_themes = getattr(block, "dominant_themes", [])
             if not dominant_themes and hasattr(block, "themes"):
