@@ -133,6 +133,7 @@ export interface DailyPredictionPublicDomainScore {
 }
 
 export interface DailyPredictionTimeWindow {
+  period_key: string;
   time_range: string;
   label: string;
   regime: string;
@@ -188,6 +189,17 @@ export interface DailyPredictionAstroFoundation {
   interpretation_bridge: string;
 }
 
+export interface DailyPredictionIngress {
+  text: string;
+  time: string | null;
+}
+
+export interface DailyPredictionAstroDailyEvents {
+  ingresses: DailyPredictionIngress[];
+  aspects: string[];
+  planet_positions?: string[];
+}
+
 export interface DailyPredictionMicroTrend {
   category_code: string;
   z_score: number | null;
@@ -205,6 +217,7 @@ export interface DailyPredictionResponse {
   turning_point?: DailyPredictionTurningPointPublic;
   best_window?: DailyPredictionBestWindow;
   astro_foundation?: DailyPredictionAstroFoundation;
+  astro_daily_events?: DailyPredictionAstroDailyEvents;
   categories: DailyPredictionCategory[];
   categories_internal?: DailyPredictionCategory[];
   timeline: DailyPredictionTimeBlock[];

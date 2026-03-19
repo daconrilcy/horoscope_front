@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, time
 from numbers import Real
 from typing import TYPE_CHECKING, Any
 
 from app.prediction.decision_window_builder import DecisionWindowBuilder
 from app.prediction.editorial_template_engine import EditorialTemplateEngine
+from app.prediction.public_astro_daily_events import PublicAstroDailyEventsPolicy
 from app.prediction.public_astro_vocabulary import (
     HOUSE_SIGNIFICATIONS,
     get_aspect_label,
@@ -163,6 +164,13 @@ class PublicPredictionAssembler:
             evidence=evidence,
         )
 
+        # New: Astro Daily Events (V4)
+        astro_daily_events = PublicAstroDailyEventsPolicy().build(
+            snapshot,
+            engine_output=engine_output,
+            evidence=evidence,
+        )
+
         # 7. Meta
         house_system_effective = snapshot.house_system_effective
         if house_system_effective is None and engine_output is not None:
@@ -195,6 +203,7 @@ class PublicPredictionAssembler:
             "time_windows": time_windows,
             "turning_point": main_turning_point,
             "astro_foundation": astro_foundation,
+            "astro_daily_events": astro_daily_events,
             "categories": internal_categories,  # Keep for retrocompat
             "categories_internal": internal_categories,
             "domain_ranking": public_domains,
@@ -510,10 +519,18 @@ class PublicMainTurningPointPolicy:
         return getattr(tp, "summary", "Changement de dynamique dans votre journée.")
 
 
+PERIOD_SLOTS = [
+    {"key": "nuit", "hour_start": 22, "hour_end": 6, "default_regime": "récupération"},
+    {"key": "matin", "hour_start": 6, "hour_end": 12, "default_regime": "mise_en_route"},
+    {"key": "apres_midi", "hour_start": 12, "hour_end": 18, "default_regime": "fluidité"},
+    {"key": "soiree", "hour_start": 18, "hour_end": 22, "default_regime": "recentrage"},
+]
+
+
 class PublicTimeWindowPolicy:
     """
-    Builds the narrative time windows for the day (Story 60.4).
-    Mappers V3 orientation -> regime -> label/action.
+    Builds the narrative time windows for the day (Story 60.14).
+    Produces 4 fixed periods (Night, Morning, Afternoon, Evening).
     """
 
     def build(
@@ -524,6 +541,8 @@ class PublicTimeWindowPolicy:
         engine_output: Any | None = None,
         evidence: V3EvidencePack | None = None,
     ) -> list[dict[str, Any]]:
+        from collections import Counter
+
         # 1. Resolve Time Blocks (V3)
         v3_blocks = []
         if evidence:
@@ -533,45 +552,73 @@ class PublicTimeWindowPolicy:
             if core_output is not None:
                 v3_blocks = getattr(core_output, "time_blocks", [])
 
-        if not v3_blocks:
-            return []
-
-        # 2. Build Windows
+        # 2. Build 4 Windows
         windows = []
-        for block in v3_blocks:
-            # Resolve properties
-            # Note: block can be V3EvidenceWindow or V3TimeBlock
-            start = (
-                block.start_local
-                if hasattr(block, "start_local")
-                else getattr(block, "start_at_local", None)
-            )
-            end = (
-                block.end_local
-                if hasattr(block, "end_local")
-                else getattr(block, "end_at_local", None)
-            )
-            if start is None or end is None:
-                continue
+        l_date = snapshot.local_date
+        if isinstance(l_date, datetime):
+            l_date = l_date.date()
 
-            orientation = getattr(block, "orientation", "stable")
-            dominant_themes = getattr(block, "dominant_themes", [])
-            if not dominant_themes and hasattr(block, "themes"):
-                dominant_themes = block.themes
+        for slot in PERIOD_SLOTS:
+            key = slot["key"]
+            h_start = slot["hour_start"]
+            h_end = slot["hour_end"]
 
-            # A. Determine Regime
-            regime = self._resolve_regime(start, end, orientation, turning_points)
+            # A. Filter blocks whose start falls in the period
+            slot_blocks = []
+            for b in v3_blocks:
+                start = getattr(b, "start_local", None) or getattr(b, "start_at_local", None)
+                if start is None:
+                    continue
 
-            # B. Map Domains
-            top_domains = self._map_domains(dominant_themes)
+                if h_start < h_end:
+                    is_in_slot = h_start <= start.hour < h_end
+                else:  # Overnight (22 to 6)
+                    is_in_slot = start.hour >= h_start or start.hour < h_end
 
-            # C. Label & Action
+                if is_in_slot:
+                    slot_blocks.append(b)
+
+            # B. Aggregate Orientation (Mode)
+            orientation = "stable"
+            if slot_blocks:
+                orientations = [getattr(b, "orientation", "stable") for b in slot_blocks]
+                counts = Counter(orientations)
+                orientation = counts.most_common(1)[0][0]
+
+            # C. Aggregate Themes
+            all_themes = []
+            for b in slot_blocks:
+                themes = getattr(b, "dominant_themes", []) or getattr(b, "themes", [])
+                all_themes.extend(themes)
+
+            theme_counts = Counter(all_themes)
+            top_internal_themes = [t for t, c in theme_counts.most_common(5)]
+            top_domains = self._map_domains(top_internal_themes)
+
+            # D. Resolve Regime
+            # Representative mid-period hour
+            duration = (h_end - h_start) % 24
+            mid_hour = (h_start + duration // 2) % 24
+            representative = datetime.combine(l_date, time(mid_hour, 0))
+
+            # Approximate start/end for _resolve_regime logic
+            rep_start = representative
+            rep_end = datetime.combine(l_date, time(h_end % 24, 0))
+
+            regime = self._resolve_regime(rep_start, rep_end, orientation, turning_points)
+
+            # E. Default Fallback
+            if not slot_blocks and regime == "fluidité":
+                regime = slot["default_regime"]
+
+            # F. Label & Action
             label = get_regime_label(regime)
             action_hint = get_action_hint(regime)
 
             windows.append(
                 {
-                    "time_range": f"{start.strftime('%H:%M')}–{end.strftime('%H:%M')}",
+                    "period_key": key,
+                    "time_range": f"{h_start:02d}:00–{h_end:02d}:00",
                     "label": label,
                     "regime": regime,
                     "top_domains": top_domains,
@@ -645,9 +692,7 @@ class PublicDayClimatePolicy:
         tone = snapshot.overall_tone or "neutral"
         if evidence:
             tone = (
-                evidence.day_profile.get("overall_tone")
-                or evidence.day_profile.get("tone")
-                or tone
+                evidence.day_profile.get("overall_tone") or evidence.day_profile.get("tone") or tone
             )
 
         # 2. Resolve Intensity & Stability (normalized 0-10)

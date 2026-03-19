@@ -609,7 +609,7 @@ class GuidanceService:
         from datetime import date
 
         from app.services.astro_context_builder import AstroContextBuilder
-        
+
         astro_context = None
         try:
             today = date.today()
@@ -685,7 +685,7 @@ class GuidanceService:
                     # For now, let's do a simple extraction from the recovered_text.
                     # No, AC says structure is guaranteed by Gateway V2.
                     # If recovery returned a new result, we should have used it.
-                    
+
                     # Manual fallback/parsing for recovery text if it's not structured
                     summary_raw = recovered_text
                     key_points = []

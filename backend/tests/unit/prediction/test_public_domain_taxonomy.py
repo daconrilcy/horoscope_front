@@ -20,6 +20,7 @@ def test_map_internal_to_public():
     assert map_internal_to_public("family_home") == "vie_personnelle"
     assert map_internal_to_public("unknown") is None
 
+
 def test_aggregate_public_domain_score():
     internal_scores = {
         "work": 14.0,
@@ -29,12 +30,13 @@ def test_aggregate_public_domain_score():
         "energy": 10.0,
     }
     aggregated = aggregate_public_domain_score(internal_scores)
-    
+
     assert aggregated["pro_ambition"] == 18.0
     assert aggregated["relations_echanges"] == 15.0
     assert aggregated["energie_bienetre"] == 10.0
     assert "argent_ressources" not in aggregated
     assert "vie_personnelle" not in aggregated
+
 
 def test_public_domains_count():
     assert len(PUBLIC_DOMAINS) == 5
@@ -43,6 +45,6 @@ def test_public_domains_count():
         "relations_echanges",
         "energie_bienetre",
         "argent_ressources",
-        "vie_personnelle"
+        "vie_personnelle",
     }
     assert set(PUBLIC_DOMAINS.keys()) == expected_keys

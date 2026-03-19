@@ -89,11 +89,7 @@ def aggregate_public_domain_score(internal_scores: dict[str, float | None]) -> d
         if public_key:
             public_scores.setdefault(public_key, []).append(score)
 
-    return {
-        public_key: max(scores)
-        for public_key, scores in public_scores.items()
-        if scores
-    }
+    return {public_key: max(scores) for public_key, scores in public_scores.items() if scores}
 
 
 # Validation: Ensure all 12 internal codes are covered

@@ -99,6 +99,7 @@ class DailyPredictionTimeBlock(BaseModel):
 
 
 class DailyPredictionTimeWindow(BaseModel):
+    period_key: str
     time_range: str
     label: str
     regime: str
@@ -134,6 +135,17 @@ class DailyPredictionDominantAspect(BaseModel):
     planet_b: str | None = None
     tonality: str
     effect_label: str
+
+
+class DailyPredictionIngress(BaseModel):
+    text: str
+    time: str | None
+
+
+class DailyPredictionAstroDailyEvents(BaseModel):
+    ingresses: list[DailyPredictionIngress]
+    aspects: list[str]
+    planet_positions: list[str] | None = None
 
 
 class DailyPredictionAstroFoundation(BaseModel):
@@ -199,6 +211,7 @@ class DailyPredictionResponse(BaseModel):
     best_window: DailyPredictionBestWindow | None = None
     time_windows: list[DailyPredictionTimeWindow] | None = None
     astro_foundation: DailyPredictionAstroFoundation | None = None
+    astro_daily_events: DailyPredictionAstroDailyEvents | None = None
     timeline: list[DailyPredictionTimeBlock]
     turning_points: list[DailyPredictionTurningPoint]
     decision_windows: list[DailyPredictionDecisionWindow] | None = None

@@ -224,7 +224,5 @@ async def test_check_2_fail_fast_missing_vars(db_session):
     assert "Missing mandatory platform variable: 'locale'" in str(exc.value)
 
     with pytest.raises(GatewayConfigError) as exc:
-        await gateway.execute(
-            "chat", {}, {"locale": "fr"}, "r", "t", user_id=1, db=db_session
-        )
+        await gateway.execute("chat", {}, {"locale": "fr"}, "r", "t", user_id=1, db=db_session)
     assert "Missing mandatory platform variable: 'use_case'" in str(exc.value)

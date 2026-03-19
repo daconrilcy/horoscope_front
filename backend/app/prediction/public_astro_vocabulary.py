@@ -55,9 +55,28 @@ PLANET_NAMES_FR: dict[str, str] = {
     "pluto": "Pluton",
 }
 
+SIGN_NAMES_FR: dict[str, str] = {
+    "ari": "Bélier",
+    "tau": "Taureau",
+    "gem": "Gémeaux",
+    "can": "Cancer",
+    "leo": "Lion",
+    "vir": "Vierge",
+    "lib": "Balance",
+    "sco": "Scorpion",
+    "sag": "Sagittaire",
+    "cap": "Capricorne",
+    "aqu": "Verseau",
+    "pis": "Poissons",
+}
+
 
 def get_planet_name_fr(code: str) -> str:
     return PLANET_NAMES_FR.get(code.lower(), code.capitalize())
+
+
+def get_sign_name_fr(code: str) -> str:
+    return SIGN_NAMES_FR.get(code.lower(), code.capitalize())
 
 
 def get_aspect_tonality(aspect: str) -> str:

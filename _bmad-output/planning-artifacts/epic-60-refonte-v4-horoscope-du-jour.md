@@ -110,6 +110,8 @@ daily_advice
 | 60.10 | Migration API sans casse | 60.1–60.7 | P0 |
 | 60.11 | Tests, fixtures, QA | 60.1–60.9 | P2 |
 | 60.12 | Cleanup legacy | 60.10, 60.11 | P3 |
+| 60.13 | Module Événements Astrologiques du Jour | 60.7, 60.8 | P2 |
+| 60.14 | Périodes du jour dans la timeline V4 | 60.4, 60.8 | P2 |
 
 ---
 

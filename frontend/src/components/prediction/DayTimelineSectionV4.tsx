@@ -1,12 +1,21 @@
 import React from 'react';
+import { Moon, Sunrise, Sun, Sunset, Sparkles } from 'lucide-react';
 import type { DailyPredictionTimeWindow } from '../../types/dailyPrediction';
 import type { Lang } from '../../i18n/predictions';
 import { getDomainLabel, getRegimeLabel, DOMAIN_LABELS } from '../../i18n/horoscope_copy';
+import { PERIOD_LABELS } from '../../i18n/predictions';
 
 interface Props {
   timeWindows: DailyPredictionTimeWindow[];
   lang: Lang;
 }
+
+const PERIOD_ICONS: Record<string, React.ElementType> = {
+  nuit: Moon,
+  matin: Sunrise,
+  apres_midi: Sun,
+  soiree: Sunset,
+};
 
 export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => {
   const getRegimeColor = (regime: string) => {
@@ -49,50 +58,60 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => 
       </h2>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {timeWindows.map((window) => (
-          <div key={window.time_range} style={{
-            background: getRegimeColor(window.regime),
-            border: getRegimeBorder(window.regime),
-            borderRadius: '12px',
-            padding: '16px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-2)' }}>
-                {window.time_range}
-              </span>
-              <span style={{ 
-                fontSize: '11px', 
-                textTransform: 'uppercase', 
-                fontWeight: 'bold', 
-                color: 'var(--text-2)',
-                background: 'var(--glass-2)',
-                padding: '2px 6px',
-                borderRadius: '4px'
-              }}>
-                {getRegimeLabel(window.regime, lang)}
-              </span>
-            </div>
+        {timeWindows.map((window) => {
+          const Icon = PERIOD_ICONS[window.period_key] || Sparkles;
+          const periodLabel = PERIOD_LABELS[window.period_key as keyof typeof PERIOD_LABELS]?.[lang] || '';
 
-            <h3 style={{ fontSize: '16px', fontWeight: 'bold', margin: 0, color: 'var(--text-1)' }}>
-              {window.label}
-            </h3>
-
-            <p style={{ fontSize: '14px', color: 'var(--text-1)', fontStyle: 'italic', margin: 0 }}>
-              {window.action_hint}
-            </p>
-
-            <div style={{ display: 'flex', gap: '4px' }}>
-              {window.top_domains.map(key => (
-                <span key={key} title={getDomainLabel(key, lang)} style={{ fontSize: '14px' }}>
-                  {DOMAIN_LABELS[key]?.icon || '✨'}
+          return (
+            <div key={window.period_key || window.time_range} style={{
+              background: getRegimeColor(window.regime),
+              border: getRegimeBorder(window.regime),
+              borderRadius: '12px',
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Icon size={16} color="var(--text-2)" />
+                <span style={{ fontWeight: 'bold', color: 'var(--text-1)', fontSize: '15px' }}>
+                  {periodLabel}
                 </span>
-              ))}
+                <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--text-2)' }}>
+                  {window.time_range}
+                </span>
+                <span style={{ 
+                  fontSize: '10px', 
+                  textTransform: 'uppercase', 
+                  fontWeight: 'bold', 
+                  color: 'var(--text-2)',
+                  background: 'var(--glass-2)',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  marginLeft: '8px'
+                }}>
+                  {getRegimeLabel(window.regime, lang)}
+                </span>
+              </div>
+
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', margin: 0, color: 'var(--text-1)' }}>
+                {window.label}
+              </h3>
+
+              <p style={{ fontSize: '14px', color: 'var(--text-1)', fontStyle: 'italic', margin: 0 }}>
+                {window.action_hint}
+              </p>
+
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {window.top_domains.map(key => (
+                  <span key={key} title={getDomainLabel(key, lang)} style={{ fontSize: '14px' }}>
+                    {DOMAIN_LABELS[key]?.icon || '✨'}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

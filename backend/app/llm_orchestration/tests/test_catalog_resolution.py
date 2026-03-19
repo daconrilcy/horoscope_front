@@ -22,7 +22,7 @@ def test_resolve_model_priority_granular_vs_legacy():
     use_case = "guidance_daily"
     granular_key = "OPENAI_ENGINE_GUIDANCE_DAILY"
     legacy_key = "LLM_MODEL_OVERRIDE_GUIDANCE_DAILY"
-    
+
     granular_model = "gpt-granular"
     legacy_model = "gpt-legacy"
 
@@ -39,7 +39,7 @@ def test_resolve_model_fallback_to_legacy():
 
     # Ensure granular key is NOT in env
     granular_key = PROMPT_CATALOG[use_case].engine_env_key
-    
+
     with patch.dict(os.environ, {legacy_key: legacy_model}):
         if granular_key in os.environ:
             del os.environ[granular_key]
@@ -63,7 +63,7 @@ def test_resolve_model_default():
     use_case = "guidance_daily"
 
     with patch.dict(os.environ, {}, clear=True):
-        # We don't mock settings here but we expect it to return something 
+        # We don't mock settings here but we expect it to return something
         # (either from .env or gpt-4o-mini)
         resolved = resolve_model(use_case, fallback_model=None)
         assert resolved is not None

@@ -361,7 +361,7 @@ class LLMGateway:
         # 1.1 Centralized model resolution (Story 59.3)
         # Order: OS Granular > OS Legacy > config.model (DB/Stub) > settings.default
         resolved_model = resolve_model(use_case, fallback_model=config.model)
-        
+
         if resolved_model != config.model:
             config = config.model_copy(update={"model": resolved_model})
             logger.info(
@@ -580,9 +580,7 @@ class LLMGateway:
                 labels={"use_case": use_case, "schema_version": result.meta.schema_version},
             )
         # Fallback support
-        config = await self._resolve_config(
-            db, use_case, context
-        )
+        config = await self._resolve_config(db, use_case, context)
         if config.fallback_use_case:
             logger.warning(
                 "gateway_validation_failed_triggering_fallback use_case=%s fallback=%s",
@@ -666,24 +664,20 @@ class LLMGateway:
             if db and user_id is not None:
                 try:
                     from app.prompts.common_context import CommonContextBuilder
+
                     # Detect period from context or use_case
                     period = "daily"
                     if "weekly" in use_case or context.get("period") == "weekly":
                         period = "weekly"
-                    
+
                     common_ctx = CommonContextBuilder.build(
-                        user_id=user_id,
-                        use_case_key=use_case,
-                        period=period,
-                        db=db
+                        user_id=user_id, use_case_key=use_case, period=period, db=db
                     )
                     # Merge common context (use_case context has priority)
                     context = {**common_ctx.model_dump(), **context}
                 except Exception as e:
                     logger.warning(
-                        "gateway_common_context_failed use_case=%s error=%s",
-                        use_case,
-                        e
+                        "gateway_common_context_failed use_case=%s error=%s", use_case, e
                     )
 
             # 2. Log start

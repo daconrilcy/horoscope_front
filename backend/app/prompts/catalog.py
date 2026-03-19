@@ -211,13 +211,13 @@ validate_catalog()
 def resolve_model(use_case_key: str, fallback_model: str | None = None) -> str:
     """
     Resolve the OpenAI model to use for a specific use case.
-    
+
     Order of resolution:
     1. OS environment variable (OPENAI_ENGINE_{UC})
     2. Legacy model override (LLM_MODEL_OVERRIDE_{UC})
     3. fallback_model (usually from DB config or stub)
     4. settings.OPENAI_MODEL_DEFAULT
-    
+
     Returns:
         The model name (e.g., 'gpt-4o-mini').
     """
@@ -230,16 +230,16 @@ def resolve_model(use_case_key: str, fallback_model: str | None = None) -> str:
         model = os.environ.get(entry.engine_env_key)
         if model:
             return model
-            
+
     # 2. Legacy override
     safe_uc_key = re.sub(r"[^a-zA-Z0-9_]", "_", use_case_key).upper()
     legacy_key = f"LLM_MODEL_OVERRIDE_{safe_uc_key}"
     legacy_model = os.environ.get(legacy_key)
     if legacy_model:
         return legacy_model
-        
+
     # 3. Use provided fallback (from DB or stub)
     if fallback_model:
         return fallback_model
-        
+
     return getattr(settings, "openai_model_default", "gpt-4o-mini")

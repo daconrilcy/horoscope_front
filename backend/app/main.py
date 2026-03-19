@@ -189,6 +189,7 @@ def _ensure_llm_registry_seeded() -> None:
         degraded_registry,
     )
     from sqlalchemy.exc import IntegrityError
+
     try:
         with SessionLocal() as db:
             seed_astrologers(db)
@@ -230,6 +231,7 @@ async def _app_lifespan(_: FastAPI):
     # Story 59.2: Validate prompt catalog vs DB
     from app.infra.db.session import SessionLocal
     from app.prompts.validators import validate_catalog_vs_db
+
     with SessionLocal() as db:
         validate_catalog_vs_db(db)
 

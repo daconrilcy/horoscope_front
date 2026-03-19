@@ -17,6 +17,7 @@ from app.infra.db.session import SessionLocal
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
+
 COMMON_HEADER = """## Contexte de base — {{ use_case_name }}
 Date du jour : {{ today_date }}
 Période couverte : {{ period_covered }}
@@ -36,38 +37,39 @@ Ascendant : {{ natal_data.houses[0].sign }}
 ---
 """
 
+
 def update_all_prompts(db: Session):
     stmt = select(LlmUseCaseConfigModel)
     use_cases = db.execute(stmt).scalars().all()
-    
+
     for uc in use_cases:
         print(f"Updating prompt for {uc.key}...")
-        
+
         # Get current active prompt
         v_stmt = select(LlmPromptVersionModel).where(
             LlmPromptVersionModel.use_case_key == uc.key,
-            LlmPromptVersionModel.status == PromptStatus.PUBLISHED
+            LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
         )
         old_prompt = db.execute(v_stmt).scalar_one_or_none()
-        
+
         if not old_prompt:
             print(f"Skipping {uc.key} (no published prompt found)")
             continue
-            
+
         if "## Contexte de base" in old_prompt.developer_prompt:
             print(f"Skipping {uc.key} (already has common context)")
             continue
 
         # Archive old version
         old_prompt.status = PromptStatus.ARCHIVED
-        
+
         # New prompt content
         new_content = COMMON_HEADER + "\n" + old_prompt.developer_prompt
-        
+
         # Handle natal_interpretation special case
         if uc.key == "natal_interpretation":
             # For natal interpretation, we don't want to include natal_interpretation
-            # in the context (as it's being produced). 
+            # in the context (as it's being produced).
             # But our header already handles it via if natal_interpretation.
             pass
 
@@ -85,10 +87,11 @@ def update_all_prompts(db: Session):
         )
         db.add(new_prompt)
         db.flush()
-        
+
         print(f"Updated {uc.key} to new version {new_prompt.id}")
 
     db.commit()
+
 
 if __name__ == "__main__":
     with SessionLocal() as session:

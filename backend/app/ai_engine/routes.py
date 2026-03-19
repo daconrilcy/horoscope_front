@@ -97,7 +97,7 @@ async def generate(
 
         # Convert GenerateContext to dict for adapter
         context_dict = body.context.model_dump()
-        
+
         result = await AIEngineAdapter.generate_guidance(
             use_case=body.use_case,
             context=context_dict,
@@ -107,7 +107,7 @@ async def generate(
             locale=body.locale,
             db=db,
         )
-        
+
         # Return GenerateResponse compatible payload
         usage = UsageInfo(
             input_tokens=getattr(result.usage, "input_tokens", 0)
@@ -170,7 +170,7 @@ async def chat(
     if body.output.stream:
         return JSONResponse(
             status_code=501,
-            content={"error": {"message": "Streaming not supported in V2 migration path."}}
+            content={"error": {"message": "Streaming not supported in V2 migration path."}},
         )
 
     try:
@@ -189,11 +189,11 @@ async def chat(
             locale=body.locale,
             db=db,
         )
-        
+
         return ChatResponse(
             request_id=request_id,
             trace_id=trace_id,
-            provider="openai", # Default
+            provider="openai",  # Default
             model="AUTO",
             text=response_text,
             usage=UsageInfo(),  # Not easily available from current generate_chat_reply

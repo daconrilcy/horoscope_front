@@ -536,6 +536,7 @@ class AIEngineAdapter:
                 use_case, context, user_id, request_id, trace_id, locale
             )
             from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+
             return GatewayResult(
                 use_case=use_case,
                 request_id=request_id,
@@ -567,6 +568,7 @@ class AIEngineAdapter:
         except Exception as err:
             if _can_use_test_fallback(err):
                 from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+
                 return GatewayResult(
                     use_case=use_case,
                     request_id=request_id,

@@ -5,6 +5,7 @@ import { RefreshCw } from 'lucide-react'
 
 import { TodayHeader } from '../components/TodayHeader'
 import { DayClimateHero } from '../components/DayClimateHero'
+import { AstroDailyEvents } from '../components/AstroDailyEvents'
 import { DomainRankingCard } from '../components/DomainRankingCard'
 import { DayTimelineSectionV4 } from '../components/prediction/DayTimelineSectionV4'
 import { TurningPointCard } from '../components/TurningPointCard'
@@ -23,7 +24,9 @@ import { trackEvent, EVENTS } from '../utils/analytics'
 import { SectionErrorBoundary } from '../components/ErrorBoundary'
 
 import { mapDayClimate } from '../utils/dayClimateHeroMapper'
+import { mapAstroDailyEvents } from '../utils/astroDailyEventsMapper'
 import { mapDomainRanking } from '../utils/domainRankingCardMapper'
+
 import { mapTurningPoint } from '../utils/turningPointCardMapper'
 import { mapBestWindow } from '../utils/bestWindowCardMapper'
 import { mapAstroFoundation } from '../utils/astroFoundationSectionMapper'
@@ -139,6 +142,12 @@ export function DailyHoroscopePage() {
               return climate ? <DayClimateHero climate={climate} lang={lang} /> : null;
             })()}
           </SectionErrorBoundary>
+
+          {/* New: AstroDailyEvents (Story 60.13) */}
+          {(() => {
+            const astroEvents = mapAstroDailyEvents(prediction);
+            return astroEvents ? <AstroDailyEvents data={astroEvents} /> : null;
+          })()}
 
           {/* Zone 3 : DomainRankingCard (V4) */}
           {(() => {

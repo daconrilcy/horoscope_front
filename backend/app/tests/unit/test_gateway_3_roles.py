@@ -93,7 +93,7 @@ async def test_chart_json_in_user_message_not_developer(db_session: Session):
 
 @pytest.mark.asyncio
 async def test_chart_json_still_in_user_when_placeholder_required_but_absent_in_prompt(
-    db_session: Session
+    db_session: Session,
 ):
     """
     Régression: si chart_json est dans required_prompt_placeholders
