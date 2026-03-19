@@ -38,6 +38,8 @@ class DailyPredictionMeta(BaseModel):
     house_system_effective: str | None
     is_provisional_calibration: bool | None
     calibration_label: str | None
+    v3_evidence_version: str | None = None
+    payload_version: str = "v3"
 
 
 class DailyPredictionCategory(BaseModel):

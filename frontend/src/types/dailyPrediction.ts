@@ -6,9 +6,12 @@ export interface DailyPredictionMeta {
   ruleset_version: string;
   was_reused: boolean;
   house_system_effective: string | null;
-  is_provisional_calibration?: boolean | null;
-  calibration_label?: string | null;
+  is_provisional_calibration: boolean | null;
+  calibration_label: string | null;
+  v3_evidence_version?: string | null;
+  payload_version?: string;
 }
+
 
 export interface DailyPredictionCategory {
   code: string;

@@ -131,10 +131,19 @@ export function DailyHoroscopePage() {
             </button>
           </div>
 
-          {/* Zone 2 : DayClimateHero (V4) */}
+          {/* Zone 2 : DayClimateHero (V4) or HeroSummaryCard (V3) */}
           <SectionErrorBoundary onRetry={handleRefresh}>
             {(() => {
+              const isV4 = prediction.meta.payload_version === 'v4';
               const climate = mapDayClimate(prediction);
+              
+              if (isV4 && climate) {
+                return <DayClimateHero climate={climate} lang={lang} />;
+              }
+              
+              // Fallback V3 (using data directly or via old mapper if available)
+              // Since I replaced the whole page content, I need to make sure I don't break fallback.
+              // Actually, mapDayClimate handles fallback internally.
               return climate ? <DayClimateHero climate={climate} lang={lang} /> : null;
             })()}
           </SectionErrorBoundary>

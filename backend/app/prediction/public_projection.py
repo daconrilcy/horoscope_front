@@ -184,6 +184,7 @@ class PublicPredictionAssembler:
             "is_provisional_calibration": snapshot.is_provisional_calibration,
             "calibration_label": snapshot.calibration_label,
             "v3_evidence_version": evidence.version if evidence else None,
+            "payload_version": "v4",
         }
 
         return {

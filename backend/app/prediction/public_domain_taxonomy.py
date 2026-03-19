@@ -83,6 +83,8 @@ def aggregate_public_domain_score(internal_scores: dict[str, float]) -> dict[str
     public_scores: dict[str, list[float]] = {}
 
     for internal_code, score in internal_scores.items():
+        if score is None:
+            continue
         public_key = map_internal_to_public(internal_code)
         if public_key:
             public_scores.setdefault(public_key, []).append(score)
