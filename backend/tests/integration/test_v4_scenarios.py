@@ -1,12 +1,8 @@
-import pytest
+from datetime import UTC, date, datetime
+
+from app.prediction.persisted_snapshot import PersistedCategoryScore, PersistedPredictionSnapshot
 from app.prediction.public_projection import PublicPredictionAssembler
-from app.prediction.persisted_snapshot import (
-    PersistedPredictionSnapshot, 
-    PersistedCategoryScore,
-    PersistedTimeBlock,
-    PersistedTurningPoint
-)
-from datetime import date, datetime, UTC
+
 
 def _build_base_snapshot():
     return {
@@ -41,7 +37,9 @@ def test_scenario_flat_day():
     snapshot = PersistedPredictionSnapshot(**data)
     cat_id_to_code = {s.category_id: s.category_code for s in snapshot.category_scores}
     
-    result = assembler.assemble(snapshot, cat_id_to_code, reference_version="1", ruleset_version="1")
+    result = assembler.assemble(
+        snapshot, cat_id_to_code, reference_version="1", ruleset_version="1"
+    )
     
     assert result["day_climate"]["intensity"] < 6.0
     assert result["turning_point"] is None
@@ -69,7 +67,9 @@ def test_scenario_polarized_day():
     snapshot = PersistedPredictionSnapshot(**data)
     cat_id_to_code = {s.category_id: s.category_code for s in snapshot.category_scores}
     
-    result = assembler.assemble(snapshot, cat_id_to_code, reference_version="1", ruleset_version="1")
+    result = assembler.assemble(
+        snapshot, cat_id_to_code, reference_version="1", ruleset_version="1"
+    )
     
     assert any(d["score_10"] >= 8.5 for d in result["domain_ranking"])
     assert any(d["score_10"] <= 3.5 for d in result["domain_ranking"])
@@ -82,8 +82,9 @@ def test_scenario_turning_point():
         PersistedCategoryScore(1, "work", 12, 0.5, 0.5, 0.0, 1, False, "S", score_20=12.0)
     ]
     
-    from app.prediction.schemas import V3EvidencePack, V3EvidenceTurningPoint
     from unittest.mock import MagicMock
+
+    from app.prediction.schemas import V3EvidencePack, V3EvidenceTurningPoint
     
     tp = V3EvidenceTurningPoint(
         local_time=datetime(2026, 3, 18, 10, 0),
@@ -110,7 +111,10 @@ def test_scenario_turning_point():
     snapshot = PersistedPredictionSnapshot(**data)
     cat_id_to_code = {1: "work"}
     
-    result = assembler.assemble(snapshot, cat_id_to_code, reference_version="1", ruleset_version="1", engine_output=mock_bundle)
+    result = assembler.assemble(
+        snapshot, cat_id_to_code, reference_version="1", ruleset_version="1",
+        engine_output=mock_bundle,
+    )
     
     assert result["turning_point"] is not None
     assert result["turning_point"]["change_type"] == "emergence"

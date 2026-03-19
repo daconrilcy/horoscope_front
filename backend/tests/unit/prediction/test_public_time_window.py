@@ -1,8 +1,8 @@
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock
+
 from app.prediction.public_projection import PublicTimeWindowPolicy
-from app.prediction.schemas import V3TimeBlock
+
 
 def test_time_window_resolve_regime_progression():
     policy = PublicTimeWindowPolicy()

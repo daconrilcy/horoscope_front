@@ -66,7 +66,7 @@ export const DomainRankingCard: React.FC<Props> = ({ domains, lang }) => {
             }}>
               <div style={{ 
                 height: '100%', 
-                width: `${domain.score_10 * 10}%`, 
+                width: `${Math.min(domain.score_10 * 10, 100)}%`,
                 background: getLevelColor(domain.level),
                 borderRadius: '3px',
                 transition: 'width 0.5s ease-out'

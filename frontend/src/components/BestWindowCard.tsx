@@ -51,8 +51,8 @@ export const BestWindowCard: React.FC<Props> = ({ bestWindow, lang }) => {
           {lang === 'fr' ? 'Actions recommandées' : 'Recommended actions'}
         </h3>
         <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {bestWindow.recommended_actions.map((action, i) => (
-            <li key={i} style={{ fontSize: '14px', color: 'var(--text-1)' }}>
+          {bestWindow.recommended_actions.map((action) => (
+            <li key={action} style={{ fontSize: '14px', color: 'var(--text-1)' }}>
               {action}
             </li>
           ))}

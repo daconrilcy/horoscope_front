@@ -1,9 +1,9 @@
-import pytest
 from app.prediction.public_domain_taxonomy import (
-    map_internal_to_public,
+    PUBLIC_DOMAINS,
     aggregate_public_domain_score,
-    PUBLIC_DOMAINS
+    map_internal_to_public,
 )
+
 
 def test_map_internal_to_public():
     assert map_internal_to_public("work") == "pro_ambition"

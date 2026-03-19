@@ -14,6 +14,7 @@ import { AstroFoundationSection } from '../components/AstroFoundationSection'
 import { DailyPageHeader } from '../components/prediction/DailyPageHeader'
 
 import { detectLang } from '../i18n/astrology'
+import type { Lang } from '../i18n/predictions'
 import { getPredictionMessage } from '../utils/predictionI18n'
 import { useAccessTokenSnapshot } from '../utils/authToken'
 import { useAuthMe } from '../api/authMe'
@@ -34,7 +35,7 @@ export function DailyHoroscopePage() {
   const navigate = useNavigate()
   const accessToken = useAccessTokenSnapshot()
   const detected = detectLang()
-  const lang = (detected === 'en' ? 'en' : 'fr') as any
+  const lang: Lang = detected === 'en' ? 'en' : 'fr'
   const manualRefreshPending = useRef(false)
   const bootstrapPredictionRefetchDoneForToken = useRef<string | null>(null)
 
@@ -140,10 +141,10 @@ export function DailyHoroscopePage() {
           </SectionErrorBoundary>
 
           {/* Zone 3 : DomainRankingCard (V4) */}
-          <DomainRankingCard 
-            domains={mapDomainRanking(prediction)} 
-            lang={lang} 
-          />
+          {(() => {
+            const domains = mapDomainRanking(prediction);
+            return domains.length > 0 ? <DomainRankingCard domains={domains} lang={lang} /> : null;
+          })()}
 
           {/* Zone 4 : DayTimelineSectionV4 (V4) */}
           {prediction.time_windows && (

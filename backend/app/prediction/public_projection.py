@@ -315,7 +315,8 @@ class PublicAstroFoundationPolicy:
 
         # 5. Headline & Bridge
         first_mvmt = key_movements[0]["planet"] if key_movements else "Le ciel"
-        headline = f"{first_mvmt} influence votre dynamique — {day_climate['label'].lower()}."
+        climate_label = day_climate.get("label", "cette journée").lower()
+        headline = f"{first_mvmt} influence votre dynamique — {climate_label}."
 
         top_dom_label = domain_ranking[0]["label"].lower() if domain_ranking else "votre journée"
         interpretation_bridge = (
@@ -443,18 +444,22 @@ class PublicMainTurningPointPolicy:
         if not significant:
             return None
 
-        # Sort by severity descending, then time
-        significant.sort(
-            key=lambda x: (float(getattr(x, "severity", getattr(x, "amplitude", 0.0))), x.local_time),
-            reverse=True,
-        )
+        # Sort by severity descending, then time ascending (earliest wins on tie)
+        def _sort_key(x: Any) -> tuple[float, Any]:
+            sev = float(getattr(x, "severity", getattr(x, "amplitude", 0.0)))
+            return (-sev, x.local_time)
+
+        significant.sort(key=_sort_key)
         best = significant[0]
 
         # 3. Project for Public
         change_type = getattr(best, "change_type", "recomposition")
-        impacted = getattr(best, "categories_impacted", [])
-        if not impacted and hasattr(best, "themes"):
-            impacted = best.themes
+        impacted = (
+            getattr(best, "categories_impacted", None)
+            or getattr(best, "impacted_categories", None)
+            or getattr(best, "themes", None)
+            or []
+        )
 
         affected_domains = self._map_domains(impacted)
         primary_domain = affected_domains[0] if affected_domains else None
@@ -555,7 +560,7 @@ class PublicTimeWindowPolicy:
             top_domains = self._map_domains(dominant_themes)
 
             # C. Label & Action
-            label = get_regime_label(regime, top_domains)
+            label = get_regime_label(regime)
             action_hint = get_action_hint(regime)
 
             windows.append(
@@ -737,7 +742,10 @@ class PublicDomainRankingPolicy:
     """
 
     def build(self, internal_categories: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        internal_scores = {c["code"]: c["score_20"] for c in internal_categories}
+        internal_scores = {
+            c["code"]: c["score_20"] if c.get("score_20") is not None else c["note_20"]
+            for c in internal_categories
+        }
         aggregated = aggregate_public_domain_score(internal_scores)
 
         public_scores = []
@@ -940,7 +948,7 @@ class PublicCategoryPolicy:
                 categories.append(
                     {
                         "code": code,
-                        "note_20": round(theme.score_20),
+                        "note_20": round(theme.score_20, 1),
                         "raw_score": theme.level,
                         "power": theme.intensity / 20.0,
                         "volatility": 1.0 - theme.stability / 20.0,

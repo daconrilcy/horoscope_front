@@ -1,7 +1,8 @@
-import pytest
+from datetime import UTC, date, datetime
+
+from app.prediction.persisted_snapshot import PersistedCategoryScore, PersistedPredictionSnapshot
 from app.prediction.public_projection import PublicPredictionAssembler
-from app.prediction.persisted_snapshot import PersistedPredictionSnapshot, PersistedCategoryScore
-from datetime import date, datetime, UTC
+
 
 def test_v4_payload_contains_v3_fields():
     assembler = PublicPredictionAssembler()

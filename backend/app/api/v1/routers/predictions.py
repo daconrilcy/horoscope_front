@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import json
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -23,9 +22,6 @@ from app.services.daily_prediction_types import (
     ComputeMode,
     DailyPredictionServiceError,
 )
-
-if TYPE_CHECKING:
-    pass
 
 
 class DailyPredictionMeta(BaseModel):
@@ -478,7 +474,7 @@ def get_daily_prediction(
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
     service: DailyPredictionService = Depends(get_daily_prediction_service),
-) -> Any:
+) -> DailyPredictionResponse:
     parsed_date = None
     if target_date:
         try:
@@ -542,31 +538,3 @@ def get_daily_prediction(
         )
 
     return DailyPredictionResponse(**assembled)
-
-
-def _load_json_list(raw_value: str | None, *, field_name: str) -> list[Any]:
-    if not raw_value:
-        return []
-    try:
-        parsed = json.loads(raw_value)
-    except json.JSONDecodeError as exc:
-        raise HTTPException(
-            status_code=500,
-            detail={
-                "code": "prediction_payload_invalid",
-                "message": f"Malformed JSON payload for {field_name}",
-            },
-        ) from exc
-    if isinstance(parsed, list):
-        return parsed
-    raise HTTPException(
-        status_code=500,
-        detail={
-            "code": "prediction_payload_invalid",
-            "message": f"Expected a JSON list for {field_name}",
-        },
-    )
-
-
-def _parse_iso_datetime(value: str) -> datetime:
-    return datetime.fromisoformat(value)

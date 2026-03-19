@@ -1,8 +1,9 @@
-import pytest
-from datetime import datetime, date
+from datetime import datetime
 from unittest.mock import MagicMock
+
 from app.prediction.public_projection import PublicDayClimatePolicy
 from app.prediction.schemas import V3EvidencePack, V3EvidenceTheme
+
 
 def test_day_climate_build_basic():
     policy = PublicDayClimatePolicy()

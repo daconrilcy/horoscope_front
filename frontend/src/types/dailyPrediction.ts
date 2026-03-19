@@ -48,7 +48,7 @@ export interface DailyPredictionCategoryDelta {
 
 export interface DailyPredictionTurningPoint {
   occurred_at_local: string;
-  severity: number | string;
+  severity: number;
   summary: string | null;
   drivers: DailyPredictionDriver[];
   // Story 43.1
@@ -94,7 +94,7 @@ export interface DailyPredictionSummary {
   } | null;
   main_turning_point: {
     occurred_at_local: string;
-    severity: number | string;
+    severity: number;
     summary: string | null;
   } | null;
   low_score_variance?: boolean;
@@ -155,7 +155,7 @@ export interface DailyPredictionBestWindow {
   label: string;
   why: string;
   recommended_actions: string[];
-  is_pivot?: boolean;
+  is_pivot: boolean;
 }
 
 export interface AstroKeyMovement {

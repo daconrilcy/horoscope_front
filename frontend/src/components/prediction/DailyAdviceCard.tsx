@@ -1,6 +1,6 @@
 import React from 'react'
 import { Lightbulb } from 'lucide-react'
-import type { DailyAdviceCardModel } from '../../types/detailScores'
+import type { DailyAdviceCardModel } from '../../utils/dailyAdviceCardMapper'
 import './DailyAdviceCard.css'
 
 interface DailyAdviceCardProps {

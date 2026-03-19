@@ -1,7 +1,12 @@
 import type { DailyPredictionResponse } from '../types/dailyPrediction'
 import type { Lang } from '../i18n/predictions'
-import type { DailyAdviceCardModel } from '../types/detailScores'
 import { getPredictionMessage } from './predictionI18n'
+
+export interface DailyAdviceCardModel {
+  title: string;
+  advice: string;
+  emphasis: string;
+}
 
 export function buildDailyAdviceCardModel(
   _prediction: DailyPredictionResponse,

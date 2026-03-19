@@ -86,10 +86,13 @@ export const AstroFoundationSection: React.FC<Props> = ({ foundation, lang }) =>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {foundation.dominant_aspects.map((a, i) => (
                   <div key={i} style={{ fontSize: '14px', color: 'var(--text-1)', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>{a.planet_a} {a.aspect_type.toLowerCase()} {a.planet_b}</span>
-                    <span style={{ 
-                      fontSize: '12px', 
-                      color: a.tonality === 'fluidité' ? 'var(--success)' : 'var(--primary)',
+                    <span>{a.planet_a} {a.aspect_type.toLowerCase()}{a.planet_b ? ` ${a.planet_b}` : ''}</span>
+                    <span style={{
+                      fontSize: '12px',
+                      color: a.tonality === 'fluidité' ? 'var(--success)'
+                        : a.tonality === 'ajustement' ? '#ff9800'
+                        : a.tonality === 'intensification' ? 'var(--primary)'
+                        : 'var(--text-2)',
                       fontWeight: '500'
                     }}>
                       {a.tonality}

@@ -75,7 +75,7 @@ def map_internal_to_public(code: str) -> str | None:
     return _REVERSE_LOOKUP.get(code)
 
 
-def aggregate_public_domain_score(internal_scores: dict[str, float]) -> dict[str, float]:
+def aggregate_public_domain_score(internal_scores: dict[str, float | None]) -> dict[str, float]:
     """
     Aggregates internal scores into public domain scores using the max rule.
     Returns a dict of public_domain_key -> max_score.

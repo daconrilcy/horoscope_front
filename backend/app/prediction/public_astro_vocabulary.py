@@ -49,10 +49,10 @@ PLANET_NAMES_FR: dict[str, str] = {
     "venus": "Vénus",
     "mars": "Mars",
     "jupiter": "Jupiter",
-    "saturne": "Saturne",
+    "saturn": "Saturne",
     "uranus": "Uranus",
     "neptune": "Neptune",
-    "pluton": "Pluton",
+    "pluto": "Pluton",
 }
 
 

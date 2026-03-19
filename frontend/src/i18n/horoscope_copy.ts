@@ -1,4 +1,4 @@
-import { Lang } from './predictions';
+import type { Lang } from './predictions';
 
 export const LEVEL_LABELS: Record<string, { fr: string; en: string; color_hint: string }> = {
   "très_favorable": { fr: "Très favorable", en: "Very Favorable", color_hint: "success" },
@@ -30,7 +30,7 @@ export const DOMAIN_LABELS: Record<string, { fr: string; en: string; icon: strin
   "relations_echanges": { fr: "Relations & échanges", en: "Relationships", icon: "🤝" },
   "energie_bienetre": { fr: "Énergie & bien-être", en: "Energy & Wellbeing", icon: "⚡" },
   "argent_ressources": { fr: "Argent & ressources", en: "Money & Resources", icon: "💰" },
-  "vie_personnelle": { fr: "Vie personnelle", en: "Personal Life", icon: "🌸" },
+  "vie_personnelle": { fr: "Vie personnelle", en: "Personal Life", icon: "🎨" },
 };
 
 export function getDomainLabel(key: string, lang: Lang): string {

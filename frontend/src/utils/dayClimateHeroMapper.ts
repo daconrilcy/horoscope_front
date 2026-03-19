@@ -9,7 +9,10 @@ export function mapDayClimate(prediction: DailyPredictionResponse): DailyPredict
   if (!prediction.summary) return null;
 
   return {
-    label: `Journée ${prediction.summary.overall_tone || 'équilibrée'}`,
+    label: prediction.summary.overall_tone === 'positive' ? 'Élan favorable'
+      : prediction.summary.overall_tone === 'negative' ? 'Journée exigeante'
+      : prediction.summary.overall_tone === 'mixed' ? 'Journée en relief'
+      : 'Climat stable et fluide',
     tone: prediction.summary.overall_tone || 'neutral',
     intensity: 5.0,
     stability: 5.0,

@@ -1,19 +1,18 @@
-import pytest
 from app.prediction.public_label_catalog import (
     CLIMATE_LABELS,
-    REGIME_LABELS,
     REGIME_ACTION_HINTS,
+    REGIME_LABELS,
     TP_FALLBACK_TITLES,
-    WINDOW_WHY_TEMPLATES,
     WINDOW_ACTIONS,
-    get_climate_label,
-    get_regime_label,
+    WINDOW_WHY_TEMPLATES,
     get_action_hint,
-    get_turning_point_title,
-    get_do_avoid,
     get_best_window_why,
-    get_recommended_actions
+    get_climate_label,
+    get_do_avoid,
+    get_recommended_actions,
+    get_turning_point_title,
 )
+
 
 def test_no_equilibre_in_dicts():
     # AC3: "équilibré" forbidden in labels except day_climate.summary
@@ -28,11 +27,14 @@ def test_no_equilibre_in_dicts():
         assert "équilibré" not in hint.lower()
 
 def test_regime_coverage():
-    regimes = ["progression", "fluidité", "prudence", "pivot", "récupération", "retombée", "mise_en_route", "recentrage"]
+    regimes = [
+        "progression", "fluidité", "prudence", "pivot",
+        "récupération", "retombée", "mise_en_route", "recentrage",
+    ]
     for r in regimes:
         assert r in REGIME_LABELS
         assert r in REGIME_ACTION_HINTS
-        assert get_action_hint(r) != "Suivez votre rythme" or r in REGIME_ACTION_HINTS
+        assert get_action_hint(r) != "Suivez votre rythme", f"Missing action hint for regime {r}"
 
 def test_change_type_coverage():
     change_types = ["emergence", "recomposition", "attenuation"]
@@ -41,7 +43,10 @@ def test_change_type_coverage():
         assert get_turning_point_title(ct, None) != "Moment de bascule"
 
 def test_public_domain_coverage():
-    domains = ["pro_ambition", "relations_echanges", "energie_bienetre", "argent_ressources", "vie_personnelle"]
+    domains = [
+        "pro_ambition", "relations_echanges", "energie_bienetre",
+        "argent_ressources", "vie_personnelle",
+    ]
     for d in domains:
         assert d in WINDOW_WHY_TEMPLATES
         assert d in WINDOW_ACTIONS

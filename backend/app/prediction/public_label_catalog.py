@@ -133,11 +133,9 @@ def get_climate_label(tone: str, intensity: float) -> str:
     return CLIMATE_LABELS.get((tone, bucket), "Journée en cours")
 
 
-def get_regime_label(regime: str, top_domains: list[str]) -> str:
+def get_regime_label(regime: str) -> str:
     pool = REGIME_LABELS.get(regime, ["Moment de la journée"])
-    # Simple selection logic: index based on first domain if available
-    idx = (ord(top_domains[0][0]) % len(pool)) if top_domains else 0
-    return pool[idx % len(pool)]
+    return pool[0]
 
 
 def get_action_hint(regime: str) -> str:

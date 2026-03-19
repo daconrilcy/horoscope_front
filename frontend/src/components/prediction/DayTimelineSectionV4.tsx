@@ -49,8 +49,8 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => 
       </h2>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {timeWindows.map((window, i) => (
-          <div key={i} style={{
+        {timeWindows.map((window) => (
+          <div key={window.time_range} style={{
             background: getRegimeColor(window.regime),
             border: getRegimeBorder(window.regime),
             borderRadius: '12px',

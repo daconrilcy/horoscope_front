@@ -1,7 +1,7 @@
 import React from 'react';
 import type { DailyPredictionDayClimate } from '../types/dailyPrediction';
 import type { Lang } from '../i18n/predictions';
-import { getCategoryLabel, getCategoryIcon } from '../utils/predictionI18n';
+import { getDomainLabel, DOMAIN_LABELS } from '../i18n/horoscope_copy';
 
 interface Props {
   climate: DailyPredictionDayClimate;
@@ -59,8 +59,8 @@ export const DayClimateHero: React.FC<Props> = ({ climate, lang }) => {
             gap: '6px',
             border: '1px solid var(--glass-border)'
           }}>
-            <span>{getCategoryIcon(key)}</span>
-            <span>{getCategoryLabel(key, lang)}</span>
+            <span>{DOMAIN_LABELS[key]?.icon || '✨'}</span>
+            <span>{getDomainLabel(key, lang)}</span>
           </span>
         ))}
 
@@ -90,7 +90,7 @@ export const DayClimateHero: React.FC<Props> = ({ climate, lang }) => {
           <span>⚠️</span>
           <span>
             {lang === 'fr' ? 'Vigilance sur ' : 'Watchout on '} 
-            <strong>{getCategoryLabel(climate.watchout, lang).toLowerCase()}</strong>
+            <strong>{getDomainLabel(climate.watchout!, lang).toLowerCase()}</strong>
           </span>
         </div>
       )}

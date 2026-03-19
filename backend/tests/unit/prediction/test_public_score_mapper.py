@@ -1,10 +1,10 @@
-import pytest
 from app.prediction.public_score_mapper import (
-    to_score_10,
-    to_level,
+    PublicDomainScore,
     rank_domains,
-    PublicDomainScore
+    to_level,
+    to_score_10,
 )
+
 
 def test_to_score_10():
     assert to_score_10(20.0) == 10.0
@@ -26,10 +26,15 @@ def test_to_level():
     assert to_level(0.0) == "exigeant"
 
 def test_rank_domains():
+    def _d(key: str, label: str, score_10: float, note: float, order: int) -> PublicDomainScore:
+        return PublicDomainScore(
+            key=key, label=label, score_10=score_10, level="L", rank=0,
+            note_20_internal=note, internal_codes=[], display_order=order,
+        )
     domains = [
-        PublicDomainScore(key="d1", label="L1", score_10=5.0, level="L", rank=0, note_20_internal=10.0, internal_codes=[], display_order=1),
-        PublicDomainScore(key="d2", label="L2", score_10=8.0, level="L", rank=0, note_20_internal=16.0, internal_codes=[], display_order=2),
-        PublicDomainScore(key="d3", label="L3", score_10=7.0, level="L", rank=0, note_20_internal=14.0, internal_codes=[], display_order=3),
+        _d("d1", "L1", 5.0, 10.0, 1),
+        _d("d2", "L2", 8.0, 16.0, 2),
+        _d("d3", "L3", 7.0, 14.0, 3),
     ]
     ranked = rank_domains(domains)
     
