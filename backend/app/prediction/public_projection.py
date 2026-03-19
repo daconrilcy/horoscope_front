@@ -433,15 +433,21 @@ class PublicMainTurningPointPolicy:
             return None
 
         # 2. Filter & Sort (AC8: severity >= 0.3, confidence >= 0.5)
-        significant = [
-            tp for tp in raw_tps if float(tp.severity) >= 0.3 and float(tp.confidence) >= 0.5
-        ]
+        significant = []
+        for tp in raw_tps:
+            severity = getattr(tp, "severity", getattr(tp, "amplitude", 0.0))
+            confidence = getattr(tp, "confidence", 0.0)
+            if float(severity) >= 0.3 and float(confidence) >= 0.5:
+                significant.append(tp)
 
         if not significant:
             return None
 
         # Sort by severity descending, then time
-        significant.sort(key=lambda x: (float(x.severity), x.local_time), reverse=True)
+        significant.sort(
+            key=lambda x: (float(getattr(x, "severity", getattr(x, "amplitude", 0.0))), x.local_time),
+            reverse=True,
+        )
         best = significant[0]
 
         # 3. Project for Public

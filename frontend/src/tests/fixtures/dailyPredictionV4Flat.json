@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date_local": "2026-03-18",
+    "timezone": "UTC",
+    "computed_at": "2026-03-18T10:00:00Z",
+    "reference_version": "1.0.0",
+    "ruleset_version": "2.0.0",
+    "was_reused": false,
+    "payload_version": "v4"
+  },
+  "summary": {
+    "overall_tone": "neutral",
+    "overall_summary": "Une journée calme et sereine.",
+    "top_categories": ["energy", "mood"],
+    "bottom_categories": ["work"],
+    "best_window": null,
+    "main_turning_point": null,
+    "flat_day": true
+  },
+  "day_climate": {
+    "label": "Journée calme et sereine",
+    "tone": "neutral",
+    "intensity": 3.5,
+    "stability": 8.0,
+    "summary": "Journée calme et sereine avec un bel accent sur énergie et bien-être.",
+    "top_domains": ["energie_bienetre", "vie_personnelle"],
+    "watchout": null,
+    "best_window_ref": null
+  },
+  "domain_ranking": [
+    {
+      "key": "energie_bienetre",
+      "label": "Énergie & bien-être",
+      "score_10": 6.5,
+      "level": "stable",
+      "rank": 1,
+      "note_20_internal": 13.0
+    }
+  ],
+  "time_windows": [],
+  "turning_points": [],
+  "categories": []
+}

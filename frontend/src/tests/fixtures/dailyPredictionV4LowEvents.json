@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "date_local": "2026-03-18",
+    "timezone": "UTC",
+    "computed_at": "2026-03-18T10:00:00Z",
+    "reference_version": "1.0.0",
+    "ruleset_version": "2.0.0",
+    "was_reused": false,
+    "payload_version": "v4"
+  },
+  "summary": {
+    "overall_tone": "neutral",
+    "overall_summary": "Journée calme.",
+    "top_categories": [],
+    "bottom_categories": [],
+    "best_window": null,
+    "main_turning_point": null
+  },
+  "astro_foundation": null,
+  "time_windows": [],
+  "categories": [],
+  "timeline": [],
+  "turning_points": []
+}

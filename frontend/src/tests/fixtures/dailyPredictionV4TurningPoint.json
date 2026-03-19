@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date_local": "2026-03-18",
+    "timezone": "UTC",
+    "computed_at": "2026-03-18T10:00:00Z",
+    "reference_version": "1.0.0",
+    "ruleset_version": "2.0.0",
+    "was_reused": false,
+    "payload_version": "v4"
+  },
+  "summary": {
+    "overall_tone": "positive",
+    "overall_summary": "Un tournant positif.",
+    "top_categories": ["love"],
+    "bottom_categories": ["work"],
+    "best_window": null,
+    "main_turning_point": null
+  },
+  "turning_point": {
+    "time": "15:30",
+    "title": "Ouverture relationnelle",
+    "change_type": "emergence",
+    "affected_domains": ["relations_echanges"],
+    "what_changes": "L'énergie monte et les relations deviennent prioritaires.",
+    "do": "Échanger, sortir, proposer",
+    "avoid": "S'isoler, ruminer"
+  },
+  "time_windows": [
+    {
+      "time_range": "14:00–18:00",
+      "label": "Virage de la journée",
+      "regime": "pivot",
+      "top_domains": ["relations_echanges"],
+      "action_hint": "Observez avant d'agir"
+    }
+  ],
+  "categories": [],
+  "timeline": [],
+  "turning_points": []
+}

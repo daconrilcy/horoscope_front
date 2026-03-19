@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "date_local": "2026-03-18",
+    "timezone": "UTC",
+    "computed_at": "2026-03-18T10:00:00Z",
+    "reference_version": "1.0.0",
+    "ruleset_version": "2.0.0",
+    "was_reused": false,
+    "payload_version": "v4"
+  },
+  "summary": {
+    "overall_tone": "mixed",
+    "overall_summary": "Journée contrastée.",
+    "top_categories": ["work"],
+    "bottom_categories": ["love"],
+    "best_window": null,
+    "main_turning_point": null
+  },
+  "day_climate": {
+    "label": "Journée intense et contrastée",
+    "tone": "mixed",
+    "intensity": 8.5,
+    "stability": 3.0,
+    "summary": "Journée intense et contrastée, entre pro et relations.",
+    "top_domains": ["pro_ambition", "relations_echanges"],
+    "watchout": "relations_echanges",
+    "best_window_ref": "10:00–12:00"
+  },
+  "domain_ranking": [
+    {
+      "key": "pro_ambition",
+      "label": "Pro & Ambition",
+      "score_10": 9.2,
+      "level": "très_favorable",
+      "rank": 1,
+      "note_20_internal": 18.4
+    },
+    {
+      "key": "relations_echanges",
+      "label": "Relations & échanges",
+      "score_10": 3.2,
+      "level": "exigeant",
+      "rank": 5,
+      "note_20_internal": 6.4
+    }
+  ],
+  "best_window": {
+    "time_range": "10:00–12:00",
+    "label": "Pic du jour",
+    "why": "Les conditions pro sont au maximum.",
+    "recommended_actions": ["Décider", "Agir"]
+  },
+  "categories": [],
+  "timeline": [],
+  "turning_points": []
+}
