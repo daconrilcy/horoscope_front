@@ -323,7 +323,29 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+Code review post-implémentation — session 2026-03-20.
+
 ### Completion Notes List
+
+**Bug 1 — `base_weight=1.0` sur les événements enrichis (critique)**
+- **Symptôme** : Tests QA `test_daily_prediction_qa.py` échouaient avec "Unexpected pivot count: 12 (expected between 2 and 6)". Les événements enrichis (sky aspects, nœuds, progressions, etc.) alimentaient le moteur de scoring via `_build_prediction_outputs`, augmentant artificiellement le nombre de pivots.
+- **Fix** : Tous les `AstroEvent` créés dans `enriched_astro_events_builder.py` utilisent `base_weight=0.0` (display-only, sans contribution au signal).
+- **Fichier** : `backend/app/prediction/enriched_astro_events_builder.py`
+
+**Bug 2 — `AttributeError: 'datetime.date' object has no attribute 'hour'` dans `prediction_request_resolver.py`**
+- **Symptôme** : Prédiction retournait HTTP 503. `profile.birth_date` issu de la DB est de type `datetime.date`, mais le code supposait `datetime.datetime` (appel à `.hour`, `.minute`, `.second`).
+- **Fix** : Ajout d'une normalisation `isinstance(birth_date, _date)` → `_dt.combine(birth_date, _time(12, 0))`. Les MagicMock des tests unitaires (non-`date`) sont traités par `birth_date = None`.
+- **Fichier** : `backend/app/services/prediction_request_resolver.py`
+
+**Bug 3 — `TypeError: can't subtract offset-naive and offset-aware datetimes` dans `turning_point_detector.py`**
+- **Symptôme** : `_compute_progressions` créait un `datetime` naïf via `datetime.combine(local_date, datetime.min.time())` ; `curr.start_local` étant timezone-aware, la soustraction échouait.
+- **Fix** : La méthode `build()` passe `ref_dt = astro_states[0].local_time` (timezone-aware) à `_compute_progressions`. Signature mise à jour : `_compute_progressions(natal_chart, local_date, birth_date, ref_local_time: datetime)`.
+- **Fichiers** : `backend/app/prediction/enriched_astro_events_builder.py`, `backend/tests/unit/prediction/test_enriched_astro_events_builder.py`
+
+**Bug 4 — `TypeError: Cannot read properties of undefined (reading 'length')` dans `AstroDailyEvents.tsx`**
+- **Symptôme** : Crash frontend au rendu du composant. `renderGroup` était appelé avec `items = undefined` (cache React Query avec ancienne prédiction sans les nouveaux champs).
+- **Fix** : Signature `renderGroup` étendue à `items: string[] | undefined` + guard `if (!items || items.length === 0) return null`. Idem pour `ingresses && ingresses.length > 0`.
+- **Fichier** : `frontend/src/components/AstroDailyEvents.tsx`
 
 ### File List
 

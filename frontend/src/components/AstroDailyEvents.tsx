@@ -29,8 +29,8 @@ export const AstroDailyEvents: React.FC<AstroDailyEventsProps> = ({ data, lang }
   
   const l = (key: keyof typeof LABELS) => LABELS[key][lang] ?? LABELS[key].fr;
 
-  const renderGroup = (titleKey: keyof typeof LABELS, items: string[], Icon: React.ElementType, isPill = false) => {
-    if (items.length === 0) return null;
+  const renderGroup = (titleKey: keyof typeof LABELS, items: string[] | undefined, Icon: React.ElementType, isPill = false) => {
+    if (!items || items.length === 0) return null;
     return (
       <div className="astro-daily-events__group">
         <header className="astro-daily-events__group-header">
@@ -56,7 +56,7 @@ export const AstroDailyEvents: React.FC<AstroDailyEventsProps> = ({ data, lang }
 
       <div className="astro-daily-events__grid">
         {/* Ingresses */}
-        {ingresses.length > 0 && (
+        {ingresses && ingresses.length > 0 && (
           <div className="astro-daily-events__group">
             <header className="astro-daily-events__group-header">
               <Star size={16} className="astro-daily-events__group-icon" />
