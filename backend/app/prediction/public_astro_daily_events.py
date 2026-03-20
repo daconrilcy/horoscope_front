@@ -58,7 +58,9 @@ class PublicAstroDailyEventsPolicy:
         aspect_events = [
             e
             for e in events
-            if getattr(e, "event_type", None) in aspect_event_types and getattr(e, "target", None)
+            if getattr(e, "event_type", None) in aspect_event_types
+            and getattr(e, "target", None)
+            and getattr(e, "body", None) != getattr(e, "target", None)  # exclude self-aspects
         ]
 
         # Sort by priority or proximity if available

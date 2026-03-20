@@ -7,7 +7,7 @@ import './AstroDailyEvents.css';
 const LABELS = {
   title:    { fr: 'Astrologie du jour', en: 'Astrology of the Day' },
   mouvements: { fr: 'Mouvements',       en: 'Transits' },
-  aspects:  { fr: 'Aspects exacts',     en: 'Exact Aspects' },
+  aspects:  { fr: 'Transits actifs',    en: 'Active Transits' },
   positions:{ fr: 'Positions',          en: 'Positions' },
 };
 

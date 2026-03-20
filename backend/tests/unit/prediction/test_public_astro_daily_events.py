@@ -126,6 +126,47 @@ def test_multi_aspects_limit(policy):
     assert len(result["aspects"]) == 4
 
 
+def test_self_aspects_excluded(policy):
+    """Aspect where body == target (e.g. Moon square natal Moon) must be filtered out."""
+    events = [
+        AstroEvent(
+            event_type="aspect_exact_to_luminary",
+            ut_time=0.0,
+            local_time=datetime.now(),
+            body="moon",
+            target="moon",  # self-aspect — should be excluded
+            aspect="square",
+            orb_deg=0.1,
+            priority=80,
+            base_weight=1.0,
+        ),
+        AstroEvent(
+            event_type="aspect_exact_to_personal",
+            ut_time=0.0,
+            local_time=datetime.now(),
+            body="moon",
+            target="saturn",
+            aspect="sextile",
+            orb_deg=0.8,
+            priority=60,
+            base_weight=1.0,
+        ),
+    ]
+    evidence = V3EvidencePack(
+        version="1.0",
+        generated_at=datetime.now(),
+        day_profile={},
+        themes={},
+        time_windows=[],
+        turning_points=[],
+        metadata={"astro_events": events},
+    )
+    result = policy.build(None, evidence=evidence)
+    assert len(result["aspects"]) == 1
+    assert "Lune Carré Lune" not in result["aspects"]
+    assert "Lune Sextile Saturne" in result["aspects"]
+
+
 def test_planet_positions(policy):
     # Mock evidence with planet_positions in metadata
     evidence = V3EvidencePack(
