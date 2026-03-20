@@ -41,6 +41,7 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => 
     switch (regime) {
       case 'progression':
       case 'fluidité':
+      case 'mise_en_route':
         return '1px solid var(--success)';
       case 'prudence':
         return '1px solid #ff9800';

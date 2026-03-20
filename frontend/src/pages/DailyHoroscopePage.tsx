@@ -146,7 +146,7 @@ export function DailyHoroscopePage() {
           {/* New: AstroDailyEvents (Story 60.13) */}
           {(() => {
             const astroEvents = mapAstroDailyEvents(prediction);
-            return astroEvents ? <AstroDailyEvents data={astroEvents} /> : null;
+            return astroEvents ? <AstroDailyEvents data={astroEvents} lang={lang} /> : null;
           })()}
 
           {/* Zone 3 : DomainRankingCard (V4) */}

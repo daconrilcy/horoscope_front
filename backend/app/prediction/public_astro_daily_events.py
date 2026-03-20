@@ -130,11 +130,13 @@ class PublicAstroDailyEventsPolicy:
         if not positions or len(positions) < len(targets):
             for e in events:
                 if getattr(e, "event_type", None) == "transit_to_natal" and e.body in targets:
-                    sign = getattr(e, "body_sign", None) or e.metadata.get("body_sign")
+                    meta = getattr(e, "metadata", None)
+                    sign = getattr(e, "body_sign", None) or (
+                        meta.get("body_sign") if isinstance(meta, dict) else None
+                    )
                     if sign and e.body not in positions:
-                        positions[e.body] = (
-                            f"{get_planet_name_fr(e.body)} en {get_sign_name_fr(sign)}"
-                        )
+                        label = f"{get_planet_name_fr(e.body)} en {get_sign_name_fr(sign)}"
+                        positions[e.body] = label
 
         # 3. Try from snapshot v3_metrics if available
         if (
