@@ -31,16 +31,17 @@ afin d'obtenir une lecture astrologique compréhensible, fluide et cohérente pl
 - Créer `backend/app/prediction/llm_narrator.py` avec la classe `LLMNarrator`
 - Utiliser le SDK **OpenAI** (`openai.AsyncOpenAI`) — **NE PAS utiliser l'Anthropic SDK** (non installé)
 - Modèle : `settings.openai_model_default` (défaut `gpt-4o-mini`)
-- Méthode principale : `async def narrate(snapshot, events, time_windows, astrologer_profile, lang) -> NarratorResult | None`
+- Méthode principale : `async def narrate(snapshot, events, time_windows, natal_chart, astrologer_profile, lang) -> NarratorResult | None`
+  - `natal_chart: NatalResult | None` — thème natal complet (voir Dev Notes "Données du Thème Natal")
 - `NarratorResult` (dataclass) : `daily_synthesis: str`, `astro_events_intro: str`, `time_window_narratives: dict[str, str]`, `turning_point_narratives: list[str]`
 - Timeout : 10 secondes — si dépassé ou erreur OpenAI → retourner `None` (fallback silencieux)
 - Construire le prompt via un module séparé `backend/app/prediction/astrologer_prompt_builder.py`
 
 ### AC5 — Module `AstrologerPromptBuilder` (backend)
 - Créer `backend/app/prediction/astrologer_prompt_builder.py` avec la classe `AstrologerPromptBuilder`
-- Méthode `build(snapshot, events, time_windows, astrologer_profile, lang) -> str` qui construit le prompt utilisateur
+- Méthode `build(snapshot, events, time_windows, natal_chart, astrologer_profile, lang) -> str` qui construit le prompt utilisateur
 - Le prompt inclut :
-  - Profil natal simplifié (Soleil, Lune, Ascendant, positions planétaires)
+  - **Profil natal** (Soleil, Lune, Ascendant, planètes lentes) — extrait de `natal_chart: NatalResult` (voir Dev Notes "Données du Thème Natal")
   - Date locale et événements astrologiques du jour (ingresses, sky aspects, aspects transit-natal, progressions, nœuds, étoiles fixes, retours)
   - Les 4 créneaux avec leur régime et leurs `astro_events`
   - Les turning points détectés (heure, domaine, type de changement)
@@ -87,7 +88,8 @@ afin d'obtenir une lecture astrologique compréhensible, fluide et cohérente pl
   - Test que `narrate()` retourne None si erreur OpenAI
   - Test que `narrate()` parse correctement le JSON de réponse
 - Tests unitaires `TestAstrologerPromptBuilder` : `backend/tests/unit/prediction/test_astrologer_prompt_builder.py`
-  - Test que le prompt contient les éléments natals
+  - Test que le prompt contient les éléments natals (Soleil, Lune, Ascendant) quand `natal_chart` est fourni
+  - Test que le prompt contient "non disponible" quand `natal_chart=None`
   - Test que le style varie selon `astrologer_profile`
 - Test que `has_llm_narrative=False` quand `settings.llm_narrator_enabled=False`
 
@@ -109,7 +111,8 @@ afin d'obtenir une lecture astrologique compréhensible, fluide et cohérente pl
 - [ ] T4 — AstrologerPromptBuilder (AC: 5)
   - [ ] T4.1 — Créer `backend/app/prediction/astrologer_prompt_builder.py`
   - [ ] T4.2 — Implémenter les 5 styles de prompt (standard, védique, humaniste, karmique, psychologique)
-  - [ ] T4.3 — Formatter le profil natal, les événements, les créneaux et turning points
+  - [ ] T4.3 — Formatter le profil natal depuis `NatalResult` (Soleil/Lune/Ascendant/planètes lentes) avec `_format_natal_profile()`
+  - [ ] T4.4 — Formatter les événements, les créneaux et turning points
 
 - [ ] T5 — LLMNarrator (AC: 4)
   - [ ] T5.1 — Créer `backend/app/prediction/llm_narrator.py` avec `LLMNarrator` + `NarratorResult`
@@ -119,7 +122,8 @@ afin d'obtenir une lecture astrologique compréhensible, fluide et cohérente pl
 - [ ] T6 — Feature flag + intégration pipeline (AC: 6)
   - [ ] T6.1 — Ajouter `llm_narrator_enabled` dans `Settings` (`backend/app/core/config.py`)
   - [ ] T6.2 — Appeler `LLMNarrator` depuis `PublicProjection.build()` après assemblage
-  - [ ] T6.3 — Passer `astrologer_profile` depuis la DB au moment de l'appel
+  - [ ] T6.3 — Récupérer `astrologer_profile` depuis la DB (router) et le passer au service
+  - [ ] T6.4 — Récupérer `natal_chart` via `UserNatalChartService.get_latest_for_user()` (router) et le passer au narrateur
 
 - [ ] T7 — DTO backend + types TypeScript (AC: 7, 8)
   - [ ] T7.1 — Étendre `DailyPredictionResponse`, `DailyPredictionTimeWindow`, `DailyPredictionTurningPointPublic`
@@ -270,6 +274,7 @@ class LLMNarrator:
         snapshot: Any,
         events: list[Any],
         time_windows: list[dict],
+        natal_chart: Any = None,          # NatalResult | None
         astrologer_profile: str = "standard",
         lang: str = "fr",
     ) -> NarratorResult | None:
@@ -279,6 +284,7 @@ class LLMNarrator:
                 snapshot=snapshot,
                 events=events,
                 time_windows=time_windows,
+                natal_chart=natal_chart,
                 astrologer_profile=astrologer_profile,
                 lang=lang,
             )
@@ -343,7 +349,14 @@ import asyncio
 if settings.llm_narrator_enabled:
     try:
         narrator_result = asyncio.run(
-            LLMNarrator().narrate(snapshot, events, time_windows, astrologer_profile, lang)
+            LLMNarrator().narrate(
+                snapshot=snapshot,
+                events=events,
+                time_windows=time_windows,
+                natal_chart=natal_chart,       # NatalResult | None, récupéré depuis UserNatalChartService
+                astrologer_profile=astrologer_profile,
+                lang=lang,
+            )
         )
     except Exception:
         narrator_result = None
@@ -386,12 +399,59 @@ Descriptions des styles pour l'UI (fr) :
 - `karmique` : "Leçons de vie, nœuds lunaires, cycles"
 - `psychologique` : "Patterns comportementaux, intégration"
 
-### Récupération de astrologer_profile dans le pipeline de prédiction
+### Données du Thème Natal pour le prompt
+
+⚠️ **`PersistedPredictionSnapshot` ne contient PAS le thème natal.** Il faut le récupérer séparément depuis la DB.
+
+**Source :** `UserNatalChartService.get_latest_for_user(db, user_id)` → retourne `UserNatalChartReadData` avec un champ `result: NatalResult`.
+
+**`NatalResult`** (dans `backend/app/domain/astrology/natal_calculation.py`) contient :
+- `planet_positions: list[PlanetPosition]` — chaque entrée a `planet_code`, `sign_code`, `house_number`, `is_retrograde`
+  - Codes planètes clés : `"SO"` (Soleil), `"LU"` (Lune), `"ME"` (Mercure), `"VE"` (Vénus), `"MA"` (Mars), `"JU"` (Jupiter), `"SA"` (Saturne), `"UR"` (Uranus), `"NE"` (Neptune), `"PL"` (Pluton)
+  - Codes signes : `"aries"`, `"taurus"`, `"gemini"`, `"cancer"`, `"leo"`, `"virgo"`, `"libra"`, `"scorpio"`, `"sagittarius"`, `"capricorn"`, `"aquarius"`, `"pisces"`
+- `houses: list[HouseResult]` — `number` (1–12), `cusp_longitude`
+  - Ascendant = `houses[0]` (house number 1) → utiliser `sign_from_longitude(houses[0].cusp_longitude)` pour le signe
+
+**Extraction dans AstrologerPromptBuilder :**
+```python
+from app.domain.astrology.natal_calculation import NatalResult, sign_from_longitude
+
+def _format_natal_profile(natal: NatalResult | None) -> str:
+    if natal is None:
+        return "Thème natal non disponible."
+    planets = {p.planet_code: p for p in natal.planet_positions}
+    asc_sign = sign_from_longitude(natal.houses[0].cusp_longitude) if natal.houses else "?"
+    lines = [
+        f"Ascendant : {asc_sign}",
+        f"Soleil : {planets['SO'].sign_code} (maison {planets['SO'].house_number})" if "SO" in planets else "",
+        f"Lune : {planets['LU'].sign_code} (maison {planets['LU'].house_number})" if "LU" in planets else "",
+        f"Mercure : {planets['ME'].sign_code}" if "ME" in planets else "",
+        f"Vénus : {planets['VE'].sign_code}" if "VE" in planets else "",
+        f"Mars : {planets['MA'].sign_code}" if "MA" in planets else "",
+        f"Jupiter : {planets['JU'].sign_code}" if "JU" in planets else "",
+        f"Saturne : {planets['SA'].sign_code}" if "SA" in planets else "",
+    ]
+    return "\n".join(l for l in lines if l)
+```
+
+### Récupération de astrologer_profile et natal_chart dans le pipeline de prédiction
 
 Dans `backend/app/api/v1/routers/predictions.py`, l'endpoint `GET /v1/predictions/daily` a déjà accès à `current_user` et `db`. Il doit :
 1. Lire `user_model = db.get(UserModel, current_user.id)`
 2. Extraire `astrologer_profile = getattr(user_model, "astrologer_profile", "standard")`
-3. Passer ce paramètre à `DailyPredictionService.get_or_compute()` ou à `PublicProjection.build()`
+3. Récupérer le thème natal : `natal_chart_data = UserNatalChartService.get_latest_for_user(db, current_user.id)` → `natal_chart = natal_chart_data.result` (ou `None` si exception)
+4. Passer `astrologer_profile` et `natal_chart` à `DailyPredictionService.get_or_compute()` ou directement à `PublicProjection.build()`
+
+**Import nécessaire :** `from app.services.user_natal_chart_service import UserNatalChartService, UserNatalChartServiceError`
+
+**Gestion d'erreur :**
+```python
+try:
+    natal_data = UserNatalChartService.get_latest_for_user(db, current_user.id)
+    natal_chart = natal_data.result
+except UserNatalChartServiceError:
+    natal_chart = None  # fallback — prompt sera moins personnalisé mais ça marche
+```
 
 ### TurningPointCard — structure actuelle
 
