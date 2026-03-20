@@ -103,6 +103,14 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => 
                 {window.action_hint}
               </p>
 
+              {window.astro_events && window.astro_events.length > 0 && (
+                <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  {window.astro_events.map((evt, i) => (
+                    <li key={i} style={{ fontSize: '12px', color: 'var(--text-2)' }}>· {evt}</li>
+                  ))}
+                </ul>
+              )}
+
               <div style={{ display: 'flex', gap: '4px' }}>
                 {window.top_domains.map(key => (
                   <span key={key} title={getDomainLabel(key, lang)} style={{ fontSize: '14px' }}>

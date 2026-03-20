@@ -105,6 +105,7 @@ class DailyPredictionTimeWindow(BaseModel):
     regime: str
     top_domains: list[str]
     action_hint: str
+    astro_events: list[str] = []
 
 
 class DailyPredictionBestWindow(BaseModel):

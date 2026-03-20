@@ -139,6 +139,7 @@ export interface DailyPredictionTimeWindow {
   regime: string;
   top_domains: string[];
   action_hint: string;
+  astro_events: string[];
 }
 
 export interface DailyPredictionTurningPointPublic {

@@ -230,6 +230,19 @@ else:
     rep_start = datetime.combine(l_date, time(mid_hour, 0))
 ```
 
+**Évolution — Enrichissement astrologique des créneaux (`astro_events`)**
+
+Suite aux retours utilisateur (contenu trop générique, pas assez astrologique), `PublicTimeWindowPolicy` a été enrichie pour associer les `AstroEvent` à leur créneau horaire et les exposer dans le DTO.
+
+- **Changement** : Ajout du champ `astro_events: list[str]` (max 3, triés par priorité) dans chaque `DailyPredictionTimeWindow`.
+- **Logique** : Pour chaque période, les `AstroEvent` dont `local_time` ou `occurred_at_local` tombe dans `[h_start, h_end)` sont filtrés, triés par `priority` desc, puis formatés en texte lisible via 3 nouvelles méthodes :
+  - `_resolve_events(evidence, engine_output)` — extrait les événements de l'evidence pack ou de l'engine output
+  - `_filter_events_in_period(events, h_start, h_end)` — filtre par heure locale (gère le slot nuit chevauchant minuit)
+  - `_format_event_text(e)` — formate chaque type d'événement (`moon_sign_ingress`, `sky_aspect`, `transit_to_natal`, `progression_aspect`, `node_conjunction`, `fixed_star_conjunction`, `solar_return`, `lunar_return`)
+- **Imports ajoutés** : `get_sign_name_fr`, `get_fixed_star_name_fr` dans `public_projection.py`
+- **DTO** : `astro_events: list[str] = []` ajouté à `DailyPredictionTimeWindow` dans `predictions.py`
+- **Frontend** : `astro_events: string[]` ajouté au type TypeScript ; `DayTimelineSectionV4` affiche les événements en petits textes gris (`· Lune → Gémeaux (09:42)`) sous l'`action_hint`
+
 ### File List
 
 - `backend/app/prediction/public_projection.py`

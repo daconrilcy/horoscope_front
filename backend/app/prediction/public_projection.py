@@ -12,7 +12,9 @@ from app.prediction.public_astro_vocabulary import (
     get_aspect_label,
     get_aspect_tonality,
     get_effect_label,
+    get_fixed_star_name_fr,
     get_planet_name_fr,
+    get_sign_name_fr,
 )
 from app.prediction.public_domain_taxonomy import (
     DISPLAY_ORDER,
@@ -543,6 +545,9 @@ class PublicTimeWindowPolicy:
     ) -> list[dict[str, Any]]:
         from collections import Counter
 
+        # 0. Resolve Astro Events for per-period enrichment
+        all_events = self._resolve_events(evidence, engine_output)
+
         # 1. Resolve Time Blocks (V3)
         v3_blocks = []
         if evidence:
@@ -617,6 +622,19 @@ class PublicTimeWindowPolicy:
             label = get_regime_label(regime)
             action_hint = get_action_hint(regime)
 
+            # G. Astrological events in this period (sorted by priority, max 3)
+            slot_events = self._filter_events_in_period(all_events, h_start, h_end)
+            slot_events.sort(key=lambda ev: getattr(ev, "priority", 0), reverse=True)
+            astro_events: list[str] = []
+            seen_texts: set[str] = set()
+            for ev in slot_events:
+                text = self._format_event_text(ev)
+                if text and text not in seen_texts:
+                    astro_events.append(text)
+                    seen_texts.add(text)
+                    if len(astro_events) >= 3:
+                        break
+
             windows.append(
                 {
                     "period_key": key,
@@ -625,6 +643,7 @@ class PublicTimeWindowPolicy:
                     "regime": regime,
                     "top_domains": top_domains,
                     "action_hint": action_hint,
+                    "astro_events": astro_events,
                 }
             )
 
@@ -667,6 +686,73 @@ class PublicTimeWindowPolicy:
             return "recentrage"
 
         return regime
+
+    def _resolve_events(self, evidence: Any, engine_output: Any) -> list[Any]:
+        events: list[Any] = []
+        if evidence and hasattr(evidence, "metadata") and "astro_events" in evidence.metadata:
+            events = evidence.metadata["astro_events"]
+        elif engine_output is not None:
+            core = _resolve_core_engine_output(engine_output)
+            if core is not None:
+                events = getattr(core, "events", None) or getattr(core, "detected_events", None) or []
+        return events
+
+    def _filter_events_in_period(self, events: list[Any], h_start: int, h_end: int) -> list[Any]:
+        result = []
+        for e in events:
+            dt = getattr(e, "local_time", None) or getattr(e, "occurred_at_local", None)
+            if dt is None:
+                continue
+            if isinstance(dt, str):
+                try:
+                    dt = datetime.fromisoformat(dt)
+                except ValueError:
+                    continue
+            h = dt.hour
+            in_period = (h_start <= h < h_end) if h_start < h_end else (h >= h_start or h < h_end)
+            if in_period:
+                result.append(e)
+        return result
+
+    def _format_event_text(self, e: Any) -> str | None:
+        ev_type = getattr(e, "event_type", None)
+        body = getattr(e, "body", None)
+        target = getattr(e, "target", None)
+        aspect = getattr(e, "aspect", None)
+
+        if ev_type == "solar_return":
+            return "Retour Solaire"
+        if ev_type == "lunar_return":
+            return "Retour Lunaire"
+        if ev_type == "moon_sign_ingress" and body and target:
+            planet = get_planet_name_fr(body)
+            sign = get_sign_name_fr(target)
+            dt = getattr(e, "local_time", None) or getattr(e, "occurred_at_local", None)
+            if isinstance(dt, str):
+                try:
+                    dt = datetime.fromisoformat(dt)
+                except ValueError:
+                    dt = None
+            time_str = f" ({dt.strftime('%H:%M')})" if dt else ""
+            return f"{planet} → {sign}{time_str}"
+        if ev_type == "fixed_star_conjunction" and body and target:
+            return f"{get_planet_name_fr(body)} ☌ {get_fixed_star_name_fr(target)}"
+        if ev_type == "node_conjunction" and body and target:
+            return f"{get_planet_name_fr(body)} ☌ {get_planet_name_fr(target)}"
+        if ev_type == "progression_aspect" and body and aspect and target:
+            return f"{get_planet_name_fr(body)} {get_aspect_label(aspect)} {get_planet_name_fr(target)} (progressé)"
+        if ev_type == "sky_aspect" and body and aspect and target:
+            return f"{get_planet_name_fr(body)} {get_aspect_label(aspect)} {get_planet_name_fr(target)}"
+        if ev_type in {
+            "aspect",
+            "aspect_exact_to_angle",
+            "aspect_exact_to_luminary",
+            "aspect_exact_to_personal",
+        } and body and aspect and target and body != target:
+            return f"{get_planet_name_fr(body)} {get_aspect_label(aspect)} {get_planet_name_fr(target)}"
+        if ev_type == "transit_to_natal" and body and aspect and target:
+            return f"{get_planet_name_fr(body)} {get_aspect_label(aspect)} {get_planet_name_fr(target)} natal"
+        return None
 
     def _map_domains(self, internal_themes: list[str]) -> list[str]:
         public_keys = []
