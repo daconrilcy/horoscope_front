@@ -76,13 +76,22 @@ class PredictionRequestResolver:
             birth_date = profile.birth_date
             birth_date_jd = None
             if birth_date:
+                # Normalize to datetime (EngineInput expects datetime, DB may give date)
+                from datetime import date as _date
+                from datetime import datetime as _dt
+                from datetime import time as _time
+
                 import swisseph as swe
 
-                # swisseph.julday expects (year, month, day, hour_fraction)
-                hour_frac = birth_date.hour + birth_date.minute / 60.0 + birth_date.second / 3600.0
-                birth_date_jd = swe.julday(
-                    birth_date.year, birth_date.month, birth_date.day, hour_frac
-                )
+                if isinstance(birth_date, _date):
+                    if not isinstance(birth_date, _dt):
+                        birth_date = _dt.combine(birth_date, _time(12, 0))
+                    hour_frac = birth_date.hour + birth_date.minute / 60.0 + birth_date.second / 3600.0
+                    birth_date_jd = swe.julday(
+                        birth_date.year, birth_date.month, birth_date.day, hour_frac
+                    )
+                else:
+                    birth_date = None  # unexpected type (e.g. mock) — ignore
 
             engine_input = EngineInput(
                 natal_chart=natal_chart,

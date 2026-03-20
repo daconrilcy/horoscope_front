@@ -133,7 +133,7 @@ class EnrichedAstroEventsBuilder:
                     aspect=asp_code,
                     orb_deg=orb,
                     priority=priority,
-                    base_weight=1.0,
+                    base_weight=0.0,
                     metadata={},
                 )
             )
@@ -143,7 +143,7 @@ class EnrichedAstroEventsBuilder:
         return detected[:4]
 
     def _compute_node_events(
-        self, steps: list[StepAstroState], natal_chart: NatalChart, tz_name: str
+        self, steps: list[StepAstroState], natal_chart: NatalChart, _tz_name: str = ""
     ) -> list[AstroEvent]:
         events: list[AstroEvent] = []
         if not steps:
@@ -182,7 +182,7 @@ class EnrichedAstroEventsBuilder:
                     aspect="conjunction",
                     orb_deg=orb,
                     priority=60,
-                    base_weight=1.0,
+                    base_weight=0.0,  # display-only, no signal contribution
                     metadata={},
                 )
             )
@@ -205,7 +205,7 @@ class EnrichedAstroEventsBuilder:
                             aspect="conjunction",
                             orb_deg=dist,
                             priority=55,
-                            base_weight=1.0,
+                            base_weight=0.0,  # display-only, no signal contribution
                             metadata={"is_natal": True},
                         )
                     )
@@ -241,7 +241,7 @@ class EnrichedAstroEventsBuilder:
                         aspect=None,
                         orb_deg=best_orb,
                         priority=80,
-                        base_weight=1.0,
+                        base_weight=0.0,  # display-only, no signal contribution
                         metadata={},
                     )
                 )
@@ -268,7 +268,7 @@ class EnrichedAstroEventsBuilder:
                         aspect=None,
                         orb_deg=best_orb,
                         priority=95,
-                        base_weight=1.0,
+                        base_weight=0.0,  # display-only, no signal contribution
                         metadata={},
                     )
                 )
@@ -318,7 +318,7 @@ class EnrichedAstroEventsBuilder:
                                 aspect=asp_code,
                                 orb_deg=orb,
                                 priority=65,
-                                base_weight=1.0,
+                                base_weight=0.0,  # display-only, no signal contribution
                                 metadata={},
                             )
                         )
@@ -350,7 +350,7 @@ class EnrichedAstroEventsBuilder:
                     aspect="conjunction",
                     orb_deg=orb,
                     priority=45,
-                    base_weight=1.0,
+                    base_weight=0.0,  # display-only, no signal contribution
                     metadata={"star_name_fr": FIXED_STARS[star_key]["name_fr"]},
                 )
             )
