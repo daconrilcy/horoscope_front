@@ -139,14 +139,26 @@ export function DailyHoroscopePage() {
           <SectionErrorBoundary onRetry={handleRefresh}>
             {(() => {
               const climate = mapDayClimate(prediction);
-              return climate ? <DayClimateHero climate={climate} lang={lang} /> : null;
+              return climate ? (
+                <DayClimateHero 
+                  climate={climate} 
+                  dailySynthesis={prediction.daily_synthesis} 
+                  lang={lang} 
+                />
+              ) : null;
             })()}
           </SectionErrorBoundary>
 
           {/* New: AstroDailyEvents (Story 60.13) */}
           {(() => {
             const astroEvents = mapAstroDailyEvents(prediction);
-            return astroEvents ? <AstroDailyEvents data={astroEvents} lang={lang} /> : null;
+            return astroEvents ? (
+              <AstroDailyEvents 
+                data={astroEvents} 
+                intro={prediction.astro_events_intro} 
+                lang={lang} 
+              />
+            ) : null;
           })()}
 
           {/* Zone 3 : DomainRankingCard (V4) */}

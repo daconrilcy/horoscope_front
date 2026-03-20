@@ -72,7 +72,7 @@ export const TurningPointCard: React.FC<Props> = ({ turningPoint, lang }) => {
       </h2>
 
       <p style={{ fontSize: '15px', color: 'var(--text-1)', marginBottom: '16px', lineHeight: '1.4' }}>
-        {turningPoint.what_changes}
+        {turningPoint.narrative || turningPoint.what_changes}
       </p>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>

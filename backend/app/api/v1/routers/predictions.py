@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import date, datetime
 from typing import Any
 
@@ -22,6 +23,8 @@ from app.services.daily_prediction_types import (
     ComputeMode,
     DailyPredictionServiceError,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class DailyPredictionMeta(BaseModel):
@@ -87,6 +90,7 @@ class DailyPredictionTurningPointPublic(BaseModel):
     what_changes: str
     do: str
     avoid: str
+    narrative: str | None = None
 
 
 class DailyPredictionTimeBlock(BaseModel):
@@ -106,6 +110,7 @@ class DailyPredictionTimeWindow(BaseModel):
     top_domains: list[str]
     action_hint: str
     astro_events: list[str] = []
+    narrative: str | None = None
 
 
 class DailyPredictionBestWindow(BaseModel):
@@ -210,6 +215,9 @@ class DailyPredictionResponse(BaseModel):
     meta: DailyPredictionMeta
     summary: DailyPredictionSummary
     day_climate: DailyPredictionDayClimate | None = None
+    daily_synthesis: str | None = None
+    astro_events_intro: str | None = None
+    has_llm_narrative: bool = False
     categories: list[DailyPredictionCategory]
     categories_internal: list[DailyPredictionCategory] | None = None
     domain_ranking: list[DailyPredictionPublicDomainScore] | None = None
@@ -488,7 +496,7 @@ def get_daily_history(
 
 
 @router.get("/daily", response_model=DailyPredictionResponse)
-def get_daily_prediction(
+async def get_daily_prediction(
     target_date: str | None = Query(None, alias="date", pattern=r"^\d{4}-\d{2}-\d{2}$"),
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
@@ -536,16 +544,39 @@ def get_daily_prediction(
     if version_model is not None:
         reference_version = version_model.version
 
+    # Fetch user profile for Story 60.16
+    from app.infra.db.models.user import UserModel
+
+    user_model = db.get(UserModel, current_user.id)
+    astrologer_profile_key = (
+        getattr(user_model, "astrologer_profile", "standard") if user_model else "standard"
+    )
+
+    # Build prompt context if LLM narration is enabled
+    prompt_context = None
+    if settings.llm_narrator_enabled:
+        from app.prompts.common_context import CommonContextBuilder
+
+        try:
+            prompt_context = CommonContextBuilder.build(
+                user_id=current_user.id, use_case_key="daily_prediction", period="daily", db=db
+            )
+        except Exception as e:
+            logger.warning("failed to build prompt context for daily prediction: %s", str(e))
+
     # AC1/AC2/AC4 - Call Assembler with typed snapshot
     assembler = PublicPredictionAssembler()
     try:
-        assembled = assembler.assemble(
+        assembled = await assembler.assemble(
             snapshot=snapshot,
             cat_id_to_code=cat_id_to_code,
             engine_output=result.bundle,
             was_reused=result.was_reused,
             reference_version=reference_version,
             ruleset_version=settings.ruleset_version,
+            astrologer_profile_key=astrologer_profile_key,
+            lang=current_user.lang if hasattr(current_user, "lang") else "fr",
+            prompt_context=prompt_context,
         )
     except ValueError as exc:
         raise HTTPException(

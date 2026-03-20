@@ -18,10 +18,11 @@ const LABELS = {
 
 interface AstroDailyEventsProps {
   data: AstroDailyEventsViewData;
+  intro?: string | null;
   lang: Lang;
 }
 
-export const AstroDailyEvents: React.FC<AstroDailyEventsProps> = ({ data, lang }) => {
+export const AstroDailyEvents: React.FC<AstroDailyEventsProps> = ({ data, intro, lang }) => {
   const { 
     ingresses, aspects, planetPositions, 
     returns, progressions, nodes, skyAspects, fixedStars 
@@ -53,6 +54,18 @@ export const AstroDailyEvents: React.FC<AstroDailyEventsProps> = ({ data, lang }
       <h3 id="astro-events-title" className="astro-daily-events__title">
         {l('title')}
       </h3>
+
+      {intro && (
+        <p className="astro-daily-events__intro" style={{
+          fontSize: '0.95rem',
+          color: 'var(--text-1)',
+          marginBottom: '16px',
+          fontStyle: 'italic',
+          lineHeight: '1.4'
+        }}>
+          {intro}
+        </p>
+      )}
 
       <div className="astro-daily-events__grid">
         {/* Ingresses */}

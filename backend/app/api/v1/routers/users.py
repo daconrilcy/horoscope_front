@@ -130,6 +130,22 @@ class NatalInterpretationApiResponse(BaseModel):
     meta: ResponseMeta
 
 
+class UserSettingsData(BaseModel):
+    astrologer_profile: str
+
+
+class UserSettingsApiResponse(BaseModel):
+    data: UserSettingsData
+    meta: ResponseMeta
+
+
+class UserSettingsPatchRequest(BaseModel):
+    astrologer_profile: str
+
+
+VALID_ASTROLOGER_PROFILES = {"standard", "vedique", "humaniste", "karmique", "psychologique"}
+
+
 router = APIRouter(prefix="/v1/users", tags=["users"])
 logger = logging.getLogger(__name__)
 _INCONSISTENT_LOG_WINDOW_SECONDS = 60.0
@@ -686,3 +702,96 @@ def generate_me_natal_chart(
                 }
             },
         )
+
+
+@router.get(
+    "/me/settings",
+    response_model=UserSettingsApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        500: {"model": ErrorEnvelope},
+    },
+)
+def get_me_settings(
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    from app.infra.db.models.user import UserModel
+
+    user = db.get(UserModel, current_user.id)
+    if not user:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "error": {
+                    "code": "user_not_found",
+                    "message": "user not found",
+                    "details": {},
+                    "request_id": request_id,
+                }
+            },
+        )
+
+    profile = getattr(user, "astrologer_profile", "standard")
+    return {
+        "data": {"astrologer_profile": profile},
+        "meta": {"request_id": request_id},
+    }
+
+
+@router.patch(
+    "/me/settings",
+    response_model=UserSettingsApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        422: {"model": ErrorEnvelope},
+        500: {"model": ErrorEnvelope},
+    },
+)
+def patch_me_settings(
+    request: Request,
+    payload: UserSettingsPatchRequest,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    if payload.astrologer_profile not in VALID_ASTROLOGER_PROFILES:
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": {
+                    "code": "invalid_astrologer_profile",
+                    "message": f"profile must be one of {VALID_ASTROLOGER_PROFILES}",
+                    "details": {"allowed_values": list(VALID_ASTROLOGER_PROFILES)},
+                    "request_id": request_id,
+                }
+            },
+        )
+
+    from app.infra.db.models.user import UserModel
+
+    user = db.get(UserModel, current_user.id)
+    if not user:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "error": {
+                    "code": "user_not_found",
+                    "message": "user not found",
+                    "details": {},
+                    "request_id": request_id,
+                }
+            },
+        )
+
+    user.astrologer_profile = payload.astrologer_profile
+    db.commit()
+
+    return {
+        "data": {"astrologer_profile": user.astrologer_profile},
+        "meta": {"request_id": request_id},
+    }

@@ -1,6 +1,6 @@
 # Story 60.16 : Interprétation LLM des sections horoscope — textes narratifs enrichis par profil astrologue
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -103,57 +103,57 @@ afin d'obtenir une lecture astrologique compréhensible, fluide et cohérente pl
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Migration Alembic + modèle User (AC: 1)
-  - [ ] T1.1 — Ajouter `astrologer_profile: Mapped[str]` avec `mapped_column(String(32), default="standard")` dans `UserModel`
-  - [ ] T1.2 — Créer `backend/migrations/versions/20260320_0050_add_astrologer_profile_to_users.py` avec `op.add_column("users", sa.Column("astrologer_profile", sa.String(32), nullable=False, server_default="standard"))`
+- [x] T1 — Migration Alembic + modèle User (AC: 1)
+  - [x] T1.1 — Ajouter `astrologer_profile: Mapped[str]` avec `mapped_column(String(32), default="standard")` dans `UserModel`
+  - [x] T1.2 — Créer `backend/migrations/versions/20260320_0050_add_astrologer_profile_to_users.py` avec `op.add_column("users", sa.Column("astrologer_profile", sa.String(32), nullable=False, server_default="standard"))`
 
-- [ ] T2 — Endpoints utilisateur (AC: 2)
-  - [ ] T2.1 — Ajouter `GET /v1/users/me/settings` dans `backend/app/api/v1/routers/users.py`
-  - [ ] T2.2 — Ajouter `PATCH /v1/users/me/settings` avec validation et persistance
+- [x] T2 — Endpoints utilisateur (AC: 2)
+  - [x] T2.1 — Ajouter `GET /v1/users/me/settings` dans `backend/app/api/v1/routers/users.py`
+  - [x] T2.2 — Ajouter `PATCH /v1/users/me/settings` avec validation et persistance
 
-- [ ] T3 — Sélecteur frontend (AC: 3)
-  - [ ] T3.1 — Ajouter section "Style d'astrologue" dans `AccountSettings.tsx`
-  - [ ] T3.2 — Ajouter hook `useUserSettings` ou calls directs via fetch/axios dans le composant
-  - [ ] T3.3 — Ajouter traductions dans `frontend/src/i18n/settings.ts` (ou équivalent)
+- [x] T3 — Sélecteur frontend (AC: 3)
+  - [x] T3.1 — Ajouter section "Style d'astrologue" dans `AccountSettings.tsx`
+  - [x] T3.2 — Ajouter hook `useUserSettings` ou calls directs via fetch/axios dans le composant
+  - [x] T3.3 — Ajouter traductions dans `frontend/src/i18n/settings.ts` (ou équivalent)
 
-- [ ] T4 — AstrologerPromptBuilder (AC: 5)
-  - [ ] T4.1 — Créer `backend/app/prediction/astrologer_prompt_builder.py`
-  - [ ] T4.2 — Implémenter les 5 styles de prompt (standard, védique, humaniste, karmique, psychologique)
-  - [ ] T4.3 — Intégrer `PromptCommonContext` comme source du profil natal et de la date (via `common_context.natal_interpretation` ou `common_context.natal_data`)
-  - [ ] T4.4 — Formatter les événements, les créneaux et turning points
+- [x] T4 — AstrologerPromptBuilder (AC: 5)
+  - [x] T4.1 — Créer `backend/app/prediction/astrologer_prompt_builder.py`
+  - [x] T4.2 — Implémenter les 5 styles de prompt (standard, védique, humaniste, karmique, psychologique)
+  - [x] T4.3 — Intégrer `PromptCommonContext` comme source du profil natal et de la date (via `common_context.natal_interpretation` ou `common_context.natal_data`)
+  - [x] T4.4 — Formatter les événements, les créneaux et turning points
 
-- [ ] T5 — LLMNarrator (AC: 4)
-  - [ ] T5.1 — Créer `backend/app/prediction/llm_narrator.py` avec `LLMNarrator` + `NarratorResult`
-  - [ ] T5.2 — Appel `openai.AsyncOpenAI` avec timeout 10s et fallback `None`
-  - [ ] T5.3 — Parser le JSON de réponse avec gestion d'erreur
+- [x] T5 — LLMNarrator (AC: 4)
+  - [x] T5.1 — Créer `backend/app/prediction/llm_narrator.py` avec `LLMNarrator` + `NarratorResult`
+  - [x] T5.2 — Appel `openai.AsyncOpenAI` avec timeout 10s et fallback `None`
+  - [x] T5.3 — Parser le JSON de réponse avec gestion d'erreur
 
-- [ ] T6 — Feature flag + intégration pipeline (AC: 6)
-  - [ ] T6.1 — Ajouter `llm_narrator_enabled` dans `Settings` (`backend/app/core/config.py`)
-  - [ ] T6.2 — Appeler `LLMNarrator` depuis `PublicProjection.build()` après assemblage
-  - [ ] T6.3 — Appeler `CommonContextBuilder.build()` dans le router et passer le résultat au service/projection
-  - [ ] T6.4 — Récupérer `astrologer_profile_key` depuis `UserModel.astrologer_profile` et le passer en complément
+- [x] T6 — Feature flag + intégration pipeline (AC: 6)
+  - [x] T6.1 — Ajouter `llm_narrator_enabled` dans `Settings` (`backend/app/core/config.py`)
+  - [x] T6.2 — Appeler `LLMNarrator` depuis `PublicProjection.build()` après assemblage
+  - [x] T6.3 — Appeler `CommonContextBuilder.build()` dans le router et passer le résultat au service/projection
+  - [x] T6.4 — Récupérer `astrologer_profile_key` depuis `UserModel.astrologer_profile` et le passer en complément
 
-- [ ] T7 — DTO backend + types TypeScript (AC: 7, 8)
-  - [ ] T7.1 — Étendre `DailyPredictionResponse`, `DailyPredictionTimeWindow`, `DailyPredictionTurningPointPublic`
-  - [ ] T7.2 — Mettre à jour `frontend/src/types/dailyPrediction.ts`
-  - [ ] T7.3 — Créer/étendre `frontend/src/types/user.ts`
+- [x] T7 — DTO backend + types TypeScript (AC: 7, 8)
+  - [x] T7.1 — Étendre `DailyPredictionResponse`, `DailyPredictionTimeWindow`, `DailyPredictionTurningPointPublic`
+  - [x] T7.2 — Mettre à jour `frontend/src/types/dailyPrediction.ts`
+  - [x] T7.3 — Créer/étendre `frontend/src/types/user.ts`
 
-- [ ] T8 — Intégration frontend (AC: 9)
-  - [ ] T8.1 — `DailyHoroscopePage.tsx` : afficher `daily_synthesis`
-  - [ ] T8.2 — `DayTimelineSectionV4.tsx` : afficher `window.narrative`
-  - [ ] T8.3 — `AstroDailyEvents.tsx` : afficher `astro_events_intro`
-  - [ ] T8.4 — `TurningPointCard.tsx` : afficher `narrative`
+- [x] T8 — Intégration frontend (AC: 9)
+  - [x] T8.1 — `DailyHoroscopePage.tsx` : afficher `daily_synthesis`
+  - [x] T8.2 — `DayTimelineSectionV4.tsx` : afficher `window.narrative`
+  - [x] T8.3 — `AstroDailyEvents.tsx` : afficher `astro_events_intro`
+  - [x] T8.4 — `TurningPointCard.tsx` : afficher `narrative`
 
-- [ ] T9 — Tests (AC: 10)
-  - [ ] T9.1 — `test_llm_narrator.py` avec mock OpenAI
-  - [ ] T9.2 — `test_astrologer_prompt_builder.py`
-  - [ ] T9.3 — Test feature flag désactivé
+- [x] T9 — Tests (AC: 10)
+  - [x] T9.1 — `test_llm_narrator.py` avec mock OpenAI
+  - [x] T9.2 — `test_astrologer_prompt_builder.py`
+  - [x] T9.3 — Test feature flag désactivé
 
-- [ ] T10 — Vérification finale
-  - [ ] T10.1 — `ruff check backend/` passe
-  - [ ] T10.2 — `pytest backend/` passe
-  - [ ] T10.3 — Avec `LLM_NARRATOR_ENABLED=false` → comportement actuel inchangé (zéro régression)
-  - [ ] T10.4 — Avec `LLM_NARRATOR_ENABLED=true` et clé OpenAI valide → narratives affichées
+- [x] T10 — Vérification finale
+  - [x] T10.1 — `ruff check backend/` passe
+  - [x] T10.2 — `pytest backend/` passe
+  - [x] T10.3 — Avec `LLM_NARRATOR_ENABLED=false` → comportement actuel inchangé (zéro régression)
+  - [x] T10.4 — Avec `LLM_NARRATOR_ENABLED=true` et clé OpenAI valide → narratives affichées
 
 ## Dev Notes
 
@@ -512,6 +512,26 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+- `backend/app/infra/db/models/user.py`
+- `backend/migrations/versions/20260320_0050_add_astrologer_profile_to_users.py`
+- `backend/app/api/v1/routers/users.py`
+- `backend/app/api/v1/routers/predictions.py`
+- `backend/app/prediction/astrologer_prompt_builder.py`
+- `backend/app/prediction/llm_narrator.py`
+- `backend/app/prediction/public_projection.py`
+- `backend/app/core/config.py`
+- `backend/tests/unit/prediction/test_llm_narrator.py`
+- `backend/tests/unit/prediction/test_astrologer_prompt_builder.py`
+- `frontend/src/types/user.ts`
+- `frontend/src/types/dailyPrediction.ts`
+- `frontend/src/pages/settings/AccountSettings.tsx`
+- `frontend/src/i18n/settings.ts`
+- `frontend/src/components/DayClimateHero.tsx`
+- `frontend/src/components/AstroDailyEvents.tsx`
+- `frontend/src/components/prediction/DayTimelineSectionV4.tsx`
+- `frontend/src/components/TurningPointCard.tsx`
+- `frontend/src/pages/DailyHoroscopePage.tsx`
 
 - `backend/app/infra/db/models/user.py`
 - `backend/migrations/versions/20260320_0050_add_astrologer_profile_to_users.py`

@@ -4,6 +4,7 @@ from datetime import datetime, time
 from numbers import Real
 from typing import TYPE_CHECKING, Any
 
+from app.core.config import settings
 from app.prediction.decision_window_builder import DecisionWindowBuilder
 from app.prediction.editorial_template_engine import EditorialTemplateEngine
 from app.prediction.public_astro_daily_events import PublicAstroDailyEventsPolicy
@@ -59,7 +60,7 @@ class PublicPredictionAssembler:
     AC1/AC4 Compliance: Uses typed snapshot and evidence pack for projection.
     """
 
-    def assemble(
+    async def assemble(
         self,
         snapshot: PersistedPredictionSnapshot,
         cat_id_to_code: dict[int, str],
@@ -68,6 +69,9 @@ class PublicPredictionAssembler:
         was_reused: bool = False,
         reference_version: str,
         ruleset_version: str,
+        astrologer_profile_key: str = "standard",
+        lang: str = "fr",
+        prompt_context: Any | None = None,
     ) -> dict[str, Any]:
         # AC1 Story 42.16: Resolve evidence pack
         evidence = self._resolve_evidence_pack(snapshot, engine_output)
@@ -173,6 +177,51 @@ class PublicPredictionAssembler:
             evidence=evidence,
         )
 
+        # 8. LLM Narration (V4) - Story 60.16
+        daily_synthesis = None
+        astro_events_intro = None
+        has_llm_narrative = False
+
+        if settings.llm_narrator_enabled and prompt_context:
+            from app.prediction.llm_narrator import LLMNarrator
+
+            narrator = LLMNarrator()
+            # Extract raw events for prompt
+            raw_events = []
+            if evidence:
+                raw_events = evidence.metadata.get("astro_events", [])
+            elif engine_output:
+                core = _resolve_core_engine_output(engine_output)
+                raw_events = (
+                    getattr(core, "detected_events", [])
+                    if hasattr(core, "detected_events")
+                    else getattr(core, "events", [])
+                )
+
+            narrator_res = await narrator.narrate(
+                events=raw_events,
+                time_windows=time_windows,
+                common_context=prompt_context,
+                astrologer_profile_key=astrologer_profile_key,
+                lang=lang,
+            )
+
+            if narrator_res:
+                has_llm_narrative = True
+                daily_synthesis = narrator_res.daily_synthesis
+                astro_events_intro = narrator_res.astro_events_intro
+
+                # Inject into time windows
+                for w in time_windows:
+                    pk = w["period_key"]
+                    if pk in narrator_res.time_window_narratives:
+                        w["narrative"] = narrator_res.time_window_narratives[pk]
+
+                # Inject into turning points
+                for i, tp in enumerate(turning_points):
+                    if i < len(narrator_res.turning_point_narratives):
+                        tp["narrative"] = narrator_res.turning_point_narratives[i]
+
         # 7. Meta
         house_system_effective = snapshot.house_system_effective
         if house_system_effective is None and engine_output is not None:
@@ -201,6 +250,9 @@ class PublicPredictionAssembler:
             "meta": meta,
             "summary": summary,
             "day_climate": day_climate,
+            "daily_synthesis": daily_synthesis,
+            "astro_events_intro": astro_events_intro,
+            "has_llm_narrative": has_llm_narrative,
             "best_window": best_window,
             "time_windows": time_windows,
             "turning_point": main_turning_point,
@@ -694,7 +746,9 @@ class PublicTimeWindowPolicy:
         elif engine_output is not None:
             core = _resolve_core_engine_output(engine_output)
             if core is not None:
-                events = getattr(core, "events", None) or getattr(core, "detected_events", None) or []
+                events = (
+                    getattr(core, "events", None) or getattr(core, "detected_events", None) or []
+                )
         return events
 
     def _filter_events_in_period(self, events: list[Any], h_start: int, h_end: int) -> list[Any]:
@@ -740,18 +794,33 @@ class PublicTimeWindowPolicy:
         if ev_type == "node_conjunction" and body and target:
             return f"{get_planet_name_fr(body)} ☌ {get_planet_name_fr(target)}"
         if ev_type == "progression_aspect" and body and aspect and target:
-            return f"{get_planet_name_fr(body)} {get_aspect_label(aspect)} {get_planet_name_fr(target)} (progressé)"
+            label = get_aspect_label(aspect)
+            return f"{get_planet_name_fr(body)} {label} {get_planet_name_fr(target)} (progressé)"
         if ev_type == "sky_aspect" and body and aspect and target:
-            return f"{get_planet_name_fr(body)} {get_aspect_label(aspect)} {get_planet_name_fr(target)}"
-        if ev_type in {
-            "aspect",
-            "aspect_exact_to_angle",
-            "aspect_exact_to_luminary",
-            "aspect_exact_to_personal",
-        } and body and aspect and target and body != target:
-            return f"{get_planet_name_fr(body)} {get_aspect_label(aspect)} {get_planet_name_fr(target)}"
+            label = get_aspect_label(aspect)
+            p1 = get_planet_name_fr(body)
+            p2 = get_planet_name_fr(target)
+            return f"{p1} {label} {p2}"
+        if (
+            ev_type
+            in {
+                "aspect",
+                "aspect_exact_to_angle",
+                "aspect_exact_to_luminary",
+                "aspect_exact_to_personal",
+            }
+            and body
+            and aspect
+            and target
+            and body != target
+        ):
+            label = get_aspect_label(aspect)
+            p1 = get_planet_name_fr(body)
+            p2 = get_planet_name_fr(target)
+            return f"{p1} {label} {p2}"
         if ev_type == "transit_to_natal" and body and aspect and target:
-            return f"{get_planet_name_fr(body)} {get_aspect_label(aspect)} {get_planet_name_fr(target)} natal"
+            label = get_aspect_label(aspect)
+            return f"{get_planet_name_fr(body)} {label} {get_planet_name_fr(target)} natal"
         return None
 
     def _map_domains(self, internal_themes: list[str]) -> list[str]:

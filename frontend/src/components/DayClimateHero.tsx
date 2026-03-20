@@ -5,10 +5,11 @@ import { getDomainLabel, DOMAIN_LABELS } from '../i18n/horoscope_copy';
 
 interface Props {
   climate: DailyPredictionDayClimate;
+  dailySynthesis?: string | null;
   lang: Lang;
 }
 
-export const DayClimateHero: React.FC<Props> = ({ climate, lang }) => {
+export const DayClimateHero: React.FC<Props> = ({ climate, dailySynthesis, lang }) => {
   const getToneColor = (tone: string) => {
     switch (tone) {
       case 'positive': return 'var(--success)';
@@ -44,7 +45,7 @@ export const DayClimateHero: React.FC<Props> = ({ climate, lang }) => {
         lineHeight: '1.5',
         marginBottom: '20px'
       }}>
-        {climate.summary}
+        {dailySynthesis || climate.summary}
       </p>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>

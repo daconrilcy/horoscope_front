@@ -100,7 +100,7 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => 
               </h3>
 
               <p style={{ fontSize: '14px', color: 'var(--text-1)', fontStyle: 'italic', margin: 0 }}>
-                {window.action_hint}
+                {window.narrative || window.action_hint}
               </p>
 
               {window.astro_events && window.astro_events.length > 0 && (

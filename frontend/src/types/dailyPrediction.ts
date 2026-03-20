@@ -140,6 +140,7 @@ export interface DailyPredictionTimeWindow {
   top_domains: string[];
   action_hint: string;
   astro_events: string[];
+  narrative?: string | null;
 }
 
 export interface DailyPredictionTurningPointPublic {
@@ -150,6 +151,7 @@ export interface DailyPredictionTurningPointPublic {
   what_changes: string;
   do: string;
   avoid: string;
+  narrative?: string | null;
 }
 
 export interface DailyPredictionBestWindow {
@@ -218,6 +220,9 @@ export interface DailyPredictionResponse {
   meta: DailyPredictionMeta;
   summary: DailyPredictionSummary;
   day_climate?: DailyPredictionDayClimate;
+  daily_synthesis?: string | null;
+  astro_events_intro?: string | null;
+  has_llm_narrative: boolean;
   domain_ranking?: DailyPredictionPublicDomainScore[];
   time_windows?: DailyPredictionTimeWindow[];
   turning_point?: DailyPredictionTurningPointPublic;

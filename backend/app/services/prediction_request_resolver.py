@@ -86,7 +86,9 @@ class PredictionRequestResolver:
                 if isinstance(birth_date, _date):
                     if not isinstance(birth_date, _dt):
                         birth_date = _dt.combine(birth_date, _time(12, 0))
-                    hour_frac = birth_date.hour + birth_date.minute / 60.0 + birth_date.second / 3600.0
+                    hour_frac = (
+                        birth_date.hour + birth_date.minute / 60.0 + birth_date.second / 3600.0
+                    )
                     birth_date_jd = swe.julday(
                         birth_date.year, birth_date.month, birth_date.day, hour_frac
                     )
