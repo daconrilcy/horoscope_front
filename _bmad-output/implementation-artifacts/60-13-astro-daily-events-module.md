@@ -185,6 +185,9 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- **Bugfix post-implémentation** : `PublicAstroDailyEventsPolicy.build()` — les événements `moon_sign_ingress` avec `e.target == None` causaient `AttributeError: 'NoneType' object has no attribute 'lower'` dans `get_sign_name_fr()`. Fix : guard `and getattr(e, "target", None)` ajouté sur le filtre d'ingresses (ligne 36 de `public_astro_daily_events.py`). Ce cas se produit quand un événement d'ingresse est détecté sans signe cible renseigné.
+- **Fix isolation tests** : La policy causait une exception dans `test_daily_prediction_qa.py` (tests QA de prédiction). Par ailleurs, le fichier `backend/app/tests/integration/conftest.py` a été complété avec un fixture session-scoped `_ensure_db_schema` qui appelle `Base.metadata.create_all()` une fois au démarrage. Ce fixture garantit que les tests qui font des `DELETE` sans `drop_all+create_all` préalable (ex: `test_daily_prediction_qa`) trouvent un schéma DB complet même si une session précédente a laissé le fichier SQLite dans un état incomplet.
+
 ### File List
 
 - `backend/app/prediction/public_astro_daily_events.py`
@@ -192,6 +195,7 @@ claude-sonnet-4-6
 - `backend/app/prediction/public_projection.py`
 - `backend/app/api/v1/routers/predictions.py`
 - `backend/tests/unit/prediction/test_public_astro_daily_events.py`
+- `backend/app/tests/integration/conftest.py`
 - `frontend/src/types/dailyPrediction.ts`
 - `frontend/src/utils/astroDailyEventsMapper.ts`
 - `frontend/src/components/AstroDailyEvents.tsx`

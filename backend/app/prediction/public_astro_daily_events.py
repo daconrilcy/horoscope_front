@@ -33,7 +33,7 @@ class PublicAstroDailyEventsPolicy:
         # 2. Extract Ingresses
         ingresses = []
         for e in events:
-            if getattr(e, "event_type", None) == "moon_sign_ingress":
+            if getattr(e, "event_type", None) == "moon_sign_ingress" and getattr(e, "target", None):
                 text = f"{get_planet_name_fr(e.body)} entre en {get_sign_name_fr(e.target)}"
                 time = None
                 # Check for occurred_at_local (datetime or string)
