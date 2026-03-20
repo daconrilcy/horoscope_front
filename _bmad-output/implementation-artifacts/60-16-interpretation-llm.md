@@ -511,6 +511,17 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+1. **Code review post-implémentation (2026-03-20)** — 9 issues corrigés :
+   - CRITIQUE : `PublicPredictionAssembler.assemble()` rendu `async` par la story, 5 tests existants dans `test_public_projection_evidence.py` appellaient sans `await` → `TypeError: coroutine not subscriptable`. Corrigé avec `@pytest.mark.asyncio` + `await`.
+   - HIGH : `console.log` debug supprimé de `AccountSettings.tsx`.
+   - HIGH : Tests AC10 complétés — ajout `test_narrate_timeout_returns_none`, `test_narrate_disabled_when_flag_off`, `test_prompt_builder_empty_natal_data_shows_unavailable`.
+   - HIGH : Import `UserModel` déplacé au niveau module dans `users.py` (était local dans 2 fonctions).
+   - MEDIUM : CSS `--primary-rgb` (inexistant) remplacé par `--purple_base` dans `AccountSettings.tsx`.
+   - MEDIUM : Type `Record` dans `settings.ts` étendu avec les nouvelles clés astrologue → supprime les `as any` dans `AccountSettings`.
+   - MEDIUM : Ascendant en fallback brut : utilise `sign_from_longitude()` au lieu des degrés bruts.
+   - LOW : Numérotation commentaire `# 7. Meta` → `# 9. Meta` dans `public_projection.py`.
+   - LOW : Entrée `daily_prediction` ajoutée dans `PROMPT_CATALOG` (`catalog.py`).
+
 ### File List
 
 - `backend/app/infra/db/models/user.py`
@@ -521,8 +532,10 @@ claude-sonnet-4-6
 - `backend/app/prediction/llm_narrator.py`
 - `backend/app/prediction/public_projection.py`
 - `backend/app/core/config.py`
+- `backend/app/prompts/catalog.py`
 - `backend/tests/unit/prediction/test_llm_narrator.py`
 - `backend/tests/unit/prediction/test_astrologer_prompt_builder.py`
+- `backend/app/tests/unit/prediction/test_public_projection_evidence.py`
 - `frontend/src/types/user.ts`
 - `frontend/src/types/dailyPrediction.ts`
 - `frontend/src/pages/settings/AccountSettings.tsx`
@@ -532,20 +545,3 @@ claude-sonnet-4-6
 - `frontend/src/components/prediction/DayTimelineSectionV4.tsx`
 - `frontend/src/components/TurningPointCard.tsx`
 - `frontend/src/pages/DailyHoroscopePage.tsx`
-
-- `backend/app/infra/db/models/user.py`
-- `backend/migrations/versions/20260320_0050_add_astrologer_profile_to_users.py`
-- `backend/app/api/v1/routers/users.py`
-- `backend/app/prediction/astrologer_prompt_builder.py`
-- `backend/app/prediction/llm_narrator.py`
-- `backend/app/core/config.py`
-- `backend/app/prediction/public_projection.py`
-- `backend/app/api/v1/routers/predictions.py`
-- `frontend/src/types/dailyPrediction.ts`
-- `frontend/src/types/user.ts`
-- `frontend/src/pages/settings/AccountSettings.tsx`
-- `frontend/src/components/prediction/DayTimelineSectionV4.tsx`
-- `frontend/src/components/AstroDailyEvents.tsx`
-- `frontend/src/pages/DailyHoroscopePage.tsx`
-- `backend/tests/unit/prediction/test_llm_narrator.py`
-- `backend/tests/unit/prediction/test_astrologer_prompt_builder.py`
