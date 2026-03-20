@@ -86,7 +86,8 @@ def test_compute_progressions(builder):
     birth = datetime(1996, 3, 19, 12, 0)
     today = date(2026, 3, 19)
 
-    events = builder._compute_progressions(natal, today, birth)
+    ref_dt = datetime(2026, 3, 19, 0, 0)
+    events = builder._compute_progressions(natal, today, birth, ref_dt)
     assert isinstance(events, list)
 
 

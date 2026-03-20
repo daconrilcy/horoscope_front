@@ -63,7 +63,9 @@ class EnrichedAstroEventsBuilder:
         events.extend(self._compute_returns(astro_states, natal_chart))
 
         # 4. Secondary Progressions
-        events.extend(self._compute_progressions(natal_chart, local_date, birth_date))
+        # Use first step local_time as reference to preserve timezone-awareness
+        ref_dt = astro_states[0].local_time
+        events.extend(self._compute_progressions(natal_chart, local_date, birth_date, ref_dt))
 
         # 5. Fixed Stars
         events.extend(self._compute_fixed_star_conjunctions(astro_states))
@@ -276,7 +278,11 @@ class EnrichedAstroEventsBuilder:
         return events
 
     def _compute_progressions(
-        self, natal_chart: NatalChart, local_date: date, birth_date: datetime
+        self,
+        natal_chart: NatalChart,
+        local_date: date,
+        birth_date: datetime,
+        ref_local_time: datetime,
     ) -> list[AstroEvent]:
         events: list[AstroEvent] = []
         # Calculate progressed date: birth_jd + (age_in_days / 365.25)
@@ -311,8 +317,8 @@ class EnrichedAstroEventsBuilder:
                         events.append(
                             AstroEvent(
                                 event_type="progression_aspect",
-                                ut_time=progressed_jd,  # Use progressed JD or day middle JD?
-                                local_time=datetime.combine(local_date, datetime.min.time()),
+                                ut_time=progressed_jd,
+                                local_time=ref_local_time,
                                 body=f"prog_{p_code}",
                                 target=natal_p.lower(),
                                 aspect=asp_code,
