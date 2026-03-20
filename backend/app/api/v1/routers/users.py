@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.core.request_id import resolve_request_id
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
+from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
 from app.jobs.refresh_user_baselines import safe_refresh_user_baseline
@@ -719,8 +720,6 @@ def get_me_settings(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    from app.infra.db.models.user import UserModel
-
     user = db.get(UserModel, current_user.id)
     if not user:
         return JSONResponse(
@@ -771,8 +770,6 @@ def patch_me_settings(
                 }
             },
         )
-
-    from app.infra.db.models.user import UserModel
 
     user = db.get(UserModel, current_user.id)
     if not user:

@@ -222,7 +222,7 @@ class PublicPredictionAssembler:
                     if i < len(narrator_res.turning_point_narratives):
                         tp["narrative"] = narrator_res.turning_point_narratives[i]
 
-        # 7. Meta
+        # 9. Meta
         house_system_effective = snapshot.house_system_effective
         if house_system_effective is None and engine_output is not None:
             core_output = _resolve_core_engine_output(engine_output)

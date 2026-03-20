@@ -2,6 +2,8 @@ from dataclasses import asdict
 from datetime import UTC, date, datetime
 from unittest.mock import MagicMock
 
+import pytest
+
 from app.prediction.persisted_snapshot import (
     PersistedCategoryScore,
     PersistedPredictionSnapshot,
@@ -26,7 +28,8 @@ def _json_ready(value):
     return value
 
 
-def test_assemble_uses_evidence_pack():
+@pytest.mark.asyncio
+async def test_assemble_uses_evidence_pack():
     # Setup mock evidence pack
     evidence_pack = V3EvidencePack(
         version="3.0.0",
@@ -96,7 +99,7 @@ def test_assemble_uses_evidence_pack():
     assembler = PublicPredictionAssembler()
     cat_id_to_code = {1: "love"}
 
-    result = assembler.assemble(
+    result = await assembler.assemble(
         snapshot,
         cat_id_to_code,
         engine_output=v3_output,
@@ -114,7 +117,8 @@ def test_assemble_uses_evidence_pack():
     # This test exercises the public assembler path only.
 
 
-def test_assemble_uses_persisted_evidence_pack_snapshot():
+@pytest.mark.asyncio
+async def test_assemble_uses_persisted_evidence_pack_snapshot():
     evidence_pack = V3EvidencePack(
         version="3.1.0",
         generated_at=datetime(2026, 3, 7, 6, 0, tzinfo=UTC),
@@ -175,7 +179,7 @@ def test_assemble_uses_persisted_evidence_pack_snapshot():
         ],
     )
 
-    result = PublicPredictionAssembler().assemble(
+    result = await PublicPredictionAssembler().assemble(
         snapshot,
         {1: "work"},
         reference_version="2.0.0",
@@ -187,7 +191,8 @@ def test_assemble_uses_persisted_evidence_pack_snapshot():
     assert result["categories"][0]["code"] == "work"
 
 
-def test_assemble_includes_enriched_turning_points():
+@pytest.mark.asyncio
+async def test_assemble_includes_enriched_turning_points():
     from app.prediction.schemas import V3PrimaryDriver
 
     evidence_pack = V3EvidencePack(
@@ -237,7 +242,7 @@ def test_assemble_includes_enriched_turning_points():
     snapshot.v3_metrics = {"evidence_pack": _json_ready(asdict(evidence_pack))}
 
     assembler = PublicPredictionAssembler()
-    result = assembler.assemble(
+    result = await assembler.assemble(
         snapshot,
         {1: "love"},
         reference_version="2.0.0",
@@ -254,7 +259,8 @@ def test_assemble_includes_enriched_turning_points():
     assert tp["primary_driver"]["metadata"]["house"] == 5
 
 
-def test_assemble_includes_movement_indicators():
+@pytest.mark.asyncio
+async def test_assemble_includes_movement_indicators():
     from app.prediction.schemas import V3CategoryDelta, V3Movement
 
     evidence_pack = V3EvidencePack(
@@ -306,7 +312,7 @@ def test_assemble_includes_movement_indicators():
     snapshot.v3_metrics = {"evidence_pack": _json_ready(asdict(evidence_pack))}
 
     assembler = PublicPredictionAssembler()
-    result = assembler.assemble(
+    result = await assembler.assemble(
         snapshot,
         {1: "love"},
         reference_version="2.0.0",
@@ -321,7 +327,8 @@ def test_assemble_includes_movement_indicators():
     assert tp["category_deltas"][0]["delta_score"] == 2.0
 
 
-def test_assemble_keeps_evidence_turning_points_even_on_flat_day():
+@pytest.mark.asyncio
+async def test_assemble_keeps_evidence_turning_points_even_on_flat_day():
     evidence_pack = V3EvidencePack(
         version="3.0.0",
         generated_at=datetime.now(UTC),
@@ -374,7 +381,7 @@ def test_assemble_keeps_evidence_turning_points_even_on_flat_day():
         ],
     )
 
-    result = PublicPredictionAssembler().assemble(
+    result = await PublicPredictionAssembler().assemble(
         snapshot,
         {1: "health", 2: "work"},
         reference_version="2.0.0",

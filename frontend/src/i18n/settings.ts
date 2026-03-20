@@ -123,6 +123,21 @@ export const settingsTranslations = {
       loading: string
       error: string
       retry: string
+      astrologerStyle: string
+      astrologerStyleDesc: string
+      standard: string
+      standardDesc: string
+      vedique: string
+      vediqueDesc: string
+      humaniste: string
+      humanisteDesc: string
+      karmique: string
+      karmiqueDesc: string
+      psychologique: string
+      psychologiqueDesc: string
+      saving: string
+      saved: string
+      saveError: string
     }
   >,
 

@@ -99,6 +99,14 @@ PROMPT_CATALOG: dict[str, PromptEntry] = {
         temperature=0.7,
         output_schema=ASTRO_RESPONSE_V1,
     ),
+    "daily_prediction": PromptEntry(
+        name="daily-prediction-narrator-v1",
+        description="LLM narration of daily horoscope sections (Story 60.16)",
+        use_case_key="daily_prediction",
+        engine_env_key="OPENAI_MODEL_DEFAULT",
+        max_tokens=800,
+        temperature=0.7,
+    ),
     "natal_psy_profile": PromptEntry(
         name="natal-psy-profile-v3",
         description="Psychological portrait",

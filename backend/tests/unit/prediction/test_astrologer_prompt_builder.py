@@ -43,3 +43,20 @@ def test_prompt_builder_formats_windows():
     assert "[matin]" in prompt
     assert "06:00-12:00" in prompt
     assert "progression" in prompt
+
+
+def test_prompt_builder_empty_natal_data_shows_unavailable():
+    builder = AstrologerPromptBuilder()
+    ctx = PromptCommonContext(
+        precision_level="précision complète",
+        astrologer_profile={"tonality": "bienveillant"},
+        period_covered="journée",
+        today_date="2026-03-20",
+        use_case_name="Test",
+        use_case_key="test",
+        natal_interpretation=None,
+        natal_data={},  # present but empty → falsy → triggers "non disponible" branch
+    )
+
+    prompt = builder.build(ctx, [], [], "standard", "fr")
+    assert "non disponible" in prompt

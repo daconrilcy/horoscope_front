@@ -19,7 +19,7 @@ const ASTROLOGER_STYLES = [
 
 export function AccountSettings() {
   const lang = detectLang()
-  const t = settingsTranslations.account[lang] as any
+  const t = settingsTranslations.account[lang]
   const token = useAccessTokenSnapshot()
   const authMe = useAuthMe(token)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -28,8 +28,6 @@ export function AccountSettings() {
   const [isLoadingSettings, setIsLoadingSettings] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle")
-
-  console.log('Settings loading:', isLoadingSettings)
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -154,7 +152,7 @@ export function AccountSettings() {
                   padding: '12px',
                   borderRadius: '12px',
                   border: astrologerProfile === style ? '2px solid var(--primary)' : '1px solid var(--glass-border)',
-                  background: astrologerProfile === style ? 'rgba(var(--primary-rgb), 0.05)' : 'transparent',
+                  background: astrologerProfile === style ? 'rgba(var(--purple_base), 0.05)' : 'transparent',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
                 }}
@@ -170,10 +168,10 @@ export function AccountSettings() {
                 />
                 <div className="style-info">
                   <div style={{ fontWeight: 'bold', color: 'var(--text-1)' }}>
-                    {(t as any)[style]}
+                    {t[style]}
                   </div>
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-2)' }}>
-                    {(t as any)[`${style}Desc`]}
+                    {t[`${style}Desc`]}
                   </div>
                 </div>
               </label>

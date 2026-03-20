@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from app.domain.astrology.natal_calculation import sign_from_longitude
 from app.prompts.common_context import PromptCommonContext
 
 logger = logging.getLogger(__name__)
@@ -109,8 +110,7 @@ Génère un contenu inspirant, fluide et personnalisé.
         houses = ctx.natal_data.get("houses", [])
         asc = "Inconnu"
         if houses:
-            # Simple fallback for ASC sign if sign_from_longitude not easily accessible
-            asc = f"Maison 1 à {houses[0].get('cusp_longitude', 0):.1f}°"
+            asc = sign_from_longitude(houses[0].get("cusp_longitude", 0))
 
         return (
             f"Soleil/Lune : {', '.join(planets)}. Ascendant : {asc}. "
