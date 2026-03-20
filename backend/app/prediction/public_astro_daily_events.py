@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from app.prediction.public_astro_vocabulary import (
     get_aspect_label,
+    get_fixed_star_name_fr,
     get_planet_name_fr,
     get_sign_name_fr,
 )
@@ -83,7 +84,23 @@ class PublicAstroDailyEventsPolicy:
         # AC3: positions from transit events or snapshot sign fields
         planet_positions = self._extract_planet_positions(snapshot, events, evidence)
 
-        if not ingresses and not aspects and not planet_positions:
+        # 5. Story 60.15 Enriched Events
+        returns = self._extract_returns(events)
+        progressions = self._extract_progressions(events)
+        nodes = self._extract_nodes(events)
+        sky_aspects = self._extract_sky_aspects(events)
+        fixed_stars = self._extract_fixed_stars(events)
+
+        if (
+            not ingresses
+            and not aspects
+            and not planet_positions
+            and not returns
+            and not progressions
+            and not nodes
+            and not sky_aspects
+            and not fixed_stars
+        ):
             return None
 
         result: dict[str, Any] = {
@@ -92,8 +109,72 @@ class PublicAstroDailyEventsPolicy:
         }
         if planet_positions:
             result["planet_positions"] = planet_positions
+        if returns:
+            result["returns"] = returns
+        if progressions:
+            result["progressions"] = progressions
+        if nodes:
+            result["nodes"] = nodes
+        if sky_aspects:
+            result["sky_aspects"] = sky_aspects
+        if fixed_stars:
+            result["fixed_stars"] = fixed_stars
 
         return result
+
+    def _extract_returns(self, events: list[Any]) -> list[str]:
+        # AC7: Retours (Solaire/Lunaire)
+        found = []
+        for e in events:
+            ev_type = getattr(e, "event_type", None)
+            if ev_type == "solar_return":
+                found.append("Retour Solaire (votre anniversaire astrologique)")
+            elif ev_type == "lunar_return":
+                found.append("Retour Lunaire (la Lune retrouve sa place natale)")
+        return found
+
+    def _extract_progressions(self, events: list[Any]) -> list[str]:
+        # AC9: Progressions Secondaires
+        found = []
+        for e in events:
+            if getattr(e, "event_type", None) == "progression_aspect":
+                p_name = get_planet_name_fr(e.body)
+                asp_label = get_aspect_label(e.aspect)
+                target_name = get_planet_name_fr(e.target)
+                found.append(f"{p_name} {asp_label} {target_name} (progression)")
+        return found
+
+    def _extract_nodes(self, events: list[Any]) -> list[str]:
+        # AC10: Nœuds Lunaires
+        found = []
+        for e in events:
+            if getattr(e, "event_type", None) == "node_conjunction":
+                p_name = get_planet_name_fr(e.body)
+                target_name = get_planet_name_fr(e.target)
+                # Formatter: "Planète Conjonction Nœud" ou "Nœud Conjonction Planète"
+                found.append(f"{p_name} Conjonction {target_name}")
+        return found
+
+    def _extract_sky_aspects(self, events: list[Any]) -> list[str]:
+        # AC11: Aspects du Ciel (Sky-to-Sky)
+        found = []
+        for e in events:
+            if getattr(e, "event_type", None) == "sky_aspect":
+                p1 = get_planet_name_fr(e.body)
+                asp = get_aspect_label(e.aspect)
+                p2 = get_planet_name_fr(e.target)
+                found.append(f"{p1} {asp} {p2}")
+        return found
+
+    def _extract_fixed_stars(self, events: list[Any]) -> list[str]:
+        # AC12: Étoiles Fixes
+        found = []
+        for e in events:
+            if getattr(e, "event_type", None) == "fixed_star_conjunction":
+                p_name = get_planet_name_fr(e.body)
+                star_name = get_fixed_star_name_fr(e.target)
+                found.append(f"{p_name} conjoint à l'étoile {star_name}")
+        return found
 
     def _resolve_astro_events(
         self, evidence: V3EvidencePack | None, engine_output: Any | None

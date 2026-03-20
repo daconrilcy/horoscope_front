@@ -31,6 +31,8 @@ class EngineInput:
     reference_version: str
     ruleset_version: str
     debug_mode: bool = False
+    birth_date: datetime | None = None
+    birth_date_jd: float | None = None
 
 
 @dataclass(frozen=True)

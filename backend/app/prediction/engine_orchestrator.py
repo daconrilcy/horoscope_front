@@ -23,6 +23,7 @@ from .decision_window_builder import DecisionWindowBuilder
 from .domain_router import DomainRouter
 from .editorial_builder import EditorialOutputBuilder
 from .editorial_service import PredictionEditorialService
+from .enriched_astro_events_builder import EnrichedAstroEventsBuilder
 from .event_detector import EventDetector
 from .exceptions import PredictionContextError
 from .explainability import ExplainabilityBuilder
@@ -140,6 +141,7 @@ class EngineOrchestrator:
         self._v3_theme_aggregator = v3_theme_aggregator or V3ThemeAggregator()
         self._regime_segmenter = regime_segmenter or RegimeSegmenter()
         self._v3_evidence_builder = v3_evidence_builder or DailyPredictionEvidenceBuilder()
+        self._enriched_astro_builder = EnrichedAstroEventsBuilder()
 
     def with_context_loader(
         self,
@@ -225,6 +227,18 @@ class EngineOrchestrator:
         ]
         event_detector = self._event_detector_factory(loaded_context, natal_chart)
         detected_events = event_detector.detect(astro_states, day_grid)
+
+        # Story 60.15: Enriched events
+        if engine_input.birth_date:
+            enriched_events = self._enriched_astro_builder.build(
+                astro_states=astro_states,
+                natal_chart=natal_chart,
+                local_date=engine_input.local_date,
+                birth_date=engine_input.birth_date,
+                timezone_name=engine_input.timezone,
+            )
+            detected_events.extend(enriched_events)
+
         detected_events = self._refine_detected_events(
             detected_events,
             astro_calculator,

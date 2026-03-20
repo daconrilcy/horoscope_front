@@ -54,6 +54,7 @@ def test_time_window_build_four_periods():
             if hour + 2 >= 24:
                 # Add a day if it wraps
                 from datetime import timedelta
+
                 self.end_local += timedelta(days=1)
             self.orientation = "rising"
             self.themes = [theme]

@@ -1,6 +1,6 @@
 # Story 60.15 : Enrichissement Calculs Astrologiques — Progressions, Retours, Nœuds, Étoiles Fixes, Aspects Ciel
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -144,63 +144,63 @@ afin d'avoir une lecture astrale complète et précise de ma journée, au-delà 
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Backend : vocabulaire étendu (AC2, AC5)
-  - [ ] T1.1 — Ajouter `FIXED_STARS` dans `public_astro_vocabulary.py`
-  - [ ] T1.2 — Ajouter `"north_node"` / `"south_node"` dans `PLANET_NAMES_FR`
-  - [ ] T1.3 — Ajouter fonction `get_fixed_star_name_fr(key) -> str`
+- [x] T1 — Backend : vocabulaire étendu (AC2, AC5)
+  - [x] T1.1 — Ajouter `FIXED_STARS` dans `public_astro_vocabulary.py`
+  - [x] T1.2 — Ajouter `"north_node"` / `"south_node"` dans `PLANET_NAMES_FR`
+  - [x] T1.3 — Ajouter fonction `get_fixed_star_name_fr(key) -> str`
 
-- [ ] T2 — Backend : `EnrichedAstroEventsBuilder` (AC1, AC2, AC3, AC4, AC5, AC6)
-  - [ ] T2.1 — Créer `backend/app/prediction/enriched_astro_events_builder.py`
-  - [ ] T2.2 — Implémenter `_compute_sky_aspects(astro_states)` → liste AstroEvent sky_aspect (AC1)
-  - [ ] T2.3 — Implémenter `_compute_node_conjunctions(astro_states, natal_chart)` (AC2)
-  - [ ] T2.4 — Implémenter `_compute_returns(astro_states, natal_chart)` → lunar/solar return (AC3)
-  - [ ] T2.5 — Implémenter `_compute_progressions(natal_chart, local_date, birth_date)` (AC4)
-  - [ ] T2.6 — Implémenter `_compute_fixed_star_conjunctions(astro_states)` (AC5)
-  - [ ] T2.7 — Méthode publique `build(...)` qui agrège les 5 listes et retourne `list[AstroEvent]`
+- [x] T2 — Backend : `EnrichedAstroEventsBuilder` (AC1, AC2, AC3, AC4, AC5, AC6)
+  - [x] T2.1 — Créer `backend/app/prediction/enriched_astro_events_builder.py`
+  - [x] T2.2 — Implémenter `_compute_sky_aspects(astro_states)` → liste AstroEvent sky_aspect (AC1)
+  - [x] T2.3 — Implémenter `_compute_node_conjunctions(astro_states, natal_chart)` (AC2)
+  - [x] T2.4 — Implémenter `_compute_returns(astro_states, natal_chart)` → lunar/solar return (AC3)
+  - [x] T2.5 — Implémenter `_compute_progressions(natal_chart, local_date, birth_date)` (AC4)
+  - [x] T2.6 — Implémenter `_compute_fixed_star_conjunctions(astro_states)` (AC5)
+  - [x] T2.7 — Méthode publique `build(...)` qui agrège les 5 listes et retourne `list[AstroEvent]`
 
-- [ ] T3 — Backend : intégrer dans l'orchestrateur (AC6)
-  - [ ] T3.1 — Importer `EnrichedAstroEventsBuilder` dans `engine_orchestrator.py`
-  - [ ] T3.2 — Appeler `enriched_builder.build(...)` après `event_detector.detect()`
-  - [ ] T3.3 — Concaténer les événements enrichis à `detected_events`
-  - [ ] T3.4 — Vérifier que `birth_date` est accessible depuis `loaded_context` ou `EngineInput`
+- [x] T3 — Backend : intégrer dans l'orchestrateur (AC6)
+  - [x] T3.1 — Importer `EnrichedAstroEventsBuilder` dans `engine_orchestrator.py`
+  - [x] T3.2 — Appeler `enriched_builder.build(...)` après `event_detector.detect()`
+  - [x] T3.3 — Concaténer les événements enrichis à `detected_events`
+  - [x] T3.4 — Vérifier que `birth_date` est accessible depuis `loaded_context` ou `EngineInput`
 
-- [ ] T4 — Backend : `PublicAstroDailyEventsPolicy` étendue (AC7)
-  - [ ] T4.1 — Extraire `sky_aspects` (event_type="sky_aspect")
-  - [ ] T4.2 — Extraire `node_aspects` (event_type="node_conjunction")
-  - [ ] T4.3 — Extraire `returns` (event_type="lunar_return" / "solar_return")
-  - [ ] T4.4 — Extraire `progressions` (event_type="progression_aspect")
-  - [ ] T4.5 — Extraire `fixed_star_conjunctions` (event_type="fixed_star_conjunction")
-  - [ ] T4.6 — Renommer l'ancienne liste `aspects` en `transit_aspects` dans le dict retourné
-  - [ ] T4.7 — Ajouter `aspects` comme alias = `sky_aspects or transit_aspects` (rétrocompat)
+- [x] T4 — Backend : `PublicAstroDailyEventsPolicy` étendue (AC7)
+  - [x] T4.1 — Extraire `sky_aspects` (event_type="sky_aspect")
+  - [x] T4.2 — Extraire `node_aspects` (event_type="node_conjunction")
+  - [x] T4.3 — Extraire `returns` (event_type="lunar_return" / "solar_return")
+  - [x] T4.4 — Extraire `progressions` (event_type="progression_aspect")
+  - [x] T4.5 — Extraire `fixed_star_conjunctions` (event_type="fixed_star_conjunction")
+  - [x] T4.6 — Renommer l'ancienne liste `aspects` en `transit_aspects` dans le dict retourné
+  - [x] T4.7 — Ajouter `aspects` comme alias = `sky_aspects or transit_aspects` (rétrocompat)
 
-- [ ] T5 — Backend : DTO étendu (AC8)
-  - [ ] T5.1 — Ajouter `DailyPredictionReturn` dans `predictions.py`
-  - [ ] T5.2 — Étendre `DailyPredictionAstroDailyEvents` avec tous les nouveaux champs
+- [x] T5 — Backend : DTO étendu (AC8)
+  - [x] T5.1 — Ajouter `DailyPredictionReturn` dans `predictions.py`
+  - [x] T5.2 — Étendre `DailyPredictionAstroDailyEvents` avec tous les nouveaux champs
 
-- [ ] T6 — Tests backend (AC10)
-  - [ ] T6.1 — Créer `backend/tests/unit/prediction/test_enriched_astro_events_builder.py`
-  - [ ] T6.2 — Tests sky aspects (AC1), nœuds (AC2), retours (AC3), progressions (AC4), étoiles fixes (AC5)
-  - [ ] T6.3 — Vérifier que `test_public_astro_daily_events.py` passe sans modification
-  - [ ] T6.4 — Lancer `ruff check` + `pytest tests/` avant de valider
+- [x] T6 — Tests backend (AC10)
+  - [x] T6.1 — Créer `backend/tests/unit/prediction/test_enriched_astro_events_builder.py`
+  - [x] T6.2 — Tests sky aspects (AC1), nœuds (AC2), retours (AC3), progressions (AC4), étoiles fixes (AC5)
+  - [x] T6.3 — Vérifier que `test_public_astro_daily_events.py` passe sans modification
+  - [x] T6.4 — Lancer `ruff check` + `pytest tests/` avant de valider
 
-- [ ] T7 — Frontend : types et mapper (AC9)
-  - [ ] T7.1 — Étendre `DailyPredictionAstroDailyEvents` dans `dailyPrediction.ts`
-  - [ ] T7.2 — Étendre `AstroDailyEventsViewData` dans `astroDailyEventsMapper.ts`
-  - [ ] T7.3 — Mapper les nouveaux champs (avec valeurs par défaut `[]` si absents)
+- [x] T7 — Frontend : types et mapper (AC9)
+  - [x] T7.1 — Étendre `DailyPredictionAstroDailyEvents` dans `dailyPrediction.ts`
+  - [x] T7.2 — Étendre `AstroDailyEventsViewData` dans `astroDailyEventsMapper.ts`
+  - [x] T7.3 — Mapper les nouveaux champs (avec valeurs par défaut `[]` si absents)
 
-- [ ] T8 — Frontend : composant (AC9)
-  - [ ] T8.1 — Ajouter les labels i18n pour les nouveaux groupes dans `AstroDailyEvents.tsx`
-  - [ ] T8.2 — Afficher groupe "Retours planétaires" (conditionnel)
-  - [ ] T8.3 — Afficher groupe "Aspects du ciel" / fallback "Transits actifs" (AC1)
-  - [ ] T8.4 — Afficher groupe "Nœuds lunaires" (conditionnel)
-  - [ ] T8.5 — Afficher groupe "Progressions" (conditionnel)
-  - [ ] T8.6 — Afficher groupe "Étoiles fixes" (conditionnel)
-  - [ ] T8.7 — Vérifier que `tsc --noEmit` passe
+- [x] T8 — Frontend : composant (AC9)
+  - [x] T8.1 — Ajouter les labels i18n pour les nouveaux groupes dans `AstroDailyEvents.tsx`
+  - [x] T8.2 — Afficher groupe "Retours planétaires" (conditionnel)
+  - [x] T8.3 — Afficher groupe "Aspects du ciel" / fallback "Transits actifs" (AC1)
+  - [x] T8.4 — Afficher groupe "Nœuds lunaires" (conditionnel)
+  - [x] T8.5 — Afficher groupe "Progressions" (conditionnel)
+  - [x] T8.6 — Afficher groupe "Étoiles fixes" (conditionnel)
+  - [x] T8.7 — Vérifier que `tsc --noEmit` passe
 
-- [ ] T9 — Vérification finale
-  - [ ] T9.1 — `ruff check backend/` passe sans erreur
-  - [ ] T9.2 — `pytest tests/ app/tests/integration/test_daily_prediction_qa.py` passe
-  - [ ] T9.3 — `tsc --noEmit` passe côté frontend
+- [x] T9 — Vérification finale
+  - [x] T9.1 — `ruff check backend/` passe sans erreur
+  - [x] T9.2 — `pytest tests/ app/tests/integration/test_daily_prediction_qa.py` passe
+  - [x] T9.3 — `tsc --noEmit` passe côté frontend
 
 ## Dev Notes
 
@@ -326,3 +326,16 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+- `backend/app/prediction/enriched_astro_events_builder.py`
+- `backend/app/prediction/public_astro_vocabulary.py`
+- `backend/app/prediction/public_astro_daily_events.py`
+- `backend/app/prediction/engine_orchestrator.py`
+- `backend/app/prediction/schemas.py`
+- `backend/app/services/prediction_request_resolver.py`
+- `backend/app/api/v1/routers/predictions.py`
+- `backend/tests/unit/prediction/test_enriched_astro_events_builder.py`
+- `backend/tests/unit/prediction/test_public_astro_daily_events.py`
+- `frontend/src/types/dailyPrediction.ts`
+- `frontend/src/utils/astroDailyEventsMapper.ts`
+- `frontend/src/components/AstroDailyEvents.tsx`

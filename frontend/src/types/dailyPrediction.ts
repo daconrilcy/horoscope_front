@@ -198,6 +198,11 @@ export interface DailyPredictionAstroDailyEvents {
   ingresses: DailyPredictionIngress[];
   aspects: string[];
   planet_positions?: string[];
+  returns?: string[];
+  progressions?: string[];
+  nodes?: string[];
+  sky_aspects?: string[];
+  fixed_stars?: string[];
 }
 
 export interface DailyPredictionMicroTrend {

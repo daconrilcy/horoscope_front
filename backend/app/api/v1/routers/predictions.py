@@ -146,6 +146,11 @@ class DailyPredictionAstroDailyEvents(BaseModel):
     ingresses: list[DailyPredictionIngress]
     aspects: list[str]
     planet_positions: list[str] | None = None
+    returns: list[str] | None = None
+    progressions: list[str] | None = None
+    nodes: list[str] | None = None
+    sky_aspects: list[str] | None = None
+    fixed_stars: list[str] | None = None
 
 
 class DailyPredictionAstroFoundation(BaseModel):

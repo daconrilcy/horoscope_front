@@ -167,8 +167,65 @@ def test_self_aspects_excluded(policy):
     assert "Lune Sextile Saturne" in result["aspects"]
 
 
-def test_planet_positions(policy):
-    # Mock evidence with planet_positions in metadata
+def test_extract_enriched_events(policy):
+    events = [
+        AstroEvent(
+            event_type="solar_return",
+            ut_time=0.0,
+            local_time=datetime.now(),
+            body="sun",
+            target=None,
+            aspect=None,
+            orb_deg=0.1,
+            priority=95,
+            base_weight=1.0,
+        ),
+        AstroEvent(
+            event_type="progression_aspect",
+            ut_time=0.0,
+            local_time=datetime.now(),
+            body="prog_sun",
+            target="moon",
+            aspect="trine",
+            orb_deg=0.5,
+            priority=65,
+            base_weight=1.0,
+        ),
+        AstroEvent(
+            event_type="node_conjunction",
+            ut_time=0.0,
+            local_time=datetime.now(),
+            body="venus",
+            target="north_node",
+            aspect="conjunction",
+            orb_deg=0.2,
+            priority=60,
+            base_weight=1.0,
+        ),
+        AstroEvent(
+            event_type="sky_aspect",
+            ut_time=0.0,
+            local_time=datetime.now(),
+            body="jupiter",
+            target="saturn",
+            aspect="sextile",
+            orb_deg=0.1,
+            priority=70,
+            base_weight=1.0,
+        ),
+        AstroEvent(
+            event_type="fixed_star_conjunction",
+            ut_time=0.0,
+            local_time=datetime.now(),
+            body="moon",
+            target="regulus",
+            aspect="conjunction",
+            orb_deg=0.3,
+            priority=45,
+            base_weight=1.0,
+        ),
+    ]
+
     evidence = V3EvidencePack(
         version="1.0",
         generated_at=datetime.now(),
@@ -176,10 +233,13 @@ def test_planet_positions(policy):
         themes={},
         time_windows=[],
         turning_points=[],
-        metadata={"planet_positions": {"sun": "pis", "moon": "leo"}},
+        metadata={"astro_events": events},
     )
 
     result = policy.build(None, evidence=evidence)
-    assert "planet_positions" in result
-    assert "Soleil en Poissons" in result["planet_positions"]
-    assert "Lune en Lion" in result["planet_positions"]
+
+    assert "Retour Solaire (votre anniversaire astrologique)" in result["returns"]
+    assert "Soleil Progressé Trigone Lune (progression)" in result["progressions"]
+    assert "Vénus Conjonction Nœud Nord (Rahu)" in result["nodes"]
+    assert "Jupiter Sextile Saturne" in result["sky_aspects"]
+    assert "Lune conjoint à l'étoile Régulus" in result["fixed_stars"]

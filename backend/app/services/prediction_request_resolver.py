@@ -71,6 +71,19 @@ class PredictionRequestResolver:
         engine_input: EngineInput | None = None
         if include_engine_input:
             natal_chart = self._resolve_natal_chart(db, user_id)
+
+            # Extract birth date for Story 60.15
+            birth_date = profile.birth_date
+            birth_date_jd = None
+            if birth_date:
+                import swisseph as swe
+
+                # swisseph.julday expects (year, month, day, hour_fraction)
+                hour_frac = birth_date.hour + birth_date.minute / 60.0 + birth_date.second / 3600.0
+                birth_date_jd = swe.julday(
+                    birth_date.year, birth_date.month, birth_date.day, hour_frac
+                )
+
             engine_input = EngineInput(
                 natal_chart=natal_chart,
                 local_date=resolved_date,
@@ -80,6 +93,8 @@ class PredictionRequestResolver:
                 reference_version=resolved_reference_version,
                 ruleset_version=resolved_ruleset_version,
                 debug_mode=False,
+                birth_date=birth_date,
+                birth_date_jd=birth_date_jd,
             )
 
         return ResolvedPredictionRequest(
