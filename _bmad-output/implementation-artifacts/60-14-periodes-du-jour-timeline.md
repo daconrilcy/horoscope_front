@@ -210,6 +210,26 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+**Bug — `PublicTimeWindowPolicy.build()` : `rep_start` utilisait le milieu du créneau au lieu du début réel**
+
+Lors de la revue de cohérence post-implémentation (story 60.15), un bug a été détecté dans `PublicTimeWindowPolicy.build()` dans `backend/app/prediction/public_projection.py`.
+
+- **Problème** : `rep_start` était calculé comme le milieu du créneau (`mid_hour`) pour tous les slots, y compris les slots normaux (non chevauchant minuit). La méthode `_resolve_regime()` cherche les turning points dans `[rep_start, rep_end)`. Pour le créneau "soirée" (18h–22h), `mid_hour = 20h`, donc un TP à 19h45 tombait hors de la fenêtre `[20:00, 22:00)` → le régime était calculé sans ce TP, produisant "recentrage" au lieu de "pivot".
+- **Impact** : Tout turning point dans la première moitié d'un créneau diurne était ignoré lors du calcul du régime de ce créneau.
+- **Correction** : Pour les slots normaux (`h_start < h_end`), utiliser `datetime.combine(l_date, time(h_start, 0))` comme `rep_start`. Pour le slot nuit (`h_start > h_end`, chevauchant minuit), conserver le milieu pour rester dans le même jour calendaire et permettre la détection de la récupération nocturne (`0 <= hour_start <= 5`).
+
+```python
+rep_end = datetime.combine(l_date, time(h_end % 24, 0))
+if h_start < h_end:
+    # Slot normal : utiliser le début réel pour couvrir tout le créneau
+    rep_start = datetime.combine(l_date, time(h_start, 0))
+else:
+    # Slot nuit chevauchant minuit (22→06) : garder le milieu pour rester dans le bon jour
+    duration = (h_end - h_start) % 24
+    mid_hour = (h_start + duration // 2) % 24
+    rep_start = datetime.combine(l_date, time(mid_hour, 0))
+```
+
 ### File List
 
 - `backend/app/prediction/public_projection.py`
