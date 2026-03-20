@@ -596,14 +596,16 @@ class PublicTimeWindowPolicy:
             top_domains = self._map_domains(top_internal_themes)
 
             # D. Resolve Regime
-            # Representative mid-period hour
-            duration = (h_end - h_start) % 24
-            mid_hour = (h_start + duration // 2) % 24
-            representative = datetime.combine(l_date, time(mid_hour, 0))
-
-            # Approximate start/end for _resolve_regime logic
-            rep_start = representative
             rep_end = datetime.combine(l_date, time(h_end % 24, 0))
+            if h_start < h_end:
+                # Normal slot: use actual start so TPs in the first half are detected
+                rep_start = datetime.combine(l_date, time(h_start, 0))
+            else:
+                # Overnight slot (nuit 22→06): keep midpoint to stay within same date
+                # and to trigger the 0–5h night-recovery check in _resolve_regime
+                duration = (h_end - h_start) % 24
+                mid_hour = (h_start + duration // 2) % 24
+                rep_start = datetime.combine(l_date, time(mid_hour, 0))
 
             regime = self._resolve_regime(rep_start, rep_end, orientation, turning_points)
 
