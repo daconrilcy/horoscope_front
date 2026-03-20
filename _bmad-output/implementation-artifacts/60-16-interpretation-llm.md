@@ -31,22 +31,30 @@ afin d'obtenir une lecture astrologique compréhensible, fluide et cohérente pl
 - Créer `backend/app/prediction/llm_narrator.py` avec la classe `LLMNarrator`
 - Utiliser le SDK **OpenAI** (`openai.AsyncOpenAI`) — **NE PAS utiliser l'Anthropic SDK** (non installé)
 - Modèle : `settings.openai_model_default` (défaut `gpt-4o-mini`)
-- Méthode principale : `async def narrate(snapshot, events, time_windows, natal_chart, astrologer_profile, lang) -> NarratorResult | None`
-  - `natal_chart: NatalResult | None` — thème natal complet (voir Dev Notes "Données du Thème Natal")
+- Méthode principale : `async def narrate(snapshot, events, time_windows, common_context, astrologer_profile_key, lang) -> NarratorResult | None`
+  - `common_context: PromptCommonContext` — fourni par `CommonContextBuilder.build()` (Story 59.5) ; contient natal_interpretation/natal_data, persona global, date du jour
+  - `astrologer_profile_key: str` — style par utilisateur (défaut `"standard"`)
 - `NarratorResult` (dataclass) : `daily_synthesis: str`, `astro_events_intro: str`, `time_window_narratives: dict[str, str]`, `turning_point_narratives: list[str]`
 - Timeout : 10 secondes — si dépassé ou erreur OpenAI → retourner `None` (fallback silencieux)
 - Construire le prompt via un module séparé `backend/app/prediction/astrologer_prompt_builder.py`
 
 ### AC5 — Module `AstrologerPromptBuilder` (backend)
 - Créer `backend/app/prediction/astrologer_prompt_builder.py` avec la classe `AstrologerPromptBuilder`
-- Méthode `build(snapshot, events, time_windows, natal_chart, astrologer_profile, lang) -> str` qui construit le prompt utilisateur
+- Méthode `build(common_context, time_windows, events, astrologer_profile_key, lang) -> str`
+  - `common_context: PromptCommonContext` — **socle fourni par `CommonContextBuilder.build()`** (Story 59.5), qui contient déjà :
+    - `natal_interpretation` (texte d'interprétation existant) ou `natal_data` (thème natal brut)
+    - `astrologer_profile` (persona global configuré par admin via `PersonaConfigService`)
+    - `today_date` (date formatée en français)
+    - `precision_level` (heure/lieu manquant)
+  - `astrologer_profile_key: str` — clé du style **par utilisateur** (`standard`/`vedique`/`humaniste`/`karmique`/`psychologique`), complémentaire du persona global
 - Le prompt inclut :
-  - **Profil natal** (Soleil, Lune, Ascendant, planètes lentes) — extrait de `natal_chart: NatalResult` (voir Dev Notes "Données du Thème Natal")
-  - Date locale et événements astrologiques du jour (ingresses, sky aspects, aspects transit-natal, progressions, nœuds, étoiles fixes, retours)
+  - Profil natal : utiliser `common_context.natal_interpretation` s'il existe, sinon formater `common_context.natal_data` (Soleil, Lune, Ascendant, planètes lentes — voir Dev Notes)
+  - Date du jour : `common_context.today_date`
+  - Événements astrologiques du jour (ingresses, sky aspects, aspects transit-natal, progressions, nœuds, étoiles fixes, retours)
   - Les 4 créneaux avec leur régime et leurs `astro_events`
   - Les turning points détectés (heure, domaine, type de changement)
-  - Instruction de style selon `astrologer_profile` (voir section Dev Notes)
-- System prompt : astrologie classique, ton bienveillant, langue fr/en selon `lang`, max 800 tokens total
+  - Instruction de style selon `astrologer_profile_key` (voir section Dev Notes)
+- System prompt : ton selon `common_context.astrologer_profile["tonality"]`, langue fr/en selon `lang`, max 800 tokens total
 - Format de sortie demandé : JSON strict avec clés `daily_synthesis`, `astro_events_intro`, `time_window_narratives` (objet avec clés nuit/matin/apres_midi/soiree), `turning_point_narratives` (liste de strings)
 
 ### AC6 — Feature flag et intégration pipeline (backend)
@@ -111,7 +119,7 @@ afin d'obtenir une lecture astrologique compréhensible, fluide et cohérente pl
 - [ ] T4 — AstrologerPromptBuilder (AC: 5)
   - [ ] T4.1 — Créer `backend/app/prediction/astrologer_prompt_builder.py`
   - [ ] T4.2 — Implémenter les 5 styles de prompt (standard, védique, humaniste, karmique, psychologique)
-  - [ ] T4.3 — Formatter le profil natal depuis `NatalResult` (Soleil/Lune/Ascendant/planètes lentes) avec `_format_natal_profile()`
+  - [ ] T4.3 — Intégrer `PromptCommonContext` comme source du profil natal et de la date (via `common_context.natal_interpretation` ou `common_context.natal_data`)
   - [ ] T4.4 — Formatter les événements, les créneaux et turning points
 
 - [ ] T5 — LLMNarrator (AC: 4)
@@ -122,8 +130,8 @@ afin d'obtenir une lecture astrologique compréhensible, fluide et cohérente pl
 - [ ] T6 — Feature flag + intégration pipeline (AC: 6)
   - [ ] T6.1 — Ajouter `llm_narrator_enabled` dans `Settings` (`backend/app/core/config.py`)
   - [ ] T6.2 — Appeler `LLMNarrator` depuis `PublicProjection.build()` après assemblage
-  - [ ] T6.3 — Récupérer `astrologer_profile` depuis la DB (router) et le passer au service
-  - [ ] T6.4 — Récupérer `natal_chart` via `UserNatalChartService.get_latest_for_user()` (router) et le passer au narrateur
+  - [ ] T6.3 — Appeler `CommonContextBuilder.build()` dans le router et passer le résultat au service/projection
+  - [ ] T6.4 — Récupérer `astrologer_profile_key` depuis `UserModel.astrologer_profile` et le passer en complément
 
 - [ ] T7 — DTO backend + types TypeScript (AC: 7, 8)
   - [ ] T7.1 — Étendre `DailyPredictionResponse`, `DailyPredictionTimeWindow`, `DailyPredictionTurningPointPublic`
@@ -274,8 +282,8 @@ class LLMNarrator:
         snapshot: Any,
         events: list[Any],
         time_windows: list[dict],
-        natal_chart: Any = None,          # NatalResult | None
-        astrologer_profile: str = "standard",
+        common_context: Any,              # PromptCommonContext (natal, date, persona global)
+        astrologer_profile_key: str = "standard",  # style par utilisateur
         lang: str = "fr",
     ) -> NarratorResult | None:
         from app.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
@@ -284,8 +292,8 @@ class LLMNarrator:
                 snapshot=snapshot,
                 events=events,
                 time_windows=time_windows,
-                natal_chart=natal_chart,
-                astrologer_profile=astrologer_profile,
+                common_context=common_context,
+                astrologer_profile_key=astrologer_profile_key,
                 lang=lang,
             )
             client = openai.AsyncOpenAI()  # utilise OPENAI_API_KEY de l'env
@@ -353,8 +361,8 @@ if settings.llm_narrator_enabled:
                 snapshot=snapshot,
                 events=events,
                 time_windows=time_windows,
-                natal_chart=natal_chart,       # NatalResult | None, récupéré depuis UserNatalChartService
-                astrologer_profile=astrologer_profile,
+                common_context=common_context,           # PromptCommonContext via CommonContextBuilder
+                astrologer_profile_key=astrologer_profile_key,  # style par utilisateur
                 lang=lang,
             )
         )
@@ -399,58 +407,55 @@ Descriptions des styles pour l'UI (fr) :
 - `karmique` : "Leçons de vie, nœuds lunaires, cycles"
 - `psychologique` : "Patterns comportementaux, intégration"
 
-### Données du Thème Natal pour le prompt
+### Socle `CommonContextBuilder` — source unique des données natales et de la date
 
-⚠️ **`PersistedPredictionSnapshot` ne contient PAS le thème natal.** Il faut le récupérer séparément depuis la DB.
+⚠️ **Ne pas re-fetcher le thème natal manuellement.** Le module `backend/app/prompts/common_context.py` (Story 59.5) fait déjà tout :
 
-**Source :** `UserNatalChartService.get_latest_for_user(db, user_id)` → retourne `UserNatalChartReadData` avec un champ `result: NatalResult`.
-
-**`NatalResult`** (dans `backend/app/domain/astrology/natal_calculation.py`) contient :
-- `planet_positions: list[PlanetPosition]` — chaque entrée a `planet_code`, `sign_code`, `house_number`, `is_retrograde`
-  - Codes planètes clés : `"SO"` (Soleil), `"LU"` (Lune), `"ME"` (Mercure), `"VE"` (Vénus), `"MA"` (Mars), `"JU"` (Jupiter), `"SA"` (Saturne), `"UR"` (Uranus), `"NE"` (Neptune), `"PL"` (Pluton)
-  - Codes signes : `"aries"`, `"taurus"`, `"gemini"`, `"cancer"`, `"leo"`, `"virgo"`, `"libra"`, `"scorpio"`, `"sagittarius"`, `"capricorn"`, `"aquarius"`, `"pisces"`
-- `houses: list[HouseResult]` — `number` (1–12), `cusp_longitude`
-  - Ascendant = `houses[0]` (house number 1) → utiliser `sign_from_longitude(houses[0].cusp_longitude)` pour le signe
-
-**Extraction dans AstrologerPromptBuilder :**
 ```python
-from app.domain.astrology.natal_calculation import NatalResult, sign_from_longitude
+from app.prompts.common_context import CommonContextBuilder
 
-def _format_natal_profile(natal: NatalResult | None) -> str:
-    if natal is None:
-        return "Thème natal non disponible."
-    planets = {p.planet_code: p for p in natal.planet_positions}
-    asc_sign = sign_from_longitude(natal.houses[0].cusp_longitude) if natal.houses else "?"
-    lines = [
-        f"Ascendant : {asc_sign}",
-        f"Soleil : {planets['SO'].sign_code} (maison {planets['SO'].house_number})" if "SO" in planets else "",
-        f"Lune : {planets['LU'].sign_code} (maison {planets['LU'].house_number})" if "LU" in planets else "",
-        f"Mercure : {planets['ME'].sign_code}" if "ME" in planets else "",
-        f"Vénus : {planets['VE'].sign_code}" if "VE" in planets else "",
-        f"Mars : {planets['MA'].sign_code}" if "MA" in planets else "",
-        f"Jupiter : {planets['JU'].sign_code}" if "JU" in planets else "",
-        f"Saturne : {planets['SA'].sign_code}" if "SA" in planets else "",
-    ]
-    return "\n".join(l for l in lines if l)
+# Dans le router predictions.py (a accès à db et current_user.id)
+common_context = CommonContextBuilder.build(
+    user_id=current_user.id,
+    use_case_key="daily_horoscope",  # nouvelle entrée à ajouter au PROMPT_CATALOG
+    period="daily",
+    db=db,
+)
 ```
 
-### Récupération de astrologer_profile et natal_chart dans le pipeline de prédiction
+`PromptCommonContext` contient :
+- `natal_interpretation: str | None` — texte d'interprétation pré-généré si disponible (priorité haute)
+- `natal_data: dict | None` — thème natal brut (`NatalResult.model_dump()`) en fallback
+- `astrologer_profile: dict` — persona global (`{"name", "style", "tonality", "limits", "description"}`) via `PersonaConfigService`
+- `today_date: str` — ex: `"vendredi 20 mars 2026"`
+- `precision_level: str` — `"précision complète"` ou dégradée
 
-Dans `backend/app/api/v1/routers/predictions.py`, l'endpoint `GET /v1/predictions/daily` a déjà accès à `current_user` et `db`. Il doit :
-1. Lire `user_model = db.get(UserModel, current_user.id)`
-2. Extraire `astrologer_profile = getattr(user_model, "astrologer_profile", "standard")`
-3. Récupérer le thème natal : `natal_chart_data = UserNatalChartService.get_latest_for_user(db, current_user.id)` → `natal_chart = natal_chart_data.result` (ou `None` si exception)
-4. Passer `astrologer_profile` et `natal_chart` à `DailyPredictionService.get_or_compute()` ou directement à `PublicProjection.build()`
+**Si `natal_data` est fourni** (fallback brut), les clés utiles pour le prompt :
+- `natal_data["planet_positions"]` → liste de `{planet_code, sign_code, house_number, is_retrograde}`
+  - Codes planètes : `"SO"` Soleil, `"LU"` Lune, `"ME"` Mercure, `"VE"` Vénus, `"MA"` Mars, `"JU"` Jupiter, `"SA"` Saturne
+- `natal_data["houses"]` → liste de `{number, cusp_longitude}` — Ascendant = maison 1
+  - Pour le signe de l'Ascendant : `sign_from_longitude(houses[0]["cusp_longitude"])` (fonction dans `natal_calculation.py`)
 
-**Import nécessaire :** `from app.services.user_natal_chart_service import UserNatalChartService, UserNatalChartServiceError`
+**Profil utilisateur `astrologer_profile_key`** (védique/humaniste/etc.) — distinct du persona global :
+- Récupéré séparément depuis `UserModel.astrologer_profile` (colonne ajoutée par AC1)
+- Passé à `AstrologerPromptBuilder` comme paramètre complémentaire
 
-**Gestion d'erreur :**
+### Récupération dans le pipeline de prédiction
+
+Dans `backend/app/api/v1/routers/predictions.py` :
 ```python
-try:
-    natal_data = UserNatalChartService.get_latest_for_user(db, current_user.id)
-    natal_chart = natal_data.result
-except UserNatalChartServiceError:
-    natal_chart = None  # fallback — prompt sera moins personnalisé mais ça marche
+from app.prompts.common_context import CommonContextBuilder
+
+# 1. Socle commun (natal, date, persona global)
+common_context = CommonContextBuilder.build(
+    user_id=current_user.id, use_case_key="daily_horoscope", period="daily", db=db
+)
+
+# 2. Style par utilisateur
+user_model = db.get(UserModel, current_user.id)
+astrologer_profile_key = getattr(user_model, "astrologer_profile", "standard")
+
+# 3. Passer au service/projection
 ```
 
 ### TurningPointCard — structure actuelle
