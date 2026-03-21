@@ -58,7 +58,7 @@ class LLMNarrator:
                         {"role": "user", "content": prompt},
                     ],
                     response_format={"type": "json_object"},
-                    max_tokens=800,
+                    max_completion_tokens=800,
                 ),
                 timeout=self.TIMEOUT_SECONDS,
             )
