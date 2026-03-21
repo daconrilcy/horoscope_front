@@ -219,6 +219,8 @@ def seed_astrologers(db: Session) -> None:
             persona.enabled = data["enabled"]
             logger.info(f"Updated persona: {data['name']}")
 
+    db.flush()  # Ensure new instances are in the identity map before querying by name.
+
     # Disable duplicate legacy personas that share a seeded canonical name.
     for name, canonical_id in canonical_ids_by_name.items():
         duplicates = (
