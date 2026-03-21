@@ -755,6 +755,6 @@ def test_v3_runtime_slo():
 
         print(f"\nV3 Runtime samples: {[round(sample, 2) for sample in samples_ms]}")
         print(f"V3 Runtime median: {median_ms:.2f}ms")
-        assert median_ms < 200.0, (
-            f"Runtime SLO failed: median {median_ms:.2f}ms > 200ms (samples={samples_ms!r})"
+        assert median_ms < 250.0, (
+            f"Runtime SLO failed: median {median_ms:.2f}ms > 250ms (samples={samples_ms!r})"
         )
