@@ -182,8 +182,28 @@ class PublicPredictionAssembler:
         astro_events_intro = None
         daily_advice = None
         has_llm_narrative = False
+        persisted_llm_narrative = getattr(snapshot, "llm_narrative", None)
 
-        if settings.llm_narrator_enabled and prompt_context:
+        if isinstance(persisted_llm_narrative, dict):
+            has_llm_narrative = self._apply_persisted_llm_narrative(
+                persisted_llm_narrative,
+                time_windows=time_windows,
+                turning_points=turning_points,
+                main_turning_point=main_turning_point,
+            )
+            if has_llm_narrative:
+                daily_synthesis = self._safe_text(persisted_llm_narrative.get("daily_synthesis"))
+                astro_events_intro = self._safe_text(
+                    persisted_llm_narrative.get("astro_events_intro")
+                )
+                advice_payload = persisted_llm_narrative.get("daily_advice")
+                if isinstance(advice_payload, dict):
+                    advice = self._safe_text(advice_payload.get("advice"))
+                    emphasis = self._safe_text(advice_payload.get("emphasis"))
+                    if advice or emphasis:
+                        daily_advice = {"advice": advice, "emphasis": emphasis}
+
+        if not has_llm_narrative and settings.llm_narrator_enabled and prompt_context:
             from app.prediction.llm_narrator import LLMNarrator
 
             narrator = LLMNarrator()
@@ -269,6 +289,59 @@ class PublicPredictionAssembler:
             "decision_windows": decision_windows,
             "micro_trends": micro_trends,
         }
+
+    def _apply_persisted_llm_narrative(
+        self,
+        payload: dict[str, Any],
+        *,
+        time_windows: list[dict[str, Any]],
+        turning_points: list[dict[str, Any]],
+        main_turning_point: dict[str, Any] | None,
+    ) -> bool:
+        applied = False
+
+        window_payload = payload.get("time_window_narratives")
+        if isinstance(window_payload, dict):
+            for window in time_windows:
+                period_key = window.get("period_key")
+                narrative = self._safe_text(window_payload.get(period_key))
+                if narrative:
+                    window["narrative"] = narrative
+                    applied = True
+
+        turning_point_payload = payload.get("turning_point_narratives")
+        if isinstance(turning_point_payload, list):
+            for index, turning_point in enumerate(turning_points):
+                if index >= len(turning_point_payload):
+                    break
+                narrative = self._safe_text(turning_point_payload[index])
+                if narrative:
+                    turning_point["narrative"] = narrative
+                    applied = True
+
+        if main_turning_point is not None:
+            main_narrative = self._safe_text(payload.get("main_turning_point_narrative"))
+            if main_narrative:
+                main_turning_point["narrative"] = main_narrative
+                applied = True
+
+        if self._safe_text(payload.get("daily_synthesis")):
+            applied = True
+        if self._safe_text(payload.get("astro_events_intro")):
+            applied = True
+        advice_payload = payload.get("daily_advice")
+        if isinstance(advice_payload, dict) and (
+            self._safe_text(advice_payload.get("advice"))
+            or self._safe_text(advice_payload.get("emphasis"))
+        ):
+            applied = True
+
+        return applied
+
+    def _safe_text(self, value: Any) -> str:
+        if isinstance(value, str):
+            return value.strip()
+        return ""
 
     def _resolve_evidence_pack(
         self, snapshot: PersistedPredictionSnapshot, engine_output: Any | None

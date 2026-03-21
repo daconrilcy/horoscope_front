@@ -1,6 +1,6 @@
 from dataclasses import asdict
 from datetime import UTC, date, datetime
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -189,6 +189,68 @@ async def test_assemble_uses_persisted_evidence_pack_snapshot():
     assert result["summary"]["overall_summary"] == "Persisted evidence summary"
     assert result["decision_windows"][0]["window_type"] == "favorable"
     assert result["categories"][0]["code"] == "work"
+
+
+@pytest.mark.asyncio
+async def test_assemble_reuses_persisted_llm_narrative_without_regeneration():
+    snapshot = PersistedPredictionSnapshot(
+        run_id=7,
+        user_id=42,
+        local_date=date(2026, 3, 7),
+        timezone="UTC",
+        computed_at=datetime(2026, 3, 7, 7, 0, tzinfo=UTC),
+        input_hash="hash",
+        reference_version_id=1,
+        ruleset_id=1,
+        house_system_effective="placidus",
+        is_provisional_calibration=False,
+        calibration_label="final",
+        overall_summary="legacy summary",
+        overall_tone="neutral",
+        llm_narrative={
+            "daily_synthesis": "Synthèse persistée",
+            "astro_events_intro": "Intro persistée",
+            "time_window_narratives": {"matin": "Narration matin persistée"},
+            "turning_point_narratives": ["Turning point persistant"],
+            "main_turning_point_narrative": "Narration pivot principal persistée",
+            "daily_advice": {"advice": "Conseil persistant", "emphasis": "Emphase persistée"},
+        },
+        category_scores=[
+            PersistedCategoryScore(
+                category_id=1,
+                category_code="work",
+                note_20=16,
+                raw_score=0.8,
+                power=0.7,
+                volatility=0.25,
+                rank=1,
+                is_provisional=False,
+                summary=None,
+            )
+        ],
+        turning_points=[],
+        time_blocks=[],
+    )
+
+    prompt_context = MagicMock()
+
+    with patch(
+        "app.prediction.llm_narrator.LLMNarrator.narrate",
+        new_callable=AsyncMock,
+    ) as narrate:
+        result = await PublicPredictionAssembler().assemble(
+            snapshot,
+            {1: "work"},
+            reference_version="2.0.0",
+            ruleset_version="2.0.0",
+            prompt_context=prompt_context,
+        )
+
+    narrate.assert_not_awaited()
+    assert result["has_llm_narrative"] is True
+    assert result["daily_synthesis"] == "Synthèse persistée"
+    assert result["astro_events_intro"] == "Intro persistée"
+    assert result["daily_advice"]["advice"] == "Conseil persistant"
 
 
 @pytest.mark.asyncio

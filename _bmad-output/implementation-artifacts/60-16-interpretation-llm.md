@@ -567,19 +567,43 @@ claude-sonnet-4-6
       - `npm run test -- src/utils/dailyAdviceCardMapper.test.ts`
       - **Note :** `npm run lint` global côté frontend échoue toujours sur des erreurs TypeScript préexistantes hors périmètre (BillingPanel, EnterpriseCredentialsPanel, admin i18n, etc.).
 
+8. **Réutilisation au reload + robustesse du narrateur (2026-03-21)** — Ajustements post-déploiement pour éviter les régénérations inutiles et stabiliser le runtime :
+
+   a. **Persistance de l'interprétation LLM par run quotidien** — Ajout de `llm_narrative_json` sur `daily_prediction_runs` via la migration `20260321_0051_add_llm_narrative_to_daily_prediction_runs.py`. Le snapshot persisté expose maintenant `llm_narrative`, et `DailyPredictionRepository` sait relire et mettre à jour ce JSON.
+
+   b. **Réutilisation backend au rechargement** (`public_projection.py`, `predictions.py`) — Si l'horoscope du jour existe déjà avec sa narration LLM, l'assembleur réinjecte directement `daily_synthesis`, `astro_events_intro`, les narratives des créneaux, les narratives des turning points, la narrative du turning point principal et `daily_advice`. Le LLM n'est rappelé que si cette narration persistée est absente.
+
+   c. **Écriture différée après génération réussie** (`predictions.py`) — Après la première génération LLM, le routeur extrait le payload narratif depuis le DTO assemblé et le persiste sur le run du jour. En cas d'erreur d'écriture DB, rollback défensif + warning explicite sans casser la réponse utilisateur.
+
+   d. **Timeout et taille de sortie recalibrés** (`llm_narrator.py`, `catalog.py`) — Le timeout du narrateur passe à 60s et `max_completion_tokens` est piloté par le catalogue. L'entrée `daily_prediction` du `PROMPT_CATALOG` a été relevée de `800` à `1600` tokens pour éviter les JSON tronqués avec le prompt enrichi.
+
+   e. **Diagnostic runtime plus lisible** (`llm_narrator.py`) — Distinction explicite entre `llm_narrator.timeout` et `llm_narrator.invalid_json`, avec `finish_reason`, longueur de payload et fin de réponse logguée pour identifier immédiatement les sorties coupées.
+
+   f. **Couleurs de régimes clarifiées sur le déroulé du jour** (`DayTimelineSectionV4.tsx`) — Refonte légère de la palette inline du composant pour mieux distinguer `mise_en_route`, `fluidité`, `récupération`, `recentrage` et `retombée`, tout en conservant la logique métier des régimes et le style visuel général de la page.
+
+   g. **Vérifications ciblées** — Passent :
+      - `pytest backend/app/tests/unit/prediction/test_public_projection_evidence.py backend/tests/unit/prediction/test_llm_narrator.py backend/tests/unit/prediction/test_astrologer_prompt_builder.py -q`
+      - `ruff check backend/app/api/v1/routers/predictions.py backend/app/infra/db/models/daily_prediction.py backend/app/infra/db/repositories/daily_prediction_repository.py backend/app/prediction/llm_narrator.py backend/app/prediction/persisted_snapshot.py backend/app/prediction/public_projection.py backend/app/prompts/catalog.py backend/app/tests/unit/prediction/test_public_projection_evidence.py backend/tests/unit/prediction/test_llm_narrator.py backend/tests/unit/prediction/test_astrologer_prompt_builder.py`
+      - `ruff format --check backend/app/api/v1/routers/predictions.py backend/app/infra/db/models/daily_prediction.py backend/app/infra/db/repositories/daily_prediction_repository.py backend/app/prediction/llm_narrator.py backend/app/tests/unit/prediction/test_public_projection_evidence.py backend/tests/unit/prediction/test_llm_narrator.py`
+      - `npx tsc --noEmit` dans `frontend/`
+
 ### File List
 
 - `backend/app/infra/db/models/user.py`
 - `backend/migrations/versions/20260320_0050_add_astrologer_profile_to_users.py`
+- `backend/migrations/versions/20260321_0051_add_llm_narrative_to_daily_prediction_runs.py`
 - `backend/app/api/v1/routers/users.py`
 - `backend/app/api/v1/routers/predictions.py`
 - `backend/app/prediction/astrologer_prompt_builder.py`
 - `backend/app/prediction/llm_narrator.py`
+- `backend/app/prediction/persisted_snapshot.py`
 - `backend/app/prediction/public_projection.py`
 - `backend/app/prediction/public_astro_daily_events.py`
 - `backend/app/prediction/persistence_service.py`
 - `backend/app/core/config.py`
 - `backend/app/prompts/catalog.py`
+- `backend/app/infra/db/models/daily_prediction.py`
+- `backend/app/infra/db/repositories/daily_prediction_repository.py`
 - `backend/app/infra/db/session.py` *(PRAGMA foreign_keys=ON)*
 - `backend/app/services/daily_prediction_service.py` *(rollback + logging)*
 - `backend/tests/unit/prediction/test_llm_narrator.py`

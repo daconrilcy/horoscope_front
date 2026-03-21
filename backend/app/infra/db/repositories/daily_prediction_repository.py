@@ -296,10 +296,18 @@ class DailyPredictionRepository:
             snapshot_version=run.snapshot_version,
             evidence_pack_version=run.evidence_pack_version,
             v3_metrics=self._load_json_object(run.v3_metrics_json),
+            llm_narrative=self._load_json_object(run.llm_narrative_json),
             category_scores=category_scores,
             turning_points=turning_points,
             time_blocks=time_blocks,
         )
+
+    def update_llm_narrative(self, run_id: int, payload: dict[str, Any]) -> None:
+        run = self.db.get(DailyPredictionRunModel, run_id)
+        if run is None:
+            raise ValueError(f"daily prediction run {run_id} not found")
+        run.llm_narrative_json = json.dumps(payload, ensure_ascii=True, separators=(",", ":"))
+        self.db.flush()
 
     def _load_json_list(self, raw: str | None) -> list[Any]:
         if not raw:

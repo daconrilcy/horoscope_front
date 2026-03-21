@@ -55,6 +55,10 @@ async def test_narrate_success():
         assert mock_client.chat.completions.create.await_args.kwargs["response_format"] == {
             "type": "json_object"
         }
+        assert (
+            mock_client.chat.completions.create.await_args.kwargs["max_completion_tokens"]
+            == LLMNarrator.MAX_COMPLETION_TOKENS
+        )
 
 
 @pytest.mark.asyncio
@@ -106,6 +110,29 @@ async def test_narrate_ignores_invalid_daily_advice_shape():
 
         assert res is not None
         assert res.daily_advice is None
+
+
+@pytest.mark.asyncio
+async def test_narrate_returns_none_on_truncated_json(caplog: pytest.LogCaptureFixture):
+    narrator = LLMNarrator()
+
+    mock_response = MagicMock()
+    mock_response.choices = [
+        MagicMock(
+            finish_reason="length",
+            message=MagicMock(content='{"daily_synthesis":"Texte tronque'),
+        )
+    ]
+
+    with patch("openai.AsyncOpenAI") as mock_openai:
+        mock_client = mock_openai.return_value
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+
+        with caplog.at_level("WARNING"):
+            res = await narrator.narrate(time_windows=[], common_context=_make_common_context())
+
+        assert res is None
+        assert "llm_narrator.invalid_json" in caplog.text
 
 
 @pytest.mark.asyncio

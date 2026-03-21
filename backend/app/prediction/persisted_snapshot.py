@@ -107,6 +107,7 @@ class PersistedPredictionSnapshot:
     snapshot_version: str | None = None
     evidence_pack_version: str | None = None
     v3_metrics: dict[str, Any] | None = None
+    llm_narrative: dict[str, Any] | None = None
 
     category_scores: list[PersistedCategoryScore] = field(default_factory=list)
     turning_points: list[PersistedTurningPoint] = field(default_factory=list)

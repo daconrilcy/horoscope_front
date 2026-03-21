@@ -8,7 +8,7 @@ from typing import Any
 
 import openai
 
-from app.prompts.catalog import resolve_model
+from app.prompts.catalog import PROMPT_CATALOG, resolve_model
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,8 @@ class LLMNarrator:
     Narrates astrological data using OpenAI (Story 60.16).
     """
 
-    TIMEOUT_SECONDS = 30.0
+    TIMEOUT_SECONDS = 60.0
+    MAX_COMPLETION_TOKENS = PROMPT_CATALOG["daily_prediction"].max_tokens
 
     async def narrate(
         self,
@@ -75,7 +76,7 @@ class LLMNarrator:
                         {"role": "user", "content": prompt},
                     ],
                     response_format={"type": "json_object"},
-                    max_completion_tokens=1400,
+                    max_completion_tokens=self.MAX_COMPLETION_TOKENS,
                 ),
                 timeout=self.TIMEOUT_SECONDS,
             )
@@ -95,7 +96,21 @@ class LLMNarrator:
                 raw = raw.split("```")[1]
                 if raw.startswith("json"):
                     raw = raw[4:]
-            data = json.loads(raw)
+            try:
+                data = json.loads(raw)
+            except json.JSONDecodeError as exc:
+                logger.warning(
+                    (
+                        "llm_narrator.invalid_json model=%s finish_reason=%s "
+                        "error=%s raw_length=%s raw_tail=%r"
+                    ),
+                    model,
+                    choice.finish_reason,
+                    str(exc),
+                    len(raw),
+                    raw[-240:],
+                )
+                return None
             advice_data = data.get("daily_advice")
 
             return NarratorResult(
@@ -114,6 +129,13 @@ class LLMNarrator:
                 or None,
             )
 
+        except asyncio.TimeoutError:
+            logger.warning(
+                "llm_narrator.timeout model=%s timeout_seconds=%s",
+                resolve_model("daily_prediction"),
+                self.TIMEOUT_SECONDS,
+            )
+            return None
         except Exception as e:
             logger.warning("llm_narrator.failed error=%s", str(e))
             return None

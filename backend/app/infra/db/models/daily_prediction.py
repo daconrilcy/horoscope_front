@@ -54,6 +54,7 @@ class DailyPredictionRunModel(Base):
     snapshot_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
     evidence_pack_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
     v3_metrics_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    llm_narrative_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=utc_now
     )
