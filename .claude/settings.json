@@ -19,7 +19,16 @@
       "Bash(pip install:*)",
       "Bash(cd:*)",
       "Bash(git:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "WebFetch(domain:platform.openai.com)",
+      "Bash(sqlite3 \"C:/dev/horoscope_front/backend/horoscope.db\" \"DELETE FROM daily_prediction_runs WHERE local_date = ''2026-03-21''; SELECT changes\\(\\);\")",
+      "Bash(sqlite3 \"C:/dev/horoscope_front/backend/horoscope.db\" \"SELECT id, user_id, local_date FROM daily_prediction_runs ORDER BY id DESC LIMIT 5;\")",
+      "Bash(sqlite3 \"C:/dev/horoscope_front/backend/horoscope.db\" \".tables\")",
+      "Bash(sqlite3 \"C:/dev/horoscope_front/backend/horoscope.db\" \"SELECT id, user_id, local_date FROM daily_prediction_runs ORDER BY id DESC LIMIT 5\")",
+      "Bash(sqlite3 \"C:/dev/horoscope_front/backend/horoscope.db\" \"SELECT count\\(*\\) FROM daily_prediction_runs\")",
+      "Bash(sqlite3 \"C:/dev/horoscope_front/horoscope.db\" \"SELECT count\\(*\\) FROM daily_prediction_runs; SELECT id, user_id, local_date FROM daily_prediction_runs ORDER BY id DESC LIMIT 5\")",
+      "Bash(sqlite3 \"C:/dev/horoscope_front/horoscope.db\" \".tables\")",
+      "Bash(sqlite3 \"C:/dev/horoscope_front/backend/horoscope.db\" \"SELECT count\\(*\\) FROM daily_prediction_runs; SELECT id, user_id, local_date FROM daily_prediction_runs ORDER BY id DESC LIMIT 3\")"
     ],
     "additionalDirectories": [
       "c:\\dev\\horoscope_front\\_bmad-output\\implementation-artifacts"
