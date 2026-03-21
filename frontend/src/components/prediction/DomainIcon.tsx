@@ -15,6 +15,16 @@ const DOMAIN_ICON_MAP: Record<string, LucideIcon> = {
   energie_bienetre:   Zap,
   argent_ressources:  DollarSign,
   vie_personnelle:    Heart,
+  work:               Briefcase,
+  career:             Briefcase,
+  love:               Heart,
+  health:             Sparkles,
+  energy:             Zap,
+  mood:               Sparkles,
+  money:              DollarSign,
+  social_network:     Users,
+  communication:      Users,
+  pleasure_creativity:Sparkles,
 }
 
 interface DomainIconProps {

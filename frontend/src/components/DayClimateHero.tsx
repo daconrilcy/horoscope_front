@@ -1,4 +1,5 @@
 import React from 'react';
+import { AlertTriangle } from 'lucide-react';
 import type { DailyPredictionDayClimate } from '../types/dailyPrediction';
 import type { Lang } from '../i18n/predictions';
 import { getDomainLabel } from '../i18n/horoscope_copy';
@@ -25,19 +26,11 @@ export const DayClimateHero: React.FC<Props> = ({
   lang,
   astroBackgroundProps,
 }) => {
-  const getToneColor = (tone: string) => {
-    switch (tone) {
-      case 'positive': return '#4caf50';
-      case 'negative': return '#f44336';
-      default: return 'var(--accent-purple)';
-    }
-  };
-
   const content = (
     <div className="day-climate-hero__inner">
       <div className="day-climate-hero__content-zone">
         <header className="day-climate-hero__header">
-          <h2 className="day-climate-hero__title" style={{ color: getToneColor(climate.tone) }}>
+          <h2 className="day-climate-hero__title">
             {climate.label}
           </h2>
           {climate.best_window_ref && (
@@ -65,7 +58,9 @@ export const DayClimateHero: React.FC<Props> = ({
 
           {climate.watchout && (
             <div className="day-climate-hero__pill day-climate-hero__pill--watchout">
-              <span className="day-climate-hero__pill-icon">⚠️</span>
+              <span className="day-climate-hero__pill-icon" aria-hidden="true">
+                <AlertTriangle size={14} strokeWidth={1.75} />
+              </span>
               <span>
                 {lang === 'fr' ? 'Vigilance sur ' : 'Watchout on '} 
                 <strong>{getDomainLabel(climate.watchout!, lang).toLowerCase()}</strong>

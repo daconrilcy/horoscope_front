@@ -31,6 +31,16 @@ export const DOMAIN_LABELS: Record<string, { fr: string; en: string; icon: strin
   "energie_bienetre": { fr: "Énergie & bien-être", en: "Energy & Wellbeing", icon: "Zap" },
   "argent_ressources": { fr: "Argent & ressources", en: "Money & Resources", icon: "DollarSign" },
   "vie_personnelle": { fr: "Vie personnelle", en: "Personal Life", icon: "Heart" },
+  "work": { fr: "Travail", en: "Work", icon: "Briefcase" },
+  "career": { fr: "Carrière", en: "Career", icon: "Briefcase" },
+  "love": { fr: "Amour & Relations", en: "Love & Relationships", icon: "Heart" },
+  "health": { fr: "Santé & Hygiène de vie", en: "Health & Routine", icon: "Sparkles" },
+  "energy": { fr: "Énergie & Vitalité", en: "Energy & Vitality", icon: "Zap" },
+  "mood": { fr: "Humeur & Climat intérieur", en: "Mood & Inner Climate", icon: "Sparkles" },
+  "money": { fr: "Argent & Ressources", en: "Money & Resources", icon: "DollarSign" },
+  "social_network": { fr: "Vie sociale & Réseau", en: "Social Network", icon: "Users" },
+  "communication": { fr: "Communication", en: "Communication", icon: "Users" },
+  "pleasure_creativity": { fr: "Plaisir & Créativité", en: "Pleasure & Creativity", icon: "Sparkles" },
 };
 
 export function getDomainLabel(key: string, lang: Lang): string {

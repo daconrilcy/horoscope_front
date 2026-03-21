@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -89,6 +89,45 @@ const predictionOk = {
       drivers: [{ label: "Mars carre Lune" }],
     },
   ],
+  has_llm_narrative: false,
+  time_windows: [
+    {
+      period_key: "nuit",
+      time_range: "22:00–06:00",
+      label: "Phase de repos",
+      regime: "récupération",
+      top_domains: ["love"],
+      action_hint: "Relâchez le rythme pour repartir plus clair demain.",
+      astro_events: [],
+    },
+    {
+      period_key: "matin",
+      time_range: "06:00–12:00",
+      label: "Lancement souple",
+      regime: "mise_en_route",
+      top_domains: ["career", "love"],
+      action_hint: "Prenez le temps de cadrer vos priorités avant d'agir.",
+      astro_events: ["Lune conjointe Soleil"],
+    },
+    {
+      period_key: "apres_midi",
+      time_range: "12:00–18:00",
+      label: "Cap à tenir",
+      regime: "fluidité",
+      top_domains: ["career"],
+      action_hint: "La progression est meilleure si vous restez simple et régulier.",
+      astro_events: ["Lune carrée Mars"],
+    },
+    {
+      period_key: "soiree",
+      time_range: "18:00–22:00",
+      label: "Retour à l'essentiel",
+      regime: "recentrage",
+      top_domains: ["love"],
+      action_hint: "Recentrez-vous sur les échanges qui comptent vraiment.",
+      astro_events: [],
+    },
+  ],
 };
 
 const predictionWithDecisionWindows = {
@@ -154,6 +193,45 @@ const predictionWithDecisionWindows = {
       score: 0.65,
       confidence: 0.8,
       dominant_categories: ["love", "work"],
+    },
+  ],
+  has_llm_narrative: false,
+  time_windows: [
+    {
+      period_key: "nuit",
+      time_range: "22:00–06:00",
+      label: "Repos profond",
+      regime: "récupération",
+      top_domains: ["love"],
+      action_hint: "Rechargez avant la phase active.",
+      astro_events: [],
+    },
+    {
+      period_key: "matin",
+      time_range: "06:00–12:00",
+      label: "Créneau porteur",
+      regime: "progression",
+      top_domains: ["love"],
+      action_hint: "Engagez la discussion importante tôt.",
+      astro_events: ["Mars trigone Jupiter"],
+    },
+    {
+      period_key: "apres_midi",
+      time_range: "12:00–18:00",
+      label: "Virage décisif",
+      regime: "pivot",
+      top_domains: ["work", "love"],
+      action_hint: "Une bascule demande d'ajuster votre stratégie.",
+      astro_events: ["Mars carré Lune"],
+    },
+    {
+      period_key: "soiree",
+      time_range: "18:00–22:00",
+      label: "Retombée utile",
+      regime: "retombée",
+      top_domains: ["work"],
+      action_hint: "Consolidez sans surcharger.",
+      astro_events: [],
     },
   ],
 };
@@ -267,6 +345,27 @@ const predictionTechnical = {
       ],
     },
   ],
+  has_llm_narrative: false,
+  time_windows: [
+    {
+      period_key: "nuit",
+      time_range: "22:00–06:00",
+      label: "Climat neutre",
+      regime: "récupération",
+      top_domains: ["career", "communication"],
+      action_hint: "Le calme domine, sans poussée majeure.",
+      astro_events: [],
+    },
+    {
+      period_key: "matin",
+      time_range: "06:00–12:00",
+      label: "Ajustement discret",
+      regime: "prudence",
+      top_domains: ["energy"],
+      action_hint: "Mieux vaut observer avant de trancher.",
+      astro_events: ["Vénus opposition Pluton"],
+    },
+  ],
 };
 
 const predictionNeutralTimelineWithLateWindows = {
@@ -368,6 +467,27 @@ const predictionNeutralTimelineWithLateWindows = {
       dominant_categories: ["pleasure_creativity", "social_network"],
     },
   ],
+  has_llm_narrative: false,
+  time_windows: [
+    {
+      period_key: "nuit",
+      time_range: "22:00–06:00",
+      label: "Socle stable",
+      regime: "récupération",
+      top_domains: [],
+      action_hint: "Pas de poussée marquée sur ce créneau.",
+      astro_events: [],
+    },
+    {
+      period_key: "soiree",
+      time_range: "18:00–22:00",
+      label: "Ouverture tardive",
+      regime: "progression",
+      top_domains: ["pleasure_creativity", "social_network"],
+      action_hint: "La fin de journée devient nettement plus porteuse.",
+      astro_events: [],
+    },
+  ],
 };
 
 const predictionWithInferredEmergence = {
@@ -439,6 +559,7 @@ const predictionWithInferredEmergence = {
       ],
     },
   ],
+  has_llm_narrative: false,
 };
 
 const predictionWithoutApiTurningPointsButClearFallback = {
@@ -493,6 +614,7 @@ const predictionWithoutApiTurningPointsButClearFallback = {
   ],
   turning_points: [],
   decision_windows: null,
+  has_llm_narrative: false,
 };
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -571,24 +693,15 @@ describe("DailyHoroscopePage", () => {
       expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument();
-    
-    // On utilise un matcher plus flexible pour le créneau horaire
-    expect(screen.getByText(/10:00/)).toBeInTheDocument();
-    // On évite l'ambiguïté avec les period-cards
-    expect(screen.getAllByText(/12:00/)[0]).toBeInTheDocument();
-    expect(screen.getByText("Points clés du jour")).toBeInTheDocument();
-
-    const matinCard = screen.getByRole("button", { name: /Matin/i });
-    await userEvent.click(matinCard);
-
-    expect(screen.getByText("Agenda du jour")).toBeInTheDocument();
-    
-    // On cherche les libellés via aria-label ou dans le document (selon le composant qui les rend)
-    expect(screen.getAllByLabelText(/Changement/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { level: 1, name: /mars/i })).toBeInTheDocument();
+    expect(screen.getByText("Vos domaines clés")).toBeInTheDocument();
+    expect(screen.getByText("Déroulé de votre journée")).toBeInTheDocument();
+    expect(screen.getByText("Moment clé")).toBeInTheDocument();
+    expect(screen.getByText("Opportunité")).toBeInTheDocument();
+    expect(screen.getByText("08:00–09:30")).toBeInTheDocument();
     expect(screen.getAllByText(/Carrière/i).length).toBeGreaterThan(0);
-    expect(screen.getByText("14")).toBeInTheDocument();
-    expect(screen.getByText("7")).toBeInTheDocument();
+    expect(screen.getByText("6.8/10")).toBeInTheDocument();
+    expect(screen.getByText("3.6/10")).toBeInTheDocument();
   });
 
   it("affiche un bouton retour vers le dashboard", async () => {
@@ -613,7 +726,7 @@ describe("DailyHoroscopePage", () => {
     const { container } = renderDashboard()
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { level: 1, name: "Horoscope" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 1, name: /mars/i })).toBeInTheDocument()
     })
 
     expect(container.querySelector(".today-header__avatar")).not.toBeInTheDocument()
@@ -750,8 +863,9 @@ describe("DailyHoroscopePage", () => {
       expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Best window")).toBeInTheDocument();
-    expect(screen.getByText("Key points")).toBeInTheDocument();
+    expect(screen.getByText(/Best window/i)).toBeInTheDocument();
+    expect(screen.getByText("Your key domains")).toBeInTheDocument();
+    expect(screen.getByText("Your day timeline")).toBeInTheDocument();
     expect(screen.getAllByText(/Career/i).length).toBeGreaterThan(0);
   });
 
@@ -766,22 +880,15 @@ describe("DailyHoroscopePage", () => {
       expect(screen.getByText(/Votre journée du 2026-03-08 s'annonce équilibrée/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Les scores sont calculés sans données historiques/i)).toBeInTheDocument();
     expect(screen.queryByText("delta_note")).not.toBeInTheDocument();
-
-    const nuitCard = screen.getByRole("button", { name: /Nuit/i });
-    await userEvent.click(nuitCard);
-
-    const midnightSlot = screen
-      .getAllByTestId("agenda-slot")
-      .find((element) => element.getAttribute("data-slot-label") === "00:00");
-    expect(midnightSlot).toBeDefined();
-    expect(within(midnightSlot!).getByText(/Carrière/i)).toBeInTheDocument();
-    expect(within(midnightSlot!).getByText(/Communication/i)).toBeInTheDocument();
+    expect(screen.getByText("Déroulé de votre journée")).toBeInTheDocument();
+    expect(screen.getByText(/Climat neutre/i)).toBeInTheDocument();
+    expect(screen.getAllByTitle(/Carrière/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByTitle(/Communication/i).length).toBeGreaterThan(0);
     expect(screen.queryByText("Énergie & Vitalité : Votre score est de 10/20 (climat neutre).")).not.toBeInTheDocument();
   });
 
-  it("affiche l'agenda du jour et les moments clés quand ils sont présents", async () => {
+  it("affiche la timeline et le moment clé quand ils sont présents", async () => {
     installFetchMock({
       prediction: jsonResponse(predictionWithDecisionWindows),
     });
@@ -792,22 +899,11 @@ describe("DailyHoroscopePage", () => {
       expect(screen.getByText(/Journée avec des créneaux décisionnels bien définis/i)).toBeInTheDocument();
     });
 
-    const matinCard = screen.getByRole("button", { name: /Matin/i });
-    await userEvent.click(matinCard);
-
-    expect(screen.getByText("Agenda du jour")).toBeInTheDocument();
-    expect(screen.getByText("Points clés du jour")).toBeInTheDocument();
-    expect(screen.getAllByTestId("agenda-slot")).toHaveLength(3);
-
-    const apresMidiCard = screen.getByRole("button", { name: /Après-midi/i });
-    await userEvent.click(apresMidiCard);
-
-    // On cherche le wrapper pivot via son testid
-    const pivotWrapper = screen.getByTestId("agenda-slot-pivot");
-    expect(within(pivotWrapper).getByText("14:00")).toBeInTheDocument();
-    expect(within(pivotWrapper).getByTestId("agenda-slot-shift-marker")).toBeInTheDocument();
-
-    expect(screen.getAllByText(/aspect majeur/i).length).toBeGreaterThan(0);
+    expect(screen.getByText("Déroulé de votre journée")).toBeInTheDocument();
+    expect(screen.getByText(/Virage décisif/i)).toBeInTheDocument();
+    expect(screen.queryByText("Moment clé")).not.toBeInTheDocument();
+    expect(screen.queryByText("Opportunité")).not.toBeInTheDocument();
+    expect(screen.getAllByText(/Amour/i).length).toBeGreaterThan(0);
   });
 
   it("localise les titres de section en anglais", async () => {
@@ -820,12 +916,13 @@ describe("DailyHoroscopePage", () => {
       expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Key points")).toBeInTheDocument();
-    expect(screen.getByText("Day timeline")).toBeInTheDocument();
-    expect(screen.getByText("Daily domains")).toBeInTheDocument();
+    expect(screen.getByText("Your key domains")).toBeInTheDocument();
+    expect(screen.getByText("Your day timeline")).toBeInTheDocument();
+    expect(screen.getByText("Key moment")).toBeInTheDocument();
+    expect(screen.getByText("Daily advice")).toBeInTheDocument();
   });
 
-  it("n'affiche pas de fausses recommandations d'agenda sur des créneaux uniquement neutres", async () => {
+  it("n'affiche pas de faux signaux d'action sur des créneaux neutres", async () => {
     installFetchMock({
       prediction: jsonResponse(predictionNeutralTimelineWithLateWindows),
     });
@@ -836,30 +933,10 @@ describe("DailyHoroscopePage", () => {
       expect(screen.getByText("Votre journée du 2026-03-10 s'annonce très porteuse.")).toBeInTheDocument();
     });
 
-    const nuitCard = screen.getByRole("button", { name: /Nuit/i });
-    await userEvent.click(nuitCard);
-
-    const midnightSlot = screen
-      .getAllByTestId("agenda-slot")
-      .find((element) => element.getAttribute("data-slot-label") === "00:00");
-    expect(midnightSlot).toBeDefined();
-    expect(within(midnightSlot!).queryByText(/Carrière/i)).not.toBeInTheDocument();
-    expect(within(midnightSlot!).queryByText(/Communication/i)).not.toBeInTheDocument();
-
-    const soireeCard = screen.getByRole("button", { name: /Soirée/i });
-    await userEvent.click(soireeCard);
-
-    const eveningSlot = screen
-      .getAllByTestId("agenda-slot")
-      .find((element) => element.getAttribute("data-slot-label") === "20:00");
-    expect(eveningSlot).toBeDefined();
-    expect(within(eveningSlot!).getByText(/Plaisir & Créativité/i)).toBeInTheDocument();
-
-    await userEvent.click(nuitCard);
-    const updatedMidnightSlot = screen
-      .getAllByTestId("agenda-slot")
-      .find((element) => element.getAttribute("data-slot-label") === "00:00");
-    expect(within(updatedMidnightSlot!).getByText(/Pas d'aspect majeur/i)).toBeInTheDocument();
+    expect(screen.getByText(/Socle stable/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Pas d'aspect majeur/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Ouverture tardive/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Plaisir & Créativité/i).length).toBeGreaterThan(0);
   });
 
   it("n'expose pas de codes techniques backend dans l'interface", async () => {
@@ -895,12 +972,8 @@ describe("DailyHoroscopePage", () => {
       ),
     ).not.toBeInTheDocument();
     
-    // On cherche les mots-clés plutôt que la phrase exacte
     expect(screen.getAllByText(/travail/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/santé/i).length).toBeGreaterThan(0);
-    
-    // On ne vérifie plus les détails techniques retirés de la UI simplifiée
-    // expect(screen.getAllByText(/Moon/i)[0]).toBeInTheDocument();
   });
 
   it("rend le fallback des moments clés plus explicite quand l'API ne fournit aucun turning point", async () => {
@@ -914,18 +987,10 @@ describe("DailyHoroscopePage", () => {
       expect(screen.getByText(/Journée équilibrée avec des rééquilibrages progressifs/i)).toBeInTheDocument();
     });
 
-    // On vérifie la présence des termes clés du fallback
-    expect(screen.getAllByText(/priorités/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText("Moment clé")).not.toBeInTheDocument();
     expect(screen.getAllByText(/travail/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/réseau/i).length).toBeGreaterThan(0);
-
-    const matinCard = screen.getByRole("button", { name: /Matin/i });
-    await userEvent.click(matinCard);
-
-    // On cherche le wrapper pivot via son testid
-    const pivotWrappers = screen.getAllByTestId("agenda-slot-pivot");
-    expect(pivotWrappers.length).toBeGreaterThan(0);
-    expect(within(pivotWrappers[0]).getByTestId("agenda-slot-shift-marker")).toBeInTheDocument();
+    expect(screen.getByText("Conseil du jour")).toBeInTheDocument();
   });
 
   it("ne rend plus la chronologie du jour devenue redondante", async () => {

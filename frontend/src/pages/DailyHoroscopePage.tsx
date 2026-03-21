@@ -18,7 +18,6 @@ import { normalizeSignCode } from '../i18n/astrology'
 import type { Lang } from '../i18n/predictions'
 import { getPredictionMessage } from '../utils/predictionI18n'
 import { getSubjectFromAccessToken, useAccessTokenSnapshot } from '../utils/authToken'
-import { useAuthMe } from '../api/authMe'
 import { useDailyPrediction } from '../api/useDailyPrediction'
 import { useBirthData } from '../api/useBirthData'
 import { trackEvent, EVENTS } from '../utils/analytics'
@@ -41,10 +40,10 @@ export default function DailyHoroscopePage() {
   const navigate = useNavigate()
   const lang = detectLang()
   const token = useAccessTokenSnapshot()
-  const authMe = useAuthMe(token)
   const userId = getSubjectFromAccessToken(token)
-  const { data: prediction, isLoading, isError, refetch } = useDailyPrediction(userId!)
-  const { data: birthData } = useBirthData(userId!)
+  const { data: prediction, isLoading, isError, refetch } = useDailyPrediction(token)
+  const { data: birthData } = useBirthData(token)
+  const bootstrapPredictionRefetchDoneForToken = useRef<string | null>(null)
 
   // Track page view
   const hasTracked = useRef(false)
@@ -55,6 +54,24 @@ export default function DailyHoroscopePage() {
     }
   }, [prediction])
 
+  useEffect(() => {
+    if (!token) {
+      bootstrapPredictionRefetchDoneForToken.current = null
+      return
+    }
+
+    if (isLoading || isError || prediction !== null) {
+      return
+    }
+
+    if (bootstrapPredictionRefetchDoneForToken.current === token) {
+      return
+    }
+
+    bootstrapPredictionRefetchDoneForToken.current = token
+    void refetch()
+  }, [isError, isLoading, prediction, refetch, token])
+
   const handleRefresh = async () => {
     await refetch()
   }
@@ -64,12 +81,27 @@ export default function DailyHoroscopePage() {
   }
 
   // Pre-calculate astro background data
-  const astroBackgroundProps = birthData && prediction ? {
-    sign: normalizeSignCode((birthData as any).sun_sign || 'ari') as ZodiacSign,
-    userId: userId!,
-    dateKey: prediction.meta.date_local,
-    dayScore: clamp(prediction.summary.overall_tone === 'positive' ? 80 : 40, 0, 100)
-  } : undefined
+  const astroBackgroundProps = prediction
+    ? {
+        sign: ((birthData?.astro_profile?.sun_sign_code
+          ? normalizeSignCode(birthData.astro_profile.sun_sign_code)
+          : 'neutral') as ZodiacSign),
+        userId: userId || 'anonymous',
+        dateKey: prediction.meta.date_local,
+        dayScore: clamp(
+          Math.round(
+            prediction.categories.length > 0
+              ? prediction.categories
+                  .map((category) => category.note_20)
+                  .filter((note) => typeof note === 'number' && !Number.isNaN(note))
+                  .reduce((sum, note, _, notes) => sum + note / notes.length, 0)
+              : 12,
+          ),
+          1,
+          20,
+        ),
+      }
+    : undefined
 
   const pLang = lang as Lang
 
@@ -201,8 +233,6 @@ export default function DailyHoroscopePage() {
 
           {/* BottomSpacer */}
           <div className="daily-layout__bottom-spacer" />
-          
-          <div style={{ display: 'none' }}>Auth active: {authMe.isLoading ? '...' : 'yes'}</div>
         </div>
       ) : (
         <div className="panel state-empty daily-page-state">
