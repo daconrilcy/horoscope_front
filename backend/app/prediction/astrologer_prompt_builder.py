@@ -27,9 +27,9 @@ class AstrologerPromptBuilder:
         self,
         common_context: PromptCommonContext,
         time_windows: list[dict[str, Any]],
-        events: list[Any],
         astrologer_profile_key: str = "standard",
         lang: str = "fr",
+        astro_daily_events: dict[str, Any] | None = None,
     ) -> str:
         # 1. Natal Foundation
         natal_section = self._build_natal_section(common_context)
@@ -38,7 +38,7 @@ class AstrologerPromptBuilder:
         date_str = common_context.today_date
 
         # 3. Astro Events Summary
-        events_str = self._format_events(events)
+        events_str = self._format_astro_daily_events(astro_daily_events)
 
         # 4. Time Windows & Regimes
         windows_str = self._format_windows(time_windows)
@@ -117,19 +117,45 @@ Génère un contenu inspirant, fluide et personnalisé.
             f"Précision : {ctx.precision_level}."
         )
 
-    def _format_events(self, events: list[Any]) -> str:
-        if not events:
+    def _format_astro_daily_events(self, astro_daily_events: dict[str, Any] | None) -> str:
+        if not astro_daily_events:
             return "Aucun événement majeur particulier."
 
-        lines = []
-        for e in events[:10]:
-            body = getattr(e, "body", "?")
-            target = getattr(e, "target", "")
-            aspect = getattr(e, "aspect", "")
-            ev_type = getattr(e, "event_type", "")
-            lines.append(f"- {ev_type}: {body} {aspect} {target}")
+        sections = []
 
-        return "\n".join(lines)
+        sky = astro_daily_events.get("sky_aspects", [])
+        if sky:
+            sections.append("Aspects du ciel : " + ", ".join(sky))
+
+        aspects = astro_daily_events.get("aspects", [])
+        if aspects:
+            sections.append("Aspects transit-natal : " + ", ".join(aspects))
+
+        nodes = astro_daily_events.get("nodes", [])
+        if nodes:
+            sections.append("Nœuds lunaires : " + ", ".join(nodes))
+
+        progressions = astro_daily_events.get("progressions", [])
+        if progressions:
+            sections.append("Progressions : " + ", ".join(progressions))
+
+        returns = astro_daily_events.get("returns", [])
+        if returns:
+            sections.append("Retours : " + ", ".join(returns))
+
+        ingresses = astro_daily_events.get("ingresses", [])
+        if ingresses:
+            sections.append("Ingresses : " + ", ".join(i["text"] for i in ingresses))
+
+        fixed_stars = astro_daily_events.get("fixed_stars", [])
+        if fixed_stars:
+            sections.append("Étoiles fixes : " + ", ".join(fixed_stars))
+
+        planet_positions = astro_daily_events.get("planet_positions", [])
+        if planet_positions:
+            sections.append("Positions : " + ", ".join(planet_positions))
+
+        return "\n".join(f"- {s}" for s in sections) if sections else "Aucun événement majeur particulier."
 
     def _format_windows(self, windows: list[dict[str, Any]]) -> str:
         lines = []
@@ -138,7 +164,9 @@ Génère un contenu inspirant, fluide et personnalisé.
             regime = w.get("regime", "?")
             label = w.get("label", "")
             domains = ", ".join(w.get("top_domains", []))
+            slot_events = w.get("astro_events", [])
+            events_part = f" Événements : {', '.join(slot_events)}." if slot_events else ""
             lines.append(
-                f"[{key}] {w.get('time_range')}: {label} (Régime: {regime}). Domaines: {domains}"
+                f"[{key}] {w.get('time_range')}: {label} (Régime: {regime}). Domaines: {domains}.{events_part}"
             )
         return "\n".join(lines)

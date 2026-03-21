@@ -14,7 +14,7 @@ def test_prompt_builder_contains_style():
         natal_interpretation="Vous êtes un Lion fier.",
     )
 
-    prompt = builder.build(ctx, [], [], "vedique", "fr")
+    prompt = builder.build(ctx, [], "vedique", "fr")
     assert "nakshatra" in prompt
     assert "Lion fier" in prompt
 
@@ -39,7 +39,7 @@ def test_prompt_builder_formats_windows():
         }
     ]
 
-    prompt = builder.build(ctx, windows, [], "standard", "fr")
+    prompt = builder.build(ctx, windows, "standard", "fr")
     assert "[matin]" in prompt
     assert "06:00-12:00" in prompt
     assert "progression" in prompt
@@ -58,5 +58,5 @@ def test_prompt_builder_empty_natal_data_shows_unavailable():
         natal_data={},  # present but empty → falsy → triggers "non disponible" branch
     )
 
-    prompt = builder.build(ctx, [], [], "standard", "fr")
+    prompt = builder.build(ctx, [], "standard", "fr")
     assert "non disponible" in prompt

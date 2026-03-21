@@ -29,7 +29,7 @@ class PublicAstroDailyEventsPolicy:
         evidence: V3EvidencePack | None = None,
     ) -> dict[str, Any] | None:
         # 1. Resolve Astro Events
-        events = self._resolve_astro_events(evidence, engine_output)
+        events = self._resolve_astro_events(evidence, engine_output, snapshot)
 
         # 2. Extract Ingresses
         ingresses = []
@@ -177,7 +177,10 @@ class PublicAstroDailyEventsPolicy:
         return found
 
     def _resolve_astro_events(
-        self, evidence: V3EvidencePack | None, engine_output: Any | None
+        self,
+        evidence: V3EvidencePack | None,
+        engine_output: Any | None,
+        snapshot: Any | None = None,
     ) -> list[Any]:
         events = []
         if evidence and hasattr(evidence, "metadata") and "astro_events" in evidence.metadata:
@@ -189,6 +192,19 @@ class PublicAstroDailyEventsPolicy:
                 events = core.events
             elif hasattr(core, "detected_events"):
                 events = core.detected_events
+
+        # Fallback for cached predictions: load from persisted v3_metrics
+        if not events and snapshot is not None:
+            v3_metrics = getattr(snapshot, "v3_metrics", None)
+            if isinstance(v3_metrics, dict):
+                raw_events = v3_metrics.get("detected_events", [])
+                if raw_events:
+                    from types import SimpleNamespace
+
+                    events = [
+                        SimpleNamespace(**e) if isinstance(e, dict) else e for e in raw_events
+                    ]
+
         return events
 
     def _extract_planet_positions(

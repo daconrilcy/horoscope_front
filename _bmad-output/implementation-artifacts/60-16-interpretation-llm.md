@@ -534,6 +534,22 @@ claude-sonnet-4-6
 
 5. **Résultat final** — `pytest -q` : **2057 passed, 3 skipped, 0 failed, 0 warnings**.
 
+6. **Bugs runtime post-déploiement (2026-03-21)** — Série de bugs découverts à l'exécution :
+
+   a. **`KeyError: 'generated_at'` dans `_deserialize_evidence_pack`** (`public_projection.py`) — Les prédictions en cache créées avant l'ajout du champ `generated_at` à `V3EvidencePack` déclenchaient un `KeyError` non rattrapé → 500. Correction : `.get()` avec valeurs par défaut sur `generated_at` et `version` ; appel enveloppé dans un try/except dans `_resolve_evidence_pack`.
+
+   b. **`PendingRollbackError` → 500 sur la route fallback** (`daily_prediction_service.py`) — Après une `IntegrityError` dans `db.flush()`, la session SQLAlchemy entre en état `PendingRollback`. Toute requête DB suivante (dont `fallback_policy.try_fallback()`) levait alors `PendingRollbackError`, non géré → 500. Correction : `db.rollback()` ajouté avant l'appel au fallback (dans le bloc `except Exception`). La réponse passe de 500 à 503 correct.
+
+   c. **`IntegrityError: UNIQUE constraint failed: daily_prediction_category_scores.run_id, category_id`** — Cause racine : SQLite désactive par défaut l'application des FK (`PRAGMA foreign_keys = OFF`). Les `ondelete="CASCADE"` sur les FK étaient silencieusement ignorés. Lors de la suppression d'un run stale + recréation, SQLite réutilise le même `rowid` (comportement sans `AUTOINCREMENT`) et les scores orphelins déclenchaient la contrainte unique. **Deux corrections** :
+      - `backend/app/infra/db/session.py` : ajout de `PRAGMA foreign_keys=ON` dans le listener `connect` SQLite → active le cascade DELETE pour toutes les nouvelles connexions.
+      - `backend/app/prediction/persistence_service.py` : DELETE explicite des enregistrements enfants (scores, turning_points, time_blocks) pour le `run_id` avant chaque INSERT → nettoyage défensif des lignes orphelines héritées de l'historique FK-OFF.
+
+   d. **Logging erreur insuffisant** (`daily_prediction_service.py`) — L'erreur était logguée uniquement dans le champ `extra` (non visible dans la sortie uvicorn par défaut). Ajout du message d'erreur dans le message principal + `exc_info=True` pour le traceback complet.
+
+   e. **`LLMNarrator` / `AstrologerPromptBuilder`** — Refactorisés pour recevoir `astro_daily_events: dict[str, Any] | None` (résultat de `PublicAstroDailyEventsPolicy.build()`) au lieu de la liste d'événements bruts, évitant la duplication de la logique de résolution.
+
+   f. **`PublicAstroDailyEventsPolicy._resolve_astro_events`** — Ajout d'un fallback sur `snapshot.v3_metrics["detected_events"]` pour les prédictions mises en cache (sans `engine_output` ni `evidence` disponibles en lecture seule).
+
 ### File List
 
 - `backend/app/infra/db/models/user.py`
@@ -543,8 +559,12 @@ claude-sonnet-4-6
 - `backend/app/prediction/astrologer_prompt_builder.py`
 - `backend/app/prediction/llm_narrator.py`
 - `backend/app/prediction/public_projection.py`
+- `backend/app/prediction/public_astro_daily_events.py`
+- `backend/app/prediction/persistence_service.py`
 - `backend/app/core/config.py`
 - `backend/app/prompts/catalog.py`
+- `backend/app/infra/db/session.py` *(PRAGMA foreign_keys=ON)*
+- `backend/app/services/daily_prediction_service.py` *(rollback + logging)*
 - `backend/tests/unit/prediction/test_llm_narrator.py`
 - `backend/tests/unit/prediction/test_astrologer_prompt_builder.py`
 - `backend/app/tests/unit/prediction/test_public_projection_evidence.py`

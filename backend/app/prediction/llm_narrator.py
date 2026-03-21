@@ -32,11 +32,11 @@ class LLMNarrator:
 
     async def narrate(
         self,
-        events: list[Any],
         time_windows: list[dict[str, Any]],
         common_context: Any,  # PromptCommonContext
         astrologer_profile_key: str = "standard",
         lang: str = "fr",
+        astro_daily_events: dict[str, Any] | None = None,
     ) -> NarratorResult | None:
         from app.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
 
@@ -44,7 +44,7 @@ class LLMNarrator:
             prompt = AstrologerPromptBuilder().build(
                 common_context=common_context,
                 time_windows=time_windows,
-                events=events,
+                astro_daily_events=astro_daily_events,
                 astrologer_profile_key=astrologer_profile_key,
                 lang=lang,
             )

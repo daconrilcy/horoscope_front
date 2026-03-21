@@ -198,9 +198,18 @@ class DailyPredictionService:
             # AC1 - Fallback on engine/persistence failure
             error_str = str(e)
             logger.error(
-                "prediction.compute_failed",
+                "prediction.compute_failed error=%s",
+                error_str,
                 extra={"user_id": user_id, "error": error_str},
+                exc_info=True,
             )
+
+            # Reset session state so fallback queries can proceed
+            # (e.g. after IntegrityError the session is in PendingRollback state)
+            try:
+                db.rollback()
+            except Exception:
+                pass
 
             fallback = self.fallback_policy.try_fallback(
                 db,

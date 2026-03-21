@@ -26,7 +26,7 @@ async def test_narrate_success():
         mock_client = mock_openai.return_value
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
 
-        res = await narrator.narrate([], [], MagicMock(), "standard", "fr")
+        res = await narrator.narrate(time_windows=[], common_context=MagicMock())
 
         assert res is not None
         assert res.daily_synthesis == "Synth"
@@ -41,7 +41,7 @@ async def test_narrate_failure_returns_none():
         mock_client = mock_openai.return_value
         mock_client.chat.completions.create = AsyncMock(side_effect=Exception("OpenAI error"))
 
-        res = await narrator.narrate([], [], MagicMock(), "standard", "fr")
+        res = await narrator.narrate(time_windows=[], common_context=MagicMock())
         assert res is None
 
 
@@ -53,7 +53,7 @@ async def test_narrate_timeout_returns_none():
         mock_client = mock_openai.return_value
         mock_client.chat.completions.create = AsyncMock(side_effect=asyncio.TimeoutError())
 
-        res = await narrator.narrate([], [], MagicMock(), "standard", "fr")
+        res = await narrator.narrate(time_windows=[], common_context=MagicMock())
         assert res is None
 
 

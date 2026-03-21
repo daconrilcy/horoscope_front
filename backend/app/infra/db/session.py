@@ -23,6 +23,7 @@ if settings.database_url.startswith("sqlite"):
     def _set_sqlite_wal_mode(dbapi_conn, _connection_record):  # type: ignore[misc]
         dbapi_conn.execute("PRAGMA journal_mode=WAL")
         dbapi_conn.execute("PRAGMA synchronous=NORMAL")
+        dbapi_conn.execute("PRAGMA foreign_keys=ON")
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
 _bootstrap_lock = Lock()
 _local_schema_ready = False

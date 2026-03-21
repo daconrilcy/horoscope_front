@@ -5,6 +5,7 @@ from dataclasses import asdict, dataclass
 from datetime import date
 from typing import TYPE_CHECKING
 
+from sqlalchemy import delete as sa_delete
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.daily_prediction import (
@@ -111,7 +112,7 @@ class PredictionPersistenceService:
             engine_version=engine_version,
             snapshot_version=snapshot_version,
             evidence_pack_version=evidence_pack_version,
-            v3_metrics_json=json.dumps(self._json_ready(v3_core)) if v3_core else None,
+            v3_metrics_json=self._build_v3_metrics_json(v3_core, core),
             house_system_effective=core.effective_context.house_system_effective,
             is_provisional_calibration=core.run_metadata.get("is_provisional_calibration"),
             calibration_label=core.run_metadata.get("calibration_label"),
@@ -126,6 +127,19 @@ class PredictionPersistenceService:
                 else core.run_metadata.get("overall_tone")
             ),
         )
+
+        # Defensive: remove any orphaned child rows for this run_id before inserting.
+        # Can occur with SQLite when FK enforcement was previously disabled and a run
+        # ID gets reused after a failed transaction.
+        db.execute(sa_delete(DailyPredictionCategoryScoreModel).where(
+            DailyPredictionCategoryScoreModel.run_id == run_model.id
+        ))
+        db.execute(sa_delete(DailyPredictionTurningPointModel).where(
+            DailyPredictionTurningPointModel.run_id == run_model.id
+        ))
+        db.execute(sa_delete(DailyPredictionTimeBlockModel).where(
+            DailyPredictionTimeBlockModel.run_id == run_model.id
+        ))
 
         # AC3, AC4, AC5 - Persist child entities
         self._save_scores(
@@ -364,6 +378,16 @@ class PredictionPersistenceService:
         if value is None:
             return None
         return json.dumps(self._json_ready(value))
+
+    def _build_v3_metrics_json(self, v3_core: object | None, core: object | None) -> str | None:
+        """Build v3_metrics JSON, including detected_events for LLM narrator cache."""
+        if v3_core is None:
+            return None
+        v3_dict = self._json_ready(v3_core)
+        if isinstance(v3_dict, dict):
+            detected_events = getattr(core, "detected_events", None) or []
+            v3_dict["detected_events"] = self._json_ready(detected_events)
+        return json.dumps(v3_dict)
 
     def _json_ready(self, value: object) -> object:
         if hasattr(value, "isoformat"):

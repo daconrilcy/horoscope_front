@@ -186,20 +186,9 @@ class PublicPredictionAssembler:
             from app.prediction.llm_narrator import LLMNarrator
 
             narrator = LLMNarrator()
-            # Extract raw events for prompt
-            raw_events = []
-            if evidence:
-                raw_events = evidence.metadata.get("astro_events", [])
-            elif engine_output:
-                core = _resolve_core_engine_output(engine_output)
-                raw_events = (
-                    getattr(core, "detected_events", [])
-                    if hasattr(core, "detected_events")
-                    else getattr(core, "events", [])
-                )
 
             narrator_res = await narrator.narrate(
-                events=raw_events,
+                astro_daily_events=astro_daily_events,
                 time_windows=time_windows,
                 common_context=prompt_context,
                 astrologer_profile_key=astrologer_profile_key,
@@ -283,7 +272,10 @@ class PublicPredictionAssembler:
         if isinstance(v3_metrics, dict):
             evidence = v3_metrics.get("evidence_pack")
             if isinstance(evidence, dict):
-                return _deserialize_evidence_pack(evidence)
+                try:
+                    return _deserialize_evidence_pack(evidence)
+                except (KeyError, ValueError, TypeError):
+                    pass
 
         return None
 
@@ -598,7 +590,7 @@ class PublicTimeWindowPolicy:
         from collections import Counter
 
         # 0. Resolve Astro Events for per-period enrichment
-        all_events = self._resolve_events(evidence, engine_output)
+        all_events = self._resolve_events(evidence, engine_output, snapshot)
 
         # 1. Resolve Time Blocks (V3)
         v3_blocks = []
@@ -739,7 +731,9 @@ class PublicTimeWindowPolicy:
 
         return regime
 
-    def _resolve_events(self, evidence: Any, engine_output: Any) -> list[Any]:
+    def _resolve_events(
+        self, evidence: Any, engine_output: Any, snapshot: Any | None = None
+    ) -> list[Any]:
         events: list[Any] = []
         if evidence and hasattr(evidence, "metadata") and "astro_events" in evidence.metadata:
             events = evidence.metadata["astro_events"]
@@ -749,6 +743,19 @@ class PublicTimeWindowPolicy:
                 events = (
                     getattr(core, "events", None) or getattr(core, "detected_events", None) or []
                 )
+
+        # Fallback for cached predictions: load from persisted v3_metrics
+        if not events and snapshot is not None:
+            v3_metrics = getattr(snapshot, "v3_metrics", None)
+            if isinstance(v3_metrics, dict):
+                raw_events = v3_metrics.get("detected_events", [])
+                if raw_events:
+                    from types import SimpleNamespace
+
+                    events = [
+                        SimpleNamespace(**e) if isinstance(e, dict) else e for e in raw_events
+                    ]
+
         return events
 
     def _filter_events_in_period(self, events: list[Any], h_start: int, h_end: int) -> list[Any]:
@@ -1901,9 +1908,12 @@ def _deserialize_evidence_pack(payload: dict[str, Any]) -> V3EvidencePack:
             )
         )
 
+    generated_at_raw = payload.get("generated_at")
+    generated_at = datetime.fromisoformat(generated_at_raw) if generated_at_raw else datetime.now()
+
     return V3EvidencePack(
-        version=payload["version"],
-        generated_at=datetime.fromisoformat(payload["generated_at"]),
+        version=payload.get("version", "unknown"),
+        generated_at=generated_at,
         day_profile=dict(payload.get("day_profile", {})),
         themes=themes,
         time_windows=time_windows,
