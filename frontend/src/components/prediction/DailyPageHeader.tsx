@@ -33,7 +33,7 @@ export const DailyPageHeader: React.FC<Props> = ({ date, tone, lang, onRefresh, 
         onClick={() => navigate('/dashboard')}
         aria-label={lang === 'fr' ? 'Retour au tableau de bord' : 'Back to dashboard'}
       >
-        <ChevronLeft size={24} />
+        <ChevronLeft size={18} strokeWidth={2.4} />
       </button>
 
       <div className="daily-page-header__content">
@@ -57,7 +57,7 @@ export const DailyPageHeader: React.FC<Props> = ({ date, tone, lang, onRefresh, 
           onClick={onRefresh}
           aria-label={refreshLabel}
         >
-          <RefreshCw size={16} aria-hidden="true" />
+          <RefreshCw size={16} strokeWidth={2.35} aria-hidden="true" />
         </button>
       </div>
     </header>

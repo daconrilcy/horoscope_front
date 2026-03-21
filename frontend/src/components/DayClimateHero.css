@@ -27,37 +27,39 @@
 }
 
 .day-climate-hero__inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(352px, 1.08fr) minmax(240px, 0.92fr);
+  align-items: stretch;
   width: 100%;
   padding: 28px;
-  gap: 8px;
+  gap: 20px;
 }
 
 .day-climate-hero__content-zone {
-  flex: 0 0 43%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 20px;
   position: relative;
   z-index: 2;
-  padding: 4px 12px 4px 2px;
+  min-width: 0;
+  padding: 10px 18px 10px 8px;
 }
 
 .day-climate-hero__content-zone::before {
   content: '';
   position: absolute;
-  inset: -20px -34px -22px -26px;
+  inset: -18px -24px -20px -18px;
   border-radius: 42px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.08) 42%, rgba(255, 255, 255, 0) 100%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 38%, rgba(255, 255, 255, 0) 100%);
   filter: blur(8px);
   z-index: -1;
 }
 
 .day-climate-hero__decor-zone {
-  flex: 0 0 57%;
   position: relative;
   z-index: 1;
+  min-width: 0;
 }
 
 .day-climate-hero__decor-zone::before {
@@ -91,7 +93,8 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-strong);
-  max-width: 15ch;
+  max-width: 12ch;
+  text-wrap: balance;
 }
 
 .day-climate-hero__best-window {
@@ -107,7 +110,7 @@
   font-size: 15px;
   line-height: 1.78;
   color: var(--text-main);
-  max-width: 34ch;
+  max-width: 38ch;
 }
 
 .day-climate-hero__pills {
@@ -153,6 +156,7 @@
 
 @media (max-width: 760px) {
   .day-climate-hero__inner {
+    display: flex;
     flex-direction: column;
     gap: 10px;
     padding: 24px;

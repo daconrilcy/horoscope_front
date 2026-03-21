@@ -20,7 +20,7 @@
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.68) 0%, rgba(255, 255, 255, 0.38) 100%);
   border: 1px solid var(--glass-border);
-  color: var(--text-strong);
+  color: color-mix(in srgb, var(--text-strong) 82%, var(--accent-purple-strong) 18%);
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
@@ -32,6 +32,13 @@
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.76) 0%, rgba(255, 255, 255, 0.42) 100%);
   box-shadow: var(--shadow-focus);
+}
+
+.daily-page-header__back svg,
+.daily-page-header__refresh svg {
+  display: block;
+  stroke: currentColor;
+  flex-shrink: 0;
 }
 
 .daily-page-header__content {
@@ -84,7 +91,8 @@
   display: flex;
   justify-content: flex-end;
   align-self: start;
-  padding-top: 8px;
+  padding-top: 10px;
+  padding-right: 6px;
 }
 
 .daily-page-header__refresh {
@@ -94,7 +102,7 @@
   border: 1px solid rgba(196, 177, 235, 0.54);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.34) 100%);
-  color: var(--accent-purple-strong);
+  color: color-mix(in srgb, var(--accent-purple-strong) 88%, var(--text-strong) 12%);
   display: inline-flex;
   align-items: center;
   justify-content: center;

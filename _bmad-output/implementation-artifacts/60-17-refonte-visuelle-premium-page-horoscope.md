@@ -340,9 +340,12 @@ GPT-5 Codex
 - La hero card a été rééquilibrée pour supprimer l’effet de “carte dans la carte” trop visible : le voile de lecture est désormais diffus, la zone décorative droite est plus présente, et la composition texte/décor est mieux proportionnée.
 - La timeline a été consolidée en parcours vertical premium : rail plus proche des cartes, points plus présents, cartes de période plus denses, et tags d’aspects/domaines rendus comme de vrais micro-tags analytiques.
 - Les blocs `AstroDailyEvents`, `DomainRankingCard` et `DailyAdviceCard` ont été harmonisés dans un langage moins “UI fonctionnelle” et plus éditorial, avec des capsules, badges et halos cohérents.
+- Une vérification live sur `http://localhost:5173/dashboard/horoscope` avec un utilisateur réellement bootstrapé via l’API locale a permis de corriger deux défauts de rendu non visibles dans les seuls tests statiques : icônes du header insuffisamment lisibles et hero encore trop comprimée côté texte.
+- Après cette vérification navigateur, la hero a été recalée avec une vraie largeur éditoriale minimale et le header a reçu un meilleur ancrage visuel des actions, ce qui réduit la sensation de colonne “maigre” et d’icônes flottantes.
 - Vérifications exécutées après les dernières retouches :
   - `npx tsc --noEmit`
   - `npm run test -- src/tests/DailyHoroscopePage.test.tsx src/tests/AstroMoodBackground.test.tsx src/tests/visual-smoke.test.tsx`
+  - vérification live de `/dashboard/horoscope` via navigateur headless avec session authentifiée réelle
 
 ### File List
 
