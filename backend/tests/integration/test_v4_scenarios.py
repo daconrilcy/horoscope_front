@@ -1,5 +1,7 @@
 from datetime import UTC, date, datetime
 
+import pytest
+
 from app.prediction.persisted_snapshot import PersistedCategoryScore, PersistedPredictionSnapshot
 from app.prediction.public_projection import PublicPredictionAssembler
 
@@ -25,7 +27,8 @@ def _build_base_snapshot():
     }
 
 
-def test_scenario_flat_day():
+@pytest.mark.asyncio
+async def test_scenario_flat_day():
     assembler = PublicPredictionAssembler()
     data = _build_base_snapshot()
     # All scores around 10
@@ -38,7 +41,7 @@ def test_scenario_flat_day():
     snapshot = PersistedPredictionSnapshot(**data)
     cat_id_to_code = {s.category_id: s.category_code for s in snapshot.category_scores}
 
-    result = assembler.assemble(
+    result = await assembler.assemble(
         snapshot, cat_id_to_code, reference_version="1", ruleset_version="1"
     )
 
@@ -48,7 +51,8 @@ def test_scenario_flat_day():
         assert d["level"] in ("stable", "mitigé")
 
 
-def test_scenario_polarized_day():
+@pytest.mark.asyncio
+async def test_scenario_polarized_day():
     assembler = PublicPredictionAssembler()
     data = _build_base_snapshot()
     # One high, one low. Use score_20 as build() uses it.
@@ -83,7 +87,7 @@ def test_scenario_polarized_day():
     snapshot = PersistedPredictionSnapshot(**data)
     cat_id_to_code = {s.category_id: s.category_code for s in snapshot.category_scores}
 
-    result = assembler.assemble(
+    result = await assembler.assemble(
         snapshot, cat_id_to_code, reference_version="1", ruleset_version="1"
     )
 
@@ -92,7 +96,8 @@ def test_scenario_polarized_day():
     assert result["day_climate"]["watchout"] is not None
 
 
-def test_scenario_turning_point():
+@pytest.mark.asyncio
+async def test_scenario_turning_point():
     assembler = PublicPredictionAssembler()
     data = _build_base_snapshot()
     data["category_scores"] = [
@@ -128,7 +133,7 @@ def test_scenario_turning_point():
     snapshot = PersistedPredictionSnapshot(**data)
     cat_id_to_code = {1: "work"}
 
-    result = assembler.assemble(
+    result = await assembler.assemble(
         snapshot,
         cat_id_to_code,
         reference_version="1",
@@ -141,12 +146,13 @@ def test_scenario_turning_point():
     assert result["turning_point"]["do"] != ""
 
 
-def test_scenario_low_events():
+@pytest.mark.asyncio
+async def test_scenario_low_events():
     assembler = PublicPredictionAssembler()
     data = _build_base_snapshot()
     snapshot = PersistedPredictionSnapshot(**data)
 
-    result = assembler.assemble(snapshot, {}, reference_version="1", ruleset_version="1")
+    result = await assembler.assemble(snapshot, {}, reference_version="1", ruleset_version="1")
 
     assert result["astro_foundation"] is None
     assert len(result["time_windows"]) == 4

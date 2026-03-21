@@ -1,10 +1,13 @@
 from datetime import UTC, date, datetime
 
+import pytest
+
 from app.prediction.persisted_snapshot import PersistedCategoryScore, PersistedPredictionSnapshot
 from app.prediction.public_projection import PublicPredictionAssembler
 
 
-def test_v4_payload_contains_v3_fields():
+@pytest.mark.asyncio
+async def test_v4_payload_contains_v3_fields():
     assembler = PublicPredictionAssembler()
 
     # Mock snapshot
@@ -41,7 +44,7 @@ def test_v4_payload_contains_v3_fields():
 
     cat_id_to_code = {1: "work"}
 
-    result = assembler.assemble(
+    result = await assembler.assemble(
         snapshot=snapshot,
         cat_id_to_code=cat_id_to_code,
         reference_version="1.0.0",
@@ -61,7 +64,8 @@ def test_v4_payload_contains_v3_fields():
     assert "categories_internal" in result
 
 
-def test_v4_payload_compatibility_with_v3_client():
+@pytest.mark.asyncio
+async def test_v4_payload_compatibility_with_v3_client():
     assembler = PublicPredictionAssembler()
     snapshot = PersistedPredictionSnapshot(
         run_id=1,
@@ -82,7 +86,7 @@ def test_v4_payload_compatibility_with_v3_client():
         time_blocks=[],
     )
 
-    result = assembler.assemble(
+    result = await assembler.assemble(
         snapshot=snapshot, cat_id_to_code={}, reference_version="1.0.0", ruleset_version="2.0.0"
     )
 
