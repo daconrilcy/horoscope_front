@@ -526,6 +526,13 @@ async def get_daily_prediction(
     if result is None:
         raise HTTPException(status_code=404, detail="Prediction not found")
 
+    # Commit the prediction to DB before the async LLM call so concurrent requests
+    # hit the cache instead of recomputing. Without this, the `async def` handler's
+    # `await assembler.assemble()` pause allows many requests to start simultaneously,
+    # all seeing a cache miss.
+    if not result.was_reused:
+        db.commit()
+
     snapshot = result.run
     if not isinstance(snapshot, PersistedPredictionSnapshot):
         reloaded_snapshot = DailyPredictionRepository(db).get_full_run(result.run.run_id)
