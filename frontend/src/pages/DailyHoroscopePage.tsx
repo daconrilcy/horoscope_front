@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { PageLayout } from '../layouts'
 import { useEffect, useRef } from 'react'
-import { RefreshCw } from 'lucide-react'
 
 import { DailyPageHeader } from '../components/prediction/DailyPageHeader'
 import { DayClimateHero } from '../components/DayClimateHero'
@@ -127,19 +126,9 @@ export default function DailyHoroscopePage() {
             date={prediction.meta.date_local}
             tone={prediction.day_climate?.tone || prediction.summary.overall_tone}
             lang={pLang}
+            onRefresh={handleRefresh}
+            refreshLabel={getPredictionMessage('refresh', pLang)}
           />
-
-          {/* Bouton refresh — séparé du header éditorial */}
-          <div className="daily-layout__refresh-row">
-            <button
-              type="button"
-              className="daily-page-refresh-button"
-              onClick={handleRefresh}
-              aria-label={getPredictionMessage('refresh', pLang)}
-            >
-              <RefreshCw size={15} aria-hidden="true" />
-            </button>
-          </div>
 
           {/* Zone 2 : DayClimateHero (V4) — Focus Masterpiece */}
           <SectionErrorBoundary onRetry={handleRefresh}>

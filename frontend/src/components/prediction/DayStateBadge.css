@@ -4,14 +4,14 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  min-height: 36px;
-  padding: 0 16px;
+  min-height: 34px;
+  padding: 0 15px;
   border-radius: var(--radius-pill);
-  background: var(--glass-surface-2);
-  border: 1px solid rgba(156, 121, 255, 0.25);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.3) 100%);
+  border: 1px solid rgba(156, 121, 255, 0.22);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 4px 12px rgba(88, 58, 130, 0.05);
+  box-shadow: 0 8px 22px rgba(76, 52, 122, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.56);
 }
 
 .day-state-badge--sm {
@@ -21,11 +21,12 @@
 }
 
 .day-state-badge__label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--accent-purple);
+  color: var(--accent-purple-strong);
+  white-space: nowrap;
 }
 
 .day-state-badge__dot {
@@ -38,16 +39,16 @@
 
 /* Tone Specific Overrides */
 .day-state-badge--dynamic {
-  background: rgba(156, 121, 255, 0.1);
-  border-color: rgba(156, 121, 255, 0.4);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(236, 229, 255, 0.34) 100%);
+  border-color: rgba(156, 121, 255, 0.34);
 }
 
 .day-state-badge--intense {
-  background: rgba(107, 63, 160, 0.08);
+  background: linear-gradient(180deg, rgba(232, 222, 255, 0.44) 0%, rgba(255, 255, 255, 0.24) 100%);
 }
 
 .day-state-badge--calm {
-  background: rgba(223, 213, 252, 0.2);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(243, 239, 255, 0.3) 100%);
 }
 
 .dark .day-state-badge {

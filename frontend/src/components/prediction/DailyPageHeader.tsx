@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, RefreshCw } from 'lucide-react'
 import type { Lang } from '../../i18n/predictions'
 import { getToneLabel } from '../../utils/predictionI18n'
 import { getLocale } from '../../utils/locale'
@@ -11,9 +11,11 @@ interface Props {
   date: string      // ISO date string, ex: "2026-03-16"
   tone: string | null
   lang: Lang
+  onRefresh: () => void
+  refreshLabel: string
 }
 
-export const DailyPageHeader: React.FC<Props> = ({ date, tone, lang }) => {
+export const DailyPageHeader: React.FC<Props> = ({ date, tone, lang, onRefresh, refreshLabel }) => {
   const navigate = useNavigate()
   const locale = getLocale(lang)
   const toneLabel = getToneLabel(tone, lang)
@@ -46,6 +48,17 @@ export const DailyPageHeader: React.FC<Props> = ({ date, tone, lang }) => {
         <div className="daily-page-header__badge-row">
           <DayStateBadge label={toneLabel} tone={tone} lang={lang} />
         </div>
+      </div>
+
+      <div className="daily-page-header__actions">
+        <button
+          type="button"
+          className="daily-page-header__refresh"
+          onClick={onRefresh}
+          aria-label={refreshLabel}
+        >
+          <RefreshCw size={16} aria-hidden="true" />
+        </button>
       </div>
     </header>
   )

@@ -143,15 +143,17 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => 
                   <div className="day-timeline-v4__period-info">
                     <Icon size={16} color={accentColor} />
                     <span className="day-timeline-v4__period-name">{periodLabel}</span>
-                    <span className="day-timeline-v4__time-range">{window.time_range}</span>
                   </div>
-                  <span
-                    title={regimeDescription}
-                    className="day-timeline-v4__regime-badge"
-                  >
-                    <RegimeIcon size={12} />
-                    {getRegimeLabel(window.regime, lang)}
-                  </span>
+                  <div className="day-timeline-v4__meta">
+                    <span className="day-timeline-v4__time-range">{window.time_range}</span>
+                    <span
+                      title={regimeDescription}
+                      className="day-timeline-v4__regime-badge"
+                    >
+                      <RegimeIcon size={12} />
+                      {getRegimeLabel(window.regime, lang)}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Line 2: Strong Title */}
@@ -168,8 +170,9 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => 
                 <div className="day-timeline-v4__footer">
                   <div className="day-timeline-v4__domains">
                     {window.top_domains.map(key => (
-                      <span key={key} title={getDomainLabel(key, lang)} className="day-timeline-v4__domain-icon">
-                        <DomainIcon code={key} size={14} />
+                      <span key={key} title={getDomainLabel(key, lang)} className="day-timeline-v4__domain-chip">
+                        <DomainIcon code={key} size={13} />
+                        <span className="day-timeline-v4__domain-label">{getDomainLabel(key, lang)}</span>
                       </span>
                     ))}
                   </div>

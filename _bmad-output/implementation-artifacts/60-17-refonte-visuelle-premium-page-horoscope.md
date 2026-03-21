@@ -335,34 +335,18 @@ GPT-5 Codex
 - Story créée à partir du cadrage utilisateur et des acquis design des epics 17, 49, 58 et 60.
 - Le scope est volontairement borné à une refonte stylistique frontend sans changement de payload métier.
 - Les AC sont structurés pour permettre une implémentation incrémentale carte par carte tout en gardant un socle visuel unique.
+- L’implémentation finale a dépassé la première passe “cohérente et propre” pour intégrer une vraie finition premium : colonne desktop élargie, fond plus atmosphérique, surfaces glass plus denses et micro-composants harmonisés.
+- Le header a été recomposé pour intégrer l’action de refresh dans la même bande éditoriale que le titre et le badge d’état, avec moins de vide structurel.
+- La hero card a été rééquilibrée pour supprimer l’effet de “carte dans la carte” trop visible : le voile de lecture est désormais diffus, la zone décorative droite est plus présente, et la composition texte/décor est mieux proportionnée.
+- La timeline a été consolidée en parcours vertical premium : rail plus proche des cartes, points plus présents, cartes de période plus denses, et tags d’aspects/domaines rendus comme de vrais micro-tags analytiques.
+- Les blocs `AstroDailyEvents`, `DomainRankingCard` et `DailyAdviceCard` ont été harmonisés dans un langage moins “UI fonctionnelle” et plus éditorial, avec des capsules, badges et halos cohérents.
+- Vérifications exécutées après les dernières retouches :
+  - `npx tsc --noEmit`
+  - `npm run test -- src/tests/DailyHoroscopePage.test.tsx src/tests/AstroMoodBackground.test.tsx src/tests/visual-smoke.test.tsx`
 
 ### File List
 
-- `frontend/src/pages/DailyHoroscopePage.tsx`
-- `frontend/src/pages/DailyHoroscopePage.css`
-- `frontend/src/components/prediction/DailyPageHeader.tsx`
-- `frontend/src/components/prediction/DailyPageHeader.css`
-- `frontend/src/components/prediction/DayStateBadge.css`
-- `frontend/src/components/DayClimateHero.tsx`
-- `frontend/src/components/DayClimateHero.css`
-- `frontend/src/components/AstroDailyEvents.tsx`
-- `frontend/src/components/AstroDailyEvents.css`
-- `frontend/src/components/DomainRankingCard.tsx`
-- `frontend/src/components/DomainRankingCard.css`
-- `frontend/src/components/prediction/DayTimelineSectionV4.tsx`
-- `frontend/src/components/prediction/DayTimelineSectionV4.css`
-- `frontend/src/components/TurningPointCard.css`
-- `frontend/src/components/BestWindowCard.css`
-- `frontend/src/components/prediction/DailyAdviceCard.css`
-- `frontend/src/components/AstroFoundationSection.css`
-- `frontend/src/components/prediction/SectionTitle.css`
-- `frontend/src/i18n/horoscope_copy.ts`
-- `frontend/src/components/prediction/DomainIcon.tsx`
-- `frontend/src/app/routes.tsx`
-- `frontend/src/components/BestWindowCard.tsx`
-- `frontend/src/components/AstroFoundationSection.tsx`
-- `frontend/src/components/TurningPointCard.tsx`
-
+- `_bmad-output/implementation-artifacts/60-17-refonte-visuelle-premium-page-horoscope.md`
 - `frontend/src/pages/DailyHoroscopePage.tsx`
 - `frontend/src/pages/DailyHoroscopePage.css`
 - `frontend/src/components/prediction/DailyPageHeader.tsx`
