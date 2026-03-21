@@ -1,0 +1,89 @@
+/* ── DashboardPage — Premium Alignment (Story 60.18) ── */
+
+.dashboard-container {
+  --layout-max-width: var(--premium-layout-max-width);
+  --layout-padding-inline: var(--premium-layout-padding-inline);
+  
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  padding: 0 var(--layout-padding-inline) 48px !important;
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Background Elements similar to Horoscope Page */
+.dashboard-container::before,
+.dashboard-container::after,
+.dashboard-container__bg-halo-3 {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.dashboard-container::before {
+  background: linear-gradient(180deg, var(--premium-bg-start) 0%, var(--premium-bg-mid) 48%, var(--premium-bg-end) 100%);
+}
+
+.dashboard-container::after {
+  background: 
+    radial-gradient(circle at 78% 18%, rgba(144, 117, 240, 0.2) 0%, transparent 36%),
+    radial-gradient(circle at 16% 88%, rgba(255, 211, 236, 0.15) 0%, transparent 34%);
+}
+
+.dashboard-container__bg-halo-3 {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+}
+
+.dashboard-title {
+  font-size: 40px;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--premium-text-strong);
+  margin: 8px 0 4px;
+}
+
+.dashboard-welcome {
+  font-size: 15px;
+  color: var(--premium-text-meta);
+  margin: 0 0 32px;
+}
+
+.dashboard-section-header {
+  margin: 32px 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-section-header::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--premium-accent-purple);
+}
+
+.dashboard-section-title {
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 600;
+  color: var(--premium-text-strong);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    --layout-padding-inline: 22px;
+    gap: 24px;
+  }
+  .dashboard-title { font-size: 32px; }
+}

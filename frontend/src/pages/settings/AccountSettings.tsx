@@ -25,7 +25,6 @@ export function AccountSettings() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const [astrologerProfile, setAstrologerProfile] = useState<string>("standard")
-  const [isLoadingSettings, setIsLoadingSettings] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle")
 
@@ -42,8 +41,6 @@ export function AccountSettings() {
         }
       } catch (err) {
         console.error("Failed to fetch settings", err)
-      } finally {
-        setIsLoadingSettings(false)
       }
     }
     void fetchSettings()

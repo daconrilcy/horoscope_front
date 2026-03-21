@@ -9,10 +9,13 @@ import { detectLang } from "@i18n/astrology"
 import { navigationTranslations } from "@i18n/navigation"
 import { useSidebarContext } from "@state/SidebarContext"
 import { useAccessTokenSnapshot } from "@utils/authToken"
+import { useQueryClient } from "@tanstack/react-query"
+import { prefetchDailyHoroscope } from "../../utils/prefetchHelpers"
 import { getAllNavItems } from "../../ui/nav"
 
 export function Sidebar() {
   const token = useAccessTokenSnapshot()
+  const queryClient = useQueryClient()
   const authMe = useAuthMe(token)
   const role = authMe.data?.role ?? null
   const { sidebarState, collapseSidebar, closeSidebar } = useSidebarContext()
@@ -51,7 +54,12 @@ export function Sidebar() {
                 key={item.path}
                 ref={index === 0 ? firstLinkRef : undefined}
                 to={item.path}
-                onClick={collapseSidebar}
+                onClick={() => {
+                  collapseSidebar()
+                  if (item.key === 'today') {
+                    void prefetchDailyHoroscope(queryClient, token)
+                  }
+                }}
                 className={({ isActive }) =>
                   `app-sidebar-link${isActive ? " app-sidebar-link--active" : ""}`
                 }

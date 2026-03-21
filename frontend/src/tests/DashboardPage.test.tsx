@@ -122,6 +122,31 @@ describe("DashboardPage Landing", () => {
     expect(screen.getByText("Guidance ciblée")).toBeInTheDocument()
   })
 
+  it("priorise daily_synthesis sur overall_summary", async () => {
+    const predictionWithSynthesis = {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        meta: { date_local: "2026-03-12" },
+        daily_synthesis: "Texte synthétique LLM prioritaire.",
+        summary: {
+          overall_summary: "Résumé legacy à ignorer.",
+        },
+        categories: [{ code: 'love', note_20: 18 }],
+        timeline: [],
+        turning_points: [],
+      }),
+    }
+    vi.stubGlobal("fetch", makeFetchMock(predictionWithSynthesis))
+    
+    renderDashboard()
+
+    await waitFor(() => {
+      expect(screen.getByText(/Texte synthétique LLM prioritaire/i)).toBeInTheDocument()
+    })
+    expect(screen.queryByText(/Résumé legacy à ignorer/i)).not.toBeInTheDocument()
+  })
+
   it("navigue vers le détail de l'horoscope quand on clique sur le résumé", async () => {
     vi.stubGlobal("fetch", makeFetchMock())
     const user = userEvent.setup()

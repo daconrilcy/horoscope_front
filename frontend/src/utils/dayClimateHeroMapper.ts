@@ -17,8 +17,8 @@ export function mapDayClimate(prediction: DailyPredictionResponse): DailyPredict
     intensity: 5.0,
     stability: 5.0,
     summary: prediction.summary.overall_summary || '',
-    top_domains: prediction.summary.top_categories.slice(0, 2),
-    watchout: prediction.summary.bottom_categories[0] || null,
+    top_domains: (prediction.summary.top_categories || []).slice(0, 2),
+    watchout: (prediction.summary.bottom_categories || [])[0] || null,
     best_window_ref: prediction.summary.best_window?.start_local 
       ? new Date(prediction.summary.best_window.start_local).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
       : null

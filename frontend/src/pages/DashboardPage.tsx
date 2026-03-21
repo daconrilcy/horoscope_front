@@ -4,6 +4,7 @@ import { translateDashboardPage } from "../i18n/dashboard"
 import { ShortcutsSection } from "../components/ShortcutsSection"
 import { DashboardHoroscopeSummaryCardContainer } from "../components/dashboard/DashboardHoroscopeSummaryCardContainer"
 import { SectionErrorBoundary } from "../components/ErrorBoundary"
+import "./DashboardPage.css"
 
 /**
  * Primary dashboard landing page (Story 45.2).
@@ -15,15 +16,17 @@ export function DashboardPage() {
 
   return (
     <PageLayout
-      className="panel dashboard-container"
+      className="dashboard-container"
     >
-      <div>
+      <div className="dashboard-layout__bg-halo-3" />
+      
+      <header className="dashboard-header">
         <h2 className="dashboard-title">{title}</h2>
-        <p>{welcome}</p>
-      </div>
+        <p className="dashboard-welcome">{welcome}</p>
+      </header>
 
-      <div className="section-header">
-        <h3 className="section-header__title">{header.title}</h3>
+      <div className="dashboard-section-header">
+        <h3 className="dashboard-section-title">{header.title}</h3>
       </div>
 
       <SectionErrorBoundary>

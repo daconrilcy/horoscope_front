@@ -7,6 +7,7 @@ import { translateSign } from "../../i18n/astrology"
 import { AstroMoodBackground } from "../astro/AstroMoodBackground"
 import { getZodiacIcon } from "../../components/zodiacSignIconMap"
 import type { ZodiacSign } from "../astro/zodiacPatterns"
+import { getDailyEditorialSummary } from "../../utils/dailySummaryHelper"
 
 import { SkeletonGroup } from "../ui"
 
@@ -96,7 +97,7 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
     )
   }
 
-  const summary = prediction.summary.overall_summary
+  const summary = getDailyEditorialSummary(prediction)
 
   return (
     <div

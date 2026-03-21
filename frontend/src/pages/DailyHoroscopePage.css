@@ -1,36 +1,36 @@
 /* ── DailyHoroscopePage — Unified Premium Glassmorphism (Story 60.17) ── */
 
 .daily-layout {
-  --layout-max-width: 912px;
-  --layout-padding-inline: 40px;
+  --layout-max-width: var(--premium-layout-max-width);
+  --layout-padding-inline: var(--premium-layout-padding-inline);
   --timeline-card-offset: 28px;
-  --page-bg-start: #f4edf6;
-  --page-bg-mid: #ece2f1;
-  --page-bg-end: #e2d7ec;
+  --page-bg-start: var(--premium-bg-start);
+  --page-bg-mid: var(--premium-bg-mid);
+  --page-bg-end: var(--premium-bg-end);
 
-  --glass-surface-1: rgba(255, 255, 255, 0.44);
-  --glass-surface-2: rgba(255, 255, 255, 0.5);
-  --glass-surface-3: rgba(255, 255, 255, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.42);
-  --glass-border-strong: rgba(196, 177, 235, 0.54);
+  --glass-surface-1: var(--premium-glass-surface-1);
+  --glass-surface-2: var(--premium-glass-surface-2);
+  --glass-surface-3: var(--premium-glass-surface-3);
+  --glass-border: var(--premium-glass-border);
+  --glass-border-strong: var(--premium-glass-border-strong);
 
-  --shadow-page: 0 18px 60px rgba(76, 52, 122, 0.08);
-  --shadow-card: 0 14px 40px rgba(70, 50, 110, 0.1);
-  --shadow-focus: 0 18px 50px rgba(70, 50, 110, 0.14);
-  --inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  --shadow-page: var(--premium-shadow-page);
+  --shadow-card: var(--premium-shadow-card);
+  --shadow-focus: var(--premium-shadow-focus);
+  --inner-light: var(--premium-inner-light);
 
-  --radius-hero: 28px;
-  --radius-card: 24px;
-  --radius-panel: 18px;
-  --radius-pill: 999px;
+  --radius-hero: var(--premium-radius-hero);
+  --radius-card: var(--premium-radius-card);
+  --radius-panel: var(--premium-radius-panel);
+  --radius-pill: var(--premium-radius-pill);
 
-  --text-strong: #2a2338;
-  --text-main: #4b445a;
-  --text-meta: #7e7891;
-  --text-faint: #a39bb6;
-  --accent-purple: #8e7cf0;
-  --accent-purple-strong: #6f57d9;
-  --accent-purple-soft: #cbbdff;
+  --text-strong: var(--premium-text-strong);
+  --text-main: var(--premium-text-main);
+  --text-meta: var(--premium-text-meta);
+  --text-faint: var(--premium-text-faint);
+  --accent-purple: var(--premium-accent-purple);
+  --accent-purple-strong: var(--premium-accent-purple-strong);
+  --accent-purple-soft: var(--premium-accent-purple-soft);
 
   position: relative;
   display: flex;

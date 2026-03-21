@@ -1,0 +1,76 @@
+/* ── Premium Design Tokens (Story 60.17 & 60.18) ── */
+
+:root {
+  --premium-layout-max-width: 912px;
+  --premium-layout-padding-inline: 40px;
+  
+  --premium-bg-start: #f4edf6;
+  --premium-bg-mid: #ece2f1;
+  --premium-bg-end: #e2d7ec;
+
+  --premium-glass-surface-1: rgba(255, 255, 255, 0.44);
+  --premium-glass-surface-2: rgba(255, 255, 255, 0.5);
+  --premium-glass-surface-3: rgba(255, 255, 255, 0.6);
+  --premium-glass-border: rgba(255, 255, 255, 0.42);
+  --premium-glass-border-strong: rgba(196, 177, 235, 0.54);
+
+  --premium-shadow-page: 0 18px 60px rgba(76, 52, 122, 0.08);
+  --premium-shadow-card: 0 14px 40px rgba(70, 50, 110, 0.1);
+  --premium-shadow-focus: 0 18px 50px rgba(70, 50, 110, 0.14);
+  --premium-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+
+  --premium-radius-hero: 28px;
+  --premium-radius-card: 24px;
+  --premium-radius-panel: 18px;
+  --premium-radius-pill: 999px;
+
+  --premium-text-strong: #2a2338;
+  --premium-text-main: #4b445a;
+  --premium-text-meta: #7e7891;
+  --premium-text-faint: #a39bb6;
+  
+  --premium-accent-purple: #8e7cf0;
+  --premium-accent-purple-strong: #6f57d9;
+  --premium-accent-purple-soft: #cbbdff;
+}
+
+/* Dark Mode Overrides */
+.dark {
+  --premium-bg-start: #1a1625;
+  --premium-bg-mid: #151223;
+  --premium-bg-end: #0f0d1a;
+  
+  --premium-glass-surface-1: rgba(255, 255, 255, 0.04);
+  --premium-glass-surface-2: rgba(255, 255, 255, 0.07);
+  --premium-glass-border: rgba(255, 255, 255, 0.1);
+  --premium-glass-border-strong: rgba(156, 121, 255, 0.2);
+  
+  --premium-shadow-card: 0 12px 34px rgba(0, 0, 0, 0.38);
+  
+  --premium-accent-purple: #b197ff;
+  --premium-text-strong: #f4eefc;
+  --premium-text-main: rgba(244, 238, 252, 0.84);
+  --premium-text-meta: rgba(214, 205, 234, 0.72);
+  --premium-text-faint: rgba(188, 176, 212, 0.62);
+}
+
+/* Utility Class for Glass Cards */
+.premium-glass-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.38) 100%);
+  border: 1px solid var(--premium-glass-border);
+  border-radius: var(--premium-radius-card);
+  box-shadow: var(--premium-shadow-card), var(--premium-inner-light);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.dark .premium-glass-card {
+  background: var(--premium-glass-surface-2);
+}
+
+.premium-glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--premium-shadow-focus);
+  border-color: var(--premium-glass-border-strong);
+}

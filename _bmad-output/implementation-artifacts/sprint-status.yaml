@@ -522,6 +522,7 @@ development_status:
   60-15-enrichissement-calculs-astrologiques: done
   60-16-interpretation-llm: done
   60-17-refonte-visuelle-premium-page-horoscope: done
+  60-18-alignement-dashboard-et-prechargement-horoscope: done
   epic-60-retrospective: optional
 
   epic-58: in-progress
