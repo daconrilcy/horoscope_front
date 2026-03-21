@@ -600,6 +600,19 @@ claude-sonnet-4-6
    e. **Vérification ciblée** — Passe :
       - `npx tsc --noEmit` dans `frontend/`
 
+10. **Seconde passe de cohérence visuelle `/dashboard/horoscope` (2026-03-21)** — Consolidation du style pour coller davantage à la maquette de référence :
+
+   a. **Socle de surface unifié au niveau page** (`DailyHoroscopePage.css`) — Introduction de variables partagées de section (`--horoscope-panel-*`, `--horoscope-inner-*`, `--horoscope-phase-*`) afin que toutes les cartes principales de la page utilisent le même fond glassmorphism de base, la même densité de bordure, le même ombrage et la même profondeur.
+
+   b. **Cohérence inter-sections renforcée** — `AstroDailyEvents`, `DailyAdviceCard`, `DomainRankingCard`, `TurningPointCard`, `BestWindowCard`, `AstroFoundationSection` et les cartes de timeline héritent désormais du même traitement visuel de surface, ce qui réduit la dérive précédente entre cartes “verre clair”, cartes teintées et cartes plus opaques.
+
+   c. **Différenciation des périodes par bordure, pas par fond** (`DayTimelineSectionV4.tsx`) — Les fonds des créneaux journaliers ont été neutralisés sur une même base glass. Les régimes (`progression`, `fluidité`, `prudence`, `pivot`, `récupération`, `retombée`, `mise_en_route`, `recentrage`) se distinguent maintenant principalement par la couleur de bordure et du badge, conformément à la direction UI demandée.
+
+   d. **AstroDailyEvents réaligné** (`AstroDailyEvents.tsx/css`) — Suppression du style inline sur l’intro et rapprochement de la section du système visuel commun : même fond, mêmes bordures internes, hiérarchie typo plus homogène avec le reste de la page horoscope.
+
+   e. **Vérification ciblée** — Passe :
+      - `npx tsc --noEmit` dans `frontend/`
+
 ### File List
 
 - `backend/app/infra/db/models/user.py`

@@ -9,13 +9,13 @@
 }
 
 .day-timeline-v4__card {
-  border-radius: 20px;
+  border-radius: var(--horoscope-panel-radius, 24px);
   padding: 1rem 1rem 1.05rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(var(--horoscope-blur, 18px));
+  -webkit-backdrop-filter: blur(var(--horoscope-blur, 18px));
 }
 
 .day-timeline-v4__top {
@@ -48,6 +48,9 @@
   border-radius: 999px;
   margin-left: 0.35rem;
   cursor: help;
+  background: var(--horoscope-inner-bg, rgba(255, 255, 255, 0.34));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .day-timeline-v4__label {

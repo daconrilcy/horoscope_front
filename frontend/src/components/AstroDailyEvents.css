@@ -3,12 +3,7 @@
 .astro-daily-events {
   width: 100%;
   padding: 20px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(134, 108, 208, 0.15);
-  box-shadow: 0 4px 16px rgba(134, 108, 208, 0.05);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border-radius: var(--horoscope-panel-radius, 24px);
   margin-top: 16px;
 }
 
@@ -20,9 +15,17 @@
 .astro-daily-events__title {
   font-size: 1.1rem;
   font-weight: 800;
-  color: var(--text-1);
+  color: var(--color-text-primary, var(--text-1));
   margin: 0 0 16px 0;
   letter-spacing: -0.01em;
+}
+
+.astro-daily-events__intro {
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+  color: var(--color-text-secondary, var(--text-2));
+  font-style: italic;
+  line-height: 1.55;
 }
 
 .astro-daily-events__grid {
@@ -41,7 +44,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  border-bottom: 1px solid rgba(134, 108, 208, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.42);
   padding-bottom: 6px;
 }
 
@@ -73,10 +76,10 @@
   justify-content: space-between;
   align-items: center;
   font-size: 0.9rem;
-  color: var(--text-1);
-  background: rgba(134, 108, 208, 0.05);
+  color: var(--color-text-primary, var(--text-1));
   padding: 6px 10px;
   border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
 }
 
 .astro-daily-events__item-time {
@@ -96,8 +99,6 @@
 
 .astro-daily-events__item--pill {
   font-size: 0.8rem;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(134, 108, 208, 0.1);
   padding: 4px 10px;
   border-radius: 20px;
   white-space: nowrap;

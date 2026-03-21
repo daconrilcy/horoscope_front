@@ -1,8 +1,8 @@
 .day-climate-hero-wrapper {
-  border-radius: 28px;
+  border-radius: var(--horoscope-panel-radius, 24px);
   overflow: hidden;
-  border: 1px solid var(--color-line, rgba(30, 27, 46, 0.15));
-  box-shadow: var(--shadow-card);
+  border: 1.5px solid var(--horoscope-panel-border, rgba(255, 255, 255, 0.72));
+  box-shadow: var(--horoscope-panel-shadow, var(--shadow-card));
 }
 
 .day-climate-hero {
@@ -117,13 +117,13 @@
 
 .day-climate-hero--astro .day-climate-hero__chip,
 .day-climate-hero--astro .day-climate-hero__best-window {
-  background: rgba(10, 5, 30, 0.24);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.24);
 }
 
 .day-climate-hero--astro .day-climate-hero__watchout {
-  background: rgba(10, 5, 30, 0.3);
-  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .day-climate-hero__watchout-text {

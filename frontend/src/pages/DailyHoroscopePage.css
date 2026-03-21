@@ -1,5 +1,30 @@
 /* Layout racine */
 .daily-layout {
+  --horoscope-panel-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.56) 0%, rgba(255, 255, 255, 0.34) 100%);
+  --horoscope-panel-bg-strong:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.4) 100%);
+  --horoscope-panel-border: rgba(255, 255, 255, 0.72);
+  --horoscope-panel-border-soft: rgba(220, 210, 246, 0.65);
+  --horoscope-panel-shadow:
+    0 18px 44px rgba(72, 56, 118, 0.11),
+    0 2px 0 rgba(255, 255, 255, 0.28) inset;
+  --horoscope-panel-shadow-soft:
+    0 12px 28px rgba(72, 56, 118, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.28) inset;
+  --horoscope-panel-radius: 24px;
+  --horoscope-inner-bg: rgba(255, 255, 255, 0.34);
+  --horoscope-inner-bg-strong: rgba(255, 255, 255, 0.42);
+  --horoscope-inner-border: rgba(255, 255, 255, 0.62);
+  --horoscope-blur: 18px;
+  --horoscope-phase-progression: #5d946d;
+  --horoscope-phase-fluidite: #6f67cf;
+  --horoscope-phase-prudence: #d39a3e;
+  --horoscope-phase-pivot: #8b5cf6;
+  --horoscope-phase-recuperation: #8a7cb2;
+  --horoscope-phase-retombee: #9a8ebc;
+  --horoscope-phase-mise-en-route: #f0b83d;
+  --horoscope-phase-recentrage: #7355c7;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -38,6 +63,24 @@
 .daily-layout > * {
   position: relative;
   z-index: 1;
+}
+
+.daily-layout :is(.astro-daily-events, .domain-ranking-card, .turning-point-card, .best-window-card, .daily-advice-card, .astro-foundation-section) {
+  background: var(--horoscope-panel-bg);
+  border: 1.5px solid var(--horoscope-panel-border);
+  border-radius: var(--horoscope-panel-radius);
+  box-shadow: var(--horoscope-panel-shadow);
+  backdrop-filter: blur(var(--horoscope-blur));
+  -webkit-backdrop-filter: blur(var(--horoscope-blur));
+}
+
+.daily-layout :is(.astro-daily-events__item, .astro-daily-events__item--pill, .domain-ranking-card__badge, .turning-point-card__time, .turning-point-card__domain-pill, .best-window-card__actions, .astro-foundation-section__bridge, .day-climate-hero__chip, .day-climate-hero__best-window) {
+  background: var(--horoscope-inner-bg);
+  border-color: var(--horoscope-inner-border);
+}
+
+.daily-layout :is(.astro-daily-events__title, .turning-point-card__title, .best-window-card__title) {
+  letter-spacing: -0.02em;
 }
 
 .daily-layout__refresh-row {

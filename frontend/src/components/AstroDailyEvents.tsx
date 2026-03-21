@@ -56,13 +56,7 @@ export const AstroDailyEvents: React.FC<AstroDailyEventsProps> = ({ data, intro,
       </h3>
 
       {intro && (
-        <p className="astro-daily-events__intro" style={{
-          fontSize: '0.95rem',
-          color: 'var(--text-1)',
-          marginBottom: '16px',
-          fontStyle: 'italic',
-          lineHeight: '1.4'
-        }}>
+        <p className="astro-daily-events__intro">
           {intro}
         </p>
       )}

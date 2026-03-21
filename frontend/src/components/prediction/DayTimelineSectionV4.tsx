@@ -104,60 +104,60 @@ const REGIME_META: Record<
 };
 
 const DEFAULT_REGIME_VISUAL: RegimeVisual = {
-  cardBackground: 'linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(208, 188, 255, 0.12))',
-  borderColor: 'rgba(255, 255, 255, 0.22)',
-  badgeBackground: 'rgba(255, 255, 255, 0.54)',
-  badgeColor: 'var(--text-2)',
+  cardBackground: 'var(--horoscope-panel-bg, linear-gradient(180deg, rgba(255, 255, 255, 0.56) 0%, rgba(255, 255, 255, 0.34) 100%))',
+  borderColor: 'var(--horoscope-panel-border-soft, rgba(220, 210, 246, 0.65))',
+  badgeBackground: 'var(--horoscope-inner-bg, rgba(255, 255, 255, 0.34))',
+  badgeColor: 'var(--color-text-secondary, var(--text-2))',
 };
 
 const REGIME_VISUALS: Record<string, RegimeVisual> = {
   progression: {
-    cardBackground: 'linear-gradient(135deg, rgba(223, 247, 229, 0.42), rgba(168, 230, 186, 0.18))',
-    borderColor: 'rgba(54, 141, 79, 0.9)',
-    badgeBackground: 'rgba(222, 245, 229, 0.92)',
-    badgeColor: '#225c37',
+    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
+    borderColor: 'var(--horoscope-phase-progression, #5d946d)',
+    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
+    badgeColor: 'var(--horoscope-phase-progression, #5d946d)',
   },
   fluidité: {
-    cardBackground: 'linear-gradient(135deg, rgba(226, 246, 240, 0.4), rgba(156, 214, 198, 0.18))',
-    borderColor: 'rgba(47, 134, 116, 0.78)',
-    badgeBackground: 'rgba(227, 246, 241, 0.9)',
-    badgeColor: '#1d6255',
+    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
+    borderColor: 'var(--horoscope-phase-fluidite, #6f67cf)',
+    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
+    badgeColor: 'var(--horoscope-phase-fluidite, #6f67cf)',
   },
   prudence: {
-    cardBackground: 'linear-gradient(135deg, rgba(255, 241, 223, 0.45), rgba(255, 194, 122, 0.16))',
-    borderColor: 'rgba(214, 131, 26, 0.92)',
-    badgeBackground: 'rgba(255, 242, 226, 0.92)',
-    badgeColor: '#8d5408',
+    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
+    borderColor: 'var(--horoscope-phase-prudence, #d39a3e)',
+    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
+    badgeColor: 'var(--horoscope-phase-prudence, #d39a3e)',
   },
   pivot: {
-    cardBackground: 'linear-gradient(135deg, rgba(223, 239, 255, 0.42), rgba(146, 189, 255, 0.18))',
-    borderColor: 'rgba(58, 111, 196, 0.88)',
-    badgeBackground: 'rgba(225, 239, 255, 0.9)',
-    badgeColor: '#214f96',
+    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
+    borderColor: 'var(--horoscope-phase-pivot, #8b5cf6)',
+    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
+    badgeColor: 'var(--horoscope-phase-pivot, #8b5cf6)',
   },
   récupération: {
-    cardBackground: 'linear-gradient(135deg, rgba(245, 241, 252, 0.42), rgba(216, 208, 237, 0.16))',
-    borderColor: 'rgba(180, 172, 205, 0.74)',
-    badgeBackground: 'rgba(246, 243, 252, 0.9)',
-    badgeColor: '#615a76',
+    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
+    borderColor: 'var(--horoscope-phase-recuperation, #8a7cb2)',
+    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
+    badgeColor: 'var(--horoscope-phase-recuperation, #8a7cb2)',
   },
   retombée: {
-    cardBackground: 'linear-gradient(135deg, rgba(241, 238, 248, 0.42), rgba(202, 193, 226, 0.16))',
-    borderColor: 'rgba(161, 151, 189, 0.74)',
-    badgeBackground: 'rgba(243, 239, 250, 0.9)',
-    badgeColor: '#5f5774',
+    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
+    borderColor: 'var(--horoscope-phase-retombee, #9a8ebc)',
+    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
+    badgeColor: 'var(--horoscope-phase-retombee, #9a8ebc)',
   },
   mise_en_route: {
-    cardBackground: 'linear-gradient(135deg, rgba(240, 251, 229, 0.46), rgba(213, 234, 146, 0.18))',
-    borderColor: 'rgba(109, 146, 26, 0.92)',
-    badgeBackground: 'rgba(242, 250, 231, 0.94)',
-    badgeColor: '#587115',
+    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
+    borderColor: 'var(--horoscope-phase-mise-en-route, #f0b83d)',
+    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
+    badgeColor: 'var(--horoscope-phase-mise-en-route, #f0b83d)',
   },
   recentrage: {
-    cardBackground: 'linear-gradient(135deg, rgba(250, 243, 236, 0.4), rgba(231, 204, 188, 0.16))',
-    borderColor: 'rgba(177, 136, 110, 0.72)',
-    badgeBackground: 'rgba(251, 244, 238, 0.9)',
-    badgeColor: '#7b5a46',
+    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
+    borderColor: 'var(--horoscope-phase-recentrage, #7355c7)',
+    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
+    badgeColor: 'var(--horoscope-phase-recentrage, #7355c7)',
   },
 };
 
@@ -196,8 +196,8 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => 
               className="day-timeline-v4__card"
               style={{
                 background: regimeVisual.cardBackground,
-                border: `1px solid ${regimeVisual.borderColor}`,
-                boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 24px ${regimeVisual.borderColor.replace(/0\.\d+\)$/, '0.12)')}`,
+                border: `1.5px solid ${regimeVisual.borderColor}`,
+                boxShadow: 'var(--horoscope-panel-shadow, 0 18px 44px rgba(72, 56, 118, 0.11), 0 2px 0 rgba(255, 255, 255, 0.28) inset)',
               }}
             >
               <div className="day-timeline-v4__top">
