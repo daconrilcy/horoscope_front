@@ -26,11 +26,11 @@ export const CHANGE_TYPE_LABELS: Record<string, { fr: string; en: string }> = {
 };
 
 export const DOMAIN_LABELS: Record<string, { fr: string; en: string; icon: string }> = {
-  "pro_ambition": { fr: "Pro & Ambition", en: "Work & Ambition", icon: "💼" },
-  "relations_echanges": { fr: "Relations & échanges", en: "Relationships", icon: "🤝" },
-  "energie_bienetre": { fr: "Énergie & bien-être", en: "Energy & Wellbeing", icon: "⚡" },
-  "argent_ressources": { fr: "Argent & ressources", en: "Money & Resources", icon: "💰" },
-  "vie_personnelle": { fr: "Vie personnelle", en: "Personal Life", icon: "🎨" },
+  "pro_ambition": { fr: "Pro & Ambition", en: "Work & Ambition", icon: "Briefcase" },
+  "relations_echanges": { fr: "Relations & échanges", en: "Relationships", icon: "Users" },
+  "energie_bienetre": { fr: "Énergie & bien-être", en: "Energy & Wellbeing", icon: "Zap" },
+  "argent_ressources": { fr: "Argent & ressources", en: "Money & Resources", icon: "DollarSign" },
+  "vie_personnelle": { fr: "Vie personnelle", en: "Personal Life", icon: "Heart" },
 };
 
 export function getDomainLabel(key: string, lang: Lang): string {

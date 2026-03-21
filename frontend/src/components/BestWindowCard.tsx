@@ -1,4 +1,5 @@
 import React from 'react';
+import { Sparkles } from 'lucide-react';
 import type { DailyPredictionBestWindow } from '../types/dailyPrediction';
 import type { Lang } from '../i18n/predictions';
 import './BestWindowCard.css';
@@ -12,10 +13,11 @@ export const BestWindowCard: React.FC<Props> = ({ bestWindow, lang }) => {
   if (!bestWindow) return null;
 
   return (
-    <section className="best-window-card glass-card glass-card--hero">
+    <section className="best-window-card">
       <header className="best-window-card__header">
         <span className="best-window-card__time">
-          ✨ {bestWindow.time_range}
+          <Sparkles size={14} className="best-window-card__time-icon" />
+          {bestWindow.time_range}
         </span>
         {bestWindow.is_pivot && (
           <span className="best-window-card__pivot">

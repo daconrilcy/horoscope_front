@@ -1,7 +1,8 @@
 import React from 'react';
 import type { DailyPredictionTurningPointPublic } from '../types/dailyPrediction';
 import type { Lang } from '../i18n/predictions';
-import { getDomainLabel, getChangeTypeLabel, DOMAIN_LABELS } from '../i18n/horoscope_copy';
+import { getDomainLabel, getChangeTypeLabel } from '../i18n/horoscope_copy';
+import { DomainIcon } from './prediction/DomainIcon';
 import './TurningPointCard.css';
 
 interface Props {
@@ -24,7 +25,7 @@ export const TurningPointCard: React.FC<Props> = ({ turningPoint, lang }) => {
   const badge = getBadgeStyle(turningPoint.change_type);
 
   return (
-    <section className="turning-point-card glass-card glass-card--hero">
+    <section className="turning-point-card">
       <div className="turning-point-card__rail" style={{ background: badge.color }} />
       <header className="turning-point-card__header">
         <div className="turning-point-card__meta">
@@ -44,7 +45,8 @@ export const TurningPointCard: React.FC<Props> = ({ turningPoint, lang }) => {
       <div className="turning-point-card__domains">
         {turningPoint.affected_domains.map(key => (
           <span key={key} className="turning-point-card__domain-pill">
-            {DOMAIN_LABELS[key]?.icon || '✨'} {getDomainLabel(key, lang)}
+            <DomainIcon code={key} size={14} />
+            {getDomainLabel(key, lang)}
           </span>
         ))}
       </div>

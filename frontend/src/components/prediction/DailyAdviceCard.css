@@ -1,72 +1,75 @@
-/* ── DailyAdviceCard — conseil du jour, glassmorphism PeriodCard ── */
+/* ── DailyAdviceCard — Conclusive Masterpiece (Story 60.17) ── */
 
 .daily-advice-card {
   width: 100%;
-  padding: 16px 20px;
-  border-radius: 18px;
-  background: rgba(252, 250, 255, 0.58);
-  border: 2px solid rgba(200, 190, 240, 0.35);
-  box-shadow: 0 2px 12px rgba(134, 108, 208, 0.06);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-.dark .daily-advice-card {
-  background: var(--background-unselected-cell);
-  border-color: rgba(134, 108, 208, 0.18);
+  padding: 24px;
+  background: var(--glass-surface-2);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-focus);
 }
 
 .daily-advice-card__header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .daily-advice-card__icon-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: rgba(134, 108, 208, 0.15);
-  color: var(--primary);
+  background: rgba(156, 121, 255, 0.15);
+  color: var(--accent-purple);
   flex-shrink: 0;
+  position: relative;
+}
+
+/* Local Halo (AC9.35) */
+.daily-advice-card__icon-badge::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  background: radial-gradient(circle, rgba(156, 121, 255, 0.2) 0%, transparent 70%);
+  z-index: -1;
 }
 
 .daily-advice-card__title {
-  font-size: 0.95rem;
+  font-size: 18px;
   font-weight: 700;
-  color: var(--text-1);
+  color: var(--text-main);
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .daily-advice-card__content {
-  padding-left: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .daily-advice-card__body {
-  font-size: 0.88rem;
-  line-height: 1.55;
-  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-main);
   margin: 0;
 }
 
 .daily-advice-card__emphasis {
-  display: block;
-  margin: 8px 0 0;
-  font-weight: 700;
-  color: var(--text-1);
-  line-height: 1.45;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.5;
+  margin: 0;
+  padding-top: 8px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .daily-advice-card {
-    padding: 14px 16px;
-  }
-
-  .daily-advice-card__content {
-    padding-left: 0;
+    padding: 20px;
   }
 }

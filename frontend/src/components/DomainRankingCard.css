@@ -1,71 +1,112 @@
+/* ── DomainRankingCard — Premium Metrics (Story 60.17) ── */
+
+.domain-ranking-card__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0 0 20px 0;
+}
+
 .domain-ranking-card__list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: 24px;
 }
 
 .domain-ranking-card__item {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 12px;
 }
 
-.domain-ranking-card__item-top {
+.domain-ranking-card__row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: var(--space-3);
+  gap: 12px;
 }
 
-.domain-ranking-card__label-wrap,
-.domain-ranking-card__meta {
+.domain-ranking-card__info {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 12px;
 }
 
-.domain-ranking-card__icon {
-  font-size: 1.15rem;
+.domain-ranking-card__icon-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--glass-surface-2);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(88, 58, 130, 0.05);
 }
 
 .domain-ranking-card__label {
-  font-size: 0.98rem;
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-main);
 }
 
-.domain-ranking-card__score {
-  font-size: 0.9rem;
-  font-weight: var(--font-weight-bold);
+.domain-ranking-card__metrics {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.domain-ranking-card__badge {
-  padding: 0.22rem 0.55rem;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.34);
-  border: 1px solid rgba(134, 108, 208, 0.18);
-  color: var(--color-text-secondary);
-  font-size: 0.72rem;
-  font-weight: var(--font-weight-semibold);
+.domain-ranking-card__score-pill {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  background: var(--glass-surface-2);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
 }
 
+.domain-ranking-card__status-pill {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--glass-border);
+  color: var(--text-meta);
+}
+
+/* Track & Progress */
 .domain-ranking-card__track {
-  height: 8px;
-  background: rgba(134, 108, 208, 0.11);
-  border-radius: var(--radius-full);
+  height: 6px;
+  background: rgba(123, 104, 180, 0.14);
+  border-radius: var(--radius-pill);
   overflow: hidden;
+  position: relative;
 }
 
 .domain-ranking-card__fill {
   height: 100%;
   border-radius: inherit;
-  transition: width 0.45s ease-out;
-  box-shadow: 0 0 14px rgba(134, 108, 208, 0.16);
+  background: linear-gradient(90deg, #c0aef2 0%, var(--accent-purple) 100%);
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@media (max-width: 640px) {
-  .domain-ranking-card__item-top {
-    align-items: flex-start;
-    flex-direction: column;
+/* Status Variations */
+.domain-ranking-card__fill--favorable,
+.domain-ranking-card__fill--tres_favorable {
+  box-shadow: 0 0 12px rgba(156, 121, 255, 0.3);
+}
+
+.domain-ranking-card__status-pill--favorable,
+.domain-ranking-card__status-pill--tres_favorable {
+  border-color: rgba(156, 121, 255, 0.3);
+  color: var(--accent-purple);
+}
+
+@media (max-width: 480px) {
+  .domain-ranking-card__status-pill {
+    display: none;
   }
 }

@@ -14,9 +14,9 @@ import {
 } from 'lucide-react';
 import type { DailyPredictionTimeWindow } from '../../types/dailyPrediction';
 import type { Lang } from '../../i18n/predictions';
-import { getDomainLabel, getRegimeLabel, DOMAIN_LABELS } from '../../i18n/horoscope_copy';
+import { getDomainLabel, getRegimeLabel } from '../../i18n/horoscope_copy';
+import { DomainIcon } from './DomainIcon';
 import { PERIOD_LABELS } from '../../i18n/predictions';
-import './SectionTitle.css';
 import './DayTimelineSectionV4.css';
 
 interface Props {
@@ -24,18 +24,18 @@ interface Props {
   lang: Lang;
 }
 
-interface RegimeVisual {
-  cardBackground: string;
-  borderColor: string;
-  badgeBackground: string;
-  badgeColor: string;
-}
-
 const PERIOD_ICONS: Record<string, React.ElementType> = {
   nuit: Moon,
   matin: Sunrise,
   apres_midi: Sun,
   soiree: Sunset,
+};
+
+const PERIOD_ACCENTS: Record<string, string> = {
+  nuit: '#a5b4fc', // Light indigo
+  matin: '#fde68a', // Light amber
+  apres_midi: '#ddd6fe', // Light violet
+  soiree: '#fca5a5', // Light rose/plum
 };
 
 const REGIME_META: Record<
@@ -103,154 +103,89 @@ const REGIME_META: Record<
   },
 };
 
-const DEFAULT_REGIME_VISUAL: RegimeVisual = {
-  cardBackground: 'var(--horoscope-panel-bg, linear-gradient(180deg, rgba(255, 255, 255, 0.56) 0%, rgba(255, 255, 255, 0.34) 100%))',
-  borderColor: 'var(--horoscope-panel-border-soft, rgba(220, 210, 246, 0.65))',
-  badgeBackground: 'var(--horoscope-inner-bg, rgba(255, 255, 255, 0.34))',
-  badgeColor: 'var(--color-text-secondary, var(--text-2))',
-};
-
-const REGIME_VISUALS: Record<string, RegimeVisual> = {
-  progression: {
-    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
-    borderColor: 'var(--horoscope-phase-progression, #5d946d)',
-    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
-    badgeColor: 'var(--horoscope-phase-progression, #5d946d)',
-  },
-  fluidité: {
-    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
-    borderColor: 'var(--horoscope-phase-fluidite, #6f67cf)',
-    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
-    badgeColor: 'var(--horoscope-phase-fluidite, #6f67cf)',
-  },
-  prudence: {
-    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
-    borderColor: 'var(--horoscope-phase-prudence, #d39a3e)',
-    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
-    badgeColor: 'var(--horoscope-phase-prudence, #d39a3e)',
-  },
-  pivot: {
-    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
-    borderColor: 'var(--horoscope-phase-pivot, #8b5cf6)',
-    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
-    badgeColor: 'var(--horoscope-phase-pivot, #8b5cf6)',
-  },
-  récupération: {
-    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
-    borderColor: 'var(--horoscope-phase-recuperation, #8a7cb2)',
-    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
-    badgeColor: 'var(--horoscope-phase-recuperation, #8a7cb2)',
-  },
-  retombée: {
-    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
-    borderColor: 'var(--horoscope-phase-retombee, #9a8ebc)',
-    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
-    badgeColor: 'var(--horoscope-phase-retombee, #9a8ebc)',
-  },
-  mise_en_route: {
-    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
-    borderColor: 'var(--horoscope-phase-mise-en-route, #f0b83d)',
-    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
-    badgeColor: 'var(--horoscope-phase-mise-en-route, #f0b83d)',
-  },
-  recentrage: {
-    cardBackground: DEFAULT_REGIME_VISUAL.cardBackground,
-    borderColor: 'var(--horoscope-phase-recentrage, #7355c7)',
-    badgeBackground: DEFAULT_REGIME_VISUAL.badgeBackground,
-    badgeColor: 'var(--horoscope-phase-recentrage, #7355c7)',
-  },
-};
-
 export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => {
-  const getRegimeVisual = (regime: string): RegimeVisual =>
-    REGIME_VISUALS[regime] ?? DEFAULT_REGIME_VISUAL;
-
   return (
     <section className="day-timeline-v4">
-      <div className="section-title">
-        <div className="section-title__dot" />
-        <h2 className="section-title__text">
-          {lang === 'fr' ? 'Déroulé de votre journée' : 'Your day timeline'}
-        </h2>
-        <hr className="section-title__line" />
-      </div>
+      <h3 className="day-timeline-v4__title">
+        {lang === 'fr' ? 'Déroulé de votre journée' : 'Your day timeline'}
+      </h3>
 
-      <div className="day-timeline-v4__list">
-        {timeWindows.map((window) => {
-          const Icon = PERIOD_ICONS[window.period_key] || Sparkles;
-          const periodLabel = PERIOD_LABELS[window.period_key as keyof typeof PERIOD_LABELS]?.[lang] || '';
-          const regimeMeta = REGIME_META[window.regime] || {
-            icon: Sparkles,
-            description: {
-              fr: "Ce créneau possède une tonalité astrologique particulière.",
-              en: 'This slot has a distinct astrological tone.',
-            },
-          };
-          const RegimeIcon = regimeMeta.icon;
-          const regimeDescription = regimeMeta.description[lang];
-          const regimeVisual = getRegimeVisual(window.regime);
+      <div className="day-timeline-v4__container">
+        {/* Vertical Timeline Line (AC8.34) */}
+        <div className="day-timeline-v4__line" aria-hidden="true" />
 
-          return (
-            <article
-              key={window.period_key || window.time_range}
-              className="day-timeline-v4__card"
-              style={{
-                background: regimeVisual.cardBackground,
-                border: `1.5px solid ${regimeVisual.borderColor}`,
-                boxShadow: 'var(--horoscope-panel-shadow, 0 18px 44px rgba(72, 56, 118, 0.11), 0 2px 0 rgba(255, 255, 255, 0.28) inset)',
-              }}
-            >
-              <div className="day-timeline-v4__top">
-                <Icon size={16} color="var(--text-2)" />
-                <span className="day-timeline-v4__period-label">
-                  {periodLabel}
-                </span>
-                <span className="day-timeline-v4__time-range">
-                  {window.time_range}
-                </span>
-                <span
-                  title={regimeDescription}
-                  aria-label={`${getRegimeLabel(window.regime, lang)}. ${regimeDescription}`}
-                  className="day-timeline-v4__regime-badge"
-                  style={{
-                    color: regimeVisual.badgeColor,
-                    background: regimeVisual.badgeBackground,
-                    border: `1px solid ${regimeVisual.borderColor}`,
-                  }}
-                >
-                  <RegimeIcon size={12} strokeWidth={2} />
-                  <span>
+        <div className="day-timeline-v4__list">
+          {timeWindows.map((window) => {
+            const Icon = PERIOD_ICONS[window.period_key] || Sparkles;
+            const periodLabel = PERIOD_LABELS[window.period_key as keyof typeof PERIOD_LABELS]?.[lang] || '';
+            const accentColor = PERIOD_ACCENTS[window.period_key] || 'var(--accent-purple)';
+            const regimeMeta = REGIME_META[window.regime] || {
+              icon: Sparkles,
+              description: {
+                fr: "Ce créneau possède une tonalité astrologique particulière.",
+                en: 'This slot has a distinct astrological tone.',
+              },
+            };
+            const RegimeIcon = regimeMeta.icon;
+            const regimeDescription = regimeMeta.description[lang];
+
+            return (
+              <article
+                key={window.period_key || window.time_range}
+                className="day-timeline-v4__card"
+                style={{ ['--period-accent' as string]: accentColor }}
+              >
+                {/* Timeline Connector Dot */}
+                <div className="day-timeline-v4__dot" style={{ backgroundColor: accentColor }} />
+
+                {/* Line 1: Header */}
+                <div className="day-timeline-v4__row-1">
+                  <div className="day-timeline-v4__period-info">
+                    <Icon size={16} color={accentColor} />
+                    <span className="day-timeline-v4__period-name">{periodLabel}</span>
+                    <span className="day-timeline-v4__time-range">{window.time_range}</span>
+                  </div>
+                  <span
+                    title={regimeDescription}
+                    className="day-timeline-v4__regime-badge"
+                  >
+                    <RegimeIcon size={12} />
                     {getRegimeLabel(window.regime, lang)}
                   </span>
-                </span>
-              </div>
+                </div>
 
-              <h3 className="day-timeline-v4__label">
-                {window.label}
-              </h3>
+                {/* Line 2: Strong Title */}
+                <h4 className="day-timeline-v4__card-title">
+                  {window.label}
+                </h4>
 
-              <p className="day-timeline-v4__narrative">
-                {window.narrative || window.action_hint}
-              </p>
+                {/* Line 3: Text */}
+                <p className="day-timeline-v4__narrative">
+                  {window.narrative || window.action_hint}
+                </p>
 
-              {window.astro_events && window.astro_events.length > 0 && (
-                <ul className="day-timeline-v4__events">
-                  {window.astro_events.map((evt, i) => (
-                    <li key={i} className="day-timeline-v4__event">· {evt}</li>
-                  ))}
-                </ul>
-              )}
-
-              <div className="day-timeline-v4__domains">
-                {window.top_domains.map(key => (
-                  <span key={key} title={getDomainLabel(key, lang)} className="day-timeline-v4__domain-icon">
-                    {DOMAIN_LABELS[key]?.icon || '✨'}
-                  </span>
-                ))}
-              </div>
-            </article>
-          );
-        })}
+                {/* Line 4: Secondary Markers */}
+                <div className="day-timeline-v4__footer">
+                  <div className="day-timeline-v4__domains">
+                    {window.top_domains.map(key => (
+                      <span key={key} title={getDomainLabel(key, lang)} className="day-timeline-v4__domain-icon">
+                        <DomainIcon code={key} size={14} />
+                      </span>
+                    ))}
+                  </div>
+                  
+                  {window.astro_events && window.astro_events.length > 0 && (
+                    <div className="day-timeline-v4__mini-events">
+                      {window.astro_events.slice(0, 2).map((evt, i) => (
+                        <span key={i} className="day-timeline-v4__mini-event">{evt}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

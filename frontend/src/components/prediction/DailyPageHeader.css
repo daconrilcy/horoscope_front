@@ -1,48 +1,84 @@
-/* Conteneur principal */
+/* ── DailyPageHeader — Editorial Entry (Story 60.17) ── */
+
 .daily-page-header {
   position: relative;
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4, 1rem);
-  padding: var(--space-1, 0.25rem) 0 var(--space-2, 0.5rem);
-  margin-bottom: 20px;
-  overflow: hidden;
+  gap: 20px;
+  padding: 8px 0 12px;
+  margin-bottom: 24px;
 }
 
-@media (max-width: 767px) {
-  .daily-page-header {
-    margin-bottom: 18px;
-  }
+.daily-page-header__back {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-surface-2);
+  border: 1px solid var(--glass-border);
+  color: var(--text-1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-standard);
 }
 
-/* Zone contenu (gauche) */
+.daily-page-header__back:hover {
+  transform: translateX(-2px);
+  background: var(--glass-surface-1);
+  box-shadow: var(--shadow-focus);
+}
+
 .daily-page-header__content {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
+  gap: 4px;
   min-width: 0;
-  flex: 1;
 }
 
-/* Date dominante */
+.daily-page-header__eyebrow {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-meta);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .header-date {
   margin: 0;
-  font-size: clamp(2rem, 4vw, 3.25rem);
-  line-height: 1.02;
-  font-weight: var(--font-weight-bold, 700);
-  letter-spacing: -0.04em;
-  color: var(--color-text-primary);
+  font-size: 40px;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-1);
+  text-transform: capitalize;
+}
+
+.header-date__weekday {
+  color: var(--text-1);
 }
 
 .header-date__day {
-  font-weight: 900;
-  letter-spacing: -0.05em;
+  color: var(--text-1);
 }
 
-.header-date__rest {
-  font-weight: var(--font-weight-medium, 500);
-  opacity: 0.85;
+.header-date__month {
+  font-weight: 500;
+  opacity: 0.8;
 }
 
+.daily-page-header__badge-row {
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .header-date {
+    font-size: 32px;
+  }
+  .daily-page-header__back {
+    width: 36px;
+    height: 36px;
+  }
+}

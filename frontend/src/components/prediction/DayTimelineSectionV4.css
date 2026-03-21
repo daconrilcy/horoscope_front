@@ -1,106 +1,166 @@
+/* ── DayTimelineSectionV4 — Connected Story (Story 60.17) ── */
+
 .day-timeline-v4 {
-  margin-bottom: var(--space-8, 2rem);
+  margin-bottom: 32px;
+}
+
+.day-timeline-v4__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0 0 24px 0;
+}
+
+.day-timeline-v4__container {
+  position: relative;
+  padding-left: 24px;
+}
+
+/* Vertical Line (AC8.34) */
+.day-timeline-v4__line {
+  position: absolute;
+  left: 4px;
+  top: 10px;
+  bottom: 40px;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(156, 121, 255, 0.3) 0%, rgba(156, 121, 255, 0.05) 100%);
+  border-radius: 2px;
 }
 
 .day-timeline-v4__list {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 16px;
 }
 
 .day-timeline-v4__card {
-  border-radius: var(--horoscope-panel-radius, 24px);
-  padding: 1rem 1rem 1.05rem;
+  position: relative;
+  /* Card base style handled by .daily-layout selector in DailyHoroscopePage.css */
+  padding: 20px !important;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  backdrop-filter: blur(var(--horoscope-blur, 18px));
-  -webkit-backdrop-filter: blur(var(--horoscope-blur, 18px));
+  gap: 12px;
+  border-top: 2px solid var(--period-accent) !important; /* Subtle Top Accent (AC8.31) */
 }
 
-.day-timeline-v4__top {
+/* Connector Dot */
+.day-timeline-v4__dot {
+  position: absolute;
+  left: -24px;
+  top: 24px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--page-bg-start);
+  box-shadow: 0 0 8px rgba(156, 121, 255, 0.4);
+  z-index: 2;
+}
+
+/* Row 1: Header */
+.day-timeline-v4__row-1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.day-timeline-v4__period-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
-.day-timeline-v4__period-label {
-  font-weight: var(--font-weight-bold, 700);
-  color: var(--color-text-primary, var(--text-1));
-  font-size: 0.95rem;
+.day-timeline-v4__period-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
 .day-timeline-v4__time-range {
-  margin-left: auto;
-  font-size: 0.75rem;
-  color: var(--color-text-secondary, var(--text-2));
+  font-size: 12px;
+  color: var(--text-meta);
+  font-weight: 500;
 }
 
 .day-timeline-v4__regime-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.63rem;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  font-weight: var(--font-weight-bold, 700);
   letter-spacing: 0.04em;
-  padding: 0.28rem 0.55rem;
-  border-radius: 999px;
-  margin-left: 0.35rem;
-  cursor: help;
-  background: var(--horoscope-inner-bg, rgba(255, 255, 255, 0.34));
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--glass-surface-2);
+  border: 1px solid var(--glass-border);
+  color: var(--text-meta);
 }
 
-.day-timeline-v4__label {
+/* Row 2: Title */
+.day-timeline-v4__card-title {
   margin: 0;
-  font-size: 1rem;
-  font-weight: var(--font-weight-bold, 700);
-  color: var(--color-text-primary, var(--text-1));
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
 }
 
+/* Row 3: Narrative */
 .day-timeline-v4__narrative {
   margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.62;
-  color: var(--color-text-primary, var(--text-1));
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-main);
+  font-style: italic;
+  opacity: 0.9;
 }
 
-.day-timeline-v4__events {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+/* Row 4: Footer */
+.day-timeline-v4__footer {
   display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.day-timeline-v4__event {
-  font-size: 0.76rem;
-  color: var(--color-text-secondary, var(--text-2));
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .day-timeline-v4__domains {
   display: flex;
-  gap: 0.25rem;
+  gap: 6px;
 }
 
 .day-timeline-v4__domain-icon {
-  font-size: 0.95rem;
+  font-size: 14px;
 }
 
-@media (max-width: 720px) {
-  .day-timeline-v4__top {
-    flex-wrap: wrap;
-  }
+.day-timeline-v4__mini-events {
+  display: flex;
+  gap: 8px;
+}
 
-  .day-timeline-v4__time-range {
-    margin-left: 0;
-    order: 3;
-  }
+.day-timeline-v4__mini-event {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-meta);
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
 
+@media (max-width: 640px) {
+  .day-timeline-v4__row-1 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
   .day-timeline-v4__regime-badge {
+    margin-left: 0;
+  }
+  .day-timeline-v4__period-info {
+    width: 100%;
+  }
+  .day-timeline-v4__time-range {
     margin-left: auto;
   }
 }

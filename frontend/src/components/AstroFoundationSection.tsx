@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import type { DailyPredictionAstroFoundation } from '../types/dailyPrediction';
 import type { Lang } from '../i18n/predictions';
 import './AstroFoundationSection.css';
@@ -14,7 +15,7 @@ export const AstroFoundationSection: React.FC<Props> = ({ foundation, lang }) =>
   if (!foundation) return null;
 
   return (
-    <section className="astro-foundation-section glass-card glass-card--mini">
+    <section className="astro-foundation-section">
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className="astro-foundation-section__toggle"
@@ -23,7 +24,7 @@ export const AstroFoundationSection: React.FC<Props> = ({ foundation, lang }) =>
           {lang === 'fr' ? 'Fondements astrologiques' : 'Astrological foundations'}
         </span>
         <span className={`astro-foundation-section__chevron ${isOpen ? 'astro-foundation-section__chevron--open' : ''}`}>
-          ▼
+          <ChevronDown size={20} />
         </span>
       </button>
 

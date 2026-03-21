@@ -63,7 +63,7 @@ export const AstroDailyEvents: React.FC<AstroDailyEventsProps> = ({ data, intro,
 
       <div className="astro-daily-events__grid">
         {/* Ingresses */}
-        {ingresses && ingresses.length > 0 && (
+        {ingresses.length > 0 && (
           <div className="astro-daily-events__group">
             <header className="astro-daily-events__group-header">
               <Star size={16} className="astro-daily-events__group-icon" />

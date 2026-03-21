@@ -521,6 +521,7 @@ development_status:
   60-14-periodes-du-jour-timeline: done
   60-15-enrichissement-calculs-astrologiques: done
   60-16-interpretation-llm: done
+  60-17-refonte-visuelle-premium-page-horoscope: done
   epic-60-retrospective: optional
 
   epic-58: in-progress
