@@ -103,7 +103,7 @@ PROMPT_CATALOG: dict[str, PromptEntry] = {
         name="daily-prediction-narrator-v1",
         description="LLM narration of daily horoscope sections (Story 60.16)",
         use_case_key="daily_prediction",
-        engine_env_key="OPENAI_MODEL_DEFAULT",
+        engine_env_key="OPENAI_ENGINE_DAILY_PREDICTION",
         max_tokens=800,
         temperature=0.7,
     ),

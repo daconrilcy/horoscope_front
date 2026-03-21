@@ -8,7 +8,7 @@ from typing import Any
 
 import openai
 
-from app.core.config import settings
+from app.prompts.catalog import resolve_model
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class LLMNarrator:
             client = openai.AsyncOpenAI()  # uses OPENAI_API_KEY from env
             response = await asyncio.wait_for(
                 client.chat.completions.create(
-                    model=settings.openai_model_default or "gpt-4o-mini",
+                    model=resolve_model("daily_prediction"),
                     messages=[
                         {"role": "system", "content": self._system_prompt(lang)},
                         {"role": "user", "content": prompt},
