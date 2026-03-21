@@ -57,13 +57,20 @@ class LLMNarrator:
                         {"role": "system", "content": self._system_prompt(lang)},
                         {"role": "user", "content": prompt},
                     ],
-                    response_format={"type": "json_object"},
                     max_completion_tokens=800,
                 ),
                 timeout=self.TIMEOUT_SECONDS,
             )
 
-            raw = response.choices[0].message.content or ""
+            raw = (response.choices[0].message.content or "").strip()
+            if not raw:
+                logger.warning("llm_narrator.empty_response model=%s", resolve_model("daily_prediction"))
+                return None
+            # Strip markdown code fences if present
+            if raw.startswith("```"):
+                raw = raw.split("```")[1]
+                if raw.startswith("json"):
+                    raw = raw[4:]
             data = json.loads(raw)
 
             return NarratorResult(
