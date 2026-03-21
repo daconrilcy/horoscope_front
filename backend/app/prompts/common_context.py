@@ -88,11 +88,11 @@ class CommonContextBuilder:
         # 1. Fetch Persona
         persona = PersonaConfigService.get_active(db)
         astrologer_profile = {
-            "name": persona.name,
-            "style": ", ".join(persona.style_markers),
+            "name": persona.display_name,
+            "style": persona.response_style,
             "tonality": persona.tone,
-            "limits": ", ".join(persona.boundaries),
-            "description": persona.description,
+            "limits": persona.prudence_level,
+            "description": persona.to_prompt_line(),
         }
 
         # 2. Fetch User Profile & Precision
