@@ -126,3 +126,7 @@ Commandes standard (exemples PowerShell, toujours après activation venv):
 - L'app démarre localement (ou instructions exactes pour le faire).
 - Pas de duplication introduite.
 - Les erreurs sont gérées (status codes, messages).
+
+14) Style
+- Aucun style inline : tout doit etre mis en oeuvre dans le fichier .css ou .scss approprie
+- utiliser et reutiliser les variables de couleurs, bordure, marge, etc. present dans les feuilles styles. Verifier leur presence avant de les re creer.
