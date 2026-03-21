@@ -174,10 +174,11 @@ def test_timeline_policy(sample_snapshot):
     assert "tonalité très porteuse" in timeline[0]["summary"]
 
 
-def test_assembler_integration(cat_map, sample_snapshot):
+@pytest.mark.asyncio
+async def test_assembler_integration(cat_map, sample_snapshot):
     assembler = PublicPredictionAssembler()
 
-    result = assembler.assemble(
+    result = await assembler.assemble(
         snapshot=sample_snapshot,
         cat_id_to_code=cat_map,
         reference_version="2.0.0",
@@ -192,7 +193,8 @@ def test_assembler_integration(cat_map, sample_snapshot):
     assert len(result["turning_points"]) >= 1
 
 
-def test_assembler_falls_back_to_engine_output_house_system(cat_map, sample_snapshot):
+@pytest.mark.asyncio
+async def test_assembler_falls_back_to_engine_output_house_system(cat_map, sample_snapshot):
     assembler = PublicPredictionAssembler()
 
     # Snapshot without house system
@@ -203,7 +205,7 @@ def test_assembler_falls_back_to_engine_output_house_system(cat_map, sample_snap
     engine_output = MagicMock()
     engine_output.core.effective_context.house_system_effective = "placidus"
 
-    result = assembler.assemble(
+    result = await assembler.assemble(
         snapshot=snapshot_no_house,
         cat_id_to_code=cat_map,
         engine_output=engine_output,
@@ -215,14 +217,15 @@ def test_assembler_falls_back_to_engine_output_house_system(cat_map, sample_snap
     assert result["meta"]["house_system_effective"] == "placidus"
 
 
-def test_assembler_summary_uses_provisional_flag(cat_map, sample_snapshot):
+@pytest.mark.asyncio
+async def test_assembler_summary_uses_provisional_flag(cat_map, sample_snapshot):
     assembler = PublicPredictionAssembler()
 
     snapshot_prov = PersistedPredictionSnapshot(
         **{**sample_snapshot.__dict__, "is_provisional_calibration": True}
     )
 
-    result = assembler.assemble(
+    result = await assembler.assemble(
         snapshot=snapshot_prov,
         cat_id_to_code=cat_map,
         reference_version="2.0.0",
@@ -264,7 +267,8 @@ def test_category_policy_ignores_internal_relative_scores(cat_map):
     assert "relative" not in categories[0]
 
 
-def test_assembler_hides_non_actionable_turning_points_and_best_window(cat_map):
+@pytest.mark.asyncio
+async def test_assembler_hides_non_actionable_turning_points_and_best_window(cat_map):
     snapshot = PersistedPredictionSnapshot(
         run_id=1,
         user_id=1,
@@ -329,7 +333,7 @@ def test_assembler_hides_non_actionable_turning_points_and_best_window(cat_map):
         dominant_category="career",
     )
 
-    result = PublicPredictionAssembler().assemble(
+    result = await PublicPredictionAssembler().assemble(
         snapshot=snapshot,
         cat_id_to_code=cat_map,
         engine_output=engine_output,
@@ -345,7 +349,8 @@ def test_assembler_hides_non_actionable_turning_points_and_best_window(cat_map):
     assert result["timeline"][0]["turning_point"] is False
 
 
-def test_assembler_keeps_public_luminary_pivots_without_major_category_notes(cat_map):
+@pytest.mark.asyncio
+async def test_assembler_keeps_public_luminary_pivots_without_major_category_notes(cat_map):
     snapshot = PersistedPredictionSnapshot(
         run_id=1,
         user_id=1,
@@ -397,7 +402,7 @@ def test_assembler_keeps_public_luminary_pivots_without_major_category_notes(cat
     ]
     engine_output.editorial = None
 
-    result = PublicPredictionAssembler().assemble(
+    result = await PublicPredictionAssembler().assemble(
         snapshot=snapshot,
         cat_id_to_code=cat_map | {2: "career", 3: "communication"},
         engine_output=engine_output,
@@ -419,7 +424,8 @@ def test_assembler_keeps_public_luminary_pivots_without_major_category_notes(cat
         "moon_sign_ingress",
     ],
 )
-def test_assembler_keeps_public_pivots_for_structuring_runtime_event_types(cat_map, event_type):
+@pytest.mark.asyncio
+async def test_assembler_keeps_public_pivots_for_structuring_runtime_event_types(cat_map, event_type):
     snapshot = PersistedPredictionSnapshot(
         run_id=1,
         user_id=1,
@@ -471,7 +477,7 @@ def test_assembler_keeps_public_pivots_for_structuring_runtime_event_types(cat_m
     ]
     engine_output.editorial = None
 
-    result = PublicPredictionAssembler().assemble(
+    result = await PublicPredictionAssembler().assemble(
         snapshot=snapshot,
         cat_id_to_code=cat_map | {2: "career", 3: "communication"},
         engine_output=engine_output,
