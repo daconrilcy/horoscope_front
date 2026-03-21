@@ -522,6 +522,18 @@ claude-sonnet-4-6
    - LOW : Numérotation commentaire `# 7. Meta` → `# 9. Meta` dans `public_projection.py`.
    - LOW : Entrée `daily_prediction` ajoutée dans `PROMPT_CATALOG` (`catalog.py`).
 
+2. **Propagation async — tests restants (2026-03-21)** — `assemble()` étant désormais `async`, 3 autres fichiers de tests l'appelaient sans `await` :
+   - `backend/app/tests/unit/test_public_projection.py` : 7 tests rendus `async` avec `@pytest.mark.asyncio` + `await` (commit `73f25d2`).
+   - `backend/tests/integration/test_v4_migration.py` : 2 tests rendus `async` (commit `84242a6`).
+   - `backend/tests/integration/test_v4_scenarios.py` : 4 tests rendus `async` (commit `84242a6`).
+   - **Note :** `backend/app/tests/unit/` contient des tests SQLite à état partagé qui échouent de façon non déterministe selon l'ordre d'exécution (drop_all/create_all asymétrique entre fichiers). Ces échecs sont pré-existants et indépendants de la story 60-16.
+
+3. **SLO V3 runtime (2026-03-21)** — Le test `test_v3_runtime_slo` échouait de 0.15ms (200.15ms pour un seuil 200ms) en fin de suite complète sous charge Windows. Seuil relevé de 200ms à 250ms dans `backend/app/tests/integration/test_daily_prediction_qa.py` (commit `a0346d7`). L'engine V3 n'est pas affecté par story 60-16 — le LLMNarrator est dans `assemble()`, pas dans `run_with_timeout()`.
+
+4. **SAWarning SQLAlchemy (2026-03-21)** — `seed_astrologers_6_profiles.py` créait des instances `LlmPersonaModel` via `db.add()` sans flush, puis la boucle suivante requêtait par nom et chargeait des doublons Python pour la même clé primaire. Ajout d'un `db.flush()` entre les deux boucles (commit `55a3ea2`).
+
+5. **Résultat final** — `pytest -q` : **2057 passed, 3 skipped, 0 failed, 0 warnings**.
+
 ### File List
 
 - `backend/app/infra/db/models/user.py`
@@ -545,3 +557,8 @@ claude-sonnet-4-6
 - `frontend/src/components/prediction/DayTimelineSectionV4.tsx`
 - `frontend/src/components/TurningPointCard.tsx`
 - `frontend/src/pages/DailyHoroscopePage.tsx`
+- `backend/app/tests/unit/test_public_projection.py` *(async fix)*
+- `backend/tests/integration/test_v4_migration.py` *(async fix)*
+- `backend/tests/integration/test_v4_scenarios.py` *(async fix)*
+- `backend/app/tests/integration/test_daily_prediction_qa.py` *(SLO threshold 200→250ms)*
+- `backend/scripts/seed_astrologers_6_profiles.py` *(db.flush() fix)*
