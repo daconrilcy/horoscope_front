@@ -550,6 +550,23 @@ claude-sonnet-4-6
 
    f. **`PublicAstroDailyEventsPolicy._resolve_astro_events`** — Ajout d'un fallback sur `snapshot.v3_metrics["detected_events"]` pour les prédictions mises en cache (sans `engine_output` ni `evidence` disponibles en lecture seule).
 
+7. **Enrichissement qualitatif des textes LLM (2026-03-21)** — Ajustement post-validation fonctionnelle pour corriger des textes jugés trop courts, trop génériques et peu explicatifs :
+
+   a. **Prompt narratif renforcé** (`astrologer_prompt_builder.py`) — Le prompt injecte désormais le `day_climate`, le `best_window`, le `turning_point` principal et le ranking de domaines en plus du profil natal, des événements astro et des créneaux. Les consignes imposent explicitement : causalité astrologique, vécu probable, conseils situés, anti-banalités, et plus de densité sur `daily_synthesis`, `astro_events_intro` et `time_window_narratives`.
+
+   b. **Contrat JSON enrichi** (`llm_narrator.py`) — Ajout de `daily_advice` (`advice` + `emphasis`) et de `main_turning_point_narrative`. L'appel OpenAI force désormais `response_format={"type":"json_object"}` et le parsing reste tolérant aux formes invalides.
+
+   c. **Injection backend étendue** (`public_projection.py`, `predictions.py`) — Le DTO public expose maintenant `daily_advice` et la carte `turning_point` principale reçoit enfin une vraie narrative LLM, au lieu de rester sur le fallback statique `what_changes`.
+
+   d. **Fallback frontend contextualisé** (`dailyAdviceCardMapper.ts`) — Le composant `daily-advice-card` n'utilise plus un placeholder dur. Si le LLM est indisponible, un conseil de secours est calculé à partir du `best_window`, du domaine dominant et du `watchout`.
+
+   e. **Vérifications ciblées** — Passent :
+      - `ruff check` + `ruff format --check` sur les fichiers Python modifiés
+      - `pytest backend/tests/unit/prediction/test_astrologer_prompt_builder.py backend/tests/unit/prediction/test_llm_narrator.py -q`
+      - `npx tsc --noEmit ...` ciblé sur les fichiers frontend modifiés
+      - `npm run test -- src/utils/dailyAdviceCardMapper.test.ts`
+      - **Note :** `npm run lint` global côté frontend échoue toujours sur des erreurs TypeScript préexistantes hors périmètre (BillingPanel, EnterpriseCredentialsPanel, admin i18n, etc.).
+
 ### File List
 
 - `backend/app/infra/db/models/user.py`
@@ -576,7 +593,11 @@ claude-sonnet-4-6
 - `frontend/src/components/AstroDailyEvents.tsx`
 - `frontend/src/components/prediction/DayTimelineSectionV4.tsx`
 - `frontend/src/components/TurningPointCard.tsx`
+- `frontend/src/components/prediction/DailyAdviceCard.tsx`
+- `frontend/src/components/prediction/DailyAdviceCard.css`
 - `frontend/src/pages/DailyHoroscopePage.tsx`
+- `frontend/src/utils/dailyAdviceCardMapper.ts`
+- `frontend/src/utils/dailyAdviceCardMapper.test.ts`
 - `backend/app/tests/unit/test_public_projection.py` *(async fix)*
 - `backend/tests/integration/test_v4_migration.py` *(async fix)*
 - `backend/tests/integration/test_v4_scenarios.py` *(async fix)*

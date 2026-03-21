@@ -17,9 +17,11 @@ export const DailyAdviceCard: React.FC<DailyAdviceCardProps> = ({ model }) => (
         {model.title}
       </h3>
     </header>
-    <p className="daily-advice-card__body">
-      {model.advice}{' '}
-      <strong className="daily-advice-card__emphasis">{model.emphasis}</strong>
-    </p>
+    <div className="daily-advice-card__content">
+      <p className="daily-advice-card__body">{model.advice}</p>
+      {model.emphasis ? (
+        <p className="daily-advice-card__emphasis">{model.emphasis}</p>
+      ) : null}
+    </div>
   </section>
 )

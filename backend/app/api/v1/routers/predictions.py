@@ -113,6 +113,11 @@ class DailyPredictionTimeWindow(BaseModel):
     narrative: str | None = None
 
 
+class DailyPredictionDailyAdvice(BaseModel):
+    advice: str
+    emphasis: str
+
+
 class DailyPredictionBestWindow(BaseModel):
     time_range: str
     label: str
@@ -217,6 +222,7 @@ class DailyPredictionResponse(BaseModel):
     day_climate: DailyPredictionDayClimate | None = None
     daily_synthesis: str | None = None
     astro_events_intro: str | None = None
+    daily_advice: DailyPredictionDailyAdvice | None = None
     has_llm_narrative: bool = False
     categories: list[DailyPredictionCategory]
     categories_internal: list[DailyPredictionCategory] | None = None

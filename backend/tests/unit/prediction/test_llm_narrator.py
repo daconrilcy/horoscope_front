@@ -6,6 +6,19 @@ import pytest
 
 from app.core.config import settings
 from app.prediction.llm_narrator import LLMNarrator
+from app.prompts.common_context import PromptCommonContext
+
+
+def _make_common_context() -> PromptCommonContext:
+    return PromptCommonContext(
+        precision_level="précision complète",
+        astrologer_profile={"tonality": "bienveillant"},
+        period_covered="journée",
+        today_date="samedi 21 mars 2026",
+        use_case_name="daily-prediction-narrator-v1",
+        use_case_key="daily_prediction",
+        natal_interpretation="Vous avancez mieux quand un cap clair se dégage.",
+    )
 
 
 @pytest.mark.asyncio
@@ -17,6 +30,11 @@ async def test_narrate_success():
         "astro_events_intro": "Intro",
         "time_window_narratives": {"matin": "Matin text"},
         "turning_point_narratives": ["TP1"],
+        "main_turning_point_narrative": "Le pivot devient lisible.",
+        "daily_advice": {
+            "advice": "Profitez du matin pour clarifier un échange important.",
+            "emphasis": "Le bon mot au bon moment.",
+        },
     }
 
     mock_response = MagicMock()
@@ -26,11 +44,17 @@ async def test_narrate_success():
         mock_client = mock_openai.return_value
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
 
-        res = await narrator.narrate(time_windows=[], common_context=MagicMock())
+        res = await narrator.narrate(time_windows=[], common_context=_make_common_context())
 
         assert res is not None
         assert res.daily_synthesis == "Synth"
         assert res.time_window_narratives["matin"] == "Matin text"
+        assert res.main_turning_point_narrative == "Le pivot devient lisible."
+        assert res.daily_advice is not None
+        assert res.daily_advice.emphasis == "Le bon mot au bon moment."
+        assert mock_client.chat.completions.create.await_args.kwargs["response_format"] == {
+            "type": "json_object"
+        }
 
 
 @pytest.mark.asyncio
@@ -41,7 +65,8 @@ async def test_narrate_failure_returns_none():
         mock_client = mock_openai.return_value
         mock_client.chat.completions.create = AsyncMock(side_effect=Exception("OpenAI error"))
 
-        res = await narrator.narrate(time_windows=[], common_context=MagicMock())
+        res = await narrator.narrate(time_windows=[], common_context=_make_common_context())
+
         assert res is None
 
 
@@ -53,8 +78,34 @@ async def test_narrate_timeout_returns_none():
         mock_client = mock_openai.return_value
         mock_client.chat.completions.create = AsyncMock(side_effect=asyncio.TimeoutError())
 
-        res = await narrator.narrate(time_windows=[], common_context=MagicMock())
+        res = await narrator.narrate(time_windows=[], common_context=_make_common_context())
+
         assert res is None
+
+
+@pytest.mark.asyncio
+async def test_narrate_ignores_invalid_daily_advice_shape():
+    narrator = LLMNarrator()
+
+    content = {
+        "daily_synthesis": "Synth",
+        "astro_events_intro": "Intro",
+        "time_window_narratives": {"soiree": "Soiree"},
+        "turning_point_narratives": [],
+        "daily_advice": "not-an-object",
+    }
+
+    mock_response = MagicMock()
+    mock_response.choices = [MagicMock(message=MagicMock(content=json.dumps(content)))]
+
+    with patch("openai.AsyncOpenAI") as mock_openai:
+        mock_client = mock_openai.return_value
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+
+        res = await narrator.narrate(time_windows=[], common_context=_make_common_context())
+
+        assert res is not None
+        assert res.daily_advice is None
 
 
 @pytest.mark.asyncio

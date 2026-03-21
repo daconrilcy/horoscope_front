@@ -180,6 +180,7 @@ class PublicPredictionAssembler:
         # 8. LLM Narration (V4) - Story 60.16
         daily_synthesis = None
         astro_events_intro = None
+        daily_advice = None
         has_llm_narrative = False
 
         if settings.llm_narrator_enabled and prompt_context:
@@ -193,12 +194,21 @@ class PublicPredictionAssembler:
                 common_context=prompt_context,
                 astrologer_profile_key=astrologer_profile_key,
                 lang=lang,
+                day_climate=day_climate,
+                best_window=best_window,
+                turning_point=main_turning_point,
+                domain_ranking=public_domains,
             )
 
             if narrator_res:
                 has_llm_narrative = True
                 daily_synthesis = narrator_res.daily_synthesis
                 astro_events_intro = narrator_res.astro_events_intro
+                if narrator_res.daily_advice:
+                    daily_advice = {
+                        "advice": narrator_res.daily_advice.advice,
+                        "emphasis": narrator_res.daily_advice.emphasis,
+                    }
 
                 # Inject into time windows
                 for w in time_windows:
@@ -210,6 +220,9 @@ class PublicPredictionAssembler:
                 for i, tp in enumerate(turning_points):
                     if i < len(narrator_res.turning_point_narratives):
                         tp["narrative"] = narrator_res.turning_point_narratives[i]
+
+                if main_turning_point and narrator_res.main_turning_point_narrative:
+                    main_turning_point["narrative"] = narrator_res.main_turning_point_narrative
 
         # 9. Meta
         house_system_effective = snapshot.house_system_effective
@@ -241,6 +254,7 @@ class PublicPredictionAssembler:
             "day_climate": day_climate,
             "daily_synthesis": daily_synthesis,
             "astro_events_intro": astro_events_intro,
+            "daily_advice": daily_advice,
             "has_llm_narrative": has_llm_narrative,
             "best_window": best_window,
             "time_windows": time_windows,

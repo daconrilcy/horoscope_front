@@ -4,16 +4,71 @@ import logging
 from typing import Any
 
 from app.domain.astrology.natal_calculation import sign_from_longitude
+from app.prediction.public_astro_vocabulary import get_planet_name_fr, get_sign_name_fr
 from app.prompts.common_context import PromptCommonContext
 
 logger = logging.getLogger(__name__)
 
 STYLE_INSTRUCTIONS = {
-    "standard": "Astrologie occidentale classique, ton positif et accessible.",
-    "vedique": "Références védiques : nakshatra, maisons védiques, dharma, karma.",
-    "humaniste": "Approche humaniste : archétypes jungiens, croissance personnelle.",
-    "karmique": "Insiste sur les leçons de vie, les nœuds lunaires, les cycles karmiques.",
-    "psychologique": "Vocabulaire psychologique moderne : patterns, intégration.",
+    "standard": (
+        "Astrologie occidentale classique, claire et incarnée. "
+        "Explique les effets concrets du ciel sans jargon inutile."
+    ),
+    "vedique": (
+        "Références védiques sobres et utiles : nakshatra, dharma, karma, maisons védiques. "
+        "Toujours relier ces notions à du vécu quotidien."
+    ),
+    "humaniste": (
+        "Approche humaniste : archétypes, croissance personnelle, mise en sens. "
+        "Rester concret sur ce qui se joue dans la journée."
+    ),
+    "karmique": (
+        "Mettre en avant les leçons de vie, les répétitions, les nœuds et les cycles. "
+        "Garder un ton utile et non fataliste."
+    ),
+    "psychologique": (
+        "Vocabulaire psychologique moderne : schémas, intégration, réactions, besoins. "
+        "Toujours ancré dans les faits astrologiques du jour."
+    ),
+}
+
+PLANET_CODE_LABELS = {
+    "SO": "Soleil",
+    "LU": "Lune",
+    "ME": "Mercure",
+    "VE": "Vénus",
+    "MA": "Mars",
+    "JU": "Jupiter",
+    "SA": "Saturne",
+    "UR": "Uranus",
+    "NE": "Neptune",
+    "PL": "Pluton",
+}
+
+SIGN_LABELS_FR = {
+    "ari": "Bélier",
+    "aries": "Bélier",
+    "tau": "Taureau",
+    "taurus": "Taureau",
+    "gem": "Gémeaux",
+    "gemini": "Gémeaux",
+    "can": "Cancer",
+    "cancer": "Cancer",
+    "leo": "Lion",
+    "vir": "Vierge",
+    "virgo": "Vierge",
+    "lib": "Balance",
+    "libra": "Balance",
+    "sco": "Scorpion",
+    "scorpio": "Scorpion",
+    "sag": "Sagittaire",
+    "sagittarius": "Sagittaire",
+    "cap": "Capricorne",
+    "capricorn": "Capricorne",
+    "aqu": "Verseau",
+    "aquarius": "Verseau",
+    "pis": "Poissons",
+    "pisces": "Poissons",
 }
 
 
@@ -30,45 +85,61 @@ class AstrologerPromptBuilder:
         astrologer_profile_key: str = "standard",
         lang: str = "fr",
         astro_daily_events: dict[str, Any] | None = None,
+        day_climate: dict[str, Any] | None = None,
+        best_window: dict[str, Any] | None = None,
+        turning_point: dict[str, Any] | None = None,
+        domain_ranking: list[dict[str, Any]] | None = None,
     ) -> str:
-        # 1. Natal Foundation
         natal_section = self._build_natal_section(common_context)
-
-        # 2. Daily Context
         date_str = common_context.today_date
-
-        # 3. Astro Events Summary
         events_str = self._format_astro_daily_events(astro_daily_events)
-
-        # 4. Time Windows & Regimes
-        windows_str = self._format_windows(time_windows)
-
-        # 5. Style Instructions
+        day_profile_str = self._format_day_profile(
+            day_climate=day_climate,
+            best_window=best_window,
+            turning_point=turning_point,
+            domain_ranking=domain_ranking,
+        )
+        windows_str = self._format_windows(time_windows, domain_ranking=domain_ranking)
         style_instr = STYLE_INSTRUCTIONS.get(astrologer_profile_key, STYLE_INSTRUCTIONS["standard"])
         if lang != "fr":
-            # Basic translation for non-fr (could be improved)
             if astrologer_profile_key == "vedique":
-                style_instr = "Use Vedic references: nakshatra, vedic houses, dharma, karma."
+                style_instr = (
+                    "Use grounded Vedic references: nakshatra, dharma, karma, Vedic houses. "
+                    "Always connect them to concrete daily experience."
+                )
             elif astrologer_profile_key == "humaniste":
                 style_instr = (
-                    "Adopt a humanistic approach: Jungian archetypes, personal growth, symbolism."
+                    "Adopt a humanistic approach: archetypes, symbolism, personal growth, "
+                    "while staying concrete about the lived day."
                 )
             elif astrologer_profile_key == "karmique":
-                style_instr = "Emphasize life lessons, lunar nodes, karmic cycles."
+                style_instr = (
+                    "Emphasize life lessons, repetitions, lunar nodes and karmic cycles, "
+                    "without sounding fatalistic."
+                )
             elif astrologer_profile_key == "psychologique":
                 style_instr = (
-                    "Use modern psychological vocabulary: patterns, integration, behaviors."
+                    "Use modern psychological vocabulary: patterns, reactions, integration, "
+                    "while grounding each point in today's astrology."
                 )
             else:
                 style_instr = (
-                    "Use classic western astrology vocabulary, positive and accessible tone."
+                    "Use classic western astrology vocabulary with an accessible, concrete tone."
                 )
 
         prompt = f"""
 CONTEXTE ASTROLOGIQUE DU JOUR ({date_str})
 
+OBJECTIF :
+Tu transformes des données astrologiques en lecture réellement utile pour la journée.
+Le lecteur doit comprendre ce qu'il va probablement ressentir,
+pourquoi cela arrive astrologiquement, et comment s'ajuster avec intelligence.
+
 PROFIL NATAL DE L'UTILISATEUR :
 {natal_section}
+
+PROFIL DE LA JOURNÉE :
+{day_profile_str}
 
 ÉVÉNEMENTS CÉLESTES MAJEURS DU JOUR :
 {events_str}
@@ -81,39 +152,69 @@ CONSIGNES DE RÉDACTION :
 - Ton : {common_context.astrologer_profile.get("tonality", "bienveillant")}
 - Langue : {"Français" if lang == "fr" else "English"}
 - Format attendu : JSON strict.
-- daily_synthesis : Une synthèse globale de la journée (2 phrases).
-- astro_events_intro : Une phrase courte pour introduire les événements du ciel.
+- Ne fais jamais de banalités recyclables d'un jour à l'autre.
+- Chaque interprétation doit s'appuyer sur au moins un fait du contexte fourni.
+- Quand le ciel est contrasté, explique la tension au lieu de lisser artificiellement.
+- Écris comme un astrologue pédagogue : tu expliques, tu relies, tu rends concret.
+- Mets l'accent sur le vécu probable : concentration, échanges, rythme, fatigue, élan, sensibilité,
+  besoin d'isolement, envie d'agir, clarté ou dispersion.
+- Ne recopie pas simplement les listes techniques : interprète-les.
+- daily_synthesis : 3 à 5 phrases, riche et utile.
+  Doit dire ce qui domine la journée, où se situent les frottements, ce qu'il faut anticiper,
+  et pourquoi astrologiquement.
+- astro_events_intro : 2 à 4 phrases.
+  Explique les 2 ou 3 faits astrologiques les plus structurants du jour et leur effet concret.
 - time_window_narratives : Un objet avec les clés "nuit", "matin", "apres_midi", "soiree".
-  Chaque valeur est une phrase décrivant l'ambiance du créneau.
-- turning_point_narratives : Une liste de phrases (une par turning point détecté).
+  Chaque valeur contient 2 ou 3 phrases qui décrivent :
+  1) ce qu'on peut ressentir ou vivre dans ce créneau,
+  2) pourquoi d'après les indices astro du créneau,
+  3) la meilleure manière d'utiliser ou de gérer cette période.
+- turning_point_narratives : Une liste de textes alignés sur les turning points détectés.
+  Chaque texte doit expliquer la bascule, sa cause probable et l'attitude juste.
+- main_turning_point_narrative : 2 ou 3 phrases pour la carte du moment clé principal.
+- daily_advice : objet avec
+  - advice : 2 ou 3 phrases de conseil très concret, spécifique à cette journée.
+  - emphasis : courte phrase de 4 à 10 mots, mémorable, spécifique et non générique.
 
-Génère un contenu inspirant, fluide et personnalisé.
+IMPORTANT :
+- Si une donnée manque, n'en parle pas ; travaille avec ce qui est disponible.
+- Interdiction de produire des phrases creuses du type "faites-vous confiance", "restez centré",
+  "écoutez votre intuition" sans ancrage astrologique explicite.
+- Le conseil du jour doit reprendre au moins un créneau, une vigilance ou un fait astrologique.
 """
         return prompt.strip()
 
     def _build_natal_section(self, ctx: PromptCommonContext) -> str:
         if ctx.natal_interpretation:
-            return ctx.natal_interpretation[:1000]  # Limit size
+            natal_summary = " ".join(ctx.natal_interpretation.split())[:1400]
+            return f"Synthèse natale existante : {natal_summary}"
 
         if not ctx.natal_data:
             return "Profil natal non disponible."
 
-        # Fallback raw data formatting
         pos = ctx.natal_data.get("planet_positions", [])
         planets = []
+        important_codes = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn"]
+        fallback_codes = ["SO", "LU", "ME", "VE", "MA", "JU", "SA"]
         for p in pos:
-            code = p.get("planet_code")
-            sign = p.get("sign_code")
-            if code in ["SO", "LU"]:
-                planets.append(f"{code} en {sign}")
+            code = str(p.get("planet_code", ""))
+            normalized = code.lower()
+            if normalized in important_codes or code.upper() in fallback_codes:
+                label = PLANET_CODE_LABELS.get(code.upper()) or get_planet_name_fr(normalized)
+                sign = self._format_sign_label(p.get("sign_code"))
+                planets.append(f"{label} en {sign}")
+            if len(planets) >= 6:
+                break
 
         houses = ctx.natal_data.get("houses", [])
         asc = "Inconnu"
         if houses:
             asc = sign_from_longitude(houses[0].get("cusp_longitude", 0))
+            asc = self._format_sign_label(asc)
 
         return (
-            f"Soleil/Lune : {', '.join(planets)}. Ascendant : {asc}. "
+            f"Placements de base : {', '.join(planets) if planets else 'non disponibles'}. "
+            f"Ascendant : {asc}. "
             f"Précision : {ctx.precision_level}."
         )
 
@@ -155,18 +256,109 @@ Génère un contenu inspirant, fluide et personnalisé.
         if planet_positions:
             sections.append("Positions : " + ", ".join(planet_positions))
 
-        return "\n".join(f"- {s}" for s in sections) if sections else "Aucun événement majeur particulier."
+        if not sections:
+            return "Aucun événement majeur particulier."
+        return "\n".join(f"- {s}" for s in sections)
 
-    def _format_windows(self, windows: list[dict[str, Any]]) -> str:
+    def _format_day_profile(
+        self,
+        *,
+        day_climate: dict[str, Any] | None,
+        best_window: dict[str, Any] | None,
+        turning_point: dict[str, Any] | None,
+        domain_ranking: list[dict[str, Any]] | None,
+    ) -> str:
+        sections = []
+
+        if day_climate:
+            top_domains = self._format_domain_labels(
+                day_climate.get("top_domains", []), domain_ranking
+            )
+            sections.append(
+                f"- Climat général : {day_climate.get('label', 'non disponible')} "
+                f"(ton={day_climate.get('tone', 'inconnu')}, "
+                f"intensité={day_climate.get('intensity', 'n/a')}, "
+                f"stabilité={day_climate.get('stability', 'n/a')})."
+            )
+            if day_climate.get("summary"):
+                sections.append(f"- Résumé moteur : {day_climate['summary']}")
+            if top_domains:
+                sections.append(f"- Domaines les plus activés : {top_domains}.")
+            if day_climate.get("watchout"):
+                watchout = self._format_domain_labels([day_climate["watchout"]], domain_ranking)
+                sections.append(f"- Point de vigilance : {watchout}.")
+
+        if best_window:
+            actions = ", ".join(best_window.get("recommended_actions", []))
+            sections.append(
+                f"- Meilleur créneau : {best_window.get('time_range', 'non disponible')} "
+                f"({best_window.get('label', 'moment favorable')}). "
+                f"Pourquoi : {best_window.get('why', '')}"
+            )
+            if actions:
+                sections.append(f"- Actions favorisées dans ce créneau : {actions}.")
+
+        if turning_point:
+            impacted = self._format_domain_labels(
+                turning_point.get("affected_domains", []), domain_ranking
+            )
+            sections.append(
+                f"- Moment clé principal : {turning_point.get('time', 'non disponible')} — "
+                f"{turning_point.get('title', 'Bascule')} "
+                f"({turning_point.get('change_type', 'recomposition')})."
+            )
+            if turning_point.get("what_changes"):
+                sections.append(f"- Ce qui change : {turning_point['what_changes']}")
+            if impacted:
+                sections.append(f"- Domaines concernés : {impacted}.")
+            if turning_point.get("do") or turning_point.get("avoid"):
+                sections.append(
+                    f"- Posture utile : {turning_point.get('do', 'n/a')} | À éviter : "
+                    f"{turning_point.get('avoid', 'n/a')}"
+                )
+
+        if not sections:
+            return "- Pas de synthèse structurelle supplémentaire disponible."
+        return "\n".join(sections)
+
+    def _format_windows(
+        self, windows: list[dict[str, Any]], *, domain_ranking: list[dict[str, Any]] | None = None
+    ) -> str:
         lines = []
         for w in windows:
             key = w.get("period_key", "?")
             regime = w.get("regime", "?")
             label = w.get("label", "")
-            domains = ", ".join(w.get("top_domains", []))
+            domains = self._format_domain_labels(w.get("top_domains", []), domain_ranking)
+            action_hint = w.get("action_hint", "")
             slot_events = w.get("astro_events", [])
             events_part = f" Événements : {', '.join(slot_events)}." if slot_events else ""
             lines.append(
-                f"[{key}] {w.get('time_range')}: {label} (Régime: {regime}). Domaines: {domains}.{events_part}"
+                f"[{key}] {w.get('time_range')}: {label} (Régime: {regime}). "
+                f"Domaines: {domains or 'non précisés'}. "
+                f"Orientation pratique: {action_hint or 'non précisée'}.{events_part}"
             )
         return "\n".join(lines)
+
+    def _format_domain_labels(
+        self, domain_keys: list[str] | tuple[str, ...], domain_ranking: list[dict[str, Any]] | None
+    ) -> str:
+        if not domain_keys:
+            return ""
+        label_by_key = {
+            str(item.get("key")): str(item.get("label"))
+            for item in (domain_ranking or [])
+            if item.get("key") and item.get("label")
+        }
+        labels = [label_by_key.get(key, str(key)) for key in domain_keys]
+        return ", ".join(labels)
+
+    def _format_sign_label(self, raw_sign: Any) -> str:
+        if raw_sign is None:
+            return "signe inconnu"
+        sign = str(raw_sign).strip().lower()
+        if sign in SIGN_LABELS_FR:
+            return SIGN_LABELS_FR[sign]
+        if len(sign) == 3:
+            return get_sign_name_fr(sign)
+        return str(raw_sign).capitalize()

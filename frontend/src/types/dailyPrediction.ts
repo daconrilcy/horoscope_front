@@ -154,6 +154,11 @@ export interface DailyPredictionTurningPointPublic {
   narrative?: string | null;
 }
 
+export interface DailyPredictionDailyAdvice {
+  advice: string;
+  emphasis: string;
+}
+
 export interface DailyPredictionBestWindow {
   time_range: string;
   label: string;
@@ -222,6 +227,7 @@ export interface DailyPredictionResponse {
   day_climate?: DailyPredictionDayClimate;
   daily_synthesis?: string | null;
   astro_events_intro?: string | null;
+  daily_advice?: DailyPredictionDailyAdvice | null;
   has_llm_narrative: boolean;
   domain_ranking?: DailyPredictionPublicDomainScore[];
   time_windows?: DailyPredictionTimeWindow[];
