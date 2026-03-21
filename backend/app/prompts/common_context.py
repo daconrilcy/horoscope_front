@@ -39,8 +39,13 @@ class PromptCommonContext(BaseModel):
 
         Les use_cases de type 'natal_interpretation*' produisent l'interprétation
         — ils ne la consomment pas — donc la contrainte ne s'applique pas.
+        'daily_prediction' narre des événements astro ; le natal est enrichissement
+        optionnel (le prompt builder gère l'absence gracieusement).
         """
         if self.use_case_key.startswith("natal_interpretation"):
+            return self
+
+        if self.use_case_key == "daily_prediction":
             return self
 
         if self.natal_interpretation is None and self.natal_data is None:
