@@ -2,6 +2,8 @@ import React from 'react';
 import type { DailyPredictionPublicDomainScore } from '../types/dailyPrediction';
 import type { Lang } from '../i18n/predictions';
 import { getDomainLabel, getLevelLabel, LEVEL_LABELS, DOMAIN_LABELS } from '../i18n/horoscope_copy';
+import './prediction/SectionTitle.css';
+import './DomainRankingCard.css';
 
 interface Props {
   domains: DailyPredictionPublicDomainScore[];
@@ -22,59 +24,45 @@ export const DomainRankingCard: React.FC<Props> = ({ domains, lang }) => {
   };
 
   return (
-    <div className="domain-ranking-card" style={{
-      background: 'var(--glass)',
-      border: '1px solid var(--glass-border)',
-      borderRadius: '16px',
-      padding: '24px',
-      marginBottom: '24px'
-    }}>
-      <h2 style={{ fontSize: '18px', marginBottom: '20px', color: 'var(--text-1)' }}>
-        {lang === 'fr' ? 'Vos domaines clés' : 'Your key domains'}
-      </h2>
+    <section className="domain-ranking-card glass-card glass-card--hero">
+      <div className="section-title">
+        <div className="section-title__dot" />
+        <h2 className="section-title__text">
+          {lang === 'fr' ? 'Vos domaines clés' : 'Your key domains'}
+        </h2>
+        <hr className="section-title__line" />
+      </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="domain-ranking-card__list">
         {domains.map(domain => (
-          <div key={domain.key} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '20px' }}>{DOMAIN_LABELS[domain.key]?.icon || '✨'}</span>
-                <span style={{ fontWeight: '500', color: 'var(--text-1)' }}>{getDomainLabel(domain.key, lang)}</span>
+          <article key={domain.key} className="domain-ranking-card__item">
+            <div className="domain-ranking-card__item-top">
+              <div className="domain-ranking-card__label-wrap">
+                <span className="domain-ranking-card__icon">{DOMAIN_LABELS[domain.key]?.icon || '✨'}</span>
+                <span className="domain-ranking-card__label">{getDomainLabel(domain.key, lang)}</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '14px', fontWeight: 'bold', color: getLevelColor(domain.level) }}>
+              <div className="domain-ranking-card__meta">
+                <span className="domain-ranking-card__score" style={{ color: getLevelColor(domain.level) }}>
                   {domain.score_10}/10
                 </span>
-                <span style={{ 
-                  fontSize: '12px', 
-                  padding: '2px 8px', 
-                  borderRadius: '10px', 
-                  background: 'var(--glass-2)',
-                  color: 'var(--text-2)',
-                  border: `1px solid ${getLevelColor(domain.level)}`
-                }}>
+                <span className="domain-ranking-card__badge" style={{ borderColor: getLevelColor(domain.level) }}>
                   {getLevelLabel(domain.level, lang)}
                 </span>
               </div>
             </div>
             
-            <div style={{ 
-              height: '6px', 
-              background: 'var(--glass-2)', 
-              borderRadius: '3px', 
-              overflow: 'hidden' 
-            }}>
-              <div style={{ 
-                height: '100%', 
-                width: `${Math.min(domain.score_10 * 10, 100)}%`,
-                background: getLevelColor(domain.level),
-                borderRadius: '3px',
-                transition: 'width 0.5s ease-out'
-              }} />
+            <div className="domain-ranking-card__track">
+              <div
+                className="domain-ranking-card__fill"
+                style={{
+                  width: `${Math.min(domain.score_10 * 10, 100)}%`,
+                  background: getLevelColor(domain.level),
+                }}
+              />
             </div>
-          </div>
+          </article>
         ))}
       </div>
-    </div>
+    </section>
   );
 };

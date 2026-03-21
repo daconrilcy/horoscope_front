@@ -2,6 +2,7 @@ import React from 'react';
 import type { DailyPredictionTurningPointPublic } from '../types/dailyPrediction';
 import type { Lang } from '../i18n/predictions';
 import { getDomainLabel, getChangeTypeLabel, DOMAIN_LABELS } from '../i18n/horoscope_copy';
+import './TurningPointCard.css';
 
 interface Props {
   turningPoint: DailyPredictionTurningPointPublic | null;
@@ -23,87 +24,45 @@ export const TurningPointCard: React.FC<Props> = ({ turningPoint, lang }) => {
   const badge = getBadgeStyle(turningPoint.change_type);
 
   return (
-    <div className="turning-point-card" style={{
-      background: 'var(--glass)',
-      border: '1px solid var(--glass-border)',
-      borderRadius: '16px',
-      padding: '24px',
-      marginBottom: '24px',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '4px',
-        height: '100%',
-        background: badge.color
-      }} />
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-        <div>
-          <span style={{ 
-            fontSize: '12px', 
-            fontWeight: 'bold', 
-            color: 'var(--text-2)', 
-            background: 'var(--glass-2)',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            marginRight: '8px'
-          }}>
-            {turningPoint.time}
-          </span>
-          <span style={{ 
-            fontSize: '12px', 
-            fontWeight: '500', 
-            color: badge.color,
-            background: badge.bg,
-            padding: '4px 8px',
-            borderRadius: '4px'
-          }}>
+    <section className="turning-point-card glass-card glass-card--hero">
+      <div className="turning-point-card__rail" style={{ background: badge.color }} />
+      <header className="turning-point-card__header">
+        <div className="turning-point-card__meta">
+          <span className="turning-point-card__time">{turningPoint.time}</span>
+          <span className="turning-point-card__type" style={{ color: badge.color, background: badge.bg }}>
             {getChangeTypeLabel(turningPoint.change_type, lang)}
           </span>
         </div>
-      </div>
+      </header>
 
-      <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--text-1)' }}>
-        {turningPoint.title}
-      </h2>
+      <h2 className="turning-point-card__title">{turningPoint.title}</h2>
 
-      <p style={{ fontSize: '15px', color: 'var(--text-1)', marginBottom: '16px', lineHeight: '1.4' }}>
+      <p className="turning-point-card__body">
         {turningPoint.narrative || turningPoint.what_changes}
       </p>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
+      <div className="turning-point-card__domains">
         {turningPoint.affected_domains.map(key => (
-          <span key={key} style={{ 
-            fontSize: '12px', 
-            color: 'var(--text-2)', 
-            padding: '2px 8px', 
-            borderRadius: '12px', 
-            background: 'var(--glass-2)',
-            border: '1px solid var(--glass-border)'
-          }}>
+          <span key={key} className="turning-point-card__domain-pill">
             {DOMAIN_LABELS[key]?.icon || '✨'} {getDomainLabel(key, lang)}
           </span>
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-        <div style={{ padding: '12px', background: 'rgba(76, 175, 80, 0.05)', borderRadius: '8px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--success)', marginBottom: '4px', textTransform: 'uppercase' }}>
+      <div className="turning-point-card__actions">
+        <div className="turning-point-card__action turning-point-card__action--do">
+          <div className="turning-point-card__action-label">
             {lang === 'fr' ? 'À privilégier' : 'To do'}
           </div>
-          <div style={{ fontSize: '13px', color: 'var(--text-1)' }}>{turningPoint.do}</div>
+          <div className="turning-point-card__action-text">{turningPoint.do}</div>
         </div>
-        <div style={{ padding: '12px', background: 'rgba(244, 67, 54, 0.05)', borderRadius: '8px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--danger)', marginBottom: '4px', textTransform: 'uppercase' }}>
+        <div className="turning-point-card__action turning-point-card__action--avoid">
+          <div className="turning-point-card__action-label">
             {lang === 'fr' ? 'À éviter' : 'Avoid'}
           </div>
-          <div style={{ fontSize: '13px', color: 'var(--text-1)' }}>{turningPoint.avoid}</div>
+          <div className="turning-point-card__action-text">{turningPoint.avoid}</div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };

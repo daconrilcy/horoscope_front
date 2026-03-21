@@ -16,6 +16,8 @@ import type { DailyPredictionTimeWindow } from '../../types/dailyPrediction';
 import type { Lang } from '../../i18n/predictions';
 import { getDomainLabel, getRegimeLabel, DOMAIN_LABELS } from '../../i18n/horoscope_copy';
 import { PERIOD_LABELS } from '../../i18n/predictions';
+import './SectionTitle.css';
+import './DayTimelineSectionV4.css';
 
 interface Props {
   timeWindows: DailyPredictionTimeWindow[];
@@ -164,12 +166,16 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => 
     REGIME_VISUALS[regime] ?? DEFAULT_REGIME_VISUAL;
 
   return (
-    <section className="day-timeline-v4" style={{ marginBottom: '32px' }}>
-      <h2 style={{ fontSize: '18px', marginBottom: '16px', color: 'var(--text-1)' }}>
-        {lang === 'fr' ? 'Déroulé de votre journée' : 'Your day timeline'}
-      </h2>
+    <section className="day-timeline-v4">
+      <div className="section-title">
+        <div className="section-title__dot" />
+        <h2 className="section-title__text">
+          {lang === 'fr' ? 'Déroulé de votre journée' : 'Your day timeline'}
+        </h2>
+        <hr className="section-title__line" />
+      </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="day-timeline-v4__list">
         {timeWindows.map((window) => {
           const Icon = PERIOD_ICONS[window.period_key] || Sparkles;
           const periodLabel = PERIOD_LABELS[window.period_key as keyof typeof PERIOD_LABELS]?.[lang] || '';
@@ -185,42 +191,31 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => 
           const regimeVisual = getRegimeVisual(window.regime);
 
           return (
-            <div key={window.period_key || window.time_range} style={{
-              background: regimeVisual.cardBackground,
-              border: `1px solid ${regimeVisual.borderColor}`,
-              boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 24px ${regimeVisual.borderColor.replace(/0\.\d+\)$/, '0.12)')}`,
-              borderRadius: '12px',
-              padding: '16px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <article
+              key={window.period_key || window.time_range}
+              className="day-timeline-v4__card"
+              style={{
+                background: regimeVisual.cardBackground,
+                border: `1px solid ${regimeVisual.borderColor}`,
+                boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 24px ${regimeVisual.borderColor.replace(/0\.\d+\)$/, '0.12)')}`,
+              }}
+            >
+              <div className="day-timeline-v4__top">
                 <Icon size={16} color="var(--text-2)" />
-                <span style={{ fontWeight: 'bold', color: 'var(--text-1)', fontSize: '15px' }}>
+                <span className="day-timeline-v4__period-label">
                   {periodLabel}
                 </span>
-                <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--text-2)' }}>
+                <span className="day-timeline-v4__time-range">
                   {window.time_range}
                 </span>
                 <span
                   title={regimeDescription}
                   aria-label={`${getRegimeLabel(window.regime, lang)}. ${regimeDescription}`}
+                  className="day-timeline-v4__regime-badge"
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '10px',
-                    textTransform: 'uppercase',
-                    fontWeight: 'bold',
-                    letterSpacing: '0.04em',
                     color: regimeVisual.badgeColor,
                     background: regimeVisual.badgeBackground,
                     border: `1px solid ${regimeVisual.borderColor}`,
-                    padding: '4px 8px',
-                    borderRadius: '999px',
-                    marginLeft: '8px',
-                    cursor: 'help',
                   }}
                 >
                   <RegimeIcon size={12} strokeWidth={2} />
@@ -230,30 +225,30 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => 
                 </span>
               </div>
 
-              <h3 style={{ fontSize: '16px', fontWeight: 'bold', margin: 0, color: 'var(--text-1)' }}>
+              <h3 className="day-timeline-v4__label">
                 {window.label}
               </h3>
 
-              <p style={{ fontSize: '14px', color: 'var(--text-1)', fontStyle: 'italic', margin: 0 }}>
+              <p className="day-timeline-v4__narrative">
                 {window.narrative || window.action_hint}
               </p>
 
               {window.astro_events && window.astro_events.length > 0 && (
-                <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <ul className="day-timeline-v4__events">
                   {window.astro_events.map((evt, i) => (
-                    <li key={i} style={{ fontSize: '12px', color: 'var(--text-2)' }}>· {evt}</li>
+                    <li key={i} className="day-timeline-v4__event">· {evt}</li>
                   ))}
                 </ul>
               )}
 
-              <div style={{ display: 'flex', gap: '4px' }}>
+              <div className="day-timeline-v4__domains">
                 {window.top_domains.map(key => (
-                  <span key={key} title={getDomainLabel(key, lang)} style={{ fontSize: '14px' }}>
+                  <span key={key} title={getDomainLabel(key, lang)} className="day-timeline-v4__domain-icon">
                     {DOMAIN_LABELS[key]?.icon || '✨'}
                   </span>
                 ))}
               </div>
-            </div>
+            </article>
           );
         })}
       </div>

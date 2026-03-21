@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { DailyPredictionAstroFoundation } from '../types/dailyPrediction';
 import type { Lang } from '../i18n/predictions';
+import './AstroFoundationSection.css';
 
 interface Props {
   foundation: DailyPredictionAstroFoundation | null;
@@ -13,66 +14,47 @@ export const AstroFoundationSection: React.FC<Props> = ({ foundation, lang }) =>
   if (!foundation) return null;
 
   return (
-    <div className="astro-foundation-section" style={{
-      background: 'var(--glass-2)',
-      borderRadius: '16px',
-      padding: '16px',
-      marginBottom: '24px',
-      border: '1px solid var(--glass-border)'
-    }}>
+    <section className="astro-foundation-section glass-card glass-card--mini">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          width: '100%',
-          background: 'none',
-          border: 'none',
-          padding: 0,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          cursor: 'pointer',
-          color: 'var(--text-1)'
-        }}
+        className="astro-foundation-section__toggle"
       >
-        <span style={{ fontWeight: 'bold', fontSize: '16px' }}>
+        <span className="astro-foundation-section__title">
           {lang === 'fr' ? 'Fondements astrologiques' : 'Astrological foundations'}
         </span>
-        <span style={{ 
-          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-          transition: 'transform 0.3s ease'
-        }}>
+        <span className={`astro-foundation-section__chevron ${isOpen ? 'astro-foundation-section__chevron--open' : ''}`}>
           ▼
         </span>
       </button>
 
       {isOpen && (
-        <div style={{ marginTop: '20px' }}>
-          <p style={{ fontSize: '15px', color: 'var(--text-1)', marginBottom: '20px', fontStyle: 'italic' }}>
+        <div className="astro-foundation-section__content">
+          <p className="astro-foundation-section__headline">
             {foundation.headline}
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="astro-foundation-section__groups">
             <section>
-              <h3 style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-2)', marginBottom: '10px', textTransform: 'uppercase' }}>
+              <h3 className="astro-foundation-section__section-title">
                 {lang === 'fr' ? 'Mouvements clés' : 'Key movements'}
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div className="astro-foundation-section__items">
                 {foundation.key_movements.map((m, i) => (
-                  <div key={i} style={{ fontSize: '14px', color: 'var(--text-1)', display: 'flex', justifyContent: 'space-between' }}>
+                  <div key={i} className="astro-foundation-section__row">
                     <span><strong>{m.planet}</strong> {m.target ? `sur ${m.target}` : ''}</span>
-                    <span style={{ color: 'var(--text-2)', fontSize: '13px' }}>{m.effect_label}</span>
+                    <span className="astro-foundation-section__hint">{m.effect_label}</span>
                   </div>
                 ))}
               </div>
             </section>
 
             <section>
-              <h3 style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-2)', marginBottom: '10px', textTransform: 'uppercase' }}>
+              <h3 className="astro-foundation-section__section-title">
                 {lang === 'fr' ? 'Maisons activées' : 'Activated houses'}
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div className="astro-foundation-section__items">
                 {foundation.activated_houses.map((h, i) => (
-                  <div key={i} style={{ fontSize: '14px', color: 'var(--text-1)' }}>
+                  <div key={i} className="astro-foundation-section__row astro-foundation-section__row--stack">
                     <strong>{h.house_label}</strong> : {h.domain_label}
                   </div>
                 ))}
@@ -80,21 +62,14 @@ export const AstroFoundationSection: React.FC<Props> = ({ foundation, lang }) =>
             </section>
 
             <section>
-              <h3 style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-2)', marginBottom: '10px', textTransform: 'uppercase' }}>
+              <h3 className="astro-foundation-section__section-title">
                 {lang === 'fr' ? 'Aspects dominants' : 'Dominant aspects'}
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div className="astro-foundation-section__items">
                 {foundation.dominant_aspects.map((a, i) => (
-                  <div key={i} style={{ fontSize: '14px', color: 'var(--text-1)', display: 'flex', justifyContent: 'space-between' }}>
+                  <div key={i} className="astro-foundation-section__row">
                     <span>{a.planet_a} {a.aspect_type.toLowerCase()}{a.planet_b ? ` ${a.planet_b}` : ''}</span>
-                    <span style={{
-                      fontSize: '12px',
-                      color: a.tonality === 'fluidité' ? 'var(--success)'
-                        : a.tonality === 'ajustement' ? '#ff9800'
-                        : a.tonality === 'intensification' ? 'var(--primary)'
-                        : 'var(--text-2)',
-                      fontWeight: '500'
-                    }}>
+                    <span className="astro-foundation-section__tonality" data-tonality={a.tonality}>
                       {a.tonality}
                     </span>
                   </div>
@@ -102,19 +77,12 @@ export const AstroFoundationSection: React.FC<Props> = ({ foundation, lang }) =>
               </div>
             </section>
 
-            <p style={{ 
-              fontSize: '14px', 
-              color: 'var(--text-2)', 
-              padding: '12px', 
-              background: 'var(--glass-2)', 
-              borderRadius: '8px',
-              borderLeft: '2px solid var(--primary)'
-            }}>
+            <p className="astro-foundation-section__bridge">
               {foundation.interpretation_bridge}
             </p>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };

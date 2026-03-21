@@ -15,11 +15,13 @@ import { AstroFoundationSection } from '../components/AstroFoundationSection'
 import { DailyPageHeader } from '../components/prediction/DailyPageHeader'
 
 import { detectLang } from '../i18n/astrology'
+import { normalizeSignCode } from '../i18n/astrology'
 import type { Lang } from '../i18n/predictions'
 import { getPredictionMessage } from '../utils/predictionI18n'
-import { useAccessTokenSnapshot } from '../utils/authToken'
+import { getSubjectFromAccessToken, useAccessTokenSnapshot } from '../utils/authToken'
 import { useAuthMe } from '../api/authMe'
 import { useDailyPrediction } from '../api/useDailyPrediction'
+import { useBirthData } from '../api/useBirthData'
 import { trackEvent, EVENTS } from '../utils/analytics'
 import { SectionErrorBoundary } from '../components/ErrorBoundary'
 
@@ -31,6 +33,8 @@ import { mapTurningPoint } from '../utils/turningPointCardMapper'
 import { mapBestWindow } from '../utils/bestWindowCardMapper'
 import { mapAstroFoundation } from '../utils/astroFoundationSectionMapper'
 import { buildDailyAdviceCardModel } from '../utils/dailyAdviceCardMapper'
+import { clamp } from '../components/astro/astroMoodBackgroundUtils'
+import type { ZodiacSign } from '../components/astro/zodiacPatterns'
 
 import './DailyHoroscopePage.css'
 
@@ -43,6 +47,7 @@ export function DailyHoroscopePage() {
   const bootstrapPredictionRefetchDoneForToken = useRef<string | null>(null)
 
   const { isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useAuthMe(accessToken)
+  const { data: birthData } = useBirthData(accessToken)
 
   const { 
     data: prediction, 
@@ -84,6 +89,27 @@ export function DailyHoroscopePage() {
 
   const isLoading = isUserLoading || isPredictionLoading
   const isError = isUserError || isPredictionError
+  const astroBackgroundProps = prediction
+    ? {
+        sign: ((birthData?.astro_profile?.sun_sign_code
+          ? normalizeSignCode(birthData.astro_profile.sun_sign_code)
+          : 'neutral') as ZodiacSign),
+        userId: getSubjectFromAccessToken(accessToken) || 'anonymous',
+        dateKey: prediction.meta.date_local,
+        dayScore: clamp(
+          Math.round(
+            prediction.categories.length > 0
+              ? prediction.categories
+                  .map((category) => category.note_20)
+                  .filter((note) => typeof note === 'number' && !Number.isNaN(note))
+                  .reduce((sum, note, _, notes) => sum + note / notes.length, 0)
+              : 12
+          ),
+          1,
+          20
+        ),
+      }
+    : undefined
 
   const handleRetry = () => {
     refetchUser()
@@ -143,6 +169,7 @@ export function DailyHoroscopePage() {
                 <DayClimateHero 
                   climate={climate} 
                   dailySynthesis={prediction.daily_synthesis} 
+                  astroBackgroundProps={astroBackgroundProps}
                   lang={lang} 
                 />
               ) : null;

@@ -587,6 +587,19 @@ claude-sonnet-4-6
       - `ruff format --check backend/app/api/v1/routers/predictions.py backend/app/infra/db/models/daily_prediction.py backend/app/infra/db/repositories/daily_prediction_repository.py backend/app/prediction/llm_narrator.py backend/app/tests/unit/prediction/test_public_projection_evidence.py backend/tests/unit/prediction/test_llm_narrator.py`
       - `npx tsc --noEmit` dans `frontend/`
 
+9. **Réalignement visuel `/dashboard/horoscope` sur l'epic 58 (2026-03-21)** — Restauration du langage visuel premium initial qui s'était dilué au fil des retouches fonctionnelles :
+
+   a. **Retour au langage glassmorphism epic 58** — Les cartes majeures de la page horoscope (`DayClimateHero`, `DomainRankingCard`, `TurningPointCard`, `BestWindowCard`, `AstroFoundationSection`, `DayTimelineSectionV4`) ont été réharmonisées avec les tokens de design existants (`glass-card`, `SectionTitle`, `--color-hero-*`, ombres diffuses, bordures semi-transparentes) au lieu d'accumuler des styles inline hétérogènes.
+
+   b. **Raccord du hero climat au fond généré astro** — `DayClimateHero` sait désormais utiliser `AstroMoodBackground`, avec les mêmes paramètres de génération que `dashboard-summary-card-wrapper` : signe solaire normalisé, `userId` dérivé du token, `dateKey` du jour et `dayScore` calculé depuis la prédiction. Le hero principal de `/dashboard/horoscope` retrouve ainsi le fond cosmique déterministe prévu dans les stories de l'epic 58.
+
+   c. **Hiérarchie visuelle de page rétablie** (`DailyHoroscopePage.css`) — La page réutilise un container plus resserré, des halos de fond diffus, un bouton refresh glass circulaire, et une meilleure séparation des niveaux de lecture pour reconnecter le parcours visuel au style premium initial.
+
+   d. **Day timeline réintégré au système de sections** — `DayTimelineSectionV4` a été déplacé des styles inline vers une feuille CSS dédiée et réutilise `SectionTitle.css`, ce qui rétablit sa cohérence avec les sections epic 58 tout en conservant le codage métier des régimes.
+
+   e. **Vérification ciblée** — Passe :
+      - `npx tsc --noEmit` dans `frontend/`
+
 ### File List
 
 - `backend/app/infra/db/models/user.py`
@@ -614,12 +627,22 @@ claude-sonnet-4-6
 - `frontend/src/pages/settings/AccountSettings.tsx`
 - `frontend/src/i18n/settings.ts`
 - `frontend/src/components/DayClimateHero.tsx`
+- `frontend/src/components/DayClimateHero.css`
 - `frontend/src/components/AstroDailyEvents.tsx`
+- `frontend/src/components/DomainRankingCard.css`
+- `frontend/src/components/DomainRankingCard.tsx`
 - `frontend/src/components/prediction/DayTimelineSectionV4.tsx`
+- `frontend/src/components/prediction/DayTimelineSectionV4.css`
 - `frontend/src/components/TurningPointCard.tsx`
+- `frontend/src/components/TurningPointCard.css`
+- `frontend/src/components/BestWindowCard.tsx`
+- `frontend/src/components/BestWindowCard.css`
+- `frontend/src/components/AstroFoundationSection.tsx`
+- `frontend/src/components/AstroFoundationSection.css`
 - `frontend/src/components/prediction/DailyAdviceCard.tsx`
 - `frontend/src/components/prediction/DailyAdviceCard.css`
 - `frontend/src/pages/DailyHoroscopePage.tsx`
+- `frontend/src/pages/DailyHoroscopePage.css`
 - `frontend/src/utils/dailyAdviceCardMapper.ts`
 - `frontend/src/utils/dailyAdviceCardMapper.test.ts`
 - `backend/app/tests/unit/test_public_projection.py` *(async fix)*

@@ -2,99 +2,96 @@ import React from 'react';
 import type { DailyPredictionDayClimate } from '../types/dailyPrediction';
 import type { Lang } from '../i18n/predictions';
 import { getDomainLabel, DOMAIN_LABELS } from '../i18n/horoscope_copy';
+import { AstroMoodBackground } from './astro/AstroMoodBackground';
+import type { ZodiacSign } from './astro/zodiacPatterns';
+import './DayClimateHero.css';
 
 interface Props {
   climate: DailyPredictionDayClimate;
   dailySynthesis?: string | null;
   lang: Lang;
+  astroBackgroundProps?: {
+    sign: ZodiacSign;
+    userId: string;
+    dateKey: string;
+    dayScore: number;
+  };
 }
 
-export const DayClimateHero: React.FC<Props> = ({ climate, dailySynthesis, lang }) => {
+export const DayClimateHero: React.FC<Props> = ({
+  climate,
+  dailySynthesis,
+  lang,
+  astroBackgroundProps,
+}) => {
   const getToneColor = (tone: string) => {
     switch (tone) {
-      case 'positive': return 'var(--success)';
-      case 'negative': return 'var(--danger)';
-      case 'mixed': return 'var(--primary)';
-      case 'neutral': return 'var(--text-2)';
-      default: return 'var(--text-1)';
+      case 'positive': return 'var(--color-success)';
+      case 'negative': return 'var(--color-danger)';
+      case 'mixed': return 'var(--color-primary)';
+      case 'neutral': return 'var(--color-text-secondary)';
+      default: return 'var(--color-text-primary)';
     }
   };
 
-  return (
-    <div className="day-climate-hero" style={{
-      background: 'var(--glass)',
-      border: '1px solid var(--glass-border)',
-      borderRadius: '16px',
-      padding: '24px',
-      marginBottom: '24px',
-      backdropFilter: 'blur(10px)'
-    }}>
-      <h1 style={{
-        fontSize: '24px',
-        fontWeight: 'bold',
-        color: getToneColor(climate.tone),
-        marginBottom: '8px',
-        marginTop: 0
-      }}>
-        {climate.label}
-      </h1>
-      
-      <p style={{
-        fontSize: '16px',
-        color: 'var(--text-1)',
-        lineHeight: '1.5',
-        marginBottom: '20px'
-      }}>
+  const content = (
+    <>
+      <div className="day-climate-hero__aura" aria-hidden="true" />
+      <header className="day-climate-hero__header">
+        <h1 className="day-climate-hero__title" style={{ color: getToneColor(climate.tone) }}>
+          {climate.label}
+        </h1>
+        {climate.best_window_ref && (
+          <span className="day-climate-hero__best-window">
+            {lang === 'fr' ? 'Meilleur créneau' : 'Best window'} · {climate.best_window_ref}
+          </span>
+        )}
+      </header>
+
+      <p className="day-climate-hero__summary">
         {dailySynthesis || climate.summary}
       </p>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+      <div className="day-climate-hero__domains">
         {climate.top_domains.map(key => (
-          <span key={key} style={{
-            background: 'var(--glass-2)',
-            padding: '6px 12px',
-            borderRadius: '20px',
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            border: '1px solid var(--glass-border)'
-          }}>
+          <span key={key} className="day-climate-hero__chip">
             <span>{DOMAIN_LABELS[key]?.icon || '✨'}</span>
             <span>{getDomainLabel(key, lang)}</span>
           </span>
         ))}
-
-        {climate.best_window_ref && (
-          <span style={{
-            fontSize: '14px',
-            color: 'var(--text-2)',
-            marginLeft: 'auto'
-          }}>
-            🕒 {climate.best_window_ref}
-          </span>
-        )}
       </div>
 
       {climate.watchout && (
-        <div style={{
-          marginTop: '16px',
-          padding: '12px',
-          background: 'rgba(255, 107, 107, 0.1)',
-          borderRadius: '8px',
-          borderLeft: '4px solid var(--danger)',
-          display: 'flex',
-          gap: '10px',
-          alignItems: 'center',
-          fontSize: '14px'
-        }}>
-          <span>⚠️</span>
-          <span>
+        <div className="day-climate-hero__watchout">
+          <span className="day-climate-hero__watchout-icon">⚠️</span>
+          <span className="day-climate-hero__watchout-text">
             {lang === 'fr' ? 'Vigilance sur ' : 'Watchout on '} 
             <strong>{getDomainLabel(climate.watchout!, lang).toLowerCase()}</strong>
           </span>
         </div>
       )}
-    </div>
+    </>
+  );
+
+  if (astroBackgroundProps) {
+    return (
+      <div className="day-climate-hero-wrapper">
+        <AstroMoodBackground
+          sign={astroBackgroundProps.sign}
+          userId={astroBackgroundProps.userId}
+          dateKey={astroBackgroundProps.dateKey}
+          dayScore={astroBackgroundProps.dayScore}
+          className="day-climate-hero day-climate-hero--astro"
+        >
+          <div className="day-climate-hero__content">{content}</div>
+        </AstroMoodBackground>
+      </div>
+    );
+  }
+
+  return (
+    <section className="day-climate-hero glass-card glass-card--hero">
+      {content}
+    </section>
   );
 };

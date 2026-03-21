@@ -1,0 +1,108 @@
+.astro-foundation-section__toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-primary);
+}
+
+.astro-foundation-section__title {
+  font-size: 1rem;
+  font-weight: var(--font-weight-bold);
+}
+
+.astro-foundation-section__chevron {
+  transition: transform 0.3s ease;
+  color: var(--color-text-secondary);
+}
+
+.astro-foundation-section__chevron--open {
+  transform: rotate(180deg);
+}
+
+.astro-foundation-section__content {
+  margin-top: var(--space-5);
+}
+
+.astro-foundation-section__headline {
+  margin: 0 0 var(--space-5);
+  color: var(--color-text-primary);
+  font-style: italic;
+  line-height: 1.55;
+}
+
+.astro-foundation-section__groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.astro-foundation-section__section-title {
+  margin: 0 0 0.7rem;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.astro-foundation-section__items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.astro-foundation-section__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.astro-foundation-section__row--stack {
+  display: block;
+}
+
+.astro-foundation-section__hint {
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+.astro-foundation-section__tonality {
+  font-size: 0.78rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.astro-foundation-section__tonality[data-tonality='fluidité'] {
+  color: var(--color-success);
+}
+
+.astro-foundation-section__tonality[data-tonality='ajustement'] {
+  color: #d6831a;
+}
+
+.astro-foundation-section__tonality[data-tonality='intensification'] {
+  color: var(--color-primary);
+}
+
+.astro-foundation-section__bridge {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.3);
+  border-left: 2px solid var(--color-primary);
+}
+
+@media (max-width: 640px) {
+  .astro-foundation-section__row {
+    flex-direction: column;
+  }
+}

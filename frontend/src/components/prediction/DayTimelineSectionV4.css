@@ -1,0 +1,103 @@
+.day-timeline-v4 {
+  margin-bottom: var(--space-8, 2rem);
+}
+
+.day-timeline-v4__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.day-timeline-v4__card {
+  border-radius: 20px;
+  padding: 1rem 1rem 1.05rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.day-timeline-v4__top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.day-timeline-v4__period-label {
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--color-text-primary, var(--text-1));
+  font-size: 0.95rem;
+}
+
+.day-timeline-v4__time-range {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, var(--text-2));
+}
+
+.day-timeline-v4__regime-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.63rem;
+  text-transform: uppercase;
+  font-weight: var(--font-weight-bold, 700);
+  letter-spacing: 0.04em;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  margin-left: 0.35rem;
+  cursor: help;
+}
+
+.day-timeline-v4__label {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--color-text-primary, var(--text-1));
+}
+
+.day-timeline-v4__narrative {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.62;
+  color: var(--color-text-primary, var(--text-1));
+}
+
+.day-timeline-v4__events {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.day-timeline-v4__event {
+  font-size: 0.76rem;
+  color: var(--color-text-secondary, var(--text-2));
+}
+
+.day-timeline-v4__domains {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.day-timeline-v4__domain-icon {
+  font-size: 0.95rem;
+}
+
+@media (max-width: 720px) {
+  .day-timeline-v4__top {
+    flex-wrap: wrap;
+  }
+
+  .day-timeline-v4__time-range {
+    margin-left: 0;
+    order: 3;
+  }
+
+  .day-timeline-v4__regime-badge {
+    margin-left: auto;
+  }
+}
