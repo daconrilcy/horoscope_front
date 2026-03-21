@@ -28,7 +28,7 @@ class LLMNarrator:
     Narrates astrological data using OpenAI (Story 60.16).
     """
 
-    TIMEOUT_SECONDS = 10.0
+    TIMEOUT_SECONDS = 30.0
 
     async def narrate(
         self,
@@ -57,14 +57,20 @@ class LLMNarrator:
                         {"role": "system", "content": self._system_prompt(lang)},
                         {"role": "user", "content": prompt},
                     ],
-                    max_completion_tokens=800,
+                    max_completion_tokens=4000,
                 ),
                 timeout=self.TIMEOUT_SECONDS,
             )
 
-            raw = (response.choices[0].message.content or "").strip()
+            choice = response.choices[0]
+            raw = (choice.message.content or "").strip()
             if not raw:
-                logger.warning("llm_narrator.empty_response model=%s", resolve_model("daily_prediction"))
+                logger.warning(
+                    "llm_narrator.empty_response model=%s finish_reason=%s refusal=%s",
+                    resolve_model("daily_prediction"),
+                    choice.finish_reason,
+                    getattr(choice.message, "refusal", None),
+                )
                 return None
             # Strip markdown code fences if present
             if raw.startswith("```"):
