@@ -52,6 +52,7 @@ type SendChatPayload = {
 
 type ChatConversationSummary = {
   conversation_id: number
+  persona_id?: string
   status: string
   updated_at: string
   last_message_preview: string

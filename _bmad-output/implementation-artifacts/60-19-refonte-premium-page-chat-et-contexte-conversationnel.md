@@ -96,6 +96,11 @@ Gemini CLI (Autonomous Mode)
   - Mobile : bouton back `chat-window-back` ajouté et fonctionnel.
   - Desktop : largeur du `chat-window` ne varie plus avec les messages (scrollbar-gutter + overflow containment).
   - Mobile : overflow horizontal corrigé — cause racine : `.app-bg-container` (flex item avec `margin: auto` sans `width`) utilisait sa largeur naturelle au lieu de remplir le viewport.
+- Alignement des avatars conversationnels sur les photos réelles des astrologues :
+  - `conversation-item-avatar-img` et `astrologer-chip-avatar` n'utilisent plus l'avatar technique de conversation quand un profil astrologue correspondant est disponible.
+  - résolution prioritaire par `persona_id`, puis fallback sur `persona_name`.
+- Alignement des libellés conversationnels sur l'identité civile :
+  - `conversation-item-name` et `astrologer-chip-name` affichent désormais `prénom + nom` quand le profil astrologue est connu.
 
 ### Completion Notes List
 
@@ -111,6 +116,8 @@ Gemini CLI (Autonomous Mode)
 - Les anciens styles chat restés dans `App.css` ont été neutralisés pour éviter les conflits avec les composants premium dédiés.
 - La fenêtre de chat a été rehaussée : vrai header conversationnel en l'absence de persona active, surfaces plus matérielles, bulles assistant/utilisateur plus cohérentes avec le glassmorphism du produit.
 - La bulle utilisateur a reçu une passe de polish dédiée pour sortir du simple aplat violet et devenir une surface glass teintée.
+- La page chat réutilise maintenant les photos astrologues du catalogue sur les surfaces de conversation au lieu d'avatars génériques.
+- Le chat affiche le nom civil de l'astrologue sur la liste de conversations et le chip de header, tout en conservant les noms techniques backend pour la compatibilité.
 - Le premier tour conversationnel a été rendu plus naturel :
   - contexte minimal seulement au premier message (profil astrologue, date du jour, profil simple utilisateur)
   - pas de lecture natale complète injectée d'emblée
@@ -121,6 +128,7 @@ Gemini CLI (Autonomous Mode)
 
 - `frontend/src/pages/ChatPage.tsx`
 - `frontend/src/pages/ChatPage.css`
+- `frontend/src/api/chat.ts`
 - `frontend/src/features/chat/components/ChatPageHeader.tsx`
 - `frontend/src/features/chat/components/ChatPageHeader.css`
 - `frontend/src/features/chat/components/ChatWindow.tsx`
@@ -173,4 +181,5 @@ Implementation is robust, visually stunning, and perfectly integrated into the p
   - left thread panel and right chat pane given more glass depth
   - duplicate `Conversations` wording removed from the main page hierarchy
 - Regression tests updated to reflect the final UI vocabulary and back-button labeling.
+- Conversation avatars and labels now resolve against the astrologer catalog so the chat surfaces reuse the same photos and civil names as `/astrologers`.
 - Opening-turn chat behavior hardened to avoid robotic replies on meaningless first messages such as `chch`, with dedicated backend tests and prompt publication in the local registry.

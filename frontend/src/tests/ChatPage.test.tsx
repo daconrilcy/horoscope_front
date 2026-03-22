@@ -9,6 +9,7 @@ const mockUseChatConversations = vi.fn()
 const mockUseChatConversationHistory = vi.fn()
 const mockUseBillingQuota = vi.fn()
 const mockUseCreateConversationByPersona = vi.fn()
+const mockUseAstrologers = vi.fn()
 const mockNavigate = vi.fn()
 
 vi.mock("react-router-dom", async () => {
@@ -60,11 +61,7 @@ vi.mock("../api/astrologers", () => ({
     isPending: false,
     error: null,
   }),
-  useAstrologers: () => ({
-    data: [],
-    isPending: false,
-    error: null,
-  }),
+  useAstrologers: () => mockUseAstrologers(),
 }))
 
 const routerFutureFlags = { v7_startTransition: true, v7_relativeSplatPath: true }
@@ -88,6 +85,7 @@ afterEach(() => {
   mockUseChatConversationHistory.mockReset()
   mockUseBillingQuota.mockReset()
   mockUseCreateConversationByPersona.mockReset()
+  mockUseAstrologers.mockReset()
   mockNavigate.mockReset()
 })
 
@@ -140,6 +138,11 @@ describe("ChatPage", () => {
     mockUseSendChatMessage.mockReturnValue(baseSendMessageState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
     mockUseCreateConversationByPersona.mockReturnValue(baseCreateConversationState)
+    mockUseAstrologers.mockReturnValue({
+      data: [],
+      isPending: false,
+      error: null,
+    })
   })
 
   describe("Empty State (AC6)", () => {
@@ -406,12 +409,29 @@ describe("ChatPage", () => {
 
   describe("Empty Chat State with Persona (AC5)", () => {
     it("displays persona name in empty conversation state", () => {
+      mockUseAstrologers.mockReturnValue({
+        data: [
+          {
+            id: "persona-luna",
+            name: "Luna",
+            first_name: "Luna",
+            last_name: "Caron",
+            avatar_url: "/assets/astrologers/luna.png",
+            specialties: ["Relations"],
+            style: "Douce",
+            bio_short: "Astrologue relationnelle",
+          },
+        ],
+        isPending: false,
+        error: null,
+      })
       mockUseChatConversations.mockReturnValue({
         ...baseConversationsState,
         data: {
           conversations: [
             {
               conversation_id: 10,
+              persona_id: "persona-luna",
               status: "active",
               updated_at: "2026-02-22T10:00:00Z",
               last_message_preview: "",
@@ -431,10 +451,10 @@ describe("ChatPage", () => {
 
       renderWithRouter("/chat/10")
 
-      // "Luna" appears in both the conversation list item and the chat header persona chip.
-      const lunaElements = screen.getAllByText("Luna")
+      const lunaElements = screen.getAllByText("Luna Caron")
       expect(lunaElements.length).toBeGreaterThanOrEqual(1)
       expect(lunaElements.some((el) => el.className === "astrologer-chip-name")).toBe(true)
+      expect(screen.getByAltText("Luna Caron")).toHaveAttribute("src", "/assets/astrologers/luna.png")
       expect(screen.getByText("Bonjour, que puis-je faire pour vous ?")).toBeInTheDocument()
     })
   })
@@ -644,12 +664,29 @@ describe("ChatPage", () => {
     })
 
     it("renders persona chip in chat header when persona is available", () => {
+      mockUseAstrologers.mockReturnValue({
+        data: [
+          {
+            id: "persona-luna",
+            name: "Luna",
+            first_name: "Luna",
+            last_name: "Caron",
+            avatar_url: "/assets/astrologers/luna.png",
+            specialties: ["Relations"],
+            style: "Douce",
+            bio_short: "Astrologue relationnelle",
+          },
+        ],
+        isPending: false,
+        error: null,
+      })
       mockUseChatConversations.mockReturnValue({
         ...baseConversationsState,
         data: {
           conversations: [
             {
               conversation_id: 42,
+              persona_id: "persona-luna",
               status: "active",
               updated_at: "2026-02-22T10:00:00Z",
               last_message_preview: "Test",
@@ -664,9 +701,56 @@ describe("ChatPage", () => {
 
       renderWithRouter("/chat/42")
 
-      const lunaElements = screen.getAllByText("Luna")
+      const lunaElements = screen.getAllByText("Luna Caron")
       expect(lunaElements.some((el) => el.className === "astrologer-chip-name")).toBe(true)
+      expect(screen.getByAltText("Luna Caron")).toHaveAttribute("src", "/assets/astrologers/luna.png")
       expect(screen.queryByText("Votre Astrologue")).not.toBeInTheDocument()
+    })
+
+    it("uses astrologer photo in conversation list items", () => {
+      mockUseAstrologers.mockReturnValue({
+        data: [
+          {
+            id: "persona-luna",
+            name: "Luna",
+            first_name: "Luna",
+            last_name: "Caron",
+            avatar_url: "/assets/astrologers/luna.png",
+            specialties: ["Relations"],
+            style: "Douce",
+            bio_short: "Astrologue relationnelle",
+          },
+        ],
+        isPending: false,
+        error: null,
+      })
+      mockUseChatConversations.mockReturnValue({
+        ...baseConversationsState,
+        data: {
+          conversations: [
+            {
+              conversation_id: 1,
+              persona_id: "persona-luna",
+              persona_name: "Luna",
+              avatar_url: "https://api.dicebear.com/legacy.svg",
+              status: "active",
+              updated_at: "2026-02-22T10:00:00Z",
+              last_message_preview: "Test",
+            },
+          ],
+          total: 1,
+          limit: 20,
+          offset: 0,
+        },
+      })
+
+      renderWithRouter()
+
+      expect(screen.getByAltText("Avatar de Luna Caron")).toHaveAttribute(
+        "src",
+        "/assets/astrologers/luna.png"
+      )
+      expect(screen.getByText("Luna Caron")).toBeInTheDocument()
     })
   })
 })

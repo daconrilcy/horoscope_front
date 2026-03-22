@@ -34,6 +34,43 @@ type ChatUiMessage = {
   timestamp?: string
 }
 
+function resolveAstrologerForConversation(
+  astrologers: ReturnType<typeof useAstrologers>["data"],
+  conversation:
+    | {
+        persona_id?: string
+        persona_name?: string
+      }
+    | undefined,
+) {
+  if (!astrologers || !conversation) {
+    return undefined
+  }
+
+  return astrologers.find((astrologer) => {
+    if (conversation.persona_id && astrologer.id === conversation.persona_id) {
+      return true
+    }
+    return astrologer.name === conversation.persona_name
+  })
+}
+
+function getAstrologerFullName(
+  astrologer:
+    | {
+        first_name?: string
+        last_name?: string
+        name?: string
+      }
+    | undefined,
+) {
+  if (!astrologer) {
+    return undefined
+  }
+
+  return [astrologer.first_name, astrologer.last_name].filter(Boolean).join(" ") || astrologer.name
+}
+
 export function ChatPage() {
   const { conversationId: urlConversationId } = useParams<{
     conversationId: string
@@ -308,8 +345,28 @@ export function ChatPage() {
         )
       : undefined
 
-  const currentAstrologer = astrologers.data?.find(
-    (a) => a.name === selectedConversationSummary?.persona_name
+  const resolvedConversations = useMemo(() => {
+    const items = conversations.data?.conversations ?? []
+
+    return items.map((conversation) => {
+      const astrologer = resolveAstrologerForConversation(astrologers.data, conversation)
+      const fullName = getAstrologerFullName(astrologer)
+      return {
+        ...conversation,
+        persona_name: fullName ?? conversation.persona_name,
+        avatar_url: astrologer?.avatar_url ?? conversation.avatar_url,
+      }
+    })
+  }, [conversations.data?.conversations, astrologers.data])
+
+  const resolvedSelectedConversationSummary =
+    selectedConversationId !== null
+      ? resolvedConversations.find((c) => c.conversation_id === selectedConversationId)
+      : undefined
+
+  const currentAstrologer = resolveAstrologerForConversation(
+    astrologers.data,
+    resolvedSelectedConversationSummary ?? selectedConversationSummary
   )
 
   return (
@@ -339,7 +396,7 @@ export function ChatPage() {
           isMobile={isMobile}
           leftPanel={
             <ConversationList
-              conversations={conversations.data?.conversations ?? []}
+              conversations={resolvedConversations}
               selectedId={selectedConversationId}
               onSelect={handleSelectConversation}
               onNewConversation={() => setShowAstrologerPicker(true)}
@@ -371,8 +428,14 @@ export function ChatPage() {
                 quotaBlocked={quotaBlocked}
                 initialMessage={prefillMessage}
                 onInitialMessageConsumed={() => setPrefillMessage(null)}
-                personaName={selectedConversationSummary?.persona_name}
-                personaAvatarUrl={selectedConversationSummary?.avatar_url}
+                personaName={
+                  getAstrologerFullName(currentAstrologer) ??
+                  resolvedSelectedConversationSummary?.persona_name
+                }
+                personaAvatarUrl={
+                  currentAstrologer?.avatar_url ??
+                  resolvedSelectedConversationSummary?.avatar_url
+                }
                 personaBio={currentAstrologer?.bio_short}
                 personaSpecialties={currentAstrologer?.specialties}
                 onBack={isMobile && mobileView === "chat" ? handleBackToList : undefined}
