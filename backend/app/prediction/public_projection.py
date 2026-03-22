@@ -985,7 +985,10 @@ class PublicDayClimatePolicy:
         # 4. Top Domains (top 3, keeping ties with the third score)
         sorted_domains = sorted(
             domain_ranking,
-            key=lambda item: (-float(item.get("score_10", 0.0)), int(item.get("display_order", 99))),
+            key=lambda item: (
+                -float(item.get("score_10", 0.0)),
+                int(item.get("display_order", 99)),
+            ),
         )
         if len(sorted_domains) <= 3:
             top_domains = [d["key"] for d in sorted_domains]

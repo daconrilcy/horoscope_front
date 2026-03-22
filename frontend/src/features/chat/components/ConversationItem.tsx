@@ -3,6 +3,7 @@ import type { ChatConversationSummary } from "@api/chat"
 import { detectLang } from "@i18n/astrology"
 import type { AstrologyLang } from "@i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
+import "./ConversationItem.css"
 
 const LOCALE_MAP: Record<AstrologyLang, string> = {
   fr: "fr-FR",

@@ -1,5 +1,4 @@
 import { useRef, useEffect } from "react"
-import { Plus } from "lucide-react"
 import { MessageBubble } from "./MessageBubble"
 import { TypingIndicator } from "./TypingIndicator"
 import { ChatComposer } from "./ChatComposer"
@@ -22,11 +21,8 @@ type ChatWindowProps = {
   error?: Error | null
   quotaBlocked?: boolean
   onRetry?: () => void
-  onBack?: () => void
-  showBackButton?: boolean
   initialMessage?: string | null
   onInitialMessageConsumed?: () => void
-  onNewConversation?: () => void
   personaName?: string
   personaAvatarUrl?: string
   personaBio?: string
@@ -41,11 +37,8 @@ export function ChatWindow({
   error = null,
   quotaBlocked = false,
   onRetry,
-  onBack,
-  showBackButton = false,
   initialMessage = null,
   onInitialMessageConsumed,
-  onNewConversation,
   personaName,
   personaAvatarUrl,
   personaBio,
@@ -70,16 +63,6 @@ export function ChatWindow({
   return (
     <div className="chat-window">
       <div className="chat-window-header">
-        {showBackButton && onBack && (
-          <button
-            type="button"
-            className="chat-window-back"
-            onClick={onBack}
-            aria-label={t("chat_back_to_list", lang)}
-          >
-            ← {t("chat_back", lang)}
-          </button>
-        )}
         {personaName && (
           <div className="astrologer-chip">
             {personaAvatarUrl ? (
@@ -107,17 +90,6 @@ export function ChatWindow({
               </div>
             )}
           </div>
-        )}
-        {onNewConversation && (
-          <button
-            type="button"
-            className="chat-window-new-btn"
-            onClick={onNewConversation}
-            aria-label={t("new_conversation", lang)}
-          >
-            <Plus size={14} />
-            {t("new_conversation", lang)}
-          </button>
         )}
       </div>
 

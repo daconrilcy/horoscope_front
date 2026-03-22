@@ -130,3 +130,6 @@ Commandes standard (exemples PowerShell, toujours après activation venv):
 14) Style
 - Aucun style inline : tout doit etre mis en oeuvre dans le fichier .css ou .scss approprie
 - utiliser et reutiliser les variables de couleurs, bordure, marge, etc. present dans les feuilles styles. Verifier leur presence avant de les re creer.
+
+15) Utilisateur test
+- tu peux utiliser l'utilisateur test : daconrilcy@hotmail.com password : admin123

@@ -298,6 +298,9 @@ class LLMGateway:
                         "today_date",
                         "use_case_name",
                         "use_case_key",
+                        "current_datetime",
+                        "current_timezone",
+                        "current_location",
                     }
 
                     # Point 28.5 AC4: Use contract (db_use_case) as

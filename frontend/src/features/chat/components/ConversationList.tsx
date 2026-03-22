@@ -5,6 +5,7 @@ import type { ChatConversationSummary } from "@api/chat"
 import { detectLang } from "@i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
 import { ConversationItem, ConversationItemSkeleton } from "./ConversationItem"
+import "./ConversationList.css"
 
 type ConversationListProps = {
   conversations: ChatConversationSummary[]

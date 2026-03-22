@@ -13,6 +13,7 @@ import {
 } from "../api/chat"
 import {
   ChatLayout,
+  ChatPageHeader,
   ConversationList,
   ChatWindow,
   useIsMobile,
@@ -21,8 +22,10 @@ import type { MobileView } from "../features/chat"
 import { AstrologerPickerModal } from "../features/chat/components/AstrologerPickerModal"
 import { ChatEmptyState } from "../features/chat/components/ChatEmptyState"
 import { SectionErrorBoundary } from "../components/ErrorBoundary"
+import { PageLayout } from "../layouts"
 import { detectLang } from "../i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
+import "./ChatPage.css"
 
 type ChatUiMessage = {
   id: string
@@ -307,12 +310,21 @@ export function ChatPage() {
   )
 
   return (
-    <>
+    <PageLayout className="chat-page-container">
       {isRedirecting && (
         <div className="chat-window-loading-overlay">
           <div className="spinner" />
         </div>
       )}
+
+      {/* Decorative Halo (Story 60.19) */}
+      <div className="chat-page-container__bg-halo" />
+
+      <ChatPageHeader 
+        showBackButton={!isMobile || mobileView === "chat"}
+        onBack={isMobile && mobileView === "chat" ? handleBackToList : undefined}
+      />
+
       <SectionErrorBoundary onRetry={() => conversations.refetch()}>
         <ChatLayout
           mobileView={mobileView}
@@ -351,15 +363,12 @@ export function ChatPage() {
                 isSending={sendMessage.isPending}
                 error={conversationError}
                 quotaBlocked={quotaBlocked}
-                showBackButton={isMobile}
-                onBack={handleBackToList}
                 initialMessage={prefillMessage}
                 onInitialMessageConsumed={() => setPrefillMessage(null)}
                 personaName={selectedConversationSummary?.persona_name}
                 personaAvatarUrl={selectedConversationSummary?.avatar_url}
                 personaBio={currentAstrologer?.bio_short}
                 personaSpecialties={currentAstrologer?.specialties}
-                onNewConversation={() => setShowAstrologerPicker(true)}
               />
             )
           }
@@ -374,7 +383,7 @@ export function ChatPage() {
           onClose={() => setShowAstrologerPicker(false)}
         />
       )}
-    </>
+    </PageLayout>
   )
 }
 

@@ -425,7 +425,9 @@ async def test_assembler_keeps_public_luminary_pivots_without_major_category_not
     ],
 )
 @pytest.mark.asyncio
-async def test_assembler_keeps_public_pivots_for_structuring_runtime_event_types(cat_map, event_type):
+async def test_assembler_keeps_public_pivots_for_structuring_runtime_event_types(
+    cat_map, event_type
+):
     snapshot = PersistedPredictionSnapshot(
         run_id=1,
         user_id=1,

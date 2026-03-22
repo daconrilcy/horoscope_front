@@ -1,0 +1,110 @@
+.conversation-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: transparent;
+}
+
+.conversation-list-header {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.conversation-list-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.conversation-list-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.conversation-list-search {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  color: var(--text-strong);
+  transition: all 0.2s ease;
+}
+
+.conversation-list-search:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(134, 108, 208, 0.1);
+}
+
+.conversation-list-new-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(134, 108, 208, 0.24);
+}
+
+.conversation-list-new-btn:hover {
+  transform: scale(1.05);
+  background: var(--primary-dark, #7559c8);
+  box-shadow: 0 6px 16px rgba(134, 108, 208, 0.32);
+}
+
+.conversation-list-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+/* Custom Scrollbar */
+.conversation-list-items::-webkit-scrollbar {
+  width: 5px;
+}
+
+.conversation-list-items::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.conversation-list-items::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+.conversation-list-items:hover::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.conversation-list-empty,
+.conversation-list-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  gap: 12px;
+}
+
+.conversation-list-error {
+  color: #e63946;
+}

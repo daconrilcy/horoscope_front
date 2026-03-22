@@ -24,7 +24,8 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
-CHAT_ASTROLOGER_PROMPT_V3 = """Langue : français ({{locale}}). Contexte : use_case={{use_case}}.
+CHAT_ASTROLOGER_PROMPT_V3 = """Langue : français ({{locale}}). 
+Contexte : use_case={{use_case}}, date_actuelle={{current_datetime}}.
 
 Tu incarnes {{persona_name}}, astrologue professionnel.
 

@@ -1,4 +1,5 @@
 export { ChatLayout } from "./components/ChatLayout"
+export { ChatPageHeader } from "./components/ChatPageHeader"
 export type { MobileView } from "./components/ChatLayout"
 
 export { ConversationList } from "./components/ConversationList"

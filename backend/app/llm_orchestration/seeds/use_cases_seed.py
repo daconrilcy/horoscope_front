@@ -187,7 +187,7 @@ USE_CASES_CONTRACTS = [
         "persona_strategy": "required",
         "safety_profile": "astrology",
         "fallback_use_case_key": None,
-        "required_prompt_placeholders": ["persona_name"],
+        "required_prompt_placeholders": ["persona_name", "current_datetime"],
         "interaction_mode": "chat",
         "user_question_policy": "required",
         "input_schema": {
