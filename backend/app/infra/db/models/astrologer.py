@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
     JSON,
@@ -11,6 +11,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -60,9 +61,22 @@ class AstrologerProfileModel(Base):
     
     # JSON list of strings: ["Amour", "Carrière", etc.]
     specialties: Mapped[list[str]] = mapped_column(JSON, default=list)
+    # Structured specialties: [{"title": "...", "description": "..."}]
+    specialties_details: Mapped[list[dict[str, str]]] = mapped_column(JSON, default=list)
+    
     professional_background: Mapped[list[str]] = mapped_column(JSON, default=list)
     key_skills: Mapped[list[str]] = mapped_column(JSON, default=list)
     behavioral_style: Mapped[list[str]] = mapped_column(JSON, default=list)
+    
+    # New fields for Story 60.22
+    location: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    quote: Mapped[str | None] = mapped_column(Text, nullable=True)
+    mission_statement: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ideal_for: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    
+    # Metrics (Experience years, happy clients count, etc.)
+    # {"experience_years": 12, "consultations_count": 1500, "average_rating": 4.9}
+    metrics: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     
     is_public: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
@@ -104,4 +118,31 @@ class AstrologerPromptProfileModel(Base):
 
     persona: Mapped[LlmPersonaModel] = relationship(
         "LlmPersonaModel", backref="prompt_profiles"
+    )
+
+
+class AstrologerReviewModel(Base):
+    """
+    User reviews and ratings for astrologers.
+    """
+    __tablename__ = "astrologer_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    persona_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("llm_personas.id", ondelete="CASCADE"), index=True
+    )
+    
+    rating: Mapped[int] = mapped_column(Integer) # 1 to 5
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+    # Unique constraint: one review per user per astrologer
+    __table_args__ = (
+        Index("ix_astrologer_review_user_persona", "user_id", "persona_id", unique=True),
     )

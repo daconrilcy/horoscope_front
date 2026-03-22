@@ -1,0 +1,557 @@
+/* ── AstrologerProfilePage — Premium Conversion (Story 60.22) ── */
+
+.astrologer-profile-container {
+  --layout-max-width: 1100px;
+  --layout-padding-inline: 24px;
+  
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 0 var(--layout-padding-inline) 80px;
+}
+
+/* Base Overrides for PageLayout */
+.is-astrologer-profile-page {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+  background: transparent !important;
+}
+
+.is-astrologer-profile-page .page-layout__main {
+  padding: 0 !important;
+}
+
+/* Background & Ambient */
+.profile-bg-halo,
+.profile-noise {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.profile-bg-halo {
+  background:
+    radial-gradient(circle at 10% 10%, rgba(147, 117, 235, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(255, 211, 236, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+}
+
+.profile-noise {
+  opacity: 0.025;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* --- HeaderNav --- */
+.profile-nav {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.profile-back-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--premium-glass-border);
+  color: var(--premium-text-strong);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--premium-shadow-card);
+}
+
+.profile-back-btn:hover {
+  transform: translateX(-3px);
+  background: white;
+  box-shadow: var(--premium-shadow-focus);
+}
+
+/* --- HeroSection --- */
+.profile-hero {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 48px;
+  align-items: center;
+  margin-bottom: 48px;
+}
+
+.profile-hero-avatar-container {
+  position: relative;
+  width: 320px;
+  height: 320px;
+}
+
+.profile-hero-avatar-glow {
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(circle, var(--astrologer-glow, rgba(147, 117, 235, 0.3)) 0%, transparent 70%);
+  z-index: -1;
+  border-radius: 50%;
+  animation: pulse-glow 4s infinite alternate ease-in-out;
+}
+
+@keyframes pulse-glow {
+  from { opacity: 0.5; transform: scale(0.95); }
+  to { opacity: 0.8; transform: scale(1.05); }
+}
+
+.profile-hero-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 40px;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+}
+
+.profile-hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-positioning-badge {
+  display: inline-flex;
+  padding: 6px 14px;
+  background: var(--premium-accent-purple-soft);
+  color: var(--premium-accent-purple-strong);
+  border-radius: var(--premium-radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  width: fit-content;
+  margin-bottom: 8px;
+}
+
+.profile-full-name {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--premium-text-strong);
+  line-height: 1.1;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.profile-style-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--premium-accent-purple);
+  margin: 0 0 12px;
+}
+
+.profile-metadata-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.profile-meta-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--premium-glass-border);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--premium-text-main);
+}
+
+.profile-quote {
+  font-size: 18px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--premium-text-strong);
+  line-height: 1.5;
+  border-left: 4px solid var(--premium-accent-purple);
+  padding-left: 20px;
+  margin: 8px 0 0;
+  opacity: 0.9;
+}
+
+/* --- MetricsBar --- */
+.profile-metrics-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 48px;
+}
+
+.metric-card {
+  background: var(--premium-glass-surface-1);
+  border: 1px solid var(--premium-glass-border);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  transition: transform 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--premium-glass-border-strong);
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--premium-text-strong);
+}
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--premium-text-meta);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-icon {
+  margin-bottom: 8px;
+  color: var(--premium-accent-purple);
+}
+
+/* --- Main Grid --- */
+.profile-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 40px;
+  margin-bottom: 64px;
+}
+
+/* Column Left */
+.profile-col-left {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.profile-section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--premium-text-strong);
+  margin: 0 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-bio-text {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--premium-text-main);
+  margin: 0;
+}
+
+.profile-mission-card {
+  background: linear-gradient(135deg, var(--premium-accent-purple) 0%, var(--premium-accent-purple-strong) 100%);
+  border-radius: 24px;
+  padding: 32px;
+  color: white;
+  box-shadow: 0 15px 40px rgba(134, 108, 208, 0.2);
+}
+
+.profile-mission-card h3 {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 12px;
+  opacity: 0.8;
+}
+
+.profile-mission-text {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Stepper Method */
+.profile-method-stepper {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  position: relative;
+}
+
+.profile-method-stepper::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--premium-glass-border);
+  z-index: 0;
+}
+
+.method-step {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--premium-accent-purple);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: var(--premium-accent-purple);
+  margin-bottom: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.step-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--premium-text-strong);
+  margin-bottom: 4px;
+}
+
+/* Column Right (Sticky) */
+.profile-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sticky-sidebar {
+  position: sticky;
+  top: 100px;
+}
+
+.specialties-card {
+  background: var(--premium-glass-surface-2);
+  border: 1px solid var(--premium-glass-border-strong);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: var(--premium-shadow-page);
+}
+
+.specialties-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.specialty-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.specialty-item-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--premium-text-strong);
+}
+
+.specialty-item-desc {
+  font-size: 13px;
+  color: var(--premium-text-main);
+  line-height: 1.4;
+  opacity: 0.8;
+}
+
+/* --- Reviews Section --- */
+.profile-reviews-section {
+  margin-bottom: 64px;
+}
+
+.reviews-container {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 32px;
+}
+
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.review-item {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--premium-glass-border);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.review-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.review-user-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--premium-text-strong);
+}
+
+.review-date {
+  font-size: 11px;
+  color: var(--premium-text-meta);
+}
+
+.review-rating {
+  color: #fbbf24;
+  display: flex;
+  gap: 2px;
+}
+
+.review-comment {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--premium-text-main);
+  margin: 0;
+}
+
+.review-stats-card {
+  background: var(--premium-glass-surface-1);
+  border: 1px solid var(--premium-glass-border);
+  border-radius: 20px;
+  padding: 24px;
+  height: fit-content;
+  text-align: center;
+}
+
+.big-rating {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--premium-text-strong);
+  line-height: 1;
+}
+
+/* --- Final CTA Section --- */
+.profile-final-cta {
+  background: var(--premium-glass-surface-1);
+  border: 1px solid var(--premium-glass-border-strong);
+  border-radius: 32px;
+  padding: 48px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  box-shadow: var(--premium-shadow-page);
+}
+
+.cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 1024px) {
+  .profile-hero {
+    grid-template-columns: 240px 1fr;
+    gap: 32px;
+  }
+  
+  .profile-hero-avatar-container {
+    width: 240px;
+    height: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .astrologer-profile-container {
+    padding: 0 20px 40px;
+  }
+  
+  .profile-hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 24px;
+  }
+  
+  .profile-hero-avatar-container {
+    margin: 0 auto;
+  }
+  
+  .profile-positioning-badge {
+    margin: 0 auto 8px;
+  }
+  
+  .profile-metadata-row {
+    justify-content: center;
+  }
+  
+  .profile-quote {
+    text-align: left;
+  }
+  
+  .profile-metrics-bar {
+    grid-template-columns: 1fr;
+  }
+  
+  .profile-main-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .profile-method-stepper {
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .profile-method-stepper::before {
+    display: none;
+  }
+  
+  .method-step {
+    flex-direction: row;
+    text-align: left;
+    gap: 16px;
+  }
+  
+  .step-number {
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+  
+  .reviews-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .profile-col-right {
+    order: -1; /* Specialties before About on mobile */
+  }
+}

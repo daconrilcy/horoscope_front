@@ -1,6 +1,7 @@
 from app.infra.db.models.astrologer import (
     AstrologerProfileModel,
     AstrologerPromptProfileModel,
+    AstrologerReviewModel,
 )
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.billing import (
@@ -82,6 +83,7 @@ __all__ = [
     "AuditEventModel",
     "AstrologerProfileModel",
     "AstrologerPromptProfileModel",
+    "AstrologerReviewModel",
     "BillingPlanModel",
     "PaymentAttemptModel",
     "SubscriptionPlanChangeModel",

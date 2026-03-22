@@ -301,6 +301,101 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Hello, how can I help you?",
     es: "Hola, ¿en qué puedo ayudarle?",
   },
+  ideal_for_prefix: {
+    fr: "Idéal pour :",
+    en: "Ideal for:",
+    es: "Ideal para:",
+  },
+  consultations_count: {
+    fr: "consultations",
+    en: "consultations",
+    es: "consultas",
+  },
+  average_rating_label: {
+    fr: "note moyenne",
+    en: "average rating",
+    es: "calificación promedio",
+  },
+  mission_title: {
+    fr: "Ma Mission",
+    en: "My Mission",
+    es: "Mi Misión",
+  },
+  method_title: {
+    fr: "Ma Méthode",
+    en: "My Method",
+    es: "Mi Método",
+  },
+  specialties_title: {
+    fr: "Expertises & Spécialités",
+    en: "Expertise & Specialties",
+    es: "Pericia y Especialidades",
+  },
+  reviews_title: {
+    fr: "Avis de ses consultants",
+    en: "Reviews from clients",
+    es: "Opiniones de sus consultantes",
+  },
+  reviews_count: {
+    fr: "avis",
+    en: "reviews",
+    es: "opiniones",
+  },
+  your_rating_title: {
+    fr: "Votre note",
+    en: "Your rating",
+    es: "Su calificación",
+  },
+  rate_action: {
+    fr: "Noter cet astrologue",
+    en: "Rate this astrologer",
+    es: "Calificar a este astrólogo",
+  },
+  cta_chat_new: {
+    fr: "Démarrer un chat",
+    en: "Start a chat",
+    es: "Iniciar un chat",
+  },
+  cta_chat_resume: {
+    fr: "Reprendre le chat",
+    en: "Resume chat",
+    es: "Reanudar el chat",
+  },
+  cta_natal_new: {
+    fr: "Demander mon interprétation",
+    en: "Request my interpretation",
+    es: "Solicitar mi interpretación",
+  },
+  cta_natal_view: {
+    fr: "Voir mon interprétation",
+    en: "View my interpretation",
+    es: "Ver mi interpretación",
+  },
+  cta_consultation: {
+    fr: "Lancer une consultation",
+    en: "Start a consultation",
+    es: "Iniciar una consulta",
+  },
+  method_step_1: {
+    fr: "Analyse du thème",
+    en: "Chart Analysis",
+    es: "Análisis del tema",
+  },
+  method_step_2: {
+    fr: "Identification des cycles",
+    en: "Cycle Identification",
+    es: "Identificación de ciclos",
+  },
+  method_step_3: {
+    fr: "Synthèse & Guidance",
+    en: "Synthesis & Guidance",
+    es: "Síntesis y Guía",
+  },
+  method_step_4: {
+    fr: "Plan d'action",
+    en: "Action Plan",
+    es: "Plan de acción",
+  },
 }
 
 export function tAstrologers(key: string, lang: AstrologyLang): string {
