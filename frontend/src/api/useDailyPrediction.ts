@@ -1,10 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { getDailyPrediction, getDailyHistory } from "./dailyPrediction";
 import { ApiError } from "@api";
 import { getSubjectFromAccessToken } from "../utils/authToken";
 import { ANONYMOUS_SUBJECT } from "../utils/constants";
 
-function isPredictionSetupError(error: unknown): boolean {
+export function isPredictionSetupError(error: unknown): boolean {
   if (!(error instanceof ApiError)) {
     return false;
   }
@@ -22,9 +22,10 @@ function isPredictionSetupError(error: unknown): boolean {
   );
 }
 
-export function useDailyPrediction(token: string | null, date?: string) {
+export function getDailyPredictionQueryOptions(token: string | null, date?: string) {
   const tokenSubject = getSubjectFromAccessToken(token) ?? ANONYMOUS_SUBJECT;
-  return useQuery({
+
+  return queryOptions({
     queryKey: ["daily-prediction", tokenSubject, date ?? "today"],
     queryFn: async () => {
       try {
@@ -42,6 +43,10 @@ export function useDailyPrediction(token: string | null, date?: string) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
+}
+
+export function useDailyPrediction(token: string | null, date?: string) {
+  return useQuery(getDailyPredictionQueryOptions(token, date));
 }
 
 export function useDailyHistory(token: string | null, from: string, to: string) {

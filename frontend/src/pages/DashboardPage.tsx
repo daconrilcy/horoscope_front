@@ -18,7 +18,7 @@ export function DashboardPage() {
     <PageLayout
       className="dashboard-container"
     >
-      <div className="dashboard-layout__bg-halo-3" />
+      <div className="dashboard-container__bg-halo-3" />
       
       <header className="dashboard-header">
         <h2 className="dashboard-title">{title}</h2>

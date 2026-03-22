@@ -1,11 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 import { getBirthData } from './birthProfile';
 import { getSubjectFromAccessToken } from '../utils/authToken';
 import { ANONYMOUS_SUBJECT } from '../utils/constants';
 
-export function useBirthData(token: string | null) {
+export function getBirthDataQueryOptions(token: string | null) {
   const tokenSubject = getSubjectFromAccessToken(token) ?? ANONYMOUS_SUBJECT;
-  return useQuery({
+
+  return queryOptions({
     queryKey: ['birth-data', tokenSubject],
     queryFn: async () => {
       if (!token) throw new Error('No access token');
@@ -17,4 +18,8 @@ export function useBirthData(token: string | null) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
+}
+
+export function useBirthData(token: string | null) {
+  return useQuery(getBirthDataQueryOptions(token));
 }

@@ -44,34 +44,34 @@ so that le parcours dashboard → horoscope détaillé paraisse cohérent et que
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Unifier la source éditoriale du résumé dashboard et hero détail (AC: 2, 3)
-  - [ ] Identifier la source canonique du texte `day-climate-hero__summary`
-  - [ ] Extraire un helper ou mapper partagé pour produire ce résumé à partir de `DailyPredictionResponse`
-  - [ ] Brancher `DashboardHoroscopeSummaryCard` sur cette source canonique
-  - [ ] Brancher `/dashboard/horoscope` sur la même source partagée si nécessaire pour supprimer toute divergence implicite
+- [x] Task 1: Unifier la source éditoriale du résumé dashboard et hero détail (AC: 2, 3)
+  - [x] Identifier la source canonique du texte `day-climate-hero__summary`
+  - [x] Extraire un helper ou mapper partagé pour produire ce résumé à partir de `DailyPredictionResponse`
+  - [x] Brancher `DashboardHoroscopeSummaryCard` sur cette source canonique
+  - [x] Brancher `/dashboard/horoscope` sur la même source partagée si nécessaire pour supprimer toute divergence implicite
 
-- [ ] Task 2: Aligner visuellement `/dashboard` sur `/dashboard/horoscope` (AC: 1, 8)
-  - [ ] Réutiliser les tokens, classes glass et choix typographiques déjà établis par 60-17
-  - [ ] Mettre à niveau la carte résumé dashboard et sa zone conteneur sans recréer un style concurrent
-  - [ ] Vérifier que la landing dashboard garde sa hiérarchie fonctionnelle (`résumé` puis `activités`) tout en reprenant la direction artistique premium
-  - [ ] Garder une cohérence de rayons, ombres, bordures, spacing et pills avec `DayClimateHero`
+- [x] Task 2: Aligner visuellement `/dashboard` sur `/dashboard/horoscope` (AC: 1, 8)
+  - [x] Réutiliser les tokens, classes glass et choix typographiques déjà établis par 60-17
+  - [x] Mettre à niveau la carte résumé dashboard et sa zone conteneur sans recréer un style concurrent
+  - [x] Vérifier que la landing dashboard garde sa hiérarchie fonctionnelle (`résumé` puis `activités`) tout en reprenant la direction artistique premium
+  - [x] Garder une cohérence de rayons, ombres, bordures, spacing et pills avec `DayClimateHero`
 
-- [ ] Task 3: Introduire un préchargement daily côté navigation horoscope (AC: 4, 5, 7)
-  - [ ] Centraliser un helper de préfetch React Query pour `daily-prediction` et `birth-data`
-  - [ ] Déclencher ce préfetch depuis l'entrée sidebar qui navigue vers `/dashboard/horoscope`
-  - [ ] Conserver le comportement existant de navigation/collapse de la sidebar
-  - [ ] Éviter tout couplage de composants UI à des appels `fetch` directs
+- [x] Task 3: Introduire un préchargement daily côté navigation horoscope (AC: 4, 5, 7)
+  - [x] Centraliser un helper de préfetch React Query pour `daily-prediction` et `birth-data`
+  - [x] Déclencher ce préfetch depuis l'entrée sidebar qui navigue vers `/dashboard/horoscope`
+  - [x] Conserver le comportement existant de navigation/collapse de la sidebar
+  - [x] Éviter tout couplage de composants UI à des appels `fetch` directs
 
-- [ ] Task 4: Faire consommer à la page détail la donnée préféetchée sans flicker inutile (AC: 5, 6, 8)
-  - [ ] Vérifier que `useDailyPrediction` et `useBirthData` réutilisent immédiatement le cache React Query après navigation
-  - [ ] Ajuster si nécessaire le bootstrap/refetch de `DailyHoroscopePage` pour ne pas casser le bénéfice du préchargement
-  - [ ] Préserver les fallbacks `loading/error/empty` quand le préchargement échoue ou n'a pas encore abouti
+- [x] Task 4: Faire consommer à la page détail la donnée préféetchée sans flicker inutile (AC: 5, 6, 8)
+  - [x] Vérifier que `useDailyPrediction` et `useBirthData` réutilisent immédiatement le cache React Query après navigation
+  - [x] Ajuster si nécessaire le bootstrap/refetch de `DailyHoroscopePage` pour ne pas casser le bénéfice du préchargement
+  - [x] Préserver les fallbacks `loading/error/empty` quand le préchargement échoue ou n'a pas encore abouti
 
-- [ ] Task 5: Couvrir la navigation et les états par des tests ciblés (AC: 6, 8, 9)
-  - [ ] Mettre à jour les tests dashboard pour vérifier la nouvelle source de résumé
-  - [ ] Ajouter un test sidebar/navigation qui vérifie le préchargement de la query horoscope
-  - [ ] Ajouter ou adapter un test de la page détail pour confirmer la réutilisation du cache
-  - [ ] Vérifier qu'aucune régression n'affecte les états `loading/error/empty`
+- [x] Task 5: Couvrir la navigation et les états par des tests ciblés (AC: 6, 8, 9)
+  - [x] Mettre à jour les tests dashboard pour vérifier la nouvelle source de résumé
+  - [x] Ajouter un test sidebar/navigation qui vérifie le préchargement de la query horoscope
+  - [x] Ajouter ou adapter un test de la page détail pour confirmer la réutilisation du cache
+  - [x] Vérifier qu'aucune régression n'affecte les états `loading/error/empty`
 
 ## Dev Notes
 
@@ -179,12 +179,24 @@ GPT-5 Codex
 
 - Story générée via le workflow BMAD `create-story`.
 - Contexte consolidé depuis les stories 45.2, 45.3, 48.2, 59.4, 60.16 et 60.17 ainsi que depuis l'implémentation frontend courante.
+- Post-review 2026-03-22: correction des régressions sur le préfetch daily, le halo dashboard et le contrat visuel `ShortcutCard`.
 
 ### Completion Notes List
 
-- Story 60-18 cadrée pour unifier le langage visuel dashboard/horoscope.
-- Source canonique du résumé dashboard explicitée pour éviter la divergence avec `DayClimateHero`.
-- Préchargement React Query au clic de navigation sidebar cadré sans nouveau contrat backend.
+- Le dashboard réutilise la même source éditoriale que la hero détaillée via `getDailyEditorialSummary`.
+- Le style `/dashboard` est réaligné sur la direction premium/glass de `/dashboard/horoscope` avec tokens mutualisés.
+- Le préchargement au clic sidebar vers `/dashboard/horoscope` est branché via React Query sans nouvel endpoint backend.
+- Les query options `daily-prediction` et `birth-data` sont désormais partagées entre hooks et préfetch pour garantir un comportement de cache cohérent.
+- Les régressions post-review ont été corrigées:
+  - le préfetch ne convertit plus une erreur backend en faux état vide mis en cache
+  - le halo dashboard utilise la bonne classe CSS
+  - `ShortcutCard` respecte à nouveau son contrat visuel couvert par les tests
+- La page détail réutilise bien la donnée préféetchée sans chargement bloquant du daily quand le cache est déjà hydraté.
+
+### Change Log
+
+- 2026-03-21: Implémentation initiale de l’alignement visuel dashboard + préchargement horoscope.
+- 2026-03-22: Corrections post-code-review sur le data-flow React Query, le halo dashboard et les non-régressions visuelles `ShortcutCard`.
 
 ### File List
 
@@ -202,7 +214,10 @@ GPT-5 Codex
 - `frontend/src/components/ShortcutCard.css`
 - `frontend/src/pages/DashboardPage.tsx`
 - `frontend/src/utils/dayClimateHeroMapper.ts`
+- `frontend/src/api/useDailyPrediction.ts`
+- `frontend/src/api/useBirthData.ts`
 - `frontend/src/tests/DashboardPage.test.tsx`
+- `frontend/src/tests/DailyHoroscopePage.test.tsx`
 - `frontend/src/tests/layout/Sidebar.test.tsx`
 
 - `_bmad-output/implementation-artifacts/60-18-alignement-dashboard-et-prechargement-horoscope.md`

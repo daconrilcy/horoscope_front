@@ -672,6 +672,27 @@ function renderDashboard(initialEntries: string[] = ["/dashboard/horoscope"]) {
   };
 }
 
+function renderDailyHoroscopeWithClient(
+  queryClient: QueryClient,
+  initialEntries: string[] = ["/dashboard/horoscope"],
+) {
+  const router = createMemoryRouter(routes, {
+    initialEntries,
+    future: { v7_relativeSplatPath: true },
+  });
+
+  return {
+    router,
+    ...render(
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} future={{ v7_startTransition: true }} />
+        </QueryClientProvider>
+      </ThemeProvider>,
+    ),
+  };
+}
+
 describe("DailyHoroscopePage", () => {
   beforeEach(() => {
     localStorage.setItem("lang", "fr");
@@ -851,6 +872,54 @@ describe("DailyHoroscopePage", () => {
     });
 
     expect(predictionCallCount).toBe(2);
+  });
+
+  it("réutilise immédiatement la donnée préchargée du cache sans refetch bloquant du daily", async () => {
+    const fetchSpy = vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/v1/auth/me")) {
+        return Promise.resolve(jsonResponse(authMeOk));
+      }
+      if (url.includes("/v1/predictions/daily")) {
+        throw new Error("daily prediction should come from React Query cache");
+      }
+      if (url.includes("/v1/users/me/birth-data")) {
+        throw new Error("birth-data should come from React Query cache");
+      }
+      return Promise.resolve(jsonResponse({ error: { code: "not_found", message: "not found" } }, 404));
+    });
+
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+    });
+
+    queryClient.setQueryData(["daily-prediction", "42", "today"], predictionOk);
+    queryClient.setQueryData(["birth-data", "42"], {
+      astro_profile: { sun_sign_code: "Aries" },
+      geolocation_consent: true,
+    });
+
+    renderDailyHoroscopeWithClient(queryClient);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
+    });
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/\/v1\/auth\/me$/),
+      expect.anything(),
+    );
+    expect(fetchSpy).not.toHaveBeenCalledWith(
+      expect.stringMatching(/\/v1\/predictions\/daily/),
+      expect.anything(),
+    );
+    expect(fetchSpy).not.toHaveBeenCalledWith(
+      expect.stringMatching(/\/v1\/users\/me\/birth-data/),
+      expect.anything(),
+    );
+    expect(screen.queryByText("Chargement de votre ciel du jour...")).not.toBeInTheDocument();
   });
 
   it("bascule les libelles de prediction en anglais quand la langue active est en", async () => {
