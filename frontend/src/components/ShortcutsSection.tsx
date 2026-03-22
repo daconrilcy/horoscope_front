@@ -44,7 +44,9 @@ export function ShortcutsSection({ onChatClick, onConsultationClick, onHistoryCl
 
   return (
     <section className="shortcuts-section">
-      <h2 className="shortcuts-section__title">{activities}</h2>
+      <div className="dashboard-section-header shortcuts-section__header">
+        <h3 className="dashboard-section-title shortcuts-section__title">{activities}</h3>
+      </div>
       <div className="shortcuts-grid">
         {shortcutItems.map((shortcut) => {
           let handleClick = undefined;

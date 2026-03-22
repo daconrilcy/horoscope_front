@@ -10,19 +10,20 @@
   font: inherit;
   color: inherit;
   text-decoration: none;
-  padding: 16px;
-  background: var(--premium-glass-surface-1);
+  min-height: 118px;
+  padding: 20px 18px 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.4) 100%);
   border: 1px solid var(--premium-glass-border);
-  border-radius: var(--premium-radius-panel);
-  box-shadow: var(--premium-shadow-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: all 0.2s ease;
+  border-radius: 22px;
+  box-shadow: 0 14px 34px rgba(72, 52, 110, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.52);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .shortcut-card:hover {
   transform: translateY(-2px);
-  background: var(--premium-glass-surface-2);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.66) 0%, rgba(255, 255, 255, 0.44) 100%);
   border-color: var(--premium-glass-border-strong);
   box-shadow: var(--premium-shadow-focus);
 }
@@ -32,6 +33,9 @@
   height: 44px;
   border-radius: 16px;
   flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46), 0 10px 24px rgba(88, 58, 130, 0.08);
+  filter: saturate(0.6);
+  opacity: 0.78;
 }
 
 .shortcut-card__content {
@@ -39,6 +43,8 @@
   flex-direction: column;
   align-items: flex-start;
   min-width: 0;
+  gap: 10px;
+  flex: 1;
 }
 
 .shortcut-card__title {
@@ -53,16 +59,28 @@
 }
 
 .shortcut-card__subtitle {
+  display: inline-flex;
+  align-items: center;
+  min-height: 31px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.36);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
   font-size: 13px;
   color: var(--premium-text-meta);
-  margin-top: 2px;
+  margin-top: 0;
+  width: auto;
+  max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 100%;
 }
 
 .shortcut-card__subtitle--online {
-  color: #4caf50;
-  font-weight: 500;
+  background: rgba(255, 255, 255, 0.44);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: var(--premium-accent-purple-strong);
+  font-weight: 600;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46);
 }

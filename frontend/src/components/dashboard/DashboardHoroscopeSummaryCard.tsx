@@ -123,20 +123,25 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
         dayScore={dayScore}
         className="dashboard-summary-card-bg"
       >
-        <div className="dashboard-summary-card__content">
-          {ZodiacIcon && (
-            <div className="default_card_pill">
-              <ZodiacIcon className="default_card_pill-icon" />
-              <span>{translateSign(sign, locale)} • {formattedDate}</span>
+        <div className="dashboard-summary-card__shell">
+          <div className="dashboard-summary-card__content">
+            {ZodiacIcon && (
+              <div className="default_card_pill">
+                <ZodiacIcon className="default_card_pill-icon" />
+                <span>{translateSign(sign, locale)} • {formattedDate}</span>
+              </div>
+            )}
+            <p className="dashboard-summary-card__text">
+              {summary}
+            </p>
+          </div>
+
+          <div className="dashboard-summary-card__footer">
+            <div className="dashboard-summary-card__cta">
+              <span>{viewHoroscope}</span>
+              <ChevronRight size={16} />
             </div>
-          )}
-          <p className="dashboard-summary-card__text">
-            {summary}
-          </p>
-        </div>
-        <div className="dashboard-summary-card__link">
-          <span>{viewHoroscope}</span>
-          <ChevronRight size={16} />
+          </div>
         </div>
       </AstroMoodBackground>
     </div>

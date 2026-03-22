@@ -185,6 +185,12 @@ GPT-5 Codex
 
 - Le dashboard réutilise la même source éditoriale que la hero détaillée via `getDailyEditorialSummary`.
 - Le style `/dashboard` est réaligné sur la direction premium/glass de `/dashboard/horoscope` avec tokens mutualisés.
+- La landing dashboard a reçu plusieurs passes de finition premium:
+  - hero horoscope plus dense et plus éditoriale
+  - CTA principal plus intégré et plus contrasté
+  - fond global enrichi de halos plus orchestrés
+  - cartes Activités densifiées avec micro-pills harmonisées
+- Les sections `Horoscope` et `Activités` reposent maintenant sur le même pattern de header de section, avec une hiérarchie typographique et un layout homogènes.
 - Le préchargement au clic sidebar vers `/dashboard/horoscope` est branché via React Query sans nouvel endpoint backend.
 - Les query options `daily-prediction` et `birth-data` sont désormais partagées entre hooks et préfetch pour garantir un comportement de cache cohérent.
 - Les régressions post-review ont été corrigées:
@@ -201,6 +207,7 @@ GPT-5 Codex
 - 2026-03-21: Implémentation initiale de l’alignement visuel dashboard + préchargement horoscope.
 - 2026-03-22: Corrections post-code-review sur le data-flow React Query, le halo dashboard et les non-régressions visuelles `ShortcutCard`.
 - 2026-03-22: Ajout d’un état de rédaction bloquant dans la carte résumé dashboard avec spinner, message dédié et blocage de la navigation pendant la génération.
+- 2026-03-22: Passes finales de finition premium sur `/dashboard` avec hero plus luxueuse, grille Activités plus matérielle, fond plus atmosphérique et headers de sections homogénéisés.
 
 ### File List
 
@@ -216,6 +223,7 @@ GPT-5 Codex
 - `frontend/src/components/layout/Sidebar.tsx`
 - `frontend/src/components/ShortcutCard.tsx`
 - `frontend/src/components/ShortcutCard.css`
+- `frontend/src/components/ShortcutsSection.tsx`
 - `frontend/src/pages/DashboardPage.tsx`
 - `frontend/src/utils/dayClimateHeroMapper.ts`
 - `frontend/src/api/useDailyPrediction.ts`

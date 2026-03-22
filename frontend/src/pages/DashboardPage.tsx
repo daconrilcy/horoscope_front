@@ -21,6 +21,7 @@ export function DashboardPage() {
       <div className="dashboard-container__bg-halo-3" />
       
       <header className="dashboard-header">
+        <p className="dashboard-header__kicker">{header.kicker}</p>
         <h2 className="dashboard-title">{title}</h2>
         <p className="dashboard-welcome">{welcome}</p>
       </header>
