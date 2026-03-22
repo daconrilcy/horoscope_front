@@ -23,12 +23,12 @@
 }
 
 .chat-page-container {
-  --layout-max-width: 1400px;
+  --layout-max-width: 1600px;
   
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 20px 40px !important;
+  padding: 20px !important;
   max-width: var(--layout-max-width) !important;
   margin: 0 auto !important;
   width: 100% !important;
