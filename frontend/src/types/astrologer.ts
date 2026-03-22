@@ -12,4 +12,8 @@ export type Astrologer = {
 export type AstrologerProfile = Astrologer & {
   bio_full: string
   gender: "male" | "female" | "non_binary" | "other"
+  age: number | null
+  professional_background: string[]
+  key_skills: string[]
+  behavioral_style: string[]
 }

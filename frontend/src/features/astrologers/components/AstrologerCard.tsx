@@ -12,19 +12,20 @@ export function AstrologerCard({ astrologer, onClick }: AstrologerCardProps) {
   const [imgError, setImgError] = useState(false)
   const lang = detectLang()
   const showImage = astrologer.avatar_url && !imgError
+  const fullName = [astrologer.first_name, astrologer.last_name].filter(Boolean).join(" ") || astrologer.name
 
   return (
     <button
       className="astrologer-card"
       onClick={onClick}
       type="button"
-      aria-label={`${t("view_profile_aria", lang)} ${astrologer.name}`}
+      aria-label={`${t("view_profile_aria", lang)} ${fullName}`}
     >
       <div className="astrologer-card-avatar">
         {showImage ? (
           <img
             src={astrologer.avatar_url || ""}
-            alt={`${t("avatar_alt", lang)} ${astrologer.name}`}
+            alt={`${t("avatar_alt", lang)} ${fullName}`}
             className="astrologer-card-avatar-img"
             onError={() => setImgError(true)}
           />
@@ -34,7 +35,7 @@ export function AstrologerCard({ astrologer, onClick }: AstrologerCardProps) {
           </span>
         )}
       </div>
-      <span className="astrologer-card-name">{astrologer.name}</span>
+      <span className="astrologer-card-name">{fullName}</span>
       <p className="astrologer-card-style">{astrologer.style}</p>
       <div className="astrologer-card-specialties">
         {astrologer.specialties.slice(0, 3).map((specialty) => (

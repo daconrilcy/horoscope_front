@@ -18,6 +18,9 @@ so that les astrologues deviennent administrables, cohérents entre front et LLM
 4. **[x] Injection prompt durcie**: Le `persona_composer.py` résout désormais le prompt depuis la table `astrologer_prompt_profiles` avec un fallback vers les champs legacy.
 5. **[x] Frontend aligné**: Les types et l'API frontend ont été mis à jour pour consommer la nouvelle source backend. Les mocks sont réduits à un rôle de fallback technique.
 6. **[x] Qualité et Robustesse**: Ruff/lint validés, tests d'intégration backend passants, et documentation d'exploitation créée.
+7. **[x] Profil métier structuré**: Les profils astrologues persistés peuvent désormais stocker l'âge, l'expérience professionnelle, les compétences clés et le style comportemental dans des champs dédiés.
+8. **[x] Assets photo branchés**: Les photos de référence placées dans `docs/astrologues` sont exposées côté frontend via `frontend/public/assets/astrologers` et reliées aux profils seedés.
+9. **[x] Affichage identité civile sur les cartes**: Les cartes et sélecteurs d'astrologues affichent `prénom + nom` au lieu de l'alias public, sans casser les alias sur les pages profil ou les fallbacks backend.
 
 ## Tasks / Subtasks
 
@@ -46,6 +49,11 @@ Gemini CLI (Autonomous Mode)
 - Stabilisation du bootstrap des prompts dédiés pour garantir une source de vérité complète dès le seed initial.
 - Sélection déterministe et sanitation du prompt astrologue injecté dans l'orchestration LLM.
 - Enrichissement des profils seedés Atlas, Luna, Nox, Orion et Sélène avec biographies longues, spécialités et prompts dédiés.
+- Ajout de champs structurés `age`, `professional_background`, `key_skills` et `behavioral_style` dans `astrologer_profiles`.
+- Création de la migration Alembic complémentaire pour persister les nouveaux champs structurés sans casser l'existant.
+- Remplacement du profil d'entrée public par `Guide Psychologique` / `Étienne Garnier`, tout en conservant le persona technique `Astrologue Standard` pour les fallbacks applicatifs.
+- Intégration des photos réelles des astrologues depuis `docs/astrologues` vers les assets publics du frontend et réalignement des `photo_url` seedés.
+- Basculage des cartes et sélecteurs astrologues sur l'affichage `prénom + nom` à la place des alias publics.
 - Neutralisation des doublons publics locaux sur les profils seedés pour éviter les collisions d'identité côté API.
 - Ajout du lien vers la page astrologues dans le menu utilisateur et dans la navigation principale de l'application.
 - Stabilisation de la suite backend complète après introduction des nouvelles contraintes de clés étrangères.
@@ -55,6 +63,7 @@ Gemini CLI (Autonomous Mode)
 - `backend/app/infra/db/models/astrologer.py`
 - `backend/app/infra/db/models/__init__.py`
 - `backend/migrations/versions/c5c208c81831_create_astrologer_dedicated_tables.py`
+- `backend/migrations/versions/20260322_0052_add_structured_fields_to_astrologer_profiles.py`
 - `backend/scripts/backfill_astrologer_profiles.py`
 - `backend/scripts/seed_astrologers_6_profiles.py`
 - `backend/app/api/v1/routers/astrologers.py`
@@ -69,6 +78,9 @@ Gemini CLI (Autonomous Mode)
 - `frontend/src/types/astrologer.ts`
 - `frontend/src/api/astrologers.ts`
 - `frontend/src/features/astrologers/components/AstrologerCard.tsx`
+- `frontend/src/features/chat/components/AstrologerPickerModal.tsx`
+- `frontend/src/features/consultations/components/AstrologerSelectStep.tsx`
+- `frontend/src/tests/AstrologersPage.test.tsx`
 - `frontend/src/components/ui/UserMenu/UserMenu.tsx`
 - `frontend/src/i18n/common.ts`
 - `frontend/src/i18n/navigation.ts`
@@ -76,6 +88,8 @@ Gemini CLI (Autonomous Mode)
 - `frontend/src/tests/ui-barrel.test.ts`
 - `frontend/src/tests/ui-nav.test.ts`
 - `frontend/src/ui/nav.ts`
+- `frontend/public/assets/astrologers/`
+- `docs/astrologues/`
 - `docs/astrologer-management-v2.md`
 
 ## Senior Developer Review (AI)
@@ -84,4 +98,4 @@ L'implémentation respecte parfaitement le découplage entre identité technique
 
 ### Final Outcome
 
-L'architecture est désormais prête pour une gestion administrative complète des astrologues, une personnalisation fine des prompts LLM par profil, et une exposition cohérente des astrologues sur les parcours publics et la navigation applicative.
+L'architecture est désormais prête pour une gestion administrative complète des astrologues, avec profils métier structurés, prompts dédiés, photos réelles branchées côté produit, et une exposition cohérente des astrologues sur les parcours publics, la navigation et les surfaces de sélection.

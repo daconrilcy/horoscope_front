@@ -46,6 +46,7 @@ class AstrologerProfileModel(Base):
     last_name: Mapped[str] = mapped_column(String(100))
     display_name: Mapped[str] = mapped_column(String(200))
     gender: Mapped[AstrologerGender] = mapped_column(String(32))
+    age: Mapped[int | None] = mapped_column(Integer, nullable=True)
     photo_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     
     # "Mystique", "Analytique", etc.
@@ -59,6 +60,9 @@ class AstrologerProfileModel(Base):
     
     # JSON list of strings: ["Amour", "Carrière", etc.]
     specialties: Mapped[list[str]] = mapped_column(JSON, default=list)
+    professional_background: Mapped[list[str]] = mapped_column(JSON, default=list)
+    key_skills: Mapped[list[str]] = mapped_column(JSON, default=list)
+    behavioral_style: Mapped[list[str]] = mapped_column(JSON, default=list)
     
     is_public: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)

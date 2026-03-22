@@ -40,12 +40,16 @@ def backfill_astrologers(db: Session) -> None:
                     last_name=enriched["last_name"],
                     display_name=enriched["display_name"],
                     gender=enriched["gender"],
+                    age=enriched["age"],
                     photo_url=enriched["photo_url"],
                     public_style_label=enriched["public_style_label"],
                     bio_short=enriched["bio_short"],
                     bio_long=persona.description or "",
                     admin_category=enriched["admin_category"],
                     specialties=enriched["specialties"],
+                    professional_background=enriched["professional_background"],
+                    key_skills=enriched["key_skills"],
+                    behavioral_style=enriched["behavioral_style"],
                     sort_order=enriched["sort_order"],
                     is_public=persona.enabled,
                 )
@@ -60,6 +64,7 @@ def backfill_astrologers(db: Session) -> None:
                     last_name=last,
                     display_name=persona.name,
                     gender="other",
+                    age=None,
                     public_style_label="Standard",
                     bio_short=(
                         persona.description[:497] + "..."
@@ -69,12 +74,37 @@ def backfill_astrologers(db: Session) -> None:
                     bio_long=persona.description or "",
                     admin_category="legacy",
                     specialties=[],
+                    professional_background=[],
+                    key_skills=[],
+                    behavioral_style=[],
                     is_public=persona.enabled,
                 )
             db.add(profile)
             logger.info(f"Created profile for persona: {persona.name}")
         else:
-            logger.info(f"Profile already exists for persona: {persona.name}")
+            if enriched:
+                profile.first_name = enriched["first_name"]
+                profile.last_name = enriched["last_name"]
+                profile.display_name = enriched["display_name"]
+                profile.gender = enriched["gender"]
+                profile.age = enriched["age"]
+                profile.photo_url = enriched["photo_url"]
+                profile.public_style_label = enriched["public_style_label"]
+                profile.bio_short = enriched["bio_short"]
+                profile.bio_long = persona.description or enriched["description"]
+                profile.admin_category = enriched["admin_category"]
+                profile.specialties = enriched["specialties"]
+                profile.professional_background = enriched["professional_background"]
+                profile.key_skills = enriched["key_skills"]
+                profile.behavioral_style = enriched["behavioral_style"]
+                profile.sort_order = enriched["sort_order"]
+                profile.is_public = persona.enabled
+            else:
+                profile.professional_background = profile.professional_background or []
+                profile.key_skills = profile.key_skills or []
+                profile.behavioral_style = profile.behavioral_style or []
+                profile.is_public = persona.enabled
+            logger.info(f"Updated profile for persona: {persona.name}")
 
         # 3. Handle AstrologerPromptProfile
         stmt_prompt = select(AstrologerPromptProfileModel).where(

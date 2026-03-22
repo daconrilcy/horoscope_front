@@ -59,6 +59,9 @@ export function AstrologerSelectStep({
         <div className="astrologer-select-grid">
           {astrologers.map((astrologer: Astrologer) => {
             const isSelected = selectedId === astrologer.id
+            const fullName =
+              [astrologer.first_name, astrologer.last_name].filter(Boolean).join(" ") ||
+              astrologer.name
 
             return (
               <button
@@ -87,7 +90,7 @@ export function AstrologerSelectStep({
                   )}
                 </div>
                 <div className="astrologer-option-info">
-                  <span className="astrologer-option-name">{astrologer.name}</span>
+                  <span className="astrologer-option-name">{fullName}</span>
                   <span className="astrologer-option-style">{astrologer.style}</span>
                 </div>
               </button>

@@ -17,21 +17,34 @@ type ErrorEnvelope = {
 const MOCK_ASTROLOGERS: Astrologer[] = [
   {
     id: "c0a80101-8edb-4e1a-8f1a-8f1a8f1a8f1a",
-    name: "Guide Pédagogique",
-    first_name: "Astrologue",
-    last_name: "Standard",
-    avatar_url: "/assets/astrologers/standard.jpg",
-    specialties: ["Thème natal", "Bases", "Orientation"],
-    style: "Pédagogue",
-    bio_short: "Profil pédagogique généraliste pour débutants.",
+    name: "Guide Psychologique",
+    first_name: "Étienne",
+    last_name: "Garnier",
+    avatar_url: "/assets/astrologers/etienne.png",
+    specialties: ["Débutants", "Bases", "Onboarding"],
+    style: "Pédagogique",
+    bio_short: "Astrologue généraliste pédagogique, spécialisé dans l’accompagnement des débutants.",
   },
 ]
 
 const MOCK_ASTROLOGER_PROFILES: Record<string, AstrologerProfile> = {
   "c0a80101-8edb-4e1a-8f1a-8f1a8f1a8f1a": {
     ...MOCK_ASTROLOGERS[0],
-    bio_full: "Profil pédagogique généraliste pour débutants. Calme, stable et rassurant.",
-    gender: "other",
+    bio_full:
+      "Ancien professeur de philosophie, Étienne Garnier accompagne les débutants avec une approche simple, claire et progressive.",
+    gender: "male",
+    age: 55,
+    professional_background: [
+      "20 ans professeur (philosophie / pédagogie)",
+      "12 ans astrologue généraliste",
+      "Création de programmes d’initiation à l’astrologie",
+    ],
+    key_skills: [
+      "Vulgarisation astrologique",
+      "Explication des bases",
+      "Rassurance et pédagogie",
+    ],
+    behavioral_style: ["Calme", "Posé", "Progressif (step-by-step)"],
   },
 }
 

@@ -5,7 +5,7 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -34,6 +34,10 @@ class Astrologer(BaseModel):
 class AstrologerProfile(Astrologer):
     bio_full: str
     gender: str
+    age: Optional[int] = None
+    professional_background: List[str] = Field(default_factory=list)
+    key_skills: List[str] = Field(default_factory=list)
+    behavioral_style: List[str] = Field(default_factory=list)
 
 
 class AstrologerListResponse(BaseModel):
@@ -150,6 +154,10 @@ def get_astrologer(
             bio_short=profile.bio_short,
             bio_full=profile.bio_long,
             gender=profile.gender,
+            age=profile.age,
+            professional_background=profile.professional_background,
+            key_skills=profile.key_skills,
+            behavioral_style=profile.behavioral_style,
         ),
         "meta": {"request_id": request_id},
     }

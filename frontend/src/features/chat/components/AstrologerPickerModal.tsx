@@ -64,7 +64,12 @@ export function AstrologerPickerModal({
             <p className="astrologer-picker-empty">{t("empty_state", lang)}</p>
           )}
 
-          {!isLoading && astrologers.map((astrologer) => (
+          {!isLoading && astrologers.map((astrologer) => {
+            const fullName =
+              [astrologer.first_name, astrologer.last_name].filter(Boolean).join(" ") ||
+              astrologer.name
+
+            return (
             <button
               key={astrologer.id}
               type="button"
@@ -76,7 +81,7 @@ export function AstrologerPickerModal({
                 {astrologer.avatar_url ? (
                   <img
                     src={astrologer.avatar_url}
-                    alt={`${t("avatar_alt", lang)} ${astrologer.name}`}
+                    alt={`${t("avatar_alt", lang)} ${fullName}`}
                     className="astrologer-picker-item-avatar-img"
                     onError={(e) => {
                       const target = e.currentTarget
@@ -90,17 +95,18 @@ export function AstrologerPickerModal({
                   className="astrologer-picker-item-avatar-fallback"
                   style={{ display: astrologer.avatar_url ? "none" : "flex" }}
                 >
-                  {astrologer.name.charAt(0).toUpperCase()}
+                  {fullName.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="astrologer-picker-item-info">
-                <span className="astrologer-picker-item-name">{astrologer.name}</span>
+                <span className="astrologer-picker-item-name">{fullName}</span>
                 {astrologer.bio_short && (
                   <span className="astrologer-picker-item-bio">{astrologer.bio_short}</span>
                 )}
               </div>
             </button>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>

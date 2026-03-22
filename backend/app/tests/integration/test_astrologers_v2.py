@@ -33,12 +33,16 @@ def test_list_astrologers_returns_v2_fields() -> None:
             last_name="Analyste",
             display_name="Orion l'Analyste",
             gender="male",
+            age=39,
             photo_url="/assets/orion.jpg",
             public_style_label="Analytique",
             bio_short="Short bio",
             bio_long="Long bio content",
             admin_category="rational",
             specialties=["Transits", "Carrière"],
+            professional_background=["Ingénieur data / systèmes"],
+            key_skills=["Lecture des aspects et configurations"],
+            behavioral_style=["Méthodique"],
             is_public=True,
             sort_order=1,
         )
@@ -82,12 +86,16 @@ def test_get_astrologer_returns_v2_profile() -> None:
             last_name="Mystique",
             display_name="Sélène Mystique",
             gender="female",
+            age=44,
             photo_url="/assets/selene.jpg",
             public_style_label="Mystique",
             bio_short="Short",
             bio_long="Enriched long bio",
             admin_category="mystical",
             specialties=["Spiritualité"],
+            professional_background=["Études en symbolisme et traditions anciennes"],
+            key_skills=["Lecture symbolique du thème"],
+            behavioral_style=["Imagé"],
             is_public=True,
         )
         db.add(profile)
@@ -101,6 +109,10 @@ def test_get_astrologer_returns_v2_profile() -> None:
     assert payload["name"] == "Sélène Mystique"
     assert payload["bio_full"] == "Enriched long bio"
     assert payload["gender"] == "female"
+    assert payload["age"] == 44
+    assert payload["professional_background"] == ["Études en symbolisme et traditions anciennes"]
+    assert payload["key_skills"] == ["Lecture symbolique du thème"]
+    assert payload["behavioral_style"] == ["Imagé"]
     assert "admin_category" not in payload
 
 
@@ -119,3 +131,21 @@ def test_seed_astrologers_creates_active_prompt_profiles() -> None:
 
     assert len(prompt_profiles) == len(canonical_ids)
     assert all(profile.prompt_content.strip() for profile in prompt_profiles)
+
+
+def test_seed_astrologers_populates_structured_profile_fields() -> None:
+    selene_id = next(
+        uuid.UUID(item["id"]) for item in ASTROLOGERS if item["display_name"] == "Sélène Mystique"
+    )
+    with SessionLocal() as db:
+        seed_astrologers(db)
+        selene_profile = (
+            db.query(AstrologerProfileModel)
+            .filter(AstrologerProfileModel.persona_id == selene_id)
+            .one()
+        )
+
+    assert selene_profile.age == 44
+    assert "Études en symbolisme et traditions anciennes" in selene_profile.professional_background
+    assert "Lecture symbolique du thème" in selene_profile.key_skills
+    assert "Sens du cycle et du temps" in selene_profile.behavioral_style

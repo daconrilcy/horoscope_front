@@ -69,6 +69,8 @@ describe("AstrologersPage", () => {
     {
       id: "1",
       name: "Luna Céleste",
+      first_name: "Luna",
+      last_name: "Caron",
       avatar_url: "/avatars/luna.jpg",
       specialties: ["Thème natal", "Transits", "Relations"],
       style: "Bienveillant et direct",
@@ -77,6 +79,8 @@ describe("AstrologersPage", () => {
     {
       id: "2",
       name: "Orion Mystique",
+      first_name: "Orion",
+      last_name: "Vasseur",
       avatar_url: "/avatars/orion.jpg",
       specialties: ["Carrière", "Événements"],
       style: "Analytique et précis",
@@ -95,8 +99,8 @@ describe("AstrologersPage", () => {
       renderAstrologersPage()
 
       expect(screen.getByText("Nos Astrologues")).toBeInTheDocument()
-      expect(screen.getByText("Luna Céleste")).toBeInTheDocument()
-      expect(screen.getByText("Orion Mystique")).toBeInTheDocument()
+      expect(screen.getByText("Luna Caron")).toBeInTheDocument()
+      expect(screen.getByText("Orion Vasseur")).toBeInTheDocument()
     })
 
     it("displays avatar, name, specialties, and style for each card", () => {
@@ -108,12 +112,12 @@ describe("AstrologersPage", () => {
 
       renderAstrologersPage()
 
-      expect(screen.getByText("Luna Céleste")).toBeInTheDocument()
+      expect(screen.getByText("Luna Caron")).toBeInTheDocument()
       expect(screen.getByText("Bienveillant et direct")).toBeInTheDocument()
       expect(screen.getByText("Thème natal")).toBeInTheDocument()
       expect(screen.getByText("Transits")).toBeInTheDocument()
       expect(screen.getByText("Relations")).toBeInTheDocument()
-      expect(screen.getByAltText("Avatar de Luna Céleste")).toBeInTheDocument()
+      expect(screen.getByAltText("Avatar de Luna Caron")).toBeInTheDocument()
     })
 
     it("shows loading state while fetching", () => {
@@ -151,7 +155,7 @@ describe("AstrologersPage", () => {
 
       renderAstrologersPage()
 
-      const lunaCard = screen.getByRole("button", { name: /Voir le profil de Luna Céleste/i })
+      const lunaCard = screen.getByRole("button", { name: /Voir le profil de Luna Caron/i })
       fireEvent.click(lunaCard)
 
       expect(mockNavigate).toHaveBeenCalledWith(`/astrologers/${encodeURIComponent("1")}`)
@@ -162,6 +166,8 @@ describe("AstrologersPage", () => {
       const astrologerValid = {
         id: validId,
         name: "Astro Expert",
+        first_name: "Astro",
+        last_name: "Expert",
         avatar_url: "/avatars/expert.jpg",
         specialties: ["Test"],
         style: "Test style",
