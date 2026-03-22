@@ -27,6 +27,8 @@ def test_prompt_builder_contains_style():
     assert "Lion fier" in prompt
     assert "daily_advice" in prompt
     assert "main_turning_point_narrative" in prompt
+    assert "5 à 7 phrases" in prompt
+    assert "3 ou 4 phrases" in prompt
 
 
 def test_prompt_builder_formats_windows():

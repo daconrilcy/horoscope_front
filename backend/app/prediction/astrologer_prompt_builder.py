@@ -159,16 +159,20 @@ CONSIGNES DE RÉDACTION :
 - Mets l'accent sur le vécu probable : concentration, échanges, rythme, fatigue, élan, sensibilité,
   besoin d'isolement, envie d'agir, clarté ou dispersion.
 - Ne recopie pas simplement les listes techniques : interprète-les.
-- daily_synthesis : 3 à 5 phrases, riche et utile.
-  Doit dire ce qui domine la journée, où se situent les frottements, ce qu'il faut anticiper,
+- daily_synthesis : 5 à 7 phrases, dense, incarné et agréable à lire.
+  Vise une vraie histoire de la journée, pas un simple résumé.
+  Doit dire ce qui domine la journée, comment l'ambiance évolue du matin au soir,
+  où se situent les frottements, ce qu'il faut anticiper,
   et pourquoi astrologiquement.
+  Quand c'est pertinent, mentionne le meilleur créneau et la bascule principale.
 - astro_events_intro : 2 à 4 phrases.
   Explique les 2 ou 3 faits astrologiques les plus structurants du jour et leur effet concret.
 - time_window_narratives : Un objet avec les clés "nuit", "matin", "apres_midi", "soiree".
-  Chaque valeur contient 2 ou 3 phrases qui décrivent :
+  Chaque valeur contient 3 ou 4 phrases qui décrivent :
   1) ce qu'on peut ressentir ou vivre dans ce créneau,
   2) pourquoi d'après les indices astro du créneau,
   3) la meilleure manière d'utiliser ou de gérer cette période.
+  Entre dans le détail du vécu probable au lieu de rester générique.
 - turning_point_narratives : Une liste de textes alignés sur les turning points détectés.
   Chaque texte doit expliquer la bascule, sa cause probable et l'attitude juste.
 - main_turning_point_narrative : 2 ou 3 phrases pour la carte du moment clé principal.

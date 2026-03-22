@@ -649,7 +649,10 @@ class PublicMainTurningPointPolicy:
         if change_type == "attenuation":
             return "La tension retombe et laisse place à une phase d'intégration."
 
-        return getattr(tp, "summary", "Changement de dynamique dans votre journée.")
+        summary = getattr(tp, "summary", None)
+        if isinstance(summary, str) and "theme_rotation" not in summary:
+            return summary
+        return "Changement de dynamique dans votre journée."
 
 
 PERIOD_SLOTS = [
@@ -1494,7 +1497,7 @@ class PublicTurningPointPolicy:
                 {
                     "occurred_at_local": tp.local_time.isoformat(),
                     "severity": tp.amplitude / 10.0,  # Scaled
-                    "summary": f"Bascule durable ({tp.reason})",
+                    "summary": self._build_public_turning_point_summary(tp),
                     "drivers": [{"label": d} for d in tp.drivers],
                     "impacted_categories": list(tp.themes),
                     # Story 43.1
@@ -1552,6 +1555,14 @@ class PublicTurningPointPolicy:
             )
 
         return public_turning_points
+
+    def _build_public_turning_point_summary(self, tp: Any) -> str:
+        change_type = getattr(tp, "change_type", "recomposition")
+        if change_type == "emergence":
+            return "Une dynamique prend clairement de l'ampleur."
+        if change_type == "attenuation":
+            return "L'intensité retombe et laisse plus d'espace pour intégrer."
+        return "La journée change d'axe et demande un nouvel ajustement."
 
     def _serialize_primary_driver(self, pd: Any | None) -> dict[str, Any] | None:
         if not pd:

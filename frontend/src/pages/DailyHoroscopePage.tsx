@@ -35,6 +35,14 @@ import type { ZodiacSign } from '../components/astro/zodiacPatterns'
 
 import './DailyHoroscopePage.css'
 
+function SectionHeading({ title }: { title: string }) {
+  return (
+    <div className="daily-layout__section-header">
+      <h3 className="daily-layout__section-title">{title}</h3>
+    </div>
+  )
+}
+
 export default function DailyHoroscopePage() {
   const navigate = useNavigate()
   const lang = detectLang()
@@ -150,7 +158,8 @@ export default function DailyHoroscopePage() {
             const domains = mapDomainRanking(prediction);
             return domains.length > 0 ? (
               <div className="daily-layout__section">
-                <DomainRankingCard domains={domains} lang={pLang} />
+                <SectionHeading title={pLang === 'fr' ? 'Vos domaines clés' : 'Your key domains'} />
+                <DomainRankingCard domains={domains} lang={pLang} hideTitle />
               </div>
             ) : null;
           })()}
@@ -159,9 +168,11 @@ export default function DailyHoroscopePage() {
           <SectionErrorBoundary onRetry={handleRefresh}>
             {prediction.time_windows && (
               <div className="daily-layout__section">
+                <SectionHeading title={pLang === 'fr' ? 'Déroulé de votre journée' : 'Your day timeline'} />
                 <DayTimelineSectionV4 
                   timeWindows={prediction.time_windows} 
-                  lang={pLang} 
+                  lang={pLang}
+                  hideTitle
                 />
               </div>
             )}
@@ -172,9 +183,7 @@ export default function DailyHoroscopePage() {
             const tp = mapTurningPoint(prediction);
             return tp ? (
               <div className="daily-layout__section">
-                <h3 className="daily-layout__section-title">
-                  {pLang === 'fr' ? 'Moment clé' : 'Key moment'}
-                </h3>
+                <SectionHeading title={pLang === 'fr' ? 'Moment clé' : 'Key moment'} />
                 <TurningPointCard turningPoint={tp} lang={pLang} />
               </div>
             ) : null;
@@ -185,9 +194,7 @@ export default function DailyHoroscopePage() {
             const bw = mapBestWindow(prediction);
             return bw ? (
               <div className="daily-layout__section">
-                <h3 className="daily-layout__section-title">
-                  {pLang === 'fr' ? 'Opportunité' : 'Opportunity'}
-                </h3>
+                <SectionHeading title={pLang === 'fr' ? 'Opportunité' : 'Opportunity'} />
                 <BestWindowCard bestWindow={bw} lang={pLang} />
               </div>
             ) : null;
@@ -198,10 +205,12 @@ export default function DailyHoroscopePage() {
             const astroEvents = mapAstroDailyEvents(prediction);
             return astroEvents ? (
               <div className="daily-layout__section">
+                <SectionHeading title={pLang === 'fr' ? 'Astrologie du jour' : 'Astrology of the day'} />
                 <AstroDailyEvents 
                   data={astroEvents} 
                   intro={prediction.astro_events_intro} 
-                  lang={pLang} 
+                  lang={pLang}
+                  hideTitle
                 />
               </div>
             ) : null;
@@ -209,16 +218,24 @@ export default function DailyHoroscopePage() {
 
           {/* Zone 8 : DailyAdviceCard — Conclusive Masterpiece */}
           <div className="daily-layout__section">
-            <DailyAdviceCard model={buildDailyAdviceCardModel(prediction, pLang)} />
+            <SectionHeading title={pLang === 'fr' ? 'Conseil du jour' : 'Daily advice'} />
+            <DailyAdviceCard model={buildDailyAdviceCardModel(prediction, pLang)} hideTitle />
           </div>
 
           {/* Zone 9 : AstroFoundationSection (V4) */}
-          <div className="daily-layout__section">
-            <AstroFoundationSection 
-              foundation={mapAstroFoundation(prediction)} 
-              lang={pLang} 
-            />
-          </div>
+          {(() => {
+            const foundation = mapAstroFoundation(prediction)
+            return foundation ? (
+              <div className="daily-layout__section">
+                <SectionHeading title={pLang === 'fr' ? 'Fondements astrologiques' : 'Astrological foundations'} />
+                <AstroFoundationSection 
+                  foundation={foundation} 
+                  lang={pLang}
+                  hideTitle
+                />
+              </div>
+            ) : null
+          })()}
 
           {/* BottomSpacer */}
           <div className="daily-layout__bottom-spacer" />

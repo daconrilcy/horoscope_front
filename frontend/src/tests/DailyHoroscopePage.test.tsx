@@ -1024,6 +1024,36 @@ describe("DailyHoroscopePage", () => {
     expect(screen.queryByText("Entrée en orbe d'aspect")).not.toBeInTheDocument();
   });
 
+  it("n'expose pas de raison technique legacy dans le fallback du moment clé", async () => {
+    const payload = {
+      ...predictionOk,
+      turning_point: null,
+      summary: {
+        ...predictionOk.summary,
+        main_turning_point: {
+          occurred_at_local: "2026-03-08T22:00:00",
+          severity: 0.8,
+          summary: "Bascule durable (theme_rotation)",
+        },
+      },
+    };
+
+    installFetchMock({
+      prediction: jsonResponse(payload),
+    });
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText("Moment clé")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText("La dynamique de la journée se réorganise et demande de vous adapter."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/theme_rotation/i)).not.toBeInTheDocument();
+  });
+
   it("n'affiche pas une transition incohérente quand avant et après sont identiques", async () => {
     installFetchMock({
       prediction: jsonResponse(predictionWithInferredEmergence),

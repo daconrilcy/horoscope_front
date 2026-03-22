@@ -8,14 +8,17 @@ import './DomainRankingCard.css';
 interface Props {
   domains: DailyPredictionPublicDomainScore[];
   lang: Lang;
+  hideTitle?: boolean;
 }
 
-export const DomainRankingCard: React.FC<Props> = ({ domains, lang }) => {
+export const DomainRankingCard: React.FC<Props> = ({ domains, lang, hideTitle = false }) => {
   return (
     <section className="domain-ranking-card">
-      <h3 className="domain-ranking-card__title">
-        {lang === 'fr' ? 'Vos domaines clés' : 'Your key domains'}
-      </h3>
+      {!hideTitle ? (
+        <h3 className="domain-ranking-card__title">
+          {lang === 'fr' ? 'Vos domaines clés' : 'Your key domains'}
+        </h3>
+      ) : null}
 
       <div className="domain-ranking-card__list">
         {domains.map(domain => (

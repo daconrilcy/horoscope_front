@@ -22,6 +22,7 @@ import './DayTimelineSectionV4.css';
 interface Props {
   timeWindows: DailyPredictionTimeWindow[];
   lang: Lang;
+  hideTitle?: boolean;
 }
 
 const PERIOD_ICONS: Record<string, React.ElementType> = {
@@ -103,12 +104,14 @@ const REGIME_META: Record<
   },
 };
 
-export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang }) => {
+export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang, hideTitle = false }) => {
   return (
     <section className="day-timeline-v4">
-      <h3 className="day-timeline-v4__title">
-        {lang === 'fr' ? 'Déroulé de votre journée' : 'Your day timeline'}
-      </h3>
+      {!hideTitle ? (
+        <h3 className="day-timeline-v4__title">
+          {lang === 'fr' ? 'Déroulé de votre journée' : 'Your day timeline'}
+        </h3>
+      ) : null}
 
       <div className="day-timeline-v4__container">
         {/* Vertical Timeline Line (AC8.34) */}

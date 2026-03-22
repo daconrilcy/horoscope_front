@@ -7,9 +7,10 @@ import './AstroFoundationSection.css';
 interface Props {
   foundation: DailyPredictionAstroFoundation | null;
   lang: Lang;
+  hideTitle?: boolean;
 }
 
-export const AstroFoundationSection: React.FC<Props> = ({ foundation, lang }) => {
+export const AstroFoundationSection: React.FC<Props> = ({ foundation, lang, hideTitle = false }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   if (!foundation) return null;
@@ -21,7 +22,9 @@ export const AstroFoundationSection: React.FC<Props> = ({ foundation, lang }) =>
         className="astro-foundation-section__toggle"
       >
         <span className="astro-foundation-section__title">
-          {lang === 'fr' ? 'Fondements astrologiques' : 'Astrological foundations'}
+          {hideTitle
+            ? (lang === 'fr' ? 'Afficher les fondements' : 'Show foundations')
+            : (lang === 'fr' ? 'Fondements astrologiques' : 'Astrological foundations')}
         </span>
         <span className={`astro-foundation-section__chevron ${isOpen ? 'astro-foundation-section__chevron--open' : ''}`}>
           <ChevronDown size={20} />

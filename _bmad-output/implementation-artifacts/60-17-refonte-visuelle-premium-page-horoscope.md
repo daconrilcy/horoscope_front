@@ -342,14 +342,25 @@ GPT-5 Codex
 - Les blocs `AstroDailyEvents`, `DomainRankingCard` et `DailyAdviceCard` ont été harmonisés dans un langage moins “UI fonctionnelle” et plus éditorial, avec des capsules, badges et halos cohérents.
 - Une vérification live sur `http://localhost:5173/dashboard/horoscope` avec un utilisateur réellement bootstrapé via l’API locale a permis de corriger deux défauts de rendu non visibles dans les seuls tests statiques : icônes du header insuffisamment lisibles et hero encore trop comprimée côté texte.
 - Après cette vérification navigateur, la hero a été recalée avec une vraie largeur éditoriale minimale et le header a reçu un meilleur ancrage visuel des actions, ce qui réduit la sensation de colonne “maigre” et d’icônes flottantes.
+- Une passe post-implémentation a homogénéisé toutes les sections de la page autour d’un header externe commun, afin d’éviter le mélange de titres “dans la carte” et “hors carte”.
+- Le badge d’état du header a été rendu plus explicite pour parler de la journée elle-même (`Journée très porteuse`, `Journée contrastée`, etc.) au lieu d’un adjectif isolé ambigu.
+- Le prompt LLM a été renforcé pour produire une synthèse du jour plus dense et plus narrative (5 à 7 phrases) ainsi que des créneaux plus détaillés (3 à 4 phrases), afin de donner une vraie histoire de la journée.
+- Le run quotidien du 22 mars 2026 a été régénéré localement pour vérifier l’impact réel de ce prompt renforcé sur `day-climate-hero__summary`.
+- La timeline a été réalignée sur le même gabarit que les autres sections : même bord gauche que les cartes précédentes, rail vertical recentré et bullets ancrés sur le même axe optique que la ligne.
+- Le titre orphelin `Fondements astrologiques` a été supprimé lorsque la section n’est pas disponible, en rendant tout le bloc conditionnel.
+- Une fuite de raison technique backend dans la carte `Moment clé` (`theme_rotation`) a été corrigée dans la projection publique backend et dans le fallback frontend legacy, afin qu’aucune clé interne ne remonte dans l’interface.
 - Vérifications exécutées après les dernières retouches :
   - `npx tsc --noEmit`
-  - `npm run test -- src/tests/DailyHoroscopePage.test.tsx src/tests/AstroMoodBackground.test.tsx src/tests/visual-smoke.test.tsx`
+  - `npm run test -- src/tests/DailyHoroscopePage.test.tsx`
+  - `.\.venv\Scripts\Activate.ps1; pytest backend/tests/unit/prediction/test_astrologer_prompt_builder.py -q`
   - vérification live de `/dashboard/horoscope` via navigateur headless avec session authentifiée réelle
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/60-17-refonte-visuelle-premium-page-horoscope.md`
+- `backend/app/prediction/astrologer_prompt_builder.py`
+- `backend/app/prediction/public_projection.py`
+- `backend/tests/unit/prediction/test_astrologer_prompt_builder.py`
 - `frontend/src/pages/DailyHoroscopePage.tsx`
 - `frontend/src/pages/DailyHoroscopePage.css`
 - `frontend/src/components/prediction/DailyPageHeader.tsx`
@@ -374,3 +385,10 @@ GPT-5 Codex
 - `frontend/src/components/BestWindowCard.tsx`
 - `frontend/src/components/AstroFoundationSection.tsx`
 - `frontend/src/components/TurningPointCard.tsx`
+- `frontend/src/components/AstroDailyEvents.tsx`
+- `frontend/src/components/DomainRankingCard.tsx`
+- `frontend/src/components/prediction/DailyAdviceCard.tsx`
+- `frontend/src/components/prediction/DayTimelineSectionV4.tsx`
+- `frontend/src/i18n/predictions.ts`
+- `frontend/src/tests/DailyHoroscopePage.test.tsx`
+- `frontend/src/utils/turningPointCardMapper.ts`

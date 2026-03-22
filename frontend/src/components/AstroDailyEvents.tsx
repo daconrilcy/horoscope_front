@@ -20,9 +20,10 @@ interface AstroDailyEventsProps {
   data: AstroDailyEventsViewData;
   intro?: string | null;
   lang: Lang;
+  hideTitle?: boolean;
 }
 
-export const AstroDailyEvents: React.FC<AstroDailyEventsProps> = ({ data, intro, lang }) => {
+export const AstroDailyEvents: React.FC<AstroDailyEventsProps> = ({ data, intro, lang, hideTitle = false }) => {
   const { 
     ingresses, aspects, planetPositions, 
     returns, progressions, nodes, skyAspects, fixedStars 
@@ -50,10 +51,16 @@ export const AstroDailyEvents: React.FC<AstroDailyEventsProps> = ({ data, intro,
   };
 
   return (
-    <section className="astro-daily-events" aria-labelledby="astro-events-title">
-      <h3 id="astro-events-title" className="astro-daily-events__title">
-        {l('title')}
-      </h3>
+    <section
+      className="astro-daily-events"
+      aria-labelledby={hideTitle ? undefined : "astro-events-title"}
+      aria-label={hideTitle ? l('title') : undefined}
+    >
+      {!hideTitle ? (
+        <h3 id="astro-events-title" className="astro-daily-events__title">
+          {l('title')}
+        </h3>
+      ) : null}
 
       {intro && (
         <p className="astro-daily-events__intro">

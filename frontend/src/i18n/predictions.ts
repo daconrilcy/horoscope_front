@@ -56,14 +56,14 @@ export const NOTE_BAND_LABELS: Record<string, Record<Lang, string>> = {
 };
 
 export const TONE_LABELS: Record<string, Record<Lang, string>> = {
-  positive: { fr: "Très porteuse", en: "Very positive" },
-  mixed: { fr: "Contrastée", en: "Mixed" },
-  neutral: { fr: "Équilibrée", en: "Balanced" },
-  negative: { fr: "Exigeante", en: "Challenging" },
-  steady: { fr: "Stable", en: "Steady" },
-  push: { fr: "Dynamique", en: "Push" },
-  careful: { fr: "Prudent", en: "Careful" },
-  open: { fr: "Ouvert", en: "Open" },
+  positive: { fr: "Journée très porteuse", en: "Very positive day" },
+  mixed: { fr: "Journée contrastée", en: "Mixed day" },
+  neutral: { fr: "Journée équilibrée", en: "Balanced day" },
+  negative: { fr: "Journée exigeante", en: "Challenging day" },
+  steady: { fr: "Journée stable", en: "Steady day" },
+  push: { fr: "Journée dynamique", en: "Dynamic day" },
+  careful: { fr: "Journée prudente", en: "Careful day" },
+  open: { fr: "Journée ouverte", en: "Open day" },
 };
 
 export const PIVOT_LABELS: Record<string, Record<Lang, string>> = {
