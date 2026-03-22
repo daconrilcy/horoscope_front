@@ -1,6 +1,6 @@
 .two-col-layout {
   display: grid;
-  grid-template-columns: var(--sidebar-width, 320px) 1fr;
+  grid-template-columns: var(--sidebar-width, 320px) minmax(0, 1fr);
   height: 100%;
   width: 100%;
   overflow: hidden;
