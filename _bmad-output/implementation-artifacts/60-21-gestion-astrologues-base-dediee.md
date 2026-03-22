@@ -21,7 +21,7 @@ so that les astrologues deviennent administrables, cohérents entre front et LLM
 7. **[x] Profil métier structuré**: Les profils astrologues persistés peuvent désormais stocker l'âge, l'expérience professionnelle, les compétences clés et le style comportemental dans des champs dédiés.
 8. **[x] Assets photo branchés**: Les photos de référence placées dans `docs/astrologues` sont exposées côté frontend via `frontend/public/assets/astrologers` et reliées aux profils seedés.
 9. **[x] Affichage identité civile sur les cartes**: Les cartes et sélecteurs d'astrologues affichent `prénom + nom` au lieu de l'alias public, sans casser les alias sur les pages profil ou les fallbacks backend.
-10. **[x] Catalogue premium différencié**: La page `/astrologers` adopte une hiérarchie visuelle premium claire avec thèmes couleur par astrologue, avatar renforcé, carte featured sur le premier profil affiché et contraste lisible sur les tags.
+10. **[x] Catalogue premium différencié**: La page `/astrologers` adopte une hiérarchie visuelle premium claire avec thèmes couleur par astrologue, avatar renforcé, carte hero sur le premier profil affiché, profondeur multi-couches, animation légère au hover et contraste lisible sur les tags.
 11. **[x] Rotation du premier profil**: Le premier astrologue affiché alterne de façon déterministe entre les visites via un index persistant frontend, sans casser la navigation ni le tri global.
 
 ## Tasks / Subtasks
@@ -61,6 +61,7 @@ Gemini CLI (Autonomous Mode)
 - Mise en oeuvre d'une rotation locale du premier profil affiché pour varier le point d'entrée du catalogue d'une visite à l'autre.
 - Retrait du badge éditorial "Choix conseillé" après revue UX, tout en conservant la mise en avant visuelle par taille et placement.
 - Correction du contraste des pills/spécialités pour éviter les cas ton-sur-ton sur les thèmes clairs.
+- Seconde passe premium sur le catalogue avec halo focalisé sur la carte hero, avatars encore agrandis, profondeur de cartes renforcée, micro-animations au hover et badge de focus contextuel non éditorial.
 - Neutralisation des doublons publics locaux sur les profils seedés pour éviter les collisions d'identité côté API.
 - Ajout du lien vers la page astrologues dans le menu utilisateur et dans la navigation principale de l'application.
 - Stabilisation de la suite backend complète après introduction des nouvelles contraintes de clés étrangères.

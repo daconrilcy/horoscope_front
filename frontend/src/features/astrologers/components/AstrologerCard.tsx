@@ -39,6 +39,17 @@ function getAstrologerIcon(theme: string): string {
   }
 }
 
+function getFeaturedBadge(astrologer: Astrologer): string {
+  const firstName = astrologer.first_name.toLowerCase()
+  if (firstName === "orion") return "Analyse precise"
+  if (firstName === "étienne" || firstName === "etienne") return "Debutants"
+  if (firstName === "atlas") return "Decisions"
+  if (firstName === "luna") return "Relationnel"
+  if (firstName === "nox") return "Profondeur"
+  if (firstName === "sélène" || firstName === "selene") return "Cycles"
+  return astrologer.style
+}
+
 export function AstrologerCard({ astrologer, featured = false, onClick }: AstrologerCardProps) {
   const [imgError, setImgError] = useState(false)
   const lang = detectLang()
@@ -46,6 +57,7 @@ export function AstrologerCard({ astrologer, featured = false, onClick }: Astrol
   const fullName = [astrologer.first_name, astrologer.last_name].filter(Boolean).join(" ") || astrologer.name
   const theme = getAstrologerTheme(astrologer)
   const icon = getAstrologerIcon(theme)
+  const featuredBadge = getFeaturedBadge(astrologer)
 
   return (
     <button
@@ -59,6 +71,7 @@ export function AstrologerCard({ astrologer, featured = false, onClick }: Astrol
       <div className="astrologer-card-orbit astrologer-card-orbit--two" aria-hidden="true" />
       <div className="astrologer-card-topline">
         <span className="astrologer-card-icon" aria-hidden="true">{icon}</span>
+        {featured && <span className="astrologer-card-featured-badge">{featuredBadge}</span>}
       </div>
       <div className="astrologer-card-avatar">
         {showImage ? (
