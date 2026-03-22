@@ -437,9 +437,9 @@ function ConfirmDeleteModal({ t, onConfirm, onCancel, isDeleting }: { t: Interpr
 function InterpretationSkeleton({ t, isComplete }: { t: InterpretationTranslations, isComplete?: boolean }) {
   return (
     <div className="ni-skeleton">
-      <div className="ni-skeleton__line" style={{ height: '1rem', width: '75%' }} />
-      <div className="ni-skeleton__line" style={{ height: '0.75rem' }} />
-      <div className="ni-skeleton__line" style={{ height: '0.75rem', width: '83%' }} />
+      <div className="ni-skeleton__line ni-skeleton__line--75" />
+      <div className="ni-skeleton__line" />
+      <div className="ni-skeleton__line ni-skeleton__line--83" />
       <div className="ni-skeleton__tabs">
         {[1, 2, 3].map(i => <div key={i} className="ni-skeleton__tab" />)}
       </div>
@@ -454,6 +454,9 @@ function InterpretationSkeleton({ t, isComplete }: { t: InterpretationTranslatio
 function InterpretationError({ t, onRetry }: { t: InterpretationTranslations, onRetry: () => void }) {
   return (
     <div className="ni-error">
+      <div className="ni-error__icon">
+        <AlertCircle size={32} />
+      </div>
       <p className="ni-error__message">{t.error}</p>
       <Button variant="danger" onClick={onRetry} leftIcon={<RefreshCw size={16} />}>
         {t.retry}
@@ -509,15 +512,15 @@ function InterpretationContent({ data, lang }: { data: NatalInterpretationResult
       <EvidenceTags evidence={evidence} title={t.evidenceTitle} t={t} />
 
       {disclaimers.length > 0 && (
-        <footer style={{ marginTop: 'var(--space-2)', borderTop: '1px solid var(--color-border-subtle)', paddingTop: 'var(--space-4)' }}>
-          <div className="ni-degraded-notice" style={{ display: 'block', background: 'var(--color-warning-surface, rgba(217,119,6,0.07))', borderColor: 'var(--color-warning-border, rgba(217,119,6,0.2))' }}>
-            <p style={{ fontWeight: 'var(--font-weight-bold)', textTransform: 'uppercase', fontSize: '0.6875rem', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 'var(--space-1)', marginBottom: 'var(--space-2)', color: 'var(--color-warning-text, #92400e)' }}>
+        <footer className="ni-disclaimer-footer">
+          <div className="ni-degraded-notice ni-degraded-notice--disclaimer">
+            <p className="ni-disclaimer-title">
               <AlertCircle size={14} />
               {t.disclaimerTitle}
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', fontSize: 'var(--font-size-xs)', color: 'var(--color-warning-text, #92400e)' }}>
+            <div className="ni-disclaimer-list">
               {disclaimers.map((d, i) => (
-                <p key={i} style={{ margin: 0 }}>{d}</p>
+                <p key={i} className="ni-disclaimer-item">{d}</p>
               ))}
             </div>
           </div>
@@ -533,7 +536,7 @@ function HighlightsChips({ highlights }: { highlights: string[] }) {
       {highlights.map((h, i) => (
         <div key={i} className="ni-highlight-chip">
           <div className="ni-highlight-icon">
-            <Star size={16} style={{ color: 'var(--color-primary-strong)', fill: 'currentColor' }} />
+            <Star size={16} className="ni-highlight-star" />
           </div>
           <p className="ni-highlight-text">{stripLeadingNumbering(h)}</p>
         </div>
@@ -565,8 +568,8 @@ function SectionAccordion({ sections, sectionsMap }: { sections: AstroSection[],
                 {sectionsMap[section.key] || section.heading}
               </span>
               {isOpen
-                ? <ChevronUp size={20} style={{ color: 'var(--color-primary-strong)' }} />
-                : <ChevronDown size={20} style={{ color: 'var(--color-text-muted)' }} />
+                ? <ChevronUp size={20} className="ni-accordion-icon ni-accordion-icon--open" />
+                : <ChevronDown size={20} className="ni-accordion-icon ni-accordion-icon--closed" />
               }
             </button>
             {isOpen && (
@@ -587,7 +590,7 @@ function AdviceList({ advice }: { advice: string[] }) {
       {advice.map((item, i) => (
         <div key={i} className="ni-advice-item">
           <div className="ni-advice-icon">
-            <Star size={12} style={{ fill: 'currentColor' }} />
+            <Star size={12} className="ni-advice-star" />
           </div>
           <p className="ni-advice-text">{stripLeadingNumber(item)}</p>
         </div>
@@ -742,22 +745,22 @@ function EvidenceTags({
   const totalCount = deduped.length;
 
   return (
-    <div className="evidence-tags" style={{ border: '1px solid var(--color-border-default)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-4)', background: 'var(--color-surface-overlay)' }}>
+    <div className="ni-evidence-tags">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+        className="ni-evidence-toggle-btn"
       >
         <div>
-          <p className="evidence-tags__title" style={{ fontWeight: 'var(--font-weight-semibold)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', margin: 0 }}>
+          <p className="ni-evidence-tags-title">
             {title}
           </p>
-          <p className="ni-evidence-count">{t.evidenceIntro}</p>
+          <p className="ni-evidence-intro">{t.evidenceIntro}</p>
           <p className="ni-evidence-count">
             {totalCount} élément{totalCount > 1 ? "s" : ""} dédupliqué{totalCount > 1 ? "s" : ""}
           </p>
         </div>
-        <span className="ni-evidence-toggle">
+        <span className="ni-evidence-toggle-icon">
           {open ? t.hideEvidence : t.showEvidence}
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </span>
@@ -803,7 +806,7 @@ function UpsellBlock({ t, onOpenSelector }: { t: InterpretationTranslations, onO
   return (
     <div className="ni-upsell">
       <div className="ni-upsell__icon-bg">
-        <Lock size={128} style={{ transform: 'rotate(-12deg) translateX(3rem)' }} />
+        <Lock size={128} className="ni-upsell__lock-icon" />
       </div>
       <div className="ni-upsell__content">
         <h4 className="ni-upsell__title">{t.upsellTitle}</h4>
@@ -851,15 +854,15 @@ function PersonaSelector({
         </h4>
 
         {isLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-8)' }}>
-            <RefreshCw size={32} style={{ animation: 'spin 1s linear infinite', color: 'var(--color-primary-strong)' }} />
+          <div className="ni-loader-container">
+            <RefreshCw size={32} className="ni-loader-spin" />
           </div>
         ) : isError ? (
-          <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '3rem', height: '3rem', borderRadius: 'var(--radius-full)', background: 'var(--color-danger-surface, rgba(220,38,38,0.1))', marginBottom: 'var(--space-4)' }}>
-              <AlertCircle size={24} style={{ color: 'var(--color-danger)' }} />
+          <div className="ni-modal-error">
+            <div className="ni-modal-error-icon">
+              <AlertCircle size={24} />
             </div>
-            <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)' }}>{t.error}</p>
+            <p className="ni-modal-error-text">{t.error}</p>
             <Button variant="secondary" onClick={() => refetch()}>{t.retry}</Button>
           </div>
         ) : availableAstrologers.length > 0 ? (
@@ -871,13 +874,13 @@ function PersonaSelector({
             }}
           />
         ) : (
-          <p style={{ padding: 'var(--space-8)', textAlign: 'center', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-            Tous les astrologues disponibles ont deja une interpretation.
+          <p className="ni-modal-empty-text">
+            Tous les astrologues disponibles ont déjà une interprétation.
           </p>
         )}
 
         <div className="modal-actions">
-          <button onClick={onCancel} disabled={isSubmitting}>
+          <button onClick={onCancel} disabled={isSubmitting} className="ni-modal-cancel-btn">
             {t.cancel}
           </button>
         </div>
