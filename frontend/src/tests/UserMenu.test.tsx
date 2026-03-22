@@ -76,6 +76,19 @@ describe("UserMenu", () => {
     expect(onClose).toHaveBeenCalled()
   })
 
+  it("navigue vers /astrologers au clic Voir les astrologues", () => {
+    const onClose = vi.fn()
+
+    renderWithRouter(
+      <UserMenu email="a@b.com" role="user" isOpen onClose={onClose} />,
+    )
+
+    fireEvent.click(screen.getByText("Voir les astrologues"))
+
+    expect(mockNavigate).toHaveBeenCalledWith("/astrologers")
+    expect(onClose).toHaveBeenCalled()
+  })
+
   it("se ferme sur clic extérieur", () => {
     const onClose = vi.fn()
 

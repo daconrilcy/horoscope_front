@@ -14,6 +14,7 @@ export interface CommonTranslation {
   }
   userMenu: {
     editAccount: string
+    astrologers: string
     logout: string
     settings: string
   }
@@ -54,6 +55,7 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
     },
     userMenu: {
       editAccount: "Modifier mon compte",
+      astrologers: "Voir les astrologues",
       logout: "Se déconnecter",
       settings: "Paramètres",
     },
@@ -92,6 +94,7 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
     },
     userMenu: {
       editAccount: "Edit account",
+      astrologers: "View astrologers",
       logout: "Log out",
       settings: "Settings",
     },
@@ -130,6 +133,7 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
     },
     userMenu: {
       editAccount: "Editar cuenta",
+      astrologers: "Ver astrólogos",
       logout: "Cerrar sesión",
       settings: "Configuración",
     },

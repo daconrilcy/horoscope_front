@@ -110,6 +110,14 @@ export function UserMenu({ email, role, avatarUrl, isOpen, onClose }: UserMenuPr
         type="button"
         role="menuitem"
         className="user-menu__item"
+        onClick={() => handleNavigate("/astrologers")}
+      >
+        {t.userMenu.astrologers}
+      </button>
+      <button
+        type="button"
+        role="menuitem"
+        className="user-menu__item"
         onClick={() => handleNavigate("/settings")}
       >
         {t.userMenu.settings}

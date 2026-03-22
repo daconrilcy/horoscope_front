@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.request_id import resolve_request_id
-from app.infra.db.models import AstrologerProfileModel
+from app.infra.db.models import AstrologerProfileModel, LlmPersonaModel
 from app.infra.db.session import get_db_session
 
 router = APIRouter(prefix="/v1/astrologers", tags=["astrologers"])
@@ -76,7 +76,8 @@ def list_astrologers(
 
     stmt = (
         select(AstrologerProfileModel)
-        .where(AstrologerProfileModel.is_public == True)  # noqa: E712
+        .join(LlmPersonaModel, LlmPersonaModel.id == AstrologerProfileModel.persona_id)
+        .where(AstrologerProfileModel.is_public.is_(True), LlmPersonaModel.enabled.is_(True))
         .order_by(AstrologerProfileModel.sort_order, AstrologerProfileModel.display_name)
     )
     profiles = db.execute(stmt).scalars().all()
@@ -118,8 +119,17 @@ def get_astrologer(
             details={},
         )
 
-    profile = db.get(AstrologerProfileModel, persona_uuid)
-    if not profile or not profile.is_public:
+    stmt = (
+        select(AstrologerProfileModel)
+        .join(LlmPersonaModel, LlmPersonaModel.id == AstrologerProfileModel.persona_id)
+        .where(
+            AstrologerProfileModel.persona_id == persona_uuid,
+            AstrologerProfileModel.is_public.is_(True),
+            LlmPersonaModel.enabled.is_(True),
+        )
+    )
+    profile = db.execute(stmt).scalar_one_or_none()
+    if not profile:
         return _error_response(
             status_code=404,
             request_id=request_id,

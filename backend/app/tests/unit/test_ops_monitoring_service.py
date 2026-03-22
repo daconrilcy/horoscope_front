@@ -1,6 +1,7 @@
 from sqlalchemy import delete
 
 from app.infra.db.models.audit_event import AuditEventModel
+from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal
 from app.infra.observability.metrics import increment_counter, observe_duration, reset_metrics
 from app.services.audit_service import AuditEventCreatePayload, AuditService
@@ -228,6 +229,16 @@ def test_get_pricing_experiment_kpis_uses_database_persistent_events() -> None:
         db.execute(
             delete(AuditEventModel).where(AuditEventModel.action == "pricing_experiment_event")
         )
+        db.execute(delete(UserModel).where(UserModel.id == 1))
+        db.add(
+            UserModel(
+                id=1,
+                email="pricing-monitoring@example.com",
+                password_hash="test-hash",
+                role="user",
+            )
+        )
+        db.flush()
         AuditService.record_event(
             db,
             payload=AuditEventCreatePayload(

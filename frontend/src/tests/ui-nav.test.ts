@@ -5,7 +5,7 @@ describe("ui/nav configuration", () => {
   it("exports navItems array with 15 entries", () => {
     expect(navItems).toBeDefined()
     expect(Array.isArray(navItems)).toBe(true)
-    expect(navItems).toHaveLength(15)
+    expect(navItems).toHaveLength(16)
   })
 
   it("each navItem has required properties", () => {
@@ -27,6 +27,7 @@ describe("ui/nav configuration", () => {
       { key: "chat", label: "Chat", path: "/chat" },
       { key: "natal", label: "Thème", path: "/natal" },
       { key: "consultations", label: "Consultations", path: "/consultations" },
+      { key: "astrologers", label: "Astrologues", path: "/astrologers" },
       { key: "profile", label: "Profil", path: "/settings" },
     ]
 

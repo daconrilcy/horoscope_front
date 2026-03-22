@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 
 from app.infra.db.models import LlmPersonaModel
 
@@ -46,12 +47,21 @@ def compose_persona_block(persona: LlmPersonaModel) -> str:
     """
     # 1. Try to find the active dedicated prompt profile
     # We look for the first active one. In theory there should only be one active per persona.
-    active_prompt = next((p for p in persona.prompt_profiles if p.is_active), None)
+    prompt_profiles = getattr(persona, "prompt_profiles", []) or []
+    active_prompts = [prompt for prompt in prompt_profiles if prompt.is_active]
+    active_prompts.sort(
+        key=lambda prompt: (
+            getattr(prompt, "updated_at", None) or datetime.min.replace(tzinfo=timezone.utc)
+        ),
+        reverse=True,
+    )
+    active_prompt = active_prompts[0] if active_prompts else None
 
     if active_prompt:
         persona_name = _sanitize_string(persona.name)
+        prompt_content = _sanitize_string(active_prompt.prompt_content)
         # We still add a header for structure
-        block = f"## Directives de persona : {persona_name}\n{active_prompt.prompt_content}"
+        block = f"## Directives de persona : {persona_name}\n{prompt_content}"
 
         # Security: check size
         block_len = len(block)

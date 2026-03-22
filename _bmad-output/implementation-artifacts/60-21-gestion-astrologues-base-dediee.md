@@ -42,6 +42,13 @@ Gemini CLI (Autonomous Mode)
 - Refonte du router FastAPI et des schémas Pydantic.
 - Mise à jour du `persona_composer.py` pour l'injection dynamique de prompt.
 - Fix des erreurs de type TypeScript et des erreurs Ruff (longueurs de lignes, imports).
+- Durcissement post-review des endpoints publics pour ne retourner que les profils rattachés à une persona active.
+- Stabilisation du bootstrap des prompts dédiés pour garantir une source de vérité complète dès le seed initial.
+- Sélection déterministe et sanitation du prompt astrologue injecté dans l'orchestration LLM.
+- Enrichissement des profils seedés Atlas, Luna, Nox, Orion et Sélène avec biographies longues, spécialités et prompts dédiés.
+- Neutralisation des doublons publics locaux sur les profils seedés pour éviter les collisions d'identité côté API.
+- Ajout du lien vers la page astrologues dans le menu utilisateur et dans la navigation principale de l'application.
+- Stabilisation de la suite backend complète après introduction des nouvelles contraintes de clés étrangères.
 
 ### File List
 
@@ -52,10 +59,23 @@ Gemini CLI (Autonomous Mode)
 - `backend/scripts/seed_astrologers_6_profiles.py`
 - `backend/app/api/v1/routers/astrologers.py`
 - `backend/app/llm_orchestration/services/persona_composer.py`
+- `backend/app/tests/integration/test_astrologers_api.py`
 - `backend/app/tests/integration/test_astrologers_v2.py`
+- `backend/app/tests/integration/test_enterprise_credentials_api.py`
+- `backend/app/tests/integration/test_natal_calculate_api.py`
+- `backend/app/tests/unit/test_ops_monitoring_service.py`
+- `backend/app/tests/unit/test_persona_composer.py`
+- `backend/tests/unit/prediction/test_llm_narrator.py`
 - `frontend/src/types/astrologer.ts`
 - `frontend/src/api/astrologers.ts`
 - `frontend/src/features/astrologers/components/AstrologerCard.tsx`
+- `frontend/src/components/ui/UserMenu/UserMenu.tsx`
+- `frontend/src/i18n/common.ts`
+- `frontend/src/i18n/navigation.ts`
+- `frontend/src/tests/UserMenu.test.tsx`
+- `frontend/src/tests/ui-barrel.test.ts`
+- `frontend/src/tests/ui-nav.test.ts`
+- `frontend/src/ui/nav.ts`
 - `docs/astrologer-management-v2.md`
 
 ## Senior Developer Review (AI)
@@ -64,4 +84,4 @@ L'implémentation respecte parfaitement le découplage entre identité technique
 
 ### Final Outcome
 
-L'architecture est désormais prête pour une gestion administrative complète des astrologues et une personnalisation fine des prompts LLM par profil.
+L'architecture est désormais prête pour une gestion administrative complète des astrologues, une personnalisation fine des prompts LLM par profil, et une exposition cohérente des astrologues sur les parcours publics et la navigation applicative.

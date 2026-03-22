@@ -29,6 +29,7 @@ export const navItems: NavItem[] = [
   { key: 'chat', label: 'Chat', icon: MessageCircle, path: '/chat', showOnMobile: true },
   { key: 'natal', label: 'Thème', icon: Star, path: '/natal', showOnMobile: true },
   { key: 'consultations', label: 'Consultations', icon: Layers, path: '/consultations', showOnMobile: true },
+  { key: 'astrologers', label: 'Astrologues', icon: Star, path: '/astrologers', showOnMobile: false },
   { key: 'profile', label: 'Profil', icon: User, path: '/settings', showOnMobile: true },
   
   // Public

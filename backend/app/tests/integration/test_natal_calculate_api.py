@@ -12,17 +12,9 @@ from app.domain.astrology.natal_calculation import (
 )
 from app.domain.astrology.natal_preparation import BirthPreparedData
 from app.infra.db.base import Base
-from app.infra.db.models.audit_event import AuditEventModel
-from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.reference import (
-    AspectModel,
-    AstroCharacteristicModel,
     HouseModel,
-    PlanetModel,
-    ReferenceVersionModel,
-    SignModel,
 )
-from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
@@ -31,21 +23,8 @@ client = TestClient(app)
 
 
 def _cleanup_reference_tables() -> None:
-    Base.metadata.create_all(bind=engine, checkfirst=True)
-    with SessionLocal() as db:
-        for model in (
-            ChartResultModel,
-            AuditEventModel,
-            AstroCharacteristicModel,
-            AspectModel,
-            HouseModel,
-            SignModel,
-            PlanetModel,
-            ReferenceVersionModel,
-            UserModel,
-        ):
-            db.execute(delete(model))
-        db.commit()
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
 
 def _seed_reference_data() -> None:

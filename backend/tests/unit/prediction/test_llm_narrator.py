@@ -124,15 +124,17 @@ async def test_narrate_returns_none_on_truncated_json(caplog: pytest.LogCaptureF
         )
     ]
 
-    with patch("openai.AsyncOpenAI") as mock_openai:
+    with patch("openai.AsyncOpenAI") as mock_openai, patch(
+        "app.prediction.llm_narrator.logger.warning"
+    ) as mock_warning:
         mock_client = mock_openai.return_value
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
 
-        with caplog.at_level("WARNING"):
-            res = await narrator.narrate(time_windows=[], common_context=_make_common_context())
+        res = await narrator.narrate(time_windows=[], common_context=_make_common_context())
 
         assert res is None
-        assert "llm_narrator.invalid_json" in caplog.text
+        warning_message = mock_warning.call_args[0][0]
+        assert "llm_narrator.invalid_json" in warning_message
 
 
 @pytest.mark.asyncio

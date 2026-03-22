@@ -1,11 +1,10 @@
 from fastapi.testclient import TestClient
-from sqlalchemy import delete, select
+from sqlalchemy import select
 
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentialModel
-from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
@@ -14,13 +13,8 @@ client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.create_all(bind=engine, checkfirst=True)
-    with SessionLocal() as db:
-        db.execute(delete(AuditEventModel))
-        db.execute(delete(EnterpriseApiCredentialModel))
-        db.execute(delete(EnterpriseAccountModel))
-        db.execute(delete(UserModel))
-        db.commit()
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
 
 def _register_user_with_role(email: str, role: str) -> tuple[int, str]:

@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta, timezone
+
+from app.infra.db.models import AstrologerPromptProfileModel
 from app.infra.db.models.llm_persona import LlmPersonaModel, PersonaTone, PersonaVerbosity
 from app.llm_orchestration.services.persona_composer import compose_persona_block
 
@@ -70,3 +73,33 @@ def test_compose_persona_block_sanitizes_newlines_and_braces():
     assert "Luna \\{\\{inject\\}\\}" in block
     assert "Profil pedagogique et stable" in block
     assert "jamais \\{\\{fatalisme\\}\\}" in block
+
+
+def test_compose_persona_block_uses_latest_active_dedicated_prompt_and_sanitizes_it():
+    persona = LlmPersonaModel(
+        name="Nox",
+        tone=PersonaTone.WARM,
+        verbosity=PersonaVerbosity.LONG,
+        style_markers=[],
+        boundaries=[],
+        allowed_topics=[],
+        disallowed_topics=[],
+        formatting={"sections": True, "bullets": False, "emojis": False},
+    )
+    older_prompt = AstrologerPromptProfileModel(
+        prompt_content="Ancien prompt",
+        is_active=True,
+        updated_at=datetime.now(timezone.utc) - timedelta(days=1),
+    )
+    latest_prompt = AstrologerPromptProfileModel(
+        prompt_content="Prompt\nrécent avec {{template}}",
+        is_active=True,
+        updated_at=datetime.now(timezone.utc),
+    )
+    persona.prompt_profiles = [older_prompt, latest_prompt]
+
+    block = compose_persona_block(persona)
+
+    assert "Ancien prompt" not in block
+    assert "Prompt récent avec \\{\\{template\\}\\}" in block
+    assert "{{" not in block
