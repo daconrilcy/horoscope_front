@@ -89,6 +89,61 @@ describe("AstrologersPage", () => {
   ]
 
   describe("AC1: Catalogue astrologues - Grille de vignettes", () => {
+    it("alternates the first displayed astrologer between visits", () => {
+      mockUseAstrologers.mockReturnValue({
+        data: [
+          {
+            id: "guide",
+            name: "Guide Psychologique",
+            first_name: "Étienne",
+            last_name: "Garnier",
+            avatar_url: "/avatars/etienne.jpg",
+            specialties: ["Débutants"],
+            style: "Pédagogique",
+            bio_short: "Profil onboarding.",
+          },
+          ...mockAstrologersList,
+        ],
+        isPending: false,
+        error: null,
+      })
+
+      const firstRender = renderAstrologersPage()
+      const firstButtons = screen.getAllByRole("button", { name: /Voir le profil de/i })
+      expect(firstButtons[0]).toHaveAccessibleName("Voir le profil de Étienne Garnier")
+      firstRender.unmount()
+
+      const secondRender = renderAstrologersPage()
+      const secondButtons = screen.getAllByRole("button", { name: /Voir le profil de/i })
+      expect(secondButtons[0]).toHaveAccessibleName("Voir le profil de Luna Caron")
+      secondRender.unmount()
+    })
+
+    it("renders premium hierarchy and highlights the onboarding astrologer", () => {
+      mockUseAstrologers.mockReturnValue({
+        data: [
+          {
+            id: "guide",
+            name: "Guide Psychologique",
+            first_name: "Étienne",
+            last_name: "Garnier",
+            avatar_url: "/avatars/etienne.jpg",
+            specialties: ["Débutants", "Bases", "Onboarding"],
+            style: "Pédagogique",
+            bio_short: "Astrologue d'entrée pour les débutants.",
+          },
+          ...mockAstrologersList,
+        ],
+        isPending: false,
+        error: null,
+      })
+
+      renderAstrologersPage()
+
+      expect(screen.getByRole("heading", { name: "Nos Astrologues" })).toBeInTheDocument()
+      expect(screen.getByText("Étienne Garnier")).toBeInTheDocument()
+    })
+
     it("renders grid of astrologer cards when data is loaded", () => {
       mockUseAstrologers.mockReturnValue({
         data: mockAstrologersList,

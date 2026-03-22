@@ -24,10 +24,11 @@ export function AstrologerGrid({ astrologers, onSelectAstrologer }: AstrologerGr
 
   return (
     <div className="astrologer-grid">
-      {astrologers.map((astrologer) => (
+      {astrologers.map((astrologer, index) => (
         <AstrologerCard
           key={astrologer.id}
           astrologer={astrologer}
+          featured={index === 0}
           onClick={() => onSelectAstrologer(astrologer)}
         />
       ))}

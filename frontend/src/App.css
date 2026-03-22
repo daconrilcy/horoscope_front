@@ -1251,11 +1251,70 @@ textarea:focus-visible {
 }
 
 /* Astrologer Catalogue */
+.astrologers-page {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(160, 132, 255, 0.22), transparent 30%),
+    radial-gradient(circle at 82% 72%, rgba(255, 191, 215, 0.18), transparent 32%),
+    radial-gradient(circle at 56% 18%, rgba(255, 255, 255, 0.7), transparent 28%),
+    linear-gradient(180deg, #fffafc 0%, #f6efff 48%, #efe6ff 100%);
+}
+
+.astrologers-page::before,
+.astrologers-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.astrologers-page::before {
+  background:
+    radial-gradient(circle at 30% 34%, rgba(181, 143, 255, 0.16), transparent 22%),
+    radial-gradient(circle at 72% 64%, rgba(255, 181, 205, 0.14), transparent 20%);
+  filter: blur(18px);
+  opacity: 0.9;
+}
+
+.astrologers-page::after {
+  opacity: 0.055;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.astrologers-page-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.astrologers-page-header {
+  margin-bottom: 1.75rem;
+}
+
+.astrologers-page-header h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 4vw, 4rem);
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+  color: #2b1f44;
+  text-shadow: 0 10px 25px rgba(164, 139, 255, 0.12);
+}
+
+.astrologers-page-header p {
+  max-width: 760px;
+  margin: 1rem 0 0;
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: rgba(69, 50, 103, 0.72);
+}
+
 .astrologer-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.25rem;
-  margin-top: 1.5rem;
+  gap: 1.45rem;
+  margin-top: 1.75rem;
 }
 
 .astrologer-grid-empty {
@@ -1280,43 +1339,123 @@ textarea:focus-visible {
 
 /* Astrologer Card */
 .astrologer-card {
+  --astro-accent: rgba(170, 146, 255, 0.92);
+  --astro-glow: rgba(147, 109, 255, 0.34);
+  --astro-chip-bg: rgba(160, 120, 255, 0.18);
+  --astro-chip-border: rgba(160, 120, 255, 0.32);
+  --astro-chip-text: #5c438f;
+
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 1.5rem 1.25rem;
-  background: var(--glass);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
+  align-items: flex-start;
+  padding: 1.45rem 1.35rem 1.35rem;
+  min-height: 100%;
+  background: rgba(255, 255, 255, 0.56);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(136, 112, 211, 0.18);
+  border-radius: 24px;
   cursor: pointer;
-  text-align: center;
-  transition: all 0.2s ease;
+  text-align: left;
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease, background 0.28s ease;
   color: inherit;
   font-weight: normal;
+  overflow: hidden;
+  box-shadow:
+    0 14px 36px rgba(115, 88, 180, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
 .astrologer-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--cta-l);
-  background: var(--glass-2);
-  box-shadow: var(--shadow-card);
+  transform: translateY(-6px) scale(1.02);
+  border-color: color-mix(in srgb, var(--astro-accent) 46%, rgba(255, 255, 255, 0.28) 54%);
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow:
+    0 20px 50px rgba(120, 80, 255, 0.2),
+    0 12px 28px rgba(107, 86, 169, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86);
+}
+
+.astrologer-card--featured {
+  grid-column: span 2;
+  padding: 1.7rem 1.5rem 1.5rem;
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.4), transparent 34%),
+    rgba(255, 255, 255, 0.72);
+  border-color: color-mix(in srgb, var(--astro-accent) 40%, rgba(255, 255, 255, 0.32) 60%);
+  box-shadow:
+    0 24px 56px rgba(102, 72, 170, 0.18),
+    0 12px 24px rgba(126, 103, 187, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+}
+
+.astrologer-card-orbit {
+  position: absolute;
+  border-radius: 999px;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.astrologer-card-orbit--one {
+  top: -20px;
+  right: -8px;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, var(--astro-glow) 0%, transparent 70%);
+}
+
+.astrologer-card-orbit--two {
+  bottom: -32px;
+  left: -18px;
+  width: 110px;
+  height: 110px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+}
+
+.astrologer-card-topline {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.astrologer-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 999px;
+  color: #fff8ff;
+  background: color-mix(in srgb, var(--astro-accent) 48%, rgba(255, 255, 255, 0.35) 52%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--astro-glow) 72%, transparent 28%);
+  font-size: 0.92rem;
 }
 
 .astrologer-card-avatar {
-  width: 72px;
-  height: 72px;
+  position: relative;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(102, 230, 255, 0.2) 0%, rgba(0, 211, 167, 0.2) 100%);
-  border: 2px solid var(--primary);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03)),
+    color-mix(in srgb, var(--astro-accent) 18%, rgba(15, 10, 30, 0.82) 82%);
+  border: 1px solid color-mix(in srgb, var(--astro-accent) 40%, rgba(255, 255, 255, 0.08) 60%);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.15rem;
+  box-shadow:
+    0 0 22px color-mix(in srgb, var(--astro-glow) 84%, transparent 16%),
+    0 14px 26px rgba(0, 0, 0, 0.28);
+  z-index: 1;
 }
 
 .astrologer-card-avatar-icon {
-  font-size: 2rem;
+  font-size: 2.3rem;
 }
 
 .astrologer-card-avatar-img {
@@ -1324,42 +1463,113 @@ textarea:focus-visible {
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
+  transform: scale(1.08);
 }
 
 .astrologer-card-name {
-  margin: 0 0 0.35rem;
-  font-size: 1.15rem;
-  color: var(--text-1);
+  margin: 0 0 0.18rem;
+  font-size: 1.24rem;
+  font-weight: 700;
+  color: #2d2144;
+  letter-spacing: -0.02em;
+}
+
+.astrologer-card-alias {
+  margin-bottom: 0.52rem;
+  color: rgba(84, 63, 126, 0.5);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .astrologer-card-style {
-  margin: 0 0 0.75rem;
-  font-size: 0.85rem;
-  color: var(--primary);
+  margin: 0 0 0.85rem;
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--astro-accent) 76%, #3a2d5a 24%);
+  font-weight: 600;
+}
+
+.astrologer-card-divider {
+  width: 100%;
+  height: 1px;
+  margin-bottom: 0.95rem;
+  background: linear-gradient(90deg, rgba(114, 88, 182, 0.18), transparent 100%);
 }
 
 .astrologer-card-specialties {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  justify-content: center;
-  margin-bottom: 0.75rem;
+  gap: 0.5rem;
+  justify-content: flex-start;
+  margin-bottom: 0.95rem;
 }
 
 .astrologer-card-tag {
-  padding: 0.25rem 0.6rem;
-  border-radius: 12px;
-  background: rgba(102, 230, 255, 0.1);
-  border: 1px solid rgba(102, 230, 255, 0.25);
-  font-size: 0.75rem;
-  color: var(--text-1);
+  padding: 0.36rem 0.72rem;
+  border-radius: 999px;
+  background: var(--astro-chip-bg);
+  border: 1px solid var(--astro-chip-border);
+  font-size: 0.76rem;
+  color: var(--astro-chip-text);
+  font-weight: 600;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 4px 10px rgba(138, 114, 201, 0.08);
 }
 
 .astrologer-card-bio {
   margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-2);
-  line-height: 1.45;
+  font-size: 0.92rem;
+  color: rgba(73, 53, 109, 0.7);
+  line-height: 1.62;
+}
+
+.astrologer-card[data-theme="etienne"] {
+  --astro-accent: rgba(119, 173, 255, 0.92);
+  --astro-glow: rgba(107, 171, 255, 0.34);
+  --astro-chip-bg: rgba(110, 171, 255, 0.18);
+  --astro-chip-border: rgba(110, 171, 255, 0.34);
+  --astro-chip-text: #355f9f;
+}
+
+.astrologer-card[data-theme="luna"] {
+  --astro-accent: rgba(255, 126, 174, 0.94);
+  --astro-glow: rgba(255, 110, 168, 0.36);
+  --astro-chip-bg: rgba(255, 126, 174, 0.18);
+  --astro-chip-border: rgba(255, 126, 174, 0.32);
+  --astro-chip-text: #9f4168;
+}
+
+.astrologer-card[data-theme="nox"] {
+  --astro-accent: rgba(151, 116, 255, 0.92);
+  --astro-glow: rgba(102, 72, 194, 0.42);
+  --astro-chip-bg: rgba(111, 82, 199, 0.18);
+  --astro-chip-border: rgba(131, 100, 227, 0.34);
+  --astro-chip-text: #5b3c9e;
+}
+
+.astrologer-card[data-theme="orion"] {
+  --astro-accent: rgba(110, 202, 255, 0.95);
+  --astro-glow: rgba(82, 154, 255, 0.34);
+  --astro-chip-bg: rgba(95, 168, 255, 0.18);
+  --astro-chip-border: rgba(95, 168, 255, 0.34);
+  --astro-chip-text: #376ea6;
+}
+
+.astrologer-card[data-theme="atlas"] {
+  --astro-accent: rgba(160, 112, 255, 0.98);
+  --astro-glow: rgba(149, 72, 255, 0.42);
+  --astro-chip-bg: rgba(160, 112, 255, 0.18);
+  --astro-chip-border: rgba(160, 112, 255, 0.34);
+  --astro-chip-text: #6338ae;
+}
+
+.astrologer-card[data-theme="selene"] {
+  --astro-accent: rgba(244, 199, 108, 0.96);
+  --astro-glow: rgba(232, 191, 96, 0.34);
+  --astro-chip-bg: rgba(233, 189, 93, 0.18);
+  --astro-chip-border: rgba(233, 189, 93, 0.34);
+  --astro-chip-text: #8d6922;
 }
 
 /* Astrologer Profile Header */
@@ -1578,8 +1788,20 @@ textarea:focus-visible {
 }
 
 @media (max-width: 768px) {
+  .astrologers-page-header h1 {
+    font-size: 2.35rem;
+  }
+
+  .astrologers-page-header p {
+    font-size: 0.95rem;
+  }
+
   .astrologer-grid {
     grid-template-columns: 1fr;
+  }
+
+  .astrologer-card--featured {
+    grid-column: span 1;
   }
 
   .astrologer-profile-header-top {

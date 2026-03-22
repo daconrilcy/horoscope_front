@@ -21,6 +21,8 @@ so that les astrologues deviennent administrables, cohérents entre front et LLM
 7. **[x] Profil métier structuré**: Les profils astrologues persistés peuvent désormais stocker l'âge, l'expérience professionnelle, les compétences clés et le style comportemental dans des champs dédiés.
 8. **[x] Assets photo branchés**: Les photos de référence placées dans `docs/astrologues` sont exposées côté frontend via `frontend/public/assets/astrologers` et reliées aux profils seedés.
 9. **[x] Affichage identité civile sur les cartes**: Les cartes et sélecteurs d'astrologues affichent `prénom + nom` au lieu de l'alias public, sans casser les alias sur les pages profil ou les fallbacks backend.
+10. **[x] Catalogue premium différencié**: La page `/astrologers` adopte une hiérarchie visuelle premium claire avec thèmes couleur par astrologue, avatar renforcé, carte featured sur le premier profil affiché et contraste lisible sur les tags.
+11. **[x] Rotation du premier profil**: Le premier astrologue affiché alterne de façon déterministe entre les visites via un index persistant frontend, sans casser la navigation ni le tri global.
 
 ## Tasks / Subtasks
 
@@ -54,6 +56,11 @@ Gemini CLI (Autonomous Mode)
 - Remplacement du profil d'entrée public par `Guide Psychologique` / `Étienne Garnier`, tout en conservant le persona technique `Astrologue Standard` pour les fallbacks applicatifs.
 - Intégration des photos réelles des astrologues depuis `docs/astrologues` vers les assets publics du frontend et réalignement des `photo_url` seedés.
 - Basculage des cartes et sélecteurs astrologues sur l'affichage `prénom + nom` à la place des alias publics.
+- Refonte visuelle du catalogue `/astrologers` avec fond premium clair, halos localisés, cartes glass plus incarnées et différenciation couleur par persona.
+- Agrandissement des avatars, ajout d'ornements subtils par carte et hiérarchie visuelle renforcée sur le premier astrologue affiché.
+- Mise en oeuvre d'une rotation locale du premier profil affiché pour varier le point d'entrée du catalogue d'une visite à l'autre.
+- Retrait du badge éditorial "Choix conseillé" après revue UX, tout en conservant la mise en avant visuelle par taille et placement.
+- Correction du contraste des pills/spécialités pour éviter les cas ton-sur-ton sur les thèmes clairs.
 - Neutralisation des doublons publics locaux sur les profils seedés pour éviter les collisions d'identité côté API.
 - Ajout du lien vers la page astrologues dans le menu utilisateur et dans la navigation principale de l'application.
 - Stabilisation de la suite backend complète après introduction des nouvelles contraintes de clés étrangères.
@@ -77,7 +84,10 @@ Gemini CLI (Autonomous Mode)
 - `backend/tests/unit/prediction/test_llm_narrator.py`
 - `frontend/src/types/astrologer.ts`
 - `frontend/src/api/astrologers.ts`
+- `frontend/src/pages/AstrologersPage.tsx`
 - `frontend/src/features/astrologers/components/AstrologerCard.tsx`
+- `frontend/src/features/astrologers/components/AstrologerGrid.tsx`
+- `frontend/src/App.css`
 - `frontend/src/features/chat/components/AstrologerPickerModal.tsx`
 - `frontend/src/features/consultations/components/AstrologerSelectStep.tsx`
 - `frontend/src/tests/AstrologersPage.test.tsx`
@@ -98,4 +108,4 @@ L'implémentation respecte parfaitement le découplage entre identité technique
 
 ### Final Outcome
 
-L'architecture est désormais prête pour une gestion administrative complète des astrologues, avec profils métier structurés, prompts dédiés, photos réelles branchées côté produit, et une exposition cohérente des astrologues sur les parcours publics, la navigation et les surfaces de sélection.
+L'architecture est désormais prête pour une gestion administrative complète des astrologues, avec profils métier structurés, prompts dédiés, photos réelles branchées côté produit, et une exposition cohérente des astrologues sur les parcours publics, la navigation, les surfaces de sélection et un catalogue premium réellement différenciant.
