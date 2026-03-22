@@ -91,6 +91,11 @@ Gemini CLI (Autonomous Mode)
 - Correction du split layout (vertical side-by-side).
 - Rationalisation du bouton "Nouvelle Conversation" (icône seule + tooltip).
 - Hardening du contexte LLM (date/heure, timezone).
+- Correction des bugs post-implémentation mobile et desktop :
+  - Mobile : redirection AC3 auto-redirect désactivée sur mobile (empêchait l'affichage de la liste).
+  - Mobile : bouton back `chat-window-back` ajouté et fonctionnel.
+  - Desktop : largeur du `chat-window` ne varie plus avec les messages (scrollbar-gutter + overflow containment).
+  - Mobile : overflow horizontal corrigé — cause racine : `.app-bg-container` (flex item avec `margin: auto` sans `width`) utilisait sa largeur naturelle au lieu de remplir le viewport.
 
 ### Completion Notes List
 
@@ -98,6 +103,9 @@ Gemini CLI (Autonomous Mode)
 - Le layout occupe tout l'espace disponible sans scroll global.
 - Le bouton d'envoi reprend le style des CTA du dashboard.
 - Le contexte LLM inclut la date actuelle pour des réponses plus précises.
+- Navigation mobile en deux temps (liste → chat) pleinement fonctionnelle, sans overflow horizontal.
+- `backgrounds.css` : ajout de `width: 100%` sur `.app-bg-container` pour corriger le comportement flex avec `margin: auto`.
+- `ChatPage.css` : override `max-width: none` sur `.app-bg-container:has(.is-chat-page)` pour préserver la largeur 1600px du chat sur desktop.
 
 ### File List
 
@@ -115,6 +123,7 @@ Gemini CLI (Autonomous Mode)
 - `frontend/src/features/chat/components/ConversationItem.css`
 - `frontend/src/features/chat/index.ts`
 - `frontend/src/layouts/TwoColumnLayout.css`
+- `frontend/src/styles/backgrounds.css`
 - `backend/app/llm_orchestration/gateway.py`
 - `backend/app/llm_orchestration/seeds/use_cases_seed.py`
 - `backend/scripts/seed_30_15_chat_naturalite.py`

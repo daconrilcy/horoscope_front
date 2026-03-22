@@ -1,4 +1,5 @@
 import { useRef, useEffect } from "react"
+import { ChevronLeft } from "lucide-react"
 import { MessageBubble } from "./MessageBubble"
 import { TypingIndicator } from "./TypingIndicator"
 import { ChatComposer } from "./ChatComposer"
@@ -28,6 +29,7 @@ type ChatWindowProps = {
   personaAvatarUrl?: string
   personaBio?: string
   personaSpecialties?: string[]
+  onBack?: () => void
 }
 
 export function ChatWindow({
@@ -44,6 +46,7 @@ export function ChatWindow({
   personaAvatarUrl,
   personaBio,
   personaSpecialties,
+  onBack,
 }: ChatWindowProps) {
   const lang = detectLang()
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -64,6 +67,16 @@ export function ChatWindow({
   return (
     <div className="chat-window">
       <div className="chat-window-header">
+        {onBack && (
+          <button
+            type="button"
+            className="chat-window-back"
+            onClick={onBack}
+            aria-label={t("chat_back", lang)}
+          >
+            <ChevronLeft size={18} strokeWidth={2.4} />
+          </button>
+        )}
         {personaName && (
           <div className="astrologer-chip">
             {personaAvatarUrl ? (

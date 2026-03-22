@@ -100,8 +100,10 @@ export function ChatPage() {
     parsedId !== null && !Number.isNaN(parsedId) ? parsedId : null
 
   // AC3: Auto-redirect to last active conversation when navigating to /chat without ID
+  // Disabled on mobile: the list view is the entry point there.
   useEffect(() => {
     if (
+      !isMobile &&
       !urlConversationId &&
       !personaIdFromUrl &&
       !conversations.isPending &&
@@ -114,6 +116,7 @@ export function ChatPage() {
       )
     }
   }, [
+    isMobile,
     urlConversationId,
     personaIdFromUrl,
     conversations.isPending,
@@ -321,12 +324,11 @@ export function ChatPage() {
       <div className="chat-page-container__bg-halo" />
       <div className="chat-page-container__noise" />
 
-      <ChatPageHeader 
-        title={isMobile && mobileView === "chat" ? selectedConversationSummary?.persona_name : undefined}
-        eyebrow={isMobile && mobileView === "chat" ? (lang === 'fr' ? 'Discussion' : 'Conversation') : undefined}
-        showBackButton={!isMobile || mobileView === "chat"}
-        onBack={isMobile && mobileView === "chat" ? handleBackToList : undefined}
-      />
+      {!(isMobile && mobileView === "chat") && (
+        <ChatPageHeader
+          showBackButton={!isMobile}
+        />
+      )}
 
       <SectionErrorBoundary onRetry={() => conversations.refetch()}>
         <ChatLayout
@@ -372,6 +374,7 @@ export function ChatPage() {
                 personaAvatarUrl={selectedConversationSummary?.avatar_url}
                 personaBio={currentAstrologer?.bio_short}
                 personaSpecialties={currentAstrologer?.specialties}
+                onBack={isMobile && mobileView === "chat" ? handleBackToList : undefined}
               />
             )
           }
