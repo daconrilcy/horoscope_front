@@ -111,6 +111,11 @@ Gemini CLI (Autonomous Mode)
 - Les anciens styles chat restés dans `App.css` ont été neutralisés pour éviter les conflits avec les composants premium dédiés.
 - La fenêtre de chat a été rehaussée : vrai header conversationnel en l'absence de persona active, surfaces plus matérielles, bulles assistant/utilisateur plus cohérentes avec le glassmorphism du produit.
 - La bulle utilisateur a reçu une passe de polish dédiée pour sortir du simple aplat violet et devenir une surface glass teintée.
+- Le premier tour conversationnel a été rendu plus naturel :
+  - contexte minimal seulement au premier message (profil astrologue, date du jour, profil simple utilisateur)
+  - pas de lecture natale complète injectée d'emblée
+  - gestion spécifique des premiers messages vagues/incompréhensibles pour éviter les réponses robotiques du type menu d'options
+  - proposition du thème natal / horoscope du jour / transits seulement après une première réponse utile
 
 ### File List
 
@@ -134,7 +139,12 @@ Gemini CLI (Autonomous Mode)
 - `frontend/src/tests/chat/ChatComponents.test.tsx`
 - `backend/app/llm_orchestration/gateway.py`
 - `backend/app/llm_orchestration/seeds/use_cases_seed.py`
+- `backend/app/services/ai_engine_adapter.py`
+- `backend/app/services/chat_guidance_service.py`
+- `backend/app/tests/unit/test_ai_engine_adapter.py`
+- `backend/app/tests/unit/test_chat_guidance_service.py`
 - `backend/scripts/seed_30_15_chat_naturalite.py`
+- `backend/scripts/seed_30_14_chat_prompt.py`
 
 ## Senior Developer Review (AI)
 
@@ -163,3 +173,4 @@ Implementation is robust, visually stunning, and perfectly integrated into the p
   - left thread panel and right chat pane given more glass depth
   - duplicate `Conversations` wording removed from the main page hierarchy
 - Regression tests updated to reflect the final UI vocabulary and back-button labeling.
+- Opening-turn chat behavior hardened to avoid robotic replies on meaningless first messages such as `chch`, with dedicated backend tests and prompt publication in the local registry.

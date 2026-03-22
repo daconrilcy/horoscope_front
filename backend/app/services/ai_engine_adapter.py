@@ -43,6 +43,20 @@ DEFAULT_MODEL = "AUTO"
 DEFAULT_PROVIDER = "openai"
 
 
+def _looks_like_unclear_opening_message(message: str) -> bool:
+    normalized = "".join(ch for ch in message.strip().lower() if ch.isalpha())
+    if not normalized:
+        return True
+    if len(normalized) <= 4:
+        return True
+    if len(set(normalized)) <= 2 and len(normalized) <= 6:
+        return True
+    vowels = sum(1 for ch in normalized if ch in "aeiouyàâäéèêëîïôöùûü")
+    if len(normalized) <= 6 and vowels == 0:
+        return True
+    return False
+
+
 def _build_guidance_gateway_payload(
     use_case: str,
     context: dict[str, str | None],
@@ -99,6 +113,45 @@ def _build_test_chat_fallback(messages: list[dict[str, str]]) -> str:
 
 def _build_test_guidance_fallback(use_case: str) -> str:
     return f"Guidance test hors provider pour {use_case}."
+
+
+def _build_opening_chat_user_data_block(
+    *,
+    last_user_msg: str,
+    context: dict[str, str | None],
+) -> str:
+    persona_name = context.get("persona_name") or "Astrologue"
+    persona_tone = context.get("persona_tone") or "direct"
+    persona_style = context.get("persona_style_markers") or "non précisé"
+    today_date = context.get("today_date") or "aujourd'hui"
+    user_profile = context.get("user_profile_brief") or "Profil utilisateur non disponible"
+    unclear_opening = _looks_like_unclear_opening_message(last_user_msg)
+
+    return (
+        f"Premier message utilisateur : {last_user_msg}\n\n"
+        "Contexte initial minimal pour ce premier échange seulement:\n"
+        f"- Astrologue: {persona_name}\n"
+        f"- Ton astrologue: {persona_tone}\n"
+        f"- Style astrologue: {persona_style}\n"
+        f"- Date du jour: {today_date}\n"
+        f"- Profil simple utilisateur: {user_profile}\n\n"
+        "Consigne de réponse pour ce premier échange:\n"
+        "- Réponds d'abord naturellement à la demande immédiate de l'utilisateur.\n"
+        "- N'ouvre pas spontanément une lecture complète du thème natal "
+        "ni de l'horoscope du jour.\n"
+        "- Si ces éléments peuvent aider, propose ensuite simplement de regarder le thème natal, "
+        "l'horoscope du jour ou les transits du moment, selon la demande.\n"
+        + (
+            "- Le premier message semble vague ou incompréhensible. "
+            "Ne réponds pas avec une formule robotique ni une liste d'options. "
+            "Dis simplement que tu n'as pas bien saisi et invite l'utilisateur "
+            "à reformuler naturellement en une phrase.\n"
+            if unclear_opening
+            else "- Évite les salutations automatiques du type "
+            "\"Bonjour, comment puis-je vous aider ?\" si elles n'apportent rien.\n"
+        )
+        + "- Reste conversationnel, bref et humain."
+    )
 
 
 def _can_use_test_fallback(err: Exception) -> bool:
@@ -431,15 +484,20 @@ class AIEngineAdapter:
             if conversation_id is not None:
                 gateway_user_input["conversation_id"] = str(conversation_id)
 
+            gateway_context = {
+                **context,
+                "history": messages[:-1],  # Exclude the last message sent as user_input
+            }
+            if context.get("chat_turn_stage") == "opening":
+                gateway_context["user_data_block"] = _build_opening_chat_user_data_block(
+                    last_user_msg=last_user_msg,
+                    context=context,
+                )
+
             result = await gateway.execute(
                 use_case="chat_astrologer",
                 user_input=gateway_user_input,
-                context={
-                    **context,
-                    "history": messages[
-                        :-1
-                    ],  # Exclude the last message which is sent as user_input
-                },
+                context=gateway_context,
                 request_id=request_id,
                 trace_id=trace_id,
                 user_id=user_id,

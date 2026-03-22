@@ -11,7 +11,7 @@ import asyncio
 import logging
 import urllib.parse
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from time import monotonic
 
 from pydantic import BaseModel
@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.infra.db.repositories.chat_repository import ChatRepository
+from app.infra.db.repositories.user_repository import UserRepository
 from app.infra.llm.anonymizer import LLMAnonymizationError, anonymize_text
 from app.infra.observability.metrics import increment_counter, observe_duration
 from app.services.ai_engine_adapter import (
@@ -149,6 +150,21 @@ class ChatGuidanceService:
         "Pouvez-vous preciser votre contexte immediat et votre objectif principal ?"
     )
 
+    _MONTHS_FR = (
+        "janvier",
+        "février",
+        "mars",
+        "avril",
+        "mai",
+        "juin",
+        "juillet",
+        "août",
+        "septembre",
+        "octobre",
+        "novembre",
+        "décembre",
+    )
+
     @classmethod
     def reset_quality_kpis(cls) -> None:
         """Réinitialise les compteurs de KPI qualité."""
@@ -224,6 +240,53 @@ class ChatGuidanceService:
                 message="llm payload anonymization failed",
                 details={},
             ) from error
+
+    @staticmethod
+    def _derive_user_display_name(email: str) -> str:
+        local_part = email.split("@", 1)[0].strip()
+        if not local_part:
+            return "Utilisateur"
+        normalized = local_part.replace(".", " ").replace("_", " ").replace("-", " ")
+        words = [part for part in normalized.split() if part]
+        if not words:
+            return local_part
+        return " ".join(word.capitalize() for word in words)
+
+    @classmethod
+    def _format_today_label(cls, current_datetime: str | None) -> str:
+        if current_datetime:
+            return current_datetime.split(" à ", 1)[0]
+        today = date.today()
+        month_name = cls._MONTHS_FR[today.month - 1]
+        return f"{today.day:02d} {month_name} {today.year}"
+
+    @staticmethod
+    def _compute_user_age(birth_date_iso: str | None, today: date | None = None) -> int | None:
+        if not birth_date_iso:
+            return None
+        try:
+            birth_date = date.fromisoformat(birth_date_iso)
+        except ValueError:
+            return None
+        reference = today or date.today()
+        age = reference.year - birth_date.year - (
+            (reference.month, reference.day) < (birth_date.month, birth_date.day)
+        )
+        return age if age >= 0 else None
+
+    @classmethod
+    def _build_opening_user_profile(
+        cls,
+        *,
+        email: str,
+        birth_date_iso: str | None,
+    ) -> str:
+        display_name = cls._derive_user_display_name(email)
+        age = cls._compute_user_age(birth_date_iso)
+        parts = [f"Nom: {display_name}", f"Email: {email}"]
+        if age is not None:
+            parts.append(f"Âge: {age} ans")
+        return " | ".join(parts)
 
     @staticmethod
     async def _apply_off_scope_recovery_async(
@@ -823,21 +886,44 @@ class ChatGuidanceService:
         current_datetime_str = None
         current_timezone_str = None
         current_location_str = None
+        today_date_str = None
+        opening_user_profile = None
+        user_model = UserRepository(db).get_by_id(user_id)
+        if user_model is None:
+            raise ChatGuidanceServiceError(
+                code="user_not_found",
+                message="user not found",
+                details={"user_id": str(user_id)},
+            )
+        is_first_user_turn = (
+            len(recent_messages) == 1 and recent_messages[0].role == "user"
+        ) or not any(msg.role == "assistant" for msg in recent_messages)
         try:
             birth_profile = UserBirthProfileService.get_for_user(db, user_id=user_id)
-            natal_chart = UserNatalChartService.get_latest_for_user(db, user_id=user_id)
-            degraded_mode = _detect_degraded_mode(birth_profile)
-            natal_summary = build_chat_natal_hint(
-                natal_result=natal_chart.result,
-                degraded_mode=degraded_mode,
-            )
             current_context = build_current_prompt_context(birth_profile)
             current_datetime_str = current_context.current_datetime
             current_timezone_str = current_context.current_timezone
             current_location_str = current_context.current_location
+            today_date_str = ChatGuidanceService._format_today_label(current_datetime_str)
+            opening_user_profile = ChatGuidanceService._build_opening_user_profile(
+                email=user_model.email,
+                birth_date_iso=birth_profile.birth_date,
+            )
+            if not is_first_user_turn:
+                natal_chart = UserNatalChartService.get_latest_for_user(db, user_id=user_id)
+                degraded_mode = _detect_degraded_mode(birth_profile)
+                natal_summary = build_chat_natal_hint(
+                    natal_result=natal_chart.result,
+                    degraded_mode=degraded_mode,
+                )
         except (UserBirthProfileServiceError, UserNatalChartServiceError):
             # Optionnel : le chat fonctionne même sans thème natal
             logger.debug("chat_natal_summary_not_available user_id=%d", user_id)
+            today_date_str = ChatGuidanceService._format_today_label(current_datetime_str)
+            opening_user_profile = ChatGuidanceService._build_opening_user_profile(
+                email=user_model.email,
+                birth_date_iso=None,
+            )
 
         context: dict[str, str | None] = {
             "persona_name": persona.name,
@@ -850,6 +936,9 @@ class ChatGuidanceService:
             "current_datetime": current_datetime_str,
             "current_timezone": current_timezone_str,
             "current_location": current_location_str,
+            "today_date": today_date_str,
+            "chat_turn_stage": "opening" if is_first_user_turn else "follow_up",
+            "user_profile_brief": opening_user_profile if is_first_user_turn else None,
         }
 
         attempts = 0

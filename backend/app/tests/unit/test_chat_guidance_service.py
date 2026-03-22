@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 from sqlalchemy import delete
 
@@ -88,6 +90,7 @@ class RecordingGenerator:
 
     def __init__(self) -> None:
         self.messages_list: list[list[dict[str, str]]] = []
+        self.contexts: list[dict[str, str | None]] = []
 
     async def __call__(
         self,
@@ -99,6 +102,7 @@ class RecordingGenerator:
         locale: str,
     ) -> str:
         self.messages_list.append(messages)
+        self.contexts.append(dict(context))
         return "ok:20"
 
 
@@ -175,6 +179,94 @@ def test_send_message_success_creates_user_and_assistant_messages() -> None:
     assert len(reply.context.message_ids) == 1
     assert len(generator.messages_list) == 1
     assert any("climat" in m["content"].lower() for m in generator.messages_list[0])
+
+
+def test_send_message_first_turn_uses_minimal_opening_context() -> None:
+    _cleanup_tables()
+    user_id = _create_user_id()
+    generator = RecordingGenerator()
+    set_test_chat_generator(generator)
+
+    with SessionLocal() as db:
+        profile_repo = UserBirthProfileModel(
+            user_id=user_id,
+            birth_date=date(1990, 3, 22),
+            birth_time=None,
+            birth_place="Paris",
+            birth_timezone="Europe/Paris",
+        )
+        db.add(profile_repo)
+        db.commit()
+
+    with SessionLocal() as db:
+        ChatGuidanceService.send_message(
+            db=db,
+            user_id=user_id,
+            message="Bonjour, je traverse une journée étrange.",
+        )
+        db.commit()
+
+    assert len(generator.contexts) == 1
+    opening_context = generator.contexts[0]
+    assert opening_context["chat_turn_stage"] == "opening"
+    assert opening_context["today_date"] is not None
+    assert opening_context["user_profile_brief"] is not None
+    assert "chat-user@example.com" in (opening_context["user_profile_brief"] or "")
+    assert "Âge:" in (opening_context["user_profile_brief"] or "")
+    assert opening_context["natal_chart_summary"] is None
+
+
+def test_send_message_follow_up_turn_restores_extended_context(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _cleanup_tables()
+    user_id = _create_user_id()
+    generator = RecordingGenerator()
+    set_test_chat_generator(generator)
+
+    with SessionLocal() as db:
+        db.add(
+            UserBirthProfileModel(
+                user_id=user_id,
+                birth_date=date(1990, 3, 22),
+                birth_time=None,
+                birth_place="Paris",
+                birth_timezone="Europe/Paris",
+            )
+        )
+        db.commit()
+
+    class _FakeNatalChart:
+        def __init__(self) -> None:
+            self.result = {"sun": "aries"}
+
+    monkeypatch.setattr(
+        "app.services.chat_guidance_service.UserNatalChartService.get_latest_for_user",
+        lambda db, user_id: _FakeNatalChart(),
+    )
+    monkeypatch.setattr(
+        "app.services.chat_guidance_service.build_chat_natal_hint",
+        lambda natal_result, degraded_mode: "Résumé natal synthétique",
+    )
+
+    with SessionLocal() as db:
+        ChatGuidanceService.send_message(
+            db=db,
+            user_id=user_id,
+            message="Bonjour, comment me sens-tu aujourd'hui ?",
+        )
+        ChatGuidanceService.send_message(
+            db=db,
+            user_id=user_id,
+            message="Oui, tu peux regarder plus en détail.",
+        )
+        db.commit()
+
+    assert len(generator.contexts) == 2
+    follow_up_context = generator.contexts[1]
+    assert follow_up_context["chat_turn_stage"] == "follow_up"
+    assert follow_up_context["user_profile_brief"] is None
+    assert follow_up_context["natal_chart_summary"] == "Résumé natal synthétique"
 
 
 def test_send_message_anonymizes_personal_identifiers_before_llm_call() -> None:

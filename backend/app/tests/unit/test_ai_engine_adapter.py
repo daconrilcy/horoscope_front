@@ -7,6 +7,7 @@ import pytest
 from app.services.ai_engine_adapter import (
     AIEngineAdapter,
     AIEngineAdapterError,
+    _build_opening_chat_user_data_block,
     assess_off_scope,
     get_test_generators_state,
     map_adapter_error_to_codes,
@@ -415,6 +416,48 @@ async def test_generate_chat_reply_v2_converts_conversation_id_to_string(
     assert user_input.get("conversation_id") == "42"
 
 
+@pytest.mark.asyncio
+async def test_generate_chat_reply_opening_turn_builds_minimal_user_data_block(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeGateway:
+        async def execute(self, **kwargs):  # type: ignore[no-untyped-def]
+            captured.update(kwargs)
+            return SimpleNamespace(
+                structured_output={"message": "ok"},
+                raw_output="ok",
+            )
+
+    monkeypatch.setattr("app.llm_orchestration.gateway.LLMGateway", FakeGateway)
+
+    result = await AIEngineAdapter.generate_chat_reply(
+        messages=[{"role": "user", "content": "Je me sens perdu aujourd'hui."}],
+        context={
+            "chat_turn_stage": "opening",
+            "persona_name": "Mira",
+            "persona_tone": "chaleureux",
+            "persona_style_markers": "simple; intuitif",
+            "today_date": "22 mars 2026",
+            "user_profile_brief": "Nom: Daconrilcy | Email: daconrilcy@hotmail.com | Âge: 36 ans",
+        },
+        user_id=1,
+        request_id="req-chat-opening",
+        trace_id="trace-chat-opening",
+    )
+
+    assert result == "ok"
+    context = captured["context"]
+    assert isinstance(context, dict)
+    user_data_block = context.get("user_data_block")
+    assert isinstance(user_data_block, str)
+    assert "Je me sens perdu aujourd'hui." in user_data_block
+    assert "22 mars 2026" in user_data_block
+    assert "daconrilcy@hotmail.com" in user_data_block
+    assert "N'ouvre pas spontanément une lecture complète du thème natal" in user_data_block
+
+
 def test_map_adapter_error_to_codes_gateway_input_validation_passthrough() -> None:
     err = AIEngineAdapterError(
         code="invalid_chat_astrologer_input",
@@ -425,3 +468,19 @@ def test_map_adapter_error_to_codes_gateway_input_validation_passthrough() -> No
     code, message = map_adapter_error_to_codes(err)
     assert code == "invalid_chat_astrologer_input"
     assert message == "Input validation failed for 'chat_astrologer'"
+
+
+def test_build_opening_chat_user_data_block_flags_unclear_first_message() -> None:
+    payload = _build_opening_chat_user_data_block(
+        last_user_msg="chch",
+        context={
+            "persona_name": "Mira",
+            "persona_tone": "chaleureux",
+            "persona_style_markers": "simple; intuitif",
+            "today_date": "22 mars 2026",
+            "user_profile_brief": "Nom: Daconrilcy | Email: daconrilcy@hotmail.com | Âge: 36 ans",
+        },
+    )
+
+    assert "Le premier message semble vague ou incompréhensible." in payload
+    assert "Ne réponds pas avec une formule robotique" in payload
