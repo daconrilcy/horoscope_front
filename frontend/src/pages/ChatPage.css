@@ -1,5 +1,5 @@
 .chat-page-container {
-  --layout-max-width: 1200px;
+  --layout-max-width: 1400px;
   --layout-padding-inline: 40px;
   
   position: fixed;
@@ -64,8 +64,6 @@
   border-radius: var(--premium-radius-card);
   box-shadow: var(--premium-shadow-page);
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 /* Adjust TwoColumnLayout for chat */
