@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.request_id import resolve_request_id
-from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models import AstrologerProfileModel
 from app.infra.db.session import get_db_session
 
 router = APIRouter(prefix="/v1/astrologers", tags=["astrologers"])
@@ -23,6 +23,8 @@ class ResponseMeta(BaseModel):
 class Astrologer(BaseModel):
     id: str
     name: str
+    first_name: str
+    last_name: str
     avatar_url: Optional[str] = None
     specialties: List[str]
     style: str
@@ -31,12 +33,7 @@ class Astrologer(BaseModel):
 
 class AstrologerProfile(Astrologer):
     bio_full: str
-    languages: List[str]
-    experience_years: int
-
-
-def _safe_bio(value: str | None) -> str:
-    return value or ""
+    gender: str
 
 
 class AstrologerListResponse(BaseModel):
@@ -78,22 +75,24 @@ def list_astrologers(
     request_id = resolve_request_id(request)
 
     stmt = (
-        select(LlmPersonaModel)
-        .where(LlmPersonaModel.enabled == True)  # noqa: E712
-        .order_by(LlmPersonaModel.name)
+        select(AstrologerProfileModel)
+        .where(AstrologerProfileModel.is_public == True)  # noqa: E712
+        .order_by(AstrologerProfileModel.sort_order, AstrologerProfileModel.display_name)
     )
-    personas = db.execute(stmt).scalars().all()
+    profiles = db.execute(stmt).scalars().all()
 
     result_data = []
-    for p in personas:
+    for p in profiles:
         result_data.append(
             Astrologer(
-                id=str(p.id),
-                name=p.name,
-                avatar_url=None,  # Personas don't have avatar_url in DB yet
-                specialties=p.allowed_topics or [],
-                style=p.tone,
-                bio_short=_safe_bio(p.description),
+                id=str(p.persona_id),
+                name=p.display_name,
+                first_name=p.first_name,
+                last_name=p.last_name,
+                avatar_url=p.photo_url,
+                specialties=p.specialties,
+                style=p.public_style_label,
+                bio_short=p.bio_short,
             )
         )
 
@@ -119,8 +118,8 @@ def get_astrologer(
             details={},
         )
 
-    persona = db.get(LlmPersonaModel, persona_uuid)
-    if not persona or not persona.enabled:
+    profile = db.get(AstrologerProfileModel, persona_uuid)
+    if not profile or not profile.is_public:
         return _error_response(
             status_code=404,
             request_id=request_id,
@@ -131,15 +130,16 @@ def get_astrologer(
 
     return {
         "data": AstrologerProfile(
-            id=str(persona.id),
-            name=persona.name,
-            avatar_url=None,
-            specialties=persona.allowed_topics or [],
-            style=persona.tone,
-            bio_short=_safe_bio(persona.description),
-            bio_full=_safe_bio(persona.description),  # Same as bio_short for now
-            languages=["Français"],
-            experience_years=10,
+            id=str(profile.persona_id),
+            name=profile.display_name,
+            first_name=profile.first_name,
+            last_name=profile.last_name,
+            avatar_url=profile.photo_url,
+            specialties=profile.specialties,
+            style=profile.public_style_label,
+            bio_short=profile.bio_short,
+            bio_full=profile.bio_long,
+            gender=profile.gender,
         ),
         "meta": {"request_id": request_id},
     }

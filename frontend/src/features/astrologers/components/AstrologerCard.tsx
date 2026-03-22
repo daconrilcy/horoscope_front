@@ -23,7 +23,7 @@ export function AstrologerCard({ astrologer, onClick }: AstrologerCardProps) {
       <div className="astrologer-card-avatar">
         {showImage ? (
           <img
-            src={astrologer.avatar_url}
+            src={astrologer.avatar_url || ""}
             alt={`${t("avatar_alt", lang)} ${astrologer.name}`}
             className="astrologer-card-avatar-img"
             onError={() => setImgError(true)}

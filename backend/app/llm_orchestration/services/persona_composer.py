@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models import LlmPersonaModel
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,25 @@ def _sanitize_string(s: str | None) -> str:
 def compose_persona_block(persona: LlmPersonaModel) -> str:
     """
     Composes a structured persona block for the LLM.
+    Uses the dedicated prompt profile if available, otherwise falls back to legacy fields.
     """
+    # 1. Try to find the active dedicated prompt profile
+    # We look for the first active one. In theory there should only be one active per persona.
+    active_prompt = next((p for p in persona.prompt_profiles if p.is_active), None)
+
+    if active_prompt:
+        persona_name = _sanitize_string(persona.name)
+        # We still add a header for structure
+        block = f"## Directives de persona : {persona_name}\n{active_prompt.prompt_content}"
+
+        # Security: check size
+        block_len = len(block)
+        if block_len > 3000:
+            raise ValueError(f"Persona block too large: {block_len} characters (max 3000)")
+
+        return block
+
+    # 2. Legacy fallback
     lines = []
 
     # Header

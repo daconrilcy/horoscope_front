@@ -6,7 +6,7 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.infra.db.models import LlmPersonaModel
+from app.infra.db.models import AstrologerProfileModel, LlmPersonaModel
 from app.infra.db.session import SessionLocal
 
 logger = logging.getLogger(__name__)
@@ -15,6 +15,16 @@ ASTROLOGERS = [
     {
         "id": "c0a80101-8edb-4e1a-8f1a-8f1a8f1a8f1a",
         "name": "Astrologue Standard",
+        "display_name": "Guide Pédagogique",
+        "first_name": "Astrologue",
+        "last_name": "Standard",
+        "gender": "other",
+        "photo_url": "/assets/astrologers/standard.jpg",
+        "public_style_label": "Pédagogue",
+        "bio_short": "Profil pédagogique généraliste pour débutants. Calme, stable et rassurant.",
+        "admin_category": "standard",
+        "specialties": ["Thème Natal", "Bases", "Orientation"],
+        "sort_order": 1,
         "description": (
             "Profil pedagogique generaliste pour debutants. "
             "Personnalite calme, stable et rassurante. "
@@ -48,6 +58,16 @@ ASTROLOGERS = [
     {
         "id": "de6d4827-63d4-40dc-8012-6de96f2e58f4",
         "name": "Selene Mystique",
+        "display_name": "Sélène Mystique",
+        "first_name": "Sélène",
+        "last_name": "Mystique",
+        "gender": "female",
+        "photo_url": "/assets/astrologers/selene.jpg",
+        "public_style_label": "Mystique",
+        "bio_short": "Profil intuitif et symbolique. Contemplative et sensible aux archétypes.",
+        "admin_category": "mystical",
+        "specialties": ["Spiritualité", "Cycles Lunaires", "Relations"],
+        "sort_order": 2,
         "description": (
             "Profil intuitif et symbolique. Personnalite contemplative, imaginative et sensible "
             "aux archetypes. Caracteristiques: traduit les configurations en images parlantes "
@@ -75,6 +95,16 @@ ASTROLOGERS = [
     {
         "id": "f4f49f86-1ecf-4f3d-bbbf-2cf34ca71623",
         "name": "Orion Analyste",
+        "display_name": "Orion l'Analyste",
+        "first_name": "Orion",
+        "last_name": "Analyste",
+        "gender": "male",
+        "photo_url": "/assets/astrologers/orion.jpg",
+        "public_style_label": "Analytique",
+        "bio_short": "Profil analytique et méthodique. Rigoureux et orienté preuves.",
+        "admin_category": "rational",
+        "specialties": ["Transits", "Carrière", "Organisation"],
+        "sort_order": 3,
         "description": (
             "Profil analytique pour lecteurs qui veulent comprendre la mecanique du theme. "
             "Personnalite methodique, rigoureuse et orientee preuves. Caracteristiques: structure "
@@ -101,6 +131,16 @@ ASTROLOGERS = [
     {
         "id": "f2879652-1f13-4f4e-8d68-57f13d5ba670",
         "name": "Luna Empathie",
+        "display_name": "Luna Empathie",
+        "first_name": "Luna",
+        "last_name": "Empathie",
+        "gender": "female",
+        "photo_url": "/assets/astrologers/luna.jpg",
+        "public_style_label": "Chaleureux",
+        "bio_short": "Profil d'accompagnement émotionnel. Chaleureuse et bienveillante.",
+        "admin_category": "warm",
+        "specialties": ["Relations", "Estime de soi", "Famille"],
+        "sort_order": 4,
         "description": (
             "Profil d'accompagnement emotionnel. Personnalite chaleureuse, bienveillante et "
             "relationnelle. Caracteristiques: reformule sans jugement, valide le ressenti puis "
@@ -127,6 +167,16 @@ ASTROLOGERS = [
     {
         "id": "3a4fc82a-4286-48f6-babe-cab39992f5c4",
         "name": "Atlas Direct",
+        "display_name": "Atlas Direct",
+        "first_name": "Atlas",
+        "last_name": "Direct",
+        "gender": "male",
+        "photo_url": "/assets/astrologers/atlas.jpg",
+        "public_style_label": "Pragmatique",
+        "bio_short": "Profil pragmatique et décisionnel. Franc et orienté résultats.",
+        "admin_category": "direct",
+        "specialties": ["Business", "Timing", "Objectifs"],
+        "sort_order": 5,
         "description": (
             "Profil pragmatique et decisionnel. Personnalite franche, orientee resultat et "
             "priorisation. Caracteristiques: va a l'essentiel, explicite les compromis, propose "
@@ -152,6 +202,16 @@ ASTROLOGERS = [
     {
         "id": "a38fbb78-14d6-4f54-b625-cf6f40b95f92",
         "name": "Nox Profondeur",
+        "display_name": "Nox Profondeur",
+        "first_name": "Nox",
+        "last_name": "Profondeur",
+        "gender": "non_binary",
+        "photo_url": "/assets/astrologers/nox.jpg",
+        "public_style_label": "Introspectif",
+        "bio_short": "Profil introspectif de profondeur. Nuancé, patient et réflexif.",
+        "admin_category": "introspective",
+        "specialties": ["Ombre", "Transformation", "Psychologie"],
+        "sort_order": 6,
         "description": (
             "Profil introspectif de profondeur. Personnalite nuancee, patiente et reflexive. "
             "Caracteristiques: explore les mecanismes internes sans etiqueter la personne. "
@@ -218,6 +278,46 @@ def seed_astrologers(db: Session) -> None:
             persona.formatting = data["formatting"]
             persona.enabled = data["enabled"]
             logger.info(f"Updated persona: {data['name']}")
+
+        db.flush()
+
+        # Update or create AstrologerProfile
+        stmt_profile = select(AstrologerProfileModel).where(
+            AstrologerProfileModel.persona_id == persona.id
+        )
+        profile = db.execute(stmt_profile).scalar_one_or_none()
+        if not profile:
+            profile = AstrologerProfileModel(
+                persona_id=persona.id,
+                first_name=data["first_name"],
+                last_name=data["last_name"],
+                display_name=data["display_name"],
+                gender=data["gender"],
+                photo_url=data["photo_url"],
+                public_style_label=data["public_style_label"],
+                bio_short=data["bio_short"],
+                bio_long=data["description"],
+                admin_category=data["admin_category"],
+                specialties=data["specialties"],
+                is_public=data["enabled"],
+                sort_order=data["sort_order"],
+            )
+            db.add(profile)
+            logger.info(f"Created profile for: {data['name']}")
+        else:
+            profile.first_name = data["first_name"]
+            profile.last_name = data["last_name"]
+            profile.display_name = data["display_name"]
+            profile.gender = data["gender"]
+            profile.photo_url = data["photo_url"]
+            profile.public_style_label = data["public_style_label"]
+            profile.bio_short = data["bio_short"]
+            profile.bio_long = data["description"]
+            profile.admin_category = data["admin_category"]
+            profile.specialties = data["specialties"]
+            profile.is_public = data["enabled"]
+            profile.sort_order = data["sort_order"]
+            logger.info(f"Updated profile for: {data['name']}")
 
     db.flush()  # Ensure new instances are in the identity map before querying by name.
 

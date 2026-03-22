@@ -1,3 +1,7 @@
+from app.infra.db.models.astrologer import (
+    AstrologerProfileModel,
+    AstrologerPromptProfileModel,
+)
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.billing import (
     BillingPlanModel,
@@ -76,6 +80,8 @@ from app.infra.db.models.user_refresh_token import UserRefreshTokenModel
 
 __all__ = [
     "AuditEventModel",
+    "AstrologerProfileModel",
+    "AstrologerPromptProfileModel",
     "BillingPlanModel",
     "PaymentAttemptModel",
     "SubscriptionPlanChangeModel",

@@ -1,7 +1,9 @@
 export type Astrologer = {
   id: string
   name: string
-  avatar_url: string
+  first_name: string
+  last_name: string
+  avatar_url: string | null
   specialties: string[]
   style: string
   bio_short: string
@@ -9,6 +11,5 @@ export type Astrologer = {
 
 export type AstrologerProfile = Astrologer & {
   bio_full: string
-  languages: string[]
-  experience_years: number
+  gender: "male" | "female" | "non_binary" | "other"
 }
