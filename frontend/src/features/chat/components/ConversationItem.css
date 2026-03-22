@@ -11,7 +11,7 @@
   cursor: pointer;
   text-align: left;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  color: var(--text-strong);
+  color: var(--premium-text-strong);
   font-weight: 500;
   position: relative;
   overflow: hidden;
@@ -19,13 +19,13 @@
 
 .conversation-item:hover {
   background: rgba(255, 255, 255, 0.4);
-  border-color: var(--glass-border);
+  border-color: var(--premium-glass-border);
   transform: translateY(-1px);
 }
 
 .conversation-item--active {
   background: rgba(255, 255, 255, 0.6);
-  border-color: var(--primary);
+  border-color: var(--premium-accent-purple);
   box-shadow: 0 4px 12px rgba(134, 108, 208, 0.08);
 }
 
@@ -36,7 +36,7 @@
   top: 12px;
   bottom: 12px;
   width: 3px;
-  background: var(--primary);
+  background: var(--premium-accent-purple);
   border-radius: 0 4px 4px 0;
 }
 
@@ -45,7 +45,7 @@
   width: 44px;
   height: 44px;
   border-radius: 14px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--premium-glass-border);
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 100%);
   flex-shrink: 0;
   overflow: hidden;
@@ -66,7 +66,7 @@
   justify-content: center;
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--premium-accent-purple);
   background: rgba(134, 108, 208, 0.1);
 }
 
@@ -88,7 +88,7 @@
 .conversation-item-name {
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-strong);
+  color: var(--premium-text-strong);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -97,14 +97,14 @@
 .conversation-item-date {
   font-size: 11px;
   font-weight: 500;
-  color: var(--text-faint);
+  color: var(--premium-text-meta);
   flex-shrink: 0;
 }
 
 .conversation-item-preview {
   font-size: 13px;
   line-height: 1.4;
-  color: var(--text-muted);
+  color: var(--premium-text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -112,7 +112,7 @@
 }
 
 .conversation-item--active .conversation-item-preview {
-  color: var(--text-strong);
+  color: var(--premium-text-strong);
   opacity: 1;
 }
 
@@ -122,7 +122,7 @@
 }
 
 .conversation-item-avatar--skeleton {
-  background: var(--glass-2);
+  background: rgba(255, 255, 255, 0.3);
   animation: premium-shimmer 2s infinite linear;
 }
 
@@ -133,7 +133,7 @@
 }
 
 .skeleton-line {
-  background: var(--glass-2);
+  background: rgba(255, 255, 255, 0.3);
   height: 12px;
   border-radius: 4px;
   animation: premium-shimmer 2s infinite linear;

@@ -45,9 +45,9 @@ export function ConversationList({
             className="conversation-list-new-btn"
             onClick={onNewConversation}
             aria-label={t("new_conversation", lang)}
-            title={t("new_conversation", lang)}
           >
-            <Plus size={18} />
+            <Plus size={16} />
+            <span>{t("new_conversation", lang)}</span>
           </button>
         </div>
         <input

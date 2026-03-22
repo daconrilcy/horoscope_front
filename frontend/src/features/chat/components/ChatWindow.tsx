@@ -5,6 +5,7 @@ import { ChatComposer } from "./ChatComposer"
 import { useAutoScroll } from "../hooks/useAutoScroll"
 import { detectLang } from "@i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
+import "./ChatWindow.css"
 
 type ChatMessage = {
   id: string

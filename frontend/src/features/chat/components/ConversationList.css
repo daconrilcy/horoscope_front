@@ -10,8 +10,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-bottom: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid var(--premium-glass-border);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .conversation-list-title-row {
@@ -24,49 +24,57 @@
 .conversation-list-title {
   margin: 0;
   font-size: 13px;
-  font-weight: 700;
-  color: var(--text-faint);
+  font-weight: 750;
+  color: var(--premium-text-meta);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .conversation-list-search {
   width: 100%;
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.5);
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--premium-glass-border);
+  background: rgba(255, 255, 255, 0.4);
   font-size: 14px;
-  color: var(--text-strong);
+  color: var(--premium-text-strong);
   transition: all 0.2s ease;
 }
 
 .conversation-list-search:focus {
   outline: none;
-  border-color: var(--primary);
+  border-color: var(--premium-accent-purple);
   background: white;
   box-shadow: 0 0 0 3px rgba(134, 108, 208, 0.1);
 }
 
 .conversation-list-new-btn {
-  width: 34px;
-  height: 34px;
+  height: 32px;
+  padding: 0 12px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  background: var(--primary);
+  gap: 6px;
+  border-radius: var(--premium-radius-pill, 999px);
+  background: var(--premium-accent-purple, #8e7cf0);
   color: white;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 12px rgba(134, 108, 208, 0.24);
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .conversation-list-new-btn:hover {
-  transform: scale(1.05);
-  background: var(--primary-dark, #7559c8);
+  transform: translateY(-1px);
+  background: var(--premium-accent-purple-strong, #6f57d9);
   box-shadow: 0 6px 16px rgba(134, 108, 208, 0.32);
+}
+
+.conversation-list-new-btn svg {
+  flex-shrink: 0;
 }
 
 .conversation-list-items {
@@ -101,7 +109,7 @@
   justify-content: center;
   padding: 40px 20px;
   text-align: center;
-  color: var(--text-muted);
+  color: var(--premium-text-meta);
   gap: 12px;
 }
 

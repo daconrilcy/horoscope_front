@@ -1,58 +1,94 @@
 .chat-page-container {
-  --layout-max-width: var(--premium-layout-max-width, 1200px);
-  --layout-padding-inline: var(--premium-layout-padding-inline, 20px);
+  --layout-max-width: 1200px;
+  --layout-padding-inline: 40px;
   
-  position: relative;
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  padding: 0 var(--layout-padding-inline) 48px;
+  padding: 24px var(--layout-padding-inline) 24px;
   max-width: var(--layout-max-width);
   margin: 0 auto;
   height: 100vh;
   box-sizing: border-box;
+  overflow: hidden; /* No global scroll */
 }
 
+/* Base Background and Halos (from DailyHoroscopePage) */
+.chat-page-container::before,
+.chat-page-container::after,
 .chat-page-container__bg-halo {
   content: '';
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: -2;
   pointer-events: none;
+}
+
+.chat-page-container::before {
+  background:
+    linear-gradient(180deg, var(--premium-bg-start) 0%, var(--premium-bg-mid) 48%, var(--premium-bg-end) 100%);
+}
+
+.chat-page-container::after {
+  background:
+    radial-gradient(circle at 78% 18%, rgba(144, 117, 240, 0.24) 0%, transparent 36%),
+    radial-gradient(circle at 16% 88%, rgba(255, 211, 236, 0.18) 0%, transparent 34%),
+    radial-gradient(circle at 48% 28%, rgba(255, 255, 255, 0.4) 0%, transparent 40%);
+}
+
+.chat-page-container__bg-halo {
+  z-index: -1;
   background:
     radial-gradient(circle at 84% 68%, rgba(147, 117, 235, 0.15) 0%, transparent 28%),
     radial-gradient(circle at 30% 8%, rgba(255, 255, 255, 0.24) 0%, transparent 32%);
 }
 
+.chat-page-container__noise {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.028;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
 .chat-page-container .chat-layout {
   flex: 1;
-  min-height: 0; /* Allow flex child to shrink */
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.25) 100%);
+  min-height: 0;
+  background: var(--premium-glass-surface-1);
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-panel, 24px);
-  box-shadow: var(--shadow-page, 0 20px 50px rgba(0,0,0,0.1));
+  border: 1px solid var(--premium-glass-border);
+  border-radius: var(--premium-radius-card);
+  box-shadow: var(--premium-shadow-page);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Adjust TwoColumnLayout for chat */
 .chat-page-container .two-col-layout {
   --sidebar-width: 320px;
+  height: 100%;
 }
 
-@media (max-width: 1024px) {
-  .chat-page-container .two-col-layout {
-    --sidebar-width: 280px;
+@media (max-width: 1200px) {
+  .chat-page-container {
+    max-width: 100%;
   }
 }
 
 @media (max-width: 768px) {
   .chat-page-container {
-    padding: 0 16px 20px;
-    height: calc(100vh - 60px); /* Account for bottom nav if present */
+    padding: 16px 16px 0;
+    height: 100vh;
+    position: fixed;
   }
 
   .chat-page-container .chat-layout {
-    border-radius: 16px;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
   }
 }

@@ -317,10 +317,13 @@ export function ChatPage() {
         </div>
       )}
 
-      {/* Decorative Halo (Story 60.19) */}
+      {/* Decorative Halos and Noise (Story 60.19) */}
       <div className="chat-page-container__bg-halo" />
+      <div className="chat-page-container__noise" />
 
       <ChatPageHeader 
+        title={isMobile && mobileView === "chat" ? selectedConversationSummary?.persona_name : undefined}
+        eyebrow={isMobile && mobileView === "chat" ? (lang === 'fr' ? 'Discussion' : 'Conversation') : undefined}
         showBackButton={!isMobile || mobileView === "chat"}
         onBack={isMobile && mobileView === "chat" ? handleBackToList : undefined}
       />
