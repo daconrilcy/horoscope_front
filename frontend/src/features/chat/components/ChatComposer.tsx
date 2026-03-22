@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import type { FormEvent, KeyboardEvent } from "react"
+import { SendHorizontal } from "lucide-react"
+import "./ChatComposer.css"
 
 type ChatComposerProps = {
   onSend: (message: string) => void
@@ -64,7 +66,8 @@ export function ChatComposer({
         className="chat-composer-button"
         disabled={disabled || !value.trim()}
       >
-        {sendLabel}
+        <span>{sendLabel}</span>
+        <SendHorizontal size={16} strokeWidth={2.5} />
       </button>
     </form>
   )
