@@ -326,6 +326,7 @@ export function ChatPage() {
 
       {!(isMobile && mobileView === "chat") && (
         <ChatPageHeader
+          title={t("chat_page_title", lang)}
           showBackButton={!isMobile}
         />
       )}

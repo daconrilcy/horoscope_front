@@ -39,7 +39,7 @@ export function ConversationList({
     <div className="conversation-list">
       <div className="conversation-list-header">
         <div className="conversation-list-title-row">
-          <h2 className="conversation-list-title">{t("conversations_title", lang)}</h2>
+          <h2 className="conversation-list-title">{t("chat_threads_title", lang)}</h2>
           <button
             type="button"
             className="conversation-list-new-btn"

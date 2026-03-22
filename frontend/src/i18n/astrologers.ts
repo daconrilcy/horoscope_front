@@ -211,6 +211,26 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Resume conversation",
     es: "Reanudar conversación",
   },
+  chat_page_title: {
+    fr: "Chat astrologique",
+    en: "Astrology chat",
+    es: "Chat astrológico",
+  },
+  chat_threads_title: {
+    fr: "Discussions",
+    en: "Threads",
+    es: "Conversaciones",
+  },
+  chat_window_title: {
+    fr: "Conversation en cours",
+    en: "Active conversation",
+    es: "Conversación activa",
+  },
+  chat_window_subtitle: {
+    fr: "Retrouvez vos échanges astrologiques et poursuivez la discussion.",
+    en: "Continue your astrology conversation from where you left off.",
+    es: "Retome su conversación astrológica donde la dejó.",
+  },
   conversations_title: {
     fr: "Conversations",
     en: "Conversations",

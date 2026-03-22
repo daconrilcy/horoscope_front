@@ -564,7 +564,7 @@ describe("ChatWindow", () => {
       />
     )
 
-    const backButton = screen.getByLabelText("Retour à la liste")
+    const backButton = screen.getByLabelText("Retour")
     expect(backButton).toBeInTheDocument()
 
     fireEvent.click(backButton)
@@ -581,7 +581,7 @@ describe("ChatWindow", () => {
       />
     )
 
-    expect(screen.queryByLabelText("Retour à la liste")).not.toBeInTheDocument()
+    expect(screen.queryByLabelText("Retour")).not.toBeInTheDocument()
   })
 
   it("disables composer when sending", () => {

@@ -617,7 +617,10 @@ describe("ChatPage", () => {
 
       renderWithRouter()
 
-      expect(screen.getByText("Conversations")).toBeInTheDocument()
+      expect(
+        screen.getByRole("heading", { level: 1, name: "Chat astrologique" })
+      ).toBeInTheDocument()
+      expect(screen.getByText("Discussions")).toBeInTheDocument()
       expect(screen.getByPlaceholderText("Rechercher...")).toBeInTheDocument()
     })
 

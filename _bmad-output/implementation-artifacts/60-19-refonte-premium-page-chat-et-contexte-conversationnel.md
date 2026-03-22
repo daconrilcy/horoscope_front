@@ -106,6 +106,11 @@ Gemini CLI (Autonomous Mode)
 - Navigation mobile en deux temps (liste → chat) pleinement fonctionnelle, sans overflow horizontal.
 - `backgrounds.css` : ajout de `width: 100%` sur `.app-bg-container` pour corriger le comportement flex avec `margin: auto`.
 - `ChatPage.css` : override `max-width: none` sur `.app-bg-container:has(.is-chat-page)` pour préserver la largeur 1600px du chat sur desktop.
+- Vérification live menée sur `http://localhost:5173/chat` en desktop et mobile avec utilisateur authentifié.
+- Le vocabulaire d'interface est clarifié : `Chat astrologique` côté page et `Discussions` côté liste.
+- Les anciens styles chat restés dans `App.css` ont été neutralisés pour éviter les conflits avec les composants premium dédiés.
+- La fenêtre de chat a été rehaussée : vrai header conversationnel en l'absence de persona active, surfaces plus matérielles, bulles assistant/utilisateur plus cohérentes avec le glassmorphism du produit.
+- La bulle utilisateur a reçu une passe de polish dédiée pour sortir du simple aplat violet et devenir une surface glass teintée.
 
 ### File List
 
@@ -124,6 +129,9 @@ Gemini CLI (Autonomous Mode)
 - `frontend/src/features/chat/index.ts`
 - `frontend/src/layouts/TwoColumnLayout.css`
 - `frontend/src/styles/backgrounds.css`
+- `frontend/src/i18n/astrologers.ts`
+- `frontend/src/tests/ChatPage.test.tsx`
+- `frontend/src/tests/chat/ChatComponents.test.tsx`
 - `backend/app/llm_orchestration/gateway.py`
 - `backend/app/llm_orchestration/seeds/use_cases_seed.py`
 - `backend/scripts/seed_30_15_chat_naturalite.py`
@@ -145,3 +153,13 @@ Gemini CLI (Autonomous Mode)
 ### Final Outcome
 
 Implementation is robust, visually stunning, and perfectly integrated into the project's layout system.
+
+### Post-Implementation Polish
+
+- Live UI review completed on `2026-03-22` for `/chat` in desktop and mobile conditions.
+- Premium alignment tightened with `/dashboard` and `/dashboard/horoscope`:
+  - page title hierarchy refined
+  - shell/background halos strengthened
+  - left thread panel and right chat pane given more glass depth
+  - duplicate `Conversations` wording removed from the main page hierarchy
+- Regression tests updated to reflect the final UI vocabulary and back-button labeling.

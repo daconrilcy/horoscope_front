@@ -21,7 +21,7 @@ export const ChatPageHeader: React.FC<ChatPageHeaderProps> = ({
   const navigate = useNavigate()
   const lang = detectLang()
   
-  const displayTitle = title || t("conversations_title", lang)
+  const displayTitle = title || t("chat_page_title", lang)
   const displayEyebrow = eyebrow || (lang === 'fr' ? 'Messagerie' : 'Messaging')
 
   const handleBack = () => {

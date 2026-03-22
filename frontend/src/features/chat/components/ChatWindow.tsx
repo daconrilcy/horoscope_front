@@ -105,6 +105,19 @@ export function ChatWindow({
             )}
           </div>
         )}
+        {!personaName && (
+          <div className="chat-window-heading">
+            <span className="chat-window-heading__eyebrow">
+              {t("chat_page_title", lang)}
+            </span>
+            <h2 className="chat-window-heading__title">
+              {t("chat_window_title", lang)}
+            </h2>
+            <p className="chat-window-heading__subtitle">
+              {t("chat_window_subtitle", lang)}
+            </p>
+          </div>
+        )}
       </div>
 
       <div
