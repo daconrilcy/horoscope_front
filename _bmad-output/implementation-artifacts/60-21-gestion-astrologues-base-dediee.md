@@ -62,6 +62,7 @@ Gemini CLI (Autonomous Mode)
 - Retrait du badge éditorial "Choix conseillé" après revue UX, tout en conservant la mise en avant visuelle par taille et placement.
 - Correction du contraste des pills/spécialités pour éviter les cas ton-sur-ton sur les thèmes clairs.
 - Seconde passe premium sur le catalogue avec halo focalisé sur la carte hero, avatars encore agrandis, profondeur de cartes renforcée, micro-animations au hover et badge de focus contextuel non éditorial.
+- Raffinement des avatars avec un anneau lumineux cosmique plus marqué autour de chaque photo de profil, inspiré d'un rendu premium éditorial.
 - Neutralisation des doublons publics locaux sur les profils seedés pour éviter les collisions d'identité côté API.
 - Ajout du lien vers la page astrologues dans le menu utilisateur et dans la navigation principale de l'application.
 - Stabilisation de la suite backend complète après introduction des nouvelles contraintes de clés étrangères.

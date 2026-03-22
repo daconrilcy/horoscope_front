@@ -1510,6 +1510,33 @@ textarea:focus-visible {
   transition: transform 0.28s ease, box-shadow 0.28s ease;
 }
 
+.astrologer-card-avatar::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.88) 0 22%, color-mix(in srgb, var(--astro-glow) 82%, rgba(255, 255, 255, 0.24) 18%) 34%, color-mix(in srgb, var(--astro-glow) 42%, transparent 58%) 52%, transparent 74%);
+  opacity: 0.98;
+  filter: blur(14px);
+  z-index: -1;
+  transition: opacity 0.28s ease, transform 0.28s ease, filter 0.28s ease;
+}
+
+.astrologer-card-avatar::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--astro-accent) 56%, rgba(255, 255, 255, 0.76) 44%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.58),
+    0 0 0 3px color-mix(in srgb, var(--astro-glow) 18%, transparent 82%),
+    0 0 24px color-mix(in srgb, var(--astro-glow) 78%, transparent 22%),
+    inset 0 0 12px rgba(255, 255, 255, 0.18);
+  pointer-events: none;
+}
+
 .astrologer-card--featured .astrologer-card-avatar {
   width: 116px;
   height: 116px;
@@ -1604,6 +1631,20 @@ textarea:focus-visible {
   box-shadow:
     0 0 32px color-mix(in srgb, var(--astro-glow) 94%, transparent 6%),
     0 18px 30px rgba(0, 0, 0, 0.22);
+}
+
+.astrologer-card:hover .astrologer-card-avatar::before {
+  opacity: 1;
+  transform: scale(1.09);
+  filter: blur(16px);
+}
+
+.astrologer-card:hover .astrologer-card-avatar::after {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 0 0 4px color-mix(in srgb, var(--astro-glow) 22%, transparent 78%),
+    0 0 30px color-mix(in srgb, var(--astro-glow) 84%, transparent 16%),
+    inset 0 0 14px rgba(255, 255, 255, 0.22);
 }
 
 .astrologer-card:hover .astrologer-card-avatar-img {
