@@ -3,6 +3,7 @@
 .daily-layout {
   --layout-max-width: var(--premium-layout-max-width);
   --layout-padding-inline: var(--premium-layout-padding-inline);
+  --timeline-card-shift: 34px;
   --timeline-rail-center: 18px;
   --page-bg-start: var(--premium-bg-start);
   --page-bg-mid: var(--premium-bg-mid);
@@ -163,6 +164,7 @@
   .daily-layout {
     --layout-padding-inline: 22px;
     --layout-max-width: 100%;
+    --timeline-card-shift: 28px;
     --timeline-rail-center: 16px;
     gap: 24px;
   }

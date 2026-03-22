@@ -28,7 +28,7 @@
 
 .day-climate-hero__inner {
   display: grid;
-  grid-template-columns: minmax(352px, 1.08fr) minmax(240px, 0.92fr);
+  grid-template-columns: minmax(420px, 1.34fr) minmax(220px, 0.66fr);
   align-items: stretch;
   width: 100%;
   padding: 28px;
@@ -39,7 +39,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 20px;
+  gap: 24px;
   position: relative;
   z-index: 2;
   min-width: 0;
@@ -83,7 +83,7 @@
 .day-climate-hero__header {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .day-climate-hero__title {
@@ -108,9 +108,9 @@
 .day-climate-hero__summary {
   margin: 0;
   font-size: 15px;
-  line-height: 1.78;
+  line-height: 1.86;
   color: var(--text-main);
-  max-width: 38ch;
+  max-width: 58ch;
 }
 
 .day-climate-hero__pills {

@@ -171,3 +171,49 @@ async def test_narrate_disabled_when_flag_off():
         assert result["has_llm_narrative"] is False
     finally:
         settings.llm_narrator_enabled = original
+
+
+@pytest.mark.asyncio
+async def test_narrate_retries_when_daily_synthesis_is_too_short():
+    narrator = LLMNarrator()
+
+    short_content = {
+        "daily_synthesis": "Première phrase. Deuxième phrase. Troisième phrase.",
+        "astro_events_intro": "Intro",
+        "time_window_narratives": {"matin": "Matin text"},
+        "turning_point_narratives": ["TP1"],
+        "main_turning_point_narrative": "Pivot.",
+        "daily_advice": {"advice": "Conseil", "emphasis": "Emphase"},
+    }
+    long_content = {
+        "daily_synthesis": (
+            "Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. "
+            "Phrase 6. Phrase 7. Phrase 8. Phrase 9. Phrase 10."
+        ),
+        "astro_events_intro": "Intro",
+        "time_window_narratives": {"matin": "Matin text"},
+        "turning_point_narratives": ["TP1"],
+        "main_turning_point_narrative": "Pivot.",
+        "daily_advice": {"advice": "Conseil", "emphasis": "Emphase"},
+    }
+
+    first_response = MagicMock()
+    first_response.choices = [
+        MagicMock(message=MagicMock(content=json.dumps(short_content)), finish_reason="stop")
+    ]
+    second_response = MagicMock()
+    second_response.choices = [
+        MagicMock(message=MagicMock(content=json.dumps(long_content)), finish_reason="stop")
+    ]
+
+    with patch("openai.AsyncOpenAI") as mock_openai:
+        mock_client = mock_openai.return_value
+        mock_client.chat.completions.create = AsyncMock(
+            side_effect=[first_response, second_response]
+        )
+
+        res = await narrator.narrate(time_windows=[], common_context=_make_common_context())
+
+        assert res is not None
+        assert narrator._count_sentences(res.daily_synthesis) == 10
+        assert mock_client.chat.completions.create.await_count == 2

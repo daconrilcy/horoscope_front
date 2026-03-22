@@ -29,7 +29,11 @@ def test_day_climate_build_basic():
     result = policy.build(snapshot, domain_ranking, decision_windows)
 
     assert result["tone"] == "positive"
-    assert result["top_domains"] == ["pro_ambition", "relations_echanges"]
+    assert result["top_domains"] == [
+        "pro_ambition",
+        "relations_echanges",
+        "energie_bienetre",
+    ]
     assert result["watchout"] == "energie_bienetre"
     assert result["best_window_ref"] == "10:00–12:00"
     assert "intensity" in result
@@ -71,3 +75,26 @@ def test_day_climate_uses_evidence():
     assert result["tone"] == "mixed"
     assert result["intensity"] == 8.0  # 16/2
     assert result["stability"] == 5.0  # 10/2
+
+
+def test_day_climate_keeps_top_domains_sorted_by_score_with_ties():
+    policy = PublicDayClimatePolicy()
+    snapshot = MagicMock()
+    snapshot.overall_tone = "positive"
+
+    domain_ranking = [
+        {"key": "pro_ambition", "score_10": 9.3, "display_order": 1},
+        {"key": "relations_echanges", "score_10": 7.9, "display_order": 2},
+        {"key": "energie_bienetre", "score_10": 9.5, "display_order": 3},
+        {"key": "vie_personnelle", "score_10": 7.9, "display_order": 5},
+        {"key": "argent_ressources", "score_10": 5.1, "display_order": 4},
+    ]
+
+    result = policy.build(snapshot, domain_ranking, None)
+
+    assert result["top_domains"] == [
+        "energie_bienetre",
+        "pro_ambition",
+        "relations_echanges",
+        "vie_personnelle",
+    ]

@@ -159,11 +159,15 @@ CONSIGNES DE RÉDACTION :
 - Mets l'accent sur le vécu probable : concentration, échanges, rythme, fatigue, élan, sensibilité,
   besoin d'isolement, envie d'agir, clarté ou dispersion.
 - Ne recopie pas simplement les listes techniques : interprète-les.
-- daily_synthesis : 5 à 7 phrases, dense, incarné et agréable à lire.
+- daily_synthesis : strictement 10 à 12 phrases complètes, dense, incarné et agréable à lire.
   Vise une vraie histoire de la journée, pas un simple résumé.
   Doit dire ce qui domine la journée, comment l'ambiance évolue du matin au soir,
   où se situent les frottements, ce qu'il faut anticiper,
   et pourquoi astrologiquement.
+  Si des "Domaines les plus activés" sont fournis dans le profil de la journée,
+  ils doivent être explicitement reflétés dans la synthèse comme axes dominants.
+  N'en mets pas d'autres au même niveau d'importance sans ancrage clair dans le contexte.
+  Ne t'arrête pas à 5, 6, 7 ou 8 phrases.
   Quand c'est pertinent, mentionne le meilleur créneau et la bascule principale.
 - astro_events_intro : 2 à 4 phrases.
   Explique les 2 ou 3 faits astrologiques les plus structurants du jour et leur effet concret.

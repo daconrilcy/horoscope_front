@@ -982,15 +982,25 @@ class PublicDayClimatePolicy:
         # 3. Label from catalog
         label = get_climate_label(tone, intensity)
 
-        # 4. Top Domains (max 2 keys)
-        top_domains = [d["key"] for d in domain_ranking[:2]]
+        # 4. Top Domains (top 3, keeping ties with the third score)
+        sorted_domains = sorted(
+            domain_ranking,
+            key=lambda item: (-float(item.get("score_10", 0.0)), int(item.get("display_order", 99))),
+        )
+        if len(sorted_domains) <= 3:
+            top_domains = [d["key"] for d in sorted_domains]
+        else:
+            third_score = float(sorted_domains[2].get("score_10", 0.0))
+            top_domains = [
+                d["key"] for d in sorted_domains if float(d.get("score_10", 0.0)) >= third_score
+            ][:4]
 
-        # 5. Watchout (last domain if score < 5.0)
+        # 5. Watchout (weakest domain if score < 5.0)
         watchout = None
         if domain_ranking:
-            last = domain_ranking[-1]
-            if last["score_10"] < 5.0:
-                watchout = last["key"]
+            weakest = min(domain_ranking, key=lambda item: float(item.get("score_10", 0.0)))
+            if weakest["score_10"] < 5.0:
+                watchout = weakest["key"]
 
         # 6. Best window reference
         best_window_ref = None
@@ -1027,7 +1037,7 @@ class PublicDayClimatePolicy:
         from app.prediction.public_domain_taxonomy import PUBLIC_DOMAINS
 
         names = [PUBLIC_DOMAINS[k].label_fr.lower() for k in top_domains if k in PUBLIC_DOMAINS]
-        joined_names = " et ".join(names)
+        joined_names = self._join_domain_names(names)
 
         if tone == "positive":
             return f"{label} avec un bel accent sur {joined_names}."
@@ -1037,6 +1047,15 @@ class PublicDayClimatePolicy:
             return f"{label}, vigilance requise sur {joined_names}."
 
         return f"{label}, focus sur {joined_names}."
+
+    def _join_domain_names(self, names: list[str]) -> str:
+        if not names:
+            return ""
+        if len(names) == 1:
+            return names[0]
+        if len(names) == 2:
+            return f"{names[0]} et {names[1]}"
+        return f"{', '.join(names[:-1])} et {names[-1]}"
 
 
 class PublicDomainRankingPolicy:

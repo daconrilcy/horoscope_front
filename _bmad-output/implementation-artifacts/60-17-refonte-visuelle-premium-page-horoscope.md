@@ -344,23 +344,29 @@ GPT-5 Codex
 - Après cette vérification navigateur, la hero a été recalée avec une vraie largeur éditoriale minimale et le header a reçu un meilleur ancrage visuel des actions, ce qui réduit la sensation de colonne “maigre” et d’icônes flottantes.
 - Une passe post-implémentation a homogénéisé toutes les sections de la page autour d’un header externe commun, afin d’éviter le mélange de titres “dans la carte” et “hors carte”.
 - Le badge d’état du header a été rendu plus explicite pour parler de la journée elle-même (`Journée très porteuse`, `Journée contrastée`, etc.) au lieu d’un adjectif isolé ambigu.
-- Le prompt LLM a été renforcé pour produire une synthèse du jour plus dense et plus narrative (5 à 7 phrases) ainsi que des créneaux plus détaillés (3 à 4 phrases), afin de donner une vraie histoire de la journée.
-- Le run quotidien du 22 mars 2026 a été régénéré localement pour vérifier l’impact réel de ce prompt renforcé sur `day-climate-hero__summary`.
+- Le prompt LLM a été renforcé pour produire une synthèse du jour strictement comprise entre 10 et 12 phrases, plus dense, plus narrative et davantage ancrée dans les domaines réellement dominants de la journée.
+- Le narrateur LLM a reçu un garde-fou de non-régression : si `daily_synthesis` revient trop courte, une seconde tentative corrective est automatiquement déclenchée avant persistance.
+- La politique `day_climate` ne déduit plus les domaines clés à partir de l’ordre d’affichage mais d’un tri réel sur `score_10`, avec gestion des égalités au troisième score, ce qui réaligne la hero avec la section `Vos domaines clés`.
+- Le run quotidien du 22 mars 2026 a été régénéré localement pour vérifier l’impact réel de ce prompt renforcé sur `day-climate-hero__summary`, avec une synthèse persistée à 10 phrases.
 - La timeline a été réalignée sur le même gabarit que les autres sections : même bord gauche que les cartes précédentes, rail vertical recentré et bullets ancrés sur le même axe optique que la ligne.
+- Une passe finale sur la timeline a augmenté le retrait horizontal des cartes de période afin qu’elles ne chevauchent plus visuellement le rail vertical tout en gardant les bullets centrés sur la ligne.
 - Le titre orphelin `Fondements astrologiques` a été supprimé lorsque la section n’est pas disponible, en rendant tout le bloc conditionnel.
 - Une fuite de raison technique backend dans la carte `Moment clé` (`theme_rotation`) a été corrigée dans la projection publique backend et dans le fallback frontend legacy, afin qu’aucune clé interne ne remonte dans l’interface.
 - Vérifications exécutées après les dernières retouches :
   - `npx tsc --noEmit`
   - `npm run test -- src/tests/DailyHoroscopePage.test.tsx`
-  - `.\.venv\Scripts\Activate.ps1; pytest backend/tests/unit/prediction/test_astrologer_prompt_builder.py -q`
+  - `.\.venv\Scripts\Activate.ps1; pytest backend/tests/unit/prediction/test_astrologer_prompt_builder.py backend/tests/unit/prediction/test_llm_narrator.py backend/tests/unit/prediction/test_public_day_climate.py -q`
   - vérification live de `/dashboard/horoscope` via navigateur headless avec session authentifiée réelle
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/60-17-refonte-visuelle-premium-page-horoscope.md`
 - `backend/app/prediction/astrologer_prompt_builder.py`
+- `backend/app/prediction/llm_narrator.py`
 - `backend/app/prediction/public_projection.py`
 - `backend/tests/unit/prediction/test_astrologer_prompt_builder.py`
+- `backend/tests/unit/prediction/test_llm_narrator.py`
+- `backend/tests/unit/prediction/test_public_day_climate.py`
 - `frontend/src/pages/DailyHoroscopePage.tsx`
 - `frontend/src/pages/DailyHoroscopePage.css`
 - `frontend/src/components/prediction/DailyPageHeader.tsx`

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 from dataclasses import dataclass
 from typing import Any
 
@@ -38,6 +39,8 @@ class LLMNarrator:
 
     TIMEOUT_SECONDS = 60.0
     MAX_COMPLETION_TOKENS = PROMPT_CATALOG["daily_prediction"].max_tokens
+    MIN_DAILY_SYNTHESIS_SENTENCES = 10
+    MAX_NARRATION_ATTEMPTS = 2
 
     async def narrate(
         self,
@@ -54,7 +57,7 @@ class LLMNarrator:
         from app.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
 
         try:
-            prompt = AstrologerPromptBuilder().build(
+            base_prompt = AstrologerPromptBuilder().build(
                 common_context=common_context,
                 time_windows=time_windows,
                 astro_daily_events=astro_daily_events,
@@ -68,66 +71,28 @@ class LLMNarrator:
 
             client = openai.AsyncOpenAI()  # uses OPENAI_API_KEY from env
             model = resolve_model("daily_prediction")
-            response = await asyncio.wait_for(
-                client.chat.completions.create(
+            result: NarratorResult | None = None
+            for attempt in range(1, self.MAX_NARRATION_ATTEMPTS + 1):
+                prompt = self._build_attempt_prompt(base_prompt, attempt)
+                result = await self._request_narration(
+                    client=client,
                     model=model,
-                    messages=[
-                        {"role": "system", "content": self._system_prompt(lang)},
-                        {"role": "user", "content": prompt},
-                    ],
-                    response_format={"type": "json_object"},
-                    max_completion_tokens=self.MAX_COMPLETION_TOKENS,
-                ),
-                timeout=self.TIMEOUT_SECONDS,
-            )
-
-            choice = response.choices[0]
-            raw = (choice.message.content or "").strip()
-            if not raw:
+                    prompt=prompt,
+                    lang=lang,
+                )
+                if result is None:
+                    return None
+                sentence_count = self._count_sentences(result.daily_synthesis)
+                if sentence_count >= self.MIN_DAILY_SYNTHESIS_SENTENCES:
+                    return result
                 logger.warning(
-                    "llm_narrator.empty_response model=%s finish_reason=%s refusal=%s",
+                    "llm_narrator.short_synthesis model=%s attempt=%s sentence_count=%s",
                     model,
-                    choice.finish_reason,
-                    getattr(choice.message, "refusal", None),
+                    attempt,
+                    sentence_count,
                 )
-                return None
-            # Strip markdown code fences if present
-            if raw.startswith("```"):
-                raw = raw.split("```")[1]
-                if raw.startswith("json"):
-                    raw = raw[4:]
-            try:
-                data = json.loads(raw)
-            except json.JSONDecodeError as exc:
-                logger.warning(
-                    (
-                        "llm_narrator.invalid_json model=%s finish_reason=%s "
-                        "error=%s raw_length=%s raw_tail=%r"
-                    ),
-                    model,
-                    choice.finish_reason,
-                    str(exc),
-                    len(raw),
-                    raw[-240:],
-                )
-                return None
-            advice_data = data.get("daily_advice")
 
-            return NarratorResult(
-                daily_synthesis=self._as_string(data.get("daily_synthesis")),
-                astro_events_intro=self._as_string(data.get("astro_events_intro")),
-                time_window_narratives=self._normalize_window_narratives(
-                    data.get("time_window_narratives")
-                ),
-                turning_point_narratives=self._normalize_turning_point_narratives(
-                    data.get("turning_point_narratives")
-                ),
-                daily_advice=self._normalize_daily_advice(advice_data),
-                main_turning_point_narrative=self._as_string(
-                    data.get("main_turning_point_narrative")
-                )
-                or None,
-            )
+            return result
 
         except asyncio.TimeoutError:
             logger.warning(
@@ -155,6 +120,88 @@ class LLMNarrator:
             "et quelle attitude adopter. Évite les banalités et le remplissage. "
             "Pas de markdown."
         )
+
+    async def _request_narration(
+        self,
+        *,
+        client: openai.AsyncOpenAI,
+        model: str,
+        prompt: str,
+        lang: str,
+    ) -> NarratorResult | None:
+        response = await asyncio.wait_for(
+            client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": self._system_prompt(lang)},
+                    {"role": "user", "content": prompt},
+                ],
+                response_format={"type": "json_object"},
+                max_completion_tokens=self.MAX_COMPLETION_TOKENS,
+            ),
+            timeout=self.TIMEOUT_SECONDS,
+        )
+
+        choice = response.choices[0]
+        raw = (choice.message.content or "").strip()
+        if not raw:
+            logger.warning(
+                "llm_narrator.empty_response model=%s finish_reason=%s refusal=%s",
+                model,
+                choice.finish_reason,
+                getattr(choice.message, "refusal", None),
+            )
+            return None
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            logger.warning(
+                (
+                    "llm_narrator.invalid_json model=%s finish_reason=%s "
+                    "error=%s raw_length=%s raw_tail=%r"
+                ),
+                model,
+                choice.finish_reason,
+                str(exc),
+                len(raw),
+                raw[-240:],
+            )
+            return None
+
+        advice_data = data.get("daily_advice")
+        return NarratorResult(
+            daily_synthesis=self._as_string(data.get("daily_synthesis")),
+            astro_events_intro=self._as_string(data.get("astro_events_intro")),
+            time_window_narratives=self._normalize_window_narratives(
+                data.get("time_window_narratives")
+            ),
+            turning_point_narratives=self._normalize_turning_point_narratives(
+                data.get("turning_point_narratives")
+            ),
+            daily_advice=self._normalize_daily_advice(advice_data),
+            main_turning_point_narrative=self._as_string(data.get("main_turning_point_narrative"))
+            or None,
+        )
+
+    def _build_attempt_prompt(self, base_prompt: str, attempt: int) -> str:
+        if attempt <= 1:
+            return base_prompt
+        return (
+            f"{base_prompt}\n\n"
+            "CORRECTION OBLIGATOIRE : lors de la tentative précédente, "
+            "daily_synthesis était trop courte. "
+            "Régénère tout le JSON et assure-toi que daily_synthesis comporte "
+            "strictement entre 10 et 12 phrases complètes."
+        )
+
+    def _count_sentences(self, text: str) -> int:
+        if not text:
+            return 0
+        return len([part for part in re.split(r"(?<=[.!?])\s+", text.strip()) if part.strip()])
 
     def _as_string(self, value: Any) -> str:
         if isinstance(value, str):

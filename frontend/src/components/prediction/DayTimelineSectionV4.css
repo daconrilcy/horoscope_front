@@ -13,6 +13,7 @@
 
 .day-timeline-v4__container {
   position: relative;
+  padding-left: var(--timeline-card-shift);
 }
 
 .day-timeline-v4__line {
@@ -33,7 +34,7 @@
 
 .day-timeline-v4__card {
   position: relative;
-  padding: 22px 22px 22px 34px !important;
+  padding: 22px 22px 22px 24px !important;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -56,7 +57,7 @@
 
 .day-timeline-v4__dot {
   position: absolute;
-  left: calc(var(--timeline-rail-center) - 6.5px);
+  left: calc((var(--timeline-card-shift) * -1) + var(--timeline-rail-center) - 6.5px);
   top: 25px;
   width: 13px;
   height: 13px;
@@ -183,7 +184,7 @@
 
 @media (max-width: 640px) {
   .day-timeline-v4__card {
-    padding: 20px 18px 20px 30px !important;
+    padding: 20px 18px 20px 22px !important;
   }
 
   .day-timeline-v4__row-1 {
