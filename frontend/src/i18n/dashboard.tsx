@@ -69,7 +69,7 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
     noPrediction: "Aucune prédiction disponible.",
     errorPrediction: "Impossible de charger le résumé du jour.",
     retry: "Réessayer",
-    summaryLoading: "Chargement du résumé du jour...",
+    summaryLoading: "Horoscope du jour en cours de rédaction",
     activities: "Activités",
     shortcuts: {
       chatTitle: "Chat astrologue",
@@ -96,7 +96,7 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
     noPrediction: "No prediction available.",
     errorPrediction: "Unable to load today's summary.",
     retry: "Retry",
-    summaryLoading: "Loading today's summary...",
+    summaryLoading: "Today's horoscope is being written",
     activities: "Activities",
     shortcuts: {
       chatTitle: "Astrologer chat",
@@ -123,7 +123,7 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
     noPrediction: "No hay predicción disponible.",
     errorPrediction: "No se puede cargar el resumen de hoy.",
     retry: "Reintentar",
-    summaryLoading: "Cargando el resumen de hoy...",
+    summaryLoading: "El horóscopo del día se está redactando",
     activities: "Actividades",
     shortcuts: {
       chatTitle: "Chat astrólogo",

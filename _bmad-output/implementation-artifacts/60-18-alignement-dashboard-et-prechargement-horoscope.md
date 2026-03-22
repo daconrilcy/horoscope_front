@@ -192,11 +192,15 @@ GPT-5 Codex
   - le halo dashboard utilise la bonne classe CSS
   - `ShortcutCard` respecte à nouveau son contrat visuel couvert par les tests
 - La page détail réutilise bien la donnée préféetchée sans chargement bloquant du daily quand le cache est déjà hydraté.
+- Pendant le chargement initial sur `/dashboard`, la carte `dashboard-summary-card-wrapper` affiche désormais un spinner éditorial avec le message `Horoscope du jour en cours de rédaction`.
+- Durant cet état de rédaction, la navigation vers `/dashboard/horoscope` est gelée côté UI et couverte par test.
+- La carte loading conserve la même enveloppe premium que la carte finale, avec une largeur de lecture du résumé ensuite limitée par une contrainte de style sur `dashboard-summary-card__text`.
 
 ### Change Log
 
 - 2026-03-21: Implémentation initiale de l’alignement visuel dashboard + préchargement horoscope.
 - 2026-03-22: Corrections post-code-review sur le data-flow React Query, le halo dashboard et les non-régressions visuelles `ShortcutCard`.
+- 2026-03-22: Ajout d’un état de rédaction bloquant dans la carte résumé dashboard avec spinner, message dédié et blocage de la navigation pendant la génération.
 
 ### File List
 

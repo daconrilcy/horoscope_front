@@ -2640,6 +2640,18 @@ textarea:focus-visible {
   outline: none;
 }
 
+.dashboard-summary-card-wrapper--loading {
+  cursor: default;
+  pointer-events: none;
+}
+
+.dashboard-summary-card-wrapper--loading:hover,
+.dashboard-summary-card-wrapper--loading:focus {
+  transform: none;
+  box-shadow: var(--premium-shadow-card);
+  border-color: var(--premium-glass-border);
+}
+
 .dashboard-summary-card-bg .astro-mood-background__content {
   display: flex;
   flex-direction: column;
@@ -2699,6 +2711,7 @@ textarea:focus-visible {
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  max-width: 60%;
 }
 
 .dashboard-summary-card__link {
@@ -2721,6 +2734,54 @@ textarea:focus-visible {
 .dashboard-summary-card--loading {
   cursor: default;
   pointer-events: none;
+  justify-content: center;
+  min-height: 240px;
+}
+
+.dashboard-summary-card__loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 100%;
+  text-align: center;
+}
+
+.dashboard-summary-card__loading-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.46);
+  border: 1px solid var(--premium-glass-border);
+  color: var(--premium-accent-purple-strong);
+  box-shadow: var(--premium-inner-light);
+}
+
+.dashboard-summary-card__loading-spinner svg {
+  animation: dashboard-summary-spin 0.9s linear infinite;
+}
+
+.dashboard-summary-card__loading-message {
+  margin: 0;
+  max-width: 26ch;
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 600;
+  color: var(--premium-text-main);
+}
+
+@keyframes dashboard-summary-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .skeleton-line {

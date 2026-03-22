@@ -223,8 +223,7 @@ describe("DashboardPage Landing", () => {
 
     renderDashboard()
 
-    // Le résumé est en loading (on peut chercher une classe ou un élément skeleton si on veut être précis)
-    // Mais ici on vérifie surtout que Activités est là
+    expect(screen.getByText("Horoscope du jour en cours de rédaction")).toBeInTheDocument()
     expect(screen.getByText("Activités")).toBeInTheDocument()
     
     resolvePrediction!(PREDICTION_OK)
@@ -232,6 +231,29 @@ describe("DashboardPage Landing", () => {
     await waitFor(() => {
       expect(screen.getByText(/Une excellente journée vous attend/i)).toBeInTheDocument()
     })
+  })
+
+  it("freeze la navigation vers le détail tant que l'horoscope du jour est en cours de rédaction", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith("/v1/auth/me")) return AUTH_ME_USER
+      if (url.includes("/v1/predictions/daily")) {
+        return new Promise(() => undefined)
+      }
+      return NOT_FOUND
+    }))
+
+    const user = userEvent.setup()
+    const { router } = renderDashboard()
+
+    const loadingCard = await screen.findByRole("status", {
+      name: "Horoscope du jour en cours de rédaction",
+    })
+
+    await user.click(loadingCard)
+
+    expect(router.state.location.pathname).toBe("/dashboard")
+    expect(screen.queryByLabelText(/Voir l'horoscope complet/i)).not.toBeInTheDocument()
   })
 
   it("gère l'erreur de prédiction en affichant un message dédié et une relance", async () => {

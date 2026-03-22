@@ -1,6 +1,6 @@
 import React from "react"
 import { useNavigate } from "react-router-dom"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, LoaderCircle } from "lucide-react"
 import type { DailyPredictionResponse } from "../../types/dailyPrediction"
 import { translateDashboardPage, type SupportedLocale } from "../../i18n/dashboard"
 import { translateSign } from "../../i18n/astrology"
@@ -8,8 +8,6 @@ import { AstroMoodBackground } from "../astro/AstroMoodBackground"
 import { getZodiacIcon } from "../../components/zodiacSignIconMap"
 import type { ZodiacSign } from "../astro/zodiacPatterns"
 import { getDailyEditorialSummary } from "../../utils/dailySummaryHelper"
-
-import { SkeletonGroup } from "../ui"
 
 interface Props {
   prediction: DailyPredictionResponse | null
@@ -53,14 +51,24 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
       handleNavigate()
     }
   }
+
   if (isLoading) {
     return (
       <div
-        className="panel dashboard-summary-card dashboard-summary-card--loading"
+        className="dashboard-summary-card-wrapper dashboard-summary-card-wrapper--loading"
         aria-busy="true"
         aria-label={summaryLoading}
+        role="status"
+        aria-live="polite"
       >
-        <SkeletonGroup count={2} widths={["80%", "60%"]} height="1.25rem" />
+        <div className="dashboard-summary-card dashboard-summary-card--loading">
+          <div className="dashboard-summary-card__loading-state">
+            <span className="dashboard-summary-card__loading-spinner" aria-hidden="true">
+              <LoaderCircle size={22} strokeWidth={2} />
+            </span>
+            <p className="dashboard-summary-card__loading-message">{summaryLoading}</p>
+          </div>
+        </div>
       </div>
     )
   }
