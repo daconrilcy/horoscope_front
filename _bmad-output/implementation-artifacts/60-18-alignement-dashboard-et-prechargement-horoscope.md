@@ -190,6 +190,10 @@ GPT-5 Codex
   - CTA principal plus intégré et plus contrasté
   - fond global enrichi de halos plus orchestrés
   - cartes Activités densifiées avec micro-pills harmonisées
+- Une dernière passe de luxe a renforcé la perception premium:
+  - hero plus habitée avec halo CTA plus lisible, surface plus stratifiée et texte plus contrasté
+  - cartes Activités plus tangibles avec badges icônes désaturés, reflets internes plus propres et ombres plus lisibles
+  - titres de section et fond global légèrement réhaussés pour une hiérarchie plus architecturée
 - Les sections `Horoscope` et `Activités` reposent maintenant sur le même pattern de header de section, avec une hiérarchie typographique et un layout homogènes.
 - Le préchargement au clic sidebar vers `/dashboard/horoscope` est branché via React Query sans nouvel endpoint backend.
 - Les query options `daily-prediction` et `birth-data` sont désormais partagées entre hooks et préfetch pour garantir un comportement de cache cohérent.
@@ -208,6 +212,7 @@ GPT-5 Codex
 - 2026-03-22: Corrections post-code-review sur le data-flow React Query, le halo dashboard et les non-régressions visuelles `ShortcutCard`.
 - 2026-03-22: Ajout d’un état de rédaction bloquant dans la carte résumé dashboard avec spinner, message dédié et blocage de la navigation pendant la génération.
 - 2026-03-22: Passes finales de finition premium sur `/dashboard` avec hero plus luxueuse, grille Activités plus matérielle, fond plus atmosphérique et headers de sections homogénéisés.
+- 2026-03-22: Ultime passe de polish premium sur `/dashboard` pour renforcer la matérialité de la hero, les cartes Activités et la hiérarchie visuelle globale.
 
 ### File List
 

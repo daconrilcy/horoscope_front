@@ -10,12 +10,12 @@
   font: inherit;
   color: inherit;
   text-decoration: none;
-  min-height: 118px;
+  min-height: 122px;
   padding: 20px 18px 22px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.4) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.64) 0%, rgba(255, 255, 255, 0.44) 100%);
   border: 1px solid var(--premium-glass-border);
   border-radius: 22px;
-  box-shadow: 0 14px 34px rgba(72, 52, 110, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.52);
+  box-shadow: 0 16px 38px rgba(72, 52, 110, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
   transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
@@ -33,9 +33,9 @@
   height: 44px;
   border-radius: 16px;
   flex-shrink: 0;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46), 0 10px 24px rgba(88, 58, 130, 0.08);
-  filter: saturate(0.6);
-  opacity: 0.78;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.56), 0 10px 24px rgba(88, 58, 130, 0.08);
+  filter: saturate(0.48);
+  opacity: 0.7;
 }
 
 .shortcut-card__content {
@@ -45,12 +45,13 @@
   min-width: 0;
   gap: 10px;
   flex: 1;
+  justify-content: center;
 }
 
 .shortcut-card__title {
   font-size: 15px;
   font-weight: 650;
-  color: var(--premium-text-strong);
+  color: color-mix(in srgb, var(--premium-text-strong) 96%, var(--premium-accent-purple-strong) 4%);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -64,9 +65,9 @@
   min-height: 31px;
   padding: 4px 11px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.36);
-  border: 1px solid rgba(255, 255, 255, 0.34);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
   font-size: 13px;
   color: var(--premium-text-meta);
   margin-top: 0;
@@ -78,9 +79,9 @@
 }
 
 .shortcut-card__subtitle--online {
-  background: rgba(255, 255, 255, 0.44);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.44);
   color: var(--premium-accent-purple-strong);
   font-weight: 600;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.46);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.54);
 }
