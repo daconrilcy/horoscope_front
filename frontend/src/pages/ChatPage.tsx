@@ -310,7 +310,7 @@ export function ChatPage() {
   )
 
   return (
-    <PageLayout className="chat-page-container">
+    <PageLayout className="chat-page-container is-chat-page">
       {isRedirecting && (
         <div className="chat-window-loading-overlay">
           <div className="spinner" />
