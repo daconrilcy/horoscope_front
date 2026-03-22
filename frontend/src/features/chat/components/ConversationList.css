@@ -50,27 +50,45 @@
 
 .conversation-list-new-btn {
   height: 32px;
-  padding: 0 14px;
+  width: 32px; /* Square by default */
+  padding: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 0;
   border-radius: var(--premium-radius-pill, 999px);
   background: linear-gradient(135deg, var(--premium-accent-purple) 0%, var(--premium-accent-purple-strong) 100%);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 12px rgba(134, 108, 208, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .conversation-list-new-btn:hover {
-  transform: translateY(-1px) scale(1.02);
+  width: auto;
+  padding: 0 14px;
+  gap: 8px;
   box-shadow: 0 6px 16px rgba(134, 108, 208, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.4);
   filter: brightness(1.05);
+}
+
+.conversation-list-new-btn span {
+  width: 0;
+  opacity: 0;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.conversation-list-new-btn:hover span {
+  width: auto;
+  opacity: 1;
 }
 
 .conversation-list-new-btn svg {
