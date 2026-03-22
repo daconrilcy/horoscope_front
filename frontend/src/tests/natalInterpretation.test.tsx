@@ -140,6 +140,24 @@ describe("NatalInterpretationSection", () => {
     expect(screen.getByText(/Standard/i)).toBeInTheDocument();
   });
 
+  it("masque le bloc des autres interprétations quand une seule version existe", () => {
+    (useNatalInterpretationsList as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        items: [mockHistory.items[0]],
+        total: 1,
+        limit: 20,
+        offset: 0,
+      },
+    });
+
+    renderSection();
+
+    expect(
+      screen.queryByText(/Autres interprétations du thème disponibles/i),
+    ).not.toBeInTheDocument();
+  });
+
   it("permet de sélectionner une version de l'historique", async () => {
     const mockIdQuery = vi.fn().mockReturnValue({
       isLoading: false,
@@ -204,7 +222,8 @@ describe("NatalInterpretationSection", () => {
     (downloadNatalInterpretationPdf as any).mockResolvedValue(undefined);
 
     renderSection();
-    
+
+    fireEvent.click(screen.getByRole("button", { name: /Actions PDF/i }));
     fireEvent.click(screen.getByRole("button", { name: /Télécharger PDF/i }));
 
     expect(downloadNatalInterpretationPdf).toHaveBeenCalledWith(
@@ -219,7 +238,8 @@ describe("NatalInterpretationSection", () => {
     (previewNatalInterpretationPdf as any).mockResolvedValue(undefined);
 
     renderSection();
-    
+
+    fireEvent.click(screen.getByRole("button", { name: /Actions PDF/i }));
     fireEvent.click(screen.getByRole("button", { name: /Aperçu PDF/i }));
 
     expect(previewNatalInterpretationPdf).toHaveBeenCalledWith(
@@ -230,13 +250,70 @@ describe("NatalInterpretationSection", () => {
     );
   });
 
-  it("ouvre le sélecteur d'astrologues au clic sur régénérer quand short+complete existent", async () => {
+  it("ouvre le sélecteur d'astrologues au clic sur l'action autre astrologue quand short+complete existent", async () => {
     renderSection();
 
-    fireEvent.click(screen.getByRole("button", { name: /Nouvelle interprétation/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Choisir un autre astrologue/i }));
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText(/Choisissez votre astrologue/i)).toBeInTheDocument();
+  });
+
+  it("n'arme pas une requête complete sans persona quand on demande le thème complet", async () => {
+    (useNatalInterpretationsList as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        items: [mockHistory.items[0]],
+        total: 1,
+        limit: 20,
+        offset: 0,
+      },
+    });
+
+    renderSection();
+
+    fireEvent.click(screen.getByRole("button", { name: /Obtenir le thème natal complet/i }));
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(useNatalInterpretation).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        useCaseLevel: "short",
+      }),
+    );
+  });
+
+  it("rafraîchit l'historique quand une nouvelle interprétation persistée n'est pas encore dans la liste", async () => {
+    const refetch = vi.fn().mockResolvedValue({ data: mockHistory });
+    (useNatalInterpretationsList as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        items: [mockHistory.items[0]],
+        total: 1,
+        limit: 20,
+        offset: 0,
+      },
+      refetch,
+    });
+    (useNatalInterpretation as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        ...mockInterpretationData,
+        meta: {
+          ...mockInterpretationData.meta,
+          id: 202,
+          level: "complete",
+          persona_id: "1",
+          persona_name: "Luna Céleste",
+          persisted_at: "2026-03-04T11:00:00Z",
+        },
+      },
+    });
+
+    renderSection();
+
+    await waitFor(() => {
+      expect(refetch).toHaveBeenCalled();
+    });
   });
 
   it("affiche le skeleton pendant le chargement", () => {
@@ -253,6 +330,41 @@ describe("NatalInterpretationSection", () => {
     renderSection();
     expect(screen.getByText("Votre Thème Test")).toBeInTheDocument();
     expect(screen.getByText("Résumé test de votre personnalité.")).toBeInTheDocument();
+  });
+
+  it("affiche systématiquement les mentions légales applicatives", () => {
+    renderSection();
+
+    expect(screen.getByText(/Mentions légales/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Cette interprétation astrologique est un contenu de réflexion personnelle/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Ce contenu ne constitue pas un conseil médical, psychologique, juridique, fiscal ou financier/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Aucune garantie de résultat n'est fournie/i),
+    ).toBeInTheDocument();
+  });
+
+  it("n'utilise plus les mentions légales provenant du payload LLM", () => {
+    (useNatalInterpretation as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        ...mockInterpretationData,
+        disclaimers: ["Disclaimer API spécifique"],
+        interpretation: {
+          ...mockInterpretationData.interpretation,
+          disclaimers: ["Disclaimer LLM spécifique"],
+        },
+      },
+    });
+
+    renderSection();
+
+    expect(screen.queryByText(/Disclaimer API spécifique/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Disclaimer LLM spécifique/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Mentions légales/i)).toBeInTheDocument();
   });
 
   it("gère l'erreur d'interprétation", () => {

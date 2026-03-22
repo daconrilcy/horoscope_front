@@ -1105,7 +1105,7 @@ describe("NatalChartPage", () => {
         </MemoryRouter>
       )
       expect(screen.getByText(/orbe 2\.50°/i)).toBeInTheDocument()
-      expect(screen.getByText(/orbe eff\. 1\.80°/i)).toBeInTheDocument()
+      expect(screen.getByText(/orbe effective 1\.80°/i)).toBeInTheDocument()
     })
 
     it("affiche un état vide explicite quand aspects est vide (AC 2)", () => {
@@ -1161,7 +1161,7 @@ describe("NatalChartPage", () => {
         </MemoryRouter>
       )
       expect(screen.getByText(/Mercure ℞:/i)).toBeInTheDocument()
-      expect(screen.getByText(/orbe eff\. 1\.00°/i)).toBeInTheDocument()
+      expect(screen.getByText(/orbe effective 1\.00°/i)).toBeInTheDocument()
     })
 
     it("rendu stable sans orb_used sur payload legacy (AC 4)", () => {

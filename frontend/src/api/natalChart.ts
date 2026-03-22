@@ -563,6 +563,10 @@ export function useNatalInterpretation(options: {
 }) {
   const accessToken = useAccessTokenSnapshot()
   const tokenSubject = getSubjectFromAccessToken(accessToken) ?? ANONYMOUS_SUBJECT
+  const canRunInterpretationQuery =
+    options.enabled &&
+    Boolean(accessToken) &&
+    (options.useCaseLevel === "short" || Boolean(options.personaId))
 
   return useQuery({
     queryKey: [
@@ -589,7 +593,7 @@ export function useNatalInterpretation(options: {
         options.module,
       )
     },
-    enabled: options.enabled && Boolean(accessToken),
+    enabled: canRunInterpretationQuery,
     retry: (failureCount, error) => {
       if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
         return false

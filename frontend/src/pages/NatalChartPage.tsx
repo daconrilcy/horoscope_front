@@ -12,7 +12,9 @@ import { formatDateTime } from "../utils/formatDate"
 import { useAccessTokenSnapshot } from "../utils/authToken"
 import { NatalChartGuide } from "../components/NatalChartGuide"
 import { NatalInterpretationSection } from "../components/NatalInterpretation"
+import { getZodiacIcon } from "../components/zodiacSignIconMap"
 import "./NatalChartPage.css"
+import "../components/prediction/DailyPageHeader.css"
 
 function shouldLogSupportForApiError(error: ApiError): boolean {
   return error.status >= 500
@@ -32,6 +34,26 @@ function formatDegreeMinuteFromSignLongitude(value: number): string {
   return `${normalizedDegrees}°${String(normalizedMinutes).padStart(2, "0")}′`
 }
 
+const SIGN_CODES = [
+  "ARIES",
+  "TAURUS",
+  "GEMINI",
+  "CANCER",
+  "LEO",
+  "VIRGO",
+  "LIBRA",
+  "SCORPIO",
+  "SAGITTARIUS",
+  "CAPRICORN",
+  "AQUARIUS",
+  "PISCES",
+] as const
+
+function getSignCodeFromLongitude(value: number): string {
+  const normalized = normalize360(value)
+  return SIGN_CODES[Math.floor(normalized / 30)] ?? "ARIES"
+}
+
 export function NatalChartPage() {
   const navigate = useNavigate()
   const accessToken = useAccessTokenSnapshot()
@@ -40,6 +62,14 @@ export function NatalChartPage() {
   const t = natalChartTranslations[lang]
   const [generateError, setGenerateError] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [activeInterpretation, setActiveInterpretation] = useState<{
+    level: "short" | "complete";
+    personaName: string | null;
+  }>({ level: "short", personaName: null })
+  const [headerActionRequest, setHeaderActionRequest] = useState<{
+    kind: "upgrade" | "switch_persona";
+    nonce: number;
+  } | null>(null)
 
   const error = latestChart.error
   const apiError = error instanceof ApiError ? error : null
@@ -96,24 +126,23 @@ export function NatalChartPage() {
             <h1 className="natal-page-header__title">{t.notFound}</h1>
           </header>
           <div className="natal-card">
-            <p style={{ marginBottom: '24px', opacity: 0.8 }}>{t.notFoundSub}</p>
+            <p className="natal-card__lead">{t.notFoundSub}</p>
             {generateError ? (
-              <div className="chat-error" role="alert" style={{ marginBottom: '24px' }}>
+              <div className="chat-error natal-card__error" role="alert">
                 <p>{generateError}</p>
               </div>
             ) : null}
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div className="natal-card__actions">
               <button
                 type="button"
                 onClick={() => void handleGenerateChart()}
                 disabled={isGenerating}
                 aria-busy={isGenerating}
                 className="ni-action-btn ni-action-btn--regenerate"
-                style={{ height: '44px', padding: '0 24px' }}
               >
                 {isGenerating ? t.generating : t.generateNow}
               </button>
-              <Link to="/profile" className="btn-link" style={{ fontSize: '14px', fontWeight: 600 }}>
+              <Link to="/profile" className="btn-link natal-card__secondary-link">
                 {t.completeProfile}
               </Link>
             </div>
@@ -136,10 +165,10 @@ export function NatalChartPage() {
             <h1 className="natal-page-header__title">{t.incompleteData}</h1>
           </header>
           <div className="natal-card">
-            <div className="chat-error degraded-warning" role="alert" style={{ border: 'none', background: 'none', padding: 0 }}>
+            <div className="chat-error degraded-warning natal-page__inline-alert" role="alert">
               <p>{t.incompleteDataSub}</p>
             </div>
-            <Link to="/profile" className="btn-link complete-profile-link" style={{ marginTop: '24px', display: 'inline-block' }}>
+            <Link to="/profile" className="btn-link complete-profile-link natal-card__complete-link">
               {t.completeProfile}
             </Link>
           </div>
@@ -205,9 +234,30 @@ export function NatalChartPage() {
           : houseSystemKey === "regiomontanus"
             ? t.regiomontanusHouseSystem
             : houseSystemKey
-  const sunSignName = astroProfile?.sun_sign_code ? translateSign(astroProfile.sun_sign_code) : null
-  const ascendantSignName = astroProfile?.ascendant_sign_code ? translateSign(astroProfile.ascendant_sign_code) : null
+  const sunSignName = astroProfile?.sun_sign_code ? translateSign(astroProfile.sun_sign_code.toUpperCase()) : null
+  const ascendantSignName = astroProfile?.ascendant_sign_code ? translateSign(astroProfile.ascendant_sign_code.toUpperCase()) : null
   const missingBirthTime = astroProfile?.missing_birth_time ?? false
+  const SunSignIcon = getZodiacIcon(astroProfile?.sun_sign_code)
+  const AscendantSignIcon = getZodiacIcon(astroProfile?.ascendant_sign_code)
+  const pageTitle =
+    activeInterpretation.level === "complete" ? t.completeTitle : t.basicTitle
+  const headerActionLabel =
+    activeInterpretation.level === "complete"
+      ? t.requestAnotherAstrologer
+      : t.unlockCompleteInterpretation
+  const sortedHouses = [...houses].sort((a, b) => a.number - b.number)
+  const fallbackEvidence = Array.from(
+    new Set([
+      astroProfile?.sun_sign_code ? `SUN_${astroProfile.sun_sign_code.toUpperCase()}` : null,
+      astroProfile?.ascendant_sign_code ? `ASC_${astroProfile.ascendant_sign_code.toUpperCase()}` : null,
+      ...planetPositions
+        .slice(0, 6)
+        .map((item) => `${item.planet_code.toUpperCase()}_${item.sign_code.toUpperCase()}_H${item.house_number}`),
+      ...aspects
+        .slice(0, 4)
+        .map((item) => `ASPECT_${item.planet_a.toUpperCase()}_${item.planet_b.toUpperCase()}_${item.aspect_code.toUpperCase()}`),
+    ].filter(Boolean) as string[]),
+  )
 
   return (
     <PageLayout className="natal-page-container is-natal-page">
@@ -216,19 +266,38 @@ export function NatalChartPage() {
       <div className="natal-page-container__noise" />
 
       <header className="natal-page-header">
-        <div className="natal-page-header__top" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+        <div className="natal-page-header__top">
           <button 
             className="daily-page-header__back" 
             onClick={() => navigate('/dashboard')}
-            aria-label="Retour au dashboard"
+            aria-label={t.backToDashboard}
           >
             <ChevronLeft size={18} strokeWidth={2.4} />
           </button>
           <div className="natal-page-header__main">
             <span className="natal-page-header__meta">{t.title}</span>
             <h1 className="natal-page-header__title">
-              {astroProfile?.sun_sign_code ? translateSign(astroProfile.sun_sign_code) : t.title}
+              {pageTitle}
             </h1>
+            <div className="natal-page-header__actions">
+              {activeInterpretation.level === "complete" && activeInterpretation.personaName ? (
+                <p className="natal-page-header__persona">
+                  {t.interpretedByLabel} <strong>{activeInterpretation.personaName}</strong>
+                </p>
+              ) : null}
+              <button
+                type="button"
+                className="natal-page-header__cta"
+                onClick={() => {
+                  setHeaderActionRequest({
+                    kind: activeInterpretation.level === "complete" ? "switch_persona" : "upgrade",
+                    nonce: Date.now(),
+                  })
+                }}
+              >
+                {headerActionLabel}
+              </button>
+            </div>
           </div>
         </div>
         <div className="natal-page-header__info">
@@ -244,15 +313,15 @@ export function NatalChartPage() {
         </div>
       </header>
 
-      {(chart.metadata.degraded_mode === "no_location" ||
-        chart.metadata.degraded_mode === "no_location_no_time") && (
-        <div className="chat-error degraded-warning" role="alert" style={{ marginBottom: '24px' }}>
+        {(chart.metadata.degraded_mode === "no_location" ||
+          chart.metadata.degraded_mode === "no_location_no_time") && (
+        <div className="chat-error degraded-warning natal-page__degraded-warning" role="alert">
           ⚠ {DEGRADED_MODE_MESSAGES.no_location[lang]}
         </div>
       )}
       {(chart.metadata.degraded_mode === "no_time" ||
         chart.metadata.degraded_mode === "no_location_no_time") && (
-        <div className="chat-error degraded-warning" role="alert" style={{ marginBottom: '24px' }}>
+        <div className="chat-error degraded-warning natal-page__degraded-warning" role="alert">
           ⚠ {DEGRADED_MODE_MESSAGES.no_time[lang]}
         </div>
       )}
@@ -263,16 +332,22 @@ export function NatalChartPage() {
           <dl className="natal-astro-summary__list">
             <div className="natal-astro-summary__item">
               <dt>{t.astroProfile.sunSign}</dt>
-              <dd>{sunSignName ?? "—"}</dd>
+              <dd>
+                {SunSignIcon ? <SunSignIcon className="natal-astro-summary__icon" aria-hidden="true" /> : null}
+                <span>{sunSignName ?? "—"}</span>
+              </dd>
             </div>
             <div className="natal-astro-summary__item">
               <dt>{t.astroProfile.ascendant}</dt>
               <dd>
-                {ascendantSignName ?? (
-                  missingBirthTime
-                    ? `— (${t.astroProfile.missingTime})`
-                    : "—"
-                )}
+                {AscendantSignIcon ? <AscendantSignIcon className="natal-astro-summary__icon" aria-hidden="true" /> : null}
+                <span>
+                  {ascendantSignName ?? (
+                    missingBirthTime
+                      ? `— (${t.astroProfile.missingTime})`
+                      : "—"
+                  )}
+                </span>
               </dd>
             </div>
           </dl>
@@ -282,16 +357,32 @@ export function NatalChartPage() {
       <div className="natal-grid">
         <article className="natal-card">
           <h2>{t.sections.planets}</h2>
-          <ul>
+          <p className="natal-card__intro">{t.planetsLead}</p>
+          <ul className="natal-data-list">
             {planetPositions.map((item) => {
               const houseInterval = getHouseIntervalLabel(item.house_number)
+              const planetLabel = `${translatePlanet(item.planet_code)}${item.is_retrograde === true ? " ℞" : ""}:`
               return (
-                <li key={item.planet_code}>
-                  <strong>{translatePlanet(item.planet_code)}</strong>
-                  {item.is_retrograde === true ? " ℞" : ""}: {translateSign(item.sign_code)}{" "}
-                  {formatDegreeMinuteFromSignLongitude(item.longitude)} ({item.longitude.toFixed(2)}°),{" "}
-                  {translateHouse(item.house_number)}
-                  {houseInterval ? <div className="natal-house-interval">{houseInterval}</div> : ""}
+                <li key={item.planet_code} className="natal-data-card">
+                  <div className="natal-data-card__head">
+                    <strong className="natal-data-card__title">{planetLabel}</strong>
+                    <span className="natal-data-card__value">
+                      {formatDegreeMinuteFromSignLongitude(item.longitude)}
+                    </span>
+                  </div>
+                  <p className="natal-data-card__reading">
+                    {translateSign(item.sign_code)} {formatDegreeMinuteFromSignLongitude(item.longitude)} ({item.longitude.toFixed(2)}°)
+                  </p>
+                  <div className="natal-data-card__meta">
+                    <span className="natal-data-pill">{t.positionLabel} {item.longitude.toFixed(2)}°</span>
+                    <span className="natal-data-pill">{t.houseLabel} {translateHouse(item.house_number)}</span>
+                    <span className="natal-data-pill">{t.longitudeLabel} {item.longitude.toFixed(2)}°</span>
+                  </div>
+                  {houseInterval ? (
+                    <p className="natal-data-card__support">
+                      {translateHouse(item.house_number)} {houseInterval}
+                    </p>
+                  ) : null}
                 </li>
               )
             })}
@@ -300,10 +391,20 @@ export function NatalChartPage() {
 
         <article className="natal-card">
           <h2>{t.sections.houses}</h2>
-          <ul>
-            {houses.map((item) => (
-              <li key={item.number}>
-                <strong>{translateHouse(item.number)}</strong>: {t.cuspide} {item.cusp_longitude.toFixed(2)}°
+          <p className="natal-card__intro">{t.housesLead}</p>
+          <ul className="natal-data-list">
+            {sortedHouses.map((item) => (
+              <li key={item.number} className="natal-data-card natal-data-card--house">
+                <div className="natal-data-card__head">
+                  <strong className="natal-data-card__title">{translateHouse(item.number)}</strong>
+                  <span className="natal-data-card__value">
+                    {translateSign(getSignCodeFromLongitude(item.cusp_longitude))} {formatDegreeMinuteFromSignLongitude(item.cusp_longitude)}
+                  </span>
+                </div>
+                <div className="natal-data-card__meta">
+                  <span className="natal-data-pill">{t.cuspLongitudeLabel} {item.cusp_longitude.toFixed(2)}°</span>
+                  <span className="natal-data-pill">{t.houseSignLabel} {translateSign(getSignCodeFromLongitude(item.cusp_longitude))}</span>
+                </div>
               </li>
             ))}
           </ul>
@@ -312,19 +413,38 @@ export function NatalChartPage() {
 
       <article className="natal-card natal-aspects-card">
         <h2>{t.sections.aspects}</h2>
+        <p className="natal-card__intro">{t.aspectsLead}</p>
         {aspects.length === 0 ? (
           <p>{t.noAspects}</p>
         ) : (
           <ul className="natal-aspects-list">
             {aspects.map((item, index) => (
               <li key={`${item.aspect_code}-${item.planet_a}-${item.planet_b}-${index}`} className="natal-aspect-item">
-                <div className="natal-aspect-header">
-                  <strong>{translateAspect(item.aspect_code)}</strong>
-                  <span className="natal-aspect-orb">{item.orb.toFixed(1)}°</span>
+                <div className="natal-aspect-item__head">
+                  <span className="natal-aspect-badge">{translateAspect(item.aspect_code)}</span>
+                  <h3 className="natal-aspect-title">
+                    {translatePlanet(item.planet_a)} — {translatePlanet(item.planet_b)}
+                  </h3>
                 </div>
-                <div className="natal-aspect-planets">
-                  {translatePlanet(item.planet_a)} — {translatePlanet(item.planet_b)}
+                <p className="natal-aspect-meaning">
+                  {t.aspectMeaningMap[item.aspect_code] ?? t.aspectMeaningMap.CONJUNCTION}
+                </p>
+                <dl className="natal-aspect-meta">
+                  <div className="natal-aspect-meta__item">
+                    <dt>{t.aspectExactAngleLabel}</dt>
+                    <dd>{item.angle.toFixed(2)}°</dd>
                 </div>
+                <div className="natal-aspect-meta__item">
+                  <dt>{t.orb}</dt>
+                  <dd>{t.orb} {item.orb.toFixed(2)}°</dd>
+                </div>
+                {typeof item.orb_used === "number" ? (
+                  <div className="natal-aspect-meta__item">
+                    <dt>{t.orbUsed}</dt>
+                    <dd>{t.orbUsed} {item.orb_used.toFixed(2)}°</dd>
+                  </div>
+                ) : null}
+              </dl>
               </li>
             ))}
           </ul>
@@ -337,7 +457,10 @@ export function NatalChartPage() {
         <NatalInterpretationSection 
           chartLoaded={Boolean(chart)} 
           chartId={chart.chart_id}
-          lang={lang} 
+          lang={lang}
+          fallbackEvidence={fallbackEvidence}
+          onActiveInterpretationChange={setActiveInterpretation}
+          actionRequest={headerActionRequest}
         />
       </div>
     </PageLayout>

@@ -165,7 +165,7 @@ so that l’exploration du thème natal paraisse faire partie du même produit h
 
 ### Agent Model Used
 
-Gemini CLI (Autonomous Mode)
+GPT-5 Codex
 
 ### Debug Log References
 
@@ -174,21 +174,55 @@ Gemini CLI (Autonomous Mode)
 - Migration massive des styles inline de `NatalInterpretation.tsx` vers `.css`.
 - Harmonisation du Guide Natal et de la section Interprétation.
 - Correction d'imports manquants (RefreshCw) lors du refactoring.
+- Reprise itérative de `NatalInterpretationSection` après validation visuelle réelle sur `/natal`.
+- Correction du flux d'obtention d'interprétation complète pour empêcher tout appel `complete` sans `persona_id`.
+- Réalignement des menus versions / PDF et du sélecteur d'astrologue après plusieurs passes de QA visuelle.
 
 ### Completion Notes List
 
-- La page `/natal` est désormais totalement cohérente avec le Dashboard Premium.
-- Les surfaces glassmorphism et les halos de fond sont actifs.
-- Le code est plus propre et maintenable (plus de styles inline).
-- Tous les états (chargement, erreur, data) sont couverts par le nouveau design.
+- La page `/natal` est désormais totalement cohérente avec le Dashboard Premium, avec un titre dynamique `thème natal de base` / `thème natal complet` selon la version active.
+- Le header premium intègre désormais une CTA de haut de page cohérente avec l'état courant : obtention du thème complet quand seule la version standard existe, ou changement d'astrologue quand des interprétations complètes sont déjà présentes.
+- Le hero natif a été enrichi avec l'iconographie signe solaire / ascendant et une restitution plus éditoriale des cartes planètes, maisons et aspects.
+- Le libellé `orbe eff.` a été remplacé par `orbe effective` dans la restitution des aspects et les tests associés ont été mis à jour.
+- La section `NatalInterpretationSection` a été profondément reprise pour séparer clairement :
+  - l'action principale de génération / régénération,
+  - le menu des autres interprétations disponibles,
+  - le menu des exports PDF.
+- Le groupe `Autres interprétations du thème disponibles` n'apparaît désormais que lorsqu'il existe strictement plus d'une interprétation pour l'utilisateur.
+- Le sélecteur des versions du thème a été harmonisé visuellement avec les contrôles PDF :
+  - mêmes triggers premium,
+  - même système d'ombres,
+  - liste dropdown simplifiée,
+  - style porté par le conteneur d'item et non par les boutons internes.
+- L'historique des interprétations est désormais rechargé automatiquement après création d'une nouvelle interprétation persistée, afin que le menu réapparaisse immédiatement quand une deuxième version devient disponible.
+- Le flux `obtenir une interprétation complète` ne peut plus déclencher de `POST /v1/natal/interpretation` invalide sans `persona_id` :
+  - ouverture du sélecteur d'astrologue en premier,
+  - garde défensive côté `useNatalInterpretation` pour bloquer tout run `complete` sans persona.
+- La modal de choix d'astrologue a été revue pour tenir dans la fenêtre :
+  - largeur bornée,
+  - hauteur max bornée,
+  - scroll interne,
+  - grille responsive exploitable au lieu d'une pile verticale débordante.
+- Les `ni-highlight-icon` ont été harmonisées avec le style premium global et les evidence tags ont été réparés avec un fallback technique côté page quand le payload ne remonte pas d'evidence.
+- Le résumé de l'interprétation et le bloc conseils utilisent maintenant la même grammaire visuelle que les autres surfaces premium via un conteneur commun.
+- Les mentions légales de fin de page sont maintenant injectées systématiquement par l'application, dans toutes les interprétations, sans dépendre du moteur LLM ni du payload `disclaimers`.
+- Tous les états principaux (`loading`, `error`, `empty`, historique, suppression, preview/download PDF, sélection d'astrologue) restent couverts dans le design final.
+- Les validations finales exécutées sur ce lot :
+  - `npx tsc --noEmit`
+  - `npm run test -- src/tests/NatalChartPage.test.tsx src/tests/natalInterpretation.test.tsx`
+  - suite ciblée frontend verte avec `74` tests passés
 
 ### File List
 
-- `frontend/src/pages/NatalChartPage.tsx` (overhauled with premium layout, back button, and classes)
-- `frontend/src/pages/NatalChartPage.css` (new premium styles, halos, noise, and grid)
-- `frontend/src/components/NatalInterpretation.tsx` (modernized with CSS classes, removed inline styles)
-- `frontend/src/components/NatalInterpretation.css` (complete premium refinement)
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` (updated status)
+- `_bmad-output/implementation-artifacts/60-20-alignement-premium-page-natal.md`
+- `frontend/src/api/natalChart.ts`
+- `frontend/src/pages/NatalChartPage.tsx`
+- `frontend/src/pages/NatalChartPage.css`
+- `frontend/src/components/NatalInterpretation.tsx`
+- `frontend/src/components/NatalInterpretation.css`
+- `frontend/src/i18n/natalChart.ts`
+- `frontend/src/tests/NatalChartPage.test.tsx`
+- `frontend/src/tests/natalInterpretation.test.tsx`
 
 ## Senior Developer Review (AI)
 

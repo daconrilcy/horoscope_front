@@ -18,9 +18,8 @@ import { type AstrologyLang } from "../i18n/astrology";
 import {
   ChevronDown,
   ChevronUp,
-  Lock,
   RefreshCw,
-  Star,
+  Sparkles,
   AlertCircle,
   Trash2,
   History,
@@ -37,12 +36,29 @@ interface Props {
   chartLoaded: boolean;
   chartId?: string;
   lang: AstrologyLang;
+  fallbackEvidence?: string[];
+  onActiveInterpretationChange?: (payload: {
+    level: "short" | "complete";
+    personaName: string | null;
+  }) => void;
+  actionRequest?: {
+    kind: "upgrade" | "switch_persona";
+    nonce: number;
+  } | null;
 }
 
 type InterpretationTranslations = typeof natalChartTranslations['fr']['interpretation'];
 
-export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props) {
-  const t = natalChartTranslations[lang].interpretation;
+export function NatalInterpretationSection({
+  chartLoaded,
+  chartId,
+  lang,
+  fallbackEvidence,
+  onActiveInterpretationChange,
+  actionRequest,
+}: Props) {
+  const pageT = natalChartTranslations[lang];
+  const t = pageT.interpretation;
   const accessToken = useAccessTokenSnapshot();
 
   const [useCaseLevel, setUseCaseLevel] = useState<"short" | "complete">("short");
@@ -82,6 +98,26 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
 
   const activeQuery = selectedInterpretationId ? idQuery : mainQuery;
   const { data, isLoading, error, refetch } = activeQuery;
+  const historyItems = historyQuery.data?.items ?? [];
+  const hasCompleteInterpretation = historyItems.some((item) => item.level === "complete");
+  const primaryActionLabel = hasCompleteInterpretation
+    ? pageT.requestAnotherAstrologer
+    : pageT.unlockCompleteInterpretation;
+
+  useEffect(() => {
+    onActiveInterpretationChange?.({
+      level: data?.meta.level ?? "short",
+      personaName: data?.meta.persona_name ?? null,
+    });
+  }, [data?.meta.level, data?.meta.persona_name, onActiveInterpretationChange]);
+
+  useEffect(() => {
+    if (!actionRequest) return;
+    setSelectedInterpretationId(null);
+    setSelectedPersonaId(null);
+    setForceRefresh(false);
+    setIsUpsellOpen(true);
+  }, [actionRequest]);
 
   useEffect(() => {
     if (selectedTemplateKey) return;
@@ -90,6 +126,26 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
       setSelectedTemplateKey(defaultTemplate.key);
     }
   }, [pdfTemplatesQuery.data, selectedTemplateKey]);
+
+  useEffect(() => {
+    if (selectedInterpretationId) return;
+    const persistedAt = data?.meta.persisted_at;
+    const interpretationId = data?.meta.id;
+    if (!persistedAt && !interpretationId) return;
+
+    const isPresentInHistory = historyItems.some(
+      (item) => item.id === interpretationId || item.created_at === persistedAt,
+    );
+    if (isPresentInHistory) return;
+
+    void historyQuery.refetch();
+  }, [
+    data?.meta.id,
+    data?.meta.persisted_at,
+    historyItems,
+    historyQuery,
+    selectedInterpretationId,
+  ]);
 
   const handleUpgrade = (personaId: string) => {
     setSelectedPersonaId(personaId);
@@ -101,18 +157,10 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
   };
 
   const handleRegenerate = () => {
-    const historyItems = historyQuery.data?.items ?? [];
-    const hasShortInterpretation = historyItems.some((item) => item.level === "short");
-    const hasCompleteInterpretation = historyItems.some((item) => item.level === "complete");
-    if (hasShortInterpretation && hasCompleteInterpretation) {
-      setSelectedInterpretationId(null);
-      setForceRefresh(false);
-      setIsUpsellOpen(true);
-      return;
-    }
     setSelectedInterpretationId(null);
-    setForceRefresh(true);
-    setRefreshKey((previous) => previous + 1);
+    setSelectedPersonaId(null);
+    setForceRefresh(false);
+    setIsUpsellOpen(true);
   };
 
   const handleSelectVersion = (id: number | null) => {
@@ -195,70 +243,68 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
           <h2 className="ni-title">{t.title}</h2>
           {data?.meta.persisted_at && (
             <span className="ni-date">
-              Généré le {new Date(data.meta.persisted_at).toLocaleDateString(lang, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              {t.generatedOnLabel} {new Date(data.meta.persisted_at).toLocaleDateString(lang, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
         </div>
 
         <div className="ni-actions">
-          {historyQuery.data && historyQuery.data.items.length > 0 && (
-            <VersionSelector
-              items={historyQuery.data.items}
-              selectedId={selectedInterpretationId || (historyQuery.data.items.find(i => i.created_at === data?.meta.persisted_at)?.id ?? null)}
-              onSelect={handleSelectVersion}
-              onDeleteRequest={(id) => setShowDeleteConfirm(id)}
-              t={t}
-              lang={lang}
-            />
+          {data && !isLoading && (
+            <button
+              onClick={handleRegenerate}
+              title={primaryActionLabel}
+              className="ni-action-btn ni-action-btn--regenerate ni-action-btn--primary"
+            >
+              <RefreshCw size={16} />
+              <span className="ni-action-btn__label">{primaryActionLabel}</span>
+            </button>
+          )}
+
+          {historyItems.length > 1 && (
+            <div className="ni-actions__group">
+              <span className="ni-actions__group-label">{t.historyGroupLabel}</span>
+              <div className="ni-actions__group-content">
+                <VersionSelector
+                  items={historyItems}
+                  selectedId={selectedInterpretationId || (historyItems.find(i => i.created_at === data?.meta.persisted_at)?.id ?? null)}
+                  onSelect={handleSelectVersion}
+                  onDeleteRequest={(id) => setShowDeleteConfirm(id)}
+                  t={t}
+                  lang={lang}
+                />
+              </div>
+            </div>
           )}
 
           {data && !isLoading && (
-            <>
-              <label className="ni-template-label">
-                <span>{t.templateLabel}</span>
-                <select
-                  value={selectedTemplateKey}
-                  onChange={(event) => setSelectedTemplateKey(event.target.value)}
-                  aria-label={t.templateLabel}
-                >
-                  {pdfTemplatesQuery.data?.items.map((template) => (
-                    <option key={template.key} value={template.key}>
-                      {template.name}
-                    </option>
-                  ))}
-                  {!pdfTemplatesQuery.data?.items.length && (
-                    <option value="default_natal">default_natal</option>
-                  )}
-                </select>
-              </label>
+            <div className="ni-actions__group ni-actions__group--pdf">
+              <span className="ni-actions__group-label">{t.pdfGroupLabel}</span>
+              <div className="ni-actions__group-content">
+                <label className="ni-control-trigger ni-template-label">
+                  <span>{t.templateLabel}</span>
+                  <select
+                    value={selectedTemplateKey}
+                    onChange={(event) => setSelectedTemplateKey(event.target.value)}
+                    aria-label={t.templateLabel}
+                  >
+                    {pdfTemplatesQuery.data?.items.map((template) => (
+                      <option key={template.key} value={template.key}>
+                        {template.name}
+                      </option>
+                    ))}
+                    {!pdfTemplatesQuery.data?.items.length && (
+                      <option value="default_natal">default_natal</option>
+                    )}
+                  </select>
+                </label>
 
-              <button
-                onClick={handlePreviewPdf}
-                title={t.previewPdf}
-                className="ni-action-btn ni-action-btn--preview"
-              >
-                <Eye size={16} />
-                <span className="ni-action-btn__label">{t.previewPdf}</span>
-              </button>
-
-              <button
-                onClick={handleDownloadPdf}
-                title={t.downloadPdf}
-                className="ni-action-btn ni-action-btn--download"
-              >
-                <Download size={16} />
-                <span className="ni-action-btn__label">{t.downloadPdf}</span>
-              </button>
-
-              <button
-                onClick={handleRegenerate}
-                title={t.regenerate}
-                className="ni-action-btn ni-action-btn--regenerate"
-              >
-                <RefreshCw size={16} />
-                <span className="ni-action-btn__label">{t.regenerate}</span>
-              </button>
-            </>
+                <PdfActionsMenu
+                  t={t}
+                  onPreview={handlePreviewPdf}
+                  onDownload={handleDownloadPdf}
+                />
+              </div>
+            </div>
           )}
 
           {data?.meta.level === "complete" && (
@@ -274,11 +320,7 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
           <InterpretationError t={t} onRetry={() => refetch()} />
         ) : data ? (
           <>
-            <InterpretationContent data={data} lang={lang} />
-
-            {useCaseLevel === "short" && !isUpsellOpen && !selectedInterpretationId && (
-              <UpsellBlock t={t} onOpenSelector={() => setIsUpsellOpen(true)} />
-            )}
+            <InterpretationContent data={data} lang={lang} fallbackEvidence={fallbackEvidence} />
 
             {isUpsellOpen && (
               <PersonaSelector
@@ -302,6 +344,73 @@ export function NatalInterpretationSection({ chartLoaded, chartId, lang }: Props
         />
       )}
     </section>
+  );
+}
+
+function PdfActionsMenu({
+  t,
+  onPreview,
+  onDownload,
+}: {
+  t: InterpretationTranslations
+  onPreview: () => void
+  onDownload: () => void
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (containerRef.current && !containerRef.current.contains(target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  return (
+    <div className="ni-version-selector" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((previous) => !previous)}
+        className="ni-control-trigger ni-version-btn"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+      >
+        <Download size={16} />
+        <span>{t.pdfActionsLabel}</span>
+        <ChevronDown
+          size={12}
+          className={`ni-version-btn__chevron${isOpen ? " ni-version-btn__chevron--open" : ""}`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="ni-version-dropdown ni-version-dropdown--actions" role="menu">
+          <div className="ni-version-dropdown__header">
+            <span className="ni-version-dropdown__label">{t.pdfGroupLabel}</span>
+          </div>
+          <div className="ni-version-dropdown__list">
+            <button type="button" className="ni-menu-action" onClick={() => { onPreview(); setIsOpen(false); }}>
+              <Eye size={16} />
+              <span>{t.previewPdf}</span>
+            </button>
+            <button type="button" className="ni-menu-action ni-menu-action--primary" onClick={() => { onDownload(); setIsOpen(false); }}>
+              <Download size={16} />
+              <span>{t.downloadPdf}</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -347,12 +456,12 @@ function VersionSelector({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="ni-version-btn"
+        className="ni-control-trigger ni-version-btn"
       >
         <History size={16} style={{ color: 'var(--color-primary-strong)' }} />
         <span>
           {selectedItem
-            ? `${new Date(selectedItem.created_at).toLocaleDateString(lang)} - ${selectedItem.persona_name || 'Standard'}`
+            ? `${new Date(selectedItem.created_at).toLocaleDateString(lang)} - ${selectedItem.persona_name || t.standardVersionLabel}`
             : t.historyTitle}
         </span>
         <ChevronDown
@@ -370,31 +479,34 @@ function VersionSelector({
             {items.map((item) => (
               <div
                 key={item.id}
-                className={`ni-version-item${selectedId === item.id ? ' ni-version-item--selected' : ''}`}
+                className="ni-version-item"
+                data-selected={selectedId === item.id ? "true" : undefined}
               >
-                <button
-                  type="button"
-                  className="ni-version-item__btn"
-                  onClick={() => {
+                <div className="ni-version-item__row">
+                  <button
+                    type="button"
+                    className="ni-version-item__btn"
+                    onClick={() => {
                     onSelect(item.id);
                     setIsOpen(false);
                   }}
                 >
-                  <span className={`ni-version-item__name${selectedId === item.id ? ' ni-version-item__name--selected' : ''}`}>
-                    {item.persona_name || 'Standard'}
+                  <span className="ni-version-item__name">
+                      {item.persona_name || t.standardVersionLabel}
                   </span>
                   <span className="ni-version-item__date">
-                    {new Date(item.created_at).toLocaleString(lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} · {item.level === 'complete' ? t.completeBadge : 'Short'}
+                      {new Date(item.created_at).toLocaleString(lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} · {item.level === 'complete' ? t.completeBadge : t.shortBadge}
                   </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); onDeleteRequest(item.id); }}
-                  className="ni-version-item__delete"
-                  title={t.deleteCta}
-                >
-                  <Trash2 size={14} />
-                </button>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onDeleteRequest(item.id); }}
+                    className="ni-version-item__delete"
+                    title={t.deleteCta}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -465,29 +577,36 @@ function InterpretationError({ t, onRetry }: { t: InterpretationTranslations, on
   );
 }
 
-function InterpretationContent({ data, lang }: { data: NatalInterpretationResult, lang: AstrologyLang }) {
+function InterpretationContent({
+  data,
+  lang,
+  fallbackEvidence,
+}: {
+  data: NatalInterpretationResult
+  lang: AstrologyLang
+  fallbackEvidence?: string[]
+}) {
   const t = natalChartTranslations[lang].interpretation;
   const { interpretation, meta, degraded_mode } = data;
   const highlights = Array.isArray(interpretation.highlights) ? interpretation.highlights : [];
   const sections = Array.isArray(interpretation.sections) ? interpretation.sections : [];
   const advice = Array.isArray(interpretation.advice) ? interpretation.advice : [];
-  const evidence = Array.isArray(interpretation.evidence) ? interpretation.evidence : [];
-  const disclaimers = Array.isArray(data.disclaimers)
-    ? data.disclaimers
-    : Array.isArray(interpretation.disclaimers)
-      ? interpretation.disclaimers
-      : [];
+  const evidence =
+    Array.isArray(interpretation.evidence) && interpretation.evidence.length > 0
+      ? interpretation.evidence
+      : fallbackEvidence ?? [];
+  const legalNoticeLines = t.legalNoticeLines;
 
   return (
     <div className="ni-content">
       {degraded_mode && (
         <div className="ni-degraded-notice">
-          <Star size={16} style={{ fill: 'currentColor', flexShrink: 0 }} />
+          <AlertCircle size={16} style={{ flexShrink: 0 }} />
           {t.degradedNotice}
         </div>
       )}
 
-      <div>
+      <div className="ni-content-card ni-content-card--summary">
         <h3 className="ni-interpretation-title">{interpretation.title}</h3>
         {meta.persona_name && (
           <p className="ni-persona-text">
@@ -504,14 +623,14 @@ function InterpretationContent({ data, lang }: { data: NatalInterpretationResult
 
       <SectionAccordion sections={sections} sectionsMap={t.sectionsMap} />
 
-      <div className="ni-advice-block">
+      <div className="ni-content-card ni-content-card--advice ni-advice-block">
         <h4 className="ni-advice-title">{t.adviceTitle}</h4>
         <AdviceList advice={advice} />
       </div>
 
       <EvidenceTags evidence={evidence} title={t.evidenceTitle} t={t} />
 
-      {disclaimers.length > 0 && (
+      {legalNoticeLines.length > 0 && (
         <footer className="ni-disclaimer-footer">
           <div className="ni-degraded-notice ni-degraded-notice--disclaimer">
             <p className="ni-disclaimer-title">
@@ -519,7 +638,7 @@ function InterpretationContent({ data, lang }: { data: NatalInterpretationResult
               {t.disclaimerTitle}
             </p>
             <div className="ni-disclaimer-list">
-              {disclaimers.map((d, i) => (
+              {legalNoticeLines.map((d, i) => (
                 <p key={i} className="ni-disclaimer-item">{d}</p>
               ))}
             </div>
@@ -536,7 +655,7 @@ function HighlightsChips({ highlights }: { highlights: string[] }) {
       {highlights.map((h, i) => (
         <div key={i} className="ni-highlight-chip">
           <div className="ni-highlight-icon">
-            <Star size={16} className="ni-highlight-star" />
+            <Sparkles size={16} className="ni-highlight-star" />
           </div>
           <p className="ni-highlight-text">{stripLeadingNumbering(h)}</p>
         </div>
@@ -561,11 +680,13 @@ function SectionAccordion({ sections, sectionsMap }: { sections: AstroSection[],
       {sections.map((section, index) => {
         const sectionId = `${section.key}-${index}`;
         const isOpen = openIds.includes(sectionId);
+        const sectionTitle =
+          section.heading?.trim() || sectionsMap[section.key] || section.key;
         return (
           <div key={sectionId} className="ni-accordion-item">
             <button onClick={() => toggleSection(sectionId)} className="ni-accordion-header">
               <span className="ni-accordion-title">
-                {sectionsMap[section.key] || section.heading}
+                {sectionTitle}
               </span>
               {isOpen
                 ? <ChevronUp size={20} className="ni-accordion-icon ni-accordion-icon--open" />
@@ -590,7 +711,7 @@ function AdviceList({ advice }: { advice: string[] }) {
       {advice.map((item, i) => (
         <div key={i} className="ni-advice-item">
           <div className="ni-advice-icon">
-            <Star size={12} className="ni-advice-star" />
+            <Sparkles size={12} className="ni-advice-star" />
           </div>
           <p className="ni-advice-text">{stripLeadingNumber(item)}</p>
         </div>
@@ -698,7 +819,12 @@ function EvidenceTags({
   title: string
   t: InterpretationTranslations
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(evidence.length > 0);
+  useEffect(() => {
+    if (evidence.length > 0) {
+      setOpen(true);
+    }
+  }, [evidence.length]);
   const categoryLabels: Record<EvidenceCategoryKey, string> = {
     angles: t.evidenceCategories.angles,
     personal_planets: t.evidenceCategories.personalPlanets,
@@ -757,7 +883,7 @@ function EvidenceTags({
           </p>
           <p className="ni-evidence-intro">{t.evidenceIntro}</p>
           <p className="ni-evidence-count">
-            {totalCount} élément{totalCount > 1 ? "s" : ""} dédupliqué{totalCount > 1 ? "s" : ""}
+            {t.dedupedCount(totalCount)}
           </p>
         </div>
         <span className="ni-evidence-toggle-icon">
@@ -768,6 +894,9 @@ function EvidenceTags({
 
       {open && (
         <div className="ni-evidence-content">
+          {totalCount === 0 ? (
+            <p className="ni-evidence-empty">{t.evidenceEmpty}</p>
+          ) : null}
           {orderedKeys.map((key) => {
             const items = grouped[key];
             if (items.length === 0) return null;
@@ -798,23 +927,6 @@ function EvidenceTags({
           })}
         </div>
       )}
-    </div>
-  );
-}
-
-function UpsellBlock({ t, onOpenSelector }: { t: InterpretationTranslations, onOpenSelector: () => void }) {
-  return (
-    <div className="ni-upsell">
-      <div className="ni-upsell__icon-bg">
-        <Lock size={128} className="ni-upsell__lock-icon" />
-      </div>
-      <div className="ni-upsell__content">
-        <h4 className="ni-upsell__title">{t.upsellTitle}</h4>
-        <p className="ni-upsell__desc">{t.upsellDescription}</p>
-        <button onClick={onOpenSelector} className="ni-upsell__cta">
-          {t.upsellCta}
-        </button>
-      </div>
     </div>
   );
 }
@@ -853,31 +965,33 @@ function PersonaSelector({
           {t.personaSelectorTitle}
         </h4>
 
-        {isLoading ? (
-          <div className="ni-loader-container">
-            <RefreshCw size={32} className="ni-loader-spin" />
-          </div>
-        ) : isError ? (
-          <div className="ni-modal-error">
-            <div className="ni-modal-error-icon">
-              <AlertCircle size={24} />
+        <div className="ni-persona-selector__body">
+          {isLoading ? (
+            <div className="ni-loader-container">
+              <RefreshCw size={32} className="ni-loader-spin" />
             </div>
-            <p className="ni-modal-error-text">{t.error}</p>
-            <Button variant="secondary" onClick={() => refetch()}>{t.retry}</Button>
-          </div>
-        ) : availableAstrologers.length > 0 ? (
-          <AstrologerGrid
-            astrologers={availableAstrologers}
-            onSelectAstrologer={(astrologer: Astrologer) => {
-              if (isSubmitting) return;
-              onConfirm(astrologer.id);
-            }}
-          />
-        ) : (
-          <p className="ni-modal-empty-text">
-            Tous les astrologues disponibles ont déjà une interprétation.
-          </p>
-        )}
+          ) : isError ? (
+            <div className="ni-modal-error">
+              <div className="ni-modal-error-icon">
+                <AlertCircle size={24} />
+              </div>
+              <p className="ni-modal-error-text">{t.error}</p>
+              <Button variant="secondary" onClick={() => refetch()}>{t.retry}</Button>
+            </div>
+          ) : availableAstrologers.length > 0 ? (
+            <AstrologerGrid
+              astrologers={availableAstrologers}
+              onSelectAstrologer={(astrologer: Astrologer) => {
+                if (isSubmitting) return;
+                onConfirm(astrologer.id);
+              }}
+            />
+          ) : (
+            <p className="ni-modal-empty-text">
+              {t.allAstrologersUsed}
+            </p>
+          )}
+        </div>
 
         <div className="modal-actions">
           <button onClick={onCancel} disabled={isSubmitting} className="ni-modal-cancel-btn">

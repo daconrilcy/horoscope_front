@@ -35,6 +35,8 @@ export type NatalChartGuideTranslations = {
 
 type NatalChartTranslations = {
   title: string
+  basicTitle: string
+  completeTitle: string
   loading: string
   notFound: string
   notFoundSub: string
@@ -43,10 +45,14 @@ type NatalChartTranslations = {
   incompleteDataSub: string
   completeProfile: string
   genericError: string
+  backToDashboard: string
   generateNow: string
   generating: string
   generateError: string
   retry: string
+  unlockCompleteInterpretation: string
+  requestAnotherAstrologer: string
+  interpretedByLabel: string
   generatedOn: string
   referenceVersion: string
   rulesetVersion: string
@@ -67,10 +73,23 @@ type NatalChartTranslations = {
     aspects: string
   }
   noAspects: string
+  planetsLead: string
+  housesLead: string
+  aspectsLead: string
   cuspide: string
   angle: string
   orb: string
   orbUsed: string
+  positionLabel: string
+  longitudeLabel: string
+  houseLabel: string
+  houseIntervalLabel: string
+  cuspLongitudeLabel: string
+  houseSignLabel: string
+  aspectPlanetsLabel: string
+  aspectExactAngleLabel: string
+  aspectMeaningLabel: string
+  aspectMeaningMap: Record<string, string>
   wrapConnector: string
   interpretation: {
     loading: string
@@ -87,6 +106,7 @@ type NatalChartTranslations = {
     showEvidence: string
     hideEvidence: string
     disclaimerTitle: string
+    legalNoticeLines: string[]
     error: string
     retry: string
     regenerate: string
@@ -95,15 +115,24 @@ type NatalChartTranslations = {
     personaSelectorTitle: string
     personaSelectorConfirm: string
     cancel: string
+    generatedOnLabel: string
+    standardVersionLabel: string
+    shortBadge: string
     historyTitle: string
     deleteConfirm: string
     deleteConfirmSub: string
     deleteCta: string
     templateLabel: string
+    historyGroupLabel: string
+    pdfGroupLabel: string
     previewPdf: string
     downloadPdf: string
+    pdfActionsLabel: string
     versionLabel: string
     noHistory: string
+    allAstrologersUsed: string
+    evidenceEmpty: string
+    dedupedCount: (count: number) => string
     sectionsMap: Record<string, string>
     evidenceCategories: {
       angles: string
@@ -120,6 +149,8 @@ type NatalChartTranslations = {
 export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslations> = {
   fr: {
     title: "Thème natal",
+    basicTitle: "Thème natal de base",
+    completeTitle: "Thème natal complet",
     loading: "Chargement de votre dernier thème natal...",
     notFound: "Aucun thème natal disponible pour le moment.",
     notFoundSub: "Générez d'abord votre thème initial pour afficher cette page.",
@@ -128,10 +159,14 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
     incompleteDataSub: "Complétez votre profil pour générer votre thème natal.",
     completeProfile: "Compléter mon profil",
     genericError: "Une erreur est survenue. Veuillez réessayer ultérieurement.",
+    backToDashboard: "Retour au dashboard",
     generateNow: "Générer mon thème natal",
     generating: "Génération en cours...",
     generateError: "Impossible de générer le thème pour le moment. Veuillez réessayer.",
     retry: "Réessayer",
+    unlockCompleteInterpretation: "Obtenir le thème natal complet",
+    requestAnotherAstrologer: "Choisir un autre astrologue",
+    interpretedByLabel: "Interprétation actuelle par",
     generatedOn: "Généré le",
     referenceVersion: "Version référentiel",
     rulesetVersion: "Ruleset",
@@ -152,10 +187,29 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       aspects: "Les aspects",
     },
     noAspects: "Aucun aspect majeur détecté pour ce calcul.",
+    planetsLead: "Les positions clés de vos planètes, avec leur signe, leur maison et leur longitude de référence.",
+    housesLead: "Les douze maisons structurent les domaines de vie. Chaque cuspide marque l'ouverture d'un secteur du thème.",
+    aspectsLead: "Les aspects décrivent les liens majeurs entre deux planètes. Les valeurs ci-dessous indiquent l'angle théorique et la précision observée.",
     cuspide: "cuspide",
     angle: "angle",
     orb: "orbe",
-    orbUsed: "orbe eff.",
+    orbUsed: "orbe effective",
+    positionLabel: "Position",
+    longitudeLabel: "Longitude brute",
+    houseLabel: "Maison active",
+    houseIntervalLabel: "Intervalle",
+    cuspLongitudeLabel: "Cuspide",
+    houseSignLabel: "Ouverture en",
+    aspectPlanetsLabel: "Planètes",
+    aspectExactAngleLabel: "Angle exact",
+    aspectMeaningLabel: "Lecture rapide",
+    aspectMeaningMap: {
+      CONJUNCTION: "Les deux énergies se superposent et se vivent ensemble dans le thème.",
+      SEXTILE: "Le lien ouvre une facilité de circulation et un potentiel de coopération.",
+      SQUARE: "L'aspect crée une tension utile, qui pousse à ajuster ou à dépasser un blocage.",
+      TRINE: "Le flux entre les deux planètes est naturel et soutenant.",
+      OPPOSITION: "L'aspect met en miroir deux pôles à équilibrer dans la vie du natif.",
+    },
     wrapConnector: "puis 0°",
     interpretation: {
       loading: "L'IA analyse votre thème natal...",
@@ -172,6 +226,11 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       showEvidence: "Afficher le panneau d’audit",
       hideEvidence: "Masquer le panneau d’audit",
       disclaimerTitle: "Mentions légales",
+      legalNoticeLines: [
+        "Cette interprétation astrologique est un contenu de réflexion personnelle, non scientifique et non prédictif.",
+        "Ce contenu ne constitue pas un conseil médical, psychologique, juridique, fiscal ou financier, et ne remplace pas un professionnel qualifié.",
+        "Aucune garantie de résultat n'est fournie ; vos décisions relèvent de votre responsabilité et de votre libre arbitre.",
+      ],
       error: "L'interprétation n'est pas disponible pour le moment.",
       retry: "Réessayer",
       regenerate: "Nouvelle interprétation",
@@ -180,15 +239,25 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       personaSelectorTitle: "Choisissez votre astrologue",
       personaSelectorConfirm: "Demander l'interprétation complète",
       cancel: "Annuler",
+      generatedOnLabel: "Généré le",
+      standardVersionLabel: "Standard",
+      shortBadge: "Short",
       historyTitle: "Versions disponibles",
       deleteConfirm: "Supprimer cette version ?",
       deleteConfirmSub: "Cette interprétation sera définitivement supprimée de votre historique.",
       deleteCta: "Supprimer",
       templateLabel: "Style",
+      historyGroupLabel: "Autres interprétations du thème disponibles",
+      pdfGroupLabel: "Exports PDF",
       previewPdf: "Aperçu PDF",
       downloadPdf: "Télécharger PDF",
+      pdfActionsLabel: "Actions PDF",
       versionLabel: "Version du",
       noHistory: "Aucune autre version disponible.",
+      allAstrologersUsed: "Tous les astrologues disponibles ont déjà une interprétation.",
+      evidenceEmpty: "Aucun repère technique n’est disponible pour cette version.",
+      dedupedCount: (count: number) =>
+        `${count} élément${count > 1 ? "s" : ""} dédupliqué${count > 1 ? "s" : ""}`,
       sectionsMap: {
         overall: "Vue d'ensemble",
         career: "Carrière et vocation",
@@ -287,6 +356,8 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
   },
   en: {
     title: "Natal Chart",
+    basicTitle: "Basic natal chart",
+    completeTitle: "Complete natal chart",
     loading: "Loading your latest natal chart...",
     notFound: "No natal chart available at the moment.",
     notFoundSub: "Generate your initial chart first to view this page.",
@@ -295,10 +366,14 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
     incompleteDataSub: "Complete your profile to generate your natal chart.",
     completeProfile: "Complete my profile",
     genericError: "An error occurred. Please try again later.",
+    backToDashboard: "Back to dashboard",
     generateNow: "Generate my natal chart",
     generating: "Generating...",
     generateError: "Unable to generate the chart right now. Please try again.",
     retry: "Retry",
+    unlockCompleteInterpretation: "Unlock the complete natal chart",
+    requestAnotherAstrologer: "Choose another astrologer",
+    interpretedByLabel: "Current interpretation by",
     generatedOn: "Generated on",
     referenceVersion: "Reference version",
     rulesetVersion: "Ruleset",
@@ -319,10 +394,29 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       aspects: "Aspects",
     },
     noAspects: "No major aspects detected for this calculation.",
+    planetsLead: "Key planetary placements with their sign, house and reference longitude.",
+    housesLead: "The twelve houses structure life areas. Each cusp opens a specific chart sector.",
+    aspectsLead: "Aspects describe the main links between two planets. The values below show the exact angle and measured precision.",
     cuspide: "cusp",
     angle: "angle",
     orb: "orb",
-    orbUsed: "eff. orb",
+    orbUsed: "effective orb",
+    positionLabel: "Position",
+    longitudeLabel: "Raw longitude",
+    houseLabel: "Active house",
+    houseIntervalLabel: "Range",
+    cuspLongitudeLabel: "Cusp",
+    houseSignLabel: "Opens in",
+    aspectPlanetsLabel: "Planets",
+    aspectExactAngleLabel: "Exact angle",
+    aspectMeaningLabel: "Quick reading",
+    aspectMeaningMap: {
+      CONJUNCTION: "Both energies merge and tend to be experienced together in the chart.",
+      SEXTILE: "This link creates flow and cooperative potential.",
+      SQUARE: "The aspect creates productive tension that pushes for adjustment.",
+      TRINE: "The flow between both planets is natural and supportive.",
+      OPPOSITION: "The aspect mirrors two poles that need balance in the native's life.",
+    },
     wrapConnector: "then 0°",
     interpretation: {
       loading: "AI is analyzing your natal chart...",
@@ -339,6 +433,11 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       showEvidence: "Show audit panel",
       hideEvidence: "Hide audit panel",
       disclaimerTitle: "Legal Notice",
+      legalNoticeLines: [
+        "This astrological interpretation is content for personal reflection, non-scientific and non-predictive.",
+        "This content does not constitute medical, psychological, legal, tax, or financial advice, and does not replace a qualified professional.",
+        "No guarantee of results is provided; your decisions remain your responsibility and your free will.",
+      ],
       error: "Interpretation is not available at the moment.",
       retry: "Retry",
       regenerate: "New interpretation",
@@ -347,15 +446,24 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       personaSelectorTitle: "Choose your astrologer",
       personaSelectorConfirm: "Request complete interpretation",
       cancel: "Cancel",
+      generatedOnLabel: "Generated on",
+      standardVersionLabel: "Standard",
+      shortBadge: "Short",
       historyTitle: "Available versions",
       deleteConfirm: "Delete this version?",
       deleteConfirmSub: "This interpretation will be permanently removed from your history.",
       deleteCta: "Delete",
       templateLabel: "Style",
+      historyGroupLabel: "Other available chart interpretations",
+      pdfGroupLabel: "PDF exports",
       previewPdf: "Preview PDF",
       downloadPdf: "Download PDF",
+      pdfActionsLabel: "PDF actions",
       versionLabel: "Version from",
       noHistory: "No other versions available.",
+      allAstrologersUsed: "All available astrologers already have an interpretation.",
+      evidenceEmpty: "No technical evidence is available for this version.",
+      dedupedCount: (count: number) => `${count} deduplicated item${count > 1 ? "s" : ""}`,
       sectionsMap: {
         overall: "Overall Overview",
         career: "Career and Vocation",
@@ -453,6 +561,8 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
   },
   es: {
     title: "Carta Natal",
+    basicTitle: "Carta natal básica",
+    completeTitle: "Carta natal completa",
     loading: "Cargando tu última carta natal...",
     notFound: "No hay carta natal disponible por el momento.",
     notFoundSub: "Genera primero tu carta inicial para ver esta página.",
@@ -461,10 +571,14 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
     incompleteDataSub: "Completa tu perfil para generar tu carta natal.",
     completeProfile: "Completar mi perfil",
     genericError: "Ocurrió un error. Por favor, inténtalo más tarde.",
+    backToDashboard: "Volver al panel",
     generateNow: "Generar mi carta natal",
     generating: "Generando...",
     generateError: "No se puede generar la carta en este momento. Inténtalo de nuevo.",
     retry: "Reintentar",
+    unlockCompleteInterpretation: "Obtener la carta natal completa",
+    requestAnotherAstrologer: "Elegir otro astrólogo",
+    interpretedByLabel: "Interpretación actual por",
     generatedOn: "Generado el",
     referenceVersion: "Versión de referencia",
     rulesetVersion: "Conjunto de reglas",
@@ -485,10 +599,29 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       aspects: "Los aspects",
     },
     noAspects: "No se detectaron aspectos mayores para este cálculo.",
+    planetsLead: "Las posiciones planetarias clave con su signo, casa y longitud de referencia.",
+    housesLead: "Las doce casas estructuran las áreas de vida. Cada cúspide abre un sector específico de la carta.",
+    aspectsLead: "Los aspectos describen los vínculos principales entre dos planetas. Los valores indican el ángulo exacto y la precisión observada.",
     cuspide: "cúspide",
     angle: "ángulo",
     orb: "orbe",
-    orbUsed: "orbe efec.",
+    orbUsed: "orbe efectivo",
+    positionLabel: "Posición",
+    longitudeLabel: "Longitud bruta",
+    houseLabel: "Casa activa",
+    houseIntervalLabel: "Intervalo",
+    cuspLongitudeLabel: "Cúspide",
+    houseSignLabel: "Se abre en",
+    aspectPlanetsLabel: "Planetas",
+    aspectExactAngleLabel: "Ángulo exacto",
+    aspectMeaningLabel: "Lectura rápida",
+    aspectMeaningMap: {
+      CONJUNCTION: "Ambas energías se superponen y suelen vivirse juntas en la carta.",
+      SEXTILE: "El vínculo abre facilidad de circulación y potencial de cooperación.",
+      SQUARE: "El aspecto crea una tensión útil que empuja a reajustar.",
+      TRINE: "El flujo entre ambos planetas es natural y favorecedor.",
+      OPPOSITION: "El aspecto pone en espejo dos polos que deben equilibrarse en la vida del nativo.",
+    },
     wrapConnector: "luego 0°",
     interpretation: {
       loading: "La IA está analizando tu carta natal...",
@@ -505,6 +638,11 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       showEvidence: "Mostrar panel de auditoría",
       hideEvidence: "Ocultar panel de auditoría",
       disclaimerTitle: "Aviso legal",
+      legalNoticeLines: [
+        "Esta interpretación astrológica es un contenido de reflexión personal, no científico y no predictivo.",
+        "Este contenido no constituye asesoramiento médico, psicológico, jurídico, fiscal o financiero, y no sustituye a un profesional cualificado.",
+        "No se ofrece ninguna garantía de resultado; sus decisiones son su responsabilidad y forman parte de su libre albedrío.",
+      ],
       error: "La interpretación no está disponible en este momento.",
       retry: "Reintentar",
       regenerate: "Nueva interpretación",
@@ -513,15 +651,24 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       personaSelectorTitle: "Elige a tu astrólogo",
       personaSelectorConfirm: "Solicitar interpretación completa",
       cancel: "Cancelar",
+      generatedOnLabel: "Generado el",
+      standardVersionLabel: "Standard",
+      shortBadge: "Short",
       historyTitle: "Versiones disponibles",
       deleteConfirm: "¿Eliminar esta versión?",
       deleteConfirmSub: "Esta interpretación se eliminará permanentemente de tu historial.",
       deleteCta: "Eliminar",
       templateLabel: "Estilo",
+      historyGroupLabel: "Otras interpretaciones disponibles de la carta",
+      pdfGroupLabel: "Exportaciones PDF",
       previewPdf: "Vista previa PDF",
       downloadPdf: "Descargar PDF",
+      pdfActionsLabel: "Acciones PDF",
       versionLabel: "Versión del",
       noHistory: "No hay otras versiones disponibles.",
+      allAstrologersUsed: "Todos los astrólogos disponibles ya tienen una interpretación.",
+      evidenceEmpty: "No hay evidencia técnica disponible para esta versión.",
+      dedupedCount: (count: number) => `${count} elemento${count > 1 ? "s" : ""} deduplicado${count > 1 ? "s" : ""}`,
       sectionsMap: {
         overall: "Visión general",
         career: "Carrera y vocación",

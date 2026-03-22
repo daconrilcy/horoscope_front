@@ -1,27 +1,20 @@
-/* Overrides for standard PageLayout when in NatalChartPage */
-.is-natal-page {
-  padding: 0 !important;
-  margin: 0 !important;
-  max-width: none !important;
-  width: 100% !important;
-}
-
-.is-natal-page .page-layout__main {
-  padding: 0 !important;
-}
-
 .natal-page-container {
-  --layout-max-width: 1200px;
+  --layout-page-max-width: 1200px;
+  --layout-page-padding: 0;
   --layout-padding-inline: 40px;
-  
+}
+
+.page-layout.natal-page-container {
+  width: 100%;
+}
+
+.page-layout.natal-page-container .page-layout__main {
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 24px var(--layout-padding-inline) 48px !important; /* Force override of PageLayout padding */
-  max-width: var(--layout-max-width) !important;
-  margin: 0 auto !important;
   min-height: 100vh;
   box-sizing: border-box;
+  padding: 24px var(--layout-padding-inline) 48px;
 }
 
 /* Base Background and Halos (from DailyHoroscopePage) */
@@ -53,6 +46,13 @@
   margin-bottom: 32px;
 }
 
+.natal-page-header__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
 .natal-page-header__meta {
   display: block;
   font-size: 11px;
@@ -72,6 +72,45 @@
   color: var(--premium-text-strong, var(--text-strong));
 }
 
+.natal-page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.natal-page-header__persona {
+  margin: 0;
+  font-size: 14px;
+  color: var(--premium-text-main, var(--text-main));
+}
+
+.natal-page-header__cta {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid var(--premium-glass-border-strong, rgba(255, 255, 255, 0.58));
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.78) 0%, rgba(244, 237, 255, 0.92) 100%);
+  color: var(--premium-accent-purple-strong, var(--primary-strong));
+  box-shadow:
+    0 12px 28px rgba(88, 58, 130, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.54);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.natal-page-header__cta:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 16px 36px rgba(88, 58, 130, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
 .natal-page-header__info {
   margin-top: 12px;
   font-size: 13px;
@@ -86,7 +125,7 @@
 .natal-grid {
   display: grid;
   gap: 24px;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   margin-bottom: 32px;
 }
 
@@ -113,6 +152,46 @@
   margin: 0 0 20px;
   color: var(--premium-text-strong, var(--text-strong));
   letter-spacing: -0.01em;
+}
+
+.natal-card__lead {
+  margin: 0 0 24px;
+  opacity: 0.8;
+}
+
+.natal-card__error {
+  margin-bottom: 24px;
+}
+
+.natal-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.natal-card__actions .ni-action-btn {
+  height: 44px;
+  padding-inline: 24px;
+}
+
+.natal-card__secondary-link {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.natal-card__complete-link {
+  display: inline-block;
+  margin-top: 24px;
+}
+
+.natal-page__inline-alert {
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.natal-page__degraded-warning {
+  margin-bottom: 24px;
 }
 
 /* Astro Profile Specifics */
@@ -143,9 +222,26 @@
 
 .natal-astro-summary__item dd {
   margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-size: 20px;
   font-weight: 700;
   color: var(--premium-accent-purple-strong, var(--primary-strong));
+}
+
+.natal-astro-summary__icon {
+  width: 20px;
+  height: 20px;
+  color: currentColor;
+  flex-shrink: 0;
+}
+
+.natal-card__intro {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--premium-text-main, var(--text-main));
 }
 
 /* List Styling */
@@ -169,6 +265,83 @@
 .natal-card li:last-child {
   border-bottom: none;
   padding-bottom: 0;
+}
+
+.natal-data-list {
+  display: grid;
+  gap: 14px;
+}
+
+.natal-data-card {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.46) 0%, rgba(248, 243, 255, 0.74) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.42) !important;
+  padding-bottom: 16px !important;
+  box-shadow:
+    0 10px 26px rgba(72, 52, 110, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.48);
+}
+
+.natal-data-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.natal-data-card__title {
+  font-size: 15px;
+  color: var(--premium-text-strong, var(--text-strong));
+}
+
+.natal-data-card__value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--premium-accent-purple-strong, var(--primary-strong));
+  text-align: right;
+}
+
+.natal-data-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.natal-data-card__reading {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--premium-text-main, var(--text-main));
+}
+
+.natal-data-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  color: var(--premium-text-main, var(--text-main));
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.natal-data-card__support {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--premium-text-meta, var(--text-faint));
+}
+
+.natal-data-card__support-label {
+  display: inline-block;
+  margin-right: 8px;
+  color: var(--premium-text-main, var(--text-main));
+  font-weight: 700;
 }
 
 /* Natal Chart Guide Premium Styling */
@@ -261,7 +434,7 @@
 .natal-house-interval {
   font-size: 11px;
   opacity: 0.7;
-  margin-top: 2px;
+  display: inline;
 }
 
 .natal-aspects-card {
@@ -278,26 +451,82 @@
 }
 
 .natal-aspect-item {
-  border: none !important;
-  padding: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.42) !important;
+  padding: 18px !important;
   display: flex;
   flex-direction: column;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(248, 244, 255, 0.72) 100%);
+  box-shadow:
+    0 12px 28px rgba(72, 52, 110, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.48);
 }
 
-.natal-aspect-header {
+.natal-aspect-item__head {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.natal-aspect-badge {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(122, 95, 220, 0.12);
+  border: 1px solid rgba(122, 95, 220, 0.14);
+  color: var(--premium-accent-purple-strong, var(--primary-strong));
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
-.natal-aspect-orb {
-  font-size: 12px;
-  opacity: 0.6;
+.natal-aspect-title {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.3;
+  color: var(--premium-text-strong, var(--text-strong));
 }
 
-.natal-aspect-planets {
+.natal-aspect-meaning {
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--premium-text-main, var(--text-main));
+}
+
+.natal-aspect-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+}
+
+.natal-aspect-meta__item {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+}
+
+.natal-aspect-meta__item dt {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--premium-text-meta, var(--text-faint));
+}
+
+.natal-aspect-meta__item dd {
+  margin: 0;
   font-size: 13px;
-  margin-top: 2px;
+  line-height: 1.4;
+  color: var(--premium-text-strong, var(--text-strong));
 }
 
 .natal-interpretation-container {
@@ -306,15 +535,35 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .natal-page-container {
+  .page-layout.natal-page-container .page-layout__main {
     padding: 16px 20px 40px;
   }
   
   .natal-page-header__title {
     font-size: 32px;
   }
+
+  .natal-page-header__actions {
+    align-items: flex-start;
+  }
+
+  .natal-card__actions {
+    flex-wrap: wrap;
+  }
   
   .natal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .natal-data-card__head {
+    flex-direction: column;
+  }
+
+  .natal-data-card__value {
+    text-align: left;
+  }
+
+  .natal-aspect-meta {
     grid-template-columns: 1fr;
   }
 }
