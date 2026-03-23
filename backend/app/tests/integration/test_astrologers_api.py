@@ -3,8 +3,9 @@ import uuid
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
+from app.core.security import create_access_token, hash_password
 from app.infra.db.base import Base
-from app.infra.db.models import AstrologerProfileModel, LlmPersonaModel
+from app.infra.db.models import AstrologerProfileModel, AstrologerReviewModel, LlmPersonaModel, UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 
@@ -151,3 +152,71 @@ def test_get_astrologer_returns_structured_profile_fields() -> None:
     assert payload["professional_background"] == ["Études en symbolisme et traditions anciennes"]
     assert payload["key_skills"] == ["Lecture symbolique du thème", "Archétypes"]
     assert payload["behavioral_style"] == ["Imagé", "Poétique mais lisible"]
+
+
+def test_review_rating_and_comment_are_persisted_with_user_alias() -> None:
+    _reset_tables()
+    persona_id = uuid.uuid4()
+
+    with SessionLocal() as db:
+        db.add(LlmPersonaModel(id=persona_id, name="Orion", enabled=True))
+        db.add(
+            AstrologerProfileModel(
+                persona_id=persona_id,
+                first_name="Orion",
+                last_name="Vasseur",
+                display_name="Orion Vasseur",
+                gender="male",
+                age=39,
+                public_style_label="Analytique",
+                bio_short="Bio courte",
+                bio_long="Bio longue",
+                admin_category="rational",
+                specialties=[],
+                professional_background=[],
+                key_skills=[],
+                behavioral_style=[],
+                is_public=True,
+            )
+        )
+        user = UserModel(
+            email="marie.lou@example.com",
+            password_hash=hash_password("secret"),
+            role="user",
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        user_id = user.id
+        access_token = create_access_token(str(user.id), user.role)
+
+    rate_response = client.post(
+        f"/v1/astrologers/{persona_id}/reviews",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"rating": 4},
+    )
+    assert rate_response.status_code == 200
+
+    with SessionLocal() as db:
+        stored_review = db.query(AstrologerReviewModel).filter_by(persona_id=persona_id, user_id=user_id).one()
+        assert stored_review.user_alias == "marie.lou"
+        assert stored_review.comment is None
+
+    comment_response = client.post(
+        f"/v1/astrologers/{persona_id}/reviews",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"rating": 4, "comment": "Analyse très claire et utile."},
+    )
+    assert comment_response.status_code == 200
+
+    profile_response = client.get(
+        f"/v1/astrologers/{persona_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert profile_response.status_code == 200
+    payload = profile_response.json()["data"]
+
+    assert payload["user_review"]["user_name"] == "marie.lou"
+    assert payload["user_review"]["comment"] == "Analyse très claire et utile."
+    assert payload["reviews"][0]["user_name"] == "marie.lou"
+    assert payload["reviews"][0]["comment"] == "Analyse très claire et utile."

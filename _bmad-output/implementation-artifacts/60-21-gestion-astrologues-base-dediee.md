@@ -25,6 +25,7 @@ so that les astrologues deviennent administrables, cohérents entre front et LLM
 11. **[x] Rotation du premier profil**: Le premier astrologue affiché alterne de façon déterministe entre les visites via un index persistant frontend, sans casser la navigation ni le tri global.
 12. **[x] Catégorie fournisseur explicite**: Les profils astrologues portent désormais un `provider_type` (`ia` / `real`) persisté en base et exposé clairement sur le catalogue et les fiches détail.
 13. **[x] Nettoyage des profils legacy parasites**: Le seed, le backfill et les tests d'intégration évitent désormais la réapparition de profils publics non canoniques ou sans photo dans le catalogue.
+14. **[x] Alias d'avis persisté**: Les avis astrologues persistés stockent aussi l'alias utilisateur, permettant un affichage public cohérent des retours sans exposer l'email.
 
 ## Tasks / Subtasks
 
@@ -73,6 +74,7 @@ Gemini CLI (Autonomous Mode)
 - Réécriture éditoriale des sections `À propos` pour les 6 astrologues, avec positionnement produit clarifié et phrase signature courte réutilisable dans la mission.
 - Ajout du lien vers la page astrologues dans le menu utilisateur et dans la navigation principale de l'application.
 - Stabilisation de la suite backend complète après introduction des nouvelles contraintes de clés étrangères.
+- Ajout du champ `user_alias` sur les avis astrologues pour afficher des retours publics identifiables sans fuite de donnée sensible.
 
 ### File List
 
@@ -81,6 +83,7 @@ Gemini CLI (Autonomous Mode)
 - `backend/migrations/versions/c5c208c81831_create_astrologer_dedicated_tables.py`
 - `backend/migrations/versions/20260322_0052_add_structured_fields_to_astrologer_profiles.py`
 - `backend/migrations/versions/20260323_0905_add_provider_type_to_astrologer_profiles.py`
+- `backend/migrations/versions/20260323_1120_add_user_alias_to_astrologer_reviews.py`
 - `backend/scripts/backfill_astrologer_profiles.py`
 - `backend/scripts/seed_astrologers_6_profiles.py`
 - `backend/app/api/v1/routers/astrologers.py`

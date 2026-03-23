@@ -205,22 +205,67 @@ export function AstrologerProfilePage() {
   
   const [isRating, setIsRating] = useState(false)
   const [imgError, setImgError] = useState(false)
+  const [isReviewComposerOpen, setIsReviewComposerOpen] = useState(false)
+  const [draftRating, setDraftRating] = useState<number | null>(null)
+  const [reviewDraft, setReviewDraft] = useState("")
+  const [reviewError, setReviewError] = useState<string | null>(null)
 
   const handleBack = () => {
     navigate("/astrologers")
   }
 
-  const handleRate = async (rating: number) => {
-    if (!profile || isRating) return
+  const handleReviewComposerOpen = (rating: number) => {
+    if (!profile || isRating || profile.user_rating) {
+      return
+    }
+    setDraftRating(rating)
+    setReviewDraft(profile.user_review?.comment ?? "")
+    setReviewError(null)
+    setIsReviewComposerOpen(true)
+  }
+
+  const closeReviewComposer = () => {
+    setIsReviewComposerOpen(false)
+    setDraftRating(null)
+    setReviewDraft("")
+    setReviewError(null)
+  }
+
+  const submitReview = async (comment?: string) => {
+    if (!profile || isRating) {
+      return
+    }
+
+    const rating = profile.user_rating ?? draftRating
+    if (!rating) {
+      return
+    }
+
     setIsRating(true)
     try {
-      await rateAstrologer(profile.id, { rating })
+      await rateAstrologer(profile.id, { rating, comment, tags: [] })
       await refetch()
+      closeReviewComposer()
     } catch {
       // Keep the current rating visible; the API error is already surfaced elsewhere.
     } finally {
       setIsRating(false)
     }
+  }
+
+  const handlePublishReview = async () => {
+    const trimmedReview = reviewDraft.trim()
+    if (!trimmedReview) {
+      setReviewError(null)
+      await submitReview(undefined)
+      return
+    }
+    if (trimmedReview.length < 10) {
+      setReviewError(t("review_form_min_length", lang))
+      return
+    }
+    setReviewError(null)
+    await submitReview(trimmedReview)
   }
 
   const handleChatCta = () => {
@@ -362,6 +407,9 @@ export function AstrologerProfilePage() {
     },
   ]
   const showImage = profile.avatar_url && !imgError
+  const displayedUserRating = profile.user_rating ?? draftRating ?? 0
+  const hasWrittenReview = Boolean(profile.user_review?.comment?.trim())
+  const canAddReviewText = Boolean(profile.user_rating) && !hasWrittenReview
 
   return (
     <PageLayout className="is-astrologer-profile-page">
@@ -637,15 +685,34 @@ export function AstrologerProfilePage() {
                 <p className="step-title review-stats-card__rating-title">{t("your_rating_title", lang)}</p>
                 <div className="review-rating review-rating--interactive">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <Star 
-                      key={star} 
-                      size={24} 
-                      onClick={() => handleRate(star)}
-                      fill={(profile.user_rating || 0) >= star ? "currentColor" : "none"}
-                      className="review-rating__star"
-                    />
+                    <button
+                      key={star}
+                      type="button"
+                      className="review-rating__button"
+                      onClick={() => handleReviewComposerOpen(star)}
+                      disabled={Boolean(profile.user_rating) || isRating}
+                      aria-label={`${t("your_rating_title", lang)} ${star}/5`}
+                    >
+                      <Star
+                        size={24}
+                        fill={displayedUserRating >= star ? "currentColor" : "none"}
+                        className="review-rating__star"
+                      />
+                    </button>
                   ))}
                 </div>
+                {canAddReviewText ? (
+                  <div className="review-stats-card__write-review">
+                    <Button type="button" variant="secondary" onClick={() => {
+                      setDraftRating(profile.user_rating ?? null)
+                      setReviewDraft(profile.user_review?.comment ?? "")
+                      setReviewError(null)
+                      setIsReviewComposerOpen(true)
+                    }}>
+                      {t("review_add_button", lang)}
+                    </Button>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -704,6 +771,64 @@ export function AstrologerProfilePage() {
             <span>Retour aux astrologues</span>
           </button>
         </div>
+
+        {isReviewComposerOpen ? (
+          <div
+            className="modal-overlay review-composer-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="astrologer-review-title"
+            onClick={closeReviewComposer}
+          >
+            <div
+              className="modal-content review-composer-modal"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="review-composer-modal__close"
+                onClick={closeReviewComposer}
+                aria-label={t("close", lang)}
+                disabled={isRating}
+              >
+                <span className="review-composer-modal__close-glyph" aria-hidden="true">
+                  ×
+                </span>
+              </button>
+              <h3 className="modal-title review-composer-modal__title" id="astrologer-review-title">
+                {t("review_form_title", lang)}
+              </h3>
+              <textarea
+                id="astrologer-review-textarea"
+                className="review-composer-card__textarea"
+                value={reviewDraft}
+                onChange={(event) => {
+                  setReviewDraft(event.target.value)
+                  if (reviewError) {
+                    setReviewError(null)
+                  }
+                }}
+                placeholder={t("review_form_placeholder", lang)}
+                rows={5}
+              />
+              {reviewError ? (
+                <p className="review-composer-card__error" role="alert">
+                  {reviewError}
+                </p>
+              ) : null}
+              <div className="review-composer-card__actions">
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={() => void handlePublishReview()}
+                  disabled={isRating}
+                >
+                  {t("review_form_publish", lang)}
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </PageLayout>
   )

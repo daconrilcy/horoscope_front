@@ -336,6 +336,8 @@ Gemini CLI (Autonomous Mode)
 - Le CTA principal n'affiche plus de tarif pour les astrologues IA ; le contrôle d'accès est renvoyé au flow métier au clic.
 - Les métriques du hero/detail distinguent désormais proprement `expérience métier` et `expérience astrologue`.
 - Les biographies `À propos` et les signatures mission reflètent maintenant le ton et le rôle exacts de chaque astrologue.
+- Le flux d'avis utilisateur est finalisé avec une modale en surimpression, une seule action de publication, validation d'un commentaire libre à partir de 10 caractères et fallback propre vers une simple note si aucun texte n'est saisi.
+- Les avis textuels persistés exposent désormais l'alias utilisateur, la date et le commentaire dans la section `Avis`, avec possibilité de noter d'abord puis d'ajouter un avis ultérieurement.
 
 ### File List
 
@@ -343,6 +345,7 @@ Gemini CLI (Autonomous Mode)
 - `backend/app/infra/db/models/__init__.py` (MOD)
 - `backend/migrations/versions/f44760fae191_add_astrologer_details_and_reviews.py` (NEW)
 - `backend/migrations/versions/20260323_0905_add_provider_type_to_astrologer_profiles.py` (NEW)
+- `backend/migrations/versions/20260323_1120_add_user_alias_to_astrologer_reviews.py` (NEW)
 - `backend/scripts/seed_astrologers_6_profiles.py` (MOD)
 - `backend/scripts/backfill_astrologer_profiles.py` (MOD)
 - `backend/app/api/v1/routers/astrologers.py` (MOD)

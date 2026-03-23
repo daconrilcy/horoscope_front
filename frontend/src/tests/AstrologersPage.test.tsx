@@ -8,6 +8,7 @@ import { AstrologerProfilePage } from "../pages/AstrologerProfilePage"
 const mockUseAstrologers = vi.fn()
 const mockUseAstrologer = vi.fn()
 const mockNavigate = vi.fn()
+const mockRateAstrologer = vi.fn()
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom")
@@ -20,8 +21,10 @@ vi.mock("react-router-dom", async () => {
 vi.mock("../api/astrologers", async () => {
   const actual = await vi.importActual<typeof import("../api/astrologers")>("../api/astrologers")
   return {
+    ...actual,
     useAstrologers: () => mockUseAstrologers(),
     useAstrologer: (id: string | undefined) => mockUseAstrologer(id),
+    rateAstrologer: (...args: unknown[]) => mockRateAstrologer(...args),
     isValidAstrologerId: actual.isValidAstrologerId,
   }
 })
@@ -64,6 +67,7 @@ afterEach(() => {
   mockUseAstrologers.mockReset()
   mockUseAstrologer.mockReset()
   mockNavigate.mockReset()
+  mockRateAstrologer.mockReset()
   localStorage.clear()
 })
 
@@ -315,6 +319,14 @@ describe("AstrologerProfilePage", () => {
       review_count: 127,
     },
     user_rating: 4,
+    user_review: {
+      id: "my-review",
+      user_name: "marie.lou",
+      rating: 4,
+      comment: "",
+      tags: [],
+      created_at: "2026-03-02T10:00:00Z",
+    },
     action_state: {
       has_chat: false,
       has_natal_interpretation: false,
@@ -341,6 +353,7 @@ describe("AstrologerProfilePage", () => {
       expect(screen.getByText("Je vous aide à relire votre thème avec douceur.")).toBeInTheDocument()
       expect(screen.getByText("Personnes accompagnées")).toBeInTheDocument()
       expect(screen.getByText(/Marie/)).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Avis" })).toBeInTheDocument()
       expect(screen.getByText(/\(127 avis\)/)).toBeInTheDocument()
     })
 
@@ -470,6 +483,73 @@ describe("AstrologerProfilePage", () => {
       fireEvent.click(backButton)
 
       expect(mockNavigate).toHaveBeenCalledWith("/astrologers")
+    })
+  })
+
+  describe("Reviews flow", () => {
+    it("opens the review composer when selecting a rating for the first time", () => {
+      const unratedProfile = {
+        ...mockProfile,
+        user_rating: undefined,
+        user_review: undefined,
+      }
+      mockUseAstrologer.mockReturnValue({
+        data: unratedProfile,
+        isPending: false,
+        error: null,
+        refetch: vi.fn(),
+      })
+
+      renderProfilePage("1")
+
+      fireEvent.click(screen.getByRole("button", { name: "Votre note 5/5" }))
+
+      expect(screen.getByRole("dialog")).toBeInTheDocument()
+      expect(
+        screen.getByPlaceholderText("Décrivez votre expérience avec cet astrologue...")
+      ).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Publier l'avis" })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Fermer" })).toBeInTheDocument()
+    })
+
+    it("shows a validation message when the review is shorter than 10 characters", () => {
+      const unratedProfile = {
+        ...mockProfile,
+        user_rating: undefined,
+        user_review: undefined,
+      }
+      mockUseAstrologer.mockReturnValue({
+        data: unratedProfile,
+        isPending: false,
+        error: null,
+        refetch: vi.fn(),
+      })
+
+      renderProfilePage("1")
+
+      fireEvent.click(screen.getByRole("button", { name: "Votre note 5/5" }))
+      fireEvent.change(
+        screen.getByPlaceholderText("Décrivez votre expérience avec cet astrologue..."),
+        { target: { value: "court" } }
+      )
+      fireEvent.click(screen.getByRole("button", { name: "Publier l'avis" }))
+
+      expect(
+        screen.getByText("Merci d'écrire au moins 10 caractères pour publier un avis.")
+      ).toBeInTheDocument()
+    })
+
+    it("shows a button to add a written review after a rating-only submission", () => {
+      mockUseAstrologer.mockReturnValue({
+        data: mockProfile,
+        isPending: false,
+        error: null,
+        refetch: vi.fn(),
+      })
+
+      renderProfilePage("1")
+
+      expect(screen.getByRole("button", { name: "Rédiger un avis" })).toBeInTheDocument()
     })
   })
 })

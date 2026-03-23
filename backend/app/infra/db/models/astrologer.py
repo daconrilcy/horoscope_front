@@ -135,6 +135,7 @@ class AstrologerReviewModel(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    user_alias: Mapped[str] = mapped_column(String(120), default="")
     persona_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("llm_personas.id", ondelete="CASCADE"), index=True
     )

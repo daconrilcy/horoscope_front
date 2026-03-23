@@ -347,7 +347,7 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     es: "Pericia y Especialidades",
   },
   reviews_title: {
-    fr: "Avis de ses consultants",
+    fr: "Avis",
     en: "Reviews from clients",
     es: "Opiniones de sus consultantes",
   },
@@ -360,6 +360,31 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     fr: "Votre note",
     en: "Your rating",
     es: "Su calificación",
+  },
+  review_form_title: {
+    fr: "Ajouter un avis",
+    en: "Add a review",
+    es: "Añadir una reseña",
+  },
+  review_form_placeholder: {
+    fr: "Décrivez votre expérience avec cet astrologue...",
+    en: "Describe your experience with this astrologer...",
+    es: "Describa su experiencia con este astrólogo...",
+  },
+  review_form_publish: {
+    fr: "Publier l'avis",
+    en: "Publish review",
+    es: "Publicar la reseña",
+  },
+  review_form_min_length: {
+    fr: "Merci d'écrire au moins 10 caractères pour publier un avis.",
+    en: "Please write at least 10 characters to publish a review.",
+    es: "Escriba al menos 10 caracteres para publicar una reseña.",
+  },
+  review_add_button: {
+    fr: "Rédiger un avis",
+    en: "Write a review",
+    es: "Escribir una reseña",
   },
   rate_action: {
     fr: "Noter cet astrologue",

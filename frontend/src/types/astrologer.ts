@@ -59,6 +59,7 @@ export type AstrologerProfile = Astrologer & {
     review_count: number
   }
   user_rating?: number
+  user_review?: AstrologerReview
 
   // Contextual actions
   action_state: AstrologerActionState

@@ -84,7 +84,8 @@ class AstrologerProfile(Astrologer):
     # Social proof
     reviews: List[AstrologerReview] = Field(default_factory=list)
     review_summary: dict = Field(default_factory=dict)
-    user_rating: Optional[int] = None # Current user's rating
+    user_rating: Optional[int] = None
+    user_review: Optional[AstrologerReview] = None
     
     # Contextual actions
     action_state: AstrologerActionState = Field(default_factory=AstrologerActionState)
@@ -104,6 +105,12 @@ class ReviewUpdate(BaseModel):
     rating: int = Field(..., ge=1, le=5)
     comment: Optional[str] = None
     tags: List[str] = Field(default_factory=list)
+
+
+def _build_user_alias(email: str) -> str:
+    local_part = email.split("@", 1)[0].strip()
+    cleaned = "".join(character for character in local_part if character.isalnum() or character in {"-", "_", "."})
+    return cleaned[:120] or "membre"
 
 
 def _error_response(
@@ -203,7 +210,11 @@ def get_astrologer(
     # Fetch reviews
     reviews_stmt = (
         select(AstrologerReviewModel)
-        .where(AstrologerReviewModel.persona_id == persona_uuid)
+        .where(
+            AstrologerReviewModel.persona_id == persona_uuid,
+            AstrologerReviewModel.comment.is_not(None),
+            AstrologerReviewModel.comment != "",
+        )
         .order_by(AstrologerReviewModel.created_at.desc())
         .limit(5)
     )
@@ -212,7 +223,7 @@ def get_astrologer(
     reviews = [
         AstrologerReview(
             id=str(r.id),
-            user_name="Consultant", # We don't have user names yet, anonymize
+            user_name=r.user_alias or "membre",
             rating=r.rating,
             comment=r.comment,
             tags=r.tags,
@@ -234,15 +245,26 @@ def get_astrologer(
 
     # User state
     user_rating = None
+    user_review = None
     action_state = AstrologerActionState()
     
     if current_user:
         # User rating
-        user_rev_stmt = select(AstrologerReviewModel.rating).where(
+        user_rev_stmt = select(AstrologerReviewModel).where(
             AstrologerReviewModel.persona_id == persona_uuid,
             AstrologerReviewModel.user_id == current_user.id
         )
-        user_rating = db.execute(user_rev_stmt).scalar_one_or_none()
+        current_user_review = db.execute(user_rev_stmt).scalar_one_or_none()
+        if current_user_review is not None:
+            user_rating = current_user_review.rating
+            user_review = AstrologerReview(
+                id=str(current_user_review.id),
+                user_name=current_user_review.user_alias or _build_user_alias(current_user.email),
+                rating=current_user_review.rating,
+                comment=current_user_review.comment,
+                tags=current_user_review.tags,
+                created_at=current_user_review.created_at.isoformat(),
+            )
         
         # Chat state
         chat_stmt = (
@@ -304,6 +326,7 @@ def get_astrologer(
             reviews=reviews,
             review_summary=review_summary,
             user_rating=user_rating,
+            user_review=user_review,
             action_state=action_state
         ),
         "meta": {"request_id": request_id},
@@ -351,6 +374,8 @@ def update_astrologer_review(
             details={},
         )
 
+    normalized_comment = (review_data.comment or "").strip() or None
+
     # Upsert review
     stmt = select(AstrologerReviewModel).where(
         AstrologerReviewModel.persona_id == persona_uuid,
@@ -360,14 +385,16 @@ def update_astrologer_review(
     
     if review:
         review.rating = review_data.rating
-        review.comment = review_data.comment
+        review.comment = normalized_comment
         review.tags = review_data.tags
+        review.user_alias = review.user_alias or _build_user_alias(current_user.email)
     else:
         review = AstrologerReviewModel(
             user_id=current_user.id,
+            user_alias=_build_user_alias(current_user.email),
             persona_id=persona_uuid,
             rating=review_data.rating,
-            comment=review_data.comment,
+            comment=normalized_comment,
             tags=review_data.tags
         )
         db.add(review)

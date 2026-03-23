@@ -72,6 +72,7 @@ const MOCK_ASTROLOGER_PROFILES: Record<string, AstrologerProfile> = {
       review_count: 0,
     },
     user_rating: undefined,
+    user_review: undefined,
     action_state: {
       has_chat: false,
       has_natal_interpretation: false,
