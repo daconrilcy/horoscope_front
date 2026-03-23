@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+import { API_BASE_URL, apiFetch } from "@api/client"
 import { useAccessTokenSnapshot } from "@utils/authToken"
 import { useAuthMe } from "@api/authMe"
 import { PrivacyPanel } from "@components/PrivacyPanel"
@@ -17,6 +18,8 @@ const ASTROLOGER_STYLES = [
   "psychologique",
 ] as const
 
+const USER_SETTINGS_ENDPOINT = `${API_BASE_URL}/v1/users/me/settings`
+
 export function AccountSettings() {
   const lang = detectLang()
   const t = settingsTranslations.account[lang]
@@ -32,7 +35,7 @@ export function AccountSettings() {
     const fetchSettings = async () => {
       if (!token) return
       try {
-        const response = await fetch("/api/v1/users/me/settings", {
+        const response = await apiFetch(USER_SETTINGS_ENDPOINT, {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (response.ok) {
@@ -54,7 +57,7 @@ export function AccountSettings() {
     setSaveStatus("idle")
 
     try {
-      const response = await fetch("/api/v1/users/me/settings", {
+      const response = await apiFetch(USER_SETTINGS_ENDPOINT, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

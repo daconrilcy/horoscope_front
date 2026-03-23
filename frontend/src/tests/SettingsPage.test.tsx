@@ -37,6 +37,19 @@ const AUTH_ME_USER = {
   }),
 }
 
+const USER_SETTINGS = {
+  ok: true,
+  status: 200,
+  json: async () => ({
+    data: {
+      astrologer_profile: "standard",
+    },
+    meta: {
+      request_id: "rid-settings-1",
+    },
+  }),
+}
+
 const BILLING_SUBSCRIPTION = {
   ok: true,
   status: 200,
@@ -95,6 +108,7 @@ function makeFetchMock(overrides: Record<string, object> = {}) {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
     if (url.endsWith("/v1/auth/me")) return overrides.authMe ?? AUTH_ME_USER
+    if (url.endsWith("/v1/users/me/settings")) return overrides.userSettings ?? USER_SETTINGS
     if (url.endsWith("/v1/billing/subscription")) return overrides.subscription ?? BILLING_SUBSCRIPTION
     if (url.endsWith("/v1/billing/quota")) return overrides.quota ?? BILLING_QUOTA
     if (url.endsWith("/v1/privacy/export")) return overrides.exportStatus ?? EXPORT_STATUS_NONE
@@ -187,7 +201,8 @@ describe("SettingsPage", () => {
 
   describe("AC2: Page compte", () => {
     it("affiche les informations du compte", async () => {
-      vi.stubGlobal("fetch", makeFetchMock())
+      const fetchMock = makeFetchMock()
+      vi.stubGlobal("fetch", fetchMock)
       setupToken()
 
       renderWithRouter(["/settings/account"])
@@ -200,6 +215,15 @@ describe("SettingsPage", () => {
       expect(screen.getByText("test@example.com")).toBeInTheDocument()
       expect(screen.getByText(frAcc.memberSince)).toBeInTheDocument()
       expect(screen.getByText(frAcc.role)).toBeInTheDocument()
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringMatching(/\/v1\/users\/me\/settings$/),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: expect.stringMatching(/^Bearer /),
+          }),
+          signal: expect.any(AbortSignal),
+        })
+      )
     })
   })
 
