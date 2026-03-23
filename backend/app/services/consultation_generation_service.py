@@ -18,6 +18,7 @@ from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationE
 from app.infra.db.repositories.consultation_third_party_repository import (
     ConsultationThirdPartyRepository,
 )
+from app.services.consultation_catalogue_service import ConsultationCatalogueService
 from app.services.consultation_fallback_service import ConsultationFallbackService
 from app.services.consultation_precheck_service import ConsultationPrecheckService
 from app.services.consultation_third_party_service import ConsultationThirdPartyService
@@ -282,10 +283,15 @@ class ConsultationGenerationService:
         return "\n\n".join(blocks), True
 
     @staticmethod
-    def _build_consultation_objective(request: ConsultationGenerateRequest) -> str:
+    def _build_consultation_objective(db: Session, request: ConsultationGenerateRequest) -> str:
         explicit_objective = (request.objective or "").strip()
         if explicit_objective:
             return explicit_objective
+
+        # AC1: Pilotage par la DB si disponible
+        template = ConsultationCatalogueService.get_template_by_key(db, request.consultation_type)
+        if template and template.prompt_content:
+            return template.prompt_content
 
         objective_by_type = {
             "period": "Comprendre le climat astrologique de la periode demandee.",
@@ -473,7 +479,7 @@ class ConsultationGenerationService:
             )
 
         route_key = ConsultationFallbackService.resolve_route_key(precheck)
-        objective = ConsultationGenerationService._build_consultation_objective(request)
+        objective = ConsultationGenerationService._build_consultation_objective(db, request)
         natal_chart_summary_override: str | None = None
         other_person_chart_used = False
         if request.consultation_type == "relation" and request.other_person is not None:

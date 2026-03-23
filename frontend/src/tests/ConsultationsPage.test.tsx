@@ -33,7 +33,7 @@ vi.mock("../api/consultations", () => ({
       },
       options?: { onSuccess?: (response: { data: any }) => void }
     ) => {
-      const isRelation = payload.consultation_type === "relation"
+      const isRelation = payload.consultation_type === "relation" || payload.consultation_type === "relationship"
       const fallbackMode =
         isRelation && payload.other_person?.birth_time_known === false
           ? "other_no_birth_time"
@@ -60,6 +60,32 @@ vi.mock("../api/consultations", () => ({
   useConsultationGenerate: () => ({
     mutateAsync: vi.fn(),
     isPending: false,
+  }),
+  useConsultationCatalogue: () => ({
+    data: {
+      items: [
+        {
+          key: "period",
+          icon_ref: "📅",
+          title: "Period Title",
+          subtitle: "Period Subtitle",
+          description: "Period Desc",
+          metadata_config: { tags: ["Tag1"] },
+          sort_order: 1,
+        },
+        {
+          key: "career",
+          icon_ref: "💼",
+          title: "Career Title",
+          subtitle: "Career Subtitle",
+          description: "Career Desc",
+          metadata_config: { tags: ["Tag2"] },
+          sort_order: 2,
+        },
+      ],
+      meta: { total: 2 },
+    },
+    isLoading: false,
   }),
   useConsultationThirdParties: () => ({
     data: { items: [
@@ -123,23 +149,22 @@ describe("ConsultationsPage", () => {
       renderWithProviders(<ConsultationsPage />, { route: "/consultations" })
 
       expect(screen.getByText("Consultations")).toBeInTheDocument()
-      expect(screen.getByText(/Create targeted/i)).toBeInTheDocument()
+      expect(screen.getByText(/Create targeted thematic consultations/i)).toBeInTheDocument()
     })
 
-    it("displays consultation types", () => {
+    it("displays consultation types from catalogue", () => {
       renderWithProviders(<ConsultationsPage />, { route: "/consultations" })
 
-      expect(screen.getAllByText(/Period/i).length).toBeGreaterThan(0)
-      expect(screen.getAllByText(/Career/i).length).toBeGreaterThan(0)
+      expect(screen.getByText("Period Title")).toBeInTheDocument()
+      expect(screen.getByText("Career Title")).toBeInTheDocument()
     })
   })
 })
 
 describe("Consultation Taxonomy Consistency", () => {
-  it("contains exactly work and relation", () => {
-    expect(INTERACTION_ELIGIBLE_TYPES).toContain("work")
-    expect(INTERACTION_ELIGIBLE_TYPES).toContain("relation")
-    expect(INTERACTION_ELIGIBLE_TYPES.length).toBe(2)
+  it("contains career and relationship", () => {
+    expect(INTERACTION_ELIGIBLE_TYPES).toContain("career")
+    expect(INTERACTION_ELIGIBLE_TYPES).toContain("relationship")
   })
 
   it("does not include non-eligible types", () => {

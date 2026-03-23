@@ -19,7 +19,7 @@ export function ConsultationFrameStep({
 }: ConsultationFrameStepProps) {
   const lang = detectLang()
   const isInteractionEligible = draft.type && INTERACTION_ELIGIBLE_TYPES.includes(draft.type)
-  const isRelationType = draft.type === "relation"
+  const isRelationType = draft.type === "relation" || draft.type === "relationship"
 
   return (
     <div className="wizard-step">

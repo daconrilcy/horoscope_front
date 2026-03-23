@@ -1,6 +1,36 @@
 import type { AstrologyLang } from "./astrology"
 
 const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
+  back_to_dashboard: {
+    fr: "Retour au tableau de bord",
+    en: "Back to dashboard",
+    es: "Volver al tablero de mando",
+  },
+  loading_catalogue: {
+    fr: "Chargement du catalogue...",
+    en: "Loading catalogue...",
+    es: "Cargando catálogo...",
+  },
+  choose_consultation: {
+    fr: "Choisir",
+    en: "Choose",
+    es: "Elegir",
+  },
+  no_preference_title: {
+    fr: "Je n’ai pas de préférence",
+    en: "I have no preference",
+    es: "No tengo preferencia",
+  },
+  no_preference_subtitle: {
+    fr: "Laissez-vous guider et définissez votre besoin à l'étape suivante.",
+    en: "Let us guide you and define your needs in the next step.",
+    es: "Déjanos guiarte y define tus necesidades en el siguiente paso.",
+  },
+  start_now: {
+    fr: "Commencer",
+    en: "Start",
+    es: "Comenzar",
+  },
   page_title: {
     fr: "Consultations",
     en: "Consultations",

@@ -15,6 +15,7 @@ from app.infra.db.models.calibration import CalibrationRawDayModel
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
+from app.infra.db.models.consultation_template import ConsultationTemplateModel
 from app.infra.db.models.consultation_third_party import (
     ConsultationThirdPartyProfileModel,
     ConsultationThirdPartyUsageModel,
@@ -93,6 +94,7 @@ __all__ = [
     "ChartResultModel",
     "ChatConversationModel",
     "ChatMessageModel",
+    "ConsultationTemplateModel",
     "ConsultationThirdPartyProfileModel",
     "ConsultationThirdPartyUsageModel",
     "DailyPredictionCategoryScoreModel",

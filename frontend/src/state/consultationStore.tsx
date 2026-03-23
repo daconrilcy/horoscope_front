@@ -399,7 +399,7 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
           (state.draft.objective ?? "").trim().length > 0
         )
       case "collection":
-        if (state.draft.type === "relation" && !state.draft.otherPerson) {
+        if (state.draft.type === "relationship" && !state.draft.otherPerson) {
            return false
         }
         if (state.draft.isInteraction && !state.draft.otherPerson) {

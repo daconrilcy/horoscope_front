@@ -16,9 +16,10 @@ import { tConsultations as t } from "@i18n/consultations"
 import {
   VALID_CREATABLE_TYPES,
   getObjectiveForType,
+  mapLegacyConsultationKey,
   type ConsultationType,
 } from "../types/consultation"
-import { useConsultationPrecheck } from "../api/consultations"
+import { useConsultationPrecheck, useConsultationCatalogue } from "../api/consultations"
 import { trackEvent, EVENTS } from "../utils/analytics"
 
 export function ConsultationWizardPage() {
@@ -26,6 +27,7 @@ export function ConsultationWizardPage() {
   const [searchParams] = useSearchParams()
   const lang = detectLang()
   const { mutate: runPrecheck, isPending: isPrechecking } = useConsultationPrecheck()
+  const { data: catalogue } = useConsultationCatalogue()
   const initializedTypeParamRef = useRef<string | null>(null)
 
   const {
@@ -52,24 +54,32 @@ export function ConsultationWizardPage() {
   const startConsultationForType = useCallback(
     (type: ConsultationType, advanceToNextStep: boolean) => {
       const astrologerIdFromQuery = searchParams.get("astrologerId")
+      
+      // AC2: Normalisation des clés legacy (work -> career, etc.)
+      const canonicalType = mapLegacyConsultationKey(type)
+      
       reset()
-      setType(type)
+      setType(canonicalType)
       setAstrologer(astrologerIdFromQuery || "auto")
       setContext("")
-      setObjective(t(getObjectiveForType(type), lang))
+      
+      // AC1.7: Utilisation des micro-textes pilotés par la base si disponibles
+      const template = catalogue?.items.find(i => i.key === canonicalType)
+      setObjective(template?.title ?? t(getObjectiveForType(canonicalType), lang))
+      
       setTimeHorizon(null)
       setOtherPerson(null)
       setPrecheck(null)
 
-      trackEvent(EVENTS.CONSULTATION_STARTED, { type })
+      trackEvent(EVENTS.CONSULTATION_STARTED, { type: canonicalType })
 
       runPrecheck(
-        { consultation_type: type },
+        { consultation_type: canonicalType },
         {
           onSuccess: (response) => {
             setPrecheck(response.data)
             trackEvent(EVENTS.CONSULTATION_PRECHECK, {
-              type,
+              type: canonicalType,
               status: response.data.status,
               precision: response.data.precision_level,
             })
@@ -82,6 +92,7 @@ export function ConsultationWizardPage() {
       }
     },
     [
+      catalogue,
       reset,
       setType,
       setAstrologer,
@@ -279,4 +290,3 @@ export function ConsultationWizardPage() {
     </div>
   )
 }
-

@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -182,3 +182,21 @@ class ConsultationThirdPartyListMeta(BaseModel):
 class ConsultationThirdPartyListResponse(BaseModel):
     items: list[ConsultationThirdPartyProfile]
     meta: ConsultationThirdPartyListMeta
+
+
+class ConsultationTemplateSchema(BaseModel):
+    key: str
+    icon_ref: str
+    title: str
+    subtitle: str
+    description: str
+    metadata_config: dict[str, Any]
+    sort_order: int
+
+    class Config:
+        from_attributes = True
+
+
+class ConsultationCatalogueResponse(BaseModel):
+    items: list[ConsultationTemplateSchema]
+    meta: dict[str, Any]

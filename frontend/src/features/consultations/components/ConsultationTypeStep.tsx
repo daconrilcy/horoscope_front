@@ -1,7 +1,8 @@
 import { detectLang } from "@i18n/astrology"
 import { tConsultations as t } from "@i18n/consultations"
-import { CONSULTATION_TYPES, type ConsultationType } from "@app-types/consultation"
+import { type ConsultationType } from "@app-types/consultation"
 import { classNames } from "@utils/classNames"
+import { useConsultationCatalogue } from "@api/consultations"
 
 type ConsultationTypeStepProps = {
   selectedType: ConsultationType | null
@@ -13,29 +14,40 @@ export function ConsultationTypeStep({
   onSelect,
 }: ConsultationTypeStepProps) {
   const lang = detectLang()
+  const { data: catalogue, isLoading } = useConsultationCatalogue()
+
+  if (isLoading) {
+    return (
+      <div className="wizard-step">
+        <h2 className="wizard-step-title">{t("select_type", lang)}</h2>
+        <div className="state-line state-loading">{t("loading", lang)}</div>
+      </div>
+    )
+  }
+
   return (
     <div className="wizard-step">
       <h2 className="wizard-step-title">{t("select_type", lang)}</h2>
       <div className="consultation-type-grid">
-        {CONSULTATION_TYPES.filter((t) => !t.isLegacy).map((typeConfig) => {
-          const isSelected = selectedType === typeConfig.id
+        {catalogue?.items.map((item) => {
+          const isSelected = selectedType === item.key
 
           return (
             <button
-              key={typeConfig.id}
+              key={item.key}
               type="button"
               className={classNames(
                 "consultation-type-card",
                 isSelected && "consultation-type-card--selected"
               )}
-              onClick={() => onSelect(typeConfig.id)}
+              onClick={() => onSelect(item.key as ConsultationType)}
               aria-pressed={isSelected}
             >
               <span className="consultation-type-icon" aria-hidden="true">
-                {typeConfig.icon}
+                {item.icon_ref}
               </span>
               <span className="consultation-type-label">
-                {t(typeConfig.labelKey, lang)}
+                {item.title}
               </span>
             </button>
           )
@@ -44,8 +56,3 @@ export function ConsultationTypeStep({
     </div>
   )
 }
-
-
-
-
-

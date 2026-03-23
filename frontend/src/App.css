@@ -1980,7 +1980,276 @@ textarea:focus-visible {
    CONSULTATIONS - Wizard & Result Pages
    ============================================ */
 
-/* Consultations Page */
+/* Consultations Page Refonte Premium */
+.premium-page-layout {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 50% 16%, rgba(118, 179, 255, 0.1), transparent 26%),
+    radial-gradient(circle at 18% 22%, rgba(160, 132, 255, 0.12), transparent 30%),
+    radial-gradient(circle at 82% 72%, rgba(255, 191, 215, 0.1), transparent 32%),
+    linear-gradient(180deg, #fffafc 0%, #f6efff 48%, #efe6ff 100%);
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.premium-hero-section {
+  max-width: 800px;
+  margin: 0 auto 3rem;
+  text-align: center;
+}
+
+.premium-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  color: var(--text-2);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.premium-back-link:hover {
+  color: var(--primary);
+}
+
+.premium-hero-title {
+  font-size: clamp(2.4rem, 4vw, 4rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: #2b1f44;
+  margin-bottom: 1rem;
+}
+
+.premium-hero-subtitle {
+  font-size: 1.1rem;
+  color: rgba(69, 50, 103, 0.7);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.consultations-catalogue-section {
+  max-width: 1000px;
+  margin: 0 auto 4rem;
+}
+
+.consultation-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.consultation-card-premium {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(136, 112, 211, 0.15);
+  border-radius: 24px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px rgba(64, 42, 102, 0.05);
+}
+
+.consultation-card-premium:hover {
+  transform: translateY(-4px) scale(1.01);
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(134, 108, 208, 0.4);
+  box-shadow: 0 20px 40px rgba(64, 42, 102, 0.1);
+}
+
+.consultation-card-premium-icon {
+  font-size: 3rem;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(160, 132, 255, 0.1);
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.consultation-card-premium-main {
+  flex: 1;
+}
+
+.consultation-card-premium-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2b1f44;
+  margin: 0 0 0.5rem;
+}
+
+.consultation-card-premium-subtitle {
+  font-size: 1rem;
+  color: rgba(69, 50, 103, 0.6);
+  margin: 0 0 1rem;
+}
+
+.consultation-card-premium-tags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.consultation-premium-tag {
+  padding: 0.25rem 0.75rem;
+  background: rgba(160, 132, 255, 0.08);
+  border: 1px solid rgba(160, 132, 255, 0.2);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #5c438f;
+}
+
+.premium-cta-inline {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #866cd0 0%, #a190ed 100%);
+  color: white;
+  border-radius: 999px;
+  font-weight: 600;
+  box-shadow: 0 8px 16px rgba(134, 108, 208, 0.3);
+  transition: all 0.2s ease;
+}
+
+.consultation-card-premium:hover .premium-cta-inline {
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px rgba(134, 108, 208, 0.4);
+}
+
+.consultation-card-premium--alt {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.4), rgba(160, 132, 255, 0.1));
+  border-style: dashed;
+}
+
+/* History Section Premium */
+.consultations-history-section-premium {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.premium-section-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2b1f44;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.consultations-history-list-premium {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.consultation-history-card-premium {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(136, 112, 211, 0.1);
+  border-radius: 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.consultation-history-card-premium:hover {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(134, 108, 208, 0.3);
+  transform: translateY(-2px);
+}
+
+.consultation-history-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.consultation-history-card-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(160, 132, 255, 0.05);
+  border-radius: 10px;
+}
+
+.consultation-history-card-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.consultation-history-card-type {
+  font-weight: 600;
+  color: #2b1f44;
+}
+
+.consultation-history-card-date {
+  font-size: 0.8rem;
+  color: rgba(69, 50, 103, 0.5);
+}
+
+.consultation-history-card-context {
+  font-size: 0.9rem;
+  color: rgba(69, 50, 103, 0.7);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.premium-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem;
+  color: var(--text-2);
+}
+
+.premium-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(134, 108, 208, 0.1);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .consultation-card-premium {
+    flex-direction: column;
+    gap: 1.5rem;
+    text-align: center;
+    padding: 1.5rem;
+  }
+  
+  .consultation-card-premium-action {
+    width: 100%;
+  }
+  
+  .premium-cta-inline {
+    display: block;
+    width: 100%;
+  }
+  
+  .premium-hero-title {
+    font-size: 2.5rem;
+  }
+}
+
+/* Consultations Page OLD */
 .consultations-page {
   max-width: 900px;
   margin: 0 auto;

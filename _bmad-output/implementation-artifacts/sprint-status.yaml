@@ -527,6 +527,7 @@ development_status:
   60-20-alignement-premium-page-natal: done
   60-21-gestion-astrologues-base-dediee: done
   60-22-page-profil-astrologue-premium-conversion: done
+  60-23-refonte-premium-page-consultations-et-catalogue-db: ready-for-dev
   epic-60-retrospective: optional
 
   epic-58: in-progress

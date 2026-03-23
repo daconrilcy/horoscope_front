@@ -29,7 +29,7 @@ export function DataCollectionStep({
   const lang = detectLang()
 
   const isUserMissingData = precheck?.user_profile_quality === "missing" || precheck?.user_profile_quality === "incomplete"
-  const isInteractionPath = draft.type === "relation" || draft.isInteraction
+  const isInteractionPath = draft.type === "relation" || draft.type === "relationship" || draft.isInteraction
 
   return (
     <div className="wizard-step">

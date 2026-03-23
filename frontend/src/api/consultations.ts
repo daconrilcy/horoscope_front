@@ -153,6 +153,24 @@ export interface ConsultationThirdPartyListResponse {
   }
 }
 
+export interface ConsultationTemplate {
+  key: string
+  icon_ref: string
+  title: string
+  subtitle: string
+  description: string
+  metadata_config: any
+  sort_order: number
+}
+
+export interface ConsultationCatalogueResponse {
+  items: ConsultationTemplate[]
+  meta: {
+    request_id: string
+    total: number
+  }
+}
+
 export class ConsultationApiError extends Error {
   code: string
   status: number
@@ -170,6 +188,36 @@ export class ConsultationApiError extends Error {
     this.status = status
     this.details = details
   }
+}
+
+export async function getCatalogue(): Promise<ConsultationCatalogueResponse> {
+  const response = await apiFetch(`${API_BASE_URL}/v1/consultations/catalogue`, {
+    method: "GET",
+    headers: {
+      ...getAccessTokenAuthHeader(),
+    },
+  })
+
+  const json = await response.json()
+
+  if (!response.ok) {
+    throw new ConsultationApiError(
+      json.error?.code || "unknown_error",
+      json.error?.message || "An unknown error occurred",
+      response.status,
+      json.error?.details
+    )
+  }
+
+  return json
+}
+
+export function useConsultationCatalogue() {
+  return useQuery({
+    queryKey: ["consultation-catalogue"],
+    queryFn: getCatalogue,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  })
 }
 
 export async function precheckConsultation(

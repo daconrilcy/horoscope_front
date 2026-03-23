@@ -3,22 +3,49 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.v1.schemas.consultation import (
+    ConsultationCatalogueResponse,
     ConsultationGenerateRequest,
     ConsultationGenerateResponse,
     ConsultationPrecheckMeta,
     ConsultationPrecheckRequest,
     ConsultationPrecheckResponse,
+    ConsultationTemplateSchema,
     ConsultationThirdPartyListMeta,
     ConsultationThirdPartyListResponse,
     ConsultationThirdPartyProfile,
     ConsultationThirdPartyProfileCreate,
 )
 from app.infra.db.session import get_db_session as get_db
+from app.services.consultation_catalogue_service import ConsultationCatalogueService
 from app.services.consultation_generation_service import ConsultationGenerationService
 from app.services.consultation_precheck_service import ConsultationPrecheckService
 from app.services.consultation_third_party_service import ConsultationThirdPartyService
 
 router = APIRouter()
+
+
+@router.get("/catalogue", response_model=ConsultationCatalogueResponse)
+def get_catalogue(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+):
+    """
+    Récupère le catalogue public des consultations types piloté par la base.
+    """
+    request_id = getattr(request.state, "request_id", "unknown")
+    templates = ConsultationCatalogueService.get_catalogue(db)
+
+    # Conversion en schémas
+    items = [ConsultationTemplateSchema.from_orm(t) for t in templates]
+
+    return ConsultationCatalogueResponse(
+        items=items,
+        meta={
+            "request_id": request_id,
+            "total": len(items)
+        }
+    )
 
 
 @router.post("/precheck", response_model=ConsultationPrecheckResponse)
@@ -30,8 +57,12 @@ def precheck_consultation(
 ):
     """
     Exécute un précheck de complétude et d'éligibilité pour une consultation.
+    Gère la compatibilité legacy des clés.
     """
     request_id = getattr(request.state, "request_id", "unknown")
+
+    # AC2: Normalisation des clés legacy
+    payload.consultation_type = ConsultationCatalogueService.map_legacy_key(payload.consultation_type)
 
     data = ConsultationPrecheckService.precheck(db, current_user.id, payload)
 
@@ -49,8 +80,12 @@ async def generate_consultation(
 ):
     """
     Génère le contenu complet d'une consultation.
+    Gère la compatibilité legacy des clés.
     """
     request_id = getattr(request.state, "request_id", "unknown")
+
+    # AC2: Normalisation des clés legacy
+    payload.consultation_type = ConsultationCatalogueService.map_legacy_key(payload.consultation_type)
 
     data = await ConsultationGenerationService.generate(db, current_user.id, payload, request_id)
 
