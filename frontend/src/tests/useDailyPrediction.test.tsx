@@ -7,9 +7,13 @@ import { ANONYMOUS_SUBJECT } from "../utils/constants";
 const useQueryMock = vi.fn();
 const getSubjectFromAccessTokenMock = vi.fn();
 
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: (options: unknown) => useQueryMock(options),
-}));
+vi.mock("@tanstack/react-query", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-query")>();
+  return {
+    ...actual,
+    useQuery: (options: unknown) => useQueryMock(options),
+  };
+});
 
 vi.mock("../utils/authToken", () => ({
   getSubjectFromAccessToken: (token: string | null) => getSubjectFromAccessTokenMock(token),

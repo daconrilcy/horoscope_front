@@ -120,6 +120,7 @@ export const VALID_CONSULTATION_TYPES: ConsultationType[] = [
 
 export const INTERACTION_ELIGIBLE_TYPES: ConsultationType[] = ["career", "work", "relationship", "relation"]
 
+export const AUTO_ASTROLOGER_ID = "auto"
 export const WIZARD_LAST_STEP_INDEX = 3
 export const HISTORY_MAX_LENGTH = 50
 

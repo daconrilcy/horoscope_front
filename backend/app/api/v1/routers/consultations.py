@@ -37,7 +37,7 @@ def get_catalogue(
     templates = ConsultationCatalogueService.get_catalogue(db)
 
     # Conversion en schémas
-    items = [ConsultationTemplateSchema.from_orm(t) for t in templates]
+    items = [ConsultationTemplateSchema.model_validate(t) for t in templates]
 
     return ConsultationCatalogueResponse(
         items=items,
@@ -62,7 +62,9 @@ def precheck_consultation(
     request_id = getattr(request.state, "request_id", "unknown")
 
     # AC2: Normalisation des clés legacy
-    payload.consultation_type = ConsultationCatalogueService.map_legacy_key(payload.consultation_type)
+    payload.consultation_type = ConsultationCatalogueService.map_legacy_key(
+        payload.consultation_type
+    )
 
     data = ConsultationPrecheckService.precheck(db, current_user.id, payload)
 
@@ -85,7 +87,9 @@ async def generate_consultation(
     request_id = getattr(request.state, "request_id", "unknown")
 
     # AC2: Normalisation des clés legacy
-    payload.consultation_type = ConsultationCatalogueService.map_legacy_key(payload.consultation_type)
+    payload.consultation_type = ConsultationCatalogueService.map_legacy_key(
+        payload.consultation_type
+    )
 
     data = await ConsultationGenerationService.generate(db, current_user.id, payload, request_id)
 

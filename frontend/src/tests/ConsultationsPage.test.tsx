@@ -148,8 +148,8 @@ describe("ConsultationsPage", () => {
     it("displays page title and subtitle", () => {
       renderWithProviders(<ConsultationsPage />, { route: "/consultations" })
 
-      expect(screen.getByText("Consultations")).toBeInTheDocument()
-      expect(screen.getByText(/Create targeted thematic consultations/i)).toBeInTheDocument()
+      expect(screen.getByText("Choose your consultation")).toBeInTheDocument()
+      expect(screen.getByText(/Which area would you like guidance on/i)).toBeInTheDocument()
     })
 
     it("displays consultation types from catalogue", () => {

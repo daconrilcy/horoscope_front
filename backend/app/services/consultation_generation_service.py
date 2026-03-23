@@ -295,8 +295,10 @@ class ConsultationGenerationService:
 
         objective_by_type = {
             "period": "Comprendre le climat astrologique de la periode demandee.",
+            "career": "Eclairer une interaction ou une decision liee au travail.",
             "work": "Eclairer une interaction ou une decision liee au travail.",
             "orientation": "Clarifier une direction de vie ou une decision structurante.",
+            "relationship": "Lire la dynamique relationnelle de maniere prudente et non fataliste.",
             "relation": "Lire la dynamique relationnelle de maniere prudente et non fataliste.",
             "timing": "Identifier le bon tempo d action avec une lecture astrologique prudente.",
         }
@@ -482,7 +484,7 @@ class ConsultationGenerationService:
         objective = ConsultationGenerationService._build_consultation_objective(db, request)
         natal_chart_summary_override: str | None = None
         other_person_chart_used = False
-        if request.consultation_type == "relation" and request.other_person is not None:
+        if request.consultation_type == "relationship" and request.other_person is not None:
             (
                 natal_chart_summary_override,
                 other_person_chart_used,

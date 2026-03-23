@@ -136,7 +136,12 @@ class ConsultationPrecheckService:
             status = ConsultationStatus.nominal
             available_modes.append("nominal")
 
-        if request.consultation_type == "relation":
+        is_relationship_consultation = request.consultation_type in {
+            "relation",
+            "relationship",
+        }
+
+        if is_relationship_consultation:
             if not request.other_person:
                 missing_fields.append("other_person")
                 if status != ConsultationStatus.blocked:

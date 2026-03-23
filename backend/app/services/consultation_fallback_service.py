@@ -38,19 +38,20 @@ class ConsultationFallbackService:
         precision = data.precision_level
         fallback_mode = data.fallback_mode
 
-        if consultation_type in ["period", "work", "orientation"]:
+        if consultation_type in {"period", "career", "work", "orientation"}:
             if precision == PrecisionLevel.high:
                 return f"{consultation_type}_full"
             return f"{consultation_type}_no_birth_time"
 
-        if consultation_type == "relation":
+        if consultation_type in {"relationship", "relation"}:
+            route_prefix = "relationship" if consultation_type == "relationship" else "relation"
             if fallback_mode == FallbackMode.other_no_birth_time:
-                return "relation_full_other_no_time"
+                return f"{route_prefix}_full_other_no_time"
             if fallback_mode == FallbackMode.relation_user_only:
-                return "relation_user_only"
+                return f"{route_prefix}_user_only"
             if precision == PrecisionLevel.high:
-                return "relation_full_full"
-            return "relation_user_only"
+                return f"{route_prefix}_full_full"
+            return f"{route_prefix}_user_only"
 
         if consultation_type == "timing":
             if precision == PrecisionLevel.high:

@@ -106,7 +106,7 @@ const mockHistory = {
 };
 
 const mockAstrologers = [
-  { id: "1", name: "Luna Céleste", specialties: ["Relations"], bio_short: "Bio Luna" }
+  { id: "1", name: "Luna Céleste", first_name: "Luna", last_name: "Céleste", provider_type: "ai", specialties: ["Relations"], bio_short: "Bio Luna" }
 ];
 
 describe("NatalInterpretationSection", () => {

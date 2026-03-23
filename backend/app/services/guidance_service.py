@@ -638,7 +638,7 @@ class GuidanceService:
         }
 
         attempts = 0
-        max_attempts = max(1, settings.chat_llm_retry_count + 1)
+        max_attempts = 1  # Network retries now handled exclusively by Gateway V2
         last_error_code = "llm_unavailable"
         last_error_message = "llm provider is unavailable"
 
@@ -675,9 +675,10 @@ class GuidanceService:
                 if not recovery_metadata.recovery_applied and result.structured_output:
                     s = result.structured_output
                     summary_raw = s.get("summary") or s.get("text") or result.raw_output
-                    key_points = s.get("key_points") or []
+                    key_points = s.get("key_points") or s.get("highlights") or []
                     advice = s.get("actionable_advice") or s.get("advice") or []
-                    disclaimer_raw = s.get("disclaimer") or ""
+                    disclaimers = s.get("disclaimers") or []
+                    disclaimer_raw = s.get("disclaimer") or (disclaimers[0] if disclaimers else "")
                 else:
                     # If recovery was applied, we might have a raw text from fallback
                     # In _apply_off_scope_recovery_async, it returns a string for now.
@@ -925,7 +926,7 @@ class GuidanceService:
         }
 
         attempts = 0
-        max_attempts = max(1, settings.chat_llm_retry_count + 1)
+        max_attempts = 1  # Network retries now handled exclusively by Gateway V2
         last_error_code = "llm_unavailable"
         last_error_message = "llm provider is unavailable"
 
@@ -958,9 +959,10 @@ class GuidanceService:
                 if not recovery_metadata.recovery_applied and result.structured_output:
                     s = result.structured_output
                     summary_raw = s.get("summary") or s.get("text") or result.raw_output
-                    key_points = s.get("key_points") or []
+                    key_points = s.get("key_points") or s.get("highlights") or []
                     advice = s.get("actionable_advice") or s.get("advice") or []
-                    disclaimer_raw = s.get("disclaimer") or ""
+                    disclaimers = s.get("disclaimers") or []
+                    disclaimer_raw = s.get("disclaimer") or (disclaimers[0] if disclaimers else "")
                 else:
                     summary_raw = recovered_text
                     key_points = []

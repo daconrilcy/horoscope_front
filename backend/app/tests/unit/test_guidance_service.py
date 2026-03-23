@@ -324,9 +324,10 @@ def test_request_guidance_timeout_and_unavailable_are_retryable() -> None:
     assert unavailable_error.value.details["retryable"] == "true"
 
 
-def test_request_guidance_applies_retry_backoff_when_configured(
+def test_request_guidance_delegates_network_retries(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Test that GuidanceService doesn't apply its own sleep retry for network errors."""
     _cleanup_tables()
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
@@ -336,10 +337,6 @@ def test_request_guidance_applies_retry_backoff_when_configured(
     async def fake_sleep(delay: float) -> None:
         delays.append(delay)
 
-    monkeypatch.setattr(settings, "chat_llm_retry_count", 1)
-    monkeypatch.setattr(settings, "chat_llm_retry_backoff_seconds", 0.01)
-    monkeypatch.setattr(settings, "chat_llm_retry_backoff_max_seconds", 0.01)
-    monkeypatch.setattr(settings, "chat_llm_retry_jitter_seconds", 0.0)
     monkeypatch.setattr("asyncio.sleep", fake_sleep)
 
     with SessionLocal() as db:
@@ -351,8 +348,7 @@ def test_request_guidance_applies_retry_backoff_when_configured(
             )
 
     assert timeout_error.value.code == "llm_timeout"
-    assert len(delays) == 1
-    assert delays[0] == pytest.approx(0.01, abs=0.0001)
+    assert len(delays) == 0  # No sleep because retry is delegated to Gateway
 
 
 def test_request_guidance_never_leaks_internal_prompt_in_summary() -> None:

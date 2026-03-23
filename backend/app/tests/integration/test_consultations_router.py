@@ -160,7 +160,7 @@ def test_precheck_accepts_enriched_other_person_payload():
 
     assert response.status_code == 200
     json_data = response.json()
-    assert json_data["data"]["consultation_type"] == "relation"
+    assert json_data["data"]["consultation_type"] == "relationship"
     assert json_data["data"]["status"] == "nominal"
 
 
@@ -201,9 +201,9 @@ def test_generate_accepts_enriched_other_person_payload():
 
     assert response.status_code == 200
     json_data = response.json()
-    assert json_data["data"]["consultation_type"] == "relation"
+    assert json_data["data"]["consultation_type"] == "relationship"
     assert json_data["data"]["status"] == "nominal"
-    assert json_data["data"]["route_key"] == "relation_full_full"
+    assert json_data["data"]["route_key"] == "relationship_full_full"
     assert json_data["data"]["metadata"]["other_person_chart_used"] is True
     basis_section = next(
         section
@@ -251,7 +251,7 @@ def test_generate_work_with_other_person_keeps_work_context():
 
     assert response.status_code == 200
     json_data = response.json()
-    assert json_data["data"]["consultation_type"] == "work"
+    assert json_data["data"]["consultation_type"] == "career"
     assert json_data["data"]["metadata"]["other_person_chart_used"] is False
     basis_section = next(
         section

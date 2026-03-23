@@ -205,17 +205,17 @@ describe("normalizeConsultationResult", () => {
 
 describe("type exports", () => {
   it("returns consultation config for supported types", () => {
-    expect(getConsultationTypeConfig("dating")?.icon).toBe("💕")
-    expect(getConsultationTypeConfig("pro")?.labelKey).toBe("type_pro")
+    expect(getConsultationTypeConfig("period")?.icon).toBe("📅")
+    expect(getConsultationTypeConfig("career")?.labelKey).toBe("type_work_label")
   })
 
   it("exposes wizard steps and labels without drawing step", () => {
     expect(WIZARD_STEPS).toEqual(["type", "frame", "collection", "summary"])
     expect(WIZARD_STEP_LABELS).toEqual({
-      type: "step_type",
-      frame: "step_frame",
-      collection: "step_collection",
-      summary: "step_summary",
+      type: "select_type",
+      frame: "frame_request",
+      collection: "additional_info",
+      summary: "final_verification",
     })
   })
 

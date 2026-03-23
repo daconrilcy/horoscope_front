@@ -206,7 +206,7 @@ def test_generate_records_usage_for_existing_third_party():
     items = list_resp.json()["items"]
     assert len(items) == 1
     assert len(items[0]["usage_history"]) == 1
-    assert items[0]["usage_history"][0]["consultation_type"] == "relation"
+    assert items[0]["usage_history"][0]["consultation_type"] == "relationship"
 
 
 def test_generate_can_save_new_third_party_for_later_reuse():

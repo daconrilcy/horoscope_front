@@ -1,11 +1,10 @@
 import uuid
+
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
 
 from app.infra.db.models.consultation_template import ConsultationTemplateModel
-from app.infra.db.session import SessionLocal, engine
+from app.infra.db.session import SessionLocal
 from app.main import app
-from app.api.dependencies.auth import AuthenticatedUser
 
 client = TestClient(app)
 
@@ -89,6 +88,36 @@ def test_legacy_mapping_precheck():
     # Service should have mapped 'work' to 'career'
     assert response.json()["data"]["consultation_type"] == "career"
 
+
+def test_canonical_relationship_precheck_requires_other_person():
+    _cleanup_catalogue()
+    headers = _get_auth_headers(email="canonical-relationship@example.com")
+
+    client.put(
+        "/v1/users/me/birth-data",
+        headers=headers,
+        json={
+            "birth_date": "1990-01-01",
+            "birth_time": "12:00",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+
+    response = client.post(
+        "/v1/consultations/precheck",
+        json={"consultation_type": "relationship"},
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    json_data = response.json()
+    assert json_data["data"]["consultation_type"] == "relationship"
+    assert json_data["data"]["status"] == "degraded"
+    assert json_data["data"]["fallback_mode"] == "relation_user_only"
+    assert "other_person" in json_data["data"]["missing_fields"]
+
+
 def test_legacy_mapping_generate():
     headers = _get_auth_headers()
     # Need birth data for generate
@@ -114,3 +143,35 @@ def test_legacy_mapping_generate():
     assert response.status_code == 200
     # Should be mapped to 'relationship'
     assert response.json()["data"]["consultation_type"] == "relationship"
+
+
+def test_canonical_relationship_generate_without_other_person_uses_user_only_route():
+    _cleanup_catalogue()
+    headers = _get_auth_headers(email="canonical-generate@example.com")
+
+    client.put(
+        "/v1/users/me/birth-data",
+        headers=headers,
+        json={
+            "birth_date": "1990-01-01",
+            "birth_time": "12:00",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+        },
+    )
+
+    response = client.post(
+        "/v1/consultations/generate",
+        json={
+            "consultation_type": "relationship",
+            "question": "Que comprendre de cette relation ?",
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    json_data = response.json()
+    assert json_data["data"]["consultation_type"] == "relationship"
+    assert json_data["data"]["status"] == "degraded"
+    assert json_data["data"]["route_key"] == "relationship_user_only"
+    assert json_data["data"]["metadata"]["other_person_chart_used"] is False

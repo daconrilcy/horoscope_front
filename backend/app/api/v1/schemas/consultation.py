@@ -2,7 +2,7 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PrecisionLevel(str, Enum):
@@ -193,8 +193,7 @@ class ConsultationTemplateSchema(BaseModel):
     metadata_config: dict[str, Any]
     sort_order: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ConsultationCatalogueResponse(BaseModel):
