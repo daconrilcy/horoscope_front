@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.v1.deps import get_current_user_optional
+from app.api.dependencies.auth import get_optional_authenticated_user as get_current_user_optional
 from app.core.request_id import resolve_request_id
 from app.infra.db.models import (
     AstrologerProfileModel,
@@ -59,6 +59,7 @@ class Astrologer(BaseModel):
     name: str
     first_name: str
     last_name: str
+    provider_type: str = "ia"
     avatar_url: Optional[str] = None
     specialties: List[str]
     style: str
@@ -148,6 +149,7 @@ def list_astrologers(
                 name=p.display_name,
                 first_name=p.first_name,
                 last_name=p.last_name,
+                provider_type=p.provider_type,
                 avatar_url=p.photo_url,
                 specialties=p.specialties,
                 style=p.public_style_label,
@@ -275,6 +277,7 @@ def get_astrologer(
             name=profile.display_name,
             first_name=profile.first_name,
             last_name=profile.last_name,
+            provider_type=profile.provider_type,
             avatar_url=profile.photo_url,
             specialties=profile.specialties,
             style=profile.public_style_label,

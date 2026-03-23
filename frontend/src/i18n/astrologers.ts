@@ -21,6 +21,11 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Error loading astrologers.",
     es: "Error al cargar los astrólogos.",
   },
+  error_loading_description: {
+    fr: "Le profil de cet astrologue n'a pas pu être chargé. Veuillez réessayer.",
+    en: "This astrologer's profile could not be loaded. Please try again.",
+    es: "No se pudo cargar el perfil de este astrólogo. Inténtelo de nuevo.",
+  },
   empty_state: {
     fr: "Aucun astrologue disponible",
     en: "No astrologers available",
@@ -75,6 +80,16 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     fr: "Avatar de",
     en: "Avatar of",
     es: "Avatar de",
+  },
+  provider_type_ai: {
+    fr: "Astrologue IA",
+    en: "AI astrologer",
+    es: "Astrólogo IA",
+  },
+  provider_type_real: {
+    fr: "Astrologue réel",
+    en: "Human astrologer",
+    es: "Astrólogo real",
   },
   your_astrologer: {
     fr: "Votre Astrologue",

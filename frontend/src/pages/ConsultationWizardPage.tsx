@@ -51,9 +51,10 @@ export function ConsultationWizardPage() {
 
   const startConsultationForType = useCallback(
     (type: ConsultationType, advanceToNextStep: boolean) => {
+      const astrologerIdFromQuery = searchParams.get("astrologerId")
       reset()
       setType(type)
-      setAstrologer("auto")
+      setAstrologer(astrologerIdFromQuery || "auto")
       setContext("")
       setObjective(t(getObjectiveForType(type), lang))
       setTimeHorizon(null)
@@ -92,6 +93,7 @@ export function ConsultationWizardPage() {
       lang,
       runPrecheck,
       goToStep,
+      searchParams,
     ]
   )
 

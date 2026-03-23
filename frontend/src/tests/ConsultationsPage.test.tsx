@@ -8,7 +8,7 @@ import { AUTO_ASTROLOGER_ID, CONTEXT_MAX_LENGTH, INTERACTION_ELIGIBLE_TYPES } fr
 import { ConsultationsPage } from "../pages/ConsultationsPage"
 import { ConsultationWizardPage } from "../pages/ConsultationWizardPage"
 import { ConsultationResultPage } from "../pages/ConsultationResultPage"
-import { ConsultationProvider, useConsultation, STORAGE_KEY } from "../state/consultationStore"
+import { ConsultationProvider, STORAGE_KEY } from "../state/consultationStore"
 
 const routerFutureFlags = {
   v7_startTransition: true,

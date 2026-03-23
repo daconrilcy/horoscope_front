@@ -37,6 +37,8 @@ interface Props {
   chartId?: string;
   lang: AstrologyLang;
   fallbackEvidence?: string[];
+  initialPersonaId?: string | null;
+  initialInterpretationId?: number | null;
   onActiveInterpretationChange?: (payload: {
     level: "short" | "complete";
     personaName: string | null;
@@ -54,6 +56,8 @@ export function NatalInterpretationSection({
   chartId,
   lang,
   fallbackEvidence,
+  initialPersonaId = null,
+  initialInterpretationId = null,
   onActiveInterpretationChange,
   actionRequest,
 }: Props) {
@@ -61,13 +65,15 @@ export function NatalInterpretationSection({
   const t = pageT.interpretation;
   const accessToken = useAccessTokenSnapshot();
 
-  const [useCaseLevel, setUseCaseLevel] = useState<"short" | "complete">("short");
-  const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null);
+  const [useCaseLevel, setUseCaseLevel] = useState<"short" | "complete">(
+    initialPersonaId ? "complete" : "short"
+  );
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(initialPersonaId);
   const [isUpsellOpen, setIsUpsellOpen] = useState(false);
   const [forceRefresh, setForceRefresh] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const [selectedInterpretationId, setSelectedInterpretationId] = useState<number | null>(null);
+  const [selectedInterpretationId, setSelectedInterpretationId] = useState<number | null>(initialInterpretationId);
   const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -118,6 +124,21 @@ export function NatalInterpretationSection({
     setForceRefresh(false);
     setIsUpsellOpen(true);
   }, [actionRequest]);
+
+  useEffect(() => {
+    if (typeof initialInterpretationId === "number" && Number.isFinite(initialInterpretationId)) {
+      setSelectedInterpretationId(initialInterpretationId);
+      setSelectedPersonaId(null);
+      setUseCaseLevel("complete");
+      return;
+    }
+
+    if (initialPersonaId) {
+      setSelectedInterpretationId(null);
+      setSelectedPersonaId(initialPersonaId);
+      setUseCaseLevel("complete");
+    }
+  }, [initialInterpretationId, initialPersonaId]);
 
   useEffect(() => {
     if (selectedTemplateKey) return;

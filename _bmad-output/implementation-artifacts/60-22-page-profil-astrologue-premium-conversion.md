@@ -1,6 +1,6 @@
 # Story 60.22: Page profil astrologue premium, conversion et actions contextuelles
 
-Status: in-progress
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -319,6 +319,9 @@ Gemini CLI (Autonomous Mode)
 - Suppression du composant redundant `AstrologerProfileHeader.tsx`.
 - Mise à jour des types frontend et de l'API (`rateAstrologer`).
 - Synchronisation des données enrichies via le script de seed.
+- Ajout de la catégorie produit `provider_type` (`ia` / `real`) dans le modèle, l'API et le rendu front.
+- Alignement des boutons retour du profil avec le langage visuel premium du reste de l'application.
+- Retrait du prix sur le CTA principal des astrologues IA, avec repositionnement sur une logique d'accès par forfait ou crédits au clic.
 
 ### Completion Notes List
 
@@ -326,19 +329,24 @@ Gemini CLI (Autonomous Mode)
 - Tous les Acceptance Criteria sont validés.
 - Les actions contextuelles (reprendre chat, voir interprétation) sont fonctionnelles.
 - Le système de notation est intégré et persistant.
+- Le hero affiche désormais clairement la nature du profil (`Astrologue IA` / `Astrologue réel`).
+- Le CTA principal n'affiche plus de tarif pour les astrologues IA ; le contrôle d'accès est renvoyé au flow métier au clic.
 
 ### File List
 
 - `backend/app/infra/db/models/astrologer.py` (MOD)
 - `backend/app/infra/db/models/__init__.py` (MOD)
 - `backend/migrations/versions/f44760fae191_add_astrologer_details_and_reviews.py` (NEW)
+- `backend/migrations/versions/20260323_0905_add_provider_type_to_astrologer_profiles.py` (NEW)
 - `backend/scripts/seed_astrologers_6_profiles.py` (MOD)
+- `backend/scripts/backfill_astrologer_profiles.py` (MOD)
 - `backend/app/api/v1/routers/astrologers.py` (MOD)
 - `frontend/src/types/astrologer.ts` (MOD)
 - `frontend/src/api/astrologers.ts` (MOD)
 - `frontend/src/pages/AstrologerProfilePage.tsx` (MOD)
 - `frontend/src/pages/AstrologerProfilePage.css` (NEW)
+- `frontend/src/features/astrologers/components/AstrologerCard.tsx` (MOD)
+- `frontend/src/App.css` (MOD)
 - `frontend/src/features/astrologers/index.ts` (MOD)
 - `frontend/src/i18n/astrologers.ts` (MOD)
 - `_bmad-output/implementation-artifacts/60-22-page-profil-astrologue-premium-conversion.md` (MOD)
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` (MOD)

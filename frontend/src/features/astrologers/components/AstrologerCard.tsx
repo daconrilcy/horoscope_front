@@ -50,6 +50,10 @@ function getFeaturedBadge(astrologer: Astrologer): string {
   return astrologer.style
 }
 
+function getProviderBadgeLabel(providerType: Astrologer["provider_type"], lang: ReturnType<typeof detectLang>) {
+  return providerType === "real" ? t("provider_type_real", lang) : t("provider_type_ai", lang)
+}
+
 export function AstrologerCard({ astrologer, featured = false, onClick }: AstrologerCardProps) {
   const [imgError, setImgError] = useState(false)
   const lang = detectLang()
@@ -58,6 +62,11 @@ export function AstrologerCard({ astrologer, featured = false, onClick }: Astrol
   const theme = getAstrologerTheme(astrologer)
   const icon = getAstrologerIcon(theme)
   const featuredBadge = getFeaturedBadge(astrologer)
+  const providerBadgeLabel = getProviderBadgeLabel(astrologer.provider_type, lang)
+  const providerBadgeClassName =
+    astrologer.provider_type === "real"
+      ? "astrologer-card-provider-badge astrologer-card-provider-badge--real"
+      : "astrologer-card-provider-badge astrologer-card-provider-badge--ia"
 
   return (
     <button
@@ -71,6 +80,7 @@ export function AstrologerCard({ astrologer, featured = false, onClick }: Astrol
       <div className="astrologer-card-orbit astrologer-card-orbit--two" aria-hidden="true" />
       <div className="astrologer-card-topline">
         <span className="astrologer-card-icon" aria-hidden="true">{icon}</span>
+        <span className={providerBadgeClassName}>{providerBadgeLabel}</span>
         {featured && <span className="astrologer-card-featured-badge">{featuredBadge}</span>}
       </div>
       <div className="astrologer-card-avatar">

@@ -80,6 +80,7 @@ def test_list_astrologers_returns_only_public_enabled_profiles() -> None:
 
     assert [item["id"] for item in payload] == [str(visible_id)]
     assert payload[0]["name"] == "Visible Guide"
+    assert payload[0]["provider_type"] == "ia"
 
 
 def test_get_astrologer_returns_404_for_disabled_persona_even_if_profile_is_public() -> None:
@@ -145,6 +146,7 @@ def test_get_astrologer_returns_structured_profile_fields() -> None:
     assert response.status_code == 200
 
     payload = response.json()["data"]
+    assert payload["provider_type"] == "ia"
     assert payload["age"] == 44
     assert payload["professional_background"] == ["Études en symbolisme et traditions anciennes"]
     assert payload["key_skills"] == ["Lecture symbolique du thème", "Archétypes"]

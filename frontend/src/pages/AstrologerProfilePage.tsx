@@ -7,13 +7,16 @@ import {
   Award, 
   Star, 
   Quote, 
-  CheckCircle2, 
   Users, 
   MessageSquare, 
   Clock,
   Sparkles,
   Zap,
-  Heart
+  BookOpen,
+  GraduationCap,
+  Orbit,
+  Heart,
+  ArrowRight
 } from "lucide-react"
 
 import { useAstrologer, rateAstrologer } from "../api/astrologers"
@@ -22,6 +25,117 @@ import { tAstrologers as t } from "@i18n/astrologers"
 import { PageLayout } from "../layouts"
 import { ErrorState, Button } from "@ui"
 import "./AstrologerProfilePage.css"
+
+type MetricItem = {
+  key: string
+  value: string
+  label: string
+  helper?: string
+  icon: typeof Clock
+}
+
+function formatCompactCount(value: number): string {
+  if (value >= 1000) {
+    const rounded = Math.round(value / 100) / 10
+    return `+${String(rounded).replace(".0", "")}k`
+  }
+  return `+${value}`
+}
+
+function formatReviewPercentage(value: number): number {
+  return Math.max(0, Math.min(100, Math.round((value / 5) * 100)))
+}
+
+function extractBackgroundMetric(entry: string | undefined): { value: string; label: string } | null {
+  if (!entry) {
+    return null
+  }
+
+  const match = entry.match(/(\d+\s*ans?)\s+(.*)/i)
+  if (!match) {
+    return null
+  }
+
+  const value = match[1].replace(/\s+/g, " ").trim()
+  const rawLabel = match[2].trim()
+  const cleanedLabel = rawLabel
+    .replace(/\((.*?)\)/g, "$1")
+    .replace(/\s*\/\s*/g, " & ")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+
+  return {
+    value,
+    label: cleanedLabel.charAt(0).toUpperCase() + cleanedLabel.slice(1),
+  }
+}
+
+function getApproachTitle(style: string, firstName: string): string {
+  const lowered = style.toLowerCase()
+  if (lowered.includes("pédag")) {
+    return "Son approche pédagogique"
+  }
+  if (lowered.includes("analyt")) {
+    return "Son approche analytique"
+  }
+  if (lowered.includes("myst") || lowered.includes("symbol")) {
+    return "Son approche symbolique"
+  }
+  if (lowered.includes("pragm")) {
+    return "Son approche pragmatique"
+  }
+  return `La méthode de ${firstName}`
+}
+
+function getProfileSubtitle(style: string, bioShort: string): string {
+  const loweredStyle = style.toLowerCase()
+  const loweredBio = bioShort.toLowerCase()
+
+  if (loweredStyle.includes("pédag")) {
+    return loweredBio.includes("généraliste")
+      ? "Astrologue Généraliste & Pédagogue"
+      : "Astrologue Pédagogue"
+  }
+  if (loweredStyle.includes("analyt")) {
+    return "Astrologue Technique & Analytique"
+  }
+  if (loweredStyle.includes("myst") || loweredStyle.includes("symbol")) {
+    return "Astrologue Mystique & Symbolique"
+  }
+  if (loweredStyle.includes("pragm")) {
+    return "Astrologue Direct & Pragmatique"
+  }
+  if (loweredStyle.includes("relation") || loweredStyle.includes("bienve")) {
+    return "Astrologue Relationnelle & Chaleureuse"
+  }
+  return `Astrologue ${style}`
+}
+
+function getIdealForLabel(value: string | undefined): string | null {
+  if (!value) {
+    return null
+  }
+
+  const lowered = value.toLowerCase()
+  if (lowered.includes("début")) return "Idéal pour débutants"
+  if (lowered.includes("relation")) return "Idéal pour relations"
+  if (lowered.includes("analys")) return "Idéal pour analyse précise"
+  if (lowered.includes("transit")) return "Idéal pour transitions"
+  return value
+}
+
+function getSpecialtyIcon(title: string, index: number) {
+  const lowered = title.toLowerCase()
+  if (lowered.includes("thème") || lowered.includes("natal")) return BookOpen
+  if (lowered.includes("signe") || lowered.includes("maison")) return GraduationCap
+  if (lowered.includes("aspect")) return Sparkles
+  if (lowered.includes("cycle") || lowered.includes("transit")) return Orbit
+  return [BookOpen, GraduationCap, Sparkles, Orbit][index % 4]
+}
+
+function getProviderTypeLabel(providerType: string | undefined): string {
+  return providerType === "real" ? "Astrologue réel" : "Astrologue IA"
+}
 
 export function AstrologerProfilePage() {
   const { id } = useParams<{ id: string }>()
@@ -42,11 +156,45 @@ export function AstrologerProfilePage() {
     try {
       await rateAstrologer(profile.id, { rating })
       await refetch()
-    } catch (err) {
-      console.error("Failed to rate:", err)
+    } catch {
+      // Keep the current rating visible; the API error is already surfaced elsewhere.
     } finally {
       setIsRating(false)
     }
+  }
+
+  const handleChatCta = () => {
+    if (!profile) {
+      return
+    }
+    if (profile.action_state.has_chat && profile.action_state.last_chat_id) {
+      navigate(`/chat/${encodeURIComponent(profile.action_state.last_chat_id)}`)
+      return
+    }
+    navigate(`/chat?personaId=${encodeURIComponent(profile.id)}`)
+  }
+
+  const handleNatalCta = () => {
+    if (!profile) {
+      return
+    }
+    if (
+      profile.action_state.has_natal_interpretation &&
+      profile.action_state.last_natal_interpretation_id
+    ) {
+      navigate(
+        `/natal?interpretationId=${encodeURIComponent(profile.action_state.last_natal_interpretation_id)}`
+      )
+      return
+    }
+    navigate(`/natal?personaId=${encodeURIComponent(profile.id)}`)
+  }
+
+  const handleConsultationCta = () => {
+    if (!profile) {
+      return
+    }
+    navigate(`/consultations/new?astrologerId=${encodeURIComponent(profile.id)}`)
   }
 
   if (isPending) {
@@ -62,20 +210,87 @@ export function AstrologerProfilePage() {
   }
 
   if (error || !profile) {
+    if (error) {
+      return (
+        <PageLayout className="is-astrologer-profile-page">
+          <div className="astrologer-profile-container">
+            <ErrorState 
+              title={t("error_loading", lang)}
+              message={t("error_loading_description", lang)}
+              onRetry={() => void refetch()}
+            />
+          </div>
+        </PageLayout>
+      )
+    }
+
     return (
       <PageLayout className="is-astrologer-profile-page">
         <div className="astrologer-profile-container">
-          <ErrorState 
-            title={t("profile_not_found", lang)}
-            message={t("profile_not_found_description", lang)}
-            onRetry={handleBack}
-          />
+          <div className="profile-inline-error" role="alert">
+            <h2 className="profile-inline-error__title">{t("profile_not_found", lang)}</h2>
+            <p className="profile-inline-error__message">{t("profile_not_found_description", lang)}</p>
+            <Button type="button" variant="secondary" onClick={handleBack}>
+              {t("back_to_catalogue", lang)}
+            </Button>
+          </div>
         </div>
       </PageLayout>
     )
   }
 
-  const fullName = `${profile.first_name} ${profile.last_name}`.trim() || profile.name
+  const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.name
+  const metrics = profile.metrics ?? {
+    experience_years: 0,
+    consultations_count: 0,
+    average_rating: 0,
+  }
+  const backgroundMetric = extractBackgroundMetric(profile.professional_background[0])
+  const averageRating = profile.review_summary.average_rating || metrics.average_rating || 0
+  const reviewCount = profile.review_summary.review_count || 0
+  const satisfactionRate = formatReviewPercentage(averageRating)
+  const recommendationRate = Math.max(0, satisfactionRate - 2)
+  const subtitle = getProfileSubtitle(profile.style, profile.bio_short)
+  const idealForLabel = getIdealForLabel(profile.ideal_for)
+  const providerType = profile.provider_type ?? "ia"
+  const trustItems =
+    providerType === "real"
+      ? [
+          { icon: Clock, label: "Réservation sur demande" },
+          { icon: Calendar, label: "Selon disponibilité" },
+          { icon: Heart, label: "Réponse sous 24h" },
+        ]
+      : [
+          { icon: Sparkles, label: "Inclus selon forfait" },
+          { icon: Zap, label: "Ou via crédits" },
+          { icon: Clock, label: "Accès immédiat" },
+        ]
+  const metricItems: MetricItem[] = [
+    {
+      key: "background",
+      value: backgroundMetric?.value ?? `${metrics.experience_years} ans`,
+      label: backgroundMetric?.label ?? "Parcours confirmé",
+      icon: BookOpen,
+    },
+    {
+      key: "experience",
+      value: `${metrics.experience_years} ans`,
+      label: "Astrologue",
+      icon: GraduationCap,
+    },
+    {
+      key: "consultations",
+      value: formatCompactCount(metrics.consultations_count),
+      label: "Consultants accompagnés",
+      icon: Users,
+    },
+    {
+      key: "rating",
+      value: `${averageRating.toFixed(1)}/5`,
+      label: "Note moyenne",
+      icon: Star,
+    },
+  ]
   const showImage = profile.avatar_url && !imgError
 
   return (
@@ -88,6 +303,7 @@ export function AstrologerProfilePage() {
         <nav className="profile-nav">
           <button className="profile-back-btn" onClick={handleBack} aria-label={t("back_to_catalogue", lang)}>
             <ChevronLeft size={24} />
+            <span className="profile-back-btn__label">Tous les astrologues</span>
           </button>
         </nav>
 
@@ -95,6 +311,7 @@ export function AstrologerProfilePage() {
         <section className="profile-hero">
           <div className="profile-hero-avatar-container">
             <div className="profile-hero-avatar-glow" />
+            <div className="profile-hero-avatar-orbit" />
             {showImage ? (
               <img 
                 src={profile.avatar_url!} 
@@ -109,13 +326,20 @@ export function AstrologerProfilePage() {
             )}
           </div>
           <div className="profile-hero-content">
-            {profile.ideal_for && (
-              <div className="profile-positioning-badge">
-                {profile.ideal_for}
+            <div className="profile-badge-row">
+              <div className={`profile-provider-badge profile-provider-badge--${providerType}`}>
+                <Sparkles size={14} />
+                {getProviderTypeLabel(providerType)}
               </div>
-            )}
+              {idealForLabel && (
+                <div className="profile-positioning-badge">
+                  <Star size={14} />
+                  {idealForLabel}
+                </div>
+              )}
+            </div>
             <h1 className="profile-full-name">{fullName}</h1>
-            <p className="profile-style-title">{profile.style}</p>
+            <p className="profile-style-title">{subtitle}</p>
             
             <div className="profile-metadata-row">
               {profile.age && (
@@ -124,10 +348,10 @@ export function AstrologerProfilePage() {
                   <span>{profile.age} ans</span>
                 </div>
               )}
-              {profile.metrics.experience_years > 0 && (
+              {metrics.experience_years > 0 && (
                 <div className="profile-meta-pill">
                   <Award size={16} />
-                  <span>{profile.metrics.experience_years} {t("years_experience", lang)}</span>
+                  <span>{metrics.experience_years} {t("years_experience", lang)}</span>
                 </div>
               )}
               {profile.location && (
@@ -142,6 +366,7 @@ export function AstrologerProfilePage() {
               <blockquote className="profile-quote">
                 <Quote size={24} className="quote-icon" />
                 <p>{profile.quote}</p>
+                <footer className="profile-quote-signature">— {profile.first_name}</footer>
               </blockquote>
             )}
           </div>
@@ -149,21 +374,21 @@ export function AstrologerProfilePage() {
 
         {/* Metrics Bar */}
         <section className="profile-metrics-bar">
-          <div className="metric-card">
-            <Clock size={24} className="metric-icon" />
-            <span className="metric-value">{profile.metrics.experience_years}+</span>
-            <span className="metric-label">{t("years_experience", lang)}</span>
-          </div>
-          <div className="metric-card">
-            <Users size={24} className="metric-icon" />
-            <span className="metric-value">{profile.metrics.consultations_count}+</span>
-            <span className="metric-label">{t("consultations_count", lang)}</span>
-          </div>
-          <div className="metric-card">
-            <Star size={24} className="metric-icon" />
-            <span className="metric-value">{profile.review_summary.average_rating.toFixed(1)}/5</span>
-            <span className="metric-label">{t("average_rating_label", lang)}</span>
-          </div>
+          {metricItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <div key={item.key} className="metric-card">
+                <div className="metric-card__icon-wrap">
+                  <Icon size={24} className="metric-icon" />
+                </div>
+                <div className="metric-card__body">
+                  <span className="metric-value">{item.value}</span>
+                  <span className="metric-title">{item.label}</span>
+                  {item.helper ? <span className="metric-helper">{item.helper}</span> : null}
+                </div>
+              </div>
+            )
+          })}
         </section>
 
         {/* Main Grid */}
@@ -171,76 +396,60 @@ export function AstrologerProfilePage() {
           <div className="profile-col-left">
             {/* About */}
             <section className="profile-about">
-              <h2 className="profile-section-title">{t("about", lang)}</h2>
+              <h2 className="profile-section-title profile-section-title--underlined">{`À propos de ${profile.first_name}`}</h2>
               <p className="profile-bio-text">{profile.bio_full}</p>
             </section>
 
             {/* Mission */}
             {profile.mission_statement && (
               <section className="profile-mission-card">
-                <h3>{t("mission_title", lang)}</h3>
-                <p className="profile-mission-text">“ {profile.mission_statement} ”</p>
+                <div className="profile-mission-card__icon">
+                  <Heart size={20} />
+                </div>
+                <div className="profile-mission-card__content">
+                  <h3>{t("mission_title", lang)}</h3>
+                  <p className="profile-mission-text">{profile.mission_statement}</p>
+                </div>
               </section>
             )}
-
-            {/* Method */}
-            <section className="profile-method">
-              <h2 className="profile-section-title">{t("method_title", lang)}</h2>
-              <div className="profile-method-stepper">
-                <div className="method-step">
-                  <div className="step-number">1</div>
-                  <div className="step-content">
-                    <p className="step-title">{t("method_step_1", lang)}</p>
-                  </div>
-                </div>
-                <div className="method-step">
-                  <div className="step-number">2</div>
-                  <div className="step-content">
-                    <p className="step-title">{t("method_step_2", lang)}</p>
-                  </div>
-                </div>
-                <div className="method-step">
-                  <div className="step-number">3</div>
-                  <div className="step-content">
-                    <p className="step-title">{t("method_step_3", lang)}</p>
-                  </div>
-                </div>
-                <div className="method-step">
-                  <div className="step-number">4</div>
-                  <div className="step-content">
-                    <p className="step-title">{t("method_step_4", lang)}</p>
-                  </div>
-                </div>
-              </div>
-            </section>
           </div>
 
           <aside className="profile-col-right">
             <div className="sticky-sidebar">
               <div className="specialties-card">
-                <h2 className="profile-section-title" style={{ fontSize: '18px' }}>
-                  {t("specialties_title", lang)}
+                <h2 className="profile-section-title profile-section-title--sidebar">
+                  Spécialités
                 </h2>
                 <div className="specialties-list">
                   {profile.specialties_details.length > 0 ? (
-                    profile.specialties_details.map((s, i) => (
-                      <div key={i} className="specialty-item">
-                        <span className="specialty-item-title">
-                          <CheckCircle2 size={14} style={{ color: 'var(--premium-accent-purple)', marginRight: '8px' }} />
-                          {s.title}
-                        </span>
-                        <p className="specialty-item-desc">{s.description}</p>
-                      </div>
-                    ))
+                    profile.specialties_details.map((s, i) => {
+                      const Icon = getSpecialtyIcon(s.title, i)
+                      return (
+                        <div key={i} className="specialty-item">
+                          <div className="specialty-item-icon-wrap">
+                            <Icon size={22} className="specialty-item-icon" />
+                          </div>
+                          <div className="specialty-item-copy">
+                            <span className="specialty-item-title">{s.title}</span>
+                            <p className="specialty-item-desc">{s.description}</p>
+                          </div>
+                        </div>
+                      )
+                    })
                   ) : (
-                    profile.specialties.map((s, i) => (
-                      <div key={i} className="specialty-item">
-                        <span className="specialty-item-title">
-                          <CheckCircle2 size={14} style={{ color: 'var(--premium-accent-purple)', marginRight: '8px' }} />
-                          {s}
-                        </span>
-                      </div>
-                    ))
+                    profile.specialties.map((s, i) => {
+                      const Icon = getSpecialtyIcon(s, i)
+                      return (
+                        <div key={i} className="specialty-item">
+                          <div className="specialty-item-icon-wrap">
+                            <Icon size={22} className="specialty-item-icon" />
+                          </div>
+                          <div className="specialty-item-copy">
+                            <span className="specialty-item-title">{s}</span>
+                          </div>
+                        </div>
+                      )
+                    })
                   )}
                 </div>
               </div>
@@ -248,52 +457,122 @@ export function AstrologerProfilePage() {
           </aside>
         </div>
 
+        <section className="profile-method">
+          <h2 className="profile-section-title profile-section-title--method">
+            <Sparkles size={22} />
+            {getApproachTitle(profile.style, profile.first_name)}
+          </h2>
+          <div className="profile-method-stepper">
+            <div className="method-step">
+              <div className="step-number">1</div>
+              <div className="step-content">
+                <p className="step-title">{t("method_step_1", lang)}</p>
+              </div>
+            </div>
+            <div className="method-arrow" aria-hidden="true">→</div>
+            <div className="method-step">
+              <div className="step-number">2</div>
+              <div className="step-content">
+                <p className="step-title">{t("method_step_2", lang)}</p>
+              </div>
+            </div>
+            <div className="method-arrow" aria-hidden="true">→</div>
+            <div className="method-step">
+              <div className="step-number">3</div>
+              <div className="step-content">
+                <p className="step-title">{t("method_step_3", lang)}</p>
+              </div>
+            </div>
+            <div className="method-arrow" aria-hidden="true">→</div>
+            <div className="method-step">
+              <div className="step-number">4</div>
+              <div className="step-content">
+                <p className="step-title">{t("method_step_4", lang)}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Reviews Section */}
         <section className="profile-reviews-section">
-          <h2 className="profile-section-title">{t("reviews_title", lang)}</h2>
+          <div className="profile-reviews-section__header">
+            <h2 className="profile-section-title profile-section-title--reviews">{t("reviews_title", lang)}</h2>
+            <div className="profile-reviews-summary">
+              <div className="profile-reviews-stars" aria-hidden="true">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    size={18}
+                    fill={star <= Math.round(averageRating) ? "currentColor" : "none"}
+                  />
+                ))}
+              </div>
+              <span className="profile-reviews-summary__score">{`${averageRating.toFixed(1)}/5`}</span>
+              <span className="profile-reviews-summary__count">{`(${reviewCount} avis)`}</span>
+            </div>
+          </div>
           <div className="reviews-container">
             <div className="reviews-list">
               {profile.reviews.length > 0 ? (
                 profile.reviews.map((r) => (
                   <div key={r.id} className="review-item">
-                    <div className="review-header">
+                    <div className="review-quote-mark">“</div>
+                    {r.comment && <p className="review-comment">{r.comment}</p>}
+                    <div className="review-footer">
                       <div className="review-user-info">
-                        <span className="review-user-name">{r.user_name}</span>
-                        <span className="review-date">
-                          {new Date(r.created_at).toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' })}
-                        </span>
+                        <span className="review-user-name">{`— ${r.user_name}`}</span>
+                        {r.tags.length > 0 ? (
+                          <div className="review-tags">
+                            {r.tags.map((tag) => (
+                              <span key={tag} className="review-tag">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
                       </div>
                       <div className="review-rating">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={14} fill={i < r.rating ? "currentColor" : "none"} />
+                          <Star key={i} size={15} fill={i < r.rating ? "currentColor" : "none"} />
                         ))}
                       </div>
                     </div>
-                    {r.comment && <p className="review-comment">{r.comment}</p>}
                   </div>
                 ))
               ) : (
-                <div className="review-item" style={{ textAlign: 'center', opacity: 0.7 }}>
-                  Aucun avis pour le moment.
+                <div className="review-item review-item--empty">
+                  <p className="review-comment">
+                    Cet astrologue n&apos;a pas encore reçu d&apos;avis publics. Vous pouvez être le premier à partager votre retour.
+                  </p>
                 </div>
               )}
             </div>
             <div className="review-stats-card">
-              <div className="big-rating">{profile.review_summary.average_rating.toFixed(1)}</div>
-              <p className="metric-label">{profile.review_summary.review_count} {t("reviews_count", lang)}</p>
-              
-              <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid var(--premium-glass-border)' }}>
-                <p className="step-title" style={{ marginBottom: '12px' }}>{t("your_rating_title", lang)}</p>
-                <div className="review-rating" style={{ justifyContent: 'center', gap: '8px', cursor: 'pointer' }}>
+              <div className="review-stats-card__grid">
+                <div className="review-stats-card__metric">
+                  <div className="big-rating">{reviewCount}</div>
+                  <p className="metric-title">Avis</p>
+                </div>
+                <div className="review-stats-card__metric">
+                  <div className="big-rating">{`${satisfactionRate}%`}</div>
+                  <p className="metric-title">Satisfaits</p>
+                </div>
+              </div>
+              <div className="review-stats-card__recommendation">
+                <Heart size={18} />
+                <span>{`Recommandé par ${recommendationRate}%`}</span>
+              </div>
+
+              <div className="review-stats-card__rating">
+                <p className="step-title review-stats-card__rating-title">{t("your_rating_title", lang)}</p>
+                <div className="review-rating review-rating--interactive">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star 
                       key={star} 
                       size={24} 
                       onClick={() => handleRate(star)}
                       fill={(profile.user_rating || 0) >= star ? "currentColor" : "none"}
-                      style={{ transition: 'transform 0.1s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
-                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      className="review-rating__star"
                     />
                   ))}
                 </div>
@@ -304,37 +583,57 @@ export function AstrologerProfilePage() {
 
         {/* Final CTA Section */}
         <section className="profile-final-cta">
-          <h2 className="profile-full-name" style={{ fontSize: '32px' }}>Prêt à explorer votre ciel avec {profile.first_name} ?</h2>
-          <div className="cta-group">
+          <div className="profile-final-cta__sparkles" aria-hidden="true">✦</div>
+          <h2 className="profile-full-name profile-full-name--cta">{`Commencer avec ${profile.first_name}`}</h2>
+          <p className="profile-final-cta__subtitle">Réservez votre première consultation découverte</p>
+          <Button
+            size="lg"
+            variant="primary"
+            className="premium-cta premium-cta--primary"
+            onClick={handleConsultationCta}
+            rightIcon={<ArrowRight size={20} />}
+          >
+            {t("cta_consultation", lang)}
+          </Button>
+          <div className="profile-final-cta__trust">
+            {trustItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <span key={item.label}>
+                  <Icon size={14} />
+                  {item.label}
+                </span>
+              )
+            })}
+          </div>
+          <div className="cta-group cta-group--secondary">
             <Button 
               size="lg" 
-              variant="primary"
+              variant="secondary"
               className="premium-cta"
-              onClick={() => navigate(`/chat?astrologerId=${encodeURIComponent(profile.id)}`)}
-              leftIcon={<MessageSquare size={20} />}
+              onClick={handleChatCta}
+              leftIcon={<MessageSquare size={18} />}
             >
               {profile.action_state.has_chat ? t("cta_chat_resume", lang) : t("cta_chat_new", lang)}
             </Button>
             
             <Button
               size="lg"
-              variant="secondary"
-              onClick={() => navigate(`/natal?astrologerId=${encodeURIComponent(profile.id)}`)}
-              leftIcon={<Sparkles size={20} />}
+              variant="outline"
+              onClick={handleNatalCta}
+              leftIcon={<Sparkles size={18} />}
             >
               {profile.action_state.has_natal_interpretation ? t("cta_natal_view", lang) : t("cta_natal_new", lang)}
             </Button>
-
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate(`/consultations?astrologerId=${encodeURIComponent(profile.id)}`)}
-              leftIcon={<Zap size={20} />}
-            >
-              {t("cta_consultation", lang)}
-            </Button>
           </div>
         </section>
+
+        <div className="profile-bottom-back">
+          <button type="button" className="profile-bottom-back__button" onClick={handleBack}>
+            <ChevronLeft size={18} />
+            <span>Retour aux astrologues</span>
+          </button>
+        </div>
       </div>
     </PageLayout>
   )

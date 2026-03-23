@@ -1,7 +1,7 @@
 import { PageLayout } from "../layouts"
 import { ErrorState } from "@ui"
 import { useEffect, useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate, Link, useSearchParams } from "react-router-dom"
 import { RefreshCw, ChevronLeft } from "lucide-react"
 import { ApiError, useLatestNatalChart } from "@api"
 import { generateNatalChart } from "../api/natalChart"
@@ -56,6 +56,7 @@ function getSignCodeFromLongitude(value: number): string {
 
 export function NatalChartPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const accessToken = useAccessTokenSnapshot()
   const latestChart = useLatestNatalChart()
   const { lang, translatePlanet, translateSign, translateHouse, translateAspect } = useAstrologyLabels()
@@ -258,6 +259,15 @@ export function NatalChartPage() {
         .map((item) => `ASPECT_${item.planet_a.toUpperCase()}_${item.planet_b.toUpperCase()}_${item.aspect_code.toUpperCase()}`),
     ].filter(Boolean) as string[]),
   )
+  const interpretationIdParam = searchParams.get("interpretationId")
+  const parsedInterpretationId = interpretationIdParam
+    ? Number.parseInt(interpretationIdParam, 10)
+    : null
+  const initialInterpretationId =
+    parsedInterpretationId !== null && !Number.isNaN(parsedInterpretationId)
+      ? parsedInterpretationId
+      : null
+  const initialPersonaId = searchParams.get("personaId")
 
   return (
     <PageLayout className="natal-page-container is-natal-page">
@@ -459,6 +469,8 @@ export function NatalChartPage() {
           chartId={chart.chart_id}
           lang={lang}
           fallbackEvidence={fallbackEvidence}
+          initialPersonaId={initialPersonaId}
+          initialInterpretationId={initialInterpretationId}
           onActiveInterpretationChange={setActiveInterpretation}
           actionRequest={headerActionRequest}
         />

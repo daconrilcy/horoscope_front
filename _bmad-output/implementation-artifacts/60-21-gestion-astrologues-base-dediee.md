@@ -23,6 +23,8 @@ so that les astrologues deviennent administrables, cohérents entre front et LLM
 9. **[x] Affichage identité civile sur les cartes**: Les cartes et sélecteurs d'astrologues affichent `prénom + nom` au lieu de l'alias public, sans casser les alias sur les pages profil ou les fallbacks backend.
 10. **[x] Catalogue premium différencié**: La page `/astrologers` adopte une hiérarchie visuelle premium claire avec thèmes couleur par astrologue, avatar renforcé, carte hero sur le premier profil affiché, profondeur multi-couches, animation légère au hover et contraste lisible sur les tags.
 11. **[x] Rotation du premier profil**: Le premier astrologue affiché alterne de façon déterministe entre les visites via un index persistant frontend, sans casser la navigation ni le tri global.
+12. **[x] Catégorie fournisseur explicite**: Les profils astrologues portent désormais un `provider_type` (`ia` / `real`) persisté en base et exposé clairement sur le catalogue et les fiches détail.
+13. **[x] Nettoyage des profils legacy parasites**: Le seed, le backfill et les tests d'intégration évitent désormais la réapparition de profils publics non canoniques ou sans photo dans le catalogue.
 
 ## Tasks / Subtasks
 
@@ -64,6 +66,9 @@ Gemini CLI (Autonomous Mode)
 - Seconde passe premium sur le catalogue avec halo focalisé sur la carte hero, avatars encore agrandis, profondeur de cartes renforcée, micro-animations au hover et badge de focus contextuel non éditorial.
 - Raffinement des avatars avec un anneau lumineux cosmique plus marqué autour de chaque photo de profil, inspiré d'un rendu premium éditorial.
 - Neutralisation des doublons publics locaux sur les profils seedés pour éviter les collisions d'identité côté API.
+- Ajout du champ `provider_type` (`ia` / `real`) dans `astrologer_profiles`, avec migration idempotente, exposition API et rendu visuel harmonisé sur `/astrologers` et `/astrologers/:id`.
+- Suppression du prix affiché sur les CTA principaux des astrologues IA afin de respecter le vrai modèle d'accès par forfait ou crédits, vérifié au clic.
+- Durcissement du `backfill` et du `seed` pour masquer les profils legacy non canoniques sans photo, et isolation des tests astrologues pour éviter qu'ils repolluent la base locale.
 - Ajout du lien vers la page astrologues dans le menu utilisateur et dans la navigation principale de l'application.
 - Stabilisation de la suite backend complète après introduction des nouvelles contraintes de clés étrangères.
 
@@ -73,6 +78,7 @@ Gemini CLI (Autonomous Mode)
 - `backend/app/infra/db/models/__init__.py`
 - `backend/migrations/versions/c5c208c81831_create_astrologer_dedicated_tables.py`
 - `backend/migrations/versions/20260322_0052_add_structured_fields_to_astrologer_profiles.py`
+- `backend/migrations/versions/20260323_0905_add_provider_type_to_astrologer_profiles.py`
 - `backend/scripts/backfill_astrologer_profiles.py`
 - `backend/scripts/seed_astrologers_6_profiles.py`
 - `backend/app/api/v1/routers/astrologers.py`
@@ -110,4 +116,4 @@ L'implémentation respecte parfaitement le découplage entre identité technique
 
 ### Final Outcome
 
-L'architecture est désormais prête pour une gestion administrative complète des astrologues, avec profils métier structurés, prompts dédiés, photos réelles branchées côté produit, et une exposition cohérente des astrologues sur les parcours publics, la navigation, les surfaces de sélection et un catalogue premium réellement différenciant.
+L'architecture est désormais prête pour une gestion administrative complète des astrologues, avec profils métier structurés, prompts dédiés, photos réelles branchées côté produit, différenciation explicite `IA / réel`, et une exposition cohérente des astrologues sur les parcours publics, la navigation, les surfaces de sélection et un catalogue premium réellement différenciant, sans réapparition de profils legacy parasites.

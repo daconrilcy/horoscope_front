@@ -23,6 +23,7 @@ ASTROLOGERS = [
         "first_name": "Étienne",
         "last_name": "Garnier",
         "gender": "male",
+        "provider_type": "ia",
         "age": 55,
         "photo_url": "/assets/astrologers/etienne.png",
         "public_style_label": "Pédagogue",
@@ -74,6 +75,7 @@ ASTROLOGERS = [
         "first_name": "Sélène",
         "last_name": "Ardent",
         "gender": "female",
+        "provider_type": "ia",
         "age": 44,
         "photo_url": "/assets/astrologers/selene.png",
         "public_style_label": "Mystique",
@@ -119,6 +121,7 @@ ASTROLOGERS = [
         "first_name": "Orion",
         "last_name": "Vasseur",
         "gender": "male",
+        "provider_type": "ia",
         "age": 39,
         "photo_url": "/assets/astrologers/orion.png",
         "public_style_label": "Analytique",
@@ -164,6 +167,7 @@ ASTROLOGERS = [
         "first_name": "Luna",
         "last_name": "Caron",
         "gender": "female",
+        "provider_type": "ia",
         "age": 36,
         "photo_url": "/assets/astrologers/luna.png",
         "public_style_label": "Chaleureux",
@@ -209,6 +213,7 @@ ASTROLOGERS = [
         "first_name": "Atlas",
         "last_name": "Morel",
         "gender": "male",
+        "provider_type": "ia",
         "age": 42,
         "photo_url": "/assets/astrologers/atlas.png",
         "public_style_label": "Pragmatique",
@@ -254,6 +259,7 @@ ASTROLOGERS = [
         "first_name": "Nox",
         "last_name": "Delcourt",
         "gender": "non_binary",
+        "provider_type": "ia",
         "age": 48,
         "photo_url": "/assets/astrologers/nox.png",
         "public_style_label": "Introspectif",
@@ -322,6 +328,7 @@ def _build_prompt_content(data: dict[str, object]) -> str:
 
 def seed_astrologers(db: Session) -> None:
     canonical_ids_by_name = {item["name"]: uuid.UUID(item["id"]) for item in ASTROLOGERS}
+    canonical_persona_ids = {uuid.UUID(item["id"]) for item in ASTROLOGERS}
 
     for data in ASTROLOGERS:
         stmt = select(LlmPersonaModel).where(LlmPersonaModel.id == uuid.UUID(data["id"]))
@@ -370,6 +377,7 @@ def seed_astrologers(db: Session) -> None:
                 last_name=data["last_name"],
                 display_name=data["display_name"],
                 gender=data["gender"],
+                provider_type=data.get("provider_type", "ia"),
                 age=data["age"],
                 photo_url=data["photo_url"],
                 public_style_label=data["public_style_label"],
@@ -396,6 +404,7 @@ def seed_astrologers(db: Session) -> None:
             profile.last_name = data["last_name"]
             profile.display_name = data["display_name"]
             profile.gender = data["gender"]
+            profile.provider_type = data.get("provider_type", "ia")
             profile.age = data["age"]
             profile.photo_url = data["photo_url"]
             profile.public_style_label = data["public_style_label"]
@@ -463,6 +472,24 @@ def seed_astrologers(db: Session) -> None:
             if duplicate.id != canonical_id and duplicate.enabled:
                 duplicate.enabled = False
                 logger.info("Disabled duplicate persona: %s (%s)", duplicate.name, duplicate.id)
+
+    stale_profiles = (
+        db.execute(select(AstrologerProfileModel))
+        .scalars()
+        .all()
+    )
+    for stale_profile in stale_profiles:
+        if stale_profile.persona_id in canonical_persona_ids:
+            continue
+        if stale_profile.photo_url:
+            continue
+        if stale_profile.is_public:
+            stale_profile.is_public = False
+            logger.info(
+                "Hidden stale astrologer profile without photo: %s (%s)",
+                stale_profile.display_name,
+                stale_profile.persona_id,
+            )
 
     db.commit()
 

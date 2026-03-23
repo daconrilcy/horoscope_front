@@ -40,6 +40,7 @@ def backfill_astrologers(db: Session) -> None:
                     last_name=enriched["last_name"],
                     display_name=enriched["display_name"],
                     gender=enriched["gender"],
+                    provider_type=enriched.get("provider_type", "ia"),
                     age=enriched["age"],
                     photo_url=enriched["photo_url"],
                     public_style_label=enriched["public_style_label"],
@@ -53,40 +54,22 @@ def backfill_astrologers(db: Session) -> None:
                     sort_order=enriched["sort_order"],
                     is_public=persona.enabled,
                 )
+                db.add(profile)
+                logger.info(f"Created profile for persona: {persona.name}")
             else:
-                # Fallback for non-canonical personas
-                names = persona.name.split(" ", 1)
-                first = names[0]
-                last = names[1] if len(names) > 1 else ""
-                profile = AstrologerProfileModel(
-                    persona_id=persona.id,
-                    first_name=first,
-                    last_name=last,
-                    display_name=persona.name,
-                    gender="other",
-                    age=None,
-                    public_style_label="Standard",
-                    bio_short=(
-                        persona.description[:497] + "..."
-                        if persona.description and len(persona.description) > 500
-                        else (persona.description or "")
-                    ),
-                    bio_long=persona.description or "",
-                    admin_category="legacy",
-                    specialties=[],
-                    professional_background=[],
-                    key_skills=[],
-                    behavioral_style=[],
-                    is_public=persona.enabled,
+                logger.info(
+                    "Skipped non-canonical astrologer profile creation for persona: %s (%s)",
+                    persona.name,
+                    persona.id,
                 )
-            db.add(profile)
-            logger.info(f"Created profile for persona: {persona.name}")
+                profile = None
         else:
             if enriched:
                 profile.first_name = enriched["first_name"]
                 profile.last_name = enriched["last_name"]
                 profile.display_name = enriched["display_name"]
                 profile.gender = enriched["gender"]
+                profile.provider_type = enriched.get("provider_type", "ia")
                 profile.age = enriched["age"]
                 profile.photo_url = enriched["photo_url"]
                 profile.public_style_label = enriched["public_style_label"]
@@ -103,10 +86,14 @@ def backfill_astrologers(db: Session) -> None:
                 profile.professional_background = profile.professional_background or []
                 profile.key_skills = profile.key_skills or []
                 profile.behavioral_style = profile.behavioral_style or []
-                profile.is_public = persona.enabled
+                profile.provider_type = profile.provider_type or "ia"
+                profile.is_public = bool(profile.photo_url) and persona.enabled
             logger.info(f"Updated profile for persona: {persona.name}")
 
         # 3. Handle AstrologerPromptProfile
+        if profile is None and not enriched:
+            continue
+
         stmt_prompt = select(AstrologerPromptProfileModel).where(
             AstrologerPromptProfileModel.persona_id == persona.id,
             AstrologerPromptProfileModel.is_active,

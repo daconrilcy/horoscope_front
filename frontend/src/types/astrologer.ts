@@ -30,6 +30,7 @@ export type Astrologer = {
   name: string
   first_name: string
   last_name: string
+  provider_type?: "ia" | "real"
   avatar_url: string | null
   specialties: string[]
   style: string

@@ -141,6 +141,54 @@ describe("NatalChartPage", () => {
     expect(screen.getByText(/Chargement de votre dernier thème natal/i)).toBeInTheDocument()
   })
 
+  it("forwards personaId query parameter to natal interpretation flow", () => {
+    mockUseLatestNatalChart.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { ...CHART_BASE },
+    })
+
+    render(
+      <MemoryRouter
+        initialEntries={["/natal?personaId=astro-42"]}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <NatalChartPage />
+      </MemoryRouter>
+    )
+
+    expect(mockUseNatalInterpretation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        personaId: "astro-42",
+        useCaseLevel: "complete",
+      })
+    )
+  })
+
+  it("forwards interpretationId query parameter to direct interpretation lookup", () => {
+    mockUseLatestNatalChart.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { ...CHART_BASE },
+    })
+
+    render(
+      <MemoryRouter
+        initialEntries={["/natal?interpretationId=321"]}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <NatalChartPage />
+      </MemoryRouter>
+    )
+
+    expect(mockUseNatalInterpretationById).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interpretationId: 321,
+        enabled: true,
+      })
+    )
+  })
+
   it("renders empty state", () => {
     mockUseLatestNatalChart.mockReturnValue({
       isLoading: false,

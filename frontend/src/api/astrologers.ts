@@ -20,6 +20,7 @@ const MOCK_ASTROLOGERS: Astrologer[] = [
     name: "Guide Psychologique",
     first_name: "Étienne",
     last_name: "Garnier",
+    provider_type: "ia",
     avatar_url: "/assets/astrologers/etienne.png",
     specialties: ["Débutants", "Bases", "Onboarding"],
     style: "Pédagogique",
@@ -34,6 +35,25 @@ const MOCK_ASTROLOGER_PROFILES: Record<string, AstrologerProfile> = {
       "Ancien professeur de philosophie, Étienne Garnier accompagne les débutants avec une approche simple, claire et progressive.",
     gender: "male",
     age: 55,
+    location: "Lyon, France",
+    quote: "Mon rôle est de rendre l’astrologie claire, simple et accessible à tous, sans jamais vous intimider.",
+    mission_statement: "Vous donner confiance en vous guidant pas à pas dans votre découverte de l’astrologie.",
+    ideal_for: "Idéal pour débutants",
+    metrics: {
+      experience_years: 12,
+      consultations_count: 3000,
+      average_rating: 4.9,
+    },
+    specialties_details: [
+      {
+        title: "Thème natal",
+        description: "Comprendre votre carte du ciel avec des repères simples.",
+      },
+      {
+        title: "Signes et maisons",
+        description: "Les fondamentaux expliqués pas à pas.",
+      },
+    ],
     professional_background: [
       "20 ans professeur (philosophie / pédagogie)",
       "12 ans astrologue généraliste",
@@ -45,6 +65,16 @@ const MOCK_ASTROLOGER_PROFILES: Record<string, AstrologerProfile> = {
       "Rassurance et pédagogie",
     ],
     behavioral_style: ["Calme", "Posé", "Progressif (step-by-step)"],
+    reviews: [],
+    review_summary: {
+      average_rating: 4.9,
+      review_count: 0,
+    },
+    user_rating: undefined,
+    action_state: {
+      has_chat: false,
+      has_natal_interpretation: false,
+    },
   },
 }
 
@@ -251,4 +281,41 @@ export function useAstrologer(id: string | undefined) {
   })
 }
 
-export { MOCK_ASTROLOGERS, MOCK_ASTROLOGER_PROFILES, isValidAstrologerId }
+async function rateAstrologer(id: string, data: { rating: number; comment?: string; tags?: string[] }): Promise<void> {
+  if (!isValidAstrologerId(id)) {
+    throw new AstrologersApiError("invalid_id", "invalid astrologer id", 400)
+  }
+
+  try {
+    const response = await apiFetch(`${API_BASE_URL}/v1/astrologers/${encodeURIComponent(id)}/reviews`, {
+      method: "POST",
+      headers: {
+        ...getAccessTokenAuthHeader(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      let payload: ErrorEnvelope | null = null
+      try {
+        payload = (await response.json()) as ErrorEnvelope
+      } catch {
+        payload = null
+      }
+      throw new AstrologersApiError(
+        payload?.error?.code ?? "unknown_error",
+        payload?.error?.message ?? `Request failed with status ${response.status}`,
+        response.status,
+        payload?.error?.details ?? {},
+      )
+    }
+  } catch (error) {
+    if (error instanceof AstrologersApiError) {
+      throw error
+    }
+    throw error
+  }
+}
+
+export { MOCK_ASTROLOGERS, MOCK_ASTROLOGER_PROFILES, isValidAstrologerId, rateAstrologer }

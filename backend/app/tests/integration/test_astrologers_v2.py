@@ -2,19 +2,26 @@ import uuid
 
 from fastapi.testclient import TestClient
 
+from app.infra.db.base import Base
 from app.infra.db.models import (
     AstrologerProfileModel,
     AstrologerPromptProfileModel,
     LlmPersonaModel,
 )
-from app.infra.db.session import SessionLocal
+from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from scripts.seed_astrologers_6_profiles import ASTROLOGERS, seed_astrologers
 
 client = TestClient(app)
 
 
+def _reset_tables() -> None:
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+
+
 def test_list_astrologers_returns_v2_fields() -> None:
+    _reset_tables()
     # Use a unique name to avoid conflicts if tables aren't cleared
     unique_name = f"Orion Analyste {uuid.uuid4()}"
     persona_id = uuid.uuid4()
@@ -70,6 +77,7 @@ def test_list_astrologers_returns_v2_fields() -> None:
 
 
 def test_get_astrologer_returns_v2_profile() -> None:
+    _reset_tables()
     unique_name = f"Selene Mystique {uuid.uuid4()}"
     persona_id = uuid.uuid4()
     with SessionLocal() as db:
@@ -117,6 +125,7 @@ def test_get_astrologer_returns_v2_profile() -> None:
 
 
 def test_seed_astrologers_creates_active_prompt_profiles() -> None:
+    _reset_tables()
     with SessionLocal() as db:
         seed_astrologers(db)
         canonical_ids = {uuid.UUID(item["id"]) for item in ASTROLOGERS}
@@ -134,9 +143,11 @@ def test_seed_astrologers_creates_active_prompt_profiles() -> None:
 
 
 def test_seed_astrologers_populates_structured_profile_fields() -> None:
+    _reset_tables()
     selene_id = next(
-        uuid.UUID(item["id"]) for item in ASTROLOGERS if item["display_name"] == "Sélène Mystique"
+        uuid.UUID(item["id"]) for item in ASTROLOGERS if item["display_name"] == "Sélène Ardent"
     )
+
     with SessionLocal() as db:
         seed_astrologers(db)
         selene_profile = (
@@ -146,6 +157,53 @@ def test_seed_astrologers_populates_structured_profile_fields() -> None:
         )
 
     assert selene_profile.age == 44
-    assert "Études en symbolisme et traditions anciennes" in selene_profile.professional_background
-    assert "Lecture symbolique du thème" in selene_profile.key_skills
-    assert "Sens du cycle et du temps" in selene_profile.behavioral_style
+    assert "Études en symbolisme" in selene_profile.professional_background
+    assert "Lecture symbolique" in selene_profile.key_skills
+    assert "Imagé" in selene_profile.behavioral_style
+
+
+def test_seed_astrologers_hides_stale_non_canonical_profiles_without_photo() -> None:
+    _reset_tables()
+    stale_persona_id = uuid.uuid4()
+
+    with SessionLocal() as db:
+        db.add(
+            LlmPersonaModel(
+                id=stale_persona_id,
+                name="Ancien Profil",
+                description="Profil historique",
+                enabled=True,
+            )
+        )
+        db.add(
+            AstrologerProfileModel(
+                persona_id=stale_persona_id,
+                first_name="Ancien",
+                last_name="Profil",
+                display_name="Ancien Profil",
+                gender="other",
+                provider_type="ia",
+                age=None,
+                photo_url=None,
+                public_style_label="Standard",
+                bio_short="Legacy",
+                bio_long="Legacy",
+                admin_category="legacy",
+                specialties=[],
+                professional_background=[],
+                key_skills=[],
+                behavioral_style=[],
+                is_public=True,
+            )
+        )
+        db.commit()
+
+        seed_astrologers(db)
+
+        stale_profile = (
+            db.query(AstrologerProfileModel)
+            .filter(AstrologerProfileModel.persona_id == stale_persona_id)
+            .one()
+        )
+
+    assert stale_profile.is_public is False

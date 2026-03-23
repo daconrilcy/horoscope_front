@@ -1485,6 +1485,32 @@ textarea:focus-visible {
   box-shadow: 0 10px 24px rgba(129, 100, 192, 0.12);
 }
 
+.astrologer-card-provider-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.34rem 0.66rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  background: rgba(255, 255, 255, 0.46);
+  color: #4a4f7a;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 18px rgba(129, 100, 192, 0.1);
+}
+
+.astrologer-card-provider-badge--ia {
+  border-color: color-mix(in srgb, var(--astro-accent) 28%, rgba(255, 255, 255, 0.44) 72%);
+  color: color-mix(in srgb, var(--astro-accent) 68%, #3d4b7f 32%);
+}
+
+.astrologer-card-provider-badge--real {
+  border-color: rgba(215, 180, 120, 0.5);
+  color: #a87332;
+  background: rgba(255, 248, 236, 0.58);
+}
+
 .astrologer-card-featured-badge::before {
   content: "★";
   font-size: 0.82rem;

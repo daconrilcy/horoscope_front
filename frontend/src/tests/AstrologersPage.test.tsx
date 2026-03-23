@@ -51,6 +51,9 @@ function renderProfilePage(id: string) {
         <Route path="/astrologers" element={<AstrologersPage />} />
         <Route path="/astrologers/:id" element={<AstrologerProfilePage />} />
         <Route path="/chat" element={<div>Chat Page</div>} />
+        <Route path="/chat/:conversationId" element={<div>Chat Conversation</div>} />
+        <Route path="/natal" element={<div>Natal Page</div>} />
+        <Route path="/consultations/new" element={<div>Consultation Wizard</div>} />
       </Routes>
     </MemoryRouter>
   )
@@ -72,6 +75,7 @@ describe("AstrologersPage", () => {
       first_name: "Luna",
       last_name: "Caron",
       avatar_url: "/avatars/luna.jpg",
+      provider_type: "ia",
       specialties: ["Thème natal", "Transits", "Relations"],
       style: "Bienveillant et direct",
       bio_short: "Astrologue depuis 15 ans.",
@@ -82,6 +86,7 @@ describe("AstrologersPage", () => {
       first_name: "Orion",
       last_name: "Vasseur",
       avatar_url: "/avatars/orion.jpg",
+      provider_type: "real",
       specialties: ["Carrière", "Événements"],
       style: "Analytique et précis",
       bio_short: "Expert en astrologie prévisionnelle.",
@@ -98,6 +103,7 @@ describe("AstrologersPage", () => {
             first_name: "Étienne",
             last_name: "Garnier",
             avatar_url: "/avatars/etienne.jpg",
+            provider_type: "ia",
             specialties: ["Débutants"],
             style: "Pédagogique",
             bio_short: "Profil onboarding.",
@@ -128,6 +134,7 @@ describe("AstrologersPage", () => {
             first_name: "Étienne",
             last_name: "Garnier",
             avatar_url: "/avatars/etienne.jpg",
+            provider_type: "ia",
             specialties: ["Débutants", "Bases", "Onboarding"],
             style: "Pédagogique",
             bio_short: "Astrologue d'entrée pour les débutants.",
@@ -169,6 +176,8 @@ describe("AstrologersPage", () => {
 
       expect(screen.getByText("Luna Caron")).toBeInTheDocument()
       expect(screen.getByText("Bienveillant et direct")).toBeInTheDocument()
+      expect(screen.getByText("Astrologue IA")).toBeInTheDocument()
+      expect(screen.getByText("Astrologue réel")).toBeInTheDocument()
       expect(screen.getByText("Thème natal")).toBeInTheDocument()
       expect(screen.getByText("Transits")).toBeInTheDocument()
       expect(screen.getByText("Relations")).toBeInTheDocument()
@@ -262,17 +271,54 @@ describe("AstrologerProfilePage", () => {
   const mockProfile = {
     id: "1",
     name: "Luna Céleste",
+    first_name: "Luna",
+    last_name: "Caron",
     avatar_url: "/avatars/luna.jpg",
     specialties: ["Thème natal", "Transits", "Relations"],
     style: "Bienveillant et direct",
     bio_short: "Astrologue depuis 15 ans.",
     bio_full: "Passionnée par les étoiles depuis mon enfance, j'ai consacré 15 années à l'étude.",
-    languages: ["Français", "Anglais", "Espagnol"],
-    experience_years: 15,
+    gender: "female" as const,
+    age: 36,
+    location: "Paris, France",
+    quote: "Je vous aide à relire votre thème avec douceur.",
+    mission_statement: "Vous aider à trouver des repères émotionnels fiables.",
+    ideal_for: "Idéal pour relations",
+    metrics: {
+      experience_years: 15,
+      consultations_count: 2400,
+      average_rating: 4.8,
+    },
+    specialties_details: [
+      { title: "Thème natal", description: "Lecture simple et émotionnelle." },
+      { title: "Transits", description: "Comprendre les cycles actuels." },
+    ],
+    professional_background: ["15 ans d'accompagnement"],
+    key_skills: ["Relations", "Transits"],
+    behavioral_style: ["Douceur", "Clarté"],
+    reviews: [
+      {
+        id: "review-1",
+        user_name: "Marie",
+        rating: 5,
+        comment: "Très éclairante.",
+        tags: ["Débutante"],
+        created_at: "2026-03-01T10:00:00Z",
+      },
+    ],
+    review_summary: {
+      average_rating: 4.8,
+      review_count: 127,
+    },
+    user_rating: 4,
+    action_state: {
+      has_chat: false,
+      has_natal_interpretation: false,
+    },
   }
 
   describe("AC3: Profil astrologue", () => {
-    it("displays complete profile with avatar, bio, specialties, languages, style", () => {
+    it("displays complete profile with hero, metrics, specialties and reviews", () => {
       mockUseAstrologer.mockReturnValue({
         data: mockProfile,
         isPending: false,
@@ -281,12 +327,16 @@ describe("AstrologerProfilePage", () => {
 
       renderProfilePage("1")
 
-      expect(screen.getByText("Luna Céleste")).toBeInTheDocument()
-      expect(screen.getByText("Bienveillant et direct")).toBeInTheDocument()
+      expect(screen.getByText("Luna Caron")).toBeInTheDocument()
+      expect(screen.getByText("Astrologue IA")).toBeInTheDocument()
+      expect(screen.getByText(/Astrologue .*Chaleureuse/)).toBeInTheDocument()
+      expect(screen.getByText("Paris, France")).toBeInTheDocument()
       expect(screen.getByText("15 ans d'expérience")).toBeInTheDocument()
       expect(screen.getByText("Thème natal")).toBeInTheDocument()
-      expect(screen.getByText("Français, Anglais, Espagnol")).toBeInTheDocument()
       expect(screen.getByText(/Passionnée par les étoiles/)).toBeInTheDocument()
+      expect(screen.getByText("Je vous aide à relire votre thème avec douceur.")).toBeInTheDocument()
+      expect(screen.getByText(/Marie/)).toBeInTheDocument()
+      expect(screen.getByText(/\(127 avis\)/)).toBeInTheDocument()
     })
 
     it("shows loading state", () => {
@@ -319,70 +369,85 @@ describe("AstrologerProfilePage", () => {
         data: undefined,
         isPending: false,
         error: new Error("Server error"),
+        refetch: vi.fn(),
       })
 
       renderProfilePage("1")
 
       expect(screen.getByText("Erreur lors du chargement des astrologues.")).toBeInTheDocument()
-      expect(screen.getByRole("button", { name: "Retour au catalogue" })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Réessayer" })).toBeInTheDocument()
     })
   })
 
   describe("AC4: Démarrer conversation", () => {
-    it("navigates to chat with astrologer when clicking CTA", () => {
+    it("creates or resumes chat from the profile CTA", () => {
       mockUseAstrologer.mockReturnValue({
         data: mockProfile,
         isPending: false,
         error: null,
+        refetch: vi.fn(),
       })
 
       renderProfilePage("1")
 
-      const ctaButton = screen.getByRole("button", { name: /Démarrer une conversation|Start a conversation/i })
+      const ctaButton = screen.getByRole("button", { name: /Démarrer un chat|Start a chat/i })
       fireEvent.click(ctaButton)
 
-      expect(mockNavigate).toHaveBeenCalledWith(`/chat?astrologerId=${encodeURIComponent("1")}`)
+      expect(mockNavigate).toHaveBeenCalledWith(`/chat?personaId=${encodeURIComponent("1")}`)
     })
 
-    it("navigates to chat with correct astrologerId param for different astrologer", () => {
+    it("resumes the existing conversation when one already exists", () => {
       const otherProfile = {
         ...mockProfile,
         id: "42",
         name: "Autre Astrologue",
+        action_state: {
+          has_chat: true,
+          last_chat_id: "902",
+          has_natal_interpretation: false,
+        },
       }
       mockUseAstrologer.mockReturnValue({
         data: otherProfile,
         isPending: false,
         error: null,
+        refetch: vi.fn(),
       })
 
       renderProfilePage("42")
 
-      const ctaButton = screen.getByRole("button", { name: /Démarrer une conversation|Start a conversation/i })
+      const ctaButton = screen.getByRole("button", { name: /Reprendre le chat|Resume chat/i })
       fireEvent.click(ctaButton)
 
-      expect(mockNavigate).toHaveBeenCalledWith(`/chat?astrologerId=${encodeURIComponent("42")}`)
+      expect(mockNavigate).toHaveBeenCalledWith(`/chat/${encodeURIComponent("902")}`)
     })
 
-    it("properly encodes astrologer id with underscore for chat navigation", () => {
-      const idWithUnderscore = "astro_expert_42"
-      const astrologerWithUnderscore = {
+    it("routes natal and consultation CTAs to supported pages", () => {
+      const astrologerWithActions = {
         ...mockProfile,
-        id: idWithUnderscore,
-        name: "Astro Expert",
+        id: "astro_expert_42",
+        action_state: {
+          has_chat: false,
+          has_natal_interpretation: true,
+          last_natal_interpretation_id: "321",
+        },
       }
       mockUseAstrologer.mockReturnValue({
-        data: astrologerWithUnderscore,
+        data: astrologerWithActions,
         isPending: false,
         error: null,
+        refetch: vi.fn(),
       })
 
-      renderProfilePage(idWithUnderscore)
+      renderProfilePage("astro_expert_42")
 
-      const ctaButton = screen.getByRole("button", { name: /Démarrer une conversation|Start a conversation/i })
-      fireEvent.click(ctaButton)
+      fireEvent.click(screen.getByRole("button", { name: /Voir mon interprétation|View my interpretation/i }))
+      expect(mockNavigate).toHaveBeenCalledWith("/natal?interpretationId=321")
 
-      expect(mockNavigate).toHaveBeenCalledWith(`/chat?astrologerId=${encodeURIComponent(idWithUnderscore)}`)
+      fireEvent.click(screen.getByRole("button", { name: /Lancer une consultation|Start a consultation/i }))
+      expect(mockNavigate).toHaveBeenCalledWith(
+        `/consultations/new?astrologerId=${encodeURIComponent("astro_expert_42")}`
+      )
     })
   })
 
