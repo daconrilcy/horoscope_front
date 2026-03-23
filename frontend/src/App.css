@@ -2462,6 +2462,11 @@ textarea:focus-visible {
   animation: fadeIn 0.2s ease;
 }
 
+.consultation-type-step {
+  width: 100%;
+  animation: fadeIn 0.2s ease;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

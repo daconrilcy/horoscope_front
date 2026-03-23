@@ -246,6 +246,28 @@ Codex (GPT-5)
 - Compatibilité legacy `work` / `relation` explicitée pour éviter une implémentation cassante
 - Source de vérité DB + façade premium `/consultations` + wizard aligné couverts dans un même lot
 
+### Post-delivery fixes (2026-03-23)
+
+**Bug : aucun type de consultation affiché sur `/consultations/new`**
+
+Deux causes identifiées et corrigées :
+
+1. **Seed non exécuté** — La table `consultation_templates` était vide car le script `backend/scripts/seed_consultation_templates.py` n'avait jamais été lancé après la migration. Corrigé en exécutant le seed manuellement et en ajoutant un auto-seed au démarrage du backend dans `app/main.py` (`_ensure_consultation_templates_seeded()`).
+
+2. **Conflit CSS `.wizard-step`** — `WizardLayout.css` définissait `.wizard-step` avec `display: flex; align-items: center` pour les indicateurs de la barre de progression. `ConsultationTypeStep` (et tous les autres steps) utilisaient cette même classe comme wrapper de contenu, ce qui écrasait le layout et rendait la grille de types invisible (largeur réduite à zéro par le flex column + align-items center).
+   - `WizardLayout.css` : renommage de `.wizard-step` → `.wizard-progress-step` (avec toutes les variantes `__indicator`, `__label`, `__connector`, `--active`, `--done`)
+   - `WizardLayout.tsx` : JSX mis à jour
+   - `ConsultationTypeStep.tsx` : wrapper renommé en `consultation-type-step` + `width: 100%` + fallback sur `CONSULTATION_TYPES` hardcodés si l'API échoue + gestion `isError`
+   - `App.css` : `.consultation-type-step { width: 100%; animation: fadeIn 0.2s ease }` ajouté
+   - `i18n/consultations.ts` : clé `catalogue_error` ajoutée
+
 ### File List
 
 - `_bmad-output/implementation-artifacts/60-23-refonte-premium-page-consultations-et-catalogue-db.md`
+- `backend/app/main.py`
+- `backend/scripts/seed_consultation_templates.py`
+- `frontend/src/features/consultations/components/ConsultationTypeStep.tsx`
+- `frontend/src/layouts/WizardLayout.css`
+- `frontend/src/layouts/WizardLayout.tsx`
+- `frontend/src/App.css`
+- `frontend/src/i18n/consultations.ts`

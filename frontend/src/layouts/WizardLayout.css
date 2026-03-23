@@ -18,7 +18,7 @@
   position: relative;
 }
 
-.wizard-step {
+.wizard-progress-step {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -27,7 +27,7 @@
   z-index: 1;
 }
 
-.wizard-step__indicator {
+.wizard-progress-step__indicator {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -41,30 +41,30 @@
   transition: all var(--duration-normal);
 }
 
-.wizard-step--active .wizard-step__indicator {
+.wizard-progress-step--active .wizard-progress-step__indicator {
   border-color: var(--primary);
   color: var(--primary);
   box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
 }
 
-.wizard-step--done .wizard-step__indicator {
+.wizard-progress-step--done .wizard-progress-step__indicator {
   background: var(--primary);
   border-color: var(--primary);
   color: white;
 }
 
-.wizard-step__label {
+.wizard-progress-step__label {
   font-size: 0.75rem;
   color: var(--color-text-secondary);
   text-align: center;
 }
 
-.wizard-step--active .wizard-step__label {
+.wizard-progress-step--active .wizard-progress-step__label {
   color: var(--color-text-headline);
   font-weight: 600;
 }
 
-.wizard-step__connector {
+.wizard-progress-step__connector {
   position: absolute;
   top: 16px;
   left: 50%;
@@ -74,7 +74,7 @@
   z-index: -1;
 }
 
-.wizard-step--done .wizard-step__connector {
+.wizard-progress-step--done .wizard-progress-step__connector {
   background: var(--primary);
 }
 
@@ -100,7 +100,7 @@
 }
 
 @media (max-width: 600px) {
-  .wizard-step__label {
+  .wizard-progress-step__label {
     display: none;
   }
 }

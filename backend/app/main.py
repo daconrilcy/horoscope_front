@@ -203,6 +203,23 @@ def _ensure_llm_registry_seeded() -> None:
         logger.error("llm_registry_auto_heal_failed error=%s", e)
 
 
+def _ensure_consultation_templates_seeded() -> None:
+    """Auto-seed consultation templates when the table is empty (idempotent)."""
+    from app.infra.db.models.consultation_template import ConsultationTemplateModel
+    from app.infra.db.session import SessionLocal
+
+    try:
+        with SessionLocal() as db:
+            count = db.query(ConsultationTemplateModel).count()
+            if count > 0:
+                return
+        logger.warning("consultation_templates_auto_seed table is empty, seeding...")
+        from scripts.seed_consultation_templates import seed_consultation_templates
+        seed_consultation_templates()
+    except Exception as e:
+        logger.error("consultation_templates_auto_seed_failed error=%s", e)
+
+
 @asynccontextmanager
 async def _app_lifespan(_: FastAPI):
     ensure_local_sqlite_schema_ready()
@@ -227,6 +244,7 @@ async def _app_lifespan(_: FastAPI):
             # Error stored in ephemeris module state; accurate endpoints return 5xx.
             pass
     _ensure_llm_registry_seeded()
+    _ensure_consultation_templates_seeded()
 
     # Story 59.2: Validate prompt catalog vs DB
     from app.infra.db.session import SessionLocal

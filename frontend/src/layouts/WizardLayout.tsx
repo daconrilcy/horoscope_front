@@ -34,15 +34,15 @@ export function WizardLayout({
           >
             <div className="wizard-progress-steps">
               {steps.map((label, i) => (
-                <div 
-                  key={i} 
-                  className={`wizard-step ${i < currentStep ? 'wizard-step--done' : ''} ${i === currentStep ? 'wizard-step--active' : ''}`}
+                <div
+                  key={i}
+                  className={`wizard-progress-step ${i < currentStep ? 'wizard-progress-step--done' : ''} ${i === currentStep ? 'wizard-progress-step--active' : ''}`}
                 >
-                  <div className="wizard-step__indicator">
+                  <div className="wizard-progress-step__indicator">
                     {i < currentStep ? '✓' : i + 1}
                   </div>
-                  <span className="wizard-step__label">{label}</span>
-                  {i < steps.length - 1 && <div className="wizard-step__connector" />}
+                  <span className="wizard-progress-step__label">{label}</span>
+                  {i < steps.length - 1 && <div className="wizard-progress-step__connector" />}
                 </div>
               ))}
             </div>

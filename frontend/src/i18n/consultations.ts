@@ -11,6 +11,11 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Loading catalogue...",
     es: "Cargando catálogo...",
   },
+  catalogue_error: {
+    fr: "Impossible de charger le catalogue, affichage des types par défaut.",
+    en: "Could not load catalogue, showing default types.",
+    es: "No se pudo cargar el catálogo, mostrando tipos predeterminados.",
+  },
   choose_consultation: {
     fr: "Choisir",
     en: "Choose",
