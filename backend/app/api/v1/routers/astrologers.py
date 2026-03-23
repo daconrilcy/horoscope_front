@@ -33,6 +33,7 @@ class SpecialtyDetail(BaseModel):
 
 
 class AstrologerMetrics(BaseModel):
+    total_experience_years: int = 0
     experience_years: int = 0
     consultations_count: int = 0
     average_rating: float = 0.0

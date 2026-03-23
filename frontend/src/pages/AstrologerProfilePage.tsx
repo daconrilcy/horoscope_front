@@ -34,6 +34,11 @@ type MetricItem = {
   icon: typeof Clock
 }
 
+type BackgroundMetric = {
+  value: string
+  label: string
+}
+
 function formatCompactCount(value: number): string {
   if (value >= 1000) {
     const rounded = Math.round(value / 100) / 10
@@ -46,27 +51,82 @@ function formatReviewPercentage(value: number): number {
   return Math.max(0, Math.min(100, Math.round((value / 5) * 100)))
 }
 
-function extractBackgroundMetric(entry: string | undefined): { value: string; label: string } | null {
-  if (!entry) {
-    return null
-  }
-
-  const match = entry.match(/(\d+\s*ans?)\s+(.*)/i)
-  if (!match) {
-    return null
-  }
-
-  const value = match[1].replace(/\s+/g, " ").trim()
-  const rawLabel = match[2].trim()
-  const cleanedLabel = rawLabel
+function normalizeBackgroundLabel(label: string): string {
+  return label
     .replace(/\((.*?)\)/g, "$1")
     .replace(/\s*\/\s*/g, " & ")
     .replace(/\s{2,}/g, " ")
     .trim()
+}
 
-  return {
-    value,
-    label: cleanedLabel.charAt(0).toUpperCase() + cleanedLabel.slice(1),
+function extractYearsMetric(
+  entries: string[],
+  matcher: (entry: string) => boolean,
+  fallbackYears?: number,
+  fallbackLabel?: string
+): BackgroundMetric | null {
+  const matchedEntry = entries.find((entry) => matcher(entry))
+  if (matchedEntry) {
+    const match = matchedEntry.match(/(\d+\s*ans?)\s+(.*)/i)
+    if (match) {
+      return {
+        value: match[1].replace(/\s+/g, " ").trim(),
+        label: normalizeBackgroundLabel(match[2]),
+      }
+    }
+
+    const normalized = normalizeBackgroundLabel(matchedEntry)
+    if (normalized) {
+      const [head, ...rest] = normalized.split(" ")
+      return {
+        value: head,
+        label: rest.join(" ") || fallbackLabel || normalized,
+      }
+    }
+  }
+
+  if (fallbackYears && fallbackYears > 0) {
+    return {
+      value: `${fallbackYears} ans`,
+      label: fallbackLabel ?? "Expérience",
+    }
+  }
+
+  return null
+}
+
+function getProfessionalMetric(entries: string[], totalExperienceYears?: number): BackgroundMetric | null {
+  const nonAstrologyMetric = extractYearsMetric(
+    entries,
+    (entry) => !/astrolog|astro/i.test(entry) && /\d+\s*ans?/i.test(entry),
+    totalExperienceYears,
+    "Expérience métier"
+  )
+  if (nonAstrologyMetric) {
+    return {
+      value: nonAstrologyMetric.value,
+      label: nonAstrologyMetric.label || "Expérience métier",
+    }
+  }
+
+  return extractYearsMetric(
+    entries,
+    (entry) => !/astrolog|astro/i.test(entry),
+    undefined,
+    "Parcours métier"
+  )
+}
+
+function getAstrologyMetric(entries: string[], astrologyExperienceYears: number): BackgroundMetric {
+  const astrologyMetric = extractYearsMetric(
+    entries,
+    (entry) => /astrolog|astro/i.test(entry),
+    astrologyExperienceYears,
+    "Astrologue"
+  )
+  return astrologyMetric ?? {
+    value: `${astrologyExperienceYears} ans`,
+    label: "Astrologue",
   }
 }
 
@@ -241,11 +301,19 @@ export function AstrologerProfilePage() {
 
   const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.name
   const metrics = profile.metrics ?? {
+    total_experience_years: 0,
     experience_years: 0,
     consultations_count: 0,
     average_rating: 0,
   }
-  const backgroundMetric = extractBackgroundMetric(profile.professional_background[0])
+  const professionalMetric = getProfessionalMetric(
+    profile.professional_background,
+    profile.metrics?.total_experience_years
+  )
+  const astrologyMetric = getAstrologyMetric(
+    profile.professional_background,
+    metrics.experience_years
+  )
   const averageRating = profile.review_summary.average_rating || metrics.average_rating || 0
   const reviewCount = profile.review_summary.review_count || 0
   const satisfactionRate = formatReviewPercentage(averageRating)
@@ -266,22 +334,24 @@ export function AstrologerProfilePage() {
           { icon: Clock, label: "Accès immédiat" },
         ]
   const metricItems: MetricItem[] = [
-    {
-      key: "background",
-      value: backgroundMetric?.value ?? `${metrics.experience_years} ans`,
-      label: backgroundMetric?.label ?? "Parcours confirmé",
-      icon: BookOpen,
-    },
+    ...(professionalMetric
+      ? [{
+          key: "background",
+          value: professionalMetric.value,
+          label: professionalMetric.label,
+          icon: BookOpen,
+        }]
+      : []),
     {
       key: "experience",
-      value: `${metrics.experience_years} ans`,
-      label: "Astrologue",
+      value: astrologyMetric.value,
+      label: astrologyMetric.label,
       icon: GraduationCap,
     },
     {
       key: "consultations",
       value: formatCompactCount(metrics.consultations_count),
-      label: "Consultants accompagnés",
+      label: "Personnes accompagnées",
       icon: Users,
     },
     {

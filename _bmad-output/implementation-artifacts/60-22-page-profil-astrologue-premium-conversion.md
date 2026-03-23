@@ -322,6 +322,9 @@ Gemini CLI (Autonomous Mode)
 - Ajout de la catégorie produit `provider_type` (`ia` / `real`) dans le modèle, l'API et le rendu front.
 - Alignement des boutons retour du profil avec le langage visuel premium du reste de l'application.
 - Retrait du prix sur le CTA principal des astrologues IA, avec repositionnement sur une logique d'accès par forfait ou crédits au clic.
+- Correction des `metric-card` pour distinguer l'expérience professionnelle totale de l'expérience en astrologie, sans doublon sémantique.
+- Correction du wording métier de `Consultants accompagnés` vers `Personnes accompagnées`.
+- Réécriture des contenus `À propos` et des signatures mission pour les 6 astrologues afin d'aligner la fiche avec le positionnement produit réel.
 
 ### Completion Notes List
 
@@ -331,6 +334,8 @@ Gemini CLI (Autonomous Mode)
 - Le système de notation est intégré et persistant.
 - Le hero affiche désormais clairement la nature du profil (`Astrologue IA` / `Astrologue réel`).
 - Le CTA principal n'affiche plus de tarif pour les astrologues IA ; le contrôle d'accès est renvoyé au flow métier au clic.
+- Les métriques du hero/detail distinguent désormais proprement `expérience métier` et `expérience astrologue`.
+- Les biographies `À propos` et les signatures mission reflètent maintenant le ton et le rôle exacts de chaque astrologue.
 
 ### File List
 
@@ -344,9 +349,11 @@ Gemini CLI (Autonomous Mode)
 - `frontend/src/types/astrologer.ts` (MOD)
 - `frontend/src/api/astrologers.ts` (MOD)
 - `frontend/src/pages/AstrologerProfilePage.tsx` (MOD)
+- `frontend/src/tests/AstrologersPage.test.tsx` (MOD)
 - `frontend/src/pages/AstrologerProfilePage.css` (NEW)
 - `frontend/src/features/astrologers/components/AstrologerCard.tsx` (MOD)
 - `frontend/src/App.css` (MOD)
 - `frontend/src/features/astrologers/index.ts` (MOD)
 - `frontend/src/i18n/astrologers.ts` (MOD)
+- `backend/app/tests/integration/test_astrologers_v2.py` (MOD)
 - `_bmad-output/implementation-artifacts/60-22-page-profil-astrologue-premium-conversion.md` (MOD)

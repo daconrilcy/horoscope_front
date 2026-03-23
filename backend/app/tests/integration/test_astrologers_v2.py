@@ -157,7 +157,10 @@ def test_seed_astrologers_populates_structured_profile_fields() -> None:
         )
 
     assert selene_profile.age == 44
-    assert "Études en symbolisme" in selene_profile.professional_background
+    assert any(
+        item.startswith("Études en symbolisme")
+        for item in selene_profile.professional_background
+    )
     assert "Lecture symbolique" in selene_profile.key_skills
     assert "Imagé" in selene_profile.behavioral_style
 

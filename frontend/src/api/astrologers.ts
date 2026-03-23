@@ -32,14 +32,15 @@ const MOCK_ASTROLOGER_PROFILES: Record<string, AstrologerProfile> = {
   "c0a80101-8edb-4e1a-8f1a-8f1a8f1a8f1a": {
     ...MOCK_ASTROLOGERS[0],
     bio_full:
-      "Ancien professeur de philosophie, Étienne Garnier accompagne les débutants avec une approche simple, claire et progressive.",
+      "Astrologue généraliste, Étienne accompagne celles et ceux qui découvrent l’astrologie ou souhaitent enfin la comprendre de manière claire et structurée. Son approche repose sur la simplicité : il traduit les éléments du thème natal en repères accessibles, sans jargon inutile ni interprétation floue.\n\nIl aide à poser des bases solides, à comprendre les grands équilibres du thème et à identifier des pistes concrètes pour avancer. Son objectif n’est pas de complexifier, mais de rendre l’astrologie utile, compréhensible et applicable au quotidien.",
     gender: "male",
     age: 55,
     location: "Lyon, France",
     quote: "Mon rôle est de rendre l’astrologie claire, simple et accessible à tous, sans jamais vous intimider.",
-    mission_statement: "Vous donner confiance en vous guidant pas à pas dans votre découverte de l’astrologie.",
+    mission_statement: "Comprendre avant d’interpréter.",
     ideal_for: "Idéal pour débutants",
     metrics: {
+      total_experience_years: 20,
       experience_years: 12,
       consultations_count: 3000,
       average_rating: 4.9,

@@ -29,9 +29,14 @@ ASTROLOGERS = [
         "public_style_label": "Pédagogue",
         "location": "Lyon, France",
         "quote": "L'astrologie n'est pas une fatalité, c'est une météo pour mieux naviguer.",
-        "mission_statement": "Rendre l'astrologie accessible et utile au quotidien pour chacun.",
+        "mission_statement": "Comprendre avant d’interpréter.",
         "ideal_for": "Débutants cherchant une approche rassurante et structurée.",
-        "metrics": {"experience_years": 15, "consultations_count": 1200, "average_rating": 4.8},
+        "metrics": {
+            "total_experience_years": 20,
+            "experience_years": 12,
+            "consultations_count": 1200,
+            "average_rating": 4.8,
+        },
         "specialties_details": [
             {
                 "title": "Bases du thème", 
@@ -57,7 +62,14 @@ ASTROLOGERS = [
         "behavioral_style": ["Calme", "Rassurant", "Méthodique"],
         "sort_order": 1,
         "description": (
-            "Étienne est un ancien professeur de philosophie passionné par la transmission."
+            "Astrologue généraliste, Étienne accompagne celles et ceux qui découvrent "
+            "l’astrologie ou souhaitent enfin la comprendre de manière claire et structurée. "
+            "Son approche repose sur la simplicité : il traduit les éléments du thème natal "
+            "en repères accessibles, sans jargon inutile ni interprétation floue.\n\n"
+            "Il aide à poser des bases solides, à comprendre les grands équilibres du thème "
+            "et à identifier des pistes concrètes pour avancer. Son objectif n’est pas de "
+            "complexifier, mais de rendre l’astrologie utile, compréhensible et applicable "
+            "au quotidien."
         ),
         "tone": "calm",
         "verbosity": "medium",
@@ -81,9 +93,14 @@ ASTROLOGERS = [
         "public_style_label": "Mystique",
         "location": "Montpellier, France",
         "quote": "Nous sommes faits de poussière d'étoiles et de cycles lunaires.",
-        "mission_statement": "Reconnecter les âmes à leurs rythmes célestes profonds.",
+        "mission_statement": "Donner du sens aux cycles.",
         "ideal_for": "Profils intuitifs en quête de sens et de reconnexion émotionnelle.",
-        "metrics": {"experience_years": 12, "consultations_count": 950, "average_rating": 4.9},
+        "metrics": {
+            "total_experience_years": 0,
+            "experience_years": 12,
+            "consultations_count": 950,
+            "average_rating": 4.9,
+        },
         "specialties_details": [
             {
                 "title": "Cycles Lunaires", 
@@ -100,11 +117,23 @@ ASTROLOGERS = [
         ),
         "admin_category": "mystical",
         "specialties": ["Spiritualité", "Cycles Lunaires", "Relations"],
-        "professional_background": ["Études en symbolisme", "12 ans astrologie intuitive"],
+        "professional_background": [
+            "Études en symbolisme et traditions anciennes",
+            "12 ans astrologie intuitive",
+            "Ateliers cycles lunaires et rituels",
+            "Accompagnement spirituel",
+        ],
         "key_skills": ["Lecture symbolique", "Rituels"],
         "behavioral_style": ["Imagé", "Poétique"],
         "sort_order": 2,
-        "description": "Sélène explore la dimension poétique et archétypale du ciel.",
+        "description": (
+            "Sélène développe une astrologie intuitive et symbolique, centrée sur les cycles, "
+            "les archétypes et les rythmes émotionnels. Elle traduit les configurations "
+            "astrales en images, en ressentis et en dynamiques de transformation.\n\n"
+            "Son approche invite à prendre du recul, à se reconnecter à ses propres cycles "
+            "et à donner du sens aux périodes de transition. Elle propose une lecture plus "
+            "sensible et contemplative, ancrée dans une compréhension globale de l’expérience intérieure."
+        ),
         "tone": "mystical",
         "verbosity": "long",
         "style_markers": ["images symboliques", "rituels"],
@@ -127,9 +156,14 @@ ASTROLOGERS = [
         "public_style_label": "Analytique",
         "location": "Paris, France",
         "quote": "La précision des astres au service de la stratégie de vie.",
-        "mission_statement": "Apporter une rigueur d'ingénieur à l'analyse du ciel.",
+        "mission_statement": "Analyser pour clarifier.",
         "ideal_for": "Profils cartésiens qui veulent des preuves et de la structure.",
-        "metrics": {"experience_years": 10, "consultations_count": 1100, "average_rating": 4.7},
+        "metrics": {
+            "total_experience_years": 0,
+            "experience_years": 10,
+            "consultations_count": 1100,
+            "average_rating": 4.7,
+        },
         "specialties_details": [
             {
                 "title": "Audit de thème", 
@@ -146,11 +180,23 @@ ASTROLOGERS = [
         ),
         "admin_category": "rational",
         "specialties": ["Transits", "Carrière", "Organisation"],
-        "professional_background": ["Ingénieur data", "10 ans astrologie technique"],
+        "professional_background": [
+            "Ingénieur data / systèmes",
+            "10 ans astrologie technique",
+            "Création de frameworks d’analyse astrologique",
+            "Audit de thèmes (dominantes, aspects, cohérence globale)",
+        ],
         "key_skills": ["Analyse", "Logique"],
         "behavioral_style": ["Méthodique", "Factuel"],
         "sort_order": 3,
-        "description": "Orion traite le thème astral comme une architecture logique.",
+        "description": (
+            "Orion propose une lecture structurée et rigoureuse du thème astrologique. Il "
+            "s’adresse à celles et ceux qui souhaitent comprendre la mécanique sous-jacente : "
+            "aspects, dominantes, interactions entre planètes et maisons.\n\n"
+            "Son approche distingue clairement les faits observables, les interprétations "
+            "possibles et leurs limites. Il met en évidence les relations de cause à effet "
+            "et les implications concrètes, afin de fournir une analyse fiable, lisible et exploitable."
+        ),
         "tone": "rational",
         "verbosity": "short",
         "style_markers": ["precision", "structure"],
@@ -173,9 +219,14 @@ ASTROLOGERS = [
         "public_style_label": "Chaleureux",
         "location": "Bordeaux, France",
         "quote": "Le cœur a ses raisons que les astres nous aident à comprendre.",
-        "mission_statement": "Accompagner les transitions de vie avec douceur et bienveillance.",
+        "mission_statement": "Se comprendre pour mieux se relier.",
         "ideal_for": "Personnes traversant des remises en question relationnelles.",
-        "metrics": {"experience_years": 7, "consultations_count": 800, "average_rating": 5.0},
+        "metrics": {
+            "total_experience_years": 5,
+            "experience_years": 7,
+            "consultations_count": 800,
+            "average_rating": 5.0,
+        },
         "specialties_details": [
             {
                 "title": "Relationnel", 
@@ -192,11 +243,24 @@ ASTROLOGERS = [
         ),
         "admin_category": "warm",
         "specialties": ["Relations", "Estime de soi", "Famille"],
-        "professional_background": ["Accompagnement psy", "7 ans astrologue"],
+        "professional_background": [
+            "5 ans en accompagnement psychologique (non-clinique)",
+            "7 ans astrologue relationnelle",
+            "Coaching couple / communication",
+            "Ateliers sur gestion émotionnelle",
+        ],
         "key_skills": ["Empathie", "CNV"],
         "behavioral_style": ["Chaleureux", "Bienveillant"],
         "sort_order": 4,
-        "description": "Luna aide à transformer les blocages émotionnels grâce au ciel.",
+        "description": (
+            "Luna propose une astrologie centrée sur les émotions, les relations et l’équilibre "
+            "intérieur. Elle accorde une place essentielle à l’écoute et à la reformulation, "
+            "afin de créer un espace de compréhension sans jugement.\n\n"
+            "Son approche permet de mieux identifier les schémas relationnels, de renforcer "
+            "l’estime de soi et d’apaiser certaines tensions internes. Elle accompagne avec "
+            "douceur, tout en proposant des pistes concrètes pour améliorer la communication "
+            "et les relations au quotidien."
+        ),
         "tone": "warm",
         "verbosity": "medium",
         "style_markers": ["ecoute active", "bienveillance"],
@@ -219,9 +283,14 @@ ASTROLOGERS = [
         "public_style_label": "Pragmatique",
         "location": "Bruxelles, Belgique",
         "quote": "L'astrologie est un outil de décision, pas une excuse.",
-        "mission_statement": "Optimiser le timing de vos ambitions professionnelles.",
+        "mission_statement": "Décider au bon moment.",
         "ideal_for": "Entrepreneurs et profils actifs qui veulent des résultats concrets.",
-        "metrics": {"experience_years": 8, "consultations_count": 1300, "average_rating": 4.6},
+        "metrics": {
+            "total_experience_years": 12,
+            "experience_years": 8,
+            "consultations_count": 1300,
+            "average_rating": 4.6,
+        },
         "specialties_details": [
             {
                 "title": "Timing Business", 
@@ -238,11 +307,24 @@ ASTROLOGERS = [
         ),
         "admin_category": "direct",
         "specialties": ["Business", "Timing", "Objectifs"],
-        "professional_background": ["Cabinet de conseil", "8 ans astrologue"],
+        "professional_background": [
+            "12 ans en cabinet de conseil (stratégie / ops)",
+            "8 ans astrologue spécialisé en carrière et décisions",
+            "Coaching de dirigeants (C-level, entrepreneurs)",
+            "Interventions sur optimisation du timing (lancements, pivots, recrutements)",
+        ],
         "key_skills": ["Decision", "Timing"],
         "behavioral_style": ["Direct", "Action-oriented"],
         "sort_order": 5,
-        "description": "Atlas ne fait pas de détours : il cherche l'efficacité.",
+        "description": (
+            "Atlas aborde l’astrologie comme un outil d’aide à la décision. Son travail "
+            "consiste à transformer les configurations astrales en leviers concrets, "
+            "utilisables dans des contextes professionnels, stratégiques ou personnels.\n\n"
+            "Il met l’accent sur le timing, les arbitrages et la priorisation. Chaque lecture "
+            "vise à clarifier une situation, identifier les meilleures fenêtres d’action et "
+            "expliciter les compromis. Direct et orienté résultats, Atlas privilégie toujours "
+            "l’efficacité à la théorie."
+        ),
         "tone": "direct",
         "verbosity": "short",
         "style_markers": ["franchise", "priorisation"],
@@ -265,9 +347,14 @@ ASTROLOGERS = [
         "public_style_label": "Introspectif",
         "location": "Berlin, Allemagne",
         "quote": "C'est dans l'ombre du thème que se cache la vraie lumière.",
-        "mission_statement": "Explorer les profondeurs de la psyché à travers le prisme astral.",
+        "mission_statement": "Explorer sans se juger.",
         "ideal_for": "Ceux qui n'ont pas peur de regarder leurs parts d'ombre.",
-        "metrics": {"experience_years": 15, "consultations_count": 600, "average_rating": 4.9},
+        "metrics": {
+            "total_experience_years": 0,
+            "experience_years": 15,
+            "consultations_count": 600,
+            "average_rating": 4.9,
+        },
         "specialties_details": [
             {
                 "title": "Shadow Work", 
@@ -284,11 +371,23 @@ ASTROLOGERS = [
         ),
         "admin_category": "introspective",
         "specialties": ["Ombre", "Transformation", "Psychologie"],
-        "professional_background": ["Psychanalyse", "15 ans astrologue"],
+        "professional_background": [
+            "Formation en philosophie et psychanalyse",
+            "15 ans astrologue introspectif",
+            "Accompagnement long terme (shadow work, cycles de vie)",
+            "Conférences sur symbolique et archétypes",
+        ],
         "key_skills": ["Shadow work", "Transformation"],
         "behavioral_style": ["Lent", "Nuancé"],
         "sort_order": 6,
-        "description": "Nox accompagne ceux qui cherchent une vérité brute et profonde.",
+        "description": (
+            "Nox travaille sur les dimensions les plus profondes du thème natal. Il explore "
+            "les dynamiques internes, les contradictions et les zones de transformation "
+            "personnelle, avec une approche lente et réfléchie.\n\n"
+            "Son objectif est d’aider à mettre en lumière des mécanismes souvent invisibles, "
+            "sans jamais enfermer dans une interprétation figée. Il accompagne les processus "
+            "de changement en respectant leur rythme, en favorisant l’intégration plutôt que la réaction."
+        ),
         "tone": "warm",
         "verbosity": "long",
         "style_markers": ["introspection", "nuance"],

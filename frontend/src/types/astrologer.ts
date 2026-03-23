@@ -4,6 +4,7 @@ export type SpecialtyDetail = {
 }
 
 export type AstrologerMetrics = {
+  total_experience_years: number
   experience_years: number
   consultations_count: number
   average_rating: number

@@ -277,15 +277,16 @@ describe("AstrologerProfilePage", () => {
     specialties: ["Thème natal", "Transits", "Relations"],
     style: "Bienveillant et direct",
     bio_short: "Astrologue depuis 15 ans.",
-    bio_full: "Passionnée par les étoiles depuis mon enfance, j'ai consacré 15 années à l'étude.",
+    bio_full: "Luna propose une astrologie centrée sur les émotions, les relations et l’équilibre intérieur.",
     gender: "female" as const,
     age: 36,
     location: "Paris, France",
     quote: "Je vous aide à relire votre thème avec douceur.",
-    mission_statement: "Vous aider à trouver des repères émotionnels fiables.",
+    mission_statement: "Se comprendre pour mieux se relier.",
     ideal_for: "Idéal pour relations",
     metrics: {
-      experience_years: 15,
+      total_experience_years: 5,
+      experience_years: 7,
       consultations_count: 2400,
       average_rating: 4.8,
     },
@@ -293,7 +294,10 @@ describe("AstrologerProfilePage", () => {
       { title: "Thème natal", description: "Lecture simple et émotionnelle." },
       { title: "Transits", description: "Comprendre les cycles actuels." },
     ],
-    professional_background: ["15 ans d'accompagnement"],
+    professional_background: [
+      "5 ans en accompagnement psychologique (non-clinique)",
+      "7 ans astrologue relationnelle",
+    ],
     key_skills: ["Relations", "Transits"],
     behavioral_style: ["Douceur", "Clarté"],
     reviews: [
@@ -331,10 +335,11 @@ describe("AstrologerProfilePage", () => {
       expect(screen.getByText("Astrologue IA")).toBeInTheDocument()
       expect(screen.getByText(/Astrologue .*Chaleureuse/)).toBeInTheDocument()
       expect(screen.getByText("Paris, France")).toBeInTheDocument()
-      expect(screen.getByText("15 ans d'expérience")).toBeInTheDocument()
+      expect(screen.getByText("7 ans d'expérience")).toBeInTheDocument()
       expect(screen.getByText("Thème natal")).toBeInTheDocument()
-      expect(screen.getByText(/Passionnée par les étoiles/)).toBeInTheDocument()
+      expect(screen.getByText(/Luna propose une astrologie centrée sur les émotions/)).toBeInTheDocument()
       expect(screen.getByText("Je vous aide à relire votre thème avec douceur.")).toBeInTheDocument()
+      expect(screen.getByText("Personnes accompagnées")).toBeInTheDocument()
       expect(screen.getByText(/Marie/)).toBeInTheDocument()
       expect(screen.getByText(/\(127 avis\)/)).toBeInTheDocument()
     })

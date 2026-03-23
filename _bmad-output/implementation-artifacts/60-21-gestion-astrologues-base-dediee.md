@@ -69,6 +69,8 @@ Gemini CLI (Autonomous Mode)
 - Ajout du champ `provider_type` (`ia` / `real`) dans `astrologer_profiles`, avec migration idempotente, exposition API et rendu visuel harmonisé sur `/astrologers` et `/astrologers/:id`.
 - Suppression du prix affiché sur les CTA principaux des astrologues IA afin de respecter le vrai modèle d'accès par forfait ou crédits, vérifié au clic.
 - Durcissement du `backfill` et du `seed` pour masquer les profils legacy non canoniques sans photo, et isolation des tests astrologues pour éviter qu'ils repolluent la base locale.
+- Enrichissement du seed avec un vrai découpage entre expérience professionnelle totale et expérience astrologue, afin d'éviter les doublons de métriques dans la fiche détail.
+- Réécriture éditoriale des sections `À propos` pour les 6 astrologues, avec positionnement produit clarifié et phrase signature courte réutilisable dans la mission.
 - Ajout du lien vers la page astrologues dans le menu utilisateur et dans la navigation principale de l'application.
 - Stabilisation de la suite backend complète après introduction des nouvelles contraintes de clés étrangères.
 
@@ -116,4 +118,4 @@ L'implémentation respecte parfaitement le découplage entre identité technique
 
 ### Final Outcome
 
-L'architecture est désormais prête pour une gestion administrative complète des astrologues, avec profils métier structurés, prompts dédiés, photos réelles branchées côté produit, différenciation explicite `IA / réel`, et une exposition cohérente des astrologues sur les parcours publics, la navigation, les surfaces de sélection et un catalogue premium réellement différenciant, sans réapparition de profils legacy parasites.
+L'architecture est désormais prête pour une gestion administrative complète des astrologues, avec profils métier structurés, prompts dédiés, biographies éditoriales cohérentes, différenciation explicite `IA / réel`, photos réelles branchées côté produit, et une exposition cohérente des astrologues sur les parcours publics, la navigation, les surfaces de sélection et un catalogue premium réellement différenciant, sans réapparition de profils legacy parasites.
