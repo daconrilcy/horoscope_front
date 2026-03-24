@@ -2456,6 +2456,7 @@ textarea:focus-visible {
 
 .wizard-content {
   min-height: 300px;
+  position: relative;
 }
 
 .wizard-step {
@@ -2480,8 +2481,9 @@ textarea:focus-visible {
 }
 
 .wizard-step-title {
-  margin: 0 0 1.5rem;
-  font-size: 1.25rem;
+  margin: 0 0 1.75rem;
+  font-size: 1.4rem;
+  font-weight: 700;
   color: var(--text-1);
 }
 
@@ -2528,22 +2530,26 @@ textarea:focus-visible {
   align-items: center;
   gap: 0.75rem;
   padding: 1.5rem;
-  background: rgba(102, 230, 255, 0.03);
-  border: 2px solid var(--line);
-  border-radius: 12px;
+  background: var(--glass);
+  border: 1.5px solid rgba(134, 108, 208, 0.15);
+  border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(64, 42, 102, 0.04);
+  text-decoration: none;
 }
 
 .consultation-type-card:hover {
   border-color: var(--primary);
-  background: rgba(102, 230, 255, 0.08);
+  background: rgba(134, 108, 208, 0.07);
+  box-shadow: 0 8px 24px rgba(64, 42, 102, 0.1);
+  transform: translateY(-2px);
 }
 
 .consultation-type-card--selected {
   border-color: var(--primary);
-  background: rgba(102, 230, 255, 0.12);
-  box-shadow: 0 0 0 3px rgba(102, 230, 255, 0.2);
+  background: rgba(134, 108, 208, 0.1);
+  box-shadow: 0 0 0 3px rgba(134, 108, 208, 0.2);
 }
 
 .consultation-type-icon {
@@ -2571,22 +2577,25 @@ textarea:focus-visible {
   align-items: center;
   gap: 0.5rem;
   padding: 1rem;
-  background: rgba(102, 230, 255, 0.03);
-  border: 2px solid var(--line);
-  border-radius: 10px;
+  background: var(--glass);
+  border: 1.5px solid rgba(134, 108, 208, 0.15);
+  border-radius: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(64, 42, 102, 0.04);
 }
 
 .astrologer-option:hover {
   border-color: var(--primary);
-  background: rgba(102, 230, 255, 0.08);
+  background: rgba(134, 108, 208, 0.07);
+  box-shadow: 0 6px 18px rgba(64, 42, 102, 0.1);
+  transform: translateY(-2px);
 }
 
 .astrologer-option--selected {
   border-color: var(--primary);
-  background: rgba(102, 230, 255, 0.12);
-  box-shadow: 0 0 0 3px rgba(102, 230, 255, 0.2);
+  background: rgba(134, 108, 208, 0.1);
+  box-shadow: 0 0 0 3px rgba(134, 108, 208, 0.2);
 }
 
 .astrologer-option--auto {
@@ -2716,25 +2725,38 @@ textarea:focus-visible {
 }
 
 .validation-context {
-  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .validation-context-label {
   display: block;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  margin-top: 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 600;
   color: var(--text-2);
+  letter-spacing: 0.01em;
+}
+
+.validation-context-label:first-child {
+  margin-top: 0;
 }
 
 .validation-context-input {
   width: 100%;
-  padding: 0.75rem;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  background: var(--glass);
+  border: 1px solid rgba(134, 108, 208, 0.18);
+  border-radius: 10px;
   color: var(--text-1);
   font-size: 0.95rem;
   resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+textarea.validation-context-input {
   min-height: 100px;
 }
 
@@ -2761,7 +2783,376 @@ textarea:focus-visible {
   color: var(--text-2);
 }
 
-/* Consultation Result Page */
+/* === Wizard loading overlay === */
+.wizard-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border-radius: 12px;
+  z-index: 10;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+/* === Precision badges === */
+.precision-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.85rem;
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 0;
+  width: fit-content;
+}
+
+.precision-badge--high {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #166534;
+}
+
+.precision-badge--medium {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  color: #92400e;
+}
+
+.precision-badge--limited {
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.5);
+  color: #9a3412;
+}
+
+.precision-badge--blocked {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #991b1b;
+}
+
+/* === Precheck summary (DataCollectionStep) === */
+.precheck-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+/* === Degraded warning === */
+.degraded-warning {
+  margin: 0;
+  padding: 0.6rem 1rem;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #92400e;
+}
+
+/* === User data missing notice === */
+.user-data-missing-notice {
+  padding: 1rem 1.25rem;
+  background: rgba(134, 108, 208, 0.06);
+  border: 1px solid rgba(134, 108, 208, 0.2);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.user-data-missing-notice p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-1);
+}
+
+/* === Nothing to collect === */
+.nothing-to-collect {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-2);
+  font-size: 0.95rem;
+  background: rgba(134, 108, 208, 0.04);
+  border: 1px dashed rgba(134, 108, 208, 0.2);
+  border-radius: 12px;
+}
+
+.nothing-to-collect p {
+  margin: 0;
+}
+
+/* === Interaction toggle === */
+.interaction-toggle-section {
+  margin-top: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: rgba(134, 108, 208, 0.05);
+  border: 1px solid rgba(134, 108, 208, 0.15);
+  border-radius: 10px;
+}
+
+.interaction-toggle-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text-2);
+}
+
+/* === Checkbox label === */
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-1);
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+
+/* === Form groups (OtherPersonForm) === */
+.other-person-form {
+  background: var(--glass);
+  border: 1px solid rgba(134, 108, 208, 0.14);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 4px 16px rgba(64, 42, 102, 0.05);
+}
+
+.other-person-form-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.other-person-form-hint {
+  margin: -0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(134, 108, 208, 0.18);
+  border-radius: 10px;
+  color: var(--text-1);
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.form-group input[readonly] {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.form-group input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.birth-time-input-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.birth-time-input-row input[type="time"] {
+  flex: 1;
+}
+
+.relation-data-collection {
+  margin-top: 0.75rem;
+}
+
+/* === Save opt-in section === */
+.save-opt-in-section {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.nickname-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.nickname-input-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+/* === Summary step === */
+.summary-details {
+  background: var(--glass);
+  border: 1px solid rgba(134, 108, 208, 0.12);
+  border-radius: 14px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(64, 42, 102, 0.04);
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.summary-item:first-child {
+  padding-top: 0;
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.summary-label {
+  font-size: 0.82rem;
+  color: var(--text-2);
+  font-weight: 500;
+  flex-shrink: 0;
+  padding-top: 0.1rem;
+}
+
+.summary-value {
+  font-size: 0.9rem;
+  color: var(--text-1);
+  font-weight: 600;
+  text-align: right;
+}
+
+.summary-precheck {
+  margin-bottom: 1.5rem;
+}
+
+.summary-astrologer {
+  margin-top: 0.5rem;
+}
+
+.summary-subtitle {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.precheck-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* === Error message === */
+.error-message {
+  margin: 0;
+  padding: 0.5rem 0.9rem;
+  background: rgba(239, 68, 68, 0.07);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #991b1b;
+}
+
+/* === Consultation banners === */
+.consultation-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  margin-bottom: 1.25rem;
+  backdrop-filter: blur(6px);
+}
+
+.consultation-banner--nominal {
+  background: rgba(34, 197, 94, 0.07);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.consultation-banner--degraded {
+  background: rgba(251, 191, 36, 0.07);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.consultation-banner--blocked {
+  background: rgba(239, 68, 68, 0.07);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.banner-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.banner-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.banner-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.banner-text {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+/* === Consultation Result Page */
 .consultation-result-page {
   max-width: 800px;
   margin: 0 auto;
