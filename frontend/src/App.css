@@ -2787,8 +2787,8 @@ textarea.validation-context-input {
 .wizard-loading-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(2px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2798,6 +2798,7 @@ textarea.validation-context-input {
   z-index: 10;
   color: var(--text-2);
   font-size: 0.9rem;
+  pointer-events: none;
 }
 
 /* === Precision badges === */

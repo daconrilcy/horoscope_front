@@ -242,7 +242,7 @@ export function ConsultationWizardPage() {
         )}
 
         <div className="wizard-content">
-          {isPrechecking && (
+          {isPrechecking && currentStepName !== "frame" && (
             <div className="wizard-loading-overlay">
               <span className="spinner" aria-hidden="true">⌛</span>
               <p>{t("precheck_loading", lang)}</p>
