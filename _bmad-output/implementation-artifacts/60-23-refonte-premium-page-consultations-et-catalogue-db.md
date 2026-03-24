@@ -294,6 +294,16 @@ Le wizard 4 étapes (`type → frame → collection → summary`) a été rempla
 - `frontend/src/layouts/WizardLayout.css` — Bouton `.wizard-layout__back` styilisé pill/glass
 - `frontend/src/App.css` — Nouvelles classes : `wizard-astrologer-card` (+ variantes), `consultation-form-step`, `form-label`, `consultation-type-pills`, `type-pill` (+ `--selected`, `-icon`, `-label`), `form-group--third-party-toggle`
 
+### Post-delivery refonte page résultat (2026-03-24)
+
+**Alignement visuel et nettoyage de `/consultations/result`**
+
+- **Banner** : le composant `ConsultationFallbackBanner` n'est plus affiché en mode nominal. Il apparaît uniquement si `status === "degraded"` ou `status === "blocked"`.
+- **Section `consultation_basis`** : filtrée de l'affichage (`.filter(s => s.id !== "consultation_basis")`). La donnée reste intacte dans l'objet résultat et en base.
+- **Style** : refonte complète alignée avec `/astrologers` et `/astrologers/:id` — background gradient + halos fixes, cartes glass, typographie premium, hero type icon + pill astrologue, actions CTA proéminentes.
+- Création de `ConsultationResultPage.css` (CSS dédié, patterns identiques à `AstrologerProfilePage.css`).
+- Suppression de l'ancienne structure `consultation-result-*` au profit de `result-container`, `result-hero`, `result-context-card`, `result-section-card`, `result-actions`.
+
 ### File List
 
 - `_bmad-output/implementation-artifacts/60-23-refonte-premium-page-consultations-et-catalogue-db.md`
@@ -304,6 +314,8 @@ Le wizard 4 étapes (`type → frame → collection → summary`) a été rempla
 - `frontend/src/features/consultations/index.ts`
 - `frontend/src/layouts/WizardLayout.css`
 - `frontend/src/layouts/WizardLayout.tsx`
+- `frontend/src/pages/ConsultationResultPage.tsx`
+- `frontend/src/pages/ConsultationResultPage.css`
 - `frontend/src/pages/ConsultationWizardPage.tsx`
 - `frontend/src/state/consultationStore.tsx`
 - `frontend/src/types/consultation.ts`

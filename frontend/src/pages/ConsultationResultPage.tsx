@@ -1,16 +1,17 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useNavigate, useSearchParams, Link } from "react-router-dom"
+import { ChevronLeft, MessageSquare } from "lucide-react"
 
 import { useConsultation, CHAT_PREFILL_KEY } from "../state/consultationStore"
 import { useConsultationGenerate, type ConsultationPrecheckData } from "../api/consultations"
 import { useAstrologer } from "../api/astrologers"
 import { detectLang } from "../i18n/astrology"
 import { tConsultations as t } from "@i18n/consultations"
-import { 
-  AUTO_ASTROLOGER_ID, 
-  getConsultationTypeConfig, 
-  getObjectiveForType, 
+import {
+  AUTO_ASTROLOGER_ID,
+  getConsultationTypeConfig,
+  getObjectiveForType,
   type ConsultationResult,
   type ConsultationSection,
   type ConsultationBlock,
@@ -19,6 +20,7 @@ import { ConsultationFallbackBanner } from "../features/consultations"
 import { classNames } from "../utils/classNames"
 import { trackEvent, EVENTS } from "../utils/analytics"
 import { PageLayout } from "../layouts"
+import "./ConsultationResultPage.css"
 
 function resolveObjectiveText(
   objective: string | undefined,
@@ -47,90 +49,56 @@ function buildLegacyBlocks(content: string): ConsultationBlock[] {
 
   const flushParagraph = () => {
     if (paragraphLines.length === 0) return
-    blocks.push({
-      kind: "paragraph",
-      text: paragraphLines.join(" ").trim(),
-    })
+    blocks.push({ kind: "paragraph", text: paragraphLines.join(" ").trim() })
     paragraphLines = []
   }
 
   const flushBullets = () => {
     if (bulletItems.length === 0) return
-    blocks.push({
-      kind: "bullet_list",
-      items: [...bulletItems],
-    })
+    blocks.push({ kind: "bullet_list", items: [...bulletItems] })
     bulletItems = []
   }
 
   for (const rawLine of content.split("\n")) {
     const line = rawLine.trim()
-    if (!line) {
-      flushParagraph()
-      flushBullets()
-      continue
-    }
-
+    if (!line) { flushParagraph(); flushBullets(); continue }
     if (/^#{1,6}\s+/u.test(line)) {
-      flushParagraph()
-      flushBullets()
-      blocks.push({
-        kind: line.startsWith("##") ? "subtitle" : "title",
-        text: cleanStructuredText(line),
-      })
+      flushParagraph(); flushBullets()
+      blocks.push({ kind: line.startsWith("##") ? "subtitle" : "title", text: cleanStructuredText(line) })
       continue
     }
-
     if (/^\s*[-*•]\s+/u.test(line)) {
       flushParagraph()
       bulletItems.push(cleanStructuredText(line))
       continue
     }
-
     if (/^\s*\d+[\).\s]+/u.test(line)) {
-      flushParagraph()
-      flushBullets()
-      blocks.push({
-        kind: "subtitle",
-        text: cleanStructuredText(line),
-      })
+      flushParagraph(); flushBullets()
+      blocks.push({ kind: "subtitle", text: cleanStructuredText(line) })
       continue
     }
-
     paragraphLines.push(cleanStructuredText(line))
   }
-
-  flushParagraph()
-  flushBullets()
+  flushParagraph(); flushBullets()
   return blocks
 }
 
 function getRenderableBlocks(section: ConsultationSection): ConsultationBlock[] {
-  if (section.blocks && section.blocks.length > 0) {
-    return section.blocks
-  }
+  if (section.blocks && section.blocks.length > 0) return section.blocks
   return buildLegacyBlocks(section.content)
 }
 
 function renderSectionBlock(block: ConsultationBlock, index: number) {
-  if (block.kind === "title" && block.text) {
-    return <h4 key={index}>{block.text}</h4>
-  }
-  if (block.kind === "subtitle" && block.text) {
-    return <h5 key={index}>{block.text}</h5>
-  }
+  if (block.kind === "title" && block.text) return <h4 key={index}>{block.text}</h4>
+  if (block.kind === "subtitle" && block.text) return <h5 key={index}>{block.text}</h5>
   if (block.kind === "bullet_list" && block.items && block.items.length > 0) {
     return (
       <ul key={index}>
-        {block.items.map((item, itemIndex) => (
-          <li key={`${index}-${itemIndex}`}>{item}</li>
-        ))}
+        {block.items.map((item, i) => <li key={`${index}-${i}`}>{item}</li>)}
       </ul>
     )
   }
-  if (block.text) {
-    return <p key={index}>{block.text}</p>
-  }
+  if (block.text) return <p key={index}>{block.text}</p>
   return null
 }
 
@@ -155,9 +123,7 @@ export function ConsultationResultPage() {
   const [isSaved, setIsSaved] = useState(isAlreadyInHistory)
 
   const astrologerId =
-    currentResult?.astrologerId === AUTO_ASTROLOGER_ID
-      ? undefined
-      : currentResult?.astrologerId
+    currentResult?.astrologerId === AUTO_ASTROLOGER_ID ? undefined : currentResult?.astrologerId
   const { data: astrologer } = useAstrologer(astrologerId)
   const astrologerName =
     currentResult?.astrologerId === AUTO_ASTROLOGER_ID
@@ -176,11 +142,9 @@ export function ConsultationResultPage() {
     () => (currentResult ? getConsultationTypeConfig(currentResult.type) : undefined),
     [currentResult]
   )
+
   const currentObjective = useMemo(
-    () =>
-      currentResult
-        ? resolveObjectiveText(currentResult.objective, currentResult.type, lang)
-        : "",
+    () => currentResult ? resolveObjectiveText(currentResult.objective, currentResult.type, lang) : "",
     [currentResult, lang]
   )
 
@@ -200,23 +164,17 @@ export function ConsultationResultPage() {
       user_profile_quality: "complete",
       missing_fields: [],
       available_modes: [],
-      blocking_reasons: []
+      blocking_reasons: [],
     }
   }, [currentResult])
 
   const generateInterpretation = useCallback(async () => {
-    if (draftType === null) {
-      navigate("/consultations/new")
-      return
-    }
-
+    if (draftType === null) { navigate("/consultations/new"); return }
     setError(null)
     setIsGenerating(true)
-
     try {
       const objective = resolveObjectiveText(draftObjective, draftType, lang)
       const timeHorizon = draftTimeHorizon?.trim() ? draftTimeHorizon.trim() : null
-      
       const payload = {
         consultation_type: draftType,
         question: draftContext,
@@ -225,8 +183,7 @@ export function ConsultationResultPage() {
         astrologer_id: draftAstrologerId,
         save_third_party: state.draft.saveThirdParty,
         third_party_nickname: state.draft.thirdPartyNickname,
-        third_party_external_id:
-          state.draft.selectedThirdPartyExternalId ?? undefined,
+        third_party_external_id: state.draft.selectedThirdPartyExternalId ?? undefined,
         other_person: draftOtherPerson ? {
           birth_date: draftOtherPerson.birthDate,
           birth_time: draftOtherPerson.birthTime ?? undefined,
@@ -234,27 +191,14 @@ export function ConsultationResultPage() {
           birth_place: draftOtherPerson.birthPlace,
           birth_city: draftOtherPerson.birthCity,
           birth_country: draftOtherPerson.birthCountry,
-          ...(draftOtherPerson.placeResolvedId
-            ? { place_resolved_id: draftOtherPerson.placeResolvedId }
-            : {}),
-          ...(draftOtherPerson.birthLat !== null && draftOtherPerson.birthLat !== undefined
-            ? { birth_lat: draftOtherPerson.birthLat }
-            : {}),
-          ...(draftOtherPerson.birthLon !== null && draftOtherPerson.birthLon !== undefined
-            ? { birth_lon: draftOtherPerson.birthLon }
-            : {}),
-        } : undefined
+          ...(draftOtherPerson.placeResolvedId ? { place_resolved_id: draftOtherPerson.placeResolvedId } : {}),
+          ...(draftOtherPerson.birthLat != null ? { birth_lat: draftOtherPerson.birthLat } : {}),
+          ...(draftOtherPerson.birthLon != null ? { birth_lon: draftOtherPerson.birthLon } : {}),
+        } : undefined,
       }
-
       const response = await consultationGenerate.mutateAsync(payload)
       const data = response.data
-
-      trackEvent(EVENTS.CONSULTATION_GENERATED, { 
-        type: data.consultation_type,
-        status: data.status,
-        route: data.route_key
-      })
-
+      trackEvent(EVENTS.CONSULTATION_GENERATED, { type: data.consultation_type, status: data.status, route: data.route_key })
       const result: ConsultationResult = {
         id: data.consultation_id,
         type: data.consultation_type as any,
@@ -263,22 +207,19 @@ export function ConsultationResultPage() {
         objective,
         timeHorizon,
         summary: data.summary,
-        keyPoints: data.sections.find(s => s.id === "key_points")?.content.split("\n") || [],
-        actionableAdvice: data.sections.find(s => s.id === "advice")?.content.split("\n") || [],
+        keyPoints: data.sections.find((s) => s.id === "key_points")?.content.split("\n") || [],
+        actionableAdvice: data.sections.find((s) => s.id === "advice")?.content.split("\n") || [],
         createdAt: new Date().toISOString(),
         fallbackMode: data.fallback_mode,
         precisionLevel: data.precision_level,
         sections: data.sections,
-        routeKey: data.route_key
+        routeKey: data.route_key,
       }
-
       setResult(result)
       saveToHistory(result)
       setIsSaved(true)
       if (state.draft.saveThirdParty) {
-        void queryClient.invalidateQueries({
-          queryKey: ["consultation-third-parties"],
-        })
+        void queryClient.invalidateQueries({ queryKey: ["consultation-third-parties"] })
       }
     } catch (err: any) {
       setError(
@@ -286,28 +227,14 @@ export function ConsultationResultPage() {
           ? t("generation_timeout", lang)
           : err.message || t("error_generation", lang)
       )
-      trackEvent(EVENTS.CONSULTATION_ERROR, { 
-        type: draftType,
-        error: err.message || "unknown"
-      })
+      trackEvent(EVENTS.CONSULTATION_ERROR, { type: draftType, error: err.message || "unknown" })
     } finally {
       setIsGenerating(false)
     }
   }, [
-    draftType,
-    draftAstrologerId,
-    draftContext,
-    draftObjective,
-    draftTimeHorizon,
-    draftOtherPerson,
-    state.draft.saveThirdParty,
-    state.draft.thirdPartyNickname,
-    consultationGenerate,
-    setResult,
-    saveToHistory,
-    queryClient,
-    navigate,
-    lang,
+    draftType, draftAstrologerId, draftContext, draftObjective, draftTimeHorizon, draftOtherPerson,
+    state.draft.saveThirdParty, state.draft.thirdPartyNickname, state.draft.selectedThirdPartyExternalId,
+    consultationGenerate, setResult, saveToHistory, queryClient, navigate, lang,
   ])
 
   useEffect(() => {
@@ -318,189 +245,218 @@ export function ConsultationResultPage() {
   }, [historyId, state.result, draftType, generateInterpretation])
 
   const handleSave = useCallback(() => {
-    if (currentResult) {
-      saveToHistory(currentResult)
-      setIsSaved(true)
-    }
+    if (currentResult) { saveToHistory(currentResult); setIsSaved(true) }
   }, [currentResult, saveToHistory])
 
   const handleOpenInChat = useCallback(() => {
-    if (currentResult) {
-      trackEvent(EVENTS.CONSULTATION_CHAT_OPENED, { 
-        type: currentResult.type,
-        precision: currentResult.precisionLevel 
-      })
-      const interpretation = currentResult.summary || ""
-      const timeHorizonBlock = currentResult.timeHorizon
-        ? `\n${t("time_horizon_summary_label", lang)}: ${currentResult.timeHorizon}`
-        : ""
-      const message =
-        `[Consultation ${t(typeConfig?.labelKey ?? "", lang)}]\n\n` +
-        `${t("objective_summary_label", lang)}: ${resolveObjectiveText(currentResult.objective, currentResult.type, lang)}${timeHorizonBlock}\n\n` +
-        `${currentResult.context}\n\n${t("interpretation_label", lang)}:\n${interpretation}`
-      sessionStorage.setItem(CHAT_PREFILL_KEY, message)
-      reset()
-      const astrologerParam = currentResult.astrologerId !== AUTO_ASTROLOGER_ID
-        ? `?astrologerId=${currentResult.astrologerId}`
-        : ""
-      navigate(`/chat${astrologerParam}`)
-    }
+    if (!currentResult) return
+    trackEvent(EVENTS.CONSULTATION_CHAT_OPENED, { type: currentResult.type, precision: currentResult.precisionLevel })
+    const interpretation = currentResult.summary || ""
+    const timeHorizonBlock = currentResult.timeHorizon ? `\n${t("time_horizon_summary_label", lang)}: ${currentResult.timeHorizon}` : ""
+    const message =
+      `[Consultation ${t(typeConfig?.labelKey ?? "", lang)}]\n\n` +
+      `${t("objective_summary_label", lang)}: ${resolveObjectiveText(currentResult.objective, currentResult.type, lang)}${timeHorizonBlock}\n\n` +
+      `${currentResult.context}\n\n${t("interpretation_label", lang)}:\n${interpretation}`
+    sessionStorage.setItem(CHAT_PREFILL_KEY, message)
+    reset()
+    const astrologerParam = currentResult.astrologerId !== AUTO_ASTROLOGER_ID
+      ? `?astrologerId=${currentResult.astrologerId}` : ""
+    navigate(`/chat${astrologerParam}`)
   }, [currentResult, typeConfig, reset, navigate, lang])
 
+  // — Loading state —
   if (isGenerating && !currentResult && !error) {
     return (
-      <div className="panel consultation-result-page">
-        <div className="consultation-result-loading" aria-live="polite" aria-busy="true">
-          <span className="loading-spinner" />
-          <p>{t("generating", lang)}</p>
+      <PageLayout className="is-consultation-result-page">
+        <div className="result-bg-halo" />
+        <div className="result-noise" />
+        <div className="result-container">
+          <div className="result-state-wrap">
+            <span className="loading-spinner" />
+            <p>{t("generating", lang)}</p>
+          </div>
         </div>
-      </div>
+      </PageLayout>
     )
   }
 
+  // — Error state —
   if (error) {
     return (
-      <div className="panel consultation-result-page">
-        <div className="consultation-result-error" role="alert">
-          <p>{error}</p>
-          <Link to="/consultations/new" className="btn">
-            {t("back_to_consultations", lang)}
-          </Link>
+      <PageLayout className="is-consultation-result-page">
+        <div className="result-bg-halo" />
+        <div className="result-noise" />
+        <div className="result-container">
+          <div className="result-state-wrap" role="alert">
+            <p>{error}</p>
+            <Link to="/consultations/new" className="btn btn-primary">
+              {t("back_to_consultations", lang)}
+            </Link>
+          </div>
         </div>
-      </div>
+      </PageLayout>
     )
   }
 
+  // — Empty state —
   if (!currentResult) {
     return (
-      <div className="panel consultation-result-page">
-        <div className="consultation-result-empty" aria-live="polite">
-          <p>{t("no_history", lang)}</p>
-          <Link to="/consultations" className="btn">
-            {t("back_to_consultations", lang)}
-          </Link>
+      <PageLayout className="is-consultation-result-page">
+        <div className="result-bg-halo" />
+        <div className="result-noise" />
+        <div className="result-container">
+          <div className="result-state-wrap">
+            <p>{t("no_history", lang)}</p>
+            <Link to="/consultations" className="btn btn-primary">
+              {t("back_to_consultations", lang)}
+            </Link>
+          </div>
         </div>
-      </div>
+      </PageLayout>
     )
   }
 
+  // Sections à afficher : on exclut consultation_basis
+  const visibleSections = currentResult.sections?.filter((s) => s.id !== "consultation_basis") ?? []
+
   return (
-    <PageLayout className="panel consultation-result-page">
-      <header className="consultation-result-header">
-        <h1>{t("result_title", lang)}</h1>
-      </header>
+    <PageLayout className="is-consultation-result-page">
+      <div className="result-bg-halo" />
+      <div className="result-noise" />
 
-      {resultPrecheck && (
-        <ConsultationFallbackBanner precheck={resultPrecheck} />
-      )}
+      <div className="result-container">
+        {/* Navigation */}
+        <nav className="result-nav">
+          <Link to="/consultations" className="result-back-btn">
+            <ChevronLeft size={18} />
+            <span>{t("back_to_consultations", lang)}</span>
+          </Link>
+        </nav>
 
-      <div className="consultation-result-summary-section">
-        <div className="consultation-result-type">
-          <span className="consultation-result-type-icon" aria-hidden="true">
-            {typeConfig?.icon}
-          </span>
-          <span className="consultation-result-type-label">
-            {t(typeConfig?.labelKey ?? "", lang)}
-          </span>
-        </div>
-
-        <div className="consultation-result-meta">
-          <span className="consultation-result-astrologer">
-            {t("step_astrologer", lang)}: {astrologerName}
-          </span>
-        </div>
-
-        <div className="consultation-result-context">
-          <strong>{t("objective_label", lang)}:</strong>
-          <p>{currentObjective}</p>
-        </div>
-
-        {currentResult.timeHorizon && (
-          <div className="consultation-result-context">
-            <strong>{t("time_horizon_label", lang)}:</strong>
-            <p>{currentResult.timeHorizon}</p>
+        {/* Hero */}
+        <section className="result-hero">
+          <div className="result-hero__icon-wrap">
+            <div className="result-hero__icon-glow" />
+            <span className="result-hero__icon" aria-hidden="true">
+              {typeConfig?.icon}
+            </span>
           </div>
-        )}
-
-        <div className="consultation-result-context">
-          <strong>{t("enter_context", lang)}:</strong>
-          <p>{currentResult.context}</p>
-        </div>
-      </div>
-
-      <section className="consultation-result-guidance">
-        <div className="consultation-result-interpretation">
-          <h2>{t("summary_label", lang)}</h2>
-          <p className="consultation-result-interpretation-text">
-            {currentResult.summary}
-          </p>
-        </div>
-
-        {currentResult.sections && currentResult.sections.length > 0 ? (
-          currentResult.sections.map((section) => (
-            <div key={section.id} className={`consultation-result-section consultation-result-section--${section.id}`}>
-              <h3>{section.title}</h3>
-              <div className="section-content">
-                {getRenderableBlocks(section).map((block, index) =>
-                  renderSectionBlock(block, index)
-                )}
-              </div>
+          <div className="result-hero__content">
+            <span className="result-type-label">
+              {t(typeConfig?.labelKey ?? "", lang)}
+            </span>
+            <h1 className="result-hero__title">{currentObjective}</h1>
+            <div className="result-astrologer-pill">
+              <span aria-hidden="true">✨</span>
+              <span>{astrologerName}</span>
             </div>
-          ))
-        ) : (
-          <>
-            {currentResult.keyPoints && currentResult.keyPoints.length > 0 && (
-              <div className="consultation-result-key-points">
-                <h3>{t("key_points_label", lang)}</h3>
-                <ul>
-                  {currentResult.keyPoints.map((point, idx) => (
-                    <li key={idx}>{point}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+          </div>
+        </section>
 
-            {currentResult.actionableAdvice && currentResult.actionableAdvice.length > 0 && (
-              <div className="consultation-result-advice">
-                <h3>{t("actionable_advice_label", lang)}</h3>
-                <ul>
-                  {currentResult.actionableAdvice.map((advice, idx) => (
-                    <li key={idx}>{advice}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </>
+        {/* Banner dégradé/bloqué uniquement */}
+        {resultPrecheck && resultPrecheck.status !== "nominal" && (
+          <ConsultationFallbackBanner precheck={resultPrecheck} />
         )}
 
-        {currentResult.disclaimer && (
-          <p className="consultation-result-disclaimer">
-            <em>{currentResult.disclaimer}</em>
-          </p>
-        )}
-      </section>
+        {/* Résumé du contexte */}
+        <div className="result-context-card">
+          <div className="result-context-card__row">
+            <span className="result-context-card__label">{t("enter_context", lang)}</span>
+            <p className="result-context-card__value">{currentResult.context}</p>
+          </div>
+          {currentResult.timeHorizon && (
+            <div className="result-context-card__row">
+              <span className="result-context-card__label">{t("time_horizon_label", lang)}</span>
+              <p className="result-context-card__value">{currentResult.timeHorizon}</p>
+            </div>
+          )}
+        </div>
 
-      <div className="consultation-result-actions">
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={handleOpenInChat}
-        >
-          {t("open_in_chat", lang)}
-        </button>
-        <button
-          type="button"
-          className={classNames("btn", "btn-secondary", isSaved && "btn-success")}
-          onClick={handleSave}
-          disabled={isSaved}
-        >
-          {isSaved ? t("saved", lang) : t("save", lang)}
-        </button>
-        <Link to="/consultations" className="btn btn-secondary">
-          {t("back_to_consultations", lang)}
-        </Link>
+        {/* Contenu de la consultation */}
+        <section className="result-guidance">
+          {currentResult.summary && (
+            <div className="result-section-card">
+              <h2 className="result-section-title">{t("summary_label", lang)}</h2>
+              <p className="result-summary-text">{currentResult.summary}</p>
+            </div>
+          )}
+
+          {visibleSections.length > 0 ? (
+            visibleSections.map((section) => (
+              <div key={section.id} className="result-section-card">
+                <h3 className="result-section-title result-section-title--sub">{section.title}</h3>
+                <div className="result-section-content">
+                  {getRenderableBlocks(section).map((block, index) =>
+                    renderSectionBlock(block, index)
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <>
+              {currentResult.keyPoints && currentResult.keyPoints.length > 0 && (
+                <div className="result-section-card">
+                  <h3 className="result-section-title result-section-title--sub">
+                    {t("key_points_label", lang)}
+                  </h3>
+                  <div className="result-section-content">
+                    <ul>
+                      {currentResult.keyPoints.map((point, idx) => (
+                        <li key={idx}>{point}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+              {currentResult.actionableAdvice && currentResult.actionableAdvice.length > 0 && (
+                <div className="result-section-card">
+                  <h3 className="result-section-title result-section-title--sub">
+                    {t("actionable_advice_label", lang)}
+                  </h3>
+                  <div className="result-section-content">
+                    <ul>
+                      {currentResult.actionableAdvice.map((advice, idx) => (
+                        <li key={idx}>{advice}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {currentResult.disclaimer && (
+            <p className="result-disclaimer">
+              <em>{currentResult.disclaimer}</em>
+            </p>
+          )}
+        </section>
+
+        {/* Actions */}
+        <div className="result-actions">
+          <button
+            type="button"
+            className="btn btn-primary result-chat-btn"
+            onClick={handleOpenInChat}
+          >
+            <MessageSquare size={18} />
+            {t("open_in_chat", lang)}
+          </button>
+          <div className="result-actions__secondary">
+            <button
+              type="button"
+              className={classNames("btn", "btn-secondary", isSaved && "btn-success")}
+              onClick={handleSave}
+              disabled={isSaved}
+            >
+              {isSaved ? t("saved", lang) : t("save", lang)}
+            </button>
+            <Link to="/consultations" className="btn btn-secondary">
+              {t("back_to_consultations", lang)}
+            </Link>
+          </div>
+        </div>
       </div>
     </PageLayout>
   )
 }
-
