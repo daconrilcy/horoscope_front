@@ -129,6 +129,17 @@ export function ConsultationWizardPage() {
     navigate("/consultations")
   }, [reset, navigate])
 
+  const handlePrev = useCallback(() => {
+    if (currentStepName === "frame" && searchParams.get("type")) {
+      // L'utilisateur est arrivé via ?type=xxxx depuis /consultations
+      // Retour à la page catalogue plutôt qu'à l'étape de sélection interne
+      reset()
+      navigate("/consultations")
+    } else {
+      prevStep()
+    }
+  }, [currentStepName, searchParams, reset, navigate, prevStep])
+
   const handleNext = useCallback(() => {
     if (canProceed) {
       if (currentStepName === "frame") {
@@ -235,7 +246,7 @@ export function ConsultationWizardPage() {
     <div className="panel consultation-wizard-page">
       <WizardLayout
         customProgress={<WizardProgress currentStepName={currentStepName} />}
-        onBack={currentStepName !== "type" ? prevStep : undefined}
+        onBack={currentStepName !== "type" ? handlePrev : undefined}
       >
         {state.precheck && currentStepName === "summary" && (
           <ConsultationFallbackBanner precheck={state.precheck} />
@@ -258,7 +269,7 @@ export function ConsultationWizardPage() {
 
           <div className="wizard-actions-nav">
             {currentStepName !== "type" && (
-              <button type="button" className="btn btn-secondary" onClick={prevStep}>
+              <button type="button" className="btn btn-secondary" onClick={handlePrev}>
                 {t("previous", lang)}
               </button>
             )}
