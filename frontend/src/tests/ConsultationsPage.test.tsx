@@ -186,72 +186,70 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
   })
 
   it("shows interaction toggle for eligible types like Career", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=work" })
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=career&astrologerId=auto" })
 
     await waitFor(() => {
-      expect(screen.getByText(/Frame your request/i)).toBeInTheDocument()
+      expect(screen.getByText(/Career Title/i)).toBeInTheDocument()
     })
 
-    expect(screen.getByText(/This consultation concerns another person/i)).toBeInTheDocument()
+    expect(screen.getByText(/This consultation also concerns another person/i)).toBeInTheDocument()
   })
 
-  it("advances from Framing to Summary without extra data if interaction is NOT checked", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=work" })
+  it("advances from Form to Result without extra data if interaction is NOT checked", async () => {
+    // Note: Wizard is now 2 steps: astrologer -> form. Result is a separate page.
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=career&astrologerId=auto" })
 
-    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Career Title/i)).toBeInTheDocument())
     
     fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
       target: { value: "Mon évolution pro" } 
     })
     
-    const nextBtn = screen.getByRole("button", { name: /Next/i })
-    fireEvent.click(nextBtn)
+    const generateBtn = screen.getByRole("button", { name: /Generate consultation/i })
+    expect(generateBtn).not.toBeDisabled()
+    fireEvent.click(generateBtn)
 
-    await waitFor(() => expect(screen.getByText(/Additional information/i)).toBeInTheDocument())
-    expect(screen.queryByText(/Information about the other person/i)).not.toBeInTheDocument()
-    
-    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
-    await waitFor(() => expect(screen.getByText(/Final verification/i)).toBeInTheDocument())
+    expect(mockNavigate).toHaveBeenCalledWith("/consultations/result")
   })
 
-  it("requires extra data in Collection step if interaction IS checked", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=work" })
+  it("requires extra data in Form step if interaction IS checked", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=career&astrologerId=auto" })
 
-    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Career Title/i)).toBeInTheDocument())
     
     fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
       target: { value: "Entretien avec un recruteur" } 
     })
     
-    fireEvent.click(screen.getByLabelText(/This consultation concerns another person/i))
+    fireEvent.click(screen.getByLabelText(/This consultation also concerns another person/i))
     
-    const nextBtn = screen.getByRole("button", { name: /Next/i })
-    fireEvent.click(nextBtn)
-
     await waitFor(() => expect(screen.getByText(/Information about the other person/i)).toBeInTheDocument())
     
-    const nextBtn2 = screen.getByRole("button", { name: /Next/i })
-    expect(nextBtn2).toBeDisabled()
+    const generateBtn = screen.getByRole("button", { name: /Generate consultation/i })
+    expect(generateBtn).toBeDisabled()
   })
 
-  it("keeps Next enabled on frame when a direct type link is still running its initial precheck", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=period" })
+  it("keeps Generate enabled on form when a direct type link is still running its initial precheck", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=period&astrologerId=auto" })
     
-    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Period Title/i)).toBeInTheDocument())
     fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
       target: { value: "Test precheck state" } 
     })
     
-    const nextBtn = screen.getByRole("button", { name: /Next/i })
-    expect(nextBtn).not.toBeDisabled()
+    const generateBtn = screen.getByRole("button", { name: /Generate consultation/i })
+    expect(generateBtn).not.toBeDisabled()
   })
 
   it("uses natal geocoding protocol for third-party birth place and propagates resolved coordinates", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relation" })
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relationship&astrologerId=auto" })
 
-    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Formulate your request/i)).toBeInTheDocument())
     fireEvent.change(screen.getByLabelText(/Describe your situation/i), { target: { value: "Synastrie" } })
-    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+    
+    // Relation type in story 47.8 shows the form automatically or via toggle
+    // In the new wizard, we added a toggle for all types.
+    fireEvent.click(screen.getByLabelText(/This consultation also concerns another person/i))
 
     await waitFor(() => expect(screen.getByLabelText(/Birth city/i)).toBeInTheDocument())
     
@@ -263,38 +261,39 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
 
     await waitFor(() => expect(screen.getByDisplayValue(/Paris, France/i)).toBeInTheDocument())
     
-    const nextBtn = screen.getByRole("button", { name: /Next/i })
-    expect(nextBtn).not.toBeDisabled()
+    const generateBtn = screen.getByRole("button", { name: /Generate consultation/i })
+    expect(generateBtn).not.toBeDisabled()
   })
 
-  it("restarts the wizard from the new type when switching consultation mid-process", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=work" })
-    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+  it("restarts the wizard when clicking Cancel", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=career&astrologerId=auto" })
+    await waitFor(() => expect(screen.getByText(/Career Title/i)).toBeInTheDocument())
     
     fireEvent.click(screen.getByRole("button", { name: /Cancel/i }))
     expect(mockNavigate).toHaveBeenCalledWith("/consultations")
   })
 
-  it("relation type still shows other person form without toggle", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relation" })
+  it("allows toggling other person form", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relationship&astrologerId=auto" })
 
-    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
-    expect(screen.queryByText(/This consultation concerns another person/i)).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText(/Formulate your request/i)).toBeInTheDocument())
+    expect(screen.getByLabelText(/This consultation also concerns another person/i)).toBeInTheDocument()
     
     fireEvent.change(screen.getByLabelText(/Describe your situation/i), { 
       target: { value: "Ma relation" } 
     })
-    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+    
+    fireEvent.click(screen.getByLabelText(/This consultation also concerns another person/i))
 
     await waitFor(() => expect(screen.getByText(/Information about the other person/i)).toBeInTheDocument())
   })
 
   it("allows selecting an existing third-party contact", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relation" })
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relationship&astrologerId=auto" })
 
-    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Formulate your request/i)).toBeInTheDocument())
     fireEvent.change(screen.getByLabelText(/Describe your situation/i), { target: { value: "Retrouvailles" } })
-    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+    fireEvent.click(screen.getByLabelText(/This consultation also concerns another person/i))
 
     await waitFor(() => expect(screen.getByLabelText(/Use an existing contact/i)).toBeInTheDocument())
 
@@ -307,22 +306,22 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
   })
 
   it("AC3: shows save-to-contacts checkbox on other person form", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relation" })
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relationship&astrologerId=auto" })
 
-    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Formulate your request/i)).toBeInTheDocument())
     fireEvent.change(screen.getByLabelText(/Describe your situation/i), { target: { value: "Synastrie" } })
-    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+    fireEvent.click(screen.getByLabelText(/This consultation also concerns another person/i))
 
     await waitFor(() => expect(screen.getByText(/Information about the other person/i)).toBeInTheDocument())
     expect(screen.getByLabelText(/Save to my contacts/i)).toBeInTheDocument()
   })
 
   it("AC4: shows nickname field and privacy warning when save-to-contacts is checked", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relation" })
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relationship&astrologerId=auto" })
 
-    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Formulate your request/i)).toBeInTheDocument())
     fireEvent.change(screen.getByLabelText(/Describe your situation/i), { target: { value: "Synastrie" } })
-    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+    fireEvent.click(screen.getByLabelText(/This consultation also concerns another person/i))
 
     await waitFor(() => expect(screen.getByLabelText(/Save to my contacts/i)).toBeInTheDocument())
     fireEvent.click(screen.getByLabelText(/Save to my contacts/i))
@@ -333,12 +332,12 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
     })
   })
 
-  it("AC4: Next is blocked if save-to-contacts is checked but nickname is empty", async () => {
-    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relation" })
+  it("AC4: Generate is blocked if save-to-contacts is checked but nickname is empty", async () => {
+    renderWithProviders(<ConsultationWizardPage />, { route: "/consultations/new?type=relationship&astrologerId=auto" })
 
-    await waitFor(() => expect(screen.getByText(/Frame your request/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Formulate your request/i)).toBeInTheDocument())
     fireEvent.change(screen.getByLabelText(/Describe your situation/i), { target: { value: "Synastrie" } })
-    fireEvent.click(screen.getByRole("button", { name: /Next/i }))
+    fireEvent.click(screen.getByLabelText(/This consultation also concerns another person/i))
 
     await waitFor(() => expect(screen.getByLabelText(/Birth city/i)).toBeInTheDocument())
 
@@ -350,7 +349,7 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
 
     await waitFor(() => expect(screen.getByLabelText(/Nickname/i)).toBeInTheDocument())
 
-    const nextBtn = screen.getByRole("button", { name: /Next/i })
-    expect(nextBtn).toBeDisabled()
+    const generateBtn = screen.getByRole("button", { name: /Generate consultation/i })
+    expect(generateBtn).toBeDisabled()
   })
 })

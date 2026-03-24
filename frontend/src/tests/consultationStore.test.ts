@@ -210,12 +210,10 @@ describe("type exports", () => {
   })
 
   it("exposes wizard steps and labels without drawing step", () => {
-    expect(WIZARD_STEPS).toEqual(["type", "frame", "collection", "summary"])
+    expect(WIZARD_STEPS).toEqual(["astrologer", "form"])
     expect(WIZARD_STEP_LABELS).toEqual({
-      type: "select_type",
-      frame: "frame_request",
-      collection: "additional_info",
-      summary: "final_verification",
+      astrologer: "step_astrologer",
+      form: "step_form",
     })
   })
 
