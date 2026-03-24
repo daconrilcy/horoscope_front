@@ -79,20 +79,24 @@
 }
 
 .wizard-layout__back {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  background: none;
-  border: none;
-  color: var(--color-text-secondary);
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-full, 999px);
+  color: var(--color-text-primary);
   cursor: pointer;
-  padding: var(--space-2) 0;
+  padding: var(--space-2) var(--space-4);
   margin-bottom: var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-semibold, 600);
+  font-family: inherit;
+  transition: all var(--duration-fast, 150ms) var(--easing-default, ease);
 }
 
 .wizard-layout__back:hover {
-  color: var(--color-text-headline);
+  background: var(--color-glass-shortcut);
 }
 
 .wizard-layout__container {

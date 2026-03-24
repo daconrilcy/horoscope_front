@@ -121,17 +121,15 @@ export const VALID_CONSULTATION_TYPES: ConsultationType[] = [
 export const INTERACTION_ELIGIBLE_TYPES: ConsultationType[] = ["career", "work", "relationship", "relation"]
 
 export const AUTO_ASTROLOGER_ID = "auto"
-export const WIZARD_LAST_STEP_INDEX = 3
+export const WIZARD_LAST_STEP_INDEX = 1
 export const HISTORY_MAX_LENGTH = 50
 
-export const WIZARD_STEPS = ["type", "frame", "collection", "summary"] as const
+export const WIZARD_STEPS = ["astrologer", "form"] as const
 export type WizardStep = (typeof WIZARD_STEPS)[number]
 
 export const WIZARD_STEP_LABELS: Record<WizardStep, string> = {
-  type: "select_type",
-  frame: "frame_request",
-  collection: "additional_info",
-  summary: "final_verification",
+  astrologer: "step_astrologer",
+  form: "step_form",
 }
 
 export const CONTEXT_MAX_LENGTH = 2000

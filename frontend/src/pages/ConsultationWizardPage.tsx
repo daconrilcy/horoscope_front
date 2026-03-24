@@ -4,31 +4,66 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 
 import { useConsultation } from "../state/consultationStore"
 import {
-  ConsultationTypeStep,
-  ConsultationFrameStep,
-  DataCollectionStep,
-  ConsultationSummaryStep,
+  AstrologerSelectStep,
+  ConsultationFormStep,
   WizardProgress,
-  ConsultationFallbackBanner,
 } from "../features/consultations"
 import { detectLang } from "../i18n/astrology"
 import { tConsultations as t } from "@i18n/consultations"
 import {
   VALID_CREATABLE_TYPES,
+  AUTO_ASTROLOGER_ID,
   getObjectiveForType,
   mapLegacyConsultationKey,
   type ConsultationType,
 } from "../types/consultation"
-import { useConsultationPrecheck, useConsultationCatalogue } from "../api/consultations"
+import { useConsultationCatalogue } from "../api/consultations"
+import { useAstrologer } from "../api/astrologers"
 import { trackEvent, EVENTS } from "../utils/analytics"
+
+function SelectedAstrologerCard({
+  astrologerId,
+  lang,
+}: {
+  astrologerId: string
+  lang: ReturnType<typeof detectLang>
+}) {
+  const isAuto = astrologerId === AUTO_ASTROLOGER_ID
+  const { data: astrologer } = useAstrologer(isAuto ? undefined : astrologerId)
+
+  const name = isAuto
+    ? t("auto_astrologer", lang)
+    : astrologer
+      ? [astrologer.first_name, astrologer.last_name].filter(Boolean).join(" ") || astrologer.name
+      : t("loading_name", lang)
+
+  return (
+    <div className="wizard-astrologer-card">
+      <div className="wizard-astrologer-card__avatar">
+        {!isAuto && astrologer?.avatar_url ? (
+          <img src={astrologer.avatar_url} alt="" className="wizard-astrologer-card__avatar-img" />
+        ) : (
+          <span className="wizard-astrologer-card__avatar-icon" aria-hidden="true">✨</span>
+        )}
+      </div>
+      <div className="wizard-astrologer-card__info">
+        <span className="wizard-astrologer-card__name">{name}</span>
+        {!isAuto && astrologer?.style && (
+          <span className="wizard-astrologer-card__style">{astrologer.style}</span>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export function ConsultationWizardPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const lang = detectLang()
-  const { mutate: runPrecheck, isPending: isPrechecking } = useConsultationPrecheck()
   const { data: catalogue } = useConsultationCatalogue()
-  const initializedTypeParamRef = useRef<string | null>(null)
+  const initializedRef = useRef(false)
+  const typePreselectedRef = useRef(false)
+  const astrologerChosenRef = useRef(false)
 
   const {
     state,
@@ -42,199 +77,105 @@ export function ConsultationWizardPage() {
     setSaveThirdParty,
     setThirdPartyNickname,
     setSelectedThirdPartyExternalId,
-    setPrecheck,
-    nextStep,
-    prevStep,
     goToStep,
     reset,
     canProceed,
     currentStepName,
   } = useConsultation()
 
-  const startConsultationForType = useCallback(
-    (type: ConsultationType, advanceToNextStep: boolean) => {
-      const astrologerIdFromQuery = searchParams.get("astrologerId")
-      
-      // AC2: Normalisation des clés legacy (work -> career, etc.)
-      const canonicalType = mapLegacyConsultationKey(type)
-      
-      reset()
+  // Initialize from URL params on first load
+  useEffect(() => {
+    if (initializedRef.current) return
+
+    const astrologerIdFromQuery = searchParams.get("astrologerId")
+    const typeParam = searchParams.get("type")
+
+    if (!astrologerIdFromQuery && !typeParam) return
+
+    initializedRef.current = true
+    reset()
+
+    if (typeParam && VALID_CREATABLE_TYPES.includes(typeParam as ConsultationType)) {
+      const canonicalType = mapLegacyConsultationKey(typeParam)
       setType(canonicalType)
-      setAstrologer(astrologerIdFromQuery || "auto")
-      setContext("")
-      
-      // AC1.7: Utilisation des micro-textes pilotés par la base si disponibles
-      const template = catalogue?.items.find(i => i.key === canonicalType)
+      const template = catalogue?.items.find((i) => i.key === canonicalType)
       setObjective(template?.title ?? t(getObjectiveForType(canonicalType), lang))
-      
-      setTimeHorizon(null)
-      setOtherPerson(null)
-      setPrecheck(null)
+      typePreselectedRef.current = true
+    }
 
-      trackEvent(EVENTS.CONSULTATION_STARTED, { type: canonicalType })
+    if (astrologerIdFromQuery) {
+      setAstrologer(astrologerIdFromQuery)
+      astrologerChosenRef.current = true
+      // Venant d'une page astrologue : l'astrologue est déjà choisi, on saute à la page 2
+      goToStep(1)
+    }
+  }, [searchParams, catalogue, reset, setAstrologer, setType, setObjective, goToStep, lang])
 
-      runPrecheck(
-        { consultation_type: canonicalType },
-        {
-          onSuccess: (response) => {
-            setPrecheck(response.data)
-            trackEvent(EVENTS.CONSULTATION_PRECHECK, {
-              type: canonicalType,
-              status: response.data.status,
-              precision: response.data.precision_level,
-            })
-          },
-        }
-      )
+  const handleBackToConsultations = useCallback(() => {
+    reset()
+    navigate("/consultations")
+  }, [reset, navigate])
 
-      if (advanceToNextStep) {
-        goToStep(1)
-      }
+  // Sélection d'astrologue : enregistre + avance automatiquement à l'étape suivante
+  const handleAstrologerSelect = useCallback(
+    (id: string) => {
+      setAstrologer(id)
+      astrologerChosenRef.current = true
+      goToStep(1)
     },
-    [
-      catalogue,
-      reset,
-      setType,
-      setAstrologer,
-      setContext,
-      setObjective,
-      setTimeHorizon,
-      setOtherPerson,
-      setPrecheck,
-      lang,
-      runPrecheck,
-      goToStep,
-      searchParams,
-    ]
+    [setAstrologer, goToStep]
   )
 
-  useEffect(() => {
-    const typeParam = searchParams.get("type")
-    if (!typeParam) {
-      initializedTypeParamRef.current = null
-      return
-    }
+  const handlePrevFromForm = useCallback(() => {
+    goToStep(0)
+  }, [goToStep])
 
-    if (
-      VALID_CREATABLE_TYPES.includes(typeParam as ConsultationType) &&
-      initializedTypeParamRef.current !== typeParam
-    ) {
-      initializedTypeParamRef.current = typeParam
-      startConsultationForType(typeParam as ConsultationType, true)
-    }
-  }, [searchParams, startConsultationForType])
+  const handleGenerate = useCallback(() => {
+    if (!canProceed) return
+    trackEvent(EVENTS.CONSULTATION_STARTED, { type: state.draft.type })
+    navigate("/consultations/result")
+  }, [canProceed, state.draft.type, navigate])
 
   const handleCancel = useCallback(() => {
     reset()
     navigate("/consultations")
   }, [reset, navigate])
 
-  const handlePrev = useCallback(() => {
-    if (currentStepName === "frame" && searchParams.get("type")) {
-      // L'utilisateur est arrivé via ?type=xxxx depuis /consultations
-      // Retour à la page catalogue plutôt qu'à l'étape de sélection interne
-      reset()
-      navigate("/consultations")
-    } else {
-      prevStep()
-    }
-  }, [currentStepName, searchParams, reset, navigate, prevStep])
+  const handleTypeChange = useCallback(
+    (type: ConsultationType, objective: string) => {
+      setType(type)
+      setObjective(objective)
+    },
+    [setType, setObjective]
+  )
 
-  const handleNext = useCallback(() => {
-    if (canProceed) {
-      if (currentStepName === "frame") {
-        runPrecheck({ 
-          consultation_type: state.draft.type!, 
-          question: state.draft.context,
-          horizon: state.draft.timeHorizon ?? undefined
-        }, {
-          onSuccess: (response) => {
-            setPrecheck(response.data)
-          }
-        })
-      }
-      if (currentStepName === "collection" && state.draft.otherPerson) {
-        runPrecheck({
-          consultation_type: state.draft.type!,
-          question: state.draft.context,
-          horizon: state.draft.timeHorizon ?? undefined,
-          other_person: {
-            birth_date: state.draft.otherPerson.birthDate,
-            birth_time: state.draft.otherPerson.birthTime ?? undefined,
-            birth_time_known: state.draft.otherPerson.birthTimeKnown,
-            birth_place: state.draft.otherPerson.birthPlace,
-            birth_city: state.draft.otherPerson.birthCity,
-            birth_country: state.draft.otherPerson.birthCountry,
-            ...(state.draft.otherPerson.placeResolvedId
-              ? { place_resolved_id: state.draft.otherPerson.placeResolvedId }
-              : {}),
-            ...(state.draft.otherPerson.birthLat !== null &&
-            state.draft.otherPerson.birthLat !== undefined
-              ? { birth_lat: state.draft.otherPerson.birthLat }
-              : {}),
-            ...(state.draft.otherPerson.birthLon !== null &&
-            state.draft.otherPerson.birthLon !== undefined
-              ? { birth_lon: state.draft.otherPerson.birthLon }
-              : {}),
-          }
-        }, {
-          onSuccess: (response) => {
-            setPrecheck(response.data)
-          }
-        })
-      }
-      nextStep()
-    }
-  }, [canProceed, currentStepName, nextStep, runPrecheck, state.draft, setPrecheck])
-
-  const handleGenerate = useCallback(() => {
-    if (canProceed) {
-      navigate("/consultations/result")
-    }
-  }, [canProceed, navigate])
-
-  const handleTypeSelect = useCallback((type: ConsultationType) => {
-    startConsultationForType(type, true)
-  }, [startConsultationForType])
+  const showAstrologerCard = astrologerChosenRef.current
 
   const renderStep = () => {
     switch (currentStepName) {
-      case "type":
+      case "astrologer":
         return (
-          <ConsultationTypeStep
-            selectedType={state.draft.type}
-            onSelect={handleTypeSelect}
+          <AstrologerSelectStep
+            selectedId={state.draft.astrologerId}
+            onSelect={handleAstrologerSelect}
           />
         )
-      case "frame":
+      case "form":
         return (
-          <ConsultationFrameStep
+          <ConsultationFormStep
             draft={state.draft}
+            showTypeSelector={!typePreselectedRef.current}
+            onTypeChange={handleTypeChange}
             onContextChange={setContext}
             onObjectiveChange={setObjective}
             onTimeHorizonChange={setTimeHorizon}
-            onInteractionToggle={setIsInteraction}
-          />
-        )
-      case "collection":
-        return (
-          <DataCollectionStep
-            draft={state.draft}
-            precheck={state.precheck}
+            onToggleThirdParty={setIsInteraction}
             onOtherPersonChange={setOtherPerson}
             saveOptIn={state.draft.saveThirdParty}
             onSaveOptInChange={setSaveThirdParty}
-            nickname={state.draft.thirdPartyNickname}
+            nickname={state.draft.thirdPartyNickname ?? undefined}
             onNicknameChange={setThirdPartyNickname}
             onSelectedExistingChange={setSelectedThirdPartyExternalId}
-          />
-        )
-      case "summary":
-        return (
-          <ConsultationSummaryStep
-            draft={state.draft}
-            precheck={state.precheck}
-            onAstrologerSelect={setAstrologer}
           />
         )
       default:
@@ -246,19 +187,13 @@ export function ConsultationWizardPage() {
     <div className="panel consultation-wizard-page">
       <WizardLayout
         customProgress={<WizardProgress currentStepName={currentStepName} />}
-        onBack={currentStepName !== "type" ? handlePrev : undefined}
+        onBack={handleBackToConsultations}
       >
-        {state.precheck && currentStepName === "summary" && (
-          <ConsultationFallbackBanner precheck={state.precheck} />
+        {showAstrologerCard && (
+          <SelectedAstrologerCard astrologerId={state.draft.astrologerId} lang={lang} />
         )}
 
         <div className="wizard-content">
-          {isPrechecking && (currentStepName === "collection" || currentStepName === "summary") && (
-            <div className="wizard-loading-overlay">
-              <span className="spinner" aria-hidden="true">⌛</span>
-              <p>{t("precheck_loading", lang)}</p>
-            </div>
-          )}
           {renderStep()}
         </div>
 
@@ -268,29 +203,18 @@ export function ConsultationWizardPage() {
           </button>
 
           <div className="wizard-actions-nav">
-            {currentStepName !== "type" && (
-              <button type="button" className="btn btn-secondary" onClick={handlePrev}>
+            {currentStepName === "form" && (
+              <button type="button" className="btn btn-secondary" onClick={handlePrevFromForm}>
                 {t("previous", lang)}
               </button>
             )}
 
-            {currentStepName !== "summary" && (
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleNext}
-                disabled={!canProceed}
-              >
-                {t("next", lang)}
-              </button>
-            )}
-
-            {currentStepName === "summary" && (
+            {currentStepName === "form" && (
               <button
                 type="button"
                 className="btn btn-primary"
                 onClick={handleGenerate}
-                disabled={!canProceed || isPrechecking || state.precheck?.status === "blocked"}
+                disabled={!canProceed}
               >
                 {t("generate", lang)}
               </button>

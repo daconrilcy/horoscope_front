@@ -391,30 +391,19 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
 
   const canProceed = useMemo(() => {
     switch (currentStepName) {
-      case "type":
-        return state.draft.type !== null
-      case "frame":
-        return (
-          state.draft.context.trim().length > 0 &&
-          (state.draft.objective ?? "").trim().length > 0
-        )
-      case "collection":
-        if (state.draft.type === "relationship" && !state.draft.otherPerson) {
-           return false
-        }
-        if (state.draft.isInteraction && !state.draft.otherPerson) {
-           return false
-        }
-        // Nickname required if saving
-        if (state.draft.saveThirdParty && !state.draft.thirdPartyNickname?.trim()) {
-           return false
-        }
-        if (state.draft.otherPerson) {
-           return !!(state.draft.otherPerson.birthDate && state.draft.otherPerson.birthCity && state.draft.otherPerson.birthCountry)
+      case "astrologer":
+        return true
+      case "form": {
+        if (state.draft.type === null) return false
+        if (state.draft.context.trim().length === 0) return false
+        if ((state.draft.objective ?? "").trim().length === 0) return false
+        if (state.draft.isInteraction) {
+          if (!state.draft.otherPerson) return false
+          if (!state.draft.otherPerson.birthDate || !state.draft.otherPerson.birthCity || !state.draft.otherPerson.birthCountry) return false
+          if (state.draft.saveThirdParty && !state.draft.thirdPartyNickname?.trim()) return false
         }
         return true
-      case "summary":
-        return state.precheck?.status !== "blocked"
+      }
       default:
         return false
     }
@@ -427,7 +416,6 @@ export function ConsultationProvider({ children }: { children: ReactNode }) {
     state.draft.isInteraction,
     state.draft.saveThirdParty,
     state.draft.thirdPartyNickname,
-    state.precheck?.status,
   ])
 
   const contextValue = useMemo(

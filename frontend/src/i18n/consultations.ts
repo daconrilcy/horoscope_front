@@ -431,6 +431,31 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Astrologer",
     es: "Astrólogo",
   },
+  step_form: {
+    fr: "Ma question",
+    en: "My question",
+    es: "Mi pregunta",
+  },
+  form_step_title: {
+    fr: "Formulez votre demande",
+    en: "Formulate your request",
+    es: "Formule su solicitud",
+  },
+  add_third_party_label: {
+    fr: "Cette consultation concerne aussi une autre personne",
+    en: "This consultation also concerns another person",
+    es: "Esta consulta también concierne a otra persona",
+  },
+  add_third_party_hint: {
+    fr: "Optionnel — ajoutez les données natales d'un proche pour enrichir l'analyse.",
+    en: "Optional — add a person's birth data to enrich the analysis.",
+    es: "Opcional — añada los datos natales de alguien para enriquecer el análisis.",
+  },
+  select_astrologer_step_title: {
+    fr: "Choisissez votre astrologue",
+    en: "Choose your astrologer",
+    es: "Elija su astrólogo",
+  },
   auto_astrologer: {
     fr: "Sélection automatique",
     en: "Automatic selection",

@@ -261,13 +261,51 @@ Deux causes identifiées et corrigées :
    - `App.css` : `.consultation-type-step { width: 100%; animation: fadeIn 0.2s ease }` ajouté
    - `i18n/consultations.ts` : clé `catalogue_error` ajoutée
 
+### Post-delivery refonte wizard (2026-03-24)
+
+**Refonte complète du parcours de saisie des consultations**
+
+Le wizard 4 étapes (`type → frame → collection → summary`) a été remplacé par un flow en 2 étapes plus direct, centré sur le choix de l'astrologue puis la saisie de la demande.
+
+#### Nouveau flow
+
+| Entrée | Page 1 | Page 2 | Page 3 |
+|---|---|---|---|
+| `/consultations` → type sélectionné (`?type=xxx`) | Choix astrologue | Formulaire **sans** sélecteur de type | Résultat + bouton chat |
+| `/astrologers/:id` → astrologue pré-sélectionné (`?astrologerId=xxx`) | *(skippée)* | Formulaire **avec** sélecteur de type | Résultat + bouton chat |
+| `/consultations/new` direct | Choix astrologue | Formulaire **avec** sélecteur de type | Résultat + bouton chat |
+
+#### Comportements clés
+
+- **Auto-avance** : cliquer sur un astrologue (y compris « Sélection automatique ») avance immédiatement à la page 2 sans bouton Suivant intermédiaire.
+- **Card astrologue persistante** : dès qu'un astrologue est sélectionné (ou pré-sélectionné depuis la page profil astrologue), sa photo, son nom et son style s'affichent dans une card au-dessus du contenu, sur toutes les étapes.
+- **Tierce personne pour tous les types** : l'`OtherPersonForm` (données natales, sauvegarde contacts) est disponible sur la page formulaire quel que soit le type de consultation, via un toggle optionnel.
+- **Titre dynamique** : quand le type est pré-sélectionné depuis `/consultations`, le titre `h2` du formulaire affiche le label du type (ex : « Où j'en suis en ce moment ») plutôt que le titre générique.
+- **Bouton back** : le bouton `wizard-layout__back` navigue toujours vers `/consultations`, stylisé comme les autres boutons (pill, glass background).
+
+#### Fichiers modifiés
+
+- `frontend/src/types/consultation.ts` — `WIZARD_STEPS = ["astrologer", "form"]`, `WIZARD_LAST_STEP_INDEX = 1`, `WIZARD_STEP_LABELS` mis à jour
+- `frontend/src/state/consultationStore.tsx` — `canProceed` reécrit pour les 2 nouvelles étapes
+- `frontend/src/i18n/consultations.ts` — Clés ajoutées : `step_form`, `form_step_title`, `add_third_party_label`, `add_third_party_hint`, `select_astrologer_step_title`
+- `frontend/src/features/consultations/components/ConsultationFormStep.tsx` — **Nouveau composant** : type pills + textarea + horizon + toggle tierce personne + OtherPersonForm
+- `frontend/src/features/consultations/index.ts` — Export `ConsultationFormStep`
+- `frontend/src/pages/ConsultationWizardPage.tsx` — Réécrit : 2 étapes, auto-avance astrologue, card persistante `SelectedAstrologerCard`, `typePreselectedRef`, `astrologerChosenRef`
+- `frontend/src/layouts/WizardLayout.css` — Bouton `.wizard-layout__back` styilisé pill/glass
+- `frontend/src/App.css` — Nouvelles classes : `wizard-astrologer-card` (+ variantes), `consultation-form-step`, `form-label`, `consultation-type-pills`, `type-pill` (+ `--selected`, `-icon`, `-label`), `form-group--third-party-toggle`
+
 ### File List
 
 - `_bmad-output/implementation-artifacts/60-23-refonte-premium-page-consultations-et-catalogue-db.md`
 - `backend/app/main.py`
 - `backend/scripts/seed_consultation_templates.py`
 - `frontend/src/features/consultations/components/ConsultationTypeStep.tsx`
+- `frontend/src/features/consultations/components/ConsultationFormStep.tsx`
+- `frontend/src/features/consultations/index.ts`
 - `frontend/src/layouts/WizardLayout.css`
 - `frontend/src/layouts/WizardLayout.tsx`
+- `frontend/src/pages/ConsultationWizardPage.tsx`
+- `frontend/src/state/consultationStore.tsx`
+- `frontend/src/types/consultation.ts`
 - `frontend/src/App.css`
 - `frontend/src/i18n/consultations.ts`
