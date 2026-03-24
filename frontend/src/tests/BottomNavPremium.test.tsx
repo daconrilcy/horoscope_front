@@ -92,22 +92,21 @@ function renderWithRouter(initialPath = "/dashboard") {
   )
 }
 
-// ─── AC2 : 5 items présents ─────────────────────────────────────────────────
+// ─── AC2 : 4 items présents ─────────────────────────────────────────────────
 
-describe("AC2 : 5 items de navigation présents", () => {
-  it("affiche exactement 5 liens", () => {
+describe("AC2 : 4 items de navigation présents", () => {
+  it("affiche exactement 4 liens", () => {
     renderWithRouter()
     const links = screen.getAllByRole("link")
-    expect(links).toHaveLength(5)
+    expect(links).toHaveLength(4)
   })
 
-  it("affiche les labels : Aujourd'hui, Chat, Thème, Consultations, Profil", () => {
+  it("affiche les labels : Aujourd'hui, Chat, Thème, Consultations", () => {
     renderWithRouter()
     expect(screen.getByText("Aujourd'hui")).toBeInTheDocument()
     expect(screen.getByText("Chat")).toBeInTheDocument()
     expect(screen.getByText("Thème")).toBeInTheDocument()
     expect(screen.getByText("Consultations")).toBeInTheDocument()
-    expect(screen.getByText("Profil")).toBeInTheDocument()
   })
 
   it("chaque item a la classe bottom-nav__item", () => {
@@ -121,13 +120,13 @@ describe("AC2 : 5 items de navigation présents", () => {
   it("chaque item contient une icône SVG", () => {
     const { container } = renderWithRouter()
     const svgs = container.querySelectorAll("svg")
-    expect(svgs).toHaveLength(5)
+    expect(svgs).toHaveLength(4)
   })
 
   it("chaque item contient un span avec classe bottom-nav__label", () => {
     const { container } = renderWithRouter()
     const labels = container.querySelectorAll(".bottom-nav__label")
-    expect(labels).toHaveLength(5)
+    expect(labels).toHaveLength(4)
   })
 })
 
@@ -198,19 +197,6 @@ describe("AC4 : État actif détecté via la route courante", () => {
     expect(link).toHaveClass("bottom-nav__item--active")
   })
 
-  it("marque 'Profil' actif sur /settings/account", () => {
-    renderWithRouter("/settings/account")
-    const link = screen.getByText("Profil").closest("a")!
-    expect(link).toHaveClass("bottom-nav__item--active")
-    expect(link).toHaveAttribute("aria-current", "page")
-  })
-
-  it("marque 'Profil' actif sur /settings/subscription (sous-page)", () => {
-    renderWithRouter("/settings/subscription")
-    const link = screen.getByText("Profil").closest("a")!
-    expect(link).toHaveClass("bottom-nav__item--active")
-  })
-
   it("n'a qu'un seul item actif à la fois sur /dashboard", () => {
     renderWithRouter("/dashboard")
     const activeLinks = screen
@@ -241,11 +227,6 @@ describe("AC5 : Les liens pointent vers les bonnes routes", () => {
   it("'Consultations' pointe vers /consultations", () => {
     renderWithRouter()
     expect(screen.getByText("Consultations").closest("a")).toHaveAttribute("href", "/consultations")
-  })
-
-  it("'Profil' pointe vers /settings", () => {
-    renderWithRouter()
-    expect(screen.getByText("Profil").closest("a")).toHaveAttribute("href", "/settings")
   })
 })
 

@@ -96,6 +96,11 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Your Astrologer",
     es: "Su Astrólogo",
   },
+  your_default: {
+    fr: "Votre défaut",
+    en: "Your default",
+    es: "Su defecto",
+  },
   online: {
     fr: "En ligne",
     en: "Online",

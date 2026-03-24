@@ -1,12 +1,15 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { AstrologersPage } from "../pages/AstrologersPage"
 import { AstrologerProfilePage } from "../pages/AstrologerProfilePage"
 
 const mockUseAstrologers = vi.fn()
 const mockUseAstrologer = vi.fn()
+const mockUseUserSettings = vi.fn()
+const mockUseUpdateUserSettings = vi.fn()
 const mockNavigate = vi.fn()
 const mockRateAstrologer = vi.fn()
 
@@ -29,36 +32,55 @@ vi.mock("../api/astrologers", async () => {
   }
 })
 
+vi.mock("@api/userSettings", () => ({
+  useUserSettings: () => mockUseUserSettings(),
+  useUpdateUserSettings: () => mockUseUpdateUserSettings(),
+}))
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+})
+
 beforeEach(() => {
   localStorage.setItem("lang", "fr")
+  mockUseUserSettings.mockReturnValue({ data: { default_astrologer_id: null }, isLoading: false })
+  mockUseUpdateUserSettings.mockReturnValue({ mutate: vi.fn(), isPending: false })
 })
 
 const routerFutureFlags = { v7_startTransition: true, v7_relativeSplatPath: true }
 
 function renderAstrologersPage() {
   return render(
-    <MemoryRouter initialEntries={["/astrologers"]} future={routerFutureFlags}>
-      <Routes>
-        <Route path="/astrologers" element={<AstrologersPage />} />
-        <Route path="/astrologers/:id" element={<AstrologerProfilePage />} />
-        <Route path="/chat" element={<div>Chat Page</div>} />
-      </Routes>
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={["/astrologers"]} future={routerFutureFlags}>
+        <Routes>
+          <Route path="/astrologers" element={<AstrologersPage />} />
+          <Route path="/astrologers/:id" element={<AstrologerProfilePage />} />
+          <Route path="/chat" element={<div>Chat Page</div>} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
   )
 }
 
 function renderProfilePage(id: string) {
   return render(
-    <MemoryRouter initialEntries={[`/astrologers/${id}`]} future={routerFutureFlags}>
-      <Routes>
-        <Route path="/astrologers" element={<AstrologersPage />} />
-        <Route path="/astrologers/:id" element={<AstrologerProfilePage />} />
-        <Route path="/chat" element={<div>Chat Page</div>} />
-        <Route path="/chat/:conversationId" element={<div>Chat Conversation</div>} />
-        <Route path="/natal" element={<div>Natal Page</div>} />
-        <Route path="/consultations/new" element={<div>Consultation Wizard</div>} />
-      </Routes>
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[`/astrologers/${id}`]} future={routerFutureFlags}>
+        <Routes>
+          <Route path="/astrologers" element={<AstrologersPage />} />
+          <Route path="/astrologers/:id" element={<AstrologerProfilePage />} />
+          <Route path="/chat" element={<div>Chat Page</div>} />
+          <Route path="/chat/:conversationId" element={<div>Chat Conversation</div>} />
+          <Route path="/natal" element={<div>Natal Page</div>} />
+          <Route path="/consultations/new" element={<div>Consultation Wizard</div>} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
   )
 }
 

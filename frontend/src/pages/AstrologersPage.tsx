@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 import { useAstrologers } from "@hooks/useAstrologers"
+import { useUserSettings } from "@api/userSettings"
 import { AstrologerGrid } from "../features/astrologers"
 import { detectLang } from "../i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
@@ -26,6 +27,7 @@ function rotateAstrologers(astrologers: Astrologer[], rotationIndex: number): As
 export function AstrologersPage() {
   const navigate = useNavigate()
   const { astrologers, isLoading, error } = useAstrologers()
+  const { data: settings } = useUserSettings()
   const lang = detectLang()
   const [rotationIndex] = useState(() => {
     if (typeof window === "undefined") {
@@ -77,6 +79,7 @@ export function AstrologersPage() {
           <AstrologerGrid
             astrologers={displayedAstrologers}
             onSelectAstrologer={handleSelectAstrologer}
+            defaultAstrologerId={settings?.default_astrologer_id}
           />
         )}
       </div>

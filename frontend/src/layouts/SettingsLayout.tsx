@@ -1,5 +1,7 @@
 import React from 'react'
 import { SettingsTabs } from '../components/settings/SettingsTabs'
+import { PageLayout } from './PageLayout'
+import '../pages/settings/Settings.css'
 
 interface SettingsLayoutProps {
   title: string
@@ -9,12 +11,21 @@ interface SettingsLayoutProps {
 
 export function SettingsLayout({ title, children, className }: SettingsLayoutProps) {
   return (
-    <div className={`settings-layout ${className ?? ''}`}>
-      <h1 className="settings-title">{title}</h1>
-      <SettingsTabs />
-      <div className="settings-content">
-        {children}
+    <PageLayout className={`is-settings-page ${className ?? ''}`}>
+      <div className="settings-bg-halo" />
+      <div className="settings-noise" />
+      
+      <div className="settings-container">
+        <h1 className="settings-section-title" style={{ fontSize: '2.4rem', marginBottom: '32px' }}>
+          {title}
+        </h1>
+        
+        <SettingsTabs />
+        
+        <div className="settings-content">
+          {children}
+        </div>
       </div>
-    </div>
+    </PageLayout>
   )
 }

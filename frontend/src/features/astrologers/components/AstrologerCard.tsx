@@ -6,6 +6,7 @@ import { tAstrologers as t } from "@i18n/astrologers"
 type AstrologerCardProps = {
   astrologer: Astrologer
   featured?: boolean
+  isDefault?: boolean
   onClick: () => void
 }
 
@@ -54,7 +55,7 @@ function getProviderBadgeLabel(providerType: Astrologer["provider_type"], lang: 
   return providerType === "real" ? t("provider_type_real", lang) : t("provider_type_ai", lang)
 }
 
-export function AstrologerCard({ astrologer, featured = false, onClick }: AstrologerCardProps) {
+export function AstrologerCard({ astrologer, featured = false, isDefault, onClick }: AstrologerCardProps) {
   const [imgError, setImgError] = useState(false)
   const lang = detectLang()
   const showImage = astrologer.avatar_url && !imgError
@@ -80,8 +81,15 @@ export function AstrologerCard({ astrologer, featured = false, onClick }: Astrol
       <div className="astrologer-card-orbit astrologer-card-orbit--two" aria-hidden="true" />
       <div className="astrologer-card-topline">
         <span className="astrologer-card-icon" aria-hidden="true">{icon}</span>
-        <span className={providerBadgeClassName}>{providerBadgeLabel}</span>
-        {featured && <span className="astrologer-card-featured-badge">{featuredBadge}</span>}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'flex-end', flex: 1 }}>
+          {isDefault && (
+            <span className="astrologer-default-badge">
+              {t("your_default", lang)}
+            </span>
+          )}
+          <span className={providerBadgeClassName}>{providerBadgeLabel}</span>
+          {featured && <span className="astrologer-card-featured-badge">{featuredBadge}</span>}
+        </div>
       </div>
       <div className="astrologer-card-avatar">
         {showImage ? (

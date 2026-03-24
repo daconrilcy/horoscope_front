@@ -16,10 +16,12 @@ import {
   GraduationCap,
   Orbit,
   Heart,
-  ArrowRight
+  ArrowRight,
+  Check
 } from "lucide-react"
 
 import { useAstrologer, rateAstrologer } from "../api/astrologers"
+import { useUserSettings, useUpdateUserSettings } from "@api/userSettings"
 import { detectLang } from "../i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
 import { PageLayout } from "../layouts"
@@ -201,6 +203,8 @@ export function AstrologerProfilePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: profile, isPending, error, refetch } = useAstrologer(id)
+  const { data: settings } = useUserSettings()
+  const updateSettings = useUpdateUserSettings()
   const lang = detectLang()
   
   const [isRating, setIsRating] = useState(false)
@@ -210,8 +214,17 @@ export function AstrologerProfilePage() {
   const [reviewDraft, setReviewDraft] = useState("")
   const [reviewError, setReviewError] = useState<string | null>(null)
 
+  const isDefault = profile?.id === settings?.default_astrologer_id
+
   const handleBack = () => {
     navigate("/astrologers")
+  }
+
+  const handleToggleDefault = () => {
+    if (!profile || updateSettings.isPending) return
+    updateSettings.mutate({ 
+      default_astrologer_id: isDefault ? null : profile.id 
+    })
   }
 
   const handleReviewComposerOpen = (rating: number) => {
@@ -445,6 +458,12 @@ export function AstrologerProfilePage() {
           </div>
           <div className="profile-hero-content">
             <div className="profile-badge-row">
+              {isDefault && (
+                <div className="profile-default-badge" style={{ background: 'var(--settings-purple)', color: '#fff' }}>
+                  <Check size={14} />
+                  {t("your_default", lang)}
+                </div>
+              )}
               <div className={`profile-provider-badge profile-provider-badge--${providerType}`}>
                 <Sparkles size={14} />
                 {getProviderTypeLabel(providerType)}
@@ -459,7 +478,7 @@ export function AstrologerProfilePage() {
             <h1 className="profile-full-name">{fullName}</h1>
             <p className="profile-style-title">{subtitle}</p>
             
-            <div className="profile-metadata-row">
+            <div className="profile-metadata-row" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
               {profile.age && (
                 <div className="profile-meta-pill">
                   <Calendar size={16} />
@@ -478,6 +497,21 @@ export function AstrologerProfilePage() {
                   <span>{profile.location}</span>
                 </div>
               )}
+              
+              <button 
+                className={`profile-meta-pill ${isDefault ? 'active' : ''}`}
+                onClick={handleToggleDefault}
+                disabled={updateSettings.isPending}
+                style={{ 
+                  cursor: 'pointer',
+                  border: isDefault ? '1px solid var(--settings-purple)' : '1px solid var(--settings-card-border)',
+                  background: isDefault ? 'var(--settings-purple-soft)' : 'rgba(255,255,255,0.5)',
+                  color: isDefault ? 'var(--settings-purple)' : 'inherit'
+                }}
+              >
+                <Star size={16} fill={isDefault ? "currentColor" : "none"} />
+                <span>{isDefault ? "Astrologue par défaut" : "Définir par défaut"}</span>
+              </button>
             </div>
 
             {profile.quote && (

@@ -55,6 +55,11 @@ export const settingsTranslations = {
       saving: "Enregistrement...",
       saved: "Préférences enregistrées",
       saveError: "Erreur lors de l'enregistrement",
+      defaultAstrologer: "Astrologue par défaut",
+      defaultAstrologerDesc: "Sélectionnez l'astrologue qui vous accompagnera par défaut.",
+      automatic: "Automatique",
+      automaticDesc: "Laisse l'application choisir pour vous",
+      selected: "Sélectionné",
     },
     en: {
       title: "Account Information",
@@ -74,7 +79,7 @@ export const settingsTranslations = {
       vedique: "Vedic",
       vediqueDesc: "Vedic tradition, nakshatra, karma",
       humaniste: "Humanistic",
-      humanisteDesc: "Jungian archetypes, personal growth",
+      humanisteDesc: "Humanistic archetypes, personal growth",
       karmique: "Karmic",
       karmiqueDesc: "Life lessons, lunar nodes, cycles",
       psychologique: "Psychological",
@@ -82,6 +87,11 @@ export const settingsTranslations = {
       saving: "Saving...",
       saved: "Preferences saved",
       saveError: "Error saving preferences",
+      defaultAstrologer: "Default Astrologer",
+      defaultAstrologerDesc: "Select the astrologer who will accompany you by default.",
+      automatic: "Automatic",
+      automaticDesc: "Let the application choose for you",
+      selected: "Selected",
     },
     es: {
       title: "Información de la cuenta",
@@ -89,7 +99,7 @@ export const settingsTranslations = {
       memberSince: "Miembro desde",
       role: "Rol",
       birthData: "Datos de nacimiento",
-      editBirthData: "Editar mis données de nacimiento",
+      editBirthData: "Editar mis datos de nacimiento",
       deleteAccount: "Eliminar mi cuenta",
       loading: "Cargando...",
       error: "No se pudo cargar su información",
@@ -109,6 +119,11 @@ export const settingsTranslations = {
       saving: "Guardando...",
       saved: "Preferencias guardadas",
       saveError: "Error al guardar preferencias",
+      defaultAstrologer: "Astrólogo por defecto",
+      defaultAstrologerDesc: "Selecciona el astrólogo que te acompañará por defecto.",
+      automatic: "Automático",
+      automaticDesc: "Deja que la aplicación elija por ti",
+      selected: "Seleccionado",
     },
   } as Record<
     AstrologyLang,
@@ -138,14 +153,50 @@ export const settingsTranslations = {
       saving: string
       saved: string
       saveError: string
+      defaultAstrologer: string
+      defaultAstrologerDesc: string
+      automatic: string
+      automaticDesc: string
+      selected: string
     }
   >,
 
   subscription: {
-    fr: { title: "Mon abonnement" },
-    en: { title: "My subscription" },
-    es: { title: "Mi suscripción" },
-  } as Record<AstrologyLang, { title: string }>,
+    fr: {
+      title: "Mon abonnement",
+      availablePlans: "Plans disponibles",
+      active: "Actif",
+      buyCredits: "Acheter des crédits",
+      buyCreditsDesc: "Besoin de plus de messages ? Achetez un pack de crédits supplémentaires.",
+      soon: "Bientôt disponible",
+    },
+    en: {
+      title: "My subscription",
+      availablePlans: "Available plans",
+      active: "Active",
+      buyCredits: "Buy credits",
+      buyCreditsDesc: "Need more messages? Buy an additional credit pack.",
+      soon: "Soon available",
+    },
+    es: {
+      title: "Mi suscripción",
+      availablePlans: "Planes disponibles",
+      active: "Activo",
+      buyCredits: "Comprar créditos",
+      buyCreditsDesc: "¿Necesitas más mensajes? Compra un paquete de créditos adicionales.",
+      soon: "Próximamente disponible",
+    },
+  } as Record<
+    AstrologyLang,
+    {
+      title: string
+      availablePlans: string
+      active: string
+      buyCredits: string
+      buyCreditsDesc: string
+      soon: string
+    }
+  >,
 
   usage: {
     fr: {

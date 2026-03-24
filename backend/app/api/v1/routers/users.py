@@ -133,6 +133,7 @@ class NatalInterpretationApiResponse(BaseModel):
 
 class UserSettingsData(BaseModel):
     astrologer_profile: str
+    default_astrologer_id: str | None = None
 
 
 class UserSettingsApiResponse(BaseModel):
@@ -141,7 +142,8 @@ class UserSettingsApiResponse(BaseModel):
 
 
 class UserSettingsPatchRequest(BaseModel):
-    astrologer_profile: str
+    astrologer_profile: str | None = None
+    default_astrologer_id: str | None = None
 
 
 VALID_ASTROLOGER_PROFILES = {"standard", "vedique", "humaniste", "karmique", "psychologique"}
@@ -735,8 +737,12 @@ def get_me_settings(
         )
 
     profile = getattr(user, "astrologer_profile", "standard")
+    default_astrologer_id = getattr(user, "default_astrologer_id", None)
     return {
-        "data": {"astrologer_profile": profile},
+        "data": {
+            "astrologer_profile": profile,
+            "default_astrologer_id": default_astrologer_id,
+        },
         "meta": {"request_id": request_id},
     }
 
@@ -758,7 +764,11 @@ def patch_me_settings(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    if payload.astrologer_profile not in VALID_ASTROLOGER_PROFILES:
+
+    if (
+        payload.astrologer_profile is not None
+        and payload.astrologer_profile not in VALID_ASTROLOGER_PROFILES
+    ):
         return JSONResponse(
             status_code=422,
             content={
@@ -785,10 +795,21 @@ def patch_me_settings(
             },
         )
 
-    user.astrologer_profile = payload.astrologer_profile
+    # Partial update logic
+    update_data = payload.model_dump(exclude_unset=True)
+
+    if "astrologer_profile" in update_data:
+        user.astrologer_profile = update_data["astrologer_profile"]
+
+    if "default_astrologer_id" in update_data:
+        user.default_astrologer_id = update_data["default_astrologer_id"]
+
     db.commit()
 
     return {
-        "data": {"astrologer_profile": user.astrologer_profile},
+        "data": {
+            "astrologer_profile": user.astrologer_profile,
+            "default_astrologer_id": user.default_astrologer_id,
+        },
         "meta": {"request_id": request_id},
     }

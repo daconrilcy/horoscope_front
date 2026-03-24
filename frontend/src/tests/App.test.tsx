@@ -188,7 +188,7 @@ describe("App", () => {
     await waitFor(() => {
       expect(screen.getAllByRole("link", { name: "Chat" }).length).toBeGreaterThan(0)
     })
-    expect(screen.getAllByRole("link", { name: "Profil" }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole("link", { name: "Thème" }).length).toBeGreaterThan(0)
     expect(screen.getAllByRole("link", { name: "Consultations" }).length).toBeGreaterThan(0)
   })
 

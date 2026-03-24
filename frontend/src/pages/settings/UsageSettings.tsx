@@ -2,6 +2,7 @@ import { useBillingQuota, type BillingApiError } from "@api/billing"
 import { detectLang, type AstrologyLang } from "@i18n/astrology"
 import { settingsTranslations } from "@i18n/settings"
 import { getLocale } from "@utils/locale"
+import "./Settings.css"
 
 function getErrorMessage(error: BillingApiError | null, lang: AstrologyLang): string {
   const errorMessages = settingsTranslations.usageErrors
@@ -33,75 +34,88 @@ export function UsageSettings() {
   const quotaError = quota.error as BillingApiError | null
 
   return (
-    <section className="usage-settings">
-      <h2 className="settings-section-title">{t.title}</h2>
+    <div className="usage-settings">
+      <section className="settings-card">
+        <h2 className="settings-section-title settings-section-title--decorated">
+          {t.title}
+        </h2>
 
-      {quota.isLoading && (
-        <p aria-busy="true" className="state-line state-loading">
-          {t.loading}
-        </p>
-      )}
-
-      {quota.isError && (
-        <div role="alert" className="chat-error">
-          <p>
-            {t.error}: {getErrorMessage(quotaError, lang)}
+        {quota.isLoading && (
+          <p aria-busy="true" className="settings-save-feedback settings-save-feedback--saving">
+            {t.loading}
           </p>
-          <button type="button" onClick={() => void quota.refetch()}>
-            {t.retry}
-          </button>
-        </div>
-      )}
+        )}
 
-      {quota.data && (
-        <div className="panel">
-          <h3>{t.dailyUsage}</h3>
-          <div className="usage-stats-grid">
-            <div className="usage-stat-item">
-              <span className="usage-stat-label">{t.messagesUsed}</span>
-              <span className="usage-stat-value">{quota.data.consumed}</span>
-            </div>
-            <div className="usage-stat-item">
-              <span className="usage-stat-label">{t.limit}</span>
-              <span className="usage-stat-value">{quota.data.limit}</span>
-            </div>
-            <div className="usage-stat-item">
-              <span className="usage-stat-label">{t.remaining}</span>
-              <span className="usage-stat-value">{quota.data.remaining}</span>
-            </div>
-            {quota.data.reset_at && (
+        {quota.isError && (
+          <div role="alert" className="settings-save-feedback settings-save-feedback--error">
+            <p>
+              {t.error}: {getErrorMessage(quotaError, lang)}
+            </p>
+            <button type="button" className="settings-tab" onClick={() => void quota.refetch()}>
+              {t.retry}
+            </button>
+          </div>
+        )}
+
+        {quota.data && (
+          <>
+            <h3 className="settings-section-title" style={{ marginTop: '24px', fontSize: '1.2rem' }}>
+              {t.dailyUsage}
+            </h3>
+            
+            <div className="usage-stats-premium">
               <div className="usage-stat-item">
-                <span className="usage-stat-label">{t.resetAt}</span>
-                <span className="usage-stat-value">
-                  {new Date(quota.data.reset_at).toLocaleTimeString(getLocale(lang))}
-                </span>
+                <span className="usage-stat-label">{t.messagesUsed}</span>
+                <span className="usage-stat-value">{quota.data.consumed}</span>
               </div>
-            )}
-          </div>
-          <div
-            className="usage-progress-bar"
-            role="progressbar"
-            aria-label={t.dailyUsage}
-            aria-valuenow={quota.data.consumed}
-            aria-valuemin={0}
-            aria-valuemax={quota.data.limit}
-            style={
-              {
-                "--usage-progress":
-                  quota.data.limit > 0
-                    ? Math.min((quota.data.consumed / quota.data.limit) * 100, 100)
-                    : 0,
-              } as React.CSSProperties
-            }
-          >
-            <div className="usage-progress-fill" />
-          </div>
-        </div>
-      )}
+              <div className="usage-stat-item">
+                <span className="usage-stat-label">{t.limit}</span>
+                <span className="usage-stat-value">{quota.data.limit}</span>
+              </div>
+              <div className="usage-stat-item">
+                <span className="usage-stat-label">{t.remaining}</span>
+                <span className="usage-stat-value">{quota.data.remaining}</span>
+              </div>
+              {quota.data.reset_at && (
+                <div className="usage-stat-item">
+                  <span className="usage-stat-label">{t.resetAt}</span>
+                  <span className="usage-stat-value" style={{ fontSize: '1.2rem' }}>
+                    {new Date(quota.data.reset_at).toLocaleTimeString(getLocale(lang), { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              )}
+            </div>
 
-      {!quota.isLoading && !quota.isError && !quota.data && (
-        <p className="state-line state-empty">{t.noData}</p>
-      )}
-    </section>
+            <div className="settings-card--soft">
+              <div
+                className="usage-progress-bar"
+                role="progressbar"
+                aria-label={t.dailyUsage}
+                aria-valuenow={quota.data.consumed}
+                aria-valuemin={0}
+                aria-valuemax={quota.data.limit}
+                style={
+                  {
+                    "--usage-progress":
+                      quota.data.limit > 0
+                        ? Math.min((quota.data.consumed / quota.data.limit) * 100, 100)
+                        : 0,
+                  } as React.CSSProperties
+                }
+              >
+                <div className="usage-progress-fill" />
+              </div>
+              <p className="default-astrologer-option__style" style={{ marginTop: '12px', textAlign: 'center' }}>
+                {Math.round(Math.min((quota.data.consumed / quota.data.limit) * 100, 100))}% de votre quota quotidien utilisé
+              </p>
+            </div>
+          </>
+        )}
+
+        {!quota.isLoading && !quota.isError && !quota.data && (
+          <p className="state-line state-empty">{t.noData}</p>
+        )}
+      </section>
+    </div>
   )
 }

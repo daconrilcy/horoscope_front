@@ -1,0 +1,505 @@
+.settings-container {
+  /* Palette — miroir du profil astrologue, accent violet au lieu du bleu */
+  --settings-purple:        #866cd0;          /* = var(--primary) de l'app */
+  --settings-purple-soft:   rgba(134, 108, 208, 0.12);
+  --settings-purple-border: rgba(134, 108, 208, 0.28);
+  --settings-gold:          #d59a39;          /* = --profile-gold */
+  --settings-gold-soft:     rgba(213, 154, 57, 0.16);
+  --settings-gold-border:   rgba(213, 154, 57, 0.28);
+
+  /* Cards — copié de AstrologerProfilePage.css */
+  --settings-card-surface:        rgba(255, 255, 255, 0.62);
+  --settings-card-surface-strong: rgba(255, 255, 255, 0.76);
+  --settings-card-border:         rgba(205, 217, 240, 0.72);
+  --settings-card-shadow:         0 22px 60px rgba(132, 150, 190, 0.16);
+  --settings-card-shadow-soft:    0 16px 42px rgba(132, 150, 190, 0.12);
+
+  /* Texte — copié de AstrologerProfilePage.css */
+  --settings-text-heading: #24334d;
+  --settings-text-body:    #4f5f78;
+  --settings-text-muted:   #7f8da4;
+
+  /* Layout */
+  position: relative;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 24px 96px;
+  box-sizing: border-box;
+}
+
+.is-settings-page {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+.is-settings-page .page-layout__main {
+  padding: 0 !important;
+}
+
+.settings-bg-halo,
+.settings-noise {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.settings-bg-halo {
+  background:
+    radial-gradient(circle at 10% 16%, rgba(171, 148, 255, 0.34) 0%, transparent 28%),
+    radial-gradient(circle at 80% 12%, rgba(190, 170, 255, 0.22) 0%, transparent 26%),
+    radial-gradient(circle at 55% 80%, rgba(241, 218, 168, 0.20) 0%, transparent 30%),
+    linear-gradient(180deg, #fdfcff 0%, #f7f4ff 48%, #f0f5ff 100%);
+}
+
+.settings-noise {
+  opacity: 0.028;                /* = même opacité que profile-noise */
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.58' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+.settings-card {
+  background: var(--settings-card-surface-strong);
+  border: 1px solid var(--settings-card-border);
+  border-radius: 26px;                           /* = profile cards */
+  box-shadow: var(--settings-card-shadow);
+  backdrop-filter: blur(16px);                   /* = profile blur */
+  padding: 28px 32px;
+  position: relative;
+  z-index: 1;
+}
+
+.settings-card + .settings-card {
+  margin-top: 20px;
+}
+
+.settings-card--soft {
+  background: var(--settings-card-surface);
+  box-shadow: var(--settings-card-shadow-soft);
+  border-radius: 22px;
+  padding: 22px 26px;
+}
+
+.settings-card--accent {
+  background: linear-gradient(180deg, rgba(229, 224, 255, 0.86) 0%, rgba(218, 210, 255, 0.72) 100%);
+  border: 1px solid var(--settings-purple-border);
+  border-radius: 22px;
+  box-shadow: var(--settings-card-shadow-soft);
+}
+
+.settings-section-title {
+  margin: 0 0 18px;
+  color: var(--settings-text-heading);
+  font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  font-size: clamp(1.6rem, 2.2vw, 2rem);         /* légèrement plus petit que profil */
+  line-height: 1.05;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Variante avec barre décorative (= --underlined dans profil) */
+.settings-section-title--decorated {
+  position: relative;
+  padding-bottom: 14px;
+}
+
+.settings-section-title--decorated::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 46px;                                   /* = profile-section-title--underlined */
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--settings-purple) 0%, rgba(134, 108, 208, 0.4) 100%);
+  /* La barre est violette (settings) au lieu de dorée (profil astrologue) */
+}
+
+.settings-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.settings-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 20px;
+  border-radius: 999px;                          /* = profile-back-btn */
+  border: 1px solid rgba(197, 211, 233, 0.86);   /* = profile-back-btn */
+  background: rgba(255, 255, 255, 0.68);         /* = profile-back-btn */
+  box-shadow: 0 10px 24px rgba(132, 150, 190, 0.10); /* = profile */
+  color: var(--settings-text-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.settings-tab:hover {
+  color: var(--settings-purple);
+  border-color: rgba(163, 143, 220, 0.88);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 14px 28px rgba(132, 150, 190, 0.14);
+}
+
+.settings-tab--active {
+  background: var(--settings-purple);
+  border-color: var(--settings-purple);
+  color: #fff;
+  box-shadow: 0 10px 28px rgba(134, 108, 208, 0.28);
+}
+
+.settings-tab--active:hover {
+  background: #7460bb;
+  border-color: #7460bb;
+  color: #fff;
+}
+
+.settings-divider {
+  height: 1px;
+  background: rgba(195, 206, 225, 0.72);         /* = metric-card separator */
+  margin: 24px 0;
+  border: none;
+}
+
+.default-astrologer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* Card sélectionnable — reprend le style .profile-meta-pill étendu en bloc */
+.default-astrologer-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--settings-card-border);
+  background: var(--settings-card-surface);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.14s ease;
+  text-align: center;
+}
+
+.default-astrologer-option:hover {
+  border-color: rgba(163, 143, 220, 0.64);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 12px 32px rgba(134, 108, 208, 0.10);
+  transform: translateY(-1px);
+}
+
+/* État sélectionné — accentuation violette identique aux cards actives du site */
+.default-astrologer-option--selected {
+  border: 2px solid var(--settings-purple);
+  background: var(--settings-purple-soft);
+  box-shadow: 0 14px 38px rgba(134, 108, 208, 0.16);
+}
+
+/* Avatar circulaire — même style que .profile-hero-avatar en petit */
+.default-astrologer-option__avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 28%;
+  border: 1px solid var(--settings-card-border);
+  box-shadow: 0 6px 18px rgba(111, 135, 166, 0.16);
+  flex-shrink: 0;
+}
+
+.default-astrologer-option__avatar--placeholder {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(241, 237, 255, 0.96) 0%, rgba(221, 212, 250, 0.94) 100%);
+  border: 1px solid var(--settings-purple-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--settings-purple);
+  font-size: 22px;
+}
+
+.default-astrologer-option__name {
+  color: var(--settings-text-heading);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.default-astrologer-option__style {
+  color: var(--settings-text-muted);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+/* Badge "Sélectionné" sur la card active */
+.default-astrologer-option__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--settings-purple);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* Badge "Par défaut" affiché sur les cards dans /astrologers — style = profile-provider-badge */
+.astrologer-default-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid var(--settings-purple-border);
+  color: var(--settings-purple);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* Badge "Par défaut" dans profile-badge-row de AstrologerProfilePage */
+.profile-default-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid var(--settings-purple-border, rgba(134, 108, 208, 0.28));
+  color: var(--settings-purple, #866cd0);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 8px 20px rgba(134, 108, 208, 0.10);
+  white-space: nowrap;
+}
+
+.subscription-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+/* Card plan — même base que .settings-card */
+.subscription-plan-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px 22px;
+  border-radius: 22px;
+  border: 1px solid var(--settings-card-border);
+  background: var(--settings-card-surface);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--settings-card-shadow-soft);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* Plan actif — reprend le traitement bordure accentuée des cards actives dans l'app */
+.subscription-plan-card--active {
+  border: 2px solid var(--settings-gold);
+  background: linear-gradient(180deg, rgba(255, 250, 243, 0.92) 0%, rgba(255, 247, 233, 0.82) 100%);
+  box-shadow:
+    var(--settings-card-shadow),
+    0 0 0 1px rgba(213, 154, 57, 0.16);
+}
+
+.subscription-plan-card__name {
+  color: var(--settings-text-heading);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.subscription-plan-card__limit {
+  color: var(--settings-text-muted);
+  font-size: 13px;
+}
+
+.subscription-plan-card__price {
+  color: var(--settings-text-heading);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* Badge "Actif" — style = .step-number (cercle numéroté du profil), adapté en pill */
+.subscription-plan-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f6d28a 0%, #ebb25a 100%);
+  box-shadow: 0 8px 22px rgba(214, 154, 57, 0.18);
+  color: #79521a;
+  font-size: 12px;
+  font-weight: 700;
+  align-self: flex-start;
+}
+
+/* Section crédits */
+.subscription-credits-section {
+  margin-top: 28px;
+  padding: 24px 26px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(229, 224, 255, 0.70) 0%, rgba(218, 210, 255, 0.55) 100%);
+  border: 1px solid var(--settings-purple-border);
+  box-shadow: var(--settings-card-shadow-soft);
+}
+
+.subscription-credits-section__title {
+  margin: 0 0 8px;
+  color: var(--settings-text-heading);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.subscription-credits-section__desc {
+  margin: 0 0 16px;
+  color: var(--settings-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Grille des stats — reprend .profile-metrics-bar sans les séparateurs verticaux */
+.usage-stats-premium {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0;
+  background: var(--settings-card-surface-strong);
+  border: 1px solid var(--settings-card-border);
+  border-radius: 22px;
+  box-shadow: var(--settings-card-shadow);
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.usage-stat-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 22px 24px;
+}
+
+/* Séparateur vertical interne — = .metric-card + .metric-card::before */
+.usage-stat-item + .usage-stat-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 20px;
+  bottom: 20px;
+  width: 1px;
+  background: rgba(195, 206, 225, 0.9);
+}
+
+.usage-stat-label {
+  color: var(--settings-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.usage-stat-value {
+  color: var(--settings-text-heading);
+  font-size: 24px;                               /* = .metric-value */
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Barre de progression — même variable custom property que l'existant, meilleur style */
+.usage-progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(195, 206, 225, 0.5);
+  overflow: hidden;
+  position: relative;
+}
+
+.usage-progress-fill {
+  height: 100%;
+  width: calc(var(--usage-progress, 0) * 1%);
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--settings-purple) 0%, rgba(134, 108, 208, 0.7) 100%);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Texte de feedback inline (saving / saved / error) */
+.settings-save-feedback {
+  min-height: 20px;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.settings-save-feedback--saving {
+  color: var(--settings-text-muted);
+}
+
+.settings-save-feedback--success {
+  color: #3a8f5e;                              /* vert succès cohérent avec var(--success) */
+}
+
+.settings-save-feedback--error {
+  color: #c0392b;                              /* rouge erreur cohérent avec var(--danger) */
+}
+
+@media (max-width: 640px) {
+  .settings-container {
+    padding: 16px 16px 80px;
+  }
+
+  .default-astrologer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .subscription-plans-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .usage-stats-premium {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .usage-stat-item + .usage-stat-item::before {
+    display: none;
+  }
+
+  .settings-tabs {
+    gap: 8px;
+  }
+
+  .settings-tab {
+    font-size: 13px;
+    padding: 0 14px;
+    min-height: 38px;
+  }
+}

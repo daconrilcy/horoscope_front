@@ -6,9 +6,10 @@ import { AstrologerCard } from "./AstrologerCard"
 type AstrologerGridProps = {
   astrologers: Astrologer[]
   onSelectAstrologer: (astrologer: Astrologer) => void
+  defaultAstrologerId?: string | null
 }
 
-export function AstrologerGrid({ astrologers, onSelectAstrologer }: AstrologerGridProps) {
+export function AstrologerGrid({ astrologers, onSelectAstrologer, defaultAstrologerId }: AstrologerGridProps) {
   const lang = detectLang()
 
   if (astrologers.length === 0) {
@@ -29,6 +30,7 @@ export function AstrologerGrid({ astrologers, onSelectAstrologer }: AstrologerGr
           key={astrologer.id}
           astrologer={astrologer}
           featured={index === 0}
+          isDefault={astrologer.id === defaultAstrologerId}
           onClick={() => onSelectAstrologer(astrologer)}
         />
       ))}
