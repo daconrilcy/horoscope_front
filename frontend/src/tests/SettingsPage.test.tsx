@@ -249,7 +249,7 @@ describe("SettingsPage", () => {
 
       await waitFor(() => {
         expect(screen.getByText("Basic")).toBeInTheDocument()
-        expect(screen.getByText("Actif")).toBeInTheDocument()
+        expect(screen.getByText("Plan actuel")).toBeInTheDocument()
       })
     })
   })

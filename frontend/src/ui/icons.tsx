@@ -12,6 +12,7 @@ export {
   Star,
   Layers,
   User,
+  Users,
 
   // Hero card
   ChevronRight,

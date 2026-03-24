@@ -166,6 +166,11 @@ export const settingsTranslations = {
       title: "Mon abonnement",
       availablePlans: "Plans disponibles",
       active: "Actif",
+      currentPlan: "Plan actuel",
+      selected: "Sélectionné",
+      validatePlan: "Valider ce plan",
+      validating: "Validation en cours...",
+      cancelSoon: "L'annulation vers le plan Gratuit sera bientôt disponible.",
       buyCredits: "Acheter des crédits",
       buyCreditsDesc: "Besoin de plus de messages ? Achetez un pack de crédits supplémentaires.",
       soon: "Bientôt disponible",
@@ -174,6 +179,11 @@ export const settingsTranslations = {
       title: "My subscription",
       availablePlans: "Available plans",
       active: "Active",
+      currentPlan: "Current plan",
+      selected: "Selected",
+      validatePlan: "Validate this plan",
+      validating: "Validating...",
+      cancelSoon: "Cancellation to the Free plan will be available soon.",
       buyCredits: "Buy credits",
       buyCreditsDesc: "Need more messages? Buy an additional credit pack.",
       soon: "Soon available",
@@ -182,6 +192,11 @@ export const settingsTranslations = {
       title: "Mi suscripción",
       availablePlans: "Planes disponibles",
       active: "Activo",
+      currentPlan: "Plan actual",
+      selected: "Seleccionado",
+      validatePlan: "Validar este plan",
+      validating: "Validando...",
+      cancelSoon: "La cancelación al plan Gratuito estará disponible pronto.",
       buyCredits: "Comprar créditos",
       buyCreditsDesc: "¿Necesitas más mensajes? Compra un paquete de créditos adicionales.",
       soon: "Próximamente disponible",
@@ -192,6 +207,11 @@ export const settingsTranslations = {
       title: string
       availablePlans: string
       active: string
+      currentPlan: string
+      selected: string
+      validatePlan: string
+      validating: string
+      cancelSoon: string
       buyCredits: string
       buyCreditsDesc: string
       soon: string

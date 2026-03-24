@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { UserSettings, UserSettingsApiResponse } from "@app-types/user";
+import type { UserSettings, UserSettingsApiResponse } from "@app-types/user";
 import { API_BASE_URL, apiFetch } from "./client";
 import { getAccessTokenSnapshot } from "../utils/authToken";
 

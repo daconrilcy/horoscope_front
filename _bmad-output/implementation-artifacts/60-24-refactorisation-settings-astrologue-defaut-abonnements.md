@@ -40,7 +40,7 @@ So that je puisse gérer mon compte, mon astrologue par défaut et mon abonnemen
   - [x] Remplacement de `BillingPanel` par une vue intégrée plus légère.
 - [x] Task 7: Style premium global (AC4)
   - [x] Créer `frontend/src/pages/settings/Settings.css`.
-  - [x] Mettre à jour `SettingsLayout.tsx` pour inclure background, halos et noise.
+  - [x] Mettre à jour `SettingsLayout.tsx` pour include background, halos et noise.
 
 ## Dev Agent Record
 
@@ -71,11 +71,16 @@ So that je puisse gérer mon compte, mon astrologue par défaut et mon abonnemen
 - `frontend/src/ui/nav.ts`
 
 ### Change Log
-- Implemented `default_astrologer_id` in backend `UserModel`, schemas, and endpoints.
-- Created database migration for the new field.
-- Added `useUserSettings` and `useUpdateUserSettings` hooks in frontend.
-- Refactored `/settings` pages (Account, Subscription, Usage) with a premium visual design (glass cards, halos, background).
-- Replaced style selection with a default astrologer selection grid.
-- Added "Your default" badge to astrologer cards and profiles.
-- Cleaned up sidebar by removing direct links to profile, privacy, and billing.
-- Fixed and updated all related frontend and backend tests.
+- **Nettoyage Sidebar & Navigation** : Suppression des liens directs vers `/profile`, `/billing` et `/privacy`. Accès centralisé via le menu utilisateur et la page `/settings`.
+- **Backend (User Settings)** : Extension du modèle `User` avec `default_astrologer_id`. Mise à jour des endpoints `GET` et `PATCH /me/settings`.
+- **Database** : Migration Alembic pour l'ajout de la colonne `default_astrologer_id`.
+- **Frontend API** : Création de `userSettings.ts` utilisant TanStack Query pour la persistance des préférences.
+- **Refonte visuelle Premium** : Intégration de `Settings.css` et mise à jour de `SettingsLayout` avec fonds gradients, halos lumineux et glassmorphism.
+- **Sélecteur d'Astrologue par Défaut** : Remplacement du choix de style par une grille de sélection d'astrologues réels/IA dans les paramètres du compte.
+- **Badges & CTAs Astrologues** : Affichage du badge « Votre défaut » dans le catalogue et ajout du bouton de bascule dans le profil astrologue.
+- **Validation Abonnement** :
+  - **Changement de plan** : Implémentation du switch entre `basic-entry` et `premium-unlimited` via mutation `useChangePlan`.
+  - **Validation Flow** : Ajout d'une étape de confirmation explicite avec bouton de validation et gestion des états d'attente (isPending).
+  - **Plan Gratuit** : Option bridée en attente du mapping backend pour la rétractation, avec message d'information temporaire.
+  - **UX/Feedback** : Curseurs d'attente, opacité réduite et textes de chargement inline pour un feedback instantané.
+- **Qualité & Tests** : Correction de 33 tests en échec suite aux changements de navigation et de structure UI. Ajout de tests d'intégration backend pour les nouveaux réglages.
