@@ -271,6 +271,11 @@ class Settings:
         self.llm_narrator_enabled = self._parse_bool_env("LLM_NARRATOR_ENABLED", default=False)
         self.daily_engine_mode = self._parse_daily_engine_mode(os.getenv("DAILY_ENGINE_MODE"))
 
+        # Stripe Configuration
+        self.stripe_secret_key = os.getenv("STRIPE_SECRET_KEY", "").strip() or None
+        self.stripe_webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip() or None
+        self.stripe_publishable_key = os.getenv("STRIPE_PUBLISHABLE_KEY", "").strip() or None
+
         # LLM Engine Configuration
         self.openai_model_default = os.getenv("OPENAI_MODEL_DEFAULT", "gpt-4o-mini").strip()
 
