@@ -357,3 +357,114 @@ def test_backfill_non_mapped_columns_absent_from_canonical(db_session: Session):
     quotas = db_session.execute(select(PlanFeatureQuotaModel)).scalars().all()
     assert len(quotas) == 1
     assert quotas[0].quota_key == "messages"
+
+
+def test_backfill_unmatched_manual_plan_kept_and_logged(
+    db_session: Session, caplog: pytest.LogCaptureFixture
+):
+    """Un plan canonique B2C avec source_type='manual' sans match dans billing_plans
+    doit être conservé en l'état et journalisé."""
+    orphan = PlanCatalogModel(
+        plan_code="orphan-manual",
+        plan_name="Orphan Manual",
+        audience=Audience.B2C,
+        source_type="manual",
+    )
+    db_session.add(orphan)
+    db_session.commit()
+
+    report = BackfillReport()
+    with caplog.at_level(logging.INFO):
+        backfill_b2c_plans(db_session, report)
+
+    # Le plan doit toujours exister, inchangé
+    refreshed = db_session.execute(
+        select(PlanCatalogModel).where(PlanCatalogModel.plan_code == "orphan-manual")
+    ).scalar_one_or_none()
+    assert refreshed is not None
+    assert refreshed.source_type == "manual"
+
+    # Un message doit tracer l'absence de correspondance
+    assert any("orphan-manual" in r.message for r in caplog.records)
+    assert len(report.unmatched_manual_plans) == 1
+
+
+def test_backfill_b2b_stale_migrated_binding_on_zero_units_raises_anomaly(
+    db_session: Session, caplog: pytest.LogCaptureFixture
+):
+    """Si included_monthly_units=0 mais qu'un binding migré (source_origin=migrated_from_enterprise_plan)
+    existe déjà, une anomalie doit être enregistrée sans écrasement automatique."""
+    b2b_feature = ensure_b2b_feature(db_session)
+    db_session.flush()
+
+    # Plan canonique B2B avec binding migré existant
+    plan = PlanCatalogModel(
+        plan_code="ent-stale",
+        plan_name="Enterprise Stale",
+        audience=Audience.B2B,
+        source_type=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
+        source_id=1,
+        is_active=True,
+    )
+    db_session.add(plan)
+    db_session.flush()
+
+    stale_binding = PlanFeatureBindingModel(
+        plan_id=plan.id,
+        feature_id=b2b_feature.id,
+        access_mode=AccessMode.QUOTA,
+        source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
+    )
+    db_session.add(stale_binding)
+
+    # Plan legacy correspondant avec 0 unités
+    legacy_plan = EnterpriseBillingPlanModel(
+        code="ent-stale",
+        display_name="Enterprise Stale",
+        monthly_fixed_cents=0,
+        included_monthly_units=0,
+        overage_unit_price_cents=0,
+        currency="EUR",
+        is_active=True,
+    )
+    db_session.add(legacy_plan)
+    db_session.commit()
+
+    report = BackfillReport()
+    with caplog.at_level(logging.WARNING):
+        backfill_b2b_plans(db_session, report)
+
+    # Le binding ne doit pas avoir été modifié
+    db_session.refresh(stale_binding)
+    assert stale_binding.access_mode == AccessMode.QUOTA
+    assert stale_binding.source_origin == SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value
+
+    # Une anomalie doit être enregistrée
+    assert len(report.anomalies) >= 1
+    assert any("ent-stale" in a for a in report.anomalies)
+    assert any("manual-review-required" in r.message for r in caplog.records)
+
+
+def test_backfill_idempotence_tracks_unchanged_counters(db_session: Session):
+    """Lors d'une seconde exécution sans changement, les compteurs unchanged
+    doivent être incrémentés (pas created/updated)."""
+    db_session.add(BillingPlanModel(
+        code="stable", display_name="Stable", monthly_price_cents=0,
+        currency="EUR", daily_message_limit=5, is_active=True,
+    ))
+    db_session.commit()
+
+    # Première exécution
+    backfill_b2c_plans(db_session)
+    db_session.commit()
+
+    # Deuxième exécution
+    report2 = BackfillReport()
+    backfill_b2c_plans(db_session, report2)
+
+    assert report2.plans_created == 0
+    assert report2.plans_unchanged == 1
+    assert report2.bindings_created == 0
+    assert report2.bindings_unchanged == 1
+    assert report2.quotas_created == 0
+    assert report2.quotas_unchanged == 1

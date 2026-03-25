@@ -405,11 +405,12 @@ claude-sonnet-4-6
 - [2026-03-25] Decision: `included_monthly_units = 0` in B2B will be treated as `manual-review-required` as per story truth table, unless specified otherwise.
 - [2026-03-25] Code Review: documentations and tasks updated, script docstrings added, coverage for manual update enhanced.
 - [2026-03-25] Code Review (adversarial): 5 issues fixed — (1) `_upsert_binding` now returns `(binding, was_skipped)` tuple to prevent quota creation on collision-skipped bindings; (2) DISABLED cleanup extended to remove `manual`-origin quotas (collision policy alignment); (3) non-migrated log completed with `settings.b2b_usage_limit_mode`; (4) unused imports (`Any`, `SourceOrigin`) removed; (5) 3 missing AC-12 tests added (B2B zero units, collision without overwrite, non-mapped columns). All 1393 unit tests pass.
+- [2026-03-25] Second review (4 gaps reported by user): (1) `BackfillReport` refactored to `@dataclass` with structured counters: `unchanged`, `deleted`, `manual_review_required`, `anomalies`, `unmatched_manual_plans`; (2) B2C pass now scans remaining `manual` canonical plans and logs those without any legacy match; (3) B2B `included_monthly_units=0` now detects and flags as anomaly any stale `migrated_from_enterprise_plan` binding still present; (4) all raw strings replaced by `SOURCE_BILLING` / `SOURCE_ENTERPRISE` / `SOURCE_MANUAL` constants derived from `SourceOrigin` enum; (5) `run_backfill` report now logs all structured categories including manual reviews, anomalies, unmatched plans. 3 new tests added (unmatched manual plan, stale B2B binding anomaly, unchanged counters idempotence). 11/11 tests pass.
 
 ### Completion Notes List
 
-- Script `backend/scripts/backfill_plan_catalog_from_legacy.py` implemented, reviewed and corrected.
-- Unit tests `backend/app/tests/unit/test_backfill_plan_catalog.py` — 8 tests pass (5 initial + 3 added by code review for full AC-12 coverage).
+- Script `backend/scripts/backfill_plan_catalog_from_legacy.py` implemented, reviewed and corrected twice.
+- Unit tests `backend/app/tests/unit/test_backfill_plan_catalog.py` — 11 tests pass (5 initial + 3 code review round 1 + 3 code review round 2).
 - Documentation `docs/architecture/product-entitlements-model.md` updated with mapping truth table.
 
 ### File List
