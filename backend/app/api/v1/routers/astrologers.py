@@ -109,7 +109,11 @@ class ReviewUpdate(BaseModel):
 
 def _build_user_alias(email: str) -> str:
     local_part = email.split("@", 1)[0].strip()
-    cleaned = "".join(character for character in local_part if character.isalnum() or character in {"-", "_", "."})
+    cleaned = "".join(
+        character
+        for character in local_part
+        if character.isalnum() or character in {"-", "_", "."}
+    )
     return cleaned[:120] or "membre"
 
 

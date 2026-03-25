@@ -275,6 +275,9 @@ class Settings:
         self.stripe_secret_key = os.getenv("STRIPE_SECRET_KEY", "").strip() or None
         self.stripe_webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip() or None
         self.stripe_publishable_key = os.getenv("STRIPE_PUBLISHABLE_KEY", "").strip() or None
+        self.stripe_price_basic = os.getenv("STRIPE_PRICE_BASIC", "").strip() or None
+        self.stripe_price_premium = os.getenv("STRIPE_PRICE_PREMIUM", "").strip() or None
+        self.stripe_api_version = os.getenv("STRIPE_API_VERSION", "2024-12-18.acacia").strip()
 
         # LLM Engine Configuration
         self.openai_model_default = os.getenv("OPENAI_MODEL_DEFAULT", "gpt-4o-mini").strip()

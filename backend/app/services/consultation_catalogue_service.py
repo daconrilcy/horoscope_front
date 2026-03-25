@@ -39,4 +39,6 @@ class ConsultationCatalogueService:
         Récupère un template spécifique par sa clé, avec support legacy.
         """
         canonical_key = ConsultationCatalogueService.map_legacy_key(key)
-        return db.query(ConsultationTemplateModel).filter_by(key=canonical_key, is_active=True).first()
+        return db.query(ConsultationTemplateModel).filter_by(
+            key=canonical_key, is_active=True
+        ).first()

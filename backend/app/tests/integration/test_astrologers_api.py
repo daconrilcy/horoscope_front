@@ -203,7 +203,9 @@ def test_review_rating_and_comment_are_persisted_with_user_alias() -> None:
     assert rate_response.status_code == 200
 
     with SessionLocal() as db:
-        stored_review = db.query(AstrologerReviewModel).filter_by(persona_id=persona_id, user_id=user_id).one()
+        stored_review = db.query(AstrologerReviewModel).filter_by(
+            persona_id=persona_id, user_id=user_id
+        ).one()
         assert stored_review.user_alias == "marie.lou"
         assert stored_review.comment is None
 

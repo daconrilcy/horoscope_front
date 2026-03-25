@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.infra.db.base import Base
 from app.infra.db.session import SessionLocal, engine
+from app.services import stripe_billing_profile_service as svc
 from app.services.auth_service import AuthService
 from app.services.stripe_billing_profile_service import (
     STRIPE_PRICE_ENTITLEMENT_MAP,
@@ -169,3 +170,24 @@ def test_transition_entitlement_plan(db: Session, user_id: int):
         }
         StripeBillingProfileService.update_from_event_payload(db, user_id, event_canceled)
         assert StripeBillingProfileService.get_entitlement_plan(db, user_id) == "free"
+
+
+
+
+def test_price_entitlement_map_populated_from_settings():
+    """Vérifie que la map est bien construite à partir des settings."""
+    with patch.object(svc, "settings") as mock_settings:
+        mock_settings.stripe_price_basic = "price_basic_test"
+        mock_settings.stripe_price_premium = "price_premium_test"
+        result = svc._build_price_entitlement_map()
+    assert result == {"price_basic_test": "basic", "price_premium_test": "premium"}
+
+
+def test_price_entitlement_map_empty_when_no_prices():
+    """Vérifie que la map est vide si aucun prix n'est configuré."""
+    with patch.object(svc, "settings") as mock_settings:
+        mock_settings.stripe_price_basic = None
+        mock_settings.stripe_price_premium = None
+        result = svc._build_price_entitlement_map()
+    assert result == {}
+

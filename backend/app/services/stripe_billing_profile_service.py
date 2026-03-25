@@ -7,16 +7,24 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 
 logger = logging.getLogger(__name__)
 
+
+def _build_price_entitlement_map() -> dict[str, str]:
+    """Construit le mapping Price ID -> Plan applicatif depuis la config."""
+    result: dict[str, str] = {}
+    if settings.stripe_price_basic:
+        result[settings.stripe_price_basic] = "basic"
+    if settings.stripe_price_premium:
+        result[settings.stripe_price_premium] = "premium"
+    return result
+
+
 # Mapping centralisé des Price IDs Stripe vers les plans applicatifs.
-# Sera complété en story 61-2 avec les IDs réels.
-STRIPE_PRICE_ENTITLEMENT_MAP: dict[str, str] = {
-    # "price_1Xxx...": "basic",
-    # "price_1Yyy...": "premium",
-}
+STRIPE_PRICE_ENTITLEMENT_MAP: dict[str, str] = _build_price_entitlement_map()
 
 
 def derive_entitlement_plan(

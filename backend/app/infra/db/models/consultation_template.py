@@ -46,7 +46,8 @@ class ConsultationTemplateModel(Base):
     prompt_content: Mapped[str] = mapped_column(Text)
     
     # Configuration additionnelle (tags, required_data pour le wizard, flags, etc.)
-    # Format: {"tags": ["Introspection"], "required_data": ["birth_profile"], "fallback_allowed": true}
+    # Format: {"tags": ["Introspection"], "required_data": ["birth_profile"],
+    #          "fallback_allowed": true}
     metadata_config: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)

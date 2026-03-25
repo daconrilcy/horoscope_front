@@ -52,7 +52,9 @@ class AstrologerProfileModel(Base):
     last_name: Mapped[str] = mapped_column(String(100))
     display_name: Mapped[str] = mapped_column(String(200))
     gender: Mapped[AstrologerGender] = mapped_column(String(32))
-    provider_type: Mapped[AstrologerProviderType] = mapped_column(String(16), default=AstrologerProviderType.IA.value)
+    provider_type: Mapped[AstrologerProviderType] = mapped_column(
+        String(16), default=AstrologerProviderType.IA.value
+    )
     age: Mapped[int | None] = mapped_column(Integer, nullable=True)
     photo_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     
