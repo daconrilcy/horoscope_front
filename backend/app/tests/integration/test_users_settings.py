@@ -1,12 +1,12 @@
 from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, delete
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
-from app.infra.db.models.user import UserModel
 from app.main import app
 
 client = TestClient(app)

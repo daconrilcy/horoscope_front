@@ -186,6 +186,10 @@ export function useBillingQuota() {
   return useQuery({
     queryKey: ["billing-quota"],
     queryFn: fetchQuotaStatus,
+    retry: (failureCount, error) => {
+      if (error instanceof BillingApiError && error.status === 403) return false
+      return failureCount < 1
+    },
   })
 }
 

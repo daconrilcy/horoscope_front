@@ -4,7 +4,6 @@ from datetime import date
 import pytest
 from sqlalchemy import select
 
-from app.core.config import settings
 from app.infra.db.base import Base
 from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel

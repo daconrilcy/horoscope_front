@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
+
 from app.infra.db.models.consultation_template import ConsultationTemplateModel
+
 
 class ConsultationCatalogueService:
     """

@@ -5,7 +5,12 @@ from sqlalchemy import delete
 
 from app.core.security import create_access_token, hash_password
 from app.infra.db.base import Base
-from app.infra.db.models import AstrologerProfileModel, AstrologerReviewModel, LlmPersonaModel, UserModel
+from app.infra.db.models import (
+    AstrologerProfileModel,
+    AstrologerReviewModel,
+    LlmPersonaModel,
+    UserModel,
+)
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 

@@ -1,8 +1,11 @@
 import uuid
 from datetime import datetime, timezone
+
 from sqlalchemy.orm import Session
-from app.infra.db.session import SessionLocal
+
 from app.infra.db.models.consultation_template import ConsultationTemplateModel
+from app.infra.db.session import SessionLocal
+
 
 def seed_consultation_templates():
     db: Session = SessionLocal()
