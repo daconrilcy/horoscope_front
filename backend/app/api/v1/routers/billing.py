@@ -1003,46 +1003,36 @@ async def stripe_webhook(
         )
 
     try:
-        event_dict = StripeWebhookService.verify_and_parse(
+        event = StripeWebhookService.verify_and_parse(
             payload_bytes, sig_header, settings.stripe_webhook_secret
         )
 
-        # Audit de l'événement reçu et validé
-        _record_audit_event(
-            db,
-            request_id=request_id,
-            actor_user_id=None,  # Webhook anonyme (Stripe)
-            actor_role="system",
-            action="stripe_webhook_event",
-            target_type="stripe_event",
-            target_id=event_dict.get("id"),
-            status="success",
-            details={
-                "type": event_dict.get("type"),
-                "event_id": event_dict.get("id"),
-            },
-        )
-
-        # Traitement de l'événement
-        status = StripeWebhookService.handle_event(db, event_dict)
-
-        _record_audit_event(
-            db,
-            request_id=request_id,
-            actor_user_id=None,
-            actor_role="system",
-            action="stripe_webhook_processed",
-            target_type="stripe_event",
-            target_id=event_dict.get("id"),
-            status="success",
-            details={
-                "type": event_dict.get("type"),
-                "event_id": event_dict.get("id"),
-                "outcome": status,
-            },
-        )
-
+        # 1. Traitement métier (prioritaire)
+        status = StripeWebhookService.handle_event(db, event)
         db.commit()
+
+        # 2. Audit (best-effort, ne doit pas bloquer le retour 200 à Stripe)
+        try:
+            _record_audit_event(
+                db,
+                request_id=request_id,
+                actor_user_id=None,
+                actor_role="system",
+                action="stripe_webhook_processed",
+                target_type="stripe_event",
+                target_id=event.id,
+                status="success",
+                details={
+                    "type": event.type,
+                    "event_id": event.id,
+                    "outcome": status,
+                },
+            )
+            db.commit()
+        except Exception:
+            logger.exception("stripe_webhook: best-effort audit failed (non-blocking)")
+            db.rollback()
+
         return {"status": status}
 
     except StripeWebhookServiceError as error:

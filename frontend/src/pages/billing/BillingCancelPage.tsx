@@ -20,14 +20,14 @@ export const BillingCancelPage: React.FC = () => {
         <div className="billing-return-actions">
           <Button 
             variant="primary" 
-            onClick={() => navigate("/settings?tab=subscription")}
+            onClick={() => navigate("/billing")}
             leftIcon={<RefreshCw size={18} />}
           >
             {t.tryAgain}
           </Button>
           <Button 
             variant="secondary" 
-            onClick={() => navigate("/settings")}
+            onClick={() => navigate("/settings?tab=subscription")}
             leftIcon={<Settings size={18} />}
           >
             {t.backToSettings}

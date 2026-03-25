@@ -102,6 +102,7 @@ class TestStripeWebhookService:
         mock_event = MagicMock()
         mock_event.id = "evt_000"
         mock_event.type = "unknown.event"
+        mock_event.data.object = MagicMock()
 
         result = StripeWebhookService.handle_event(db, mock_event)
         assert result == "event_ignored"

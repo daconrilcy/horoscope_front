@@ -36,24 +36,24 @@ const billingData = {
   success: {
     fr: {
       title: "Paiement réussi !",
-      message: "Merci pour votre confiance. Votre abonnement a été mis à jour avec succès. Vous pouvez maintenant profiter de toutes les fonctionnalités premium.",
-      backToDashboard: "Aller au tableau de bord",
+      message: "Votre paiement est en cours de traitement. Votre abonnement sera activé automatiquement dans quelques instants. Vous pouvez retourner au tableau de bord.",
+      backToDashboard: "Retour au tableau de bord",
       viewSubscription: "Voir mon abonnement",
-      waitingForWebhook: "Finalisation de votre commande...",
+      waitingForWebhook: "Paiement en cours de confirmation...",
     },
     en: {
       title: "Payment Successful!",
-      message: "Thank you for your trust. Your subscription has been successfully updated. You can now enjoy all premium features.",
-      backToDashboard: "Go to Dashboard",
+      message: "Your payment is being processed. Your subscription will be activated automatically in a few moments. You can return to the dashboard.",
+      backToDashboard: "Back to Dashboard",
       viewSubscription: "View my subscription",
-      waitingForWebhook: "Finalizing your order...",
+      waitingForWebhook: "Payment confirmation in progress...",
     },
     es: {
       title: "¡Pago exitoso!",
-      message: "Gracias por su confianza. Su suscripción ha sido actualizada con éxito. Ahora peut disfrutar de todas las funciones premium.",
-      backToDashboard: "Ir al panel de control",
+      message: "Su pago está siendo procesado. Su suscripción se activará automáticamente en unos momentos. Puede volver al panel de control.",
+      backToDashboard: "Volver al panel",
       viewSubscription: "Ver mi suscripción",
-      waitingForWebhook: "Finalizando su pedido...",
+      waitingForWebhook: "Confirmación de pago en curso...",
     },
   } as Record<
     AstrologyLang,
@@ -69,19 +69,19 @@ const billingData = {
     fr: {
       title: "Paiement annulé",
       message: "Le processus de paiement a été interrompu. Aucun montant n'a été débité de votre compte.",
-      backToSettings: "Retour aux paramètres",
+      backToSettings: "Retour aux abonnements",
       tryAgain: "Réessayer",
     },
     en: {
       title: "Payment Cancelled",
       message: "The payment process was interrupted. No amount has been debited from your account.",
-      backToSettings: "Back to Settings",
+      backToSettings: "Back to subscriptions",
       tryAgain: "Try Again",
     },
     es: {
       title: "Pago cancelado",
       message: "El proceso de pago fue interrumpido. No se ha debitado ningún importe de su cuenta.",
-      backToSettings: "Volver a ajustes",
+      backToSettings: "Volver a suscripciones",
       tryAgain: "Reintentar",
     },
   } as Record<

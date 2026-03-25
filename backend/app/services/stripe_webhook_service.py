@@ -27,9 +27,9 @@ class StripeWebhookService:
     @staticmethod
     def verify_and_parse(
         payload_bytes: bytes, sig_header: str, webhook_secret: str
-    ) -> dict[str, Any]:
+    ) -> stripe.Event:
         """
-        Vérifie la signature de l'événement et retourne le payload sous forme de dictionnaire.
+        Vérifie la signature de l'événement et retourne l'objet stripe.Event.
         """
         try:
             event = stripe.Webhook.construct_event(
@@ -57,34 +57,18 @@ class StripeWebhookService:
         """
         event_type = event.type
         event_id = event.id
+        
+        # Extraction du customer_id pour les logs structurés
+        customer_id = StripeWebhookService._extract_customer_id(event)
 
         logger.info(
-            "stripe_webhook: received event_id=%s type=%s", event_id, event_type
+            "stripe_webhook: received event_id=%s type=%s customer_id=%s", 
+            event_id, event_type, customer_id
         )
 
         user_id = StripeWebhookService._resolve_user_id(db, event)
 
-        if user_id is None:
-            if event_type in (
-                "checkout.session.completed",
-                "customer.subscription.created",
-                "customer.subscription.updated",
-                "customer.subscription.deleted",
-                "customer.updated",
-            ):
-                logger.warning(
-                    "stripe_webhook: user not resolved for event_id=%s type=%s",
-                    event_id,
-                    event_type,
-                )
-                return "user_not_resolved"
-            
-            # Pour les autres événements, c'est normal de ne pas résoudre l'utilisateur
-            # car nous ne les traitons pas.
-            logger.info("stripe_webhook: event_id=%s type=%s ignored", event_id, event_type)
-            return "event_ignored"
-
-        # Dispatching vers la couche service
+        # Dispatching vers la couche service si l'événement est supporté
         if event_type in (
             "checkout.session.completed",
             "customer.subscription.created",
@@ -92,18 +76,40 @@ class StripeWebhookService:
             "customer.subscription.deleted",
             "customer.updated",
         ):
-            # On repasse le dict à l'ancien service car il attend probablement un dict
+            if user_id is None:
+                logger.warning(
+                    "stripe_webhook: user not resolved for event_id=%s type=%s customer_id=%s outcome=user_not_resolved",
+                    event_id,
+                    event_type,
+                    customer_id,
+                )
+                return "user_not_resolved"
+
             StripeBillingProfileService.update_from_event_payload(db, user_id, event.to_dict())
             logger.info(
-                "stripe_webhook: event_id=%s type=%s processed for user_id=%s",
+                "stripe_webhook: processed event_id=%s type=%s customer_id=%s user_id=%s outcome=processed",
                 event_id,
                 event_type,
+                customer_id,
                 user_id,
             )
             return "processed"
 
-        logger.info("stripe_webhook: event_id=%s type=%s ignored", event_id, event_type)
+        logger.info(
+            "stripe_webhook: ignored event_id=%s type=%s customer_id=%s outcome=event_ignored", 
+            event_id, event_type, customer_id
+        )
         return "event_ignored"
+
+    @staticmethod
+    def _extract_customer_id(event: stripe.Event) -> str | None:
+        """
+        Extrait l'ID client Stripe de l'événement si présent.
+        """
+        data_obj = event.data.object
+        if event.type == "customer.updated":
+            return getattr(data_obj, "id", None)
+        return getattr(data_obj, "customer", None)
 
     @staticmethod
     def _resolve_user_id(db: Session, event: stripe.Event) -> int | None:
@@ -114,7 +120,6 @@ class StripeWebhookService:
         data_obj = event.data.object
 
         if event_type == "checkout.session.completed":
-            # Pour checkout.session, l'objet est un stripe.CheckoutSession
             client_ref = getattr(data_obj, "client_reference_id", None)
             if client_ref:
                 try:
