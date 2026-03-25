@@ -132,7 +132,8 @@ ASTROLOGERS = [
             "astrales en images, en ressentis et en dynamiques de transformation.\n\n"
             "Son approche invite à prendre du recul, à se reconnecter à ses propres cycles "
             "et à donner du sens aux périodes de transition. Elle propose une lecture plus "
-            "sensible et contemplative, ancrée dans une compréhension globale de l’expérience intérieure."
+            "sensible et contemplative, ancrée dans une compréhension globale de "
+            "l’expérience intérieure."
         ),
         "tone": "mystical",
         "verbosity": "long",
@@ -195,7 +196,8 @@ ASTROLOGERS = [
             "aspects, dominantes, interactions entre planètes et maisons.\n\n"
             "Son approche distingue clairement les faits observables, les interprétations "
             "possibles et leurs limites. Il met en évidence les relations de cause à effet "
-            "et les implications concrètes, afin de fournir une analyse fiable, lisible et exploitable."
+            "et les implications concrètes, afin de fournir une analyse fiable, lisible "
+            "et exploitable."
         ),
         "tone": "rational",
         "verbosity": "short",
@@ -386,7 +388,8 @@ ASTROLOGERS = [
             "personnelle, avec une approche lente et réfléchie.\n\n"
             "Son objectif est d’aider à mettre en lumière des mécanismes souvent invisibles, "
             "sans jamais enfermer dans une interprétation figée. Il accompagne les processus "
-            "de changement en respectant leur rythme, en favorisant l’intégration plutôt que la réaction."
+            "de changement en respectant leur rythme, en favorisant l’intégration plutôt "
+            "que la réaction."
         ),
         "tone": "warm",
         "verbosity": "long",

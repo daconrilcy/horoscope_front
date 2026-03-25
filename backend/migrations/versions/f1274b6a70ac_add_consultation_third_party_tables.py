@@ -40,9 +40,21 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('consultation_third_party_profiles', schema=None) as batch_op:
-        batch_op.create_index(batch_op.f('ix_consultation_third_party_profiles_birth_place_resolved_id'), ['birth_place_resolved_id'], unique=False)
-        batch_op.create_index(batch_op.f('ix_consultation_third_party_profiles_external_id'), ['external_id'], unique=True)
-        batch_op.create_index(batch_op.f('ix_consultation_third_party_profiles_user_id'), ['user_id'], unique=False)
+        batch_op.create_index(
+            batch_op.f('ix_consultation_third_party_profiles_birth_place_resolved_id'),
+            ['birth_place_resolved_id'],
+            unique=False
+        )
+        batch_op.create_index(
+            batch_op.f('ix_consultation_third_party_profiles_external_id'),
+            ['external_id'],
+            unique=True
+        )
+        batch_op.create_index(
+            batch_op.f('ix_consultation_third_party_profiles_user_id'),
+            ['user_id'],
+            unique=False
+        )
 
     op.create_table('consultation_third_party_usages',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
@@ -55,8 +67,16 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('consultation_third_party_usages', schema=None) as batch_op:
-        batch_op.create_index(batch_op.f('ix_consultation_third_party_usages_consultation_id'), ['consultation_id'], unique=False)
-        batch_op.create_index(batch_op.f('ix_consultation_third_party_usages_third_party_profile_id'), ['third_party_profile_id'], unique=False)
+        batch_op.create_index(
+            batch_op.f('ix_consultation_third_party_usages_consultation_id'),
+            ['consultation_id'],
+            unique=False
+        )
+        batch_op.create_index(
+            batch_op.f('ix_consultation_third_party_usages_third_party_profile_id'),
+            ['third_party_profile_id'],
+            unique=False
+        )
 
     # ### end Alembic commands ###
 

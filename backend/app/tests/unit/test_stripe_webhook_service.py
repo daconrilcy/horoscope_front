@@ -8,6 +8,12 @@ from sqlalchemy.orm import Session
 
 from app.services.stripe_webhook_service import StripeWebhookService, StripeWebhookServiceError
 
+STRIPE_BILLING_SERVICE_PATH = (
+    "app.services.stripe_billing_profile_service.StripeBillingProfileService"
+)
+UPDATE_EVENT_PAYLOAD_PATH = f"{STRIPE_BILLING_SERVICE_PATH}.update_from_event_payload"
+GET_BY_CUSTOMER_ID_PATH = f"{STRIPE_BILLING_SERVICE_PATH}.get_by_stripe_customer_id"
+
 
 @pytest.fixture
 def db():
@@ -54,7 +60,7 @@ class TestStripeWebhookService:
         mock_event.data.object.client_reference_id = "42"
         mock_event.to_dict.return_value = {"id": "evt_123"}
 
-        with patch("app.services.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload") as mock_update:
+        with patch(UPDATE_EVENT_PAYLOAD_PATH) as mock_update:
             result = StripeWebhookService.handle_event(db, mock_event)
 
             assert result == "processed"
@@ -68,12 +74,12 @@ class TestStripeWebhookService:
         mock_event.data.object.customer = "cus_123"
         mock_event.to_dict.return_value = {"id": "evt_456"}
 
-        with patch("app.services.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id") as mock_get_profile:
+        with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
             mock_profile = MagicMock()
             mock_profile.user_id = 42
             mock_get_profile.return_value = mock_profile
 
-            with patch("app.services.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload") as mock_update:
+            with patch(UPDATE_EVENT_PAYLOAD_PATH) as mock_update:
                 result = StripeWebhookService.handle_event(db, mock_event)
 
                 assert result == "processed"
@@ -87,16 +93,68 @@ class TestStripeWebhookService:
         mock_event.data.object.id = "cus_123"
         mock_event.to_dict.return_value = {"id": "evt_789"}
 
-        with patch("app.services.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id") as mock_get_profile:
+        with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
             mock_profile = MagicMock()
             mock_profile.user_id = 42
             mock_get_profile.return_value = mock_profile
 
-            with patch("app.services.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload") as mock_update:
+            with patch(UPDATE_EVENT_PAYLOAD_PATH) as mock_update:
                 result = StripeWebhookService.handle_event(db, mock_event)
 
                 assert result == "processed"
                 mock_update.assert_called_once_with(db, 42, mock_event.to_dict())
+
+    def test_handle_invoice_payment_succeeded(self, db):
+        mock_event = MagicMock()
+        mock_event.id = "evt_inv_suc"
+        mock_event.type = "invoice.payment_succeeded"
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.customer = "cus_123"
+        mock_event.to_dict.return_value = {"id": "evt_inv_suc"}
+
+        with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
+            mock_profile = MagicMock()
+            mock_profile.user_id = 42
+            mock_get_profile.return_value = mock_profile
+
+            with patch(UPDATE_EVENT_PAYLOAD_PATH) as mock_update:
+                result = StripeWebhookService.handle_event(db, mock_event)
+
+                assert result == "processed"
+                mock_update.assert_called_once_with(db, 42, mock_event.to_dict())
+
+    def test_handle_invoice_payment_failed(self, db):
+        mock_event = MagicMock()
+        mock_event.id = "evt_inv_fail"
+        mock_event.type = "invoice.payment_failed"
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.customer = "cus_123"
+        mock_event.to_dict.return_value = {"id": "evt_inv_fail"}
+
+        with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
+            mock_profile = MagicMock()
+            mock_profile.user_id = 42
+            mock_get_profile.return_value = mock_profile
+
+            with patch(UPDATE_EVENT_PAYLOAD_PATH) as mock_update:
+                result = StripeWebhookService.handle_event(db, mock_event)
+
+                assert result == "processed"
+                mock_update.assert_called_once_with(db, 42, mock_event.to_dict())
+
+    def test_handle_invoice_user_not_resolved(self, db):
+        mock_event = MagicMock()
+        mock_event.id = "evt_inv_unkn"
+        mock_event.type = "invoice.payment_succeeded"
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.customer = "cus_unknown"
+
+        with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
+            mock_get_profile.return_value = None
+
+            result = StripeWebhookService.handle_event(db, mock_event)
+
+            assert result == "user_not_resolved"
 
     def test_handle_unknown_event(self, db):
         mock_event = MagicMock()
@@ -114,7 +172,7 @@ class TestStripeWebhookService:
         mock_event.data.object = MagicMock()
         mock_event.data.object.customer = "cus_unknown"
 
-        with patch("app.services.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id") as mock_get_profile:
+        with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
             mock_get_profile.return_value = None
 
             result = StripeWebhookService.handle_event(db, mock_event)

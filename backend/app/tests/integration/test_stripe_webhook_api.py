@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import time
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -50,22 +50,32 @@ async def test_webhook_no_secret_configured():
 
 @pytest.mark.asyncio
 async def test_webhook_success_flow():
-    payload = b'{"id": "evt_123", "type": "checkout.session.completed", "data": {"object": {"client_reference_id": "42"}}}'
+    payload = (
+        b'{"id": "evt_123", "type": "checkout.session.completed", '
+        b'"data": {"object": {"client_reference_id": "42"}}}'
+    )
     secret = "whsec_test"
     headers = {"stripe-signature": _sign_payload(payload, secret)}
-    
+
     with patch("app.core.config.settings.stripe_webhook_secret", secret):
         # On mock l'événement retourné par verify_and_parse
         mock_event = MagicMock()
         mock_event.id = "evt_123"
         mock_event.type = "checkout.session.completed"
-        
-        with patch("app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse", return_value=mock_event):
-            with patch("app.services.stripe_webhook_service.StripeWebhookService.handle_event") as mock_handle:
+
+        with patch(
+            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            return_value=mock_event,
+        ):
+            with patch(
+                "app.services.stripe_webhook_service.StripeWebhookService.handle_event"
+            ) as mock_handle:
                 mock_handle.return_value = "processed"
-                
-                response = client.post("/v1/billing/stripe-webhook", content=payload, headers=headers)
-                
+
+                response = client.post(
+                    "/v1/billing/stripe-webhook", content=payload, headers=headers
+                )
+
                 assert response.status_code == 200
                 assert response.json() == {"status": "processed"}
                 mock_handle.assert_called_once()
@@ -77,17 +87,24 @@ async def test_webhook_app_error_returns_200():
     payload = b'{"id": "evt_123", "type": "checkout.session.completed"}'
     secret = "whsec_test"
     headers = {"stripe-signature": _sign_payload(payload, secret)}
-    
+
     with patch("app.core.config.settings.stripe_webhook_secret", secret):
         mock_event = MagicMock()
         mock_event.id = "evt_123"
         mock_event.type = "checkout.session.completed"
-        
-        with patch("app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse", return_value=mock_event):
-            with patch("app.services.stripe_webhook_service.StripeWebhookService.handle_event") as mock_handle:
+
+        with patch(
+            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            return_value=mock_event,
+        ):
+            with patch(
+                "app.services.stripe_webhook_service.StripeWebhookService.handle_event"
+            ) as mock_handle:
                 mock_handle.side_effect = Exception("Internal error")
-                
-                response = client.post("/v1/billing/stripe-webhook", content=payload, headers=headers)
-                
+
+                response = client.post(
+                    "/v1/billing/stripe-webhook", content=payload, headers=headers
+                )
+
                 assert response.status_code == 200
                 assert response.json() == {"status": "failed_internal"}

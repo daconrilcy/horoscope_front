@@ -34,7 +34,11 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('consultation_templates', schema=None) as batch_op:
-        batch_op.create_index(batch_op.f('ix_consultation_templates_is_active'), ['is_active'], unique=False)
+        batch_op.create_index(
+            batch_op.f('ix_consultation_templates_is_active'),
+            ['is_active'],
+            unique=False
+        )
         batch_op.create_index(batch_op.f('ix_consultation_templates_key'), ['key'], unique=True)
 
     # ### end Alembic commands ###

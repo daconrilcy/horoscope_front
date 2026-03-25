@@ -75,10 +75,13 @@ class StripeWebhookService:
             "customer.subscription.updated",
             "customer.subscription.deleted",
             "customer.updated",
+            "invoice.payment_succeeded",
+            "invoice.payment_failed",
         ):
             if user_id is None:
                 logger.warning(
-                    "stripe_webhook: user not resolved for event_id=%s type=%s customer_id=%s outcome=user_not_resolved",
+                    "stripe_webhook: user not resolved for event_id=%s type=%s "
+                    "customer_id=%s outcome=user_not_resolved",
                     event_id,
                     event_type,
                     customer_id,
@@ -87,7 +90,8 @@ class StripeWebhookService:
 
             StripeBillingProfileService.update_from_event_payload(db, user_id, event.to_dict())
             logger.info(
-                "stripe_webhook: processed event_id=%s type=%s customer_id=%s user_id=%s outcome=processed",
+                "stripe_webhook: processed event_id=%s type=%s customer_id=%s "
+                "user_id=%s outcome=processed",
                 event_id,
                 event_type,
                 customer_id,
@@ -135,6 +139,8 @@ class StripeWebhookService:
             "customer.subscription.created",
             "customer.subscription.updated",
             "customer.subscription.deleted",
+            "invoice.payment_succeeded",
+            "invoice.payment_failed",
         ):
             customer_id = getattr(data_obj, "customer", None)
             if customer_id:
