@@ -278,6 +278,14 @@ class Settings:
         self.stripe_price_basic = os.getenv("STRIPE_PRICE_BASIC", "").strip() or None
         self.stripe_price_premium = os.getenv("STRIPE_PRICE_PREMIUM", "").strip() or None
         self.stripe_api_version = os.getenv("STRIPE_API_VERSION", "2024-12-18.acacia").strip()
+        self.stripe_checkout_success_url = os.getenv(
+            "STRIPE_CHECKOUT_SUCCESS_URL",
+            "http://localhost:5173/billing/success?session_id={CHECKOUT_SESSION_ID}",
+        ).strip()
+        self.stripe_checkout_cancel_url = os.getenv(
+            "STRIPE_CHECKOUT_CANCEL_URL",
+            "http://localhost:5173/billing/cancel",
+        ).strip()
 
         # LLM Engine Configuration
         self.openai_model_default = os.getenv("OPENAI_MODEL_DEFAULT", "gpt-4o-mini").strip()

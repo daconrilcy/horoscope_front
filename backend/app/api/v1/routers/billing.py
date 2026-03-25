@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, Body, Depends, Request
@@ -28,6 +28,10 @@ from app.services.pricing_experiment_service import (
     PricingExperimentServiceError,
 )
 from app.services.quota_service import QuotaService, QuotaServiceError, QuotaStatusData
+from app.services.stripe_checkout_service import (
+    StripeCheckoutService,
+    StripeCheckoutServiceError,
+)
 
 
 class ResponseMeta(BaseModel):
@@ -74,6 +78,19 @@ class CheckoutRequest(BaseModel):
 class PlanChangeRequest(BaseModel):
     target_plan_code: str
     idempotency_key: str | None = None
+
+
+class StripeCheckoutRequest(BaseModel):
+    plan: Literal["basic", "premium"]
+
+
+class StripeCheckoutResponse(BaseModel):
+    checkout_url: str
+
+
+class StripeCheckoutApiResponse(BaseModel):
+    data: StripeCheckoutResponse
+    meta: ResponseMeta
 
 
 router = APIRouter(prefix="/v1/billing", tags=["billing"])
@@ -818,6 +835,129 @@ def change_plan(
         status_code = (
             409 if error.code in {"duplicate_plan_change", "plan_change_not_allowed"} else 422
         )
+        return _error_response(
+            status_code=status_code,
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
+        )
+    except AuditWriteError:
+        db.rollback()
+        return _audit_unavailable_response(request_id=request_id)
+
+
+@router.post(
+    "/stripe-checkout-session",
+    response_model=StripeCheckoutApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        503: {"model": ErrorEnvelope},
+        422: {"model": ErrorEnvelope},
+        502: {"model": ErrorEnvelope},
+    },
+)
+def create_stripe_checkout_session(
+    request: Request,
+    payload: Any = Body(...),
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    role_error = _ensure_user_role(current_user, request_id)
+    if role_error is not None:
+        return role_error
+
+    try:
+        parsed = StripeCheckoutRequest.model_validate(payload)
+        rate_error = _enforce_billing_limits(
+            user_id=current_user.id,
+            plan_code=parsed.plan,
+            operation="stripe_checkout",
+            request_id=request_id,
+        )
+        if rate_error is not None:
+            return rate_error
+
+        from app.core.config import settings
+
+        checkout_url = StripeCheckoutService.create_checkout_session(
+            db,
+            user_id=current_user.id,
+            user_email=current_user.email,
+            plan=parsed.plan,
+            success_url=settings.stripe_checkout_success_url,
+            cancel_url=settings.stripe_checkout_cancel_url,
+        )
+
+        _record_audit_event(
+            db,
+            request_id=request_id,
+            actor_user_id=current_user.id,
+            actor_role=current_user.role,
+            action="stripe_checkout_session_created",
+            target_type="user",
+            target_id=str(current_user.id),
+            status="success",
+            details={"plan": parsed.plan},
+        )
+        db.commit()
+        return {
+            "data": {"checkout_url": checkout_url},
+            "meta": {"request_id": request_id},
+        }
+
+    except ValidationError as error:
+        try:
+            _record_audit_event(
+                db,
+                request_id=request_id,
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="stripe_checkout_session_failed",
+                target_type="user",
+                target_id=str(current_user.id),
+                status="failed",
+                details={"error_code": "invalid_checkout_request"},
+            )
+        except AuditWriteError:
+            db.rollback()
+            return _audit_unavailable_response(request_id=request_id)
+        db.commit()
+        return _error_response(
+            status_code=422,
+            request_id=request_id,
+            code="invalid_checkout_request",
+            message="request validation failed",
+            details={"errors": error.errors()},
+        )
+    except StripeCheckoutServiceError as error:
+        db.rollback()
+        status_code = 422
+        if error.code == "stripe_unavailable":
+            status_code = 503
+        elif error.code == "stripe_api_error":
+            status_code = 502
+        elif error.code in {"plan_price_not_configured", "invalid_checkout_request"}:
+            status_code = 422
+
+        try:
+            _record_audit_event(
+                db,
+                request_id=request_id,
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="stripe_checkout_session_failed",
+                target_type="user",
+                target_id=str(current_user.id),
+                status="failed",
+                details={"error_code": error.code},
+            )
+        except AuditWriteError:
+            pass # Already in error state
+
+        db.commit()
         return _error_response(
             status_code=status_code,
             request_id=request_id,
