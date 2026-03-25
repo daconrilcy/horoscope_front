@@ -44,6 +44,13 @@ from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.pdf_template import PdfTemplateModel
 from app.infra.db.models.persona_config import PersonaConfigModel
+from app.infra.db.models.product_entitlements import (
+    FeatureCatalogModel,
+    FeatureUsageCounterModel,
+    PlanCatalogModel,
+    PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
+)
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
     AstroPointModel,
@@ -120,6 +127,11 @@ __all__ = [
     "LlmUseCaseConfigModel",
     "PdfTemplateModel",
     "PersonaConfigModel",
+    "PlanCatalogModel",
+    "FeatureCatalogModel",
+    "PlanFeatureBindingModel",
+    "PlanFeatureQuotaModel",
+    "FeatureUsageCounterModel",
     "PredictionCategoryModel",
     "PlanetProfileModel",
     "HouseProfileModel",
