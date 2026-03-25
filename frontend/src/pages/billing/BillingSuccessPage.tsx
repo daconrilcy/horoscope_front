@@ -18,7 +18,7 @@ export const BillingSuccessPage: React.FC = () => {
       <div className="billing-return-card glass-card glass-card--hero">
         <div className="billing-return-loader" />
         
-        <div className="billing-return-icon" style={{ background: 'rgba(var(--color-primary-rgb), 0.1)', color: 'var(--color-primary)' }}>
+        <div className="billing-return-icon billing-return-icon--info">
           <Info size={40} />
         </div>
 
@@ -29,7 +29,7 @@ export const BillingSuccessPage: React.FC = () => {
         </p>
 
         {sessionId && (
-          <p className="billing-return-message" style={{ fontSize: 'var(--font-size-xs)', opacity: 0.7 }}>
+          <p className="billing-return-session">
             Session: {sessionId}
           </p>
         )}

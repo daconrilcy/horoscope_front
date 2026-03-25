@@ -43,6 +43,12 @@
   border: 2px solid rgba(255, 107, 129, 0.2);
 }
 
+.billing-return-icon--info {
+  background: rgba(134, 108, 208, 0.1);
+  color: var(--color-primary);
+  border: 2px solid rgba(134, 108, 208, 0.2);
+}
+
 .billing-return-title {
   color: var(--color-text-primary);
   font-size: var(--font-size-2xl);
@@ -54,6 +60,13 @@
   color: var(--color-text-secondary);
   font-size: var(--font-size-md);
   line-height: var(--line-height-relaxed);
+  margin: 0;
+}
+
+.billing-return-session {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  opacity: 0.7;
   margin: 0;
 }
 
