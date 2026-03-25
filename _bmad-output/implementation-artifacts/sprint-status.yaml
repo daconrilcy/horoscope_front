@@ -550,3 +550,4 @@ development_status:
   epic-61: in-progress
   61-1-mapping-stripe-billing-profiles: done
   61-2-installation-sdk-stripe-et-configuration-secrets: done
+  61-3-create-subscription-checkout-session: ready-for-dev

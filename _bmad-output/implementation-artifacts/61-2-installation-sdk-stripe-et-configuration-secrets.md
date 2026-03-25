@@ -273,6 +273,20 @@ gemini-2.0-flash-thinking-exp
 - Added unit tests for both the entitlement map and the stripe client factory.
 - Verified everything with Ruff and Pytest.
 
+### Senior Developer Review (AI)
+
+- **Review Outcome :** Approved with corrections
+- **Review Date :** 2026-03-25
+- **Reviewer :** Claude Sonnet 4.6
+
+**Issues trouvés et corrigés (commit `09033bb`) :**
+
+1. **[MEDIUM] `backend/.env` — clés Stripe toujours placeholder** — `sk_test_REPLACE_ME`, `price_REPLACE_ME_*` non remplacés. Intégration non fonctionnelle. **Action requise par Cyril** : renseigner les vraies clés depuis Stripe Dashboard (test mode) → Developers → API Keys et Products → Price IDs. Non corrigeable par code review.
+
+2. **[LOW] `backend/horoscope.db-shm` et `horoscope.db-wal` trackés par git** — Fichiers binaires SQLite (WAL) inclus dans le commit 314956b. Corrigé : patterns `*.db-shm` et `*.db-wal` ajoutés au `.gitignore` racine, fichiers détrackés via `git rm --cached`.
+
+3. **[LOW] `get_stripe_client()` — nouvelle instance à chaque appel** — Aucun cache. Corrigé : ajout d'un `_client_cache: dict[str, StripeClient]` indexé par `api_key`. Invalide automatiquement si la clé change (rotation, tests). Tous les tests passent (2098 passed, 3 skipped).
+
 ### File List
 
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
@@ -289,3 +303,4 @@ gemini-2.0-flash-thinking-exp
 - `backend/app/infra/db/models/consultation_template.py` (lint fix)
 - `backend/app/services/consultation_catalogue_service.py` (lint fix)
 - `backend/app/tests/integration/test_astrologers_api.py` (lint fix)
+- `.gitignore` (code review fix — db-shm/db-wal)
