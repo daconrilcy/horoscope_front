@@ -302,13 +302,65 @@ def get_or_create_profile(db: Session, user_id: int) -> StripeBillingProfileMode
         return profile
     except IntegrityError:
         # Course concurrente : une autre requête a créé le profil entre le SELECT et l'INSERT
-        db.rollback()  # ou expire si begin_nested
+        # begin_nested() rollback le savepoint automatiquement — NE PAS appeler db.rollback()
+        # car cela détruirait la transaction parente.
         return db.scalar(select(StripeBillingProfileModel).where(
             StripeBillingProfileModel.user_id == user_id
         ).limit(1))
 ```
 
 Adapter selon le pattern de gestion des sessions déjà établi dans `billing_service.py`.
+
+### Pièges d'implémentation — corrections issues du code review
+
+Ces trois pièges ont été identifiés lors du code review de la story 61-1. Les documenter ici pour éviter toute régression en story 61-2 ou lors d'une évolution du service.
+
+#### Piège 1 — `db.rollback()` après `begin_nested()` détruit la transaction parente
+
+```python
+# ❌ INCORRECT
+except IntegrityError:
+    db.rollback()  # rollback toute la transaction parente !
+    return db.scalar(...)
+
+# ✅ CORRECT
+except IntegrityError:
+    # begin_nested() a déjà rollbacké le savepoint automatiquement.
+    # NE PAS appeler db.rollback() ici.
+    return db.scalar(...)
+```
+
+`with db.begin_nested()` crée un savepoint SQLAlchemy. En cas d'`IntegrityError`, SQLAlchemy rollback le savepoint automatiquement à la sortie du bloc `with`. Appeler `db.rollback()` en plus annule toute la transaction parente (y compris les opérations précédentes dans la même requête HTTP).
+
+#### Piège 2 — `cancel_at_period_end` peut être `null` côté Stripe
+
+```python
+# ❌ INCORRECT — retourne None si la clé existe avec valeur null
+profile.cancel_at_period_end = data_obj.get("cancel_at_period_end", False)
+
+# ✅ CORRECT — force un bool même si Stripe envoie null
+profile.cancel_at_period_end = bool(data_obj.get("cancel_at_period_end") or False)
+```
+
+La colonne est `NOT NULL` (default `False`). Stripe peut envoyer `"cancel_at_period_end": null` dans certains états de subscription. `dict.get(key, default)` retourne `None` si la clé existe avec la valeur `null` — le `default` n'est utilisé que si la clé est absente.
+
+#### Piège 3 — `stripe_price_id` peut être effacé silencieusement
+
+```python
+# ❌ INCORRECT — écrase avec None si price.id absent de l'event
+items = data_obj.get("items", {}).get("data", [])
+if items:
+    profile.stripe_price_id = items[0].get("price", {}).get("id")  # peut être None !
+
+# ✅ CORRECT — ne mettre à jour que si la valeur est présente et truthy
+items = data_obj.get("items", {}).get("data", [])
+if items:
+    price_id = items[0].get("price", {}).get("id")
+    if price_id:
+        profile.stripe_price_id = price_id
+```
+
+Certains événements Stripe envoient des items sans `price.id` valide (subscription en cours de transition, événements partiels). Sans la garde `if price_id:`, une valeur valide déjà stockée serait silencieusement écrasée par `None`, causant une perte d'information et un recalcul erroné de l'`entitlement_plan`.
 
 ### Logging
 
@@ -378,9 +430,21 @@ gemini-2.0-flash-thinking-exp
 
 ### Senior Developer Review (AI)
 
-- [x] **Review Outcome:** Approved
-- **Review Date:** 2026-03-24
-- **Summary:** Implementation is clean, follows all architectural requirements, and is well-tested. No issues found.
+- [x] **Review Outcome:** Approved with corrections
+- **Review Date:** 2026-03-25
+- **Summary:** Code review by Claude identified 5 issues (1 HIGH, 2 MEDIUM, 1 LOW, 1 test gap). All fixed before merge.
+
+**Issues found and fixed:**
+
+1. **[HIGH] `db.rollback()` détruisait la transaction parente** — Dans `get_or_create_profile`, après `with db.begin_nested()`, le savepoint est rollbacké automatiquement. L'appel supplémentaire à `db.rollback()` annulait la transaction parente entière. Corrigé : suppression du `db.rollback()`.
+
+2. **[MEDIUM] `cancel_at_period_end` violation NOT NULL** — Stripe peut envoyer `"cancel_at_period_end": null`. `dict.get(key, False)` retourne `None` si la clé existe avec valeur `None`. Corrigé : `bool(... or False)`.
+
+3. **[MEDIUM] `stripe_price_id` effacé silencieusement** — Si l'event Stripe ne contient pas de `price.id` valide, la valeur existante était écrasée par `None`. Corrigé : garde `if price_id:` avant assignment.
+
+4. **[LOW] Cas de test manquants** — `active + price_id=None` et `active + price_id inconnu` absents des tests unitaires `derive_entitlement_plan`. Corrigé : 2 assertions ajoutées dans `test_derive_entitlement_plan_basic_cases`.
+
+5. **[TEST GAP] AC9 hors-ordre absent des tests d'intégration** — L'idempotence hors-ordre était testée en unitaire mais pas en intégration. Corrigé : `test_update_from_event_payload_hors_ordre_ignored` ajouté dans le fichier d'intégration.
 
 ### Completion Notes List
 
@@ -389,8 +453,9 @@ gemini-2.0-flash-thinking-exp
 - Service `StripeBillingProfileService` implemented with idempotent `get_or_create_profile` and robust `update_from_event_payload`.
 - `derive_entitlement_plan` pure function implemented with business rules.
 - Configuration updated in `config.py` and `.env.example`.
-- Unit and integration tests added and passing (100% coverage for core logic).
+- Unit and integration tests added and passing. 8 stripe-specific tests pass (`pytest -q -k stripe`).
 - Migration created and verified (head: 20260324_0053).
+- **Code review corrections applied 2026-03-25** — voir Senior Developer Review ci-dessus.
 
 ### File List
 

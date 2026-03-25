@@ -63,6 +63,50 @@ def test_resolution_by_stripe_ids(db: Session, user_id: int):
     assert StripeBillingProfileService.get_by_stripe_customer_id(db, "unknown") is None
 
 
+def test_update_from_event_payload_hors_ordre_ignored(db: Session, user_id: int):
+    # Event récent traité en premier
+    event_recent = {
+        "id": "evt_recent_integ",
+        "created": 1711324800,
+        "type": "customer.subscription.updated",
+        "data": {
+            "object": {
+                "object": "subscription",
+                "id": "sub_integ_123",
+                "status": "active",
+                "customer": "cus_integ_123",
+            }
+        },
+    }
+    StripeBillingProfileService.update_from_event_payload(db, user_id, event_recent)
+    db.commit()
+
+    profile = StripeBillingProfileService.get_or_create_profile(db, user_id)
+    assert profile.subscription_status == "active"
+    event_id_after_recent = profile.last_stripe_event_id
+
+    # Event plus ancien arrivant après — doit être ignoré sans modification
+    event_ancien = {
+        "id": "evt_ancien_integ",
+        "created": 1711238400,  # antérieur
+        "type": "customer.subscription.updated",
+        "data": {
+            "object": {
+                "object": "subscription",
+                "id": "sub_integ_123",
+                "status": "canceled",
+                "customer": "cus_integ_123",
+            }
+        },
+    }
+    StripeBillingProfileService.update_from_event_payload(db, user_id, event_ancien)
+    db.commit()
+
+    db.refresh(profile)
+    assert profile.subscription_status == "active"  # inchangé
+    assert profile.last_stripe_event_id == event_id_after_recent  # inchangé
+
+
 def test_update_from_event_payload_updates_synced_at(db: Session, user_id: int):
     event_data = {
         "id": "evt_sync_test",

@@ -65,6 +65,11 @@ def test_derive_entitlement_plan_basic_cases():
         # Aucun statut
         assert derive_entitlement_plan(None, "price_basic") == "free"
 
+        # active + stripe_price_id None → fail-closed → free
+        assert derive_entitlement_plan("active", None) == "free"
+        # active + price_id absent du map → fail-closed → free
+        assert derive_entitlement_plan("active", "price_unknown_xyz") == "free"
+
 
 def test_update_from_event_payload_idempotence_stricte(db: Session, user_id: int):
     event_id = "evt_123"

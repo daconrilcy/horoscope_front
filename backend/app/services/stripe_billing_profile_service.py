@@ -77,7 +77,8 @@ class StripeBillingProfileService:
         except IntegrityError:
             # Course concurrente : un autre thread/process a créé le profil
             # entre notre SELECT et notre INSERT.
-            db.rollback()
+            # begin_nested() a déjà rollback le savepoint automatiquement —
+            # NE PAS appeler db.rollback() ici, cela détruirait la transaction parente.
             return db.scalar(
                 select(StripeBillingProfileModel)
                 .where(StripeBillingProfileModel.user_id == user_id)
@@ -175,7 +176,8 @@ class StripeBillingProfileService:
         if data_obj.get("object") == "subscription":
             profile.stripe_subscription_id = data_obj.get("id")
             profile.subscription_status = data_obj.get("status")
-            profile.cancel_at_period_end = data_obj.get("cancel_at_period_end", False)
+            # Stripe peut envoyer null → on force un bool pour respecter NOT NULL
+            profile.cancel_at_period_end = bool(data_obj.get("cancel_at_period_end") or False)
 
             period_end_ts = data_obj.get("current_period_end")
             if period_end_ts:
@@ -184,9 +186,12 @@ class StripeBillingProfileService:
                 )
 
             # Extraction du Price ID (premier item de la subscription)
+            # Garder la valeur existante si l'event ne fournit pas de price.id valide
             items = data_obj.get("items", {}).get("data", [])
             if items:
-                profile.stripe_price_id = items[0].get("price", {}).get("id")
+                price_id = items[0].get("price", {}).get("id")
+                if price_id:
+                    profile.stripe_price_id = price_id
 
         # Mise à jour de l'email de facturation si présent
         email = data_obj.get("email") or data_obj.get("billing_details", {}).get("email")
