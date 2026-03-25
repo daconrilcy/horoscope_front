@@ -104,13 +104,13 @@ class TestStripeWebhookService:
                 assert result == "processed"
                 mock_update.assert_called_once_with(db, 42, mock_event.to_dict())
 
-    def test_handle_invoice_payment_succeeded(self, db):
+    def test_handle_invoice_paid(self, db):
         mock_event = MagicMock()
-        mock_event.id = "evt_inv_suc"
-        mock_event.type = "invoice.payment_succeeded"
+        mock_event.id = "evt_inv_paid"
+        mock_event.type = "invoice.paid"
         mock_event.data.object = MagicMock()
         mock_event.data.object.customer = "cus_123"
-        mock_event.to_dict.return_value = {"id": "evt_inv_suc"}
+        mock_event.to_dict.return_value = {"id": "evt_inv_paid"}
 
         with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
             mock_profile = MagicMock()
@@ -142,10 +142,10 @@ class TestStripeWebhookService:
                 assert result == "processed"
                 mock_update.assert_called_once_with(db, 42, mock_event.to_dict())
 
-    def test_handle_invoice_user_not_resolved(self, db):
+    def test_handle_invoice_paid_user_not_resolved(self, db):
         mock_event = MagicMock()
         mock_event.id = "evt_inv_unkn"
-        mock_event.type = "invoice.payment_succeeded"
+        mock_event.type = "invoice.paid"
         mock_event.data.object = MagicMock()
         mock_event.data.object.customer = "cus_unknown"
 
@@ -178,3 +178,75 @@ class TestStripeWebhookService:
             result = StripeWebhookService.handle_event(db, mock_event)
 
             assert result == "user_not_resolved"
+
+    def test_handle_invoice_payment_action_required(self, db):
+        mock_event = MagicMock()
+        mock_event.id = "evt_inv_act"
+        mock_event.type = "invoice.payment_action_required"
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.customer = "cus_123"
+        mock_event.to_dict.return_value = {"id": "evt_inv_act"}
+
+        with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
+            mock_profile = MagicMock()
+            mock_profile.user_id = 42
+            mock_get_profile.return_value = mock_profile
+
+            with patch(UPDATE_EVENT_PAYLOAD_PATH) as mock_update:
+                result = StripeWebhookService.handle_event(db, mock_event)
+
+                assert result == "processed"
+                mock_update.assert_called_once_with(db, 42, mock_event.to_dict())
+
+    def test_handle_invoice_payment_action_required_user_not_resolved(self, db):
+        mock_event = MagicMock()
+        mock_event.id = "evt_inv_act_unkn"
+        mock_event.type = "invoice.payment_action_required"
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.customer = "cus_unknown"
+
+        with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
+            mock_get_profile.return_value = None
+
+            result = StripeWebhookService.handle_event(db, mock_event)
+
+            assert result == "user_not_resolved"
+
+    def test_invoice_payment_succeeded_is_now_ignored(self, db):
+        mock_event = MagicMock()
+        mock_event.id = "evt_test_legacy"
+        mock_event.type = "invoice.payment_succeeded"
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.customer = "cus_test123"
+        
+        result = StripeWebhookService.handle_event(db, mock_event)
+        assert result == "event_ignored"
+
+    def test_handle_invoice_paid_is_idempotent_same_event_id_twice(self, db):
+        mock_event = MagicMock()
+        mock_event.id = "evt_idempotent"
+        mock_event.type = "invoice.paid"
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.customer = "cus_123"
+        mock_event.to_dict.return_value = {"id": "evt_idempotent"}
+
+        with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
+            mock_profile = MagicMock()
+            mock_profile.user_id = 42
+            mock_get_profile.return_value = mock_profile
+
+            with patch(UPDATE_EVENT_PAYLOAD_PATH) as mock_update:
+                # Premier passage
+                result1 = StripeWebhookService.handle_event(db, mock_event)
+                assert result1 == "processed"
+                
+                # Deuxième passage (idempotence)
+                # On simule que update_from_event_payload est indifférent ou gère lui-même la garde
+                # En fait, StripeWebhookService.handle_event appelle systématiquement 
+                # update_from_event_payload
+                # C'est update_from_event_payload qui doit être idempotent (AC 9).
+                result2 = StripeWebhookService.handle_event(db, mock_event)
+                assert result2 == "processed"
+                
+                assert mock_update.call_count == 2
+

@@ -75,8 +75,9 @@ class StripeWebhookService:
             "customer.subscription.updated",
             "customer.subscription.deleted",
             "customer.updated",
-            "invoice.payment_succeeded",
+            "invoice.paid",
             "invoice.payment_failed",
+            "invoice.payment_action_required",
         ):
             if user_id is None:
                 logger.warning(
@@ -139,8 +140,9 @@ class StripeWebhookService:
             "customer.subscription.created",
             "customer.subscription.updated",
             "customer.subscription.deleted",
-            "invoice.payment_succeeded",
+            "invoice.paid",
             "invoice.payment_failed",
+            "invoice.payment_action_required",
         ):
             customer_id = getattr(data_obj, "customer", None)
             if customer_id:
