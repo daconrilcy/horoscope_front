@@ -146,6 +146,7 @@ type NatalChartTranslations = {
   guide: NatalChartGuideTranslations
 }
 
+export type NatalChartTranslation = NatalChartTranslations;
 export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslations> = {
   fr: {
     title: "Thème natal",

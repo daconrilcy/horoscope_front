@@ -92,9 +92,16 @@ def test_stripe_checkout_nominal_200(clean_db):
     assert response.status_code == 200
     data = response.json()["data"]
     assert data["checkout_url"] == "https://checkout.stripe.com/pay/cs_test_nominal"
-
-    # Verify audit event (indirectly by checking if it didn't crash)
     assert "request_id" in response.json()["meta"]
+
+    # Verify client_reference_id and metadata.app_user_id are correctly set in Stripe params
+    with SessionLocal() as db:
+        user = db.query(UserModel).filter_by(email="user@example.com").first()
+        user_id = str(user.id)
+    call_kwargs = mock_client.checkout.sessions.create.call_args
+    params = call_kwargs[1]["params"] if call_kwargs[1] else call_kwargs[0][0]
+    assert params["client_reference_id"] == user_id
+    assert params["metadata"]["app_user_id"] == user_id
 
 
 def test_stripe_checkout_plan_not_configured(clean_db):

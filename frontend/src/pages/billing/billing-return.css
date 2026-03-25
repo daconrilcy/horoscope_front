@@ -1,0 +1,100 @@
+.billing-return-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: var(--space-8);
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.billing-return-card {
+  width: 100%;
+  padding: var(--space-10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+  animation: fadeIn var(--duration-slow) var(--easing-default);
+}
+
+.billing-return-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  margin-bottom: var(--space-4);
+}
+
+.billing-return-icon--success {
+  background: rgba(22, 101, 52, 0.1);
+  color: var(--color-success);
+  border: 2px solid rgba(22, 101, 52, 0.2);
+}
+
+.billing-return-icon--cancel {
+  background: rgba(255, 107, 129, 0.1);
+  color: var(--color-error);
+  border: 2px solid rgba(255, 107, 129, 0.2);
+}
+
+.billing-return-title {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  margin: 0;
+}
+
+.billing-return-message {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-relaxed);
+  margin: 0;
+}
+
+.billing-return-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  margin-top: var(--space-4);
+}
+
+.billing-return-loader {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--color-glass-border);
+  border-bottom-color: var(--color-primary);
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+  margin-bottom: var(--space-4);
+}
+
+@keyframes rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (min-width: 640px) {
+  .billing-return-actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+  
+  .billing-return-actions > * {
+    flex: 1;
+    max-width: 200px;
+  }
+}

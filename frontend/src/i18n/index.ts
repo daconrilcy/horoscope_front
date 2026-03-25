@@ -1,16 +1,17 @@
-import { useAstrologyLabels, detectLang } from "./astrology"
+import { useAstrologyLabels } from "./astrology"
 import { authTranslations, type AuthTranslation } from "./auth"
 import { commonTranslations, type CommonTranslation } from "./common"
 import { navigationTranslations, type NavigationTranslation } from "./navigation"
 import { translateDashboardPage, type DashboardPageTranslation } from "./dashboard"
 import { settingsTranslations, type SettingsTranslation } from "./settings"
-import { adminTranslations, translateAdmin, type AdminTranslation } from "./admin"
+import { translateAdmin, type AdminTranslation } from "./admin"
 import { natalChartTranslations, type NatalChartTranslation } from "./natalChart"
 import { birthProfileTranslations, type BirthProfileTranslation } from "./birthProfile"
+import { billingTranslations, type BillingTranslation } from "./billing"
 import { TONE_LABELS, CATEGORY_LABELS, PREDICTION_UI_MESSAGES, type Lang as PredictionsLang } from "./predictions"
 import { tConsultations, type ConsultationsTranslation } from "./consultations"
 import { tAstrologers, type AstrologersTranslation } from "./astrologers"
-import { translateInsight, translateInsightSection, type InsightsTranslation } from "./insights"
+import { translateInsight, translateInsightSection, type InsightsTranslation, type InsightId } from "./insights"
 import type { AppLocale } from "./types"
 
 export * from "./types"
@@ -22,6 +23,7 @@ export * from "./dashboard"
 export * from "./predictions"
 export * from "./natalChart"
 export * from "./birthProfile"
+export * from "./billing"
 export * from "./settings"
 export * from "./consultations"
 export * from "./astrologers"
@@ -37,6 +39,7 @@ export type TranslationMap = {
   admin: AdminTranslation
   natalChart: NatalChartTranslation
   birthProfile: BirthProfileTranslation
+  billing: BillingTranslation
   predictions: {
     getToneLabel: (tone: string) => string
     getMessage: (key: string) => string
@@ -58,8 +61,9 @@ const translationFunctions: {
   dashboard: translateDashboardPage,
   settings: (lang) => settingsTranslations.page[lang],
   admin: translateAdmin,
-  natalChart: natalChartTranslations,
-  birthProfile: birthProfileTranslations,
+  natalChart: (lang) => natalChartTranslations[lang],
+  birthProfile: (lang) => birthProfileTranslations[lang],
+  billing: billingTranslations,
   predictions: (lang) => {
     const l: PredictionsLang = lang === 'es' ? 'fr' : lang
     return {
@@ -68,12 +72,12 @@ const translationFunctions: {
       getCategoryLabel: (cat: string) => CATEGORY_LABELS[cat]?.[l] ?? cat,
     }
   },
-  consultations: (lang) => ({ t: (key: string) => tConsultations(key, lang) }) as any,
-  astrologers: (lang) => ({ t: (key: string) => tAstrologers(key, lang) }) as any,
+  consultations: (lang) => ({ t: (key: string) => tConsultations(key, lang) }),
+  astrologers: (lang) => ({ t: (key: string) => tAstrologers(key, lang) }),
   insights: (lang) => ({ 
-    translate: (id: any) => translateInsight(id, lang),
+    translate: (id: InsightId) => translateInsight(id, lang),
     section: () => translateInsightSection(lang)
-  }) as any,
+  }),
 }
 
 /**

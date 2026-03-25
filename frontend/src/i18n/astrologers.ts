@@ -1,4 +1,7 @@
 import type { AstrologyLang } from "./astrology"
+import type { AppLocale } from "./types"
+
+export type AstrologersTranslation = { t: (key: string) => string };
 
 const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
   page_title: {
@@ -179,7 +182,7 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
   chat_back_to_list: {
     fr: "Retour à la liste",
     en: "Back to list",
-    es: "Volver a la lista",
+    es: "Volver à la liste",
   },
   chat_back: {
     fr: "Retour",
@@ -443,7 +446,7 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
   },
 }
 
-export function tAstrologers(key: string, lang: AstrologyLang): string {
+export function tAstrologers(key: string, lang: AppLocale): string {
   const entry = ASTROLOGERS_I18N[key]
-  return entry?.[lang] ?? key
+  return entry?.[lang as AstrologyLang] ?? key
 }

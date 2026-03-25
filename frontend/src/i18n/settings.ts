@@ -1,5 +1,8 @@
 import type { AstrologyLang } from "./astrology"
 
+export type SettingsTranslation = {
+  title: string
+}
 export const settingsTranslations = {
   page: {
     fr: { title: "Paramètres" },

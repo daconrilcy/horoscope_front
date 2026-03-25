@@ -61,6 +61,7 @@ type BirthProfileTranslations = {
   validation: BirthProfileValidation
 }
 
+export type BirthProfileTranslation = BirthProfileTranslations;
 export const birthProfileTranslations: Record<AstrologyLang, BirthProfileTranslations> = {
   fr: {
     title: "Mon profil natal",

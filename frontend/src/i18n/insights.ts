@@ -1,4 +1,5 @@
 import type { AstrologyLang } from './astrology'
+import type { AppLocale } from './types'
 
 export type InsightId = "amour" | "travail" | "energie"
 
@@ -6,6 +7,11 @@ export type InsightTranslation = {
   title: string
   description: string
 }
+
+export type InsightsTranslation = {
+  translate: (id: InsightId) => InsightTranslation;
+  section: () => { title: string; ariaLabel: string };
+};
 
 const insightTranslations: Record<AstrologyLang, Record<InsightId, InsightTranslation>> = {
   fr: {
@@ -33,11 +39,13 @@ export const INSIGHT_SECTION_TRANSLATIONS: Record<AstrologyLang, { title: string
 
 export function translateInsight(
   insightId: InsightId,
-  locale: AstrologyLang = "fr"
+  locale: AppLocale = "fr"
 ): InsightTranslation {
-  return insightTranslations[locale]?.[insightId] ?? insightTranslations.fr[insightId]
+  const l = locale as AstrologyLang
+  return insightTranslations[l]?.[insightId] ?? insightTranslations.fr[insightId]
 }
 
-export function translateInsightSection(locale: AstrologyLang = "fr") {
-  return INSIGHT_SECTION_TRANSLATIONS[locale] ?? INSIGHT_SECTION_TRANSLATIONS.fr
+export function translateInsightSection(locale: AppLocale = "fr") {
+  const l = locale as AstrologyLang
+  return INSIGHT_SECTION_TRANSLATIONS[l] ?? INSIGHT_SECTION_TRANSLATIONS.fr
 }

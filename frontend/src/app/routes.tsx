@@ -28,6 +28,8 @@ import { SubscriptionSettings } from "../pages/settings/SubscriptionSettings"
 import { UsageSettings } from "../pages/settings/UsageSettings"
 import { ConsultationLayout } from "../features/consultations"
 import { BillingPanel } from "../components/BillingPanel"
+import { BillingSuccessPage } from "../pages/billing/BillingSuccessPage"
+import { BillingCancelPage } from "../pages/billing/BillingCancelPage"
 import { PrivacyPanel } from "../components/PrivacyPanel"
 import { SupportOpsPanel } from "../components/SupportOpsPanel"
 import { AdminPage } from "../pages/AdminPage"
@@ -115,6 +117,14 @@ export const routes: RouteObject[] = [
       {
         path: "/billing",
         element: <BillingPanel />,
+      },
+      {
+        path: "/billing/success",
+        element: <BillingSuccessPage />,
+      },
+      {
+        path: "/billing/cancel",
+        element: <BillingCancelPage />,
       },
       {
         path: "/privacy",

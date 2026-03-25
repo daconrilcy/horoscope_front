@@ -10,6 +10,7 @@ from pydantic import BaseModel, ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.core.config import settings
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
@@ -26,6 +27,10 @@ from app.services.billing_service import (
 from app.services.pricing_experiment_service import (
     PricingExperimentService,
     PricingExperimentServiceError,
+)
+from app.services.stripe_webhook_service import (
+    StripeWebhookService,
+    StripeWebhookServiceError,
 )
 from app.services.quota_service import QuotaService, QuotaServiceError, QuotaStatusData
 from app.services.stripe_checkout_service import (
@@ -880,8 +885,6 @@ def create_stripe_checkout_session(
         if rate_error is not None:
             return rate_error
 
-        from app.core.config import settings
-
         checkout_url = StripeCheckoutService.create_checkout_session(
             db,
             user_id=current_user.id,
@@ -955,7 +958,7 @@ def create_stripe_checkout_session(
                 details={"error_code": error.code},
             )
         except AuditWriteError:
-            pass # Already in error state
+            db.rollback()
 
         db.commit()
         return _error_response(
@@ -968,3 +971,97 @@ def create_stripe_checkout_session(
     except AuditWriteError:
         db.rollback()
         return _audit_unavailable_response(request_id=request_id)
+
+
+@router.post(
+    "/stripe-webhook",
+    responses={
+        400: {"model": ErrorEnvelope},
+        503: {"model": ErrorEnvelope},
+    },
+)
+async def stripe_webhook(
+    request: Request,
+    db: Session = Depends(get_db_session),
+) -> Any:
+    """
+    Endpoint de réception des webhooks Stripe.
+    Vérifie la signature et délègue le traitement au service.
+    """
+    request_id = resolve_request_id(request)
+    payload_bytes = await request.body()
+    sig_header = request.headers.get("stripe-signature", "")
+
+    if not settings.stripe_webhook_secret:
+        logger.error("stripe_webhook: STRIPE_WEBHOOK_SECRET is not configured")
+        return _error_response(
+            status_code=503,
+            request_id=request_id,
+            code="webhook_secret_not_configured",
+            message="Stripe webhook secret is not configured on server",
+            details={},
+        )
+
+    try:
+        event_dict = StripeWebhookService.verify_and_parse(
+            payload_bytes, sig_header, settings.stripe_webhook_secret
+        )
+
+        # Audit de l'événement reçu et validé
+        _record_audit_event(
+            db,
+            request_id=request_id,
+            actor_user_id=None,  # Webhook anonyme (Stripe)
+            actor_role="system",
+            action="stripe_webhook_event",
+            target_type="stripe_event",
+            target_id=event_dict.get("id"),
+            status="success",
+            details={
+                "type": event_dict.get("type"),
+                "event_id": event_dict.get("id"),
+            },
+        )
+
+        # Traitement de l'événement
+        status = StripeWebhookService.handle_event(db, event_dict)
+
+        _record_audit_event(
+            db,
+            request_id=request_id,
+            actor_user_id=None,
+            actor_role="system",
+            action="stripe_webhook_processed",
+            target_type="stripe_event",
+            target_id=event_dict.get("id"),
+            status="success",
+            details={
+                "type": event_dict.get("type"),
+                "event_id": event_dict.get("id"),
+                "outcome": status,
+            },
+        )
+
+        db.commit()
+        return {"status": status}
+
+    except StripeWebhookServiceError as error:
+        db.rollback()
+        if error.code == "invalid_signature":
+            return _error_response(
+                status_code=400,
+                request_id=request_id,
+                code="invalid_signature",
+                message=error.message,
+                details={},
+            )
+        # Autres erreurs de service (ex: parsing) -> 200 pour éviter retry inutile
+        logger.warning("stripe_webhook: non-fatal service error: %s", error.message)
+        return {"status": "error_non_fatal", "code": error.code}
+
+    except Exception:
+        db.rollback()
+        logger.exception("stripe_webhook: unexpected internal error")
+        # On retourne 200 même ici selon AC3 pour éviter les retries Stripe
+        # sur des erreurs applicatives après signature valide.
+        return {"status": "failed_internal"}

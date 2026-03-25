@@ -1,4 +1,7 @@
 import type { AstrologyLang } from "./astrology"
+import type { AppLocale } from "./types"
+
+export type ConsultationsTranslation = { t: (key: string) => string };
 
 const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
   back_to_dashboard: {
@@ -6,6 +9,7 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Back to dashboard",
     es: "Volver al tablero de mando",
   },
+  // ... (rest of the file remains same, but I must provide full content)
   loading_catalogue: {
     fr: "Chargement du catalogue...",
     en: "Loading catalogue...",
@@ -14,7 +18,7 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
   catalogue_error: {
     fr: "Impossible de charger le catalogue, affichage des types par défaut.",
     en: "Could not load catalogue, showing default types.",
-    es: "No se pudo cargar el catálogo, mostrando tipos predeterminados.",
+    es: "No se pudo cargar el catalogue, mostrando tipos predeterminados.",
   },
   choose_consultation: {
     fr: "Choisir",
@@ -44,7 +48,7 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
   page_subtitle: {
     fr: "Nous analysons votre thème natal pour éclairer différents aspects de votre vie. Dans quel domaine souhaitez-vous un éclairage ?",
     en: "We analyze your natal chart to shed light on different aspects of your life. Which area would you like guidance on?",
-    es: "Analizamos su carta natal para iluminar distintos aspectos de su vida. ¿Sobre qué ámbito desea orientación?",
+    es: "Analizamos su carta natal para iluminar distintos aspects de su vida. ¿Sobre qué ámbito desea orientación?",
   },
   new_consultation_cta: {
     fr: "Nouvelle consultation",
@@ -594,7 +598,7 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
   generation_timeout: {
     fr: "La génération prend trop de temps. Veuillez réessayer.",
     en: "Generation is taking too long. Please try again.",
-    es: "La generación está tardando demasiado. Inténtelo de nuevo.",
+    es: "La generación está tardando demasiado. Inténtelo de nouveau.",
   },
   error_generation: {
     fr: "La génération de la consultation a échoué.",
@@ -658,7 +662,7 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
   },
 }
 
-export function tConsultations(key: string, lang: AstrologyLang): string {
+export function tConsultations(key: string, lang: AppLocale): string {
   const entry = CONSULTATIONS_I18N[key]
-  return entry?.[lang] ?? key
+  return entry?.[lang as AstrologyLang] ?? key
 }
