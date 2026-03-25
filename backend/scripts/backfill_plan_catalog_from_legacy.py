@@ -8,7 +8,6 @@ This script is idempotent and maps:
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -24,7 +23,6 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureQuotaModel,
     ResetMode,
     PeriodUnit,
-    SourceOrigin,
 )
 from app.infra.db.session import SessionLocal
 
@@ -33,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 B2B_FEATURE_CODE = "b2b_api_access"
 B2C_CHAT_FEATURE_CODE = "astrologer_chat"
+
 
 class BackfillReport:
     def __init__(self):
@@ -47,6 +46,7 @@ class BackfillReport:
         self.quotas_skipped = 0
         self.processed_b2c = 0
         self.processed_b2b = 0
+
 
 def ensure_b2b_feature(db: Session) -> FeatureCatalogModel:
     """Ensure the B2B API access feature exists in the catalog."""
@@ -67,6 +67,7 @@ def ensure_b2b_feature(db: Session) -> FeatureCatalogModel:
         db.flush()
     return feature
 
+
 def ensure_b2c_chat_feature(db: Session) -> FeatureCatalogModel:
     """Ensure the B2C chat feature exists in the catalog."""
     feature = db.execute(
@@ -84,6 +85,7 @@ def ensure_b2c_chat_feature(db: Session) -> FeatureCatalogModel:
         db.add(feature)
         db.flush()
     return feature
+
 
 def _upsert_plan(
     db: Session, 
@@ -131,22 +133,29 @@ def _upsert_plan(
     db.flush()
     return plan
 
+
 def _upsert_binding(
     db: Session,
     plan_id: int,
     feature_id: int,
     access_mode: AccessMode,
     source_origin: str,
-    report: BackfillReport
-) -> PlanFeatureBindingModel:
-    """Upsert a feature binding for a plan, respecting the collision policy."""
+    report: BackfillReport,
+) -> tuple[PlanFeatureBindingModel, bool]:
+    """Upsert a feature binding for a plan, respecting the collision policy.
+
+    Returns (binding, was_skipped). When was_skipped is True, the binding had
+    a non-overridable source_origin and was left unchanged — callers must NOT
+    perform any quota operations on it.
+    """
     binding = db.execute(
         select(PlanFeatureBindingModel).where(
             PlanFeatureBindingModel.plan_id == plan_id,
             PlanFeatureBindingModel.feature_id == feature_id,
         )
     ).scalar_one_or_none()
-    
+
+    was_skipped = False
     if binding is None:
         binding = PlanFeatureBindingModel(
             plan_id=plan_id,
@@ -166,11 +175,13 @@ def _upsert_binding(
         else:
             logger.warning(
                 "Collision on binding plan_id=%s feature_id=%s: existing source_origin='%s'. Skipping.",
-                plan_id, feature_id, binding.source_origin
+                plan_id, feature_id, binding.source_origin,
             )
             report.bindings_skipped += 1
+            was_skipped = True
     db.flush()
-    return binding
+    return binding, was_skipped
+
 
 def _upsert_quota(
     db: Session,
@@ -216,6 +227,7 @@ def _upsert_quota(
             report.quotas_skipped += 1
     db.flush()
 
+
 def backfill_b2c_plans(db: Session, report: BackfillReport | None = None) -> None:
     if report is None:
         report = BackfillReport()
@@ -237,15 +249,18 @@ def backfill_b2c_plans(db: Session, report: BackfillReport | None = None) -> Non
         
         # Mapping daily_message_limit
         access_mode = AccessMode.QUOTA if legacy.daily_message_limit > 0 else AccessMode.DISABLED
-        binding = _upsert_binding(
+        binding, binding_skipped = _upsert_binding(
             db,
             plan_id=plan.id,
             feature_id=chat_feature.id,
             access_mode=access_mode,
             source_origin="migrated_from_billing_plan",
-            report=report
+            report=report,
         )
-        
+
+        if binding_skipped:
+            continue
+
         if access_mode == AccessMode.QUOTA:
             _upsert_quota(
                 db,
@@ -256,18 +271,24 @@ def backfill_b2c_plans(db: Session, report: BackfillReport | None = None) -> Non
                 value=1,
                 reset=ResetMode.CALENDAR,
                 source_origin="migrated_from_billing_plan",
-                report=report
+                report=report,
             )
         else:
-            # If disabled, ensure no migrated quota exists
+            # DISABLED: clean up quotas with overridable origin (manual or migrated)
             existing_quotas = db.execute(
                 select(PlanFeatureQuotaModel).where(
                     PlanFeatureQuotaModel.plan_feature_binding_id == binding.id,
-                    PlanFeatureQuotaModel.source_origin == "migrated_from_billing_plan"
                 )
             ).scalars().all()
             for q in existing_quotas:
-                db.delete(q)
+                if q.source_origin in {"manual", "migrated_from_billing_plan"}:
+                    db.delete(q)
+                else:
+                    logger.warning(
+                        "Quota on disabled binding (binding_id=%s) has non-overridable source_origin='%s'. Skipping deletion.",
+                        binding.id, q.source_origin,
+                    )
+
 
 def backfill_b2b_plans(db: Session, report: BackfillReport | None = None) -> None:
     if report is None:
@@ -290,31 +311,33 @@ def backfill_b2b_plans(db: Session, report: BackfillReport | None = None) -> Non
         
         # Mapping included_monthly_units
         if legacy.included_monthly_units > 0:
-            binding = _upsert_binding(
+            binding, binding_skipped = _upsert_binding(
                 db,
                 plan_id=plan.id,
                 feature_id=b2b_feature.id,
                 access_mode=AccessMode.QUOTA,
                 source_origin="migrated_from_enterprise_plan",
-                report=report
+                report=report,
             )
-            _upsert_quota(
-                db,
-                binding_id=binding.id,
-                quota_key="calls",
-                limit=legacy.included_monthly_units,
-                unit=PeriodUnit.MONTH,
-                value=1,
-                reset=ResetMode.CALENDAR,
-                source_origin="migrated_from_enterprise_plan",
-                report=report
-            )
+            if not binding_skipped:
+                _upsert_quota(
+                    db,
+                    binding_id=binding.id,
+                    quota_key="calls",
+                    limit=legacy.included_monthly_units,
+                    unit=PeriodUnit.MONTH,
+                    value=1,
+                    reset=ResetMode.CALENDAR,
+                    source_origin="migrated_from_enterprise_plan",
+                    report=report,
+                )
         elif legacy.included_monthly_units == 0:
             logger.warning(
                 "enterprise_plan '%s' (id=%s) -> included_monthly_units=0: manual-review-required as per spec.",
                 legacy.code, legacy.id
             )
             # We don't create/update binding automatically for 0 units in B2B as per spec
+
 
 def run_backfill() -> None:
     logger.info("=== BACKFILL PLAN CATALOG FROM LEGACY START ===")
@@ -331,7 +354,7 @@ def run_backfill() -> None:
             logger.info("Bindings: %s created, %s updated, %s skipped", report.bindings_created, report.bindings_updated, report.bindings_skipped)
             logger.info("Quotas: %s created, %s updated, %s skipped", report.quotas_created, report.quotas_updated, report.quotas_skipped)
             logger.info("Ignored legacy columns: monthly_price_cents, currency, overage_unit_price_cents, monthly_fixed_cents")
-            logger.info("Non-migrated: settings.b2b_daily_usage_limit, settings.b2b_monthly_usage_limit")
+            logger.info("Non-migrated: settings.b2b_daily_usage_limit, settings.b2b_monthly_usage_limit, settings.b2b_usage_limit_mode")
             logger.info("=== BACKFILL COMPLETED ===")
         except Exception as e:
             db.rollback()

@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -219,10 +221,139 @@ def test_backfill_updates_manual_plans_and_bindings(db_session: Session):
     db_session.refresh(manual_binding)
     assert manual_binding.access_mode == AccessMode.QUOTA # Unlimited was overwritten by legacy Quota
     assert manual_binding.source_origin == "migrated_from_billing_plan"
-    
+
     quota = db_session.execute(
         select(PlanFeatureQuotaModel).where(PlanFeatureQuotaModel.plan_feature_binding_id == manual_binding.id)
     ).scalar_one_or_none()
     assert quota is not None
     assert quota.quota_limit == 10
     assert quota.source_origin == "migrated_from_billing_plan"
+
+
+def test_backfill_b2b_zero_units_logs_warning_and_creates_no_binding(
+    db_session: Session, caplog: pytest.LogCaptureFixture
+):
+    """included_monthly_units=0 doit logger un warning et ne créer aucun binding."""
+    legacy_plan = EnterpriseBillingPlanModel(
+        code="ent-zero",
+        display_name="Enterprise Zero",
+        monthly_fixed_cents=1000,
+        included_monthly_units=0,
+        overage_unit_price_cents=0,
+        currency="EUR",
+        is_active=True,
+    )
+    db_session.add(legacy_plan)
+    db_session.commit()
+
+    with caplog.at_level(logging.WARNING):
+        backfill_b2b_plans(db_session)
+
+    # Le plan doit exister dans plan_catalog
+    plan = db_session.execute(
+        select(PlanCatalogModel).where(PlanCatalogModel.plan_code == "ent-zero")
+    ).scalar_one_or_none()
+    assert plan is not None
+    assert plan.audience == Audience.B2B
+
+    # Aucun binding ne doit avoir été créé
+    bindings = db_session.execute(
+        select(PlanFeatureBindingModel).where(PlanFeatureBindingModel.plan_id == plan.id)
+    ).scalars().all()
+    assert len(bindings) == 0
+
+    # Un warning doit avoir été émis
+    assert any("manual-review-required" in r.message for r in caplog.records)
+
+
+def test_backfill_collision_on_binding_logs_warning_without_overwriting(
+    db_session: Session, caplog: pytest.LogCaptureFixture
+):
+    """Un binding avec une origine non overridable ne doit pas être écrasé."""
+    non_overridable_origin = SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value
+
+    # Plan canonique existant
+    plan = PlanCatalogModel(
+        plan_code="basic-conflict",
+        plan_name="Basic Conflict",
+        audience=Audience.B2C,
+        source_type="manual",
+    )
+    db_session.add(plan)
+    db_session.flush()
+
+    chat_feat = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat", is_metered=True)
+    db_session.add(chat_feat)
+    db_session.flush()
+
+    # Binding avec une origine tierce (non manual, non migrated_from_billing_plan)
+    existing_binding = PlanFeatureBindingModel(
+        plan_id=plan.id,
+        feature_id=chat_feat.id,
+        access_mode=AccessMode.UNLIMITED,
+        source_origin=non_overridable_origin,
+    )
+    db_session.add(existing_binding)
+    db_session.commit()
+
+    # Plan legacy correspondant
+    legacy_plan = BillingPlanModel(
+        code="basic-conflict",
+        display_name="Basic Conflict Legacy",
+        monthly_price_cents=500,
+        currency="EUR",
+        daily_message_limit=5,
+        is_active=True,
+    )
+    db_session.add(legacy_plan)
+    db_session.commit()
+
+    with caplog.at_level(logging.WARNING):
+        backfill_b2c_plans(db_session)
+
+    # Le binding doit être inchangé
+    db_session.refresh(existing_binding)
+    assert existing_binding.access_mode == AccessMode.UNLIMITED
+    assert existing_binding.source_origin == non_overridable_origin
+
+    # Aucun quota ne doit avoir été créé
+    quotas = db_session.execute(
+        select(PlanFeatureQuotaModel).where(
+            PlanFeatureQuotaModel.plan_feature_binding_id == existing_binding.id
+        )
+    ).scalars().all()
+    assert len(quotas) == 0
+
+    # Un warning doit avoir été émis
+    assert any("Collision on binding" in r.message for r in caplog.records)
+
+
+def test_backfill_non_mapped_columns_absent_from_canonical(db_session: Session):
+    """Les colonnes pricing (monthly_price_cents, currency, etc.) ne doivent pas
+    apparaître dans les tables canoniques."""
+    legacy_plan = BillingPlanModel(
+        code="priced-plan",
+        display_name="Priced Plan",
+        monthly_price_cents=9900,
+        currency="EUR",
+        daily_message_limit=20,
+        is_active=True,
+    )
+    db_session.add(legacy_plan)
+    db_session.commit()
+
+    backfill_b2c_plans(db_session)
+
+    # Exactement 1 plan créé, sans champ pricing
+    plans = db_session.execute(select(PlanCatalogModel)).scalars().all()
+    assert len(plans) == 1
+    assert not hasattr(plans[0], "monthly_price_cents")
+    assert not hasattr(plans[0], "currency")
+
+    # Exactement 1 binding (astrologer_chat) et 1 quota (messages/day)
+    bindings = db_session.execute(select(PlanFeatureBindingModel)).scalars().all()
+    assert len(bindings) == 1
+
+    quotas = db_session.execute(select(PlanFeatureQuotaModel)).scalars().all()
+    assert len(quotas) == 1
+    assert quotas[0].quota_key == "messages"
