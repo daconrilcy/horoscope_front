@@ -107,6 +107,60 @@ def test_quota_constraints():
         with pytest.raises(IntegrityError):
             db.commit()
 
+def test_usage_counter_constraints():
+    with SessionLocal() as db:
+        u = UserModel(email="test2@example.com", password_hash="hash", role="user")
+        db.add(u)
+        db.commit()
+        
+        now = datetime.now(timezone.utc)
+        
+        # period_value >= 1
+        db.add(FeatureUsageCounterModel(
+            user_id=u.id,
+            feature_code="feat",
+            quota_key="q",
+            period_unit=PeriodUnit.DAY,
+            period_value=0,
+            reset_mode=ResetMode.CALENDAR,
+            window_start=now,
+            window_end=now,
+            used_count=1
+        ))
+        with pytest.raises(IntegrityError):
+            db.commit()
+        db.rollback()
+
+        # window_end required unless lifetime (fail case)
+        db.add(FeatureUsageCounterModel(
+            user_id=u.id,
+            feature_code="feat",
+            quota_key="q",
+            period_unit=PeriodUnit.DAY,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+            window_start=now,
+            window_end=None,
+            used_count=1
+        ))
+        with pytest.raises(IntegrityError):
+            db.commit()
+        db.rollback()
+
+        # window_end None allowed if lifetime (success case)
+        db.add(FeatureUsageCounterModel(
+            user_id=u.id,
+            feature_code="feat",
+            quota_key="q",
+            period_unit=PeriodUnit.LIFETIME,
+            period_value=1,
+            reset_mode=ResetMode.LIFETIME,
+            window_start=now,
+            window_end=None,
+            used_count=1
+        ))
+        db.commit()
+
 def test_usage_counter_uniqueness():
     from app.infra.db.models.user import UserModel
     with SessionLocal() as db:
@@ -123,6 +177,7 @@ def test_usage_counter_uniqueness():
             period_value=1,
             reset_mode=ResetMode.CALENDAR,
             window_start=now,
+            window_end=now,
             used_count=1
         )
         db.add(counter1)
@@ -136,6 +191,7 @@ def test_usage_counter_uniqueness():
             period_value=1,
             reset_mode=ResetMode.CALENDAR,
             window_start=now,
+            window_end=now,
             used_count=2
         )
         db.add(counter2)

@@ -99,22 +99,24 @@ Important :
 8. **Coexistence garantie** : Aucune table legacy n’est modifiée ou supprimée. Aucun service métier existant (`QuotaService`, `BillingService`, services applicatifs legacy) n’est redirigé vers les nouvelles tables dans cette story. (AC: 6)
 9. **Documentation technique** : Un fichier `docs/architecture/product-entitlements-model.md` décrit le nouveau modèle, la stratégie de coexistence et la trajectoire de migration. (AC: 8)
 10. **Compteurs de consommation structurés** : `feature_usage_counters` contient les colonnes nécessaires au futur calcul canonique des quotas (`user_id`, `feature_code`, `quota_key`, `period_unit`, `period_value`, `reset_mode`, `window_start`, `window_end`, `used_count`) ainsi qu’une contrainte d’unicité composite par fenêtre. (AC: 1)
-11. **Contraintes numériques minimales** : Le schéma applique ou documente clairement les contraintes minimales suivantes : `quota_limit > 0`, `period_value >= 1`, `used_count >= 0`. (AC: 1)
+11. **Contraintes numériques et Enums** : Le schéma applique les contraintes suivantes : `quota_limit > 0`, `period_value >= 1`, `used_count >= 0`. Une contrainte additionnelle exige `window_end` si la période n'est pas `lifetime`. Tous les Enums utilisent `native_enum=False` avec validation SQLAlchemy. (AC: 1)
 
 ## Tasks / Subtasks
 
 - [x] **Modèles de données et Migration** (AC: 1, 2, 3, 10, 11)
   - [x] Créer `backend/app/infra/db/models/product_entitlements.py`
   - [x] Définir `PlanCatalogModel`, `FeatureCatalogModel`, `PlanFeatureBindingModel`, `PlanFeatureQuotaModel`, `FeatureUsageCounterModel`
-  - [x] Générer la migration Alembic `add_product_entitlements_tables`
+  - [x] Générer et affiner la migration Alembic `add_product_entitlements_tables` (ajout manuel des contraintes complexes)
   - [x] Ajouter les indexes sur `plan_code`, `feature_code`, `(plan_id, feature_id)`, `(user_id, feature_code)`, `(user_id, feature_code, quota_key)`
   - [x] Poser l’unicité composite de `plan_feature_quotas` sur `(plan_feature_binding_id, quota_key, period_unit, period_value, reset_mode)`
   - [x] Poser l’unicité composite de `feature_usage_counters` sur `(user_id, feature_code, quota_key, period_unit, period_value, reset_mode, window_start)`
   - [x] Poser les contraintes minimales sur `quota_limit`, `period_value` et `used_count`
+  - [x] Poser la contrainte de cohérence sur `window_end` (requis sauf pour `lifetime`)
 
 - [x] **Initialisation et Seeds** (AC: 4, 5, 6, 7)
-  - [x] Créer un script de seed idempotent `backend/scripts/seed_product_entitlements.py`
+  - [x] Créer un script de seed idempotent et convergent `backend/scripts/seed_product_entitlements.py`
   - [x] Le script doit pouvoir être exécuté indépendamment après migration, sans effet de bord en cas de réexécution
+  - [x] Le script doit mettre à jour les données existantes et supprimer les quotas obsolètes
   - [x] Le script doit ouvrir la session DB selon les conventions existantes du projet
   - [x] Injecter les 4 plans B2C de référence
   - [x] Injecter le catalogue de features initial

@@ -38,11 +38,19 @@ Définition fine des limites par binding.
 -   Supporte plusieurs quotas par feature (ex: limite journalière + limite mensuelle).
 -   Périodes : `day`, `week`, `month`, `year`, `lifetime`.
 -   Reset modes : `calendar`, `rolling`, `lifetime`.
+-   **Contrainte** : `period_value >= 1`.
 
 ### 5. `feature_usage_counters`
 Suivi de la consommation réelle.
 -   Structure optimisée pour le calcul des fenêtres glissantes ou calendaires.
 -   Unicité composite par fenêtre temporelle.
+-   **Contrainte** : `window_end` est obligatoire sauf si `period_unit` est `lifetime`.
+-   **Contrainte** : `period_value >= 1`.
+
+## Implémentation Technique
+
+### Gestion des Enums
+Pour garantir la portabilité (notamment entre SQLite en local/test et PostgreSQL en production) et faciliter les migrations, tous les Enums sont stockés en tant que chaines de caractères au niveau de la base de données (`native_enum=False`). La validation est effectuée au niveau de SQLAlchemy (`validate_strings=True`).
 
 ## Coexistence et Migration
 
@@ -50,6 +58,7 @@ Suivi de la consommation réelle.
 -   Les nouvelles tables coexistent avec `billing_plans` sans les remplacer.
 -   Aucun service métier n'est encore redirigé vers ce modèle.
 -   Les seeds initialisent les données canoniques à partir des offres actuelles.
+-   Le script de seed (`seed_product_entitlements.py`) est idempotent et convergent (il met à jour les données existantes et supprime les quotas obsolètes).
 
 ### Trajectoire
 1.  **Story 61.7 (Actuelle)** : Mise en place du schéma et des données.
@@ -61,4 +70,5 @@ Suivi de la consommation réelle.
 -   `quota_limit > 0`
 -   `period_value >= 1`
 -   `used_count >= 0`
+-   `window_end` requis si `period_unit != 'lifetime'`
 -   Unicité stricte des codes et des bindings.

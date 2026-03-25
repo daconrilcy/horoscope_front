@@ -3,7 +3,17 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from enum import Enum
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint, CheckConstraint
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    Enum as SAEnum,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.infra.db.base import Base
@@ -49,17 +59,22 @@ class PlanCatalogModel(Base):
     __tablename__ = "plan_catalog"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    plan_code: Mapped[str] = mapped_column(String(64), unique=True, index=True)
-    plan_name: Mapped[str] = mapped_column(String(128))
-    audience: Mapped[str] = mapped_column(String(32), index=True)  # Using Enum Audience
-    source_type: Mapped[str] = mapped_column(String(64), default="manual")
+    plan_code: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    plan_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    audience: Mapped[Audience] = mapped_column(
+        SAEnum(Audience, native_enum=False, validate_strings=True),
+        index=True,
+        nullable=False,
+    )
+    source_type: Mapped[str] = mapped_column(String(64), default="manual", nullable=False)
     source_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=utc_now,
         onupdate=utc_now,
+        nullable=False,
     )
 
 
@@ -67,16 +82,17 @@ class FeatureCatalogModel(Base):
     __tablename__ = "feature_catalog"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    feature_code: Mapped[str] = mapped_column(String(64), unique=True, index=True)
-    feature_name: Mapped[str] = mapped_column(String(128))
+    feature_code: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    feature_name: Mapped[str] = mapped_column(String(128), nullable=False)
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    is_metered: Mapped[bool] = mapped_column(Boolean, default=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    is_metered: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=utc_now,
         onupdate=utc_now,
+        nullable=False,
     )
 
 
@@ -89,17 +105,25 @@ class PlanFeatureBindingModel(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    plan_id: Mapped[int] = mapped_column(ForeignKey("plan_catalog.id", ondelete="CASCADE"))
-    feature_id: Mapped[int] = mapped_column(ForeignKey("feature_catalog.id", ondelete="CASCADE"))
-    is_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
-    access_mode: Mapped[str] = mapped_column(String(32))  # Using Enum AccessMode
+    plan_id: Mapped[int] = mapped_column(ForeignKey("plan_catalog.id", ondelete="CASCADE"), nullable=False)
+    feature_id: Mapped[int] = mapped_column(ForeignKey("feature_catalog.id", ondelete="CASCADE"), nullable=False)
+    is_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    access_mode: Mapped[AccessMode] = mapped_column(
+        SAEnum(AccessMode, native_enum=False, validate_strings=True),
+        nullable=False,
+    )
     variant_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    source_origin: Mapped[str] = mapped_column(String(64), default="manual")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    source_origin: Mapped[SourceOrigin] = mapped_column(
+        SAEnum(SourceOrigin, native_enum=False, validate_strings=True),
+        default=SourceOrigin.MANUAL,
+        nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=utc_now,
         onupdate=utc_now,
+        nullable=False,
     )
 
 
@@ -121,19 +145,31 @@ class PlanFeatureQuotaModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     plan_feature_binding_id: Mapped[int] = mapped_column(
-        ForeignKey("plan_feature_bindings.id", ondelete="CASCADE")
+        ForeignKey("plan_feature_bindings.id", ondelete="CASCADE"),
+        nullable=False,
     )
-    quota_key: Mapped[str] = mapped_column(String(64))
-    quota_limit: Mapped[int] = mapped_column(Integer)
-    period_unit: Mapped[str] = mapped_column(String(32))  # Using Enum PeriodUnit
-    period_value: Mapped[int] = mapped_column(Integer, default=1)
-    reset_mode: Mapped[str] = mapped_column(String(32))  # Using Enum ResetMode
-    source_origin: Mapped[str] = mapped_column(String(64), default="manual")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    quota_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    quota_limit: Mapped[int] = mapped_column(Integer, nullable=False)
+    period_unit: Mapped[PeriodUnit] = mapped_column(
+        SAEnum(PeriodUnit, native_enum=False, validate_strings=True),
+        nullable=False,
+    )
+    period_value: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    reset_mode: Mapped[ResetMode] = mapped_column(
+        SAEnum(ResetMode, native_enum=False, validate_strings=True),
+        nullable=False,
+    )
+    source_origin: Mapped[SourceOrigin] = mapped_column(
+        SAEnum(SourceOrigin, native_enum=False, validate_strings=True),
+        default=SourceOrigin.MANUAL,
+        nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=utc_now,
         onupdate=utc_now,
+        nullable=False,
     )
 
 
@@ -150,24 +186,36 @@ class FeatureUsageCounterModel(Base):
             "window_start",
             name="uq_feature_usage_counters_composite",
         ),
+        CheckConstraint("period_value >= 1", name="ck_feature_usage_counters_period_value_positive"),
         CheckConstraint("used_count >= 0", name="ck_feature_usage_counters_used_count_non_negative"),
+        CheckConstraint(
+            "LOWER(period_unit) = 'lifetime' OR window_end IS NOT NULL",
+            name="ck_feature_usage_counters_window_end_required_unless_lifetime",
+        ),
         Index("ix_feature_usage_counters_user_feature", "user_id", "feature_code"),
         Index("ix_feature_usage_counters_user_feature_quota", "user_id", "feature_code", "quota_key"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    feature_code: Mapped[str] = mapped_column(String(64), index=True)
-    quota_key: Mapped[str] = mapped_column(String(64))
-    period_unit: Mapped[str] = mapped_column(String(32))
-    period_value: Mapped[int] = mapped_column(Integer)
-    reset_mode: Mapped[str] = mapped_column(String(32))
-    window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    feature_code: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
+    quota_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    period_unit: Mapped[PeriodUnit] = mapped_column(
+        SAEnum(PeriodUnit, native_enum=False, validate_strings=True),
+        nullable=False,
+    )
+    period_value: Mapped[int] = mapped_column(Integer, nullable=False)
+    reset_mode: Mapped[ResetMode] = mapped_column(
+        SAEnum(ResetMode, native_enum=False, validate_strings=True),
+        nullable=False,
+    )
+    window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     window_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    used_count: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    used_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=utc_now,
         onupdate=utc_now,
+        nullable=False,
     )

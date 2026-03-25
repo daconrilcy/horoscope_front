@@ -62,6 +62,8 @@ def upgrade() -> None:
     sa.Column('used_count', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
+    sa.CheckConstraint('period_value >= 1', name='ck_feature_usage_counters_period_value_positive'),
+    sa.CheckConstraint("LOWER(period_unit) = 'lifetime' OR window_end IS NOT NULL", name='ck_feature_usage_counters_window_end_required_unless_lifetime'),
     sa.CheckConstraint('used_count >= 0', name='ck_feature_usage_counters_used_count_non_negative'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
