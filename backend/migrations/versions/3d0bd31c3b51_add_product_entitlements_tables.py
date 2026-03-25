@@ -8,7 +8,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import sqlite
+
 
 # revision identifiers, used by Alembic.
 revision: str = '3d0bd31c3b51'
@@ -43,6 +43,7 @@ def upgrade() -> None:
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
+    sa.CheckConstraint("LOWER(audience) IN ('b2c', 'b2b', 'internal')", name='ck_plan_catalog_audience_valid'),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('plan_catalog', schema=None) as batch_op:
@@ -65,6 +66,8 @@ def upgrade() -> None:
     sa.CheckConstraint('period_value >= 1', name='ck_feature_usage_counters_period_value_positive'),
     sa.CheckConstraint("LOWER(period_unit) = 'lifetime' OR window_end IS NOT NULL", name='ck_feature_usage_counters_window_end_required_unless_lifetime'),
     sa.CheckConstraint('used_count >= 0', name='ck_feature_usage_counters_used_count_non_negative'),
+    sa.CheckConstraint("LOWER(period_unit) IN ('day', 'week', 'month', 'year', 'lifetime')", name='ck_feature_usage_counters_period_unit_valid'),
+    sa.CheckConstraint("LOWER(reset_mode) IN ('calendar', 'rolling', 'lifetime')", name='ck_feature_usage_counters_reset_mode_valid'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('user_id', 'feature_code', 'quota_key', 'period_unit', 'period_value', 'reset_mode', 'window_start', name='uq_feature_usage_counters_composite')
@@ -85,6 +88,8 @@ def upgrade() -> None:
     sa.Column('source_origin', sa.String(length=64), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
+    sa.CheckConstraint("LOWER(access_mode) IN ('disabled', 'unlimited', 'quota')", name='ck_plan_feature_bindings_access_mode_valid'),
+    sa.CheckConstraint("LOWER(source_origin) IN ('manual', 'migrated_from_billing_plan', 'migrated_from_enterprise_plan')", name='ck_plan_feature_bindings_source_origin_valid'),
     sa.ForeignKeyConstraint(['feature_id'], ['feature_catalog.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['plan_id'], ['plan_catalog.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
@@ -107,6 +112,9 @@ def upgrade() -> None:
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
     sa.CheckConstraint('period_value >= 1', name='ck_plan_feature_quotas_period_value_positive'),
     sa.CheckConstraint('quota_limit > 0', name='ck_plan_feature_quotas_quota_limit_positive'),
+    sa.CheckConstraint("LOWER(period_unit) IN ('day', 'week', 'month', 'year', 'lifetime')", name='ck_plan_feature_quotas_period_unit_valid'),
+    sa.CheckConstraint("LOWER(reset_mode) IN ('calendar', 'rolling', 'lifetime')", name='ck_plan_feature_quotas_reset_mode_valid'),
+    sa.CheckConstraint("LOWER(source_origin) IN ('manual', 'migrated_from_billing_plan', 'migrated_from_enterprise_plan')", name='ck_plan_feature_quotas_source_origin_valid'),
     sa.ForeignKeyConstraint(['plan_feature_binding_id'], ['plan_feature_bindings.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('plan_feature_binding_id', 'quota_key', 'period_unit', 'period_value', 'reset_mode', name='uq_plan_feature_quotas_composite')

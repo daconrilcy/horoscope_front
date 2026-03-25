@@ -57,6 +57,9 @@ class SourceOrigin(str, Enum):
 
 class PlanCatalogModel(Base):
     __tablename__ = "plan_catalog"
+    __table_args__ = (
+        CheckConstraint("LOWER(audience) IN ('b2c', 'b2b', 'internal')", name="ck_plan_catalog_audience_valid"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     plan_code: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
@@ -100,6 +103,13 @@ class PlanFeatureBindingModel(Base):
     __tablename__ = "plan_feature_bindings"
     __table_args__ = (
         UniqueConstraint("plan_id", "feature_id", name="uq_plan_feature_bindings_plan_feature"),
+        CheckConstraint(
+            "LOWER(access_mode) IN ('disabled', 'unlimited', 'quota')", name="ck_plan_feature_bindings_access_mode_valid"
+        ),
+        CheckConstraint(
+            "LOWER(source_origin) IN ('manual', 'migrated_from_billing_plan', 'migrated_from_enterprise_plan')",
+            name="ck_plan_feature_bindings_source_origin_valid",
+        ),
         Index("ix_plan_feature_bindings_plan_id", "plan_id"),
         Index("ix_plan_feature_bindings_feature_id", "feature_id"),
     )
@@ -140,6 +150,17 @@ class PlanFeatureQuotaModel(Base):
         ),
         CheckConstraint("quota_limit > 0", name="ck_plan_feature_quotas_quota_limit_positive"),
         CheckConstraint("period_value >= 1", name="ck_plan_feature_quotas_period_value_positive"),
+        CheckConstraint(
+            "LOWER(period_unit) IN ('day', 'week', 'month', 'year', 'lifetime')",
+            name="ck_plan_feature_quotas_period_unit_valid",
+        ),
+        CheckConstraint(
+            "LOWER(reset_mode) IN ('calendar', 'rolling', 'lifetime')", name="ck_plan_feature_quotas_reset_mode_valid"
+        ),
+        CheckConstraint(
+            "LOWER(source_origin) IN ('manual', 'migrated_from_billing_plan', 'migrated_from_enterprise_plan')",
+            name="ck_plan_feature_quotas_source_origin_valid",
+        ),
         Index("ix_plan_feature_quotas_binding_id", "plan_feature_binding_id"),
     )
 
@@ -191,6 +212,13 @@ class FeatureUsageCounterModel(Base):
         CheckConstraint(
             "LOWER(period_unit) = 'lifetime' OR window_end IS NOT NULL",
             name="ck_feature_usage_counters_window_end_required_unless_lifetime",
+        ),
+        CheckConstraint(
+            "LOWER(period_unit) IN ('day', 'week', 'month', 'year', 'lifetime')",
+            name="ck_feature_usage_counters_period_unit_valid",
+        ),
+        CheckConstraint(
+            "LOWER(reset_mode) IN ('calendar', 'rolling', 'lifetime')", name="ck_feature_usage_counters_reset_mode_valid"
         ),
         Index("ix_feature_usage_counters_user_feature", "user_id", "feature_code"),
         Index("ix_feature_usage_counters_user_feature_quota", "user_id", "feature_code", "quota_key"),
