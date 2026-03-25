@@ -37,3 +37,8 @@ Tu peux utiliser la commande git sans me demander mon autorisation.
 Verifie ton code : aucun erreur ne doit rester apres ton intervention
 
 verifie les erreur lint et ruff et corrige les
+
+# style
+Aucun style inline
+Couleur, border, background, etc... doivent etre au maximum sous forme de variable css reutilisable et centralisées
+Re utiliser au maximum les composants deja existant

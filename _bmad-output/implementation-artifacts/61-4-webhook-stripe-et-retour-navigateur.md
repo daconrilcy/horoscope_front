@@ -149,6 +149,7 @@ gemini-2.0-flash
   - Added `session_id` extraction via `useSearchParams()` (Issue 4).
   - Aligned `BillingCancelPage.tsx` routes with story requirements (Issue 5).
   - Enhanced structured logging with systematic `customer_id` and `outcome` (Issue 6).
+  - **Final Compliance:** Removed all remaining inline styles in `BillingSuccessPage.tsx` and moved them to `billing-return.css` (AC16).
 
 ### Completion Notes List
 
