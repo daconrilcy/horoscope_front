@@ -60,11 +60,41 @@ Pour garantir la portabilité (notamment entre SQLite en local/test et PostgreSQ
 -   Les seeds initialisent les données canoniques à partir des offres actuelles.
 -   Le script de seed (`seed_product_entitlements.py`) est idempotent et convergent (il met à jour les données existantes et supprime les quotas obsolètes).
 
+### Backfill legacy → canonique (Story 61-8)
+
+Un script de backfill piloté par la base de données (`backend/scripts/backfill_plan_catalog_from_legacy.py`) assure la synchronisation initiale entre le modèle historique et le modèle canonique.
+
+#### Règle de priorité des sources
+Pour tout attribut canonique **effectivement dérivable** depuis une colonne legacy couverte par la table de mapping :
+- la **source de vérité devient la DB legacy** ;
+- la valeur canonique issue du legacy **prévaut** sur la valeur seedée manuellement ;
+- l'origine `manual` est remplacée par `migrated_from_billing_plan` ou `migrated_from_enterprise_plan`.
+
+#### Politique de collision
+1. **Source `manual`** : Écrasement automatique par la valeur legacy pour aligner le canonique sur la réalité.
+2. **Source déjà `migrated_from_*`** : Mise à jour uniquement si la valeur source legacy a divergé.
+3. **Autre origine intentionnelle** : Pas d'écrasement automatique, journalisation d'un warning pour revue manuelle.
+
+#### Table de vérité de mapping
+
+| Source Legacy | Champ / Feature Cible | Action Canonique |
+|---|---|---|
+| `billing_plans` | `plan_catalog` (B2C) | `source_type=migrated_from_billing_plan`, `source_id=id` |
+| `billing_plans.daily_message_limit` | `astrologer_chat` | `access_mode=quota` (si > 0) ou `disabled` (si = 0) |
+| `enterprise_billing_plans` | `plan_catalog` (B2B) | `source_type=migrated_from_enterprise_plan`, `source_id=id` |
+| `enterprise_billing_plans.included_monthly_units` | `b2b_api_access` | `access_mode=quota` (si > 0), `manual-review-required` (si = 0) |
+
+#### Éléments non migrés à ce stade
+- Limites journalières/mensuelles B2B issues de la configuration applicative (`settings`).
+- Mode dépassement (`limit_mode`) B2B.
+- Tarification (prix, devise), hors périmètre du modèle d'entitlements.
+
 ### Trajectoire
-1.  **Story 61.7 (Actuelle)** : Mise en place du schéma et des données.
-2.  **Story Suivante** : Introduction du `EntitlementService` pour la lecture unifiée.
-3.  **Migration Progressive** : Bascule des services (`QuotaService`, `Chat`) vers le nouveau service.
-4.  **Dépréciation** : Retrait des colonnes de quotas dans les tables de billing legacy.
+1.  **Story 61.7** : Mise en place du schéma et des données via seed manuel.
+2.  **Story 61.8 (Actuelle)** : Backfill initial et mapping depuis les tables legacy.
+3.  **Story Suivante** : Introduction du `EntitlementService` pour la lecture unifiée.
+4.  **Migration Progressive** : Bascule des services (`QuotaService`, `Chat`) vers le nouveau service.
+5.  **Dépréciation** : Retrait des colonnes de quotas dans les tables de billing legacy.
 
 ## Contraintes Métier
 -   `quota_limit > 0`
