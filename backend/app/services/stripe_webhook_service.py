@@ -53,7 +53,7 @@ class StripeWebhookService:
     def handle_event(db: Session, event: stripe.Event) -> str:
         """
         Traite un événement Stripe validé.
-        Retourne un statut logique (processed, ignored, user_not_resolved).
+        Retourne un statut logique (processed, event_ignored, user_not_resolved).
         """
         event_type = event.type
         event_id = event.id
