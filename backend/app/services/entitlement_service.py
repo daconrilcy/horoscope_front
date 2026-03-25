@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select
@@ -14,9 +14,12 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureQuotaModel,
 )
 from app.services.billing_service import BillingService
+from app.services.entitlement_types import FeatureEntitlement, QuotaDefinition
+from app.services.quota_usage_service import QuotaUsageService
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
+
     from app.services.billing_service import SubscriptionStatusData
 
 logger = logging.getLogger(__name__)
@@ -24,43 +27,18 @@ logger = logging.getLogger(__name__)
 _ACTIVE_BILLING_STATUSES = frozenset({"active", "trialing"})
 
 
-@dataclass(frozen=True)
-class QuotaDefinition:
-    """Définition d'un quota pour une feature."""
-
-    quota_key: str
-    quota_limit: int
-    period_unit: str
-    period_value: int
-    reset_mode: str
-
-
-@dataclass
-class FeatureEntitlement:
-    """Droit d'accès calculé pour une feature."""
-
-    plan_code: str
-    billing_status: str
-    is_enabled_by_plan: bool
-    access_mode: str
-    variant_code: str | None
-    quotas: list[QuotaDefinition]
-    final_access: bool
-    reason: str
-
-
 class EntitlementService:
     @staticmethod
     def get_user_canonical_plan(db: Session, user_id: int) -> PlanCatalogModel | None:
-        subscription: SubscriptionStatusData = BillingService.get_subscription_status(db, user_id=user_id)
+        subscription: SubscriptionStatusData = BillingService.get_subscription_status(
+            db, user_id=user_id
+        )
         if not subscription.plan:
             return None
 
         plan_code = subscription.plan.code
         plan = db.scalar(
-            select(PlanCatalogModel)
-            .where(PlanCatalogModel.plan_code == plan_code)
-            .limit(1)
+            select(PlanCatalogModel).where(PlanCatalogModel.plan_code == plan_code).limit(1)
         )
 
         if not plan:
@@ -75,7 +53,9 @@ class EntitlementService:
 
     @staticmethod
     def get_feature_entitlement(db: Session, user_id: int, feature_code: str) -> FeatureEntitlement:
-        subscription: SubscriptionStatusData = BillingService.get_subscription_status(db, user_id=user_id)
+        subscription: SubscriptionStatusData = BillingService.get_subscription_status(
+            db, user_id=user_id
+        )
 
         if not subscription.plan or subscription.status == "none":
             return FeatureEntitlement(
@@ -94,9 +74,7 @@ class EntitlementService:
         is_billing_active = billing_status in _ACTIVE_BILLING_STATUSES
 
         plan = db.scalar(
-            select(PlanCatalogModel)
-            .where(PlanCatalogModel.plan_code == plan_code)
-            .limit(1)
+            select(PlanCatalogModel).where(PlanCatalogModel.plan_code == plan_code).limit(1)
         )
         feature = db.scalar(
             select(FeatureCatalogModel)
@@ -106,7 +84,8 @@ class EntitlementService:
 
         if not plan:
             logger.warning(
-                "Canonical plan missing for billing plan_code '%s' and user %d. Falling back when possible.",
+                "Canonical plan missing for billing plan_code '%s' and user %d. "
+                "Falling back when possible.",
                 plan_code,
                 user_id,
             )
@@ -122,13 +101,19 @@ class EntitlementService:
             )
 
             if binding:
-                is_enabled_by_plan = binding.is_enabled and binding.access_mode != AccessMode.DISABLED
+                is_enabled_by_plan = (
+                    binding.is_enabled and binding.access_mode != AccessMode.DISABLED
+                )
                 quotas: list[QuotaDefinition] = []
+                usage_states = []
+                quota_exhausted = False
+                evaluation_dt = datetime.now(timezone.utc)
 
                 if binding.access_mode == AccessMode.QUOTA:
                     quota_models = db.scalars(
-                        select(PlanFeatureQuotaModel)
-                        .where(PlanFeatureQuotaModel.plan_feature_binding_id == binding.id)
+                        select(PlanFeatureQuotaModel).where(
+                            PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
+                        )
                     ).all()
 
                     if not quota_models:
@@ -152,7 +137,35 @@ class EntitlementService:
                             for q in quota_models
                         ]
 
-                final_access = is_billing_active and is_enabled_by_plan
+                        unsupported_quota = next(
+                            (quota for quota in quotas if quota.reset_mode == "rolling"),
+                            None,
+                        )
+                        if unsupported_quota is not None:
+                            logger.warning(
+                                "Binding %d has unsupported rolling quota '%s' for plan '%s' "
+                                "feature '%s'. Disabling access until rolling windows are "
+                                "supported.",
+                                binding.id,
+                                unsupported_quota.quota_key,
+                                plan_code,
+                                feature_code,
+                            )
+                            is_enabled_by_plan = False
+                        elif is_billing_active:
+                            usage_states = [
+                                QuotaUsageService.get_usage(
+                                    db,
+                                    user_id=user_id,
+                                    feature_code=feature_code,
+                                    quota=q,
+                                    ref_dt=evaluation_dt,
+                                )
+                                for q in quotas
+                            ]
+                            quota_exhausted = any(s.exhausted for s in usage_states)
+
+                final_access = is_billing_active and is_enabled_by_plan and not quota_exhausted
                 reason = "billing_inactive" if not is_billing_active else "canonical_binding"
 
                 return FeatureEntitlement(
@@ -164,6 +177,8 @@ class EntitlementService:
                     quotas=quotas,
                     final_access=final_access,
                     reason=reason,
+                    usage_states=usage_states,
+                    quota_exhausted=quota_exhausted,
                 )
 
             if feature_code == "astrologer_chat":
@@ -191,7 +206,9 @@ class EntitlementService:
         return fallback
 
     @staticmethod
-    def _legacy_fallback(subscription: SubscriptionStatusData, feature_code: str) -> FeatureEntitlement:
+    def _legacy_fallback(
+        subscription: SubscriptionStatusData, feature_code: str
+    ) -> FeatureEntitlement:
         plan_code = subscription.plan.code if subscription.plan else "none"
         billing_status = subscription.status
         is_billing_active = billing_status in _ACTIVE_BILLING_STATUSES
