@@ -54,7 +54,7 @@ de sorte que l'interface puisse afficher mes quotas restants, désactiver les CT
   - [x] Mock tests for no-plan, billing-inactive, no-consume, unknown feature, and role-guard
 
 - [x] **Tests d'intégration** dans `backend/app/tests/integration/test_entitlements_me.py` (AC: 1–4, 6–8, 11, 12, 14)
-  - [x] Real DB tests for unauthenticated, no-plan, trial, and no-consumption scenarios
+  - [x] Real DB tests for unauthenticated, no-plan, trial, basic, premium, and no-consumption scenarios
 
 - [x] **Non-régression** (AC: 15)
   - [x] Verify existing tests pass
@@ -93,7 +93,7 @@ gemini-2.0-flash-thinking-exp-01-21
 ### Completion Notes List
 
 - All Acceptance Criteria met.
-- Full test coverage (unit and integration).
+- Integration coverage now validates the canonical seed expectations for `trial`, `basic`, and `premium`.
 - Clean code following project patterns.
 
 ### File List
@@ -103,3 +103,23 @@ gemini-2.0-flash-thinking-exp-01-21
 - `backend/app/tests/unit/test_entitlements_me_endpoint.py`
 - `backend/app/tests/integration/test_entitlements_me.py`
 - `backend/app/main.py`
+
+### Senior Developer Review (AI)
+
+- Review date: 2026-03-26
+- Reviewer: Codex
+- Outcome: Changes requested then fixed
+
+#### Findings
+
+1. HIGH: AC 14 was not fully verified by integration tests. The story claimed coverage for `trial`, `basic`, and `premium`, but `backend/app/tests/integration/test_entitlements_me.py` only exercised `no_plan`, a partial `trial` scenario, and non-consumption. The review fix added canonical bindings and assertions for `trial`, `basic`, and `premium`, including `thematic_consultation`, `variant_code`, quota windows, and exact quota limits.
+2. MEDIUM: Touched files did not pass Ruff cleanly because of unsorted imports, unused imports, and long lines in the endpoint schema/router tests. These issues were corrected.
+
+#### Validation
+
+- `.\.venv\Scripts\Activate.ps1; cd backend; ruff check app/api/v1/schemas/entitlements.py app/api/v1/routers/entitlements.py app/tests/unit/test_entitlements_me_endpoint.py app/tests/integration/test_entitlements_me.py app/main.py --fix`
+- `.\.venv\Scripts\Activate.ps1; cd backend; pytest -q app/tests/unit/test_entitlements_me_endpoint.py app/tests/integration/test_entitlements_me.py app/tests/integration/test_natal_chart_long_entitlement.py app/tests/unit/test_entitlement_service.py app/tests/unit/test_quota_usage_service.py`
+
+### Change Log
+
+- 2026-03-26: Code review executed with `bmad-code-review`; fixed missing AC 14 integration coverage and cleaned Ruff issues on touched files.

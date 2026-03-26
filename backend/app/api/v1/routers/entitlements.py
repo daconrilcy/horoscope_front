@@ -1,14 +1,15 @@
 from __future__ import annotations
+
 from typing import Any
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.v1.schemas.entitlements import (
-    EntitlementsMeData,
     EntitlementsMeResponse,
     FeatureEntitlementResponse,
-    ResponseMeta,
     UsageStateResponse,
 )
 from app.core.request_id import resolve_request_id
@@ -71,12 +72,14 @@ def get_my_entitlements(
     if current_user.role not in {"user", "admin"}:
         return JSONResponse(
             status_code=403,
-            content={"error": {
-                "code": "insufficient_role",
-                "message": "role not allowed for entitlements",
-                "details": {"role": current_user.role},
-                "request_id": request_id,
-            }},
+            content={
+                "error": {
+                    "code": "insufficient_role",
+                    "message": "role not allowed for entitlements",
+                    "details": {"role": current_user.role},
+                    "request_id": request_id,
+                }
+            },
         )
 
     # Lecture pure — EntitlementService appelle QuotaUsageService.get_usage() (lecture)
