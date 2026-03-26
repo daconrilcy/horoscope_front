@@ -743,7 +743,7 @@ def test_send_chat_message_requires_active_subscription() -> None:
         json={"message": "Question sans abonnement"},
     )
     assert response.status_code == 403
-    assert response.json()["error"]["code"] == "no_active_subscription"
+    assert response.json()["error"]["code"] == "chat_access_denied"
 
 
 # --- AC1 & AC2: Enriched conversations list ---

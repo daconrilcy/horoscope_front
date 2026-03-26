@@ -1,16 +1,23 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
+from app.services.chat_entitlement_gate import (
+    ChatAccessDeniedError,
+    ChatEntitlementGate,
+    ChatEntitlementResult,
+    ChatQuotaExceededError,
+)
 from app.services.chat_guidance_service import (
     ChatConversationHistoryData,
     ChatConversationListData,
@@ -43,9 +50,16 @@ class ChatMessageRequest(BaseModel):
     client_message_id: str | None = None
 
 
+class QuotaInfo(BaseModel):
+    remaining: int | None = None
+    limit: int | None = None
+    window_end: datetime | None = None
+
+
 class ChatMessageApiResponse(BaseModel):
     data: ChatReplyData
     meta: ResponseMeta
+    quota_info: QuotaInfo = Field(default_factory=QuotaInfo)
 
 
 class ChatConversationListApiResponse(BaseModel):
@@ -68,6 +82,17 @@ class GetOrCreateConversationApiResponse(BaseModel):
 
 
 router = APIRouter(prefix="/v1/chat", tags=["chat"])
+
+
+def _build_quota_info(result: ChatEntitlementResult) -> QuotaInfo:
+    if result.path in ("canonical_quota", "canonical_unlimited") and result.usage_states:
+        state = result.usage_states[0]
+        return QuotaInfo(
+            remaining=state.remaining,
+            limit=state.quota_limit,
+            window_end=state.window_end,
+        )
+    return QuotaInfo()
 
 
 @router.post(
@@ -104,11 +129,17 @@ def send_chat_message(
 
     try:
         parsed_payload = ChatMessageRequest.model_validate(payload)
-        QuotaService.consume_quota_or_raise(
-            db,
-            user_id=current_user.id,
-            request_id=request_id,
-        )
+        
+        entitlement_result = ChatEntitlementGate.check_and_consume(db, user_id=current_user.id)
+        if entitlement_result.path == "legacy":
+            QuotaService.consume_quota_or_raise(
+                db,
+                user_id=current_user.id,
+                request_id=request_id,
+            )
+        
+        quota_info = _build_quota_info(entitlement_result)
+
         response = ChatGuidanceService.send_message(
             db=db,
             user_id=current_user.id,
@@ -119,7 +150,11 @@ def send_chat_message(
             client_message_id=parsed_payload.client_message_id,
         )
         db.commit()
-        return {"data": response.model_dump(mode="json"), "meta": {"request_id": request_id}}
+        return {
+            "data": response.model_dump(mode="json"),
+            "meta": {"request_id": request_id},
+            "quota_info": quota_info.model_dump(mode="json"),
+        }
     except ValidationError as error:
         db.rollback()
         return JSONResponse(
@@ -129,6 +164,37 @@ def send_chat_message(
                     "code": "invalid_chat_request",
                     "message": "chat request validation failed",
                     "details": {"errors": error.errors()},
+                    "request_id": request_id,
+                }
+            },
+        )
+    except ChatQuotaExceededError as error:
+        db.rollback()
+        return JSONResponse(
+            status_code=429,
+            content={
+                "error": {
+                    "code": "chat_quota_exceeded",
+                    "message": "quota de messages chat épuisé",
+                    "details": {
+                        "quota_key": error.quota_key,
+                        "used": error.used,
+                        "limit": error.limit,
+                        "window_end": error.window_end.isoformat() if error.window_end else None,
+                    },
+                    "request_id": request_id,
+                }
+            },
+        )
+    except ChatAccessDeniedError as error:
+        db.rollback()
+        return JSONResponse(
+            status_code=403,
+            content={
+                "error": {
+                    "code": "chat_access_denied",
+                    "message": "accès au chat refusé",
+                    "details": {"reason": error.reason, "billing_status": error.billing_status},
                     "request_id": request_id,
                 }
             },
