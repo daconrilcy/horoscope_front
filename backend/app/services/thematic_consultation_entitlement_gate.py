@@ -42,15 +42,6 @@ class ThematicConsultationEntitlementGate:
             db, user_id=user_id, feature_code=ThematicConsultationEntitlementGate.FEATURE_CODE
         )
 
-        # Pas de chemin legacy — thematic_consultation est 100% canonique
-        # Si legacy_fallback retourné → traiter comme canonical_no_binding
-        if entitlement.reason == "legacy_fallback":
-            raise ConsultationAccessDeniedError(
-                reason="canonical_no_binding",
-                billing_status=entitlement.billing_status,
-                plan_code=entitlement.plan_code,
-            )
-
         if not entitlement.final_access:
             if entitlement.quota_exhausted and entitlement.usage_states:
                 exhausted_state = next((s for s in entitlement.usage_states if s.exhausted), None)

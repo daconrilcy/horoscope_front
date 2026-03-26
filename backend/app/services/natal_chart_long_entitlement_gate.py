@@ -43,14 +43,6 @@ class NatalChartLongEntitlementGate:
             db, user_id=user_id, feature_code=NatalChartLongEntitlementGate.FEATURE_CODE
         )
 
-        # Pas de chemin legacy — natal_chart_long est 100% canonique
-        if entitlement.reason == "legacy_fallback":
-            raise NatalChartLongAccessDeniedError(
-                reason="canonical_no_binding",
-                billing_status=entitlement.billing_status,
-                plan_code=entitlement.plan_code,
-            )
-
         if not entitlement.final_access:
             if entitlement.quota_exhausted and entitlement.usage_states:
                 exhausted_state = next((s for s in entitlement.usage_states if s.exhausted), None)

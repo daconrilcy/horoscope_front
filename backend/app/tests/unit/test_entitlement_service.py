@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from unittest.mock import patch
 
 import pytest
@@ -10,7 +10,6 @@ from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,
     FeatureCatalogModel,
-    FeatureUsageCounterModel,
     PeriodUnit,
     PlanCatalogModel,
     PlanFeatureBindingModel,
@@ -419,24 +418,39 @@ def test_basic_plan_astrologer_chat_quota_daily(db):
     db.add(binding)
     db.commit()
 
-    db.add(PlanFeatureQuotaModel(
-        plan_feature_binding_id=binding.id,
-        quota_key="messages",
-        quota_limit=5,
-        period_unit=PeriodUnit.DAY,
-        period_value=1,
-        reset_mode=ResetMode.CALENDAR,
-    ))
+    db.add(
+        PlanFeatureQuotaModel(
+            plan_feature_binding_id=binding.id,
+            quota_key="messages",
+            quota_limit=5,
+            period_unit=PeriodUnit.DAY,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+        )
+    )
     db.commit()
 
     mock_sub = SubscriptionStatusData(
         status="active",
-        plan=BillingPlanData(code="basic", display_name="B", is_active=True, monthly_price_cents=1, currency="EUR", daily_message_limit=0),
-        failure_reason=None, updated_at=None,
+        plan=BillingPlanData(
+            code="basic",
+            display_name="B",
+            is_active=True,
+            monthly_price_cents=1,
+            currency="EUR",
+            daily_message_limit=0,
+        ),
+        failure_reason=None,
+        updated_at=None,
     )
 
-    with patch("app.services.entitlement_service.BillingService.get_subscription_status", return_value=mock_sub):
-        result = EntitlementService.get_feature_entitlement(db, user_id=1, feature_code="astrologer_chat")
+    with patch(
+        "app.services.entitlement_service.BillingService.get_subscription_status",
+        return_value=mock_sub,
+    ):
+        result = EntitlementService.get_feature_entitlement(
+            db, user_id=1, feature_code="astrologer_chat"
+        )
         assert result.reason == "canonical_binding"
         assert result.access_mode == "quota"
         assert len(result.usage_states) == 1
@@ -458,24 +472,39 @@ def test_premium_plan_astrologer_chat_quota_monthly(db):
     db.add(binding)
     db.commit()
 
-    db.add(PlanFeatureQuotaModel(
-        plan_feature_binding_id=binding.id,
-        quota_key="messages",
-        quota_limit=2000,
-        period_unit=PeriodUnit.MONTH,
-        period_value=1,
-        reset_mode=ResetMode.CALENDAR,
-    ))
+    db.add(
+        PlanFeatureQuotaModel(
+            plan_feature_binding_id=binding.id,
+            quota_key="messages",
+            quota_limit=2000,
+            period_unit=PeriodUnit.MONTH,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+        )
+    )
     db.commit()
 
     mock_sub = SubscriptionStatusData(
         status="active",
-        plan=BillingPlanData(code="premium", display_name="P", is_active=True, monthly_price_cents=1, currency="EUR", daily_message_limit=0),
-        failure_reason=None, updated_at=None,
+        plan=BillingPlanData(
+            code="premium",
+            display_name="P",
+            is_active=True,
+            monthly_price_cents=1,
+            currency="EUR",
+            daily_message_limit=0,
+        ),
+        failure_reason=None,
+        updated_at=None,
     )
 
-    with patch("app.services.entitlement_service.BillingService.get_subscription_status", return_value=mock_sub):
-        result = EntitlementService.get_feature_entitlement(db, user_id=1, feature_code="astrologer_chat")
+    with patch(
+        "app.services.entitlement_service.BillingService.get_subscription_status",
+        return_value=mock_sub,
+    ):
+        result = EntitlementService.get_feature_entitlement(
+            db, user_id=1, feature_code="astrologer_chat"
+        )
         assert result.reason == "canonical_binding"
         assert len(result.usage_states) == 1
         window_end = result.usage_states[0].window_end
@@ -499,19 +528,34 @@ def test_trial_plan_astrologer_chat_disabled(db):
     db.add_all([plan, feat])
     db.commit()
 
-    db.add(PlanFeatureBindingModel(
-        plan_id=plan.id, feature_id=feat.id, access_mode=AccessMode.DISABLED, is_enabled=True
-    ))
+    db.add(
+        PlanFeatureBindingModel(
+            plan_id=plan.id, feature_id=feat.id, access_mode=AccessMode.DISABLED, is_enabled=True
+        )
+    )
     db.commit()
 
     mock_sub = SubscriptionStatusData(
         status="trialing",
-        plan=BillingPlanData(code="trial", display_name="T", is_active=True, monthly_price_cents=1, currency="EUR", daily_message_limit=0),
-        failure_reason=None, updated_at=None,
+        plan=BillingPlanData(
+            code="trial",
+            display_name="T",
+            is_active=True,
+            monthly_price_cents=1,
+            currency="EUR",
+            daily_message_limit=0,
+        ),
+        failure_reason=None,
+        updated_at=None,
     )
 
-    with patch("app.services.entitlement_service.BillingService.get_subscription_status", return_value=mock_sub):
-        result = EntitlementService.get_feature_entitlement(db, user_id=1, feature_code="astrologer_chat")
+    with patch(
+        "app.services.entitlement_service.BillingService.get_subscription_status",
+        return_value=mock_sub,
+    ):
+        result = EntitlementService.get_feature_entitlement(
+            db, user_id=1, feature_code="astrologer_chat"
+        )
         assert result.reason == "disabled_by_plan"
         assert result.final_access is False
         assert result.usage_states == []

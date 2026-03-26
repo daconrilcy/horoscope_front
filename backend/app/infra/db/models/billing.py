@@ -71,6 +71,9 @@ class PaymentAttemptModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
 
+# LEGACY: Table user_daily_quota_usages est obsolète pour les flows B2C feature-gated.
+# Conservée pour : (1) export RGPD dans privacy_service.py, (2) rollback éventuel,
+# (3) script migrate_legacy_quota_to_canonical.py. Ne pas DROP avant audit complet.
 class UserDailyQuotaUsageModel(Base):
     __tablename__ = "user_daily_quota_usages"
     __table_args__ = (

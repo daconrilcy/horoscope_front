@@ -135,6 +135,8 @@ async function postRetry(payload: BillingCheckoutPayload): Promise<BillingChecko
   return body.data
 }
 
+// LEGACY: Non importée ailleurs dans le frontend. À supprimer après décommission
+// de GET /v1/billing/quota (remplacé par GET /v1/entitlements/me story 61.14).
 async function fetchQuotaStatus(): Promise<BillingQuotaStatus> {
   const response = await fetch(`${API_BASE_URL}/v1/billing/quota`, {
     method: "GET",

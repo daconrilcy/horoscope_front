@@ -1,6 +1,11 @@
 """
 Service de gestion des quotas utilisateur.
 
+LEGACY: Ce module n'est plus utilisé dans les flows B2C feature-gated (astrologer_chat,
+# natal_chart_long, thematic_consultation) depuis la story 61.15. Il reste uniquement pour
+# l'endpoint GET /v1/billing/quota (billing.py router) dont l'utilité front est à auditer.
+# En attente de décommission complète. Ne pas utiliser pour de nouveaux features.
+
 Ce module gère les quotas de messages journaliers des utilisateurs
 en fonction de leur plan d'abonnement.
 """

@@ -484,6 +484,11 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Code review BMAD exécutée sur l'implémentation finale de 61-15.
+- Correction du script de migration pour distinguer `disabled` vs `no canonical binding`.
+- Correction de la portée de migration `premium/month` pour n'agréger que la fenêtre mensuelle canonique active.
+- Ajout de tests unitaires du script de migration et extension de couverture `free` sur `GET /v1/entitlements/me`.
+
 ### File List
 
 - `backend/app/services/entitlement_service.py`
@@ -492,5 +497,37 @@ claude-sonnet-4-6
 - `backend/scripts/migrate_legacy_quota_to_canonical.py`
 - `backend/app/tests/unit/test_chat_entitlement_gate.py`
 - `backend/app/tests/unit/test_entitlement_service.py`
+- `backend/app/tests/unit/test_migrate_legacy_quota_to_canonical.py`
 - `backend/app/tests/integration/test_chat_entitlement.py`
 - `backend/app/tests/integration/test_entitlements_me.py`
+
+## Senior Developer Review (AI)
+
+### Findings
+
+1. `HIGH` `backend/scripts/migrate_legacy_quota_to_canonical.py`
+   - Le script classait indistinctement les cas `disabled` et `no binding` en `skipped_disabled`, ce qui violait l'AC 9 demandant un `WARNING` + comptage en anomalie pour l'absence de binding canonique.
+   - Corrigé en introduisant une résolution explicite des statuts canoniques (`quota`, `disabled`, `no_binding`, `missing_catalog`).
+2. `HIGH` `backend/scripts/migrate_legacy_quota_to_canonical.py`
+   - Le chemin `premium/month` pouvait agréger des lignes legacy hors fenêtre mensuelle canonique, notamment avec `--days` couvrant un changement de mois.
+   - Corrigé en filtrant strictement les lignes sur la fenêtre canonique active avant agrégation.
+3. `MEDIUM` `backend/scripts/migrate_legacy_quota_to_canonical.py`
+   - Le mode par défaut ne modélisait pas la "fenêtre active uniquement" de l'AC 9 pour les quotas mensuels.
+   - Corrigé en faisant du comportement par défaut une migration par fenêtre canonique active, avec `--days` comme override explicite.
+4. `MEDIUM` `backend/app/tests/integration/test_entitlements_me.py`
+   - La couverture annoncée des plans connus ne testait pas `free`, alors que la story et le seed le considèrent comme plan canonique supporté.
+   - Corrigé avec un cas d'intégration dédié et extension de l'audit anti-`legacy_fallback`.
+
+### Validation
+
+- `ruff check .`
+- `pytest -q app/tests/unit/test_migrate_legacy_quota_to_canonical.py app/tests/unit/test_entitlement_service.py app/tests/unit/test_chat_entitlement_gate.py app/tests/unit/test_quota_usage_service.py app/tests/integration/test_chat_entitlement.py app/tests/integration/test_entitlements_me.py app/tests/integration/test_natal_chart_long_entitlement.py`
+
+### Outcome
+
+- Tous les findings `HIGH` et `MEDIUM` ont été corrigés.
+- Le statut reste `done`.
+
+## Change Log
+
+- 2026-03-26: code review BMAD 61-15, correction du script de migration canonique, ajout des tests de migration et extension de couverture `free`.

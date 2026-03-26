@@ -5,7 +5,6 @@ import pytest
 from app.services.chat_entitlement_gate import (
     ChatAccessDeniedError,
     ChatEntitlementGate,
-    ChatEntitlementResult,
     ChatQuotaExceededError,
 )
 from app.services.entitlement_service import EntitlementService

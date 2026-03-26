@@ -320,6 +320,9 @@ def get_subscription_status(
     return {"data": subscription.model_dump(mode="json"), "meta": {"request_id": request_id}}
 
 
+# LEGACY: Cet endpoint expose QuotaService.get_quota_status (user_daily_quota_usages).
+# fetchQuotaStatus() dans frontend/src/api/billing.ts n'est plus importée nulle part.
+# À décommissionner après validation que le front utilise GET /v1/entitlements/me à la place.
 @router.get(
     "/quota",
     response_model=QuotaApiResponse,

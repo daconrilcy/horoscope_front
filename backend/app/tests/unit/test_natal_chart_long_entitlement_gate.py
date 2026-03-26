@@ -109,17 +109,6 @@ def test_variant_code_multi_astrologer(db_session):
     assert result.variant_code == "multi_astrologer"
 
 
-def test_legacy_fallback_treated_as_no_binding(db_session):
-    entitlement = make_entitlement(reason="legacy_fallback", final_access=False)
-    with patch(
-        "app.services.entitlement_service.EntitlementService.get_feature_entitlement",
-        return_value=entitlement,
-    ):
-        with pytest.raises(NatalChartLongAccessDeniedError) as exc_info:
-            NatalChartLongEntitlementGate.check_and_consume(db_session, user_id=42)
-    assert exc_info.value.reason == "canonical_no_binding"
-
-
 def test_access_denied_no_plan(db_session):
     entitlement = make_entitlement(final_access=False, reason="no_plan")
     with patch(

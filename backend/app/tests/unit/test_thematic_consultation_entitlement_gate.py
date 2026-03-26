@@ -93,17 +93,6 @@ def test_canonical_unlimited_path_no_consume(db_session):
     mock_consume.assert_not_called()
 
 
-def test_legacy_fallback_treated_as_no_binding(db_session):
-    entitlement = make_entitlement(reason="legacy_fallback", final_access=False)
-    with patch(
-        "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
-        return_value=entitlement,
-    ):
-        with pytest.raises(ConsultationAccessDeniedError) as exc_info:
-            ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=42)
-    assert exc_info.value.reason == "canonical_no_binding"
-
-
 def test_access_denied_no_plan(db_session):
     entitlement = make_entitlement(
         final_access=False, reason="no_plan", plan_code="", billing_status="none"
