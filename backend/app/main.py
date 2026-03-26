@@ -30,6 +30,7 @@ from app.api.v1.routers.billing import router as billing_router
 from app.api.v1.routers.chat import router as chat_router
 from app.api.v1.routers.consultations import router as consultations_router
 from app.api.v1.routers.enterprise_credentials import router as enterprise_credentials_router
+from app.api.v1.routers.entitlements import router as entitlements_router
 from app.api.v1.routers.ephemeris import router as ephemeris_router
 from app.api.v1.routers.geocoding import router as geocoding_router
 from app.api.v1.routers.guidance import router as guidance_router
@@ -516,6 +517,7 @@ app.include_router(ephemeris_router)
 app.include_router(auth_router)
 app.include_router(audit_router)
 app.include_router(billing_router)
+app.include_router(entitlements_router)
 app.include_router(astrology_engine_router)
 app.include_router(b2b_astrology_router)
 app.include_router(b2b_billing_router)

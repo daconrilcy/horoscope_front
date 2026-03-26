@@ -34,7 +34,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-25 00:00:00
-last_updated: 2026-03-26 (61-13 ready-for-dev)
+last_updated: 2026-03-26 (61-14 ready-for-dev)
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -562,3 +562,4 @@ development_status:
   61-11-migration-chat-astrologue-entitlements-canoniques: done
   61-12-migration-thematic-consultation-entitlements-canoniques: done
   61-13-migration-natal-chart-long-entitlements-canoniques: done
+  61-14-endpoint-entitlements-me: done
