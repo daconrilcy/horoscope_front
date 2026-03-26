@@ -166,7 +166,12 @@ class EntitlementService:
                             quota_exhausted = any(s.exhausted for s in usage_states)
 
                 final_access = is_billing_active and is_enabled_by_plan and not quota_exhausted
-                reason = "billing_inactive" if not is_billing_active else "canonical_binding"
+                if not is_billing_active:
+                    reason = "billing_inactive"
+                elif not is_enabled_by_plan:
+                    reason = "disabled_by_plan"
+                else:
+                    reason = "canonical_binding"
 
                 return FeatureEntitlement(
                     plan_code=plan_code,

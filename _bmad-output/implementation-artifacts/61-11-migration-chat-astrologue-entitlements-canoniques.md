@@ -19,7 +19,7 @@ de sorte que mon quota soit réellement consommé, que les refus soient clairs e
 7. La consommation canonique a lieu une seule fois par message accepté — elle est faite avant l'appel LLM ; aucun mécanisme de remboursement automatique n'est implémenté dans cette story
 8. En cas d'exception `ChatQuotaExceededError` ou `ChatAccessDeniedError`, le routeur appelle `db.rollback()` — aucune consommation partielle ne persiste en base
 9. La réponse du endpoint `POST /v1/chat/messages` inclut un objet `quota_info` avec les champs `remaining`, `limit`, `window_end` (null si unlimited ou legacy)
-10. Les tests d'intégration existants du chat continuent de passer sans modification
+10. Les tests d'intégration existants du chat continuent de passer ; les attentes sont alignées sur les nouveaux codes d'erreur canoniques quand le contrat API change
 11. `QuotaService.consume_quota_or_raise()` reste utilisé exclusivement sur le chemin `legacy_fallback`
 
 ## Tasks / Subtasks
@@ -71,6 +71,8 @@ de sorte que mon quota soit réellement consommé, que les refus soient clairs e
   - [x] `test_send_message_no_plan_rejected` : user without plan → 403, `code="chat_access_denied"`
   - [x] `test_send_message_quota_exhausted_rejected` : counter exhausted → 429, `code="chat_quota_exceeded"`, `details.window_end` present
   - [x] `test_send_message_legacy_fallback_still_works` : user without canonical binding → 200 (legacy QuotaService active), behavior unchanged
+  - [x] `test_send_chat_message_disabled_canonical_binding_returns_disabled_by_plan` : binding canonique désactivé → 403, `details.reason="disabled_by_plan"`
+  - [x] `test_send_chat_message_rolls_back_partial_canonical_consumption` : consommation partielle simulée sur chemin canonique → 429 et compteur rollback à `used_count=0`
 
 - [x] **Non-régression** (AC: 10, 11)
   - [x] `pytest backend/app/tests/integration/test_chat_api.py` — tous verts
@@ -417,6 +419,8 @@ claude-sonnet-4-6
 
 - Fixed `ResponseValidationError` in integration tests by providing complete `ChatReplyData` mock.
 - Updated `test_chat_api.py` to expect `chat_access_denied` instead of `no_active_subscription` as per the new ACs.
+- Code review follow-up: fixed canonical disabled binding reason to `disabled_by_plan`.
+- Code review follow-up: added real integration coverage for canonical disabled binding and rollback of partial canonical consumption.
 
 ### Completion Notes List
 
@@ -424,7 +428,9 @@ claude-sonnet-4-6
 - Integrated the gate in `chat.py` router.
 - Added `quota_info` to `ChatMessageApiResponse`.
 - Verified all canonical and legacy paths via unit and integration tests.
-- All 93 tests passing.
+- Fixed `EntitlementService` to emit `disabled_by_plan` when a canonical binding exists but is not enabled.
+- Added integration coverage on the real API flow for `disabled_by_plan` and canonical rollback behavior.
+- All targeted backend tests passing after review fixes.
 
 ### File List
 
@@ -433,3 +439,4 @@ claude-sonnet-4-6
 - `backend/app/tests/unit/test_chat_entitlement_gate.py`
 - `backend/app/tests/integration/test_chat_entitlement.py`
 - `backend/app/tests/integration/test_chat_api.py`
+- `backend/app/tests/unit/test_entitlement_service.py`

@@ -212,6 +212,7 @@ def test_get_feature_entitlement_canonical_disabled(db):
         assert result.access_mode == "disabled"
         assert result.is_enabled_by_plan is False
         assert result.final_access is False
+        assert result.reason == "disabled_by_plan"
 
 
 def test_get_feature_entitlement_legacy_fallback_chat(db):
@@ -420,6 +421,7 @@ def test_get_feature_entitlement_quota_missing_definition(db):
         assert result.final_access is False
         assert result.is_enabled_by_plan is False
         assert len(result.quotas) == 0
+        assert result.reason == "disabled_by_plan"
 
 
 def test_get_feature_entitlement_canonical_no_binding(db):
@@ -802,6 +804,6 @@ def test_entitlement_rolling_quota_disables_access_instead_of_crashing(db):
 
     assert result.final_access is False
     assert result.is_enabled_by_plan is False
-    assert result.reason == "canonical_binding"
+    assert result.reason == "disabled_by_plan"
     assert result.usage_states == []
     assert result.quota_exhausted is False

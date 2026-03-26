@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
 
@@ -16,6 +17,17 @@ from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.feature_flag import FeatureFlagModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.product_entitlements import (
+    AccessMode,
+    Audience,
+    FeatureCatalogModel,
+    FeatureUsageCounterModel,
+    PeriodUnit,
+    PlanCatalogModel,
+    PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
+    ResetMode,
+)
 from app.infra.db.models.reference import (
     AspectModel,
     AstroCharacteristicModel,
@@ -29,6 +41,7 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
+from app.services import chat_entitlement_gate as chat_entitlement_gate_module
 from app.services.ai_engine_adapter import (
     reset_test_generators,
     set_test_chat_generator,
@@ -36,6 +49,7 @@ from app.services.ai_engine_adapter import (
 from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
 from app.services.chat_guidance_service import ChatGuidanceServiceError
+from app.services.quota_usage_service import QuotaExhaustedError
 
 client = TestClient(app)
 
@@ -133,6 +147,77 @@ def _enable_module_for_user(
         },
     )
     assert response.status_code == 200
+
+
+def _get_chat_api_user_id() -> int:
+    with SessionLocal() as db:
+        user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
+        assert user is not None
+        return user.id
+
+
+def _seed_canonical_chat_binding(
+    *,
+    plan_code: str,
+    access_mode: AccessMode,
+    is_enabled: bool = True,
+    quotas: list[tuple[str, int]] | None = None,
+) -> None:
+    with SessionLocal() as db:
+        plan = db.scalar(select(PlanCatalogModel).where(PlanCatalogModel.plan_code == plan_code))
+        if plan is None:
+            plan = PlanCatalogModel(plan_code=plan_code, plan_name=plan_code, audience=Audience.B2C)
+            db.add(plan)
+            db.flush()
+
+        feature = db.scalar(
+            select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == "astrologer_chat")
+        )
+        if feature is None:
+            feature = FeatureCatalogModel(
+                feature_code="astrologer_chat",
+                feature_name="Astrologer chat",
+                is_metered=True,
+            )
+            db.add(feature)
+            db.flush()
+
+        binding = db.scalar(
+            select(PlanFeatureBindingModel).where(
+                PlanFeatureBindingModel.plan_id == plan.id,
+                PlanFeatureBindingModel.feature_id == feature.id,
+            )
+        )
+        if binding is None:
+            binding = PlanFeatureBindingModel(
+                plan_id=plan.id,
+                feature_id=feature.id,
+                access_mode=access_mode,
+                is_enabled=is_enabled,
+            )
+            db.add(binding)
+            db.flush()
+        else:
+            binding.access_mode = access_mode
+            binding.is_enabled = is_enabled
+            db.flush()
+
+        if quotas is not None:
+            db.query(PlanFeatureQuotaModel).filter(
+                PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
+            ).delete()
+            for quota_key, quota_limit in quotas:
+                db.add(
+                    PlanFeatureQuotaModel(
+                        plan_feature_binding_id=binding.id,
+                        quota_key=quota_key,
+                        quota_limit=quota_limit,
+                        period_unit=PeriodUnit.DAY,
+                        period_value=1,
+                        reset_mode=ResetMode.CALENDAR,
+                    )
+                )
+        db.commit()
 
 
 def test_send_chat_message_requires_token() -> None:
@@ -744,6 +829,90 @@ def test_send_chat_message_requires_active_subscription() -> None:
     )
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "chat_access_denied"
+
+
+def test_send_chat_message_disabled_canonical_binding_returns_disabled_by_plan() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    _activate_entry_plan(access_token, "chat-checkout-disabled-binding-1")
+    _seed_canonical_chat_binding(
+        plan_code="basic-entry",
+        access_mode=AccessMode.DISABLED,
+        is_enabled=True,
+    )
+
+    response = client.post(
+        "/v1/chat/messages",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"message": "Question binding desactive"},
+    )
+
+    assert response.status_code == 403
+    payload = response.json()["error"]
+    assert payload["code"] == "chat_access_denied"
+    assert payload["details"]["reason"] == "disabled_by_plan"
+
+
+def test_send_chat_message_rolls_back_partial_canonical_consumption() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    _activate_entry_plan(access_token, "chat-checkout-rollback-1")
+    _seed_canonical_chat_binding(
+        plan_code="basic-entry",
+        access_mode=AccessMode.QUOTA,
+        is_enabled=True,
+        quotas=[("daily", 5), ("burst", 2)],
+    )
+    user_id = _get_chat_api_user_id()
+
+    original_consume = chat_entitlement_gate_module.QuotaUsageService.consume
+    call_count = {"value": 0}
+
+    def _consume_then_fail(*args: object, **kwargs: object) -> object:
+        quota = kwargs["quota"]
+        call_count["value"] += 1
+        if quota.quota_key == "daily":
+            return original_consume(*args, **kwargs)
+        raise QuotaExhaustedError(
+            quota_key=quota.quota_key,
+            used=2,
+            limit=2,
+            feature_code="astrologer_chat",
+        )
+
+    monkeypatch = pytest.MonkeyPatch()
+    monkeypatch.setattr(
+        "app.services.chat_entitlement_gate.QuotaUsageService.consume",
+        _consume_then_fail,
+    )
+    try:
+        response = client.post(
+            "/v1/chat/messages",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json={"message": "Question rollback"},
+        )
+    finally:
+        monkeypatch.undo()
+
+    assert response.status_code == 429
+    payload = response.json()["error"]
+    assert payload["code"] == "chat_quota_exceeded"
+    assert payload["details"]["quota_key"] == "burst"
+    assert call_count["value"] == 2
+
+    with SessionLocal() as db:
+        daily_counter = db.scalar(
+            select(FeatureUsageCounterModel).where(
+                FeatureUsageCounterModel.user_id == user_id,
+                FeatureUsageCounterModel.feature_code == "astrologer_chat",
+                FeatureUsageCounterModel.quota_key == "daily",
+                FeatureUsageCounterModel.period_unit == PeriodUnit.DAY,
+                FeatureUsageCounterModel.period_value == 1,
+                FeatureUsageCounterModel.reset_mode == ResetMode.CALENDAR,
+            )
+        )
+        assert daily_counter is not None
+        assert daily_counter.used_count == 0
 
 
 # --- AC1 & AC2: Enriched conversations list ---
