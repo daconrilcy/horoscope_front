@@ -25,6 +25,16 @@ from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentia
 from app.infra.db.models.enterprise_editorial_config import EnterpriseEditorialConfigModel
 from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
 from app.infra.db.models.privacy import UserPrivacyRequestModel
+from app.infra.db.models.product_entitlements import (
+    AccessMode,
+    Audience,
+    FeatureCatalogModel,
+    PeriodUnit,
+    PlanCatalogModel,
+    PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
+    ResetMode,
+)
 from app.infra.db.models.reference import (
     AspectModel,
     AstroCharacteristicModel,
@@ -40,18 +50,6 @@ from app.main import app
 from app.services.auth_service import AuthService
 from app.services.enterprise_credentials_service import EnterpriseCredentialsService
 from app.services.reference_data_service import ReferenceDataService
-
-
-from app.infra.db.models.product_entitlements import (
-    AccessMode,
-    Audience,
-    FeatureCatalogModel,
-    PlanCatalogModel,
-    PlanFeatureBindingModel,
-    PlanFeatureQuotaModel,
-    PeriodUnit,
-    ResetMode,
-)
 
 
 def _cleanup_tables() -> None:
@@ -83,7 +81,7 @@ def _cleanup_tables() -> None:
             UserModel,
         ):
             db.execute(delete(model))
-        
+
         # Seed canonical features
         feature = FeatureCatalogModel(
             feature_code="astrologer_chat",
@@ -94,10 +92,12 @@ def _cleanup_tables() -> None:
         db.flush()
 
         # Seed basic-entry plan
-        p_basic = PlanCatalogModel(plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C)
+        p_basic = PlanCatalogModel(
+            plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C
+        )
         db.add(p_basic)
         db.flush()
-        
+
         b_basic = PlanFeatureBindingModel(
             plan_id=p_basic.id,
             feature_id=feature.id,
@@ -106,16 +106,18 @@ def _cleanup_tables() -> None:
         )
         db.add(b_basic)
         db.flush()
-        
-        db.add(PlanFeatureQuotaModel(
-            plan_feature_binding_id=b_basic.id,
-            quota_key="daily",
-            quota_limit=5,
-            period_unit=PeriodUnit.DAY,
-            period_value=1,
-            reset_mode=ResetMode.CALENDAR,
-        ))
-        
+
+        db.add(
+            PlanFeatureQuotaModel(
+                plan_feature_binding_id=b_basic.id,
+                quota_key="daily",
+                quota_limit=5,
+                period_unit=PeriodUnit.DAY,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+            )
+        )
+
         db.commit()
 
 

@@ -9,23 +9,22 @@ from app.infra.db.models.billing import (
     UserDailyQuotaUsageModel,
     UserSubscriptionModel,
 )
+from app.infra.db.models.product_entitlements import (
+    AccessMode,
+    Audience,
+    FeatureCatalogModel,
+    PeriodUnit,
+    PlanCatalogModel,
+    PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
+    ResetMode,
+)
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.infra.observability.metrics import get_metrics_snapshot, reset_metrics
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
-
-from app.infra.db.models.product_entitlements import (
-    AccessMode,
-    Audience,
-    FeatureCatalogModel,
-    PlanCatalogModel,
-    PlanFeatureBindingModel,
-    PlanFeatureQuotaModel,
-    PeriodUnit,
-    ResetMode,
-)
 
 client = TestClient(app)
 
@@ -45,7 +44,7 @@ def _cleanup_tables() -> None:
             UserModel,
         ):
             db.execute(delete(model))
-        
+
         # Seed canonical features
         feature = FeatureCatalogModel(
             feature_code="astrologer_chat",
@@ -56,10 +55,14 @@ def _cleanup_tables() -> None:
         db.flush()
 
         # Seed basic-entry plan
-        p_basic = PlanCatalogModel(plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C)
+        p_basic = PlanCatalogModel(
+            plan_code="basic-entry",
+            plan_name="Basic",
+            audience=Audience.B2C,
+        )
         db.add(p_basic)
         db.flush()
-        
+
         b_basic = PlanFeatureBindingModel(
             plan_id=p_basic.id,
             feature_id=feature.id,
@@ -68,18 +71,24 @@ def _cleanup_tables() -> None:
         )
         db.add(b_basic)
         db.flush()
-        
-        db.add(PlanFeatureQuotaModel(
-            plan_feature_binding_id=b_basic.id,
-            quota_key="daily",
-            quota_limit=5,
-            period_unit=PeriodUnit.DAY,
-            period_value=1,
-            reset_mode=ResetMode.CALENDAR,
-        ))
+
+        db.add(
+            PlanFeatureQuotaModel(
+                plan_feature_binding_id=b_basic.id,
+                quota_key="daily",
+                quota_limit=5,
+                period_unit=PeriodUnit.DAY,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+            )
+        )
 
         # Seed premium-unlimited plan
-        p_premium = PlanCatalogModel(plan_code="premium-unlimited", plan_name="Premium", audience=Audience.B2C)
+        p_premium = PlanCatalogModel(
+            plan_code="premium-unlimited",
+            plan_name="Premium",
+            audience=Audience.B2C,
+        )
         db.add(p_premium)
         db.flush()
 
@@ -92,15 +101,17 @@ def _cleanup_tables() -> None:
         db.add(b_premium)
         db.flush()
 
-        db.add(PlanFeatureQuotaModel(
-            plan_feature_binding_id=b_premium.id,
-            quota_key="daily",
-            quota_limit=1000,
-            period_unit=PeriodUnit.DAY,
-            period_value=1,
-            reset_mode=ResetMode.CALENDAR,
-        ))
-        
+        db.add(
+            PlanFeatureQuotaModel(
+                plan_feature_binding_id=b_premium.id,
+                quota_key="daily",
+                quota_limit=1000,
+                period_unit=PeriodUnit.DAY,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+            )
+        )
+
         db.commit()
 
 
@@ -354,6 +365,18 @@ def test_billing_checkout_validation_error_returns_503_when_audit_write_fails(
     )
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "audit_unavailable"
+
+
+def test_billing_quota_endpoint_returns_404() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+
+    response = client.get(
+        "/v1/billing/quota",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+    assert response.status_code == 404
 
 
 def test_billing_plan_change_updates_subscription_and_quota_limit() -> None:

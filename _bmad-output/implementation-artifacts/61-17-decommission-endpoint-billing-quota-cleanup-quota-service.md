@@ -82,6 +82,7 @@ claude-sonnet-4-6
 - Seeding systématique des plans canoniques dans les `_cleanup_tables` des tests d'intégration pour garantir le passage des gates.
 - Refactor complet du frontend pour utiliser les nouveaux noms de types et helpers.
 - Vérification par `ruff` et passage de 84 tests d'intégration backend et 24 tests frontend vitest.
+- Revue BMAD effectuée après implémentation: correction du contrat TypeScript `billing.ts`, du flux `BillingPanel`, suppression des styles inline restants dans `SubscriptionSettings`, et ajout d'un test explicite de retour `404` sur `GET /v1/billing/quota`.
 
 ### File List
 - backend/app/api/v1/routers/billing.py
@@ -100,7 +101,35 @@ claude-sonnet-4-6
 - frontend/src/api/billing.ts
 - frontend/src/components/BillingPanel.tsx
 - frontend/src/pages/ChatPage.tsx
+- frontend/src/pages/settings/Settings.css
 - frontend/src/pages/settings/SubscriptionSettings.tsx
 - frontend/src/pages/settings/UsageSettings.tsx
+- frontend/src/tests/App.test.tsx
+- frontend/src/tests/AppShell.test.tsx
 - frontend/src/tests/BillingPanel.test.tsx
 - frontend/src/tests/ChatPage.test.tsx
+- frontend/src/tests/SettingsPage.test.tsx
+- frontend/src/tests/router.test.tsx
+
+## Senior Developer Review (AI)
+
+### Findings
+- HIGH: `frontend/src/api/billing.ts` avait dérivé du contrat backend réel (`/v1/billing/subscription`, `/v1/billing/checkout`, `/v1/billing/plan-change`) avec des types incompatibles et un import invalide de `getAccessTokenAuthHeader`, ce qui cassait la vérification TypeScript sur le périmètre billing.
+- MEDIUM: `frontend/src/components/BillingPanel.tsx` utilisait des payloads et champs de réponse qui n'existent pas (`checkoutId`, `payment_failure_reason`, `last_failed_checkout_id`), ce qui rendait le flux de retry et de changement de plan incohérent avec l'API réelle.
+- MEDIUM: l'AC1 n'était pas vérifié explicitement par un test de régression dédié sur le `404` de `GET /v1/billing/quota`.
+- MEDIUM: la `File List` de la story était incomplète par rapport au delta réel du commit.
+
+### Fixes Applied
+- Contrat billing frontend réaligné sur les DTO backend et helper renommé conservé (`useChatEntitlementUsage`).
+- `BillingPanel` corrigé pour utiliser les vrais payloads de checkout/retry/plan-change.
+- `SubscriptionSettings` nettoyé pour supprimer les styles inline restants du périmètre touché.
+- Test backend ajouté pour valider le `404` sur `/v1/billing/quota`.
+- `File List` synchronisée avec les fichiers réellement modifiés autour de la story.
+
+### Validation
+- `.\.venv\Scripts\Activate.ps1; cd backend; pytest -q app/tests/integration/test_billing_api.py`
+- `npx vitest run src/tests/BillingPanel.test.tsx src/tests/ChatPage.test.tsx src/tests/SettingsPage.test.tsx src/tests/App.test.tsx src/tests/AppShell.test.tsx src/tests/router.test.tsx`
+
+## Change Log
+
+- 2026-03-26: revue BMAD 61-17 exécutée, issues frontend/backend corrigées, couverture de régression `404` ajoutée, artefact de story synchronisé.

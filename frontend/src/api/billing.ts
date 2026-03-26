@@ -1,48 +1,44 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { getAccessTokenAuthHeader } from "./auth"
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+import { API_BASE_URL } from "./client"
+import { getAccessTokenAuthHeader } from "../utils/authToken"
 
 export type BillingPlan = {
   code: string
-  name: string
+  display_name: string
   monthly_price_cents: number
-}
-
-export type BillingSubscription = {
-  status: "active" | "canceled" | "past_due" | "incomplete"
-  plan: BillingPlan | null
-  current_period_end: string | null
+  currency: string
+  daily_message_limit: number
+  is_active: boolean
 }
 
 export type BillingSubscriptionStatus = {
-  is_active: boolean
-  subscription: BillingSubscription
-  can_checkout: boolean
-  can_change_plan: boolean
-  available_plans: BillingPlan[]
+  status: "inactive" | "active"
+  plan: BillingPlan | null
+  failure_reason: string | null
+  updated_at: string | null
 }
 
 export type BillingCheckoutPayload = {
-  plan_code: string
-  payment_method_token: string
-  idempotency_key: string
+  plan_code?: string
+  payment_method_token?: string
+  idempotency_key?: string
 }
 
 export type BillingCheckoutData = {
-  checkout_id: number
-  status: "pending" | "succeeded" | "failed"
+  subscription: BillingSubscriptionStatus
   payment_status: "pending" | "succeeded" | "failed"
-  client_secret: string | null
-  subscription: BillingSubscription
+  payment_attempt_id: number
+  idempotency_key: string
 }
 
 export type BillingPlanChangePayload = {
   target_plan_code: string
-  idempotency_key: string
+  idempotency_key?: string
 }
 
 export type BillingPlanChangeData = {
+  subscription: BillingSubscriptionStatus
   previous_plan_code: string
   target_plan_code: string
   plan_change_status: "pending" | "succeeded" | "failed"

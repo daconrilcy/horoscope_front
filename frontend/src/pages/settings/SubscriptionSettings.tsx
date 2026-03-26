@@ -74,7 +74,7 @@ export function SubscriptionSettings() {
           <p className="settings-save-feedback settings-save-feedback--saving">Chargement...</p>
         ) : (
           <>
-            <h3 className="settings-section-title" style={{ marginTop: '24px', fontSize: '1.2rem' }}>
+            <h3 className="settings-section-title settings-section-title--usage">
               {t.availablePlans}
             </h3>
             <div className="subscription-plans-grid">
@@ -82,18 +82,25 @@ export function SubscriptionSettings() {
                 const isCurrent = currentPlanCode === plan.code
                 const isSelected = displaySelected === plan.code
                 return (
-                  <div 
-                    key={plan.code || 'free'} 
+                  <div
+                    key={plan.code || "free"}
                     className={`subscription-plan-card ${isSelected ? 'subscription-plan-card--active' : ''}`}
                     onClick={() => setSelectedPlanCode(plan.code)}
-                    style={{ 
-                      cursor: isAnyPending ? 'wait' : 'pointer',
-                      opacity: isAnyPending ? 0.6 : 1,
-                      borderColor: isCurrent && !isSelected ? 'rgba(255, 255, 255, 0.4)' : undefined
+                    role="button"
+                    tabIndex={isAnyPending ? -1 : 0}
+                    aria-pressed={isSelected}
+                    onKeyDown={(event) => {
+                      if (isAnyPending) return
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault()
+                        setSelectedPlanCode(plan.code)
+                      }
                     }}
+                    data-current-unselected={isCurrent && !isSelected}
+                    data-pending={isAnyPending}
                   >
                     {isCurrent && !isSelected && (
-                      <div className="subscription-plan-card__badge" style={{ background: 'rgba(255, 255, 255, 0.2)', color: 'inherit', boxShadow: 'none' }}>
+                      <div className="subscription-plan-card__badge subscription-plan-card__badge--muted">
                         {t.currentPlan}
                       </div>
                     )}
@@ -112,29 +119,23 @@ export function SubscriptionSettings() {
               })}
             </div>
 
-            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '16px' }}>
-               {hasChanges && displaySelected === null && (
-                 <span className="settings-text-muted">{t.cancelSoon}</span>
-               )}
-               <button 
-                  type="button"
-                  className="settings-tab settings-tab--active"
-                  style={{ 
-                    minWidth: '160px', 
-                    justifyContent: 'center', 
-                    opacity: (!hasChanges || displaySelected === null || isAnyPending) ? 0.5 : 1, 
-                    cursor: (!hasChanges || displaySelected === null || isAnyPending) ? 'not-allowed' : 'pointer' 
-                  }}
-                  onClick={handleValidate}
-                  disabled={!hasChanges || displaySelected === null || isAnyPending}
-               >
-                  {isAnyPending ? t.validating : t.validatePlan}
-               </button>
+            <div className="subscription-actions">
+              {hasChanges && displaySelected === null && (
+                <span className="settings-text-muted">{t.cancelSoon}</span>
+              )}
+              <button
+                type="button"
+                className="settings-tab settings-tab--active subscription-actions__button"
+                onClick={handleValidate}
+                disabled={!hasChanges || displaySelected === null || isAnyPending}
+              >
+                {isAnyPending ? t.validating : t.validatePlan}
+              </button>
             </div>
 
             <div className="subscription-credits-section">
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div className="default-astrologer-option__avatar--placeholder" style={{ width: '48px', height: '48px' }}>
+              <div className="subscription-credits-section__content">
+                <div className="default-astrologer-option__avatar--placeholder subscription-credits-section__icon">
                   <CreditCard size={24} />
                 </div>
                 <div>
@@ -142,12 +143,11 @@ export function SubscriptionSettings() {
                   <p className="subscription-credits-section__desc">{t.buyCreditsDesc}</p>
                   <button 
                     type="button" 
-                    className="settings-tab" 
+                    className="settings-tab subscription-credits-section__button"
                     disabled 
                     title={t.soon}
-                    style={{ opacity: 0.6, cursor: 'not-allowed' }}
                   >
-                    {t.buyCredits} — {t.soon}
+                    {t.buyCredits} - {t.soon}
                   </button>
                 </div>
               </div>

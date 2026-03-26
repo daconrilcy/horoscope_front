@@ -2,22 +2,21 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
 from app.infra.db.base import Base
+from app.infra.db.models.product_entitlements import (
+    AccessMode,
+    Audience,
+    FeatureCatalogModel,
+    PeriodUnit,
+    PlanCatalogModel,
+    PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
+    ResetMode,
+)
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.infra.observability.metrics import increment_counter, observe_duration, reset_metrics
 from app.main import app
 from app.services.auth_service import AuthService
-
-from app.infra.db.models.product_entitlements import (
-    AccessMode,
-    Audience,
-    FeatureCatalogModel,
-    PlanCatalogModel,
-    PlanFeatureBindingModel,
-    PlanFeatureQuotaModel,
-    PeriodUnit,
-    ResetMode,
-)
 
 client = TestClient(app)
 
@@ -28,7 +27,7 @@ def _cleanup_tables() -> None:
     reset_metrics()
     with SessionLocal() as db:
         db.execute(delete(UserModel))
-        
+
         # Seed canonical features
         feature = FeatureCatalogModel(
             feature_code="astrologer_chat",
@@ -39,10 +38,12 @@ def _cleanup_tables() -> None:
         db.flush()
 
         # Seed basic-entry plan
-        p_basic = PlanCatalogModel(plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C)
+        p_basic = PlanCatalogModel(
+            plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C
+        )
         db.add(p_basic)
         db.flush()
-        
+
         b_basic = PlanFeatureBindingModel(
             plan_id=p_basic.id,
             feature_id=feature.id,
@@ -51,16 +52,18 @@ def _cleanup_tables() -> None:
         )
         db.add(b_basic)
         db.flush()
-        
-        db.add(PlanFeatureQuotaModel(
-            plan_feature_binding_id=b_basic.id,
-            quota_key="daily",
-            quota_limit=5,
-            period_unit=PeriodUnit.DAY,
-            period_value=1,
-            reset_mode=ResetMode.CALENDAR,
-        ))
-        
+
+        db.add(
+            PlanFeatureQuotaModel(
+                plan_feature_binding_id=b_basic.id,
+                quota_key="daily",
+                quota_limit=5,
+                period_unit=PeriodUnit.DAY,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+            )
+        )
+
         db.commit()
 
 

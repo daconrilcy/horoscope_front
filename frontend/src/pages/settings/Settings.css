@@ -324,7 +324,17 @@
   background: var(--settings-card-surface);
   backdrop-filter: blur(16px);
   box-shadow: var(--settings-card-shadow-soft);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.subscription-plan-card[data-pending="true"] {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.subscription-plan-card[data-current-unselected="true"] {
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* Plan actif — reprend le traitement bordure accentuée des cards actives dans l'app */
@@ -369,7 +379,32 @@
   align-self: flex-start;
 }
 
+.subscription-plan-card__badge--muted {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: none;
+  color: inherit;
+}
+
 /* Section crédits */
+.subscription-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.subscription-actions__button {
+  justify-content: center;
+  min-width: 160px;
+}
+
+.subscription-actions__button:disabled,
+.subscription-credits-section__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .subscription-credits-section {
   margin-top: 28px;
   padding: 24px 26px;
@@ -439,6 +474,17 @@
   font-size: 24px;                               /* = .metric-value */
   font-weight: 700;
   line-height: 1;
+}
+
+.subscription-credits-section__content {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+}
+
+.subscription-credits-section__icon {
+  height: 48px;
+  width: 48px;
 }
 
 .usage-stat-value--time {

@@ -3,10 +3,20 @@ from __future__ import annotations
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from app.core.config import settings
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
-from sqlalchemy import select
+from app.infra.db.models.product_entitlements import (
+    AccessMode,
+    Audience,
+    FeatureCatalogModel,
+    PeriodUnit,
+    PlanCatalogModel,
+    PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
+    ResetMode,
+)
 from app.infra.db.session import SessionLocal
 from app.main import app
 from app.services.auth_service import AuthService
@@ -33,25 +43,14 @@ def _create_enterprise_api_key(email: str) -> str:
         db.commit()
         return created.api_key
 
-
-from app.infra.db.models.product_entitlements import (
-    AccessMode,
-    Audience,
-    FeatureCatalogModel,
-    PlanCatalogModel,
-    PlanFeatureBindingModel,
-    PlanFeatureQuotaModel,
-    PeriodUnit,
-    ResetMode,
-)
-
-
 def _seed_reference_data() -> None:
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db)
-        
+
         # Seed canonical features
-        feature = db.scalar(select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == "astrologer_chat"))
+        feature = db.scalar(
+            select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == "astrologer_chat")
+        )
         if not feature:
             feature = FeatureCatalogModel(
                 feature_code="astrologer_chat",
@@ -62,16 +61,22 @@ def _seed_reference_data() -> None:
             db.flush()
 
         # Seed basic-entry plan
-        p_basic = db.scalar(select(PlanCatalogModel).where(PlanCatalogModel.plan_code == "basic-entry"))
+        p_basic = db.scalar(
+            select(PlanCatalogModel).where(PlanCatalogModel.plan_code == "basic-entry")
+        )
         if not p_basic:
-            p_basic = PlanCatalogModel(plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C)
+            p_basic = PlanCatalogModel(
+                plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C
+            )
             db.add(p_basic)
             db.flush()
-        
-        b_basic = db.scalar(select(PlanFeatureBindingModel).where(
-            PlanFeatureBindingModel.plan_id == p_basic.id,
-            PlanFeatureBindingModel.feature_id == feature.id
-        ))
+
+        b_basic = db.scalar(
+            select(PlanFeatureBindingModel).where(
+                PlanFeatureBindingModel.plan_id == p_basic.id,
+                PlanFeatureBindingModel.feature_id == feature.id,
+            )
+        )
         if not b_basic:
             b_basic = PlanFeatureBindingModel(
                 plan_id=p_basic.id,
@@ -81,18 +86,24 @@ def _seed_reference_data() -> None:
             )
             db.add(b_basic)
             db.flush()
-        
-        q_basic = db.scalar(select(PlanFeatureQuotaModel).where(PlanFeatureQuotaModel.plan_feature_binding_id == b_basic.id))
+
+        q_basic = db.scalar(
+            select(PlanFeatureQuotaModel).where(
+                PlanFeatureQuotaModel.plan_feature_binding_id == b_basic.id
+            )
+        )
         if not q_basic:
-            db.add(PlanFeatureQuotaModel(
-                plan_feature_binding_id=b_basic.id,
-                quota_key="daily",
-                quota_limit=5,
-                period_unit=PeriodUnit.DAY,
-                period_value=1,
-                reset_mode=ResetMode.CALENDAR,
-            ))
-        
+            db.add(
+                PlanFeatureQuotaModel(
+                    plan_feature_binding_id=b_basic.id,
+                    quota_key="daily",
+                    quota_limit=5,
+                    period_unit=PeriodUnit.DAY,
+                    period_value=1,
+                    reset_mode=ResetMode.CALENDAR,
+                )
+            )
+
         db.commit()
 
 

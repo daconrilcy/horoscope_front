@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useState } from "react"
 
 import {
   BillingApiError,
@@ -25,34 +25,33 @@ export function BillingPanel() {
 
   const lastCheckoutResult = checkout.data
   const lastRetryResult = retry.data
-  const lastChangeResult = changePlan.data
-
   const checkoutError = checkout.error as BillingApiError | null
   const retryError = retry.error as BillingApiError | null
   const changePlanError = changePlan.error as BillingApiError | null
 
   const handleCheckout = () => {
-    const payload: BillingCheckoutData = {
+    checkout.mutate({
       plan_code: "basic-entry",
       payment_method_token: paymentToken,
-    }
-    checkout.mutate(payload)
+    })
   }
 
   const handleRetry = () => {
-    if (!lastCheckoutResult?.checkout_id && !subscription.data?.last_failed_checkout_id) return
-    const checkoutId = lastCheckoutResult?.checkout_id || subscription.data!.last_failed_checkout_id!
-    retry.mutate({ checkoutId, paymentMethodToken: paymentToken })
+    if (retry.isPending) return
+    retry.mutate({
+      plan_code: "basic-entry",
+      payment_method_token: paymentToken,
+    })
   }
 
   const handleChangePlan = () => {
-    const payload: BillingPlanChangeData = {
-      new_plan_code: targetPlanCode,
-    }
-    changePlan.mutate(payload)
+    changePlan.mutate({ target_plan_code: targetPlanCode })
   }
 
-  const failedReason = lastCheckoutResult?.payment_failure_reason || lastRetryResult?.payment_failure_reason
+  const failedReason =
+    lastCheckoutResult?.subscription.failure_reason ||
+    lastRetryResult?.subscription.failure_reason ||
+    subscription.data?.failure_reason
   const showRetryAction =
     lastCheckoutResult?.payment_status === "failed" || lastRetryResult?.payment_status === "failed"
   const targetPlanLimitLabel = targetPlanCode === "premium-unlimited" ? "1000 messages/jour" : "5 messages/jour"
@@ -86,7 +85,7 @@ export function BillingPanel() {
       </div>
 
       <div className="billing-actions mt-4">
-        {!subscription.data?.is_active && (
+        {subscription.data?.status !== "active" && (
           <button
             type="button"
             className="btn btn-primary"
@@ -109,7 +108,7 @@ export function BillingPanel() {
         )}
       </div>
 
-      {subscription.data?.is_active && (
+      {subscription.data?.status === "active" && (
         <div className="plan-change-section mt-8 border-t pt-6">
           <label htmlFor="billing-target-plan">{t.changePlanLabel}</label>
           <div className="action-row">
@@ -134,7 +133,9 @@ export function BillingPanel() {
         </div>
       )}
 
-      {subscription.data?.is_active ? <p className="state-line state-success">{t.statusActive}</p> : null}
+      {subscription.data?.status === "active" ? (
+        <p className="state-line state-success">{t.statusActive}</p>
+      ) : null}
       {quota.data && (
         <p className="state-line">
           Quota: {quota.data.consumed}/{quota.data.limit}

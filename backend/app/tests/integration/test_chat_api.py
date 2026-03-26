@@ -84,7 +84,7 @@ def _cleanup_tables() -> None:
             ReferenceVersionModel,
         ):
             db.execute(delete(model))
-        
+
         # Seed canonical features
         feature = FeatureCatalogModel(
             feature_code="astrologer_chat",
@@ -95,10 +95,12 @@ def _cleanup_tables() -> None:
         db.flush()
 
         # Seed basic-entry plan
-        p_basic = PlanCatalogModel(plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C)
+        p_basic = PlanCatalogModel(
+            plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C
+        )
         db.add(p_basic)
         db.flush()
-        
+
         b_basic = PlanFeatureBindingModel(
             plan_id=p_basic.id,
             feature_id=feature.id,
@@ -107,18 +109,22 @@ def _cleanup_tables() -> None:
         )
         db.add(b_basic)
         db.flush()
-        
-        db.add(PlanFeatureQuotaModel(
-            plan_feature_binding_id=b_basic.id,
-            quota_key="daily",
-            quota_limit=5,
-            period_unit=PeriodUnit.DAY,
-            period_value=1,
-            reset_mode=ResetMode.CALENDAR,
-        ))
+
+        db.add(
+            PlanFeatureQuotaModel(
+                plan_feature_binding_id=b_basic.id,
+                quota_key="daily",
+                quota_limit=5,
+                period_unit=PeriodUnit.DAY,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+            )
+        )
 
         # Seed premium-unlimited plan
-        p_premium = PlanCatalogModel(plan_code="premium-unlimited", plan_name="Premium", audience=Audience.B2C)
+        p_premium = PlanCatalogModel(
+            plan_code="premium-unlimited", plan_name="Premium", audience=Audience.B2C
+        )
         db.add(p_premium)
         db.flush()
 
@@ -131,14 +137,16 @@ def _cleanup_tables() -> None:
         db.add(b_premium)
         db.flush()
 
-        db.add(PlanFeatureQuotaModel(
-            plan_feature_binding_id=b_premium.id,
-            quota_key="daily",
-            quota_limit=1000,
-            period_unit=PeriodUnit.DAY,
-            period_value=1,
-            reset_mode=ResetMode.CALENDAR,
-        ))
+        db.add(
+            PlanFeatureQuotaModel(
+                plan_feature_binding_id=b_premium.id,
+                quota_key="daily",
+                quota_limit=1000,
+                period_unit=PeriodUnit.DAY,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+            )
+        )
 
         # Seed default persona
         default_persona = LlmPersonaModel(

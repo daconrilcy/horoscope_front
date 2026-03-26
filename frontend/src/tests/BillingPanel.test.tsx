@@ -37,7 +37,6 @@ describe("BillingPanel", () => {
       isLoading: false,
       isError: false,
       data: {
-        is_active: false,
         status: "inactive",
         plan: null,
         failure_reason: null,
@@ -84,16 +83,24 @@ describe("BillingPanel", () => {
       isLoading: false,
       isError: false,
       data: {
-        is_active: false,
         status: "inactive",
         plan: null,
         failure_reason: null,
-        last_failed_checkout_id: 123
       },
     })
     mockUseCheckoutEntryPlan.mockReturnValue({
       isPending: false,
-      data: { payment_status: "failed", payment_failure_reason: "card declined", checkout_id: 123 },
+      data: {
+        payment_status: "failed",
+        payment_attempt_id: 123,
+        idempotency_key: "billing-failed-1",
+        subscription: {
+          status: "inactive",
+          plan: null,
+          failure_reason: "card declined",
+          updated_at: null,
+        },
+      },
       error: null,
       mutate: vi.fn(),
     })
@@ -121,8 +128,8 @@ describe("BillingPanel", () => {
     
     fireEvent.click(retryButton)
     expect(mutateRetry).toHaveBeenCalledWith({
-      checkoutId: 123,
-      paymentMethodToken: "pm_card_ok",
+      plan_code: "basic-entry",
+      payment_method_token: "pm_card_ok",
     })
   })
 })
