@@ -5,6 +5,7 @@ import pytest
 from app.services.chat_entitlement_gate import (
     ChatAccessDeniedError,
     ChatEntitlementGate,
+    ChatEntitlementResult,
     ChatQuotaExceededError,
 )
 from app.services.entitlement_service import EntitlementService
@@ -67,20 +68,6 @@ def test_canonical_unlimited_path_no_consume(db_session):
     mock_consume.assert_not_called()
 
 
-def test_legacy_fallback_returns_legacy_path(db_session):
-    entitlement = make_entitlement(reason="legacy_fallback", final_access=False)
-
-    with (
-        patch.object(EntitlementService, "get_feature_entitlement", return_value=entitlement),
-        patch.object(QuotaUsageService, "consume") as mock_consume,
-    ):
-        result = ChatEntitlementGate.check_and_consume(db_session, user_id=1)
-
-    assert result.path == "legacy"
-    assert result.usage_states == []
-    mock_consume.assert_not_called()
-
-
 def test_access_denied_no_plan(db_session):
     entitlement = make_entitlement(final_access=False, reason="no_plan")
 
@@ -89,6 +76,16 @@ def test_access_denied_no_plan(db_session):
             ChatEntitlementGate.check_and_consume(db_session, user_id=1)
 
     assert excinfo.value.reason == "no_plan"
+
+
+def test_canonical_no_binding_raises_access_denied(db_session):
+    entitlement = make_entitlement(final_access=False, reason="canonical_no_binding")
+
+    with patch.object(EntitlementService, "get_feature_entitlement", return_value=entitlement):
+        with pytest.raises(ChatAccessDeniedError) as excinfo:
+            ChatEntitlementGate.check_and_consume(db_session, user_id=1)
+
+    assert excinfo.value.reason == "canonical_no_binding"
 
 
 def test_access_denied_billing_inactive(db_session):
@@ -155,17 +152,3 @@ def test_consume_called_once_per_quota(db_session):
     assert result.path == "canonical_quota"
     assert len(result.usage_states) == 2
     assert mock_consume.call_count == 2
-
-
-def test_legacy_fallback_final_access_false_still_delegates(db_session):
-    # legacy_fallback is evaluated before final_access
-    entitlement = make_entitlement(reason="legacy_fallback", final_access=False)
-
-    with (
-        patch.object(EntitlementService, "get_feature_entitlement", return_value=entitlement),
-        patch.object(QuotaUsageService, "consume") as mock_consume,
-    ):
-        result = ChatEntitlementGate.check_and_consume(db_session, user_id=1)
-
-    assert result.path == "legacy"
-    mock_consume.assert_not_called()

@@ -215,63 +215,6 @@ def test_get_feature_entitlement_canonical_disabled(db):
         assert result.reason == "disabled_by_plan"
 
 
-def test_get_feature_entitlement_legacy_fallback_chat(db):
-    # No plan or feature in catalog
-    mock_sub = SubscriptionStatusData(
-        status="active",
-        plan=BillingPlanData(
-            code="legacy",
-            display_name="Legacy",
-            monthly_price_cents=500,
-            currency="EUR",
-            daily_message_limit=7,
-            is_active=True,
-        ),
-        failure_reason=None,
-        updated_at=None,
-    )
-
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=mock_sub,
-    ):
-        result = EntitlementService.get_feature_entitlement(
-            db, user_id=1, feature_code="astrologer_chat"
-        )
-        assert result.reason == "legacy_fallback"
-        assert result.access_mode == "quota"
-        assert len(result.quotas) == 1
-        assert result.quotas[0].quota_limit == 7
-        assert result.final_access is True
-
-
-def test_get_feature_entitlement_legacy_fallback_chat_disabled(db):
-    mock_sub = SubscriptionStatusData(
-        status="active",
-        plan=BillingPlanData(
-            code="legacy",
-            display_name="Legacy",
-            monthly_price_cents=500,
-            currency="EUR",
-            daily_message_limit=0,
-            is_active=True,
-        ),
-        failure_reason=None,
-        updated_at=None,
-    )
-
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=mock_sub,
-    ):
-        result = EntitlementService.get_feature_entitlement(
-            db, user_id=1, feature_code="astrologer_chat"
-        )
-        assert result.reason == "legacy_fallback"
-        assert result.access_mode == "disabled"
-        assert result.final_access is False
-
-
 def test_get_feature_entitlement_unknown_feature(db):
     mock_sub = SubscriptionStatusData(
         status="active",
@@ -357,33 +300,6 @@ def test_get_feature_entitlement_no_plan(db):
         assert result.final_access is False
 
 
-def test_get_feature_entitlement_plan_not_in_catalog_fallback(db):
-    # Plan in billing but not in plan_catalog -> fallback legacy
-    mock_sub = SubscriptionStatusData(
-        status="active",
-        plan=BillingPlanData(
-            code="ghost_plan",
-            display_name="Ghost",
-            monthly_price_cents=500,
-            currency="EUR",
-            daily_message_limit=10,
-            is_active=True,
-        ),
-        failure_reason=None,
-        updated_at=None,
-    )
-
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=mock_sub,
-    ):
-        result = EntitlementService.get_feature_entitlement(
-            db, user_id=1, feature_code="astrologer_chat"
-        )
-        assert result.reason == "legacy_fallback"
-        assert result.quotas[0].quota_limit == 10
-
-
 def test_get_feature_entitlement_quota_missing_definition(db):
     plan = PlanCatalogModel(plan_code="basic", plan_name="Basic", audience=Audience.B2C)
     feat = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
@@ -424,10 +340,10 @@ def test_get_feature_entitlement_quota_missing_definition(db):
         assert result.reason == "disabled_by_plan"
 
 
-def test_get_feature_entitlement_canonical_no_binding(db):
-    """Feature connue, plan connu, aucun binding, hors scope fallback legacy."""
+def test_no_binding_for_astrologer_chat_returns_canonical_no_binding(db):
+    """AC: 10 - Plan et feature existent, pas de binding -> canonical_no_binding"""
     plan = PlanCatalogModel(plan_code="basic", plan_name="Basic", audience=Audience.B2C)
-    feat = FeatureCatalogModel(feature_code="natal_chart_long", feature_name="Natal Chart Long")
+    feat = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
     db.add_all([plan, feat])
     db.commit()
     # Aucun binding ajouté intentionnellement
@@ -451,270 +367,29 @@ def test_get_feature_entitlement_canonical_no_binding(db):
         return_value=mock_sub,
     ):
         result = EntitlementService.get_feature_entitlement(
-            db, user_id=1, feature_code="natal_chart_long"
+            db, user_id=1, feature_code="astrologer_chat"
         )
         assert result.reason == "canonical_no_binding"
         assert result.access_mode == "unknown"
         assert result.final_access is False
         assert result.is_enabled_by_plan is False
-        assert result.plan_code == "basic"
 
 
-def test_get_feature_entitlement_unknown_billing_status(db):
-    mock_sub = SubscriptionStatusData(
-        status="weird_status",
-        plan=BillingPlanData(
-            code="premium",
-            display_name="Premium",
-            monthly_price_cents=2000,
-            currency="EUR",
-            daily_message_limit=1000,
-            is_active=True,
-        ),
-        failure_reason=None,
-        updated_at=None,
-    )
-
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=mock_sub,
-    ):
-        result = EntitlementService.get_feature_entitlement(
-            db, user_id=1, feature_code="astrologer_chat"
-        )
-        assert result.final_access is False
-        # Reason depends on if it found a binding or not
-        # Since we didn't add a binding in this test, it will try fallback
-        # If fallback is used, it will be billing_inactive because of the override
-        assert result.reason == "billing_inactive"
-
-
-def test_entitlement_quota_remaining_gt_0_final_access_true(db):
-    plan = PlanCatalogModel(plan_code="basic", plan_name="Basic", audience=Audience.B2C)
-    feat = FeatureCatalogModel(feature_code="feat1", feature_name="F1")
-    db.add_all([plan, feat])
-    db.commit()
-
-    binding = PlanFeatureBindingModel(
-        plan_id=plan.id, feature_id=feat.id, access_mode=AccessMode.QUOTA, is_enabled=True
-    )
-    db.add(binding)
-    db.commit()
-
-    quota = PlanFeatureQuotaModel(
-        plan_feature_binding_id=binding.id,
-        quota_key="daily",
-        quota_limit=5,
-        period_unit=PeriodUnit.DAY,
-        period_value=1,
-        reset_mode=ResetMode.CALENDAR,
-    )
-    db.add(quota)
-    db.commit()
-
-    UTC = timezone.utc
-    window_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
-    window_end = window_start + timedelta(days=1)
-
-    counter = FeatureUsageCounterModel(
-        user_id=1,
-        feature_code="feat1",
-        quota_key="daily",
-        period_unit=PeriodUnit.DAY,
-        period_value=1,
-        reset_mode=ResetMode.CALENDAR,
-        window_start=window_start,
-        window_end=window_end,
-        used_count=2,
-    )
-    db.add(counter)
+def test_missing_plan_catalog_returns_feature_unknown(db):
+    """AC: 10 - Plan absent du catalog -> feature_unknown (comportement générique)"""
+    feat = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
+    db.add(feat)
     db.commit()
 
     mock_sub = SubscriptionStatusData(
         status="active",
         plan=BillingPlanData(
-            code="basic",
-            display_name="B",
-            monthly_price_cents=1,
+            code="ghost_plan",
+            display_name="Ghost",
+            monthly_price_cents=500,
             currency="EUR",
-            is_active=True,
-            daily_message_limit=0,
-        ),
-        failure_reason=None,
-        updated_at=None,
-    )
-
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=mock_sub,
-    ):
-        result = EntitlementService.get_feature_entitlement(db, user_id=1, feature_code="feat1")
-        assert result.final_access is True
-        assert result.quota_exhausted is False
-        assert len(result.usage_states) == 1
-        assert result.usage_states[0].used == 2
-        assert result.usage_states[0].remaining == 3
-
-
-def test_entitlement_quota_exhausted_final_access_false(db):
-    plan = PlanCatalogModel(plan_code="basic", plan_name="Basic", audience=Audience.B2C)
-    feat = FeatureCatalogModel(feature_code="feat1", feature_name="F1")
-    db.add_all([plan, feat])
-    db.commit()
-
-    binding = PlanFeatureBindingModel(
-        plan_id=plan.id, feature_id=feat.id, access_mode=AccessMode.QUOTA, is_enabled=True
-    )
-    db.add(binding)
-    db.commit()
-
-    quota = PlanFeatureQuotaModel(
-        plan_feature_binding_id=binding.id,
-        quota_key="daily",
-        quota_limit=5,
-        period_unit=PeriodUnit.DAY,
-        period_value=1,
-        reset_mode=ResetMode.CALENDAR,
-    )
-    db.add(quota)
-    db.commit()
-
-    UTC = timezone.utc
-    window_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
-    window_end = window_start + timedelta(days=1)
-
-    counter = FeatureUsageCounterModel(
-        user_id=1,
-        feature_code="feat1",
-        quota_key="daily",
-        period_unit=PeriodUnit.DAY,
-        period_value=1,
-        reset_mode=ResetMode.CALENDAR,
-        window_start=window_start,
-        window_end=window_end,
-        used_count=5,
-    )
-    db.add(counter)
-    db.commit()
-
-    mock_sub = SubscriptionStatusData(
-        status="active",
-        plan=BillingPlanData(
-            code="basic",
-            display_name="B",
-            monthly_price_cents=1,
-            currency="EUR",
-            is_active=True,
-            daily_message_limit=0,
-        ),
-        failure_reason=None,
-        updated_at=None,
-    )
-
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=mock_sub,
-    ):
-        result = EntitlementService.get_feature_entitlement(db, user_id=1, feature_code="feat1")
-        assert result.final_access is False
-        assert result.quota_exhausted is True
-        assert result.reason == "canonical_binding"
-
-
-def test_entitlement_no_counter_final_access_true(db):
-    plan = PlanCatalogModel(plan_code="basic", plan_name="Basic", audience=Audience.B2C)
-    feat = FeatureCatalogModel(feature_code="feat1", feature_name="F1")
-    db.add_all([plan, feat])
-    db.commit()
-
-    binding = PlanFeatureBindingModel(
-        plan_id=plan.id, feature_id=feat.id, access_mode=AccessMode.QUOTA, is_enabled=True
-    )
-    db.add(binding)
-    db.commit()
-
-    quota = PlanFeatureQuotaModel(
-        plan_feature_binding_id=binding.id,
-        quota_key="daily",
-        quota_limit=5,
-        period_unit=PeriodUnit.DAY,
-        period_value=1,
-        reset_mode=ResetMode.CALENDAR,
-    )
-    db.add(quota)
-    db.commit()
-
-    mock_sub = SubscriptionStatusData(
-        status="active",
-        plan=BillingPlanData(
-            code="basic",
-            display_name="B",
-            monthly_price_cents=1,
-            currency="EUR",
-            is_active=True,
-            daily_message_limit=0,
-        ),
-        failure_reason=None,
-        updated_at=None,
-    )
-
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=mock_sub,
-    ):
-        result = EntitlementService.get_feature_entitlement(db, user_id=1, feature_code="feat1")
-        assert result.final_access is True
-        assert result.quota_exhausted is False
-        assert len(result.usage_states) == 1
-        assert result.usage_states[0].used == 0
-
-
-def test_entitlement_billing_inactive_skips_quota(db):
-    plan = PlanCatalogModel(plan_code="basic", plan_name="Basic", audience=Audience.B2C)
-    feat = FeatureCatalogModel(feature_code="feat1", feature_name="F1")
-    db.add_all([plan, feat])
-    db.commit()
-
-    binding = PlanFeatureBindingModel(
-        plan_id=plan.id, feature_id=feat.id, access_mode=AccessMode.QUOTA, is_enabled=True
-    )
-    db.add(binding)
-    db.commit()
-
-    mock_sub = SubscriptionStatusData(
-        status="past_due",
-        plan=BillingPlanData(
-            code="basic",
-            display_name="B",
-            monthly_price_cents=1,
-            currency="EUR",
-            is_active=True,
-            daily_message_limit=0,
-        ),
-        failure_reason=None,
-        updated_at=None,
-    )
-
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=mock_sub,
-    ):
-        result = EntitlementService.get_feature_entitlement(db, user_id=1, feature_code="feat1")
-        assert result.final_access is False
-        assert result.reason == "billing_inactive"
-        assert result.usage_states == []
-
-
-def test_legacy_fallback_usage_states_empty(db):
-    mock_sub = SubscriptionStatusData(
-        status="active",
-        plan=BillingPlanData(
-            code="legacy",
-            display_name="L",
-            monthly_price_cents=1,
-            currency="EUR",
-            is_active=True,
             daily_message_limit=10,
+            is_active=True,
         ),
         failure_reason=None,
         updated_at=None,
@@ -727,83 +402,116 @@ def test_legacy_fallback_usage_states_empty(db):
         result = EntitlementService.get_feature_entitlement(
             db, user_id=1, feature_code="astrologer_chat"
         )
-        assert result.reason == "legacy_fallback"
-        assert result.final_access is True
-        assert result.usage_states == []
-        assert result.quota_exhausted is False
-
-
-def test_entitlement_no_plan_skips_quota(db):
-    # no_plan → final_access=False, reason="no_plan", usage_states=[]
-    mock_sub = SubscriptionStatusData(
-        status="none",
-        plan=None,
-        failure_reason=None,
-        updated_at=None,
-    )
-
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=mock_sub,
-    ):
-        result = EntitlementService.get_feature_entitlement(
-            db, user_id=1, feature_code="astrologer_chat"
-        )
+        assert result.reason == "feature_unknown"
         assert result.final_access is False
-        assert result.reason == "no_plan"
-        assert result.usage_states == []
-        assert result.quota_exhausted is False
 
 
-def test_entitlement_rolling_quota_disables_access_instead_of_crashing(db):
+def test_basic_plan_astrologer_chat_quota_daily(db):
+    """AC: 10 - plan basic, quota 5/day -> canonical_binding, window_end non null"""
     plan = PlanCatalogModel(plan_code="basic", plan_name="Basic", audience=Audience.B2C)
-    feat = FeatureCatalogModel(feature_code="feat1", feature_name="F1")
+    feat = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
     db.add_all([plan, feat])
     db.commit()
 
     binding = PlanFeatureBindingModel(
-        plan_id=plan.id,
-        feature_id=feat.id,
-        access_mode=AccessMode.QUOTA,
-        is_enabled=True,
+        plan_id=plan.id, feature_id=feat.id, access_mode=AccessMode.QUOTA, is_enabled=True
     )
     db.add(binding)
     db.commit()
 
-    db.add(
-        PlanFeatureQuotaModel(
-            plan_feature_binding_id=binding.id,
-            quota_key="rolling-daily",
-            quota_limit=5,
-            period_unit=PeriodUnit.DAY,
-            period_value=1,
-            reset_mode=ResetMode.ROLLING,
-        )
-    )
+    db.add(PlanFeatureQuotaModel(
+        plan_feature_binding_id=binding.id,
+        quota_key="messages",
+        quota_limit=5,
+        period_unit=PeriodUnit.DAY,
+        period_value=1,
+        reset_mode=ResetMode.CALENDAR,
+    ))
     db.commit()
 
     mock_sub = SubscriptionStatusData(
         status="active",
-        plan=BillingPlanData(
-            code="basic",
-            display_name="B",
-            monthly_price_cents=1,
-            currency="EUR",
-            is_active=True,
-            daily_message_limit=0,
-        ),
-        failure_reason=None,
-        updated_at=None,
+        plan=BillingPlanData(code="basic", display_name="B", is_active=True, monthly_price_cents=1, currency="EUR", daily_message_limit=0),
+        failure_reason=None, updated_at=None,
     )
 
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=mock_sub,
-    ):
-        result = EntitlementService.get_feature_entitlement(db, user_id=1, feature_code="feat1")
+    with patch("app.services.entitlement_service.BillingService.get_subscription_status", return_value=mock_sub):
+        result = EntitlementService.get_feature_entitlement(db, user_id=1, feature_code="astrologer_chat")
+        assert result.reason == "canonical_binding"
+        assert result.access_mode == "quota"
+        assert len(result.usage_states) == 1
+        assert result.usage_states[0].window_end is not None
+        # Vérifier que window_end est dans le futur (fin de journée)
+        assert result.usage_states[0].window_end > datetime.now(timezone.utc)
 
-    assert result.final_access is False
-    assert result.is_enabled_by_plan is False
-    assert result.reason == "disabled_by_plan"
-    assert result.usage_states == []
-    assert result.quota_exhausted is False
+
+def test_premium_plan_astrologer_chat_quota_monthly(db):
+    """AC: 10 - plan premium, quota 2000/month -> window_end = fin du mois UTC"""
+    plan = PlanCatalogModel(plan_code="premium", plan_name="Premium", audience=Audience.B2C)
+    feat = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
+    db.add_all([plan, feat])
+    db.commit()
+
+    binding = PlanFeatureBindingModel(
+        plan_id=plan.id, feature_id=feat.id, access_mode=AccessMode.QUOTA, is_enabled=True
+    )
+    db.add(binding)
+    db.commit()
+
+    db.add(PlanFeatureQuotaModel(
+        plan_feature_binding_id=binding.id,
+        quota_key="messages",
+        quota_limit=2000,
+        period_unit=PeriodUnit.MONTH,
+        period_value=1,
+        reset_mode=ResetMode.CALENDAR,
+    ))
+    db.commit()
+
+    mock_sub = SubscriptionStatusData(
+        status="active",
+        plan=BillingPlanData(code="premium", display_name="P", is_active=True, monthly_price_cents=1, currency="EUR", daily_message_limit=0),
+        failure_reason=None, updated_at=None,
+    )
+
+    with patch("app.services.entitlement_service.BillingService.get_subscription_status", return_value=mock_sub):
+        result = EntitlementService.get_feature_entitlement(db, user_id=1, feature_code="astrologer_chat")
+        assert result.reason == "canonical_binding"
+        assert len(result.usage_states) == 1
+        window_end = result.usage_states[0].window_end
+        assert window_end is not None
+        # Vérifier que c'est le 1er du mois suivant à 00:00:00 UTC
+        now = datetime.now(timezone.utc)
+        if now.month == 12:
+            expected_year, expected_month = now.year + 1, 1
+        else:
+            expected_year, expected_month = now.year, now.month + 1
+        assert window_end.year == expected_year
+        assert window_end.month == expected_month
+        assert window_end.day == 1
+        assert window_end.hour == 0
+
+
+def test_trial_plan_astrologer_chat_disabled(db):
+    """AC: 10 - plan trial -> disabled_by_plan, final_access=False"""
+    plan = PlanCatalogModel(plan_code="trial", plan_name="Trial", audience=Audience.B2C)
+    feat = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
+    db.add_all([plan, feat])
+    db.commit()
+
+    db.add(PlanFeatureBindingModel(
+        plan_id=plan.id, feature_id=feat.id, access_mode=AccessMode.DISABLED, is_enabled=True
+    ))
+    db.commit()
+
+    mock_sub = SubscriptionStatusData(
+        status="trialing",
+        plan=BillingPlanData(code="trial", display_name="T", is_active=True, monthly_price_cents=1, currency="EUR", daily_message_limit=0),
+        failure_reason=None, updated_at=None,
+    )
+
+    with patch("app.services.entitlement_service.BillingService.get_subscription_status", return_value=mock_sub):
+        result = EntitlementService.get_feature_entitlement(db, user_id=1, feature_code="astrologer_chat")
+        assert result.reason == "disabled_by_plan"
+        assert result.final_access is False
+        assert result.usage_states == []

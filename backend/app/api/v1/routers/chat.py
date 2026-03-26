@@ -25,7 +25,6 @@ from app.services.chat_guidance_service import (
     ChatGuidanceServiceError,
     ChatReplyData,
 )
-from app.services.quota_service import QuotaService, QuotaServiceError
 
 
 class ResponseMeta(BaseModel):
@@ -131,12 +130,6 @@ def send_chat_message(
         parsed_payload = ChatMessageRequest.model_validate(payload)
 
         entitlement_result = ChatEntitlementGate.check_and_consume(db, user_id=current_user.id)
-        if entitlement_result.path == "legacy":
-            QuotaService.consume_quota_or_raise(
-                db,
-                user_id=current_user.id,
-                request_id=request_id,
-            )
 
         quota_info = _build_quota_info(entitlement_result)
 
@@ -195,25 +188,6 @@ def send_chat_message(
                     "code": "chat_access_denied",
                     "message": "accès au chat refusé",
                     "details": {"reason": error.reason, "billing_status": error.billing_status},
-                    "request_id": request_id,
-                }
-            },
-        )
-    except QuotaServiceError as error:
-        db.rollback()
-        if error.code == "quota_exceeded":
-            status_code = 429
-        elif error.code == "no_active_subscription":
-            status_code = 403
-        else:
-            status_code = 422
-        return JSONResponse(
-            status_code=status_code,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
                     "request_id": request_id,
                 }
             },

@@ -211,8 +211,9 @@ def test_send_message_quota_exhausted_rejected(mock_user):
     assert data["error"]["details"]["window_end"] == now.isoformat()
 
 
-def test_send_message_legacy_fallback_still_works(mock_user):
-    mock_result = ChatEntitlementResult(path="legacy")
+def test_send_message_quota_service_never_called(mock_user):
+    """AC: 11 - Vérifier que QuotaService n'est jamais appelé."""
+    mock_result = ChatEntitlementResult(path="canonical_quota", usage_states=[])
 
     mock_reply = MagicMock()
     mock_reply.model_dump.return_value = {
@@ -221,13 +222,13 @@ def test_send_message_legacy_fallback_still_works(mock_user):
         "user_message": {
             "message_id": 1,
             "role": "user",
-            "content": "Hi legacy",
+            "content": "Hi",
             "created_at": "2026-03-25T10:00:00Z",
         },
         "assistant_message": {
             "message_id": 2,
             "role": "assistant",
-            "content": "Hello legacy user",
+            "content": "Hello",
             "created_at": "2026-03-25T10:00:01Z",
         },
         "fallback_used": False,
@@ -261,12 +262,9 @@ def test_send_message_legacy_fallback_still_works(mock_user):
         ),
         patch("app.infra.db.session.get_db_session"),
     ):
-        response = client.post(
+        client.post(
             "/v1/chat/messages",
-            json={"message": "Hi legacy"},
+            json={"message": "Hi"},
         )
 
-    assert response.status_code == 200
-    mock_legacy_consume.assert_called_once()
-    data = response.json()
-    assert data["quota_info"]["remaining"] is None
+    mock_legacy_consume.assert_not_called()

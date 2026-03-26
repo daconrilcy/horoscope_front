@@ -186,13 +186,6 @@ class EntitlementService:
                     quota_exhausted=quota_exhausted,
                 )
 
-            if feature_code == "astrologer_chat":
-                fallback = EntitlementService._legacy_fallback(subscription, feature_code)
-                if not is_billing_active:
-                    fallback.final_access = False
-                    fallback.reason = "billing_inactive"
-                return fallback
-
             return FeatureEntitlement(
                 plan_code=plan_code,
                 billing_status=billing_status,
@@ -204,16 +197,22 @@ class EntitlementService:
                 reason="billing_inactive" if not is_billing_active else "canonical_no_binding",
             )
 
-        fallback = EntitlementService._legacy_fallback(subscription, feature_code)
-        if not is_billing_active:
-            fallback.final_access = False
-            fallback.reason = "billing_inactive"
-        return fallback
+        return FeatureEntitlement(
+            plan_code=plan_code,
+            billing_status=billing_status,
+            is_enabled_by_plan=False,
+            access_mode="unknown",
+            variant_code=None,
+            quotas=[],
+            final_access=False,
+            reason="billing_inactive" if not is_billing_active else "feature_unknown",
+        )
 
     @staticmethod
     def _legacy_fallback(
         subscription: SubscriptionStatusData, feature_code: str
     ) -> FeatureEntitlement:
+        """DEPRECATED: suppression en 61.16"""
         plan_code = subscription.plan.code if subscription.plan else "none"
         billing_status = subscription.status
         is_billing_active = billing_status in _ACTIVE_BILLING_STATUSES

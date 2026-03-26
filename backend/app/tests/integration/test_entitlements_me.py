@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi.testclient import TestClient
@@ -437,3 +437,44 @@ def test_no_quota_consumed(db_session: Session):
     assert response.status_code == 200
     db_session.refresh(counter)
     assert counter.used_count == 0
+
+
+def test_basic_user_chat_usage_states_populated(db_session: Session):
+    """AC: 11 - user basic avec consommation -> usage_states[0].remaining reflète la réalité."""
+    seed_canonical_plans(db_session)
+    user = _create_user(db_session, "basic_consume@example.com")
+
+    # Créer un compteur avec 2 messages consommés
+    window_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    db_session.add(FeatureUsageCounterModel(
+        user_id=user.id,
+        feature_code="astrologer_chat",
+        quota_key="messages",
+        period_unit=PeriodUnit.DAY,
+        period_value=1,
+        reset_mode=ResetMode.CALENDAR,
+        window_start=window_start,
+        window_end=window_start + timedelta(days=1),
+        used_count=2,
+    ))
+    db_session.commit()
+
+    response = _call_endpoint_for_plan(db_session, user.id, "basic")
+    assert response.status_code == 200
+    chat = next(f for f in response.json()["data"]["features"] if f["feature_code"] == "astrologer_chat")
+    assert chat["usage_states"][0]["used"] == 2
+    assert chat["usage_states"][0]["remaining"] == 3
+    assert chat["usage_states"][0]["window_end"] is not None
+
+
+def test_no_legacy_fallback_reason_in_response(db_session: Session):
+    """AC: 11 - Vérifier qu'aucun plan connu ne retourne reason=legacy_fallback."""
+    seed_canonical_plans(db_session)
+    user = _create_user(db_session, "audit@example.com")
+
+    for plan in ("trial", "basic", "premium"):
+        response = _call_endpoint_for_plan(db_session, user.id, plan)
+        assert response.status_code == 200
+        features = response.json()["data"]["features"]
+        for f in features:
+            assert f["reason"] != "legacy_fallback", f"Plan {plan} feature {f['feature_code']} returned legacy_fallback"

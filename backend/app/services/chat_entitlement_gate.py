@@ -29,7 +29,7 @@ class ChatQuotaExceededError(Exception):
 
 @dataclass
 class ChatEntitlementResult:
-    path: str  # "canonical_quota" | "canonical_unlimited" | "legacy"
+    path: str  # "canonical_quota" | "canonical_unlimited"
     usage_states: list[UsageState] = field(default_factory=list)
 
 
@@ -42,11 +42,7 @@ class ChatEntitlementGate:
             db, user_id=user_id, feature_code=ChatEntitlementGate.FEATURE_CODE
         )
 
-        # PRIORITÉ 1 : legacy_fallback — déléguer immédiatement, final_access ignoré
-        if entitlement.reason == "legacy_fallback":
-            return ChatEntitlementResult(path="legacy", usage_states=[])
-
-        # PRIORITÉ 2 : refus canoniques
+        # PRIORITÉ 1 : refus canoniques
         if not entitlement.final_access:
             if entitlement.quota_exhausted and entitlement.usage_states:
                 # Find the first exhausted state to raise the error
