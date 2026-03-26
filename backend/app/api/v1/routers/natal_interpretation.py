@@ -16,6 +16,7 @@ from app.ai_engine.exceptions import (
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.v1.routers.users import ErrorEnvelope
 from app.api.v1.schemas.natal_interpretation import (
+    NatalChartLongEntitlementInfo,
     NatalInterpretationListResponse,
     NatalInterpretationRequest,
     NatalInterpretationResponse,
@@ -32,6 +33,12 @@ from app.llm_orchestration.models import (
     UnknownUseCaseError,
 )
 from app.services.disclaimer_registry import get_disclaimers
+from app.services.natal_chart_long_entitlement_gate import (
+    NatalChartLongAccessDeniedError,
+    NatalChartLongEntitlementGate,
+    NatalChartLongEntitlementResult,
+    NatalChartLongQuotaExceededError,
+)
 from app.services.natal_interpretation_service_v2 import NatalInterpretationServiceV2
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
@@ -64,11 +71,26 @@ def _create_error_response(
     )
 
 
+def _build_natal_entitlement_info(
+    result: NatalChartLongEntitlementResult,
+) -> NatalChartLongEntitlementInfo:
+    if result.usage_states:
+        state = result.usage_states[0]
+        return NatalChartLongEntitlementInfo(
+            remaining=state.remaining,
+            limit=state.quota_limit,
+            window_end=state.window_end,  # None pour lifetime
+            variant_code=result.variant_code,
+        )
+    return NatalChartLongEntitlementInfo(variant_code=result.variant_code)
+
+
 @router.post(
     "/interpretation",
     response_model=NatalInterpretationResponse,
     responses={
         401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
         404: {"model": ErrorEnvelope},
         422: {"model": ErrorEnvelope},
         429: {"model": ErrorEnvelope},
@@ -90,6 +112,38 @@ async def interpret_natal_chart(
     current_step = "init"
     debug_errors_enabled = request.headers.get("x-debug-errors") == "1"
 
+    # Gate entitlement — uniquement pour use_case_level="complete" (natal_chart_long)
+    entitlement_info: NatalChartLongEntitlementInfo | None = None
+    if body.use_case_level == "complete":
+        try:
+            entitlement_result = NatalChartLongEntitlementGate.check_and_consume(
+                db, user_id=current_user.id
+            )
+            entitlement_info = _build_natal_entitlement_info(entitlement_result)
+        except NatalChartLongQuotaExceededError as error:
+            db.rollback()
+            return _create_error_response(
+                status_code=429,
+                code="natal_chart_long_quota_exceeded",
+                message="quota d'interprétations complètes du thème natal épuisé",
+                request_id=request_id,
+                details={
+                    "quota_key": error.quota_key,
+                    "used": error.used,
+                    "limit": error.limit,
+                    "window_end": error.window_end.isoformat() if error.window_end else None,
+                },
+            )
+        except NatalChartLongAccessDeniedError as error:
+            db.rollback()
+            return _create_error_response(
+                status_code=403,
+                code="natal_chart_long_access_denied",
+                message="accès à l'interprétation complète du thème natal refusé",
+                request_id=request_id,
+                details={"reason": error.reason, "billing_status": error.billing_status},
+            )
+
     try:
         # Step A: Load last natal chart and profile
         current_step = "load_chart_and_profile"
@@ -97,6 +151,7 @@ async def interpret_natal_chart(
             chart = UserNatalChartService.get_latest_for_user(db, current_user.id)
             profile = UserBirthProfileService.get_for_user(db, current_user.id)
         except (UserNatalChartServiceError, UserBirthProfileServiceError) as e:
+            db.rollback()
             if e.code == "natal_chart_not_found" or e.code == "birth_profile_not_found":
                 return _create_error_response(
                     status_code=404,
@@ -126,40 +181,54 @@ async def interpret_natal_chart(
 
         current_step = "apply_disclaimers"
         response.disclaimers = get_disclaimers(body.locale)
+        response.entitlement_info = entitlement_info
+
+        # Persist quota consumption and interpretation
+        db.commit()
+
         current_step = "return_response"
         return response
 
     except UnknownUseCaseError as e:
+        db.rollback()
         logger.error(f"Unknown use case error: {e}")
         return _create_error_response(404, "unknown_use_case", str(e), request_id)
     except GatewayConfigError as e:
+        db.rollback()
         logger.error(f"Gateway configuration error: {e}")
         return _create_error_response(500, "gateway_config_error", str(e), request_id)
     except InputValidationError as e:
+        db.rollback()
         # Note: Local catch here to ensure 422 response for natal interpretation,
         # overriding the global 400 handler in main.py.
         return _create_error_response(422, "natal_input_invalid", str(e), request_id)
     except OutputValidationError:
+        db.rollback()
         return _create_error_response(
             502, "interpretation_failed", "Failed to generate a valid interpretation.", request_id
         )
     except RuntimeError as e:
+        db.rollback()
         if "no structured output" in str(e):
             return _create_error_response(502, "interpretation_failed", str(e), request_id)
         raise
     except UpstreamRateLimitError:
+        db.rollback()
         return _create_error_response(
             429, "llm_rate_limit", "Upstream rate limit reached.", request_id
         )
     except UpstreamTimeoutError:
+        db.rollback()
         return _create_error_response(
             504, "llm_upstream_timeout", "Upstream request timed out.", request_id
         )
     except UpstreamError:
+        db.rollback()
         return _create_error_response(
             503, "llm_upstream_error", "LLM provider is currently unavailable.", request_id
         )
     except Exception as e:
+        db.rollback()
         logger.exception(
             "Unexpected error during natal interpretation request_id=%s step=%s error=%s",
             request_id,

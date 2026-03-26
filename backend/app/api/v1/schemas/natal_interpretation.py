@@ -69,9 +69,17 @@ class NatalInterpretationData(BaseModel):
     degraded_mode: Optional[str] = None
 
 
+class NatalChartLongEntitlementInfo(BaseModel):
+    remaining: Optional[int] = None
+    limit: Optional[int] = None
+    window_end: Optional[datetime] = None  # None pour les quotas lifetime
+    variant_code: Optional[str] = None  # "single_astrologer" | "multi_astrologer"
+
+
 class NatalInterpretationResponse(BaseModel):
     data: NatalInterpretationData
     disclaimers: list[str] = Field(default_factory=list)
+    entitlement_info: Optional[NatalChartLongEntitlementInfo] = None
 
 
 class NatalInterpretationListItem(BaseModel):

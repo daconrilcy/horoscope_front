@@ -188,8 +188,20 @@ def test_client(mock_db):
     """Client de test avec dépendances mockées."""
     app.dependency_overrides[require_authenticated_user] = _override_auth
     app.dependency_overrides[get_db_session] = lambda: mock_db
-    client = TestClient(app)
-    yield client
+
+    # Mock gate by default to avoid entitlement service side effects with mock_db
+    from app.services.natal_chart_long_entitlement_gate import NatalChartLongEntitlementResult
+
+    result = NatalChartLongEntitlementResult(
+        path="canonical_unlimited", variant_code="single_astrologer"
+    )
+
+    with patch(
+        "app.api.v1.routers.natal_interpretation.NatalChartLongEntitlementGate.check_and_consume",
+        return_value=result,
+    ):
+        client = TestClient(app)
+        yield client
     app.dependency_overrides.clear()
 
 
