@@ -186,12 +186,15 @@ def test_generate_canonical_quota_ok() -> None:
         reset_mode=ResetMode.CALENDAR,
     )
 
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=_subscription_status(plan_code="basic"),
-    ), patch(
-        "app.services.consultation_generation_service.ConsultationGenerationService.generate",
-        return_value=_generate_payload(),
+    with (
+        patch(
+            "app.services.entitlement_service.BillingService.get_subscription_status",
+            return_value=_subscription_status(plan_code="basic"),
+        ),
+        patch(
+            "app.services.consultation_generation_service.ConsultationGenerationService.generate",
+            return_value=_generate_payload(),
+        ),
     ):
         response = _post_generate(headers)
 
@@ -221,21 +224,28 @@ def test_generate_canonical_quota_consumes_before_generation() -> None:
     async def assert_counter_visible(
         db, user_id: int, request, request_id: str
     ) -> ConsultationGenerateData:
-        counter = db.query(FeatureUsageCounterModel).filter_by(
-            user_id=user_id,
-            feature_code=FEATURE_CODE,
-            quota_key="consultations",
-        ).one()
+        counter = (
+            db.query(FeatureUsageCounterModel)
+            .filter_by(
+                user_id=user_id,
+                feature_code=FEATURE_CODE,
+                quota_key="consultations",
+            )
+            .one()
+        )
         assert counter.used_count == 1
         assert request_id != ""
         return _generate_payload()
 
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=_subscription_status(plan_code="basic"),
-    ), patch(
-        "app.services.consultation_generation_service.ConsultationGenerationService.generate",
-        side_effect=assert_counter_visible,
+    with (
+        patch(
+            "app.services.entitlement_service.BillingService.get_subscription_status",
+            return_value=_subscription_status(plan_code="basic"),
+        ),
+        patch(
+            "app.services.consultation_generation_service.ConsultationGenerationService.generate",
+            side_effect=assert_counter_visible,
+        ),
     ):
         response = _post_generate(headers)
 
@@ -250,12 +260,15 @@ def test_generate_canonical_unlimited_ok() -> None:
         access_mode=AccessMode.UNLIMITED,
     )
 
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=_subscription_status(plan_code="premium"),
-    ), patch(
-        "app.services.consultation_generation_service.ConsultationGenerationService.generate",
-        return_value=_generate_payload(),
+    with (
+        patch(
+            "app.services.entitlement_service.BillingService.get_subscription_status",
+            return_value=_subscription_status(plan_code="premium"),
+        ),
+        patch(
+            "app.services.consultation_generation_service.ConsultationGenerationService.generate",
+            return_value=_generate_payload(),
+        ),
     ):
         response = _post_generate(headers)
 
@@ -317,10 +330,13 @@ def test_generate_quota_exhausted_rejected() -> None:
         )
         db.commit()
 
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=_subscription_status(plan_code="basic"),
-    ), patch("app.services.entitlement_service.datetime", frozen_datetime):
+    with (
+        patch(
+            "app.services.entitlement_service.BillingService.get_subscription_status",
+            return_value=_subscription_status(plan_code="basic"),
+        ),
+        patch("app.services.entitlement_service.datetime", frozen_datetime),
+    ):
         response = _post_generate(headers)
 
     assert response.status_code == 429
@@ -411,10 +427,13 @@ def test_generate_rolls_back_partial_canonical_consumption() -> None:
             window_end=datetime(2026, 3, 30, 0, 0, 0, tzinfo=UTC),
         )
 
-    with patch(
-        "app.api.v1.routers.consultations.ThematicConsultationEntitlementGate.check_and_consume",
-        side_effect=_partial_consume_then_fail,
-    ), patch.object(db_session, "rollback", wraps=db_session.rollback) as mock_rollback:
+    with (
+        patch(
+            "app.api.v1.routers.consultations.ThematicConsultationEntitlementGate.check_and_consume",
+            side_effect=_partial_consume_then_fail,
+        ),
+        patch.object(db_session, "rollback", wraps=db_session.rollback) as mock_rollback,
+    ):
         response = _post_generate(headers)
 
     persisted_counter = (
@@ -437,10 +456,13 @@ def test_generate_access_denied_rolls_back() -> None:
     db_session = SessionLocal()
     app.dependency_overrides[get_db_session] = lambda: db_session
 
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=_subscription_status(plan_code=None, status="none"),
-    ), patch.object(db_session, "rollback") as mock_rollback:
+    with (
+        patch(
+            "app.services.entitlement_service.BillingService.get_subscription_status",
+            return_value=_subscription_status(plan_code=None, status="none"),
+        ),
+        patch.object(db_session, "rollback") as mock_rollback,
+    ):
         response = _post_generate(headers)
 
     app.dependency_overrides.pop(get_db_session, None)
@@ -483,12 +505,14 @@ def test_generate_quota_exceeded_rolls_back() -> None:
     )
     db_session.commit()
 
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=_subscription_status(plan_code="basic"),
-    ), patch("app.services.entitlement_service.datetime", frozen_datetime), patch.object(
-        db_session, "rollback"
-    ) as mock_rollback:
+    with (
+        patch(
+            "app.services.entitlement_service.BillingService.get_subscription_status",
+            return_value=_subscription_status(plan_code="basic"),
+        ),
+        patch("app.services.entitlement_service.datetime", frozen_datetime),
+        patch.object(db_session, "rollback") as mock_rollback,
+    ):
         response = _post_generate(headers)
 
     app.dependency_overrides.pop(get_db_session, None)
@@ -513,14 +537,17 @@ def test_premium_quota_2_per_day() -> None:
     frozen_datetime = MagicMock(wraps=datetime)
     frozen_datetime.now.return_value = fixed_now
 
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=_subscription_status(plan_code="premium"),
-    ), patch("app.services.entitlement_service.datetime", frozen_datetime), patch(
-        "app.services.quota_usage_service.datetime", frozen_datetime
-    ), patch(
-        "app.services.consultation_generation_service.ConsultationGenerationService.generate",
-        return_value=_generate_payload(),
+    with (
+        patch(
+            "app.services.entitlement_service.BillingService.get_subscription_status",
+            return_value=_subscription_status(plan_code="premium"),
+        ),
+        patch("app.services.entitlement_service.datetime", frozen_datetime),
+        patch("app.services.quota_usage_service.datetime", frozen_datetime),
+        patch(
+            "app.services.consultation_generation_service.ConsultationGenerationService.generate",
+            return_value=_generate_payload(),
+        ),
     ):
         first = _post_generate(headers, "Q1")
         second = _post_generate(headers, "Q2")
@@ -547,14 +574,17 @@ def test_basic_quota_1_per_week() -> None:
     frozen_datetime = MagicMock(wraps=datetime)
     frozen_datetime.now.return_value = fixed_now
 
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=_subscription_status(plan_code="basic"),
-    ), patch("app.services.entitlement_service.datetime", frozen_datetime), patch(
-        "app.services.quota_usage_service.datetime", frozen_datetime
-    ), patch(
-        "app.services.consultation_generation_service.ConsultationGenerationService.generate",
-        return_value=_generate_payload(),
+    with (
+        patch(
+            "app.services.entitlement_service.BillingService.get_subscription_status",
+            return_value=_subscription_status(plan_code="basic"),
+        ),
+        patch("app.services.entitlement_service.datetime", frozen_datetime),
+        patch("app.services.quota_usage_service.datetime", frozen_datetime),
+        patch(
+            "app.services.consultation_generation_service.ConsultationGenerationService.generate",
+            return_value=_generate_payload(),
+        ),
     ):
         first = _post_generate(headers, "Semaine 1")
         second = _post_generate(headers, "Semaine 2")

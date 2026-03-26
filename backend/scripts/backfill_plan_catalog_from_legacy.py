@@ -232,7 +232,7 @@ def _upsert_binding(
     )
     if changed:
         binding.access_mode = access_mode
-        binding.is_enabled = (access_mode != AccessMode.DISABLED)
+        binding.is_enabled = access_mode != AccessMode.DISABLED
         binding.source_origin = source_origin
         report.bindings_updated += 1
     else:
@@ -304,11 +304,15 @@ def _delete_overridable_quotas_for_binding(
     overridable_sources: set[str],
     report: BackfillReport,
 ) -> None:
-    existing_quotas = db.execute(
-        select(PlanFeatureQuotaModel).where(
-            PlanFeatureQuotaModel.plan_feature_binding_id == binding_id,
+    existing_quotas = (
+        db.execute(
+            select(PlanFeatureQuotaModel).where(
+                PlanFeatureQuotaModel.plan_feature_binding_id == binding_id,
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     for quota in existing_quotas:
         if quota.source_origin in overridable_sources:
@@ -378,12 +382,16 @@ def backfill_b2c_plans(db: Session, report: BackfillReport | None = None) -> Non
         report.add_ignored("billing_plans.monthly_price_cents")
         report.add_ignored("billing_plans.currency")
 
-    manual_plans = db.execute(
-        select(PlanCatalogModel).where(
-            PlanCatalogModel.audience == Audience.B2C,
-            PlanCatalogModel.source_type == "manual",
+    manual_plans = (
+        db.execute(
+            select(PlanCatalogModel).where(
+                PlanCatalogModel.audience == Audience.B2C,
+                PlanCatalogModel.source_type == "manual",
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     for manual_plan in manual_plans:
         if manual_plan.plan_code not in legacy_codes:
             msg = (
@@ -452,7 +460,8 @@ def backfill_b2b_plans(db: Session, report: BackfillReport | None = None) -> Non
             if existing_binding is not None and existing_binding.source_origin == SOURCE_ENTERPRISE:
                 anomaly = (
                     f"enterprise_plan '{legacy.code}' (id={legacy.id}) still has migrated "
-                    "b2b_api_access binding while included_monthly_units=0 is manual-review-required."
+                    "b2b_api_access binding while included_monthly_units=0 is "
+                    "manual-review-required."
                 )
                 logger.warning(anomaly)
                 report.add_anomaly(anomaly)

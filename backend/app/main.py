@@ -215,6 +215,7 @@ def _ensure_consultation_templates_seeded() -> None:
                 return
         logger.warning("consultation_templates_auto_seed table is empty, seeding...")
         from scripts.seed_consultation_templates import seed_consultation_templates
+
         seed_consultation_templates()
     except Exception as e:
         logger.error("consultation_templates_auto_seed_failed error=%s", e)

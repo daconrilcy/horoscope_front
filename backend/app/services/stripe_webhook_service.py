@@ -32,9 +32,7 @@ class StripeWebhookService:
         Vérifie la signature de l'événement et retourne l'objet stripe.Event.
         """
         try:
-            event = stripe.Webhook.construct_event(
-                payload_bytes, sig_header, webhook_secret
-            )
+            event = stripe.Webhook.construct_event(payload_bytes, sig_header, webhook_secret)
             return event
         except stripe.error.SignatureVerificationError as e:
             logger.warning("stripe_webhook: signature verification failed: %s", str(e))
@@ -57,13 +55,15 @@ class StripeWebhookService:
         """
         event_type = event.type
         event_id = event.id
-        
+
         # Extraction du customer_id pour les logs structurés
         customer_id = StripeWebhookService._extract_customer_id(event)
 
         logger.info(
-            "stripe_webhook: received event_id=%s type=%s customer_id=%s", 
-            event_id, event_type, customer_id
+            "stripe_webhook: received event_id=%s type=%s customer_id=%s",
+            event_id,
+            event_type,
+            customer_id,
         )
 
         user_id = StripeWebhookService._resolve_user_id(db, event)
@@ -101,8 +101,10 @@ class StripeWebhookService:
             return "processed"
 
         logger.info(
-            "stripe_webhook: ignored event_id=%s type=%s customer_id=%s outcome=event_ignored", 
-            event_id, event_type, customer_id
+            "stripe_webhook: ignored event_id=%s type=%s customer_id=%s outcome=event_ignored",
+            event_id,
+            event_type,
+            customer_id,
         )
         return "event_ignored"
 
@@ -130,9 +132,7 @@ class StripeWebhookService:
                 try:
                     return int(client_ref)
                 except ValueError:
-                    logger.error(
-                        "stripe_webhook: invalid client_reference_id=%s", client_ref
-                    )
+                    logger.error("stripe_webhook: invalid client_reference_id=%s", client_ref)
                     return None
             return None
 
@@ -146,9 +146,7 @@ class StripeWebhookService:
         ):
             customer_id = getattr(data_obj, "customer", None)
             if customer_id:
-                profile = StripeBillingProfileService.get_by_stripe_customer_id(
-                    db, customer_id
-                )
+                profile = StripeBillingProfileService.get_by_stripe_customer_id(db, customer_id)
                 if profile:
                     return profile.user_id
             return None
@@ -156,9 +154,7 @@ class StripeWebhookService:
         if event_type == "customer.updated":
             customer_id = getattr(data_obj, "id", None)
             if customer_id:
-                profile = StripeBillingProfileService.get_by_stripe_customer_id(
-                    db, customer_id
-                )
+                profile = StripeBillingProfileService.get_by_stripe_customer_id(db, customer_id)
                 if profile:
                     return profile.user_id
             return None

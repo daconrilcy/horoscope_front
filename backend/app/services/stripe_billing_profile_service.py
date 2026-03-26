@@ -141,9 +141,7 @@ class StripeBillingProfileService:
         event_id: str | None = event_data.get("id")
         event_created_ts: int | None = event_data.get("created")
         event_created = (
-            datetime.fromtimestamp(event_created_ts, tz=timezone.utc)
-            if event_created_ts
-            else None
+            datetime.fromtimestamp(event_created_ts, tz=timezone.utc) if event_created_ts else None
         )
         event_type: str | None = event_data.get("type")
 
@@ -165,11 +163,7 @@ class StripeBillingProfileService:
         if last_created and last_created.tzinfo is None:
             last_created = last_created.replace(tzinfo=timezone.utc)
 
-        if (
-            event_created is not None
-            and last_created is not None
-            and event_created < last_created
-        ):
+        if event_created is not None and last_created is not None and event_created < last_created:
             return profile
 
         # Mise à jour des pivots et statuts depuis l'objet Stripe
@@ -189,9 +183,7 @@ class StripeBillingProfileService:
 
             period_end_ts = data_obj.get("current_period_end")
             if period_end_ts:
-                profile.current_period_end = datetime.fromtimestamp(
-                    period_end_ts, tz=timezone.utc
-                )
+                profile.current_period_end = datetime.fromtimestamp(period_end_ts, tz=timezone.utc)
 
             # Extraction du Price ID (premier item de la subscription)
             # Garder la valeur existante si l'event ne fournit pas de price.id valide

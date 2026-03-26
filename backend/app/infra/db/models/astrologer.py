@@ -57,35 +57,35 @@ class AstrologerProfileModel(Base):
     )
     age: Mapped[int | None] = mapped_column(Integer, nullable=True)
     photo_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
-    
+
     # "Mystique", "Analytique", etc.
     public_style_label: Mapped[str] = mapped_column(String(100))
-    
+
     bio_short: Mapped[str] = mapped_column(String(500))
     bio_long: Mapped[str] = mapped_column(Text)
-    
+
     # Internal category: "standard", "mystical", etc.
     admin_category: Mapped[str] = mapped_column(String(64), index=True)
-    
+
     # JSON list of strings: ["Amour", "Carrière", etc.]
     specialties: Mapped[list[str]] = mapped_column(JSON, default=list)
     # Structured specialties: [{"title": "...", "description": "..."}]
     specialties_details: Mapped[list[dict[str, str]]] = mapped_column(JSON, default=list)
-    
+
     professional_background: Mapped[list[str]] = mapped_column(JSON, default=list)
     key_skills: Mapped[list[str]] = mapped_column(JSON, default=list)
     behavioral_style: Mapped[list[str]] = mapped_column(JSON, default=list)
-    
+
     # New fields for Story 60.22
     location: Mapped[str | None] = mapped_column(String(200), nullable=True)
     quote: Mapped[str | None] = mapped_column(Text, nullable=True)
     mission_statement: Mapped[str | None] = mapped_column(Text, nullable=True)
     ideal_for: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    
+
     # Metrics (Experience years, happy clients count, etc.)
     # {"experience_years": 12, "consultations_count": 1500, "average_rating": 4.9}
     metrics: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
-    
+
     is_public: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
@@ -95,9 +95,7 @@ class AstrologerProfileModel(Base):
     )
 
     # Relationships
-    persona: Mapped[LlmPersonaModel] = relationship(
-        "LlmPersonaModel", backref="astrologer_profile"
-    )
+    persona: Mapped[LlmPersonaModel] = relationship("LlmPersonaModel", backref="astrologer_profile")
 
 
 class AstrologerPromptProfileModel(Base):
@@ -105,34 +103,34 @@ class AstrologerPromptProfileModel(Base):
     Dedicated table for astrologer prompt configuration.
     Allows versioning and precise control over the prompt injected for this specific persona.
     """
+
     __tablename__ = "astrologer_prompt_profiles"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     persona_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("llm_personas.id", ondelete="CASCADE"), index=True
     )
-    
+
     # Content to be injected into the system prompt for this persona
     # Usually contains: instructions, tone details, style markers, etc.
     prompt_content: Mapped[str] = mapped_column(Text)
-    
+
     version: Mapped[str] = mapped_column(String(32), default="1.0.0")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
-    
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
     )
 
-    persona: Mapped[LlmPersonaModel] = relationship(
-        "LlmPersonaModel", backref="prompt_profiles"
-    )
+    persona: Mapped[LlmPersonaModel] = relationship("LlmPersonaModel", backref="prompt_profiles")
 
 
 class AstrologerReviewModel(Base):
     """
     User reviews and ratings for astrologers.
     """
+
     __tablename__ = "astrologer_reviews"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -141,11 +139,11 @@ class AstrologerReviewModel(Base):
     persona_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("llm_personas.id", ondelete="CASCADE"), index=True
     )
-    
-    rating: Mapped[int] = mapped_column(Integer) # 1 to 5
+
+    rating: Mapped[int] = mapped_column(Integer)  # 1 to 5
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     tags: Mapped[list[str]] = mapped_column(JSON, default=list)
-    
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now

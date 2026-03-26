@@ -1,7 +1,7 @@
 import uuid
+from unittest.mock import patch
 
 import pytest
-from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from app.infra.db.models.consultation_template import ConsultationTemplateModel
@@ -11,18 +11,23 @@ from app.services.thematic_consultation_entitlement_gate import ConsultationEnti
 
 client = TestClient(app)
 
+
 @pytest.fixture(autouse=True)
 def mock_entitlement_gate():
     with patch(
         "app.api.v1.routers.consultations.ThematicConsultationEntitlementGate.check_and_consume"
     ) as mock:
-        mock.return_value = ConsultationEntitlementResult(path="canonical_unlimited", usage_states=[])
+        mock.return_value = ConsultationEntitlementResult(
+            path="canonical_unlimited", usage_states=[]
+        )
         yield mock
+
 
 def _cleanup_catalogue():
     with SessionLocal() as db:
         db.query(ConsultationTemplateModel).delete()
         db.commit()
+
 
 def _get_auth_headers(email="test-catalogue@example.com"):
     # Registration might fail if already exists, but we cleanup in some tests
@@ -42,6 +47,7 @@ def _get_auth_headers(email="test-catalogue@example.com"):
         token = login.json()["data"]["tokens"]["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
+
 def test_get_catalogue_empty():
     _cleanup_catalogue()
     headers = _get_auth_headers()
@@ -50,31 +56,36 @@ def test_get_catalogue_empty():
     assert response.json()["items"] == []
     assert response.json()["meta"]["total"] == 0
 
+
 def test_get_catalogue_with_items():
     _cleanup_catalogue()
     with SessionLocal() as db:
-        db.add(ConsultationTemplateModel(
-            id=uuid.uuid4(),
-            key="test-1",
-            icon_ref="🚀",
-            title="Test Title",
-            subtitle="Test Subtitle",
-            description="Test Description",
-            prompt_content="Test Prompt",
-            metadata_config={"tags": ["Test"]},
-            sort_order=10
-        ))
-        db.add(ConsultationTemplateModel(
-            id=uuid.uuid4(),
-            key="test-2",
-            icon_ref="🌟",
-            title="Test Title 2",
-            subtitle="Test Subtitle 2",
-            description="Test Description 2",
-            prompt_content="Test Prompt 2",
-            metadata_config={"tags": ["Test 2"]},
-            sort_order=5
-        ))
+        db.add(
+            ConsultationTemplateModel(
+                id=uuid.uuid4(),
+                key="test-1",
+                icon_ref="🚀",
+                title="Test Title",
+                subtitle="Test Subtitle",
+                description="Test Description",
+                prompt_content="Test Prompt",
+                metadata_config={"tags": ["Test"]},
+                sort_order=10,
+            )
+        )
+        db.add(
+            ConsultationTemplateModel(
+                id=uuid.uuid4(),
+                key="test-2",
+                icon_ref="🌟",
+                title="Test Title 2",
+                subtitle="Test Subtitle 2",
+                description="Test Description 2",
+                prompt_content="Test Prompt 2",
+                metadata_config={"tags": ["Test 2"]},
+                sort_order=5,
+            )
+        )
         db.commit()
 
     headers = _get_auth_headers()
@@ -86,14 +97,13 @@ def test_get_catalogue_with_items():
     assert items[0]["key"] == "test-2"
     assert items[1]["key"] == "test-1"
 
+
 def test_legacy_mapping_precheck():
     headers = _get_auth_headers()
     # Mocking precheck response indirectly via router
     # We check if it accepts 'work' and returns something valid
     response = client.post(
-        "/v1/consultations/precheck",
-        json={"consultation_type": "work"},
-        headers=headers
+        "/v1/consultations/precheck", json={"consultation_type": "work"}, headers=headers
     )
     assert response.status_code == 200
     # Service should have mapped 'work' to 'career'
@@ -142,14 +152,14 @@ def test_legacy_mapping_generate():
             "birth_timezone": "Europe/Paris",
         },
     )
-    
+
     response = client.post(
         "/v1/consultations/generate",
         json={
             "consultation_type": "relation",
             "question": "Test legacy",
         },
-        headers=headers
+        headers=headers,
     )
     assert response.status_code == 200
     # Should be mapped to 'relationship'

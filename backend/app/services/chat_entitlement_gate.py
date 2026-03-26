@@ -1,10 +1,13 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime
+
 from sqlalchemy.orm import Session
+
 from app.services.entitlement_service import EntitlementService
 from app.services.entitlement_types import UsageState
-from app.services.quota_usage_service import QuotaUsageService, QuotaExhaustedError
+from app.services.quota_usage_service import QuotaExhaustedError, QuotaUsageService
 
 
 class ChatAccessDeniedError(Exception):
@@ -55,7 +58,7 @@ class ChatEntitlementGate:
                         limit=exhausted_state.quota_limit,
                         window_end=exhausted_state.window_end,
                     )
-            
+
             # Default to access denied if not specifically quota exhausted or no states
             raise ChatAccessDeniedError(
                 reason=entitlement.reason,
@@ -64,7 +67,9 @@ class ChatEntitlementGate:
             )
 
         if entitlement.access_mode == "unlimited":
-            return ChatEntitlementResult(path="canonical_unlimited", usage_states=entitlement.usage_states)
+            return ChatEntitlementResult(
+                path="canonical_unlimited", usage_states=entitlement.usage_states
+            )
 
         # access_mode == "quota" — consommer
         consumed_states: list[UsageState] = []
@@ -81,7 +86,14 @@ class ChatEntitlementGate:
             except QuotaExhaustedError as exc:
                 # If QuotaUsageService raises QuotaExhaustedError, we wrap it
                 # Try to find the window_end from entitlement.usage_states
-                window_end = next((s.window_end for s in entitlement.usage_states if s.quota_key == exc.quota_key), None)
+                window_end = next(
+                    (
+                        s.window_end
+                        for s in entitlement.usage_states
+                        if s.quota_key == exc.quota_key
+                    ),
+                    None,
+                )
                 raise ChatQuotaExceededError(
                     quota_key=exc.quota_key,
                     used=exc.used,

@@ -269,8 +269,10 @@ class ChatGuidanceService:
         except ValueError:
             return None
         reference = today or date.today()
-        age = reference.year - birth_date.year - (
-            (reference.month, reference.day) < (birth_date.month, birth_date.day)
+        age = (
+            reference.year
+            - birth_date.year
+            - ((reference.month, reference.day) < (birth_date.month, birth_date.day))
         )
         return age if age >= 0 else None
 

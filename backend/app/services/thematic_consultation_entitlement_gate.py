@@ -1,10 +1,13 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime
+
 from sqlalchemy.orm import Session
+
 from app.services.entitlement_service import EntitlementService
 from app.services.entitlement_types import UsageState
-from app.services.quota_usage_service import QuotaUsageService, QuotaExhaustedError
+from app.services.quota_usage_service import QuotaExhaustedError, QuotaUsageService
 
 
 class ConsultationAccessDeniedError(Exception):
@@ -84,7 +87,11 @@ class ThematicConsultationEntitlementGate:
                 consumed_states.append(state)
             except QuotaExhaustedError as exc:
                 window_end = next(
-                    (s.window_end for s in entitlement.usage_states if s.quota_key == exc.quota_key),
+                    (
+                        s.window_end
+                        for s in entitlement.usage_states
+                        if s.quota_key == exc.quota_key
+                    ),
                     None,
                 )
                 raise ConsultationQuotaExceededError(

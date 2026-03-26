@@ -47,12 +47,11 @@ def test_derive_entitlement_plan_basic_cases():
         assert derive_entitlement_plan("active", "unknown_price") == "free"
 
         # past_due -> conserve le plan actuel
-        assert derive_entitlement_plan(
-            "past_due", "price_basic", current_entitlement="premium"
-        ) == "premium"
-        assert derive_entitlement_plan(
-            "past_due", None, current_entitlement="basic"
-        ) == "basic"
+        assert (
+            derive_entitlement_plan("past_due", "price_basic", current_entitlement="premium")
+            == "premium"
+        )
+        assert derive_entitlement_plan("past_due", None, current_entitlement="basic") == "basic"
 
         # Cas de révocation
         assert derive_entitlement_plan("canceled", "price_basic") == "free"
@@ -84,9 +83,9 @@ def test_update_from_event_payload_idempotence_stricte(db: Session, user_id: int
                 "id": "sub_123",
                 "status": "active",
                 "customer": "cus_123",
-                "items": {"data": [{"price": {"id": "price_basic"}}]}
+                "items": {"data": [{"price": {"id": "price_basic"}}]},
             }
-        }
+        },
     }
 
     with patch.dict(STRIPE_PRICE_ENTITLEMENT_MAP, {"price_basic": "basic"}):
@@ -110,19 +109,19 @@ def test_update_from_event_payload_hors_ordre(db: Session, user_id: int):
     event_recent = {
         "id": "evt_recent",
         "created": 1711324800,  # Plus récent
-        "data": {"object": {"object": "subscription", "status": "active", "id": "sub_123"}}
+        "data": {"object": {"object": "subscription", "status": "active", "id": "sub_123"}},
     }
     # Event ancien
     event_ancien = {
         "id": "evt_ancien",
         "created": 1711238400,  # Plus ancien
-        "data": {"object": {"object": "subscription", "status": "canceled", "id": "sub_123"}}
+        "data": {"object": {"object": "subscription", "status": "canceled", "id": "sub_123"}},
     }
 
     # On traite le récent d'abord
     StripeBillingProfileService.update_from_event_payload(db, user_id, event_recent)
     db.commit()
-    
+
     profile = StripeBillingProfileService.get_or_create_profile(db, user_id)
     assert profile.subscription_status == "active"
     last_event_id = profile.last_stripe_event_id
@@ -146,9 +145,9 @@ def test_transition_entitlement_plan(db: Session, user_id: int):
                 "object": {
                     "object": "subscription",
                     "status": "active",
-                    "items": {"data": [{"price": {"id": "price_premium"}}]}
+                    "items": {"data": [{"price": {"id": "price_premium"}}]},
                 }
-            }
+            },
         }
         StripeBillingProfileService.update_from_event_payload(db, user_id, event_premium)
         assert StripeBillingProfileService.get_entitlement_plan(db, user_id) == "premium"
@@ -157,7 +156,7 @@ def test_transition_entitlement_plan(db: Session, user_id: int):
         event_past_due = {
             "id": "evt_2",
             "created": 2000,
-            "data": {"object": {"object": "subscription", "status": "past_due"}}
+            "data": {"object": {"object": "subscription", "status": "past_due"}},
         }
         StripeBillingProfileService.update_from_event_payload(db, user_id, event_past_due)
         assert StripeBillingProfileService.get_entitlement_plan(db, user_id) == "premium"
@@ -166,12 +165,10 @@ def test_transition_entitlement_plan(db: Session, user_id: int):
         event_canceled = {
             "id": "evt_3",
             "created": 3000,
-            "data": {"object": {"object": "subscription", "status": "canceled"}}
+            "data": {"object": {"object": "subscription", "status": "canceled"}},
         }
         StripeBillingProfileService.update_from_event_payload(db, user_id, event_canceled)
         assert StripeBillingProfileService.get_entitlement_plan(db, user_id) == "free"
-
-
 
 
 def test_price_entitlement_map_populated_from_settings():
@@ -190,4 +187,3 @@ def test_price_entitlement_map_empty_when_no_prices():
         mock_settings.stripe_price_premium = None
         result = svc._build_price_entitlement_map()
     assert result == {}
-

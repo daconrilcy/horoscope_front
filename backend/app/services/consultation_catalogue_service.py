@@ -8,7 +8,7 @@ class ConsultationCatalogueService:
     Service pour gérer le catalogue des consultations types.
     Gère la récupération depuis la DB et la compatibilité des clés legacy.
     """
-    
+
     @staticmethod
     def get_catalogue(db: Session) -> list[ConsultationTemplateModel]:
         """
@@ -27,10 +27,7 @@ class ConsultationCatalogueService:
         Assure la compatibilité entre les anciennes clés et les nouvelles clés canoniques.
         AC2: work -> career, relation -> relationship
         """
-        mapping = {
-            "work": "career",
-            "relation": "relationship"
-        }
+        mapping = {"work": "career", "relation": "relationship"}
         return mapping.get(key, key)
 
     @staticmethod
@@ -39,6 +36,6 @@ class ConsultationCatalogueService:
         Récupère un template spécifique par sa clé, avec support legacy.
         """
         canonical_key = ConsultationCatalogueService.map_legacy_key(key)
-        return db.query(ConsultationTemplateModel).filter_by(
-            key=canonical_key, is_active=True
-        ).first()
+        return (
+            db.query(ConsultationTemplateModel).filter_by(key=canonical_key, is_active=True).first()
+        )

@@ -1,6 +1,6 @@
-import pytest
 from datetime import datetime, timezone
 
+import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
@@ -86,7 +86,9 @@ def test_plan_feature_binding_uniqueness():
         db.add_all([p, f])
         db.commit()
 
-        db.add(PlanFeatureBindingModel(plan_id=p.id, feature_id=f.id, access_mode=AccessMode.UNLIMITED))
+        db.add(
+            PlanFeatureBindingModel(plan_id=p.id, feature_id=f.id, access_mode=AccessMode.UNLIMITED)
+        )
         db.commit()
 
         db.add(PlanFeatureBindingModel(plan_id=p.id, feature_id=f.id, access_mode=AccessMode.QUOTA))
@@ -265,11 +267,15 @@ def test_usage_counter_constraints_and_uniqueness():
 def test_variant_code_seeding():
     seed()
     with SessionLocal() as db:
+
         def get_variant(plan_code, feature_code):
             return db.execute(
                 select(PlanFeatureBindingModel.variant_code)
                 .join(PlanCatalogModel, PlanFeatureBindingModel.plan_id == PlanCatalogModel.id)
-                .join(FeatureCatalogModel, PlanFeatureBindingModel.feature_id == FeatureCatalogModel.id)
+                .join(
+                    FeatureCatalogModel,
+                    PlanFeatureBindingModel.feature_id == FeatureCatalogModel.id,
+                )
                 .where(
                     PlanCatalogModel.plan_code == plan_code,
                     FeatureCatalogModel.feature_code == feature_code,
@@ -296,10 +302,45 @@ def test_seeded_quota_shapes():
             )
             .join(PlanFeatureBindingModel, PlanFeatureBindingModel.plan_id == PlanCatalogModel.id)
             .join(FeatureCatalogModel, PlanFeatureBindingModel.feature_id == FeatureCatalogModel.id)
-            .join(PlanFeatureQuotaModel, PlanFeatureQuotaModel.plan_feature_binding_id == PlanFeatureBindingModel.id)
+            .join(
+                PlanFeatureQuotaModel,
+                PlanFeatureQuotaModel.plan_feature_binding_id == PlanFeatureBindingModel.id,
+            )
         ).all()
 
-        assert ("trial", "thematic_consultation", "consultations", 1, PeriodUnit.WEEK, 1, ResetMode.CALENDAR) in rows
-        assert ("basic", "astrologer_chat", "messages", 5, PeriodUnit.DAY, 1, ResetMode.CALENDAR) in rows
-        assert ("premium", "astrologer_chat", "messages", 2000, PeriodUnit.MONTH, 1, ResetMode.CALENDAR) in rows
-        assert ("premium", "natal_chart_long", "interpretations", 5, PeriodUnit.LIFETIME, 1, ResetMode.LIFETIME) in rows
+        assert (
+            "trial",
+            "thematic_consultation",
+            "consultations",
+            1,
+            PeriodUnit.WEEK,
+            1,
+            ResetMode.CALENDAR,
+        ) in rows
+        assert (
+            "basic",
+            "astrologer_chat",
+            "messages",
+            5,
+            PeriodUnit.DAY,
+            1,
+            ResetMode.CALENDAR,
+        ) in rows
+        assert (
+            "premium",
+            "astrologer_chat",
+            "messages",
+            2000,
+            PeriodUnit.MONTH,
+            1,
+            ResetMode.CALENDAR,
+        ) in rows
+        assert (
+            "premium",
+            "natal_chart_long",
+            "interpretations",
+            5,
+            PeriodUnit.LIFETIME,
+            1,
+            ResetMode.LIFETIME,
+        ) in rows

@@ -129,7 +129,7 @@ def send_chat_message(
 
     try:
         parsed_payload = ChatMessageRequest.model_validate(payload)
-        
+
         entitlement_result = ChatEntitlementGate.check_and_consume(db, user_id=current_user.id)
         if entitlement_result.path == "legacy":
             QuotaService.consume_quota_or_raise(
@@ -137,7 +137,7 @@ def send_chat_message(
                 user_id=current_user.id,
                 request_id=request_id,
             )
-        
+
         quota_info = _build_quota_info(entitlement_result)
 
         response = ChatGuidanceService.send_message(

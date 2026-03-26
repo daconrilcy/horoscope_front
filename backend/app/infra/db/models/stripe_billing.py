@@ -56,9 +56,7 @@ class StripeBillingProfileModel(Base):
     billing_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Idempotence webhooks Stripe (tri-champs)
-    last_stripe_event_id: Mapped[str | None] = mapped_column(
-        String(128), nullable=True, index=True
-    )
+    last_stripe_event_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
     last_stripe_event_created: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

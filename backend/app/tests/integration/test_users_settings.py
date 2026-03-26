@@ -11,6 +11,7 @@ from app.main import app
 
 client = TestClient(app)
 
+
 @pytest.fixture(autouse=True)
 def _isolated_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     database_url = f"sqlite:///{(tmp_path / 'test-users-settings.db').as_posix()}"
@@ -33,6 +34,7 @@ def _isolated_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     finally:
         test_engine.dispose()
 
+
 @pytest.fixture
 def auth_token() -> str:
     payload = {"email": "test@example.com", "password": "password123"}
@@ -40,10 +42,10 @@ def auth_token() -> str:
     assert response.status_code == 200
     return response.json()["data"]["tokens"]["access_token"]
 
+
 def test_get_me_settings_authenticated(auth_token: str):
     response = client.get(
-        "/v1/users/me/settings",
-        headers={"Authorization": f"Bearer {auth_token}"}
+        "/v1/users/me/settings", headers={"Authorization": f"Bearer {auth_token}"}
     )
     assert response.status_code == 200
     data = response.json()["data"]
@@ -52,22 +54,23 @@ def test_get_me_settings_authenticated(auth_token: str):
     assert data["astrologer_profile"] == "standard"
     assert data["default_astrologer_id"] is None
 
+
 def test_patch_me_settings_astrologer_profile(auth_token: str):
     # Change to humaniste
     response = client.patch(
         "/v1/users/me/settings",
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"astrologer_profile": "humaniste"}
+        json={"astrologer_profile": "humaniste"},
     )
     assert response.status_code == 200
     assert response.json()["data"]["astrologer_profile"] == "humaniste"
 
     # Verify via GET
     response = client.get(
-        "/v1/users/me/settings",
-        headers={"Authorization": f"Bearer {auth_token}"}
+        "/v1/users/me/settings", headers={"Authorization": f"Bearer {auth_token}"}
     )
     assert response.json()["data"]["astrologer_profile"] == "humaniste"
+
 
 def test_patch_me_settings_default_astrologer_id(auth_token: str):
     # Set a default astrologer
@@ -75,15 +78,14 @@ def test_patch_me_settings_default_astrologer_id(auth_token: str):
     response = client.patch(
         "/v1/users/me/settings",
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"default_astrologer_id": astro_id}
+        json={"default_astrologer_id": astro_id},
     )
     assert response.status_code == 200
     assert response.json()["data"]["default_astrologer_id"] == astro_id
 
     # Verify via GET
     response = client.get(
-        "/v1/users/me/settings",
-        headers={"Authorization": f"Bearer {auth_token}"}
+        "/v1/users/me/settings", headers={"Authorization": f"Bearer {auth_token}"}
     )
     assert response.json()["data"]["default_astrologer_id"] == astro_id
 
@@ -91,33 +93,35 @@ def test_patch_me_settings_default_astrologer_id(auth_token: str):
     response = client.patch(
         "/v1/users/me/settings",
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"default_astrologer_id": None}
+        json={"default_astrologer_id": None},
     )
     assert response.status_code == 200
     assert response.json()["data"]["default_astrologer_id"] is None
+
 
 def test_patch_me_settings_invalid_profile(auth_token: str):
     response = client.patch(
         "/v1/users/me/settings",
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"astrologer_profile": "invalid_one"}
+        json={"astrologer_profile": "invalid_one"},
     )
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "invalid_astrologer_profile"
+
 
 def test_patch_me_settings_partial_update(auth_token: str):
     # Initial state
     client.patch(
         "/v1/users/me/settings",
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"astrologer_profile": "karmique", "default_astrologer_id": "original-astro"}
+        json={"astrologer_profile": "karmique", "default_astrologer_id": "original-astro"},
     )
 
     # Partial update: only profile
     response = client.patch(
         "/v1/users/me/settings",
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"astrologer_profile": "vedique"}
+        json={"astrologer_profile": "vedique"},
     )
     assert response.status_code == 200
     data = response.json()["data"]
@@ -128,7 +132,7 @@ def test_patch_me_settings_partial_update(auth_token: str):
     response = client.patch(
         "/v1/users/me/settings",
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"default_astrologer_id": "new-astro"}
+        json={"default_astrologer_id": "new-astro"},
     )
     assert response.status_code == 200
     data = response.json()["data"]

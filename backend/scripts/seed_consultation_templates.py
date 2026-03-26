@@ -32,17 +32,16 @@ def seed_consultation_templates():
                 "metadata_config": {
                     "tags": ["Introspection", "Bilan actuel"],
                     "required_data": ["birth_profile"],
-                    "fallback_allowed": True
+                    "fallback_allowed": True,
                 },
-                "sort_order": 10
+                "sort_order": 10,
             },
             {
                 "key": "career",
                 "icon_ref": "💼",
                 "title": "Ma vie pro & mes décisions",
                 "subtitle": (
-                    "Éclairez vos choix professionnels, vos opportunités et vos "
-                    "prochaines étapes."
+                    "Éclairez vos choix professionnels, vos opportunités et vos prochaines étapes."
                 ),
                 "description": (
                     "Une lecture orientée sur votre carrière, vos ambitions et les "
@@ -57,9 +56,9 @@ def seed_consultation_templates():
                     "tags": ["Carrière", "Ambition"],
                     "required_data": ["birth_profile"],
                     "fallback_allowed": True,
-                    "interaction_eligible": True
+                    "interaction_eligible": True,
                 },
-                "sort_order": 20
+                "sort_order": 20,
             },
             {
                 "key": "orientation",
@@ -80,9 +79,9 @@ def seed_consultation_templates():
                 "metadata_config": {
                     "tags": ["Mission de vie", "Potentiels"],
                     "required_data": ["birth_profile"],
-                    "fallback_allowed": False
+                    "fallback_allowed": False,
                 },
-                "sort_order": 30
+                "sort_order": 30,
             },
             {
                 "key": "relationship",
@@ -106,9 +105,9 @@ def seed_consultation_templates():
                     "required_data": ["birth_profile"],
                     "fallback_allowed": True,
                     "interaction_eligible": True,
-                    "default_interaction": True
+                    "default_interaction": True,
                 },
-                "sort_order": 40
+                "sort_order": 40,
             },
             {
                 "key": "timing",
@@ -128,10 +127,10 @@ def seed_consultation_templates():
                 "metadata_config": {
                     "tags": ["Timing", "Décision"],
                     "required_data": ["birth_profile", "location"],
-                    "fallback_allowed": False
+                    "fallback_allowed": False,
                 },
-                "sort_order": 50
-            }
+                "sort_order": 50,
+            },
         ]
 
         for t_data in templates:
@@ -144,12 +143,9 @@ def seed_consultation_templates():
                 existing.updated_at = datetime.now(timezone.utc)
             else:
                 print(f"Creating template: {t_data['key']}")
-                new_t = ConsultationTemplateModel(
-                    id=uuid.uuid4(),
-                    **t_data
-                )
+                new_t = ConsultationTemplateModel(id=uuid.uuid4(), **t_data)
                 db.add(new_t)
-        
+
         db.commit()
         print("Seed completed successfully.")
     except Exception as e:
@@ -158,6 +154,7 @@ def seed_consultation_templates():
         raise e
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     seed_consultation_templates()

@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 import app.infra.db.models  # noqa: F401
@@ -13,12 +14,15 @@ from app.services.thematic_consultation_entitlement_gate import ConsultationEnti
 
 client = TestClient(app)
 
+
 @pytest.fixture(autouse=True)
 def mock_entitlement_gate():
     with patch(
         "app.api.v1.routers.consultations.ThematicConsultationEntitlementGate.check_and_consume"
     ) as mock:
-        mock.return_value = ConsultationEntitlementResult(path="canonical_unlimited", usage_states=[])
+        mock.return_value = ConsultationEntitlementResult(
+            path="canonical_unlimited", usage_states=[]
+        )
         yield mock
 
 

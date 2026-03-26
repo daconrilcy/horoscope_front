@@ -58,13 +58,16 @@ def test_canonical_quota_path_consumes(db_session):
     entitlement = make_entitlement()
     mock_state = MagicMock(used=1, remaining=0)
 
-    with patch(
-        "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
-        return_value=entitlement,
-    ), patch(
-        "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume",
-        return_value=mock_state,
-    ) as mock_consume:
+    with (
+        patch(
+            "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
+            return_value=entitlement,
+        ),
+        patch(
+            "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume",
+            return_value=mock_state,
+        ) as mock_consume,
+    ):
         result = ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=42)
 
     assert result.path == "canonical_quota"
@@ -75,12 +78,15 @@ def test_canonical_quota_path_consumes(db_session):
 def test_canonical_unlimited_path_no_consume(db_session):
     entitlement = make_entitlement(access_mode="unlimited", quotas=[])
 
-    with patch(
-        "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
-        return_value=entitlement,
-    ), patch(
-        "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume"
-    ) as mock_consume:
+    with (
+        patch(
+            "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
+            return_value=entitlement,
+        ),
+        patch(
+            "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume"
+        ) as mock_consume,
+    ):
         result = ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=42)
 
     assert result.path == "canonical_unlimited"
@@ -137,13 +143,16 @@ def test_canonical_disabled_binding_rejected_403(db_session):
 
 def test_quota_exceeded_raises_consultation_error(db_session):
     entitlement = make_entitlement()
-    with patch(
-        "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
-        return_value=entitlement,
-    ), patch(
-        "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume",
-        side_effect=QuotaExhaustedError(
-            quota_key="consultations", used=1, limit=1, feature_code="thematic_consultation"
+    with (
+        patch(
+            "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
+            return_value=entitlement,
+        ),
+        patch(
+            "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume",
+            side_effect=QuotaExhaustedError(
+                quota_key="consultations", used=1, limit=1, feature_code="thematic_consultation"
+            ),
         ),
     ):
         with pytest.raises(ConsultationQuotaExceededError) as exc_info:
@@ -155,15 +164,17 @@ def test_quota_exceeded_raises_consultation_error(db_session):
 
 def test_no_legacy_quota_service_called(db_session):
     entitlement = make_entitlement()
-    with patch(
-        "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
-        return_value=entitlement,
-    ), patch(
-        "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume",
-        return_value=MagicMock(),
-    ), patch(
-        "app.services.quota_service.QuotaService.consume_quota_or_raise"
-    ) as legacy_consume:
+    with (
+        patch(
+            "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
+            return_value=entitlement,
+        ),
+        patch(
+            "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume",
+            return_value=MagicMock(),
+        ),
+        patch("app.services.quota_service.QuotaService.consume_quota_or_raise") as legacy_consume,
+    ):
         ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=42)
 
     legacy_consume.assert_not_called()

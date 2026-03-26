@@ -80,13 +80,13 @@ class AstrologerProfile(Astrologer):
     professional_background: List[str] = Field(default_factory=list)
     key_skills: List[str] = Field(default_factory=list)
     behavioral_style: List[str] = Field(default_factory=list)
-    
+
     # Social proof
     reviews: List[AstrologerReview] = Field(default_factory=list)
     review_summary: dict = Field(default_factory=dict)
     user_rating: Optional[int] = None
     user_review: Optional[AstrologerReview] = None
-    
+
     # Contextual actions
     action_state: AstrologerActionState = Field(default_factory=AstrologerActionState)
 
@@ -110,9 +110,7 @@ class ReviewUpdate(BaseModel):
 def _build_user_alias(email: str) -> str:
     local_part = email.split("@", 1)[0].strip()
     cleaned = "".join(
-        character
-        for character in local_part
-        if character.isalnum() or character in {"-", "_", "."}
+        character for character in local_part if character.isalnum() or character in {"-", "_", "."}
     )
     return cleaned[:120] or "membre"
 
@@ -223,7 +221,7 @@ def get_astrologer(
         .limit(5)
     )
     reviews_models = db.execute(reviews_stmt).scalars().all()
-    
+
     reviews = [
         AstrologerReview(
             id=str(r.id),
@@ -231,17 +229,17 @@ def get_astrologer(
             rating=r.rating,
             comment=r.comment,
             tags=r.tags,
-            created_at=r.created_at.isoformat()
-        ) for r in reviews_models
+            created_at=r.created_at.isoformat(),
+        )
+        for r in reviews_models
     ]
 
     # Review summary
-    stats_stmt = (
-        select(func.avg(AstrologerReviewModel.rating), func.count(AstrologerReviewModel.id))
-        .where(AstrologerReviewModel.persona_id == persona_uuid)
-    )
+    stats_stmt = select(
+        func.avg(AstrologerReviewModel.rating), func.count(AstrologerReviewModel.id)
+    ).where(AstrologerReviewModel.persona_id == persona_uuid)
     avg_rating, review_count = db.execute(stats_stmt).one()
-    
+
     review_summary = {
         "average_rating": float(avg_rating or 0),
         "review_count": review_count,
@@ -251,12 +249,12 @@ def get_astrologer(
     user_rating = None
     user_review = None
     action_state = AstrologerActionState()
-    
+
     if current_user:
         # User rating
         user_rev_stmt = select(AstrologerReviewModel).where(
             AstrologerReviewModel.persona_id == persona_uuid,
-            AstrologerReviewModel.user_id == current_user.id
+            AstrologerReviewModel.user_id == current_user.id,
         )
         current_user_review = db.execute(user_rev_stmt).scalar_one_or_none()
         if current_user_review is not None:
@@ -269,26 +267,26 @@ def get_astrologer(
                 tags=current_user_review.tags,
                 created_at=current_user_review.created_at.isoformat(),
             )
-        
+
         # Chat state
         chat_stmt = (
             select(ChatConversationModel.id)
             .where(
                 ChatConversationModel.persona_id == persona_uuid,
-                ChatConversationModel.user_id == current_user.id
+                ChatConversationModel.user_id == current_user.id,
             )
             .order_by(ChatConversationModel.updated_at.desc())
             .limit(1)
         )
         action_state.last_chat_id = db.execute(chat_stmt).scalar_one_or_none()
         action_state.has_chat = action_state.last_chat_id is not None
-        
+
         # Natal state
         natal_stmt = (
             select(UserNatalInterpretationModel.id)
             .where(
                 UserNatalInterpretationModel.persona_id == persona_uuid,
-                UserNatalInterpretationModel.user_id == current_user.id
+                UserNatalInterpretationModel.user_id == current_user.id,
             )
             .order_by(UserNatalInterpretationModel.created_at.desc())
             .limit(1)
@@ -317,13 +315,9 @@ def get_astrologer(
             mission_statement=profile.mission_statement,
             ideal_for=profile.ideal_for,
             metrics=(
-                AstrologerMetrics(**profile.metrics) 
-                if profile.metrics else AstrologerMetrics()
+                AstrologerMetrics(**profile.metrics) if profile.metrics else AstrologerMetrics()
             ),
-            specialties_details=[
-                SpecialtyDetail(**sd) 
-                for sd in profile.specialties_details
-            ],
+            specialties_details=[SpecialtyDetail(**sd) for sd in profile.specialties_details],
             professional_background=profile.professional_background,
             key_skills=profile.key_skills,
             behavioral_style=profile.behavioral_style,
@@ -331,7 +325,7 @@ def get_astrologer(
             review_summary=review_summary,
             user_rating=user_rating,
             user_review=user_review,
-            action_state=action_state
+            action_state=action_state,
         ),
         "meta": {"request_id": request_id},
     }
@@ -346,7 +340,7 @@ def update_astrologer_review(
     current_user: Any = Depends(get_current_user_optional),
 ) -> Any:
     request_id = resolve_request_id(request)
-    
+
     if not current_user:
         return _error_response(
             status_code=401,
@@ -383,10 +377,10 @@ def update_astrologer_review(
     # Upsert review
     stmt = select(AstrologerReviewModel).where(
         AstrologerReviewModel.persona_id == persona_uuid,
-        AstrologerReviewModel.user_id == current_user.id
+        AstrologerReviewModel.user_id == current_user.id,
     )
     review = db.execute(stmt).scalar_one_or_none()
-    
+
     if review:
         review.rating = review_data.rating
         review.comment = normalized_comment
@@ -399,10 +393,10 @@ def update_astrologer_review(
             persona_id=persona_uuid,
             rating=review_data.rating,
             comment=normalized_comment,
-            tags=review_data.tags
+            tags=review_data.tags,
         )
         db.add(review)
-    
+
     db.commit()
-    
+
     return {"status": "ok", "meta": {"request_id": request_id}}

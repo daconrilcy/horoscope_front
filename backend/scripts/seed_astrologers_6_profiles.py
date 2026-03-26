@@ -39,12 +39,12 @@ ASTROLOGERS = [
         },
         "specialties_details": [
             {
-                "title": "Bases du thème", 
-                "description": "Comprendre sa structure de naissance sans jargon."
+                "title": "Bases du thème",
+                "description": "Comprendre sa structure de naissance sans jargon.",
             },
             {
-                "title": "Orientation", 
-                "description": "Identifier ses forces naturelles et ses zones de talent."
+                "title": "Orientation",
+                "description": "Identifier ses forces naturelles et ses zones de talent.",
             },
         ],
         "bio_short": (
@@ -103,12 +103,12 @@ ASTROLOGERS = [
         },
         "specialties_details": [
             {
-                "title": "Cycles Lunaires", 
-                "description": "Vivre en harmonie avec les phases de la Lune."
+                "title": "Cycles Lunaires",
+                "description": "Vivre en harmonie avec les phases de la Lune.",
             },
             {
-                "title": "Astrologie Karmique", 
-                "description": "Explorer les mémoires et le chemin de l'âme."
+                "title": "Astrologie Karmique",
+                "description": "Explorer les mémoires et le chemin de l'âme.",
             },
         ],
         "bio_short": (
@@ -167,17 +167,16 @@ ASTROLOGERS = [
         },
         "specialties_details": [
             {
-                "title": "Audit de thème", 
-                "description": "Vérifier la cohérence des dominantes astrales."
+                "title": "Audit de thème",
+                "description": "Vérifier la cohérence des dominantes astrales.",
             },
             {
-                "title": "Transits techniques", 
-                "description": "Anticiper les périodes charnières avec précision."
+                "title": "Transits techniques",
+                "description": "Anticiper les périodes charnières avec précision.",
             },
         ],
         "bio_short": (
-            "Astrologue technique et méthodique, spécialisé dans la lecture "
-            "structurée du thème."
+            "Astrologue technique et méthodique, spécialisé dans la lecture structurée du thème."
         ),
         "admin_category": "rational",
         "specialties": ["Transits", "Carrière", "Organisation"],
@@ -231,17 +230,16 @@ ASTROLOGERS = [
         },
         "specialties_details": [
             {
-                "title": "Relationnel", 
-                "description": "Décoder les dynamiques de couple et d'attachement."
+                "title": "Relationnel",
+                "description": "Décoder les dynamiques de couple et d'attachement.",
             },
             {
-                "title": "Estime de soi", 
-                "description": "Utiliser son thème pour se réconcilier avec soi-même."
+                "title": "Estime de soi",
+                "description": "Utiliser son thème pour se réconcilier avec soi-même.",
             },
         ],
         "bio_short": (
-            "Astrologue relationnelle, chaleureuse et centrée sur la "
-            "sécurité intérieure."
+            "Astrologue relationnelle, chaleureuse et centrée sur la sécurité intérieure."
         ),
         "admin_category": "warm",
         "specialties": ["Relations", "Estime de soi", "Famille"],
@@ -295,17 +293,16 @@ ASTROLOGERS = [
         },
         "specialties_details": [
             {
-                "title": "Timing Business", 
-                "description": "Choisir le meilleur moment pour lancer un projet."
+                "title": "Timing Business",
+                "description": "Choisir le meilleur moment pour lancer un projet.",
             },
             {
-                "title": "Arbitrage", 
-                "description": "Trancher entre plusieurs options grâce aux cycles."
+                "title": "Arbitrage",
+                "description": "Trancher entre plusieurs options grâce aux cycles.",
             },
         ],
         "bio_short": (
-            "Astrologue orienté décision et performance, spécialisé en arbitrage "
-            "professionnel."
+            "Astrologue orienté décision et performance, spécialisé en arbitrage professionnel."
         ),
         "admin_category": "direct",
         "specialties": ["Business", "Timing", "Objectifs"],
@@ -359,17 +356,16 @@ ASTROLOGERS = [
         },
         "specialties_details": [
             {
-                "title": "Shadow Work", 
-                "description": "Intégrer les parts refoulées de sa personnalité."
+                "title": "Shadow Work",
+                "description": "Intégrer les parts refoulées de sa personnalité.",
             },
             {
-                "title": "Métamorphose", 
-                "description": "Accompagner les crises de vie transformatrices."
+                "title": "Métamorphose",
+                "description": "Accompagner les crises de vie transformatrices.",
             },
         ],
         "bio_short": (
-            "Astrologue introspectif de profondeur, orienté transformation et "
-            "cycles de vie."
+            "Astrologue introspectif de profondeur, orienté transformation et cycles de vie."
         ),
         "admin_category": "introspective",
         "specialties": ["Ombre", "Transformation", "Psychologie"],
@@ -575,11 +571,7 @@ def seed_astrologers(db: Session) -> None:
                 duplicate.enabled = False
                 logger.info("Disabled duplicate persona: %s (%s)", duplicate.name, duplicate.id)
 
-    stale_profiles = (
-        db.execute(select(AstrologerProfileModel))
-        .scalars()
-        .all()
-    )
+    stale_profiles = db.execute(select(AstrologerProfileModel)).scalars().all()
     for stale_profile in stale_profiles:
         if stale_profile.persona_id in canonical_persona_ids:
             continue

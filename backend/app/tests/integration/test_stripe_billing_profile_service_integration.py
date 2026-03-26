@@ -112,13 +112,7 @@ def test_update_from_event_payload_updates_synced_at(db: Session, user_id: int):
         "id": "evt_sync_test",
         "created": 1711238400,
         "type": "customer.updated",
-        "data": {
-            "object": {
-                "object": "customer",
-                "id": "cus_123",
-                "email": "billing@example.com"
-            }
-        }
+        "data": {"object": {"object": "customer", "id": "cus_123", "email": "billing@example.com"}},
     }
 
     # Appel au service

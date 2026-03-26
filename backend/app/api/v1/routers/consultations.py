@@ -63,11 +63,7 @@ def get_catalogue(
     items = [ConsultationTemplateSchema.model_validate(t) for t in templates]
 
     return ConsultationCatalogueResponse(
-        items=items,
-        meta={
-            "request_id": request_id,
-            "total": len(items)
-        }
+        items=items, meta={"request_id": request_id, "total": len(items)}
     )
 
 

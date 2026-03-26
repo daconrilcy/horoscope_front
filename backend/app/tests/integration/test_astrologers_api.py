@@ -40,42 +40,42 @@ def test_list_astrologers_returns_only_public_enabled_profiles() -> None:
         )
         db.add_all(
             [
-            AstrologerProfileModel(
-                persona_id=visible_id,
-                first_name="Visible",
-                last_name="Guide",
-                display_name="Visible Guide",
-                gender="other",
-                age=41,
-                public_style_label="Standard",
-                bio_short="Bio courte",
-                bio_long="Bio longue",
-                admin_category="standard",
-                specialties=[],
-                professional_background=["Parcours visible"],
-                key_skills=["Pédagogie"],
-                behavioral_style=["Calme"],
-                is_public=True,
-                sort_order=1,
-            ),
-            AstrologerProfileModel(
-                persona_id=hidden_id,
-                first_name="Hidden",
-                last_name="Guide",
-                display_name="Hidden Guide",
-                gender="other",
-                age=40,
-                public_style_label="Standard",
-                bio_short="Ne doit pas sortir",
-                bio_long="Ne doit pas sortir",
-                admin_category="standard",
-                specialties=[],
-                professional_background=[],
-                key_skills=[],
-                behavioral_style=[],
-                is_public=True,
-                sort_order=2,
-            ),
+                AstrologerProfileModel(
+                    persona_id=visible_id,
+                    first_name="Visible",
+                    last_name="Guide",
+                    display_name="Visible Guide",
+                    gender="other",
+                    age=41,
+                    public_style_label="Standard",
+                    bio_short="Bio courte",
+                    bio_long="Bio longue",
+                    admin_category="standard",
+                    specialties=[],
+                    professional_background=["Parcours visible"],
+                    key_skills=["Pédagogie"],
+                    behavioral_style=["Calme"],
+                    is_public=True,
+                    sort_order=1,
+                ),
+                AstrologerProfileModel(
+                    persona_id=hidden_id,
+                    first_name="Hidden",
+                    last_name="Guide",
+                    display_name="Hidden Guide",
+                    gender="other",
+                    age=40,
+                    public_style_label="Standard",
+                    bio_short="Ne doit pas sortir",
+                    bio_long="Ne doit pas sortir",
+                    admin_category="standard",
+                    specialties=[],
+                    professional_background=[],
+                    key_skills=[],
+                    behavioral_style=[],
+                    is_public=True,
+                    sort_order=2,
+                ),
             ]
         )
         db.commit()
@@ -203,9 +203,9 @@ def test_review_rating_and_comment_are_persisted_with_user_alias() -> None:
     assert rate_response.status_code == 200
 
     with SessionLocal() as db:
-        stored_review = db.query(AstrologerReviewModel).filter_by(
-            persona_id=persona_id, user_id=user_id
-        ).one()
+        stored_review = (
+            db.query(AstrologerReviewModel).filter_by(persona_id=persona_id, user_id=user_id).one()
+        )
         assert stored_review.user_alias == "marie.lou"
         assert stored_review.comment is None
 

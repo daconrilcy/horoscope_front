@@ -45,13 +45,38 @@ def _quota_identity(quota: dict) -> tuple[str, PeriodUnit, int, ResetMode]:
 def seed() -> None:
     desired_bindings: dict[str, dict[str, dict]] = {
         "free": {
-            "natal_chart_short": {"is_enabled": True, "access_mode": AccessMode.UNLIMITED, "variant_code": None, "quotas": []},
-            "natal_chart_long": {"is_enabled": False, "access_mode": AccessMode.DISABLED, "variant_code": None, "quotas": []},
-            "astrologer_chat": {"is_enabled": False, "access_mode": AccessMode.DISABLED, "variant_code": None, "quotas": []},
-            "thematic_consultation": {"is_enabled": False, "access_mode": AccessMode.DISABLED, "variant_code": None, "quotas": []},
+            "natal_chart_short": {
+                "is_enabled": True,
+                "access_mode": AccessMode.UNLIMITED,
+                "variant_code": None,
+                "quotas": [],
+            },
+            "natal_chart_long": {
+                "is_enabled": False,
+                "access_mode": AccessMode.DISABLED,
+                "variant_code": None,
+                "quotas": [],
+            },
+            "astrologer_chat": {
+                "is_enabled": False,
+                "access_mode": AccessMode.DISABLED,
+                "variant_code": None,
+                "quotas": [],
+            },
+            "thematic_consultation": {
+                "is_enabled": False,
+                "access_mode": AccessMode.DISABLED,
+                "variant_code": None,
+                "quotas": [],
+            },
         },
         "trial": {
-            "natal_chart_short": {"is_enabled": True, "access_mode": AccessMode.UNLIMITED, "variant_code": None, "quotas": []},
+            "natal_chart_short": {
+                "is_enabled": True,
+                "access_mode": AccessMode.UNLIMITED,
+                "variant_code": None,
+                "quotas": [],
+            },
             "natal_chart_long": {
                 "is_enabled": True,
                 "access_mode": AccessMode.QUOTA,
@@ -66,7 +91,12 @@ def seed() -> None:
                     }
                 ],
             },
-            "astrologer_chat": {"is_enabled": False, "access_mode": AccessMode.DISABLED, "variant_code": None, "quotas": []},
+            "astrologer_chat": {
+                "is_enabled": False,
+                "access_mode": AccessMode.DISABLED,
+                "variant_code": None,
+                "quotas": [],
+            },
             "thematic_consultation": {
                 "is_enabled": True,
                 "access_mode": AccessMode.QUOTA,
@@ -83,7 +113,12 @@ def seed() -> None:
             },
         },
         "basic": {
-            "natal_chart_short": {"is_enabled": True, "access_mode": AccessMode.UNLIMITED, "variant_code": None, "quotas": []},
+            "natal_chart_short": {
+                "is_enabled": True,
+                "access_mode": AccessMode.UNLIMITED,
+                "variant_code": None,
+                "quotas": [],
+            },
             "natal_chart_long": {
                 "is_enabled": True,
                 "access_mode": AccessMode.QUOTA,
@@ -128,7 +163,12 @@ def seed() -> None:
             },
         },
         "premium": {
-            "natal_chart_short": {"is_enabled": True, "access_mode": AccessMode.UNLIMITED, "variant_code": None, "quotas": []},
+            "natal_chart_short": {
+                "is_enabled": True,
+                "access_mode": AccessMode.UNLIMITED,
+                "variant_code": None,
+                "quotas": [],
+            },
             "natal_chart_long": {
                 "is_enabled": True,
                 "access_mode": AccessMode.QUOTA,
@@ -177,16 +217,38 @@ def seed() -> None:
     with SessionLocal() as db:
         try:
             plans_data = [
-                {"plan_code": "free", "plan_name": "Free Plan", "audience": Audience.B2C, "source_type": "manual"},
-                {"plan_code": "trial", "plan_name": "Trial Plan", "audience": Audience.B2C, "source_type": "manual"},
-                {"plan_code": "basic", "plan_name": "Basic Plan", "audience": Audience.B2C, "source_type": "manual"},
-                {"plan_code": "premium", "plan_name": "Premium Plan", "audience": Audience.B2C, "source_type": "manual"},
+                {
+                    "plan_code": "free",
+                    "plan_name": "Free Plan",
+                    "audience": Audience.B2C,
+                    "source_type": "manual",
+                },
+                {
+                    "plan_code": "trial",
+                    "plan_name": "Trial Plan",
+                    "audience": Audience.B2C,
+                    "source_type": "manual",
+                },
+                {
+                    "plan_code": "basic",
+                    "plan_name": "Basic Plan",
+                    "audience": Audience.B2C,
+                    "source_type": "manual",
+                },
+                {
+                    "plan_code": "premium",
+                    "plan_name": "Premium Plan",
+                    "audience": Audience.B2C,
+                    "source_type": "manual",
+                },
             ]
 
             plans: dict[str, PlanCatalogModel] = {}
             for p_data in plans_data:
                 plan = db.execute(
-                    select(PlanCatalogModel).where(PlanCatalogModel.plan_code == p_data["plan_code"])
+                    select(PlanCatalogModel).where(
+                        PlanCatalogModel.plan_code == p_data["plan_code"]
+                    )
                 ).scalar_one_or_none()
                 if plan is None:
                     logger.info("Creating plan '%s'...", p_data["plan_code"])
@@ -203,16 +265,34 @@ def seed() -> None:
                 plans[p_data["plan_code"]] = plan
 
             features_data = [
-                {"feature_code": "natal_chart_short", "feature_name": "Natal Chart Short", "is_metered": False},
-                {"feature_code": "natal_chart_long", "feature_name": "Natal Chart Long", "is_metered": True},
-                {"feature_code": "astrologer_chat", "feature_name": "Astrologer Chat", "is_metered": True},
-                {"feature_code": "thematic_consultation", "feature_name": "Thematic Consultation", "is_metered": True},
+                {
+                    "feature_code": "natal_chart_short",
+                    "feature_name": "Natal Chart Short",
+                    "is_metered": False,
+                },
+                {
+                    "feature_code": "natal_chart_long",
+                    "feature_name": "Natal Chart Long",
+                    "is_metered": True,
+                },
+                {
+                    "feature_code": "astrologer_chat",
+                    "feature_name": "Astrologer Chat",
+                    "is_metered": True,
+                },
+                {
+                    "feature_code": "thematic_consultation",
+                    "feature_name": "Thematic Consultation",
+                    "is_metered": True,
+                },
             ]
 
             features: dict[str, FeatureCatalogModel] = {}
             for f_data in features_data:
                 feature = db.execute(
-                    select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == f_data["feature_code"])
+                    select(FeatureCatalogModel).where(
+                        FeatureCatalogModel.feature_code == f_data["feature_code"]
+                    )
                 ).scalar_one_or_none()
                 if feature is None:
                     logger.info("Creating feature '%s'...", f_data["feature_code"])
@@ -259,7 +339,9 @@ def seed() -> None:
                     db.add(binding)
                     db.flush()
                 else:
-                    logger.info("Binding %s -> %s already exists. Updating...", plan_code, feature_code)
+                    logger.info(
+                        "Binding %s -> %s already exists. Updating...", plan_code, feature_code
+                    )
                     binding.is_enabled = is_enabled
                     binding.access_mode = access_mode
                     binding.variant_code = variant_code
@@ -269,11 +351,15 @@ def seed() -> None:
                 desired_quotas = list(quotas)
                 desired_keys = {_quota_identity(q) for q in desired_quotas}
 
-                existing_quotas = db.execute(
-                    select(PlanFeatureQuotaModel).where(
-                        PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
+                existing_quotas = (
+                    db.execute(
+                        select(PlanFeatureQuotaModel).where(
+                            PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
+                        )
                     )
-                ).scalars().all()
+                    .scalars()
+                    .all()
+                )
 
                 for existing in existing_quotas:
                     identity = (
@@ -303,7 +389,12 @@ def seed() -> None:
                     ).scalar_one_or_none()
 
                     if quota is None:
-                        logger.info("  Creating quota %s for %s -> %s...", q_data["quota_key"], plan_code, feature_code)
+                        logger.info(
+                            "  Creating quota %s for %s -> %s...",
+                            q_data["quota_key"],
+                            plan_code,
+                            feature_code,
+                        )
                         quota = PlanFeatureQuotaModel(
                             plan_feature_binding_id=binding.id,
                             source_origin=SourceOrigin.MANUAL,
@@ -311,7 +402,12 @@ def seed() -> None:
                         )
                         db.add(quota)
                     else:
-                        logger.info("  Quota %s for %s -> %s already exists. Updating...", q_data["quota_key"], plan_code, feature_code)
+                        logger.info(
+                            "  Quota %s for %s -> %s already exists. Updating...",
+                            q_data["quota_key"],
+                            plan_code,
+                            feature_code,
+                        )
                         quota.quota_limit = q_data["quota_limit"]
                         quota.source_origin = SourceOrigin.MANUAL
 

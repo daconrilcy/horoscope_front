@@ -11,6 +11,7 @@ from app.services.stripe_checkout_service import StripeCheckoutService, StripeCh
 def db():
     return MagicMock(spec=Session)
 
+
 @pytest.fixture
 def mock_stripe_client():
     with patch("app.services.stripe_checkout_service.get_stripe_client") as mock:
@@ -18,10 +19,12 @@ def mock_stripe_client():
         mock.return_value = client
         yield client
 
+
 @pytest.fixture
 def mock_profile_service():
     with patch("app.services.stripe_checkout_service.StripeBillingProfileService") as mock:
         yield mock
+
 
 @pytest.fixture
 def mock_price_map():
@@ -150,4 +153,3 @@ def test_create_checkout_session_stripe_error(
             db, user_id=1, user_email="t@e.c", plan="basic", success_url="h", cancel_url="c"
         )
     assert excinfo.value.code == "stripe_api_error"
-

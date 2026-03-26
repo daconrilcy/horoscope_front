@@ -131,15 +131,21 @@ class PredictionPersistenceService:
         # Defensive: remove any orphaned child rows for this run_id before inserting.
         # Can occur with SQLite when FK enforcement was previously disabled and a run
         # ID gets reused after a failed transaction.
-        db.execute(sa_delete(DailyPredictionCategoryScoreModel).where(
-            DailyPredictionCategoryScoreModel.run_id == run_model.id
-        ))
-        db.execute(sa_delete(DailyPredictionTurningPointModel).where(
-            DailyPredictionTurningPointModel.run_id == run_model.id
-        ))
-        db.execute(sa_delete(DailyPredictionTimeBlockModel).where(
-            DailyPredictionTimeBlockModel.run_id == run_model.id
-        ))
+        db.execute(
+            sa_delete(DailyPredictionCategoryScoreModel).where(
+                DailyPredictionCategoryScoreModel.run_id == run_model.id
+            )
+        )
+        db.execute(
+            sa_delete(DailyPredictionTurningPointModel).where(
+                DailyPredictionTurningPointModel.run_id == run_model.id
+            )
+        )
+        db.execute(
+            sa_delete(DailyPredictionTimeBlockModel).where(
+                DailyPredictionTimeBlockModel.run_id == run_model.id
+            )
+        )
 
         # AC3, AC4, AC5 - Persist child entities
         self._save_scores(

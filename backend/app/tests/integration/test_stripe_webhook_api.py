@@ -28,10 +28,10 @@ def _sign_payload(payload: bytes, secret: str) -> str:
 async def test_webhook_invalid_signature():
     payload = b'{"id": "evt_123", "type": "checkout.session.completed"}'
     headers = {"stripe-signature": "invalid"}
-    
+
     with patch("app.core.config.settings.stripe_webhook_secret", "whsec_test"):
         response = client.post("/v1/billing/stripe-webhook", content=payload, headers=headers)
-        
+
         assert response.status_code == 400
         assert response.json()["error"]["code"] == "invalid_signature"
 
@@ -40,10 +40,10 @@ async def test_webhook_invalid_signature():
 async def test_webhook_no_secret_configured():
     payload = b'{"id": "evt_123"}'
     headers = {"stripe-signature": "any"}
-    
+
     with patch("app.core.config.settings.stripe_webhook_secret", None):
         response = client.post("/v1/billing/stripe-webhook", content=payload, headers=headers)
-        
+
         assert response.status_code == 503
         assert response.json()["error"]["code"] == "webhook_secret_not_configured"
 

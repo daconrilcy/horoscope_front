@@ -124,9 +124,10 @@ async def test_narrate_returns_none_on_truncated_json(caplog: pytest.LogCaptureF
         )
     ]
 
-    with patch("openai.AsyncOpenAI") as mock_openai, patch(
-        "app.prediction.llm_narrator.logger.warning"
-    ) as mock_warning:
+    with (
+        patch("openai.AsyncOpenAI") as mock_openai,
+        patch("app.prediction.llm_narrator.logger.warning") as mock_warning,
+    ):
         mock_client = mock_openai.return_value
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
 

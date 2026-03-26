@@ -218,7 +218,7 @@ class TestStripeWebhookService:
         mock_event.type = "invoice.payment_succeeded"
         mock_event.data.object = MagicMock()
         mock_event.data.object.customer = "cus_test123"
-        
+
         result = StripeWebhookService.handle_event(db, mock_event)
         assert result == "event_ignored"
 
@@ -239,14 +239,13 @@ class TestStripeWebhookService:
                 # Premier passage
                 result1 = StripeWebhookService.handle_event(db, mock_event)
                 assert result1 == "processed"
-                
+
                 # Deuxième passage (idempotence)
                 # On simule que update_from_event_payload est indifférent ou gère lui-même la garde
-                # En fait, StripeWebhookService.handle_event appelle systématiquement 
+                # En fait, StripeWebhookService.handle_event appelle systématiquement
                 # update_from_event_payload
                 # C'est update_from_event_payload qui doit être idempotent (AC 9).
                 result2 = StripeWebhookService.handle_event(db, mock_event)
                 assert result2 == "processed"
-                
-                assert mock_update.call_count == 2
 
+                assert mock_update.call_count == 2

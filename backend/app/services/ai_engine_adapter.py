@@ -148,7 +148,7 @@ def _build_opening_chat_user_data_block(
             "à reformuler naturellement en une phrase.\n"
             if unclear_opening
             else "- Évite les salutations automatiques du type "
-            "\"Bonjour, comment puis-je vous aider ?\" si elles n'apportent rien.\n"
+            '"Bonjour, comment puis-je vous aider ?" si elles n\'apportent rien.\n'
         )
         + "- Reste conversationnel, bref et humain."
     )
