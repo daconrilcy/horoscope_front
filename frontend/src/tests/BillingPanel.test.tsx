@@ -7,7 +7,7 @@ const mockUseBillingSubscription = vi.fn()
 const mockUseCheckoutEntryPlan = vi.fn()
 const mockUseRetryPayment = vi.fn()
 const mockUseChangePlan = vi.fn()
-const mockUseBillingQuota = vi.fn()
+const mockUseChatEntitlementUsage = vi.fn()
 
 vi.mock("@api", () => ({
   BillingApiError: class extends Error {},
@@ -15,7 +15,7 @@ vi.mock("@api", () => ({
   useCheckoutEntryPlan: () => mockUseCheckoutEntryPlan(),
   useRetryPayment: () => mockUseRetryPayment(),
   useChangePlan: () => mockUseChangePlan(),
-  useBillingQuota: () => mockUseBillingQuota(),
+  useChatEntitlementUsage: () => mockUseChatEntitlementUsage(),
 }))
 
 afterEach(() => {
@@ -24,7 +24,7 @@ afterEach(() => {
   mockUseCheckoutEntryPlan.mockReset()
   mockUseRetryPayment.mockReset()
   mockUseChangePlan.mockReset()
-  mockUseBillingQuota.mockReset()
+  mockUseChatEntitlementUsage.mockReset()
   vi.restoreAllMocks()
 })
 
@@ -62,7 +62,7 @@ describe("BillingPanel", () => {
       error: null,
       mutate: vi.fn(),
     })
-    mockUseBillingQuota.mockReturnValue({
+    mockUseChatEntitlementUsage.mockReturnValue({
       refetch: vi.fn(),
     })
 
@@ -110,7 +110,7 @@ describe("BillingPanel", () => {
       error: null,
       mutate: vi.fn(),
     })
-    mockUseBillingQuota.mockReturnValue({
+    mockUseChatEntitlementUsage.mockReturnValue({
       refetch: vi.fn(),
     })
 

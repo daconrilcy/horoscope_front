@@ -7,7 +7,7 @@ import { ChatPage } from "../pages/ChatPage"
 const mockUseSendChatMessage = vi.fn()
 const mockUseChatConversations = vi.fn()
 const mockUseChatConversationHistory = vi.fn()
-const mockUseBillingQuota = vi.fn()
+const mockUseChatEntitlementUsage = vi.fn()
 const mockUseCreateConversationByPersona = vi.fn()
 const mockUseAstrologers = vi.fn()
 const mockNavigate = vi.fn()
@@ -52,7 +52,7 @@ vi.mock("../api/billing", () => ({
       this.details = details
     }
   },
-  useBillingQuota: () => mockUseBillingQuota(),
+  useChatEntitlementUsage: () => mockUseChatEntitlementUsage(),
 }))
 
 vi.mock("../api/astrologers", () => ({
@@ -83,7 +83,7 @@ afterEach(() => {
   mockUseSendChatMessage.mockReset()
   mockUseChatConversations.mockReset()
   mockUseChatConversationHistory.mockReset()
-  mockUseBillingQuota.mockReset()
+  mockUseChatEntitlementUsage.mockReset()
   mockUseCreateConversationByPersona.mockReset()
   mockUseAstrologers.mockReset()
   mockNavigate.mockReset()
@@ -134,7 +134,7 @@ describe("ChatPage", () => {
 
   beforeEach(() => {
     localStorage.setItem("lang", "fr")
-    mockUseBillingQuota.mockReturnValue(baseQuotaState)
+    mockUseChatEntitlementUsage.mockReturnValue(baseQuotaState)
     mockUseSendChatMessage.mockReturnValue(baseSendMessageState)
     mockUseChatConversationHistory.mockReturnValue(baseHistoryState)
     mockUseCreateConversationByPersona.mockReturnValue(baseCreateConversationState)
@@ -597,7 +597,7 @@ describe("ChatPage", () => {
     })
 
     it("shows quota blocked message", () => {
-      mockUseBillingQuota.mockReturnValue({
+      mockUseChatEntitlementUsage.mockReturnValue({
         ...baseQuotaState,
         data: { ...baseQuotaState.data, blocked: true },
       })

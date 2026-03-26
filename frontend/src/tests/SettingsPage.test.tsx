@@ -82,17 +82,32 @@ const BILLING_SUBSCRIPTION = {
   }),
 }
 
-const BILLING_QUOTA = {
+const ENTITLEMENTS_ME = {
   ok: true,
   status: 200,
   json: async () => ({
     data: {
-      quota_date: "2026-02-23",
-      limit: 50,
-      consumed: 2,
-      remaining: 48,
-      reset_at: "2026-02-24T00:00:00Z",
-      blocked: false,
+      features: [
+        {
+          feature_code: "astrologer_chat",
+          final_access: true,
+          reason: "canonical_binding",
+          usage_states: [
+            {
+              quota_key: "messages",
+              quota_limit: 50,
+              used: 2,
+              remaining: 48,
+              exhausted: false,
+              period_unit: "day",
+              period_value: 1,
+              reset_mode: "calendar",
+              window_start: "2026-02-23T00:00:00Z",
+              window_end: "2026-02-24T00:00:00Z",
+            },
+          ],
+        },
+      ],
     },
   }),
 }
@@ -122,7 +137,7 @@ function makeFetchMock(overrides: Record<string, object> = {}) {
     if (url.endsWith("/v1/users/me/settings")) return overrides.userSettings ?? USER_SETTINGS
     if (url.endsWith("/v1/astrologers")) return overrides.astrologers ?? ASTROLOGERS
     if (url.endsWith("/v1/billing/subscription")) return overrides.subscription ?? BILLING_SUBSCRIPTION
-    if (url.endsWith("/v1/billing/quota")) return overrides.quota ?? BILLING_QUOTA
+    if (url.endsWith("/v1/entitlements/me")) return overrides.entitlements ?? ENTITLEMENTS_ME
     if (url.endsWith("/v1/privacy/export")) return overrides.exportStatus ?? EXPORT_STATUS_NONE
     if (url.endsWith("/v1/privacy/delete")) return overrides.deleteStatus ?? DELETE_STATUS_NONE
     return NOT_FOUND

@@ -16,6 +16,17 @@ from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
 
+from app.infra.db.models.product_entitlements import (
+    AccessMode,
+    Audience,
+    FeatureCatalogModel,
+    PlanCatalogModel,
+    PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
+    PeriodUnit,
+    ResetMode,
+)
+
 client = TestClient(app)
 
 
@@ -25,12 +36,71 @@ def _cleanup_tables() -> None:
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
-        db.execute(delete(SubscriptionPlanChangeModel))
-        db.execute(delete(PaymentAttemptModel))
-        db.execute(delete(UserDailyQuotaUsageModel))
-        db.execute(delete(UserSubscriptionModel))
-        db.execute(delete(BillingPlanModel))
-        db.execute(delete(UserModel))
+        for model in (
+            SubscriptionPlanChangeModel,
+            PaymentAttemptModel,
+            UserDailyQuotaUsageModel,
+            UserSubscriptionModel,
+            BillingPlanModel,
+            UserModel,
+        ):
+            db.execute(delete(model))
+        
+        # Seed canonical features
+        feature = FeatureCatalogModel(
+            feature_code="astrologer_chat",
+            feature_name="Astrologer chat",
+            is_metered=True,
+        )
+        db.add(feature)
+        db.flush()
+
+        # Seed basic-entry plan
+        p_basic = PlanCatalogModel(plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C)
+        db.add(p_basic)
+        db.flush()
+        
+        b_basic = PlanFeatureBindingModel(
+            plan_id=p_basic.id,
+            feature_id=feature.id,
+            access_mode=AccessMode.QUOTA,
+            is_enabled=True,
+        )
+        db.add(b_basic)
+        db.flush()
+        
+        db.add(PlanFeatureQuotaModel(
+            plan_feature_binding_id=b_basic.id,
+            quota_key="daily",
+            quota_limit=5,
+            period_unit=PeriodUnit.DAY,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+        ))
+
+        # Seed premium-unlimited plan
+        p_premium = PlanCatalogModel(plan_code="premium-unlimited", plan_name="Premium", audience=Audience.B2C)
+        db.add(p_premium)
+        db.flush()
+
+        b_premium = PlanFeatureBindingModel(
+            plan_id=p_premium.id,
+            feature_id=feature.id,
+            access_mode=AccessMode.QUOTA,
+            is_enabled=True,
+        )
+        db.add(b_premium)
+        db.flush()
+
+        db.add(PlanFeatureQuotaModel(
+            plan_feature_binding_id=b_premium.id,
+            quota_key="daily",
+            quota_limit=1000,
+            period_unit=PeriodUnit.DAY,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+        ))
+        
         db.commit()
 
 
@@ -286,46 +356,6 @@ def test_billing_checkout_validation_error_returns_503_when_audit_write_fails(
     assert response.json()["error"]["code"] == "audit_unavailable"
 
 
-def test_billing_quota_status_returns_usage_snapshot() -> None:
-    _cleanup_tables()
-    access_token = _register_and_get_access_token()
-    headers = {"Authorization": f"Bearer {access_token}"}
-
-    checkout = client.post(
-        "/v1/billing/checkout",
-        headers=headers,
-        json={
-            "plan_code": "basic-entry",
-            "payment_method_token": "pm_card_ok",
-            "idempotency_key": "api-checkout-quota-1",
-        },
-    )
-    assert checkout.status_code == 200
-
-    quota = client.get("/v1/billing/quota", headers=headers)
-    assert quota.status_code == 200
-    payload = quota.json()["data"]
-    assert payload["limit"] == 5
-    assert payload["consumed"] == 0
-    assert payload["remaining"] == 5
-    assert payload["blocked"] is False
-    assert "reset_at" in payload
-
-
-def test_billing_quota_status_forbidden_for_non_user_role() -> None:
-    _cleanup_tables()
-    support_access_token = _register_user_with_role_and_token(
-        "billing-quota-support@example.com",
-        "support",
-    )
-    response = client.get(
-        "/v1/billing/quota",
-        headers={"Authorization": f"Bearer {support_access_token}"},
-    )
-    assert response.status_code == 403
-    assert response.json()["error"]["code"] == "insufficient_role"
-
-
 def test_billing_plan_change_updates_subscription_and_quota_limit() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
@@ -342,9 +372,12 @@ def test_billing_plan_change_updates_subscription_and_quota_limit() -> None:
     )
     assert checkout.status_code == 200
 
-    quota_before = client.get("/v1/billing/quota", headers=headers)
-    assert quota_before.status_code == 200
-    assert quota_before.json()["data"]["limit"] == 5
+    ent_before = client.get("/v1/entitlements/me", headers=headers)
+    assert ent_before.status_code == 200
+    chat_ent = next(
+        f for f in ent_before.json()["data"]["features"] if f["feature_code"] == "astrologer_chat"
+    )
+    assert chat_ent["usage_states"][0]["quota_limit"] == 5
 
     change = client.post(
         "/v1/billing/plan-change",
@@ -366,9 +399,12 @@ def test_billing_plan_change_updates_subscription_and_quota_limit() -> None:
     assert status.status_code == 200
     assert status.json()["data"]["plan"]["code"] == "premium-unlimited"
 
-    quota_after = client.get("/v1/billing/quota", headers=headers)
-    assert quota_after.status_code == 200
-    assert quota_after.json()["data"]["limit"] == 1000
+    ent_after = client.get("/v1/entitlements/me", headers=headers)
+    assert ent_after.status_code == 200
+    chat_ent_after = next(
+        f for f in ent_after.json()["data"]["features"] if f["feature_code"] == "astrologer_chat"
+    )
+    assert chat_ent_after["usage_states"][0]["quota_limit"] == 1000
 
     counters = get_metrics_snapshot()["counters"]
     assert any(

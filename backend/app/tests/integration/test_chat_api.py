@@ -84,6 +84,62 @@ def _cleanup_tables() -> None:
             ReferenceVersionModel,
         ):
             db.execute(delete(model))
+        
+        # Seed canonical features
+        feature = FeatureCatalogModel(
+            feature_code="astrologer_chat",
+            feature_name="Astrologer chat",
+            is_metered=True,
+        )
+        db.add(feature)
+        db.flush()
+
+        # Seed basic-entry plan
+        p_basic = PlanCatalogModel(plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C)
+        db.add(p_basic)
+        db.flush()
+        
+        b_basic = PlanFeatureBindingModel(
+            plan_id=p_basic.id,
+            feature_id=feature.id,
+            access_mode=AccessMode.QUOTA,
+            is_enabled=True,
+        )
+        db.add(b_basic)
+        db.flush()
+        
+        db.add(PlanFeatureQuotaModel(
+            plan_feature_binding_id=b_basic.id,
+            quota_key="daily",
+            quota_limit=5,
+            period_unit=PeriodUnit.DAY,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+        ))
+
+        # Seed premium-unlimited plan
+        p_premium = PlanCatalogModel(plan_code="premium-unlimited", plan_name="Premium", audience=Audience.B2C)
+        db.add(p_premium)
+        db.flush()
+
+        b_premium = PlanFeatureBindingModel(
+            plan_id=p_premium.id,
+            feature_id=feature.id,
+            access_mode=AccessMode.QUOTA,
+            is_enabled=True,
+        )
+        db.add(b_premium)
+        db.flush()
+
+        db.add(PlanFeatureQuotaModel(
+            plan_feature_binding_id=b_premium.id,
+            quota_key="daily",
+            quota_limit=1000,
+            period_unit=PeriodUnit.DAY,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+        ))
+
         # Seed default persona
         default_persona = LlmPersonaModel(
             name="Astrologue Standard",
@@ -120,6 +176,13 @@ def _activate_entry_plan(access_token: str, idempotency_key: str) -> None:
         },
     )
     assert checkout.status_code == 200
+    # Seed canonical binding so ChatEntitlementGate works
+    _seed_canonical_chat_binding(
+        plan_code="basic-entry",
+        access_mode=AccessMode.QUOTA,
+        is_enabled=True,
+        quotas=[("daily", 5)],
+    )
 
 
 def _register_user_with_role_and_token(email: str, role: str) -> str:
@@ -266,12 +329,12 @@ def test_send_chat_message_returns_429_when_daily_quota_is_reached() -> None:
     )
     assert blocked.status_code == 429
     payload = blocked.json()["error"]
-    assert payload["code"] == "quota_exceeded"
-    assert payload["details"]["remaining"] == "0"
-    assert payload["details"]["limit"] == "5"
+    assert payload["code"] == "chat_quota_exceeded"
+    assert payload["details"]["used"] == 5
+    assert payload["details"]["limit"] == 5
 
 
-def test_chat_message_consumption_is_reflected_in_billing_quota_status() -> None:
+def test_chat_message_consumption_is_reflected_in_entitlements_status() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
     _activate_entry_plan(access_token, "chat-checkout-quota-progress-1")
@@ -283,10 +346,13 @@ def test_chat_message_consumption_is_reflected_in_billing_quota_status() -> None
         json={"message": "Question progression 1"},
     )
     assert first_message.status_code == 200
-    first_quota = client.get("/v1/billing/quota", headers=headers)
-    assert first_quota.status_code == 200
-    assert first_quota.json()["data"]["consumed"] == 1
-    assert first_quota.json()["data"]["remaining"] == 4
+    first_ent = client.get("/v1/entitlements/me", headers=headers)
+    assert first_ent.status_code == 200
+    chat_ent = next(
+        f for f in first_ent.json()["data"]["features"] if f["feature_code"] == "astrologer_chat"
+    )
+    assert chat_ent["usage_states"][0]["used"] == 1
+    assert chat_ent["usage_states"][0]["remaining"] == 4
 
     second_message = client.post(
         "/v1/chat/messages",
@@ -294,10 +360,13 @@ def test_chat_message_consumption_is_reflected_in_billing_quota_status() -> None
         json={"message": "Question progression 2"},
     )
     assert second_message.status_code == 200
-    second_quota = client.get("/v1/billing/quota", headers=headers)
-    assert second_quota.status_code == 200
-    assert second_quota.json()["data"]["consumed"] == 2
-    assert second_quota.json()["data"]["remaining"] == 3
+    second_ent = client.get("/v1/entitlements/me", headers=headers)
+    assert second_ent.status_code == 200
+    chat_ent_2 = next(
+        f for f in second_ent.json()["data"]["features"] if f["feature_code"] == "astrologer_chat"
+    )
+    assert chat_ent_2["usage_states"][0]["used"] == 2
+    assert chat_ent_2["usage_states"][0]["remaining"] == 3
 
 
 def test_chat_enforcement_uses_updated_limit_after_plan_change() -> None:
@@ -325,11 +394,14 @@ def test_chat_enforcement_uses_updated_limit_after_plan_change() -> None:
         )
         assert response.status_code == 200
 
-    quota = client.get("/v1/billing/quota", headers=headers)
-    assert quota.status_code == 200
-    assert quota.json()["data"]["limit"] == 1000
-    assert quota.json()["data"]["consumed"] == 6
-    assert quota.json()["data"]["remaining"] == 994
+    ent = client.get("/v1/entitlements/me", headers=headers)
+    assert ent.status_code == 200
+    chat_ent = next(
+        f for f in ent.json()["data"]["features"] if f["feature_code"] == "astrologer_chat"
+    )
+    assert chat_ent["usage_states"][0]["quota_limit"] == 1000
+    assert chat_ent["usage_states"][0]["used"] == 6
+    assert chat_ent["usage_states"][0]["remaining"] == 994
 
 
 def test_send_chat_message_second_turn_uses_first_turn_context() -> None:

@@ -42,6 +42,18 @@ from app.services.enterprise_credentials_service import EnterpriseCredentialsSer
 from app.services.reference_data_service import ReferenceDataService
 
 
+from app.infra.db.models.product_entitlements import (
+    AccessMode,
+    Audience,
+    FeatureCatalogModel,
+    PlanCatalogModel,
+    PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
+    PeriodUnit,
+    ResetMode,
+)
+
+
 def _cleanup_tables() -> None:
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
@@ -71,6 +83,39 @@ def _cleanup_tables() -> None:
             UserModel,
         ):
             db.execute(delete(model))
+        
+        # Seed canonical features
+        feature = FeatureCatalogModel(
+            feature_code="astrologer_chat",
+            feature_name="Astrologer chat",
+            is_metered=True,
+        )
+        db.add(feature)
+        db.flush()
+
+        # Seed basic-entry plan
+        p_basic = PlanCatalogModel(plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C)
+        db.add(p_basic)
+        db.flush()
+        
+        b_basic = PlanFeatureBindingModel(
+            plan_id=p_basic.id,
+            feature_id=feature.id,
+            access_mode=AccessMode.QUOTA,
+            is_enabled=True,
+        )
+        db.add(b_basic)
+        db.flush()
+        
+        db.add(PlanFeatureQuotaModel(
+            plan_feature_binding_id=b_basic.id,
+            quota_key="daily",
+            quota_limit=5,
+            period_unit=PeriodUnit.DAY,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+        ))
+        
         db.commit()
 
 
@@ -209,7 +254,7 @@ def test_load_smoke_critical_flows() -> None:
         return response.status_code, duration_ms
 
     billing_metrics = _run_concurrent_requests(
-        lambda: _timed_get("/v1/billing/quota", bearer_headers),
+        lambda: _timed_get("/v1/entitlements/me", bearer_headers),
         total_requests=total_requests,
         max_workers=max_workers,
     )

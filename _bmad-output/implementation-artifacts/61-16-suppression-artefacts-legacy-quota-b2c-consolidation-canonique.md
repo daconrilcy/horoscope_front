@@ -128,7 +128,7 @@ def _legacy_fallback(
 
 ### Audit front de `fetchQuotaStatus`
 
-**Résultat de l'audit** : `fetchQuotaStatus` est définie dans `frontend/src/api/billing.ts` mais n'est importée nulle part dans `frontend/src/`. Elle est donc **dead code côté front**. Le front utilise `GET /v1/entitlements/me` (61.14) pour afficher l'état de consommation. Cela confirme que l'endpoint `/billing/quota` peut être décommissionné dès que l'audit backend est validé (hors scope 61.16 — scope : dépréciation + commentaire uniquement).
+**Résultat de l'audit après code review** : la première implémentation de 61.16 documentait à tort `fetchQuotaStatus` comme dead code. En réalité, le frontend web consommait encore `useBillingQuota()` dans plusieurs écrans. Le correctif de review a conservé le nom historique `fetchQuotaStatus`, mais l'a rerouté vers `GET /v1/entitlements/me` afin que le web lise désormais la source canonique sans dépendre de l'endpoint legacy `/billing/quota`.
 
 ### Politique de suppression de la table `user_daily_quota_usages`
 
@@ -202,5 +202,18 @@ claude-sonnet-4-6
 ### Debug Log References
 
 ### Completion Notes List
+- Code review BMAD : correction d'un finding HIGH. Le frontend web utilisait encore `/v1/billing/quota` via `useBillingQuota()`, contrairement à la story et à la documentation.
+- `fetchQuotaStatus` conserve son nom legacy mais lit maintenant `GET /v1/entitlements/me` pour l'usage `astrologer_chat`.
+- Documentation backend et commentaires LEGACY ajustés pour refléter l'état réel après correction.
+- `UsageSettings.tsx` nettoyé pour supprimer les styles inline et respecter les règles du dépôt.
 
 ### File List
+- backend/app/api/v1/routers/billing.py
+- backend/docs/entitlements-canonical-platform.md
+- frontend/src/api/billing.ts
+- frontend/src/pages/settings/Settings.css
+- frontend/src/pages/settings/UsageSettings.tsx
+- frontend/src/tests/App.test.tsx
+- frontend/src/tests/AppShell.test.tsx
+- frontend/src/tests/SettingsPage.test.tsx
+- frontend/src/tests/router.test.tsx

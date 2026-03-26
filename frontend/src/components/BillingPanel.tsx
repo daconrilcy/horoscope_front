@@ -4,7 +4,7 @@ import {
   BillingApiError,
   type BillingCheckoutData,
   type BillingPlanChangeData,
-  useBillingQuota,
+  useChatEntitlementUsage,
   useChangePlan,
   useBillingSubscription,
   useCheckoutEntryPlan,
@@ -14,7 +14,7 @@ import { useTranslation } from "../i18n"
 
 export function BillingPanel() {
   const t = useTranslation("admin").b2b.billing_v2
-  const quota = useBillingQuota()
+  const quota = useChatEntitlementUsage()
   const subscription = useBillingSubscription()
   const checkout = useCheckoutEntryPlan()
   const retry = useRetryPayment()

@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react"
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom"
 
-import { useBillingQuota } from "../api/billing"
+import { useChatEntitlementUsage } from "../api/billing"
 import { CHAT_PREFILL_KEY } from "../state/consultationStore"
 import { useAstrologers } from "../api/astrologers"
 import {
@@ -84,7 +84,7 @@ export function ChatPage() {
   const isMobile = useIsMobile()
   const lang = detectLang()
 
-  const quota = useBillingQuota()
+  const quota = useChatEntitlementUsage()
   const sendMessage = useSendChatMessage()
   const conversations = useChatConversations(20, 0)
   const astrologers = useAstrologers()

@@ -8,6 +8,17 @@ from app.infra.observability.metrics import increment_counter, observe_duration,
 from app.main import app
 from app.services.auth_service import AuthService
 
+from app.infra.db.models.product_entitlements import (
+    AccessMode,
+    Audience,
+    FeatureCatalogModel,
+    PlanCatalogModel,
+    PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
+    PeriodUnit,
+    ResetMode,
+)
+
 client = TestClient(app)
 
 
@@ -17,6 +28,39 @@ def _cleanup_tables() -> None:
     reset_metrics()
     with SessionLocal() as db:
         db.execute(delete(UserModel))
+        
+        # Seed canonical features
+        feature = FeatureCatalogModel(
+            feature_code="astrologer_chat",
+            feature_name="Astrologer chat",
+            is_metered=True,
+        )
+        db.add(feature)
+        db.flush()
+
+        # Seed basic-entry plan
+        p_basic = PlanCatalogModel(plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C)
+        db.add(p_basic)
+        db.flush()
+        
+        b_basic = PlanFeatureBindingModel(
+            plan_id=p_basic.id,
+            feature_id=feature.id,
+            access_mode=AccessMode.QUOTA,
+            is_enabled=True,
+        )
+        db.add(b_basic)
+        db.flush()
+        
+        db.add(PlanFeatureQuotaModel(
+            plan_feature_binding_id=b_basic.id,
+            quota_key="daily",
+            quota_limit=5,
+            period_unit=PeriodUnit.DAY,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+        ))
+        
         db.commit()
 
 

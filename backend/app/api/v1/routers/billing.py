@@ -28,7 +28,6 @@ from app.services.pricing_experiment_service import (
     PricingExperimentService,
     PricingExperimentServiceError,
 )
-from app.services.quota_service import QuotaService, QuotaServiceError, QuotaStatusData
 from app.services.stripe_checkout_service import (
     StripeCheckoutService,
     StripeCheckoutServiceError,
@@ -66,11 +65,6 @@ class CheckoutApiResponse(BaseModel):
 
 class PlanChangeApiResponse(BaseModel):
     data: PlanChangeData
-    meta: ResponseMeta
-
-
-class QuotaApiResponse(BaseModel):
-    data: QuotaStatusData
     meta: ResponseMeta
 
 
@@ -318,67 +312,6 @@ def get_subscription_status(
         )
         db.commit()
     return {"data": subscription.model_dump(mode="json"), "meta": {"request_id": request_id}}
-
-
-# LEGACY: Cet endpoint expose QuotaService.get_quota_status (user_daily_quota_usages).
-# fetchQuotaStatus() dans frontend/src/api/billing.ts n'est plus importée nulle part.
-# À décommissionner après validation que le front utilise GET /v1/entitlements/me à la place.
-@router.get(
-    "/quota",
-    response_model=QuotaApiResponse,
-    responses={
-        401: {"model": ErrorEnvelope},
-        403: {"model": ErrorEnvelope},
-        422: {"model": ErrorEnvelope},
-    },
-)
-def get_quota_status(
-    request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
-    db: Session = Depends(get_db_session),
-) -> Any:
-    request_id = resolve_request_id(request)
-    role_error = _ensure_user_role(current_user, request_id)
-    if role_error is not None:
-        return role_error
-    subscription = BillingService.get_subscription_status(db, user_id=current_user.id)
-    plan_code = subscription.plan.code if subscription.plan is not None else "no-plan"
-    rate_error = _enforce_billing_limits(
-        user_id=current_user.id,
-        plan_code=plan_code,
-        operation="get_quota",
-        request_id=request_id,
-    )
-    if rate_error is not None:
-        return rate_error
-    try:
-        quota = QuotaService.get_quota_status(
-            db,
-            user_id=current_user.id,
-            subscription=subscription,
-        )
-        _record_pricing_event_safely(
-            db=db,
-            request_id=request_id,
-            action="offer_retention",
-            details={
-                "user_id": current_user.id,
-                "user_role": current_user.role,
-                "plan_code": plan_code,
-                "retention_event": "quota_status_view",
-            },
-        )
-        db.commit()
-        return {"data": quota.model_dump(mode="json"), "meta": {"request_id": request_id}}
-    except QuotaServiceError as error:
-        status_code = 403 if error.code == "no_active_subscription" else 422
-        return _error_response(
-            status_code=status_code,
-            request_id=request_id,
-            code=error.code,
-            message=error.message,
-            details=error.details,
-        )
 
 
 @router.post(

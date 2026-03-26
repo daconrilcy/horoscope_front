@@ -151,19 +151,3 @@ def test_quota_exceeded_raises_consultation_error(db_session):
     assert exc_info.value.limit == 1
 
 
-def test_no_legacy_quota_service_called(db_session):
-    entitlement = make_entitlement()
-    with (
-        patch(
-            "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
-            return_value=entitlement,
-        ),
-        patch(
-            "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume",
-            return_value=MagicMock(),
-        ),
-        patch("app.services.quota_service.QuotaService.consume_quota_or_raise") as legacy_consume,
-    ):
-        ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=42)
-
-    legacy_consume.assert_not_called()

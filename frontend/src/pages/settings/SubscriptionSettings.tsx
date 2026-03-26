@@ -42,7 +42,7 @@ export function SubscriptionSettings() {
 
     const onSuccess = () => {
       void qc.invalidateQueries({ queryKey: ["billing-subscription"] })
-      void qc.invalidateQueries({ queryKey: ["billing-quota"] })
+      void qc.invalidateQueries({ queryKey: ["chat-entitlement-usage"] })
     }
     const onError = (err: any) => {
       alert(err?.message || "Erreur lors de l'opération")

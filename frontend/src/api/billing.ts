@@ -1,52 +1,48 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
+import { getAccessTokenAuthHeader } from "./auth"
 
-import { API_BASE_URL } from "./client"
-import { getAccessTokenAuthHeader } from "../utils/authToken"
-
-type ErrorEnvelope = {
-  error: {
-    code: string
-    message: string
-    details?: Record<string, string>
-  }
-}
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 export type BillingPlan = {
   code: string
-  display_name: string
+  name: string
   monthly_price_cents: number
-  currency: string
-  daily_message_limit: number
-  is_active: boolean
+}
+
+export type BillingSubscription = {
+  status: "active" | "canceled" | "past_due" | "incomplete"
+  plan: BillingPlan | null
+  current_period_end: string | null
 }
 
 export type BillingSubscriptionStatus = {
-  status: "inactive" | "active"
-  plan: BillingPlan | null
-  failure_reason: string | null
-  updated_at: string | null
+  is_active: boolean
+  subscription: BillingSubscription
+  can_checkout: boolean
+  can_change_plan: boolean
+  available_plans: BillingPlan[]
 }
 
 export type BillingCheckoutPayload = {
-  plan_code?: string
-  payment_method_token?: string
-  idempotency_key?: string
+  plan_code: string
+  payment_method_token: string
+  idempotency_key: string
 }
 
 export type BillingCheckoutData = {
-  subscription: BillingSubscriptionStatus
+  checkout_id: number
+  status: "pending" | "succeeded" | "failed"
   payment_status: "pending" | "succeeded" | "failed"
-  payment_attempt_id: number
-  idempotency_key: string
+  client_secret: string | null
+  subscription: BillingSubscription
 }
 
 export type BillingPlanChangePayload = {
   target_plan_code: string
-  idempotency_key?: string
+  idempotency_key: string
 }
 
 export type BillingPlanChangeData = {
-  subscription: BillingSubscriptionStatus
   previous_plan_code: string
   target_plan_code: string
   plan_change_status: "pending" | "succeeded" | "failed"
@@ -54,7 +50,7 @@ export type BillingPlanChangeData = {
   idempotency_key: string
 }
 
-export type BillingQuotaStatus = {
+export type ChatEntitlementUsageStatus = {
   quota_date: string
   limit: number
   consumed: number
@@ -89,6 +85,59 @@ async function parseError(response: Response): Promise<never> {
     response.status,
     payload?.error?.details ?? {},
   )
+}
+
+type ErrorEnvelope = {
+  error: {
+    code: string
+    message: string
+    details: Record<string, string>
+    request_id: string
+  }
+}
+
+type EntitlementUsageState = {
+  quota_key: string
+  quota_limit: number
+  used: number
+  remaining: number
+  exhausted: boolean
+  period_unit: string
+  period_value: number
+  reset_mode: string
+  window_start: string | null
+  window_end: string | null
+}
+
+type FeatureEntitlementResponse = {
+  feature_code: string
+  final_access: boolean
+  reason: string
+  usage_states: EntitlementUsageState[]
+}
+
+type EntitlementsMeResponse = {
+  data: {
+    features: FeatureEntitlementResponse[]
+  }
+}
+
+const CHAT_QUOTA_FEATURE_CODE = "astrologer_chat"
+
+function toChatEntitlementUsage(feature: FeatureEntitlementResponse | undefined): ChatEntitlementUsageStatus | null {
+  const usage = feature?.usage_states[0]
+  if (!usage) {
+    return null
+  }
+
+  return {
+    quota_date: usage.window_start ?? "",
+    limit: usage.quota_limit,
+    consumed: usage.used,
+    remaining: usage.remaining,
+    reset_at: usage.window_end ?? "",
+    blocked: usage.exhausted || feature?.final_access === false,
+  }
 }
 
 async function fetchSubscriptionStatus(): Promise<BillingSubscriptionStatus> {
@@ -135,18 +184,19 @@ async function postRetry(payload: BillingCheckoutPayload): Promise<BillingChecko
   return body.data
 }
 
-// LEGACY: Non importée ailleurs dans le frontend. À supprimer après décommission
-// de GET /v1/billing/quota (remplacé par GET /v1/entitlements/me story 61.14).
-async function fetchQuotaStatus(): Promise<BillingQuotaStatus> {
-  const response = await fetch(`${API_BASE_URL}/v1/billing/quota`, {
+async function fetchChatEntitlementUsage(): Promise<ChatEntitlementUsageStatus | null> {
+  const response = await fetch(`${API_BASE_URL}/v1/entitlements/me`, {
     method: "GET",
     headers: getAccessTokenAuthHeader(),
   })
   if (!response.ok) {
     return parseError(response)
   }
-  const body = (await response.json()) as { data: BillingQuotaStatus }
-  return body.data
+  const body = (await response.json()) as EntitlementsMeResponse
+  const chatEntitlement = body.data.features.find(
+    (feature) => feature.feature_code === CHAT_QUOTA_FEATURE_CODE,
+  )
+  return toChatEntitlementUsage(chatEntitlement)
 }
 
 async function postPlanChange(payload: BillingPlanChangePayload): Promise<BillingPlanChangeData> {
@@ -184,10 +234,10 @@ export function useRetryPayment() {
   })
 }
 
-export function useBillingQuota() {
+export function useChatEntitlementUsage() {
   return useQuery({
-    queryKey: ["billing-quota"],
-    queryFn: fetchQuotaStatus,
+    queryKey: ["chat-entitlement-usage"],
+    queryFn: fetchChatEntitlementUsage,
     retry: (failureCount, error) => {
       if (error instanceof BillingApiError && error.status === 403) return false
       return failureCount < 1

@@ -16,25 +16,30 @@ Le système legacy basé sur les quotas journaliers (`user_daily_quota_usages`) 
 | `natal_chart_long` | 61.13 | 100% Canonique | Aucun (Natif) |
 | `thematic_consultation` | 61.12 | 100% Canonique | Aucun (Natif) |
 
+## Breaking Changes (Story 61.17)
+
+- **Endpoint Supprimé** : `GET /v1/billing/quota` a été décommissionné. Il retourne désormais HTTP 404.
+- **Module Supprimé** : `backend/app/services/quota_service.py` (`QuotaService`) a été supprimé. Tout nouveau code doit utiliser `QuotaUsageService` et le système canonique d'entitlements.
+- **Refactor Frontend** : Les helpers frontend (`useBillingQuota`, `fetchQuotaStatus`) ont été renommés en `useChatEntitlementUsage`, `fetchChatEntitlementUsage` pour refléter leur usage réel de `GET /v1/entitlements/me`.
+
 ## Inventaire des Usages Résiduels (Legacy)
 
-Bien que déprécié, le système legacy (`QuotaService` et table `user_daily_quota_usages`) subsiste pour les raisons suivantes :
+Bien que déprécié et ses services supprimés, certains artefacts subsistent :
 
 ### Backend
 - **Audit et RGPD** : `privacy_service.py` inclut toujours `user_daily_quota_usages` dans l'export des données personnelles (obligation légale tant que les données existent).
-- **API Billing** : L'endpoint `GET /v1/billing/quota` expose toujours `QuotaService.get_quota_status` pour compatibilité descendante.
-- **Maintenance** : `test_quota_service.py` et le script `migrate_legacy_quota_to_canonical.py` utilisent ces artefacts.
+- **Migration** : Le script `migrate_legacy_quota_to_canonical.py` reste archivé pour référence historique.
 
 ### Frontend
-- **API Client** : `fetchQuotaStatus` dans `frontend/src/api/billing.ts` est conservé avec un tag LEGACY (dead code, non importé).
+- (Aucun usage legacy actif identifié après 61.17)
 
 ## Trajectoire de Décommission
 
-1. **Audit Final** : Valider que plus aucun client (web, mobile, partenaire) n'appelle `GET /v1/billing/quota`.
-2. **Nettoyage Code** : Supprimer `QuotaService`, `test_quota_service.py` et l'endpoint backend.
+1. **Audit Final** : (Terminé en 61.17) ✓
+2. **Nettoyage Code** : (Terminé en 61.17) ✓
 3. **Migration RGPD** : Retirer la table de `privacy_service.py` une fois que les données sont archivées ou supprimées.
 4. **Suppression Physique** : Migration Alembic `DROP TABLE user_daily_quota_usages`.
 
 ## Contraintes de Sécurité
 
-**NE PAS DROP TABLE** `user_daily_quota_usages` sans avoir validé les étapes ci-dessus. La table sert de filet de sécurité pour les audits et les rollbacks potentiels des stories de migration.
+**NE PAS DROP TABLE** `user_daily_quota_usages` sans avoir validé les étapes ci-dessus. La table sert de filet de sécurité pour les audits (obligation légale RGPD).

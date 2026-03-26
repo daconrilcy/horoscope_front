@@ -102,6 +102,11 @@
   gap: 12px;
 }
 
+.settings-section-title--usage {
+  margin-top: 24px;
+  font-size: 1.2rem;
+}
+
 /* Variante avec barre décorative (= --underlined dans profil) */
 .settings-section-title--decorated {
   position: relative;
@@ -436,6 +441,10 @@
   line-height: 1;
 }
 
+.usage-stat-value--time {
+  font-size: 1.2rem;
+}
+
 /* Barre de progression — même variable custom property que l'existant, meilleur style */
 .usage-progress-bar {
   height: 8px;
@@ -451,6 +460,11 @@
   border-radius: 999px;
   background: linear-gradient(90deg, var(--settings-purple) 0%, rgba(134, 108, 208, 0.7) 100%);
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.usage-progress-label {
+  margin-top: 12px;
+  text-align: center;
 }
 
 /* Texte de feedback inline (saving / saved / error) */

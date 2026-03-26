@@ -158,21 +158,3 @@ def test_quota_exceeded_raises_natal_error(db_session):
     assert exc_info.value.window_end is None
 
 
-def test_no_legacy_quota_service_called(db_session):
-    # Vérifie indirectement que seul le chemin canonique est utilisé.
-    entitlement = make_entitlement()
-    mock_state = MagicMock(used=1, remaining=0, quota_limit=1, window_end=None)
-
-    with (
-        patch(
-            "app.services.entitlement_service.EntitlementService.get_feature_entitlement",
-            return_value=entitlement,
-        ),
-        patch(
-            "app.services.quota_usage_service.QuotaUsageService.consume", return_value=mock_state
-        ),
-        patch("app.services.quota_service.QuotaService") as mock_legacy_quota,
-    ):
-        NatalChartLongEntitlementGate.check_and_consume(db_session, user_id=42)
-
-    mock_legacy_quota.assert_not_called()

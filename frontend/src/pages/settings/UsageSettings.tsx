@@ -1,4 +1,4 @@
-import { useBillingQuota, type BillingApiError } from "@api/billing"
+import { useChatEntitlementUsage, type BillingApiError } from "@api/billing"
 import { detectLang, type AstrologyLang } from "@i18n/astrology"
 import { settingsTranslations } from "@i18n/settings"
 import { getLocale } from "@utils/locale"
@@ -29,7 +29,7 @@ function getErrorMessage(error: BillingApiError | null, lang: AstrologyLang): st
 export function UsageSettings() {
   const lang = detectLang()
   const t = settingsTranslations.usage[lang]
-  const quota = useBillingQuota()
+  const quota = useChatEntitlementUsage()
 
   const quotaError = quota.error as BillingApiError | null
 
@@ -59,10 +59,10 @@ export function UsageSettings() {
 
         {quota.data && (
           <>
-            <h3 className="settings-section-title" style={{ marginTop: '24px', fontSize: '1.2rem' }}>
+            <h3 className="settings-section-title settings-section-title--usage">
               {t.dailyUsage}
             </h3>
-            
+
             <div className="usage-stats-premium">
               <div className="usage-stat-item">
                 <span className="usage-stat-label">{t.messagesUsed}</span>
@@ -79,7 +79,7 @@ export function UsageSettings() {
               {quota.data.reset_at && (
                 <div className="usage-stat-item">
                   <span className="usage-stat-label">{t.resetAt}</span>
-                  <span className="usage-stat-value" style={{ fontSize: '1.2rem' }}>
+                  <span className="usage-stat-value usage-stat-value--time">
                     {new Date(quota.data.reset_at).toLocaleTimeString(getLocale(lang), { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -105,7 +105,7 @@ export function UsageSettings() {
               >
                 <div className="usage-progress-fill" />
               </div>
-              <p className="default-astrologer-option__style" style={{ marginTop: '12px', textAlign: 'center' }}>
+              <p className="default-astrologer-option__style usage-progress-label">
                 {Math.round(Math.min((quota.data.consumed / quota.data.limit) * 100, 100))}% de votre quota quotidien utilisé
               </p>
             </div>

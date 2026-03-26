@@ -48,11 +48,33 @@ const BILLING_SUBSCRIPTION = {
   }),
 }
 
-const BILLING_QUOTA = {
+const ENTITLEMENTS_ME = {
   ok: true,
   status: 200,
   json: async () => ({
-    data: { quota_date: "2026-02-23", limit: 5, consumed: 2, remaining: 3, reset_at: "2026-02-24T00:00:00Z", blocked: false },
+    data: {
+      features: [
+        {
+          feature_code: "astrologer_chat",
+          final_access: true,
+          reason: "canonical_binding",
+          usage_states: [
+            {
+              quota_key: "messages",
+              quota_limit: 5,
+              used: 2,
+              remaining: 3,
+              exhausted: false,
+              period_unit: "day",
+              period_value: 1,
+              reset_mode: "calendar",
+              window_start: "2026-02-23T00:00:00Z",
+              window_end: "2026-02-24T00:00:00Z",
+            },
+          ],
+        },
+      ],
+    },
   }),
 }
 
@@ -95,7 +117,7 @@ function makeFetchMock(withAuthMe = true) {
     if (withAuthMe && url.endsWith("/v1/auth/me")) return AUTH_ME_SUCCESS
     if (url.includes("/v1/predictions/daily")) return DAILY_PREDICTION_SUCCESS
     if (url.endsWith("/v1/billing/subscription")) return BILLING_SUBSCRIPTION
-    if (url.endsWith("/v1/billing/quota")) return BILLING_QUOTA
+    if (url.endsWith("/v1/entitlements/me")) return ENTITLEMENTS_ME
     if (url.endsWith("/v1/privacy/export")) return PRIVACY_EMPTY
     if (url.endsWith("/v1/privacy/delete")) return PRIVACY_EMPTY
     return NOT_FOUND
