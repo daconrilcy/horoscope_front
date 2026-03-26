@@ -109,6 +109,7 @@ gemini-2.0-flash
 
 - [2026-03-26] Implementation started.
 - [2026-03-26] All tests passed. Code review performed. Fixed quota integrity in router.
+- [2026-03-26] Code review follow-up: added real DB-backed integration coverage for lifetime quotas, variant propagation, and cached-response consumption.
 
 ### Completion Notes List
 
@@ -116,6 +117,7 @@ gemini-2.0-flash
 - Created `NatalChartLongEntitlementGate`.
 - Updated schemas and router.
 - Added comprehensive unit and integration tests.
+- Added DB-backed coverage for AC13 and quota consumption before cached generation responses.
 - Verified non-regression.
 
 ### File List

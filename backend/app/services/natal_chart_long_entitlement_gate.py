@@ -1,10 +1,13 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime
+
 from sqlalchemy.orm import Session
+
 from app.services.entitlement_service import EntitlementService
 from app.services.entitlement_types import UsageState
-from app.services.quota_usage_service import QuotaUsageService, QuotaExhaustedError
+from app.services.quota_usage_service import QuotaExhaustedError, QuotaUsageService
 
 
 class NatalChartLongAccessDeniedError(Exception):
@@ -86,7 +89,11 @@ class NatalChartLongEntitlementGate:
             except QuotaExhaustedError as exc:
                 # Pour les quotas lifetime, window_end est None dans usage_states
                 window_end = next(
-                    (s.window_end for s in entitlement.usage_states if s.quota_key == exc.quota_key),
+                    (
+                        s.window_end
+                        for s in entitlement.usage_states
+                        if s.quota_key == exc.quota_key
+                    ),
                     None,
                 )
                 raise NatalChartLongQuotaExceededError(
