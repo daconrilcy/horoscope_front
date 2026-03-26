@@ -1,6 +1,6 @@
 # Story 61.12 : Migration du flux métier thematic_consultation vers les entitlements canoniques
 
-Status: review
+Status: done
 
 ## Story
 
@@ -555,8 +555,8 @@ gemini-2.0-flash
 
 ### Debug Log References
 
-- All 15 unit/integration tests passed.
-- 57 non-regression tests passed after adding mocks to legacy tests.
+- `pytest -q app/tests/integration/test_thematic_consultation_entitlement.py app/tests/unit/test_thematic_consultation_entitlement_gate.py app/tests/integration/test_consultations_router.py app/tests/integration/test_consultation_catalogue.py app/tests/integration/test_consultation_third_party.py app/tests/unit/test_entitlement_service.py app/tests/unit/test_quota_usage_service.py` → 77 passed.
+- `ruff check app/api/v1/routers/consultations.py app/tests/integration/test_thematic_consultation_entitlement.py app/tests/unit/test_thematic_consultation_entitlement_gate.py` → OK.
 
 ### Completion Notes List
 
@@ -564,7 +564,8 @@ gemini-2.0-flash
 - Updated `generate_consultation` endpoint to enforce entitlements and return quota info.
 - Handled `403` and `429` errors with explicit `db.rollback()`.
 - Added unit tests for gate logic.
-- Added integration tests for `/generate` with quota window scenarios.
+- Added real integration tests for `/generate` with canonical bindings, persisted counters, `canonical_no_binding`, rollback checks, and fixed window scenarios (`2/day`, `1/week`).
+- Fixed a persistence bug by committing the SQLAlchemy session after successful generation so canonical quota consumption survives across requests.
 - Fixed non-regression tests by mocking the entitlement gate.
 
 ### File List

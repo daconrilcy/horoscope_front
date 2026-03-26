@@ -1,217 +1,564 @@
-import pytest
-from unittest.mock import patch, MagicMock
-from fastapi.testclient import TestClient
-from app.main import app
-from app.services.thematic_consultation_entitlement_gate import (
-    ConsultationEntitlementResult,
-    ConsultationAccessDeniedError,
-    ConsultationQuotaExceededError,
-)
-from app.services.entitlement_types import UsageState
+from __future__ import annotations
+
 from datetime import datetime, timezone
-from app.api.v1.schemas.consultation import ConsultationGenerateData, ConsultationStatus, PrecisionLevel
-from app.infra.db.session import get_db_session
+from unittest.mock import MagicMock, patch
 
-client = TestClient(app)
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import delete
+
+import app.infra.db.models  # noqa: F401
+from app.api.v1.schemas.consultation import (
+    ConsultationGenerateData,
+    ConsultationSection,
+    ConsultationStatus,
+    PrecisionLevel,
+)
+from app.infra.db.base import Base
+from app.infra.db.models.product_entitlements import (
+    AccessMode,
+    Audience,
+    FeatureCatalogModel,
+    FeatureUsageCounterModel,
+    PeriodUnit,
+    PlanCatalogModel,
+    PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
+    ResetMode,
+    SourceOrigin,
+)
+from app.infra.db.models.user import UserModel
+from app.infra.db.models.user_birth_profile import UserBirthProfileModel
+from app.infra.db.session import SessionLocal, engine, get_db_session
+from app.main import app
+from app.services.billing_service import BillingPlanData, BillingService, SubscriptionStatusData
+from app.services.thematic_consultation_entitlement_gate import ConsultationQuotaExceededError
+
+UTC = timezone.utc
+FEATURE_CODE = "thematic_consultation"
+CLIENT = TestClient(app)
 
 
-@pytest.fixture
-def mock_user():
-    return MagicMock(id=42, email="user@example.com")
+def _reset_database() -> None:
+    BillingService.reset_subscription_status_cache()
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    with SessionLocal() as db:
+        db.execute(delete(UserBirthProfileModel))
+        db.execute(delete(UserModel))
+        db.commit()
+
+
+def _auth_headers(email: str) -> dict[str, str]:
+    register = CLIENT.post(
+        "/v1/auth/register",
+        json={"email": email, "password": "strong-pass-123"},
+    )
+    assert register.status_code == 200
+    token = register.json()["data"]["tokens"]["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+def _seed_thematic_binding(
+    *,
+    plan_code: str,
+    access_mode: AccessMode,
+    is_enabled: bool = True,
+    quota_limit: int | None = None,
+    period_unit: PeriodUnit | None = None,
+    period_value: int = 1,
+    reset_mode: ResetMode | None = None,
+) -> None:
+    with SessionLocal() as db:
+        plan = PlanCatalogModel(
+            plan_code=plan_code,
+            plan_name=plan_code.title(),
+            audience=Audience.B2C,
+            source_type="manual",
+        )
+        feature = FeatureCatalogModel(
+            feature_code=FEATURE_CODE,
+            feature_name="Thematic Consultation",
+            is_metered=True,
+        )
+        db.add_all([plan, feature])
+        db.flush()
+
+        binding = PlanFeatureBindingModel(
+            plan_id=plan.id,
+            feature_id=feature.id,
+            is_enabled=is_enabled,
+            access_mode=access_mode,
+            source_origin=SourceOrigin.MANUAL,
+        )
+        db.add(binding)
+        db.flush()
+
+        if access_mode == AccessMode.QUOTA:
+            assert quota_limit is not None
+            assert period_unit is not None
+            assert reset_mode is not None
+            db.add(
+                PlanFeatureQuotaModel(
+                    plan_feature_binding_id=binding.id,
+                    quota_key="consultations",
+                    quota_limit=quota_limit,
+                    period_unit=period_unit,
+                    period_value=period_value,
+                    reset_mode=reset_mode,
+                    source_origin=SourceOrigin.MANUAL,
+                )
+            )
+
+        db.commit()
+
+
+def _subscription_status(
+    *,
+    plan_code: str | None,
+    status: str = "active",
+    daily_message_limit: int = 0,
+) -> SubscriptionStatusData:
+    plan = None
+    if plan_code is not None:
+        plan = BillingPlanData(
+            code=plan_code,
+            display_name=plan_code.title(),
+            monthly_price_cents=500,
+            currency="EUR",
+            daily_message_limit=daily_message_limit,
+            is_active=True,
+        )
+    return SubscriptionStatusData(
+        status=status,
+        plan=plan,
+        failure_reason=None,
+        updated_at=None,
+    )
+
+
+def _generate_payload() -> ConsultationGenerateData:
+    return ConsultationGenerateData(
+        consultation_id="consult_test",
+        consultation_type="career",
+        status=ConsultationStatus.nominal,
+        precision_level=PrecisionLevel.high,
+        fallback_mode=None,
+        safeguard_issue=None,
+        route_key="career_full",
+        summary="Synthese",
+        sections=[
+            ConsultationSection(
+                id="analysis",
+                title="Lecture astrologique",
+                content="Contenu",
+                blocks=[],
+            )
+        ],
+        chat_prefill="Prefill",
+        metadata={"request_id": "test"},
+    )
+
+
+def _post_generate(headers: dict[str, str], question: str = "Quelle direction prendre ?"):
+    return CLIENT.post(
+        "/v1/consultations/generate",
+        json={"consultation_type": "career", "question": question},
+        headers=headers,
+    )
 
 
 @pytest.fixture(autouse=True)
-def override_auth(mock_user):
-    from app.api.dependencies.auth import require_authenticated_user
-
-    app.dependency_overrides[require_authenticated_user] = lambda: mock_user
+def clear_overrides():
     yield
-    app.dependency_overrides.pop(require_authenticated_user, None)
+    app.dependency_overrides.clear()
+    BillingService.reset_subscription_status_cache()
 
 
-def _make_quota_state(used=1, limit=1, period_unit="week"):
-    return UsageState(
-        feature_code="thematic_consultation",
-        quota_key="consultations",
-        quota_limit=limit,
-        used=used,
-        remaining=max(0, limit - used),
-        exhausted=used >= limit,
-        period_unit=period_unit,
-        period_value=1,
-        reset_mode="calendar",
-        window_start=None,
-        window_end=datetime(2026, 3, 30, 0, 0, 0, tzinfo=timezone.utc),
+def test_generate_canonical_quota_ok() -> None:
+    _reset_database()
+    headers = _auth_headers("quota-ok@example.com")
+    _seed_thematic_binding(
+        plan_code="basic",
+        access_mode=AccessMode.QUOTA,
+        quota_limit=1,
+        period_unit=PeriodUnit.WEEK,
+        reset_mode=ResetMode.CALENDAR,
     )
-
-
-def test_generate_canonical_quota_ok(mock_user):
-    mock_result = ConsultationEntitlementResult(
-        path="canonical_quota", usage_states=[_make_quota_state(used=1, limit=1)]
-    )
-
-    mock_data = ConsultationGenerateData.model_construct(consultation_id="123")
 
     with patch(
-        "app.services.thematic_consultation_entitlement_gate.ThematicConsultationEntitlementGate.check_and_consume",
-        return_value=mock_result,
+        "app.services.entitlement_service.BillingService.get_subscription_status",
+        return_value=_subscription_status(plan_code="basic"),
     ), patch(
         "app.services.consultation_generation_service.ConsultationGenerationService.generate",
-        return_value=mock_data,
+        return_value=_generate_payload(),
     ):
-        response = client.post(
-            "/v1/consultations/generate",
-            json={"consultation_type": "career", "question": "Quelle direction prendre ?"},
-        )
+        response = _post_generate(headers)
 
     assert response.status_code == 200
     data = response.json()
     assert data["quota_info"]["remaining"] == 0
     assert data["quota_info"]["limit"] == 1
 
+    with SessionLocal() as db:
+        counters = db.query(FeatureUsageCounterModel).all()
+        assert len(counters) == 1
+        assert counters[0].feature_code == FEATURE_CODE
+        assert counters[0].used_count == 1
 
-def test_generate_canonical_unlimited_ok(mock_user):
-    mock_result = ConsultationEntitlementResult(
-        path="canonical_unlimited",
-        usage_states=[
-            UsageState(
-                feature_code="thematic_consultation",
-                quota_key="unlimited",
-                quota_limit=None,
-                used=0,
-                remaining=None,
-                exhausted=False,
-                period_unit="unlimited",
-                period_value=0,
-                reset_mode="none",
-                window_start=None,
-                window_end=None,
-            )
-        ],
+
+def test_generate_canonical_quota_consumes_before_generation() -> None:
+    _reset_database()
+    headers = _auth_headers("quota-order@example.com")
+    _seed_thematic_binding(
+        plan_code="basic",
+        access_mode=AccessMode.QUOTA,
+        quota_limit=1,
+        period_unit=PeriodUnit.WEEK,
+        reset_mode=ResetMode.CALENDAR,
     )
 
-    mock_data = ConsultationGenerateData.model_construct(consultation_id="123")
+    async def assert_counter_visible(
+        db, user_id: int, request, request_id: str
+    ) -> ConsultationGenerateData:
+        counter = db.query(FeatureUsageCounterModel).filter_by(
+            user_id=user_id,
+            feature_code=FEATURE_CODE,
+            quota_key="consultations",
+        ).one()
+        assert counter.used_count == 1
+        assert request_id != ""
+        return _generate_payload()
 
     with patch(
-        "app.services.thematic_consultation_entitlement_gate.ThematicConsultationEntitlementGate.check_and_consume",
-        return_value=mock_result,
+        "app.services.entitlement_service.BillingService.get_subscription_status",
+        return_value=_subscription_status(plan_code="basic"),
     ), patch(
         "app.services.consultation_generation_service.ConsultationGenerationService.generate",
-        return_value=mock_data,
+        side_effect=assert_counter_visible,
     ):
-        response = client.post(
-            "/v1/consultations/generate",
-            json={"consultation_type": "career", "question": "Quelle direction prendre ?"},
-        )
+        response = _post_generate(headers)
+
+    assert response.status_code == 200
+
+
+def test_generate_canonical_unlimited_ok() -> None:
+    _reset_database()
+    headers = _auth_headers("unlimited@example.com")
+    _seed_thematic_binding(
+        plan_code="premium",
+        access_mode=AccessMode.UNLIMITED,
+    )
+
+    with patch(
+        "app.services.entitlement_service.BillingService.get_subscription_status",
+        return_value=_subscription_status(plan_code="premium"),
+    ), patch(
+        "app.services.consultation_generation_service.ConsultationGenerationService.generate",
+        return_value=_generate_payload(),
+    ):
+        response = _post_generate(headers)
 
     assert response.status_code == 200
     data = response.json()
     assert data["quota_info"]["remaining"] is None
+    assert data["quota_info"]["limit"] is None
+    assert data["quota_info"]["window_end"] is None
+
+    with SessionLocal() as db:
+        assert db.query(FeatureUsageCounterModel).count() == 0
 
 
-def test_generate_no_plan_rejected(mock_user):
+def test_generate_no_plan_rejected() -> None:
+    _reset_database()
+    headers = _auth_headers("no-plan@example.com")
+
     with patch(
-        "app.services.thematic_consultation_entitlement_gate.ThematicConsultationEntitlementGate.check_and_consume",
-        side_effect=ConsultationAccessDeniedError(
-            reason="no_plan", billing_status="none", plan_code=""
-        ),
+        "app.services.entitlement_service.BillingService.get_subscription_status",
+        return_value=_subscription_status(plan_code=None, status="none"),
     ):
-        response = client.post(
-            "/v1/consultations/generate",
-            json={"consultation_type": "career", "question": "Quelle direction prendre ?"},
-        )
+        response = _post_generate(headers)
 
     assert response.status_code == 403
-    assert response.json()["error"]["code"] == "consultation_access_denied"
-    assert response.json()["error"]["details"]["reason"] == "no_plan"
+    data = response.json()
+    assert data["error"]["code"] == "consultation_access_denied"
+    assert data["error"]["details"]["reason"] == "no_plan"
 
 
-def test_generate_quota_exhausted_rejected(mock_user):
-    with patch(
-        "app.services.thematic_consultation_entitlement_gate.ThematicConsultationEntitlementGate.check_and_consume",
-        side_effect=ConsultationQuotaExceededError(
-            quota_key="consultations",
-            used=1,
-            limit=1,
-            window_end=datetime(2026, 3, 30, 0, 0, 0, tzinfo=timezone.utc),
-        ),
-    ):
-        response = client.post(
-            "/v1/consultations/generate",
-            json={"consultation_type": "career", "question": "Quelle direction prendre ?"},
+def test_generate_quota_exhausted_rejected() -> None:
+    _reset_database()
+    headers = _auth_headers("quota-exhausted@example.com")
+    _seed_thematic_binding(
+        plan_code="basic",
+        access_mode=AccessMode.QUOTA,
+        quota_limit=1,
+        period_unit=PeriodUnit.WEEK,
+        reset_mode=ResetMode.CALENDAR,
+    )
+
+    fixed_now = datetime(2026, 3, 26, 12, 0, 0, tzinfo=UTC)
+    frozen_datetime = MagicMock(wraps=datetime)
+    frozen_datetime.now.return_value = fixed_now
+
+    with SessionLocal() as db:
+        user = db.query(UserModel).filter_by(email="quota-exhausted@example.com").one()
+        db.add(
+            FeatureUsageCounterModel(
+                user_id=user.id,
+                feature_code=FEATURE_CODE,
+                quota_key="consultations",
+                period_unit=PeriodUnit.WEEK,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+                window_start=datetime(2026, 3, 23, 0, 0, 0, tzinfo=UTC),
+                window_end=datetime(2026, 3, 30, 0, 0, 0, tzinfo=UTC),
+                used_count=1,
+            )
         )
+        db.commit()
+
+    with patch(
+        "app.services.entitlement_service.BillingService.get_subscription_status",
+        return_value=_subscription_status(plan_code="basic"),
+    ), patch("app.services.entitlement_service.datetime", frozen_datetime):
+        response = _post_generate(headers)
 
     assert response.status_code == 429
-    assert response.json()["error"]["code"] == "consultation_quota_exceeded"
-    assert "window_end" in response.json()["error"]["details"]
+    data = response.json()
+    assert data["error"]["code"] == "consultation_quota_exceeded"
+    assert data["error"]["details"]["window_end"] == "2026-03-30T00:00:00+00:00"
 
 
-def test_generate_disabled_binding_returns_disabled_by_plan(mock_user):
+def test_generate_disabled_binding_returns_disabled_by_plan() -> None:
+    _reset_database()
+    headers = _auth_headers("disabled@example.com")
+    _seed_thematic_binding(
+        plan_code="free",
+        access_mode=AccessMode.DISABLED,
+        is_enabled=False,
+    )
+
     with patch(
-        "app.services.thematic_consultation_entitlement_gate.ThematicConsultationEntitlementGate.check_and_consume",
-        side_effect=ConsultationAccessDeniedError(
-            reason="disabled_by_plan", billing_status="active", plan_code="free"
-        ),
+        "app.services.entitlement_service.BillingService.get_subscription_status",
+        return_value=_subscription_status(plan_code="free"),
     ):
-        response = client.post(
-            "/v1/consultations/generate",
-            json={"consultation_type": "career", "question": "Quelle direction prendre ?"},
-        )
+        response = _post_generate(headers)
 
     assert response.status_code == 403
     assert response.json()["error"]["details"]["reason"] == "disabled_by_plan"
 
 
-def test_generate_rolls_back_on_error(mock_user, db_session):
-    # On vérifie que db.rollback() est appelé en cas d'erreur d'entitlement
-    with patch(
-        "app.services.thematic_consultation_entitlement_gate.ThematicConsultationEntitlementGate.check_and_consume",
-        side_effect=ConsultationQuotaExceededError(
-            quota_key="consultations", used=1, limit=1, window_end=None
-        ),
-    ):
-        with patch.object(db_session, "rollback") as mock_rollback:
-            # On doit s'assurer que le Depends(get_db) utilise bien notre db_session mockée
-            app.dependency_overrides[get_db_session] = lambda: db_session
-            client.post(
-                "/v1/consultations/generate",
-                json={"consultation_type": "career", "question": "Quelle direction prendre ?"},
+def test_generate_no_canonical_binding_returns_no_binding() -> None:
+    _reset_database()
+    headers = _auth_headers("no-binding@example.com")
+
+    with SessionLocal() as db:
+        db.add(
+            PlanCatalogModel(
+                plan_code="basic",
+                plan_name="Basic",
+                audience=Audience.B2C,
+                source_type="manual",
             )
-            mock_rollback.assert_called_once()
-            app.dependency_overrides.pop(get_db_session)
+        )
+        db.add(
+            FeatureCatalogModel(
+                feature_code=FEATURE_CODE,
+                feature_name="Thematic Consultation",
+                is_metered=True,
+            )
+        )
+        db.commit()
+
+    with patch(
+        "app.services.entitlement_service.BillingService.get_subscription_status",
+        return_value=_subscription_status(plan_code="basic"),
+    ):
+        response = _post_generate(headers)
+
+    assert response.status_code == 403
+    assert response.json()["error"]["details"]["reason"] == "canonical_no_binding"
 
 
-def test_premium_quota_2_per_day(mock_user, db_session):
-    # Ce test nécessite une vraie intégration ou des mocks très précis du cycle complet
-    # Pour AC 10, on va utiliser des mocks successifs pour simuler la consommation
-    
-    fixed_now = datetime(2026, 3, 26, 12, 0, 0, tzinfo=timezone.utc)
-    
-    with patch("app.services.quota_window_resolver.datetime") as mock_dt:
-        mock_dt.now.return_value = fixed_now
-        
-        # 1ère consultation OK
-        state1 = _make_quota_state(used=1, limit=2, period_unit="day")
-        res1 = ConsultationEntitlementResult(path="canonical_quota", usage_states=[state1])
-        
-        # 2ème consultation OK
-        state2 = _make_quota_state(used=2, limit=2, period_unit="day")
-        res2 = ConsultationEntitlementResult(path="canonical_quota", usage_states=[state2])
-        
-        # 3ème consultation KO
-        err3 = ConsultationQuotaExceededError(quota_key="consultations", used=2, limit=2, window_end=fixed_now)
+def test_generate_rolls_back_partial_canonical_consumption() -> None:
+    _reset_database()
+    headers = _auth_headers("rollback-partial@example.com")
 
-        with patch("app.services.thematic_consultation_entitlement_gate.ThematicConsultationEntitlementGate.check_and_consume") as mock_gate:
-            mock_gate.side_effect = [res1, res2, err3]
-            
-            mock_data = ConsultationGenerateData.model_construct(consultation_id="123")
-            with patch("app.services.consultation_generation_service.ConsultationGenerationService.generate", return_value=mock_data):
-                # 1
-                resp1 = client.post("/v1/consultations/generate", json={"consultation_type": "career", "question": "Q1"})
-                assert resp1.status_code == 200
-                # 2
-                resp2 = client.post("/v1/consultations/generate", json={"consultation_type": "career", "question": "Q2"})
-                assert resp2.status_code == 200
-                # 3
-                resp3 = client.post("/v1/consultations/generate", json={"consultation_type": "career", "question": "Q3"})
-                assert resp3.status_code == 429
+    db_session = SessionLocal()
+    app.dependency_overrides[get_db_session] = lambda: db_session
+
+    user = db_session.query(UserModel).filter_by(email="rollback-partial@example.com").one()
+
+    def _partial_consume_then_fail(*_args, **_kwargs):
+        db_session.add(
+            FeatureUsageCounterModel(
+                user_id=user.id,
+                feature_code=FEATURE_CODE,
+                quota_key="consultations",
+                period_unit=PeriodUnit.WEEK,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+                window_start=datetime(2026, 3, 23, 0, 0, 0, tzinfo=UTC),
+                window_end=datetime(2026, 3, 30, 0, 0, 0, tzinfo=UTC),
+                used_count=1,
+            )
+        )
+        db_session.flush()
+        raise ConsultationQuotaExceededError(
+            quota_key="consultations",
+            used=1,
+            limit=1,
+            window_end=datetime(2026, 3, 30, 0, 0, 0, tzinfo=UTC),
+        )
+
+    with patch(
+        "app.api.v1.routers.consultations.ThematicConsultationEntitlementGate.check_and_consume",
+        side_effect=_partial_consume_then_fail,
+    ), patch.object(db_session, "rollback", wraps=db_session.rollback) as mock_rollback:
+        response = _post_generate(headers)
+
+    persisted_counter = (
+        db_session.query(FeatureUsageCounterModel)
+        .filter_by(user_id=user.id, feature_code=FEATURE_CODE)
+        .one_or_none()
+    )
+
+    app.dependency_overrides.pop(get_db_session, None)
+    db_session.close()
+
+    assert response.status_code == 429
+    mock_rollback.assert_called_once()
+    assert persisted_counter is None
+
+
+def test_generate_access_denied_rolls_back() -> None:
+    _reset_database()
+    headers = _auth_headers("rollback-403@example.com")
+    db_session = SessionLocal()
+    app.dependency_overrides[get_db_session] = lambda: db_session
+
+    with patch(
+        "app.services.entitlement_service.BillingService.get_subscription_status",
+        return_value=_subscription_status(plan_code=None, status="none"),
+    ), patch.object(db_session, "rollback") as mock_rollback:
+        response = _post_generate(headers)
+
+    app.dependency_overrides.pop(get_db_session, None)
+    db_session.close()
+
+    assert response.status_code == 403
+    mock_rollback.assert_called_once()
+
+
+def test_generate_quota_exceeded_rolls_back() -> None:
+    _reset_database()
+    headers = _auth_headers("rollback-429@example.com")
+    _seed_thematic_binding(
+        plan_code="basic",
+        access_mode=AccessMode.QUOTA,
+        quota_limit=1,
+        period_unit=PeriodUnit.WEEK,
+        reset_mode=ResetMode.CALENDAR,
+    )
+
+    db_session = SessionLocal()
+    app.dependency_overrides[get_db_session] = lambda: db_session
+    fixed_now = datetime(2026, 3, 26, 12, 0, 0, tzinfo=UTC)
+    frozen_datetime = MagicMock(wraps=datetime)
+    frozen_datetime.now.return_value = fixed_now
+
+    user = db_session.query(UserModel).filter_by(email="rollback-429@example.com").one()
+    db_session.add(
+        FeatureUsageCounterModel(
+            user_id=user.id,
+            feature_code=FEATURE_CODE,
+            quota_key="consultations",
+            period_unit=PeriodUnit.WEEK,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+            window_start=datetime(2026, 3, 23, 0, 0, 0, tzinfo=UTC),
+            window_end=datetime(2026, 3, 30, 0, 0, 0, tzinfo=UTC),
+            used_count=1,
+        )
+    )
+    db_session.commit()
+
+    with patch(
+        "app.services.entitlement_service.BillingService.get_subscription_status",
+        return_value=_subscription_status(plan_code="basic"),
+    ), patch("app.services.entitlement_service.datetime", frozen_datetime), patch.object(
+        db_session, "rollback"
+    ) as mock_rollback:
+        response = _post_generate(headers)
+
+    app.dependency_overrides.pop(get_db_session, None)
+    db_session.close()
+
+    assert response.status_code == 429
+    mock_rollback.assert_called_once()
+
+
+def test_premium_quota_2_per_day() -> None:
+    _reset_database()
+    headers = _auth_headers("premium-day@example.com")
+    _seed_thematic_binding(
+        plan_code="premium",
+        access_mode=AccessMode.QUOTA,
+        quota_limit=2,
+        period_unit=PeriodUnit.DAY,
+        reset_mode=ResetMode.CALENDAR,
+    )
+
+    fixed_now = datetime(2026, 3, 26, 12, 0, 0, tzinfo=UTC)
+    frozen_datetime = MagicMock(wraps=datetime)
+    frozen_datetime.now.return_value = fixed_now
+
+    with patch(
+        "app.services.entitlement_service.BillingService.get_subscription_status",
+        return_value=_subscription_status(plan_code="premium"),
+    ), patch("app.services.entitlement_service.datetime", frozen_datetime), patch(
+        "app.services.quota_usage_service.datetime", frozen_datetime
+    ), patch(
+        "app.services.consultation_generation_service.ConsultationGenerationService.generate",
+        return_value=_generate_payload(),
+    ):
+        first = _post_generate(headers, "Q1")
+        second = _post_generate(headers, "Q2")
+        third = _post_generate(headers, "Q3")
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert third.status_code == 429
+    assert third.json()["error"]["details"]["limit"] == 2
+
+
+def test_basic_quota_1_per_week() -> None:
+    _reset_database()
+    headers = _auth_headers("basic-week@example.com")
+    _seed_thematic_binding(
+        plan_code="basic",
+        access_mode=AccessMode.QUOTA,
+        quota_limit=1,
+        period_unit=PeriodUnit.WEEK,
+        reset_mode=ResetMode.CALENDAR,
+    )
+
+    fixed_now = datetime(2026, 3, 26, 12, 0, 0, tzinfo=UTC)
+    frozen_datetime = MagicMock(wraps=datetime)
+    frozen_datetime.now.return_value = fixed_now
+
+    with patch(
+        "app.services.entitlement_service.BillingService.get_subscription_status",
+        return_value=_subscription_status(plan_code="basic"),
+    ), patch("app.services.entitlement_service.datetime", frozen_datetime), patch(
+        "app.services.quota_usage_service.datetime", frozen_datetime
+    ), patch(
+        "app.services.consultation_generation_service.ConsultationGenerationService.generate",
+        return_value=_generate_payload(),
+    ):
+        first = _post_generate(headers, "Semaine 1")
+        second = _post_generate(headers, "Semaine 2")
+
+    assert first.status_code == 200
+    assert second.status_code == 429
+    assert second.json()["error"]["details"]["limit"] == 1

@@ -1,12 +1,14 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from app.services.thematic_consultation_entitlement_gate import (
-    ThematicConsultationEntitlementGate,
-    ConsultationAccessDeniedError,
-    ConsultationQuotaExceededError,
-)
+
 from app.services.entitlement_types import FeatureEntitlement, QuotaDefinition, UsageState
 from app.services.quota_usage_service import QuotaExhaustedError
+from app.services.thematic_consultation_entitlement_gate import (
+    ConsultationAccessDeniedError,
+    ConsultationQuotaExceededError,
+    ThematicConsultationEntitlementGate,
+)
 
 
 @pytest.fixture
@@ -152,8 +154,6 @@ def test_quota_exceeded_raises_consultation_error(db_session):
 
 
 def test_no_legacy_quota_service_called(db_session):
-    # On mock l'appel legacy QuotaService s'il existait pour vérifier son absence
-    # Mais ici on vérifie surtout qu'on utilise bien EntitlementService et QuotaUsageService
     entitlement = make_entitlement()
     with patch(
         "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
@@ -161,7 +161,9 @@ def test_no_legacy_quota_service_called(db_session):
     ), patch(
         "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume",
         return_value=MagicMock(),
-    ):
-        with patch("app.services.quota_service.QuotaService") as mock_legacy:
-            ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=42)
-            mock_legacy.assert_not_called()
+    ), patch(
+        "app.services.quota_service.QuotaService.consume_quota_or_raise"
+    ) as legacy_consume:
+        ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=42)
+
+    legacy_consume.assert_not_called()

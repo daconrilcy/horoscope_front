@@ -157,6 +157,7 @@ async def generate_consultation(
     quota_info = _build_consultation_quota_info(entitlement_result)
 
     data = await ConsultationGenerationService.generate(db, current_user.id, payload, request_id)
+    db.commit()
 
     return ConsultationGenerateResponse(
         data=data,
