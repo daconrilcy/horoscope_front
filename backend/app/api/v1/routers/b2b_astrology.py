@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
@@ -16,6 +17,11 @@ from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
+from app.services.b2b_api_entitlement_gate import (
+    B2BApiAccessDeniedError,
+    B2BApiEntitlementGate,
+    B2BApiQuotaExceededError,
+)
 from app.services.b2b_astrology_service import (
     B2BAstrologyService,
     B2BAstrologyServiceError,
@@ -27,6 +33,13 @@ from app.services.b2b_usage_service import B2BUsageService, B2BUsageServiceError
 
 class ResponseMeta(BaseModel):
     request_id: str
+
+
+class QuotaInfoPayload(BaseModel):
+    source: str
+    limit: int | None = None
+    remaining: int | None = None
+    window_end: datetime | None = None
 
 
 class ErrorPayload(BaseModel):
@@ -43,6 +56,7 @@ class ErrorEnvelope(BaseModel):
 class WeeklyBySignApiResponse(BaseModel):
     data: WeeklyBySignData
     meta: ResponseMeta
+    quota_info: QuotaInfoPayload | None = None
 
 
 router = APIRouter(prefix="/v1/b2b/astrology", tags=["b2b-astrology"])
@@ -102,6 +116,7 @@ def _enforce_limits(
 @router.get(
     "/weekly-by-sign",
     response_model=WeeklyBySignApiResponse,
+    response_model_exclude_none=True,
     responses={
         401: {"model": ErrorEnvelope},
         403: {"model": ErrorEnvelope},
@@ -123,13 +138,31 @@ def get_weekly_by_sign(
 
     try:
         increment_counter("b2b_api_calls_total", 1.0)
-        B2BUsageService.consume_or_raise(
-            db,
-            account_id=client.account_id,
-            credential_id=client.credential_id,
-            request_id=request_id,
-            units=1,
-        )
+
+        gate_result = B2BApiEntitlementGate.check_and_consume(db, account_id=client.account_id)
+
+        if gate_result.path == "settings_fallback":
+            B2BUsageService.consume_or_raise(
+                db,
+                account_id=client.account_id,
+                credential_id=client.credential_id,
+                request_id=request_id,
+                units=1,
+            )
+            quota_info = {"source": "settings_fallback"}
+        elif gate_result.path == "canonical_quota":
+            # Le canonique a déjà consommé
+            state = gate_result.usage_states[0] if gate_result.usage_states else None
+            quota_info = {
+                "source": "canonical",
+                "limit": state.quota_limit if state else None,
+                "remaining": state.remaining if state else None,
+                "window_end": state.window_end if state else None,
+            }
+        else:
+            # canonical_unlimited
+            quota_info = {"source": "canonical_unlimited"}
+
         editorial_config = B2BEditorialService.get_active_config(db, account_id=client.account_id)
         if editorial_config.version_number > 0:
             increment_counter("b2b_editorial_config_used_total", 1.0)
@@ -142,7 +175,11 @@ def get_weekly_by_sign(
         )
         data = B2BAstrologyService.get_weekly_by_sign(db, editorial_config=editorial_config)
         db.commit()
-        return {"data": data.model_dump(mode="json"), "meta": {"request_id": request_id}}
+        return {
+            "data": data.model_dump(mode="json"),
+            "meta": {"request_id": request_id},
+            "quota_info": quota_info,
+        }
     except B2BEditorialServiceError as error:
         db.rollback()
         status_code = 404 if error.code == "enterprise_account_not_found" else 422
@@ -153,15 +190,21 @@ def get_weekly_by_sign(
             message=error.message,
             details=error.details,
         )
-    except B2BUsageServiceError as error:
+    except (B2BUsageServiceError, B2BApiAccessDeniedError, B2BApiQuotaExceededError) as error:
         db.rollback()
-        status_code = 429 if error.code == "b2b_quota_exceeded" else 422
+        if isinstance(error, B2BApiAccessDeniedError):
+            status_code = 403
+        elif isinstance(error, (B2BUsageServiceError, B2BApiQuotaExceededError)):
+            status_code = 429 if error.code in ("b2b_quota_exceeded", "b2b_api_quota_exceeded") else 422
+        else:
+            status_code = 422
+
         return _error_response(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
             message=error.message,
-            details=error.details,
+            details=getattr(error, "details", {}),
         )
     except B2BAstrologyServiceError as error:
         db.rollback()

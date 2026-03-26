@@ -29,7 +29,8 @@
       "Bash(sqlite3 \"C:/dev/horoscope_front/horoscope.db\" \"SELECT count\\(*\\) FROM daily_prediction_runs; SELECT id, user_id, local_date FROM daily_prediction_runs ORDER BY id DESC LIMIT 5\")",
       "Bash(sqlite3 \"C:/dev/horoscope_front/horoscope.db\" \".tables\")",
       "Bash(sqlite3 \"C:/dev/horoscope_front/backend/horoscope.db\" \"SELECT count\\(*\\) FROM daily_prediction_runs; SELECT id, user_id, local_date FROM daily_prediction_runs ORDER BY id DESC LIMIT 3\")",
-      "Bash(cd c:/dev/horoscope_front && git status:*)"
+      "Bash(cd c:/dev/horoscope_front && git status:*)",
+      "Bash(cd c:/dev/horoscope_front && git log:*)"
     ],
     "additionalDirectories": [
       "c:\\dev\\horoscope_front\\_bmad-output\\implementation-artifacts"
