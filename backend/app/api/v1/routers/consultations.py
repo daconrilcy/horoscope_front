@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
@@ -9,6 +10,7 @@ from app.api.v1.schemas.consultation import (
     ConsultationPrecheckMeta,
     ConsultationPrecheckRequest,
     ConsultationPrecheckResponse,
+    ConsultationQuotaInfo,
     ConsultationTemplateSchema,
     ConsultationThirdPartyListMeta,
     ConsultationThirdPartyListResponse,
@@ -20,8 +22,29 @@ from app.services.consultation_catalogue_service import ConsultationCatalogueSer
 from app.services.consultation_generation_service import ConsultationGenerationService
 from app.services.consultation_precheck_service import ConsultationPrecheckService
 from app.services.consultation_third_party_service import ConsultationThirdPartyService
+from app.services.thematic_consultation_entitlement_gate import (
+    ConsultationAccessDeniedError,
+    ConsultationEntitlementResult,
+    ConsultationQuotaExceededError,
+    ThematicConsultationEntitlementGate,
+)
 
 router = APIRouter()
+
+
+def _build_consultation_quota_info(result: ConsultationEntitlementResult) -> ConsultationQuotaInfo:
+    """
+    Construit les informations de quota pour la réponse.
+    thematic_consultation a un seul quota par plan (quota_key="consultations").
+    """
+    if result.path in ("canonical_quota", "canonical_unlimited") and result.usage_states:
+        state = result.usage_states[0]
+        return ConsultationQuotaInfo(
+            remaining=state.remaining,
+            limit=state.quota_limit,
+            window_end=state.window_end,
+        )
+    return ConsultationQuotaInfo()
 
 
 @router.get("/catalogue", response_model=ConsultationCatalogueResponse)
@@ -73,7 +96,11 @@ def precheck_consultation(
     )
 
 
-@router.post("/generate", response_model=ConsultationGenerateResponse)
+@router.post(
+    "/generate",
+    response_model=ConsultationGenerateResponse,
+    responses={403: {"description": "Accès refusé"}, 429: {"description": "Quota épuisé"}},
+)
 async def generate_consultation(
     request: Request,
     payload: ConsultationGenerateRequest,
@@ -91,10 +118,50 @@ async def generate_consultation(
         payload.consultation_type
     )
 
+    try:
+        entitlement_result = ThematicConsultationEntitlementGate.check_and_consume(
+            db, user_id=current_user.id
+        )
+    except ConsultationQuotaExceededError as error:
+        db.rollback()
+        return JSONResponse(
+            status_code=429,
+            content={
+                "error": {
+                    "code": "consultation_quota_exceeded",
+                    "message": "quota de consultations thématiques épuisé",
+                    "details": {
+                        "quota_key": error.quota_key,
+                        "used": error.used,
+                        "limit": error.limit,
+                        "window_end": error.window_end.isoformat() if error.window_end else None,
+                    },
+                    "request_id": request_id,
+                }
+            },
+        )
+    except ConsultationAccessDeniedError as error:
+        db.rollback()
+        return JSONResponse(
+            status_code=403,
+            content={
+                "error": {
+                    "code": "consultation_access_denied",
+                    "message": "accès aux consultations thématiques refusé",
+                    "details": {"reason": error.reason, "billing_status": error.billing_status},
+                    "request_id": request_id,
+                }
+            },
+        )
+
+    quota_info = _build_consultation_quota_info(entitlement_result)
+
     data = await ConsultationGenerationService.generate(db, current_user.id, payload, request_id)
 
     return ConsultationGenerateResponse(
-        data=data, meta=ConsultationPrecheckMeta(request_id=request_id)
+        data=data,
+        meta=ConsultationPrecheckMeta(request_id=request_id),
+        quota_info=quota_info,
     )
 
 

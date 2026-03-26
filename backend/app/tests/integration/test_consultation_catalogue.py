@@ -1,12 +1,23 @@
 import uuid
 
+import pytest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from app.infra.db.models.consultation_template import ConsultationTemplateModel
 from app.infra.db.session import SessionLocal
 from app.main import app
+from app.services.thematic_consultation_entitlement_gate import ConsultationEntitlementResult
 
 client = TestClient(app)
+
+@pytest.fixture(autouse=True)
+def mock_entitlement_gate():
+    with patch(
+        "app.api.v1.routers.consultations.ThematicConsultationEntitlementGate.check_and_consume"
+    ) as mock:
+        mock.return_value = ConsultationEntitlementResult(path="canonical_unlimited", usage_states=[])
+        yield mock
 
 def _cleanup_catalogue():
     with SessionLocal() as db:

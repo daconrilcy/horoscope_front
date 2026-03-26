@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
@@ -8,7 +9,19 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 
+from unittest.mock import patch
+from app.services.thematic_consultation_entitlement_gate import ConsultationEntitlementResult
+
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def mock_entitlement_gate():
+    with patch(
+        "app.api.v1.routers.consultations.ThematicConsultationEntitlementGate.check_and_consume"
+    ) as mock:
+        mock.return_value = ConsultationEntitlementResult(path="canonical_unlimited", usage_states=[])
+        yield mock
 
 
 def _cleanup_tables() -> None:

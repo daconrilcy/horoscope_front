@@ -132,9 +132,16 @@ class ConsultationGenerateData(BaseModel):
     metadata: dict
 
 
+class ConsultationQuotaInfo(BaseModel):
+    remaining: int | None = None
+    limit: int | None = None
+    window_end: datetime | None = None
+
+
 class ConsultationGenerateResponse(BaseModel):
     data: ConsultationGenerateData
     meta: ConsultationPrecheckMeta
+    quota_info: ConsultationQuotaInfo = Field(default_factory=ConsultationQuotaInfo)
 
 
 class ConsultationThirdPartyUsage(BaseModel):
