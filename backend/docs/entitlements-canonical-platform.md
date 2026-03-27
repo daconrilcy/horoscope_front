@@ -50,15 +50,13 @@ Depuis la story 61.18, le système d'entitlements canonique s'étend au segment 
 
 ### Priorité de Résolution B2B
 
-1. **Système Canonique (Prioritaire)** : Si un binding `b2b_api_access` existe pour le plan enterprise lié au compte, ce système gagne.
-   - Si le binding est `DISABLED`, l'accès est refusé (403), même si les settings legacy seraient permissifs.
-   - Si le binding est `QUOTA`, la consommation s'effectue via `QuotaUsageService`.
-   - Si le binding est `UNLIMITED`, l'accès est libre sans compteur.
-2. **Fallback Settings (Legacy)** : Si aucun binding canonique n'est trouvé, le flux historique via `B2BUsageService` et les settings `b2b_*` continue de s'appliquer.
+1. **Système Canonique (Source Unique)** : Depuis la story 61.23, le système d'entitlements canonique est l'unique source de vérité pour le segment B2B. Le fallback legacy via `B2BUsageService` a été définitivement supprimé.
+   - Si un binding `b2b_api_access` existe pour le plan enterprise lié au compte, il définit les droits d'accès.
+   - Si aucun binding n'est trouvé, l'accès est refusé par défaut (politique sécurisée).
 
 ### Identifiant de Compteur B2B
 
-En raison de la contrainte technique sur la table `feature_usage_counters`, les consommations B2B sont enregistrées sous le `user_id` correspondant à l'`admin_user_id` de l'EnterpriseAccountModel.
+En raison de la contrainte technique sur la table `feature_usage_counters`, les consommations B2B sont enregistrées sous le `user_id` correspondant à l' `admin_user_id` de l'EnterpriseAccountModel.
 
 > **Dette technique** : Ce mapping est transitoire. Une future évolution devra découpler les compteurs B2B de la table `users`.
 
@@ -66,6 +64,7 @@ En raison de la contrainte technique sur la table `feature_usage_counters`, les 
 
 Les réponses API B2B incluent désormais un objet `quota_info` dans le body JSON :
 
-- `source: "canonical"` : Consommation via le nouveau moteur (champs `limit`, `remaining`, `window_end` présents).
-- `source: "settings_fallback"` : Consommation via l'ancien moteur (champs de détail absents).
-- `source: "canonical_unlimited"` : Accès illimité via le nouveau moteur.
+- `source: "canonical"` : Consommation via le moteur canonique (champs `limit`, `remaining`, `window_end` présents).
+- `source: "canonical_unlimited"` : Accès illimité via le moteur canonique.
+- `source: "settings_fallback"` : (Obsolète — retiré en 61.23)
+

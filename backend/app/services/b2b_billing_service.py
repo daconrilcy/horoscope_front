@@ -16,7 +16,6 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_billing import (
     EnterpriseAccountBillingPlanModel,
@@ -27,6 +26,9 @@ from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
 from app.infra.observability.metrics import increment_counter, observe_duration
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_B2B_INCLUDED_MONTHLY_UNITS = 10000  # valeur historique B2B_MONTHLY_USAGE_LIMIT
+DEFAULT_B2B_LIMIT_MODE = "block"             # valeur historique B2B_USAGE_LIMIT_MODE
 
 
 class B2BBillingServiceError(Exception):
@@ -146,7 +148,7 @@ class B2BBillingService:
             code="b2b_standard",
             display_name="B2B Standard",
             monthly_fixed_cents=5000,
-            included_monthly_units=settings.b2b_monthly_usage_limit,
+            included_monthly_units=DEFAULT_B2B_INCLUDED_MONTHLY_UNITS,
             overage_unit_price_cents=2,
             currency="EUR",
             is_active=True,
@@ -338,12 +340,8 @@ class B2BBillingService:
         fixed_amount = max(0, int(plan.monthly_fixed_cents))
         variable_amount = billable_units * unit_price
         total_amount = fixed_amount + variable_amount
-        limit_mode = (
-            settings.b2b_usage_limit_mode
-            if settings.b2b_usage_limit_mode in {"block", "overage"}
-            else "block"
-        )
-        overage_applied = billable_units > 0 and limit_mode == "overage"
+        limit_mode = DEFAULT_B2B_LIMIT_MODE
+        overage_applied = False
 
         snapshot = {
             "period_start": period_start.isoformat(),

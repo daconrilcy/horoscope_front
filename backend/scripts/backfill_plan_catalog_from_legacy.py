@@ -470,10 +470,6 @@ def backfill_b2b_plans(db: Session, report: BackfillReport | None = None) -> Non
         report.add_ignored("enterprise_billing_plans.overage_unit_price_cents")
         report.add_ignored("enterprise_billing_plans.currency")
 
-    report.add_non_migrated("settings.b2b_daily_usage_limit")
-    report.add_non_migrated("settings.b2b_monthly_usage_limit")
-    report.add_non_migrated("settings.b2b_usage_limit_mode")
-
 
 def run_backfill() -> None:
     logger.info("=== BACKFILL PLAN CATALOG FROM LEGACY START ===")

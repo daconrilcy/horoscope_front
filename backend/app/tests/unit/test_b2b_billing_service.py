@@ -2,7 +2,6 @@ from datetime import date
 
 from sqlalchemy import delete
 
-from app.core.config import settings
 from app.infra.db.base import Base
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentialModel
@@ -69,13 +68,32 @@ def _seed_usage(account_id: int, credential_id: int, usage_date: date, used_coun
         db.commit()
 
 
-def test_b2b_billing_close_cycle_calculates_fixed_and_variable(monkeypatch: object) -> None:
+def test_b2b_billing_close_cycle_calculates_fixed_and_variable() -> None:
     _cleanup_tables()
     account_id, credential_id = _create_enterprise_context()
+    # Créer un plan avec 2 unités incluses et l'associer au compte
+    with SessionLocal() as db:
+        plan = EnterpriseBillingPlanModel(
+            code="b2b_test_plan",
+            display_name="Test Plan",
+            monthly_fixed_cents=5000,
+            included_monthly_units=2,
+            overage_unit_price_cents=2,
+            currency="EUR",
+            is_active=True,
+        )
+        db.add(plan)
+        db.flush()
+        db.add(
+            EnterpriseAccountBillingPlanModel(
+                enterprise_account_id=account_id,
+                plan_id=plan.id,
+            )
+        )
+        db.commit()
+
     usage_day = date(2026, 2, 15)
     _seed_usage(account_id, credential_id, usage_day, used_count=5)
-    monkeypatch.setattr(settings, "b2b_monthly_usage_limit", 2)
-    monkeypatch.setattr(settings, "b2b_usage_limit_mode", "overage")
 
     with SessionLocal() as db:
         cycle = B2BBillingService.close_cycle(
@@ -92,7 +110,7 @@ def test_b2b_billing_close_cycle_calculates_fixed_and_variable(monkeypatch: obje
     assert cycle.billable_units == 3
     assert cycle.variable_amount_cents == 6
     assert cycle.total_amount_cents == 5006
-    assert cycle.overage_applied is True
+    assert cycle.overage_applied is False  # block mode (default)
 
 
 def test_b2b_billing_close_cycle_is_idempotent() -> None:
