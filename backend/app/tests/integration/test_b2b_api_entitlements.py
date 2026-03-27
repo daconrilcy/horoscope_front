@@ -264,10 +264,9 @@ def test_b2b_astrology_fallback_settings():
         "/v1/b2b/astrology/weekly-by-sign",
         headers={"X-API-Key": api_key, "X-Request-Id": "rid-fallback"},
     )
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["quota_info"]["source"] == "settings_fallback"
-    assert "limit" not in payload["quota_info"]
+    assert response.status_code == 403
+    payload = response.json()["error"]
+    assert payload["code"] == "b2b_no_canonical_plan"
 
 
 def test_b2b_astrology_canonical_quota_decrements_and_exposes_month_window():
@@ -342,4 +341,4 @@ def test_b2b_astrology_canonical_unlimited():
     )
     assert response.status_code == 200
     payload = response.json()
-    assert payload["quota_info"]["source"] == "canonical_unlimited"
+    assert payload["quota_info"]["source"] == "canonical"

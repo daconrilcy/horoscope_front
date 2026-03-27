@@ -63,6 +63,9 @@ class B2BUsageSummaryData(BaseModel):
 
 class B2BUsageService:
     """
+    Deprecated: ce service n'est plus appelé dans le flux runtime principal depuis la story 61.21.
+    Il reste actif pour les endpoints /v1/b2b/usage/* jusqu'à leur décommission future.
+
     Service de gestion des quotas d'usage B2B.
 
     Suit la consommation des comptes entreprise et applique les limites

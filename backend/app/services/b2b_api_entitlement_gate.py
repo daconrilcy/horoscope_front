@@ -49,7 +49,7 @@ class B2BApiQuotaExceededError(Exception):
 
 @dataclass
 class B2BApiEntitlementResult:
-    path: Literal["canonical_quota", "canonical_unlimited", "settings_fallback"]
+    path: Literal["canonical_quota", "canonical_unlimited"]
     usage_states: list[UsageState] = field(default_factory=list)
     source: str = "canonical"
 
@@ -65,16 +65,26 @@ class B2BApiEntitlementGate:
         )
         if not account or account.admin_user_id is None:
             logger.warning(
-                "b2b_api_entitlement_gate.admin_user_id_missing account_id=%s", account_id
+                "b2b_gate_blocked account_id=%s code=%s",
+                account_id,
+                "b2b_account_not_configured",
             )
-            return B2BApiEntitlementResult(path="settings_fallback")
+            raise B2BApiAccessDeniedError(
+                code="b2b_account_not_configured",
+                details={"reason": "admin_user_id_missing"},
+            )
 
         admin_user_id = account.admin_user_id
 
         # 2. Résoudre le plan canonique B2B
         canonical_plan = resolve_b2b_canonical_plan(db, account_id)
         if not canonical_plan:
-            return B2BApiEntitlementResult(path="settings_fallback")
+            logger.warning(
+                "b2b_gate_blocked account_id=%s code=%s", account_id, "b2b_no_canonical_plan"
+            )
+            raise B2BApiAccessDeniedError(
+                code="b2b_no_canonical_plan", details={"account_id": account_id}
+            )
 
         # 3. Lire le binding b2b_api_access
         binding_stmt = (
@@ -87,7 +97,8 @@ class B2BApiEntitlementGate:
         )
         binding = db.scalar(binding_stmt)
         if not binding:
-            return B2BApiEntitlementResult(path="settings_fallback")
+            logger.warning("b2b_gate_blocked account_id=%s code=%s", account_id, "b2b_no_binding")
+            raise B2BApiAccessDeniedError(code="b2b_no_binding", details={"account_id": account_id})
 
         # 4. Selon l'access_mode
         if not binding.is_enabled or binding.access_mode == AccessMode.DISABLED:
@@ -110,7 +121,12 @@ class B2BApiEntitlementGate:
 
             if not quotas_models:
                 # AC: 8 - cas manual-review-required / non bindé
-                return B2BApiEntitlementResult(path="settings_fallback")
+                logger.warning(
+                    "b2b_gate_blocked account_id=%s code=%s", account_id, "b2b_no_quota_defined"
+                )
+                raise B2BApiAccessDeniedError(
+                    code="b2b_no_quota_defined", details={"account_id": account_id}
+                )
 
             # Consommer (AC: 2)
             consumed_states: list[UsageState] = []
@@ -144,4 +160,13 @@ class B2BApiEntitlementGate:
 
             return B2BApiEntitlementResult(path="canonical_quota", usage_states=consumed_states)
 
-        return B2BApiEntitlementResult(path="settings_fallback")
+        logger.warning(
+            "b2b_gate_blocked account_id=%s code=%s",
+            account_id,
+            "b2b_unknown_access_mode",
+        )
+        raise B2BApiAccessDeniedError(
+            code="b2b_unknown_access_mode",
+            details={"access_mode": str(binding.access_mode)},
+        )
+

@@ -28,7 +28,6 @@ from app.services.b2b_astrology_service import (
     WeeklyBySignData,
 )
 from app.services.b2b_editorial_service import B2BEditorialService, B2BEditorialServiceError
-from app.services.b2b_usage_service import B2BUsageService, B2BUsageServiceError
 
 
 class ResponseMeta(BaseModel):
@@ -146,16 +145,7 @@ def get_weekly_by_sign(
 
             gate_result = B2BApiEntitlementGate.check_and_consume(db, account_id=client.account_id)
 
-            if gate_result.path == "settings_fallback":
-                B2BUsageService.consume_or_raise(
-                    db,
-                    account_id=client.account_id,
-                    credential_id=client.credential_id,
-                    request_id=request_id,
-                    units=1,
-                )
-                quota_info = {"source": "settings_fallback"}
-            elif gate_result.path == "canonical_quota":
+            if gate_result.path == "canonical_quota":
                 # Le canonique a déjà consommé.
                 state = gate_result.usage_states[0] if gate_result.usage_states else None
                 quota_info = {
@@ -165,7 +155,8 @@ def get_weekly_by_sign(
                     "window_end": state.window_end if state else None,
                 }
             else:
-                quota_info = {"source": "canonical_unlimited"}
+                # path == "canonical_unlimited"
+                quota_info = {"source": "canonical"}
 
             editorial_config = B2BEditorialService.get_active_config(
                 db,
@@ -199,16 +190,13 @@ def get_weekly_by_sign(
             message=error.message,
             details=error.details,
         )
-    except (B2BUsageServiceError, B2BApiAccessDeniedError, B2BApiQuotaExceededError) as error:
+    except (B2BApiAccessDeniedError, B2BApiQuotaExceededError) as error:
         db.rollback()
         if isinstance(error, B2BApiAccessDeniedError):
             status_code = 403
-        elif isinstance(error, (B2BUsageServiceError, B2BApiQuotaExceededError)):
-            status_code = (
-                429 if error.code in ("b2b_quota_exceeded", "b2b_api_quota_exceeded") else 422
-            )
         else:
-            status_code = 422
+            # B2BApiQuotaExceededError
+            status_code = 429
 
         return _error_response(
             status_code=status_code,

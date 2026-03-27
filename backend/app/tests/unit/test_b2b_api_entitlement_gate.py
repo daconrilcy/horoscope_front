@@ -202,9 +202,10 @@ def test_check_and_consume_quota_exhausted(db_session):
 def test_check_and_consume_fallback_no_canonical(db_session):
     seed_b2b_data(db_session, account_id=1, admin_user_id=10, has_canonical=False)
 
-    result = B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
+    with pytest.raises(B2BApiAccessDeniedError) as exc:
+        B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
 
-    assert result.path == "settings_fallback"
+    assert exc.value.code == "b2b_no_canonical_plan"
 
 
 def test_check_and_consume_fallback_no_binding(db_session):
@@ -216,9 +217,10 @@ def test_check_and_consume_fallback_no_binding(db_session):
         with_binding=False,
     )
 
-    result = B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
+    with pytest.raises(B2BApiAccessDeniedError) as exc:
+        B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
 
-    assert result.path == "settings_fallback"
+    assert exc.value.code == "b2b_no_binding"
 
 
 def test_check_and_consume_admin_user_missing_logs_warning(db_session, caplog):
@@ -227,11 +229,13 @@ def test_check_and_consume_admin_user_missing_logs_warning(db_session, caplog):
     mock_account.admin_user_id = None
 
     caplog.set_level("WARNING")
-    with patch.object(Session, "scalar", return_value=mock_account):
-        result = B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
+    # On doit patcher le retour de db_session.scalar
+    with patch.object(db_session, "scalar", return_value=mock_account):
+        with pytest.raises(B2BApiAccessDeniedError) as exc:
+            B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
 
-    assert result.path == "settings_fallback"
-    assert "admin_user_id_missing" in caplog.text
+    assert exc.value.code == "b2b_account_not_configured"
+    assert "b2b_gate_blocked" in caplog.text
 
 
 def test_check_and_consume_window_end_is_next_month(db_session):
