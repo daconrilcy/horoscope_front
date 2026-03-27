@@ -285,8 +285,11 @@ gemini-2.0-flash-001
 - `backend/docs/entitlements-canonical-platform.md` documentation updated.
 - `backend/scripts/backfill_plan_catalog_from_legacy.py` cleaned up.
 - Full B2B non-regression test suite passed (58 tests).
+- Code review completed: story artefacts synced with actual git changes and documentation wording cleaned up.
 
 ### File List
+- `_bmad-output/implementation-artifacts/61-23-nettoyage-final-b2busageservice-settings-legacy.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
 - `backend/app/services/b2b_usage_service.py` (deleted)
 - `backend/app/tests/unit/test_b2b_usage_service.py` (deleted)
 - `backend/app/core/config.py`
@@ -297,6 +300,7 @@ gemini-2.0-flash-001
 
 ### Change Log
 - 2026-03-27: Final cleanup of B2B legacy components. Removed unused services, settings, and updated related tests and docs.
+- 2026-03-27: Code review fixes applied. Story metadata and sprint tracking aligned with the reviewed implementation.
 
 ### Status
-review
+done

@@ -56,7 +56,7 @@ Depuis la story 61.18, le système d'entitlements canonique s'étend au segment 
 
 ### Identifiant de Compteur B2B
 
-En raison de la contrainte technique sur la table `feature_usage_counters`, les consommations B2B sont enregistrées sous le `user_id` correspondant à l' `admin_user_id` de l'EnterpriseAccountModel.
+En raison de la contrainte technique sur la table `feature_usage_counters`, les consommations B2B sont enregistrées sous le `user_id` correspondant à l'`admin_user_id` de l'EnterpriseAccountModel.
 
 > **Dette technique** : Ce mapping est transitoire. Une future évolution devra découpler les compteurs B2B de la table `users`.
 
@@ -66,5 +66,4 @@ Les réponses API B2B incluent désormais un objet `quota_info` dans le body JSO
 
 - `source: "canonical"` : Consommation via le moteur canonique (champs `limit`, `remaining`, `window_end` présents).
 - `source: "canonical_unlimited"` : Accès illimité via le moteur canonique.
-- `source: "settings_fallback"` : (Obsolète — retiré en 61.23)
 

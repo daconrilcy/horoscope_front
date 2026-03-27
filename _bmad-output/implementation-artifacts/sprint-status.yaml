@@ -34,7 +34,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-25 00:00:00
-last_updated: 2026-03-27 (story 61-23 in progress)
+last_updated: 2026-03-27 (story 61-23 review fixes applied)
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
