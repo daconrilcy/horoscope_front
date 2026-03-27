@@ -135,8 +135,10 @@ gemini-2.0-flash-exp (orchestrator)
 ### Completion Notes List
 
 ### File List
+- `backend/app/api/v1/routers/b2b_entitlement_repair.py`
 - `backend/app/infra/db/models/__init__.py`
 - `backend/app/infra/db/models/enterprise_usage.py` (supprimé)
+- `backend/app/infra/db/models/enterprise_account.py`
 - `backend/app/services/b2b_billing_service.py`
 - `backend/app/services/b2b_reconciliation_service.py`
 - `backend/app/tests/unit/test_b2b_billing_service.py`
@@ -146,15 +148,25 @@ gemini-2.0-flash-exp (orchestrator)
 - `backend/app/tests/integration/test_b2b_api_entitlements.py`
 - `backend/app/tests/integration/test_b2b_usage_api.py`
 - `backend/app/tests/integration/test_b2b_astrology_api.py`
+- `backend/app/tests/integration/test_b2b_entitlements_audit.py`
 - `backend/app/tests/integration/test_b2b_editorial_api.py`
 - `backend/app/tests/integration/test_load_smoke_critical_flows.py`
 - `backend/migrations/versions/20260327_0054_drop_enterprise_daily_usages.py`
 - `backend/docs/entitlements-canonical-platform.md`
 
+### Senior Developer Review (AI)
+
+- 2026-03-27 : Review adversariale effectuée sur l’implémentation `61-24`. Aucun écart restant sur les AC après correction.
+- Findings corrigés :
+  - `HIGH` : risque de surcomptage de facturation/réconciliation si plusieurs compteurs canoniques existent pour `b2b_api_access` (mensuel + annuel/lifetime). Correction : filtrage explicite sur `period_unit=month` et `reset_mode=calendar` dans `B2BBillingService` et `B2BReconciliationService`, avec tests de non-régression dédiés.
+  - `MEDIUM` : la migration `20260327_0054` exposait un header de révision incohérent et un fichier non conforme `ruff`. Correction : métadonnées alignées et fichier relinté.
+  - `MEDIUM` : les suites SQLite ciblées par l’AC 8 étaient fragiles lors des resets de schéma. Correction : stabilisation du cleanup dans les tests d’intégration concernés pour fiabiliser la vérification locale.
+
 ### Change Log
 - 2026-03-27 : Story créée. Audit schéma : seule table legacy = `enterprise_daily_usages`. Deux consommateurs actifs : `_consumed_units_for_period()` et `_usage_by_period()`. Bug latent confirmé (0 écritures depuis 61.21).
 - 2026-03-27 : Corrections v2 appliquées : (1) billing/reco lisent directement `feature_usage_counters` sans passer par le plan courant ; (2) convention fenêtrage UTC exclusive documentée ; (3) `QuotaUsageService.get_usage()` retiré comme chemin principal pour billing/reco ; (4) chemins grep corrigés vers `backend/app/tests/`.
 - 2026-03-27 : Story mise à jour (Done). Migration Alembic renommée et revision ID corrigée. Nettoyage final validé.
+- 2026-03-27 : Post-review Codex : correction du surcomptage potentiel des compteurs canoniques B2B, stabilisation des tests SQLite AC8, relint migration/router/model, artefact synchronisé.
 
 ### Status
 done

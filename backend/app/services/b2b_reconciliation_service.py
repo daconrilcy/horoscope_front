@@ -18,7 +18,11 @@ from sqlalchemy.orm import Session
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_billing import EnterpriseBillingCycleModel
-from app.infra.db.models.product_entitlements import FeatureUsageCounterModel
+from app.infra.db.models.product_entitlements import (
+    FeatureUsageCounterModel,
+    PeriodUnit,
+    ResetMode,
+)
 from app.services.b2b_billing_service import B2BBillingService
 
 
@@ -319,12 +323,12 @@ class B2BReconciliationService:
         ).where(
             FeatureUsageCounterModel.user_id.in_(list(user_to_account.keys())),
             FeatureUsageCounterModel.feature_code == "b2b_api_access",
+            FeatureUsageCounterModel.period_unit == PeriodUnit.MONTH,
+            FeatureUsageCounterModel.reset_mode == ResetMode.CALENDAR,
         )
 
         if period_start is not None:
-            start_utc = datetime(
-                period_start.year, period_start.month, 1, tzinfo=timezone.utc
-            )
+            start_utc = datetime(period_start.year, period_start.month, 1, tzinfo=timezone.utc)
             counter_query = counter_query.where(FeatureUsageCounterModel.window_start >= start_utc)
         if period_end is not None:
             # period_end est inclusif dans le legacy, mais ici on veut borner
@@ -332,9 +336,7 @@ class B2BReconciliationService:
             if period_end.month == 12:
                 end_utc = datetime(period_end.year + 1, 1, 1, tzinfo=timezone.utc)
             else:
-                end_utc = datetime(
-                    period_end.year, period_end.month + 1, 1, tzinfo=timezone.utc
-                )
+                end_utc = datetime(period_end.year, period_end.month + 1, 1, tzinfo=timezone.utc)
             counter_query = counter_query.where(FeatureUsageCounterModel.window_start < end_utc)
 
         rows = db.execute(counter_query).all()

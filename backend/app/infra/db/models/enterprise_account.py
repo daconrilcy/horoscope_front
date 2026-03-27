@@ -19,7 +19,12 @@ class EnterpriseAccountModel(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    admin_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), unique=True, index=True, nullable=True)
+    admin_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"),
+        unique=True,
+        index=True,
+        nullable=True,
+    )
     company_name: Mapped[str] = mapped_column(String(255))
     status: Mapped[str] = mapped_column(String(16), index=True)
     created_at: Mapped[datetime] = mapped_column(

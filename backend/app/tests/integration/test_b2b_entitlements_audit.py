@@ -30,8 +30,10 @@ client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
+    engine.dispose()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    engine.dispose()
     with SessionLocal() as db:
         from app.infra.db.models.user import UserModel
 
@@ -48,6 +50,7 @@ def _cleanup_tables() -> None:
         ):
             db.execute(delete(model))
         db.commit()
+    engine.dispose()
 
 
 def _register_user(db, *, email: str, role: str):

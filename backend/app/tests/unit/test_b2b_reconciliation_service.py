@@ -196,3 +196,35 @@ def test_reconciliation_normalizes_period_filters_to_month_bounds() -> None:
     assert issue.period_start == date(2026, 5, 1)
     assert issue.period_end == date(2026, 5, 31)
     assert issue.usage_measured_units == 7
+
+
+def test_reconciliation_ignores_non_monthly_counters() -> None:
+    _cleanup_tables()
+    account_id, _ = _create_enterprise_context("reco-service-ignore-yearly@example.com")
+    _seed_usage(account_id, date(2026, 6, 5), used_count=4)
+
+    with SessionLocal() as db:
+        account = db.scalar(
+            select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id)
+        )
+        assert account and account.admin_user_id is not None
+        db.add(
+            FeatureUsageCounterModel(
+                user_id=account.admin_user_id,
+                feature_code="b2b_api_access",
+                quota_key="b2b_api_access_yearly",
+                period_unit=PeriodUnit.YEAR,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+                window_start=datetime(2026, 1, 1, tzinfo=timezone.utc),
+                window_end=datetime(2027, 1, 1, tzinfo=timezone.utc),
+                used_count=50,
+            )
+        )
+        db.commit()
+
+    with SessionLocal() as db:
+        listed = B2BReconciliationService.list_issues(db, account_id=account_id, limit=20, offset=0)
+
+    assert listed.total == 1
+    assert listed.items[0].usage_measured_units == 4

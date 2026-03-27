@@ -21,8 +21,10 @@ logger = logging.getLogger(__name__)
 
 # --- Models ---
 
+
 class ResponseMeta(BaseModel):
     request_id: str
+
 
 class ErrorPayload(BaseModel):
     code: str
@@ -30,14 +32,17 @@ class ErrorPayload(BaseModel):
     details: dict[str, Any]
     request_id: str
 
+
 class ErrorEnvelope(BaseModel):
     error: ErrorPayload
+
 
 class RepairBlockerPayload(BaseModel):
     account_id: int
     company_name: str
     reason: str
     recommended_action: str
+
 
 class RepairRunData(BaseModel):
     accounts_scanned: int
@@ -48,23 +53,28 @@ class RepairRunData(BaseModel):
     remaining_blockers: list[RepairBlockerPayload]
     dry_run: bool
 
+
 class RepairRunResponse(BaseModel):
     data: RepairRunData
     meta: ResponseMeta
 
+
 class SetAdminUserRequest(BaseModel):
     account_id: int
     user_id: int
+
 
 class SetAdminUserResponse(BaseModel):
     account_id: int
     user_id: int
     status: str
 
+
 class ClassifyZeroUnitsRequest(BaseModel):
     canonical_plan_id: int
     access_mode: Literal["disabled", "unlimited", "quota"]
     quota_limit: int | None = Field(default=None, ge=1)
+
 
 class ClassifyZeroUnitsResponse(BaseModel):
     canonical_plan_id: int
@@ -72,9 +82,11 @@ class ClassifyZeroUnitsResponse(BaseModel):
     quota_limit: int | None
     status: str
 
+
 # --- Router ---
 
 router = APIRouter(prefix="/v1/ops/b2b/entitlements/repair", tags=["ops-b2b-entitlements"])
+
 
 def _error_response(
     *,
@@ -96,6 +108,7 @@ def _error_response(
         },
     )
 
+
 def _ensure_ops_role(user: AuthenticatedUser, request_id: str) -> JSONResponse | None:
     if user.role not in ["ops", "admin"]:
         return _error_response(
@@ -106,6 +119,7 @@ def _ensure_ops_role(user: AuthenticatedUser, request_id: str) -> JSONResponse |
             details={"required_roles": "ops, admin", "actual_role": user.role},
         )
     return None
+
 
 def _enforce_limits(
     *, user: AuthenticatedUser, request_id: str, operation: str
@@ -124,6 +138,7 @@ def _enforce_limits(
             details=error.details,
         )
     return None
+
 
 @router.post(
     "/run",
@@ -173,6 +188,7 @@ def run_repair(
         "meta": {"request_id": request_id},
     }
 
+
 @router.post(
     "/set-admin-user",
     response_model=SetAdminUserResponse,
@@ -195,7 +211,11 @@ def set_admin_user(
     if role_error is not None:
         return role_error
 
-    limit_error = _enforce_limits(user=current_user, request_id=request_id, operation="set_admin_user")
+    limit_error = _enforce_limits(
+        user=current_user,
+        request_id=request_id,
+        operation="set_admin_user",
+    )
     if limit_error is not None:
         return limit_error
 
@@ -212,6 +232,7 @@ def set_admin_user(
             message=e.message,
             details=e.details,
         )
+
 
 @router.post(
     "/classify-zero-units",
@@ -235,7 +256,11 @@ def classify_zero_units(
     if role_error is not None:
         return role_error
 
-    limit_error = _enforce_limits(user=current_user, request_id=request_id, operation="classify_zero_units")
+    limit_error = _enforce_limits(
+        user=current_user,
+        request_id=request_id,
+        operation="classify_zero_units",
+    )
     if limit_error is not None:
         return limit_error
 

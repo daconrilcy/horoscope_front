@@ -256,3 +256,41 @@ def test_b2b_billing_uses_account_specific_plan_mapping() -> None:
 
     assert cycle.plan_code == "b2b_premium"
     assert cycle.fixed_amount_cents == 9000
+
+
+def test_b2b_billing_ignores_non_monthly_counters() -> None:
+    _cleanup_tables()
+    account_id, _ = _create_enterprise_context()
+    _seed_usage(account_id, date(2026, 2, 20), used_count=5)
+
+    with SessionLocal() as db:
+        account = db.scalar(
+            select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id)
+        )
+        assert account and account.admin_user_id is not None
+        db.add(
+            FeatureUsageCounterModel(
+                user_id=account.admin_user_id,
+                feature_code="b2b_api_access",
+                quota_key="b2b_api_access_yearly",
+                period_unit=PeriodUnit.YEAR,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+                window_start=datetime(2026, 1, 1, tzinfo=timezone.utc),
+                window_end=datetime(2027, 1, 1, tzinfo=timezone.utc),
+                used_count=99,
+            )
+        )
+        db.commit()
+
+    with SessionLocal() as db:
+        cycle = B2BBillingService.close_cycle(
+            db,
+            account_id=account_id,
+            period_start=date(2026, 2, 1),
+            period_end=date(2026, 2, 28),
+            closed_by_user_id=None,
+        )
+        db.commit()
+
+    assert cycle.consumed_units == 5

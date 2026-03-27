@@ -44,8 +44,10 @@ client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
+    engine.dispose()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    engine.dispose()
     with SessionLocal() as db:
         for model in (
             AuditEventModel,
@@ -62,6 +64,7 @@ def _cleanup_tables() -> None:
         ):
             db.execute(delete(model))
         db.commit()
+    engine.dispose()
 
 
 def _create_enterprise_api_key(email: str) -> str:
@@ -332,6 +335,7 @@ def test_b2b_usage_summary_returns_metrics_for_credential() -> None:
         from datetime import timezone
 
         from app.services.quota_window_resolver import QuotaWindowResolver
+
         auth = db.scalar(
             select(UserModel).where(UserModel.email == "b2b-usage-summary@example.com")
         )

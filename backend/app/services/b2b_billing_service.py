@@ -22,13 +22,17 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseBillingCycleModel,
     EnterpriseBillingPlanModel,
 )
-from app.infra.db.models.product_entitlements import FeatureUsageCounterModel
+from app.infra.db.models.product_entitlements import (
+    FeatureUsageCounterModel,
+    PeriodUnit,
+    ResetMode,
+)
 from app.infra.observability.metrics import increment_counter, observe_duration
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_B2B_INCLUDED_MONTHLY_UNITS = 10000  # valeur historique B2B_MONTHLY_USAGE_LIMIT
-DEFAULT_B2B_LIMIT_MODE = "block"             # valeur historique B2B_USAGE_LIMIT_MODE
+DEFAULT_B2B_LIMIT_MODE = "block"  # valeur historique B2B_USAGE_LIMIT_MODE
 
 
 class B2BBillingServiceError(Exception):
@@ -238,9 +242,7 @@ class B2BBillingService:
             return 0
 
         # Fenêtre UTC exclusive — ne pas dépendre du plan courant
-        month_start_utc = datetime(
-            period_start.year, period_start.month, 1, tzinfo=timezone.utc
-        )
+        month_start_utc = datetime(period_start.year, period_start.month, 1, tzinfo=timezone.utc)
         if period_start.month == 12:
             next_month_utc = datetime(period_start.year + 1, 1, 1, tzinfo=timezone.utc)
         else:
@@ -252,6 +254,8 @@ class B2BBillingService:
             select(func.coalesce(func.sum(FeatureUsageCounterModel.used_count), 0)).where(
                 FeatureUsageCounterModel.user_id == account.admin_user_id,
                 FeatureUsageCounterModel.feature_code == "b2b_api_access",
+                FeatureUsageCounterModel.period_unit == PeriodUnit.MONTH,
+                FeatureUsageCounterModel.reset_mode == ResetMode.CALENDAR,
                 FeatureUsageCounterModel.window_start >= month_start_utc,
                 FeatureUsageCounterModel.window_start < next_month_utc,
             )
