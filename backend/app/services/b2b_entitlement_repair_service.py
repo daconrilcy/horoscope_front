@@ -17,10 +17,10 @@ from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,
     FeatureCatalogModel,
+    PeriodUnit,
     PlanCatalogModel,
     PlanFeatureBindingModel,
     PlanFeatureQuotaModel,
-    PeriodUnit,
     ResetMode,
     SourceOrigin,
 )
@@ -29,6 +29,7 @@ from app.services.b2b_audit_service import B2BAuditService
 
 logger = logging.getLogger(__name__)
 
+
 class RepairValidationError(Exception):
     def __init__(self, code: str, message: str, details: dict | None = None) -> None:
         self.code = code
@@ -36,12 +37,16 @@ class RepairValidationError(Exception):
         self.details = details or {}
         super().__init__(message)
 
+
 @dataclass
 class RepairBlockerEntry:
     account_id: int
     company_name: str
     reason: str
-    recommended_action: Literal["set_admin_user", "classify_zero_units", "schema_constraint_violation"]
+    recommended_action: Literal[
+        "set_admin_user", "classify_zero_units", "schema_constraint_violation"
+    ]
+
 
 @dataclass
 class RepairRunReport:
@@ -53,18 +58,19 @@ class RepairRunReport:
     remaining_blockers: list[RepairBlockerEntry] = field(default_factory=list)
     dry_run: bool = False
 
+
 class B2BEntitlementRepairService:
     FEATURE_CODE = "b2b_api_access"
 
     @classmethod
     def run_auto_repair(cls, db: Session, *, dry_run: bool = False) -> RepairRunReport:
         report = RepairRunReport(dry_run=dry_run)
-        
+
         all_accounts = db.scalars(
             select(EnterpriseAccountModel).where(EnterpriseAccountModel.status == "active")
         ).all()
         report.accounts_scanned = len(all_accounts)
-        
+
         if not all_accounts:
             return report
 
@@ -115,80 +121,105 @@ class B2BEntitlementRepairService:
                 enterprise_plan = (
                     enterprise_plans.get(account_plan.plan_id) if account_plan is not None else None
                 )
-                
+                current_canonical_plan = (
+                    canonical_plans.get(account_plan.plan_id) if account_plan is not None else None
+                )
+                current_binding = (
+                    bindings.get(current_canonical_plan.id)
+                    if current_canonical_plan is not None
+                    else None
+                )
+                current_quotas = (
+                    quotas.get(current_binding.id) if current_binding is not None else None
+                )
+
                 # Recalculate state to decide repair
                 audit_entry = B2BAuditService._audit_account(
                     db,
                     account,
                     acc_plan=account_plan,
                     ent_plan=enterprise_plan,
-                    canonical_plan=canonical_plans.get(account_plan.plan_id) if account_plan else None,
-                    binding=bindings.get(canonical_plans[account_plan.plan_id].id) if account_plan and account_plan.plan_id in canonical_plans else None,
-                    quota_models=quotas.get(bindings[canonical_plans[account_plan.plan_id].id].id) if account_plan and account_plan.plan_id in canonical_plans and canonical_plans[account_plan.plan_id].id in bindings else None,
+                    canonical_plan=current_canonical_plan,
+                    binding=current_binding,
+                    quota_models=current_quotas,
                 )
 
-                if audit_entry.resolution_source in {"canonical_quota", "canonical_unlimited", "canonical_disabled"}:
+                if audit_entry.resolution_source in {
+                    "canonical_quota",
+                    "canonical_unlimited",
+                    "canonical_disabled",
+                }:
                     report.skipped_already_canonical += 1
                     continue
 
                 if audit_entry.reason == "admin_user_id_missing":
-                    report.remaining_blockers.append(RepairBlockerEntry(
-                        account_id=account.id,
-                        company_name=account.company_name,
-                        reason=audit_entry.reason,
-                        recommended_action="set_admin_user"
-                    ))
+                    report.remaining_blockers.append(
+                        RepairBlockerEntry(
+                            account_id=account.id,
+                            company_name=account.company_name,
+                            reason=audit_entry.reason,
+                            recommended_action="set_admin_user",
+                        )
+                    )
                     continue
 
                 if audit_entry.reason == "manual_review_required":
-                    report.remaining_blockers.append(RepairBlockerEntry(
-                        account_id=account.id,
-                        company_name=account.company_name,
-                        reason=audit_entry.reason,
-                        recommended_action="classify_zero_units"
-                    ))
+                    report.remaining_blockers.append(
+                        RepairBlockerEntry(
+                            account_id=account.id,
+                            company_name=account.company_name,
+                            reason=audit_entry.reason,
+                            recommended_action="classify_zero_units",
+                        )
+                    )
                     continue
 
                 # Auto-repairable cases
-                current_canonical_plan = canonical_plans.get(account_plan.plan_id) if account_plan else None
-                
                 try:
                     # Case: no_canonical_plan
-                    if audit_entry.reason == "no_canonical_plan" and enterprise_plan:
+                    if (
+                        audit_entry.reason == "no_canonical_plan"
+                        and account_plan is not None
+                        and enterprise_plan is not None
+                    ):
                         created, current_canonical_plan = cls._backfill_canonical_plan(
-                            db, account, enterprise_plan, dry_run, report
+                            db, enterprise_plan, dry_run
                         )
                         if created:
                             report.plans_created += 1
-                    
+                            canonical_plans[account_plan.plan_id] = current_canonical_plan
+
                     # Case: no_binding with included_monthly_units > 0
-                    if current_canonical_plan and enterprise_plan and enterprise_plan.included_monthly_units > 0:
-                        # Check if binding already exists
-                        binding_exists = db.scalar(
-                            select(PlanFeatureBindingModel).where(
-                                PlanFeatureBindingModel.plan_id == current_canonical_plan.id,
-                                PlanFeatureBindingModel.feature_id == feature.id
-                            )
-                        ) is not None
-                        
-                        if not binding_exists:
-                            b_created, q_created = cls._backfill_binding_and_quota(
-                                db, current_canonical_plan, enterprise_plan, feature, dry_run, report
+                    if (
+                        current_canonical_plan
+                        and enterprise_plan
+                        and enterprise_plan.included_monthly_units > 0
+                    ):
+                        current_binding = bindings.get(current_canonical_plan.id)
+                        if current_binding is None:
+                            b_created, q_created, current_binding, current_quota = (
+                                cls._backfill_binding_and_quota(
+                                    db, current_canonical_plan, enterprise_plan, feature, dry_run
+                                )
                             )
                             if b_created:
                                 report.bindings_created += 1
+                                bindings[current_canonical_plan.id] = current_binding
                             if q_created:
                                 report.quotas_created += 1
+                                quotas[current_binding.id] = [current_quota]
 
                 except IntegrityError as e:
                     # Rollback only this account's changes (automatic via with db.begin_nested())
                     logger.warning(f"IntegrityError during repair for account {account.id}: {e}")
-                    report.remaining_blockers.append(RepairBlockerEntry(
-                        account_id=account.id,
-                        company_name=account.company_name,
-                        reason="schema_constraint_violation",
-                        recommended_action="schema_constraint_violation"
-                    ))
+                    report.remaining_blockers.append(
+                        RepairBlockerEntry(
+                            account_id=account.id,
+                            company_name=account.company_name,
+                            reason="schema_constraint_violation",
+                            recommended_action="schema_constraint_violation",
+                        )
+                    )
                     continue
 
         if not dry_run:
@@ -198,8 +229,10 @@ class B2BEntitlementRepairService:
 
     @classmethod
     def _backfill_canonical_plan(
-        cls, db: Session, account: EnterpriseAccountModel, enterprise_plan: EnterpriseBillingPlanModel, 
-        dry_run: bool, report: RepairRunReport
+        cls,
+        db: Session,
+        enterprise_plan: EnterpriseBillingPlanModel,
+        dry_run: bool,
     ) -> tuple[bool, PlanCatalogModel | None]:
         existing = db.scalar(
             select(PlanCatalogModel).where(
@@ -223,15 +256,26 @@ class B2BEntitlementRepairService:
             db.add(new_plan)
             db.flush()
             return True, new_plan
-        # Dry run: return a dummy object to allow chaining
-        dummy_plan = PlanCatalogModel(id=-1, plan_code=enterprise_plan.code)
+        dummy_plan = PlanCatalogModel(
+            id=-enterprise_plan.id,
+            plan_code=enterprise_plan.code,
+            plan_name=enterprise_plan.display_name,
+            audience=Audience.B2B,
+            source_type=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
+            source_id=enterprise_plan.id,
+            is_active=enterprise_plan.is_active,
+        )
         return True, dummy_plan
 
     @classmethod
     def _backfill_binding_and_quota(
-        cls, db: Session, canonical_plan: PlanCatalogModel, enterprise_plan: EnterpriseBillingPlanModel,
-        feature: FeatureCatalogModel, dry_run: bool, report: RepairRunReport
-    ) -> tuple[bool, bool]:
+        cls,
+        db: Session,
+        canonical_plan: PlanCatalogModel,
+        enterprise_plan: EnterpriseBillingPlanModel,
+        feature: FeatureCatalogModel,
+        dry_run: bool,
+    ) -> tuple[bool, bool, PlanFeatureBindingModel, PlanFeatureQuotaModel]:
         if not dry_run:
             binding = PlanFeatureBindingModel(
                 plan_id=canonical_plan.id,
@@ -242,7 +286,7 @@ class B2BEntitlementRepairService:
             )
             db.add(binding)
             db.flush()
-            
+
             quota = PlanFeatureQuotaModel(
                 plan_feature_binding_id=binding.id,
                 quota_key="calls",
@@ -254,64 +298,91 @@ class B2BEntitlementRepairService:
             )
             db.add(quota)
             db.flush()
-            return True, True
-        return True, True
+            return True, True, binding, quota
+
+        binding = PlanFeatureBindingModel(
+            id=-(canonical_plan.id or 1),
+            plan_id=canonical_plan.id,
+            feature_id=feature.id,
+            access_mode=AccessMode.QUOTA,
+            is_enabled=True,
+            source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
+        )
+        quota = PlanFeatureQuotaModel(
+            id=-(enterprise_plan.id or 1),
+            plan_feature_binding_id=binding.id,
+            quota_key="calls",
+            quota_limit=enterprise_plan.included_monthly_units,
+            period_unit=PeriodUnit.MONTH,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+            source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
+        )
+        return True, True, binding, quota
 
     @classmethod
     def set_admin_user(cls, db: Session, *, account_id: int, user_id: int) -> dict:
         account = db.get(EnterpriseAccountModel, account_id)
         if not account or account.status != "active":
-            raise RepairValidationError(code="account_not_found_or_inactive", message="Account not found or inactive")
-        
+            raise RepairValidationError(
+                code="account_not_found_or_inactive", message="Account not found or inactive"
+            )
+
         if account.admin_user_id is not None:
-            raise RepairValidationError(code="admin_user_already_set", message="Admin user already set for this account")
-        
+            raise RepairValidationError(
+                code="admin_user_already_set", message="Admin user already set for this account"
+            )
+
         user = db.get(UserModel, user_id)
         if not user:
             raise RepairValidationError(code="user_not_found", message="User not found")
-        
+
         # Check if user is already admin of another account
         other_account = db.scalar(
             select(EnterpriseAccountModel).where(EnterpriseAccountModel.admin_user_id == user_id)
         )
         if other_account:
             raise RepairValidationError(
-                code="user_already_admin_of_another_account", 
-                message=f"User is already admin of account {other_account.id}"
+                code="user_already_admin_of_another_account",
+                message=f"User is already admin of account {other_account.id}",
             )
-        
+
         account.admin_user_id = user_id
         db.commit()
         return {"account_id": account_id, "user_id": user_id, "status": "ok"}
 
     @classmethod
-    def classify_zero_units(cls, db: Session, *, canonical_plan_id: int, access_mode: str, quota_limit: int | None) -> dict:
+    def classify_zero_units(
+        cls, db: Session, *, canonical_plan_id: int, access_mode: str, quota_limit: int | None
+    ) -> dict:
         # AC 14: Validation rules in order
         plan = db.get(PlanCatalogModel, canonical_plan_id)
         if not plan or plan.audience != Audience.B2B or not plan.is_active:
-            raise RepairValidationError(code="canonical_plan_not_found", message="Canonical plan not found or inactive")
-        
+            raise RepairValidationError(
+                code="canonical_plan_not_found", message="Canonical plan not found or inactive"
+            )
+
         # Resolve enterprise plan to check zero units
         enterprise_plan = None
         if plan.source_type == SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value:
             enterprise_plan = db.get(EnterpriseBillingPlanModel, plan.source_id)
-        
+
         if not enterprise_plan or enterprise_plan.included_monthly_units != 0:
             raise RepairValidationError(
-                code="canonical_plan_not_zero_units_eligible", 
-                message="Plan not eligible for zero units classification"
+                code="canonical_plan_not_zero_units_eligible",
+                message="Plan not eligible for zero units classification",
             )
-        
+
         if access_mode == "quota" and quota_limit is None:
             raise RepairValidationError(
                 code="quota_limit_required_for_quota_mode",
-                message="quota_limit is required when access_mode is 'quota'"
+                message="quota_limit is required when access_mode is 'quota'",
             )
-        
+
         if access_mode != "quota" and quota_limit is not None:
             raise RepairValidationError(
                 code="quota_limit_forbidden_for_non_quota_mode",
-                message=f"quota_limit must be null for access_mode '{access_mode}'"
+                message=f"quota_limit must be null for access_mode '{access_mode}'",
             )
 
         feature = db.scalar(
@@ -319,36 +390,48 @@ class B2BEntitlementRepairService:
         )
         if not feature:
             raise RuntimeError(f"Feature {cls.FEATURE_CODE} not found")
-        
+
         binding = db.scalar(
             select(PlanFeatureBindingModel).where(
                 PlanFeatureBindingModel.plan_id == canonical_plan_id,
-                PlanFeatureBindingModel.feature_id == feature.id
+                PlanFeatureBindingModel.feature_id == feature.id,
             )
         )
-        
+
         access_mode_enum = AccessMode(access_mode)
-        
+
         # Check if already configured identical
         if binding and binding.access_mode == access_mode_enum:
             if access_mode_enum != AccessMode.QUOTA:
-                return {"canonical_plan_id": canonical_plan_id, "access_mode": access_mode, "quota_limit": None, "status": "already_configured"}
-            
+                return {
+                    "canonical_plan_id": canonical_plan_id,
+                    "access_mode": access_mode,
+                    "quota_limit": None,
+                    "status": "already_configured",
+                }
+
             quota = db.scalar(
-                select(PlanFeatureQuotaModel).where(PlanFeatureQuotaModel.plan_feature_binding_id == binding.id)
+                select(PlanFeatureQuotaModel).where(
+                    PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
+                )
             )
             if quota and quota.quota_limit == quota_limit:
-                return {"canonical_plan_id": canonical_plan_id, "access_mode": access_mode, "quota_limit": quota_limit, "status": "already_configured"}
+                return {
+                    "canonical_plan_id": canonical_plan_id,
+                    "access_mode": access_mode,
+                    "quota_limit": quota_limit,
+                    "status": "already_configured",
+                }
 
         status = "updated" if binding else "created"
-        
+
         if not binding:
             binding = PlanFeatureBindingModel(
                 plan_id=canonical_plan_id,
                 feature_id=feature.id,
                 access_mode=access_mode_enum,
                 is_enabled=(access_mode_enum != AccessMode.DISABLED),
-                source_origin=SourceOrigin.MANUAL.value
+                source_origin=SourceOrigin.MANUAL.value,
             )
             db.add(binding)
             db.flush()
@@ -356,18 +439,24 @@ class B2BEntitlementRepairService:
             # Reclassify
             # AC 18: Supprimer les quotas existants si on passe en non-QUOTA
             if binding.access_mode == AccessMode.QUOTA and access_mode_enum != AccessMode.QUOTA:
-                for q in db.scalars(select(PlanFeatureQuotaModel).where(PlanFeatureQuotaModel.plan_feature_binding_id == binding.id)).all():
+                for q in db.scalars(
+                    select(PlanFeatureQuotaModel).where(
+                        PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
+                    )
+                ).all():
                     db.delete(q)
-            
+
             binding.access_mode = access_mode_enum
-            binding.is_enabled = (access_mode_enum != AccessMode.DISABLED)
+            binding.is_enabled = access_mode_enum != AccessMode.DISABLED
             binding.source_origin = SourceOrigin.MANUAL.value
             db.add(binding)
             db.flush()
 
         if access_mode_enum == AccessMode.QUOTA:
             quota = db.scalar(
-                select(PlanFeatureQuotaModel).where(PlanFeatureQuotaModel.plan_feature_binding_id == binding.id)
+                select(PlanFeatureQuotaModel).where(
+                    PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
+                )
             )
             if quota:
                 quota.quota_limit = quota_limit
@@ -380,9 +469,14 @@ class B2BEntitlementRepairService:
                     period_unit=PeriodUnit.MONTH,
                     period_value=1,
                     reset_mode=ResetMode.CALENDAR,
-                    source_origin=SourceOrigin.MANUAL.value
+                    source_origin=SourceOrigin.MANUAL.value,
                 )
             db.add(quota)
 
         db.commit()
-        return {"canonical_plan_id": canonical_plan_id, "access_mode": access_mode, "quota_limit": quota_limit, "status": status}
+        return {
+            "canonical_plan_id": canonical_plan_id,
+            "access_mode": access_mode,
+            "quota_limit": quota_limit,
+            "status": status,
+        }

@@ -288,3 +288,56 @@ def test_list_audit_pagination_and_filtering(db_session: MagicMock) -> None:
         assert total == 2
         assert len(items) == 1
         assert items[0].account_id == 2
+
+
+def test_list_audit_blocker_only_excludes_canonical_disabled(db_session: MagicMock) -> None:
+    account = EnterpriseAccountModel(
+        id=1, company_name="Disabled", admin_user_id=10, status="active"
+    )
+
+    accounts_result = MagicMock()
+    accounts_result.all.return_value = [account]
+
+    account_plans_result = MagicMock()
+    account_plans_result.all.return_value = []
+
+    enterprise_plans_result = MagicMock()
+    enterprise_plans_result.all.return_value = []
+
+    db_session.scalars.side_effect = [
+        accounts_result,
+        account_plans_result,
+        enterprise_plans_result,
+    ]
+
+    with (
+        patch.object(B2BAuditService, "_prefetch_canonical_plans", return_value={}),
+        patch.object(B2BAuditService, "_prefetch_bindings", return_value={}),
+        patch.object(B2BAuditService, "_prefetch_quotas", return_value={}),
+        patch.object(B2BAuditService, "_audit_account") as mock_audit,
+    ):
+        mock_audit.return_value = B2BAuditEntry(
+            account_id=1,
+            company_name="Disabled",
+            enterprise_plan_id=None,
+            enterprise_plan_code=None,
+            canonical_plan_id=10,
+            canonical_plan_code="disabled-plan",
+            feature_code="b2b_api_access",
+            resolution_source="canonical_disabled",
+            reason="disabled_by_plan",
+            binding_status="disabled",
+            quota_limit=None,
+            remaining=None,
+            window_end=None,
+            admin_user_id_present=True,
+            manual_review_required=False,
+        )
+
+        items, total = B2BAuditService.list_b2b_entitlement_audit(
+            db_session,
+            blocker_only=True,
+        )
+
+    assert total == 0
+    assert items == []

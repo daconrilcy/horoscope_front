@@ -185,9 +185,7 @@ def test_get_b2b_entitlements_audit_success() -> None:
     assert canonical_item["resolution_source"] == "canonical_quota"
     assert canonical_item["quota_limit"] == 100
 
-    fallback_item = next(
-        item for item in payload["items"] if item["company_name"] == "Fallback Co"
-    )
+    fallback_item = next(item for item in payload["items"] if item["company_name"] == "Fallback Co")
     assert fallback_item["resolution_source"] == "settings_fallback"
     assert fallback_item["reason"] == "no_binding"
 
@@ -199,6 +197,67 @@ def test_get_b2b_entitlements_audit_filters() -> None:
 
     response = client.get(
         "/v1/ops/b2b/entitlements/audit?resolution_source=settings_fallback",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    assert payload["total_count"] == 1
+    assert payload["items"][0]["company_name"] == "Fallback Co"
+
+
+def test_get_b2b_entitlements_audit_blocker_only_excludes_canonical_disabled() -> None:
+    _cleanup_tables()
+    with SessionLocal() as db:
+        ops_token, _ = _setup_audit_data(db)
+        feature = db.query(FeatureCatalogModel).filter_by(feature_code="b2b_api_access").one()
+        disabled_admin = _register_user(
+            db, email="admin-disabled@example.com", role="enterprise_admin"
+        )
+        disabled_account = EnterpriseAccountModel(
+            admin_user_id=disabled_admin.user.id,
+            company_name="Disabled Co",
+            status="active",
+        )
+        db.add(disabled_account)
+        db.flush()
+
+        disabled_plan = EnterpriseBillingPlanModel(
+            code="plan-disabled",
+            display_name="Disabled",
+            monthly_fixed_cents=0,
+            included_monthly_units=0,
+        )
+        db.add(disabled_plan)
+        db.flush()
+
+        db.add(
+            EnterpriseAccountBillingPlanModel(
+                enterprise_account_id=disabled_account.id,
+                plan_id=disabled_plan.id,
+            )
+        )
+        disabled_canonical_plan = PlanCatalogModel(
+            plan_code="cat-disabled",
+            plan_name="cat-disabled",
+            audience=Audience.B2B,
+            source_type=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
+            source_id=disabled_plan.id,
+            is_active=True,
+        )
+        db.add(disabled_canonical_plan)
+        db.flush()
+        db.add(
+            PlanFeatureBindingModel(
+                plan_id=disabled_canonical_plan.id,
+                feature_id=feature.id,
+                access_mode=AccessMode.DISABLED,
+                is_enabled=False,
+            )
+        )
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/b2b/entitlements/audit?blocker_only=true",
         headers={"Authorization": f"Bearer {ops_token}"},
     )
     assert response.status_code == 200

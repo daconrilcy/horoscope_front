@@ -134,10 +134,7 @@ class B2BAuditService:
 
             if resolution_source_filter and entry.resolution_source != resolution_source_filter:
                 continue
-            if blocker_only and entry.resolution_source not in {
-                "settings_fallback",
-                "canonical_disabled",
-            }:
+            if blocker_only and entry.resolution_source != "settings_fallback":
                 continue
 
             entries.append(entry)
@@ -281,9 +278,7 @@ class B2BAuditService:
                 feature_code=B2BAuditService.FEATURE_CODE,
                 resolution_source="settings_fallback",
                 reason=(
-                    "manual_review_required"
-                    if manual_review_required
-                    else "no_canonical_plan"
+                    "manual_review_required" if manual_review_required else "no_canonical_plan"
                 ),
                 binding_status=None,
                 quota_limit=None,

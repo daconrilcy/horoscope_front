@@ -84,94 +84,31 @@ Les cas `canonical_disabled` sont intentionnels — le binding existe et désact
 
 ## Tasks / Subtasks
 
-- [ ] **Créer `B2BEntitlementRepairService`** (AC: 1–7, 17–20)
-  - [ ] Créer `backend/app/services/b2b_entitlement_repair_service.py`
-  - [ ] Définir le dataclass `RepairBlockerEntry` : `account_id`, `company_name`, `reason`, `recommended_action` (`"set_admin_user"` | `"classify_zero_units"` | `"schema_constraint_violation"`)
-  - [ ] Définir le dataclass `RepairRunReport` : `accounts_scanned`, `plans_created`, `bindings_created`, `quotas_created`, `skipped_already_canonical`, `remaining_blockers`, `dry_run`
-  - [ ] Implémenter `B2BEntitlementRepairService.run_auto_repair(db, *, dry_run=False) -> RepairRunReport`
-    - [ ] Charger tous les comptes actifs + leurs plans enterprise (préchargement batch, pas de N+1)
-    - [ ] Pour chaque compte : déterminer son état via recalcul inline (éviter la double requête avec B2BAuditService paginé)
-    - [ ] Cas `no_canonical_plan` : appeler `_backfill_canonical_plan(db, account, enterprise_plan, dry_run)` → si créé ET `included_monthly_units > 0`, enchaîner immédiatement `_backfill_binding_and_quota(db, new_canonical_plan, enterprise_plan, dry_run)` dans le même run
-    - [ ] Cas `no_binding` avec `included_monthly_units > 0` (plan canonique déjà existant) : appeler `_backfill_binding_and_quota(db, canonical_plan, enterprise_plan, dry_run)`
-    - [ ] Cas nécessitant action manuelle : ajouter dans `remaining_blockers` avec la bonne `recommended_action`
-    - [ ] Si `dry_run=False` : appeler `db.commit()` une seule fois à la fin (batch commit) — utiliser `db.flush()` entre les créations intermédiaires pour obtenir les IDs
-    - [ ] Si `dry_run=True` : ne jamais appeler `db.commit()`, `db.add()`, `db.flush()`
-  - [ ] Implémenter `_backfill_canonical_plan(db, account, enterprise_plan, dry_run) -> bool` — retourne True si créé
-    - [ ] Vérifier `plan_catalog` existant via `source_type=migrated_from_enterprise_plan` et `source_id=enterprise_plan.id`
-    - [ ] Si absent et `dry_run=False` : créer `PlanCatalogModel` avec `audience=B2B`, `source_type=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN`, `source_id=enterprise_plan.id`, `plan_code=enterprise_plan.code`, `plan_name=enterprise_plan.display_name`, `is_active=enterprise_plan.is_active`
-    - [ ] Gérer `IntegrityError` sur `plan_code` unique → log warning, ajouter dans `remaining_blockers` avec `reason="schema_constraint_violation"`
-  - [ ] Implémenter `_backfill_binding_and_quota(db, canonical_plan, enterprise_plan, dry_run) -> tuple[bool, bool]` — retourne (binding_created, quota_created)
-    - [ ] Récupérer `FeatureCatalogModel` pour `feature_code="b2b_api_access"` (erreur fatale si absent)
-    - [ ] Vérifier `PlanFeatureBindingModel` existant pour `(canonical_plan.id, feature.id)` — si présent, skip et retourner (False, False)
-    - [ ] Si absent et `dry_run=False` : créer binding avec `access_mode=AccessMode.QUOTA`, `is_enabled=True`, `source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN`
-    - [ ] Créer `PlanFeatureQuotaModel` avec `quota_key="calls"`, `quota_limit=enterprise_plan.included_monthly_units`, `period_unit=PeriodUnit.MONTH`, `period_value=1`, `reset_mode=ResetMode.CALENDAR`, `source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN`
-    - [ ] Gérer `IntegrityError` → log warning, ajouter dans `remaining_blockers` avec `reason="schema_constraint_violation"`
+- [x] **Créer `B2BEntitlementRepairService`** (AC: 1–7, 17–20)
+  - [x] Service implémenté avec rapport structuré, dry-run, backfill plan/binding/quota, validations métier et commits adaptés.
+  - [x] Le run batch précharge les comptes/plans/features et réutilise désormais les créations en mémoire pendant le même passage pour éviter les faux doublons quand plusieurs comptes partagent un plan enterprise.
+  - [x] Les violations de contraintes restent capturées comme `schema_constraint_violation`.
 
-- [ ] **Implémenter la logique set-admin-user et classify-zero-units dans le service** (AC: 8–16)
-  - [ ] Implémenter `B2BEntitlementRepairService.set_admin_user(db, *, account_id, user_id) -> dict`
-    - [ ] Charger le compte → vérifier `status="active"` et `admin_user_id is None`
-    - [ ] Vérifier que le user existe dans `UserModel`
-    - [ ] Vérifier qu'aucun autre compte n'utilise cet `admin_user_id` (UniqueConstraint)
-    - [ ] Muter `account.admin_user_id = user_id` → `db.commit()`
-  - [ ] Implémenter `B2BEntitlementRepairService.classify_zero_units(db, *, canonical_plan_id, access_mode, quota_limit) -> dict`
-    - [ ] Charger `PlanCatalogModel` par id, vérifier `audience=b2b` et `is_active=True` → sinon `RepairValidationError(code="canonical_plan_not_found")`
-    - [ ] Résoudre le `EnterpriseBillingPlanModel` source via `plan_catalog.source_type=migrated_from_enterprise_plan` + `plan_catalog.source_id` → vérifier `included_monthly_units == 0` → sinon `RepairValidationError(code="canonical_plan_not_zero_units_eligible")`
-    - [ ] Récupérer `FeatureCatalogModel` pour `feature_code="b2b_api_access"`
-    - [ ] Récupérer binding existant pour `(canonical_plan_id, feature.id)` s'il existe
-    - [ ] Appliquer la logique : créer (`source_origin="manual"`), mettre à jour (`source_origin="manual"`, supprimer quotas obsolètes si passage de QUOTA vers autre mode), ou skip si déjà configuré identique
-    - [ ] `db.commit()` uniquement si modification effective
+- [x] **Implémenter la logique set-admin-user et classify-zero-units dans le service** (AC: 8–16)
+  - [x] `set_admin_user()` valide le compte, l’utilisateur cible et l’unicité de l’admin avant commit.
+  - [x] `classify_zero_units()` gère création, mise à jour, suppression de quotas obsolètes et idempotence.
 
-- [ ] **Créer le router `b2b_entitlement_repair.py`** (AC: 1, 4, 5, 8–9, 12–13, 17)
-  - [ ] Créer `backend/app/api/v1/routers/b2b_entitlement_repair.py`
-  - [ ] Préfixe : `/v1/ops/b2b/entitlements/repair`
-  - [ ] Tag : `ops-b2b-entitlements`
-  - [ ] **Réutiliser** `_ensure_ops_role()`, `_enforce_limits()`, `_error_response()` — copier le pattern de `b2b_entitlements_audit.py` (ces helpers sont locaux à chaque router dans ce projet)
-  - [ ] `POST /run` avec param query `dry_run: bool = Query(default=False)`
-  - [ ] `POST /set-admin-user` avec body Pydantic `SetAdminUserRequest(account_id: int, user_id: int)`
-  - [ ] `POST /classify-zero-units` avec body Pydantic `ClassifyZeroUnitsRequest(canonical_plan_id: int, access_mode: Literal["disabled","unlimited","quota"], quota_limit: int | None = None)`
-  - [ ] Valider les règles de l'AC13–14 dans le handler avant d'appeler le service
-  - [ ] Définir les modèles Pydantic de réponse pour chaque endpoint
+- [x] **Créer le router `b2b_entitlement_repair.py`** (AC: 1, 4, 5, 8–9, 12–13, 17)
+  - [x] Endpoints `/run`, `/set-admin-user` et `/classify-zero-units` exposés sous `/v1/ops/b2b/entitlements/repair`.
+  - [x] Contrôles de rôle, rate limiting et réponses d’erreur structurées en place.
 
-- [ ] **Enregistrer le router dans `main.py`** (AC: 1)
-  - [ ] Importer `b2b_entitlement_repair_router` depuis le nouveau fichier
-  - [ ] Ajouter `app.include_router(b2b_entitlement_repair_router)` dans la liste des routers
+- [x] **Enregistrer le router dans `main.py`** (AC: 1)
 
-- [ ] **Tests unitaires** (AC: 21)
-  - [ ] Créer `backend/app/tests/unit/test_b2b_entitlement_repair_service.py`
-  - [ ] Mocker `db`, `PlanCatalogModel`, `PlanFeatureBindingModel`, `PlanFeatureQuotaModel`, `EnterpriseAccountModel`, `EnterpriseBillingPlanModel`, `FeatureCatalogModel`
-  - [ ] Test dry_run : `db.add()` et `db.commit()` ne sont jamais appelés
-  - [ ] Test backfill plan manquant avec `included_monthly_units > 0` → `plans_created=1`, `bindings_created=1`, `quotas_created=1` (les trois créés en un seul run)
-  - [ ] Test plan déjà présent → `skipped_already_canonical++`, pas de création
-  - [ ] Test binding déjà présent → `bindings_created=0` même si plan absent (skip idempotent)
-  - [ ] Test IntegrityError sur plan_code unique → capturé dans `remaining_blockers`
-  - [ ] Test `admin_user_id_missing` → dans `remaining_blockers` avec `recommended_action="set_admin_user"`
-  - [ ] Test `manual_review_required` → dans `remaining_blockers` avec `recommended_action="classify_zero_units"`
-  - [ ] Test set-admin-user valide → `status="ok"`
-  - [ ] Test set-admin-user compte inexistant → `RepairValidationError(code="account_not_found_or_inactive")`
-  - [ ] Test set-admin-user `admin_user_id` déjà renseigné → `RepairValidationError(code="admin_user_already_set")`
-  - [ ] Test set-admin-user user inexistant → `RepairValidationError(code="user_not_found")`
-  - [ ] Test classify-zero-units mode disabled → binding créé avec `access_mode=DISABLED`, `source_origin="manual"`
-  - [ ] Test classify-zero-units mode unlimited → binding créé avec `access_mode=UNLIMITED`, `source_origin="manual"`
-  - [ ] Test classify-zero-units mode quota avec `quota_limit=500` → binding + quota créés avec `source_origin="manual"`
-  - [ ] Test classify-zero-units mode quota sans `quota_limit` → `RepairValidationError(code="quota_limit_required_for_quota_mode")`
-  - [ ] Test classify-zero-units sur plan avec `included_monthly_units > 0` → `RepairValidationError(code="canonical_plan_not_zero_units_eligible")`
-  - [ ] Test classify-zero-units passage QUOTA → DISABLED → quotas supprimés, `status="updated"`
-  - [ ] Test classify-zero-units idempotence → `status="already_configured"`
+- [x] **Tests unitaires** (AC: 21)
+  - [x] Couverture service de repair et audit enrichie, y compris le cas multi-comptes sur plan partagé introduit pendant la revue.
+  - [x] Les validations et comportements idempotents principaux sont couverts.
 
-- [ ] **Tests d'intégration** (AC: 22)
-  - [ ] Créer `backend/app/tests/integration/test_b2b_entitlement_repair.py`
-  - [ ] Setup : 3 comptes B2B actifs — 1 sans canonical plan, 1 avec canonical plan sans binding (units > 0), 1 avec canonical plan sans binding (units = 0)
-  - [ ] Test `POST /v1/ops/b2b/entitlements/repair/run` avec `dry_run=true` → rapport correct, aucune entrée créée en DB
-  - [ ] Test `POST /v1/ops/b2b/entitlements/repair/run` → `plans_created=1`, `bindings_created=2` (les deux), `remaining_blockers` contient le compte zero_units avec `recommended_action="classify_zero_units"`
-  - [ ] Test re-run idempotent → `plans_created=0`, `bindings_created=0`, `quotas_created=0`
-  - [ ] Test `GET /audit?blocker_only=true` après repair/run → `total_count=1` (le zero_units non classifié)
-  - [ ] Test `POST /repair/classify-zero-units` pour le compte zero_units → `status="created"`
-  - [ ] Test `GET /audit?blocker_only=true` après classify-zero-units → `total_count=0`
-  - [ ] Test `POST /repair/set-admin-user` end-to-end valide → `status="ok"`
-  - [ ] Test accès sans rôle ops/admin → 403 sur chacun des 3 endpoints
+- [x] **Tests d'intégration** (AC: 22)
+  - [x] Parcours end-to-end `repair/run`, `set-admin-user`, `classify-zero-units` et `audit?blocker_only=true` couverts.
+  - [x] La revue a ajouté la vérification que `canonical_disabled` n’est plus compté comme blocker dans `blocker_only=true`.
 
-- [ ] **Non-régression** (AC: 23)
-  - [ ] Vérifier que `test_b2b_api_entitlement_gate.py`, `test_b2b_usage_service.py`, `test_b2b_audit_service.py`, `test_b2b_entitlements_audit.py`, `test_b2b_astrology_api.py`, `test_b2b_api_entitlements.py` passent toujours
+- [x] **Non-régression** (AC: 23)
+  - [x] Les suites B2B ciblées continuent de passer après correction.
 
 ## Dev Notes
 
@@ -409,11 +346,14 @@ Fichier modifié :
 ### File List
 
 - `backend/app/infra/db/models/enterprise_account.py` : Rendu `admin_user_id` nullable pour supporter les blockers legacy.
-- `backend/app/services/b2b_entitlement_repair_service.py` : Logique de backfill automatique et manuelle (savepoints inclus).
+- `backend/app/services/b2b_entitlement_repair_service.py` : Logique de backfill automatique et manuelle, avec réutilisation en mémoire des créations pendant le même batch.
+- `backend/app/services/b2b_audit_service.py` : Ajustement du filtre `blocker_only=true` pour exclure `canonical_disabled`.
 - `backend/app/api/v1/routers/b2b_entitlement_repair.py` : Router ops avec rate limiting et validation.
 - `backend/app/main.py` : Enregistrement du nouveau router.
-- `backend/app/tests/unit/test_b2b_entitlement_repair_service.py` : Tests unitaires du service.
+- `backend/app/tests/unit/test_b2b_entitlement_repair_service.py` : Tests unitaires du service, y compris le cas de plan enterprise partagé.
+- `backend/app/tests/unit/test_b2b_audit_service.py` : Test unitaire du filtre `blocker_only=true` mis à jour.
 - `backend/app/tests/integration/test_b2b_entitlement_repair.py` : Tests d'intégration end-to-end.
+- `backend/app/tests/integration/test_b2b_entitlements_audit.py` : Test d’intégration vérifiant que `canonical_disabled` n’est pas compté comme blocker.
 
 ## Dev Agent Record
 
@@ -433,3 +373,6 @@ gemini-2-0-flash-001
 - Le modèle `EnterpriseAccountModel` a été modifié pour autoriser NULL sur `admin_user_id` (blocker legacy).
 - Les validations métier de `classify_zero_units` ont été centralisées dans le service.
 - Le rate limiting a été appliqué conformément aux AC (10/5/3).
+- Code review post-implémentation effectuée et entièrement résorbée sans action ouverte.
+- Correction appliquée sur `run_auto_repair()` pour réutiliser les backfills déjà réalisés pendant le même batch et éviter les faux `schema_constraint_violation` sur plans enterprise partagés.
+- Correction appliquée sur l’audit `blocker_only=true` pour exclure `canonical_disabled`, conforme au contrat 61.20.
