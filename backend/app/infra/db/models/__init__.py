@@ -34,7 +34,6 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseBillingPlanModel,
 )
 from app.infra.db.models.enterprise_editorial_config import EnterpriseEditorialConfigModel
-from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
 from app.infra.db.models.feature_flag import FeatureFlagModel
 from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.geocoding_query_cache import GeocodingQueryCacheModel
@@ -115,7 +114,6 @@ __all__ = [
     "EnterpriseAccountBillingPlanModel",
     "EnterpriseBillingCycleModel",
     "EnterpriseEditorialConfigModel",
-    "EnterpriseDailyUsageModel",
     "FeatureFlagModel",
     "GeoPlaceResolvedModel",
     "GeocodingQueryCacheModel",

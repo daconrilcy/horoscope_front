@@ -8,7 +8,7 @@ calcul des consommations et génération des relevés.
 from __future__ import annotations
 
 import logging
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timezone
 from time import monotonic
 
 from pydantic import BaseModel
@@ -22,7 +22,7 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseBillingCycleModel,
     EnterpriseBillingPlanModel,
 )
-from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
+from app.infra.db.models.product_entitlements import FeatureUsageCounterModel
 from app.infra.observability.metrics import increment_counter, observe_duration
 
 logger = logging.getLogger(__name__)
@@ -227,12 +227,33 @@ class B2BBillingService:
     def _consumed_units_for_period(
         db: Session, *, account_id: int, period_start: date, period_end: date
     ) -> int:
-        """Calcule le total d'unités consommées sur une période."""
+        """
+        Calcule le total d'unités consommées sur une période.
+        Utilise feature_usage_counters comme source de vérité canonique.
+        """
+        account = db.scalar(
+            select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id).limit(1)
+        )
+        if not account or account.admin_user_id is None:
+            return 0
+
+        # Fenêtre UTC exclusive — ne pas dépendre du plan courant
+        month_start_utc = datetime(
+            period_start.year, period_start.month, 1, tzinfo=timezone.utc
+        )
+        if period_start.month == 12:
+            next_month_utc = datetime(period_start.year + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            next_month_utc = datetime(
+                period_start.year, period_start.month + 1, 1, tzinfo=timezone.utc
+            )
+
         value = db.scalar(
-            select(func.coalesce(func.sum(EnterpriseDailyUsageModel.used_count), 0)).where(
-                EnterpriseDailyUsageModel.enterprise_account_id == account_id,
-                EnterpriseDailyUsageModel.usage_date >= period_start,
-                EnterpriseDailyUsageModel.usage_date <= period_end,
+            select(func.coalesce(func.sum(FeatureUsageCounterModel.used_count), 0)).where(
+                FeatureUsageCounterModel.user_id == account.admin_user_id,
+                FeatureUsageCounterModel.feature_code == "b2b_api_access",
+                FeatureUsageCounterModel.window_start >= month_start_utc,
+                FeatureUsageCounterModel.window_start < next_month_utc,
             )
         )
         return max(0, int(value) if value is not None else 0)

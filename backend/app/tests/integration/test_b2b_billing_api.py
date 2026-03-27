@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timezone
 
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
@@ -12,7 +12,11 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseBillingCycleModel,
     EnterpriseBillingPlanModel,
 )
-from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
+from app.infra.db.models.product_entitlements import (
+    FeatureUsageCounterModel,
+    PeriodUnit,
+    ResetMode,
+)
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
@@ -31,7 +35,7 @@ def _cleanup_tables() -> None:
             EnterpriseAccountBillingPlanModel,
             EnterpriseBillingCycleModel,
             EnterpriseBillingPlanModel,
-            EnterpriseDailyUsageModel,
+            FeatureUsageCounterModel,
             EnterpriseApiCredentialModel,
             EnterpriseAccountModel,
             UserModel,
@@ -63,11 +67,30 @@ def _create_enterprise_api_key(email: str) -> tuple[str, int]:
 def _seed_usage_from_api_key(api_key: str, *, usage_date: date, used_count: int) -> None:
     with SessionLocal() as db:
         authenticated = EnterpriseCredentialsService.authenticate_api_key(db, api_key=api_key)
+        account = db.scalar(
+            select(EnterpriseAccountModel).where(
+                EnterpriseAccountModel.id == authenticated.account_id
+            )
+        )
+        assert account and account.admin_user_id, "Compte B2B sans admin_user_id"
+
+        # Fenêtre mensuelle UTC
+        window_start = datetime(usage_date.year, usage_date.month, 1, tzinfo=timezone.utc)
+        if usage_date.month == 12:
+            window_end = datetime(usage_date.year + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            window_end = datetime(usage_date.year, usage_date.month + 1, 1, tzinfo=timezone.utc)
+
         db.add(
-            EnterpriseDailyUsageModel(
-                enterprise_account_id=authenticated.account_id,
-                credential_id=authenticated.credential_id,
-                usage_date=usage_date,
+            FeatureUsageCounterModel(
+                user_id=account.admin_user_id,
+                feature_code="b2b_api_access",
+                quota_key="b2b_api_access_monthly",
+                period_unit=PeriodUnit.MONTH,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+                window_start=window_start,
+                window_end=window_end,
                 used_count=used_count,
             )
         )

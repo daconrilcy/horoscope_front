@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, datetime, timezone
 
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
@@ -11,7 +11,11 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseBillingCycleModel,
     EnterpriseBillingPlanModel,
 )
-from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
+from app.infra.db.models.product_entitlements import (
+    FeatureUsageCounterModel,
+    PeriodUnit,
+    ResetMode,
+)
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
@@ -35,7 +39,7 @@ def _cleanup_tables() -> None:
             EnterpriseAccountBillingPlanModel,
             EnterpriseBillingCycleModel,
             EnterpriseBillingPlanModel,
-            EnterpriseDailyUsageModel,
+            FeatureUsageCounterModel,
             EnterpriseApiCredentialModel,
             EnterpriseAccountModel,
             UserModel,
@@ -64,19 +68,40 @@ def _create_enterprise_context(email: str) -> tuple[int, int]:
         return account.id, credential.credential_id
 
 
-def test_reconciliation_detects_missing_billing_cycle_as_major() -> None:
-    _cleanup_tables()
-    account_id, credential_id = _create_enterprise_context("reco-service-major@example.com")
+def _seed_usage(account_id: int, usage_date: date, used_count: int) -> None:
     with SessionLocal() as db:
+        account = db.scalar(
+            select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id)
+        )
+        assert account and account.admin_user_id, "Compte B2B sans admin_user_id"
+
+        # Fenêtre mensuelle UTC
+        window_start = datetime(usage_date.year, usage_date.month, 1, tzinfo=timezone.utc)
+        if usage_date.month == 12:
+            window_end = datetime(usage_date.year + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            window_end = datetime(usage_date.year, usage_date.month + 1, 1, tzinfo=timezone.utc)
+
         db.add(
-            EnterpriseDailyUsageModel(
-                enterprise_account_id=account_id,
-                credential_id=credential_id,
-                usage_date=date(2026, 2, 5),
-                used_count=12,
+            FeatureUsageCounterModel(
+                user_id=account.admin_user_id,
+                feature_code="b2b_api_access",
+                quota_key="b2b_api_access_monthly",
+                period_unit=PeriodUnit.MONTH,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+                window_start=window_start,
+                window_end=window_end,
+                used_count=used_count,
             )
         )
         db.commit()
+
+
+def test_reconciliation_detects_missing_billing_cycle_as_major() -> None:
+    _cleanup_tables()
+    account_id, credential_id = _create_enterprise_context("reco-service-major@example.com")
+    _seed_usage(account_id, date(2026, 2, 5), used_count=12)
 
     with SessionLocal() as db:
         listed = B2BReconciliationService.list_issues(db, account_id=account_id, limit=20, offset=0)
@@ -92,15 +117,9 @@ def test_reconciliation_detects_missing_billing_cycle_as_major() -> None:
 def test_reconciliation_is_resolved_when_usage_and_billing_match() -> None:
     _cleanup_tables()
     account_id, credential_id = _create_enterprise_context("reco-service-resolved@example.com")
+    _seed_usage(account_id, date(2026, 3, 5), used_count=4)
+
     with SessionLocal() as db:
-        db.add(
-            EnterpriseDailyUsageModel(
-                enterprise_account_id=account_id,
-                credential_id=credential_id,
-                usage_date=date(2026, 3, 5),
-                used_count=4,
-            )
-        )
         B2BBillingService.close_cycle(
             db,
             account_id=account_id,
@@ -123,16 +142,7 @@ def test_reconciliation_is_resolved_when_usage_and_billing_match() -> None:
 def test_reconciliation_action_recalculate_returns_action_state() -> None:
     _cleanup_tables()
     account_id, credential_id = _create_enterprise_context("reco-service-action@example.com")
-    with SessionLocal() as db:
-        db.add(
-            EnterpriseDailyUsageModel(
-                enterprise_account_id=account_id,
-                credential_id=credential_id,
-                usage_date=date(2026, 4, 15),
-                used_count=7,
-            )
-        )
-        db.commit()
+    _seed_usage(account_id, date(2026, 4, 15), used_count=7)
 
     with SessionLocal() as db:
         listed = B2BReconciliationService.list_issues(db, account_id=account_id, limit=20, offset=0)
@@ -156,23 +166,19 @@ def test_reconciliation_action_recalculate_returns_action_state() -> None:
 def test_reconciliation_normalizes_period_filters_to_month_bounds() -> None:
     _cleanup_tables()
     account_id, credential_id = _create_enterprise_context("reco-service-period@example.com")
+    _seed_usage(account_id, date(2026, 5, 2), used_count=3)
+    # On ajoute au même compteur pour le même mois
     with SessionLocal() as db:
-        db.add(
-            EnterpriseDailyUsageModel(
-                enterprise_account_id=account_id,
-                credential_id=credential_id,
-                usage_date=date(2026, 5, 2),
-                used_count=3,
+        account = db.scalar(
+            select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id)
+        )
+        counter = db.scalar(
+            select(FeatureUsageCounterModel).where(
+                FeatureUsageCounterModel.user_id == account.admin_user_id,
+                FeatureUsageCounterModel.feature_code == "b2b_api_access",
             )
         )
-        db.add(
-            EnterpriseDailyUsageModel(
-                enterprise_account_id=account_id,
-                credential_id=credential_id,
-                usage_date=date(2026, 5, 28),
-                used_count=4,
-            )
-        )
+        counter.used_count += 4
         db.commit()
 
     with SessionLocal() as db:

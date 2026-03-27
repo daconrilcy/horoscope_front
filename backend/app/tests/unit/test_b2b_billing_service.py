@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, datetime, timezone
 
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 
 from app.infra.db.base import Base
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
@@ -10,7 +10,11 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseBillingCycleModel,
     EnterpriseBillingPlanModel,
 )
-from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
+from app.infra.db.models.product_entitlements import (
+    FeatureUsageCounterModel,
+    PeriodUnit,
+    ResetMode,
+)
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
@@ -26,7 +30,7 @@ def _cleanup_tables() -> None:
             EnterpriseAccountBillingPlanModel,
             EnterpriseBillingCycleModel,
             EnterpriseBillingPlanModel,
-            EnterpriseDailyUsageModel,
+            FeatureUsageCounterModel,
             EnterpriseApiCredentialModel,
             EnterpriseAccountModel,
             UserModel,
@@ -55,13 +59,30 @@ def _create_enterprise_context() -> tuple[int, int]:
         return account.id, created.credential_id
 
 
-def _seed_usage(account_id: int, credential_id: int, usage_date: date, used_count: int) -> None:
+def _seed_usage(account_id: int, usage_date: date, used_count: int) -> None:
     with SessionLocal() as db:
+        account = db.scalar(
+            select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id)
+        )
+        assert account and account.admin_user_id, "Compte B2B sans admin_user_id"
+
+        # Fenêtre mensuelle UTC
+        window_start = datetime(usage_date.year, usage_date.month, 1, tzinfo=timezone.utc)
+        if usage_date.month == 12:
+            window_end = datetime(usage_date.year + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            window_end = datetime(usage_date.year, usage_date.month + 1, 1, tzinfo=timezone.utc)
+
         db.add(
-            EnterpriseDailyUsageModel(
-                enterprise_account_id=account_id,
-                credential_id=credential_id,
-                usage_date=usage_date,
+            FeatureUsageCounterModel(
+                user_id=account.admin_user_id,
+                feature_code="b2b_api_access",
+                quota_key="b2b_api_access_monthly",
+                period_unit=PeriodUnit.MONTH,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+                window_start=window_start,
+                window_end=window_end,
                 used_count=used_count,
             )
         )
@@ -93,7 +114,7 @@ def test_b2b_billing_close_cycle_calculates_fixed_and_variable() -> None:
         db.commit()
 
     usage_day = date(2026, 2, 15)
-    _seed_usage(account_id, credential_id, usage_day, used_count=5)
+    _seed_usage(account_id, usage_day, used_count=5)
 
     with SessionLocal() as db:
         cycle = B2BBillingService.close_cycle(
@@ -116,7 +137,7 @@ def test_b2b_billing_close_cycle_calculates_fixed_and_variable() -> None:
 def test_b2b_billing_close_cycle_is_idempotent() -> None:
     _cleanup_tables()
     account_id, credential_id = _create_enterprise_context()
-    _seed_usage(account_id, credential_id, date(2026, 2, 10), used_count=1)
+    _seed_usage(account_id, date(2026, 2, 10), used_count=1)
 
     with SessionLocal() as db:
         first = B2BBillingService.close_cycle(
@@ -141,8 +162,8 @@ def test_b2b_billing_close_cycle_is_idempotent() -> None:
 def test_b2b_billing_list_and_latest_return_persisted_cycles() -> None:
     _cleanup_tables()
     account_id, credential_id = _create_enterprise_context()
-    _seed_usage(account_id, credential_id, date(2026, 1, 20), used_count=2)
-    _seed_usage(account_id, credential_id, date(2026, 2, 20), used_count=3)
+    _seed_usage(account_id, date(2026, 1, 20), used_count=2)
+    _seed_usage(account_id, date(2026, 2, 20), used_count=3)
 
     with SessionLocal() as db:
         january = B2BBillingService.close_cycle(
@@ -191,7 +212,7 @@ def test_b2b_billing_rejects_invalid_period() -> None:
 def test_b2b_billing_uses_account_specific_plan_mapping() -> None:
     _cleanup_tables()
     account_id, credential_id = _create_enterprise_context()
-    _seed_usage(account_id, credential_id, date(2026, 2, 20), used_count=1)
+    _seed_usage(account_id, date(2026, 2, 20), used_count=1)
 
     with SessionLocal() as db:
         default_plan = EnterpriseBillingPlanModel(

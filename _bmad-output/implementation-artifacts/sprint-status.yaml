@@ -34,7 +34,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-25 00:00:00
-last_updated: 2026-03-27 (story 61-23 review fixes applied)
+last_updated: 2026-03-27 (story 61-24 completed)
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -572,3 +572,4 @@ development_status:
   61-21-decommission-b2busageservice-suppression-fallback-settings: done
   61-22-migration-usage-summary-canonique-retrait-final-b2busageservice: done
   61-23-nettoyage-final-b2busageservice-settings-legacy: done
+  61-24-decommission-db-reliquats-b2b-legacy: done

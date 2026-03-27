@@ -23,7 +23,6 @@ from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentialModel
 from app.infra.db.models.enterprise_editorial_config import EnterpriseEditorialConfigModel
-from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
 from app.infra.db.models.privacy import UserPrivacyRequestModel
 from app.infra.db.models.product_entitlements import (
     AccessMode,
@@ -67,7 +66,6 @@ def _cleanup_tables() -> None:
             UserSubscriptionModel,
             BillingPlanModel,
             EnterpriseEditorialConfigModel,
-            EnterpriseDailyUsageModel,
             EnterpriseApiCredentialModel,
             EnterpriseAccountModel,
             UserBirthProfileModel,

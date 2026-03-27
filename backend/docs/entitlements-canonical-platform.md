@@ -60,6 +60,12 @@ En raison de la contrainte technique sur la table `feature_usage_counters`, les 
 
 > **Dette technique** : Ce mapping est transitoire. Une future évolution devra découpler les compteurs B2B de la table `users`.
 
+### Décommissionnement B2B Legacy (Story 61.24)
+
+- **Suppression Physique** : La table `enterprise_daily_usages` a été supprimée via une migration Alembic destructive (`9d73f7af0bf4`).
+- **Source de Vérité** : `feature_usage_counters` est désormais l'unique source de vérité pour la facturation et la réconciliation B2B.
+- **Services Migrés** : `B2BBillingService` et `B2BReconciliationService` lisent désormais directement sur les compteurs canoniques avec une convention de fenêtrage UTC exclusive.
+
 ### Métadonnées de Quota
 
 Les réponses API B2B incluent désormais un objet `quota_info` dans le body JSON :

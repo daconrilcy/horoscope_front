@@ -12,7 +12,6 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseBillingPlanModel,
 )
 from app.infra.db.models.enterprise_editorial_config import EnterpriseEditorialConfigModel
-from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
 from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,
@@ -45,7 +44,6 @@ def _cleanup_tables() -> None:
         for model in (
             AuditEventModel,
             EnterpriseEditorialConfigModel,
-            EnterpriseDailyUsageModel,
             EnterpriseApiCredentialModel,
             EnterpriseAccountBillingPlanModel,
             EnterpriseBillingPlanModel,
@@ -230,14 +228,6 @@ def test_b2b_astrology_disabled_binding_not_enabled_skips_settings_fallback():
 
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "b2b_api_access_denied"
-
-    with SessionLocal() as db:
-        legacy_usage_rows = db.scalars(
-            select(EnterpriseDailyUsageModel).where(
-                EnterpriseDailyUsageModel.enterprise_account_id == account_id
-            )
-        ).all()
-        assert legacy_usage_rows == []
 
 
 def test_b2b_astrology_fallback_settings():

@@ -11,7 +11,6 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseAccountBillingPlanModel,
     EnterpriseBillingPlanModel,
 )
-from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
 from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,
@@ -41,7 +40,6 @@ def _cleanup_tables() -> None:
     with SessionLocal() as db:
         for model in (
             AuditEventModel,
-            EnterpriseDailyUsageModel,
             EnterpriseApiCredentialModel,
             EnterpriseAccountModel,
             UserModel,

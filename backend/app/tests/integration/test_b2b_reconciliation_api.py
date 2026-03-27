@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timezone
 
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
@@ -12,7 +12,11 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseBillingCycleModel,
     EnterpriseBillingPlanModel,
 )
-from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
+from app.infra.db.models.product_entitlements import (
+    FeatureUsageCounterModel,
+    PeriodUnit,
+    ResetMode,
+)
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
@@ -31,7 +35,7 @@ def _cleanup_tables() -> None:
             EnterpriseAccountBillingPlanModel,
             EnterpriseBillingCycleModel,
             EnterpriseBillingPlanModel,
-            EnterpriseDailyUsageModel,
+            FeatureUsageCounterModel,
             EnterpriseApiCredentialModel,
             EnterpriseAccountModel,
             UserModel,
@@ -67,6 +71,36 @@ def _create_ops_token(email: str = "ops-reconciliation@example.com") -> str:
         return auth.tokens.access_token
 
 
+def _seed_usage(account_id: int, usage_date: date, used_count: int) -> None:
+    with SessionLocal() as db:
+        account = db.scalar(
+            select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id)
+        )
+        assert account and account.admin_user_id, "Compte B2B sans admin_user_id"
+
+        # Fenêtre mensuelle UTC
+        window_start = datetime(usage_date.year, usage_date.month, 1, tzinfo=timezone.utc)
+        if usage_date.month == 12:
+            window_end = datetime(usage_date.year + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            window_end = datetime(usage_date.year, usage_date.month + 1, 1, tzinfo=timezone.utc)
+
+        db.add(
+            FeatureUsageCounterModel(
+                user_id=account.admin_user_id,
+                feature_code="b2b_api_access",
+                quota_key="b2b_api_access_monthly",
+                period_unit=PeriodUnit.MONTH,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+                window_start=window_start,
+                window_end=window_end,
+                used_count=used_count,
+            )
+        )
+        db.commit()
+
+
 def test_reconciliation_requires_token() -> None:
     _cleanup_tables()
     response = client.get("/v1/ops/b2b/reconciliation/issues")
@@ -97,16 +131,7 @@ def test_reconciliation_list_detail_and_action_flow() -> None:
     _cleanup_tables()
     account_id, credential_id = _create_enterprise_context("reconciliation-flow@example.com")
     ops_token = _create_ops_token()
-    with SessionLocal() as db:
-        db.add(
-            EnterpriseDailyUsageModel(
-                enterprise_account_id=account_id,
-                credential_id=credential_id,
-                usage_date=date(2026, 2, 10),
-                used_count=9,
-            )
-        )
-        db.commit()
+    _seed_usage(account_id, date(2026, 2, 10), used_count=9)
 
     list_response = client.get(
         "/v1/ops/b2b/reconciliation/issues",

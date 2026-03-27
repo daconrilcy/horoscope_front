@@ -7,7 +7,7 @@ des comptes entreprise, détectant et permettant de résoudre les écarts.
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from enum import StrEnum
 from typing import Any
 
@@ -16,8 +16,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.audit_event import AuditEventModel
+from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_billing import EnterpriseBillingCycleModel
-from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
+from app.infra.db.models.product_entitlements import FeatureUsageCounterModel
 from app.services.b2b_billing_service import B2BBillingService
 
 
@@ -291,24 +292,65 @@ class B2BReconciliationService:
         period_start: date | None,
         period_end: date | None,
     ) -> dict[tuple[int, date, date], dict[str, int]]:
-        """Agrège les données d'usage par période mensuelle."""
-        query = select(
-            EnterpriseDailyUsageModel.enterprise_account_id,
-            EnterpriseDailyUsageModel.usage_date,
-            EnterpriseDailyUsageModel.used_count,
+        """
+        Agrège les données d'usage par période mensuelle.
+        Utilise feature_usage_counters comme source de vérité canonique.
+        """
+        # 1. Résoudre les account_id concernés -> admin_user_ids
+        account_query = select(
+            EnterpriseAccountModel.id,
+            EnterpriseAccountModel.admin_user_id,
         )
         if account_id is not None:
-            query = query.where(EnterpriseDailyUsageModel.enterprise_account_id == account_id)
-        if period_start is not None:
-            query = query.where(EnterpriseDailyUsageModel.usage_date >= period_start)
-        if period_end is not None:
-            query = query.where(EnterpriseDailyUsageModel.usage_date <= period_end)
+            account_query = account_query.where(EnterpriseAccountModel.id == account_id)
+        accounts = db.execute(account_query).all()
+        user_to_account = {
+            row.admin_user_id: row.id for row in accounts if row.admin_user_id is not None
+        }
 
-        rows = db.execute(query).all()
+        if not user_to_account:
+            return {}
+
+        # 2. Lire feature_usage_counters avec fenêtre UTC exclusive
+        counter_query = select(
+            FeatureUsageCounterModel.user_id,
+            FeatureUsageCounterModel.window_start,
+            FeatureUsageCounterModel.used_count,
+        ).where(
+            FeatureUsageCounterModel.user_id.in_(list(user_to_account.keys())),
+            FeatureUsageCounterModel.feature_code == "b2b_api_access",
+        )
+
+        if period_start is not None:
+            start_utc = datetime(
+                period_start.year, period_start.month, 1, tzinfo=timezone.utc
+            )
+            counter_query = counter_query.where(FeatureUsageCounterModel.window_start >= start_utc)
+        if period_end is not None:
+            # period_end est inclusif dans le legacy, mais ici on veut borner
+            # par le début du mois suivant pour la fenêtre exclusive
+            if period_end.month == 12:
+                end_utc = datetime(period_end.year + 1, 1, 1, tzinfo=timezone.utc)
+            else:
+                end_utc = datetime(
+                    period_end.year, period_end.month + 1, 1, tzinfo=timezone.utc
+                )
+            counter_query = counter_query.where(FeatureUsageCounterModel.window_start < end_utc)
+
+        rows = db.execute(counter_query).all()
         grouped: dict[tuple[int, date, date], dict[str, int]] = {}
         for row in rows:
-            month_start, month_end = B2BReconciliationService._month_bounds(row.usage_date)
-            key = (row.enterprise_account_id, month_start, month_end)
+            acct_id = user_to_account[row.user_id]
+            ws = row.window_start
+            # On s'assure d'être au début du mois
+            month_start = ws.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            if month_start.month == 12:
+                next_month = month_start.replace(year=month_start.year + 1, month=1)
+            else:
+                next_month = month_start.replace(month=month_start.month + 1)
+            month_end = next_month - timedelta(days=1)
+
+            key = (acct_id, month_start.date(), month_end.date())
             bucket = grouped.setdefault(key, {"usage_units": 0, "usage_rows": 0})
             bucket["usage_units"] += max(0, int(row.used_count))
             bucket["usage_rows"] += 1

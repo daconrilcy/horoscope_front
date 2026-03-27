@@ -12,7 +12,6 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseBillingPlanModel,
 )
 from app.infra.db.models.enterprise_editorial_config import EnterpriseEditorialConfigModel
-from app.infra.db.models.enterprise_usage import EnterpriseDailyUsageModel
 from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,
@@ -51,7 +50,6 @@ def _cleanup_tables() -> None:
         for model in (
             AuditEventModel,
             EnterpriseEditorialConfigModel,
-            EnterpriseDailyUsageModel,
             EnterpriseApiCredentialModel,
             EnterpriseAccountModel,
             AstroCharacteristicModel,
