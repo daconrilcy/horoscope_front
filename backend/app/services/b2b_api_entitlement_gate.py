@@ -13,13 +13,11 @@ from app.infra.db.models.enterprise_billing import (
 )
 from app.infra.db.models.product_entitlements import (
     AccessMode,
-    Audience,
     FeatureCatalogModel,
-    PlanCatalogModel,
     PlanFeatureBindingModel,
     PlanFeatureQuotaModel,
-    SourceOrigin,
 )
+from app.services.b2b_canonical_plan_resolver import resolve_b2b_canonical_plan
 from app.services.entitlement_types import QuotaDefinition, UsageState
 from app.services.quota_usage_service import QuotaExhaustedError, QuotaUsageService
 
@@ -77,7 +75,7 @@ class B2BApiEntitlementGate:
         admin_user_id = account.admin_user_id
 
         # 2. Résoudre le plan canonique B2B
-        canonical_plan = B2BApiEntitlementGate._resolve_b2b_canonical_plan(db, account_id)
+        canonical_plan = resolve_b2b_canonical_plan(db, account_id)
         if not canonical_plan:
             return B2BApiEntitlementResult(path="settings_fallback")
 
@@ -150,27 +148,3 @@ class B2BApiEntitlementGate:
             return B2BApiEntitlementResult(path="canonical_quota", usage_states=consumed_states)
 
         return B2BApiEntitlementResult(path="settings_fallback")
-
-    @staticmethod
-    def _resolve_b2b_canonical_plan(db: Session, account_id: int) -> PlanCatalogModel | None:
-        # account_id -> enterprise_account_billing_plans
-        account_plan = db.scalar(
-            select(EnterpriseAccountBillingPlanModel)
-            .where(EnterpriseAccountBillingPlanModel.enterprise_account_id == account_id)
-            .limit(1)
-        )
-        if not account_plan:
-            return None
-
-        # plan_id -> plan_catalog
-        canonical_plan = db.scalar(
-            select(PlanCatalogModel)
-            .where(
-                PlanCatalogModel.source_type == SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
-                PlanCatalogModel.source_id == account_plan.plan_id,
-                PlanCatalogModel.audience == Audience.B2B,
-                PlanCatalogModel.is_active,
-            )
-            .limit(1)
-        )
-        return canonical_plan
