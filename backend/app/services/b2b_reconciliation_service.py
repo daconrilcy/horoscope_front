@@ -18,10 +18,8 @@ from sqlalchemy.orm import Session
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_billing import EnterpriseBillingCycleModel
-from app.infra.db.models.product_entitlements import (
-    FeatureUsageCounterModel,
-    PeriodUnit,
-    ResetMode,
+from app.infra.db.models.enterprise_feature_usage_counters import (
+    EnterpriseFeatureUsageCounterModel,
 )
 from app.services.b2b_billing_service import B2BBillingService
 
@@ -298,51 +296,47 @@ class B2BReconciliationService:
     ) -> dict[tuple[int, date, date], dict[str, int]]:
         """
         Agrège les données d'usage par période mensuelle.
-        Utilise feature_usage_counters comme source de vérité canonique.
+        Utilise EnterpriseFeatureUsageCounterModel comme source de vérité canonique.
         """
-        # 1. Résoudre les account_id concernés -> admin_user_ids
-        account_query = select(
-            EnterpriseAccountModel.id,
-            EnterpriseAccountModel.admin_user_id,
-        )
+        # 1. Collecter les account_ids
+        account_ids_query = select(EnterpriseAccountModel.id)
         if account_id is not None:
-            account_query = account_query.where(EnterpriseAccountModel.id == account_id)
-        accounts = db.execute(account_query).all()
-        user_to_account = {
-            row.admin_user_id: row.id for row in accounts if row.admin_user_id is not None
-        }
+            account_ids_query = account_ids_query.where(EnterpriseAccountModel.id == account_id)
+        account_ids = [row for row in db.scalars(account_ids_query).all()]
 
-        if not user_to_account:
+        if not account_ids:
             return {}
 
-        # 2. Lire feature_usage_counters avec fenêtre UTC exclusive
+        # 2. Lire EnterpriseFeatureUsageCounterModel avec fenêtre UTC exclusive
+        from app.infra.db.models.product_entitlements import PeriodUnit
         counter_query = select(
-            FeatureUsageCounterModel.user_id,
-            FeatureUsageCounterModel.window_start,
-            FeatureUsageCounterModel.used_count,
+            EnterpriseFeatureUsageCounterModel.enterprise_account_id,
+            EnterpriseFeatureUsageCounterModel.window_start,
+            EnterpriseFeatureUsageCounterModel.used_count,
         ).where(
-            FeatureUsageCounterModel.user_id.in_(list(user_to_account.keys())),
-            FeatureUsageCounterModel.feature_code == "b2b_api_access",
-            FeatureUsageCounterModel.period_unit == PeriodUnit.MONTH,
-            FeatureUsageCounterModel.reset_mode == ResetMode.CALENDAR,
+            EnterpriseFeatureUsageCounterModel.enterprise_account_id.in_(account_ids),
+            EnterpriseFeatureUsageCounterModel.feature_code == "b2b_api_access",
+            EnterpriseFeatureUsageCounterModel.period_unit == PeriodUnit.MONTH,
         )
 
         if period_start is not None:
             start_utc = datetime(period_start.year, period_start.month, 1, tzinfo=timezone.utc)
-            counter_query = counter_query.where(FeatureUsageCounterModel.window_start >= start_utc)
+            counter_query = counter_query.where(
+                EnterpriseFeatureUsageCounterModel.window_start >= start_utc
+            )
         if period_end is not None:
-            # period_end est inclusif dans le legacy, mais ici on veut borner
-            # par le début du mois suivant pour la fenêtre exclusive
             if period_end.month == 12:
                 end_utc = datetime(period_end.year + 1, 1, 1, tzinfo=timezone.utc)
             else:
                 end_utc = datetime(period_end.year, period_end.month + 1, 1, tzinfo=timezone.utc)
-            counter_query = counter_query.where(FeatureUsageCounterModel.window_start < end_utc)
+            counter_query = counter_query.where(
+                EnterpriseFeatureUsageCounterModel.window_start < end_utc
+            )
 
         rows = db.execute(counter_query).all()
         grouped: dict[tuple[int, date, date], dict[str, int]] = {}
         for row in rows:
-            acct_id = user_to_account[row.user_id]
+            acct_id = row.enterprise_account_id
             ws = row.window_start
             # On s'assure d'être au début du mois
             month_start = ws.replace(day=1, hour=0, minute=0, second=0, microsecond=0)

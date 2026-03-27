@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi.testclient import TestClient
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
@@ -12,6 +12,9 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseBillingPlanModel,
 )
 from app.infra.db.models.enterprise_editorial_config import EnterpriseEditorialConfigModel
+from app.infra.db.models.enterprise_feature_usage_counters import (
+    EnterpriseFeatureUsageCounterModel,
+)
 from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,
@@ -54,6 +57,8 @@ def _cleanup_tables() -> None:
             EnterpriseEditorialConfigModel,
             EnterpriseApiCredentialModel,
             EnterpriseAccountModel,
+            EnterpriseFeatureUsageCounterModel,
+            FeatureUsageCounterModel,
             AstroCharacteristicModel,
             AspectModel,
             HouseModel,
@@ -309,7 +314,9 @@ def test_b2b_astrology_rejects_revoked_api_key() -> None:
 
 def test_b2b_astrology_returns_weekly_by_sign_with_valid_api_key() -> None:
     _cleanup_tables()
-    api_key = _create_enterprise_api_key_with_canonical_plan("b2b-success@example.com")
+    api_key = _create_enterprise_api_key_with_canonical_plan(
+        "b2b-success@example.com", access_mode=AccessMode.QUOTA, quota_limit=10
+    )
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db)
 
@@ -322,7 +329,21 @@ def test_b2b_astrology_returns_weekly_by_sign_with_valid_api_key() -> None:
     assert payload["meta"]["request_id"] == "rid-b2b-success"
     assert payload["data"]["api_version"] == "v1"
     assert len(payload["data"]["items"]) > 0
-    assert payload["quota_info"] == {"source": "canonical"}
+    qi = payload["quota_info"]
+    assert qi["source"] == "canonical"
+    assert qi["limit"] == 10
+    assert qi["remaining"] == 9
+    assert "window_end" in qi
+
+    # Assert no B2B usage in B2C table
+    with SessionLocal() as db:
+        b2c_count = db.scalar(select(func.count(FeatureUsageCounterModel.id)))
+        assert b2c_count == 0, "B2B call should not write to B2C feature_usage_counters"
+        b2b_count = db.scalar(select(func.count(EnterpriseFeatureUsageCounterModel.id)))
+        assert b2b_count == 1, "B2B call should write to B2B enterprise_feature_usage_counters"
+        counter = db.scalar(select(EnterpriseFeatureUsageCounterModel))
+        assert counter.used_count == 1
+
 
 
 def test_b2b_usage_summary_returns_metrics_for_credential() -> None:
@@ -336,14 +357,12 @@ def test_b2b_usage_summary_returns_metrics_for_credential() -> None:
 
         from app.services.quota_window_resolver import QuotaWindowResolver
 
-        auth = db.scalar(
-            select(UserModel).where(UserModel.email == "b2b-usage-summary@example.com")
-        )
+        authenticated = EnterpriseCredentialsService.authenticate_api_key(db, api_key=api_key)
         ref_dt = datetime.now(timezone.utc)
         window = QuotaWindowResolver.compute_window(PeriodUnit.MONTH, 1, ResetMode.CALENDAR, ref_dt)
         db.add(
-            FeatureUsageCounterModel(
-                user_id=auth.id,
+            EnterpriseFeatureUsageCounterModel(
+                enterprise_account_id=authenticated.account_id,
                 feature_code="b2b_api_access",
                 quota_key="calls",
                 period_unit=PeriodUnit.MONTH,

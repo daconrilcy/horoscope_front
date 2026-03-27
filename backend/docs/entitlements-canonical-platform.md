@@ -44,27 +44,28 @@ Bien que déprécié et ses services supprimés, certains artefacts subsistent :
 
 **NE PAS DROP TABLE** `user_daily_quota_usages` sans avoir validé les étapes ci-dessus. La table sert de filet de sécurité pour les audits (obligation légale RGPD).
 
-## Support B2B (Story 61.18)
+## Support B2B (Story 61.18, 61.25)
 
-Depuis la story 61.18, le système d'entitlements canonique s'étend au segment B2B.
+Depuis la story 61.18, le système d'entitlements canonique s'étend au segment B2B. En story 61.25, le stockage a été découplé pour utiliser une table native B2B.
 
-### Priorité de Résolution B2B
+### Séparation Canonique B2C / B2B
 
-1. **Système Canonique (Source Unique)** : Depuis la story 61.23, le système d'entitlements canonique est l'unique source de vérité pour le segment B2B. Le fallback legacy via `B2BUsageService` a été définitivement supprimé.
-   - Si un binding `b2b_api_access` existe pour le plan enterprise lié au compte, il définit les droits d'accès.
-   - Si aucun binding n'est trouvé, l'accès est refusé par défaut (politique sécurisée).
+| Segment | Table | Index Primaire | Service |
+|---------|-------|----------------|---------|
+| **B2C** | `feature_usage_counters` | `user_id` | `QuotaUsageService` |
+| **B2B** | `enterprise_feature_usage_counters` | `enterprise_account_id` | `EnterpriseQuotaUsageService` |
 
-### Identifiant de Compteur B2B
+### Identifiant de Compteur B2B (Story 61.25)
 
-En raison de la contrainte technique sur la table `feature_usage_counters`, les consommations B2B sont enregistrées sous le `user_id` correspondant à l'`admin_user_id` de l'EnterpriseAccountModel.
+Le compromis transitoire consistant à utiliser `admin_user_id` comme clé de quota a été supprimé. Les consommations B2B sont désormais indexées directement par `enterprise_account_id` dans la table native `enterprise_feature_usage_counters`.
 
-> **Dette technique** : Ce mapping est transitoire. Une future évolution devra découpler les compteurs B2B de la table `users`.
+- **Indépendance** : La consommation quota ne dépend plus de l'existence ou du changement d'un administrateur particulier.
+- **Source de Vérité** : `EnterpriseQuotaUsageService` est l'unique service gérant le cycle de vie de ces compteurs.
 
 ### Décommissionnement B2B Legacy (Story 61.24)
 
 - **Suppression Physique** : La table `enterprise_daily_usages` a été supprimée via une migration Alembic destructive (`9d73f7af0bf4`).
-- **Source de Vérité** : `feature_usage_counters` est désormais l'unique source de vérité pour la facturation et la réconciliation B2B.
-- **Services Migrés** : `B2BBillingService` et `B2BReconciliationService` lisent désormais directement sur les compteurs canoniques avec une convention de fenêtrage UTC exclusive.
+- **Services Migrés** : `B2BBillingService`, `B2BReconciliationService`, `B2BApiEntitlementGate` et `B2BAuditService` utilisent désormais la table native B2B.
 
 ### Métadonnées de Quota
 

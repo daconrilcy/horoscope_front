@@ -12,6 +12,9 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseBillingCycleModel,
     EnterpriseBillingPlanModel,
 )
+from app.infra.db.models.enterprise_feature_usage_counters import (
+    EnterpriseFeatureUsageCounterModel,
+)
 from app.infra.db.models.product_entitlements import (
     FeatureUsageCounterModel,
     PeriodUnit,
@@ -35,6 +38,7 @@ def _cleanup_tables() -> None:
             EnterpriseAccountBillingPlanModel,
             EnterpriseBillingCycleModel,
             EnterpriseBillingPlanModel,
+            EnterpriseFeatureUsageCounterModel,
             FeatureUsageCounterModel,
             EnterpriseApiCredentialModel,
             EnterpriseAccountModel,
@@ -67,12 +71,6 @@ def _create_enterprise_api_key(email: str) -> tuple[str, int]:
 def _seed_usage_from_api_key(api_key: str, *, usage_date: date, used_count: int) -> None:
     with SessionLocal() as db:
         authenticated = EnterpriseCredentialsService.authenticate_api_key(db, api_key=api_key)
-        account = db.scalar(
-            select(EnterpriseAccountModel).where(
-                EnterpriseAccountModel.id == authenticated.account_id
-            )
-        )
-        assert account and account.admin_user_id, "Compte B2B sans admin_user_id"
 
         # Fenêtre mensuelle UTC
         window_start = datetime(usage_date.year, usage_date.month, 1, tzinfo=timezone.utc)
@@ -82,8 +80,8 @@ def _seed_usage_from_api_key(api_key: str, *, usage_date: date, used_count: int)
             window_end = datetime(usage_date.year, usage_date.month + 1, 1, tzinfo=timezone.utc)
 
         db.add(
-            FeatureUsageCounterModel(
-                user_id=account.admin_user_id,
+            EnterpriseFeatureUsageCounterModel(
+                enterprise_account_id=authenticated.account_id,
                 feature_code="b2b_api_access",
                 quota_key="b2b_api_access_monthly",
                 period_unit=PeriodUnit.MONTH,

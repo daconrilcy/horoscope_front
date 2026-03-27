@@ -11,6 +11,9 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseBillingCycleModel,
     EnterpriseBillingPlanModel,
 )
+from app.infra.db.models.enterprise_feature_usage_counters import (
+    EnterpriseFeatureUsageCounterModel,
+)
 from app.infra.db.models.product_entitlements import (
     FeatureUsageCounterModel,
     PeriodUnit,
@@ -39,6 +42,7 @@ def _cleanup_tables() -> None:
             EnterpriseAccountBillingPlanModel,
             EnterpriseBillingCycleModel,
             EnterpriseBillingPlanModel,
+            EnterpriseFeatureUsageCounterModel,
             FeatureUsageCounterModel,
             EnterpriseApiCredentialModel,
             EnterpriseAccountModel,
@@ -70,11 +74,6 @@ def _create_enterprise_context(email: str) -> tuple[int, int]:
 
 def _seed_usage(account_id: int, usage_date: date, used_count: int) -> None:
     with SessionLocal() as db:
-        account = db.scalar(
-            select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id)
-        )
-        assert account and account.admin_user_id, "Compte B2B sans admin_user_id"
-
         # Fenêtre mensuelle UTC
         window_start = datetime(usage_date.year, usage_date.month, 1, tzinfo=timezone.utc)
         if usage_date.month == 12:
@@ -83,8 +82,8 @@ def _seed_usage(account_id: int, usage_date: date, used_count: int) -> None:
             window_end = datetime(usage_date.year, usage_date.month + 1, 1, tzinfo=timezone.utc)
 
         db.add(
-            FeatureUsageCounterModel(
-                user_id=account.admin_user_id,
+            EnterpriseFeatureUsageCounterModel(
+                enterprise_account_id=account_id,
                 feature_code="b2b_api_access",
                 quota_key="b2b_api_access_monthly",
                 period_unit=PeriodUnit.MONTH,
@@ -169,13 +168,10 @@ def test_reconciliation_normalizes_period_filters_to_month_bounds() -> None:
     _seed_usage(account_id, date(2026, 5, 2), used_count=3)
     # On ajoute au même compteur pour le même mois
     with SessionLocal() as db:
-        account = db.scalar(
-            select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id)
-        )
         counter = db.scalar(
-            select(FeatureUsageCounterModel).where(
-                FeatureUsageCounterModel.user_id == account.admin_user_id,
-                FeatureUsageCounterModel.feature_code == "b2b_api_access",
+            select(EnterpriseFeatureUsageCounterModel).where(
+                EnterpriseFeatureUsageCounterModel.enterprise_account_id == account_id,
+                EnterpriseFeatureUsageCounterModel.feature_code == "b2b_api_access",
             )
         )
         counter.used_count += 4
@@ -204,13 +200,9 @@ def test_reconciliation_ignores_non_monthly_counters() -> None:
     _seed_usage(account_id, date(2026, 6, 5), used_count=4)
 
     with SessionLocal() as db:
-        account = db.scalar(
-            select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id)
-        )
-        assert account and account.admin_user_id is not None
         db.add(
-            FeatureUsageCounterModel(
-                user_id=account.admin_user_id,
+            EnterpriseFeatureUsageCounterModel(
+                enterprise_account_id=account_id,
                 feature_code="b2b_api_access",
                 quota_key="b2b_api_access_yearly",
                 period_unit=PeriodUnit.YEAR,

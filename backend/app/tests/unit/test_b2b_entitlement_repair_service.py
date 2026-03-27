@@ -291,14 +291,18 @@ def test_run_auto_repair_already_canonical_skipped(db, feature):
         db.add.assert_not_called()
 
 
-def test_run_auto_repair_admin_missing_blocker(db, feature):
+def test_run_auto_repair_admin_missing_no_longer_blocker(db, feature):
     # Setup
     account = EnterpriseAccountModel(
         id=1, company_name="Test Co", status="active", admin_user_id=None
     )
+    acc_plan = EnterpriseAccountBillingPlanModel(enterprise_account_id=1, plan_id=100)
+    ent_plan = EnterpriseBillingPlanModel(
+        id=100, code="PLAN1", display_name="Plan 1", included_monthly_units=10, is_active=True
+    )
 
-    db.scalars.return_value.all.side_effect = [[account], {}, {}]
-    db.scalar.side_effect = [feature]
+    db.scalars.return_value.all.side_effect = [[account], [acc_plan], [ent_plan]]
+    db.scalar.side_effect = [feature, None, None]
 
     with (
         patch("app.services.b2b_audit_service.B2BAuditService._audit_account") as mock_audit,
@@ -312,13 +316,13 @@ def test_run_auto_repair_admin_missing_blocker(db, feature):
         mock_audit.return_value = B2BAuditEntry(
             account_id=1,
             company_name="Test Co",
-            enterprise_plan_id=None,
-            enterprise_plan_code=None,
+            enterprise_plan_id=100,
+            enterprise_plan_code="PLAN1",
             canonical_plan_id=None,
             canonical_plan_code=None,
             feature_code="b2b_api_access",
             resolution_source="settings_fallback",
-            reason="admin_user_id_missing",
+            reason="no_canonical_plan",
             binding_status=None,
             quota_limit=None,
             remaining=None,
@@ -331,8 +335,10 @@ def test_run_auto_repair_admin_missing_blocker(db, feature):
         report = B2BEntitlementRepairService.run_auto_repair(db, dry_run=False)
 
         # Assert
-        assert len(report.remaining_blockers) == 1
-        assert report.remaining_blockers[0].recommended_action == "set_admin_user"
+        # Plus de blocker pour admin_user_id_missing
+        assert len(report.remaining_blockers) == 0
+        assert report.plans_created == 1
+        assert report.bindings_created == 1
 
 
 def test_set_admin_user_valid(db):

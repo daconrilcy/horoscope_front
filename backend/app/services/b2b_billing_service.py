@@ -22,10 +22,8 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseBillingCycleModel,
     EnterpriseBillingPlanModel,
 )
-from app.infra.db.models.product_entitlements import (
-    FeatureUsageCounterModel,
-    PeriodUnit,
-    ResetMode,
+from app.infra.db.models.enterprise_feature_usage_counters import (
+    EnterpriseFeatureUsageCounterModel,
 )
 from app.infra.observability.metrics import increment_counter, observe_duration
 
@@ -233,14 +231,8 @@ class B2BBillingService:
     ) -> int:
         """
         Calcule le total d'unités consommées sur une période.
-        Utilise feature_usage_counters comme source de vérité canonique.
+        Utilise EnterpriseFeatureUsageCounterModel comme source de vérité canonique.
         """
-        account = db.scalar(
-            select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id).limit(1)
-        )
-        if not account or account.admin_user_id is None:
-            return 0
-
         # Fenêtre UTC exclusive — ne pas dépendre du plan courant
         month_start_utc = datetime(period_start.year, period_start.month, 1, tzinfo=timezone.utc)
         if period_start.month == 12:
@@ -251,13 +243,11 @@ class B2BBillingService:
             )
 
         value = db.scalar(
-            select(func.coalesce(func.sum(FeatureUsageCounterModel.used_count), 0)).where(
-                FeatureUsageCounterModel.user_id == account.admin_user_id,
-                FeatureUsageCounterModel.feature_code == "b2b_api_access",
-                FeatureUsageCounterModel.period_unit == PeriodUnit.MONTH,
-                FeatureUsageCounterModel.reset_mode == ResetMode.CALENDAR,
-                FeatureUsageCounterModel.window_start >= month_start_utc,
-                FeatureUsageCounterModel.window_start < next_month_utc,
+            select(func.coalesce(func.sum(EnterpriseFeatureUsageCounterModel.used_count), 0)).where(
+                EnterpriseFeatureUsageCounterModel.enterprise_account_id == account_id,
+                EnterpriseFeatureUsageCounterModel.feature_code == "b2b_api_access",
+                EnterpriseFeatureUsageCounterModel.window_start >= month_start_utc,
+                EnterpriseFeatureUsageCounterModel.window_start < next_month_utc,
             )
         )
         return max(0, int(value) if value is not None else 0)

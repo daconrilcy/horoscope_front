@@ -207,22 +207,56 @@ def test_set_admin_user_success() -> None:
         assert acc.admin_user_id == user_id
 
 
-def test_repair_forbidden_for_user() -> None:
+def test_repair_run_works_even_if_admin_user_id_is_null() -> None:
     _cleanup_tables()
     with SessionLocal() as db:
-        _, _, _ = _setup_repair_data(db)
-        user_auth = _register_user(db, email="user@example.com", role="user")
-        user_token = user_auth.tokens.access_token
+        ops_auth = _register_user(db, email="ops@example.com", role="ops")
+        ops_token = ops_auth.tokens.access_token
+
+        feature = FeatureCatalogModel(
+            feature_code="b2b_api_access",
+            feature_name="B2B API",
+            is_metered=True,
+        )
+        db.add(feature)
+        db.flush()
+
+        # Compte SANS admin_user_id mais avec usage > 0 (via ent plan)
+        acc = EnterpriseAccountModel(
+            company_name="No Admin Co", status="active", admin_user_id=None
+        )
+        db.add(acc)
+        db.flush()
+        plan = EnterpriseBillingPlanModel(
+            code="p-noadmin",
+            display_name="P No Admin",
+            included_monthly_units=150,
+            monthly_fixed_cents=0,
+        )
+        db.add(plan)
+        db.flush()
+        db.add(EnterpriseAccountBillingPlanModel(enterprise_account_id=acc.id, plan_id=plan.id))
         db.commit()
 
-    for path, payload in [
-        ("/run", None),
-        ("/set-admin-user", {"account_id": 1, "user_id": 1}),
-        ("/classify-zero-units", {"canonical_plan_id": 1, "access_mode": "unlimited"}),
-    ]:
-        response = client.post(
-            f"/v1/ops/b2b/entitlements/repair{path}",
-            headers={"Authorization": f"Bearer {user_token}"},
-            json=payload if payload else {},
-        )
-        assert response.status_code == 403
+    # AC 15: run_auto_repair ne doit plus considérer admin_user_id_missing comme un blocker
+    response = client.post(
+        "/v1/ops/b2b/entitlements/repair/run",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["plans_created"] == 1
+    assert data["bindings_created"] == 1
+    # Aucun blocker car le plan a > 0 units
+    assert len(data["remaining_blockers"]) == 0
+
+    # Vérification audit
+    response = client.get(
+        "/v1/ops/b2b/entitlements/audit",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    item = response.json()["data"]["items"][0]
+    assert item["resolution_source"] == "canonical_quota"
+    assert item["quota_limit"] == 150
+    assert item["admin_user_id_present"] is False

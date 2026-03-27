@@ -22,8 +22,8 @@ from app.infra.db.models.product_entitlements import (
     SourceOrigin,
 )
 from app.services.b2b_canonical_plan_resolver import resolve_b2b_canonical_plan
+from app.services.enterprise_quota_usage_service import EnterpriseQuotaUsageService
 from app.services.entitlement_types import QuotaDefinition
-from app.services.quota_usage_service import QuotaUsageService
 
 
 @dataclass
@@ -240,25 +240,6 @@ class B2BAuditService:
         enterprise_plan_code = enterprise_plan.code if enterprise_plan is not None else None
         admin_user_id_present = account.admin_user_id is not None
 
-        if not admin_user_id_present:
-            return B2BAuditEntry(
-                account_id=account.id,
-                company_name=account.company_name,
-                enterprise_plan_id=enterprise_plan_id,
-                enterprise_plan_code=enterprise_plan_code,
-                canonical_plan_id=None,
-                canonical_plan_code=None,
-                feature_code=B2BAuditService.FEATURE_CODE,
-                resolution_source="settings_fallback",
-                reason="admin_user_id_missing",
-                binding_status=None,
-                quota_limit=None,
-                remaining=None,
-                window_end=None,
-                admin_user_id_present=False,
-                manual_review_required=False,
-            )
-
         if canonical_plan is None:
             canonical_plan = resolve_b2b_canonical_plan(db, account.id)
 
@@ -284,7 +265,7 @@ class B2BAuditService:
                 quota_limit=None,
                 remaining=None,
                 window_end=None,
-                admin_user_id_present=True,
+                admin_user_id_present=admin_user_id_present,
                 manual_review_required=manual_review_required,
             )
 
@@ -325,7 +306,7 @@ class B2BAuditService:
                 quota_limit=None,
                 remaining=None,
                 window_end=None,
-                admin_user_id_present=True,
+                admin_user_id_present=admin_user_id_present,
                 manual_review_required=manual_review_required,
             )
 
@@ -344,7 +325,7 @@ class B2BAuditService:
                 quota_limit=None,
                 remaining=None,
                 window_end=None,
-                admin_user_id_present=True,
+                admin_user_id_present=admin_user_id_present,
                 manual_review_required=False,
             )
 
@@ -363,7 +344,7 @@ class B2BAuditService:
                 quota_limit=None,
                 remaining=None,
                 window_end=None,
-                admin_user_id_present=True,
+                admin_user_id_present=admin_user_id_present,
                 manual_review_required=False,
             )
 
@@ -397,7 +378,7 @@ class B2BAuditService:
                 quota_limit=None,
                 remaining=None,
                 window_end=None,
-                admin_user_id_present=True,
+                admin_user_id_present=admin_user_id_present,
                 manual_review_required=manual_review_required,
             )
 
@@ -409,9 +390,9 @@ class B2BAuditService:
             period_value=quota_model.period_value,
             reset_mode=quota_model.reset_mode.value,
         )
-        usage_state = QuotaUsageService.get_usage(
+        usage_state = EnterpriseQuotaUsageService.get_usage(
             db,
-            user_id=account.admin_user_id,
+            account_id=account.id,
             feature_code=B2BAuditService.FEATURE_CODE,
             quota=quota_def,
         )
@@ -429,7 +410,7 @@ class B2BAuditService:
             quota_limit=usage_state.quota_limit,
             remaining=usage_state.remaining,
             window_end=usage_state.window_end,
-            admin_user_id_present=True,
+            admin_user_id_present=admin_user_id_present,
             manual_review_required=False,
         )
 

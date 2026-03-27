@@ -152,17 +152,6 @@ class B2BEntitlementRepairService:
                     report.skipped_already_canonical += 1
                     continue
 
-                if audit_entry.reason == "admin_user_id_missing":
-                    report.remaining_blockers.append(
-                        RepairBlockerEntry(
-                            account_id=account.id,
-                            company_name=account.company_name,
-                            reason=audit_entry.reason,
-                            recommended_action="set_admin_user",
-                        )
-                    )
-                    continue
-
                 if audit_entry.reason == "manual_review_required":
                     report.remaining_blockers.append(
                         RepairBlockerEntry(

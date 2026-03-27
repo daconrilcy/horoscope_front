@@ -11,6 +11,9 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseAccountBillingPlanModel,
     EnterpriseBillingPlanModel,
 )
+from app.infra.db.models.enterprise_feature_usage_counters import (
+    EnterpriseFeatureUsageCounterModel,
+)
 from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,
@@ -48,6 +51,7 @@ def _cleanup_tables() -> None:
             PlanCatalogModel,
             PlanFeatureBindingModel,
             PlanFeatureQuotaModel,
+            EnterpriseFeatureUsageCounterModel,
             FeatureUsageCounterModel,
         ):
             db.execute(delete(model))
@@ -164,15 +168,13 @@ def test_b2b_usage_summary_quota_mode() -> None:
     )
 
     with SessionLocal() as db:
-        account = db.get(EnterpriseAccountModel, account_id)
-        admin_user_id = account.admin_user_id
         ref_dt = datetime.now(timezone.utc)
         window = QuotaWindowResolver.compute_window(
             PeriodUnit.MONTH, 1, ResetMode.CALENDAR, ref_dt
         )
         db.add(
-            FeatureUsageCounterModel(
-                user_id=admin_user_id,
+            EnterpriseFeatureUsageCounterModel(
+                enterprise_account_id=account_id,
                 feature_code="b2b_api_access",
                 quota_key="calls",
                 period_unit=PeriodUnit.MONTH,

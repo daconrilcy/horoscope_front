@@ -16,8 +16,8 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.services.b2b_api_entitlement_gate import B2BApiAccessDeniedError
 from app.services.b2b_canonical_plan_resolver import resolve_b2b_canonical_plan
+from app.services.enterprise_quota_usage_service import EnterpriseQuotaUsageService
 from app.services.entitlement_types import QuotaDefinition
-from app.services.quota_usage_service import QuotaUsageService
 
 logger = logging.getLogger(__name__)
 
@@ -37,22 +37,20 @@ class B2BCanonicalUsageSummaryService:
 
     @staticmethod
     def get_summary(db: Session, *, account_id: int) -> B2BCanonicalUsageSummary:
-        # 1. Charger l'EnterpriseAccountModel -> admin_user_id
+        # 1. Charger l'EnterpriseAccountModel (vérifier existence)
         account = db.scalar(
             select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id)
         )
-        if not account or account.admin_user_id is None:
+        if not account:
             logger.warning(
                 "b2b_usage_summary_blocked account_id=%s code=%s",
                 account_id,
-                "b2b_account_not_configured",
+                "b2b_account_not_found",
             )
             raise B2BApiAccessDeniedError(
                 code="b2b_account_not_configured",
-                details={"reason": "admin_user_id_missing"},
+                details={"reason": "account_not_found"},
             )
-
-        admin_user_id = account.admin_user_id
 
         # 2. Résoudre le plan canonique B2B
         canonical_plan = resolve_b2b_canonical_plan(db, account_id)
@@ -120,9 +118,9 @@ class B2BCanonicalUsageSummaryService:
                     period_value=q_model.period_value,
                     reset_mode=q_model.reset_mode.value,
                 )
-                state = QuotaUsageService.get_usage(
+                state = EnterpriseQuotaUsageService.get_usage(
                     db,
-                    user_id=admin_user_id,
+                    account_id=account_id,
                     feature_code=B2BCanonicalUsageSummaryService.FEATURE_CODE,
                     quota=quota_def,
                 )
