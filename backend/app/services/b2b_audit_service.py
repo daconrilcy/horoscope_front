@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
 
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
@@ -14,12 +14,15 @@ from app.infra.db.models.enterprise_billing import (
 )
 from app.infra.db.models.product_entitlements import (
     AccessMode,
+    Audience,
     FeatureCatalogModel,
+    PlanCatalogModel,
     PlanFeatureBindingModel,
     PlanFeatureQuotaModel,
+    SourceOrigin,
 )
 from app.services.b2b_canonical_plan_resolver import resolve_b2b_canonical_plan
-from app.services.entitlement_types import QuotaDefinition, UsageState
+from app.services.entitlement_types import QuotaDefinition
 from app.services.quota_usage_service import QuotaUsageService
 
 
@@ -33,7 +36,10 @@ class B2BAuditEntry:
     canonical_plan_code: str | None
     feature_code: str
     resolution_source: Literal[
-        "canonical_quota", "canonical_unlimited", "canonical_disabled", "settings_fallback"
+        "canonical_quota",
+        "canonical_unlimited",
+        "canonical_disabled",
+        "settings_fallback",
     ]
     reason: Literal[
         "admin_user_id_missing",
@@ -64,71 +70,179 @@ class B2BAuditService:
         resolution_source_filter: str | None = None,
         blocker_only: bool = False,
     ) -> tuple[list[B2BAuditEntry], int]:
-        # 1. Base query for active enterprise accounts
-        stmt = select(EnterpriseAccountModel).where(EnterpriseAccountModel.status == "active")
-        all_accounts = db.scalars(stmt).all()
-        
+        all_accounts = db.scalars(
+            select(EnterpriseAccountModel).where(EnterpriseAccountModel.status == "active")
+        ).all()
         if not all_accounts:
             return [], 0
 
-        # 2. Pre-fetch related data to avoid N+1 queries
-        account_ids = [acc.id for acc in all_accounts]
-        
-        # account_id -> billing_plan_binding
-        acc_plan_stmt = select(EnterpriseAccountBillingPlanModel).where(
-            EnterpriseAccountBillingPlanModel.enterprise_account_id.in_(account_ids)
+        account_ids = [account.id for account in all_accounts]
+        account_plans = {
+            account_plan.enterprise_account_id: account_plan
+            for account_plan in db.scalars(
+                select(EnterpriseAccountBillingPlanModel).where(
+                    EnterpriseAccountBillingPlanModel.enterprise_account_id.in_(account_ids)
+                )
+            ).all()
+        }
+
+        plan_ids = [account_plan.plan_id for account_plan in account_plans.values()]
+        enterprise_plans = (
+            {
+                plan.id: plan
+                for plan in db.scalars(
+                    select(EnterpriseBillingPlanModel).where(
+                        EnterpriseBillingPlanModel.id.in_(plan_ids)
+                    )
+                ).all()
+            }
+            if plan_ids
+            else {}
         )
-        acc_plans = {ap.enterprise_account_id: ap for ap in db.scalars(acc_plan_stmt).all()}
-        
-        # plan_id -> enterprise_plan
-        plan_ids = [ap.plan_id for ap in acc_plans.values()]
-        ent_plans = {}
-        if plan_ids:
-            ent_plan_stmt = select(EnterpriseBillingPlanModel).where(
-                EnterpriseBillingPlanModel.id.in_(plan_ids)
-            )
-            ent_plans = {p.id: p for p in db.scalars(ent_plan_stmt).all()}
+
+        canonical_plans = B2BAuditService._prefetch_canonical_plans(db, plan_ids)
+        bindings = B2BAuditService._prefetch_bindings(
+            db,
+            canonical_plan_ids=[plan.id for plan in canonical_plans.values()],
+        )
+        quotas = B2BAuditService._prefetch_quotas(
+            db,
+            binding_ids=[binding.id for binding in bindings.values()],
+        )
 
         entries: list[B2BAuditEntry] = []
         for account in all_accounts:
-            acc_plan = acc_plans.get(account.id)
-            ent_plan = ent_plans.get(acc_plan.plan_id) if acc_plan else None
-            
-            entry = B2BAuditService._audit_account(db, account, acc_plan=acc_plan, ent_plan=ent_plan)
-            
-            # Apply filters
+            account_plan = account_plans.get(account.id)
+            enterprise_plan = (
+                enterprise_plans.get(account_plan.plan_id) if account_plan is not None else None
+            )
+            canonical_plan = (
+                canonical_plans.get(account_plan.plan_id) if account_plan is not None else None
+            )
+            binding = bindings.get(canonical_plan.id) if canonical_plan is not None else None
+            quota_models = quotas.get(binding.id) if binding is not None else None
+
+            entry = B2BAuditService._audit_account(
+                db,
+                account,
+                acc_plan=account_plan,
+                ent_plan=enterprise_plan,
+                canonical_plan=canonical_plan,
+                binding=binding,
+                quota_models=quota_models,
+            )
+
             if resolution_source_filter and entry.resolution_source != resolution_source_filter:
                 continue
-            
-            if blocker_only and entry.resolution_source not in ("settings_fallback", "canonical_disabled"):
+            if blocker_only and entry.resolution_source not in {
+                "settings_fallback",
+                "canonical_disabled",
+            }:
                 continue
-                
+
             entries.append(entry)
 
-        # 3. Pagination
         total_count = len(entries)
         start_idx = (page - 1) * page_size
         end_idx = start_idx + page_size
-        paginated_entries = entries[start_idx:end_idx]
+        return entries[start_idx:end_idx], total_count
 
-        return paginated_entries, total_count
+    @staticmethod
+    def _prefetch_canonical_plans(
+        db: Session,
+        enterprise_plan_ids: list[int],
+    ) -> dict[int, PlanCatalogModel]:
+        if not enterprise_plan_ids:
+            return {}
+
+        return {
+            plan.source_id: plan
+            for plan in db.scalars(
+                select(PlanCatalogModel).where(
+                    PlanCatalogModel.source_type
+                    == SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
+                    PlanCatalogModel.source_id.in_(enterprise_plan_ids),
+                    PlanCatalogModel.audience == Audience.B2B,
+                    PlanCatalogModel.is_active,
+                )
+            ).all()
+            if plan.source_id is not None
+        }
+
+    @staticmethod
+    def _prefetch_bindings(
+        db: Session,
+        *,
+        canonical_plan_ids: list[int],
+    ) -> dict[int, PlanFeatureBindingModel]:
+        if not canonical_plan_ids:
+            return {}
+
+        return {
+            binding.plan_id: binding
+            for binding in db.scalars(
+                select(PlanFeatureBindingModel)
+                .join(
+                    FeatureCatalogModel,
+                    PlanFeatureBindingModel.feature_id == FeatureCatalogModel.id,
+                )
+                .where(
+                    PlanFeatureBindingModel.plan_id.in_(canonical_plan_ids),
+                    FeatureCatalogModel.feature_code == B2BAuditService.FEATURE_CODE,
+                )
+            ).all()
+        }
+
+    @staticmethod
+    def _prefetch_quotas(
+        db: Session,
+        *,
+        binding_ids: list[int],
+    ) -> dict[int, list[PlanFeatureQuotaModel]]:
+        if not binding_ids:
+            return {}
+
+        quotas_by_binding: dict[int, list[PlanFeatureQuotaModel]] = {
+            binding_id: [] for binding_id in binding_ids
+        }
+        for quota in db.scalars(
+            select(PlanFeatureQuotaModel).where(
+                PlanFeatureQuotaModel.plan_feature_binding_id.in_(binding_ids)
+            )
+        ).all():
+            quotas_by_binding.setdefault(quota.plan_feature_binding_id, []).append(quota)
+        return quotas_by_binding
 
     @staticmethod
     def _audit_account(
-        db: Session, 
+        db: Session,
         account: EnterpriseAccountModel,
         *,
         acc_plan: EnterpriseAccountBillingPlanModel | None = None,
         ent_plan: EnterpriseBillingPlanModel | None = None,
+        canonical_plan: PlanCatalogModel | None = None,
+        binding: PlanFeatureBindingModel | None = None,
+        quota_models: list[PlanFeatureQuotaModel] | None = None,
     ) -> B2BAuditEntry:
-        # Initial default values
-        enterprise_plan_id = ent_plan.id if ent_plan else None
-        enterprise_plan_code = ent_plan.code if ent_plan else None
-        canonical_plan_id = None
-        canonical_plan_code = None
+        enterprise_plan = ent_plan
+        if acc_plan is None:
+            acc_plan = db.scalar(
+                select(EnterpriseAccountBillingPlanModel)
+                .where(EnterpriseAccountBillingPlanModel.enterprise_account_id == account.id)
+                .limit(1)
+            )
+
+        if acc_plan is not None and enterprise_plan is None:
+            enterprise_plan = db.scalar(
+                select(EnterpriseBillingPlanModel)
+                .where(EnterpriseBillingPlanModel.id == acc_plan.plan_id)
+                .limit(1)
+            )
+
+        enterprise_plan_id = enterprise_plan.id if enterprise_plan is not None else None
+        enterprise_plan_code = enterprise_plan.code if enterprise_plan is not None else None
         admin_user_id_present = account.admin_user_id is not None
 
-        # 1. Check admin_user_id
         if not admin_user_id_present:
             return B2BAuditEntry(
                 account_id=account.id,
@@ -148,32 +262,15 @@ class B2BAuditService:
                 manual_review_required=False,
             )
 
-        # 2. Resolve plans
-        # Use provided or fetch if missing (fallback for unit tests or specific calls)
-        if not acc_plan:
-            acc_plan = db.scalar(
-                select(EnterpriseAccountBillingPlanModel)
-                .where(EnterpriseAccountBillingPlanModel.enterprise_account_id == account.id)
-                .limit(1)
-            )
-        
-        enterprise_plan = ent_plan # variable for manual review check
-        if acc_plan and not enterprise_plan:
-            enterprise_plan = db.scalar(
-                select(EnterpriseBillingPlanModel).where(EnterpriseBillingPlanModel.id == acc_plan.plan_id)
-            )
-        
-        if enterprise_plan:
-            enterprise_plan_id = enterprise_plan.id
-            enterprise_plan_code = enterprise_plan.code
+        if canonical_plan is None:
+            canonical_plan = resolve_b2b_canonical_plan(db, account.id)
 
-        canonical_plan = resolve_b2b_canonical_plan(db, account.id)
-        if canonical_plan:
-            canonical_plan_id = canonical_plan.id
-            canonical_plan_code = canonical_plan.plan_code
-        else:
-            # Fallback check for manual review
-            is_manual = enterprise_plan is not None and enterprise_plan.included_monthly_units == 0
+        if canonical_plan is None:
+            manual_review_required = B2BAuditService._is_manual_review_required(
+                enterprise_plan,
+                binding=None,
+                quota_models=None,
+            )
             return B2BAuditEntry(
                 account_id=account.id,
                 company_name=account.company_name,
@@ -183,27 +280,42 @@ class B2BAuditService:
                 canonical_plan_code=None,
                 feature_code=B2BAuditService.FEATURE_CODE,
                 resolution_source="settings_fallback",
-                reason="manual_review_required" if is_manual else "no_canonical_plan",
+                reason=(
+                    "manual_review_required"
+                    if manual_review_required
+                    else "no_canonical_plan"
+                ),
                 binding_status=None,
                 quota_limit=None,
                 remaining=None,
                 window_end=None,
                 admin_user_id_present=True,
-                manual_review_required=is_manual,
+                manual_review_required=manual_review_required,
             )
 
-        # 3. Resolve binding
-        binding = db.scalar(
-            select(PlanFeatureBindingModel)
-            .join(FeatureCatalogModel, PlanFeatureBindingModel.feature_id == FeatureCatalogModel.id)
-            .where(
-                PlanFeatureBindingModel.plan_id == canonical_plan.id,
-                FeatureCatalogModel.feature_code == B2BAuditService.FEATURE_CODE,
-            )
-        )
+        canonical_plan_id = canonical_plan.id
+        canonical_plan_code = canonical_plan.plan_code
 
-        if not binding:
-            is_manual = enterprise_plan is not None and enterprise_plan.included_monthly_units == 0
+        if binding is None:
+            binding = db.scalar(
+                select(PlanFeatureBindingModel)
+                .join(
+                    FeatureCatalogModel,
+                    PlanFeatureBindingModel.feature_id == FeatureCatalogModel.id,
+                )
+                .where(
+                    PlanFeatureBindingModel.plan_id == canonical_plan.id,
+                    FeatureCatalogModel.feature_code == B2BAuditService.FEATURE_CODE,
+                )
+                .limit(1)
+            )
+
+        if binding is None:
+            manual_review_required = B2BAuditService._is_manual_review_required(
+                enterprise_plan,
+                binding=None,
+                quota_models=None,
+            )
             return B2BAuditEntry(
                 account_id=account.id,
                 company_name=account.company_name,
@@ -213,16 +325,15 @@ class B2BAuditService:
                 canonical_plan_code=canonical_plan_code,
                 feature_code=B2BAuditService.FEATURE_CODE,
                 resolution_source="settings_fallback",
-                reason="manual_review_required" if is_manual else "no_binding",
+                reason="manual_review_required" if manual_review_required else "no_binding",
                 binding_status="missing",
                 quota_limit=None,
                 remaining=None,
                 window_end=None,
                 admin_user_id_present=True,
-                manual_review_required=is_manual,
+                manual_review_required=manual_review_required,
             )
 
-        # 4. Resolve status
         if not binding.is_enabled or binding.access_mode == AccessMode.DISABLED:
             return B2BAuditEntry(
                 account_id=account.id,
@@ -261,51 +372,22 @@ class B2BAuditService:
                 manual_review_required=False,
             )
 
-        if binding.access_mode == AccessMode.QUOTA:
-            quotas_models = db.scalars(
+        if quota_models is None:
+            quota_models = db.scalars(
                 select(PlanFeatureQuotaModel).where(
                     PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
                 )
             ).all()
 
-            if not quotas_models:
-                is_manual = enterprise_plan is not None and enterprise_plan.included_monthly_units == 0
-                return B2BAuditEntry(
-                    account_id=account.id,
-                    company_name=account.company_name,
-                    enterprise_plan_id=enterprise_plan_id,
-                    enterprise_plan_code=enterprise_plan_code,
-                    canonical_plan_id=canonical_plan_id,
-                    canonical_plan_code=canonical_plan_code,
-                    feature_code=B2BAuditService.FEATURE_CODE,
-                    resolution_source="settings_fallback",
-                    reason="manual_review_required" if is_manual else "no_binding", # logically no quota defined
-                    binding_status="quota",
-                    quota_limit=None,
-                    remaining=None,
-                    window_end=None,
-                    admin_user_id_present=True,
-                    manual_review_required=is_manual,
-                )
-
-            # For B2B audit, we take the first quota (usually only one: calls/month)
-            q_model = quotas_models[0]
-            quota_def = QuotaDefinition(
-                quota_key=q_model.quota_key,
-                quota_limit=q_model.quota_limit,
-                period_unit=q_model.period_unit.value,
-                period_value=q_model.period_value,
-                reset_mode=q_model.reset_mode.value,
-            )
-            
-            # Read-only usage call
-            usage_state = QuotaUsageService.get_usage(
-                db,
-                user_id=account.admin_user_id,
-                feature_code=B2BAuditService.FEATURE_CODE,
-                quota=quota_def,
-            )
-
+        valid_quota_models = [
+            quota_model for quota_model in quota_models if quota_model.quota_limit > 0
+        ]
+        manual_review_required = B2BAuditService._is_manual_review_required(
+            enterprise_plan,
+            binding=binding,
+            quota_models=valid_quota_models,
+        )
+        if not valid_quota_models:
             return B2BAuditEntry(
                 account_id=account.id,
                 company_name=account.company_name,
@@ -314,17 +396,30 @@ class B2BAuditService:
                 canonical_plan_id=canonical_plan_id,
                 canonical_plan_code=canonical_plan_code,
                 feature_code=B2BAuditService.FEATURE_CODE,
-                resolution_source="canonical_quota",
-                reason="quota_binding_active",
+                resolution_source="settings_fallback",
+                reason="manual_review_required" if manual_review_required else "no_binding",
                 binding_status="quota",
-                quota_limit=usage_state.quota_limit,
-                remaining=usage_state.remaining,
-                window_end=usage_state.window_end,
+                quota_limit=None,
+                remaining=None,
+                window_end=None,
                 admin_user_id_present=True,
-                manual_review_required=False,
+                manual_review_required=manual_review_required,
             )
 
-        # Fallback (should not happen with AccessMode enum)
+        quota_model = valid_quota_models[0]
+        quota_def = QuotaDefinition(
+            quota_key=quota_model.quota_key,
+            quota_limit=quota_model.quota_limit,
+            period_unit=quota_model.period_unit.value,
+            period_value=quota_model.period_value,
+            reset_mode=quota_model.reset_mode.value,
+        )
+        usage_state = QuotaUsageService.get_usage(
+            db,
+            user_id=account.admin_user_id,
+            feature_code=B2BAuditService.FEATURE_CODE,
+            quota=quota_def,
+        )
         return B2BAuditEntry(
             account_id=account.id,
             company_name=account.company_name,
@@ -333,12 +428,27 @@ class B2BAuditService:
             canonical_plan_id=canonical_plan_id,
             canonical_plan_code=canonical_plan_code,
             feature_code=B2BAuditService.FEATURE_CODE,
-            resolution_source="settings_fallback",
-            reason="no_binding",
-            binding_status=None,
-            quota_limit=None,
-            remaining=None,
-            window_end=None,
+            resolution_source="canonical_quota",
+            reason="quota_binding_active",
+            binding_status="quota",
+            quota_limit=usage_state.quota_limit,
+            remaining=usage_state.remaining,
+            window_end=usage_state.window_end,
             admin_user_id_present=True,
             manual_review_required=False,
         )
+
+    @staticmethod
+    def _is_manual_review_required(
+        enterprise_plan: EnterpriseBillingPlanModel | None,
+        *,
+        binding: PlanFeatureBindingModel | None,
+        quota_models: list[PlanFeatureQuotaModel] | None,
+    ) -> bool:
+        if enterprise_plan is None or enterprise_plan.included_monthly_units != 0:
+            return False
+        if binding is None:
+            return True
+        if quota_models is None:
+            return True
+        return len(quota_models) == 0

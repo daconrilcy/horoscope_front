@@ -387,10 +387,23 @@ Fichiers modifiés :
 
 ### Agent Model Used
 
-claude-sonnet-4-6
+gpt-5-codex
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Code review complet effectue sur le service, le router et les tests de la story 61.19.
+- Correction du cas quota canonique invalide (`quota_limit <= 0`) pour forcer `settings_fallback` et `manual_review_required`.
+- Suppression des N+1 evitables sur la liste d'audit via prechargement des plans canoniques, bindings et quotas.
+- Alignement des tests annonces dans la story avec des cas reels `no_binding`, `binding_status` et `manual_review_required`.
+- Validation executee dans le venv avec `ruff check` et la suite de non-regression demandee.
+
 ### File List
+
+- backend/app/api/v1/routers/b2b_entitlements_audit.py
+- backend/app/services/b2b_api_entitlement_gate.py
+- backend/app/services/b2b_audit_service.py
+- backend/app/services/b2b_canonical_plan_resolver.py
+- backend/app/tests/integration/test_b2b_entitlements_audit.py
+- backend/app/tests/unit/test_b2b_audit_service.py

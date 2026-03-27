@@ -30,7 +30,7 @@ def resolve_b2b_canonical_plan(db: Session, account_id: int) -> PlanCatalogModel
             PlanCatalogModel.source_type == SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
             PlanCatalogModel.source_id == account_plan.plan_id,
             PlanCatalogModel.audience == Audience.B2B,
-            PlanCatalogModel.is_active == True,
+            PlanCatalogModel.is_active,
         )
         .limit(1)
     )

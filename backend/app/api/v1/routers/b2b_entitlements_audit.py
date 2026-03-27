@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Literal
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
@@ -12,7 +12,7 @@ from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_u
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
-from app.services.b2b_audit_service import B2BAuditEntry, B2BAuditService
+from app.services.b2b_audit_service import B2BAuditService
 
 
 class ResponseMeta(BaseModel):
@@ -61,6 +61,12 @@ class B2BAuditListApiResponse(BaseModel):
 
 
 router = APIRouter(prefix="/v1/ops/b2b/entitlements", tags=["ops-b2b-entitlements"])
+VALID_RESOLUTION_SOURCES = {
+    "canonical_quota",
+    "canonical_unlimited",
+    "canonical_disabled",
+    "settings_fallback",
+}
 
 
 def _error_response(
@@ -134,26 +140,17 @@ def get_b2b_entitlements_audit(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    
-    # 1. Auth check
+
     role_error = _ensure_ops_role(current_user, request_id)
     if role_error is not None:
         return role_error
-        
-    # 2. Rate limit
+
     limit_error = _enforce_limits(
         user=current_user, request_id=request_id, operation="entitlements_audit"
     )
     if limit_error is not None:
         return limit_error
 
-    # 3. Input validation
-    VALID_RESOLUTION_SOURCES = {
-        "canonical_quota",
-        "canonical_unlimited",
-        "canonical_disabled",
-        "settings_fallback",
-    }
     if resolution_source is not None and resolution_source not in VALID_RESOLUTION_SOURCES:
         return _error_response(
             status_code=422,
@@ -163,7 +160,6 @@ def get_b2b_entitlements_audit(
             details={"allowed": sorted(VALID_RESOLUTION_SOURCES), "received": resolution_source},
         )
 
-    # 4. Service call
     items, total_count = B2BAuditService.list_b2b_entitlement_audit(
         db,
         page=page,
@@ -174,7 +170,9 @@ def get_b2b_entitlements_audit(
 
     return {
         "data": {
-            "items": [B2BAuditEntryPayload(**vars(item)).model_dump(mode="json") for item in items],
+            "items": [
+                B2BAuditEntryPayload(**vars(item)).model_dump(mode="json") for item in items
+            ],
             "total_count": total_count,
             "page": page,
             "page_size": page_size,

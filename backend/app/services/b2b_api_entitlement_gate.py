@@ -8,9 +8,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
-from app.infra.db.models.enterprise_billing import (
-    EnterpriseAccountBillingPlanModel,
-)
 from app.infra.db.models.product_entitlements import (
     AccessMode,
     FeatureCatalogModel,
