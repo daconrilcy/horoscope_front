@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
 
@@ -15,6 +17,7 @@ from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,
     FeatureCatalogModel,
+    FeatureUsageCounterModel,
     PeriodUnit,
     PlanCatalogModel,
     PlanFeatureBindingModel,
@@ -83,7 +86,11 @@ def _create_enterprise_api_key(email: str) -> str:
         return created.api_key
 
 
-def _create_enterprise_api_key_with_canonical_plan(email: str) -> str:
+def _create_enterprise_api_key_with_canonical_plan(
+    email: str,
+    access_mode: AccessMode = AccessMode.UNLIMITED,
+    quota_limit: int = 100,
+) -> str:
     with SessionLocal() as db:
         auth = AuthService.register(
             db,
@@ -142,11 +149,24 @@ def _create_enterprise_api_key_with_canonical_plan(email: str) -> str:
         binding = PlanFeatureBindingModel(
             plan_id=plan.id,
             feature_id=feature.id,
-            access_mode=AccessMode.UNLIMITED,
+            access_mode=access_mode,
             is_enabled=True,
             source_origin="manual",
         )
         db.add(binding)
+        db.flush()
+
+        if access_mode == AccessMode.QUOTA:
+            quota = PlanFeatureQuotaModel(
+                plan_feature_binding_id=binding.id,
+                quota_key="calls",
+                quota_limit=quota_limit,
+                period_unit=PeriodUnit.MONTH,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+                source_origin="manual",
+            )
+            db.add(quota)
 
         created = EnterpriseCredentialsService.create_credential(db, admin_user_id=auth.user.id)
         db.commit()
@@ -306,29 +326,31 @@ def test_b2b_astrology_returns_weekly_by_sign_with_valid_api_key() -> None:
 
 def test_b2b_usage_summary_returns_metrics_for_credential() -> None:
     _cleanup_tables()
-    api_key = _create_enterprise_api_key("b2b-usage-summary@example.com")
+    api_key = _create_enterprise_api_key_with_canonical_plan(
+        "b2b-usage-summary@example.com", access_mode=AccessMode.QUOTA, quota_limit=100
+    )
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db)
-        # On doit simuler l'usage manuellement car astrology n'appelle plus B2BUsageService
+        from datetime import timezone
+
+        from app.services.quota_window_resolver import QuotaWindowResolver
         auth = db.scalar(
             select(UserModel).where(UserModel.email == "b2b-usage-summary@example.com")
         )
-        account = db.scalar(
-            select(EnterpriseAccountModel).where(EnterpriseAccountModel.admin_user_id == auth.id)
-        )
-        credential = db.scalar(
-            select(EnterpriseApiCredentialModel).where(
-                EnterpriseApiCredentialModel.enterprise_account_id == account.id
+        ref_dt = datetime.now(timezone.utc)
+        window = QuotaWindowResolver.compute_window(PeriodUnit.MONTH, 1, ResetMode.CALENDAR, ref_dt)
+        db.add(
+            FeatureUsageCounterModel(
+                user_id=auth.id,
+                feature_code="b2b_api_access",
+                quota_key="calls",
+                period_unit=PeriodUnit.MONTH,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+                window_start=window.window_start,
+                window_end=window.window_end,
+                used_count=1,
             )
-        )
-        from app.services.b2b_usage_service import B2BUsageService
-
-        B2BUsageService.consume_or_raise(
-            db,
-            account_id=account.id,
-            credential_id=credential.id,
-            request_id="test-manual-consume",
-            units=1,
         )
         db.commit()
 
@@ -339,9 +361,11 @@ def test_b2b_usage_summary_returns_metrics_for_credential() -> None:
     assert summary.status_code == 200
     payload = summary.json()
     assert payload["meta"]["request_id"] == "rid-b2b-usage-summary"
-    assert payload["data"]["daily_consumed"] >= 1
-    assert payload["data"]["monthly_consumed"] >= 1
-    assert payload["data"]["limit_mode"] in {"block", "overage"}
+    assert payload["data"]["source"] == "canonical"
+    assert payload["data"]["access_mode"] == "quota"
+    assert payload["data"]["used"] == 1
+    assert payload["data"]["limit"] == 100
+    assert payload["data"]["remaining"] == 99
 
 
 def test_b2b_astrology_returns_429_when_rate_limited(monkeypatch: object) -> None:

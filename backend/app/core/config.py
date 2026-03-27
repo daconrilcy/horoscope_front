@@ -216,6 +216,7 @@ class Settings:
         self.enable_reference_seed_admin_fallback = self._parse_bool_env(
             "ENABLE_REFERENCE_SEED_ADMIN_FALLBACK", default=False
         )
+        # legacy unused since story 61.22
         self.b2b_daily_usage_limit = int(os.getenv("B2B_DAILY_USAGE_LIMIT", "500"))
         self.b2b_monthly_usage_limit = int(os.getenv("B2B_MONTHLY_USAGE_LIMIT", "10000"))
         self.b2b_usage_limit_mode = os.getenv("B2B_USAGE_LIMIT_MODE", "block").strip().lower()

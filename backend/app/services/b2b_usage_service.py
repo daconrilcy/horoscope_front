@@ -61,11 +61,13 @@ class B2BUsageSummaryData(BaseModel):
     overage_applied: bool
 
 
-# Deprecated runtime fallback kept only for /v1/b2b/usage/* until future decommission.
+# ZERO CONSUMERS: ce service n'a plus aucun appel en production depuis la story 61.22.
+# Legacy implementation kept only for backward-compatible unit coverage until final deletion.
 class B2BUsageService:
     """
-    Deprecated: ce service n'est plus appelé dans le flux runtime principal depuis la story 61.21.
-    Il reste actif pour les endpoints /v1/b2b/usage/* jusqu'à leur décommission future.
+    Deprecated: ce service n'a plus aucun consumer runtime depuis la story 61.22.
+    Il est conservé uniquement pour préserver les tests unitaires legacy
+    jusqu'à sa suppression définitive.
 
     Service de gestion des quotas d'usage B2B.
 

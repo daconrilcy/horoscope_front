@@ -15,10 +15,10 @@ from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
 from app.services.audit_service import AuditEventCreatePayload, AuditService, AuditServiceError
-from app.services.b2b_usage_service import (
-    B2BUsageService,
-    B2BUsageServiceError,
-    B2BUsageSummaryData,
+from app.services.b2b_api_entitlement_gate import B2BApiAccessDeniedError
+from app.services.b2b_canonical_usage_service import (
+    B2BCanonicalUsageSummary,
+    B2BCanonicalUsageSummaryService,
 )
 
 
@@ -38,11 +38,13 @@ class ErrorEnvelope(BaseModel):
 
 
 class B2BUsageSummaryApiResponse(BaseModel):
-    data: B2BUsageSummaryData
+    data: B2BCanonicalUsageSummary
     meta: ResponseMeta
 
 
 router = APIRouter(prefix="/v1/b2b/usage", tags=["b2b-usage"])
+
+# Source de vérité: feature_usage_counters via QuotaUsageService (depuis story 61.22)
 
 
 def _error_response(
@@ -108,6 +110,7 @@ def _record_usage_audit(
 @router.get(
     "/summary",
     response_model=B2BUsageSummaryApiResponse,
+    response_model_exclude_none=True,
     responses={
         401: {"model": ErrorEnvelope},
         403: {"model": ErrorEnvelope},
@@ -124,10 +127,9 @@ def get_b2b_usage_summary(
     request_id = resolve_request_id(request)
     try:
         _enforce_limits(client=client, operation="summary")
-        summary = B2BUsageService.get_usage_summary(
+        summary = B2BCanonicalUsageSummaryService.get_summary(
             db,
             account_id=client.account_id,
-            credential_id=client.credential_id,
         )
         _record_usage_audit(
             db,
@@ -149,7 +151,7 @@ def get_b2b_usage_summary(
             message=error.message,
             details=error.details,
         )
-    except B2BUsageServiceError as error:
+    except B2BApiAccessDeniedError as error:
         db.rollback()
         try:
             _record_usage_audit(
@@ -171,9 +173,8 @@ def get_b2b_usage_summary(
                 message="audit service is unavailable",
                 details={},
             )
-        status_code = 429 if error.code == "b2b_quota_exceeded" else 422
         return _error_response(
-            status_code=status_code,
+            status_code=403,
             request_id=request_id,
             code=error.code,
             message=error.message,
