@@ -136,45 +136,54 @@ def get_weekly_by_sign(
     if limit_error is not None:
         return limit_error
 
+    # Reset the read transaction opened during auth so the quota consumption
+    # and downstream generation share an explicit atomic transaction.
+    db.rollback()
+
     try:
-        increment_counter("b2b_api_calls_total", 1.0)
+        with db.begin():
+            increment_counter("b2b_api_calls_total", 1.0)
 
-        gate_result = B2BApiEntitlementGate.check_and_consume(db, account_id=client.account_id)
+            gate_result = B2BApiEntitlementGate.check_and_consume(db, account_id=client.account_id)
 
-        if gate_result.path == "settings_fallback":
-            B2BUsageService.consume_or_raise(
+            if gate_result.path == "settings_fallback":
+                B2BUsageService.consume_or_raise(
+                    db,
+                    account_id=client.account_id,
+                    credential_id=client.credential_id,
+                    request_id=request_id,
+                    units=1,
+                )
+                quota_info = {"source": "settings_fallback"}
+            elif gate_result.path == "canonical_quota":
+                # Le canonique a déjà consommé.
+                state = gate_result.usage_states[0] if gate_result.usage_states else None
+                quota_info = {
+                    "source": "canonical",
+                    "limit": state.quota_limit if state else None,
+                    "remaining": state.remaining if state else None,
+                    "window_end": state.window_end if state else None,
+                }
+            else:
+                quota_info = {"source": "canonical_unlimited"}
+
+            editorial_config = B2BEditorialService.get_active_config(
                 db,
                 account_id=client.account_id,
-                credential_id=client.credential_id,
-                request_id=request_id,
-                units=1,
             )
-            quota_info = {"source": "settings_fallback"}
-        elif gate_result.path == "canonical_quota":
-            # Le canonique a déjà consommé
-            state = gate_result.usage_states[0] if gate_result.usage_states else None
-            quota_info = {
-                "source": "canonical",
-                "limit": state.quota_limit if state else None,
-                "remaining": state.remaining if state else None,
-                "window_end": state.window_end if state else None,
-            }
-        else:
-            # canonical_unlimited
-            quota_info = {"source": "canonical_unlimited"}
-
-        editorial_config = B2BEditorialService.get_active_config(db, account_id=client.account_id)
-        if editorial_config.version_number > 0:
-            increment_counter("b2b_editorial_config_used_total", 1.0)
-        logger.info(
-            "b2b_editorial_config_applied request_id=%s account_id=%s credential_id=%s version=%s",
-            request_id,
-            client.account_id,
-            client.credential_id,
-            editorial_config.version_number,
-        )
-        data = B2BAstrologyService.get_weekly_by_sign(db, editorial_config=editorial_config)
-        db.commit()
+            if editorial_config.version_number > 0:
+                increment_counter("b2b_editorial_config_used_total", 1.0)
+            logger.info(
+                (
+                    "b2b_editorial_config_applied request_id=%s "
+                    "account_id=%s credential_id=%s version=%s"
+                ),
+                request_id,
+                client.account_id,
+                client.credential_id,
+                editorial_config.version_number,
+            )
+            data = B2BAstrologyService.get_weekly_by_sign(db, editorial_config=editorial_config)
         return {
             "data": data.model_dump(mode="json"),
             "meta": {"request_id": request_id},
@@ -195,7 +204,9 @@ def get_weekly_by_sign(
         if isinstance(error, B2BApiAccessDeniedError):
             status_code = 403
         elif isinstance(error, (B2BUsageServiceError, B2BApiQuotaExceededError)):
-            status_code = 429 if error.code in ("b2b_quota_exceeded", "b2b_api_quota_exceeded") else 422
+            status_code = (
+                429 if error.code in ("b2b_quota_exceeded", "b2b_api_quota_exceeded") else 422
+            )
         else:
             status_code = 422
 

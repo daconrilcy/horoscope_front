@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
@@ -16,10 +15,10 @@ from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,
     FeatureCatalogModel,
+    PeriodUnit,
     PlanCatalogModel,
     PlanFeatureBindingModel,
     PlanFeatureQuotaModel,
-    PeriodUnit,
     ResetMode,
     SourceOrigin,
 )
@@ -29,8 +28,6 @@ from app.services.b2b_api_entitlement_gate import (
     B2BApiQuotaExceededError,
 )
 
-logger = logging.getLogger(__name__)
-
 
 def seed_b2b_data(
     db: Session,
@@ -39,6 +36,8 @@ def seed_b2b_data(
     admin_user_id: int | None = 10,
     has_canonical: bool = True,
     access_mode: AccessMode = AccessMode.QUOTA,
+    is_enabled: bool = True,
+    with_binding: bool = True,
 ) -> EnterpriseAccountModel:
     # 1. Create account
     account = EnterpriseAccountModel(
@@ -64,7 +63,10 @@ def seed_b2b_data(
     db.add(ent_plan)
 
     # 3. Binding account to plan
-    acc_plan = EnterpriseAccountBillingPlanModel(enterprise_account_id=account_id, plan_id=ent_plan.id)
+    acc_plan = EnterpriseAccountBillingPlanModel(
+        enterprise_account_id=account_id,
+        plan_id=ent_plan.id,
+    )
     db.add(acc_plan)
 
     # 4. Plan Catalog (Canonical)
@@ -89,11 +91,15 @@ def seed_b2b_data(
     db.flush()
 
     # 6. Plan Feature Binding
+    if not with_binding:
+        db.commit()
+        return account
+
     binding = PlanFeatureBindingModel(
         plan_id=plan_catalog.id,
         feature_id=feature.id,
         access_mode=access_mode,
-        is_enabled=True,
+        is_enabled=is_enabled,
     )
     db.add(binding)
     db.flush()
@@ -142,6 +148,23 @@ def test_check_and_consume_disabled(db_session):
     with pytest.raises(B2BApiAccessDeniedError) as exc:
         B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
     assert exc.value.code == "b2b_api_access_denied"
+    assert exc.value.details["reason"] == "disabled_by_plan"
+
+
+def test_check_and_consume_disabled_when_binding_not_enabled(db_session):
+    seed_b2b_data(
+        db_session,
+        account_id=1,
+        admin_user_id=10,
+        access_mode=AccessMode.QUOTA,
+        is_enabled=False,
+    )
+
+    with pytest.raises(B2BApiAccessDeniedError) as exc:
+        B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
+
+    assert exc.value.code == "b2b_api_access_denied"
+    assert exc.value.details["reason"] == "disabled_by_plan"
 
 
 def test_check_and_consume_quota_exhausted(db_session):
@@ -184,15 +207,31 @@ def test_check_and_consume_fallback_no_canonical(db_session):
     assert result.path == "settings_fallback"
 
 
-def test_check_and_consume_admin_user_missing(db_session):
+def test_check_and_consume_fallback_no_binding(db_session):
+    seed_b2b_data(
+        db_session,
+        account_id=1,
+        admin_user_id=10,
+        has_canonical=True,
+        with_binding=False,
+    )
+
+    result = B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
+
+    assert result.path == "settings_fallback"
+
+
+def test_check_and_consume_admin_user_missing_logs_warning(db_session, caplog):
     # On mock le retour de db.scalar pour simuler un compte avec admin_user_id à None
     mock_account = MagicMock(spec=EnterpriseAccountModel)
     mock_account.admin_user_id = None
 
+    caplog.set_level("WARNING")
     with patch.object(Session, "scalar", return_value=mock_account):
         result = B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
 
     assert result.path == "settings_fallback"
+    assert "admin_user_id_missing" in caplog.text
 
 
 def test_check_and_consume_window_end_is_next_month(db_session):

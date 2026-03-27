@@ -27,7 +27,12 @@ logger = logging.getLogger(__name__)
 
 
 class B2BApiAccessDeniedError(Exception):
-    def __init__(self, code: str, message: str = "B2B API access denied", details: dict | None = None) -> None:
+    def __init__(
+        self,
+        code: str,
+        message: str = "B2B API access denied",
+        details: dict | None = None,
+    ) -> None:
         self.code = code
         self.message = message
         self.details = details or {}
@@ -35,7 +40,12 @@ class B2BApiAccessDeniedError(Exception):
 
 
 class B2BApiQuotaExceededError(Exception):
-    def __init__(self, code: str, message: str = "B2B API quota exceeded", details: dict | None = None) -> None:
+    def __init__(
+        self,
+        code: str,
+        message: str = "B2B API quota exceeded",
+        details: dict | None = None,
+    ) -> None:
         self.code = code
         self.message = message
         self.details = details or {}
@@ -78,7 +88,6 @@ class B2BApiEntitlementGate:
             .where(
                 PlanFeatureBindingModel.plan_id == canonical_plan.id,
                 FeatureCatalogModel.feature_code == B2BApiEntitlementGate.FEATURE_CODE,
-                PlanFeatureBindingModel.is_enabled == True,
             )
         )
         binding = db.scalar(binding_stmt)
@@ -86,9 +95,12 @@ class B2BApiEntitlementGate:
             return B2BApiEntitlementResult(path="settings_fallback")
 
         # 4. Selon l'access_mode
-        if binding.access_mode == AccessMode.DISABLED:
+        if not binding.is_enabled or binding.access_mode == AccessMode.DISABLED:
             # AC: 4 — le canonique gagne même si settings permissifs
-            raise B2BApiAccessDeniedError(code="b2b_api_access_denied")
+            raise B2BApiAccessDeniedError(
+                code="b2b_api_access_denied",
+                details={"reason": "disabled_by_plan"},
+            )
 
         if binding.access_mode == AccessMode.UNLIMITED:
             return B2BApiEntitlementResult(path="canonical_unlimited")
@@ -126,11 +138,16 @@ class B2BApiEntitlementGate:
                     consumed_states.append(state)
                 except QuotaExhaustedError as exc:
                     # AC: 5
-                    raise B2BApiQuotaExceededError(code="b2b_api_quota_exceeded") from exc
+                    raise B2BApiQuotaExceededError(
+                        code="b2b_api_quota_exceeded",
+                        details={
+                            "quota_key": exc.quota_key,
+                            "used": str(exc.used),
+                            "limit": str(exc.limit),
+                        },
+                    ) from exc
 
-            return B2BApiEntitlementResult(
-                path="canonical_quota", usage_states=consumed_states
-            )
+            return B2BApiEntitlementResult(path="canonical_quota", usage_states=consumed_states)
 
         return B2BApiEntitlementResult(path="settings_fallback")
 
@@ -152,7 +169,7 @@ class B2BApiEntitlementGate:
                 PlanCatalogModel.source_type == SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
                 PlanCatalogModel.source_id == account_plan.plan_id,
                 PlanCatalogModel.audience == Audience.B2B,
-                PlanCatalogModel.is_active == True,
+                PlanCatalogModel.is_active,
             )
             .limit(1)
         )

@@ -328,6 +328,7 @@ claude-sonnet-4-6
 ### Debug Log References
 
 ### Completion Notes List
+- Revue BMAD post-implémentation effectuée: correction de la priorité canonique pour les bindings B2B désactivés (`is_enabled=false`), ajout de tests de rollback aval, de fallback sans binding et de décrément quota/mois UTC.
 
 ### File List
 
@@ -336,3 +337,29 @@ claude-sonnet-4-6
 - backend/app/tests/unit/test_b2b_api_entitlement_gate.py (NOUVEAU)
 - backend/app/tests/integration/test_b2b_api_entitlements.py (NOUVEAU)
 - backend/docs/entitlements-canonical-platform.md
+
+## Senior Developer Review (AI)
+
+### Findings
+- HIGH: `backend/app/services/b2b_api_entitlement_gate.py` filtrait les bindings sur `is_enabled=True`, ce qui laissait un binding canonique présent mais désactivé basculer à tort sur le fallback settings au lieu de refuser en `403 b2b_api_access_denied`. Cela violait l’AC4.
+- MEDIUM: la couverture de tests ne verrouillait pas explicitement le cas `disabled_by_plan` via `is_enabled=false`, le fallback sans binding canonique, ni la non-facturation après erreur aval.
+- LOW: plusieurs fichiers 61-18 n’étaient pas conformes `ruff` (imports / longueur de lignes).
+
+### Fixes Applied
+- Priorité canonique corrigée: tout binding `b2b_api_access` présent mais désactivé refuse désormais l’accès, sans passer par `B2BUsageService`.
+- Handler `b2b_astrology` encapsulé dans une transaction explicite après reset du read transaction d’auth pour garantir l’atomicité du débit canonique et du traitement aval.
+- Tests unitaires/integration ajoutés pour:
+  - binding présent mais `is_enabled=false`
+  - fallback sans binding
+  - warning `admin_user_id_missing`
+  - décrément du `remaining` sur deux appels
+  - annulation du débit sur erreur aval
+- Fichiers 61-18 remis en conformité `ruff`.
+
+### Validation
+- `.\.venv\Scripts\Activate.ps1; cd backend; ruff check app/services/b2b_api_entitlement_gate.py app/api/v1/routers/b2b_astrology.py app/tests/unit/test_b2b_api_entitlement_gate.py app/tests/integration/test_b2b_api_entitlements.py`
+- `.\.venv\Scripts\Activate.ps1; cd backend; pytest -q app/tests/unit/test_b2b_api_entitlement_gate.py app/tests/integration/test_b2b_api_entitlements.py app/tests/unit/test_b2b_usage_service.py app/tests/unit/test_entitlement_service.py app/tests/unit/test_quota_usage_service.py app/tests/integration/test_b2b_astrology_api.py`
+
+## Change Log
+
+- 2026-03-27: revue BMAD 61-18 exécutée, correction de la priorité canonique `disabled_by_plan`, durcissement transactionnel du handler B2B, ajout de tests de rollback/fallback/quota, validation `ruff` + tests.
