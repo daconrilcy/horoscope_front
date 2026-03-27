@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
@@ -221,6 +222,49 @@ def test_check_and_consume_fallback_no_binding(db_session):
         B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
 
     assert exc.value.code == "b2b_no_binding"
+
+
+def test_check_and_consume_quota_without_quota_rows(db_session):
+    seed_b2b_data(
+        db_session,
+        account_id=1,
+        admin_user_id=10,
+        has_canonical=True,
+        access_mode=AccessMode.UNLIMITED,
+    )
+    binding = db_session.scalar(select(PlanFeatureBindingModel).limit(1))
+    assert binding is not None
+    binding.access_mode = AccessMode.QUOTA
+    db_session.commit()
+
+    with pytest.raises(B2BApiAccessDeniedError) as exc:
+        B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
+
+    assert exc.value.code == "b2b_no_quota_defined"
+
+
+def test_check_and_consume_unknown_access_mode_logs_warning(db_session, caplog):
+    account = EnterpriseAccountModel(
+        id=1,
+        company_name="Test Co",
+        admin_user_id=10,
+        status="active",
+    )
+    binding = MagicMock(spec=PlanFeatureBindingModel)
+    binding.is_enabled = True
+    binding.access_mode = "surprise-mode"
+
+    caplog.set_level("WARNING")
+    with patch(
+        "app.services.b2b_api_entitlement_gate.resolve_b2b_canonical_plan",
+        return_value=PlanCatalogModel(id=1, plan_code="b2b-test"),
+    ), patch.object(db_session, "scalar", side_effect=[account, binding]):
+
+        with pytest.raises(B2BApiAccessDeniedError) as exc:
+            B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
+
+    assert exc.value.code == "b2b_unknown_access_mode"
+    assert "b2b_gate_blocked" in caplog.text
 
 
 def test_check_and_consume_admin_user_missing_logs_warning(db_session, caplog):

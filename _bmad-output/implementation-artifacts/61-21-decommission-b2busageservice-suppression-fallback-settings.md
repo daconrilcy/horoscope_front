@@ -294,6 +294,21 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+- [Review: 61-21 targeted review] — Correction du lint et factorisation des helpers de seed canoniques dans `test_b2b_astrology_api.py`.
+- [Review: gate denial coverage] — Ajout de tests unitaires couvrant `b2b_no_quota_defined` et `b2b_unknown_access_mode`.
+
 ### Completion Notes List
 
+- Revue de code 61.21 effectuée et toutes les issues confirmées ont été corrigées.
+- `test_b2b_astrology_api.py` a été remis au propre: lint OK, helper quota dédié, assertions explicites sur `quota_info.source == "canonical"`.
+- La couverture de la gate a été complétée pour verrouiller les codes `b2b_no_quota_defined` et `b2b_unknown_access_mode`.
+- `B2BUsageService` conserve maintenant un commentaire de classe deprecated explicite, en plus de la docstring.
+- Les suites ciblées 61.21 et les non-régressions listées dans la story passent en séquentiel dans le venv activé.
+
 ### File List
+
+- `backend/app/services/b2b_api_entitlement_gate.py` : Vérifié en revue contre les AC 1–5, aucune correction fonctionnelle supplémentaire requise.
+- `backend/app/api/v1/routers/b2b_astrology.py` : Vérifié en revue contre les AC 6–9, aucune correction fonctionnelle supplémentaire requise.
+- `backend/app/services/b2b_usage_service.py` : Ajout/validation du commentaire de classe deprecated demandé par l’AC 10.
+- `backend/app/tests/unit/test_b2b_api_entitlement_gate.py` : Ajout de couverture pour `b2b_no_quota_defined` et `b2b_unknown_access_mode`.
+- `backend/app/tests/integration/test_b2b_astrology_api.py` : Nettoyage lint, helper quota dédié, assertions explicites sur `quota_info`.

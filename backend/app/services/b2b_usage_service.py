@@ -61,6 +61,7 @@ class B2BUsageSummaryData(BaseModel):
     overage_applied: bool
 
 
+# Deprecated runtime fallback kept only for /v1/b2b/usage/* until future decommission.
 class B2BUsageService:
     """
     Deprecated: ce service n'est plus appelé dans le flux runtime principal depuis la story 61.21.
