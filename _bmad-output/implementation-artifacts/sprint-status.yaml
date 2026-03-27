@@ -34,7 +34,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-25 00:00:00
-last_updated: 2026-03-27 (61-19 story created)
+last_updated: 2026-03-27 (61-20 story created)
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -568,3 +568,4 @@ development_status:
   61-17-decommission-endpoint-billing-quota-cleanup-quota-service: done
   61-18-migration-controle-acces-b2b-api-entitlements-canoniques: done
   61-19-observabilite-inventaire-b2b-settings-fallback: done
+  61-20-resorption-blockers-b2b-bascule-canonique: done

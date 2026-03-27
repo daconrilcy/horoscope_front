@@ -24,6 +24,7 @@ from app.api.v1.routers.auth import router as auth_router
 from app.api.v1.routers.b2b_astrology import router as b2b_astrology_router
 from app.api.v1.routers.b2b_billing import router as b2b_billing_router
 from app.api.v1.routers.b2b_editorial import router as b2b_editorial_router
+from app.api.v1.routers.b2b_entitlement_repair import router as b2b_entitlement_repair_router
 from app.api.v1.routers.b2b_entitlements_audit import router as b2b_entitlements_audit_router
 from app.api.v1.routers.b2b_reconciliation import router as b2b_reconciliation_router
 from app.api.v1.routers.b2b_usage import router as b2b_usage_router
@@ -525,6 +526,7 @@ app.include_router(b2b_billing_router)
 app.include_router(b2b_editorial_router)
 app.include_router(b2b_reconciliation_router)
 app.include_router(b2b_usage_router)
+app.include_router(b2b_entitlement_repair_router)
 app.include_router(b2b_entitlements_audit_router)
 app.include_router(chat_router)
 app.include_router(consultations_router, prefix="/v1/consultations", tags=["Consultations"])
