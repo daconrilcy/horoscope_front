@@ -159,44 +159,44 @@ afin de savoir immédiatement ce qui nécessite mon attention, ce qui est en cou
 
 ## Tasks / Subtasks
 
-- [ ] **Ajouter les schémas Pydantic** (AC: 5)
-  - [ ] `ReviewQueueItem(MutationAuditItem)` avec les 5 champs dérivés
-  - [ ] `ReviewQueueListData`, `ReviewQueueApiResponse`
-  - [ ] `ReviewQueueSummaryData`, `ReviewQueueSummaryApiResponse`
+- [x] **Ajouter les schémas Pydantic** (AC: 5)
+  - [x] `ReviewQueueItem(MutationAuditItem)` avec les 5 champs dérivés
+  - [x] `ReviewQueueListData`, `ReviewQueueApiResponse`
+  - [x] `ReviewQueueSummaryData`, `ReviewQueueSummaryApiResponse`
 
-- [ ] **Helper `_build_filtered_review_queue_rows()` + `_to_queue_item()`** (AC: 2, 6)
-  - [ ] Créer `_build_filtered_review_queue_rows(db, *, request_id, ...)` — retourne `list[tuple] | JSONResponse(400)`
-  - [ ] Créer `_to_queue_item(audit, *, diff, review_record, eff_status, now_utc)` — **sans** `include_payloads` (toujours False)
-  - [ ] `effective_review_status` via `_compute_review_state(diff.risk_level, review_record)` dans le helper — pas de duplication
+- [x] **Helper `_build_filtered_review_queue_rows()` + `_to_queue_item()`** (AC: 2, 6)
+  - [x] Créer `_build_filtered_review_queue_rows(db, *, request_id, ...)` — retourne `list[tuple] | JSONResponse(400)`
+  - [x] Créer `_to_queue_item(audit, *, diff, review_record, eff_status, now_utc)` — **sans** `include_payloads` (toujours False)
+  - [x] `effective_review_status` via `_compute_review_state(diff.risk_level, review_record)` dans le helper — pas de duplication
 
-- [ ] **Constante `_STATUS_PRIORITY`** (AC: 1)
-  - [ ] Définir dans le router : `_STATUS_PRIORITY = {"pending_review": 0, "investigating": 1, "acknowledged": 2, "expected": 3, "closed": 4, None: 5}`
+- [x] **Constante `_STATUS_PRIORITY`** (AC: 1)
+  - [x] Définir dans le router : `_STATUS_PRIORITY = {"pending_review": 0, "investigating": 1, "acknowledged": 2, "expected": 3, "closed": 4, None: 5}`
 
-- [ ] **Endpoint GET `/mutation-audits/review-queue`** (AC: 1, 4)
-  - [ ] Déclarer avant `/mutation-audits/{audit_id}` dans le fichier
-  - [ ] Filtres SQL via `CanonicalEntitlementMutationAuditQueryService.list_mutation_audits()`
-  - [ ] Garde `_DIFF_FILTER_MAX` sur le count SQL
-  - [ ] Chargement batch des revues via `_load_reviews_by_audit_ids()`
-  - [ ] Diff in-memory + filtre `risk_level` + filtre `effective_review_status` + filtre `incident_key`
-  - [ ] Tri par `(_STATUS_PRIORITY[eff_status], occurred_at)` puis pagination
-  - [ ] Retour 200 avec `ReviewQueueApiResponse`
+- [x] **Endpoint GET `/mutation-audits/review-queue`** (AC: 1, 4)
+  - [x] Déclarer avant `/mutation-audits/{audit_id}` dans le fichier
+  - [x] Filtres SQL via `CanonicalEntitlementMutationAuditQueryService.list_mutation_audits()`
+  - [x] Garde `_DIFF_FILTER_MAX` sur le count SQL
+  - [x] Chargement batch des revues via `_load_reviews_by_audit_ids()`
+  - [x] Diff in-memory + filtre `risk_level` + filtre `effective_review_status` + filtre `incident_key`
+  - [x] Tri par `(_STATUS_PRIORITY[eff_status], occurred_at)` puis pagination
+  - [x] Retour 200 avec `ReviewQueueApiResponse`
 
-- [ ] **Endpoint GET `/mutation-audits/review-queue/summary`** (AC: 3, 4)
-  - [ ] Déclarer avant `/mutation-audits/{audit_id}` dans le fichier (et avant `/review-queue` pour éviter ambiguïté)
-  - [ ] Mêmes filtres SQL + garde `_DIFF_FILTER_MAX`
-  - [ ] Agrégation des compteurs par `effective_review_status` + `high_unreviewed_count`
-  - [ ] Retour 200 avec `ReviewQueueSummaryApiResponse`
+- [x] **Endpoint GET `/mutation-audits/review-queue/summary`** (AC: 3, 4)
+  - [x] Déclarer avant `/mutation-audits/{audit_id}` dans le fichier (et avant `/review-queue` pour éviter ambiguïté)
+  - [x] Mêmes filtres SQL + garde `_DIFF_FILTER_MAX`
+  - [x] Agrégation des compteurs par `effective_review_status` + `high_unreviewed_count`
+  - [x] Retour 200 avec `ReviewQueueSummaryApiResponse`
 
-- [ ] **Tests d'intégration** (AC: 7)
-  - [ ] Enrichir `test_ops_entitlement_mutation_audits_api.py` avec 12 nouveaux cas
+- [x] **Tests d'intégration** (AC: 7)
+  - [x] Enrichir `test_ops_entitlement_mutation_audits_api.py` avec les cas de work queue et summary, puis compléter la couverture en code review (401, file vide, feature filter, age fields)
 
-- [ ] **Documentation** (AC: 8)
-  - [ ] Section 61.37 dans `backend/docs/entitlements-canonical-platform.md`
+- [x] **Documentation** (AC: 8)
+  - [x] Section 61.37 dans `backend/docs/entitlements-canonical-platform.md`
 
-- [ ] **Validation finale**
-  - [ ] `ruff check` — zéro erreur
-  - [ ] `pytest unit` — tous verts
-  - [ ] `pytest integration` — tous verts (dont les 54 existants + 12 nouveaux)
+- [x] **Validation finale**
+  - [x] `ruff check` — zéro erreur
+  - [x] `pytest unit` — couvert via `pytest -q` backend complet
+  - [x] `pytest integration` — verts sur `test_ops_entitlement_mutation_audits_api.py` et sur la suite backend complète
 
 ---
 
@@ -647,8 +647,10 @@ claude-sonnet-4-6
 - Added `GET /v1/ops/entitlements/mutation-audits/review-queue/summary` endpoint.
 - Added `GET /v1/ops/entitlements/mutation-audits/review-queue` endpoint.
 - Updated `entitlements-canonical-platform.md` documentation.
-- Added 12 integration tests in `test_ops_entitlement_mutation_audits_api.py`.
-- Verified all 63 tests pass.
+- Completed a follow-up code review and fixed the review issues in test coverage and documentation accuracy.
+- Brought the integration suite for `test_ops_entitlement_mutation_audits_api.py` to 66 passing tests.
+- Verified `ruff check .` passes in `backend/`.
+- Verified `pytest -q` passes in `backend/` (`2383 passed, 3 skipped`).
 
 ### File List
 
@@ -659,3 +661,4 @@ claude-sonnet-4-6
 ### Change Log
 
 - 2026-03-28 : Story 61.37 créée.
+- 2026-03-28 : Code review de la story, compléments de couverture et correction des artefacts/doc.

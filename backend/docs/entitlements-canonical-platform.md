@@ -499,7 +499,19 @@ Depuis la story 61.37, les opérateurs disposent d'un backlog structuré et d'un
 GET /v1/ops/entitlements/mutation-audits/review-queue
 ```
 
-Cet endpoint retourne une liste paginée d'audits, triée par **priorité métier** décroissante. Contrairement à la liste brute, il permet de traiter immédiatement ce qui est urgent ou en retard.
+Cet endpoint retourne une liste paginée d'audits, triée par **priorité métier croissante**. Contrairement à la liste brute, il permet de traiter immédiatement ce qui est urgent ou en retard.
+
+#### Paramètres supportés
+
+- `page`, `page_size`
+- `risk_level`
+- `effective_review_status`
+- `feature_code`
+- `actor_type`
+- `actor_identifier`
+- `incident_key`
+- `date_from`
+- `date_to`
 
 #### Tri par priorité métier
 
@@ -519,6 +531,8 @@ Chaque item de la queue inclut des métadonnées de pilotage calculées à la vo
 - `effective_review_status` : Statut réel ou virtuel (`pending_review`).
 - `age_seconds` / `age_hours` : Temps écoulé depuis la mutation.
 - `is_pending` / `is_closed` : Indicateurs booléens de workflow.
+- `review` et `effective_review_status` sont omis de la réponse JSON quand ils valent `null`.
+- Les payloads complets `before_payload` et `after_payload` ne sont pas exposés dans la queue ; ils restent accessibles via `GET /v1/ops/entitlements/mutation-audits/{audit_id}`.
 
 ### Résumé du backlog (Summary)
 
@@ -532,6 +546,19 @@ Retourne les compteurs agrégés du backlog correspondant aux filtres appliqués
 - `high_unreviewed_count` : Focus spécifique sur les audits `high` n'ayant pas encore de revue DB.
 - `total_count` : Total global après filtrage.
 
+#### Paramètres supportés
+
+- `risk_level`
+- `effective_review_status`
+- `feature_code`
+- `actor_type`
+- `actor_identifier`
+- `incident_key`
+- `date_from`
+- `date_to`
+
 ### Filtrage et Limitations
 
-Les deux endpoints acceptent le même ensemble complet de filtres que la liste brute (SQL et applicatifs). La règle de garde **`_DIFF_FILTER_MAX = 10 000`** s'applique : si le nombre d'audits correspondant aux filtres SQL dépasse cette limite, une erreur 400 est retournée pour protéger la performance du calcul de diff en mémoire.
+Les deux endpoints appliquent la même séquence de traitement : filtres SQL (`feature_code`, `actor_type`, `actor_identifier`, `date_from`, `date_to`) puis calcul du diff et de l'état de revue, puis filtres applicatifs (`risk_level`, `effective_review_status`, `incident_key`).
+
+La règle de garde **`_DIFF_FILTER_MAX = 10 000`** s'applique : si le nombre d'audits correspondant aux filtres SQL dépasse cette limite, une erreur 400 `diff_filter_result_set_too_large` est retournée pour protéger la performance du calcul de diff en mémoire.
