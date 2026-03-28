@@ -58,6 +58,7 @@ from app.infra.db.bootstrap import ensure_local_sqlite_schema_ready
 from app.infra.observability.metrics import increment_counter, observe_duration
 from app.llm_orchestration.models import InputValidationError
 from app.services.pricing_experiment_service import PricingExperimentService
+from app.startup.feature_scope_validation import run_feature_scope_startup_validation
 
 
 def _ensure_llm_registry_seeded() -> None:
@@ -249,6 +250,9 @@ async def _app_lifespan(_: FastAPI):
             pass
     _ensure_llm_registry_seeded()
     _ensure_consultation_templates_seeded()
+
+    # Story 61.29: Enforcement du registre de scope au démarrage
+    run_feature_scope_startup_validation(settings.feature_scope_validation_mode)
 
     # Story 59.2: Validate prompt catalog vs DB
     from app.infra.db.session import SessionLocal

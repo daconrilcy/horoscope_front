@@ -135,6 +135,37 @@ Le validateur `FeatureRegistryConsistencyValidator` effectue 4 points de contrô
 3. **Cohérence seed B2C** : Les 3 features `is_metered=True` du seed canonique B2C doivent être présentes dans le registre avec le scope `B2C`.
 4. **Validité du registre** : Toutes les entrées du registre doivent utiliser des valeurs valides de l'enum `FeatureScope`.
 
-### Recommandation CI
-Il est recommandé d'ajouter l'exécution de ce script comme étape obligatoire de validation statique dans la pipeline CI, aux côtés de `ruff` et `mypy`.
+## Enforcement startup + CI (Story 61.29)
+
+Depuis la story 61.29, la validation de cohérence du registre de scope n'est plus optionnelle. Elle est devenue un **enforcement systématique** au démarrage de l'application et une étape obligatoire de validation CI.
+
+### Validation au démarrage (Startup)
+L'application backend exécute automatiquement `FeatureRegistryConsistencyValidator.validate()` dans son cycle de vie `_app_lifespan`.
+
+Le comportement en cas d'erreur dépend du mode de validation configuré via la variable d'environnement `FEATURE_SCOPE_VALIDATION_MODE`.
+
+#### Modes de validation
+| Mode | Variable d'env | Comportement | Usage recommandé |
+|------|----------------|--------------|------------------|
+| **strict** | `strict` | Succès → démarrage OK ; Échec → **crash immédiat** au boot. | Production, Staging, CI |
+| **warn** | `warn` | Succès → démarrage OK ; Échec → log ERROR structuré, le démarrage continue. | Transition, Debug local |
+| **off** | `off` | La validation n'est pas exécutée. Log WARNING émis. | Cas d'urgence uniquement |
+
+*Valeur par défaut : `strict`*
+
+### Commande CI obligatoire
+Pour détecter les incohérences le plus tôt possible, la commande suivante doit être intégrée dans la pipeline de validation statique :
+
+```bash
+python backend/scripts/check_feature_scope_registry.py
+```
+
+Cette commande retourne un code de sortie `0` en cas de succès et `1` en cas d'incohérence détectée.
+
+### Séquence de protection complète
+Le système de protection des entitlements repose désormais sur trois couches complémentaires :
+
+1. **Design-time / CI** (61.28/61.29) : La commande CLI bloque le merge si le registre est incohérent avec le code des gates.
+2. **Boot-time** (61.29) : Le backend refuse de démarrer en mode `strict` si une incohérence est détectée au chargement des modules.
+3. **Runtime** (61.27) : Les services de quota lèvent des exceptions si une feature inconnue ou hors-scope est appelée.
 

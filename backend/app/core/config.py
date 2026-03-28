@@ -267,6 +267,14 @@ class Settings:
         self.llm_narrator_enabled = self._parse_bool_env("LLM_NARRATOR_ENABLED", default=False)
         self.daily_engine_mode = self._parse_daily_engine_mode(os.getenv("DAILY_ENGINE_MODE"))
 
+        # Feature Scope Validation Mode (Story 61.29)
+        raw_feature_scope_validation_mode = (
+            os.getenv("FEATURE_SCOPE_VALIDATION_MODE", "strict").strip().lower()
+        )
+        if raw_feature_scope_validation_mode not in {"strict", "warn", "off"}:
+            raw_feature_scope_validation_mode = "strict"
+        self.feature_scope_validation_mode = raw_feature_scope_validation_mode
+
         # Stripe Configuration
         self.stripe_secret_key = os.getenv("STRIPE_SECRET_KEY", "").strip() or None
         self.stripe_webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip() or None
