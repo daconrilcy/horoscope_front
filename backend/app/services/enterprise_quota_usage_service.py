@@ -4,8 +4,15 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.enterprise_feature_usage_counters import EnterpriseFeatureUsageCounterModel
+from app.infra.db.models.enterprise_feature_usage_counters import (
+    EnterpriseFeatureUsageCounterModel,
+)
 from app.services.entitlement_types import QuotaDefinition, UsageState
+from app.services.feature_scope_registry import (
+    FeatureScope,
+    InvalidQuotaScopeError,
+    get_feature_scope,
+)
 from app.services.quota_usage_service import QuotaExhaustedError
 from app.services.quota_window_resolver import QuotaWindow, QuotaWindowResolver
 
@@ -20,6 +27,16 @@ class EnterpriseQuotaUsageService:
         quota: QuotaDefinition,
         ref_dt: datetime | None = None,
     ) -> UsageState:
+        scope = get_feature_scope(feature_code)
+        if scope == FeatureScope.B2C:
+            raise InvalidQuotaScopeError(
+                feature_code=feature_code,
+                actual_scope=FeatureScope.B2C,
+                expected_scope=FeatureScope.B2B,
+                correct_service="QuotaUsageService",
+                wrong_service="EnterpriseQuotaUsageService",
+            )
+
         if ref_dt is None:
             ref_dt = datetime.now(timezone.utc)
 
@@ -69,6 +86,16 @@ class EnterpriseQuotaUsageService:
         amount: int = 1,
         ref_dt: datetime | None = None,
     ) -> UsageState:
+        scope = get_feature_scope(feature_code)
+        if scope == FeatureScope.B2C:
+            raise InvalidQuotaScopeError(
+                feature_code=feature_code,
+                actual_scope=FeatureScope.B2C,
+                expected_scope=FeatureScope.B2B,
+                correct_service="QuotaUsageService",
+                wrong_service="EnterpriseQuotaUsageService",
+            )
+
         if amount <= 0:
             raise ValueError("amount must be >= 1")
 

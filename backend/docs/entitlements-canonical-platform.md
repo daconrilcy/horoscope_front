@@ -76,14 +76,37 @@ Depuis la story 61.26, l'écosystème ops B2B est entièrement aligné sur la ta
 - **admin_user_id** : Ce champ dans `enterprise_accounts` définit l'administrateur du compte (ownership) uniquement. Plus aucun chemin de décision quota/usage B2B n'en dépend.
 - **Nettoyage Historique** : Les scripts `verify_b2b_usage_migration.py` et `archive_b2b_legacy_usage_counters.py` fournissent respectivement la vérification de migration et la purge contrôlée des compteurs legacy B2B dans `feature_usage_counters`.
 
-### Invariants du Système (Post-61.26)
+### Invariants du Système (Post-61.27)
 
-| Flux | Table Source | Identifiant Pivot |
-|------|--------------|-------------------|
-| **Usage B2C** | `feature_usage_counters` | `user_id` |
-| **Usage B2B** | `enterprise_feature_usage_counters` | `enterprise_account_id` |
-| **Audit B2B** | `enterprise_feature_usage_counters` | `enterprise_account_id` |
-| **Ownership B2B** | `enterprise_accounts` | `admin_user_id` |
+| Flux | Table Source | Identifiant Pivot | Service Autorisé |
+|------|--------------|-------------------|------------------|
+| **Usage B2C** | `feature_usage_counters` | `user_id` | `QuotaUsageService` |
+| **Usage B2B** | `enterprise_feature_usage_counters` | `enterprise_account_id` | `EnterpriseQuotaUsageService` |
+| **Audit B2B** | `enterprise_feature_usage_counters` | `enterprise_account_id` | `EnterpriseQuotaUsageService` |
+| **Ownership B2B** | `enterprise_accounts` | `admin_user_id` | `AuthService` |
+
+## Séparation stricte B2C/B2B — Règle structurelle post-61.27
+
+Depuis la story 61.27, la séparation B2C/B2B entre `feature_usage_counters` et `enterprise_feature_usage_counters` est devenue une règle structurelle du code, impossible à violer par inadvertance.
+
+### Registre de Scope Explicite
+
+Un registre centralisé (`FEATURE_SCOPE_REGISTRY` dans `feature_scope_registry.py`) définit le scope de chaque **feature code soumis aux services de quota** (pas de toutes les features produit) :
+
+- **Scope B2C** : `astrologer_chat`, `thematic_consultation`, `natal_chart_long`.
+- **Scope B2B** : `b2b_api_access`.
+
+### Garde-fous Runtime
+
+- **Fail-Closed** : Tout `feature_code` passé à un service de quota qui n'est pas enregistré dans `FEATURE_SCOPE_REGISTRY` provoque une erreur immédiate (`UnknownFeatureCodeError`). Aucun compteur n'est lu ou écrit pour un code inconnu.
+- **Validation de Scope** :
+  - `QuotaUsageService` lève `InvalidQuotaScopeError` s'il est appelé pour une feature B2B.
+  - `EnterpriseQuotaUsageService` lève `InvalidQuotaScopeError` s'il est appelé pour une feature B2C.
+- **Zéro Interaction DB en cas d'erreur** : La validation a lieu en début de méthode, avant toute requête SQLAlchemy.
+
+### Non-régression Structurelle
+
+Des tests d'import (`test_scope_separation_imports.py`) vérifient statiquement par analyse d'AST que les services B2C n'importent jamais le service de quota B2B, et inversement.
 
 ### Métadonnées de Quota
 
