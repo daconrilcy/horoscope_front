@@ -682,8 +682,8 @@ claude-sonnet-4-6
 - Règle no-op stricte respectée (pas de changement de `reviewed_at`).
 - `pending_review` correctement traité comme statut virtuel (jamais persisté).
 - Propagation du `request_id` opérationnelle sur POST et GET history.
-- Couverture de tests augmentée (+5 unitaires via mocks, +8 intégration).
-- Correction `ReviewStatusLiteral` : séparation `WritableReviewStatusLiteral` pour interdire le POST de `pending_review`.
+- Couverture de tests augmentée sur les courses de création et le contrat de schéma de l'historique.
+- Correctif revue AI : no-op restauré après course sur la première création de revue, et contrat `ReviewEventItem` resserré pour exclure `pending_review`.
 
 ### File List
 
@@ -702,3 +702,17 @@ claude-sonnet-4-6
 - 2026-03-28 : Durcissement pre-dev — 4 points : (1) no-op = projection inchangée + reviewed_at stable + aucun flush ; (2) pending_review virtuel jamais dans les events (previous_review_status toujours null au premier event) ; (3) 401/403/429 explicites dans AC 4 ; (4) pattern AuditNotFoundError confirmé existant, GET review-history utilise _error_response(404) directement dans le router.
 - 2026-03-28 : Implémentation complète story 61.36.
 - 2026-03-28 : Code review et correctifs (WritableReviewStatusLiteral, test rollback via mocks).
+- 2026-03-28 : Revue senior AI post-implémentation — correction du no-op en cas de course sur la première création, tri stable de l'historique, verrouillage du schéma `ReviewEventItem` contre `pending_review`, tests et documentation mis à jour.
+
+## Senior Developer Review (AI)
+
+### Findings
+
+1. [High] `backend/app/services/canonical_entitlement_mutation_audit_review_service.py` : en cas de course sur la première création, le chemin `IntegrityError` mettait à jour la projection et insérait un événement même si la revue concurrente avait déjà exactement les mêmes valeurs métier. Cela violait la règle no-op de l'AC 3 en modifiant `reviewed_at` et en ajoutant un événement parasite.
+2. [Medium] `backend/app/api/v1/routers/ops_entitlement_mutation_audits.py` : `ReviewEventItem` annonçait encore `pending_review` comme valeur possible pour `previous_review_status` et `new_review_status`, alors que l'AC 3.14 interdit explicitement ce statut dans l'historique. Le contrat OpenAPI exposait donc une valeur impossible.
+
+### Fixes Applied
+
+1. Le service recharge désormais l'état concurrent persistant après `IntegrityError`, recalcule le no-op sur les valeurs réellement en base, puis saute toute écriture si la demande est déjà satisfaite.
+2. Le schéma `ReviewEventItem` utilise désormais un type de statut persisté excluant `pending_review`, et le tri de l'historique est stabilisé par `occurred_at ASC, id ASC`.
+3. Tests ajoutés : course concurrente no-op sans événement parasite, et validation de schéma rejetant `pending_review` pour un event.

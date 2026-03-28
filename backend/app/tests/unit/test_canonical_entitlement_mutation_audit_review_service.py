@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from unittest.mock import MagicMock
 
+import pytest
 from sqlalchemy import select
 
 from app.infra.db.base import Base
@@ -218,6 +220,66 @@ def test_upsert_recovers_from_concurrent_insert_race() -> None:
         assert rows[0].review_comment == "Resolved after race"
 
 
+def test_upsert_concurrent_first_review_noop_creates_no_event() -> None:
+    _setup()
+    with SessionLocal() as db:
+        audit = _seed_audit(db)
+        db.commit()
+        audit_id = audit.id
+
+    with SessionLocal() as db:
+        original_execute = db.execute
+        injected_competing_review = False
+
+        def execute_with_concurrent_insert(statement, *args, **kwargs):
+            nonlocal injected_competing_review
+            result = original_execute(statement, *args, **kwargs)
+            statement_text = str(statement)
+            should_inject_race = (
+                not injected_competing_review
+                and "canonical_entitlement_mutation_audit_reviews" in statement_text
+            )
+            if should_inject_race:
+                with SessionLocal() as competing_db:
+                    competing_db.add(
+                        CanonicalEntitlementMutationAuditReviewModel(
+                            audit_id=audit_id,
+                            review_status="acknowledged",
+                            reviewed_by_user_id=7,
+                            reviewed_at=datetime.now(timezone.utc),
+                            review_comment="Same values",
+                            incident_key="INC-SAME",
+                        )
+                    )
+                    competing_db.commit()
+                injected_competing_review = True
+            return result
+
+        db.execute = execute_with_concurrent_insert  # type: ignore[method-assign]
+
+        review = CanonicalEntitlementMutationAuditReviewService.upsert_review(
+            db,
+            audit_id=audit_id,
+            review_status="acknowledged",
+            reviewed_by_user_id=99,
+            review_comment="Same values",
+            incident_key="INC-SAME",
+        )
+        db.commit()
+
+        assert review.reviewed_by_user_id == 7
+        assert review.review_comment == "Same values"
+        assert review.incident_key == "INC-SAME"
+
+    with SessionLocal() as db:
+        reviews = db.execute(select(CanonicalEntitlementMutationAuditReviewModel)).scalars().all()
+        events = (
+            db.execute(select(CanonicalEntitlementMutationAuditReviewEventModel)).scalars().all()
+        )
+        assert len(reviews) == 1
+        assert len(events) == 0
+
+
 def test_upsert_creates_event_on_first_review() -> None:
     _setup()
     with SessionLocal() as db:
@@ -238,9 +300,7 @@ def test_upsert_creates_event_on_first_review() -> None:
 
     with SessionLocal() as db:
         events = (
-            db.execute(select(CanonicalEntitlementMutationAuditReviewEventModel))
-            .scalars()
-            .all()
+            db.execute(select(CanonicalEntitlementMutationAuditReviewEventModel)).scalars().all()
         )
         assert len(events) == 1
         assert events[0].audit_id == audit_id
@@ -333,9 +393,7 @@ def test_upsert_no_event_on_noop() -> None:
 
     with SessionLocal() as db:
         events = (
-            db.execute(select(CanonicalEntitlementMutationAuditReviewEventModel))
-            .scalars()
-            .all()
+            db.execute(select(CanonicalEntitlementMutationAuditReviewEventModel)).scalars().all()
         )
         assert len(events) == 1
 
@@ -359,17 +417,12 @@ def test_upsert_event_carries_request_id() -> None:
         db.commit()
 
     with SessionLocal() as db:
-        event = db.execute(
-            select(CanonicalEntitlementMutationAuditReviewEventModel)
-        ).scalar_one()
+        event = db.execute(select(CanonicalEntitlementMutationAuditReviewEventModel)).scalar_one()
         assert event.request_id == "trace-abc-123"
 
 
 def test_upsert_transactional_rollback() -> None:
     """Si db.flush() sur l'event lève une exception, la session peut rollback."""
-    from unittest.mock import MagicMock
-    import pytest
-
     db = MagicMock()
     audit = MagicMock()
     audit.id = 1

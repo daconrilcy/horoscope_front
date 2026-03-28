@@ -33,6 +33,7 @@ WritableReviewStatusLiteral = Literal["acknowledged", "expected", "investigating
 ReviewStatusLiteral = Literal[
     "pending_review", "acknowledged", "expected", "investigating", "closed"
 ]
+PersistedReviewStatusLiteral = WritableReviewStatusLiteral
 
 
 # ---------------------------------------------------------------------------
@@ -121,8 +122,8 @@ class ReviewApiResponse(BaseModel):
 class ReviewEventItem(BaseModel):
     id: int
     audit_id: int
-    previous_review_status: ReviewStatusLiteral | None = None
-    new_review_status: ReviewStatusLiteral
+    previous_review_status: PersistedReviewStatusLiteral | None = None
+    new_review_status: PersistedReviewStatusLiteral
     previous_review_comment: str | None = None
     new_review_comment: str | None = None
     previous_incident_key: str | None = None
@@ -634,7 +635,10 @@ def get_review_history(
     result = db.execute(
         select(CanonicalEntitlementMutationAuditReviewEventModel)
         .where(CanonicalEntitlementMutationAuditReviewEventModel.audit_id == audit_id)
-        .order_by(CanonicalEntitlementMutationAuditReviewEventModel.occurred_at.asc())
+        .order_by(
+            CanonicalEntitlementMutationAuditReviewEventModel.occurred_at.asc(),
+            CanonicalEntitlementMutationAuditReviewEventModel.id.asc(),
+        )
     )
     events = result.scalars().all()
 

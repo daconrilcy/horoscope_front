@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 from sqlalchemy import delete
 
+from app.api.v1.routers.ops_entitlement_mutation_audits import ReviewEventItem
 from app.core.rate_limit import RateLimitError
 from app.core.security import create_access_token
 from app.infra.db.base import Base
@@ -1160,3 +1163,13 @@ def test_get_review_history_request_id_propagated() -> None:
         headers={"Authorization": f"Bearer {ops_token}"},
     )
     assert response.json()["data"]["items"][0]["request_id"] == "my-trace-id"
+
+
+def test_review_history_schema_rejects_pending_review_status() -> None:
+    with pytest.raises(ValidationError):
+        ReviewEventItem(
+            id=1,
+            audit_id=42,
+            new_review_status="pending_review",
+            occurred_at=datetime.now(timezone.utc),
+        )

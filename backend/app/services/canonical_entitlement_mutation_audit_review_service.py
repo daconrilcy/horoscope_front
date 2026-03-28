@@ -68,22 +68,21 @@ class CanonicalEntitlementMutationAuditReviewService:
                 )
                 if review is None:
                     raise
-                # Update attributes if concurrent insert happened
-                review.review_status = review_status
-                review.reviewed_by_user_id = reviewed_by_user_id
-                review.reviewed_at = now
-                review.review_comment = review_comment
-                review.incident_key = incident_key
-        else:
-            # Detection no-op (uniquement sur update)
-            is_noop = (
-                previous_status == review_status
-                and previous_comment == review_comment
-                and previous_incident == incident_key
-            )
-            if is_noop:
-                return review
+                previous_status = review.review_status
+                previous_comment = review.review_comment
+                previous_incident = review.incident_key
+                is_creation = False
 
+        is_noop = (
+            not is_creation
+            and previous_status == review_status
+            and previous_comment == review_comment
+            and previous_incident == incident_key
+        )
+        if is_noop:
+            return review
+
+        if not is_creation:
             review.review_status = review_status
             review.reviewed_by_user_id = reviewed_by_user_id
             review.reviewed_at = now

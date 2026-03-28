@@ -413,6 +413,8 @@ Depuis la story 61.36, toute transition de statut ou modification d'une revue op
 
 Cette table est **append-only**. Une nouvelle ligne est créée à chaque création de revue ou à chaque modification réelle (changement de statut, de commentaire ou d'incident).
 
+Les statuts persistés dans l'historique sont strictement limités à `acknowledged`, `expected`, `investigating` et `closed`. Le statut virtuel `pending_review` reste un artefact de lecture et n'apparaît jamais dans les événements.
+
 | Colonne | Type | Description |
 |---------|------|-------------|
 | `id` | int PK | Identifiant interne |
@@ -434,6 +436,7 @@ L'historisation est intelligente pour éviter le bruit :
 1. **Création** : Le premier `POST /review` crée systématiquement un événement (`previous_review_status` est `null`).
 2. **Modification** : Un événement n'est créé que si au moins un des champs métier (`review_status`, `review_comment`, `incident_key`) a réellement changé.
 3. **No-Op** : Si un `POST /review` est renvoyé avec des valeurs identiques à la revue actuelle, **aucun événement n'est créé** et la date `reviewed_at` de la revue principale n'est pas mise à jour.
+4. **Course sur première création** : Si une autre transaction insère la première revue juste avant le flush, le service recharge la projection courante et réapplique la règle no-op sur les valeurs réellement persistées. Une course qui aboutit aux mêmes valeurs ne crée donc ni événement parasite ni mise à jour inutile de `reviewed_at`.
 
 ### Endpoint de consultation de l'historique
 
