@@ -124,6 +124,7 @@ Protection du design au moment du développement et en CI, complémentaire aux g
 
 ### Commande de validation
 ```powershell
+.\.venv\Scripts\Activate.ps1
 python backend/scripts/check_feature_scope_registry.py
 ```
 
