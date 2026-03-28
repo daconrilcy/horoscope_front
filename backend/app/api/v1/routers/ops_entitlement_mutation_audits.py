@@ -423,9 +423,8 @@ def _build_filtered_review_queue_rows(
     risk_level_filter: str | None,
     effective_review_status_filter: str | None,
     incident_key_filter: str | None,
-    sla_status_filter: str | None = None,
-) -> Union[list[tuple[Any, Any, Any, Any, dict]], JSONResponse]:
-    """Retourne list[(audit, diff, review_record, eff_status, sla_data)] ou JSONResponse(400)."""
+) -> Union[list[tuple[Any, Any, Any, Any]], JSONResponse]:
+    """Retourne list[(audit, diff, review_record, eff_status)] ou JSONResponse(400)."""
     sql_kwargs = dict(
         feature_code=feature_code,
         actor_type=actor_type,
@@ -448,8 +447,7 @@ def _build_filtered_review_queue_rows(
         db, page=1, page_size=_DIFF_FILTER_MAX, **sql_kwargs
     )
     reviews_by_id = _load_reviews_by_audit_ids(db, [a.id for a in all_items])
-    rows: list[tuple[Any, Any, Any, Any, dict]] = []
-    now_utc = datetime.now(timezone.utc)
+    rows: list[tuple[Any, Any, Any, Any]] = []
     for item in all_items:
         diff = CanonicalEntitlementMutationDiffService.compute_diff(
             item.before_payload or {}, item.after_payload or {}
@@ -467,13 +465,7 @@ def _build_filtered_review_queue_rows(
         if incident_key_filter is not None:
             if review_record is None or review_record.incident_key != incident_key_filter:
                 continue
-
-        # SLA
-        sla_data = _compute_sla(diff.risk_level, eff_status, item.occurred_at, now_utc)
-        if sla_status_filter and sla_data["sla_status"] != sla_status_filter:
-            continue
-
-        rows.append((item, diff, review_record, eff_status, sla_data))
+        rows.append((item, diff, review_record, eff_status))
     return rows
 
 
@@ -484,19 +476,14 @@ def _to_queue_item(
     review_record: CanonicalEntitlementMutationAuditReviewModel | None,
     eff_status: str | None,
     now_utc: datetime,
-    sla_data: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     # include_payloads=False : la queue est légère, payloads via GET /mutation-audits/{id}
-    base = _to_item_with_diff(
-        audit, diff=diff, include_payloads=False, review_record=review_record
-    )
+    base = _to_item_with_diff(audit, diff=diff, include_payloads=False, review_record=review_record)
     occurred_at = audit.occurred_at
     if occurred_at.tzinfo is None:
         occurred_at = occurred_at.replace(tzinfo=timezone.utc)
     age_seconds = int((now_utc - occurred_at).total_seconds())
-
-    if sla_data is None:
-        sla_data = _compute_sla(diff.risk_level, eff_status, audit.occurred_at, now_utc)
+    sla_data = _compute_sla(diff.risk_level, eff_status, occurred_at, now_utc)
 
     return {
         **base,
@@ -737,37 +724,45 @@ def get_review_queue_summary(
         risk_level_filter=risk_level_filter,
         effective_review_status_filter=effective_review_status_filter,
         incident_key_filter=incident_key_filter,
-        sla_status_filter=sla_status_filter,
     )
     if isinstance(rows, JSONResponse):
         return rows  # 400 _DIFF_FILTER_MAX dépassé
+
+    now_utc = datetime.now(timezone.utc)
+    items = [
+        _to_queue_item(
+            audit,
+            diff=diff,
+            review_record=review_record,
+            eff_status=eff_status,
+            now_utc=now_utc,
+        )
+        for audit, diff, review_record, eff_status in rows
+    ]
+    if sla_status_filter is not None:
+        items = [item for item in items if item.get("sla_status") == sla_status_filter]
 
     counts: dict[str, int] = {}
     high_unreviewed = 0
     overdue_count = 0
     due_soon_count = 0
-    oldest_pending_age = 0
+    oldest_pending_age: int | None = None
 
-    for audit, diff, _, eff_status, sla_data in rows:
+    for item in items:
+        eff_status = item.get("effective_review_status")
         key = eff_status if eff_status is not None else "none"
         counts[key] = counts.get(key, 0) + 1
-        if diff.risk_level == "high" and eff_status == "pending_review":
+        if item["risk_level"] == "high" and eff_status == "pending_review":
             high_unreviewed += 1
 
-        # SLA counters
-        if sla_data["sla_status"] == "overdue":
+        if item.get("sla_status") == "overdue":
             overdue_count += 1
-        elif sla_data["sla_status"] == "due_soon":
+        elif item.get("sla_status") == "due_soon":
             due_soon_count += 1
 
-        # Oldest pending age (uniquement si eff_status est pending_review ou investigating)
-        if eff_status in ["pending_review", "investigating"]:
-            now_utc = datetime.now(timezone.utc)
-            occurred_at = audit.occurred_at
-            if occurred_at.tzinfo is None:
-                occurred_at = occurred_at.replace(tzinfo=timezone.utc)
-            age = int((now_utc - occurred_at).total_seconds())
-            if age > oldest_pending_age:
+        if eff_status == "pending_review":
+            age = item["age_seconds"]
+            if oldest_pending_age is None or age > oldest_pending_age:
                 oldest_pending_age = age
 
     res_data = {
@@ -778,11 +773,11 @@ def get_review_queue_summary(
         "expected_count": counts.get("expected", 0),
         "no_review_count": counts.get("none", 0),
         "high_unreviewed_count": high_unreviewed,
-        "total_count": len(rows),
+        "total_count": len(items),
         "overdue_count": overdue_count,
         "due_soon_count": due_soon_count,
     }
-    if oldest_pending_age > 0:
+    if oldest_pending_age is not None:
         res_data["oldest_pending_age_seconds"] = oldest_pending_age
 
     return {
@@ -829,9 +824,7 @@ def get_review_queue(
     if (err := _ensure_ops_role(current_user, request_id)) is not None:
         return err
     if (
-        err := _enforce_limits(
-            user=current_user, request_id=request_id, operation="review_queue"
-        )
+        err := _enforce_limits(user=current_user, request_id=request_id, operation="review_queue")
     ) is not None:
         return err
 
@@ -846,30 +839,30 @@ def get_review_queue(
         risk_level_filter=risk_level_filter,
         effective_review_status_filter=effective_review_status_filter,
         incident_key_filter=incident_key_filter,
-        sla_status_filter=sla_status_filter,
     )
     if isinstance(rows, JSONResponse):
         return rows  # 400 _DIFF_FILTER_MAX dépassé
 
     rows.sort(key=lambda x: (_STATUS_PRIORITY.get(x[3], 5), x[0].occurred_at))
     now_utc = datetime.now(timezone.utc)
-    total_count = len(rows)
+    items = [
+        _to_queue_item(
+            item,
+            diff=diff,
+            review_record=review_record,
+            eff_status=eff_status,
+            now_utc=now_utc,
+        )
+        for item, diff, review_record, eff_status in rows
+    ]
+    if sla_status_filter is not None:
+        items = [item for item in items if item.get("sla_status") == sla_status_filter]
+
+    total_count = len(items)
     start = (page - 1) * page_size
     return {
         "data": {
-            "items": [
-                _to_queue_item(
-                    item,
-                    diff=diff,
-                    review_record=review_record,
-                    eff_status=eff_status,
-                    now_utc=now_utc,
-                    sla_data=sla_data,
-                )
-                for item, diff, review_record, eff_status, sla_data in rows[
-                    start : start + page_size
-                ]
-            ],
+            "items": items[start : start + page_size],
             "total_count": total_count,
             "page": page,
             "page_size": page_size,

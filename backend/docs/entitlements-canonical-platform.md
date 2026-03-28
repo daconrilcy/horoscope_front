@@ -595,5 +595,5 @@ Les endpoints `GET /review-queue` et `GET /review-queue/summary` acceptent un pa
 Le résumé inclut désormais :
 - `overdue_count` : Nombre d'items ayant dépassé leur SLA.
 - `due_soon_count` : Nombre d'items proches de l'échéance.
-- `oldest_pending_age_seconds` : Âge du plus vieux dossier en attente (`pending_review` ou `investigating`).
+- `oldest_pending_age_seconds` : Âge du plus vieux dossier en attente avec `effective_review_status="pending_review"`. Le champ est omis s'il n'existe aucun item `pending_review` dans le sous-ensemble filtré.
 

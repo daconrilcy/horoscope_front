@@ -745,7 +745,7 @@ _LOW_RISK_AFTER = {
 def _seed_review(
     db, *, audit_id: int, review_status: str = "acknowledged"
 ) -> CanonicalEntitlementMutationAuditReviewModel:
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timezone
 
     review = CanonicalEntitlementMutationAuditReviewModel(
         audit_id=audit_id,
@@ -1693,6 +1693,41 @@ def test_review_queue_summary_overdue_count() -> None:
     assert data["due_soon_count"] == 0
 
 
+def test_review_queue_summary_filter_by_sla_status_restricts_all_counters() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        _seed_audit(
+            db,
+            occurred_at=datetime.now(timezone.utc) - timedelta(hours=5),
+            before_payload=_HIGH_RISK_BEFORE,
+            after_payload=_HIGH_RISK_AFTER,
+            feature_code="overdue",
+        )
+        _seed_audit(
+            db,
+            occurred_at=datetime.now(timezone.utc),
+            before_payload=_HIGH_RISK_BEFORE,
+            after_payload=_HIGH_RISK_AFTER,
+            feature_code="within",
+        )
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/review-queue/summary",
+        params={"sla_status": "overdue"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["total_count"] == 1
+    assert data["pending_review_count"] == 1
+    assert data["overdue_count"] == 1
+    assert data["due_soon_count"] == 0
+    assert data["high_unreviewed_count"] == 1
+    assert data["oldest_pending_age_seconds"] >= 18000
+
+
 def test_review_queue_summary_oldest_pending_age_seconds() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
@@ -1712,6 +1747,31 @@ def test_review_queue_summary_oldest_pending_age_seconds() -> None:
     assert response.status_code == 200
     data = response.json()["data"]
     assert data["oldest_pending_age_seconds"] >= 100
+
+
+def test_review_queue_summary_oldest_pending_ignores_investigating() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        audit = _seed_audit(
+            db,
+            occurred_at=datetime.now(timezone.utc) - timedelta(hours=8),
+            before_payload=_HIGH_RISK_BEFORE,
+            after_payload=_HIGH_RISK_AFTER,
+        )
+        db.flush()
+        _seed_review(db, audit_id=audit.id, review_status="investigating")
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/review-queue/summary",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["total_count"] == 1
+    assert data["investigating_count"] == 1
+    assert "oldest_pending_age_seconds" not in data
 
 
 def test_review_queue_summary_oldest_pending_none_when_no_pending() -> None:

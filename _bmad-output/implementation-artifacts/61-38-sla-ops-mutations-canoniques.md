@@ -529,15 +529,17 @@ gemini-2.0-flash-exp
 - Support des filtres `sla_status` dans la review queue et le summary.
 - Extension des modèles Pydantic pour inclure les métriques SLA et l'âge du plus vieux dossier.
 - Ajout de tests d'intégration couvrant tous les ACs.
+- Revue corrective du 2026-03-29 : réalignement du pipeline `sla_status` pour filtrer après `_to_queue_item()`, sans couplage SLA dans `_build_filtered_review_queue_rows()`.
+- Revue corrective du 2026-03-29 : correction de `oldest_pending_age_seconds` pour ne compter que les items `pending_review`, avec omission uniquement si aucun pending n'existe.
 
 ### File List
 
 - `backend/app/api/v1/routers/ops_entitlement_mutation_audits.py`
 - `backend/app/tests/integration/test_ops_entitlement_mutation_audits_api.py`
 - `backend/docs/entitlements-canonical-platform.md`
-- `_bmad-output/implementation-artifacts/sprint-status.yaml`
 
 ### Change Log
 
 - 2026-03-28 : Story 61.38 créée.
 - 2026-03-28 : Implémentation complète et tests validés.
+- 2026-03-29 : Code review adverse effectuée, écarts AC corrigés, artefacts synchronisés.
