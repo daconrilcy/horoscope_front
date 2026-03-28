@@ -535,6 +535,8 @@ gemini-2.0-flash
 - Création d'une suite de tests unitaires couvrant tous les cas d'acceptance (8 tests).
 - Mise à jour de la documentation technique.
 - Tous les tests de non-régression sont au vert.
+- Revue post-implémentation: validation runtime ajoutée sur `CanonicalMutationContext` pour refuser un `actor_identifier` vide et normaliser `request_id`.
+- Revue post-implémentation: la preuve de rollback transactionnel est désormais vérifiée depuis une nouvelle session SQLAlchemy, conformément à l'AC 17.
 
 ### File List
 - `backend/app/infra/db/models/canonical_entitlement_mutation_audit.py`
@@ -551,6 +553,7 @@ gemini-2.0-flash
 
 ### Change Log
 - 2026-03-28: Implémentation complète de la story 61.32.
+- 2026-03-28: Correctifs post-review sur la validation du contexte d'audit et le test de rollback transactionnel.
 
 ### Status
 done

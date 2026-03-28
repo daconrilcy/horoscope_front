@@ -22,7 +22,6 @@ from app.services.canonical_entitlement_mutation_service import (
     CanonicalMutationValidationError,
 )
 
-
 _TEST_CONTEXT = CanonicalMutationContext(
     actor_type="script",
     actor_identifier="test_script.py",

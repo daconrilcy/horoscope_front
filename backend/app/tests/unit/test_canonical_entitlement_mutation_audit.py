@@ -25,9 +25,14 @@ from app.services.canonical_entitlement_mutation_service import (
 
 
 @pytest.fixture()
-def db():
+def engine():
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
     Base.metadata.create_all(engine)
+    yield engine
+
+
+@pytest.fixture()
+def db(engine):
     with Session(engine) as session:
         yield session
 
@@ -269,7 +274,12 @@ def test_no_audit_row_when_no_effective_change(db, b2c_plan, chat_feature):
     assert len(audits_after) == 1
 
 
-def test_audit_row_is_rolled_back_with_transaction(db, b2c_plan, chat_feature):
+def test_context_rejects_blank_actor_identifier():
+    with pytest.raises(ValueError, match="actor_identifier"):
+        CanonicalMutationContext(actor_type="script", actor_identifier="   ")
+
+
+def test_audit_row_is_rolled_back_with_transaction(engine, db, b2c_plan, chat_feature):
     # WHEN: start transaction, upsert, then rollback
     with db.begin_nested() as sp:
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
@@ -286,5 +296,11 @@ def test_audit_row_is_rolled_back_with_transaction(db, b2c_plan, chat_feature):
         assert len(db.scalars(select(CanonicalEntitlementMutationAuditModel)).all()) == 1
         sp.rollback()
 
-    # THEN: audit row is gone
-    assert len(db.scalars(select(CanonicalEntitlementMutationAuditModel)).all()) == 0
+    # THEN: audit row is gone in a fresh session too
+    with Session(engine) as verification_session:
+        assert (
+            len(
+                verification_session.scalars(select(CanonicalEntitlementMutationAuditModel)).all()
+            )
+            == 0
+        )

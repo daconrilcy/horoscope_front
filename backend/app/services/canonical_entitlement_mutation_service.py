@@ -34,6 +34,7 @@ _SCOPE_TO_AUDIENCE: dict[FeatureScope, Audience] = {
 
 
 ActorType = Literal["script", "service", "ops", "system"]
+_ALLOWED_ACTOR_TYPES: tuple[ActorType, ...] = ("script", "service", "ops", "system")
 
 
 @dataclass(frozen=True)
@@ -41,6 +42,19 @@ class CanonicalMutationContext:
     actor_type: ActorType
     actor_identifier: str  # ex: "seed_product_entitlements.py"
     request_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.actor_type not in _ALLOWED_ACTOR_TYPES:
+            raise ValueError(f"Unsupported actor_type '{self.actor_type}'.")
+
+        actor_identifier = self.actor_identifier.strip()
+        if not actor_identifier:
+            raise ValueError("actor_identifier must be a non-empty string.")
+        object.__setattr__(self, "actor_identifier", actor_identifier)
+
+        if self.request_id is not None:
+            request_id = self.request_id.strip()
+            object.__setattr__(self, "request_id", request_id or None)
 
 
 class CanonicalMutationValidationError(ValueError):
