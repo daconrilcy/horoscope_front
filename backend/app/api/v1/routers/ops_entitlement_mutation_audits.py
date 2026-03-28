@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any, Literal
+from datetime import datetime, timezone
+from typing import Any, Literal, Union
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
@@ -39,6 +39,15 @@ PersistedReviewStatusLiteral = WritableReviewStatusLiteral
 # ---------------------------------------------------------------------------
 # Schémas Pydantic
 # ---------------------------------------------------------------------------
+
+_STATUS_PRIORITY: dict[str | None, int] = {
+    "pending_review": 0,
+    "investigating": 1,
+    "acknowledged": 2,
+    "expected": 3,
+    "closed": 4,
+    None: 5,
+}
 
 
 class ReviewState(BaseModel):
@@ -140,6 +149,42 @@ class ReviewHistoryData(BaseModel):
 
 class ReviewHistoryApiResponse(BaseModel):
     data: ReviewHistoryData
+    meta: ResponseMeta
+
+
+class ReviewQueueItem(MutationAuditItem):
+    effective_review_status: ReviewStatusLiteral | None = None
+    age_seconds: int
+    age_hours: float
+    is_pending: bool
+    is_closed: bool
+
+
+class ReviewQueueListData(BaseModel):
+    items: list[ReviewQueueItem]
+    total_count: int
+    page: int
+    page_size: int
+
+
+class ReviewQueueApiResponse(BaseModel):
+    data: ReviewQueueListData
+    meta: ResponseMeta
+
+
+class ReviewQueueSummaryData(BaseModel):
+    pending_review_count: int
+    investigating_count: int
+    acknowledged_count: int
+    closed_count: int
+    expected_count: int
+    no_review_count: int
+    high_unreviewed_count: int
+    total_count: int
+
+
+class ReviewQueueSummaryApiResponse(BaseModel):
+    data: ReviewQueueSummaryData
     meta: ResponseMeta
 
 
@@ -302,6 +347,90 @@ def _to_item_with_diff(
         d["before_payload"] = audit.before_payload
         d["after_payload"] = audit.after_payload
     return d
+
+
+def _build_filtered_review_queue_rows(
+    db: Session,
+    *,
+    request_id: str,
+    feature_code: str | None,
+    actor_type: str | None,
+    actor_identifier: str | None,
+    date_from: datetime | None,
+    date_to: datetime | None,
+    risk_level_filter: str | None,
+    effective_review_status_filter: str | None,
+    incident_key_filter: str | None,
+) -> Union[list[tuple[Any, Any, Any, Any]], JSONResponse]:
+    """Retourne list[(audit, diff, review_record, eff_status)] ou JSONResponse(400)."""
+    sql_kwargs = dict(
+        feature_code=feature_code,
+        actor_type=actor_type,
+        actor_identifier=actor_identifier,
+        date_from=date_from,
+        date_to=date_to,
+    )
+    _, sql_count = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
+        db, page=1, page_size=1, **sql_kwargs
+    )
+    if sql_count > _DIFF_FILTER_MAX:
+        return _error_response(
+            status_code=400,
+            request_id=request_id,
+            code="diff_filter_result_set_too_large",
+            message=f"Too many results ({sql_count} > {_DIFF_FILTER_MAX}). Add filters to narrow.",
+            details={"sql_count": sql_count, "max_allowed": _DIFF_FILTER_MAX},
+        )
+    all_items, _ = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
+        db, page=1, page_size=_DIFF_FILTER_MAX, **sql_kwargs
+    )
+    reviews_by_id = _load_reviews_by_audit_ids(db, [a.id for a in all_items])
+    rows: list[tuple[Any, Any, Any, Any]] = []
+    for item in all_items:
+        diff = CanonicalEntitlementMutationDiffService.compute_diff(
+            item.before_payload or {}, item.after_payload or {}
+        )
+        if risk_level_filter and diff.risk_level != risk_level_filter:
+            continue
+        review_record = reviews_by_id.get(item.id)
+        review_state = _compute_review_state(diff.risk_level, review_record)
+        eff_status = review_state.status if review_state else None
+        if (
+            effective_review_status_filter is not None
+            and eff_status != effective_review_status_filter
+        ):
+            continue
+        if incident_key_filter is not None:
+            if review_record is None or review_record.incident_key != incident_key_filter:
+                continue
+        rows.append((item, diff, review_record, eff_status))
+    return rows
+
+
+def _to_queue_item(
+    audit: Any,
+    *,
+    diff: Any,
+    review_record: CanonicalEntitlementMutationAuditReviewModel | None,
+    eff_status: str | None,
+    now_utc: datetime,
+) -> dict[str, Any]:
+    # include_payloads=False : la queue est légère, payloads via GET /mutation-audits/{id}
+    base = _to_item_with_diff(
+        audit, diff=diff, include_payloads=False, review_record=review_record
+    )
+    occurred_at = audit.occurred_at
+    if occurred_at.tzinfo is None:
+        occurred_at = occurred_at.replace(tzinfo=timezone.utc)
+    age_seconds = int((now_utc - occurred_at).total_seconds())
+    return {
+        **base,
+        "effective_review_status": eff_status,
+        "age_seconds": age_seconds,
+        "age_hours": round(age_seconds / 3600, 2),
+        "is_pending": eff_status == "pending_review",
+        "is_closed": eff_status == "closed",
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -470,6 +599,162 @@ def list_mutation_audits(
                     review_record=review_record,
                 )
                 for item, diff, review_record in page_items
+            ],
+            "total_count": total_count,
+            "page": page,
+            "page_size": page_size,
+        },
+        "meta": {"request_id": request_id},
+    }
+
+
+# ── review-queue/summary ──────────────────────────────────────────────────────
+@router.get(
+    "/mutation-audits/review-queue/summary",
+    response_model=ReviewQueueSummaryApiResponse,
+    response_model_exclude_none=True,
+    responses={
+        400: {"model": ErrorEnvelope},
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def get_review_queue_summary(
+    request: Request,
+    risk_level_filter: Literal["high", "medium", "low"] | None = Query(
+        default=None, alias="risk_level"
+    ),
+    effective_review_status_filter: ReviewStatusLiteral | None = Query(
+        default=None, alias="effective_review_status"
+    ),
+    feature_code: str | None = Query(default=None),
+    actor_type: str | None = Query(default=None),
+    actor_identifier: str | None = Query(default=None),
+    incident_key_filter: str | None = Query(default=None, alias="incident_key"),
+    date_from: datetime | None = Query(default=None),
+    date_to: datetime | None = Query(default=None),
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        return err
+    if (
+        err := _enforce_limits(
+            user=current_user, request_id=request_id, operation="review_queue_summary"
+        )
+    ) is not None:
+        return err
+
+    rows = _build_filtered_review_queue_rows(
+        db,
+        request_id=request_id,
+        feature_code=feature_code,
+        actor_type=actor_type,
+        actor_identifier=actor_identifier,
+        date_from=date_from,
+        date_to=date_to,
+        risk_level_filter=risk_level_filter,
+        effective_review_status_filter=effective_review_status_filter,
+        incident_key_filter=incident_key_filter,
+    )
+    if isinstance(rows, JSONResponse):
+        return rows  # 400 _DIFF_FILTER_MAX dépassé
+
+    counts: dict[str, int] = {}
+    high_unreviewed = 0
+    for _, diff, _, eff_status in rows:
+        key = eff_status if eff_status is not None else "none"
+        counts[key] = counts.get(key, 0) + 1
+        if diff.risk_level == "high" and eff_status == "pending_review":
+            high_unreviewed += 1
+    return {
+        "data": {
+            "pending_review_count": counts.get("pending_review", 0),
+            "investigating_count": counts.get("investigating", 0),
+            "acknowledged_count": counts.get("acknowledged", 0),
+            "closed_count": counts.get("closed", 0),
+            "expected_count": counts.get("expected", 0),
+            "no_review_count": counts.get("none", 0),
+            "high_unreviewed_count": high_unreviewed,
+            "total_count": len(rows),
+        },
+        "meta": {"request_id": request_id},
+    }
+
+
+# ── review-queue ─────────────────────────────────────────────────────────────
+@router.get(
+    "/mutation-audits/review-queue",
+    response_model=ReviewQueueApiResponse,
+    response_model_exclude_none=True,
+    responses={
+        400: {"model": ErrorEnvelope},
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def get_review_queue(
+    request: Request,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    risk_level_filter: Literal["high", "medium", "low"] | None = Query(
+        default=None, alias="risk_level"
+    ),
+    effective_review_status_filter: ReviewStatusLiteral | None = Query(
+        default=None, alias="effective_review_status"
+    ),
+    feature_code: str | None = Query(default=None),
+    actor_type: str | None = Query(default=None),
+    actor_identifier: str | None = Query(default=None),
+    incident_key_filter: str | None = Query(default=None, alias="incident_key"),
+    date_from: datetime | None = Query(default=None),
+    date_to: datetime | None = Query(default=None),
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        return err
+    if (
+        err := _enforce_limits(
+            user=current_user, request_id=request_id, operation="review_queue"
+        )
+    ) is not None:
+        return err
+
+    rows = _build_filtered_review_queue_rows(
+        db,
+        request_id=request_id,
+        feature_code=feature_code,
+        actor_type=actor_type,
+        actor_identifier=actor_identifier,
+        date_from=date_from,
+        date_to=date_to,
+        risk_level_filter=risk_level_filter,
+        effective_review_status_filter=effective_review_status_filter,
+        incident_key_filter=incident_key_filter,
+    )
+    if isinstance(rows, JSONResponse):
+        return rows  # 400 _DIFF_FILTER_MAX dépassé
+
+    rows.sort(key=lambda x: (_STATUS_PRIORITY.get(x[3], 5), x[0].occurred_at))
+    now_utc = datetime.now(timezone.utc)
+    total_count = len(rows)
+    start = (page - 1) * page_size
+    return {
+        "data": {
+            "items": [
+                _to_queue_item(
+                    item,
+                    diff=diff,
+                    review_record=review_record,
+                    eff_status=eff_status,
+                    now_utc=now_utc,
+                )
+                for item, diff, review_record, eff_status in rows[start : start + page_size]
             ],
             "total_count": total_count,
             "page": page,

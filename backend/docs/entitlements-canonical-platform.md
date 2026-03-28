@@ -486,3 +486,52 @@ GET /v1/ops/entitlements/mutation-audits/{audit_id}/review-history
 ### Propagation du `request_id`
 
 Le `request_id` résolu par le router est systématiquement propagé au service d'écriture pour être stocké dans l'événement, permettant une traçabilité complète de "qui a fait quoi via quelle requête".
+
+---
+
+## Story 61.37 — Work queue ops des mutations canoniques à risque
+
+Depuis la story 61.37, les opérateurs disposent d'un backlog structuré et d'un résumé chiffré pour le pilotage quotidien des mutations à risque.
+
+### File d'attente de revue (Work Queue)
+
+```
+GET /v1/ops/entitlements/mutation-audits/review-queue
+```
+
+Cet endpoint retourne une liste paginée d'audits, triée par **priorité métier** décroissante. Contrairement à la liste brute, il permet de traiter immédiatement ce qui est urgent ou en retard.
+
+#### Tri par priorité métier
+
+Les items sont regroupés par `effective_review_status` et triés selon l'ordre suivant :
+1. `pending_review` (Priorité 0 — Urgent, High risk non qualifié)
+2. `investigating` (Priorité 1 — En cours d'analyse)
+3. `acknowledged` (Priorité 2 — Pris en compte)
+4. `expected` (Priorité 3 — Changement prévu)
+5. `closed` (Priorité 4 — Traité)
+6. `None` (Priorité 5 — Medium/Low risk sans revue)
+
+À l'intérieur de chaque groupe de priorité, les items sont triés par `occurred_at ASC` (le plus ancien en premier).
+
+#### Nouveaux champs dérivés par item
+
+Chaque item de la queue inclut des métadonnées de pilotage calculées à la volée :
+- `effective_review_status` : Statut réel ou virtuel (`pending_review`).
+- `age_seconds` / `age_hours` : Temps écoulé depuis la mutation.
+- `is_pending` / `is_closed` : Indicateurs booléens de workflow.
+
+### Résumé du backlog (Summary)
+
+```
+GET /v1/ops/entitlements/mutation-audits/review-queue/summary
+```
+
+Retourne les compteurs agrégés du backlog correspondant aux filtres appliqués :
+- `pending_review_count`, `investigating_count`, `acknowledged_count`, `expected_count`, `closed_count`.
+- `no_review_count` : Nombre d'audits medium/low sans revue.
+- `high_unreviewed_count` : Focus spécifique sur les audits `high` n'ayant pas encore de revue DB.
+- `total_count` : Total global après filtrage.
+
+### Filtrage et Limitations
+
+Les deux endpoints acceptent le même ensemble complet de filtres que la liste brute (SQL et applicatifs). La règle de garde **`_DIFF_FILTER_MAX = 10 000`** s'applique : si le nombre d'audits correspondant aux filtres SQL dépasse cette limite, une erreur 400 est retournée pour protéger la performance du calcul de diff en mémoire.

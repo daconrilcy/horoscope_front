@@ -1173,3 +1173,271 @@ def test_review_history_schema_rejects_pending_review_status() -> None:
             new_review_status="pending_review",
             occurred_at=datetime.now(timezone.utc),
         )
+
+
+# ---------------------------------------------------------------------------
+# Tests Story 61.37 — Work Queue & Summary
+# ---------------------------------------------------------------------------
+
+
+def test_review_queue_summary_empty() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/review-queue/summary",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["total_count"] == 0
+    assert data["pending_review_count"] == 0
+
+
+def test_review_queue_summary_aggregation() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        # 1. High risk, no review -> pending_review
+        _seed_audit(db, before_payload=_HIGH_RISK_BEFORE, after_payload=_HIGH_RISK_AFTER)
+        # 2. High risk, closed review -> closed
+        a2 = _seed_audit(db, before_payload=_HIGH_RISK_BEFORE, after_payload=_HIGH_RISK_AFTER)
+        db.flush()
+        _seed_review(db, audit_id=a2.id, review_status="closed")
+        # 3. Low risk, no review -> None (no_review_count)
+        _seed_audit(db, before_payload=_LOW_RISK_BEFORE, after_payload=_LOW_RISK_AFTER)
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/review-queue/summary",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["total_count"] == 3
+    assert data["pending_review_count"] == 1
+    assert data["closed_count"] == 1
+    assert data["no_review_count"] == 1
+    assert data["high_unreviewed_count"] == 1
+
+
+def test_review_queue_summary_with_filters() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        _seed_audit(
+            db,
+            feature_code="f1",
+            before_payload=_HIGH_RISK_BEFORE,
+            after_payload=_HIGH_RISK_AFTER,
+        )
+        _seed_audit(
+            db,
+            feature_code="f2",
+            before_payload=_HIGH_RISK_BEFORE,
+            after_payload=_HIGH_RISK_AFTER,
+        )
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/review-queue/summary",
+        params={"feature_code": "f1"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    assert response.json()["data"]["total_count"] == 1
+
+
+def test_review_queue_list_basic_and_derived_fields() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        _seed_audit(db, before_payload=_HIGH_RISK_BEFORE, after_payload=_HIGH_RISK_AFTER)
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/review-queue",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    item = response.json()["data"]["items"][0]
+    assert item["effective_review_status"] == "pending_review"
+    assert "age_seconds" in item
+    assert "age_hours" in item
+    assert item["is_pending"] is True
+    assert item["is_closed"] is False
+
+
+def test_review_queue_sorting_priority_and_date() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        # P2: Acknowledged, Oldest
+        a1 = _seed_audit(
+            db,
+            occurred_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            feature_code="old-ack",
+        )
+        # P0: Pending (High risk, no review), Newest
+        _seed_audit(
+            db,
+            occurred_at=datetime(2026, 1, 3, tzinfo=timezone.utc),
+            feature_code="new-pending",
+            before_payload=_HIGH_RISK_BEFORE,
+            after_payload=_HIGH_RISK_AFTER,
+        )
+        # P0: Pending (High risk, no review), Oldest
+        _seed_audit(
+            db,
+            occurred_at=datetime(2026, 1, 2, tzinfo=timezone.utc),
+            feature_code="old-pending",
+            before_payload=_HIGH_RISK_BEFORE,
+            after_payload=_HIGH_RISK_AFTER,
+        )
+
+        db.flush()
+        _seed_review(db, audit_id=a1.id, review_status="acknowledged")
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/review-queue",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    items = response.json()["data"]["items"]
+    # Expected order: P0 old-pending, P0 new-pending, P2 old-ack
+    assert items[0]["feature_code"] == "old-pending"
+    assert items[1]["feature_code"] == "new-pending"
+    assert items[2]["feature_code"] == "old-ack"
+
+
+def test_review_queue_filter_by_effective_status() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        _seed_audit(
+            db,
+            feature_code="f-pending",
+            before_payload=_HIGH_RISK_BEFORE,
+            after_payload=_HIGH_RISK_AFTER,
+        )
+        a2 = _seed_audit(db, feature_code="f-closed")
+        db.flush()
+        _seed_review(db, audit_id=a2.id, review_status="closed")
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/review-queue",
+        params={"effective_review_status": "closed"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    items = response.json()["data"]["items"]
+    assert len(items) == 1
+    assert items[0]["feature_code"] == "f-closed"
+
+
+def test_review_queue_filter_by_incident_key() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        a1 = _seed_audit(db, feature_code="f1")
+        db.flush()
+        r1 = _seed_review(db, audit_id=a1.id)
+        r1.incident_key = "INC-1"
+        _seed_audit(db, feature_code="f2")
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/review-queue",
+        params={"incident_key": "INC-1"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    items = response.json()["data"]["items"]
+    assert len(items) == 1
+    assert items[0]["feature_code"] == "f1"
+
+
+def test_review_queue_pagination() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        for i in range(1, 6):
+            _seed_audit(
+                db,
+                feature_code=f"f{i}",
+                before_payload=_HIGH_RISK_BEFORE,
+                after_payload=_HIGH_RISK_AFTER,
+            )
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/review-queue",
+        params={"page": 2, "page_size": 2},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    assert len(payload["items"]) == 2
+    assert payload["total_count"] == 5
+    assert payload["page"] == 2
+
+
+def test_review_queue_summary_unauthorized() -> None:
+    _cleanup_tables()
+    user_token = _register_user_with_role_and_token("user@example.com", "user")
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/review-queue/summary",
+        headers={"Authorization": f"Bearer {user_token}"},
+    )
+    assert response.status_code == 403
+
+
+def test_review_queue_list_unauthorized() -> None:
+    _cleanup_tables()
+    user_token = _register_user_with_role_and_token("user@example.com", "user")
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/review-queue",
+        headers={"Authorization": f"Bearer {user_token}"},
+    )
+    assert response.status_code == 403
+
+
+def test_review_queue_returns_400_when_diff_scope_is_too_large(monkeypatch: object) -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops-too-large@example.com", "ops")
+
+    def _list_mutation_audits(*args: object, **kwargs: object) -> tuple[list[object], int]:
+        return [], 10_001
+
+    monkeypatch.setattr(
+        "app.api.v1.routers.ops_entitlement_mutation_audits."
+        "CanonicalEntitlementMutationAuditQueryService.list_mutation_audits",
+        _list_mutation_audits,
+    )
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/review-queue",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 400
+
+
+def test_review_queue_summary_returns_400_when_diff_scope_is_too_large(monkeypatch: object) -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops-too-large@example.com", "ops")
+
+    def _list_mutation_audits(*args: object, **kwargs: object) -> tuple[list[object], int]:
+        return [], 10_001
+
+    monkeypatch.setattr(
+        "app.api.v1.routers.ops_entitlement_mutation_audits."
+        "CanonicalEntitlementMutationAuditQueryService.list_mutation_audits",
+        _list_mutation_audits,
+    )
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/review-queue/summary",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 400
