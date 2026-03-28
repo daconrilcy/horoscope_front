@@ -115,3 +115,25 @@ Les réponses API B2B incluent désormais un objet `quota_info` dans le body JSO
 - `source: "canonical"` : Consommation via le moteur canonique (champs `limit`, `remaining`, `window_end` présents).
 - `source: "canonical_unlimited"` : Accès illimité via le moteur canonique.
 
+## Validation de cohérence du registre (Story 61.28)
+
+Pour garantir la pérennité de la séparation B2C/B2B introduite en 61.27, un validateur central vérifie automatiquement la cohérence entre le code et le registre.
+
+### But
+Protection du design au moment du développement et en CI, complémentaire aux garde-fous runtime de 61.27. Il assure qu'aucun `feature_code` quota ne peut être ajouté dans une gate sans être correctement enregistré et routé.
+
+### Commande de validation
+```powershell
+python backend/scripts/check_feature_scope_registry.py
+```
+
+### Vérifications effectuées
+Le validateur `FeatureRegistryConsistencyValidator` effectue 4 points de contrôle :
+1. **Exhaustivité registre ↔ gates** : Tous les `FEATURE_CODE` déclarés dans les 4 gates quota (`ChatEntitlementGate`, `ThematicConsultationEntitlementGate`, `NatalChartLongEntitlementGate`, `B2BApiEntitlementGate`) doivent être présents dans `FEATURE_SCOPE_REGISTRY`.
+2. **Scopes canoniques imposés** : Les features connues doivent avoir leur scope exact (`B2C` pour le chat, les consultations et le natal long ; `B2B` pour l'accès API).
+3. **Cohérence seed B2C** : Les 3 features `is_metered=True` du seed canonique B2C doivent être présentes dans le registre avec le scope `B2C`.
+4. **Validité du registre** : Toutes les entrées du registre doivent utiliser des valeurs valides de l'enum `FeatureScope`.
+
+### Recommandation CI
+Il est recommandé d'ajouter l'exécution de ce script comme étape obligatoire de validation statique dans la pipeline CI, aux côtés de `ruff` et `mypy`.
+
