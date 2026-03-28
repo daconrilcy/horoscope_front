@@ -1,6 +1,6 @@
 # Story 61.25 : Compteurs canoniques B2B natifs via `enterprise_feature_usage_counters`
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -631,6 +631,9 @@ claude-sonnet-4-6
 ### Debug Log References
 
 ### Completion Notes List
+- 2026-03-28 : Revue Codex post-merge. Alignement des tests unitaires annexes (`b2b_audit_service`, `b2b_api_entitlement_gate`) avec le runtime canonique par `enterprise_account_id`.
+- 2026-03-28 : Durcissement billing/réconciliation pour ignorer les compteurs mensuels non calendaires et éviter un surcomptage si d'autres quotas mensuels B2B coexistent.
+- 2026-03-28 : Script de migration historique durci avec logs catégorisés explicites (`migrated`, `already_present`, `skipped_no_account`, `skipped_multiple_accounts`, `anomalies`).
 
 ### File List
 
@@ -649,6 +652,8 @@ claude-sonnet-4-6
 - `backend/app/services/b2b_entitlement_repair_service.py`
 - `backend/app/services/b2b_billing_service.py`
 - `backend/app/services/b2b_reconciliation_service.py`
+- `backend/app/tests/unit/test_b2b_api_entitlement_gate.py`
+- `backend/app/tests/unit/test_b2b_audit_service.py`
 - `backend/app/tests/unit/test_b2b_billing_service.py`
 - `backend/app/tests/integration/test_b2b_billing_api.py`
 - `backend/app/tests/unit/test_b2b_reconciliation_service.py`
@@ -665,6 +670,7 @@ claude-sonnet-4-6
 - 2026-03-27 : v2 — 4 corrections intégrées : (1) suppression `admin_user_id` du chemin quota dans gate/summary/audit ; (2) migration `B2BAuditService` (early-return + `QuotaUsageService`) et `B2BEntitlementRepairService` (blocker) ; (3) runbook de déploiement prod ordonné ; (4) logging migration 5 catégories distinctes (`migrated`, `already_present`, `skipped_no_account`, `skipped_multiple_accounts`, `anomalies`).
 - 2026-03-27 : Implémentation complète de la story 61.25.
 - 2026-03-27 : Code Review effectuée et corrections de lint/tests appliquées.
+- 2026-03-28 : Revue Codex complémentaire. Correction des tests unitaires résiduels, durcissement des filtres billing/réconciliation et synchronisation des artefacts.
 
 ### Status
 done

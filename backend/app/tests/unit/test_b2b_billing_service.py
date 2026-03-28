@@ -289,3 +289,37 @@ def test_b2b_billing_ignores_non_monthly_counters() -> None:
         db.commit()
 
     assert cycle.consumed_units == 5
+
+
+def test_b2b_billing_ignores_non_calendar_monthly_counters() -> None:
+    _cleanup_tables()
+    account_id, _ = _create_enterprise_context()
+    _seed_usage(account_id, date(2026, 2, 20), used_count=5)
+
+    with SessionLocal() as db:
+        db.add(
+            EnterpriseFeatureUsageCounterModel(
+                enterprise_account_id=account_id,
+                feature_code="b2b_api_access",
+                quota_key="b2b_api_access_monthly_rolling",
+                period_unit=PeriodUnit.MONTH,
+                period_value=1,
+                reset_mode=ResetMode.ROLLING,
+                window_start=datetime(2026, 2, 1, tzinfo=timezone.utc),
+                window_end=datetime(2026, 3, 1, tzinfo=timezone.utc),
+                used_count=50,
+            )
+        )
+        db.commit()
+
+    with SessionLocal() as db:
+        cycle = B2BBillingService.close_cycle(
+            db,
+            account_id=account_id,
+            period_start=date(2026, 2, 1),
+            period_end=date(2026, 2, 28),
+            closed_by_user_id=None,
+        )
+        db.commit()
+
+    assert cycle.consumed_units == 5

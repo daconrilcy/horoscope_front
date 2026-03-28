@@ -28,12 +28,13 @@ def db_session() -> MagicMock:
 
 def test_audit_admin_user_id_missing(db_session: MagicMock) -> None:
     account = EnterpriseAccountModel(id=1, company_name="No Admin Co", admin_user_id=None)
+    db_session.scalar.return_value = None
 
     entry = B2BAuditService._audit_account(db_session, account)
 
     assert entry.account_id == 1
     assert entry.resolution_source == "settings_fallback"
-    assert entry.reason == "admin_user_id_missing"
+    assert entry.reason == "no_canonical_plan"
     assert entry.binding_status is None
     assert entry.admin_user_id_present is False
 
@@ -127,7 +128,7 @@ def test_audit_canonical_unlimited(
     assert entry.binding_status == "unlimited"
 
 
-@patch("app.services.b2b_audit_service.QuotaUsageService.get_usage")
+@patch("app.services.b2b_audit_service.EnterpriseQuotaUsageService.get_usage")
 @patch("app.services.b2b_audit_service.resolve_b2b_canonical_plan")
 def test_audit_canonical_quota(
     mock_resolve: MagicMock,

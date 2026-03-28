@@ -12,6 +12,9 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseAccountBillingPlanModel,
     EnterpriseBillingPlanModel,
 )
+from app.infra.db.models.enterprise_feature_usage_counters import (
+    EnterpriseFeatureUsageCounterModel,
+)
 from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,
@@ -173,7 +176,6 @@ def test_check_and_consume_quota_exhausted(db_session):
 
     # Consommer tout le quota (quota_limit=1000)
     # On peut simuler l'épuisement en créant un compteur déjà plein
-    from app.infra.db.models.product_entitlements import FeatureUsageCounterModel
     from app.services.quota_window_resolver import QuotaWindowResolver
 
     now = datetime.now(timezone.utc)
@@ -181,8 +183,8 @@ def test_check_and_consume_quota_exhausted(db_session):
         PeriodUnit.MONTH.value, 1, ResetMode.CALENDAR.value, now
     )
 
-    counter = FeatureUsageCounterModel(
-        user_id=10,
+    counter = EnterpriseFeatureUsageCounterModel(
+        enterprise_account_id=1,
         feature_code=B2BApiEntitlementGate.FEATURE_CODE,
         quota_key="calls",
         period_unit=PeriodUnit.MONTH,
@@ -267,28 +269,22 @@ def test_check_and_consume_unknown_access_mode_logs_warning(db_session, caplog):
     assert "b2b_gate_blocked" in caplog.text
 
 
-def test_check_and_consume_admin_user_missing_logs_warning(db_session, caplog):
-    # On mock le retour de db.scalar pour simuler un compte avec admin_user_id à None
-    mock_account = MagicMock(spec=EnterpriseAccountModel)
-    mock_account.admin_user_id = None
+def test_check_and_consume_admin_user_missing_no_longer_blocks_quota(db_session):
+    seed_b2b_data(db_session, account_id=1, admin_user_id=None, access_mode=AccessMode.QUOTA)
 
-    caplog.set_level("WARNING")
-    # On doit patcher le retour de db_session.scalar
-    with patch.object(db_session, "scalar", return_value=mock_account):
-        with pytest.raises(B2BApiAccessDeniedError) as exc:
-            B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
+    result = B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
 
-    assert exc.value.code == "b2b_account_not_configured"
-    assert "b2b_gate_blocked" in caplog.text
+    assert result.path == "canonical_quota"
+    assert result.usage_states[0].used == 1
 
 
 def test_check_and_consume_window_end_is_next_month(db_session):
-    # On mock datetime.now(timezone.utc) via patch dans quota_usage_service
     fixed_now = datetime(2026, 3, 15, 12, 0, 0, tzinfo=timezone.utc)
     seed_b2b_data(db_session, account_id=1, admin_user_id=10, access_mode=AccessMode.QUOTA)
 
-    with patch("app.services.quota_usage_service.datetime") as mock_dt:
+    with patch("app.services.enterprise_quota_usage_service.datetime") as mock_dt:
         mock_dt.now.return_value = fixed_now
+        mock_dt.side_effect = datetime
         # window end should be 2026-04-01 00:00:00
         result = B2BApiEntitlementGate.check_and_consume(db_session, account_id=1)
 

@@ -25,6 +25,7 @@ from app.infra.db.models.enterprise_billing import (
 from app.infra.db.models.enterprise_feature_usage_counters import (
     EnterpriseFeatureUsageCounterModel,
 )
+from app.infra.db.models.product_entitlements import PeriodUnit, ResetMode
 from app.infra.observability.metrics import increment_counter, observe_duration
 
 logger = logging.getLogger(__name__)
@@ -246,6 +247,8 @@ class B2BBillingService:
             select(func.coalesce(func.sum(EnterpriseFeatureUsageCounterModel.used_count), 0)).where(
                 EnterpriseFeatureUsageCounterModel.enterprise_account_id == account_id,
                 EnterpriseFeatureUsageCounterModel.feature_code == "b2b_api_access",
+                EnterpriseFeatureUsageCounterModel.period_unit == PeriodUnit.MONTH,
+                EnterpriseFeatureUsageCounterModel.reset_mode == ResetMode.CALENDAR,
                 EnterpriseFeatureUsageCounterModel.window_start >= month_start_utc,
                 EnterpriseFeatureUsageCounterModel.window_start < next_month_utc,
             )

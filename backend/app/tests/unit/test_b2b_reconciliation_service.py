@@ -220,3 +220,31 @@ def test_reconciliation_ignores_non_monthly_counters() -> None:
 
     assert listed.total == 1
     assert listed.items[0].usage_measured_units == 4
+
+
+def test_reconciliation_ignores_non_calendar_monthly_counters() -> None:
+    _cleanup_tables()
+    account_id, _ = _create_enterprise_context("reco-service-ignore-rolling@example.com")
+    _seed_usage(account_id, date(2026, 6, 5), used_count=4)
+
+    with SessionLocal() as db:
+        db.add(
+            EnterpriseFeatureUsageCounterModel(
+                enterprise_account_id=account_id,
+                feature_code="b2b_api_access",
+                quota_key="b2b_api_access_monthly_rolling",
+                period_unit=PeriodUnit.MONTH,
+                period_value=1,
+                reset_mode=ResetMode.ROLLING,
+                window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                window_end=datetime(2026, 7, 1, tzinfo=timezone.utc),
+                used_count=50,
+            )
+        )
+        db.commit()
+
+    with SessionLocal() as db:
+        listed = B2BReconciliationService.list_issues(db, account_id=account_id, limit=20, offset=0)
+
+    assert listed.total == 1
+    assert listed.items[0].usage_measured_units == 4

@@ -21,6 +21,7 @@ from app.infra.db.models.enterprise_billing import EnterpriseBillingCycleModel
 from app.infra.db.models.enterprise_feature_usage_counters import (
     EnterpriseFeatureUsageCounterModel,
 )
+from app.infra.db.models.product_entitlements import PeriodUnit, ResetMode
 from app.services.b2b_billing_service import B2BBillingService
 
 
@@ -308,7 +309,6 @@ class B2BReconciliationService:
             return {}
 
         # 2. Lire EnterpriseFeatureUsageCounterModel avec fenêtre UTC exclusive
-        from app.infra.db.models.product_entitlements import PeriodUnit
         counter_query = select(
             EnterpriseFeatureUsageCounterModel.enterprise_account_id,
             EnterpriseFeatureUsageCounterModel.window_start,
@@ -317,6 +317,7 @@ class B2BReconciliationService:
             EnterpriseFeatureUsageCounterModel.enterprise_account_id.in_(account_ids),
             EnterpriseFeatureUsageCounterModel.feature_code == "b2b_api_access",
             EnterpriseFeatureUsageCounterModel.period_unit == PeriodUnit.MONTH,
+            EnterpriseFeatureUsageCounterModel.reset_mode == ResetMode.CALENDAR,
         )
 
         if period_start is not None:

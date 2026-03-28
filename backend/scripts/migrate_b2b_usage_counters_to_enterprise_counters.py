@@ -25,7 +25,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def migrate_counters(dry_run: bool = False):
+def migrate_counters(dry_run: bool = False) -> None:
     db: Session = SessionLocal()
     try:
         # 1. Fetch all B2B API access counters from legacy table
@@ -39,7 +39,12 @@ def migrate_counters(dry_run: bool = False):
             .all()
         )
 
-        logger.info(f"Found {len(legacy_counters)} legacy B2B counters to migrate")
+        logger.info(
+            "category=scan mode=%s found=%s feature_code=%s",
+            "dry-run" if dry_run else "live",
+            len(legacy_counters),
+            "b2b_api_access",
+        )
 
         stats = {
             "migrated": 0,
@@ -64,16 +69,22 @@ def migrate_counters(dry_run: bool = False):
 
                 if not accounts:
                     logger.warning(
-                        f"Anomaly: No EnterpriseAccount found for admin_user_id={legacy.user_id} "
-                        f"(Counter ID: {legacy.id})"
+                        "category=skipped_no_account legacy_counter_id=%s user_id=%s",
+                        legacy.id,
+                        legacy.user_id,
                     )
                     stats["skipped_no_account"] += 1
                     continue
 
                 if len(accounts) > 1:
                     logger.error(
-                        f"Anomaly: Multiple EnterpriseAccounts found for "
-                        f"admin_user_id={legacy.user_id} (Counter ID: {legacy.id})"
+                        (
+                            "category=skipped_multiple_accounts "
+                            "legacy_counter_id=%s user_id=%s count=%s"
+                        ),
+                        legacy.id,
+                        legacy.user_id,
+                        len(accounts),
                     )
                     stats["skipped_multiple_accounts"] += 1
                     continue
@@ -98,20 +109,44 @@ def migrate_counters(dry_run: bool = False):
                     if legacy.used_count > existing.used_count:
                         if not dry_run:
                             logger.info(
-                                f"Updating existing counter for account_id={account.id}: "
-                                f"used_count {existing.used_count} -> {legacy.used_count}"
+                                (
+                                    "category=migrated action=update "
+                                    "account_id=%s legacy_counter_id=%s "
+                                    "used_count_before=%s used_count_after=%s"
+                                ),
+                                account.id,
+                                legacy.id,
+                                existing.used_count,
+                                legacy.used_count,
                             )
                             existing.used_count = legacy.used_count
                             existing.updated_at = datetime.now(timezone.utc)
                             stats["migrated"] += 1
                         else:
                             logger.info(
-                                f"[DRY-RUN] Would update existing counter for "
-                                f"account_id={account.id}: used_count {existing.used_count} "
-                                f"-> {legacy.used_count}"
+                                (
+                                    "category=migrated action=update mode=dry-run "
+                                    "account_id=%s legacy_counter_id=%s "
+                                    "used_count_before=%s used_count_after=%s"
+                                ),
+                                account.id,
+                                legacy.id,
+                                existing.used_count,
+                                legacy.used_count,
                             )
                             stats["migrated"] += 1
                     else:
+                        logger.info(
+                            (
+                                "category=already_present account_id=%s "
+                                "legacy_counter_id=%s used_count_existing=%s "
+                                "used_count_legacy=%s"
+                            ),
+                            account.id,
+                            legacy.id,
+                            existing.used_count,
+                            legacy.used_count,
+                        )
                         stats["already_present"] += 1
                     continue
 
@@ -132,25 +167,41 @@ def migrate_counters(dry_run: bool = False):
 
                 if not dry_run:
                     db.add(new_counter)
+                    logger.info(
+                        (
+                            "category=migrated action=insert "
+                            "account_id=%s legacy_counter_id=%s used_count=%s"
+                        ),
+                        account.id,
+                        legacy.id,
+                        legacy.used_count,
+                    )
                     stats["migrated"] += 1
                 else:
                     logger.info(
-                        f"[DRY-RUN] Would migrate counter for account_id={account.id}, "
-                        f"used_count={legacy.used_count}"
+                        (
+                            "category=migrated action=insert mode=dry-run "
+                            "account_id=%s legacy_counter_id=%s used_count=%s"
+                        ),
+                        account.id,
+                        legacy.id,
+                        legacy.used_count,
                     )
                     stats["migrated"] += 1
 
-            except Exception as e:
-                logger.exception(f"Unexpected error migrating counter ID {legacy.id}: {str(e)}")
+            except Exception:
+                logger.exception(
+                    "category=anomalies legacy_counter_id=%s user_id=%s",
+                    legacy.id,
+                    legacy.user_id,
+                )
                 stats["anomalies"] += 1
 
         if not dry_run:
             db.commit()
-            logger.info("Migration completed and committed")
+            logger.info("category=summary status=committed stats=%s", stats)
         else:
-            logger.info("Dry-run completed, no changes committed")
-
-        logger.info(f"Final Stats: {stats}")
+            logger.info("category=summary status=dry-run stats=%s", stats)
 
     finally:
         db.close()
