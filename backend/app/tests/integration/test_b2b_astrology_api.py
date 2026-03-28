@@ -345,7 +345,6 @@ def test_b2b_astrology_returns_weekly_by_sign_with_valid_api_key() -> None:
         assert counter.used_count == 1
 
 
-
 def test_b2b_usage_summary_returns_metrics_for_credential() -> None:
     _cleanup_tables()
     api_key = _create_enterprise_api_key_with_canonical_plan(

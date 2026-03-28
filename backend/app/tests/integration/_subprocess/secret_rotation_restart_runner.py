@@ -21,21 +21,31 @@ def _phase_1() -> int:
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db)
-        
+
         # Seed canonical features
         from app.infra.db.models.product_entitlements import (
-            FeatureCatalogModel, PlanCatalogModel, Audience, PlanFeatureBindingModel, AccessMode, SourceOrigin
+            AccessMode,
+            Audience,
+            FeatureCatalogModel,
+            PlanCatalogModel,
+            PlanFeatureBindingModel,
+            SourceOrigin,
         )
         from app.services.feature_scope_registry import FEATURE_SCOPE_REGISTRY
+
         features = {}
         for feature_code in FEATURE_SCOPE_REGISTRY:
             f = FeatureCatalogModel(
                 feature_code=feature_code,
                 feature_name=feature_code.replace("_", " ").title(),
-                is_metered=feature_code in {
-                    "astrologer_chat", "thematic_consultation", "natal_chart_long", "b2b_api_access"
+                is_metered=feature_code
+                in {
+                    "astrologer_chat",
+                    "thematic_consultation",
+                    "natal_chart_long",
+                    "b2b_api_access",
                 },
-                is_active=True
+                is_active=True,
             )
             db.add(f)
             features[feature_code] = f
@@ -43,30 +53,45 @@ def _phase_1() -> int:
 
         # Seed plans
         from app.infra.db.models.enterprise_billing import EnterpriseBillingPlanModel
+
         legacy_b2b_plan = EnterpriseBillingPlanModel(
-            code="ent-default", display_name="Default Ent", monthly_fixed_cents=0,
-            included_monthly_units=100, overage_unit_price_cents=0, currency="EUR", is_active=True
+            code="ent-default",
+            display_name="Default Ent",
+            monthly_fixed_cents=0,
+            included_monthly_units=100,
+            overage_unit_price_cents=0,
+            currency="EUR",
+            is_active=True,
         )
         db.add(legacy_b2b_plan)
         db.flush()
         legacy_plan_id = legacy_b2b_plan.id
 
-        p_b2c = PlanCatalogModel(plan_code="basic-entry", plan_name="Basic B2C", audience=Audience.B2C, is_active=True)
+        p_b2c = PlanCatalogModel(
+            plan_code="basic-entry", plan_name="Basic B2C", audience=Audience.B2C, is_active=True
+        )
         p_b2b = PlanCatalogModel(
-            plan_code="b2b-default", plan_name="Default B2B", audience=Audience.B2B, is_active=True,
+            plan_code="b2b-default",
+            plan_name="Default B2B",
+            audience=Audience.B2B,
+            is_active=True,
             source_type=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
-            source_id=legacy_plan_id
+            source_id=legacy_plan_id,
         )
         db.add_all([p_b2c, p_b2b])
         db.flush()
 
         # Bindings
-        db.add(PlanFeatureBindingModel(
-            plan_id=p_b2b.id, feature_id=features["b2b_api_access"].id,
-            access_mode=AccessMode.UNLIMITED, is_enabled=True,
-            source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value
-        ))
-        
+        db.add(
+            PlanFeatureBindingModel(
+                plan_id=p_b2b.id,
+                feature_id=features["b2b_api_access"].id,
+                access_mode=AccessMode.UNLIMITED,
+                is_enabled=True,
+                source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
+            )
+        )
+
         db.commit()
 
     client = TestClient(app)
@@ -95,12 +120,14 @@ def _phase_1() -> int:
         )
         db.add(account)
         db.flush()
-        
+
         from app.infra.db.models.enterprise_billing import EnterpriseAccountBillingPlanModel
-        db.add(EnterpriseAccountBillingPlanModel(
-            enterprise_account_id=account.id,
-            plan_id=legacy_plan_id
-        ))
+
+        db.add(
+            EnterpriseAccountBillingPlanModel(
+                enterprise_account_id=account.id, plan_id=legacy_plan_id
+            )
+        )
 
         credential = EnterpriseCredentialsService.create_credential(db, admin_user_id=auth.user.id)
         db.commit()

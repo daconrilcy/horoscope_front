@@ -26,39 +26,69 @@ from app.services.reference_data_service import ReferenceDataService
 
 def _create_enterprise_api_key(email: str) -> str:
     with SessionLocal() as db:
-        from app.infra.db.models.enterprise_billing import EnterpriseBillingPlanModel, EnterpriseAccountBillingPlanModel
-        from app.infra.db.models.product_entitlements import SourceOrigin, PlanCatalogModel, AccessMode
-        
+        from app.infra.db.models.enterprise_billing import (
+            EnterpriseAccountBillingPlanModel,
+            EnterpriseBillingPlanModel,
+        )
+        from app.infra.db.models.product_entitlements import (
+            AccessMode,
+            PlanCatalogModel,
+            SourceOrigin,
+        )
+
         # Legacy plan
-        legacy_plan = db.scalar(select(EnterpriseBillingPlanModel).where(EnterpriseBillingPlanModel.code == "rotation-ent"))
+        legacy_plan = db.scalar(
+            select(EnterpriseBillingPlanModel).where(
+                EnterpriseBillingPlanModel.code == "rotation-ent"
+            )
+        )
         if not legacy_plan:
             legacy_plan = EnterpriseBillingPlanModel(
-                code="rotation-ent", display_name="Rotation Ent", monthly_fixed_cents=0,
-                included_monthly_units=100, overage_unit_price_cents=0, currency="EUR", is_active=True
+                code="rotation-ent",
+                display_name="Rotation Ent",
+                monthly_fixed_cents=0,
+                included_monthly_units=100,
+                overage_unit_price_cents=0,
+                currency="EUR",
+                is_active=True,
             )
             db.add(legacy_plan)
             db.flush()
-        
+
         # Canonical plan
-        canonical_plan = db.scalar(select(PlanCatalogModel).where(PlanCatalogModel.plan_code == "rotation-ent"))
+        canonical_plan = db.scalar(
+            select(PlanCatalogModel).where(PlanCatalogModel.plan_code == "rotation-ent")
+        )
         if not canonical_plan:
             canonical_plan = PlanCatalogModel(
-                plan_code="rotation-ent", plan_name="Rotation B2B", audience=Audience.B2B, is_active=True,
+                plan_code="rotation-ent",
+                plan_name="Rotation B2B",
+                audience=Audience.B2B,
+                is_active=True,
                 source_type=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
-                source_id=legacy_plan.id
+                source_id=legacy_plan.id,
             )
             db.add(canonical_plan)
             db.flush()
-            
+
             # Binding
-            from app.services.b2b_api_entitlement_gate import B2BApiEntitlementGate
             from app.infra.db.models.product_entitlements import FeatureCatalogModel
-            feat = db.scalar(select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == B2BApiEntitlementGate.FEATURE_CODE))
-            db.add(PlanFeatureBindingModel(
-                plan_id=canonical_plan.id, feature_id=feat.id,
-                access_mode=AccessMode.UNLIMITED, is_enabled=True,
-                source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value
-            ))
+            from app.services.b2b_api_entitlement_gate import B2BApiEntitlementGate
+
+            feat = db.scalar(
+                select(FeatureCatalogModel).where(
+                    FeatureCatalogModel.feature_code == B2BApiEntitlementGate.FEATURE_CODE
+                )
+            )
+            db.add(
+                PlanFeatureBindingModel(
+                    plan_id=canonical_plan.id,
+                    feature_id=feat.id,
+                    access_mode=AccessMode.UNLIMITED,
+                    is_enabled=True,
+                    source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
+                )
+            )
 
         auth = AuthService.register(
             db,
@@ -73,16 +103,18 @@ def _create_enterprise_api_key(email: str) -> str:
         )
         db.add(account)
         db.flush()
-        
+
         # Assign plan to account
-        db.add(EnterpriseAccountBillingPlanModel(
-            enterprise_account_id=account.id,
-            plan_id=legacy_plan.id
-        ))
+        db.add(
+            EnterpriseAccountBillingPlanModel(
+                enterprise_account_id=account.id, plan_id=legacy_plan.id
+            )
+        )
 
         created = EnterpriseCredentialsService.create_credential(db, admin_user_id=auth.user.id)
         db.commit()
         return created.api_key
+
 
 def _seed_reference_data() -> None:
     with SessionLocal() as db:
@@ -90,6 +122,7 @@ def _seed_reference_data() -> None:
 
         # Seed canonical features
         from app.services.feature_scope_registry import FEATURE_SCOPE_REGISTRY
+
         for feature_code in FEATURE_SCOPE_REGISTRY:
             f = db.scalar(
                 select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == feature_code)
@@ -98,8 +131,12 @@ def _seed_reference_data() -> None:
                 f = FeatureCatalogModel(
                     feature_code=feature_code,
                     feature_name=feature_code.replace("_", " ").title(),
-                    is_metered=feature_code in {
-                        "astrologer_chat", "thematic_consultation", "natal_chart_long", "b2b_api_access"
+                    is_metered=feature_code
+                    in {
+                        "astrologer_chat",
+                        "thematic_consultation",
+                        "natal_chart_long",
+                        "b2b_api_access",
                     },
                     is_active=True,
                 )

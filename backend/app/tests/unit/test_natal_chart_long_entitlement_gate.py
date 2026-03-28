@@ -156,5 +156,3 @@ def test_quota_exceeded_raises_natal_error(db_session):
 
     assert exc_info.value.quota_key == "interpretations"
     assert exc_info.value.window_end is None
-
-

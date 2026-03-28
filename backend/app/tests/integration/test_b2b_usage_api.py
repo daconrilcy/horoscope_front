@@ -82,9 +82,7 @@ def _create_b2b_account_with_canonical_plan(
         db.add(ent_plan)
         db.flush()
         db.add(
-            EnterpriseAccountBillingPlanModel(
-                enterprise_account_id=account.id, plan_id=ent_plan.id
-            )
+            EnterpriseAccountBillingPlanModel(enterprise_account_id=account.id, plan_id=ent_plan.id)
         )
 
         plan = PlanCatalogModel(
@@ -169,9 +167,7 @@ def test_b2b_usage_summary_quota_mode() -> None:
 
     with SessionLocal() as db:
         ref_dt = datetime.now(timezone.utc)
-        window = QuotaWindowResolver.compute_window(
-            PeriodUnit.MONTH, 1, ResetMode.CALENDAR, ref_dt
-        )
+        window = QuotaWindowResolver.compute_window(PeriodUnit.MONTH, 1, ResetMode.CALENDAR, ref_dt)
         db.add(
             EnterpriseFeatureUsageCounterModel(
                 enterprise_account_id=account_id,

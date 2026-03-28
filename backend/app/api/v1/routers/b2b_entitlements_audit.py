@@ -170,9 +170,7 @@ def get_b2b_entitlements_audit(
 
     return {
         "data": {
-            "items": [
-                B2BAuditEntryPayload(**vars(item)).model_dump(mode="json") for item in items
-            ],
+            "items": [B2BAuditEntryPayload(**vars(item)).model_dump(mode="json") for item in items],
             "total_count": total_count,
             "page": page,
             "page_size": page_size,

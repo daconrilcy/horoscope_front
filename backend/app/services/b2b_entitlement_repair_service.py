@@ -26,6 +26,9 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.models.user import UserModel
 from app.services.b2b_audit_service import B2BAuditService
+from app.services.canonical_entitlement_mutation_service import (
+    CanonicalEntitlementMutationService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -266,38 +269,58 @@ class B2BEntitlementRepairService:
         enterprise_plan: EnterpriseBillingPlanModel,
         feature: FeatureCatalogModel,
         dry_run: bool,
-    ) -> tuple[bool, bool, PlanFeatureBindingModel, PlanFeatureQuotaModel]:
-        if not dry_run:
-            binding = PlanFeatureBindingModel(
-                plan_id=canonical_plan.id,
-                feature_id=feature.id,
-                access_mode=AccessMode.QUOTA,
-                is_enabled=True,
-                source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
-            )
-            db.add(binding)
-            db.flush()
+    ) -> tuple[bool, bool, PlanFeatureBindingModel, PlanFeatureQuotaModel | None]:
+        quotas = [
+            {
+                "quota_key": "calls",
+                "quota_limit": enterprise_plan.included_monthly_units,
+                "period_unit": PeriodUnit.MONTH,
+                "period_value": 1,
+                "reset_mode": ResetMode.CALENDAR,
+            }
+        ]
 
-            quota = PlanFeatureQuotaModel(
-                plan_feature_binding_id=binding.id,
-                quota_key="calls",
-                quota_limit=enterprise_plan.included_monthly_units,
-                period_unit=PeriodUnit.MONTH,
-                period_value=1,
-                reset_mode=ResetMode.CALENDAR,
-                source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
+        if not dry_run:
+            binding = CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
+                db,
+                plan=canonical_plan,
+                feature_code=cls.FEATURE_CODE,
+                is_enabled=True,
+                access_mode=AccessMode.QUOTA,
+                quotas=quotas,
+                source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN,
             )
-            db.add(quota)
-            db.flush()
+            # Fetch the newly created/updated quota for the return signature
+            quota = db.scalar(
+                select(PlanFeatureQuotaModel).where(
+                    PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
+                )
+            )
             return True, True, binding, quota
 
+        # dry_run: execute validation in a nested transaction then rollback
+        with db.begin_nested() as sp:
+            try:
+                CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
+                    db,
+                    plan=canonical_plan,
+                    feature_code=cls.FEATURE_CODE,
+                    is_enabled=True,
+                    access_mode=AccessMode.QUOTA,
+                    quotas=quotas,
+                    source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN,
+                )
+            finally:
+                sp.rollback()
+
+        # Build dummy objects for the report as before
         binding = PlanFeatureBindingModel(
             id=-(canonical_plan.id or 1),
             plan_id=canonical_plan.id,
             feature_id=feature.id,
             access_mode=AccessMode.QUOTA,
             is_enabled=True,
-            source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
+            source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN,
         )
         quota = PlanFeatureQuotaModel(
             id=-(enterprise_plan.id or 1),
@@ -307,7 +330,7 @@ class B2BEntitlementRepairService:
             period_unit=PeriodUnit.MONTH,
             period_value=1,
             reset_mode=ResetMode.CALENDAR,
-            source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
+            source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN,
         )
         return True, True, binding, quota
 
@@ -396,7 +419,19 @@ class B2BEntitlementRepairService:
 
         access_mode_enum = AccessMode(access_mode)
 
-        # Check if already configured identical
+        quotas = []
+        if access_mode_enum == AccessMode.QUOTA:
+            quotas = [
+                {
+                    "quota_key": "calls",
+                    "quota_limit": quota_limit,
+                    "period_unit": PeriodUnit.MONTH,
+                    "period_value": 1,
+                    "reset_mode": ResetMode.CALENDAR,
+                }
+            ]
+
+        # Check if already configured identical (AC 14 logic)
         if binding and binding.access_mode == access_mode_enum:
             if access_mode_enum != AccessMode.QUOTA:
                 return {
@@ -421,53 +456,16 @@ class B2BEntitlementRepairService:
 
         status = "updated" if binding else "created"
 
-        if not binding:
-            binding = PlanFeatureBindingModel(
-                plan_id=canonical_plan_id,
-                feature_id=feature.id,
-                access_mode=access_mode_enum,
-                is_enabled=(access_mode_enum != AccessMode.DISABLED),
-                source_origin=SourceOrigin.MANUAL.value,
-            )
-            db.add(binding)
-            db.flush()
-        else:
-            # Reclassify
-            # AC 18: Supprimer les quotas existants si on passe en non-QUOTA
-            if binding.access_mode == AccessMode.QUOTA and access_mode_enum != AccessMode.QUOTA:
-                for q in db.scalars(
-                    select(PlanFeatureQuotaModel).where(
-                        PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
-                    )
-                ).all():
-                    db.delete(q)
-
-            binding.access_mode = access_mode_enum
-            binding.is_enabled = access_mode_enum != AccessMode.DISABLED
-            binding.source_origin = SourceOrigin.MANUAL.value
-            db.add(binding)
-            db.flush()
-
-        if access_mode_enum == AccessMode.QUOTA:
-            quota = db.scalar(
-                select(PlanFeatureQuotaModel).where(
-                    PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
-                )
-            )
-            if quota:
-                quota.quota_limit = quota_limit
-                quota.source_origin = SourceOrigin.MANUAL.value
-            else:
-                quota = PlanFeatureQuotaModel(
-                    plan_feature_binding_id=binding.id,
-                    quota_key="calls",
-                    quota_limit=quota_limit,
-                    period_unit=PeriodUnit.MONTH,
-                    period_value=1,
-                    reset_mode=ResetMode.CALENDAR,
-                    source_origin=SourceOrigin.MANUAL.value,
-                )
-            db.add(quota)
+        # Use the central service for mutation
+        CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
+            db,
+            plan=plan,
+            feature_code=cls.FEATURE_CODE,
+            is_enabled=(access_mode_enum != AccessMode.DISABLED),
+            access_mode=access_mode_enum,
+            quotas=quotas,
+            source_origin=SourceOrigin.MANUAL,
+        )
 
         db.commit()
         return {

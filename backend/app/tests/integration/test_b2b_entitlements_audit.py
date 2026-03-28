@@ -313,6 +313,7 @@ def test_get_b2b_entitlements_audit_no_side_effects() -> None:
 
     with SessionLocal() as db:
         from sqlalchemy import func
+
         count_before = db.scalar(select(func.count(EnterpriseFeatureUsageCounterModel.id)))
 
     response = client.get(

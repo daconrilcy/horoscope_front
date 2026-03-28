@@ -34,7 +34,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-25 00:00:00
-last_updated: 2026-03-28 (story 61-30 ready-for-dev)
+last_updated: 2026-03-28 (story 61-31 ready-for-dev)
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -579,3 +579,4 @@ development_status:
   61-28-validation-coherence-canonique-feature-code: done
   61-29-enforcement-registre-scope-demarrage-ci: done
   61-30-validation-db-coherence-feature-scope-registry: done
+  61-31-centralisation-ecritures-canoniques-entitlements-validation-write-time: done

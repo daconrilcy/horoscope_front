@@ -7,9 +7,7 @@ from app.services.feature_registry_consistency_validator import (
 )
 from app.startup.feature_scope_validation import run_feature_scope_startup_validation
 
-VALIDATE_PATH = (
-    "app.startup.feature_scope_validation.FeatureRegistryConsistencyValidator.validate"
-)
+VALIDATE_PATH = "app.startup.feature_scope_validation.FeatureRegistryConsistencyValidator.validate"
 
 
 def test_startup_validation_strict_ok():

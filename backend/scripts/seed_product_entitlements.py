@@ -12,7 +12,6 @@ Run:
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable
 
 from sqlalchemy import select
 
@@ -22,24 +21,14 @@ from app.infra.db.models.product_entitlements import (
     FeatureCatalogModel,
     PeriodUnit,
     PlanCatalogModel,
-    PlanFeatureBindingModel,
-    PlanFeatureQuotaModel,
     ResetMode,
     SourceOrigin,
 )
 from app.infra.db.session import SessionLocal
+from app.services.canonical_entitlement_mutation_service import CanonicalEntitlementMutationService
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
-
-
-def _quota_identity(quota: dict) -> tuple[str, PeriodUnit, int, ResetMode]:
-    return (
-        quota["quota_key"],
-        quota["period_unit"],
-        quota["period_value"],
-        quota["reset_mode"],
-    )
 
 
 def seed() -> None:
@@ -307,115 +296,16 @@ def seed() -> None:
                     db.flush()
                 features[f_data["feature_code"]] = feature
 
-            def upsert_binding_and_quotas(
-                plan_code: str,
-                feature_code: str,
-                *,
-                is_enabled: bool,
-                access_mode: AccessMode,
-                variant_code: str | None = None,
-                quotas: Iterable[dict] = (),
-            ) -> None:
-                plan_id = plans[plan_code].id
-                feature_id = features[feature_code].id
-
-                binding = db.execute(
-                    select(PlanFeatureBindingModel).where(
-                        PlanFeatureBindingModel.plan_id == plan_id,
-                        PlanFeatureBindingModel.feature_id == feature_id,
-                    )
-                ).scalar_one_or_none()
-
-                if binding is None:
-                    logger.info("Creating binding %s -> %s...", plan_code, feature_code)
-                    binding = PlanFeatureBindingModel(
-                        plan_id=plan_id,
-                        feature_id=feature_id,
-                        is_enabled=is_enabled,
-                        access_mode=access_mode,
-                        variant_code=variant_code,
-                        source_origin=SourceOrigin.MANUAL,
-                    )
-                    db.add(binding)
-                    db.flush()
-                else:
-                    logger.info(
-                        "Binding %s -> %s already exists. Updating...", plan_code, feature_code
-                    )
-                    binding.is_enabled = is_enabled
-                    binding.access_mode = access_mode
-                    binding.variant_code = variant_code
-                    binding.source_origin = SourceOrigin.MANUAL
-                    db.flush()
-
-                desired_quotas = list(quotas)
-                desired_keys = {_quota_identity(q) for q in desired_quotas}
-
-                existing_quotas = (
-                    db.execute(
-                        select(PlanFeatureQuotaModel).where(
-                            PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
-                        )
-                    )
-                    .scalars()
-                    .all()
-                )
-
-                for existing in existing_quotas:
-                    identity = (
-                        existing.quota_key,
-                        existing.period_unit,
-                        existing.period_value,
-                        existing.reset_mode,
-                    )
-                    if identity not in desired_keys:
-                        logger.info(
-                            "  Removing stale quota %s for %s -> %s...",
-                            existing.quota_key,
-                            plan_code,
-                            feature_code,
-                        )
-                        db.delete(existing)
-
-                for q_data in desired_quotas:
-                    quota = db.execute(
-                        select(PlanFeatureQuotaModel).where(
-                            PlanFeatureQuotaModel.plan_feature_binding_id == binding.id,
-                            PlanFeatureQuotaModel.quota_key == q_data["quota_key"],
-                            PlanFeatureQuotaModel.period_unit == q_data["period_unit"],
-                            PlanFeatureQuotaModel.period_value == q_data["period_value"],
-                            PlanFeatureQuotaModel.reset_mode == q_data["reset_mode"],
-                        )
-                    ).scalar_one_or_none()
-
-                    if quota is None:
-                        logger.info(
-                            "  Creating quota %s for %s -> %s...",
-                            q_data["quota_key"],
-                            plan_code,
-                            feature_code,
-                        )
-                        quota = PlanFeatureQuotaModel(
-                            plan_feature_binding_id=binding.id,
-                            source_origin=SourceOrigin.MANUAL,
-                            **q_data,
-                        )
-                        db.add(quota)
-                    else:
-                        logger.info(
-                            "  Quota %s for %s -> %s already exists. Updating...",
-                            q_data["quota_key"],
-                            plan_code,
-                            feature_code,
-                        )
-                        quota.quota_limit = q_data["quota_limit"]
-                        quota.source_origin = SourceOrigin.MANUAL
-
-                db.flush()
-
             for plan_code, features_config in desired_bindings.items():
                 for feature_code, binding_config in features_config.items():
-                    upsert_binding_and_quotas(plan_code, feature_code, **binding_config)
+                    logger.info("Upserting binding %s -> %s...", plan_code, feature_code)
+                    CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
+                        db,
+                        plan=plans[plan_code],
+                        feature_code=feature_code,
+                        source_origin=SourceOrigin.MANUAL,
+                        **binding_config,
+                    )
 
             db.commit()
             print("\nSeeding complete.")

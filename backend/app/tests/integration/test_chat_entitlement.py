@@ -209,5 +209,3 @@ def test_send_message_quota_exhausted_rejected(mock_user):
     assert data["error"]["code"] == "chat_quota_exceeded"
     assert data["error"]["details"]["quota_key"] == "daily"
     assert data["error"]["details"]["window_end"] == now.isoformat()
-
-

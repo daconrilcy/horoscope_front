@@ -37,12 +37,8 @@ class EnterpriseFeatureUsageCounterModel(Base):
             "window_start",
             name="uq_enterprise_feature_usage_counters_composite",
         ),
-        CheckConstraint(
-            "period_value >= 1", name="ck_enterprise_fuc_period_value_positive"
-        ),
-        CheckConstraint(
-            "used_count >= 0", name="ck_enterprise_fuc_used_count_non_negative"
-        ),
+        CheckConstraint("period_value >= 1", name="ck_enterprise_fuc_period_value_positive"),
+        CheckConstraint("used_count >= 0", name="ck_enterprise_fuc_used_count_non_negative"),
         CheckConstraint(
             "LOWER(period_unit) = 'lifetime' OR window_end IS NOT NULL",
             name="ck_enterprise_fuc_window_end_required",

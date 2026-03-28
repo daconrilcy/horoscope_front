@@ -35,13 +35,9 @@ def test_audit_admin_user_id_absent_does_not_block_canonical_resolution(
     account = EnterpriseAccountModel(id=1, company_name="No Admin Co", admin_user_id=None)
     canonical_plan = PlanCatalogModel(id=1, plan_code="b2b_plan")
     mock_resolve.return_value = canonical_plan
-    
+
     binding = PlanFeatureBindingModel(
-        id=10, 
-        plan_id=1, 
-        feature_id=100, 
-        access_mode=AccessMode.UNLIMITED,
-        is_enabled=True
+        id=10, plan_id=1, feature_id=100, access_mode=AccessMode.UNLIMITED, is_enabled=True
     )
     # 1. acc_plan -> None, 2. binding -> binding
     db_session.scalar.side_effect = [None, binding]

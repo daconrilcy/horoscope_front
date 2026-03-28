@@ -149,5 +149,3 @@ def test_quota_exceeded_raises_consultation_error(db_session):
     assert exc_info.value.quota_key == "consultations"
     assert exc_info.value.used == 1
     assert exc_info.value.limit == 1
-
-
