@@ -18,6 +18,9 @@ from app.infra.db.models.canonical_entitlement_mutation_audit import (
 from app.infra.db.models.canonical_entitlement_mutation_audit_review import (
     CanonicalEntitlementMutationAuditReviewModel,
 )
+from app.infra.db.models.canonical_entitlement_mutation_audit_review_event import (
+    CanonicalEntitlementMutationAuditReviewEventModel,
+)
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
@@ -109,6 +112,7 @@ __all__ = [
     "CalibrationRawDayModel",
     "CanonicalEntitlementMutationAuditModel",
     "CanonicalEntitlementMutationAuditReviewModel",
+    "CanonicalEntitlementMutationAuditReviewEventModel",
     "ChartResultModel",
     "ChatConversationModel",
     "ChatMessageModel",

@@ -11,6 +11,9 @@ from app.infra.db.models.canonical_entitlement_mutation_audit import (
 from app.infra.db.models.canonical_entitlement_mutation_audit_review import (
     CanonicalEntitlementMutationAuditReviewModel,
 )
+from app.infra.db.models.canonical_entitlement_mutation_audit_review_event import (
+    CanonicalEntitlementMutationAuditReviewEventModel,
+)
 from app.infra.db.session import SessionLocal, engine
 from app.services.canonical_entitlement_mutation_audit_review_service import (
     AuditNotFoundError,
@@ -213,3 +216,188 @@ def test_upsert_recovers_from_concurrent_insert_race() -> None:
         assert len(rows) == 1
         assert rows[0].review_status == "closed"
         assert rows[0].review_comment == "Resolved after race"
+
+
+def test_upsert_creates_event_on_first_review() -> None:
+    _setup()
+    with SessionLocal() as db:
+        audit = _seed_audit(db)
+        db.flush()
+        audit_id = audit.id
+
+        CanonicalEntitlementMutationAuditReviewService.upsert_review(
+            db,
+            audit_id=audit_id,
+            review_status="acknowledged",
+            reviewed_by_user_id=42,
+            review_comment="First review",
+            incident_key="INC-001",
+            request_id="req-123",
+        )
+        db.commit()
+
+    with SessionLocal() as db:
+        events = (
+            db.execute(select(CanonicalEntitlementMutationAuditReviewEventModel))
+            .scalars()
+            .all()
+        )
+        assert len(events) == 1
+        assert events[0].audit_id == audit_id
+        assert events[0].previous_review_status is None
+        assert events[0].new_review_status == "acknowledged"
+        assert events[0].new_review_comment == "First review"
+        assert events[0].new_incident_key == "INC-001"
+        assert events[0].request_id == "req-123"
+
+
+def test_upsert_creates_event_on_status_change() -> None:
+    _setup()
+    with SessionLocal() as db:
+        audit = _seed_audit(db)
+        db.flush()
+        audit_id = audit.id
+
+        # First review
+        CanonicalEntitlementMutationAuditReviewService.upsert_review(
+            db,
+            audit_id=audit_id,
+            review_status="investigating",
+            reviewed_by_user_id=1,
+            review_comment="Investigating...",
+            incident_key=None,
+        )
+        db.commit()
+
+        # Second review (change)
+        CanonicalEntitlementMutationAuditReviewService.upsert_review(
+            db,
+            audit_id=audit_id,
+            review_status="closed",
+            reviewed_by_user_id=2,
+            review_comment="Closed finally",
+            incident_key="INC-999",
+        )
+        db.commit()
+
+    with SessionLocal() as db:
+        events = (
+            db.execute(
+                select(CanonicalEntitlementMutationAuditReviewEventModel).order_by(
+                    CanonicalEntitlementMutationAuditReviewEventModel.occurred_at.asc()
+                )
+            )
+            .scalars()
+            .all()
+        )
+        assert len(events) == 2
+        assert events[1].previous_review_status == "investigating"
+        assert events[1].new_review_status == "closed"
+        assert events[1].previous_review_comment == "Investigating..."
+        assert events[1].new_review_comment == "Closed finally"
+        assert events[1].previous_incident_key is None
+        assert events[1].new_incident_key == "INC-999"
+
+
+def test_upsert_no_event_on_noop() -> None:
+    _setup()
+    with SessionLocal() as db:
+        audit = _seed_audit(db)
+        db.flush()
+        audit_id = audit.id
+
+        # First review
+        r1 = CanonicalEntitlementMutationAuditReviewService.upsert_review(
+            db,
+            audit_id=audit_id,
+            review_status="acknowledged",
+            reviewed_by_user_id=1,
+            review_comment="Comment",
+            incident_key="INC",
+        )
+        db.commit()
+        first_reviewed_at = r1.reviewed_at
+
+        # No-op review
+        r2 = CanonicalEntitlementMutationAuditReviewService.upsert_review(
+            db,
+            audit_id=audit_id,
+            review_status="acknowledged",
+            reviewed_by_user_id=99,  # User change but fields same -> NO-OP
+            review_comment="Comment",
+            incident_key="INC",
+        )
+        db.commit()
+
+        assert r2.reviewed_at == first_reviewed_at
+
+    with SessionLocal() as db:
+        events = (
+            db.execute(select(CanonicalEntitlementMutationAuditReviewEventModel))
+            .scalars()
+            .all()
+        )
+        assert len(events) == 1
+
+
+def test_upsert_event_carries_request_id() -> None:
+    _setup()
+    with SessionLocal() as db:
+        audit = _seed_audit(db)
+        db.flush()
+        audit_id = audit.id
+
+        CanonicalEntitlementMutationAuditReviewService.upsert_review(
+            db,
+            audit_id=audit_id,
+            review_status="closed",
+            reviewed_by_user_id=1,
+            review_comment=None,
+            incident_key=None,
+            request_id="trace-abc-123",
+        )
+        db.commit()
+
+    with SessionLocal() as db:
+        event = db.execute(
+            select(CanonicalEntitlementMutationAuditReviewEventModel)
+        ).scalar_one()
+        assert event.request_id == "trace-abc-123"
+
+
+def test_upsert_transactional_rollback() -> None:
+    """Si db.flush() sur l'event lève une exception, la session peut rollback."""
+    from unittest.mock import MagicMock
+    import pytest
+
+    db = MagicMock()
+    audit = MagicMock()
+    audit.id = 1
+    db.get.return_value = audit
+
+    # Pas de revue existante
+    db.execute.return_value.scalar_one_or_none.return_value = None
+
+    # Simuler un flush qui échoue sur le 2ème appel (après l'insertion de l'événement)
+    flush_call_count = {"n": 0}
+
+    def flush_side_effect():
+        flush_call_count["n"] += 1
+        if flush_call_count["n"] == 2:
+            raise Exception("DB error on event insert")
+
+    db.flush.side_effect = flush_side_effect
+
+    with pytest.raises(Exception, match="DB error on event insert"):
+        CanonicalEntitlementMutationAuditReviewService.upsert_review(
+            db,
+            audit_id=1,
+            review_status="closed",
+            reviewed_by_user_id=1,
+            review_comment=None,
+            incident_key=None,
+        )
+
+    # db.add() a été appelé 2 fois (1x projection, 1x événement)
+    # Mais comme le 2ème flush a échoué, l'appelant (router) peut rollback.
+    assert db.add.call_count == 2

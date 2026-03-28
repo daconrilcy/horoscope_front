@@ -402,3 +402,84 @@ GET /v1/ops/entitlements/mutation-audits?review_status=pending_review
 ### Service d'écriture
 
 `CanonicalEntitlementMutationAuditReviewService.upsert_review()` gère l'INSERT/UPDATE de la revue. Le router contrôle le `commit()`. Le query service 61.33 n'est pas modifié.
+
+---
+
+## Story 61.36 — Historisation append-only des transitions de revue
+
+Depuis la story 61.36, toute transition de statut ou modification d'une revue ops (Story 61.35) est historisée de manière immuable dans une table d'événements dédiée.
+
+### Table `canonical_entitlement_mutation_audit_review_events`
+
+Cette table est **append-only**. Une nouvelle ligne est créée à chaque création de revue ou à chaque modification réelle (changement de statut, de commentaire ou d'incident).
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `id` | int PK | Identifiant interne |
+| `audit_id` | int FK INDEX | Référence vers `canonical_entitlement_mutation_audits.id` |
+| `previous_review_status` | str(32) nullable | Statut avant transition (null au 1er event) |
+| `new_review_status` | str(32) NOT NULL | Nouveau statut |
+| `previous_review_comment`| text nullable | Commentaire avant modification |
+| `new_review_comment` | text nullable | Nouveau commentaire |
+| `previous_incident_key` | str(64) nullable | Incident avant modification |
+| `new_incident_key` | str(64) nullable | Nouvel incident |
+| `reviewed_by_user_id` | int nullable | Opérateur auteur du changement |
+| `occurred_at` | timestamptz INDEX | Date de l'événement (UTC) |
+| `request_id` | str(64) nullable | ID de requête pour corrélation logs |
+
+### Règle No-Op et Historisation
+
+L'historisation est intelligente pour éviter le bruit :
+
+1. **Création** : Le premier `POST /review` crée systématiquement un événement (`previous_review_status` est `null`).
+2. **Modification** : Un événement n'est créé que si au moins un des champs métier (`review_status`, `review_comment`, `incident_key`) a réellement changé.
+3. **No-Op** : Si un `POST /review` est renvoyé avec des valeurs identiques à la revue actuelle, **aucun événement n'est créé** et la date `reviewed_at` de la revue principale n'est pas mise à jour.
+
+### Endpoint de consultation de l'historique
+
+```
+GET /v1/ops/entitlements/mutation-audits/{audit_id}/review-history
+```
+
+**Rôles requis** : `ops` ou `admin`.
+
+**Réponse** :
+```json
+{
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "audit_id": 1042,
+        "new_review_status": "acknowledged",
+        "new_review_comment": "Premier check",
+        "reviewed_by_user_id": 42,
+        "occurred_at": "2026-03-28T10:00:00Z",
+        "request_id": "req-abc-123"
+      },
+      {
+        "id": 2,
+        "audit_id": 1042,
+        "previous_review_status": "acknowledged",
+        "new_review_status": "closed",
+        "previous_review_comment": "Premier check",
+        "new_review_comment": "Clôturé après fix",
+        "new_incident_key": "INC-2026-001",
+        "reviewed_by_user_id": 43,
+        "occurred_at": "2026-03-28T11:00:00Z",
+        "request_id": "req-xyz-456"
+      }
+    ],
+    "total_count": 2
+  },
+  "meta": { "request_id": "..." }
+}
+```
+
+- Les événements sont triés par `occurred_at ASC` (ordre chronologique).
+- Si `audit_id` inexistant → HTTP 404.
+- Si l'audit existe mais n'a aucune revue → `items: []`, `total_count: 0`.
+
+### Propagation du `request_id`
+
+Le `request_id` résolu par le router est systématiquement propagé au service d'écriture pour être stocké dans l'événement, permettant une traçabilité complète de "qui a fait quoi via quelle requête".

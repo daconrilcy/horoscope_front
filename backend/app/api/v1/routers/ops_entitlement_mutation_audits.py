@@ -29,6 +29,7 @@ from app.services.canonical_entitlement_mutation_diff_service import (
 
 router = APIRouter(prefix="/v1/ops/entitlements", tags=["ops-entitlement-audits"])
 
+WritableReviewStatusLiteral = Literal["acknowledged", "expected", "investigating", "closed"]
 ReviewStatusLiteral = Literal[
     "pending_review", "acknowledged", "expected", "investigating", "closed"
 ]
@@ -48,14 +49,14 @@ class ReviewState(BaseModel):
 
 
 class ReviewRequestBody(BaseModel):
-    review_status: ReviewStatusLiteral
+    review_status: WritableReviewStatusLiteral
     review_comment: str | None = None
     incident_key: str | None = None
 
 
 class ReviewResponse(BaseModel):
     audit_id: int
-    review_status: ReviewStatusLiteral
+    review_status: WritableReviewStatusLiteral
     reviewed_by_user_id: int | None = None
     reviewed_at: datetime
     review_comment: str | None = None
@@ -114,6 +115,30 @@ class MutationAuditDetailApiResponse(BaseModel):
 
 class ReviewApiResponse(BaseModel):
     data: ReviewResponse
+    meta: ResponseMeta
+
+
+class ReviewEventItem(BaseModel):
+    id: int
+    audit_id: int
+    previous_review_status: ReviewStatusLiteral | None = None
+    new_review_status: ReviewStatusLiteral
+    previous_review_comment: str | None = None
+    new_review_comment: str | None = None
+    previous_incident_key: str | None = None
+    new_incident_key: str | None = None
+    reviewed_by_user_id: int | None = None
+    occurred_at: datetime
+    request_id: str | None = None
+
+
+class ReviewHistoryData(BaseModel):
+    items: list[ReviewEventItem]
+    total_count: int
+
+
+class ReviewHistoryApiResponse(BaseModel):
+    data: ReviewHistoryData
     meta: ResponseMeta
 
 
@@ -534,6 +559,7 @@ def post_mutation_audit_review(
             reviewed_by_user_id=current_user.id,
             review_comment=body.review_comment,
             incident_key=body.incident_key,
+            request_id=request_id,
         )
         db.commit()
     except AuditNotFoundError:
@@ -553,6 +579,84 @@ def post_mutation_audit_review(
             "reviewed_at": review.reviewed_at,
             "review_comment": review.review_comment,
             "incident_key": review.incident_key,
+        },
+        "meta": {"request_id": request_id},
+    }
+
+
+@router.get(
+    "/mutation-audits/{audit_id}/review-history",
+    response_model=ReviewHistoryApiResponse,
+    response_model_exclude_none=True,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def get_review_history(
+    audit_id: int,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+
+    role_error = _ensure_ops_role(current_user, request_id)
+    if role_error is not None:
+        return role_error
+
+    limit_error = _enforce_limits(
+        user=current_user, request_id=request_id, operation="review_history"
+    )
+    if limit_error is not None:
+        return limit_error
+
+    # Vérification existence de l'audit
+    from app.infra.db.models.canonical_entitlement_mutation_audit import (
+        CanonicalEntitlementMutationAuditModel,
+    )
+    from app.infra.db.models.canonical_entitlement_mutation_audit_review_event import (
+        CanonicalEntitlementMutationAuditReviewEventModel,
+    )
+
+    audit = db.get(CanonicalEntitlementMutationAuditModel, audit_id)
+    if audit is None:
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="audit_not_found",
+            message=f"Audit {audit_id} not found",
+            details={"audit_id": audit_id},
+        )
+
+    result = db.execute(
+        select(CanonicalEntitlementMutationAuditReviewEventModel)
+        .where(CanonicalEntitlementMutationAuditReviewEventModel.audit_id == audit_id)
+        .order_by(CanonicalEntitlementMutationAuditReviewEventModel.occurred_at.asc())
+    )
+    events = result.scalars().all()
+
+    return {
+        "data": {
+            "items": [
+                {
+                    "id": e.id,
+                    "audit_id": e.audit_id,
+                    "previous_review_status": e.previous_review_status,
+                    "new_review_status": e.new_review_status,
+                    "previous_review_comment": e.previous_review_comment,
+                    "new_review_comment": e.new_review_comment,
+                    "previous_incident_key": e.previous_incident_key,
+                    "new_incident_key": e.new_incident_key,
+                    "reviewed_by_user_id": e.reviewed_by_user_id,
+                    "occurred_at": e.occurred_at,
+                    "request_id": e.request_id,
+                }
+                for e in events
+            ],
+            "total_count": len(events),
         },
         "meta": {"request_id": request_id},
     }

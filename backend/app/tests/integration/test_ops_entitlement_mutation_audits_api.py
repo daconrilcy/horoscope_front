@@ -982,3 +982,181 @@ def test_detail_includes_review_field() -> None:
     item = response.json()["data"]
     assert "review" in item
     assert item["review"]["status"] == "investigating"
+
+
+# ---------------------------------------------------------------------------
+# Tests Story 61.36
+# ---------------------------------------------------------------------------
+
+
+def test_get_review_history_empty_returns_200() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        audit = _seed_audit(db)
+        db.commit()
+        audit_id = audit.id
+
+    response = client.get(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review-history",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["items"] == []
+    assert data["total_count"] == 0
+
+
+def test_get_review_history_after_one_review() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        audit = _seed_audit(db)
+        db.commit()
+        audit_id = audit.id
+
+    client.post(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review",
+        json={"review_status": "acknowledged", "review_comment": "Checked"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+
+    response = client.get(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review-history",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["total_count"] == 1
+    item = data["items"][0]
+    assert item["new_review_status"] == "acknowledged"
+    assert item["new_review_comment"] == "Checked"
+    # previous_* fields should be omitted because they are None
+    assert "previous_review_status" not in item
+    assert "previous_review_comment" not in item
+
+
+def test_get_review_history_chain_of_transitions() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        audit = _seed_audit(db)
+        db.commit()
+        audit_id = audit.id
+
+    # 1. First review
+    client.post(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review",
+        json={"review_status": "acknowledged"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    # 2. Transition to investigating
+    client.post(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review",
+        json={"review_status": "investigating", "review_comment": "Investigating"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    # 3. Transition to closed
+    client.post(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review",
+        json={"review_status": "closed", "incident_key": "INC-123"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+
+    response = client.get(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review-history",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    items = response.json()["data"]["items"]
+    assert len(items) == 3
+
+    # Order ASC: occurred_at
+    assert items[0]["new_review_status"] == "acknowledged"
+    assert "previous_review_status" not in items[0]
+
+    assert items[1]["previous_review_status"] == "acknowledged"
+    assert items[1]["new_review_status"] == "investigating"
+    assert items[1]["new_review_comment"] == "Investigating"
+
+    assert items[2]["previous_review_status"] == "investigating"
+    assert items[2]["new_review_status"] == "closed"
+    assert items[2]["new_incident_key"] == "INC-123"
+
+
+def test_get_review_history_noop_no_event_created() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        audit = _seed_audit(db)
+        db.commit()
+        audit_id = audit.id
+
+    # First review
+    client.post(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review",
+        json={"review_status": "acknowledged", "review_comment": "OK"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+
+    # No-op review
+    client.post(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review",
+        json={"review_status": "acknowledged", "review_comment": "OK"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+
+    response = client.get(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review-history",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.json()["data"]["total_count"] == 1
+
+
+def test_get_review_history_nonexistent_audit_returns_404() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/99999/review-history",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "audit_not_found"
+
+
+def test_get_review_history_unauthenticated_returns_401() -> None:
+    _cleanup_tables()
+    response = client.get("/v1/ops/entitlements/mutation-audits/1/review-history")
+    assert response.status_code == 401
+
+
+def test_get_review_history_requires_ops_role() -> None:
+    _cleanup_tables()
+    user_token = _register_user_with_role_and_token("user@example.com", "user")
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/1/review-history",
+        headers={"Authorization": f"Bearer {user_token}"},
+    )
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "insufficient_role"
+
+
+def test_get_review_history_request_id_propagated() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        audit = _seed_audit(db)
+        db.commit()
+        audit_id = audit.id
+
+    client.post(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review",
+        json={"review_status": "acknowledged"},
+        headers={"Authorization": f"Bearer {ops_token}", "X-Request-Id": "my-trace-id"},
+    )
+
+    response = client.get(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review-history",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.json()["data"]["items"][0]["request_id"] == "my-trace-id"
