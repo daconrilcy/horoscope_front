@@ -18,8 +18,12 @@ def upgrade() -> None:
     op.create_table(
         "canonical_entitlement_mutation_audits",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column("occurred_at", sa.DateTime(timezone=True), nullable=False,
-                  server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "occurred_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
         sa.Column("operation", sa.String(64), nullable=False),
         sa.Column("plan_id", sa.Integer(), nullable=False),
         sa.Column("plan_code_snapshot", sa.String(64), nullable=False),

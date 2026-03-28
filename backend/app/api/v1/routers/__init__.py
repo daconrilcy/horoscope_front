@@ -10,7 +10,9 @@ from app.api.v1.routers.chat import router as chat_router
 from app.api.v1.routers.consultations import router as consultations_router
 from app.api.v1.routers.enterprise_credentials import router as enterprise_credentials_router
 from app.api.v1.routers.guidance import router as guidance_router
-from app.api.v1.routers.ops_entitlement_mutation_audits import router as ops_entitlement_mutation_audits_router
+from app.api.v1.routers.ops_entitlement_mutation_audits import (
+    router as ops_entitlement_mutation_audits_router,
+)
 from app.api.v1.routers.ops_feature_flags import router as ops_feature_flags_router
 from app.api.v1.routers.ops_monitoring import router as ops_monitoring_router
 from app.api.v1.routers.ops_persona import router as ops_persona_router

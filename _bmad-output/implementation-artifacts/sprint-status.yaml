@@ -1,45 +1,9 @@
-# generated: 2026-03-07 18:05:00
-# project: horoscope_front
-# project_key: NOKEY
-# tracking_system: file-system
-# story_location: {project-root}/_bmad-output/implementation-artifacts
-
-# STATUS DEFINITIONS:
-# ==================
-# Epic Status:
-#   - backlog: Epic not yet started
-#   - in-progress: Epic actively being worked on
-#   - done: All stories in epic completed
-#
-# Epic Status Transitions:
-#   - backlog → in-progress: Automatically when first story is created (via create-story)
-#   - in-progress → done: Manually when all stories reach 'done' status
-#
-# Story Status:
-#   - backlog: Story only exists in epic file
-#   - ready-for-dev: Story file created in stories folder
-#   - in-progress: Developer actively working on implementation
-#   - review: Ready for code review (via Dev's code-review workflow)
-#   - done: Story completed
-#
-# Retrospective Status:
-#   - optional: Can be completed but not required
-#   - done: Retrospective has been completed
-#
-# WORKFLOW NOTES:
-# ===============
-# - Epic transitions to 'in-progress' automatically when first story is created
-# - Stories can be worked in parallel if team capacity allows
-# - SM typically creates next story after previous one is 'done' to incorporate learnings
-# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
-
 generated: 2026-03-25 00:00:00
-last_updated: 2026-03-28 (story 61-34 ready-for-dev)
+last_updated: '2026-03-28T18:44:31.075437'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
-story_location: "{project-root}/_bmad-output/implementation-artifacts"
-
+story_location: '{project-root}/_bmad-output/implementation-artifacts'
 development_status:
   epic-1: done
   1-1-set-up-initial-project-from-starter-template: done
@@ -48,7 +12,6 @@ development_status:
   1-4-calculer-un-resultat-natal-de-base: done
   1-5-assurer-la-tracabilite-regle-donnee-resultat: done
   epic-1-retrospective: done
-
   epic-2: done
   2-1-inscription-et-authentification-utilisateur-jwt: done
   2-2-saisie-et-gestion-des-donnees-natales: done
@@ -57,7 +20,6 @@ development_status:
   2-5-coherence-inter-sessions-des-resultats: done
   2-6-interface-utilisateur-signin-signout: done
   epic-2-retrospective: done
-
   epic-3: done
   3-1-chat-astrologue-avec-envoi-reception-de-messages: done
   3-2-persistance-du-contexte-conversationnel: done
@@ -67,23 +29,19 @@ development_status:
   3-6-detection-hors-scope-et-recuperation-guidee: done
   3-7-parametrage-des-bornes-de-persona-astrologue: done
   epic-3-retrospective: done
-
   epic-4: done
   4-1-souscription-au-plan-payant-d-entree: done
   4-2-quotas-journaliers-et-suivi-de-consommation: done
   4-3-upgrade-modification-de-plan: done
   epic-4-retrospective: done
-
   epic-5: done
   5-1-export-et-suppression-des-donnees-personnelles: done
   5-2-anonymisation-llm-et-audit-des-actions-sensibles: done
   epic-5-retrospective: done
-
   epic-6: done
   6-1-outillage-support-compte-incidents-demandes-privacy: done
   6-2-monitoring-qualite-conversationnelle-et-pilotage-ops: done
   epic-6-retrospective: done
-
   epic-7: done
   7-1-espace-compte-entreprise-et-gestion-des-credentials-api: done
   7-2-consommation-api-astrologie-authentifiee: done
@@ -91,54 +49,45 @@ development_status:
   7-4-personnalisation-editoriale-du-contenu-b2b: done
   7-5-facturation-hybride-fixe-volume: done
   epic-7-retrospective: done
-
   epic-8: done
   8-1-pipeline-ci-cd-avec-quality-gates-obligatoires: done
   8-2-observabilite-operationnelle-dashboards-alertes: done
   8-3-sauvegarde-restauration-et-runbooks-incidents: done
   8-4-tests-de-charge-et-de-concurrence-des-flux-critiques: done
   epic-8-retrospective: done
-
   epic-9: done
   9-1-durcissement-de-la-gestion-des-secrets-et-rotation: done
   9-2-pack-de-verification-securite-sast-deps-pentest: done
   9-3-preuves-operationnelles-rgpd-export-suppression-audit: done
   epic-9-retrospective: done
-
   epic-10: done
   10-1-couverture-tests-frontend-b2b-completee: done
   10-2-reconciliation-usage-facturation-b2b-pour-ops: done
   10-3-tuning-performance-guide-par-slo: done
   epic-10-retrospective: done
-
   epic-11: done
   11-1-raffinement-multi-persona-astrologue: done
   11-2-modules-tarot-runes-derriere-feature-flags: done
   11-3-instrumentation-des-experiments-packaging-pricing: done
   epic-11-retrospective: done
-
   epic-12: done
   12-1-formulaire-saisie-profil-natal: done
   12-2-declenchement-generation-theme-natal-depuis-ui: done
   epic-12-retrospective: done
-
   epic-13: done
   13-1-correction-erreur-422-generation-theme-natal: done
   epic-13-retrospective: done
-
   epic-14: done
   14-1-geocodage-lieu-naissance-nominatim: done
   14-2-modes-degrades-lieu-heure-absents: done
   14-3-table-traduction-termes-astrologiques: done
   epic-14-retrospective: done
-
   epic-15: done
   15-1-ai-text-engine-openai-gateway: done
   15-2-ai-text-engine-rate-limiting-observability-docker: done
   15-3-migration-services-chat-guidance-vers-ai-engine: done
   15-4-interpretation-textuelle-theme-natal-via-ai-engine: done
   epic-15-retrospective: done
-
   epic-16: done
   16-1-react-router-layout-foundation: done
   16-2-dashboard-page: done
@@ -149,7 +98,6 @@ development_status:
   16-7-admin-pages: done
   16-8-correction-parcours-theme-natal: done
   epic-16-retrospective: done
-
   epic-17: done
   17-1-fondations-ui-tokens-typo-lucide: done
   17-2-fond-premium-gradient-noise-starfield: done
@@ -167,13 +115,11 @@ development_status:
   17-14-correctifs-premium-v3-fond-hero-mini-cards-toggle: done
   17-15-correctifs-visuels-v5-gradient-original-mini-cards-wash-cta-panel: done
   epic-17-retrospective: done
-
   epic-18: done
   18-1-astro-profile-backend-sun-sign-ascendant-null-time: done
   18-2-astro-profile-frontend-api-types-null-time: done
   18-3-astro-profile-ui-hero-profile-natal-svg-css: done
   epic-18-retrospective: done
-
   epic-19: done
   19-1-comment-lire-ton-theme-natal-dans-l-app: done
   19-2-backend-geocoding-search-proxy-nominatim: done
@@ -182,7 +128,6 @@ development_status:
   19-5-geocoding-resolve-confirm-selection: done
   19-6-rattachement-birth-profile-place-resolved: done
   epic-19-retrospective: done
-
   epic-20: done
   20-1-installation-configuration-swiss-ephemeris: done
   20-2-ephemeris-provider-swiss-calc-ut: done
@@ -200,45 +145,37 @@ development_status:
   20-14-guide-natal-clarification-faq: done
   20-15-traductions-guide-natal-faq: done
   epic-20-retrospective: optional
-
   epic-21: done
   21-1-packager-fichiers-swiss-ephemeris-prod: done
   21-2-initialisation-swisseph-robuste-erreurs-explicites: done
   21-3-observabilite-perf-engine-swisseph: done
   epic-21-retrospective: optional
-
   epic-22: done
   22-1-standardiser-pipeline-temps-prepared-input: done
   22-2-ajouter-delta-t-jd-tt-optionnels: done
   epic-22-retrospective: optional
-
   epic-23: done
   23-1-exposer-ruleset-zodiac-ayanamsa-frame-houses: done
   23-2-houses-placidus-whole-sign-equal: done
   23-3-frame-geocentric-vs-topocentric: done
   23-4-zodiac-tropical-vs-sidereal-ayanamsa: done
   epic-23-retrospective: optional
-
   epic-24: done
   24-1-modele-regles-aspects-schools-versionnees: done
   24-2-calcul-aspects-orbs-overrides: done
   epic-24-retrospective: optional
-
   epic-25: done
   25-1-dataset-golden-pro-50-200-cas: done
   25-2-script-cross-tool-report-dev-only: done
   epic-25-retrospective: optional
-
   epic-26: done
   26-1-timezone-iana-derived-source-tracabilite: done
   26-2-gestion-dates-historiques-ambigu-dst: done
   epic-26-retrospective: optional
-
   epic-27: done
   27-1-standardiser-sortie-api-audit-grade: done
   27-2-documentation-dev-reglages-erreurs-validation: done
   epic-27-retrospective: optional
-
   epic-28: done
   28-1-llm-gateway-point-entree-unique: done
   28-2-prompt-registry-v2-versioning-db-admin: done
@@ -247,7 +184,6 @@ development_status:
   28-5-usecase-contract-catalogue: done
   28-6-observabilite-evaluation-harness: done
   epic-28-retrospective: optional
-
   epic-29: done
   29-1-n1-chart-json-canon-evidence-catalog: done
   29-2-n2-natal-interpretation-service-v2-endpoint: done
@@ -255,7 +191,6 @@ development_status:
   29-4-n4-ui-astroresponse-v1-upsell: done
   29-5-n5-eval-fixtures-gate: done
   epic-29-retrospective: optional
-
   epic-30: done
   30-1-overrides-modeles-llm-env: done
   30-2-astroresponse-v2-schema-etendu: done
@@ -277,19 +212,15 @@ development_status:
   30-18-chat-ux-header-chip-layout: done
   30-19-localisation-courante-consentement-injection-contexte-prompts: done
   epic-30-retrospective: optional
-
   epic-31: done
   31-1-migration-a-tables-profils-matrices-prediction: done
   31-2-migration-b-ruleset-parametres-calibrations: done
   31-3-migration-d-reference-version-2-seed-lock: done
   31-4-migration-e-repository-enrichi-moteur-prediction: done
-
   epic-31-retrospective: optional
-
   epic-32: done
   32-1-migration-c-tables-persistance-quotidienne-predictions: done
   epic-32-retrospective: optional
-
   epic-33: done
   33-1-engine-contract-orchestrateur: done
   33-2-context-loader: done
@@ -298,54 +229,45 @@ development_status:
   33-5-event-detector: done
   33-6-natal-sensitivity: done
   epic-33-retrospective: optional
-
   epic-34: done
   34-1-domain-routing: done
   34-2-contribution-calculator: done
   34-3-aggregateur-raw-day: done
-
   34-4-calibrateur-note-20: done
   34-5-turning-points-blocs-ux: done
   epic-34-retrospective: optional
-
   epic-35: done
   35-1-persistance-run: done
   35-2-explicabilite-debug: done
   35-3-non-regression: done
   35-4-couche-editoriale: done
   epic-35-retrospective: optional
-
   epic-36: done
   36-1-service-applicatif-daily-prediction: done
   36-2-endpoint-api-daily-prediction: done
   36-3-endpoint-historique-daily-prediction: done
   36-4-dto-front-mapping-ui-v1: done
   36-5-observabilite-debug-prediction: done
-
   epic-37: done
   37-1-specification-dataset-calibration: done
   37-2-job-generation-rawday-calibration: done
   37-3-calculateur-percentiles-categories: done
   37-4-validation-metier-notes: done
   37-5-versionning-rollout-calibration: done
-
   epic-38: done
   38-1-templates-editoriaux-parametrables: done
   38-2-i18n-editorial-coherence-stylistique: done
   38-3-qa-produit-cas-reels: done
   38-4-analytics-instrumentation-usage: done
   38-5-gardefous-runtime-exploitation: done
-
   epic-39: done
   39-1-introduire-un-ruleset-canonique-2-0-0: done
   39-2-basculer-la-configuration-runtime-et-centraliser-les-versions-actives: done
   39-3-migrer-les-jobs-fixtures-et-tests-vers-le-nouveau-versionning-metier: done
   39-4-documenter-monitorer-et-deprecier-le-ruleset-legacy: done
-
   epic-40: done
   40-1-summaries-humanises-time-blocks-et-turning-points: done
   40-2-discrimination-scores-calibration-provisoire: done
-
   epic-41: done
   41-1-realigner-taxonomie-et-hierarchie-evenements-intraday: done
   41-2-propager-influence-temporelle-evenements-fenetres-utiles: done
@@ -363,7 +285,6 @@ development_status:
   41-14-projection-publique-des-micro-tendances-des-journees-plates: done
   41-15-jobs-de-generation-et-refresh-de-baseline-utilisateur: done
   41-16-qa-et-gardefous-produit-pour-la-calibration-relative: done
-
   epic-42: done
   42-1-formaliser-le-modele-de-signal-daily-v3: done
   42-2-construire-la-susceptibilite-natale-structurelle: done
@@ -383,14 +304,12 @@ development_status:
   42-16-brancher-la-projection-publique-et-la-future-interpretation-sur-l-evidence-pack: done
   42-17-verrouiller-qa-backtesting-et-migration-progressive-du-moteur-v3: done
   epic-42-retrospective: optional
-
   epic-43: done
   43-1-structurer-une-semantique-explicable-des-bascules: done
   43-2-introduire-un-wording-i18n-pour-les-moments-cles: done
   43-3-refaire-le-rendu-ui-des-moments-cles: done
   43-4-verrouiller-qa-et-coherence-multilingue-des-moments-cles: done
   epic-43-retrospective: optional
-
   epic-44: done
   44-1-etendre-le-contrat-public-des-moments-cles-avec-des-indicateurs-de-mouvement: done
   44-2-calculer-et-projeter-les-deltas-de-mouvement-des-bascules: done
@@ -398,14 +317,12 @@ development_status:
   44-4-refondre-le-rendu-ui-des-moments-cles-avec-mouvement-et-deltas: done
   44-5-verrouiller-qa-et-garde-fous-de-bruit-sur-les-valeurs-de-bascule: done
   epic-44-retrospective: optional
-
   epic-45: done
   45-1-refondre-le-routing-dashboard-et-isoler-la-page-horoscope-detaillee: done
   45-2-creer-la-landing-dashboard-avec-resume-et-hub-d-activites: done
   45-3-restaurer-une-page-horoscope-detaillee-avec-retour-dashboard: done
   45-4-verrouiller-qa-accessibilite-et-coherence-i18n-du-parcours-dashboard: done
   epic-45-retrospective: optional
-
   epic-46: done
   46-1-rebrancher-les-consultations-ciblees-sur-la-guidance-contextuelle: done
   46-2-refondre-le-wizard-et-le-modele-de-donnees-des-consultations-sans-tirage: done
@@ -414,7 +331,6 @@ development_status:
   46-5-retirer-le-sous-systeme-tarot-runes-du-backend-et-des-contrats-llm: done
   46-6-verrouiller-qa-coherence-bmad-et-non-regression-de-la-refonte: done
   epic-46-retrospective: done
-
   epic-47: done
   47-1-redefinir-le-catalogue-produit-et-la-taxonomie-des-consultations-completes: done
   47-2-exposer-le-precheck-de-completude-et-de-precision-des-consultations: done
@@ -426,12 +342,10 @@ development_status:
   47-8-etendre-la-collecte-tiers-aux-consultations-d-interaction-ciblee: done
   47-9-persister-et-reutiliser-des-profils-tiers-de-consultation: done
   epic-47-retrospective: optional
-
   epic-48: done
   48-1-creer-le-composant-astro-mood-background-parametrable: done
   48-2-integrer-le-fond-astrologique-anime-au-resume-dashboard: done
   48-3-verrouiller-qa-accessibilite-et-performance-du-fond-astrologique: done
-
   epic-49: done
   49-1-design-tokens-couleurs-semantiques-et-surfaces: done
   49-2-design-tokens-typo-espacement-rayons-ombres-animations: done
@@ -439,7 +353,6 @@ development_status:
   49-4-systeme-glassmorphism-mutualise: done
   49-5-migration-styles-inline-vers-tokens: done
   epic-49-retrospective: optional
-
   epic-50: done
   50-1-composant-button-variants-tailles-etats: done
   50-2-composant-input-field-types-etats-validation: done
@@ -450,7 +363,6 @@ development_status:
   50-7-composants-skeleton-et-emptystate: done
   50-8-composants-badge-et-iconbadge: done
   epic-50-retrospective: optional
-
   epic-51: done
   51-1-rootlayout-et-authlayout: done
   51-2-applayout-et-pagelayout: done
@@ -458,7 +370,6 @@ development_status:
   51-4-settingslayout-et-adminlayout: done
   51-5-migration-pages-vers-layouts-et-validation: done
   epic-51-retrospective: optional
-
   epic-52: done
   52-1-i18n-auth-signinform-signupform: done
   52-2-i18n-common-textes-transversaux: done
@@ -467,36 +378,30 @@ development_status:
   52-5-schemas-zod-externalises-i18n: done
   52-6-migration-panneaux-b2b-admin-et-audit-final: done
   epic-52-retrospective: optional
-
   epic-53: done
   53-1-variables-css-adaptatives-dark-mode: done
   53-2-variables-css-contextuelles-astrotheme: done
   53-3-audit-nettoyage-usetheme-composants-presentation: done
   epic-53-retrospective: optional
-
   epic-54: done
   54-1-configurer-path-aliases-vite-typescript: done
   54-2-barrel-exports-domaine-et-migration-imports: done
   epic-54-retrospective: optional
-
   epic-55: done
   55-1-separer-composants-dashboard-complexes: done
   55-2-separer-composants-prediction: done
   55-3-separer-pages-avec-fetching: done
   epic-55-retrospective: optional
-
   epic-56: done
   56-1-page-et-section-error-boundaries: done
   56-2-composant-errorstate-unifie: done
   56-3-deployer-error-boundaries-toutes-pages: done
   epic-56-retrospective: optional
-
   epic-57: done
   57-1-tests-button-field-select: done
   57-2-tests-form-modal-card: done
   57-3-tests-skeleton-emptystate-badge: done
   epic-57-retrospective: optional
-
   epic-59: done
   59-1-suppression-v1-migration-v2: done
   59-2-centralisation-prompts-catalogue: done
@@ -504,7 +409,6 @@ development_status:
   59-4-precalcul-astral: done
   59-5-socle-commun-prompts: done
   epic-59-retrospective: optional
-
   epic-60: in-progress
   60-1-taxonomie-domaines-publics: ready-for-dev
   60-2-scores-publics-sur-10: ready-for-dev
@@ -531,7 +435,6 @@ development_status:
   60-23-refonte-premium-page-consultations-et-catalogue-db: done
   60-24-refactorisation-settings-astrologue-defaut-abonnements: done
   epic-60-retrospective: optional
-
   epic-58: in-progress
   58-1-app-name-constante-et-config-centrale: done
   58-2-header-hamburger-logo-nom-actions: done
@@ -547,7 +450,6 @@ development_status:
   58-12-detail-and-scores-section: done
   58-13-daily-advice-card: done
   epic-58-retrospective: optional
-
   epic-61: in-progress
   61-1-mapping-stripe-billing-profiles: done
   61-2-installation-sdk-stripe-et-configuration-secrets: done
@@ -583,3 +485,4 @@ development_status:
   61-32-audit-trail-mutations-canoniques-entitlements: done
   61-33-exposition-ops-audit-mutations-canoniques: done
   61-34-normalisation-diffs-scoring-risque-mutations-canoniques: done
+  61-35-workflow-ops-revue-mutations-canoniques: done

@@ -11,6 +11,9 @@ from app.infra.db.base import Base
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
 )
+from app.infra.db.models.canonical_entitlement_mutation_audit_review import (
+    CanonicalEntitlementMutationAuditReviewModel,
+)
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
@@ -497,27 +500,39 @@ def test_filter_by_risk_level() -> None:
         _seed_audit(
             db,
             before_payload={
-                "is_enabled": True, "access_mode": "quota",
-                "variant_code": None, "source_origin": "manual", "quotas": []
+                "is_enabled": True,
+                "access_mode": "quota",
+                "variant_code": None,
+                "source_origin": "manual",
+                "quotas": [],
             },
             after_payload={
-                "is_enabled": False, "access_mode": "quota",
-                "variant_code": None, "source_origin": "manual", "quotas": []
+                "is_enabled": False,
+                "access_mode": "quota",
+                "variant_code": None,
+                "source_origin": "manual",
+                "quotas": [],
             },
-            feature_code="high_risk"
+            feature_code="high_risk",
         )
         # Low risk: only source_origin change
         _seed_audit(
             db,
             before_payload={
-                "is_enabled": True, "access_mode": "quota",
-                "variant_code": None, "source_origin": "src1", "quotas": []
+                "is_enabled": True,
+                "access_mode": "quota",
+                "variant_code": None,
+                "source_origin": "src1",
+                "quotas": [],
             },
             after_payload={
-                "is_enabled": True, "access_mode": "quota",
-                "variant_code": None, "source_origin": "src2", "quotas": []
+                "is_enabled": True,
+                "access_mode": "quota",
+                "variant_code": None,
+                "source_origin": "src2",
+                "quotas": [],
             },
-            feature_code="low_risk"
+            feature_code="low_risk",
         )
         db.commit()
 
@@ -543,7 +558,7 @@ def test_filter_by_change_kind() -> None:
             db,
             before_payload={"is_enabled": True},
             after_payload={"is_enabled": False},
-            feature_code="updated"
+            feature_code="updated",
         )
         db.commit()
 
@@ -562,15 +577,17 @@ def test_filter_by_changed_field() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
     with SessionLocal() as db:
-        _seed_audit(db,
+        _seed_audit(
+            db,
             before_payload={"is_enabled": True, "access_mode": "quota"},
             after_payload={"is_enabled": False, "access_mode": "quota"},
-            feature_code="match"
+            feature_code="match",
         )
-        _seed_audit(db,
+        _seed_audit(
+            db,
             before_payload={"is_enabled": True, "access_mode": "quota"},
             after_payload={"is_enabled": True, "access_mode": "unlimited"},
-            feature_code="no_match"
+            feature_code="no_match",
         )
         db.commit()
 
@@ -686,3 +703,282 @@ def test_filter_returns_400_when_diff_scope_is_too_large(monkeypatch: object) ->
     payload = response.json()["error"]
     assert payload["code"] == "diff_filter_result_set_too_large"
     assert payload["details"] == {"sql_count": 10001, "max_allowed": 10000}
+
+
+# ---------------------------------------------------------------------------
+# Helpers Story 61.35
+# ---------------------------------------------------------------------------
+
+_HIGH_RISK_BEFORE = {
+    "is_enabled": True,
+    "access_mode": "quota",
+    "variant_code": None,
+    "source_origin": "manual",
+    "quotas": [],
+}
+_HIGH_RISK_AFTER = {
+    "is_enabled": False,
+    "access_mode": "quota",
+    "variant_code": None,
+    "source_origin": "manual",
+    "quotas": [],
+}
+_LOW_RISK_BEFORE = {
+    "is_enabled": True,
+    "access_mode": "quota",
+    "variant_code": None,
+    "source_origin": "src_a",
+    "quotas": [],
+}
+_LOW_RISK_AFTER = {
+    "is_enabled": True,
+    "access_mode": "quota",
+    "variant_code": None,
+    "source_origin": "src_b",
+    "quotas": [],
+}
+
+
+def _seed_review(
+    db, *, audit_id: int, review_status: str = "acknowledged"
+) -> CanonicalEntitlementMutationAuditReviewModel:
+    from datetime import datetime, timezone
+
+    review = CanonicalEntitlementMutationAuditReviewModel(
+        audit_id=audit_id,
+        review_status=review_status,
+        reviewed_by_user_id=1,
+        reviewed_at=datetime.now(timezone.utc),
+        review_comment="Test review",
+        incident_key=None,
+    )
+    db.add(review)
+    db.flush()
+    return review
+
+
+# ---------------------------------------------------------------------------
+# Tests Story 61.35
+# ---------------------------------------------------------------------------
+
+
+def test_post_review_creates_review_returns_201() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        audit = _seed_audit(db, before_payload=_HIGH_RISK_BEFORE, after_payload=_HIGH_RISK_AFTER)
+        db.commit()
+        audit_id = audit.id
+
+    response = client.post(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review",
+        json={"review_status": "acknowledged", "review_comment": "OK", "incident_key": "INC-001"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 201
+    data = response.json()["data"]
+    assert data["audit_id"] == audit_id
+    assert data["review_status"] == "acknowledged"
+    assert data["review_comment"] == "OK"
+    assert data["incident_key"] == "INC-001"
+    assert "reviewed_at" in data
+
+
+def test_post_review_updates_existing_review() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        audit = _seed_audit(db, before_payload=_HIGH_RISK_BEFORE, after_payload=_HIGH_RISK_AFTER)
+        db.commit()
+        audit_id = audit.id
+
+    # Première revue
+    client.post(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review",
+        json={"review_status": "acknowledged"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+
+    # Mise à jour
+    response = client.post(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}/review",
+        json={"review_status": "closed", "review_comment": "Clôturé"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 201
+    data = response.json()["data"]
+    assert data["review_status"] == "closed"
+    assert data["review_comment"] == "Clôturé"
+
+
+def test_post_review_invalid_status_returns_422() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    response = client.post(
+        "/v1/ops/entitlements/mutation-audits/1/review",
+        json={"review_status": "invalid_status"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 422
+
+
+def test_post_review_nonexistent_audit_returns_404() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    response = client.post(
+        "/v1/ops/entitlements/mutation-audits/99999/review",
+        json={"review_status": "acknowledged"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "audit_not_found"
+
+
+def test_post_review_requires_ops_or_admin_role() -> None:
+    _cleanup_tables()
+    user_token = _register_user_with_role_and_token("user@example.com", "user")
+    response = client.post(
+        "/v1/ops/entitlements/mutation-audits/1/review",
+        json={"review_status": "acknowledged"},
+        headers={"Authorization": f"Bearer {user_token}"},
+    )
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "insufficient_role"
+
+
+def test_list_review_virtual_pending_for_high_risk_no_review() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        _seed_audit(db, before_payload=_HIGH_RISK_BEFORE, after_payload=_HIGH_RISK_AFTER)
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    item = response.json()["data"]["items"][0]
+    assert "review" in item
+    assert item["review"]["status"] == "pending_review"
+    # Les champs null sont omis par response_model_exclude_none=True
+    assert "reviewed_by_user_id" not in item["review"]
+    assert "reviewed_at" not in item["review"]
+
+
+def test_list_review_populated_when_review_exists() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        audit = _seed_audit(db, before_payload=_HIGH_RISK_BEFORE, after_payload=_HIGH_RISK_AFTER)
+        db.flush()
+        _seed_review(db, audit_id=audit.id, review_status="acknowledged")
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    item = response.json()["data"]["items"][0]
+    assert item["review"]["status"] == "acknowledged"
+    assert item["review"]["review_comment"] == "Test review"
+
+
+def test_list_review_null_for_low_risk_no_review() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        _seed_audit(db, before_payload=_LOW_RISK_BEFORE, after_payload=_LOW_RISK_AFTER)
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    item = response.json()["data"]["items"][0]
+    # review omis car null (response_model_exclude_none=True)
+    assert "review" not in item
+
+
+def test_filter_by_review_status_pending_review() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        # High risk sans revue → virtual pending_review
+        _seed_audit(
+            db,
+            before_payload=_HIGH_RISK_BEFORE,
+            after_payload=_HIGH_RISK_AFTER,
+            feature_code="high_no_review",
+        )
+        # Low risk sans revue → pas de statut virtuel
+        _seed_audit(
+            db,
+            before_payload=_LOW_RISK_BEFORE,
+            after_payload=_LOW_RISK_AFTER,
+            feature_code="low_no_review",
+        )
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        params={"review_status": "pending_review"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    items = response.json()["data"]["items"]
+    assert len(items) == 1
+    assert items[0]["feature_code"] == "high_no_review"
+
+
+def test_filter_by_review_status_closed() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        audit_closed = _seed_audit(
+            db,
+            before_payload=_HIGH_RISK_BEFORE,
+            after_payload=_HIGH_RISK_AFTER,
+            feature_code="closed_review",
+        )
+        db.flush()
+        _seed_review(db, audit_id=audit_closed.id, review_status="closed")
+        _seed_audit(
+            db,
+            before_payload=_HIGH_RISK_BEFORE,
+            after_payload=_HIGH_RISK_AFTER,
+            feature_code="no_review",
+        )
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        params={"review_status": "closed"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    items = response.json()["data"]["items"]
+    assert len(items) == 1
+    assert items[0]["feature_code"] == "closed_review"
+
+
+def test_detail_includes_review_field() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        audit = _seed_audit(db, before_payload=_HIGH_RISK_BEFORE, after_payload=_HIGH_RISK_AFTER)
+        db.flush()
+        _seed_review(db, audit_id=audit.id, review_status="investigating")
+        db.commit()
+        audit_id = audit.id
+
+    response = client.get(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    item = response.json()["data"]
+    assert "review" in item
+    assert item["review"]["status"] == "investigating"

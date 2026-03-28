@@ -334,3 +334,71 @@ L'endpoint `GET /v1/ops/entitlements/mutation-audits` accepte désormais 3 nouve
 ### Service de diff dédié
 
 Le calcul du diff est centralisé dans `CanonicalEntitlementMutationDiffService`. Ce service est **stateless** et n'effectue aucun accès base de données. Il est utilisé par le router pour enrichir les réponses API à la volée.
+
+---
+
+## Story 61.35 — Workflow ops de revue
+
+Depuis la story 61.35, chaque mutation canonique peut être qualifiée par un opérateur via un workflow de revue. Cela rend l'audit trail actionnable : les mutations à risque peuvent être tracées, commentées et clôturées.
+
+### Table `canonical_entitlement_mutation_audit_reviews`
+
+Les revues sont stockées dans une table **séparée** de l'audit trail (qui reste append-only et immuable). Une seule ligne par `audit_id` (upsert — la dernière revue remplace la précédente).
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `id` | int PK | Identifiant interne |
+| `audit_id` | int FK UNIQUE | Référence vers `canonical_entitlement_mutation_audits.id` |
+| `review_status` | str(32) NOT NULL | Statut de revue (voir valeurs ci-dessous) |
+| `reviewed_by_user_id` | int nullable | User ID de l'opérateur auteur |
+| `reviewed_at` | timestamptz NOT NULL | Horodatage de la dernière revue |
+| `review_comment` | text nullable | Commentaire libre |
+| `incident_key` | str(64) nullable | Référence incident (ex: `INC-2026-1042`) |
+
+**Valeurs de `review_status`** : `pending_review`, `acknowledged`, `expected`, `investigating`, `closed`.
+
+### Statut virtuel `pending_review`
+
+Les mutations avec `risk_level="high"` **sans** revue DB apparaissent automatiquement avec `review_status="pending_review"` dans les réponses API. Ce calcul est **application-level dans le router** — aucune écriture DB automatique n'est effectuée.
+
+- Revue DB existante → statut réel de la revue
+- Aucune revue + `risk_level="high"` → statut virtuel `"pending_review"`
+- Aucune revue + `risk_level != "high"` → champ `review` omis de la réponse (via `response_model_exclude_none=True`)
+
+### Endpoint POST de revue
+
+```
+POST /v1/ops/entitlements/mutation-audits/{audit_id}/review
+```
+
+**Rôles requis** : `ops` ou `admin`.
+
+**Body** :
+```json
+{
+  "review_status": "acknowledged",
+  "review_comment": "Changement attendu après backfill 61.31",
+  "incident_key": "INC-2026-1042"
+}
+```
+
+**Réponse** : HTTP 201 avec l'objet review `{ audit_id, review_status, reviewed_by_user_id, reviewed_at, review_comment, incident_key }`.
+
+- `review_status` est validé avec `Literal[...]` → HTTP 422 automatique pour toute valeur invalide.
+- `reviewed_by_user_id` est extrait du token JWT (pas dans le body).
+- Si `audit_id` inexistant → HTTP 404.
+
+### Filtre `review_status` sur GET list
+
+`GET /v1/ops/entitlements/mutation-audits` accepte un nouveau paramètre optionnel `review_status`.
+
+Le filtrage est **application-level** (prend en compte le statut virtuel `pending_review`). La limite de **10 000 audits** s'applique également à ce filtre (erreur 400 `diff_filter_result_set_too_large` si dépassée).
+
+**Cas d'usage ops typique** — mutations high non traitées :
+```
+GET /v1/ops/entitlements/mutation-audits?review_status=pending_review
+```
+
+### Service d'écriture
+
+`CanonicalEntitlementMutationAuditReviewService.upsert_review()` gère l'INSERT/UPDATE de la revue. Le router contrôle le `commit()`. Le query service 61.33 n'est pas modifié.

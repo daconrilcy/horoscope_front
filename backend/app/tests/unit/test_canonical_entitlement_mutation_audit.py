@@ -299,8 +299,6 @@ def test_audit_row_is_rolled_back_with_transaction(engine, db, b2c_plan, chat_fe
     # THEN: audit row is gone in a fresh session too
     with Session(engine) as verification_session:
         assert (
-            len(
-                verification_session.scalars(select(CanonicalEntitlementMutationAuditModel)).all()
-            )
+            len(verification_session.scalars(select(CanonicalEntitlementMutationAuditModel)).all())
             == 0
         )

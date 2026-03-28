@@ -35,7 +35,7 @@ class CanonicalEntitlementMutationDiffService:
             q.get("quota_key"),
             q.get("period_unit"),
             q.get("period_value"),
-            q.get("reset_mode")
+            q.get("reset_mode"),
         )
 
     @staticmethod
@@ -80,10 +80,12 @@ class CanonicalEntitlementMutationDiffService:
             if key not in before_map:
                 added.append({**q})
             elif before_map[key].get("quota_limit") != q.get("quota_limit"):
-                updated.append({
-                    **q,
-                    "before_quota_limit": before_map[key].get("quota_limit"),
-                })
+                updated.append(
+                    {
+                        **q,
+                        "before_quota_limit": before_map[key].get("quota_limit"),
+                    }
+                )
                 path = f"quotas[{key[0]},{key[1]},{key[2]},{key[3]}].quota_limit"
                 changed_fields.append(path)
 
@@ -126,27 +128,16 @@ class CanonicalEntitlementMutationDiffService:
         for u in quota_changes.updated:
             before_limit = u.get("before_quota_limit")
             after_limit = u.get("quota_limit")
-            if (
-                before_limit is not None
-                and after_limit is not None
-                and after_limit < before_limit
-            ):
+            if before_limit is not None and after_limit is not None and after_limit < before_limit:
                 return "high"
 
         # MEDIUM
-        if (
-            quota_changes.added
-            or "binding.variant_code" in changed_fields
-        ):
+        if quota_changes.added or "binding.variant_code" in changed_fields:
             return "medium"
         for u in quota_changes.updated:
             before_limit = u.get("before_quota_limit")
             after_limit = u.get("quota_limit")
-            if (
-                before_limit is not None
-                and after_limit is not None
-                and after_limit > before_limit
-            ):
+            if before_limit is not None and after_limit is not None and after_limit > before_limit:
                 return "medium"
 
         # LOW
