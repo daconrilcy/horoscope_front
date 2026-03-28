@@ -342,6 +342,7 @@ def test_run_auto_repair_admin_missing_no_longer_blocker(db, feature):
 
 
 def test_set_admin_user_valid(db):
+    # Ownership/auth uniquement : pas un prérequis quota depuis 61.25.
     account = EnterpriseAccountModel(id=1, status="active", admin_user_id=None)
     user = UserModel(id=10)
     db.get.side_effect = [account, user]
@@ -355,6 +356,7 @@ def test_set_admin_user_valid(db):
 
 
 def test_set_admin_user_already_set(db):
+    # Ownership/auth uniquement : pas un prérequis quota depuis 61.25.
     account = EnterpriseAccountModel(id=1, status="active", admin_user_id=9)
     db.get.return_value = account
 

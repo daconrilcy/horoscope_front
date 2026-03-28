@@ -487,6 +487,7 @@ python scripts/archive_b2b_legacy_usage_counters.py
 **Nouveaux fichiers :**
 - `backend/scripts/verify_b2b_usage_migration.py`
 - `backend/scripts/archive_b2b_legacy_usage_counters.py`
+- `backend/app/tests/unit/test_b2b_usage_migration_scripts.py`
 
 **Fichiers modifiés :**
 - `backend/app/services/b2b_audit_service.py`
@@ -523,11 +524,14 @@ gemini-2.0-flash-thinking-exp
 - Création de `archive_b2b_legacy_usage_counters.py` avec garde-fou de vérification automatique.
 - Mise à jour de la documentation d'architecture pour refléter l'indépendance du quota vis-à-vis de l'`admin_user_id`.
 - Test unitaire ajouté pour vérifier que l'absence d'`admin_user_id` ne bloque pas la résolution canonique.
+- Revue Codex post-implémentation : la vérification de migration compare désormais les agrégats par clé métier `(enterprise_account_id, feature_code, quota_key, window_start)` et signale les compensations de delta.
+- Revue Codex post-implémentation : le message d'abort du script d'archivage est aligné sur l'AC, et la documentation ne prétend plus qu'une purge a déjà été exécutée.
 
 ### File List
 **Nouveaux fichiers :**
 - `backend/scripts/verify_b2b_usage_migration.py`
 - `backend/scripts/archive_b2b_legacy_usage_counters.py`
+- `backend/app/tests/unit/test_b2b_usage_migration_scripts.py`
 
 **Fichiers modifiés :**
 - `backend/app/services/b2b_audit_service.py`
@@ -535,7 +539,9 @@ gemini-2.0-flash-thinking-exp
 - `backend/app/api/v1/routers/b2b_entitlement_repair.py`
 - `backend/scripts/migrate_b2b_usage_counters_to_enterprise_counters.py`
 - `backend/app/tests/unit/test_b2b_audit_service.py`
+- `backend/app/tests/unit/test_b2b_entitlement_repair_service.py`
 - `backend/docs/entitlements-canonical-platform.md`
 
 ### Change Log
 - 2026-03-28 : Story implémentée. Alignement des outils ops B2B sur les compteurs natifs et nettoyage des reliquats `admin_user_id`.
+- 2026-03-28 : Revue Codex. Correction de la vérification par agrégats métier, alignement du message d'abort du script d'archivage, ajout de tests unitaires scripts, et correction documentaire sur la purge legacy.

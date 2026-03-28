@@ -11,6 +11,7 @@ Usage:
     python scripts/archive_b2b_legacy_usage_counters.py --force
     # Note: --force bypass le garde-fou (usage exceptionnel)
 """
+
 import argparse
 import os
 import sys
@@ -37,19 +38,22 @@ def main(dry_run: bool, force: bool) -> None:
             ok = run_verification(db, verbose=False)
             if not ok:
                 print(
-                    "❌ ABORT — vérification migration incomplète.\n"
-                    "   Relancer verify_b2b_usage_migration.py pour diagnostiquer,\n"
-                    "   ou utiliser --force si le mismatch est intentionnel."
+                    "❌ ABORT — vérification migration incomplète. "
+                    "Relancer verify_b2b_usage_migration.py ou utiliser --force si intentionnel."
                 )
                 sys.exit(1)
             print("--- Vérification OK — purge autorisée ---")
         else:
             print("⚠️  --force activé : garde-fou de vérification ignoré.")
 
-        legacy_count = db.scalar(
-            select(func.count()).select_from(FeatureUsageCounterModel)
-            .where(FeatureUsageCounterModel.feature_code == FEATURE_CODE)
-        ) or 0
+        legacy_count = (
+            db.scalar(
+                select(func.count())
+                .select_from(FeatureUsageCounterModel)
+                .where(FeatureUsageCounterModel.feature_code == FEATURE_CODE)
+            )
+            or 0
+        )
 
         if legacy_count == 0:
             print("✅ Aucune ligne legacy B2B à purger — idempotent no-op.")
@@ -65,8 +69,9 @@ def main(dry_run: bool, force: bool) -> None:
             return
 
         db.execute(
-            delete(FeatureUsageCounterModel)
-            .where(FeatureUsageCounterModel.feature_code == FEATURE_CODE)
+            delete(FeatureUsageCounterModel).where(
+                FeatureUsageCounterModel.feature_code == FEATURE_CODE
+            )
         )
         db.commit()
         print(f"✅ {legacy_count} ligne(s) purgée(s) de feature_usage_counters.")

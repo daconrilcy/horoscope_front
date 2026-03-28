@@ -315,7 +315,8 @@ class B2BEntitlementRepairService:
     def set_admin_user(cls, db: Session, *, account_id: int, user_id: int) -> dict:
         """
         Gère l'ownership du compte (admin_user_id).
-        Cet endpoint n'est pas un prérequis à la consommation ou à la lecture de quota B2B.
+        Cet endpoint n'est pas un prérequis à la consommation ou à la lecture
+        de quota B2B depuis 61.25.
         """
         account = db.get(EnterpriseAccountModel, account_id)
         if not account or account.status != "active":

@@ -74,7 +74,7 @@ Depuis la story 61.26, l'écosystème ops B2B est entièrement aligné sur la ta
 - **Audit Ops** : `GET /v1/ops/b2b/entitlements/audit` lit exclusivement `enterprise_feature_usage_counters`. L'absence d'`admin_user_id` n'est plus un motif de blocage ou d'audit "settings_fallback".
 - **Repair Ops** : Les blockers `"set_admin_user"` ont été supprimés. L'outil `POST /repair/set-admin-user` est désormais documenté comme un outil de gestion d'**ownership/authentification**, sans impact sur le quota.
 - **admin_user_id** : Ce champ dans `enterprise_accounts` définit l'administrateur du compte (ownership) uniquement. Plus aucun chemin de décision quota/usage B2B n'en dépend.
-- **Nettoyage Historique** : Les compteurs legacy B2B dans `feature_usage_counters` ont été purgés après vérification via `verify_b2b_usage_migration.py`.
+- **Nettoyage Historique** : Les scripts `verify_b2b_usage_migration.py` et `archive_b2b_legacy_usage_counters.py` fournissent respectivement la vérification de migration et la purge contrôlée des compteurs legacy B2B dans `feature_usage_counters`.
 
 ### Invariants du Système (Post-61.26)
 
