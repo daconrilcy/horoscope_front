@@ -308,6 +308,28 @@ def test_validation_fails_quota_mode_without_quotas(db, b2c_plan, chat_feature):
     assert "requiert au moins un quota" in str(excinfo.value)
 
 
+def test_validation_fails_quota_mode_with_non_positive_quota_limit(db, b2c_plan, chat_feature):
+    with pytest.raises(CanonicalMutationValidationError) as excinfo:
+        CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
+            db,
+            plan=b2c_plan,
+            feature_code="astrologer_chat",
+            is_enabled=True,
+            access_mode=AccessMode.QUOTA,
+            quotas=[
+                {
+                    "quota_key": "messages",
+                    "quota_limit": 0,
+                    "period_unit": PeriodUnit.DAY,
+                    "period_value": 1,
+                    "reset_mode": ResetMode.CALENDAR,
+                }
+            ],
+            source_origin=SourceOrigin.MANUAL,
+        )
+    assert "quota_limit > 0" in str(excinfo.value)
+
+
 def test_validation_fails_unlimited_with_quotas(db, b2c_plan, chat_feature):
     with pytest.raises(CanonicalMutationValidationError) as excinfo:
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(

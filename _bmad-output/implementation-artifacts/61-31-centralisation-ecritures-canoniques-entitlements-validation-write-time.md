@@ -553,15 +553,20 @@ claude-sonnet-4-6
   6. Run full validation suite.
 - [2026-03-28 14:45] Implementation completed.
 - [2026-03-28 14:50] Unit tests passed (15/15).
-- [2026-03-28 14:55] Code review performed, no issues found.
+- [2026-03-28 15:20] Code review performed: 2 issues majeures détectées.
+- [2026-03-28 15:35] Fix: validation write-time explicite de `quota_limit > 0` ajoutée au service canonique + test dédié.
+- [2026-03-28 15:40] Fix: reporting idempotent exact restauré dans `backfill_plan_catalog_from_legacy.py`.
+- [2026-03-28 15:45] Fix: constructions directes résiduelles supprimées du `B2BEntitlementRepairService` en `dry_run` via previews mémoire.
+- [2026-03-28 15:55] Validation revue/fixes: `pytest` ciblé + non-régression B2B + `ruff check` OK.
 
 ### Completion Notes List
 
 - Service central `CanonicalEntitlementMutationService` créé dans `backend/app/services/`.
-- Invariants validés : présence dans le registre, présence en DB, feature active, cohérence Audience/Scope, règles quotas/is_metered.
+- Invariants validés : présence dans le registre, présence en DB, feature active, cohérence Audience/Scope, règles quotas/is_metered, et désormais `quota_limit > 0` avant écriture.
 - Remplacement des quotas atomique implémenté.
 - Migrations effectuées : `seed_product_entitlements.py`, `backfill_plan_catalog_from_legacy.py`, `B2BEntitlementRepairService`.
-- Tests unitaires complets ajoutés.
+- Revue corrective effectuée : reporting `BackfillReport` réaligné sur le comportement observable attendu et `dry_run` B2B débarrassé des constructions ORM directes.
+- Tests unitaires et de non-régression mis à jour et exécutés.
 
 ### File List
 
@@ -570,3 +575,7 @@ claude-sonnet-4-6
 - `backend/scripts/seed_product_entitlements.py`
 - `backend/scripts/backfill_plan_catalog_from_legacy.py`
 - `backend/app/services/b2b_entitlement_repair_service.py`
+- `backend/app/tests/unit/test_backfill_plan_catalog.py`
+- `backend/app/tests/unit/test_b2b_entitlement_repair_service.py`
+- `backend/docs/entitlements-canonical-platform.md`
+- `docs/architecture/product-entitlements-model.md`

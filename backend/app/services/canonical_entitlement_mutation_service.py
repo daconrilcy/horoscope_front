@@ -202,6 +202,12 @@ class CanonicalEntitlementMutationService:
                 errors.append(
                     f"access_mode=QUOTA pour '{feature_code}' requiert au moins un quota."
                 )
+            for quota in quotas:
+                if quota["quota_limit"] <= 0:
+                    errors.append(
+                        f"quota '{quota['quota_key']}' pour '{feature_code}' "
+                        "requiert quota_limit > 0."
+                    )
             if feature_row is not None and not feature_row.is_metered:
                 errors.append(
                     f"access_mode=QUOTA pour '{feature_code}' "

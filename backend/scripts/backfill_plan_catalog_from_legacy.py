@@ -28,6 +28,7 @@ from app.infra.db.models.product_entitlements import (
     PeriodUnit,
     PlanCatalogModel,
     PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
     ResetMode,
     SourceOrigin,
 )
@@ -186,6 +187,59 @@ def _upsert_plan(
     return plan
 
 
+def _binding_snapshot(
+    binding: PlanFeatureBindingModel | None,
+) -> tuple[AccessMode, bool, str] | None:
+    if binding is None:
+        return None
+    return (
+        binding.access_mode,
+        binding.is_enabled,
+        str(binding.source_origin),
+    )
+
+
+def _quota_snapshot(
+    quota: PlanFeatureQuotaModel | None,
+) -> tuple[int, str] | None:
+    if quota is None:
+        return None
+    return (
+        quota.quota_limit,
+        str(quota.source_origin),
+    )
+
+
+def _record_binding_report(
+    report: BackfillReport,
+    before: tuple[AccessMode, bool, str] | None,
+    after: tuple[AccessMode, bool, str] | None,
+) -> None:
+    if before is None and after is not None:
+        report.bindings_created += 1
+    elif before is not None and after is not None and before != after:
+        report.bindings_updated += 1
+    elif before is not None and after is not None:
+        report.bindings_unchanged += 1
+
+
+def _record_quota_report(
+    report: BackfillReport,
+    *,
+    before: tuple[int, str] | None,
+    after: tuple[int, str] | None,
+    deleted_count: int = 0,
+) -> None:
+    if before is None and after is not None:
+        report.quotas_created += 1
+    elif before is not None and after is not None and before != after:
+        report.quotas_updated += 1
+    elif before is not None and after is not None:
+        report.quotas_unchanged += 1
+    elif before is not None and after is None:
+        report.quotas_deleted += max(deleted_count, 1)
+
+
 def backfill_b2c_plans(db: Session, report: BackfillReport | None = None) -> None:
     report = report or BackfillReport()
     # Ensure chat feature exists (no change here)
@@ -216,6 +270,31 @@ def backfill_b2c_plans(db: Session, report: BackfillReport | None = None) -> Non
                 PlanFeatureBindingModel.plan_id == plan.id,
                 PlanFeatureBindingModel.feature_id == chat_feature.id,
             )
+        )
+        binding_before = _binding_snapshot(existing_binding)
+        quota_before = None
+        if existing_binding is not None:
+            quota_before = _quota_snapshot(
+                db.scalar(
+                    select(PlanFeatureQuotaModel).where(
+                        PlanFeatureQuotaModel.plan_feature_binding_id == existing_binding.id,
+                        PlanFeatureQuotaModel.quota_key == "messages",
+                        PlanFeatureQuotaModel.period_unit == PeriodUnit.DAY,
+                        PlanFeatureQuotaModel.period_value == 1,
+                        PlanFeatureQuotaModel.reset_mode == ResetMode.CALENDAR,
+                    )
+                )
+            )
+        existing_quota_count = (
+            len(
+                db.scalars(
+                    select(PlanFeatureQuotaModel).where(
+                        PlanFeatureQuotaModel.plan_feature_binding_id == existing_binding.id
+                    )
+                ).all()
+            )
+            if existing_binding is not None
+            else 0
         )
 
         # Check collision before calling the service
@@ -255,20 +334,42 @@ def backfill_b2c_plans(db: Session, report: BackfillReport | None = None) -> Non
             source_origin=SourceOrigin.MIGRATED_FROM_BILLING_PLAN,
         )
 
-        if existing_binding is None:
-            report.bindings_created += 1
-            if access_mode == AccessMode.QUOTA:
-                report.quotas_created += 1
-        else:
-            # We don't have granular changed info here but we assume updated
-            # for simplicity if it exists
-            report.bindings_updated += 1
-            if access_mode == AccessMode.QUOTA:
-                report.quotas_updated += 1
-            else:
-                # If it was quota and now it's disabled, we deleted quotas
-                # We could check existing quotas count, but let's keep it simple
-                report.quotas_deleted += 1
+        updated_binding = db.scalar(
+            select(PlanFeatureBindingModel).where(
+                PlanFeatureBindingModel.plan_id == plan.id,
+                PlanFeatureBindingModel.feature_id == chat_feature.id,
+            )
+        )
+        assert updated_binding is not None
+        binding_after = _binding_snapshot(updated_binding)
+        quota_after = _quota_snapshot(
+            db.scalar(
+                select(PlanFeatureQuotaModel).where(
+                    PlanFeatureQuotaModel.plan_feature_binding_id == updated_binding.id,
+                    PlanFeatureQuotaModel.quota_key == "messages",
+                    PlanFeatureQuotaModel.period_unit == PeriodUnit.DAY,
+                    PlanFeatureQuotaModel.period_value == 1,
+                    PlanFeatureQuotaModel.reset_mode == ResetMode.CALENDAR,
+                )
+            )
+        )
+        updated_quota_count = len(
+            db.scalars(
+                select(PlanFeatureQuotaModel).where(
+                    PlanFeatureQuotaModel.plan_feature_binding_id == updated_binding.id
+                )
+            ).all()
+        )
+
+        _record_binding_report(report, binding_before, binding_after)
+        _record_quota_report(
+            report,
+            before=quota_before,
+            after=quota_after,
+            deleted_count=max(existing_quota_count - updated_quota_count, 0),
+        )
+        if access_mode != AccessMode.QUOTA and quota_before is None and quota_after is None:
+            report.quotas_unchanged += 1
 
         report.add_ignored("billing_plans.monthly_price_cents")
         report.add_ignored("billing_plans.currency")
@@ -319,6 +420,20 @@ def backfill_b2b_plans(db: Session, report: BackfillReport | None = None) -> Non
                 PlanFeatureBindingModel.feature_id == b2b_feature.id,
             )
         )
+        binding_before = _binding_snapshot(existing_binding)
+        quota_before = None
+        if existing_binding is not None:
+            quota_before = _quota_snapshot(
+                db.scalar(
+                    select(PlanFeatureQuotaModel).where(
+                        PlanFeatureQuotaModel.plan_feature_binding_id == existing_binding.id,
+                        PlanFeatureQuotaModel.quota_key == "calls",
+                        PlanFeatureQuotaModel.period_unit == PeriodUnit.MONTH,
+                        PlanFeatureQuotaModel.period_value == 1,
+                        PlanFeatureQuotaModel.reset_mode == ResetMode.CALENDAR,
+                    )
+                )
+            )
 
         if legacy.included_monthly_units > 0:
             # Check collision before calling the service
@@ -356,12 +471,28 @@ def backfill_b2b_plans(db: Session, report: BackfillReport | None = None) -> Non
                 source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN,
             )
 
-            if existing_binding is None:
-                report.bindings_created += 1
-                report.quotas_created += 1
-            else:
-                report.bindings_updated += 1
-                report.quotas_updated += 1
+            updated_binding = db.scalar(
+                select(PlanFeatureBindingModel).where(
+                    PlanFeatureBindingModel.plan_id == plan.id,
+                    PlanFeatureBindingModel.feature_id == b2b_feature.id,
+                )
+            )
+            assert updated_binding is not None
+            binding_after = _binding_snapshot(updated_binding)
+            quota_after = _quota_snapshot(
+                db.scalar(
+                    select(PlanFeatureQuotaModel).where(
+                        PlanFeatureQuotaModel.plan_feature_binding_id == updated_binding.id,
+                        PlanFeatureQuotaModel.quota_key == "calls",
+                        PlanFeatureQuotaModel.period_unit == PeriodUnit.MONTH,
+                        PlanFeatureQuotaModel.period_value == 1,
+                        PlanFeatureQuotaModel.reset_mode == ResetMode.CALENDAR,
+                    )
+                )
+            )
+
+            _record_binding_report(report, binding_before, binding_after)
+            _record_quota_report(report, before=quota_before, after=quota_after)
 
         elif legacy.included_monthly_units == 0:
             msg = (

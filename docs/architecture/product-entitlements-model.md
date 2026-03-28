@@ -102,3 +102,13 @@ Pour tout attribut canonique **effectivement dérivable** depuis une colonne leg
 -   `used_count >= 0`
 -   `window_end` requis si `period_unit != 'lifetime'`
 -   Unicité stricte des codes et des bindings.
+
+## Enforcement Write-Time (Story 61.31)
+
+Depuis la story 61.31, ces contraintes ne sont plus seulement garanties par la structure DB et les validateurs startup/CI. Toute mutation canonique de `plan_feature_bindings` et `plan_feature_quotas` doit transiter par `CanonicalEntitlementMutationService`.
+
+Effets attendus :
+- validation agrégée avant écriture ;
+- absence d'écriture partielle si une règle échoue ;
+- convergence idempotente des scripts de seed/backfill ;
+- cohérence observable des compteurs de reporting lors des backfills legacy.

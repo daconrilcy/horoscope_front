@@ -60,6 +60,28 @@ class RepairRunReport:
     dry_run: bool = False
 
 
+@dataclass
+class _RepairBindingPreview:
+    id: int
+    plan_id: int | None
+    feature_id: int
+    access_mode: AccessMode
+    is_enabled: bool
+    source_origin: SourceOrigin
+
+
+@dataclass
+class _RepairQuotaPreview:
+    id: int
+    plan_feature_binding_id: int
+    quota_key: str
+    quota_limit: int
+    period_unit: PeriodUnit
+    period_value: int
+    reset_mode: ResetMode
+    source_origin: SourceOrigin
+
+
 class B2BEntitlementRepairService:
     FEATURE_CODE = "b2b_api_access"
 
@@ -108,12 +130,6 @@ class B2BEntitlementRepairService:
             db,
             binding_ids=[binding.id for binding in bindings.values()],
         )
-
-        feature = db.scalar(
-            select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == cls.FEATURE_CODE)
-        )
-        if not feature:
-            raise RuntimeError(f"Feature {cls.FEATURE_CODE} not found in catalog")
 
         for account in all_accounts:
             # NOTE: L'absence d'admin_user_id (account.admin_user_id is None) n'est JAMAIS
@@ -193,7 +209,7 @@ class B2BEntitlementRepairService:
                         if current_binding is None:
                             b_created, q_created, current_binding, current_quota = (
                                 cls._backfill_binding_and_quota(
-                                    db, current_canonical_plan, enterprise_plan, feature, dry_run
+                                    db, current_canonical_plan, enterprise_plan, dry_run
                                 )
                             )
                             if b_created:
@@ -267,9 +283,13 @@ class B2BEntitlementRepairService:
         db: Session,
         canonical_plan: PlanCatalogModel,
         enterprise_plan: EnterpriseBillingPlanModel,
-        feature: FeatureCatalogModel,
         dry_run: bool,
-    ) -> tuple[bool, bool, PlanFeatureBindingModel, PlanFeatureQuotaModel | None]:
+    ) -> tuple[
+        bool,
+        bool,
+        PlanFeatureBindingModel | _RepairBindingPreview,
+        PlanFeatureQuotaModel | _RepairQuotaPreview | None,
+    ]:
         quotas = [
             {
                 "quota_key": "calls",
@@ -298,40 +318,48 @@ class B2BEntitlementRepairService:
             )
             return True, True, binding, quota
 
-        # dry_run: execute validation in a nested transaction then rollback
+        # dry_run: execute validation in a nested transaction then rollback, while
+        # preserving an in-memory preview for subsequent accounts in the same run.
         with db.begin_nested() as sp:
-            try:
-                CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
-                    db,
-                    plan=canonical_plan,
-                    feature_code=cls.FEATURE_CODE,
-                    is_enabled=True,
-                    access_mode=AccessMode.QUOTA,
-                    quotas=quotas,
-                    source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN,
+            binding = CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
+                db,
+                plan=canonical_plan,
+                feature_code=cls.FEATURE_CODE,
+                is_enabled=True,
+                access_mode=AccessMode.QUOTA,
+                quotas=quotas,
+                source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN,
+            )
+            quota = db.scalar(
+                select(PlanFeatureQuotaModel).where(
+                    PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
                 )
-            finally:
-                sp.rollback()
-
-        # Build dummy objects for the report as before
-        binding = PlanFeatureBindingModel(
-            id=-(canonical_plan.id or 1),
-            plan_id=canonical_plan.id,
-            feature_id=feature.id,
-            access_mode=AccessMode.QUOTA,
-            is_enabled=True,
-            source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN,
-        )
-        quota = PlanFeatureQuotaModel(
-            id=-(enterprise_plan.id or 1),
-            plan_feature_binding_id=binding.id,
-            quota_key="calls",
-            quota_limit=enterprise_plan.included_monthly_units,
-            period_unit=PeriodUnit.MONTH,
-            period_value=1,
-            reset_mode=ResetMode.CALENDAR,
-            source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN,
-        )
+            )
+            binding_preview = _RepairBindingPreview(
+                id=binding.id or -(canonical_plan.id or 1),
+                plan_id=binding.plan_id,
+                feature_id=binding.feature_id,
+                access_mode=binding.access_mode,
+                is_enabled=binding.is_enabled,
+                source_origin=binding.source_origin,
+            )
+            quota_preview = (
+                _RepairQuotaPreview(
+                    id=quota.id or -(enterprise_plan.id or 1),
+                    plan_feature_binding_id=quota.plan_feature_binding_id,
+                    quota_key=quota.quota_key,
+                    quota_limit=quota.quota_limit,
+                    period_unit=quota.period_unit,
+                    period_value=quota.period_value,
+                    reset_mode=quota.reset_mode,
+                    source_origin=quota.source_origin,
+                )
+                if quota is not None
+                else None
+            )
+            sp.rollback()
+        binding = binding_preview
+        quota = quota_preview
         return True, True, binding, quota
 
     @classmethod

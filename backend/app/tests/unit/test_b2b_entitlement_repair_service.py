@@ -9,9 +9,12 @@ from app.infra.db.models.enterprise_billing import (
     EnterpriseBillingPlanModel,
 )
 from app.infra.db.models.product_entitlements import (
+    AccessMode,
     Audience,
     FeatureCatalogModel,
     PlanCatalogModel,
+    PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
     SourceOrigin,
 )
 from app.infra.db.models.user import UserModel
@@ -50,11 +53,7 @@ def test_run_auto_repair_dry_run_no_mutation(db, feature):
         [acc_plan],  # account_plans
         [ent_plan],  # enterprise_plans
     ]
-    # db.scalar calls in order:
-    # 1. feature lookup
-    # 2. existing plan check in _backfill_canonical_plan
-    # 3. existing binding check in run_auto_repair
-    db.scalar.side_effect = [feature, None, None]
+    db.scalar.side_effect = [None]
 
     # Mock audit to return no_canonical_plan
     with (
@@ -65,6 +64,15 @@ def test_run_auto_repair_dry_run_no_mutation(db, feature):
         ),
         patch("app.services.b2b_audit_service.B2BAuditService._prefetch_bindings", return_value={}),
         patch("app.services.b2b_audit_service.B2BAuditService._prefetch_quotas", return_value={}),
+        patch(
+            "app.services.b2b_entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
+            return_value=(
+                True,
+                True,
+                PlanFeatureBindingModel(id=10, plan_id=1000, feature_id=1),
+                PlanFeatureQuotaModel(id=20, plan_feature_binding_id=10),
+            ),
+        ),
     ):
         mock_audit.return_value = B2BAuditEntry(
             account_id=1,
@@ -107,11 +115,7 @@ def test_run_auto_repair_full_backfill(db, feature):
     )
 
     db.scalars.return_value.all.side_effect = [[account], [acc_plan], [ent_plan]]
-    # db.scalar calls in order:
-    # 1. feature lookup
-    # 2. existing plan check in _backfill_canonical_plan
-    # 3. existing binding check in run_auto_repair
-    db.scalar.side_effect = [feature, None, None]
+    db.scalar.side_effect = [None]
 
     with (
         patch("app.services.b2b_audit_service.B2BAuditService._audit_account") as mock_audit,
@@ -121,6 +125,15 @@ def test_run_auto_repair_full_backfill(db, feature):
         ),
         patch("app.services.b2b_audit_service.B2BAuditService._prefetch_bindings", return_value={}),
         patch("app.services.b2b_audit_service.B2BAuditService._prefetch_quotas", return_value={}),
+        patch(
+            "app.services.b2b_entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
+            return_value=(
+                True,
+                True,
+                PlanFeatureBindingModel(id=10, plan_id=1000, feature_id=1),
+                PlanFeatureQuotaModel(id=20, plan_feature_binding_id=10),
+            ),
+        ),
     ):
         mock_audit.return_value = B2BAuditEntry(
             account_id=1,
@@ -147,7 +160,7 @@ def test_run_auto_repair_full_backfill(db, feature):
         assert report.plans_created == 1
         assert report.bindings_created == 1
         assert report.quotas_created == 1
-        assert db.add.call_count == 3  # Plan, Binding, Quota
+        assert db.add.call_count == 1  # canonical plan creation only
         db.commit.assert_called_once()
 
 
@@ -179,7 +192,7 @@ def test_run_auto_repair_shared_enterprise_plan_reuses_in_memory_backfill(db, fe
         [shared_account_plan_a, shared_account_plan_b],
         [shared_enterprise_plan],
     ]
-    db.scalar.side_effect = [feature, None]
+    db.scalar.side_effect = [None]
 
     nested_transaction = MagicMock()
     nested_transaction.__enter__ = MagicMock(return_value=nested_transaction)
@@ -194,6 +207,15 @@ def test_run_auto_repair_shared_enterprise_plan_reuses_in_memory_backfill(db, fe
         ),
         patch("app.services.b2b_audit_service.B2BAuditService._prefetch_bindings", return_value={}),
         patch("app.services.b2b_audit_service.B2BAuditService._prefetch_quotas", return_value={}),
+        patch(
+            "app.services.b2b_entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
+            return_value=(
+                True,
+                True,
+                PlanFeatureBindingModel(id=10, plan_id=1000, feature_id=1),
+                PlanFeatureQuotaModel(id=20, plan_feature_binding_id=10),
+            ),
+        ),
     ):
         mock_audit.side_effect = [
             B2BAuditEntry(
@@ -238,7 +260,7 @@ def test_run_auto_repair_shared_enterprise_plan_reuses_in_memory_backfill(db, fe
     assert report.bindings_created == 1
     assert report.quotas_created == 1
     assert report.remaining_blockers == []
-    assert db.add.call_count == 3
+    assert db.add.call_count == 1
     db.commit.assert_called_once()
 
 
@@ -253,7 +275,6 @@ def test_run_auto_repair_already_canonical_skipped(db, feature):
     )
 
     db.scalars.return_value.all.side_effect = [[account], [acc_plan], [ent_plan]]
-    db.scalar.side_effect = [feature]
 
     with (
         patch("app.services.b2b_audit_service.B2BAuditService._audit_account") as mock_audit,
@@ -263,6 +284,15 @@ def test_run_auto_repair_already_canonical_skipped(db, feature):
         ),
         patch("app.services.b2b_audit_service.B2BAuditService._prefetch_bindings", return_value={}),
         patch("app.services.b2b_audit_service.B2BAuditService._prefetch_quotas", return_value={}),
+        patch(
+            "app.services.b2b_entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
+            return_value=(
+                True,
+                True,
+                PlanFeatureBindingModel(id=10, plan_id=1000, feature_id=1),
+                PlanFeatureQuotaModel(id=20, plan_feature_binding_id=10),
+            ),
+        ),
     ):
         mock_audit.return_value = B2BAuditEntry(
             account_id=1,
@@ -302,7 +332,7 @@ def test_run_auto_repair_admin_missing_no_longer_blocker(db, feature):
     )
 
     db.scalars.return_value.all.side_effect = [[account], [acc_plan], [ent_plan]]
-    db.scalar.side_effect = [feature, None, None]
+    db.scalar.side_effect = [None]
 
     with (
         patch("app.services.b2b_audit_service.B2BAuditService._audit_account") as mock_audit,
@@ -312,6 +342,15 @@ def test_run_auto_repair_admin_missing_no_longer_blocker(db, feature):
         ),
         patch("app.services.b2b_audit_service.B2BAuditService._prefetch_bindings", return_value={}),
         patch("app.services.b2b_audit_service.B2BAuditService._prefetch_quotas", return_value={}),
+        patch(
+            "app.services.b2b_entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
+            return_value=(
+                True,
+                True,
+                PlanFeatureBindingModel(id=10, plan_id=1000, feature_id=1),
+                PlanFeatureQuotaModel(id=20, plan_feature_binding_id=10),
+            ),
+        ),
     ):
         mock_audit.return_value = B2BAuditEntry(
             account_id=1,
@@ -376,11 +415,22 @@ def test_classify_zero_units_quota_valid(db, feature):
     ent_plan = EnterpriseBillingPlanModel(id=100, included_monthly_units=0)
     db.get.side_effect = [plan, ent_plan]
     # db.scalar calls: 1. feature, 2. binding, 3. quota check
-    db.scalar.side_effect = [feature, None, None]
+    db.scalar.side_effect = [feature, None]
 
-    result = B2BEntitlementRepairService.classify_zero_units(
-        db, canonical_plan_id=200, access_mode="quota", quota_limit=50
-    )
+    with patch(
+        "app.services.canonical_entitlement_mutation_service.CanonicalEntitlementMutationService.upsert_plan_feature_configuration",
+        return_value=PlanFeatureBindingModel(
+            id=10,
+            plan_id=200,
+            feature_id=feature.id,
+            access_mode=AccessMode.QUOTA,
+            is_enabled=True,
+            source_origin=SourceOrigin.MANUAL,
+        ),
+    ):
+        result = B2BEntitlementRepairService.classify_zero_units(
+            db, canonical_plan_id=200, access_mode="quota", quota_limit=50
+        )
 
     assert result["status"] == "created"
     assert result["access_mode"] == "quota"
