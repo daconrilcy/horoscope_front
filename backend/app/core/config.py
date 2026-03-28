@@ -59,6 +59,17 @@ class DailyEngineMode(str, Enum):
 
 class Settings:
     @staticmethod
+    def _parse_canonical_db_validation_mode() -> str:
+        raw_mode = os.getenv("CANONICAL_DB_VALIDATION_MODE", "strict").strip().lower()
+        if raw_mode in {"strict", "warn", "off"}:
+            return raw_mode
+        logger.warning(
+            "canonical_db_startup_validation_invalid_mode mode=%s fallback=strict",
+            raw_mode,
+        )
+        return "strict"
+
+    @staticmethod
     def _parse_feature_scope_validation_mode() -> str:
         raw_mode = os.getenv("FEATURE_SCOPE_VALIDATION_MODE", "strict").strip().lower()
         if raw_mode in {"strict", "warn", "off"}:
@@ -282,6 +293,9 @@ class Settings:
 
         # Feature Scope Validation Mode (Story 61.29)
         self.feature_scope_validation_mode = self._parse_feature_scope_validation_mode()
+
+        # Story 61.30
+        self.canonical_db_validation_mode = self._parse_canonical_db_validation_mode()
 
         # Stripe Configuration
         self.stripe_secret_key = os.getenv("STRIPE_SECRET_KEY", "").strip() or None

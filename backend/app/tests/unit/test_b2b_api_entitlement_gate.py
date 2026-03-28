@@ -256,7 +256,7 @@ def test_check_and_consume_unknown_access_mode_logs_warning(db_session, caplog):
     binding.is_enabled = True
     binding.access_mode = "surprise-mode"
 
-    caplog.set_level("WARNING")
+    caplog.set_level("WARNING", logger="app.services.b2b_api_entitlement_gate")
     with patch(
         "app.services.b2b_api_entitlement_gate.resolve_b2b_canonical_plan",
         return_value=PlanCatalogModel(id=1, plan_code="b2b-test"),

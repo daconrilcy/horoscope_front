@@ -198,7 +198,7 @@ def test_settings_invalid_feature_scope_validation_mode_warns_and_falls_back(
     monkeypatch.setenv("LLM_ANONYMIZATION_SALT", "llm-salt")
     monkeypatch.setenv("FEATURE_SCOPE_VALIDATION_MODE", "broken-mode")
 
-    with caplog.at_level("WARNING"):
+    with caplog.at_level("WARNING", logger="app.core.config"):
         settings = Settings()
 
     assert settings.feature_scope_validation_mode == "strict"

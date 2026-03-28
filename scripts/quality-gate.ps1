@@ -97,6 +97,14 @@ try {
     }
   }
 
+  Invoke-Step -Name "Canonical entitlement DB consistency CLI" -Action {
+    Set-Location $root
+    # Note: Requires DATABASE_URL to be set if not using default local sqlite.
+    Invoke-ExternalChecked -Label "python backend/scripts/check_canonical_entitlement_db_consistency.py" -Command {
+      python backend/scripts/check_canonical_entitlement_db_consistency.py
+    }
+  }
+
   Invoke-Step -Name "PostgreSQL restart-rotation test" -Action {
     if ($isCi -or $rotationPgUrl.Trim()) {
       Set-Location $root

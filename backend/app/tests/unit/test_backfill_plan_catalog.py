@@ -271,7 +271,7 @@ def test_backfill_b2b_zero_units_logs_warning_and_creates_no_binding(
     db_session.add(legacy_plan)
     db_session.commit()
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.WARNING, logger="app.services.backfill_plan_catalog_service"):
         backfill_b2b_plans(db_session)
 
     # Le plan doit exister dans plan_catalog
@@ -339,7 +339,7 @@ def test_backfill_collision_on_binding_logs_warning_without_overwriting(
     db_session.add(legacy_plan)
     db_session.commit()
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.WARNING, logger="app.services.backfill_plan_catalog_service"):
         backfill_b2c_plans(db_session)
 
     # Le binding doit être inchangé
@@ -465,7 +465,7 @@ def test_backfill_b2b_stale_migrated_binding_on_zero_units_raises_anomaly(
     db_session.commit()
 
     report = BackfillReport()
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.WARNING, logger="app.services.backfill_plan_catalog_service"):
         backfill_b2b_plans(db_session, report)
 
     # Le binding ne doit pas avoir été modifié

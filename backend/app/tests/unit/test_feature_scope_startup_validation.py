@@ -21,7 +21,7 @@ def test_startup_validation_strict_ok():
 
 def test_startup_validation_strict_ok_logs_success(caplog: pytest.LogCaptureFixture) -> None:
     with patch(VALIDATE_PATH):
-        with caplog.at_level("INFO"):
+        with caplog.at_level("INFO", logger="app.startup.feature_scope_validation"):
             run_feature_scope_startup_validation("strict")
 
     assert "feature_scope_registry_startup_validation_ok" in caplog.text
@@ -32,7 +32,7 @@ def test_startup_validation_strict_fails(caplog: pytest.LogCaptureFixture) -> No
     with patch(
         VALIDATE_PATH, side_effect=FeatureRegistryConsistencyError(["test error"])
     ) as mock_validate:
-        with caplog.at_level("ERROR"):
+        with caplog.at_level("ERROR", logger="app.startup.feature_scope_validation"):
             with pytest.raises(FeatureRegistryConsistencyError):
                 run_feature_scope_startup_validation("strict")
         mock_validate.assert_called_once()
@@ -46,7 +46,7 @@ def test_startup_validation_warn_does_not_block(caplog: pytest.LogCaptureFixture
     with patch(
         VALIDATE_PATH, side_effect=FeatureRegistryConsistencyError(["test error"])
     ) as mock_validate:
-        with caplog.at_level("ERROR"):
+        with caplog.at_level("ERROR", logger="app.startup.feature_scope_validation"):
             run_feature_scope_startup_validation("warn")
         mock_validate.assert_called_once()
 
@@ -56,7 +56,7 @@ def test_startup_validation_warn_does_not_block(caplog: pytest.LogCaptureFixture
 def test_startup_validation_off_skips_validator(caplog: pytest.LogCaptureFixture) -> None:
     """Mode off: validator is not even called."""
     with patch(VALIDATE_PATH) as mock_validate:
-        with caplog.at_level("WARNING"):
+        with caplog.at_level("WARNING", logger="app.startup.feature_scope_validation"):
             run_feature_scope_startup_validation("off")
         mock_validate.assert_not_called()
 
@@ -70,7 +70,7 @@ def test_startup_validation_invalid_mode_falls_back_to_strict(
     with patch(
         VALIDATE_PATH, side_effect=FeatureRegistryConsistencyError(["test error"])
     ) as mock_validate:
-        with caplog.at_level("WARNING"):
+        with caplog.at_level("WARNING", logger="app.startup.feature_scope_validation"):
             with pytest.raises(FeatureRegistryConsistencyError):
                 run_feature_scope_startup_validation("invalid_mode")
         mock_validate.assert_called_once()

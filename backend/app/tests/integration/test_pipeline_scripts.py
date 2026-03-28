@@ -138,6 +138,7 @@ def test_quality_gate_success_executes_all_steps_in_order(tmp_path: Path) -> Non
         "ruff check backend",
         "pytest -q backend/app/tests",
         "python backend/scripts/check_feature_scope_registry.py",
+        "python backend/scripts/check_canonical_entitlement_db_consistency.py",
         "alembic heads",
         "alembic history",
         "npm --prefix frontend run lint",

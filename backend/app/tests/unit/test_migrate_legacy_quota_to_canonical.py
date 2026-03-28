@@ -127,7 +127,7 @@ def test_migrate_counts_no_binding_as_anomaly(
         lambda db, user_id: _subscription("basic"),
     )
 
-    with caplog.at_level("WARNING"):
+    with caplog.at_level("WARNING", logger="scripts.migrate_legacy_quota_to_canonical"):
         stats = migrate(dry_run=True)
 
     assert stats["anomalies"] == 1

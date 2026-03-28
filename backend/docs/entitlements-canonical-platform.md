@@ -165,9 +165,44 @@ Cette commande retourne un code de sortie `0` en cas de succès et `1` en cas d'
 Elle est également exécutée par `scripts/quality-gate.ps1`.
 
 ### Séquence de protection complète
-Le système de protection des entitlements repose désormais sur trois couches complémentaires :
+Le système de protection des entitlements repose désormais sur quatre couches complémentaires :
 
 1. **Design-time / CI** (61.28/61.29) : La commande CLI bloque le merge si le registre est incohérent avec le code des gates.
 2. **Boot-time** (61.29) : Le backend refuse de démarrer en mode `strict` si une incohérence est détectée au chargement des modules.
-3. **Runtime** (61.27) : Les services de quota lèvent des exceptions si une feature inconnue ou hors-scope est appelée.
+3. **DB-time / Startup** (61.30) : Le backend valide au démarrage la cohérence des données canoniques en DB avec le registre.
+4. **Runtime** (61.27) : Les services de quota lèvent des exceptions si une feature inconnue ou hors-scope est appelée.
+
+## Validation DB canonique (Story 61.30)
+
+Pour combler la dernière faille (données DB incohérentes avec le code), un validateur contrôle la cohérence des tables `feature_catalog`, `plan_catalog` et `plan_feature_bindings` par rapport au registre de scope.
+
+### But
+Empêcher toute configuration incohérente en base (ex: feature B2B liée à un plan B2C) même si le code applicatif est correct. Cette validation s'exécute au démarrage de l'app et peut être déclenchée via CLI.
+
+### Commande de validation
+```powershell
+.\.venv\Scripts\Activate.ps1
+python backend/scripts/check_canonical_entitlement_db_consistency.py
+```
+*Précondition : Une base de données valide doit être accessible via `DATABASE_URL`.*
+
+### Vérifications effectuées
+Le validateur `CanonicalEntitlementDbConsistencyValidator` réalise les contrôles suivants :
+1. **Registre ↔ DB (Présence)** : Toute feature du registre doit avoir une entrée active dans `feature_catalog`.
+2. **DB ↔ Registre (Metered)** : Toute feature `is_metered=True` active en DB doit être enregistrée dans le registre.
+3. **DB ↔ Registre (Bindings)** : Toute feature utilisée dans un binding de plan doit être connue du registre.
+4. **Cohérence Scope/Audience** :
+   - Features scope `B2C` → Uniquement liées à des plans d'audience `B2C`.
+   - Features scope `B2B` → Uniquement liées à des plans d'audience `B2B`.
+5. **Intégrité des Quotas** :
+   - Binding `access_mode = QUOTA` → Doit posséder au moins une règle de quota.
+   - Binding `UNLIMITED` ou `DISABLED` → Ne doit posséder aucun quota parasite.
+6. **Features Obligatoires** : Les features critiques (`astrologer_chat`, `thematic_consultation`, `natal_chart_long`, `b2b_api_access`) doivent être présentes, actives et `is_metered=True` en DB.
+
+### Modes de validation (Startup)
+Le comportement au démarrage est piloté par `CANONICAL_DB_VALIDATION_MODE` (défaut: `strict`) :
+- **strict** : Crash immédiat au boot si une incohérence est trouvée.
+- **warn** : Log ERROR structuré, mais l'app démarre.
+- **off** : Validation désactivée (Log WARNING).
+
 
