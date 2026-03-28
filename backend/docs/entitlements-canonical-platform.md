@@ -276,7 +276,7 @@ L'audit trail est activé pour tous les consommateurs canoniques :
 - **Backfill legacy** : `backfill_plan_catalog_from_legacy.py`
 - **Repair B2B** : `b2b_entitlement_repair_service.py` (inclut la classification manuelle des plans à zéro unité).
 
-## Exposition ops de l'audit trail (Story 61.33)
+## Story 61.33 — Exposition ops de l'audit trail (endpoint de consultation)
 
 Depuis la story 61.33, les mutations auditées dans `canonical_entitlement_mutation_audits` sont consultables via une API ops sécurisée, paginée et filtrable.
 

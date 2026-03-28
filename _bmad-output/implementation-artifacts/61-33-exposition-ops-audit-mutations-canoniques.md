@@ -165,9 +165,9 @@ Cette story rend l'audit trail **actionnable** via une API ops read-only, cohér
 Gemini CLI
 
 ### Debug Log References
-- Integration tests pass: 16/16
+- Integration tests pass: 22/22
 - Unit tests pass: 25/25
-- Ruff check: Fixed long lines and unused imports.
+- Ruff check: main.py import block re-sorted and line length restored under 100 chars.
 
 ### Completion Notes List
 - Implemented `CanonicalEntitlementMutationAuditQueryService` for SQL logic.
@@ -175,6 +175,7 @@ Gemini CLI
 - Registered router in `main.py` and `api/v1/routers/__init__.py`.
 - Added comprehensive integration tests covering all ACs.
 - Updated architectural documentation.
+- Hardened post-review coverage for remaining filters, inclusive date bounds, `b2b` role denial, and 429 propagation.
 
 ### File List
 - `backend/app/services/canonical_entitlement_mutation_audit_query_service.py`
@@ -187,6 +188,7 @@ Gemini CLI
 
 ### Change Log
 - 2026-03-28: Initial implementation of Story 61.33.
+- 2026-03-28: Code review hardening for lint compliance, test coverage, and artifact/doc alignment.
 
 ## Dev Notes
 

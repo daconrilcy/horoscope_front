@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
+from app.core.rate_limit import RateLimitError
+from app.core.security import create_access_token
 from app.infra.db.base import Base
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
@@ -31,6 +33,13 @@ def _register_user_with_role_and_token(email: str, role: str) -> str:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
+
+
+def _register_user_and_issue_token_with_role_claim(email: str, role: str, claim_role: str) -> str:
+    with SessionLocal() as db:
+        auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
+        db.commit()
+        return create_access_token(subject=str(auth.user.id), role=claim_role)
 
 
 def _seed_audit(
@@ -178,6 +187,44 @@ def test_list_filter_by_request_id() -> None:
     assert items[0]["request_id"] == "rid-1"
 
 
+def test_list_filter_by_actor_identifier() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        _seed_audit(db, actor_identifier="seed_product_entitlements.py")
+        _seed_audit(db, actor_identifier="backfill_plan_catalog_from_legacy.py")
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        params={"actor_identifier": "seed_product_entitlements.py"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    items = response.json()["data"]["items"]
+    assert len(items) == 1
+    assert items[0]["actor_identifier"] == "seed_product_entitlements.py"
+
+
+def test_list_filter_by_source_origin() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        _seed_audit(db, source_origin="manual")
+        _seed_audit(db, source_origin="repair")
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        params={"source_origin": "repair"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    items = response.json()["data"]["items"]
+    assert len(items) == 1
+    assert items[0]["source_origin"] == "repair"
+
+
 def test_list_filter_by_date_range() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
@@ -199,6 +246,28 @@ def test_list_filter_by_date_range() -> None:
     items = response.json()["data"]["items"]
     assert len(items) == 1
     assert items[0]["feature_code"] == "f10"
+
+
+def test_list_filter_by_date_range_is_inclusive() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        _seed_audit(db, occurred_at=datetime(2026, 1, 5, tzinfo=timezone.utc), feature_code="f5")
+        _seed_audit(db, occurred_at=datetime(2026, 1, 10, tzinfo=timezone.utc), feature_code="f10")
+        _seed_audit(db, occurred_at=datetime(2026, 1, 15, tzinfo=timezone.utc), feature_code="f15")
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        params={
+            "date_from": "2026-01-05T00:00:00Z",
+            "date_to": "2026-01-15T00:00:00Z",
+        },
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    items = response.json()["data"]["items"]
+    assert [item["feature_code"] for item in items] == ["f15", "f10", "f5"]
 
 
 def test_list_pagination() -> None:
@@ -307,6 +376,21 @@ def test_detail_returns_403_for_non_ops_role() -> None:
     assert response.json()["error"]["code"] == "insufficient_role"
 
 
+def test_detail_returns_403_for_b2b_role() -> None:
+    _cleanup_tables()
+    b2b_token = _register_user_and_issue_token_with_role_claim(
+        "b2b@example.com",
+        "user",
+        "b2b",
+    )
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits/1",
+        headers={"Authorization": f"Bearer {b2b_token}"},
+    )
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "insufficient_role"
+
+
 def test_detail_returns_401_when_unauthenticated() -> None:
     _cleanup_tables()
     response = client.get("/v1/ops/entitlements/mutation-audits/1")
@@ -324,7 +408,52 @@ def test_list_returns_403_for_non_ops_role() -> None:
     assert response.json()["error"]["code"] == "insufficient_role"
 
 
+def test_list_returns_403_for_b2b_role() -> None:
+    _cleanup_tables()
+    b2b_token = _register_user_and_issue_token_with_role_claim(
+        "b2b-list@example.com",
+        "user",
+        "b2b",
+    )
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        headers={"Authorization": f"Bearer {b2b_token}"},
+    )
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "insufficient_role"
+
+
 def test_list_returns_401_when_unauthenticated() -> None:
     _cleanup_tables()
     response = client.get("/v1/ops/entitlements/mutation-audits")
     assert response.status_code == 401
+
+
+def test_list_returns_429_when_rate_limited(monkeypatch: object) -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops-429@example.com", "ops")
+
+    def _always_rate_limited(*args: object, **kwargs: object) -> None:
+        raise RateLimitError(
+            code="rate_limit_exceeded",
+            message="rate limit exceeded",
+            details={"retry_after": "7"},
+            status_code=429,
+        )
+
+    monkeypatch.setattr(
+        "app.api.v1.routers.ops_entitlement_mutation_audits.check_rate_limit",
+        _always_rate_limited,
+    )
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        headers={
+            "Authorization": f"Bearer {ops_token}",
+            "X-Request-Id": "rid-entitlement-audits-429",
+        },
+    )
+    assert response.status_code == 429
+    payload = response.json()["error"]
+    assert payload["code"] == "rate_limit_exceeded"
+    assert payload["request_id"] == "rid-entitlement-audits-429"
