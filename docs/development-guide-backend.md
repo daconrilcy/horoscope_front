@@ -24,6 +24,7 @@ python -m uvicorn app.main:app --reload
 .\.venv\Scripts\Activate.ps1
 cd backend
 ruff check .
+python .\scripts\check_feature_scope_registry.py
 pytest -q
 ```
 

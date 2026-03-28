@@ -90,6 +90,13 @@ try {
     Invoke-ExternalChecked -Label "pytest backend/app/tests" -Command { pytest -q backend/app/tests }
   }
 
+  Invoke-Step -Name "Feature scope registry consistency CLI" -Action {
+    Set-Location $root
+    Invoke-ExternalChecked -Label "python backend/scripts/check_feature_scope_registry.py" -Command {
+      python backend/scripts/check_feature_scope_registry.py
+    }
+  }
+
   Invoke-Step -Name "PostgreSQL restart-rotation test" -Action {
     if ($isCi -or $rotationPgUrl.Trim()) {
       Set-Location $root

@@ -324,12 +324,21 @@ gemini-2.0-flash
 - Added unit tests for startup validation and CLI exit codes.
 - Updated documentation in `backend/docs/entitlements-canonical-platform.md`.
 - Verified all tests pass and linting is clean.
+- Code review follow-up: invalid `FEATURE_SCOPE_VALIDATION_MODE` values now emit the required warning before falling back to `strict`.
+- Code review follow-up: `scripts/quality-gate.ps1` now executes `python backend/scripts/check_feature_scope_registry.py` as an explicit CI/static validation step.
+- Code review follow-up: startup/config/pipeline tests were extended to lock the logging contract and CI wiring.
 
 ### File List
+- `_bmad-output/implementation-artifacts/61-29-enforcement-registre-scope-demarrage-ci.md` (modified after code review)
 - `backend/app/core/config.py` (modified)
 - `backend/app/main.py` (modified)
 - `backend/app/startup/__init__.py` (new)
 - `backend/app/startup/feature_scope_validation.py` (new)
+- `backend/app/tests/integration/test_pipeline_scripts.py` (modified after code review)
 - `backend/app/tests/unit/test_feature_scope_startup_validation.py` (new)
 - `backend/app/tests/unit/test_check_feature_scope_registry_cli.py` (new)
+- `backend/app/tests/unit/test_settings.py` (modified after code review)
+- `backend/README.md` (modified after code review)
 - `backend/docs/entitlements-canonical-platform.md` (modified)
+- `docs/development-guide-backend.md` (modified after code review)
+- `scripts/quality-gate.ps1` (modified after code review)

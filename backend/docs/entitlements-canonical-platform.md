@@ -156,11 +156,13 @@ Le comportement en cas d'erreur dépend du mode de validation configuré via la 
 ### Commande CI obligatoire
 Pour détecter les incohérences le plus tôt possible, la commande suivante doit être intégrée dans la pipeline de validation statique :
 
-```bash
+```powershell
+.\.venv\Scripts\Activate.ps1
 python backend/scripts/check_feature_scope_registry.py
 ```
 
 Cette commande retourne un code de sortie `0` en cas de succès et `1` en cas d'incohérence détectée.
+Elle est également exécutée par `scripts/quality-gate.ps1`.
 
 ### Séquence de protection complète
 Le système de protection des entitlements repose désormais sur trois couches complémentaires :

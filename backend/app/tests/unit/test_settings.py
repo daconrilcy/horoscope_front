@@ -184,3 +184,23 @@ def test_settings_natal_engine_flags(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.ephemeris_path_version == "se-2026a"
     assert settings.ephemeris_path_hash == "abc123"
     assert settings.ephemeris_required_files == ["a.se1", "b.se1"]
+
+
+def test_settings_invalid_feature_scope_validation_mode_warns_and_falls_back(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///./horoscope.db")
+    monkeypatch.setenv("REFERENCE_SEED_ADMIN_TOKEN", "seed-token")
+    monkeypatch.setenv("API_CREDENTIALS_SECRET_KEY", "api-current")
+    monkeypatch.setenv("JWT_SECRET_KEY", "jwt-current")
+    monkeypatch.setenv("LLM_ANONYMIZATION_SALT", "llm-salt")
+    monkeypatch.setenv("FEATURE_SCOPE_VALIDATION_MODE", "broken-mode")
+
+    with caplog.at_level("WARNING"):
+        settings = Settings()
+
+    assert settings.feature_scope_validation_mode == "strict"
+    assert "feature_scope_registry_startup_validation_invalid_mode" in caplog.text
+    assert "broken-mode" in caplog.text

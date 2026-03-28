@@ -32,6 +32,13 @@ def _write_mock_commands(mock_bin: Path) -> None:
         "exit /b 0\r\n",
         encoding="utf-8",
     )
+    (mock_bin / "python.cmd").write_text(
+        "@echo off\r\n"
+        'echo python %*>>"%MOCK_LOG%"\r\n'
+        'if /I "%MOCK_FAIL_STEP%"=="python" exit /b 1\r\n'
+        "exit /b 0\r\n",
+        encoding="utf-8",
+    )
     (mock_bin / "alembic.cmd").write_text(
         "@echo off\r\n"
         'echo alembic %*>>"%MOCK_LOG%"\r\n'
@@ -130,6 +137,7 @@ def test_quality_gate_success_executes_all_steps_in_order(tmp_path: Path) -> Non
         "npm --prefix frontend audit --json",
         "ruff check backend",
         "pytest -q backend/app/tests",
+        "python backend/scripts/check_feature_scope_registry.py",
         "alembic heads",
         "alembic history",
         "npm --prefix frontend run lint",
@@ -190,6 +198,7 @@ def test_predeploy_success_runs_quality_gate_then_docker(tmp_path: Path) -> None
         "ruff check backend",
         "pytest -q backend/app/tests",
     ]
+    assert "python backend/scripts/check_feature_scope_registry.py" in lines
 
 
 def test_predeploy_fails_if_docker_config_fails(tmp_path: Path) -> None:

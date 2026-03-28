@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import secrets
 import sys
@@ -13,6 +14,7 @@ from app.core.versions import ACTIVE_REFERENCE_VERSION, ACTIVE_RULESET_VERSION
 
 backend_root = Path(__file__).parent.parent.parent
 env_path = backend_root / ".env"
+logger = logging.getLogger(__name__)
 
 
 def _should_load_backend_dotenv() -> bool:
@@ -56,6 +58,17 @@ class DailyEngineMode(str, Enum):
 
 
 class Settings:
+    @staticmethod
+    def _parse_feature_scope_validation_mode() -> str:
+        raw_mode = os.getenv("FEATURE_SCOPE_VALIDATION_MODE", "strict").strip().lower()
+        if raw_mode in {"strict", "warn", "off"}:
+            return raw_mode
+        logger.warning(
+            "feature_scope_registry_startup_validation_invalid_mode mode=%s fallback=strict",
+            raw_mode,
+        )
+        return "strict"
+
     @staticmethod
     def _normalize_database_url(database_url: str) -> str:
         # Prevent cwd-dependent sqlite DB selection.
@@ -268,12 +281,7 @@ class Settings:
         self.daily_engine_mode = self._parse_daily_engine_mode(os.getenv("DAILY_ENGINE_MODE"))
 
         # Feature Scope Validation Mode (Story 61.29)
-        raw_feature_scope_validation_mode = (
-            os.getenv("FEATURE_SCOPE_VALIDATION_MODE", "strict").strip().lower()
-        )
-        if raw_feature_scope_validation_mode not in {"strict", "warn", "off"}:
-            raw_feature_scope_validation_mode = "strict"
-        self.feature_scope_validation_mode = raw_feature_scope_validation_mode
+        self.feature_scope_validation_mode = self._parse_feature_scope_validation_mode()
 
         # Stripe Configuration
         self.stripe_secret_key = os.getenv("STRIPE_SECRET_KEY", "").strip() or None

@@ -76,6 +76,7 @@ Reference data seed/clone access:
 .\.venv\Scripts\Activate.ps1
 cd backend
 ruff check .
+python .\scripts\check_feature_scope_registry.py
 pytest -q
 ```
 
@@ -87,6 +88,8 @@ Note:
 ```powershell
 .\scripts\quality-gate.ps1
 ```
+
+Ce quality gate exécute aussi la validation statique obligatoire du registre de scope via `python backend/scripts/check_feature_scope_registry.py`.
 
 Run standalone secrets scan:
 
