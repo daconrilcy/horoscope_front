@@ -33,10 +33,20 @@ from app.infra.db.models.product_entitlements import (
     SourceOrigin,
 )
 from app.infra.db.session import SessionLocal
-from app.services.canonical_entitlement_mutation_service import CanonicalEntitlementMutationService
+from app.services.canonical_entitlement_mutation_service import (
+    CanonicalEntitlementMutationService,
+    CanonicalMutationContext,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
+
+
+_BACKFILL_CONTEXT = CanonicalMutationContext(
+    actor_type="script",
+    actor_identifier="backfill_plan_catalog_from_legacy.py",
+)
+
 
 B2B_FEATURE_CODE = "b2b_api_access"
 B2C_CHAT_FEATURE_CODE = "astrologer_chat"
@@ -332,6 +342,7 @@ def backfill_b2c_plans(db: Session, report: BackfillReport | None = None) -> Non
             access_mode=access_mode,
             quotas=quotas,
             source_origin=SourceOrigin.MIGRATED_FROM_BILLING_PLAN,
+            mutation_context=_BACKFILL_CONTEXT,
         )
 
         updated_binding = db.scalar(
@@ -469,6 +480,7 @@ def backfill_b2b_plans(db: Session, report: BackfillReport | None = None) -> Non
                 access_mode=AccessMode.QUOTA,
                 quotas=quotas,
                 source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN,
+                mutation_context=_BACKFILL_CONTEXT,
             )
 
             updated_binding = db.scalar(

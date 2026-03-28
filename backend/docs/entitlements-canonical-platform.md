@@ -243,4 +243,37 @@ Les écritures canoniques des chemins suivants ont été centralisées vers ce s
 
 Le mode `dry_run` du repair B2B exécute la validation canonique dans un savepoint annulé afin de garantir le même verdict métier qu'en exécution réelle, sans persistance effective.
 
+## Traçabilité write-time des mutations canoniques (Story 61.32)
+
+Depuis la story 61.32, toute mutation effective effectuée via `CanonicalEntitlementMutationService` laisse une trace d'audit structurée et transactionnelle dans la table `canonical_entitlement_mutation_audits`.
+
+### Fonctionnement de l'audit trail
+
+1. **Transactionnel** : L'écriture de l'audit est faite dans la même transaction SQLAlchemy que la mutation du binding/quota. Si la transaction rollback (ex: erreur ultérieure ou dry-run via savepoint), l'audit rollback aussi.
+2. **Snapshot Before/After** : Chaque ligne d'audit contient un snapshot JSON complet (`before_payload` et `after_payload`) du binding et de ses quotas.
+3. **Règle No-Op** : Si un appel à `upsert_plan_feature_configuration` est idempotent (aucun changement réel détecté après normalisation des snapshots), **aucune ligne d'audit n'est créée**. Cela évite le bruit inutile en base.
+4. **Pas d'audit sur échec** : Si la validation canonique (Story 61.31) échoue, aucune ligne d'audit n'est générée.
+
+### Contexte de mutation obligatoire
+
+Chaque appelant doit fournir un `CanonicalMutationContext` explicite précisant l'origine du changement :
+
+- **actor_type** : `"script" | "service" | "ops" | "system"`.
+- **actor_identifier** : Nom du script ou du service (ex: `seed_product_entitlements.py`, `b2b_entitlement_repair_service`).
+- **request_id** : Optionnel, pour corréler avec les logs applicatifs.
+
+### Normalisation des snapshots
+
+Pour garantir des diffs stables et une détection no-op fiable, les snapshots sont normalisés avant comparaison :
+- Les enums sont sérialisés par leur `.value` (chaîne).
+- Les quotas sont triés de manière déterministe par `(quota_key, period_unit, period_value, reset_mode)`.
+- Un binding absent est représenté par un dictionnaire vide `{}`.
+
+### Audit des consommateurs migrés
+
+L'audit trail est activé pour tous les consommateurs canoniques :
+- **Seed initial** : `seed_product_entitlements.py`
+- **Backfill legacy** : `backfill_plan_catalog_from_legacy.py`
+- **Repair B2B** : `b2b_entitlement_repair_service.py` (inclut la classification manuelle des plans à zéro unité).
+
 

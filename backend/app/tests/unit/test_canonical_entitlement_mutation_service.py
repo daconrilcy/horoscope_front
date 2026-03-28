@@ -18,7 +18,14 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.services.canonical_entitlement_mutation_service import (
     CanonicalEntitlementMutationService,
+    CanonicalMutationContext,
     CanonicalMutationValidationError,
+)
+
+
+_TEST_CONTEXT = CanonicalMutationContext(
+    actor_type="script",
+    actor_identifier="test_script.py",
 )
 
 
@@ -92,6 +99,7 @@ def test_upsert_creates_binding_and_quotas_nominal(db, b2c_plan, chat_feature):
         access_mode=AccessMode.QUOTA,
         quotas=quotas,
         source_origin=SourceOrigin.MANUAL,
+        mutation_context=_TEST_CONTEXT,
     )
 
     # THEN
@@ -140,6 +148,7 @@ def test_upsert_updates_existing_binding(db, b2c_plan, chat_feature):
         access_mode=AccessMode.QUOTA,
         quotas=quotas,
         source_origin=SourceOrigin.MIGRATED_FROM_BILLING_PLAN,
+        mutation_context=_TEST_CONTEXT,
     )
 
     # THEN
@@ -198,6 +207,7 @@ def test_upsert_replaces_stale_quotas(db, b2c_plan, chat_feature):
         access_mode=AccessMode.QUOTA,
         quotas=new_quotas,
         source_origin=SourceOrigin.MANUAL,
+        mutation_context=_TEST_CONTEXT,
     )
 
     # THEN: only q3 remains
@@ -220,6 +230,7 @@ def test_validation_fails_unknown_feature_code(db, b2c_plan):
             access_mode=AccessMode.UNLIMITED,
             quotas=[],
             source_origin=SourceOrigin.MANUAL,
+            mutation_context=_TEST_CONTEXT,
         )
     assert "absent de FEATURE_SCOPE_REGISTRY" in str(excinfo.value)
 
@@ -235,6 +246,7 @@ def test_validation_fails_feature_absent_from_catalog(db, b2c_plan):
             access_mode=AccessMode.UNLIMITED,
             quotas=[],
             source_origin=SourceOrigin.MANUAL,
+            mutation_context=_TEST_CONTEXT,
         )
     assert "absent de feature_catalog" in str(excinfo.value)
 
@@ -254,6 +266,7 @@ def test_validation_fails_feature_inactive_in_catalog(db, b2c_plan, chat_feature
             access_mode=AccessMode.UNLIMITED,
             quotas=[],
             source_origin=SourceOrigin.MANUAL,
+            mutation_context=_TEST_CONTEXT,
         )
     assert "is_active=False" in str(excinfo.value)
 
@@ -276,6 +289,7 @@ def test_validation_fails_b2b_feature_on_b2c_plan(db, b2c_plan):
             access_mode=AccessMode.UNLIMITED,
             quotas=[],
             source_origin=SourceOrigin.MANUAL,
+            mutation_context=_TEST_CONTEXT,
         )
     assert "ne peut être bindée qu'à un plan B2B" in str(excinfo.value)
 
@@ -290,6 +304,7 @@ def test_validation_fails_b2c_feature_on_b2b_plan(db, b2b_plan, chat_feature):
             access_mode=AccessMode.UNLIMITED,
             quotas=[],
             source_origin=SourceOrigin.MANUAL,
+            mutation_context=_TEST_CONTEXT,
         )
     assert "ne peut être bindée qu'à un plan B2C" in str(excinfo.value)
 
@@ -304,6 +319,7 @@ def test_validation_fails_quota_mode_without_quotas(db, b2c_plan, chat_feature):
             access_mode=AccessMode.QUOTA,
             quotas=[],
             source_origin=SourceOrigin.MANUAL,
+            mutation_context=_TEST_CONTEXT,
         )
     assert "requiert au moins un quota" in str(excinfo.value)
 
@@ -326,6 +342,7 @@ def test_validation_fails_quota_mode_with_non_positive_quota_limit(db, b2c_plan,
                 }
             ],
             source_origin=SourceOrigin.MANUAL,
+            mutation_context=_TEST_CONTEXT,
         )
     assert "quota_limit > 0" in str(excinfo.value)
 
@@ -348,6 +365,7 @@ def test_validation_fails_unlimited_with_quotas(db, b2c_plan, chat_feature):
                 }
             ],
             source_origin=SourceOrigin.MANUAL,
+            mutation_context=_TEST_CONTEXT,
         )
     assert "ne doit pas avoir de quotas" in str(excinfo.value)
 
@@ -370,6 +388,7 @@ def test_validation_fails_disabled_with_quotas(db, b2c_plan, chat_feature):
                 }
             ],
             source_origin=SourceOrigin.MANUAL,
+            mutation_context=_TEST_CONTEXT,
         )
     assert "ne doit pas avoir de quotas" in str(excinfo.value)
 
@@ -384,6 +403,7 @@ def test_validation_fails_disabled_with_is_enabled_true(db, b2c_plan, chat_featu
             access_mode=AccessMode.DISABLED,
             quotas=[],
             source_origin=SourceOrigin.MANUAL,
+            mutation_context=_TEST_CONTEXT,
         )
     assert "requiert is_enabled=False" in str(excinfo.value)
 
@@ -406,6 +426,7 @@ def test_validation_fails_quota_with_is_enabled_false(db, b2c_plan, chat_feature
                 }
             ],
             source_origin=SourceOrigin.MANUAL,
+            mutation_context=_TEST_CONTEXT,
         )
     assert "requiert is_enabled=True" in str(excinfo.value)
 
@@ -426,6 +447,7 @@ def test_validation_aggregates_multiple_errors(db, b2b_plan):
             access_mode=AccessMode.DISABLED,
             quotas=[],
             source_origin=SourceOrigin.MANUAL,
+            mutation_context=_TEST_CONTEXT,
         )
     assert "ne peut être bindée qu'à un plan B2C" in str(excinfo.value)
     assert "requiert is_enabled=False" in str(excinfo.value)
@@ -445,6 +467,7 @@ def test_no_partial_write_on_validation_error(db, b2c_plan, chat_feature):
             access_mode=AccessMode.DISABLED,
             quotas=[],
             source_origin=SourceOrigin.MANUAL,
+            mutation_context=_TEST_CONTEXT,
         )
 
     # THEN: no binding created

@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
+from typing import Literal
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.infra.db.models.canonical_entitlement_mutation_audit import (
+    CanonicalEntitlementMutationAuditModel,
+)
 from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,
@@ -26,6 +31,16 @@ _SCOPE_TO_AUDIENCE: dict[FeatureScope, Audience] = {
     FeatureScope.B2C: Audience.B2C,
     FeatureScope.B2B: Audience.B2B,
 }
+
+
+ActorType = Literal["script", "service", "ops", "system"]
+
+
+@dataclass(frozen=True)
+class CanonicalMutationContext:
+    actor_type: ActorType
+    actor_identifier: str  # ex: "seed_product_entitlements.py"
+    request_id: str | None = None
 
 
 class CanonicalMutationValidationError(ValueError):
@@ -53,10 +68,12 @@ class CanonicalEntitlementMutationService:
         variant_code: str | None = None,
         quotas: list[dict],
         source_origin: SourceOrigin,
+        mutation_context: CanonicalMutationContext,
     ) -> PlanFeatureBindingModel:
         """Crée ou met à jour un binding plan↔feature + remplace ses quotas.
 
         Valide les invariants canoniques avant toute écriture.
+        Laisse une trace d'audit si une mutation effective a eu lieu.
         Lève CanonicalMutationValidationError si une règle est violée.
         Pas de db.commit() — l'appelant contrôle la transaction.
         """
@@ -65,7 +82,15 @@ class CanonicalEntitlementMutationService:
             select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == feature_code)
         )
 
-        # 2. Valider — lève si erreurs
+        # 2. Capturer before_payload (avant validation pour être sûr d'avoir l'état initial)
+        feature_id = feature.id if feature else None
+        before_payload = (
+            CanonicalEntitlementMutationService._snapshot_binding(db, plan.id, feature_id)
+            if feature_id
+            else {}
+        )
+
+        # 3. Valider — lève si erreurs
         errors = CanonicalEntitlementMutationService._validate(
             feature_code=feature_code,
             plan_audience=plan.audience,
@@ -77,7 +102,7 @@ class CanonicalEntitlementMutationService:
         if errors:
             raise CanonicalMutationValidationError(errors)
 
-        # 3. Upsert binding
+        # 4. Upsert binding
         # feature est forcément non None ici car _validate a levé sinon
         assert feature is not None
 
@@ -104,11 +129,86 @@ class CanonicalEntitlementMutationService:
             binding.source_origin = source_origin
         db.flush()
 
-        # 4. Remplacer les quotas atomiquement (helper privé)
+        # 5. Remplacer les quotas atomiquement
         CanonicalEntitlementMutationService._replace_plan_feature_quotas(
             db, binding, quotas, source_origin=source_origin
         )
+        db.flush()
+
+        # 6. Capturer after_payload et auditer si diff réel
+        after_payload = CanonicalEntitlementMutationService._snapshot_binding_by_id(db, binding.id)
+
+        if before_payload != after_payload:
+            db.add(
+                CanonicalEntitlementMutationAuditModel(
+                    operation="upsert_plan_feature_configuration",
+                    plan_id=plan.id,
+                    plan_code_snapshot=plan.plan_code,
+                    feature_code=feature_code,
+                    actor_type=mutation_context.actor_type,
+                    actor_identifier=mutation_context.actor_identifier,
+                    request_id=mutation_context.request_id,
+                    source_origin=source_origin.value,
+                    before_payload=before_payload,
+                    after_payload=after_payload,
+                )
+            )
+            db.flush()
+
         return binding
+
+    @staticmethod
+    def _snapshot_binding(db: Session, plan_id: int, feature_id: int) -> dict:
+        """Retourne {} si le binding n'existe pas encore."""
+        binding = db.scalar(
+            select(PlanFeatureBindingModel).where(
+                PlanFeatureBindingModel.plan_id == plan_id,
+                PlanFeatureBindingModel.feature_id == feature_id,
+            )
+        )
+        if binding is None:
+            return {}
+        return CanonicalEntitlementMutationService._snapshot_binding_by_id(db, binding.id)
+
+    @staticmethod
+    def _snapshot_binding_by_id(db: Session, binding_id: int) -> dict:
+        binding = db.get(PlanFeatureBindingModel, binding_id)
+        assert binding is not None
+
+        quotas = db.scalars(
+            select(PlanFeatureQuotaModel)
+            .where(PlanFeatureQuotaModel.plan_feature_binding_id == binding_id)
+            .order_by(
+                PlanFeatureQuotaModel.quota_key,
+                PlanFeatureQuotaModel.period_unit,
+                PlanFeatureQuotaModel.period_value,
+                PlanFeatureQuotaModel.reset_mode,
+            )
+        ).all()
+
+        return {
+            "is_enabled": binding.is_enabled,
+            "access_mode": binding.access_mode.value,
+            "variant_code": binding.variant_code,
+            "source_origin": binding.source_origin.value,
+            "quotas": [
+                {
+                    "quota_key": q.quota_key,
+                    "quota_limit": q.quota_limit,
+                    "period_unit": q.period_unit.value
+                    if hasattr(q.period_unit, "value")
+                    else q.period_unit,
+                    "period_value": q.period_value,
+                    "reset_mode": q.reset_mode.value
+                    if hasattr(q.reset_mode, "value")
+                    else q.reset_mode,
+                    "source_origin": q.source_origin.value
+                    if hasattr(q.source_origin, "value")
+                    else q.source_origin,
+                }
+                for q in quotas
+            ],
+        }
 
     @staticmethod
     def _replace_plan_feature_quotas(

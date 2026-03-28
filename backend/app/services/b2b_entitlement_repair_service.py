@@ -28,9 +28,16 @@ from app.infra.db.models.user import UserModel
 from app.services.b2b_audit_service import B2BAuditService
 from app.services.canonical_entitlement_mutation_service import (
     CanonicalEntitlementMutationService,
+    CanonicalMutationContext,
 )
 
 logger = logging.getLogger(__name__)
+
+
+_REPAIR_CONTEXT = CanonicalMutationContext(
+    actor_type="service",
+    actor_identifier="b2b_entitlement_repair_service",
+)
 
 
 class RepairValidationError(Exception):
@@ -309,6 +316,7 @@ class B2BEntitlementRepairService:
                 access_mode=AccessMode.QUOTA,
                 quotas=quotas,
                 source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN,
+                mutation_context=_REPAIR_CONTEXT,
             )
             # Fetch the newly created/updated quota for the return signature
             quota = db.scalar(
@@ -329,6 +337,7 @@ class B2BEntitlementRepairService:
                 access_mode=AccessMode.QUOTA,
                 quotas=quotas,
                 source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN,
+                mutation_context=_REPAIR_CONTEXT,
             )
             quota = db.scalar(
                 select(PlanFeatureQuotaModel).where(
@@ -493,6 +502,7 @@ class B2BEntitlementRepairService:
             access_mode=access_mode_enum,
             quotas=quotas,
             source_origin=SourceOrigin.MANUAL,
+            mutation_context=_REPAIR_CONTEXT,
         )
 
         db.commit()

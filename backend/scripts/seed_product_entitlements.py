@@ -25,10 +25,19 @@ from app.infra.db.models.product_entitlements import (
     SourceOrigin,
 )
 from app.infra.db.session import SessionLocal
-from app.services.canonical_entitlement_mutation_service import CanonicalEntitlementMutationService
+from app.services.canonical_entitlement_mutation_service import (
+    CanonicalEntitlementMutationService,
+    CanonicalMutationContext,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
+
+
+_SEED_CONTEXT = CanonicalMutationContext(
+    actor_type="script",
+    actor_identifier="seed_product_entitlements.py",
+)
 
 
 def seed() -> None:
@@ -304,6 +313,7 @@ def seed() -> None:
                         plan=plans[plan_code],
                         feature_code=feature_code,
                         source_origin=SourceOrigin.MANUAL,
+                        mutation_context=_SEED_CONTEXT,
                         **binding_config,
                     )
 
