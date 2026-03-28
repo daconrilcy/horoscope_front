@@ -183,7 +183,7 @@ Les valeurs d'`access_mode` sont les valeurs `.value` de l'enum `AccessMode` (`b
 
 - [x] **Étendre les schémas Pydantic du router** (AC: 1, 6)
   - [x] Ajouter `QuotaChangeSummary` schema (added, removed, updated)
-  - [x] Étendre `MutationAuditItem` avec `change_kind`, `changed_fields`, `risk_level`, `quota_changes` (tous optionnels avec `= None` pour `exclude_none`)
+  - [x] Étendre `MutationAuditItem` avec `change_kind`, `changed_fields`, `risk_level`, `quota_changes` comme champs non-optionnels ; seuls `before_payload` et `after_payload` restent optionnels
 
 - [x] **Étendre `_to_item` dans le router** (AC: 1, 6)
   - [x] Appeler `CanonicalEntitlementMutationDiffService.compute_diff(audit.before_payload, audit.after_payload)`
@@ -257,6 +257,10 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- 2026-03-28 : Revue post-implémentation effectuée. Correction de la documentation OpenAPI du 400 `diff_filter_result_set_too_large`.
+- 2026-03-28 : Réduction du recalcul des diffs sur le chemin filtré en réutilisant le diff déjà produit pour la page sérialisée.
+- 2026-03-28 : Complément de couverture ajouté pour `test_changed_fields_no_quota_path_for_added`, la pagination post-filtrage diff et le garde-fou `sql_count > 10000`.
+
 ### File List
 
 - `backend/app/services/canonical_entitlement_mutation_diff_service.py`
@@ -272,3 +276,4 @@ claude-sonnet-4-6
 - 2026-03-28 : Extension du router ops avec enrichissement diff et filtres application-level.
 - 2026-03-28 : Ajout des tests unitaires et d'intégration.
 - 2026-03-28 : Mise à jour de la documentation architecture.
+- 2026-03-28 : Revue de code et corrections sur OpenAPI, pagination filtrée et couverture de tests.

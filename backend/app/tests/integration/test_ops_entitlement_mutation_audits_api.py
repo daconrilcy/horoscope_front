@@ -585,6 +585,45 @@ def test_filter_by_changed_field() -> None:
     assert items[0]["feature_code"] == "match"
 
 
+def test_diff_filters_paginate_after_application_level_filtering() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops-paginated@example.com", "ops")
+    with SessionLocal() as db:
+        for index in range(1, 6):
+            _seed_audit(
+                db,
+                occurred_at=datetime(2026, 1, index, tzinfo=timezone.utc),
+                before_payload={
+                    "is_enabled": True,
+                    "access_mode": "quota",
+                    "variant_code": None,
+                    "source_origin": "manual",
+                    "quotas": [],
+                },
+                after_payload={
+                    "is_enabled": False,
+                    "access_mode": "quota",
+                    "variant_code": None,
+                    "source_origin": "manual",
+                    "quotas": [],
+                },
+                feature_code=f"high-{index}",
+            )
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        params={"risk_level": "high", "page": 2, "page_size": 2},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    assert payload["total_count"] == 5
+    assert payload["page"] == 2
+    assert payload["page_size"] == 2
+    assert [item["feature_code"] for item in payload["items"]] == ["high-3", "high-2"]
+
+
 def test_detail_includes_diff_fields() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
@@ -623,3 +662,27 @@ def test_filter_invalid_change_kind_returns_422() -> None:
         headers={"Authorization": f"Bearer {ops_token}"},
     )
     assert response.status_code == 422
+
+
+def test_filter_returns_400_when_diff_scope_is_too_large(monkeypatch: object) -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops-too-large@example.com", "ops")
+
+    def _list_mutation_audits(*args: object, **kwargs: object) -> tuple[list[object], int]:
+        return [], 10_001
+
+    monkeypatch.setattr(
+        "app.api.v1.routers.ops_entitlement_mutation_audits."
+        "CanonicalEntitlementMutationAuditQueryService.list_mutation_audits",
+        _list_mutation_audits,
+    )
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        params={"risk_level": "high"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 400
+    payload = response.json()["error"]
+    assert payload["code"] == "diff_filter_result_set_too_large"
+    assert payload["details"] == {"sql_count": 10001, "max_allowed": 10000}

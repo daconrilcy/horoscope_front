@@ -118,6 +118,21 @@ def test_quota_added():
     assert len(result.quota_changes.added) == 1
     assert "quotas[daily,day,1,calendar].quota_limit" not in result.changed_fields
 
+
+def test_changed_fields_no_quota_path_for_added():
+    # AC 9: test_changed_fields_no_quota_path_for_added
+    before = {**BEFORE_PAYLOAD_BASIC, "quotas": []}
+    after = {
+        **BEFORE_PAYLOAD_BASIC,
+        "quotas": [{
+            "quota_key": "daily", "quota_limit": 10, "period_unit": "day",
+            "period_value": 1, "reset_mode": "calendar", "source_origin": "stripe_webhook"
+        }]
+    }
+    result = CanonicalEntitlementMutationDiffService.compute_diff(before, after)
+    assert len(result.quota_changes.added) == 1
+    assert "quotas[daily,day,1,calendar].quota_limit" not in result.changed_fields
+
 def test_quota_removed():
     # AC 9: test_quota_removed
     before = {

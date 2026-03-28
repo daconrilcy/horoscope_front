@@ -150,9 +150,18 @@ def _enforce_limits(
 
 
 def _to_item(audit: Any, *, include_payloads: bool) -> dict[str, Any]:
-    diff = CanonicalEntitlementMutationDiffService.compute_diff(
-        audit.before_payload or {}, audit.after_payload or {}
+    return _to_item_with_diff(
+        audit,
+        diff=CanonicalEntitlementMutationDiffService.compute_diff(
+            audit.before_payload or {}, audit.after_payload or {}
+        ),
+        include_payloads=include_payloads,
     )
+
+
+def _to_item_with_diff(
+    audit: Any, *, diff: Any, include_payloads: bool
+) -> dict[str, Any]:
     d: dict[str, Any] = {
         "id": audit.id,
         "occurred_at": audit.occurred_at,
@@ -184,6 +193,7 @@ def _to_item(audit: Any, *, include_payloads: bool) -> dict[str, Any]:
     response_model=MutationAuditListApiResponse,
     response_model_exclude_none=True,
     responses={
+        400: {"model": ErrorEnvelope},
         401: {"model": ErrorEnvelope},
         403: {"model": ErrorEnvelope},
         429: {"model": ErrorEnvelope},
@@ -300,7 +310,7 @@ def list_mutation_audits(
         date_to=date_to,
     )
 
-    filtered = []
+    filtered: list[tuple[Any, Any]] = []
     for item in all_items:
         diff = CanonicalEntitlementMutationDiffService.compute_diff(
             item.before_payload or {}, item.after_payload or {}
@@ -311,7 +321,7 @@ def list_mutation_audits(
             continue
         if changed_field_filter and changed_field_filter not in diff.changed_fields:
             continue
-        filtered.append(item)
+        filtered.append((item, diff))
 
     total_count = len(filtered)
     start = (page - 1) * page_size
@@ -320,7 +330,12 @@ def list_mutation_audits(
     return {
         "data": {
             "items": [
-                _to_item(item, include_payloads=include_payloads) for item in page_items
+                _to_item_with_diff(
+                    item,
+                    diff=diff,
+                    include_payloads=include_payloads,
+                )
+                for item, diff in page_items
             ],
             "total_count": total_count,
             "page": page,
