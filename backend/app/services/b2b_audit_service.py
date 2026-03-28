@@ -42,7 +42,6 @@ class B2BAuditEntry:
         "settings_fallback",
     ]
     reason: Literal[
-        "admin_user_id_missing",
         "no_canonical_plan",
         "no_binding",
         "disabled_by_plan",

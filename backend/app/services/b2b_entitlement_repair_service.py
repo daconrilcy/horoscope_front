@@ -43,9 +43,7 @@ class RepairBlockerEntry:
     account_id: int
     company_name: str
     reason: str
-    recommended_action: Literal[
-        "set_admin_user", "classify_zero_units", "schema_constraint_violation"
-    ]
+    recommended_action: Literal["classify_zero_units", "schema_constraint_violation"]
 
 
 @dataclass
@@ -115,6 +113,10 @@ class B2BEntitlementRepairService:
             raise RuntimeError(f"Feature {cls.FEATURE_CODE} not found in catalog")
 
         for account in all_accounts:
+            # NOTE: L'absence d'admin_user_id (account.admin_user_id is None) n'est JAMAIS
+            # un motif de remaining_blockers depuis Story 61.25.
+            # Les quotas B2B sont indexés par enterprise_account_id.
+            # admin_user_id est hors périmètre quota.
             # Use savepoint to isolate account repair
             with db.begin_nested():
                 account_plan = account_plans.get(account.id)
@@ -311,6 +313,10 @@ class B2BEntitlementRepairService:
 
     @classmethod
     def set_admin_user(cls, db: Session, *, account_id: int, user_id: int) -> dict:
+        """
+        Gère l'ownership du compte (admin_user_id).
+        Cet endpoint n'est pas un prérequis à la consommation ou à la lecture de quota B2B.
+        """
         account = db.get(EnterpriseAccountModel, account_id)
         if not account or account.status != "active":
             raise RepairValidationError(

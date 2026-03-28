@@ -67,6 +67,24 @@ Le compromis transitoire consistant à utiliser `admin_user_id` comme clé de qu
 - **Suppression Physique** : La table `enterprise_daily_usages` a été supprimée via une migration Alembic destructive (`9d73f7af0bf4`).
 - **Services Migrés** : `B2BBillingService`, `B2BReconciliationService`, `B2BApiEntitlementGate` et `B2BAuditService` utilisent désormais la table native B2B.
 
+### Outils ops B2B — Alignement post-61.26
+
+Depuis la story 61.26, l'écosystème ops B2B est entièrement aligné sur la table native `enterprise_feature_usage_counters`.
+
+- **Audit Ops** : `GET /v1/ops/b2b/entitlements/audit` lit exclusivement `enterprise_feature_usage_counters`. L'absence d'`admin_user_id` n'est plus un motif de blocage ou d'audit "settings_fallback".
+- **Repair Ops** : Les blockers `"set_admin_user"` ont été supprimés. L'outil `POST /repair/set-admin-user` est désormais documenté comme un outil de gestion d'**ownership/authentification**, sans impact sur le quota.
+- **admin_user_id** : Ce champ dans `enterprise_accounts` définit l'administrateur du compte (ownership) uniquement. Plus aucun chemin de décision quota/usage B2B n'en dépend.
+- **Nettoyage Historique** : Les compteurs legacy B2B dans `feature_usage_counters` ont été purgés après vérification via `verify_b2b_usage_migration.py`.
+
+### Invariants du Système (Post-61.26)
+
+| Flux | Table Source | Identifiant Pivot |
+|------|--------------|-------------------|
+| **Usage B2C** | `feature_usage_counters` | `user_id` |
+| **Usage B2B** | `enterprise_feature_usage_counters` | `enterprise_account_id` |
+| **Audit B2B** | `enterprise_feature_usage_counters` | `enterprise_account_id` |
+| **Ownership B2B** | `enterprise_accounts` | `admin_user_id` |
+
 ### Métadonnées de Quota
 
 Les réponses API B2B incluent désormais un objet `quota_info` dans le body JSON :

@@ -1,3 +1,6 @@
+# ONE-SHOT HISTORICAL MIGRATION — Story 61.25
+# Ce script ne doit être exécuté qu'une seule fois, avant le déploiement du runtime 61.25.
+# Il est conservé comme référence historique. Ne pas relancer en production sans validation.
 import argparse
 import logging
 import os

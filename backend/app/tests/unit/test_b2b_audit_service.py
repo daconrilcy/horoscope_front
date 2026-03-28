@@ -26,16 +26,31 @@ def db_session() -> MagicMock:
     return MagicMock(spec=Session)
 
 
-def test_audit_admin_user_id_missing(db_session: MagicMock) -> None:
+@patch("app.services.b2b_audit_service.resolve_b2b_canonical_plan")
+def test_audit_admin_user_id_absent_does_not_block_canonical_resolution(
+    mock_resolve: MagicMock,
+    db_session: MagicMock,
+) -> None:
+    # AC 1: admin_user_id=None + plan canonique + binding valide -> resolution_source canonique
     account = EnterpriseAccountModel(id=1, company_name="No Admin Co", admin_user_id=None)
-    db_session.scalar.return_value = None
+    canonical_plan = PlanCatalogModel(id=1, plan_code="b2b_plan")
+    mock_resolve.return_value = canonical_plan
+    
+    binding = PlanFeatureBindingModel(
+        id=10, 
+        plan_id=1, 
+        feature_id=100, 
+        access_mode=AccessMode.UNLIMITED,
+        is_enabled=True
+    )
+    # 1. acc_plan -> None, 2. binding -> binding
+    db_session.scalar.side_effect = [None, binding]
 
     entry = B2BAuditService._audit_account(db_session, account)
 
     assert entry.account_id == 1
-    assert entry.resolution_source == "settings_fallback"
-    assert entry.reason == "no_canonical_plan"
-    assert entry.binding_status is None
+    assert entry.resolution_source == "canonical_unlimited"
+    assert entry.reason == "unlimited_access"
     assert entry.admin_user_id_present is False
 
 

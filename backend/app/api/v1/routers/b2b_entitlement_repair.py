@@ -189,6 +189,10 @@ def run_repair(
     }
 
 
+# OWNERSHIP/AUTH UNIQUEMENT — pas un prérequis quota depuis Story 61.25
+# Cet endpoint permet d'associer un utilisateur administrateur à un compte enterprise.
+# Il N'est PAS un prérequis à la consommation ou lecture de quota B2B.
+# Les quotas B2B sont indexés par enterprise_account_id (enterprise_feature_usage_counters).
 @router.post(
     "/set-admin-user",
     response_model=SetAdminUserResponse,
