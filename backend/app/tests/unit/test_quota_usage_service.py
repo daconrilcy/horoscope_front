@@ -49,6 +49,8 @@ def test_quota_usage_service_rejects_b2b_feature_on_get_usage(db_session):
             quota=quota,
         )
     assert "EnterpriseQuotaUsageService" in str(exc_info.value)
+    assert exc_info.value.actual_scope.value == "b2b"
+    assert exc_info.value.expected_scope.value == "b2c"
 
 
 def test_quota_usage_service_rejects_b2b_feature_on_consume(db_session):
@@ -67,6 +69,50 @@ def test_quota_usage_service_rejects_b2b_feature_on_consume(db_session):
             quota=quota,
         )
     assert "EnterpriseQuotaUsageService" in str(exc_info.value)
+
+
+def test_quota_usage_service_rejects_b2b_feature_before_db_access():
+    quota = QuotaDefinition(
+        quota_key="monthly",
+        quota_limit=1000,
+        period_unit="month",
+        period_value=1,
+        reset_mode="calendar",
+    )
+    fake_db = Mock()
+
+    with pytest.raises(InvalidQuotaScopeError):
+        QuotaUsageService.get_usage(
+            fake_db,
+            user_id=1,
+            feature_code="b2b_api_access",
+            quota=quota,
+        )
+
+    fake_db.scalar.assert_not_called()
+    fake_db.flush.assert_not_called()
+
+
+def test_quota_usage_service_rejects_unknown_feature_before_db_access():
+    quota = QuotaDefinition(
+        quota_key="monthly",
+        quota_limit=1000,
+        period_unit="month",
+        period_value=1,
+        reset_mode="calendar",
+    )
+    fake_db = Mock()
+
+    with pytest.raises(UnknownFeatureCodeError):
+        QuotaUsageService.consume(
+            fake_db,
+            user_id=1,
+            feature_code="unregistered_feature",
+            quota=quota,
+        )
+
+    fake_db.scalar.assert_not_called()
+    fake_db.flush.assert_not_called()
 
 
 def test_quota_usage_service_rejects_unknown_feature_code(db_session):

@@ -31,8 +31,9 @@ def test_invalid_scope_error_message_b2b():
         feature_code="b2b_api_access",
         actual_scope=FeatureScope.B2B,
         expected_scope=FeatureScope.B2C,
-        correct_service="EnterpriseQuotaUsageService",
-        wrong_service="QuotaUsageService",
     )
     assert "feature_code 'b2b_api_access' is B2B" in str(exc)
     assert "use EnterpriseQuotaUsageService, not QuotaUsageService" in str(exc)
+    assert exc.feature_code == "b2b_api_access"
+    assert exc.actual_scope == FeatureScope.B2B
+    assert exc.expected_scope == FeatureScope.B2C

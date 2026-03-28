@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from unittest.mock import Mock
 
 import pytest
 from sqlalchemy import delete
@@ -77,6 +78,8 @@ def test_enterprise_quota_usage_service_rejects_b2c_feature_on_get_usage() -> No
                 quota=quota,
             )
     assert "QuotaUsageService" in str(exc_info.value)
+    assert exc_info.value.actual_scope.value == "b2c"
+    assert exc_info.value.expected_scope.value == "b2b"
 
 
 def test_enterprise_quota_usage_service_rejects_b2c_feature_on_consume() -> None:
@@ -98,6 +101,50 @@ def test_enterprise_quota_usage_service_rejects_b2c_feature_on_consume() -> None
                 quota=quota,
             )
     assert "QuotaUsageService" in str(exc_info.value)
+
+
+def test_enterprise_quota_usage_service_rejects_b2c_feature_before_db_access() -> None:
+    quota = QuotaDefinition(
+        quota_key="monthly",
+        quota_limit=1000,
+        period_unit=PeriodUnit.MONTH,
+        period_value=1,
+        reset_mode=ResetMode.CALENDAR,
+    )
+    fake_db = Mock()
+
+    with pytest.raises(InvalidQuotaScopeError):
+        EnterpriseQuotaUsageService.get_usage(
+            fake_db,
+            account_id=1,
+            feature_code="astrologer_chat",
+            quota=quota,
+        )
+
+    fake_db.scalar.assert_not_called()
+    fake_db.flush.assert_not_called()
+
+
+def test_enterprise_quota_usage_service_rejects_unknown_feature_before_db_access() -> None:
+    quota = QuotaDefinition(
+        quota_key="monthly",
+        quota_limit=1000,
+        period_unit=PeriodUnit.MONTH,
+        period_value=1,
+        reset_mode=ResetMode.CALENDAR,
+    )
+    fake_db = Mock()
+
+    with pytest.raises(UnknownFeatureCodeError):
+        EnterpriseQuotaUsageService.consume(
+            fake_db,
+            account_id=1,
+            feature_code="unregistered_feature",
+            quota=quota,
+        )
+
+    fake_db.scalar.assert_not_called()
+    fake_db.flush.assert_not_called()
 
 
 def test_enterprise_quota_usage_service_rejects_unknown_feature_code() -> None:

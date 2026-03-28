@@ -21,12 +21,12 @@ class InvalidQuotaScopeError(ValueError):
         feature_code: str,
         actual_scope: FeatureScope,
         expected_scope: FeatureScope,
-        correct_service: str,
-        wrong_service: str,
     ) -> None:
         self.feature_code = feature_code
         self.actual_scope = actual_scope
         self.expected_scope = expected_scope
+        correct_service = _service_name_for_scope(actual_scope)
+        wrong_service = _service_name_for_scope(expected_scope)
         super().__init__(
             f"feature_code '{feature_code}' is {actual_scope.value.upper()} — "
             f"use {correct_service}, not {wrong_service}."
@@ -51,3 +51,20 @@ def get_feature_scope(feature_code: str) -> FeatureScope:
     if scope is None:
         raise UnknownFeatureCodeError(feature_code)
     return scope
+
+
+def require_feature_scope(feature_code: str, expected_scope: FeatureScope) -> None:
+    """Valide le scope d'un feature_code et bloque tout mauvais routage de service."""
+    actual_scope = get_feature_scope(feature_code)
+    if actual_scope != expected_scope:
+        raise InvalidQuotaScopeError(
+            feature_code=feature_code,
+            actual_scope=actual_scope,
+            expected_scope=expected_scope,
+        )
+
+
+def _service_name_for_scope(scope: FeatureScope) -> str:
+    if scope == FeatureScope.B2C:
+        return "QuotaUsageService"
+    return "EnterpriseQuotaUsageService"

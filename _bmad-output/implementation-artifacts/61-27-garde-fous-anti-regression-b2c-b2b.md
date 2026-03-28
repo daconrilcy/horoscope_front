@@ -139,6 +139,8 @@ claude-sonnet-4-6
 
 - Linting errors (E501, I001, F401) fixed via `ruff check --fix` and manual wrapping.
 - `ModuleNotFoundError` in `test_scope_separation_imports.py` fixed by correcting module name `app.services.b2b_canonical_usage_service`.
+- Code review follow-up: centralized scope validation in `require_feature_scope()` to remove duplicated service-routing logic from both quota services.
+- Code review follow-up: added fail-fast tests proving invalid or unknown feature codes stop before any DB interaction.
 
 ### Completion Notes List
 
@@ -147,10 +149,13 @@ claude-sonnet-4-6
 - Added comprehensive unit tests in `test_feature_scope_registry.py`, `test_quota_usage_service.py`, and `test_enterprise_quota_usage_service.py`.
 - Implemented AST-based import separation check in `test_scope_separation_imports.py`.
 - Updated documentation in `entitlements-canonical-platform.md`.
-- All tests passing (37 tests).
+- Code review hardening: extracted `require_feature_scope()` so scope-to-service mapping is owned by the registry instead of duplicated in callers.
+- Code review hardening: added explicit non-regression assertions that invalid scope / unknown feature errors occur before any SQLAlchemy access.
+- Validation locale post-review: `ruff check`, `ruff format --check`, targeted quota tests (41 passed), adjacent entitlement/B2B tests (99 passed).
 
 ### File List
 
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
 - `backend/app/services/feature_scope_registry.py`
 - `backend/app/services/quota_usage_service.py`
 - `backend/app/services/enterprise_quota_usage_service.py`
