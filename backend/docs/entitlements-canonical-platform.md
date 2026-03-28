@@ -267,7 +267,7 @@ Chaque appelant doit fournir un `CanonicalMutationContext` explicite précisant 
 Pour garantir des diffs stables et une détection no-op fiable, les snapshots sont normalisés avant comparaison :
 - Les enums sont sérialisés par leur `.value` (chaîne).
 - Les quotas sont triés de manière déterministe par `(quota_key, period_unit, period_value, reset_mode)`.
-- Un binding absent est représenté par un dictionnaire vide `{}`.
+- Un dictionnaire vide `{}` représente un binding absent.
 
 ### Audit des consommateurs migrés
 
@@ -275,5 +275,28 @@ L'audit trail est activé pour tous les consommateurs canoniques :
 - **Seed initial** : `seed_product_entitlements.py`
 - **Backfill legacy** : `backfill_plan_catalog_from_legacy.py`
 - **Repair B2B** : `b2b_entitlement_repair_service.py` (inclut la classification manuelle des plans à zéro unité).
+
+## Exposition ops de l'audit trail (Story 61.33)
+
+Depuis la story 61.33, les mutations auditées dans `canonical_entitlement_mutation_audits` sont consultables via une API ops sécurisée, paginée et filtrable.
+
+### Endpoints de consultation
+
+- **Liste paginée** : `GET /v1/ops/entitlements/mutation-audits`
+  - Retourne les audits triés par `occurred_at DESC, id DESC`.
+  - Pagination via `page` et `page_size` (max 100).
+  - Filtres optionnels : `plan_id`, `plan_code`, `feature_code`, `actor_type`, `actor_identifier`, `source_origin`, `request_id`, `date_from`, `date_to`.
+  - **Payloads** : Par défaut, `before_payload` et `after_payload` sont **omis** pour alléger la réponse. Passer `include_payloads=true` pour les inclure.
+
+- **Détail par ID** : `GET /v1/ops/entitlements/mutation-audits/{audit_id}`
+  - Retourne l'audit complet incluant systématiquement `before_payload` et `after_payload`.
+  - Retourne 404 si l'ID n'existe pas.
+
+### Contrôle d'accès et sécurité
+
+- **Rôles autorisés** : `ops`, `admin` uniquement.
+- **Rate limiting** : Appliqué par utilisateur, rôle et globalement (clés `ops_entitlement_mutation_audits:*`).
+- **Read-only** : Aucun de ces endpoints ne permet de modifier, rollback ou supprimer une ligne d'audit. Logic de consultation encapsulée dans `CanonicalEntitlementMutationAuditQueryService`.
+
 
 

@@ -581,3 +581,4 @@ development_status:
   61-30-validation-db-coherence-feature-scope-registry: done
   61-31-centralisation-ecritures-canoniques-entitlements-validation-write-time: done
   61-32-audit-trail-mutations-canoniques-entitlements: done
+  61-33-exposition-ops-audit-mutations-canoniques: done
