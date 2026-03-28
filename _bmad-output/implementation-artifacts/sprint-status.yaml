@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-03-28T22:00:00.000000'
+last_updated: '2026-03-28T23:00:00.000000'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -488,4 +488,5 @@ development_status:
   61-35-workflow-ops-revue-mutations-canoniques: done
   61-36-historisation-transitions-revue-ops: done
   61-37-work-queue-ops-mutations-canoniques: done
+  61-38-sla-ops-mutations-canoniques: done
 

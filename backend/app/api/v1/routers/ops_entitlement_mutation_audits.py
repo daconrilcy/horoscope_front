@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Literal, Union
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -48,6 +48,16 @@ _STATUS_PRIORITY: dict[str | None, int] = {
     "closed": 4,
     None: 5,
 }
+
+# Durées SLA en secondes. Clé = (risk_level, effective_review_status).
+# Toute combinaison absente est hors SLA (sla_target = None).
+_SLA_TARGETS: dict[tuple[str, str | None], int] = {
+    ("high", "pending_review"): 14_400,  # 4h
+    ("high", "investigating"): 86_400,  # 24h
+    ("medium", "pending_review"): 86_400,  # 24h
+    ("medium", None): 86_400,  # 24h (medium sans revue)
+}
+_SLA_DUE_SOON_RATIO = 0.20  # due_soon si remaining < 20% du SLA
 
 
 class ReviewState(BaseModel):
@@ -158,6 +168,11 @@ class ReviewQueueItem(MutationAuditItem):
     age_hours: float
     is_pending: bool
     is_closed: bool
+    # Nouveaux champs SLA
+    sla_target_seconds: int | None = None
+    due_at: datetime | None = None
+    sla_status: Literal["within_sla", "due_soon", "overdue"] | None = None
+    overdue_seconds: int | None = None
 
 
 class ReviewQueueListData(BaseModel):
@@ -181,6 +196,10 @@ class ReviewQueueSummaryData(BaseModel):
     no_review_count: int
     high_unreviewed_count: int
     total_count: int
+    # Nouveaux champs SLA
+    overdue_count: int
+    due_soon_count: int
+    oldest_pending_age_seconds: int | None = None
 
 
 class ReviewQueueSummaryApiResponse(BaseModel):
@@ -280,6 +299,49 @@ def _load_reviews_by_audit_ids(
     return {r.audit_id: r for r in result.scalars().all()}
 
 
+def _compute_sla(
+    risk_level: str,
+    eff_status: str | None,
+    occurred_at: datetime,
+    now_utc: datetime,
+) -> dict[str, Any]:
+    """Retourne les 4 champs SLA pour un item de la review queue."""
+    # Normalisation timezone
+    if occurred_at.tzinfo is None:
+        occurred_at = occurred_at.replace(tzinfo=timezone.utc)
+
+    target = _SLA_TARGETS.get((risk_level, eff_status))
+    if target is None:
+        return {
+            "sla_target_seconds": None,
+            "due_at": None,
+            "sla_status": None,
+            "overdue_seconds": None,
+        }
+
+    age_s = int((now_utc - occurred_at).total_seconds())
+    remaining = target - age_s
+    due_soon_threshold = int(target * _SLA_DUE_SOON_RATIO)
+    due_at = occurred_at + timedelta(seconds=target)  # toujours UTC aware
+
+    if remaining <= 0:
+        sla_status = "overdue"
+        overdue_s = abs(remaining)  # toujours positif ; remaining==0 → overdue(0)
+    elif remaining < due_soon_threshold:
+        sla_status = "due_soon"
+        overdue_s = None
+    else:
+        sla_status = "within_sla"
+        overdue_s = None
+
+    return {
+        "sla_target_seconds": target,
+        "due_at": due_at,
+        "sla_status": sla_status,
+        "overdue_seconds": overdue_s,
+    }
+
+
 def _compute_review_state(
     risk_level: str,
     review_record: CanonicalEntitlementMutationAuditReviewModel | None,
@@ -361,8 +423,9 @@ def _build_filtered_review_queue_rows(
     risk_level_filter: str | None,
     effective_review_status_filter: str | None,
     incident_key_filter: str | None,
-) -> Union[list[tuple[Any, Any, Any, Any]], JSONResponse]:
-    """Retourne list[(audit, diff, review_record, eff_status)] ou JSONResponse(400)."""
+    sla_status_filter: str | None = None,
+) -> Union[list[tuple[Any, Any, Any, Any, dict]], JSONResponse]:
+    """Retourne list[(audit, diff, review_record, eff_status, sla_data)] ou JSONResponse(400)."""
     sql_kwargs = dict(
         feature_code=feature_code,
         actor_type=actor_type,
@@ -385,7 +448,8 @@ def _build_filtered_review_queue_rows(
         db, page=1, page_size=_DIFF_FILTER_MAX, **sql_kwargs
     )
     reviews_by_id = _load_reviews_by_audit_ids(db, [a.id for a in all_items])
-    rows: list[tuple[Any, Any, Any, Any]] = []
+    rows: list[tuple[Any, Any, Any, Any, dict]] = []
+    now_utc = datetime.now(timezone.utc)
     for item in all_items:
         diff = CanonicalEntitlementMutationDiffService.compute_diff(
             item.before_payload or {}, item.after_payload or {}
@@ -403,7 +467,13 @@ def _build_filtered_review_queue_rows(
         if incident_key_filter is not None:
             if review_record is None or review_record.incident_key != incident_key_filter:
                 continue
-        rows.append((item, diff, review_record, eff_status))
+
+        # SLA
+        sla_data = _compute_sla(diff.risk_level, eff_status, item.occurred_at, now_utc)
+        if sla_status_filter and sla_data["sla_status"] != sla_status_filter:
+            continue
+
+        rows.append((item, diff, review_record, eff_status, sla_data))
     return rows
 
 
@@ -414,6 +484,7 @@ def _to_queue_item(
     review_record: CanonicalEntitlementMutationAuditReviewModel | None,
     eff_status: str | None,
     now_utc: datetime,
+    sla_data: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     # include_payloads=False : la queue est légère, payloads via GET /mutation-audits/{id}
     base = _to_item_with_diff(
@@ -423,6 +494,10 @@ def _to_queue_item(
     if occurred_at.tzinfo is None:
         occurred_at = occurred_at.replace(tzinfo=timezone.utc)
     age_seconds = int((now_utc - occurred_at).total_seconds())
+
+    if sla_data is None:
+        sla_data = _compute_sla(diff.risk_level, eff_status, audit.occurred_at, now_utc)
+
     return {
         **base,
         "effective_review_status": eff_status,
@@ -430,6 +505,7 @@ def _to_queue_item(
         "age_hours": round(age_seconds / 3600, 2),
         "is_pending": eff_status == "pending_review",
         "is_closed": eff_status == "closed",
+        **sla_data,
     }
 
 
@@ -628,6 +704,9 @@ def get_review_queue_summary(
     effective_review_status_filter: ReviewStatusLiteral | None = Query(
         default=None, alias="effective_review_status"
     ),
+    sla_status_filter: Literal["within_sla", "due_soon", "overdue"] | None = Query(
+        default=None, alias="sla_status"
+    ),
     feature_code: str | None = Query(default=None),
     actor_type: str | None = Query(default=None),
     actor_identifier: str | None = Query(default=None),
@@ -658,28 +737,56 @@ def get_review_queue_summary(
         risk_level_filter=risk_level_filter,
         effective_review_status_filter=effective_review_status_filter,
         incident_key_filter=incident_key_filter,
+        sla_status_filter=sla_status_filter,
     )
     if isinstance(rows, JSONResponse):
         return rows  # 400 _DIFF_FILTER_MAX dépassé
 
     counts: dict[str, int] = {}
     high_unreviewed = 0
-    for _, diff, _, eff_status in rows:
+    overdue_count = 0
+    due_soon_count = 0
+    oldest_pending_age = 0
+
+    for audit, diff, _, eff_status, sla_data in rows:
         key = eff_status if eff_status is not None else "none"
         counts[key] = counts.get(key, 0) + 1
         if diff.risk_level == "high" and eff_status == "pending_review":
             high_unreviewed += 1
+
+        # SLA counters
+        if sla_data["sla_status"] == "overdue":
+            overdue_count += 1
+        elif sla_data["sla_status"] == "due_soon":
+            due_soon_count += 1
+
+        # Oldest pending age (uniquement si eff_status est pending_review ou investigating)
+        if eff_status in ["pending_review", "investigating"]:
+            now_utc = datetime.now(timezone.utc)
+            occurred_at = audit.occurred_at
+            if occurred_at.tzinfo is None:
+                occurred_at = occurred_at.replace(tzinfo=timezone.utc)
+            age = int((now_utc - occurred_at).total_seconds())
+            if age > oldest_pending_age:
+                oldest_pending_age = age
+
+    res_data = {
+        "pending_review_count": counts.get("pending_review", 0),
+        "investigating_count": counts.get("investigating", 0),
+        "acknowledged_count": counts.get("acknowledged", 0),
+        "closed_count": counts.get("closed", 0),
+        "expected_count": counts.get("expected", 0),
+        "no_review_count": counts.get("none", 0),
+        "high_unreviewed_count": high_unreviewed,
+        "total_count": len(rows),
+        "overdue_count": overdue_count,
+        "due_soon_count": due_soon_count,
+    }
+    if oldest_pending_age > 0:
+        res_data["oldest_pending_age_seconds"] = oldest_pending_age
+
     return {
-        "data": {
-            "pending_review_count": counts.get("pending_review", 0),
-            "investigating_count": counts.get("investigating", 0),
-            "acknowledged_count": counts.get("acknowledged", 0),
-            "closed_count": counts.get("closed", 0),
-            "expected_count": counts.get("expected", 0),
-            "no_review_count": counts.get("none", 0),
-            "high_unreviewed_count": high_unreviewed,
-            "total_count": len(rows),
-        },
+        "data": res_data,
         "meta": {"request_id": request_id},
     }
 
@@ -705,6 +812,9 @@ def get_review_queue(
     ),
     effective_review_status_filter: ReviewStatusLiteral | None = Query(
         default=None, alias="effective_review_status"
+    ),
+    sla_status_filter: Literal["within_sla", "due_soon", "overdue"] | None = Query(
+        default=None, alias="sla_status"
     ),
     feature_code: str | None = Query(default=None),
     actor_type: str | None = Query(default=None),
@@ -736,6 +846,7 @@ def get_review_queue(
         risk_level_filter=risk_level_filter,
         effective_review_status_filter=effective_review_status_filter,
         incident_key_filter=incident_key_filter,
+        sla_status_filter=sla_status_filter,
     )
     if isinstance(rows, JSONResponse):
         return rows  # 400 _DIFF_FILTER_MAX dépassé
@@ -753,8 +864,11 @@ def get_review_queue(
                     review_record=review_record,
                     eff_status=eff_status,
                     now_utc=now_utc,
+                    sla_data=sla_data,
                 )
-                for item, diff, review_record, eff_status in rows[start : start + page_size]
+                for item, diff, review_record, eff_status, sla_data in rows[
+                    start : start + page_size
+                ]
             ],
             "total_count": total_count,
             "page": page,

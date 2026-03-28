@@ -562,3 +562,38 @@ Retourne les compteurs agrégés du backlog correspondant aux filtres appliqués
 Les deux endpoints appliquent la même séquence de traitement : filtres SQL (`feature_code`, `actor_type`, `actor_identifier`, `date_from`, `date_to`) puis calcul du diff et de l'état de revue, puis filtres applicatifs (`risk_level`, `effective_review_status`, `incident_key`).
 
 La règle de garde **`_DIFF_FILTER_MAX = 10 000`** s'applique : si le nombre d'audits correspondant aux filtres SQL dépasse cette limite, une erreur 400 `diff_filter_result_set_too_large` est retournée pour protéger la performance du calcul de diff en mémoire.
+
+---
+
+## Story 61.38 — SLA ops et escalade des mutations canoniques à risque
+
+Depuis la story 61.38, chaque item de la review queue affiche explicitement son statut SLA (dans les temps, bientôt dû, en retard), et le résumé inclut des compteurs d'escalade.
+
+### Règles SLA
+
+| Risque | Statut de Revue | Cible SLA |
+|:---|:---|:---|
+| **High** | `pending_review` | 4h |
+| **High** | `investigating` | 24h |
+| **Medium** | `pending_review` ou *aucun* | 24h |
+
+Le seuil `due_soon` est fixé à **20% du temps restant** avant le dépassement de la cible.
+
+### Champs dérivés SLA (ReviewQueueItem)
+
+- `sla_target_seconds` : Cible SLA en secondes (ex: 14400 pour 4h).
+- `due_at` : Date limite de traitement (UTC aware).
+- `sla_status` : `within_sla`, `due_soon` ou `overdue`.
+- `overdue_seconds` : Temps de retard en secondes (présent uniquement si `overdue`).
+
+### Filtre `sla_status`
+
+Les endpoints `GET /review-queue` et `GET /review-queue/summary` acceptent un paramètre `sla_status` (`within_sla`, `due_soon`, `overdue`). Ce filtre est applicatif et s'exécute après le calcul SLA sur les items.
+
+### Métriques d'escalade (Summary)
+
+Le résumé inclut désormais :
+- `overdue_count` : Nombre d'items ayant dépassé leur SLA.
+- `due_soon_count` : Nombre d'items proches de l'échéance.
+- `oldest_pending_age_seconds` : Âge du plus vieux dossier en attente (`pending_review` ou `investigating`).
+
