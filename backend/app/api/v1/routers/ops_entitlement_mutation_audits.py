@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
@@ -15,8 +15,17 @@ from app.infra.db.session import get_db_session
 from app.services.canonical_entitlement_mutation_audit_query_service import (
     CanonicalEntitlementMutationAuditQueryService,
 )
+from app.services.canonical_entitlement_mutation_diff_service import (
+    CanonicalEntitlementMutationDiffService,
+)
 
 router = APIRouter(prefix="/v1/ops/entitlements", tags=["ops-entitlement-audits"])
+
+
+class QuotaChangeSummarySchema(BaseModel):
+    added: list[dict]
+    removed: list[dict]
+    updated: list[dict]
 
 
 class MutationAuditItem(BaseModel):
@@ -30,6 +39,12 @@ class MutationAuditItem(BaseModel):
     actor_identifier: str
     request_id: str | None
     source_origin: str
+    # Diff champs dérivés — TOUJOURS présents, non-optionnels
+    change_kind: str
+    changed_fields: list[str]
+    risk_level: str
+    quota_changes: QuotaChangeSummarySchema
+    # Payloads bruts — conditionnels (include_payloads), omis par exclude_none
     before_payload: dict | None = None
     after_payload: dict | None = None
 
@@ -135,7 +150,10 @@ def _enforce_limits(
 
 
 def _to_item(audit: Any, *, include_payloads: bool) -> dict[str, Any]:
-    d = {
+    diff = CanonicalEntitlementMutationDiffService.compute_diff(
+        audit.before_payload or {}, audit.after_payload or {}
+    )
+    d: dict[str, Any] = {
         "id": audit.id,
         "occurred_at": audit.occurred_at,
         "operation": audit.operation,
@@ -146,6 +164,14 @@ def _to_item(audit: Any, *, include_payloads: bool) -> dict[str, Any]:
         "actor_identifier": audit.actor_identifier,
         "request_id": audit.request_id,
         "source_origin": audit.source_origin,
+        "change_kind": diff.change_kind,
+        "changed_fields": diff.changed_fields,
+        "risk_level": diff.risk_level,
+        "quota_changes": {
+            "added": diff.quota_changes.added,
+            "removed": diff.quota_changes.removed,
+            "updated": diff.quota_changes.updated,
+        },
     }
     if include_payloads:
         d["before_payload"] = audit.before_payload
@@ -176,6 +202,14 @@ def list_mutation_audits(
     request_id_filter: str | None = Query(default=None, alias="request_id"),
     date_from: datetime | None = Query(default=None),
     date_to: datetime | None = Query(default=None),
+    # Nouveaux filtres diff
+    risk_level_filter: Literal["high", "medium", "low"] | None = Query(
+        default=None, alias="risk_level"
+    ),
+    change_kind_filter: Literal["binding_created", "binding_updated"] | None = Query(
+        default=None, alias="change_kind"
+    ),
+    changed_field_filter: str | None = Query(default=None, alias="changed_field"),
     include_payloads: bool = Query(default=False),
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
@@ -192,10 +226,42 @@ def list_mutation_audits(
     if limit_error is not None:
         return limit_error
 
-    items, total_count = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
+    _DIFF_FILTER_MAX = 10_000
+
+    # Si aucun filtre diff : comportement inchangé (SQL paginé)
+    if not any([risk_level_filter, change_kind_filter, changed_field_filter]):
+        items, total_count = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
+            db,
+            page=page,
+            page_size=page_size,
+            plan_id=plan_id,
+            plan_code=plan_code,
+            feature_code=feature_code,
+            actor_type=actor_type,
+            actor_identifier=actor_identifier,
+            source_origin=source_origin,
+            request_id=request_id_filter,
+            date_from=date_from,
+            date_to=date_to,
+        )
+
+        return {
+            "data": {
+                "items": [
+                    _to_item(item, include_payloads=include_payloads) for item in items
+                ],
+                "total_count": total_count,
+                "page": page,
+                "page_size": page_size,
+            },
+            "meta": {"request_id": request_id},
+        }
+
+    # Avec filtre diff : vérifier le count SQL avant de tout charger
+    _, sql_count = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
         db,
-        page=page,
-        page_size=page_size,
+        page=1,
+        page_size=1,
         plan_id=plan_id,
         plan_code=plan_code,
         feature_code=feature_code,
@@ -207,9 +273,55 @@ def list_mutation_audits(
         date_to=date_to,
     )
 
+    if sql_count > _DIFF_FILTER_MAX:
+        return _error_response(
+            status_code=400,
+            request_id=request_id,
+            code="diff_filter_result_set_too_large",
+            message=(
+                f"Too many results to apply diff filter ({sql_count} > {_DIFF_FILTER_MAX}). "
+                "Add SQL filters to narrow the result set."
+            ),
+            details={"sql_count": sql_count, "max_allowed": _DIFF_FILTER_MAX},
+        )
+
+    all_items, _ = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
+        db,
+        page=1,
+        page_size=_DIFF_FILTER_MAX,
+        plan_id=plan_id,
+        plan_code=plan_code,
+        feature_code=feature_code,
+        actor_type=actor_type,
+        actor_identifier=actor_identifier,
+        source_origin=source_origin,
+        request_id=request_id_filter,
+        date_from=date_from,
+        date_to=date_to,
+    )
+
+    filtered = []
+    for item in all_items:
+        diff = CanonicalEntitlementMutationDiffService.compute_diff(
+            item.before_payload or {}, item.after_payload or {}
+        )
+        if risk_level_filter and diff.risk_level != risk_level_filter:
+            continue
+        if change_kind_filter and diff.change_kind != change_kind_filter:
+            continue
+        if changed_field_filter and changed_field_filter not in diff.changed_fields:
+            continue
+        filtered.append(item)
+
+    total_count = len(filtered)
+    start = (page - 1) * page_size
+    page_items = filtered[start : start + page_size]
+
     return {
         "data": {
-            "items": [_to_item(item, include_payloads=include_payloads) for item in items],
+            "items": [
+                _to_item(item, include_payloads=include_payloads) for item in page_items
+            ],
             "total_count": total_count,
             "page": page,
             "page_size": page_size,

@@ -67,8 +67,8 @@ def _seed_audit(
         actor_identifier=actor_identifier,
         source_origin=source_origin,
         request_id=request_id,
-        before_payload=before_payload or {},
-        after_payload=after_payload or {"is_enabled": True},
+        before_payload=before_payload if before_payload is not None else {},
+        after_payload=after_payload if after_payload is not None else {"is_enabled": True},
     )
     db.add(audit)
     db.flush()
@@ -457,3 +457,169 @@ def test_list_returns_429_when_rate_limited(monkeypatch: object) -> None:
     payload = response.json()["error"]
     assert payload["code"] == "rate_limit_exceeded"
     assert payload["request_id"] == "rid-entitlement-audits-429"
+
+
+def test_list_includes_diff_fields() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        _seed_audit(
+            db,
+            before_payload={},
+            after_payload={
+                "is_enabled": True,
+                "access_mode": "unlimited",
+                "variant_code": None,
+                "source_origin": "manual",
+                "quotas": [],
+            },
+        )
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    item = response.json()["data"]["items"][0]
+    assert "change_kind" in item
+    assert "risk_level" in item
+    assert "changed_fields" in item
+    assert "quota_changes" in item
+    assert item["change_kind"] == "binding_created"
+
+
+def test_filter_by_risk_level() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        # High risk: is_enabled change
+        _seed_audit(
+            db,
+            before_payload={
+                "is_enabled": True, "access_mode": "quota",
+                "variant_code": None, "source_origin": "manual", "quotas": []
+            },
+            after_payload={
+                "is_enabled": False, "access_mode": "quota",
+                "variant_code": None, "source_origin": "manual", "quotas": []
+            },
+            feature_code="high_risk"
+        )
+        # Low risk: only source_origin change
+        _seed_audit(
+            db,
+            before_payload={
+                "is_enabled": True, "access_mode": "quota",
+                "variant_code": None, "source_origin": "src1", "quotas": []
+            },
+            after_payload={
+                "is_enabled": True, "access_mode": "quota",
+                "variant_code": None, "source_origin": "src2", "quotas": []
+            },
+            feature_code="low_risk"
+        )
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        params={"risk_level": "high"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    items = response.json()["data"]["items"]
+    assert len(items) == 1
+    assert items[0]["feature_code"] == "high_risk"
+
+
+def test_filter_by_change_kind() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        # Created
+        _seed_audit(db, before_payload={}, feature_code="created")
+        # Updated
+        _seed_audit(
+            db,
+            before_payload={"is_enabled": True},
+            after_payload={"is_enabled": False},
+            feature_code="updated"
+        )
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        params={"change_kind": "binding_created"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    items = response.json()["data"]["items"]
+    assert len(items) == 1
+    assert items[0]["feature_code"] == "created"
+
+
+def test_filter_by_changed_field() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        _seed_audit(db,
+            before_payload={"is_enabled": True, "access_mode": "quota"},
+            after_payload={"is_enabled": False, "access_mode": "quota"},
+            feature_code="match"
+        )
+        _seed_audit(db,
+            before_payload={"is_enabled": True, "access_mode": "quota"},
+            after_payload={"is_enabled": True, "access_mode": "unlimited"},
+            feature_code="no_match"
+        )
+        db.commit()
+
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        params={"changed_field": "binding.is_enabled"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    items = response.json()["data"]["items"]
+    assert len(items) == 1
+    assert items[0]["feature_code"] == "match"
+
+
+def test_detail_includes_diff_fields() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    with SessionLocal() as db:
+        audit = _seed_audit(db)
+        db.commit()
+        audit_id = audit.id
+
+    response = client.get(
+        f"/v1/ops/entitlements/mutation-audits/{audit_id}",
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 200
+    item = response.json()["data"]
+    assert "change_kind" in item
+    assert "risk_level" in item
+
+
+def test_filter_invalid_risk_level_returns_422() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        params={"risk_level": "extreme"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 422
+
+
+def test_filter_invalid_change_kind_returns_422() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
+    response = client.get(
+        "/v1/ops/entitlements/mutation-audits",
+        params={"change_kind": "foo"},
+        headers={"Authorization": f"Bearer {ops_token}"},
+    )
+    assert response.status_code == 422

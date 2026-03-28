@@ -71,7 +71,7 @@ Le compromis transitoire consistant à utiliser `admin_user_id` comme clé de qu
 
 Depuis la story 61.26, l'écosystème ops B2B est entièrement aligné sur la table native `enterprise_feature_usage_counters`.
 
-- **Audit Ops** : `GET /v1/ops/b2b/entitlements/audit` lit exclusivement `enterprise_feature_usage_counters`. L'absence d'`admin_user_id` n'est plus un motif de blocage ou d'audit "settings_fallback".
+- **Audit Ops** : `GET /v1/ops/b2b/entitlements/audit` lit exclusivement `enterprise_feature_usage_counters`. L'absence d' `admin_user_id` n'est plus un motif de blocage ou d'audit "settings_fallback".
 - **Repair Ops** : Les blockers `"set_admin_user"` ont été supprimés. L'outil `POST /repair/set-admin-user` est désormais documenté comme un outil de gestion d'**ownership/authentification**, sans impact sur le quota.
 - **admin_user_id** : Ce champ dans `enterprise_accounts` définit l'administrateur du compte (ownership) uniquement. Plus aucun chemin de décision quota/usage B2B n'en dépend.
 - **Nettoyage Historique** : Les scripts `verify_b2b_usage_migration.py` et `archive_b2b_legacy_usage_counters.py` fournissent respectivement la vérification de migration et la purge contrôlée des compteurs legacy B2B dans `feature_usage_counters`.
@@ -298,5 +298,39 @@ Depuis la story 61.33, les mutations auditées dans `canonical_entitlement_mutat
 - **Rate limiting** : Appliqué par utilisateur, rôle et globalement (clés `ops_entitlement_mutation_audits:*`).
 - **Read-only** : Aucun de ces endpoints ne permet de modifier, rollback ou supprimer une ligne d'audit. Logic de consultation encapsulée dans `CanonicalEntitlementMutationAuditQueryService`.
 
+## Story 61.34 — Normalisation des diffs et scoring de risque
 
+Depuis la story 61.34, chaque ligne d'audit canonique expose un résumé de diff calculé et un niveau de risque, permettant une identification rapide des mutations sensibles.
 
+### Champs dérivés de diff
+
+Chaque item d'audit retourné par les endpoints ops contient désormais 4 champs dérivés systématiques :
+
+- **change_kind** : `binding_created` (si avant mutation le binding n'existait pas) ou `binding_updated`.
+- **changed_fields** : Liste triée des chemins métier modifiés (ex: `binding.access_mode`, `quotas[daily,day,1,calendar].quota_limit`).
+- **risk_level** : Niveau de risque calculé (`high`, `medium`, `low`).
+- **quota_changes** : Objet structuré contenant les quotas `added`, `removed` et `updated`.
+
+### Règles de scoring de risque (risk_level)
+
+| Niveau | Conditions (au moins une) |
+|--------|---------------------------|
+| **High** | Changement de `access_mode` ou `is_enabled` ; Quota supprimé ; `quota_limit` diminué. |
+| **Medium** | Quota ajouté ; `quota_limit` augmenté ; Changement de `variant_code`. |
+| **Low** | Seul `source_origin` a changé ou aucun changement métier (no-op). |
+
+*Note pour les créations (`binding_created`) : le risque est `high` si `access_mode="quota"`, `low` si `disabled`, sinon `medium`.*
+
+### Nouveaux filtres de recherche ops
+
+L'endpoint `GET /v1/ops/entitlements/mutation-audits` accepte désormais 3 nouveaux filtres optionnels :
+
+- **risk_level** : `high`, `medium`, `low`.
+- **change_kind** : `binding_created`, `binding_updated`.
+- **changed_field** : Filtrage par chemin exact (ex: `binding.is_enabled`).
+
+**Performance et limitation** : Le filtrage par diff s'opère en mémoire (application-level) après les filtres SQL. Pour garantir la performance, ce filtrage est limité à un ensemble de résultats SQL de **10 000 audits maximum**. Au-delà, une erreur HTTP 400 (`diff_filter_result_set_too_large`) est retournée, invitant l'opérateur à affiner sa recherche avec des filtres SQL (dates, feature_code, etc.).
+
+### Service de diff dédié
+
+Le calcul du diff est centralisé dans `CanonicalEntitlementMutationDiffService`. Ce service est **stateless** et n'effectue aucun accès base de données. Il est utilisé par le router pour enrichir les réponses API à la volée.
