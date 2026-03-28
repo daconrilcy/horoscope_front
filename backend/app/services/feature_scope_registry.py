@@ -37,6 +37,7 @@ class InvalidQuotaScopeError(ValueError):
 # IMPORTANT: Tout nouveau feature_code DOIT être enregistré ici avant utilisation.
 FEATURE_SCOPE_REGISTRY: dict[str, FeatureScope] = {
     # B2C features (QuotaUsageService + feature_usage_counters)
+    "natal_chart_short": FeatureScope.B2C,
     "astrologer_chat": FeatureScope.B2C,
     "thematic_consultation": FeatureScope.B2C,
     "natal_chart_long": FeatureScope.B2C,

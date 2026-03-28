@@ -93,7 +93,7 @@ Depuis la story 61.27, la séparation B2C/B2B entre `feature_usage_counters` et 
 
 Un registre centralisé (`FEATURE_SCOPE_REGISTRY` dans `feature_scope_registry.py`) définit le scope de chaque **feature code soumis aux services de quota** (pas de toutes les features produit) :
 
-- **Scope B2C** : `astrologer_chat`, `thematic_consultation`, `natal_chart_long`.
+- **Scope B2C** : `natal_chart_short`, `astrologer_chat`, `thematic_consultation`, `natal_chart_long`.
 - **Scope B2B** : `b2b_api_access`.
 
 ### Garde-fous Runtime

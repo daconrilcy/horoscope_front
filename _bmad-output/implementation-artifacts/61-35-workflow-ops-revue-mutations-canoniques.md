@@ -496,6 +496,9 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 - 2026-03-28 : Implémentation complète. Service synchrone (pas async) conforme à la session SQLAlchemy du projet. Migration dans `backend/migrations/versions/`. `_to_item` et `_to_item_with_diff` acceptent un paramètre `review_record` optionnel. Filtre `review_status` déclenche le chemin batch (garde-fou 10 000) comme les filtres diff. Les champs null omis via `response_model_exclude_none=True` — ajustement du test de statut virtuel en conséquence. 46/46 tests verts, ruff clean.
+- 2026-03-28 : Code review post-implémentation. Finding HIGH corrigé : l'upsert de revue n'était pas robuste à une race concurrente sur la contrainte unique `audit_id`, pouvant produire une `IntegrityError` au lieu d'un comportement idempotent. Le service gère maintenant ce conflit par savepoint + relecture puis update, avec test dédié.
+- 2026-03-28 : Écart story/git documenté. Le commit initial a aussi touché des fichiers d'enregistrement/formatage (`backend/app/infra/db/models/__init__.py`, `backend/app/api/v1/routers/__init__.py`, tests et migration 0056) absents ou contredisant le périmètre strict annoncé dans la story. Cette divergence est désormais consignée dans l'artefact.
+- 2026-03-28 : Validation backend complète rejouée après review. Deux défauts préexistants hors story ont aussi été corrigés pour retrouver une suite verte : réintégration de `natal_chart_short` dans `FEATURE_SCOPE_REGISTRY` et isolation correcte du `dry_run` dans `B2BEntitlementRepairService`.
 
 ### File List
 
@@ -507,8 +510,18 @@ claude-sonnet-4-6
 - `backend/app/tests/unit/test_canonical_entitlement_mutation_audit_review_service.py` (créé)
 - `backend/app/tests/integration/test_ops_entitlement_mutation_audits_api.py` (modifié)
 - `backend/docs/entitlements-canonical-platform.md` (modifié)
+- `backend/app/api/v1/routers/__init__.py` (modifié — formatage import router)
+- `backend/app/services/canonical_entitlement_mutation_diff_service.py` (modifié — formatage)
+- `backend/app/tests/unit/test_canonical_entitlement_mutation_audit.py` (modifié — formatage)
+- `backend/app/tests/unit/test_canonical_entitlement_mutation_diff_service.py` (modifié — formatage)
+- `backend/migrations/versions/20260328_0056_create_canonical_entitlement_mutation_audits.py` (modifié — formatage)
+- `backend/app/services/feature_scope_registry.py` (modifié — réintégration `natal_chart_short`)
+- `backend/app/services/b2b_entitlement_repair_service.py` (modifié — isolation transactionnelle du `dry_run`)
+- `backend/app/tests/unit/test_b2b_entitlement_repair_service.py` (modifié — alignement sur le contrat `dry_run`)
 
 ### Change Log
 
 - 2026-03-28 : Story 61.35 créée.
 - 2026-03-28 : Implémentation complète — modèle, migration, service, router, tests, documentation.
+- 2026-03-28 : Code review et hardening — upsert review rendu robuste en cas d'écriture concurrente sur `audit_id` + test unitaire de non-régression.
+- 2026-03-28 : Validation backend complète restaurée — fix du registre `natal_chart_short` et du rollback `dry_run` du repair B2B.

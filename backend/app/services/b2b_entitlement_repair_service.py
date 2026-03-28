@@ -95,149 +95,162 @@ class B2BEntitlementRepairService:
     @classmethod
     def run_auto_repair(cls, db: Session, *, dry_run: bool = False) -> RepairRunReport:
         report = RepairRunReport(dry_run=dry_run)
+        dry_run_scope = db.begin_nested() if dry_run else None
 
-        all_accounts = db.scalars(
-            select(EnterpriseAccountModel).where(EnterpriseAccountModel.status == "active")
-        ).all()
-        report.accounts_scanned = len(all_accounts)
-
-        if not all_accounts:
-            return report
-
-        account_ids = [account.id for account in all_accounts]
-        account_plans = {
-            account_plan.enterprise_account_id: account_plan
-            for account_plan in db.scalars(
-                select(EnterpriseAccountBillingPlanModel).where(
-                    EnterpriseAccountBillingPlanModel.enterprise_account_id.in_(account_ids)
-                )
+        try:
+            all_accounts = db.scalars(
+                select(EnterpriseAccountModel).where(EnterpriseAccountModel.status == "active")
             ).all()
-        }
+            report.accounts_scanned = len(all_accounts)
 
-        plan_ids = [account_plan.plan_id for account_plan in account_plans.values()]
-        enterprise_plans = (
-            {
-                plan.id: plan
-                for plan in db.scalars(
-                    select(EnterpriseBillingPlanModel).where(
-                        EnterpriseBillingPlanModel.id.in_(plan_ids)
+            if not all_accounts:
+                return report
+
+            account_ids = [account.id for account in all_accounts]
+            account_plans = {
+                account_plan.enterprise_account_id: account_plan
+                for account_plan in db.scalars(
+                    select(EnterpriseAccountBillingPlanModel).where(
+                        EnterpriseAccountBillingPlanModel.enterprise_account_id.in_(account_ids)
                     )
                 ).all()
             }
-            if plan_ids
-            else {}
-        )
 
-        canonical_plans = B2BAuditService._prefetch_canonical_plans(db, plan_ids)
-        bindings = B2BAuditService._prefetch_bindings(
-            db,
-            canonical_plan_ids=[plan.id for plan in canonical_plans.values()],
-        )
-        quotas = B2BAuditService._prefetch_quotas(
-            db,
-            binding_ids=[binding.id for binding in bindings.values()],
-        )
-
-        for account in all_accounts:
-            # NOTE: L'absence d'admin_user_id (account.admin_user_id is None) n'est JAMAIS
-            # un motif de remaining_blockers depuis Story 61.25.
-            # Les quotas B2B sont indexés par enterprise_account_id.
-            # admin_user_id est hors périmètre quota.
-            # Use savepoint to isolate account repair
-            with db.begin_nested():
-                account_plan = account_plans.get(account.id)
-                enterprise_plan = (
-                    enterprise_plans.get(account_plan.plan_id) if account_plan is not None else None
-                )
-                current_canonical_plan = (
-                    canonical_plans.get(account_plan.plan_id) if account_plan is not None else None
-                )
-                current_binding = (
-                    bindings.get(current_canonical_plan.id)
-                    if current_canonical_plan is not None
-                    else None
-                )
-                current_quotas = (
-                    quotas.get(current_binding.id) if current_binding is not None else None
-                )
-
-                # Recalculate state to decide repair
-                audit_entry = B2BAuditService._audit_account(
-                    db,
-                    account,
-                    acc_plan=account_plan,
-                    ent_plan=enterprise_plan,
-                    canonical_plan=current_canonical_plan,
-                    binding=current_binding,
-                    quota_models=current_quotas,
-                )
-
-                if audit_entry.resolution_source in {
-                    "canonical_quota",
-                    "canonical_unlimited",
-                    "canonical_disabled",
-                }:
-                    report.skipped_already_canonical += 1
-                    continue
-
-                if audit_entry.reason == "manual_review_required":
-                    report.remaining_blockers.append(
-                        RepairBlockerEntry(
-                            account_id=account.id,
-                            company_name=account.company_name,
-                            reason=audit_entry.reason,
-                            recommended_action="classify_zero_units",
+            plan_ids = [account_plan.plan_id for account_plan in account_plans.values()]
+            enterprise_plans = (
+                {
+                    plan.id: plan
+                    for plan in db.scalars(
+                        select(EnterpriseBillingPlanModel).where(
+                            EnterpriseBillingPlanModel.id.in_(plan_ids)
                         )
+                    ).all()
+                }
+                if plan_ids
+                else {}
+            )
+
+            canonical_plans = B2BAuditService._prefetch_canonical_plans(db, plan_ids)
+            bindings = B2BAuditService._prefetch_bindings(
+                db,
+                canonical_plan_ids=[plan.id for plan in canonical_plans.values()],
+            )
+            quotas = B2BAuditService._prefetch_quotas(
+                db,
+                binding_ids=[binding.id for binding in bindings.values()],
+            )
+
+            for account in all_accounts:
+                # NOTE: L'absence d'admin_user_id (account.admin_user_id is None) n'est JAMAIS
+                # un motif de remaining_blockers depuis Story 61.25.
+                # Les quotas B2B sont indexés par enterprise_account_id.
+                # admin_user_id est hors périmètre quota.
+                # Use savepoint to isolate account repair
+                with db.begin_nested():
+                    account_plan = account_plans.get(account.id)
+                    enterprise_plan = (
+                        enterprise_plans.get(account_plan.plan_id)
+                        if account_plan is not None
+                        else None
                     )
-                    continue
+                    current_canonical_plan = (
+                        canonical_plans.get(account_plan.plan_id)
+                        if account_plan is not None
+                        else None
+                    )
+                    current_binding = (
+                        bindings.get(current_canonical_plan.id)
+                        if current_canonical_plan is not None
+                        else None
+                    )
+                    current_quotas = (
+                        quotas.get(current_binding.id) if current_binding is not None else None
+                    )
 
-                # Auto-repairable cases
-                try:
-                    # Case: no_canonical_plan
-                    if (
-                        audit_entry.reason == "no_canonical_plan"
-                        and account_plan is not None
-                        and enterprise_plan is not None
-                    ):
-                        created, current_canonical_plan = cls._backfill_canonical_plan(
-                            db, enterprise_plan, dry_run
-                        )
-                        if created:
-                            report.plans_created += 1
-                            canonical_plans[account_plan.plan_id] = current_canonical_plan
+                    # Recalculate state to decide repair
+                    audit_entry = B2BAuditService._audit_account(
+                        db,
+                        account,
+                        acc_plan=account_plan,
+                        ent_plan=enterprise_plan,
+                        canonical_plan=current_canonical_plan,
+                        binding=current_binding,
+                        quota_models=current_quotas,
+                    )
 
-                    # Case: no_binding with included_monthly_units > 0
-                    if (
-                        current_canonical_plan
-                        and enterprise_plan
-                        and enterprise_plan.included_monthly_units > 0
-                    ):
-                        current_binding = bindings.get(current_canonical_plan.id)
-                        if current_binding is None:
-                            b_created, q_created, current_binding, current_quota = (
-                                cls._backfill_binding_and_quota(
-                                    db, current_canonical_plan, enterprise_plan, dry_run
-                                )
+                    if audit_entry.resolution_source in {
+                        "canonical_quota",
+                        "canonical_unlimited",
+                        "canonical_disabled",
+                    }:
+                        report.skipped_already_canonical += 1
+                        continue
+
+                    if audit_entry.reason == "manual_review_required":
+                        report.remaining_blockers.append(
+                            RepairBlockerEntry(
+                                account_id=account.id,
+                                company_name=account.company_name,
+                                reason=audit_entry.reason,
+                                recommended_action="classify_zero_units",
                             )
-                            if b_created:
-                                report.bindings_created += 1
-                                bindings[current_canonical_plan.id] = current_binding
-                            if q_created:
-                                report.quotas_created += 1
-                                quotas[current_binding.id] = [current_quota]
-
-                except IntegrityError as e:
-                    # Rollback only this account's changes (automatic via with db.begin_nested())
-                    logger.warning(f"IntegrityError during repair for account {account.id}: {e}")
-                    report.remaining_blockers.append(
-                        RepairBlockerEntry(
-                            account_id=account.id,
-                            company_name=account.company_name,
-                            reason="schema_constraint_violation",
-                            recommended_action="schema_constraint_violation",
                         )
-                    )
-                    continue
+                        continue
+
+                    # Auto-repairable cases
+                    try:
+                        # Case: no_canonical_plan
+                        if (
+                            audit_entry.reason == "no_canonical_plan"
+                            and account_plan is not None
+                            and enterprise_plan is not None
+                        ):
+                            created, current_canonical_plan = cls._backfill_canonical_plan(
+                                db, enterprise_plan, dry_run
+                            )
+                            if created:
+                                report.plans_created += 1
+                                canonical_plans[account_plan.plan_id] = current_canonical_plan
+
+                        # Case: no_binding with included_monthly_units > 0
+                        if (
+                            current_canonical_plan
+                            and enterprise_plan
+                            and enterprise_plan.included_monthly_units > 0
+                        ):
+                            current_binding = bindings.get(current_canonical_plan.id)
+                            if current_binding is None:
+                                b_created, q_created, current_binding, current_quota = (
+                                    cls._backfill_binding_and_quota(
+                                        db, current_canonical_plan, enterprise_plan, dry_run
+                                    )
+                                )
+                                if b_created:
+                                    report.bindings_created += 1
+                                    bindings[current_canonical_plan.id] = current_binding
+                                if q_created:
+                                    report.quotas_created += 1
+                                    quotas[current_binding.id] = [current_quota]
+
+                    except IntegrityError as e:
+                        # Rollback only this account's changes via the nested savepoint.
+                        logger.warning(
+                            "IntegrityError during repair for account %s: %s",
+                            account.id,
+                            e,
+                        )
+                        report.remaining_blockers.append(
+                            RepairBlockerEntry(
+                                account_id=account.id,
+                                company_name=account.company_name,
+                                reason="schema_constraint_violation",
+                                recommended_action="schema_constraint_violation",
+                            )
+                        )
+                        continue
+        finally:
+            if dry_run_scope is not None:
+                dry_run_scope.rollback()
 
         if not dry_run:
             db.commit()
@@ -273,8 +286,7 @@ class B2BEntitlementRepairService:
             db.add(new_plan)
             db.flush()
             return True, new_plan
-        dummy_plan = PlanCatalogModel(
-            id=-enterprise_plan.id,
+        preview_plan = PlanCatalogModel(
             plan_code=enterprise_plan.code,
             plan_name=enterprise_plan.display_name,
             audience=Audience.B2B,
@@ -282,7 +294,9 @@ class B2BEntitlementRepairService:
             source_id=enterprise_plan.id,
             is_active=enterprise_plan.is_active,
         )
-        return True, dummy_plan
+        db.add(preview_plan)
+        db.flush()
+        return True, preview_plan
 
     @classmethod
     def _backfill_binding_and_quota(

@@ -100,7 +100,7 @@ def test_run_auto_repair_dry_run_no_mutation(db, feature):
         assert report.plans_created == 1
         assert report.bindings_created == 1
         assert report.quotas_created == 1
-        db.add.assert_not_called()
+        assert db.add.call_count == 1  # preview canonical plan inside dry-run savepoint
         db.commit.assert_not_called()
 
 

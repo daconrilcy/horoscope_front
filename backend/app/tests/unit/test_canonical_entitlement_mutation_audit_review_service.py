@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from sqlalchemy import select
+
 from app.infra.db.base import Base
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
@@ -97,9 +99,7 @@ def test_upsert_updates_review_when_already_exists() -> None:
 
     # Vérifier qu'il n'y a qu'une seule ligne en DB
     with SessionLocal() as db:
-        result = db.execute(
-            __import__("sqlalchemy").select(CanonicalEntitlementMutationAuditReviewModel)
-        )
+        result = db.execute(select(CanonicalEntitlementMutationAuditReviewModel))
         rows = result.scalars().all()
         assert len(rows) == 1
         assert rows[0].review_status == "closed"
@@ -154,3 +154,62 @@ def test_upsert_raises_404_when_audit_not_found() -> None:
             assert False, "Expected AuditNotFoundError"
         except AuditNotFoundError as e:
             assert e.audit_id == 99999
+
+
+def test_upsert_recovers_from_concurrent_insert_race() -> None:
+    _setup()
+    with SessionLocal() as db:
+        audit = _seed_audit(db)
+        db.commit()
+        audit_id = audit.id
+
+    with SessionLocal() as db:
+        original_execute = db.execute
+        injected_competing_review = False
+
+        def execute_with_concurrent_insert(statement, *args, **kwargs):
+            nonlocal injected_competing_review
+            result = original_execute(statement, *args, **kwargs)
+            statement_text = str(statement)
+            should_inject_race = (
+                not injected_competing_review
+                and "canonical_entitlement_mutation_audit_reviews" in statement_text
+            )
+            if should_inject_race:
+                with SessionLocal() as competing_db:
+                    competing_db.add(
+                        CanonicalEntitlementMutationAuditReviewModel(
+                            audit_id=audit_id,
+                            review_status="expected",
+                            reviewed_by_user_id=5,
+                            reviewed_at=datetime.now(timezone.utc),
+                            review_comment="Competing write",
+                            incident_key="INC-RACE",
+                        )
+                    )
+                    competing_db.commit()
+                injected_competing_review = True
+            return result
+
+        db.execute = execute_with_concurrent_insert  # type: ignore[method-assign]
+
+        review = CanonicalEntitlementMutationAuditReviewService.upsert_review(
+            db,
+            audit_id=audit_id,
+            review_status="closed",
+            reviewed_by_user_id=99,
+            review_comment="Resolved after race",
+            incident_key="INC-RESOLVED",
+        )
+        db.commit()
+
+        assert review.review_status == "closed"
+        assert review.reviewed_by_user_id == 99
+        assert review.review_comment == "Resolved after race"
+        assert review.incident_key == "INC-RESOLVED"
+
+    with SessionLocal() as db:
+        rows = db.execute(select(CanonicalEntitlementMutationAuditReviewModel)).scalars().all()
+        assert len(rows) == 1
+        assert rows[0].review_status == "closed"
+        assert rows[0].review_comment == "Resolved after race"

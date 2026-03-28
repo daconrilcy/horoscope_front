@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
@@ -34,13 +35,10 @@ class CanonicalEntitlementMutationAuditReviewService:
         if audit is None:
             raise AuditNotFoundError(audit_id)
 
-        result = db.execute(
-            select(CanonicalEntitlementMutationAuditReviewModel).where(
-                CanonicalEntitlementMutationAuditReviewModel.audit_id == audit_id
-            )
-        )
-        review = result.scalar_one_or_none()
         now = datetime.now(timezone.utc)
+        review = CanonicalEntitlementMutationAuditReviewService._get_review_by_audit_id(
+            db, audit_id
+        )
 
         if review is None:
             review = CanonicalEntitlementMutationAuditReviewModel(
@@ -51,13 +49,33 @@ class CanonicalEntitlementMutationAuditReviewService:
                 review_comment=review_comment,
                 incident_key=incident_key,
             )
-            db.add(review)
-        else:
-            review.review_status = review_status
-            review.reviewed_by_user_id = reviewed_by_user_id
-            review.reviewed_at = now
-            review.review_comment = review_comment
-            review.incident_key = incident_key
+            try:
+                with db.begin_nested():
+                    db.add(review)
+                    db.flush()
+            except IntegrityError:
+                review = CanonicalEntitlementMutationAuditReviewService._get_review_by_audit_id(
+                    db, audit_id
+                )
+                if review is None:
+                    raise
+
+        review.review_status = review_status
+        review.reviewed_by_user_id = reviewed_by_user_id
+        review.reviewed_at = now
+        review.review_comment = review_comment
+        review.incident_key = incident_key
 
         db.flush()
         return review
+
+    @staticmethod
+    def _get_review_by_audit_id(
+        db: Session, audit_id: int
+    ) -> CanonicalEntitlementMutationAuditReviewModel | None:
+        result = db.execute(
+            select(CanonicalEntitlementMutationAuditReviewModel).where(
+                CanonicalEntitlementMutationAuditReviewModel.audit_id == audit_id
+            )
+        )
+        return result.scalar_one_or_none()
