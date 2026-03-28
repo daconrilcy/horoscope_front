@@ -204,3 +204,23 @@ def test_settings_invalid_feature_scope_validation_mode_warns_and_falls_back(
     assert settings.feature_scope_validation_mode == "strict"
     assert "feature_scope_registry_startup_validation_invalid_mode" in caplog.text
     assert "broken-mode" in caplog.text
+
+
+def test_settings_invalid_canonical_db_validation_mode_warns_and_falls_back(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///./horoscope.db")
+    monkeypatch.setenv("REFERENCE_SEED_ADMIN_TOKEN", "seed-token")
+    monkeypatch.setenv("API_CREDENTIALS_SECRET_KEY", "api-current")
+    monkeypatch.setenv("JWT_SECRET_KEY", "jwt-current")
+    monkeypatch.setenv("LLM_ANONYMIZATION_SALT", "llm-salt")
+    monkeypatch.setenv("CANONICAL_DB_VALIDATION_MODE", "broken-mode")
+
+    with caplog.at_level("WARNING", logger="app.core.config"):
+        settings = Settings()
+
+    assert settings.canonical_db_validation_mode == "strict"
+    assert "canonical_db_startup_validation_invalid_mode" in caplog.text
+    assert "broken-mode" in caplog.text

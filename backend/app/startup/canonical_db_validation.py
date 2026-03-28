@@ -1,4 +1,5 @@
 import logging
+
 from sqlalchemy.orm import Session
 
 from app.services.canonical_entitlement_db_consistency_validator import (
@@ -12,9 +13,7 @@ _VALID_MODES = frozenset({"strict", "warn", "off"})
 
 def run_canonical_db_startup_validation(mode: str, db: Session) -> None:
     if mode not in _VALID_MODES:
-        logger.warning(
-            "canonical_db_startup_validation_invalid_mode mode=%s fallback=strict", mode
-        )
+        logger.warning("canonical_db_startup_validation_invalid_mode mode=%s fallback=strict", mode)
         mode = "strict"
 
     if mode == "off":

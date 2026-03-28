@@ -55,6 +55,11 @@ try {
   if ($null -ne $env:ROTATION_RESTART_POSTGRES_DATABASE_URL) {
     $rotationPgUrl = $env:ROTATION_RESTART_POSTGRES_DATABASE_URL
   }
+  $canonicalDbReadyRaw = ""
+  if ($null -ne $env:CANONICAL_DB_QUALITY_GATE_READY) {
+    $canonicalDbReadyRaw = $env:CANONICAL_DB_QUALITY_GATE_READY
+  }
+  $canonicalDbReady = ($canonicalDbReadyRaw.Trim().ToLower() -in @("1", "true", "yes"))
 
   Invoke-Step -Name "Activate Python virtual environment" -Action {
     . $venvActivate
@@ -98,10 +103,13 @@ try {
   }
 
   Invoke-Step -Name "Canonical entitlement DB consistency CLI" -Action {
-    Set-Location $root
-    # Note: Requires DATABASE_URL to be set if not using default local sqlite.
-    Invoke-ExternalChecked -Label "python backend/scripts/check_canonical_entitlement_db_consistency.py" -Command {
-      python backend/scripts/check_canonical_entitlement_db_consistency.py
+    if ($canonicalDbReady) {
+      Set-Location $root
+      Invoke-ExternalChecked -Label "python backend/scripts/check_canonical_entitlement_db_consistency.py" -Command {
+        python backend/scripts/check_canonical_entitlement_db_consistency.py
+      }
+    } else {
+      Write-Host "Skipped: set CANONICAL_DB_QUALITY_GATE_READY=1 after migrations + canonical entitlement seed." -ForegroundColor Yellow
     }
   }
 

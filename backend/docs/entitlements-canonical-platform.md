@@ -184,12 +184,16 @@ Empêcher toute configuration incohérente en base (ex: feature B2B liée à un 
 .\.venv\Scripts\Activate.ps1
 python backend/scripts/check_canonical_entitlement_db_consistency.py
 ```
-*Précondition : Une base de données valide doit être accessible via `DATABASE_URL`.*
+Précondition : migrations appliquées et seed canonique minimal présent dans la base ciblée par `DATABASE_URL`.
+
+### Intégration quality gate
+Le script [scripts/quality-gate.ps1](/c:/dev/horoscope_front/scripts/quality-gate.ps1) n'exécute ce contrôle que si `CANONICAL_DB_QUALITY_GATE_READY=1`.
+Cette variable doit uniquement être positionnée dans une phase où la DB de validation a déjà été provisionnée, migrée et seedée avec le catalogue canonique minimal.
 
 ### Vérifications effectuées
 Le validateur `CanonicalEntitlementDbConsistencyValidator` réalise les contrôles suivants :
 1. **Registre ↔ DB (Présence)** : Toute feature du registre doit avoir une entrée active dans `feature_catalog`.
-2. **DB ↔ Registre (Metered)** : Toute feature `is_metered=True` active en DB doit être enregistrée dans le registre.
+2. **DB ↔ Registre (Metered)** : Toute feature active `is_metered=True` impliquée dans un binding `QUOTA` doit être enregistrée dans le registre.
 3. **DB ↔ Registre (Bindings)** : Toute feature utilisée dans un binding de plan doit être connue du registre.
 4. **Cohérence Scope/Audience** :
    - Features scope `B2C` → Uniquement liées à des plans d'audience `B2C`.

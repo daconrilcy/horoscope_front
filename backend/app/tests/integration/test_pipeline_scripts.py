@@ -124,6 +124,7 @@ def test_quality_gate_success_executes_all_steps_in_order(tmp_path: Path) -> Non
     env["QUALITY_GATE_ROOT"] = str(mock_root)
     env["MOCK_LOG"] = str(log_file)
     env["MOCK_FAIL_STEP"] = ""
+    env["CANONICAL_DB_QUALITY_GATE_READY"] = "1"
     env["PATH"] = f"{mock_bin}{os.pathsep}{env.get('PATH', '')}"
 
     result = _run_ps_script(SCRIPTS_DIR / "quality-gate.ps1", env)
@@ -184,6 +185,7 @@ def test_predeploy_success_runs_quality_gate_then_docker(tmp_path: Path) -> None
     env["PREDEPLOY_SKIP_STARTUP_SMOKE"] = "1"
     env["MOCK_LOG"] = str(log_file)
     env["MOCK_FAIL_STEP"] = ""
+    env["CANONICAL_DB_QUALITY_GATE_READY"] = "1"
     env["PATH"] = f"{mock_bin}{os.pathsep}{env.get('PATH', '')}"
 
     result = _run_ps_script(SCRIPTS_DIR / "predeploy-check.ps1", env)
@@ -200,6 +202,7 @@ def test_predeploy_success_runs_quality_gate_then_docker(tmp_path: Path) -> None
         "pytest -q backend/app/tests",
     ]
     assert "python backend/scripts/check_feature_scope_registry.py" in lines
+    assert "python backend/scripts/check_canonical_entitlement_db_consistency.py" in lines
 
 
 def test_predeploy_fails_if_docker_config_fails(tmp_path: Path) -> None:
@@ -221,3 +224,23 @@ def test_predeploy_fails_if_docker_config_fails(tmp_path: Path) -> None:
     assert result.returncode != 0
     lines = log_file.read_text(encoding="utf-8").splitlines()
     assert "docker compose config" in lines
+
+
+def test_quality_gate_skips_canonical_db_cli_when_db_not_marked_ready(tmp_path: Path) -> None:
+    mock_root = _prepare_mock_root(tmp_path)
+    mock_bin = tmp_path / "mock-bin"
+    _write_mock_commands(mock_bin)
+    log_file = tmp_path / "pipeline.log"
+
+    env = os.environ.copy()
+    env["QUALITY_GATE_ROOT"] = str(mock_root)
+    env["MOCK_LOG"] = str(log_file)
+    env["MOCK_FAIL_STEP"] = ""
+    env["PATH"] = f"{mock_bin}{os.pathsep}{env.get('PATH', '')}"
+
+    result = _run_ps_script(SCRIPTS_DIR / "quality-gate.ps1", env)
+
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert "Skipped: set CANONICAL_DB_QUALITY_GATE_READY=1" in result.stdout
+    lines = log_file.read_text(encoding="utf-8").splitlines()
+    assert "python backend/scripts/check_canonical_entitlement_db_consistency.py" not in lines

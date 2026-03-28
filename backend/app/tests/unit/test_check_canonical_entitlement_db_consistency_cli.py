@@ -1,11 +1,15 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+from app.services.canonical_entitlement_db_consistency_validator import (
+    CanonicalEntitlementDbConsistencyError,
+)
 from scripts.check_canonical_entitlement_db_consistency import main
-from app.services.canonical_entitlement_db_consistency_validator import CanonicalEntitlementDbConsistencyError
 
 VALIDATE_PATH_CLI = (
     "app.services.canonical_entitlement_db_consistency_validator"
     ".CanonicalEntitlementDbConsistencyValidator.validate"
 )
+
 
 def test_cli_main_exit_0_on_consistent_db():
     mock_db = MagicMock()
@@ -25,7 +29,10 @@ def test_cli_main_exit_1_on_inconsistent_db():
     mock_ctx.__exit__ = MagicMock(return_value=False)
 
     with patch("app.infra.db.session.SessionLocal", return_value=mock_ctx):
-        with patch(VALIDATE_PATH_CLI, side_effect=CanonicalEntitlementDbConsistencyError("Inconsistent")):
+        with patch(
+            VALIDATE_PATH_CLI,
+            side_effect=CanonicalEntitlementDbConsistencyError("Inconsistent"),
+        ):
             assert main() == 1
 
 

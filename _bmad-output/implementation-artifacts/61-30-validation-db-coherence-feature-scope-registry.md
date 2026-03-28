@@ -659,7 +659,7 @@ python backend/scripts/check_canonical_entitlement_db_consistency.py  # 61.30 (n
 - `backend/app/core/config.py` — ajouter `canonical_db_validation_mode`
 - `backend/app/main.py` — brancher `run_canonical_db_startup_validation` dans `_app_lifespan`
 - `backend/docs/entitlements-canonical-platform.md` — section 61.30
-- `scripts/quality-gate.ps1` — ajouter le nouveau CLI comme étape CI
+- `scripts/quality-gate.ps1` — ajouter le nouveau CLI comme étape CI uniquement quand la DB de validation est prête (`CANONICAL_DB_QUALITY_GATE_READY=1`)
 
 ### References
 
@@ -689,9 +689,10 @@ gemini-2.0-flash-exp (orchestrated by dev-story workflow)
 ### Completion Notes List
 
 - Validateur DB complet implémenté et branché au démarrage.
-- Script CLI opérationnel pour la CI.
-- Documentation et Quality Gate mis à jour.
-- Suite de tests 100% verte (2191 tests).
+- Check DB → registre resserré aux features réellement engagées dans des bindings `QUOTA`, pour éviter les faux positifs sur de futures features metered hors entitlement.
+- Les erreurs du validateur ne dupliquent plus les absences déjà remontées par le check registre → DB pour les features obligatoires.
+- Le quality gate n'exécute le CLI DB canonique que lorsque la DB est explicitement provisionnée, migrée et seedée (`CANONICAL_DB_QUALITY_GATE_READY=1`).
+- Documentation et Quality Gate mis à jour après review corrective.
 
 ### File List
 

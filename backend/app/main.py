@@ -4,8 +4,6 @@ from contextlib import asynccontextmanager
 from time import monotonic
 
 from fastapi import FastAPI, Request
-
-logger = logging.getLogger(__name__)
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -60,8 +58,10 @@ from app.infra.db.bootstrap import ensure_local_sqlite_schema_ready
 from app.infra.observability.metrics import increment_counter, observe_duration
 from app.llm_orchestration.models import InputValidationError
 from app.services.pricing_experiment_service import PricingExperimentService
-from app.startup.feature_scope_validation import run_feature_scope_startup_validation
 from app.startup.canonical_db_validation import run_canonical_db_startup_validation
+from app.startup.feature_scope_validation import run_feature_scope_startup_validation
+
+logger = logging.getLogger(__name__)
 
 
 def _ensure_llm_registry_seeded() -> None:

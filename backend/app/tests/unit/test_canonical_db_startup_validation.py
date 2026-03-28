@@ -1,12 +1,16 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
+from app.services.canonical_entitlement_db_consistency_validator import (
+    CanonicalEntitlementDbConsistencyError,
+)
 from app.startup.canonical_db_validation import run_canonical_db_startup_validation
-from app.services.canonical_entitlement_db_consistency_validator import CanonicalEntitlementDbConsistencyError
 
 VALIDATE_PATH = (
-    "app.startup.canonical_db_validation"
-    ".CanonicalEntitlementDbConsistencyValidator.validate"
+    "app.startup.canonical_db_validation.CanonicalEntitlementDbConsistencyValidator.validate"
 )
+
 
 def test_startup_db_validation_strict_ok():
     db = MagicMock()
@@ -17,15 +21,20 @@ def test_startup_db_validation_strict_ok():
 
 def test_startup_db_validation_strict_fails():
     db = MagicMock()
-    with patch(VALIDATE_PATH, side_effect=CanonicalEntitlementDbConsistencyError("Fail")):
+    with patch(
+        VALIDATE_PATH,
+        side_effect=CanonicalEntitlementDbConsistencyError("Fail"),
+    ):
         with pytest.raises(CanonicalEntitlementDbConsistencyError):
             run_canonical_db_startup_validation("strict", db)
 
 
 def test_startup_db_validation_warn_does_not_block():
     db = MagicMock()
-    with patch(VALIDATE_PATH, side_effect=CanonicalEntitlementDbConsistencyError("Fail")):
-        # Should not raise
+    with patch(
+        VALIDATE_PATH,
+        side_effect=CanonicalEntitlementDbConsistencyError("Fail"),
+    ):
         run_canonical_db_startup_validation("warn", db)
 
 

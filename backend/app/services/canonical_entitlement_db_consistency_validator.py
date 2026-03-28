@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 import logging
+
 from sqlalchemy.orm import Session
+
 from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,
@@ -16,6 +20,14 @@ _SCOPE_TO_AUDIENCE: dict[FeatureScope, Audience] = {
     FeatureScope.B2C: Audience.B2C,
     FeatureScope.B2B: Audience.B2B,
 }
+_MANDATORY_METERED_FEATURES = frozenset(
+    {
+        "astrologer_chat",
+        "thematic_consultation",
+        "natal_chart_long",
+        "b2b_api_access",
+    }
+)
 
 
 class CanonicalEntitlementDbConsistencyError(ValueError):
@@ -23,48 +35,42 @@ class CanonicalEntitlementDbConsistencyError(ValueError):
 
 
 class CanonicalEntitlementDbConsistencyValidator:
-
     @staticmethod
     def validate(db: Session) -> None:
         errors: list[str] = []
 
         # Check 1 : registre → DB (présence active)
-        # Pour chaque feature_code de FEATURE_SCOPE_REGISTRY, une entrée active (is_active=True) existe dans feature_catalog.
+        feature_rows_by_code = {
+            row.feature_code: row for row in db.query(FeatureCatalogModel).all()
+        }
         for feature_code in FEATURE_SCOPE_REGISTRY:
-            row = (
-                db.query(FeatureCatalogModel)
-                .filter_by(feature_code=feature_code)
-                .one_or_none()
-            )
+            row = feature_rows_by_code.get(feature_code)
             if row is None:
-                errors.append(
-                    f"feature_code '{feature_code}' absent de feature_catalog."
-                )
+                errors.append(f"feature_code '{feature_code}' absent de feature_catalog.")
             elif not row.is_active:
                 errors.append(
                     f"feature_code '{feature_code}' présent dans feature_catalog "
                     "mais is_active=False."
                 )
 
-        # Check 2 : DB → registre (features metered actives)
-        # Toute feature active is_metered=True de feature_catalog qui participe aux entitlements quota 
-        # doit être enregistrée dans FEATURE_SCOPE_REGISTRY (DB → registre).
-        metered_active = (
-            db.query(FeatureCatalogModel)
-            .filter_by(is_metered=True, is_active=True)
-            .all()
-        )
-        for fc in metered_active:
-            if fc.feature_code not in FEATURE_SCOPE_REGISTRY:
+        bindings = db.query(PlanFeatureBindingModel).all()
+
+        # Check 2 : DB → registre (features metered actives utilisées en quota)
+        quota_feature_ids = {
+            binding.feature_id for binding in bindings if binding.access_mode == AccessMode.QUOTA
+        }
+        for feature_id in quota_feature_ids:
+            feature_row = db.get(FeatureCatalogModel, feature_id)
+            if feature_row is None or not feature_row.is_active or not feature_row.is_metered:
+                continue
+            if feature_row.feature_code not in FEATURE_SCOPE_REGISTRY:
                 errors.append(
-                    f"feature_code '{fc.feature_code}' est is_metered=True et is_active=True "
-                    "dans feature_catalog mais absent de FEATURE_SCOPE_REGISTRY."
+                    f"feature_code '{feature_row.feature_code}' participe à un binding QUOTA "
+                    "avec is_metered=True et is_active=True dans feature_catalog mais absent "
+                    "de FEATURE_SCOPE_REGISTRY."
                 )
 
         # Check 3 : DB → registre (features dans les bindings)
-        # Toute feature référencée dans plan_feature_bindings doit être enregistrée dans FEATURE_SCOPE_REGISTRY ; 
-        # une feature bindée absente du registre est une incohérence bloquante (DB → registre).
-        bindings = db.query(PlanFeatureBindingModel).all()
         for binding in bindings:
             feature_row = db.get(FeatureCatalogModel, binding.feature_id)
             if feature_row is None:
@@ -102,9 +108,7 @@ class CanonicalEntitlementDbConsistencyValidator:
         # Check 6 : QUOTA → au moins un quota
         # Tout binding access_mode = QUOTA possède au moins un PlanFeatureQuotaModel valide.
         quota_bindings = (
-            db.query(PlanFeatureBindingModel)
-            .filter_by(access_mode=AccessMode.QUOTA)
-            .all()
+            db.query(PlanFeatureBindingModel).filter_by(access_mode=AccessMode.QUOTA).all()
         )
         for binding in quota_bindings:
             count = (
@@ -115,7 +119,9 @@ class CanonicalEntitlementDbConsistencyValidator:
             if count == 0:
                 feature_row = db.get(FeatureCatalogModel, binding.feature_id)
                 plan_row = db.get(PlanCatalogModel, binding.plan_id)
-                fname = feature_row.feature_code if feature_row else f"feature_id={binding.feature_id}"
+                fname = (
+                    feature_row.feature_code if feature_row else f"feature_id={binding.feature_id}"
+                )
                 pname = plan_row.plan_code if plan_row else f"plan_id={binding.plan_id}"
                 errors.append(
                     f"Binding QUOTA feature='{fname}' plan='{pname}' "
@@ -126,9 +132,9 @@ class CanonicalEntitlementDbConsistencyValidator:
         # Aucun binding access_mode = UNLIMITED ou DISABLED ne possède de quota associé.
         non_quota_bindings = (
             db.query(PlanFeatureBindingModel)
-            .filter(PlanFeatureBindingModel.access_mode.in_(
-                [AccessMode.UNLIMITED, AccessMode.DISABLED]
-            ))
+            .filter(
+                PlanFeatureBindingModel.access_mode.in_([AccessMode.UNLIMITED, AccessMode.DISABLED])
+            )
             .all()
         )
         for binding in non_quota_bindings:
@@ -140,37 +146,22 @@ class CanonicalEntitlementDbConsistencyValidator:
             if count > 0:
                 feature_row = db.get(FeatureCatalogModel, binding.feature_id)
                 plan_row = db.get(PlanCatalogModel, binding.plan_id)
-                fname = feature_row.feature_code if feature_row else f"feature_id={binding.feature_id}"
+                fname = (
+                    feature_row.feature_code if feature_row else f"feature_id={binding.feature_id}"
+                )
                 pname = plan_row.plan_code if plan_row else f"plan_id={binding.plan_id}"
                 errors.append(
                     f"Binding {binding.access_mode.value.upper()} feature='{fname}' "
                     f"plan='{pname}' a {count} quota(s) parasite(s)."
                 )
 
-        # Check 12 : Features quota spécifiques connues du registre
-        # Les features quota connues du registre — actuellement astrologer_chat, thematic_consultation, 
-        # natal_chart_long et b2b_api_access — sont présentes en DB avec is_active=True. 
-        # Pour ces quatre features, is_metered=True est exigé.
-        mandatory_quota_features = {
-            "astrologer_chat",
-            "thematic_consultation",
-            "natal_chart_long",
-            "b2b_api_access",
-        }
-        for feature_code in mandatory_quota_features:
-            row = (
-                db.query(FeatureCatalogModel)
-                .filter_by(feature_code=feature_code)
-                .one_or_none()
-            )
-            if row is None:
-                # Déjà partiellement couvert par Check 1 si elles sont dans le registre
-                errors.append(f"Mandatory feature '{feature_code}' absente de feature_catalog.")
-            else:
-                if not row.is_active:
-                    errors.append(f"Mandatory feature '{feature_code}' doit être active.")
-                if not row.is_metered:
-                    errors.append(f"Mandatory feature '{feature_code}' doit être is_metered=True.")
+        # Check 12 : features quota connues du registre
+        for feature_code in _MANDATORY_METERED_FEATURES:
+            row = feature_rows_by_code.get(feature_code)
+            if row is None or not row.is_active:
+                continue
+            if not row.is_metered:
+                errors.append(f"Mandatory feature '{feature_code}' doit être is_metered=True.")
 
         if errors:
             raise CanonicalEntitlementDbConsistencyError(

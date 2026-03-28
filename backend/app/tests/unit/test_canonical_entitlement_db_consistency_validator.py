@@ -1,15 +1,16 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+
 from app.infra.db.base import Base
 from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,
     FeatureCatalogModel,
+    PeriodUnit,
     PlanCatalogModel,
     PlanFeatureBindingModel,
     PlanFeatureQuotaModel,
-    PeriodUnit,
     ResetMode,
 )
 from app.services.canonical_entitlement_db_consistency_validator import (
@@ -17,6 +18,7 @@ from app.services.canonical_entitlement_db_consistency_validator import (
     CanonicalEntitlementDbConsistencyValidator,
 )
 from app.services.feature_scope_registry import FEATURE_SCOPE_REGISTRY
+
 
 @pytest.fixture
 def db():
@@ -28,55 +30,80 @@ def db():
 
 
 def _seed_consistent_db(db: Session) -> None:
-    # Seed all features from registry
+    mandatory_metered_features = {
+        "astrologer_chat",
+        "thematic_consultation",
+        "natal_chart_long",
+        "b2b_api_access",
+    }
     features = []
     for feature_code in FEATURE_SCOPE_REGISTRY:
         features.append(
             FeatureCatalogModel(
                 feature_code=feature_code,
                 feature_name=feature_code.replace("_", " ").title(),
-                is_metered=feature_code in {"astrologer_chat", "thematic_consultation", "natal_chart_long", "b2b_api_access"},
-                is_active=True
+                is_metered=feature_code in mandatory_metered_features,
+                is_active=True,
             )
         )
     db.add_all(features)
     db.flush()
 
-    b2c_plan = PlanCatalogModel(plan_code="premium", plan_name="Premium", audience=Audience.B2C, is_active=True)
-    b2b_plan = PlanCatalogModel(plan_code="enterprise", plan_name="Enterprise", audience=Audience.B2B, is_active=True)
+    b2c_plan = PlanCatalogModel(
+        plan_code="premium",
+        plan_name="Premium",
+        audience=Audience.B2C,
+        is_active=True,
+    )
+    b2b_plan = PlanCatalogModel(
+        plan_code="enterprise",
+        plan_name="Enterprise",
+        audience=Audience.B2B,
+        is_active=True,
+    )
     db.add_all([b2c_plan, b2b_plan])
     db.flush()
 
     # B2C feature bound to B2C plan (QUOTA with quota)
     chat_feature = next(f for f in features if f.feature_code == "astrologer_chat")
     binding_b2c = PlanFeatureBindingModel(
-        plan_id=b2c_plan.id, feature_id=chat_feature.id,
-        access_mode=AccessMode.QUOTA, is_enabled=True,
+        plan_id=b2c_plan.id,
+        feature_id=chat_feature.id,
+        access_mode=AccessMode.QUOTA,
+        is_enabled=True,
     )
     db.add(binding_b2c)
     db.flush()
-    db.add(PlanFeatureQuotaModel(
-        plan_feature_binding_id=binding_b2c.id, quota_key="daily", quota_limit=5,
-        period_unit=PeriodUnit.DAY, period_value=1, reset_mode=ResetMode.CALENDAR,
-    ))
+    db.add(
+        PlanFeatureQuotaModel(
+            plan_feature_binding_id=binding_b2c.id,
+            quota_key="daily",
+            quota_limit=5,
+            period_unit=PeriodUnit.DAY,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+        )
+    )
 
     # B2B feature bound to B2B plan (UNLIMITED, no quota)
     b2b_feature = next(f for f in features if f.feature_code == "b2b_api_access")
-    db.add(PlanFeatureBindingModel(
-        plan_id=b2b_plan.id, feature_id=b2b_feature.id,
-        access_mode=AccessMode.UNLIMITED, is_enabled=True,
-    ))
+    db.add(
+        PlanFeatureBindingModel(
+            plan_id=b2b_plan.id,
+            feature_id=b2b_feature.id,
+            access_mode=AccessMode.UNLIMITED,
+            is_enabled=True,
+        )
+    )
     db.commit()
 
 
 def test_validator_ok_nominal(db):
     _seed_consistent_db(db)
-    # Should not raise
     CanonicalEntitlementDbConsistencyValidator.validate(db)
 
 
 def test_validator_fails_feature_missing_from_catalog(db):
-    # Empty DB, but registry has features
     with pytest.raises(CanonicalEntitlementDbConsistencyError) as excinfo:
         CanonicalEntitlementDbConsistencyValidator.validate(db)
     assert "absent de feature_catalog" in str(excinfo.value)
@@ -97,11 +124,15 @@ def test_validator_fails_b2b_feature_bound_to_b2c_plan(db):
     _seed_consistent_db(db)
     b2b_feature = db.query(FeatureCatalogModel).filter_by(feature_code="b2b_api_access").one()
     b2c_plan = db.query(PlanCatalogModel).filter_by(audience=Audience.B2C).first()
-    
-    db.add(PlanFeatureBindingModel(
-        plan_id=b2c_plan.id, feature_id=b2b_feature.id,
-        access_mode=AccessMode.UNLIMITED, is_enabled=True,
-    ))
+
+    db.add(
+        PlanFeatureBindingModel(
+            plan_id=b2c_plan.id,
+            feature_id=b2b_feature.id,
+            access_mode=AccessMode.UNLIMITED,
+            is_enabled=True,
+        )
+    )
     db.commit()
 
     with pytest.raises(CanonicalEntitlementDbConsistencyError) as excinfo:
@@ -113,11 +144,15 @@ def test_validator_fails_b2c_feature_bound_to_b2b_plan(db):
     _seed_consistent_db(db)
     b2c_feature = db.query(FeatureCatalogModel).filter_by(feature_code="astrologer_chat").one()
     b2b_plan = db.query(PlanCatalogModel).filter_by(audience=Audience.B2B).first()
-    
-    db.add(PlanFeatureBindingModel(
-        plan_id=b2b_plan.id, feature_id=b2c_feature.id,
-        access_mode=AccessMode.UNLIMITED, is_enabled=True,
-    ))
+
+    db.add(
+        PlanFeatureBindingModel(
+            plan_id=b2b_plan.id,
+            feature_id=b2c_feature.id,
+            access_mode=AccessMode.UNLIMITED,
+            is_enabled=True,
+        )
+    )
     db.commit()
 
     with pytest.raises(CanonicalEntitlementDbConsistencyError) as excinfo:
@@ -127,14 +162,17 @@ def test_validator_fails_b2c_feature_bound_to_b2b_plan(db):
 
 def test_validator_fails_quota_binding_without_quota(db):
     _seed_consistent_db(db)
-    # Add a new binding with QUOTA but no quota row
     feature = db.query(FeatureCatalogModel).filter_by(feature_code="thematic_consultation").one()
     b2c_plan = db.query(PlanCatalogModel).filter_by(audience=Audience.B2C).first()
-    
-    db.add(PlanFeatureBindingModel(
-        plan_id=b2c_plan.id, feature_id=feature.id,
-        access_mode=AccessMode.QUOTA, is_enabled=True,
-    ))
+
+    db.add(
+        PlanFeatureBindingModel(
+            plan_id=b2c_plan.id,
+            feature_id=feature.id,
+            access_mode=AccessMode.QUOTA,
+            is_enabled=True,
+        )
+    )
     db.commit()
 
     with pytest.raises(CanonicalEntitlementDbConsistencyError) as excinfo:
@@ -144,12 +182,17 @@ def test_validator_fails_quota_binding_without_quota(db):
 
 def test_validator_fails_unlimited_binding_with_quota(db):
     _seed_consistent_db(db)
-    # Add a quota to an UNLIMITED binding
     binding = db.query(PlanFeatureBindingModel).filter_by(access_mode=AccessMode.UNLIMITED).first()
-    db.add(PlanFeatureQuotaModel(
-        plan_feature_binding_id=binding.id, quota_key="parasite", quota_limit=10,
-        period_unit=PeriodUnit.DAY, period_value=1, reset_mode=ResetMode.CALENDAR,
-    ))
+    db.add(
+        PlanFeatureQuotaModel(
+            plan_feature_binding_id=binding.id,
+            quota_key="parasite",
+            quota_limit=10,
+            period_unit=PeriodUnit.DAY,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+        )
+    )
     db.commit()
 
     with pytest.raises(CanonicalEntitlementDbConsistencyError) as excinfo:
@@ -159,20 +202,27 @@ def test_validator_fails_unlimited_binding_with_quota(db):
 
 def test_validator_fails_disabled_binding_with_quota(db):
     _seed_consistent_db(db)
-    # Add a DISABLED binding with a quota
     feature = db.query(FeatureCatalogModel).filter_by(feature_code="thematic_consultation").one()
     b2c_plan = db.query(PlanCatalogModel).filter_by(audience=Audience.B2C).first()
-    
+
     binding = PlanFeatureBindingModel(
-        plan_id=b2c_plan.id, feature_id=feature.id,
-        access_mode=AccessMode.DISABLED, is_enabled=True,
+        plan_id=b2c_plan.id,
+        feature_id=feature.id,
+        access_mode=AccessMode.DISABLED,
+        is_enabled=True,
     )
     db.add(binding)
     db.flush()
-    db.add(PlanFeatureQuotaModel(
-        plan_feature_binding_id=binding.id, quota_key="parasite", quota_limit=10,
-        period_unit=PeriodUnit.DAY, period_value=1, reset_mode=ResetMode.CALENDAR,
-    ))
+    db.add(
+        PlanFeatureQuotaModel(
+            plan_feature_binding_id=binding.id,
+            quota_key="parasite",
+            quota_limit=10,
+            period_unit=PeriodUnit.DAY,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+        )
+    )
     db.commit()
 
     with pytest.raises(CanonicalEntitlementDbConsistencyError) as excinfo:
@@ -182,18 +232,24 @@ def test_validator_fails_disabled_binding_with_quota(db):
 
 def test_validator_fails_bound_feature_not_registered(db):
     _seed_consistent_db(db)
-    # Add a feature NOT in registry but bound to a plan
     unregistered_feature = FeatureCatalogModel(
-        feature_code="not_in_registry", feature_name="Not Registered", is_metered=False, is_active=True
+        feature_code="not_in_registry",
+        feature_name="Not Registered",
+        is_metered=False,
+        is_active=True,
     )
     db.add(unregistered_feature)
     b2c_plan = db.query(PlanCatalogModel).filter_by(audience=Audience.B2C).first()
     db.flush()
-    
-    db.add(PlanFeatureBindingModel(
-        plan_id=b2c_plan.id, feature_id=unregistered_feature.id,
-        access_mode=AccessMode.UNLIMITED, is_enabled=True,
-    ))
+
+    db.add(
+        PlanFeatureBindingModel(
+            plan_id=b2c_plan.id,
+            feature_id=unregistered_feature.id,
+            access_mode=AccessMode.UNLIMITED,
+            is_enabled=True,
+        )
+    )
     db.commit()
 
     with pytest.raises(CanonicalEntitlementDbConsistencyError) as excinfo:
@@ -204,12 +260,23 @@ def test_validator_fails_bound_feature_not_registered(db):
 
 def test_validator_fails_metered_feature_not_registered(db):
     _seed_consistent_db(db)
-    # Add a metered active feature NOT in registry
     unregistered_metered = FeatureCatalogModel(
-        feature_code="unregistered_metered", feature_name="Unregistered Metered", 
-        is_metered=True, is_active=True
+        feature_code="unregistered_metered",
+        feature_name="Unregistered Metered",
+        is_metered=True,
+        is_active=True,
     )
     db.add(unregistered_metered)
+    b2c_plan = db.query(PlanCatalogModel).filter_by(audience=Audience.B2C).first()
+    db.flush()
+    db.add(
+        PlanFeatureBindingModel(
+            plan_id=b2c_plan.id,
+            feature_id=unregistered_metered.id,
+            access_mode=AccessMode.QUOTA,
+            is_enabled=True,
+        )
+    )
     db.commit()
 
     with pytest.raises(CanonicalEntitlementDbConsistencyError) as excinfo:
@@ -218,11 +285,24 @@ def test_validator_fails_metered_feature_not_registered(db):
     assert "absent de FEATURE_SCOPE_REGISTRY" in str(excinfo.value)
 
 
+def test_validator_ignores_unregistered_metered_feature_without_quota_entitlement(db):
+    _seed_consistent_db(db)
+    db.add(
+        FeatureCatalogModel(
+            feature_code="unregistered_metered",
+            feature_name="Unregistered Metered",
+            is_metered=True,
+            is_active=True,
+        )
+    )
+    db.commit()
+
+    CanonicalEntitlementDbConsistencyValidator.validate(db)
+
+
 def test_validator_aggregates_multiple_errors(db):
-    # Empty DB + registry having features => many missing features
     with pytest.raises(CanonicalEntitlementDbConsistencyError) as excinfo:
         CanonicalEntitlementDbConsistencyValidator.validate(db)
-    
+
     error_msg = str(excinfo.value)
-    # It should list multiple features from the registry
-    assert error_msg.count("absent de feature_catalog") > 1
+    assert error_msg.count("absent de feature_catalog") == len(FEATURE_SCOPE_REGISTRY)
