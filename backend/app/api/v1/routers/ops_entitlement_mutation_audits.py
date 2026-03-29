@@ -236,6 +236,59 @@ class AlertRetryApiResponse(BaseModel):
     meta: ResponseMeta
 
 
+class AlertEventItem(BaseModel):
+    id: int
+    audit_id: int
+    dedupe_key: str
+    alert_kind: str
+    delivery_status: str
+    delivery_channel: str
+    delivery_error: str | None = None
+    created_at: datetime
+    delivered_at: datetime | None = None
+    feature_code_snapshot: str
+    plan_id_snapshot: int
+    plan_code_snapshot: str
+    risk_level_snapshot: str
+    effective_review_status_snapshot: str | None = None
+    actor_type_snapshot: str
+    actor_identifier_snapshot: str
+    age_seconds_snapshot: int
+    sla_target_seconds_snapshot: int | None = None
+    due_at_snapshot: datetime | None = None
+    request_id: str | None = None
+    attempt_count: int
+    last_attempt_number: int | None = None
+    last_attempt_status: str | None = None
+    retryable: bool
+
+
+class AlertEventListData(BaseModel):
+    items: list[AlertEventItem]
+    total_count: int
+    page: int
+    page_size: int
+
+
+class AlertEventListApiResponse(BaseModel):
+    data: AlertEventListData
+    meta: ResponseMeta
+
+
+class AlertSummaryData(BaseModel):
+    total_count: int
+    failed_count: int
+    sent_count: int
+    retryable_count: int
+    webhook_failed_count: int
+    log_sent_count: int
+
+
+class AlertSummaryApiResponse(BaseModel):
+    data: AlertSummaryData
+    meta: ResponseMeta
+
+
 class ErrorPayload(BaseModel):
     code: str
     message: str
@@ -777,6 +830,166 @@ def get_review_queue(
     return {
         "data": {
             "items": [_row_to_queue_item(row) for row in page_rows],
+            "total_count": total_count,
+            "page": page,
+            "page_size": page_size,
+        },
+        "meta": {"request_id": request_id},
+    }
+
+
+def _alert_event_to_item(row: Any) -> dict[str, Any]:
+    event = row.event
+    return {
+        "id": event.id,
+        "audit_id": event.audit_id,
+        "dedupe_key": event.dedupe_key,
+        "alert_kind": event.alert_kind,
+        "delivery_status": event.delivery_status,
+        "delivery_channel": event.delivery_channel,
+        "delivery_error": event.delivery_error,
+        "created_at": event.created_at,
+        "delivered_at": event.delivered_at,
+        "feature_code_snapshot": event.feature_code_snapshot,
+        "plan_id_snapshot": event.plan_id_snapshot,
+        "plan_code_snapshot": event.plan_code_snapshot,
+        "risk_level_snapshot": event.risk_level_snapshot,
+        "effective_review_status_snapshot": event.effective_review_status_snapshot,
+        "actor_type_snapshot": event.actor_type_snapshot,
+        "actor_identifier_snapshot": event.actor_identifier_snapshot,
+        "age_seconds_snapshot": event.age_seconds_snapshot,
+        "sla_target_seconds_snapshot": event.sla_target_seconds_snapshot,
+        "due_at_snapshot": event.due_at_snapshot,
+        "request_id": event.request_id,
+        "attempt_count": row.attempt_count,
+        "last_attempt_number": row.last_attempt_number,
+        "last_attempt_status": row.last_attempt_status,
+        "retryable": event.delivery_status == "failed",
+    }
+
+
+@router.get(
+    "/mutation-audits/alerts/summary",
+    response_model=AlertSummaryApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def get_alert_events_summary(
+    request: Request,
+    alert_kind: str | None = Query(default=None),
+    delivery_status: Literal["sent", "failed"] | None = Query(default=None),
+    audit_id: int | None = Query(default=None),
+    feature_code: str | None = Query(default=None),
+    plan_code: str | None = Query(default=None),
+    actor_type: str | None = Query(default=None),
+    request_id_filter: str | None = Query(default=None, alias="request_id"),
+    date_from: datetime | None = Query(default=None),
+    date_to: datetime | None = Query(default=None),
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    from app.services.canonical_entitlement_alert_query_service import (
+        CanonicalEntitlementAlertQueryService,
+    )
+
+    request_id = resolve_request_id(request)
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        return err
+    if (
+        err := _enforce_limits(
+            user=current_user,
+            request_id=request_id,
+            operation="alert_events_summary",
+        )
+    ) is not None:
+        return err
+
+    summary = CanonicalEntitlementAlertQueryService.get_summary(
+        db,
+        alert_kind=alert_kind,
+        delivery_status=delivery_status,
+        audit_id=audit_id,
+        feature_code=feature_code,
+        plan_code=plan_code,
+        actor_type=actor_type,
+        request_id=request_id_filter,
+        date_from=date_from,
+        date_to=date_to,
+    )
+    return {
+        "data": {
+            "total_count": summary.total_count,
+            "failed_count": summary.failed_count,
+            "sent_count": summary.sent_count,
+            "retryable_count": summary.retryable_count,
+            "webhook_failed_count": summary.webhook_failed_count,
+            "log_sent_count": summary.log_sent_count,
+        },
+        "meta": {"request_id": request_id},
+    }
+
+
+@router.get(
+    "/mutation-audits/alerts",
+    response_model=AlertEventListApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def list_alert_events(
+    request: Request,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    alert_kind: str | None = Query(default=None),
+    delivery_status: Literal["sent", "failed"] | None = Query(default=None),
+    audit_id: int | None = Query(default=None),
+    feature_code: str | None = Query(default=None),
+    plan_code: str | None = Query(default=None),
+    actor_type: str | None = Query(default=None),
+    request_id_filter: str | None = Query(default=None, alias="request_id"),
+    date_from: datetime | None = Query(default=None),
+    date_to: datetime | None = Query(default=None),
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    from app.services.canonical_entitlement_alert_query_service import (
+        CanonicalEntitlementAlertQueryService,
+    )
+
+    request_id = resolve_request_id(request)
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        return err
+    if (
+        err := _enforce_limits(
+            user=current_user,
+            request_id=request_id,
+            operation="list_alert_events",
+        )
+    ) is not None:
+        return err
+
+    rows, total_count = CanonicalEntitlementAlertQueryService.list_alert_events(
+        db,
+        page=page,
+        page_size=page_size,
+        alert_kind=alert_kind,
+        delivery_status=delivery_status,
+        audit_id=audit_id,
+        feature_code=feature_code,
+        plan_code=plan_code,
+        actor_type=actor_type,
+        request_id=request_id_filter,
+        date_from=date_from,
+        date_to=date_to,
+    )
+    return {
+        "data": {
+            "items": [_alert_event_to_item(row) for row in rows],
             "total_count": total_count,
             "page": page,
             "page_size": page_size,

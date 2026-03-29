@@ -294,6 +294,17 @@ python scripts/retry_ops_review_queue_alerts.py --limit 50
 python scripts/retry_ops_review_queue_alerts.py --dry-run
 ```
 
+Consultation ops des alertes canoniques :
+
+```text
+GET /v1/ops/entitlements/mutation-audits/alerts/summary
+GET /v1/ops/entitlements/mutation-audits/alerts
+GET /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/attempts
+POST /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/retry
+```
+
+Les endpoints `summary` et `list` sont read-only, filtrables et réservés aux rôles `ops` et `admin`.
+
 Secrets minimum requis hors environnements locaux/test (staging, production):
 - `JWT_SECRET_KEY`
 - `API_CREDENTIALS_SECRET_KEY`

@@ -730,3 +730,103 @@ Codes de sortie :
 - `1` : au moins une tentative a encore échoué
 - `2` : erreur inattendue ou event ciblé invalide
 
+---
+
+## Story 61.41 — Exposition ops de la file des alertes
+
+Depuis la story 61.41, les alertes canoniques sont consultables sans SQL via deux endpoints ops read-only, paginés et filtrables.
+
+### Endpoints
+
+```text
+GET /v1/ops/entitlements/mutation-audits/alerts/summary
+GET /v1/ops/entitlements/mutation-audits/alerts
+GET /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/attempts
+POST /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/retry
+```
+
+Ordre de déclaration critique dans le router :
+1. `GET /alerts/summary`
+2. `GET /alerts`
+3. Puis seulement les endpoints 61.40 avec `/{alert_event_id}/...`
+
+### Liste des alertes
+
+`GET /v1/ops/entitlements/mutation-audits/alerts`
+
+Filtres supportés :
+- `alert_kind`
+- `delivery_status=sent|failed`
+- `audit_id`
+- `feature_code`
+- `plan_code`
+- `actor_type`
+- `request_id`
+- `date_from`
+- `date_to`
+- `page` (défaut 1)
+- `page_size` (défaut 20, max 100)
+
+Tri :
+- `created_at DESC`, puis `id DESC`
+
+Chaque item expose :
+- tous les champs persistés de `canonical_entitlement_mutation_alert_events`
+- `attempt_count`
+- `last_attempt_number`
+- `last_attempt_status`
+- `retryable`
+
+Règles dérivées :
+- `retryable` est strictement équivalent à `delivery_status == "failed"`
+- `attempt_count` compte uniquement les lignes de `canonical_entitlement_mutation_alert_delivery_attempts`
+- `last_attempt_*` est dérivé de la tentative ayant le plus grand `attempt_number`
+
+Schéma de réponse :
+
+```json
+{
+  "data": {
+    "items": [
+      {
+        "id": 12,
+        "audit_id": 42,
+        "dedupe_key": "audit:42:review:pending_review:sla:overdue",
+        "alert_kind": "sla_overdue",
+        "delivery_status": "failed",
+        "delivery_channel": "webhook",
+        "attempt_count": 2,
+        "last_attempt_number": 2,
+        "last_attempt_status": "failed",
+        "retryable": true
+      }
+    ],
+    "total_count": 1,
+    "page": 1,
+    "page_size": 20
+  },
+  "meta": { "request_id": "..." }
+}
+```
+
+### Résumé des alertes
+
+`GET /v1/ops/entitlements/mutation-audits/alerts/summary`
+
+Utilise les mêmes filtres SQL que la liste, sans pagination, et calcule les compteurs en une seule requête agrégée :
+- `total_count`
+- `failed_count`
+- `sent_count`
+- `retryable_count`
+- `webhook_failed_count`
+- `log_sent_count`
+
+`retryable_count` est toujours égal à `failed_count`.
+
+### Sécurité et garanties
+
+- accès réservé aux rôles `ops` et `admin`
+- rate limiting ops standard appliqué
+- endpoints strictement read-only
+- aucune mutation des services 61.39 / 61.40 ni des modèles SQLAlchemy existants
+
