@@ -38,6 +38,16 @@
 - FastAPI OpenAPI schema generated from router definitions and Pydantic models.
 - Endpoint decorators located in `backend/app/api/v1/routers/`.
 
+## `/v1/entitlements/me` - Plan Commercial et Droits Effectifs
+- Fournit un état complet et consolidé des droits d'accès de l'utilisateur.
+- Champs principaux au top-level : `plan_code`, `billing_status`.
+- Liste des `features` avec pour chacune :
+  - `granted` (bool) : accès autorisé ou non.
+  - `reason_code` (str) : motif de l'autorisation ou du refus (`granted`, `feature_not_in_plan`, `billing_inactive`, `quota_exhausted`, `binding_disabled`, `subject_not_eligible`).
+  - `quota_remaining`, `quota_limit` : état du quota si applicable.
+  - `access_mode` : mode d'accès (`quota`, `unlimited`, `disabled`).
+- Suffisance frontend : permet de piloter l'affichage des CTAs et des messages d'upgrade sans appel supplémentaire.
+
 ## `/v1/astrology-engine/natal/prepare` - DST Local Time Errors
 - Ambiguous local time during DST fold returns `422` with `error.code = ambiguous_local_time`.
 - Non-existent local time during DST gap returns `422` with `error.code = nonexistent_local_time`.

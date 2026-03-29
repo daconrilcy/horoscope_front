@@ -22,16 +22,27 @@ class UsageStateResponse(BaseModel):
 
 class FeatureEntitlementResponse(BaseModel):
     feature_code: str
-    plan_code: str  # code du plan de l'utilisateur ("none", "trial", "basic", "premium")
-    billing_status: str  # "active" | "trialing" | "past_due" | "none"
-    access_mode: str  # "quota" | "unlimited" | "disabled" | "unknown"
-    final_access: bool
-    reason: str
+    granted: bool                   # remplace final_access
+    reason_code: str                # remplace reason (normalisé)
+    access_mode: str | None = None
+    quota_remaining: int | None = None
+    quota_limit: int | None = None
     variant_code: str | None = None
     usage_states: list[UsageStateResponse] = Field(default_factory=list)
 
 
 class EntitlementsMeData(BaseModel):
+    """
+    Contrat frontend unique décrivant le plan commercial et les droits effectifs.
+    
+    Suffisance frontend (AC4) :
+    - Désactiver un CTA si granted == false
+    - Afficher le quota restant via quota_remaining et quota_limit
+    - Afficher le motif de blocage via reason_code
+    - Afficher un CTA d'upgrade si reason_code in ["feature_not_in_plan", "billing_inactive", "quota_exhausted"]
+    """
+    plan_code: str                  # top-level (ex-dupliqué par feature)
+    billing_status: str             # top-level
     features: list[FeatureEntitlementResponse] = Field(default_factory=list)
 
 

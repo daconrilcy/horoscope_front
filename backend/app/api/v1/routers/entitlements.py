@@ -14,8 +14,8 @@ from app.api.v1.schemas.entitlements import (
 )
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
-from app.services.entitlement_service import EntitlementService
-from app.services.entitlement_types import FeatureEntitlement, UsageState
+from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.entitlement_types import EffectiveFeatureAccess, UsageState
 
 router = APIRouter(prefix="/v1/entitlements", tags=["entitlements"])
 
@@ -44,17 +44,17 @@ def _to_usage_state_response(state: UsageState) -> UsageStateResponse:
 
 
 def _to_feature_response(
-    feature_code: str, entitlement: FeatureEntitlement
+    feature_code: str, access: EffectiveFeatureAccess
 ) -> FeatureEntitlementResponse:
     return FeatureEntitlementResponse(
         feature_code=feature_code,
-        plan_code=entitlement.plan_code,
-        billing_status=entitlement.billing_status,
-        access_mode=entitlement.access_mode,
-        final_access=entitlement.final_access,
-        reason=entitlement.reason,
-        variant_code=entitlement.variant_code,
-        usage_states=[_to_usage_state_response(s) for s in entitlement.usage_states],
+        granted=access.granted,
+        reason_code=access.reason_code,
+        access_mode=access.access_mode,
+        quota_remaining=access.quota_remaining,
+        quota_limit=access.quota_limit,
+        variant_code=access.variant_code,
+        usage_states=[_to_usage_state_response(s) for s in access.usage_states],
     )
 
 
@@ -68,6 +68,17 @@ def get_my_entitlements(
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
+    """
+    Expose l'état d'accès complet pour l'utilisateur courant (B2C).
+    
+    AC4 - Mapping reason_code -> action UX recommandé :
+    - granted (true)          -> CTA actif, afficher quota restant
+    - feature_not_in_plan (false) -> Désactiver CTA, afficher badge "upgrade"
+    - billing_inactive (false)    -> Désactiver CTA, afficher lien renouvellement
+    - quota_exhausted (false)     -> Désactiver CTA, afficher quota 0 / limit
+    - binding_disabled (false)    -> Désactiver CTA, pas d'upgrade possible
+    - subject_not_eligible (false)-> Désactiver CTA, message générique
+    """
     request_id = resolve_request_id(request)
     if current_user.role not in {"user", "admin"}:
         return JSONResponse(
@@ -82,16 +93,24 @@ def get_my_entitlements(
             },
         )
 
-    # Lecture pure — EntitlementService appelle QuotaUsageService.get_usage() (lecture)
-    # mais JAMAIS QuotaUsageService.consume() — aucune écriture dans feature_usage_counters
-    features: list[FeatureEntitlementResponse] = []
-    for feature_code in FEATURES_TO_QUERY:
-        entitlement = EntitlementService.get_feature_entitlement(
-            db, user_id=current_user.id, feature_code=feature_code
-        )
-        features.append(_to_feature_response(feature_code, entitlement))
+    # AC5 - Appel unique au resolver effectif (livré en story 61.47)
+    snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
+        db, app_user_id=current_user.id
+    )
 
+    # AC2 - Construire les features depuis le snapshot — toujours dans l'ordre FEATURES_TO_QUERY
+    # Le resolver garantit la présence de toutes les features B2C.
+    features: list[FeatureEntitlementResponse] = []
+    for fc in FEATURES_TO_QUERY:
+        if fc in snapshot.entitlements:
+            features.append(_to_feature_response(fc, snapshot.entitlements[fc]))
+
+    # AC1 - plan_code et billing_status au top-level
     return {
-        "data": {"features": features},
+        "data": {
+            "plan_code": snapshot.plan_code,
+            "billing_status": snapshot.billing_status,
+            "features": features,
+        },
         "meta": {"request_id": request_id},
     }

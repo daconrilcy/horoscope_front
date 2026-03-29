@@ -42,7 +42,7 @@ def test_unauthenticated_returns_401():
 
 
 def test_no_plan_user_all_features_denied(db_session: Session):
-    """Vérifie qu'un utilisateur sans plan a toutes ses features refusées avec reason=no_plan."""
+    """Vérifie qu'un utilisateur sans plan a toutes ses features refusées avec reason_code=feature_not_in_plan."""
     user = UserModel(
         email="no_plan@example.com",
         password_hash="fake_hash",
@@ -62,8 +62,8 @@ def test_no_plan_user_all_features_denied(db_session: Session):
     features = response.json()["data"]["features"]
     assert len(features) == 4
     for f in features:
-        assert f["final_access"] is False
-        assert f["reason"] == "no_plan"
+        assert f["granted"] is False
+        assert f["reason_code"] == "feature_not_in_plan"
 
     app.dependency_overrides.clear()
 
@@ -334,7 +334,7 @@ def _call_endpoint_for_plan(db_session: Session, user_id: int, plan_code: str):
     with pytest.MonkeyPatch().context() as monkeypatch:
         monkeypatch.setattr(
             BillingService,
-            "get_subscription_status",
+            "get_subscription_status_readonly",
             lambda *args, **kwargs: _subscription(plan_code),
         )
         app.dependency_overrides[require_authenticated_user] = _override_auth(user_id=user_id)
@@ -365,7 +365,7 @@ def test_trial_user_entitlements(db_session: Session):
 
     thematic = next(f for f in features if f["feature_code"] == "thematic_consultation")
     assert thematic["access_mode"] == "quota"
-    assert thematic["final_access"] is True
+    assert thematic["granted"] is True
     assert thematic["usage_states"][0]["quota_limit"] == 1
     assert thematic["usage_states"][0]["period_unit"] == "week"
     assert thematic["usage_states"][0]["reset_mode"] == "calendar"
@@ -379,12 +379,12 @@ def test_trial_user_entitlements(db_session: Session):
     assert ncl["usage_states"][0]["window_end"] is None
 
     chat = next(f for f in features if f["feature_code"] == "astrologer_chat")
-    assert chat["final_access"] is False
-    assert chat["reason"] == "disabled_by_plan"
+    assert chat["granted"] is False
+    assert chat["reason_code"] == "binding_disabled"
 
     short = next(f for f in features if f["feature_code"] == "natal_chart_short")
     assert short["access_mode"] == "unlimited"
-    assert short["final_access"] is True
+    assert short["granted"] is True
 
 
 def test_free_user_entitlements(db_session: Session):
@@ -398,17 +398,17 @@ def test_free_user_entitlements(db_session: Session):
     assert {feature["feature_code"] for feature in features} == FEATURE_CODES
 
     chat = next(f for f in features if f["feature_code"] == "astrologer_chat")
-    assert chat["final_access"] is False
-    assert chat["reason"] == "disabled_by_plan"
+    assert chat["granted"] is False
+    assert chat["reason_code"] == "binding_disabled"
     assert chat["usage_states"] == []
 
     thematic = next(f for f in features if f["feature_code"] == "thematic_consultation")
-    assert thematic["final_access"] is False
-    assert thematic["reason"] == "disabled_by_plan"
+    assert thematic["granted"] is False
+    assert thematic["reason_code"] == "binding_disabled"
 
     short = next(f for f in features if f["feature_code"] == "natal_chart_short")
     assert short["access_mode"] == "unlimited"
-    assert short["final_access"] is True
+    assert short["granted"] is True
 
 
 def test_basic_user_entitlements(db_session: Session):
@@ -423,7 +423,7 @@ def test_basic_user_entitlements(db_session: Session):
 
     chat = next(f for f in features if f["feature_code"] == "astrologer_chat")
     assert chat["access_mode"] == "quota"
-    assert chat["final_access"] is True
+    assert chat["granted"] is True
     assert chat["usage_states"][0]["quota_limit"] == 5
     assert chat["usage_states"][0]["period_unit"] == "day"
     assert chat["usage_states"][0]["reset_mode"] == "calendar"
@@ -448,7 +448,7 @@ def test_premium_user_entitlements(db_session: Session):
 
     chat = next(f for f in features if f["feature_code"] == "astrologer_chat")
     assert chat["access_mode"] == "quota"
-    assert chat["final_access"] is True
+    assert chat["granted"] is True
     assert chat["usage_states"][0]["quota_limit"] == 2000
     assert chat["usage_states"][0]["period_unit"] == "month"
     assert chat["usage_states"][0]["reset_mode"] == "calendar"
@@ -523,7 +523,7 @@ def test_basic_user_chat_usage_states_populated(db_session: Session):
 
 
 def test_no_legacy_fallback_reason_in_response(db_session: Session):
-    """AC: 11 - Vérifier qu'aucun plan connu ne retourne reason=legacy_fallback."""
+    """AC: 11 - Vérifier qu'aucun plan connu ne retourne reason_code=legacy_fallback."""
     seed_canonical_plans(db_session)
     user = _create_user(db_session, "audit@example.com")
 
@@ -532,6 +532,6 @@ def test_no_legacy_fallback_reason_in_response(db_session: Session):
         assert response.status_code == 200
         features = response.json()["data"]["features"]
         for f in features:
-            assert f["reason"] != "legacy_fallback", (
+            assert f["reason_code"] != "legacy_fallback", (
                 f"Plan {plan} feature {f['feature_code']} returned legacy_fallback"
             )
