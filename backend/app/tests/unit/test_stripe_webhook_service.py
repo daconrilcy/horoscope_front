@@ -230,25 +230,27 @@ class TestStripeWebhookService:
         mock_event.data.object.customer = "cus_123"
         mock_event.to_dict.return_value = {"id": "evt_idempotent"}
 
-        with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
-            mock_profile = MagicMock()
-            mock_profile.user_id = 42
-            mock_get_profile.return_value = mock_profile
+        with patch(
+            "app.services.stripe_webhook_service.StripeWebhookIdempotencyService.claim_event",
+            side_effect=["accepted", "duplicate_ignored"],
+        ) as mock_claim:
+            with patch(
+                "app.services.stripe_webhook_service.StripeWebhookIdempotencyService.mark_processed"
+            ) as mock_mark_processed:
+                with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
+                    mock_profile = MagicMock()
+                    mock_profile.user_id = 42
+                    mock_get_profile.return_value = mock_profile
 
-            with patch(UPDATE_EVENT_PAYLOAD_PATH) as mock_update:
-                # Premier passage
-                result1 = StripeWebhookService.handle_event(db, mock_event)
-                assert result1 == "processed"
+                    with patch(UPDATE_EVENT_PAYLOAD_PATH) as mock_update:
+                        result1 = StripeWebhookService.handle_event(db, mock_event)
+                        result2 = StripeWebhookService.handle_event(db, mock_event)
 
-                # Deuxième passage (idempotence)
-                # On simule que update_from_event_payload est indifférent ou gère lui-même la garde
-                # En fait, StripeWebhookService.handle_event appelle systématiquement
-                # update_from_event_payload
-                # C'est update_from_event_payload qui doit être idempotent (AC 9).
-                result2 = StripeWebhookService.handle_event(db, mock_event)
-                assert result2 == "processed"
-
-                assert mock_update.call_count == 2
+        assert result1 == "processed"
+        assert result2 == "duplicate_ignored"
+        assert mock_claim.call_count == 2
+        mock_update.assert_called_once_with(db, 42, mock_event.to_dict())
+        mock_mark_processed.assert_called_once_with(db, "evt_idempotent")
 
     def test_handle_subscription_paused(self, db):
         mock_event = MagicMock()

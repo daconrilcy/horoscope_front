@@ -555,6 +555,8 @@ gemini-2-0-flash-001 (CLI)
 
 ### Completion Notes List
 
+- [2026-03-29] Code review réalisée: correction d'un test unitaire encore aligné sur l'ancien comportement non idempotent et ajout d'un test d'intégration couvrant `failed -> retry accepted`.
+
 ### File List
 
 - `backend/app/infra/db/models/stripe_webhook_event.py` (nouveau)
@@ -565,9 +567,12 @@ gemini-2-0-flash-001 (CLI)
 - `docs/billing-webhook-idempotency.md` (nouveau)
 - `backend/app/tests/unit/test_stripe_webhook_idempotency_service.py` (nouveau)
 - `backend/app/tests/integration/test_stripe_webhook_api.py` (modifié)
+- `backend/app/tests/unit/test_stripe_webhook_service.py` (modifié)
+- `_bmad-output/test-artifacts/review-61-56.md` (nouveau)
 
 ### Change Log
 
 - [2026-03-29] Initialisation de la story et mise à jour du statut.
 - [2026-03-29] Implémentation complète : modèle, migration, service d'idempotence, intégration et tests.
 - [2026-03-29] Correction review : passage aux savepoints (`begin_nested`) pour isoler la logique métier et permettre l'enregistrement du statut `failed` sans rollback global. Fix robustesse types (coercion string) pour les IDs.
+- [2026-03-29] Revue corrective: réalignement des tests de service sur le contrat idempotent et ajout de la preuve d'intégration `failed -> processed` au retry.

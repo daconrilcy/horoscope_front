@@ -9,6 +9,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from app.infra.db.models.stripe_webhook_event import StripeWebhookEventModel
+from app.infra.db.session import SessionLocal
 from app.main import app
 
 client = TestClient(app)
@@ -208,6 +210,74 @@ async def test_webhook_duplicate_ignored():
                     assert response.status_code == 200
                     assert response.json() == {"status": "duplicate_ignored"}
                     assert mock_update.call_count == 1  # Pas d'appel supplémentaire
+
+
+@pytest.mark.asyncio
+async def test_webhook_business_failure_persists_failed_and_retry_is_accepted():
+    event_id = _unique_id("evt_retry")
+    payload = f'{{"id": "{event_id}", "type": "invoice.paid"}}'.encode()
+    secret = "whsec_test"
+    headers = {"stripe-signature": _sign_payload(payload, secret)}
+
+    with patch("app.core.config.settings.stripe_webhook_secret", secret):
+        mock_event = MagicMock()
+        mock_event.id = event_id
+        mock_event.type = "invoice.paid"
+        mock_event.livemode = False
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.id = "in_retry_123"
+        mock_event.data.object.customer = "cus_retry_123"
+        mock_event.to_dict.return_value = {"id": event_id, "type": "invoice.paid"}
+
+        with patch(
+            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            return_value=mock_event,
+        ):
+            with patch(
+                "app.services.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
+            ) as mock_get_profile:
+                mock_profile = MagicMock()
+                mock_profile.user_id = 42
+                mock_get_profile.return_value = mock_profile
+
+                with patch(
+                    "app.services.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload",
+                    side_effect=[RuntimeError("boom"), None],
+                ) as mock_update:
+                    first_response = client.post(
+                        "/v1/billing/stripe-webhook", content=payload, headers=headers
+                    )
+                    assert first_response.status_code == 200
+                    assert first_response.json() == {"status": "failed_internal"}
+
+                    with SessionLocal() as db:
+                        failed_record = (
+                            db.query(StripeWebhookEventModel)
+                            .filter_by(stripe_event_id=event_id)
+                            .first()
+                        )
+                        assert failed_record is not None
+                        assert failed_record.status == "failed"
+                        assert failed_record.processing_attempts == 1
+                        assert failed_record.last_error == "boom"
+
+                    second_response = client.post(
+                        "/v1/billing/stripe-webhook", content=payload, headers=headers
+                    )
+                    assert second_response.status_code == 200
+                    assert second_response.json() == {"status": "processed"}
+                    assert mock_update.call_count == 2
+
+                    with SessionLocal() as db:
+                        processed_record = (
+                            db.query(StripeWebhookEventModel)
+                            .filter_by(stripe_event_id=event_id)
+                            .first()
+                        )
+                        assert processed_record is not None
+                        assert processed_record.status == "processed"
+                        assert processed_record.processing_attempts == 2
+                        assert processed_record.last_error is None
 
 
 @pytest.mark.asyncio
