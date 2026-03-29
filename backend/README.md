@@ -265,6 +265,25 @@ Important:
 
 ## Secrets Rotation
 
+...
+
+## Ops Review Queue Alerting (Story 61.39)
+
+Le script d'émission d'alertes SLA pour la review queue ops est conçu pour être exécuté périodiquement via un scheduler externe (cron).
+
+```powershell
+# Exécution normale (commit DB + envoi webhook/logs)
+python scripts/run_ops_review_queue_alerts.py
+
+# Mode simulation (pas d'écriture DB, pas de webhook)
+python scripts/run_ops_review_queue_alerts.py --dry-run
+```
+
+Configuration via variables d'environnement :
+- `OPS_REVIEW_QUEUE_ALERTS_ENABLED=True`
+- `OPS_REVIEW_QUEUE_ALERT_WEBHOOK_URL` (Optionnel : URL POST JSON)
+- `OPS_REVIEW_QUEUE_ALERT_BASE_URL` (Optionnel : Liens cliquables dans les alertes)
+
 Secrets minimum requis hors environnements locaux/test (staging, production):
 - `JWT_SECRET_KEY`
 - `API_CREDENTIALS_SECRET_KEY`

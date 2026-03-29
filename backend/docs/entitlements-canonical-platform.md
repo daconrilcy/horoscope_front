@@ -597,3 +597,68 @@ Le résumé inclut désormais :
 - `due_soon_count` : Nombre d'items proches de l'échéance.
 - `oldest_pending_age_seconds` : Âge du plus vieux dossier en attente avec `effective_review_status="pending_review"`. Le champ est omis s'il n'existe aucun item `pending_review` dans le sous-ensemble filtré.
 
+---
+
+## Story 61.39 — Alerting ops idempotent sur la review queue SLA
+
+Depuis la story 61.39, les mutations canoniques entrant en zone `due_soon` ou `overdue` génèrent des alertes ops idempotentes et traçables via un mécanisme de webhook ou de log structuré.
+
+### Table `canonical_entitlement_mutation_alert_events`
+
+Cette table est **append-only**. Elle historise chaque alerte émise pour garantir l'idempotence et la traçabilité.
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `id` | int PK | Identifiant interne |
+| `audit_id` | int FK INDEX | Référence vers `canonical_entitlement_mutation_audits.id` |
+| `dedupe_key` | str(255) UNIQUE | Clé métier de déduplication |
+| `alert_kind` | str(32) | `sla_due_soon` ou `sla_overdue` |
+| `delivery_channel` | str(32) | `webhook` ou `log` |
+| `delivery_status` | str(32) | `sent` ou `failed` |
+| `payload` | JSON | Payload complet envoyé à l'alerte |
+| `created_at` | timestamptz INDEX | Date de création de l'alerte |
+| `delivered_at` | timestamptz | Date de livraison effective |
+
+### Règle de déduplication (Idempotence)
+
+L'idempotence est garantie par la contrainte `UNIQUE` sur `dedupe_key`, calculée comme suit :
+`audit:{audit_id}:review:{effective_review_status or 'none'}:sla:{sla_status}`
+
+Cela permet :
+- Une alerte lors du passage en `due_soon`.
+- Une nouvelle alerte lors du passage en `overdue`.
+- Une nouvelle alerte si le statut de revue change (ex: de `pending_review` à `investigating`) et que l'item est toujours en retard.
+- **Aucune duplication** lors de l'exécution répétée sur un état identique.
+
+### Script CLI d'alerte
+
+Le moteur d'alerting est conçu pour être piloté par un scheduler externe (cron).
+
+```powershell
+# Exécution normale
+python backend/scripts/run_ops_review_queue_alerts.py
+
+# Mode simulation (pas d'écriture DB, pas de webhook)
+python backend/scripts/run_ops_review_queue_alerts.py --dry-run
+
+# Limitation du nombre d'alertes par run
+python backend/scripts/run_ops_review_queue_alerts.py --limit 50
+```
+
+**Codes de sortie** :
+- `0` : Succès (toutes les alertes émises ou ignorées par dédup).
+- `1` : Livraison partielle (au moins un échec de webhook).
+- `2` : Erreur inattendue.
+
+### Configuration
+
+L'alerting est piloté par les variables d'environnement suivantes :
+- `OPS_REVIEW_QUEUE_ALERTS_ENABLED` : `True` pour activer.
+- `OPS_REVIEW_QUEUE_ALERT_WEBHOOK_URL` : URL du webhook HTTP JSON (POST). Si absent, l'alerte est émise dans les logs applicatifs.
+- `OPS_REVIEW_QUEUE_ALERT_BASE_URL` : URL de base du frontend pour inclure des liens directs dans le payload.
+- `OPS_REVIEW_QUEUE_ALERT_MAX_CANDIDATES` : Taille max du batch SQL (défaut 100).
+
+### Payload Webhook
+
+Le payload envoyé par POST JSON contient toutes les métadonnées de la mutation, du SLA et de l'acteur, ainsi que des liens vers la work queue si `BASE_URL` est configuré.
+

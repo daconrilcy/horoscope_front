@@ -12,6 +12,9 @@ from app.infra.db.models.billing import (
     UserSubscriptionModel,
 )
 from app.infra.db.models.calibration import CalibrationRawDayModel
+from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+    CanonicalEntitlementMutationAlertEventModel,
+)
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
 )
@@ -113,6 +116,7 @@ __all__ = [
     "CanonicalEntitlementMutationAuditModel",
     "CanonicalEntitlementMutationAuditReviewModel",
     "CanonicalEntitlementMutationAuditReviewEventModel",
+    "CanonicalEntitlementMutationAlertEventModel",
     "ChartResultModel",
     "ChatConversationModel",
     "ChatMessageModel",

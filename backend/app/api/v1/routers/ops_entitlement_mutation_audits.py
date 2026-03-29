@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any, Literal, Union
+from datetime import datetime, timezone
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
@@ -26,6 +26,10 @@ from app.services.canonical_entitlement_mutation_audit_review_service import (
 from app.services.canonical_entitlement_mutation_diff_service import (
     CanonicalEntitlementMutationDiffService,
 )
+from app.services.canonical_entitlement_review_queue_service import (
+    CanonicalEntitlementReviewQueueService,
+    ReviewQueueRow,
+)
 
 router = APIRouter(prefix="/v1/ops/entitlements", tags=["ops-entitlement-audits"])
 
@@ -37,28 +41,8 @@ PersistedReviewStatusLiteral = WritableReviewStatusLiteral
 
 
 # ---------------------------------------------------------------------------
-# Schémas Pydantic
+# Schémas Pydantic (Rest)
 # ---------------------------------------------------------------------------
-
-_STATUS_PRIORITY: dict[str | None, int] = {
-    "pending_review": 0,
-    "investigating": 1,
-    "acknowledged": 2,
-    "expected": 3,
-    "closed": 4,
-    None: 5,
-}
-
-# Durées SLA en secondes. Clé = (risk_level, effective_review_status).
-# Toute combinaison absente est hors SLA (sla_target = None).
-_SLA_TARGETS: dict[tuple[str, str | None], int] = {
-    ("high", "pending_review"): 14_400,  # 4h
-    ("high", "investigating"): 86_400,  # 24h
-    ("medium", "pending_review"): 86_400,  # 24h
-    ("medium", None): 86_400,  # 24h (medium sans revue)
-}
-_SLA_DUE_SOON_RATIO = 0.20  # due_soon si remaining < 20% du SLA
-
 
 class ReviewState(BaseModel):
     status: ReviewStatusLiteral
@@ -299,49 +283,6 @@ def _load_reviews_by_audit_ids(
     return {r.audit_id: r for r in result.scalars().all()}
 
 
-def _compute_sla(
-    risk_level: str,
-    eff_status: str | None,
-    occurred_at: datetime,
-    now_utc: datetime,
-) -> dict[str, Any]:
-    """Retourne les 4 champs SLA pour un item de la review queue."""
-    # Normalisation timezone
-    if occurred_at.tzinfo is None:
-        occurred_at = occurred_at.replace(tzinfo=timezone.utc)
-
-    target = _SLA_TARGETS.get((risk_level, eff_status))
-    if target is None:
-        return {
-            "sla_target_seconds": None,
-            "due_at": None,
-            "sla_status": None,
-            "overdue_seconds": None,
-        }
-
-    age_s = int((now_utc - occurred_at).total_seconds())
-    remaining = target - age_s
-    due_soon_threshold = int(target * _SLA_DUE_SOON_RATIO)
-    due_at = occurred_at + timedelta(seconds=target)  # toujours UTC aware
-
-    if remaining <= 0:
-        sla_status = "overdue"
-        overdue_s = abs(remaining)  # toujours positif ; remaining==0 → overdue(0)
-    elif remaining < due_soon_threshold:
-        sla_status = "due_soon"
-        overdue_s = None
-    else:
-        sla_status = "within_sla"
-        overdue_s = None
-
-    return {
-        "sla_target_seconds": target,
-        "due_at": due_at,
-        "sla_status": sla_status,
-        "overdue_seconds": overdue_s,
-    }
-
-
 def _compute_review_state(
     risk_level: str,
     review_record: CanonicalEntitlementMutationAuditReviewModel | None,
@@ -411,88 +352,25 @@ def _to_item_with_diff(
     return d
 
 
-def _build_filtered_review_queue_rows(
-    db: Session,
-    *,
-    request_id: str,
-    feature_code: str | None,
-    actor_type: str | None,
-    actor_identifier: str | None,
-    date_from: datetime | None,
-    date_to: datetime | None,
-    risk_level_filter: str | None,
-    effective_review_status_filter: str | None,
-    incident_key_filter: str | None,
-) -> Union[list[tuple[Any, Any, Any, Any]], JSONResponse]:
-    """Retourne list[(audit, diff, review_record, eff_status)] ou JSONResponse(400)."""
-    sql_kwargs = dict(
-        feature_code=feature_code,
-        actor_type=actor_type,
-        actor_identifier=actor_identifier,
-        date_from=date_from,
-        date_to=date_to,
+def _row_to_queue_item(row: ReviewQueueRow) -> dict[str, Any]:
+    # Mapping depuis ReviewQueueRow vers le schéma Pydantic ReviewQueueItem
+    base = _to_item_with_diff(
+        row.audit,
+        diff=row.diff,
+        include_payloads=False,
+        review_record=row.review_record,
     )
-    _, sql_count = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
-        db, page=1, page_size=1, **sql_kwargs
-    )
-    if sql_count > _DIFF_FILTER_MAX:
-        return _error_response(
-            status_code=400,
-            request_id=request_id,
-            code="diff_filter_result_set_too_large",
-            message=f"Too many results ({sql_count} > {_DIFF_FILTER_MAX}). Add filters to narrow.",
-            details={"sql_count": sql_count, "max_allowed": _DIFF_FILTER_MAX},
-        )
-    all_items, _ = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
-        db, page=1, page_size=_DIFF_FILTER_MAX, **sql_kwargs
-    )
-    reviews_by_id = _load_reviews_by_audit_ids(db, [a.id for a in all_items])
-    rows: list[tuple[Any, Any, Any, Any]] = []
-    for item in all_items:
-        diff = CanonicalEntitlementMutationDiffService.compute_diff(
-            item.before_payload or {}, item.after_payload or {}
-        )
-        if risk_level_filter and diff.risk_level != risk_level_filter:
-            continue
-        review_record = reviews_by_id.get(item.id)
-        review_state = _compute_review_state(diff.risk_level, review_record)
-        eff_status = review_state.status if review_state else None
-        if (
-            effective_review_status_filter is not None
-            and eff_status != effective_review_status_filter
-        ):
-            continue
-        if incident_key_filter is not None:
-            if review_record is None or review_record.incident_key != incident_key_filter:
-                continue
-        rows.append((item, diff, review_record, eff_status))
-    return rows
-
-
-def _to_queue_item(
-    audit: Any,
-    *,
-    diff: Any,
-    review_record: CanonicalEntitlementMutationAuditReviewModel | None,
-    eff_status: str | None,
-    now_utc: datetime,
-) -> dict[str, Any]:
-    # include_payloads=False : la queue est légère, payloads via GET /mutation-audits/{id}
-    base = _to_item_with_diff(audit, diff=diff, include_payloads=False, review_record=review_record)
-    occurred_at = audit.occurred_at
-    if occurred_at.tzinfo is None:
-        occurred_at = occurred_at.replace(tzinfo=timezone.utc)
-    age_seconds = int((now_utc - occurred_at).total_seconds())
-    sla_data = _compute_sla(diff.risk_level, eff_status, occurred_at, now_utc)
-
     return {
         **base,
-        "effective_review_status": eff_status,
-        "age_seconds": age_seconds,
-        "age_hours": round(age_seconds / 3600, 2),
-        "is_pending": eff_status == "pending_review",
-        "is_closed": eff_status == "closed",
-        **sla_data,
+        "effective_review_status": row.effective_review_status,
+        "age_seconds": row.age_seconds,
+        "age_hours": row.age_hours,
+        "is_pending": row.effective_review_status == "pending_review",
+        "is_closed": row.effective_review_status == "closed",
+        "sla_target_seconds": row.sla_target_seconds,
+        "due_at": row.due_at,
+        "sla_status": row.sla_status,
+        "overdue_seconds": row.overdue_seconds,
     }
 
 
@@ -713,75 +591,58 @@ def get_review_queue_summary(
     ) is not None:
         return err
 
-    rows = _build_filtered_review_queue_rows(
+    # Check SQL count before building rows (to avoid large diff processing)
+    _, sql_count = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
         db,
-        request_id=request_id,
+        page=1,
+        page_size=1,
         feature_code=feature_code,
         actor_type=actor_type,
         actor_identifier=actor_identifier,
         date_from=date_from,
         date_to=date_to,
-        risk_level_filter=risk_level_filter,
-        effective_review_status_filter=effective_review_status_filter,
-        incident_key_filter=incident_key_filter,
     )
-    if isinstance(rows, JSONResponse):
-        return rows  # 400 _DIFF_FILTER_MAX dépassé
+    if sql_count > _DIFF_FILTER_MAX:
+        return _error_response(
+            status_code=400,
+            request_id=request_id,
+            code="diff_filter_result_set_too_large",
+            message=f"Too many results ({sql_count} > {_DIFF_FILTER_MAX}). Add filters to narrow.",
+            details={"sql_count": sql_count, "max_allowed": _DIFF_FILTER_MAX},
+        )
 
     now_utc = datetime.now(timezone.utc)
-    items = [
-        _to_queue_item(
-            audit,
-            diff=diff,
-            review_record=review_record,
-            eff_status=eff_status,
-            now_utc=now_utc,
-        )
-        for audit, diff, review_record, eff_status in rows
-    ]
-    if sla_status_filter is not None:
-        items = [item for item in items if item.get("sla_status") == sla_status_filter]
+    rows = CanonicalEntitlementReviewQueueService.build_review_queue_rows(
+        db,
+        now_utc=now_utc,
+        risk_level=risk_level_filter,
+        effective_review_status=effective_review_status_filter,
+        feature_code=feature_code,
+        actor_type=actor_type,
+        actor_identifier=actor_identifier,
+        incident_key=incident_key_filter,
+        date_from=date_from,
+        date_to=date_to,
+        sla_status=sla_status_filter,
+        max_sql_rows=_DIFF_FILTER_MAX,
+    )
 
-    counts: dict[str, int] = {}
-    high_unreviewed = 0
-    overdue_count = 0
-    due_soon_count = 0
-    oldest_pending_age: int | None = None
-
-    for item in items:
-        eff_status = item.get("effective_review_status")
-        key = eff_status if eff_status is not None else "none"
-        counts[key] = counts.get(key, 0) + 1
-        if item["risk_level"] == "high" and eff_status == "pending_review":
-            high_unreviewed += 1
-
-        if item.get("sla_status") == "overdue":
-            overdue_count += 1
-        elif item.get("sla_status") == "due_soon":
-            due_soon_count += 1
-
-        if eff_status == "pending_review":
-            age = item["age_seconds"]
-            if oldest_pending_age is None or age > oldest_pending_age:
-                oldest_pending_age = age
-
-    res_data = {
-        "pending_review_count": counts.get("pending_review", 0),
-        "investigating_count": counts.get("investigating", 0),
-        "acknowledged_count": counts.get("acknowledged", 0),
-        "closed_count": counts.get("closed", 0),
-        "expected_count": counts.get("expected", 0),
-        "no_review_count": counts.get("none", 0),
-        "high_unreviewed_count": high_unreviewed,
-        "total_count": len(items),
-        "overdue_count": overdue_count,
-        "due_soon_count": due_soon_count,
-    }
-    if oldest_pending_age is not None:
-        res_data["oldest_pending_age_seconds"] = oldest_pending_age
+    summary = CanonicalEntitlementReviewQueueService.summarize_review_queue_rows(rows)
 
     return {
-        "data": res_data,
+        "data": {
+            "pending_review_count": summary.pending_review_count,
+            "investigating_count": summary.investigating_count,
+            "acknowledged_count": summary.acknowledged_count,
+            "closed_count": summary.closed_count,
+            "expected_count": summary.expected_count,
+            "no_review_count": summary.no_review_count,
+            "high_unreviewed_count": summary.high_unreviewed_count,
+            "total_count": summary.total_count,
+            "overdue_count": summary.overdue_count,
+            "due_soon_count": summary.due_soon_count,
+            "oldest_pending_age_seconds": summary.oldest_pending_age_seconds,
+        },
         "meta": {"request_id": request_id},
     }
 
@@ -828,41 +689,49 @@ def get_review_queue(
     ) is not None:
         return err
 
-    rows = _build_filtered_review_queue_rows(
+    # Check SQL count
+    _, sql_count = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
         db,
-        request_id=request_id,
+        page=1,
+        page_size=1,
         feature_code=feature_code,
         actor_type=actor_type,
         actor_identifier=actor_identifier,
         date_from=date_from,
         date_to=date_to,
-        risk_level_filter=risk_level_filter,
-        effective_review_status_filter=effective_review_status_filter,
-        incident_key_filter=incident_key_filter,
     )
-    if isinstance(rows, JSONResponse):
-        return rows  # 400 _DIFF_FILTER_MAX dépassé
-
-    rows.sort(key=lambda x: (_STATUS_PRIORITY.get(x[3], 5), x[0].occurred_at))
-    now_utc = datetime.now(timezone.utc)
-    items = [
-        _to_queue_item(
-            item,
-            diff=diff,
-            review_record=review_record,
-            eff_status=eff_status,
-            now_utc=now_utc,
+    if sql_count > _DIFF_FILTER_MAX:
+        return _error_response(
+            status_code=400,
+            request_id=request_id,
+            code="diff_filter_result_set_too_large",
+            message=f"Too many results ({sql_count} > {_DIFF_FILTER_MAX}). Add filters to narrow.",
+            details={"sql_count": sql_count, "max_allowed": _DIFF_FILTER_MAX},
         )
-        for item, diff, review_record, eff_status in rows
-    ]
-    if sla_status_filter is not None:
-        items = [item for item in items if item.get("sla_status") == sla_status_filter]
 
-    total_count = len(items)
+    now_utc = datetime.now(timezone.utc)
+    rows = CanonicalEntitlementReviewQueueService.build_review_queue_rows(
+        db,
+        now_utc=now_utc,
+        risk_level=risk_level_filter,
+        effective_review_status=effective_review_status_filter,
+        feature_code=feature_code,
+        actor_type=actor_type,
+        actor_identifier=actor_identifier,
+        incident_key=incident_key_filter,
+        date_from=date_from,
+        date_to=date_to,
+        sla_status=sla_status_filter,
+        max_sql_rows=_DIFF_FILTER_MAX,
+    )
+
+    total_count = len(rows)
     start = (page - 1) * page_size
+    page_rows = rows[start : start + page_size]
+
     return {
         "data": {
-            "items": items[start : start + page_size],
+            "items": [_row_to_queue_item(row) for row in page_rows],
             "total_count": total_count,
             "page": page,
             "page_size": page_size,

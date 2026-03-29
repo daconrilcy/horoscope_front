@@ -291,6 +291,20 @@ class Settings:
         self.llm_narrator_enabled = self._parse_bool_env("LLM_NARRATOR_ENABLED", default=False)
         self.daily_engine_mode = self._parse_daily_engine_mode(os.getenv("DAILY_ENGINE_MODE"))
 
+        # Review Queue Alerting (Story 61.39)
+        self.ops_review_queue_alerts_enabled = self._parse_bool_env(
+            "OPS_REVIEW_QUEUE_ALERTS_ENABLED", default=False
+        )
+        self.ops_review_queue_alert_webhook_url = os.getenv(
+            "OPS_REVIEW_QUEUE_ALERT_WEBHOOK_URL"
+        )
+        self.ops_review_queue_alert_base_url = os.getenv(
+            "OPS_REVIEW_QUEUE_ALERT_BASE_URL"
+        )
+        self.ops_review_queue_alert_max_candidates = self._parse_int_env(
+            "OPS_REVIEW_QUEUE_ALERT_MAX_CANDIDATES", default=100, minimum=1
+        )
+
         # Feature Scope Validation Mode (Story 61.29)
         self.feature_scope_validation_mode = self._parse_feature_scope_validation_mode()
 
