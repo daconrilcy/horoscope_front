@@ -40,6 +40,9 @@ class StripeCheckoutService:
         plan: str,
         success_url: str,
         cancel_url: str,
+        billing_address_collection: str = "auto",
+        automatic_tax_enabled: bool = False,
+        tax_id_collection_enabled: bool = False,
     ) -> str:
         client = get_stripe_client()
         if client is None:
@@ -65,6 +68,7 @@ class StripeCheckoutService:
             "client_reference_id": str(user_id),
             "metadata": {"app_user_id": str(user_id)},
             "subscription_data": {"metadata": {"app_user_id": str(user_id), "plan": plan}},
+            "billing_address_collection": billing_address_collection,
         }
 
         if profile.stripe_customer_id:
@@ -76,6 +80,14 @@ class StripeCheckoutService:
                 code="invalid_checkout_request",
                 message="Cannot create checkout session without customer ID or email",
             )
+
+        if automatic_tax_enabled:
+            params["automatic_tax"] = {"enabled": True}
+
+        if tax_id_collection_enabled:
+            params["tax_id_collection"] = {"enabled": True}
+            if profile.stripe_customer_id:
+                params["customer_update"] = {"name": "auto", "address": "auto"}
 
         try:
             session = client.checkout.sessions.create(params=params)

@@ -224,3 +224,53 @@ def test_settings_invalid_canonical_db_validation_mode_warns_and_falls_back(
     assert settings.canonical_db_validation_mode == "strict"
     assert "canonical_db_startup_validation_invalid_mode" in caplog.text
     assert "broken-mode" in caplog.text
+
+
+def test_settings_stripe_checkout_billing_address_collection_defaults_to_auto(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///./horoscope.db")
+    monkeypatch.setenv("REFERENCE_SEED_ADMIN_TOKEN", "seed-token")
+    monkeypatch.setenv("API_CREDENTIALS_SECRET_KEY", "api-current")
+    monkeypatch.setenv("JWT_SECRET_KEY", "jwt-current")
+    monkeypatch.setenv("LLM_ANONYMIZATION_SALT", "llm-salt")
+    monkeypatch.delenv("STRIPE_CHECKOUT_BILLING_ADDRESS_COLLECTION", raising=False)
+
+    settings = Settings()
+
+    assert settings.stripe_checkout_billing_address_collection == "auto"
+
+
+def test_settings_stripe_checkout_billing_address_collection_accepts_required(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///./horoscope.db")
+    monkeypatch.setenv("REFERENCE_SEED_ADMIN_TOKEN", "seed-token")
+    monkeypatch.setenv("API_CREDENTIALS_SECRET_KEY", "api-current")
+    monkeypatch.setenv("JWT_SECRET_KEY", "jwt-current")
+    monkeypatch.setenv("LLM_ANONYMIZATION_SALT", "llm-salt")
+    monkeypatch.setenv("STRIPE_CHECKOUT_BILLING_ADDRESS_COLLECTION", "required")
+
+    settings = Settings()
+
+    assert settings.stripe_checkout_billing_address_collection == "required"
+
+
+def test_settings_stripe_checkout_billing_address_collection_rejects_invalid_value(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///./horoscope.db")
+    monkeypatch.setenv("REFERENCE_SEED_ADMIN_TOKEN", "seed-token")
+    monkeypatch.setenv("API_CREDENTIALS_SECRET_KEY", "api-current")
+    monkeypatch.setenv("JWT_SECRET_KEY", "jwt-current")
+    monkeypatch.setenv("LLM_ANONYMIZATION_SALT", "llm-salt")
+    monkeypatch.setenv("STRIPE_CHECKOUT_BILLING_ADDRESS_COLLECTION", "postal_code_only")
+
+    with pytest.raises(
+        RuntimeError,
+        match="STRIPE_CHECKOUT_BILLING_ADDRESS_COLLECTION must be 'auto' or 'required'",
+    ):
+        Settings()

@@ -59,6 +59,15 @@ class DailyEngineMode(str, Enum):
 
 class Settings:
     @staticmethod
+    def _parse_stripe_checkout_billing_address_collection() -> str:
+        raw_value = os.getenv("STRIPE_CHECKOUT_BILLING_ADDRESS_COLLECTION", "auto").strip().lower()
+        if raw_value in {"auto", "required"}:
+            return raw_value
+        raise RuntimeError(
+            "STRIPE_CHECKOUT_BILLING_ADDRESS_COLLECTION must be 'auto' or 'required'"
+        )
+
+    @staticmethod
     def _parse_canonical_db_validation_mode() -> str:
         raw_mode = os.getenv("CANONICAL_DB_VALIDATION_MODE", "strict").strip().lower()
         if raw_mode in {"strict", "warn", "off"}:
@@ -333,6 +342,15 @@ class Settings:
         self.stripe_portal_configuration_id = os.getenv(
             "STRIPE_PORTAL_CONFIGURATION_ID", ""
         ).strip() or None
+
+        # Story 61.54 - MVP Tax Configuration
+        self.stripe_tax_enabled = os.getenv("STRIPE_TAX_ENABLED", "false").strip().lower() == "true"
+        self.stripe_tax_id_collection_enabled = (
+            os.getenv("STRIPE_TAX_ID_COLLECTION_ENABLED", "false").strip().lower() == "true"
+        )
+        self.stripe_checkout_billing_address_collection = (
+            self._parse_stripe_checkout_billing_address_collection()
+        )
 
         # LLM Engine Configuration
         self.openai_model_default = os.getenv("OPENAI_MODEL_DEFAULT", "gpt-4o-mini").strip()

@@ -153,3 +153,132 @@ def test_create_checkout_session_stripe_error(
             db, user_id=1, user_email="t@e.c", plan="basic", success_url="h", cancel_url="c"
         )
     assert excinfo.value.code == "stripe_api_error"
+
+
+def test_create_checkout_session_with_automatic_tax(
+    db, mock_stripe_client, mock_profile_service, mock_price_map
+):
+    profile = StripeBillingProfileModel(user_id=1, stripe_customer_id="cus_1")
+    mock_profile_service.get_or_create_profile.return_value = profile
+
+    StripeCheckoutService.create_checkout_session(
+        db,
+        user_id=1,
+        user_email="t@e.c",
+        plan="basic",
+        success_url="h",
+        cancel_url="c",
+        automatic_tax_enabled=True,
+    )
+
+    args, kwargs = mock_stripe_client.checkout.sessions.create.call_args
+    params = kwargs["params"]
+    assert params["automatic_tax"]["enabled"] is True
+
+
+def test_create_checkout_session_without_automatic_tax(
+    db, mock_stripe_client, mock_profile_service, mock_price_map
+):
+    profile = StripeBillingProfileModel(user_id=1, stripe_customer_id="cus_1")
+    mock_profile_service.get_or_create_profile.return_value = profile
+
+    StripeCheckoutService.create_checkout_session(
+        db,
+        user_id=1,
+        user_email="t@e.c",
+        plan="basic",
+        success_url="h",
+        cancel_url="c",
+        automatic_tax_enabled=False,
+    )
+
+    args, kwargs = mock_stripe_client.checkout.sessions.create.call_args
+    params = kwargs["params"]
+    assert "automatic_tax" not in params
+
+
+def test_create_checkout_session_billing_address_collection_present(
+    db, mock_stripe_client, mock_profile_service, mock_price_map
+):
+    profile = StripeBillingProfileModel(user_id=1, stripe_customer_id="cus_1")
+    mock_profile_service.get_or_create_profile.return_value = profile
+
+    StripeCheckoutService.create_checkout_session(
+        db,
+        user_id=1,
+        user_email="t@e.c",
+        plan="basic",
+        success_url="h",
+        cancel_url="c",
+        billing_address_collection="required",
+    )
+
+    args, kwargs = mock_stripe_client.checkout.sessions.create.call_args
+    params = kwargs["params"]
+    assert params["billing_address_collection"] == "required"
+
+
+def test_create_checkout_session_tax_id_collection_with_existing_customer(
+    db, mock_stripe_client, mock_profile_service, mock_price_map
+):
+    profile = StripeBillingProfileModel(user_id=1, stripe_customer_id="cus_1")
+    mock_profile_service.get_or_create_profile.return_value = profile
+
+    StripeCheckoutService.create_checkout_session(
+        db,
+        user_id=1,
+        user_email="t@e.c",
+        plan="basic",
+        success_url="h",
+        cancel_url="c",
+        tax_id_collection_enabled=True,
+    )
+
+    args, kwargs = mock_stripe_client.checkout.sessions.create.call_args
+    params = kwargs["params"]
+    assert params["tax_id_collection"]["enabled"] is True
+    assert params["customer_update"] == {"name": "auto", "address": "auto"}
+
+
+def test_create_checkout_session_tax_id_collection_new_customer(
+    db, mock_stripe_client, mock_profile_service, mock_price_map
+):
+    profile = StripeBillingProfileModel(user_id=1, stripe_customer_id=None)
+    mock_profile_service.get_or_create_profile.return_value = profile
+
+    StripeCheckoutService.create_checkout_session(
+        db,
+        user_id=1,
+        user_email="t@e.c",
+        plan="basic",
+        success_url="h",
+        cancel_url="c",
+        tax_id_collection_enabled=True,
+    )
+
+    args, kwargs = mock_stripe_client.checkout.sessions.create.call_args
+    params = kwargs["params"]
+    assert params["tax_id_collection"]["enabled"] is True
+    assert "customer_update" not in params
+
+
+def test_create_checkout_session_no_tax_id_collection(
+    db, mock_stripe_client, mock_profile_service, mock_price_map
+):
+    profile = StripeBillingProfileModel(user_id=1, stripe_customer_id="cus_1")
+    mock_profile_service.get_or_create_profile.return_value = profile
+
+    StripeCheckoutService.create_checkout_session(
+        db,
+        user_id=1,
+        user_email="t@e.c",
+        plan="basic",
+        success_url="h",
+        cancel_url="c",
+        tax_id_collection_enabled=False,
+    )
+
+    args, kwargs = mock_stripe_client.checkout.sessions.create.call_args
+    params = kwargs["params"]
+    assert "tax_id_collection" not in params
+    assert "customer_update" not in params

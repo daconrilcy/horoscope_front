@@ -919,6 +919,9 @@ def create_stripe_checkout_session(
             plan=parsed.plan,
             success_url=settings.stripe_checkout_success_url,
             cancel_url=settings.stripe_checkout_cancel_url,
+            billing_address_collection=settings.stripe_checkout_billing_address_collection,
+            automatic_tax_enabled=settings.stripe_tax_enabled,
+            tax_id_collection_enabled=settings.stripe_tax_id_collection_enabled,
         )
 
         _record_audit_event(
@@ -930,7 +933,11 @@ def create_stripe_checkout_session(
             target_type="user",
             target_id=str(current_user.id),
             status="success",
-            details={"plan": parsed.plan},
+            details={
+                "plan": parsed.plan,
+                "automatic_tax_enabled": settings.stripe_tax_enabled,
+                "tax_id_collection_enabled": settings.stripe_tax_id_collection_enabled,
+            },
         )
         db.commit()
         return {

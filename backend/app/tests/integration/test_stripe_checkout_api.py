@@ -124,3 +124,114 @@ def test_stripe_checkout_plan_not_configured(clean_db):
             )
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "plan_price_not_configured"
+
+
+def test_stripe_checkout_with_tax_enabled(clean_db):
+    token = _register_user_with_role("user@example.com", "user")
+
+    mock_session = MagicMock()
+    mock_session.url = "https://checkout.stripe.com/pay/cs_test_tax"
+    mock_client = MagicMock()
+    mock_client.checkout.sessions.create.return_value = mock_session
+
+    with patch("app.api.v1.routers.billing.settings") as mock_settings:
+        mock_settings.stripe_tax_enabled = True
+        mock_settings.stripe_tax_id_collection_enabled = True
+        mock_settings.stripe_checkout_billing_address_collection = "required"
+        mock_settings.stripe_checkout_success_url = "http://s"
+        mock_settings.stripe_checkout_cancel_url = "http://c"
+
+        with patch(
+            "app.services.stripe_checkout_service.get_stripe_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
+                {"price_123": "basic"},
+            ):
+                response = client.post(
+                    "/v1/billing/stripe-checkout-session",
+                    headers={"Authorization": f"Bearer {token}"},
+                    json={"plan": "basic"},
+                )
+
+    assert response.status_code == 200
+    call_kwargs = mock_client.checkout.sessions.create.call_args
+    params = call_kwargs[1]["params"] if call_kwargs[1] else call_kwargs[0][0]
+    assert params["automatic_tax"]["enabled"] is True
+    assert params["tax_id_collection"]["enabled"] is True
+    assert params["billing_address_collection"] == "required"
+
+
+def test_stripe_checkout_tax_disabled_no_regression(clean_db):
+    token = _register_user_with_role("user@example.com", "user")
+
+    mock_session = MagicMock()
+    mock_session.url = "https://checkout.stripe.com/pay/cs_test_notax"
+    mock_client = MagicMock()
+    mock_client.checkout.sessions.create.return_value = mock_session
+
+    with patch("app.api.v1.routers.billing.settings") as mock_settings:
+        mock_settings.stripe_tax_enabled = False
+        mock_settings.stripe_tax_id_collection_enabled = False
+        mock_settings.stripe_checkout_billing_address_collection = "auto"
+        mock_settings.stripe_checkout_success_url = "http://s"
+        mock_settings.stripe_checkout_cancel_url = "http://c"
+
+        with patch(
+            "app.services.stripe_checkout_service.get_stripe_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
+                {"price_123": "basic"},
+            ):
+                response = client.post(
+                    "/v1/billing/stripe-checkout-session",
+                    headers={"Authorization": f"Bearer {token}"},
+                    json={"plan": "basic"},
+                )
+
+    assert response.status_code == 200
+    call_kwargs = mock_client.checkout.sessions.create.call_args
+    params = call_kwargs[1]["params"] if call_kwargs[1] else call_kwargs[0][0]
+    assert "automatic_tax" not in params
+    assert "tax_id_collection" not in params
+
+
+def test_stripe_checkout_audit_enriched_with_tax_flags(clean_db):
+    token = _register_user_with_role("user@example.com", "user")
+
+    mock_session = MagicMock()
+    mock_session.url = "https://checkout.stripe.com/pay/cs_test_audit"
+    mock_client = MagicMock()
+    mock_client.checkout.sessions.create.return_value = mock_session
+
+    with patch("app.api.v1.routers.billing.settings") as mock_settings:
+        mock_settings.stripe_tax_enabled = True
+        mock_settings.stripe_tax_id_collection_enabled = False
+        mock_settings.stripe_checkout_billing_address_collection = "auto"
+        mock_settings.stripe_checkout_success_url = "http://s"
+        mock_settings.stripe_checkout_cancel_url = "http://c"
+
+        with patch(
+            "app.services.stripe_checkout_service.get_stripe_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
+                {"price_123": "basic"},
+            ):
+                with patch("app.api.v1.routers.billing._record_audit_event") as mock_audit:
+                    client.post(
+                        "/v1/billing/stripe-checkout-session",
+                        headers={"Authorization": f"Bearer {token}"},
+                        json={"plan": "basic"},
+                    )
+
+    # Verify audit details
+    # Last call to _record_audit_event in the try block
+    success_call = [
+        call for call in mock_audit.call_args_list if call.kwargs["status"] == "success"
+    ][0]
+    details = success_call.kwargs["details"]
+    assert details["automatic_tax_enabled"] is True
+    assert details["tax_id_collection_enabled"] is False
+
