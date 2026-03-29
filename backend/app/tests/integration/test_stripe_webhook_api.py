@@ -108,3 +108,75 @@ async def test_webhook_app_error_returns_200():
 
                 assert response.status_code == 200
                 assert response.json() == {"status": "failed_internal"}
+
+
+@pytest.mark.asyncio
+async def test_webhook_subscription_trial_will_end():
+    payload = b'{"id": "evt_trial", "type": "customer.subscription.trial_will_end"}'
+    secret = "whsec_test"
+    headers = {"stripe-signature": _sign_payload(payload, secret)}
+
+    with patch("app.core.config.settings.stripe_webhook_secret", secret):
+        mock_event = MagicMock()
+        mock_event.id = "evt_trial"
+        mock_event.type = "customer.subscription.trial_will_end"
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.customer = "cus_123"
+
+        with patch(
+            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            return_value=mock_event,
+        ):
+            with patch(
+                "app.services.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
+            ) as mock_get_profile:
+                mock_profile = MagicMock()
+                mock_profile.user_id = 42
+                mock_get_profile.return_value = mock_profile
+
+                with patch(
+                    "app.services.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload"
+                ) as mock_update:
+                    response = client.post(
+                        "/v1/billing/stripe-webhook", content=payload, headers=headers
+                    )
+
+                    assert response.status_code == 200
+                    assert response.json() == {"status": "processed"}
+                    mock_update.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_webhook_subscription_paused():
+    payload = b'{"id": "evt_paused", "type": "customer.subscription.paused"}'
+    secret = "whsec_test"
+    headers = {"stripe-signature": _sign_payload(payload, secret)}
+
+    with patch("app.core.config.settings.stripe_webhook_secret", secret):
+        mock_event = MagicMock()
+        mock_event.id = "evt_paused"
+        mock_event.type = "customer.subscription.paused"
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.customer = "cus_123"
+
+        with patch(
+            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            return_value=mock_event,
+        ):
+            with patch(
+                "app.services.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
+            ) as mock_get_profile:
+                mock_profile = MagicMock()
+                mock_profile.user_id = 42
+                mock_get_profile.return_value = mock_profile
+
+                with patch(
+                    "app.services.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload"
+                ) as mock_update:
+                    response = client.post(
+                        "/v1/billing/stripe-webhook", content=payload, headers=headers
+                    )
+
+                    assert response.status_code == 200
+                    assert response.json() == {"status": "processed"}
+                    mock_update.assert_called_once()

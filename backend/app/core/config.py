@@ -90,6 +90,26 @@ class Settings:
         return "strict"
 
     @staticmethod
+    def _parse_stripe_payment_method_collection() -> str:
+        value = os.getenv("STRIPE_PAYMENT_METHOD_COLLECTION", "always").strip().lower()
+        if value in {"always", "if_required"}:
+            return value
+        raise ValueError(
+            f"STRIPE_PAYMENT_METHOD_COLLECTION must be 'always' or 'if_required', got '{value}'"
+        )
+
+    @staticmethod
+    def _parse_stripe_trial_missing_payment_method_behavior() -> str | None:
+        value = os.getenv("STRIPE_TRIAL_MISSING_PAYMENT_METHOD_BEHAVIOR", "").strip().lower()
+        if not value:
+            return None
+        if value in {"pause", "cancel"}:
+            return value
+        raise ValueError(
+            f"STRIPE_TRIAL_MISSING_PAYMENT_METHOD_BEHAVIOR must be 'pause' or 'cancel', got '{value}'"
+        )
+
+    @staticmethod
     def _normalize_database_url(database_url: str) -> str:
         # Prevent cwd-dependent sqlite DB selection.
         # Example: root/horoscope.db vs backend/horoscope.db.
@@ -350,6 +370,18 @@ class Settings:
         )
         self.stripe_checkout_billing_address_collection = (
             self._parse_stripe_checkout_billing_address_collection()
+        )
+
+        # Story 61.55 - Trial Configuration
+        self.stripe_trial_enabled = (
+            os.getenv("STRIPE_TRIAL_ENABLED", "false").strip().lower() == "true"
+        )
+        self.stripe_trial_period_days = self._parse_int_env(
+            "STRIPE_TRIAL_PERIOD_DAYS", default=0, minimum=0
+        )
+        self.stripe_payment_method_collection = self._parse_stripe_payment_method_collection()
+        self.stripe_trial_missing_payment_method_behavior = (
+            self._parse_stripe_trial_missing_payment_method_behavior()
         )
 
         # LLM Engine Configuration

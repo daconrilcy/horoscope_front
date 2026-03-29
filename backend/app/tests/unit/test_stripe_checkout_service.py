@@ -282,3 +282,94 @@ def test_create_checkout_session_no_tax_id_collection(
     params = kwargs["params"]
     assert "tax_id_collection" not in params
     assert "customer_update" not in params
+
+
+def test_create_checkout_session_with_trial(
+    db, mock_stripe_client, mock_profile_service, mock_price_map
+):
+    profile = StripeBillingProfileModel(user_id=1, stripe_customer_id="cus_1")
+    mock_profile_service.get_or_create_profile.return_value = profile
+
+    StripeCheckoutService.create_checkout_session(
+        db,
+        user_id=1,
+        user_email="t@e.c",
+        plan="basic",
+        success_url="h",
+        cancel_url="c",
+        trial_enabled=True,
+        trial_period_days=14,
+    )
+
+    args, kwargs = mock_stripe_client.checkout.sessions.create.call_args
+    params = kwargs["params"]
+    assert params["subscription_data"]["trial_period_days"] == 14
+    assert "is_trial=true" in params["success_url"]
+
+
+def test_create_checkout_session_without_trial(
+    db, mock_stripe_client, mock_profile_service, mock_price_map
+):
+    profile = StripeBillingProfileModel(user_id=1, stripe_customer_id="cus_1")
+    mock_profile_service.get_or_create_profile.return_value = profile
+
+    StripeCheckoutService.create_checkout_session(
+        db,
+        user_id=1,
+        user_email="t@e.c",
+        plan="basic",
+        success_url="h",
+        cancel_url="c",
+        trial_enabled=False,
+    )
+
+    args, kwargs = mock_stripe_client.checkout.sessions.create.call_args
+    params = kwargs["params"]
+    assert "trial_period_days" not in params.get("subscription_data", {})
+
+
+def test_create_checkout_session_payment_method_collection_if_required(
+    db, mock_stripe_client, mock_profile_service, mock_price_map
+):
+    profile = StripeBillingProfileModel(user_id=1, stripe_customer_id="cus_1")
+    mock_profile_service.get_or_create_profile.return_value = profile
+
+    StripeCheckoutService.create_checkout_session(
+        db,
+        user_id=1,
+        user_email="t@e.c",
+        plan="basic",
+        success_url="h",
+        cancel_url="c",
+        payment_method_collection="if_required",
+    )
+
+    args, kwargs = mock_stripe_client.checkout.sessions.create.call_args
+    params = kwargs["params"]
+    assert params["payment_method_collection"] == "if_required"
+
+
+def test_create_checkout_session_missing_payment_method_behavior(
+    db, mock_stripe_client, mock_profile_service, mock_price_map
+):
+    profile = StripeBillingProfileModel(user_id=1, stripe_customer_id="cus_1")
+    mock_profile_service.get_or_create_profile.return_value = profile
+
+    StripeCheckoutService.create_checkout_session(
+        db,
+        user_id=1,
+        user_email="t@e.c",
+        plan="basic",
+        success_url="h",
+        cancel_url="c",
+        trial_enabled=True,
+        payment_method_collection="if_required",
+        missing_payment_method_behavior="cancel",
+    )
+
+    args, kwargs = mock_stripe_client.checkout.sessions.create.call_args
+    params = kwargs["params"]
+    assert (
+        params["subscription_data"]["trial_settings"]["end_behavior"]["missing_payment_method"]
+        == "cancel"
+    )

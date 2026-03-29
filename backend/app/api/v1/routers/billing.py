@@ -922,6 +922,10 @@ def create_stripe_checkout_session(
             billing_address_collection=settings.stripe_checkout_billing_address_collection,
             automatic_tax_enabled=settings.stripe_tax_enabled,
             tax_id_collection_enabled=settings.stripe_tax_id_collection_enabled,
+            trial_enabled=settings.stripe_trial_enabled,
+            trial_period_days=settings.stripe_trial_period_days,
+            payment_method_collection=settings.stripe_payment_method_collection,
+            missing_payment_method_behavior=settings.stripe_trial_missing_payment_method_behavior,
         )
 
         _record_audit_event(
@@ -937,6 +941,10 @@ def create_stripe_checkout_session(
                 "plan": parsed.plan,
                 "automatic_tax_enabled": settings.stripe_tax_enabled,
                 "tax_id_collection_enabled": settings.stripe_tax_id_collection_enabled,
+                "trial_enabled": settings.stripe_trial_enabled,
+                "trial_period_days": settings.stripe_trial_period_days,
+                "payment_method_collection": settings.stripe_payment_method_collection,
+                "missing_payment_method_behavior": settings.stripe_trial_missing_payment_method_behavior,
             },
         )
         db.commit()

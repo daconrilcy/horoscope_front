@@ -140,6 +140,11 @@ def test_stripe_checkout_with_tax_enabled(clean_db):
         mock_settings.stripe_checkout_billing_address_collection = "required"
         mock_settings.stripe_checkout_success_url = "http://s"
         mock_settings.stripe_checkout_cancel_url = "http://c"
+        # Story 61.55 defaults to prevent TypeError
+        mock_settings.stripe_trial_enabled = False
+        mock_settings.stripe_trial_period_days = 0
+        mock_settings.stripe_payment_method_collection = "always"
+        mock_settings.stripe_trial_missing_payment_method_behavior = None
 
         with patch(
             "app.services.stripe_checkout_service.get_stripe_client", return_value=mock_client
@@ -176,6 +181,11 @@ def test_stripe_checkout_tax_disabled_no_regression(clean_db):
         mock_settings.stripe_checkout_billing_address_collection = "auto"
         mock_settings.stripe_checkout_success_url = "http://s"
         mock_settings.stripe_checkout_cancel_url = "http://c"
+        # Story 61.55 defaults to prevent TypeError
+        mock_settings.stripe_trial_enabled = False
+        mock_settings.stripe_trial_period_days = 0
+        mock_settings.stripe_payment_method_collection = "always"
+        mock_settings.stripe_trial_missing_payment_method_behavior = None
 
         with patch(
             "app.services.stripe_checkout_service.get_stripe_client", return_value=mock_client
@@ -211,6 +221,11 @@ def test_stripe_checkout_audit_enriched_with_tax_flags(clean_db):
         mock_settings.stripe_checkout_billing_address_collection = "auto"
         mock_settings.stripe_checkout_success_url = "http://s"
         mock_settings.stripe_checkout_cancel_url = "http://c"
+        # Story 61.55 defaults to prevent TypeError
+        mock_settings.stripe_trial_enabled = False
+        mock_settings.stripe_trial_period_days = 0
+        mock_settings.stripe_payment_method_collection = "always"
+        mock_settings.stripe_trial_missing_payment_method_behavior = None
 
         with patch(
             "app.services.stripe_checkout_service.get_stripe_client", return_value=mock_client
@@ -234,4 +249,60 @@ def test_stripe_checkout_audit_enriched_with_tax_flags(clean_db):
     details = success_call.kwargs["details"]
     assert details["automatic_tax_enabled"] is True
     assert details["tax_id_collection_enabled"] is False
+
+
+def test_stripe_checkout_with_trial_enabled(clean_db):
+    token = _register_user_with_role("user@example.com", "user")
+
+    mock_session = MagicMock()
+    mock_session.url = "https://checkout.stripe.com/pay/cs_test_trial"
+    mock_client = MagicMock()
+    mock_client.checkout.sessions.create.return_value = mock_session
+
+    with patch("app.api.v1.routers.billing.settings") as mock_settings:
+        mock_settings.stripe_trial_enabled = True
+        mock_settings.stripe_trial_period_days = 14
+        mock_settings.stripe_payment_method_collection = "if_required"
+        mock_settings.stripe_trial_missing_payment_method_behavior = "pause"
+        mock_settings.stripe_checkout_success_url = "http://s"
+        mock_settings.stripe_checkout_cancel_url = "http://c"
+        mock_settings.stripe_tax_enabled = False
+        mock_settings.stripe_tax_id_collection_enabled = False
+        mock_settings.stripe_checkout_billing_address_collection = "auto"
+
+        with patch(
+            "app.services.stripe_checkout_service.get_stripe_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
+                {"price_123": "basic"},
+            ):
+                with patch("app.api.v1.routers.billing._record_audit_event") as mock_audit:
+                    response = client.post(
+                        "/v1/billing/stripe-checkout-session",
+                        headers={"Authorization": f"Bearer {token}"},
+                        json={"plan": "basic"},
+                    )
+
+    assert response.status_code == 200
+    call_kwargs = mock_client.checkout.sessions.create.call_args
+    params = call_kwargs[1]["params"] if call_kwargs[1] else call_kwargs[0][0]
+
+    assert params["subscription_data"]["trial_period_days"] == 14
+    assert params["payment_method_collection"] == "if_required"
+    assert (
+        params["subscription_data"]["trial_settings"]["end_behavior"]["missing_payment_method"]
+        == "pause"
+    )
+    assert "is_trial=true" in params["success_url"]
+
+    # Verify audit details
+    success_call = [
+        call for call in mock_audit.call_args_list if call.kwargs["status"] == "success"
+    ][0]
+    details = success_call.kwargs["details"]
+    assert details["trial_enabled"] is True
+    assert details["trial_period_days"] == 14
+    assert details["payment_method_collection"] == "if_required"
+    assert details["missing_payment_method_behavior"] == "pause"
 

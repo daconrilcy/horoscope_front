@@ -169,6 +169,7 @@ export const settingsTranslations = {
       title: "Mon abonnement",
       availablePlans: "Plans disponibles",
       active: "Actif",
+      paused: "En pause",
       currentPlan: "Plan actuel",
       selected: "Sélectionné",
       validatePlan: "Valider ce plan",
@@ -182,6 +183,7 @@ export const settingsTranslations = {
       title: "My subscription",
       availablePlans: "Available plans",
       active: "Active",
+      paused: "Paused",
       currentPlan: "Current plan",
       selected: "Selected",
       validatePlan: "Validate this plan",
@@ -195,7 +197,8 @@ export const settingsTranslations = {
       title: "Mi suscripción",
       availablePlans: "Planes disponibles",
       active: "Activo",
-      currentPlan: "Plan actual",
+      paused: "En pausa",
+      currentPlan: "Plan actuel",
       selected: "Seleccionado",
       validatePlan: "Validar este plan",
       validating: "Validando...",
@@ -210,6 +213,7 @@ export const settingsTranslations = {
       title: string
       availablePlans: string
       active: string
+      paused: string
       currentPlan: string
       selected: string
       validatePlan: string

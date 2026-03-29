@@ -4,6 +4,11 @@ export type BillingTranslation = {
   success: {
     title: string
     message: string
+    trialTitle: string
+    trialMessage: string
+    trialStarted: string
+    activationPending: string
+    subscriptionActive: string
     backToDashboard: string
     viewSubscription: string
     waitingForWebhook: string
@@ -20,6 +25,11 @@ export const billingTranslations = (lang: AstrologyLang): BillingTranslation => 
   success: {
     title: billingData.success[lang].title,
     message: billingData.success[lang].message,
+    trialTitle: billingData.success[lang].trialTitle,
+    trialMessage: billingData.success[lang].trialMessage,
+    trialStarted: billingData.success[lang].trialStarted,
+    activationPending: billingData.success[lang].activationPending,
+    subscriptionActive: billingData.success[lang].subscriptionActive,
     backToDashboard: billingData.success[lang].backToDashboard,
     viewSubscription: billingData.success[lang].viewSubscription,
     waitingForWebhook: billingData.success[lang].waitingForWebhook,
@@ -37,6 +47,11 @@ const billingData = {
     fr: {
       title: "Paiement réussi !",
       message: "Votre paiement est en cours de traitement. Votre abonnement sera activé automatiquement dans quelques instants. Vous pouvez retourner au tableau de bord.",
+      trialTitle: "Essai gratuit activé !",
+      trialMessage: "Votre période d'essai vient de commencer. Vous pouvez commencer à utiliser toutes les fonctionnalités premium dès maintenant.",
+      trialStarted: "Essai gratuit démarré",
+      activationPending: "Activation en cours de confirmation",
+      subscriptionActive: "Abonnement activé",
       backToDashboard: "Retour au tableau de bord",
       viewSubscription: "Voir mon abonnement",
       waitingForWebhook: "Paiement en cours de confirmation...",
@@ -44,22 +59,37 @@ const billingData = {
     en: {
       title: "Payment Successful!",
       message: "Your payment is being processed. Your subscription will be activated automatically in a few moments. You can return to the dashboard.",
+      trialTitle: "Free Trial Activated!",
+      trialMessage: "Your trial period has just begun. You can start using all premium features right now.",
+      trialStarted: "Free trial started",
+      activationPending: "Activation pending confirmation",
+      subscriptionActive: "Subscription activated",
       backToDashboard: "Back to Dashboard",
       viewSubscription: "View my subscription",
       waitingForWebhook: "Payment confirmation in progress...",
     },
     es: {
       title: "¡Pago exitoso!",
-      message: "Su pago está siendo procesado. Su suscripción se activará automáticamente en unos momentos. Puede volver al panel de control.",
+      message: "Su pago está siendo procesado. Su suscripción se activará automatiquement en unos momentos. Puede volver al panel de control.",
+      trialTitle: "¡Prueba gratuita activada!",
+      trialMessage: "Su período de prueba acaba de comenzar. Puede comenzar a usar todas las funciones premium ahora mismo.",
+      trialStarted: "Prueba gratuita iniciada",
+      activationPending: "Activación pendiente de confirmación",
+      subscriptionActive: "Suscripción activada",
       backToDashboard: "Volver al panel",
       viewSubscription: "Ver mi suscripción",
-      waitingForWebhook: "Confirmación de pago en curso...",
+      waitingForWebhook: "Confirmación de pago en cours...",
     },
   } as Record<
     AstrologyLang,
     {
       title: string
       message: string
+      trialTitle: string
+      trialMessage: string
+      trialStarted: string
+      activationPending: string
+      subscriptionActive: string
       backToDashboard: string
       viewSubscription: string
       waitingForWebhook: string

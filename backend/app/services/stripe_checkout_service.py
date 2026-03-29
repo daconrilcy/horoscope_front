@@ -43,6 +43,10 @@ class StripeCheckoutService:
         billing_address_collection: str = "auto",
         automatic_tax_enabled: bool = False,
         tax_id_collection_enabled: bool = False,
+        trial_enabled: bool = False,
+        trial_period_days: int | None = None,
+        payment_method_collection: str = "always",
+        missing_payment_method_behavior: str | None = None,
     ) -> str:
         client = get_stripe_client()
         if client is None:
@@ -88,6 +92,26 @@ class StripeCheckoutService:
             params["tax_id_collection"] = {"enabled": True}
             if profile.stripe_customer_id:
                 params["customer_update"] = {"name": "auto", "address": "auto"}
+
+        # Story 61.55 - Trial Configuration
+        if trial_enabled and trial_period_days and trial_period_days > 0:
+            params["subscription_data"]["trial_period_days"] = trial_period_days
+            # On informe le frontend pour adapter le message de succès
+            connector = "&" if "?" in success_url else "?"
+            params["success_url"] = f"{success_url}{connector}is_trial=true"
+
+        if payment_method_collection == "if_required":
+            params["payment_method_collection"] = "if_required"
+
+        if (
+            trial_enabled
+            and payment_method_collection == "if_required"
+            and missing_payment_method_behavior
+        ):
+            params["subscription_data"].setdefault("trial_settings", {})
+            params["subscription_data"]["trial_settings"]["end_behavior"] = {
+                "missing_payment_method": missing_payment_method_behavior
+            }
 
         try:
             session = client.checkout.sessions.create(params=params)
