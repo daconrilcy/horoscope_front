@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-03-29T23:59:59.000+02:00'
+last_updated: '2026-03-29T00:00:00.000+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -507,3 +507,4 @@ development_status:
   61-54-fiscalite-mvp-et-factures-stripe: done
   61-55-trials-et-premier-paiement-stripe: done
   61-56-idempotence-webhook-stripe-deduplication-event-id: done
+  61-57-validation-locale-webhook-stripe-cli: done
