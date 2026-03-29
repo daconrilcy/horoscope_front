@@ -1,6 +1,6 @@
 # Story 61.51 : Clôture du chantier entitlements canoniques (61.7–61.50)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -114,7 +114,6 @@ l'epic 61. Les prochaines stories de l'epic 61 porteront sur d'autres sujets pro
 
 ### Fichiers de référence pour le contenu
 
-- `_bmad-output/implementation-artifacts/61-7-a-61-50-synthese-entitlements-canoniques-et-ops.md` — synthèse complète des 44 stories (source principale pour le tableau "État atteint")
 - `docs/entitlements-legacy-remnants.md` — inventaire des reliquats (pointer depuis "Travaux post-clôture")
 - `docs/entitlements-operations.md` — documentation opérationnelle (ne pas modifier)
 
@@ -124,7 +123,6 @@ l'epic 61. Les prochaines stories de l'epic 61 porteront sur d'autres sujets pro
 
 ### References
 
-- `_bmad-output/implementation-artifacts/61-7-a-61-50-synthese-entitlements-canoniques-et-ops.md`
 - `docs/entitlements-legacy-remnants.md`
 - `docs/entitlements-operations.md`
 
@@ -149,13 +147,22 @@ claude-sonnet-4-6
 
 - Verified existence of `docs/entitlements-legacy-remnants.md` and `docs/entitlements-operations.md`.
 - Created `docs/entitlements-canonical-closure.md` with requested content.
+- Code review found and removed an out-of-scope supporting synthesis artifact added during the initial implementation.
+- Story status and documentation trail were aligned after review.
 
 ### Completion Notes List
 
 - All documentation tasks completed.
 - AC1 satisfied: Closure document created with all required sections.
 - AC2 satisfied: No runtime code modified.
+- Review hardening completed: story scope is now aligned with the documented documentary-only perimeter.
 
 ### File List
 
+- `_bmad-output/implementation-artifacts/61-51-cloture-epic-61-objectif-initial-atteint.md`
 - `docs/entitlements-canonical-closure.md`
+
+### Change Log
+
+- Initial implementation: created the closure document and story artifact.
+- Review fix: removed the out-of-scope synthesis artifact and aligned the story record to the final reviewed state.
