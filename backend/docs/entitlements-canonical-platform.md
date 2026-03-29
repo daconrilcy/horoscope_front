@@ -971,3 +971,95 @@ Les compteurs sont calculés via un `LEFT JOIN` entre le sous-ensemble filtré d
 
 Les alertes `pending_retry` restent candidates au batch retry.
 
+---
+
+## Story 61.44 — Historisation des transitions de handling
+
+Depuis la story 61.44, le triage ops des alertes de delivery combine deux couches:
+- une projection mutable courante dans `canonical_entitlement_mutation_alert_event_handlings`
+- un journal append-only dans `canonical_entitlement_mutation_alert_event_handling_events`
+
+### Table append-only `canonical_entitlement_mutation_alert_event_handling_events`
+
+Chaque transition effective de handling écrit une nouvelle ligne d'historique.
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `id` | int PK | Identifiant interne |
+| `alert_event_id` | int FK INDEX | Référence vers `canonical_entitlement_mutation_alert_events.id` |
+| `handling_status` | str(32) | `suppressed` ou `resolved` |
+| `handled_by_user_id` | int nullable | Utilisateur ops/admin ayant appliqué l'action |
+| `handled_at` | timestamptz INDEX | Horodatage de la transition |
+| `ops_comment` | text nullable | Commentaire ops |
+| `suppression_key` | str(64) nullable | Clé métier de suppression |
+| `request_id` | str(255) nullable | Corrélation requête/logs |
+
+Contraintes :
+- table strictement append-only
+- aucune contrainte `UNIQUE` sur `alert_event_id`
+- plusieurs lignes possibles par alerte
+
+### Règle no-op
+
+Le service de handling n'écrit aucun nouvel événement si les trois champs métier suivants sont identiques à l'état courant:
+- `handling_status`
+- `ops_comment`
+- `suppression_key`
+
+Conséquences :
+- pas d'UPDATE de la projection mutable
+- pas de nouvel event append-only
+- `handled_at` reste inchangé
+
+### Propagation du `request_id`
+
+Le `request_id` résolu au niveau du router `POST /handle` est propagé au service puis stocké dans chaque event append-only, ce qui permet de relier une décision ops à la requête HTTP source.
+
+### Endpoint d'historique
+
+```text
+GET /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/handling-history
+```
+
+Règles :
+- rôles autorisés : `ops`, `admin`
+- rate limiting ops standard avec l'opération `get_alert_handling_history`
+- pagination via `limit` (défaut `50`, max `200`) et `offset`
+- tri `handled_at DESC`, puis `id DESC`
+- `404 alert_event_not_found` si l'alerte n'existe pas
+- réponse read-only avec `items`, `total_count`, `limit`, `offset`
+
+Exemple :
+
+```json
+{
+  "data": {
+    "items": [
+      {
+        "id": 2,
+        "alert_event_id": 17,
+        "handling_status": "resolved",
+        "handled_by_user_id": 42,
+        "handled_at": "2026-03-29T11:00:00Z",
+        "ops_comment": "Relance validée",
+        "request_id": "rid-resolved"
+      },
+      {
+        "id": 1,
+        "alert_event_id": 17,
+        "handling_status": "suppressed",
+        "handled_by_user_id": 41,
+        "handled_at": "2026-03-29T10:00:00Z",
+        "ops_comment": "Incident provider connu",
+        "suppression_key": "provider-incident",
+        "request_id": "rid-suppressed"
+      }
+    ],
+    "total_count": 2,
+    "limit": 50,
+    "offset": 0
+  },
+  "meta": { "request_id": "rid-history" }
+}
+```
+

@@ -352,6 +352,29 @@ class HandleAlertApiResponse(BaseModel):
     meta: ResponseMeta
 
 
+class AlertHandlingHistoryItem(BaseModel):
+    id: int
+    alert_event_id: int
+    handling_status: str
+    handled_by_user_id: int | None = None
+    handled_at: datetime
+    ops_comment: str | None = None
+    suppression_key: str | None = None
+    request_id: str | None = None
+
+
+class AlertHandlingHistoryData(BaseModel):
+    items: list[AlertHandlingHistoryItem]
+    total_count: int
+    limit: int
+    offset: int
+
+
+class AlertHandlingHistoryApiResponse(BaseModel):
+    data: AlertHandlingHistoryData
+    meta: ResponseMeta
+
+
 class AlertSummaryApiResponse(BaseModel):
     data: AlertSummaryData
     meta: ResponseMeta
@@ -1224,6 +1247,7 @@ def handle_alert_event(
             handled_by_user_id=current_user.id,
             ops_comment=body.ops_comment,
             suppression_key=body.suppression_key,
+            request_id=request_id,
         )
         db.commit()
     except HTTPException as exc:
@@ -1245,6 +1269,101 @@ def handle_alert_event(
             "handled_at": handling.handled_at,
             "ops_comment": handling.ops_comment,
             "suppression_key": handling.suppression_key,
+        },
+        "meta": {"request_id": request_id},
+    }
+
+
+@router.get(
+    "/mutation-audits/alerts/{alert_event_id}/handling-history",
+    response_model=AlertHandlingHistoryApiResponse,
+    response_model_exclude_none=True,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def get_alert_handling_history(
+    alert_event_id: int,
+    request: Request,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        return err
+    if (
+        err := _enforce_limits(
+            user=current_user,
+            request_id=request_id,
+            operation="get_alert_handling_history",
+        )
+    ) is not None:
+        return err
+
+    from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling_event import (
+        CanonicalEntitlementMutationAlertEventHandlingEventModel,
+    )
+
+    alert_event = db.get(CanonicalEntitlementMutationAlertEventModel, alert_event_id)
+    if alert_event is None:
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="alert_event_not_found",
+            message=f"Alert event {alert_event_id} not found",
+            details={"alert_event_id": alert_event_id},
+        )
+
+    total_count = db.execute(
+        select(func.count())
+        .select_from(CanonicalEntitlementMutationAlertEventHandlingEventModel)
+        .where(
+            CanonicalEntitlementMutationAlertEventHandlingEventModel.alert_event_id
+            == alert_event_id
+        )
+    ).scalar_one()
+    events = (
+        db.execute(
+            select(CanonicalEntitlementMutationAlertEventHandlingEventModel)
+            .where(
+                CanonicalEntitlementMutationAlertEventHandlingEventModel.alert_event_id
+                == alert_event_id
+            )
+            .order_by(
+                CanonicalEntitlementMutationAlertEventHandlingEventModel.handled_at.desc(),
+                CanonicalEntitlementMutationAlertEventHandlingEventModel.id.desc(),
+            )
+            .limit(limit)
+            .offset(offset)
+        )
+        .scalars()
+        .all()
+    )
+
+    return {
+        "data": {
+            "items": [
+                {
+                    "id": event.id,
+                    "alert_event_id": event.alert_event_id,
+                    "handling_status": event.handling_status,
+                    "handled_by_user_id": event.handled_by_user_id,
+                    "handled_at": event.handled_at,
+                    "ops_comment": event.ops_comment,
+                    "suppression_key": event.suppression_key,
+                    "request_id": event.request_id,
+                }
+                for event in events
+            ],
+            "total_count": total_count,
+            "limit": limit,
+            "offset": offset,
         },
         "meta": {"request_id": request_id},
     }

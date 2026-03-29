@@ -14,6 +14,12 @@ from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt i
 from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
+from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
+    CanonicalEntitlementMutationAlertEventHandlingModel,
+)
+from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling_event import (
+    CanonicalEntitlementMutationAlertEventHandlingEventModel,
+)
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
 )
@@ -31,6 +37,8 @@ def _cleanup_tables() -> None:
     with SessionLocal() as db:
         db.execute(delete(UserModel))
         db.execute(delete(CanonicalEntitlementMutationAlertDeliveryAttemptModel))
+        db.execute(delete(CanonicalEntitlementMutationAlertEventHandlingEventModel))
+        db.execute(delete(CanonicalEntitlementMutationAlertEventHandlingModel))
         db.execute(delete(CanonicalEntitlementMutationAlertEventModel))
         db.execute(delete(CanonicalEntitlementMutationAuditModel))
         db.commit()
