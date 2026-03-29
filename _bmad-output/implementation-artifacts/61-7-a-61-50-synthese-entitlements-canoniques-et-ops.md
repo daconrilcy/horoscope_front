@@ -1,8 +1,8 @@
-# Synthèse des implémentations — stories 61.7 à 61.46
+# Synthèse des implémentations — stories 61.7 à 61.50
 
 ## Objectif du chantier
 
-Le lot de stories `61.7` à `61.46` a transformé le système de droits produit d'un modèle historique couplé au billing en une plateforme canonique d'entitlements, avec :
+Le lot de stories `61.7` à `61.50` a transformé le système de droits produit d'un modèle historique couplé au billing en une plateforme canonique d'entitlements, avec :
 
 - un modèle de données centralisé pour les plans, features, bindings et quotas ;
 - une bascule progressive des flux métier B2C puis B2B vers ce modèle ;
@@ -13,7 +13,7 @@ Le lot de stories `61.7` à `61.46` a transformé le système de droits produit 
 
 ## Vue d'ensemble
 
-Le chantier s'est déroulé en six phases :
+Le chantier s'est déroulé en sept phases :
 
 1. `61.7` à `61.10` : fondations du modèle canonique et moteur de quotas.
 2. `61.11` à `61.17` : migration des principaux flux B2C et suppression du legacy quota B2C.
@@ -21,6 +21,7 @@ Le chantier s'est déroulé en six phases :
 4. `61.27` à `61.30` : garde-fous structurels de cohérence et de scope.
 5. `61.31` à `61.38` : centralisation des écritures, audit trail des mutations et work queue ops avec SLA.
 6. `61.39` à `61.46` : alerting ops, retry, triage manuel et batch, puis règles durables d'auto-suppression.
+7. `61.47` à `61.50` : unification finale du runtime, contrat frontend cible et validation end-to-end de clôture.
 
 ## 1. Fondations du canonique (`61.7` à `61.10`)
 
@@ -251,7 +252,91 @@ Différence de fond :
 - `61.45` nettoie le backlog actuel ;
 - `61.46` évite que le même bruit revienne demain.
 
-## État final atteint à la story `61.46`
+## 7. Unification finale du runtime et clôture du chantier (`61.47` à `61.50`)
+
+### `61.47` — Resolver canonique de droits effectifs
+
+Cette story a ajouté le vrai point de convergence runtime :
+
+- `EffectiveEntitlementResolverService` ;
+- un snapshot unique par sujet B2C ou B2B ;
+- un contrat explicite `EffectiveEntitlementsSnapshot` ;
+- un contrat explicite `EffectiveFeatureAccess`.
+
+Les points structurants de l'implémentation sont :
+
+- résolution en lecture seule, sans consommation ni écriture DB ;
+- couverture de toutes les features actives du scope concerné ;
+- normalisation d'un vocabulaire commun de `reason_code` ;
+- conservation à la fois d'un résumé simple (`quota_limit`, `quota_remaining`, etc.) et du détail réel multi-quota (`usage_states`).
+
+Le système sait désormais calculer les droits effectifs une seule fois, de manière cohérente, pour un utilisateur B2C ou un compte B2B.
+
+### `61.48` — Rebranchement des gates produit
+
+Les gates métier encore actives ont été rebranchées sur le resolver effectif :
+
+- `ChatEntitlementGate`
+- `ThematicConsultationEntitlementGate`
+- `NatalChartLongEntitlementGate`
+- `B2BApiEntitlementGate`
+
+Effets majeurs :
+
+- fin des lectures canoniques ad hoc dans les gates ;
+- pattern de décision uniforme sur `granted` et `reason_code` ;
+- mapping homogène `403` pour refus structurel et `429` pour quota épuisé ;
+- la consommation reste transactionnelle et localisée dans les gates, après décision d'accès.
+
+Le runtime ne reconstruit plus localement les règles commerciales : il applique le snapshot effectif comme source de vérité.
+
+### `61.49` — Contrat frontend unique sur `GET /v1/entitlements/me`
+
+Cette story a finalisé le contrat exposé au frontend :
+
+- `plan_code` et `billing_status` déplacés au top-level de `data` ;
+- remplacement des champs legacy `final_access` / `reason` par `granted` / `reason_code` ;
+- ajout de `quota_limit` et `quota_remaining` au niveau feature ;
+- maintien du champ `usage_states` pour ne pas perdre le détail.
+
+Points d'implémentation importants à ne pas oublier :
+
+- l'endpoint appelle le resolver une seule fois ;
+- les 4 features prioritaires doivent toujours être présentes ;
+- si le snapshot n'expose pas l'une d'elles, le routeur doit retourner défensivement une entrée refusée avec `reason_code="feature_not_in_plan"` au lieu de casser la forme de réponse ;
+- ce changement est volontairement breaking sur les champs legacy, mais pas sur l'URL, l'enveloppe HTTP ni la présence ordonnée des features prioritaires.
+
+Le frontend consomme ainsi un contrat unique suffisant pour piloter l'UX sans logique métier additionnelle.
+
+### `61.50` — Validation métier de clôture
+
+La story de clôture n'a pas introduit une nouvelle brique runtime, mais a verrouillé la qualité finale du chantier :
+
+- matrice de validation métier documentée à partir du seed canonique ;
+- tests d'intégration end-to-end couvrant la matrice complète plan × feature ;
+- preuve de suffisance backend/frontend sur le contrat de `GET /v1/entitlements/me` ;
+- inventaire des reliquats legacy ;
+- documentation d'exploitation pour faire évoluer une offre commerciale et valider un changement.
+
+Les correctifs finaux apportés après review sont aussi importants que la story elle-même :
+
+- isolation stricte de l'état DB des tests e2e ;
+- verrouillage complet des assertions sur `quota_limit` et `quota_remaining` ;
+- documentation mise à niveau sur tous les champs attendus et le comportement réel de l'endpoint ;
+- procédures PowerShell alignées avec l'activation obligatoire du venv ;
+- catégorisation explicite des reliquats legacy par statut et par fichier.
+
+### Ce que `61.47` à `61.50` apportent en plus par rapport à `61.46`
+
+Jusqu'à `61.46`, la plateforme canonique était gouvernée et opérable.
+Avec `61.47` à `61.50`, elle devient aussi :
+
+- unifiée du point de vue runtime ;
+- cohérente entre B2C, B2B, backend et frontend ;
+- validée contre la matrice commerciale réelle ;
+- documentée pour l'exploitation et l'évolution future.
+
+## État final atteint à la story `61.50`
 
 À ce stade, le système dispose :
 
@@ -263,11 +348,15 @@ Différence de fond :
 - d'un audit trail exploitable par les opérations ;
 - d'une work queue ops avec revue, historique et SLA ;
 - d'un sous-système d'alerting persistant, retryable, triable et débruité par règles.
+- d'un resolver runtime unique des droits effectifs ;
+- d'un contrat frontend aplati, stable et suffisant pour l'UX ;
+- d'une matrice de validation métier alignée sur le seed canonique ;
+- d'une documentation de clôture sur l'exploitation et les reliquats legacy.
 
-En synthèse, les stories `61.7` à `61.46` ont fait passer le projet :
+En synthèse, les stories `61.7` à `61.50` ont fait passer le projet :
 
 - d'une logique de droits dispersée et couplée au billing legacy,
-- à une plateforme canonique gouvernée, observable et opérable de bout en bout.
+- à une plateforme canonique gouvernée, observable, validée et exploitable de bout en bout.
 
 ## Lecture rapide par sous-ensembles
 
@@ -294,3 +383,7 @@ En synthèse, les stories `61.7` à `61.46` ont fait passer le projet :
 ### Alerting ops et suppression du bruit
 
 - `61.39` à `61.46`
+
+### Unification runtime, frontend et clôture
+
+- `61.47` à `61.50`
