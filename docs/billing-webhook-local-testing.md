@@ -1,140 +1,181 @@
 # Tests locaux du webhook Stripe avec Stripe CLI
 
-Ce document décrit la procédure pour tester localement la réception et le traitement des événements Stripe, ainsi que la validation de l'idempotence.
+Ce runbook décrit la validation locale du webhook Stripe avec la Stripe CLI sur un environnement de développement Windows/PowerShell. Le script Bash reste disponible pour Git Bash ou WSL, mais la commande PowerShell est la variante de référence pour ce dépôt.
 
 ## Prérequis
 
-1.  **Stripe CLI installé** : [Documentation d'installation](https://stripe.com/docs/stripe-cli)
-2.  **API Backend démarrée** : L'API doit être accessible sur le port 8001 (ou le port configuré pour `BACKEND_PORT`).
-3.  **Identifiant Stripe** : Un compte Stripe (en mode Test).
+1. Stripe CLI installée.
+2. Backend local démarré sur `http://localhost:8001`.
+3. Compte Stripe en mode test.
 
----
+Installation Windows :
+
+```powershell
+winget install Stripe.StripeCLI
+```
 
 ## 1. Authentification
 
-Avant toute chose, authentifiez-vous auprès de votre compte Stripe via la CLI :
-
-```bash
+```powershell
 stripe login
 ```
 
-Suivez les instructions dans le navigateur pour autoriser l'accès.
-
----
-
 ## 2. Démarrer le listener
 
-Le listener permet d'intercepter les événements Stripe et de les rediriger vers votre endpoint local.
+### Variante large
 
-### Variante large (Tous les événements)
+Utile pour observer toute la chaîne d'événements réellement émise par Stripe.
 
-Utile pour découvrir quels événements sont envoyés par Stripe :
-
-```bash
+```powershell
 stripe listen --forward-to http://localhost:8001/v1/billing/stripe-webhook
 ```
 
-### Variante filtrée (Recommandée)
+### Variante filtrée standardisée
 
-Cible uniquement les événements supportés par l'application pour réduire le bruit :
+Cette variante réduit le bruit et couvre le socle billing standardisé par cette story :
+
+```powershell
+stripe listen `
+  --events checkout.session.completed,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.paid,invoice.payment_failed,invoice.payment_action_required `
+  --forward-to http://localhost:8001/v1/billing/stripe-webhook
+```
+
+Scripts fournis :
+
+```powershell
+.\scripts\stripe-listen-webhook.ps1
+```
 
 ```bash
-stripe listen \
-  --events checkout.session.completed,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.paid,invoice.payment_failed,invoice.payment_action_required \
+./scripts/stripe-listen-webhook.sh
+```
+
+### Événements supplémentaires déjà gérés par le backend
+
+Le service backend accepte aussi actuellement :
+
+- `customer.updated`
+- `customer.subscription.paused`
+- `customer.subscription.resumed`
+- `customer.subscription.trial_will_end`
+
+Si vous voulez reproduire exactement ce périmètre élargi, démarrez le listener avec la liste complète :
+
+```powershell
+stripe listen `
+  --events checkout.session.completed,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,customer.subscription.paused,customer.subscription.resumed,customer.subscription.trial_will_end,customer.updated,invoice.paid,invoice.payment_failed,invoice.payment_action_required `
   --forward-to http://localhost:8001/v1/billing/stripe-webhook
 ```
 
 ### Utilisation de `--load-from-webhooks-api`
 
-Si vous avez déjà configuré un endpoint dans le Dashboard Stripe, vous pouvez synchroniser les événements et le chemin configurés vers votre listener local :
+Si un endpoint Stripe est déjà enregistré dans le Dashboard, cette option recharge son chemin et ses événements puis les appende au `--forward-to` local. Cela permet d'aligner le listener local sur la configuration distante existante.
 
-```bash
+```powershell
 stripe listen --load-from-webhooks-api --forward-to http://localhost:8001
 ```
-*Note : Cela appende le chemin configuré au `--forward-to` local.*
-
----
 
 ## 3. Récupérer et injecter le secret
 
-Lorsqu'il démarre, `stripe listen` affiche un message comme celui-ci :
+Au démarrage, `stripe listen` affiche un secret local de signature :
 
-`> Ready! Your webhook signing secret is whsec_XXXX (^C to quit)`
+```text
+Ready! Your webhook signing secret is whsec_XXXX (^C to quit)
+```
 
-1.  Copiez la valeur commençant par `whsec_`.
-2.  Collez-la dans votre fichier `.env.local` :
-    `STRIPE_WEBHOOK_SECRET=whsec_XXXX`
-3.  **Important** : Ce secret est généré dynamiquement par la CLI pour votre session locale. Il est différent du secret de signature configuré dans le Dashboard Stripe (utilisé pour la prod).
+1. Copier la valeur `whsec_...` affichée par `stripe listen`.
+2. La reporter dans `.env.local` :
 
----
+```dotenv
+STRIPE_WEBHOOK_SECRET=whsec_XXXX
+```
+
+3. Redémarrer le backend si nécessaire.
+
+Le secret de développement local vient explicitement de `stripe listen`. Il ne faut pas utiliser le secret du Dashboard Stripe pour ce test local, y compris lorsque `--load-from-webhooks-api` est utilisé.
 
 ## 4. Scénario nominal
 
-Pour valider le flux complet :
+Le test nominal recommandé passe par un vrai flow Checkout sandbox afin de produire la chaîne d'événements réelle. `stripe trigger` reste utile pour des validations ciblées rapides.
 
-1.  **Flow Checkout Sandbox (Préféré)** : Déclenchez un achat ou un abonnement depuis votre application ou via un lien Stripe Checkout en mode test. Cela produit la chaîne réelle d'événements.
-2.  **Stripe Trigger** : Utilisez la commande trigger pour simuler un événement spécifique :
-    ```bash
-    stripe trigger invoice.paid
-    ```
+```powershell
+stripe trigger invoice.paid
+```
 
-### Statuts de retour attendus
+Statuts de retour attendus côté endpoint :
 
 | Statut | Signification |
-| :--- | :--- |
-| `processed` | L'événement a été reçu, validé et traité avec succès. |
-| `event_ignored` | Le type d'événement n'est pas pris en charge par l'application (normal pour certains événements système). |
-| `user_not_resolved` | Le `customer_id` Stripe présent dans l'événement n'existe pas dans la base de données locale. |
+|--------|---------------|
+| `processed` | L'événement signé a été traité avec succès. |
+| `event_ignored` | L'événement est valide mais non pris en charge. |
+| `user_not_resolved` | Le `customer_id` Stripe n'est pas relié à un utilisateur local. |
+| `failed_internal` | La signature est valide mais une erreur applicative interne est survenue. |
 
----
+Avec le bon secret CLI en place, l'événement doit être accepté par l'API et retourner un statut métier HTTP 200.
 
 ## 5. Scénario de signature invalide
 
-Pour valider la sécurité HMAC :
+1. Remplacer temporairement `STRIPE_WEBHOOK_SECRET` dans `.env.local` par une mauvaise valeur.
+2. Relancer le backend.
+3. Envoyer un événement, par exemple :
 
-1.  Modifiez temporairement `STRIPE_WEBHOOK_SECRET` dans `.env.local` avec une valeur erronée.
-2.  Envoyez un événement avec `stripe trigger invoice.paid`.
-3.  **Résultat attendu** : L'API doit retourner une erreur HTTP 400 (Bad Request).
+```powershell
+stripe trigger invoice.paid
+```
 
----
+Résultat attendu : rejet HTTP 400 avec le code `invalid_signature`.
 
-## 6. Scénario de replay exact (Idempotence)
+4. Remettre ensuite le vrai secret affiché par `stripe listen`.
+5. Relancer le même test.
 
-Ce scénario prouve que le système d'idempotence (Story 61.56) fonctionne correctement.
+Résultat attendu : l'événement est accepté et retourne un statut HTTP 200 avec un résultat métier comme `processed`, `event_ignored` ou `user_not_resolved`.
 
-1.  **Premier envoi** : Envoyez un événement (ex: `stripe trigger invoice.paid`).
-2.  **Vérification** : Dans les logs applicatifs, observez `outcome=processed` et notez l'`event.id` (ex: `evt_123...`).
-3.  **Renvoi (Replay)** : Utilisez la commande resend pour renvoyer le même événement vers le listener local :
-    ```bash
-    stripe events resend evt_123...
-    ```
-4.  **Résultat attendu** :
-    - L'API doit retourner `duplicate_ignored`.
-    - Aucune action métier (mutation de base de données billing) ne doit être répétée.
-    - Dans la base de données : `SELECT status, processing_attempts FROM stripe_webhook_events WHERE stripe_event_id='evt_123...'` doit afficher `status=processed` et `attempts=1`.
+## 6. Scénario de replay exact
 
----
+Ce scénario valide l'idempotence introduite en story 61.56 sur un vrai `event.id` Stripe.
 
-## 7. Tests ciblés avec stripe trigger
+1. Envoyer un premier événement réel via Checkout sandbox ou `stripe trigger invoice.paid`.
+2. Relever dans les logs Stripe CLI ou applicatifs l'`event.id` et confirmer un premier statut `processed`.
+3. Rejouer exactement le même événement :
 
-La commande `stripe trigger <event_type>` est utile pour tester des cas précis sans passer par le tunnel de vente complet.
+```powershell
+stripe events resend evt_123456
+```
+
+4. Vérifier que le second appel retourne `duplicate_ignored` sans mutation métier supplémentaire.
+
+Si vous devez cibler un endpoint Stripe enregistré plutôt que le webhook local CLI par défaut :
+
+```powershell
+stripe events resend evt_123456 --webhook-endpoint=we_123456
+```
+
+Vérification base de données :
+
+```sql
+SELECT status, processing_attempts
+FROM stripe_webhook_events
+WHERE stripe_event_id = 'evt_123456';
+```
+
+Résultat attendu après un replay exact réussi : `status=processed` et `processing_attempts=1`.
+
+## 7. Tests ciblés avec `stripe trigger`
 
 | Commande | Utilité |
-| :--- | :--- |
-| `stripe trigger checkout.session.completed` | Valider la création initiale d'un profil billing. |
-| `stripe trigger customer.subscription.created` | Valider la création d'un abonnement. |
-| `stripe trigger customer.subscription.updated` | Valider la mise à jour d'un abonnement. |
-| `stripe trigger customer.subscription.deleted` | Valider la résiliation d'un abonnement. |
-| `stripe trigger invoice.paid` | Valider la confirmation de paiement. |
-| `stripe trigger invoice.payment_failed` | Valider l'échec d'un paiement. |
-| `stripe trigger invoice.payment_action_required` | Valider la demande d'action utilisateur (3DS). |
+|----------|---------|
+| `stripe trigger checkout.session.completed` | Valider la création initiale du profil de facturation. |
+| `stripe trigger customer.subscription.created` | Valider la création d'abonnement. |
+| `stripe trigger customer.subscription.updated` | Valider une mise à jour d'abonnement. |
+| `stripe trigger customer.subscription.deleted` | Valider une résiliation. |
+| `stripe trigger invoice.paid` | Valider un paiement confirmé. |
+| `stripe trigger invoice.payment_failed` | Valider un échec de paiement. |
+| `stripe trigger invoice.payment_action_required` | Valider un cas SCA/3DS. |
 
----
+Pour les événements supplémentaires déjà gérés par le backend :
 
-## Commandes standardisées
+| Commande | Utilité |
+|----------|---------|
+| `stripe trigger customer.updated` | Valider la synchronisation des données client Stripe. |
 
-Un script est disponible pour lancer rapidement le listener avec les bons paramètres :
-
-```bash
-./scripts/stripe-listen-webhook.sh
-```
+`stripe trigger` génère des objets synthétiques. En local, un `user_not_resolved` peut donc être normal tant qu'aucun `customer_id` correspondant n'existe en base.

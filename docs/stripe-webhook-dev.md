@@ -1,6 +1,6 @@
 # Workflow de Développement - Webhooks Stripe
 
-Ce document décrit comment tester les webhooks Stripe localement en utilisant la Stripe CLI.
+Ce document conserve la rationale historique de sélection des événements Stripe. Pour la procédure locale opérationnelle à jour, utiliser d'abord [docs/billing-webhook-local-testing.md](./billing-webhook-local-testing.md), qui fait désormais office de runbook canonique pour les tests Stripe CLI en local.
 
 ## 1. Prérequis
 
@@ -65,6 +65,9 @@ stripe trigger customer.updated
 > En développement local, à moins d'avoir un profil de facturation correspondant déjà en base, le backend retournera `user_not_resolved`. C'est un comportement normal pour valider le flux technique. Pour un test complet de réconciliation, préférez un vrai flux de checkout via l'UI et `stripe listen`.
 
 ## 5. Rationale — sélection des événements
+
+> [!NOTE]
+> Le tableau ci-dessous documente principalement la décision initiale de la story 61-6. Le périmètre effectivement géré aujourd'hui par le backend et la procédure locale de validation courante sont décrits dans le runbook canonique `docs/billing-webhook-local-testing.md`.
 
 Le tableau suivant justifie la sélection des événements Stripe traités par le webhook pour une stratégie SaaS robuste.
 

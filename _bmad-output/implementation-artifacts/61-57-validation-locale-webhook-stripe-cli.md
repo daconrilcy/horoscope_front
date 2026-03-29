@@ -206,8 +206,18 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- 2026-03-29 : code review BMAD terminée puis corrigée.
+- Runbook local aligné sur l'environnement Windows/PowerShell cible avec ajout du script `scripts/stripe-listen-webhook.ps1`.
+- Documentation complétée pour l'AC5 avec `stripe events resend <event_id> --webhook-endpoint=we_123456`.
+- Clarification du périmètre entre le sous-ensemble standardisé de 7 événements du listener par défaut et les événements supplémentaires déjà gérés par le backend.
+- Ajout d'un test automatisé sur les artefacts de développement Stripe et suppression du BOM du script shell.
+
 ### File List
 
 - `docs/billing-webhook-local-testing.md` (nouveau)
+- `docs/stripe-webhook-dev.md` (référence canonique vers le nouveau runbook ajoutée)
 - `scripts/stripe-listen-webhook.sh` (nouveau)
+- `scripts/stripe-listen-webhook.ps1` (nouveau)
 - `.env.example` (à vérifier — probablement inchangé)
+- `backend/app/tests/unit/test_stripe_webhook_local_dev_assets.py` (nouveau)
+- `_bmad-output/test-artifacts/review-61-57.md` (nouveau)
