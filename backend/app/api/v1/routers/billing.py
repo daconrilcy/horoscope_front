@@ -1016,6 +1016,158 @@ def create_stripe_customer_portal_session(
 
 
 @router.post(
+    "/stripe-customer-portal-subscription-update-session",
+    response_model=StripePortalApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        503: {"model": ErrorEnvelope},
+        502: {"model": ErrorEnvelope},
+    },
+)
+def create_stripe_portal_subscription_update_session(
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    role_error = _ensure_user_role(current_user, request_id)
+    if role_error is not None:
+        return role_error
+
+    try:
+        portal_url = StripeCustomerPortalService.create_subscription_update_session(
+            db,
+            user_id=current_user.id,
+            return_url=settings.stripe_portal_return_url,
+            configuration_id=settings.stripe_portal_configuration_id,
+        )
+        _record_audit_event(
+            db,
+            request_id=request_id,
+            actor_user_id=current_user.id,
+            actor_role=current_user.role,
+            action="stripe_portal_subscription_update_session_created",
+            target_type="user",
+            target_id=str(current_user.id),
+            status="success",
+        )
+        db.commit()
+        return {"data": {"url": portal_url}, "meta": {"request_id": request_id}}
+
+    except StripeCustomerPortalServiceError as error:
+        db.rollback()
+        status_code = {
+            "stripe_subscription_not_found": 404,
+            "stripe_unavailable": 503,
+            "stripe_api_error": 502,
+        }.get(error.code, 500)
+        try:
+            _record_audit_event(
+                db,
+                request_id=request_id,
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="stripe_portal_subscription_update_session_failed",
+                target_type="user",
+                target_id=str(current_user.id),
+                status="failed",
+                details={"error_code": error.code},
+            )
+        except AuditWriteError:
+            db.rollback()
+            return _audit_unavailable_response(request_id=request_id)
+        db.commit()
+        return _error_response(
+            status_code=status_code,
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
+        )
+    except AuditWriteError:
+        db.rollback()
+        return _audit_unavailable_response(request_id=request_id)
+
+
+@router.post(
+    "/stripe-customer-portal-subscription-cancel-session",
+    response_model=StripePortalApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        503: {"model": ErrorEnvelope},
+        502: {"model": ErrorEnvelope},
+    },
+)
+def create_stripe_portal_subscription_cancel_session(
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    role_error = _ensure_user_role(current_user, request_id)
+    if role_error is not None:
+        return role_error
+
+    try:
+        portal_url = StripeCustomerPortalService.create_subscription_cancel_session(
+            db,
+            user_id=current_user.id,
+            return_url=settings.stripe_portal_return_url,
+            configuration_id=settings.stripe_portal_configuration_id,
+        )
+        _record_audit_event(
+            db,
+            request_id=request_id,
+            actor_user_id=current_user.id,
+            actor_role=current_user.role,
+            action="stripe_portal_subscription_cancel_session_created",
+            target_type="user",
+            target_id=str(current_user.id),
+            status="success",
+        )
+        db.commit()
+        return {"data": {"url": portal_url}, "meta": {"request_id": request_id}}
+
+    except StripeCustomerPortalServiceError as error:
+        db.rollback()
+        status_code = {
+            "stripe_subscription_not_found": 404,
+            "stripe_unavailable": 503,
+            "stripe_api_error": 502,
+        }.get(error.code, 500)
+        try:
+            _record_audit_event(
+                db,
+                request_id=request_id,
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="stripe_portal_subscription_cancel_session_failed",
+                target_type="user",
+                target_id=str(current_user.id),
+                status="failed",
+                details={"error_code": error.code},
+            )
+        except AuditWriteError:
+            db.rollback()
+            return _audit_unavailable_response(request_id=request_id)
+        db.commit()
+        return _error_response(
+            status_code=status_code,
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
+        )
+    except AuditWriteError:
+        db.rollback()
+        return _audit_unavailable_response(request_id=request_id)
+
+
+@router.post(
     "/stripe-webhook",
     responses={
         400: {"model": ErrorEnvelope},

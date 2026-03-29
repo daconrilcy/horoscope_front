@@ -23,7 +23,31 @@ L'application délègue la gestion avancée des abonnements (upgrade, downgrade,
 
 ### Configuration
 - `STRIPE_PORTAL_RETURN_URL` : URL de retour après la fermeture du portail par l'utilisateur (défaut: `/settings/subscription`).
-- La valeur par défaut `http://localhost:5173/settings/subscription` est acceptable uniquement en local. En staging/production, `STRIPE_PORTAL_RETURN_URL` doit être définie explicitement.
+- `STRIPE_PORTAL_CONFIGURATION_ID` : (Optionnel) ID de configuration spécifique pour le portail créé dans le Dashboard Stripe. Si vide, la configuration par défaut est utilisée.
+
+## Portal Flows dédiés (Upgrade, Downgrade, Cancel)
+
+En plus du portail générique, l'application expose des endpoints pour initier des intentions métier explicites. Ces flux utilisent le paramètre `flow_data` de l'API Stripe Portal Session.
+
+### Endpoints de Session dédiés
+1. **Update Subscription** : `POST /v1/billing/stripe-customer-portal-subscription-update-session`
+   - Ouvre directement le flux de modification d'abonnement.
+   - Nécessite un `stripe_subscription_id` actif sur le profil utilisateur.
+2. **Cancel Subscription** : `POST /v1/billing/stripe-customer-portal-subscription-cancel-session`
+   - Ouvre directement le flux d'annulation d'abonnement.
+   - Nécessite un `stripe_subscription_id` actif sur le profil utilisateur.
+
+### Configuration Stripe Dashboard requise
+Pour que ces flux fonctionnent, la configuration du portail (par défaut ou via `STRIPE_PORTAL_CONFIGURATION_ID`) dans le Dashboard Stripe doit :
+- Activer l'option **Subscription Update**.
+- Activer l'option **Subscription Cancel**.
+- Définir le mode d'annulation sur **At period end** (recommandé pour le MVP).
+- Configurer les prix/plans autorisés qui seront présentés à l'utilisateur.
+
+### Annulation et Réactivation
+- Le mode d'annulation **At period end** permet à l'utilisateur de conserver ses accès jusqu'à la fin de la période payée.
+- Stripe autorise nativement la **réactivation de l'abonnement via le portail** tant que la période n'est pas expirée.
+- L'application ne propose pas d'endpoint `resume-subscription` maison pour le MVP ; cette action est déléguée au portail Stripe.
 
 ## Flux Utilisateur
 

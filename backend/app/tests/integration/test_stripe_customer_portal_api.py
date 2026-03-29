@@ -205,3 +205,109 @@ class TestStripeCustomerPortalApi:
 
         assert response.status_code == 502
         assert response.json()["error"]["code"] == "stripe_api_error"
+
+    def test_update_session_nominal_200(self, clean_db):
+        token = _register_user_with_role("user@example.com", "user")
+        with SessionLocal() as db:
+            user = db.query(UserModel).filter_by(email="user@example.com").first()
+            profile = StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id="cus_123",
+                stripe_subscription_id="sub_123",
+            )
+            db.add(profile)
+            db.commit()
+
+        mock_session = MagicMock()
+        mock_session.url = "https://billing.stripe.com/update"
+        mock_client = MagicMock()
+        mock_client.billing_portal.sessions.create.return_value = mock_session
+        before_snapshot = _get_profile_snapshot("user@example.com")
+
+        with (
+            patch(
+                "app.services.stripe_customer_portal_service.get_stripe_client",
+                return_value=mock_client,
+            ),
+            patch.object(
+                EffectiveEntitlementResolverService,
+                "resolve_b2c_user_snapshot",
+                side_effect=AssertionError("portal endpoint must not recalculate entitlements"),
+            ),
+        ):
+            response = client.post(
+                "/v1/billing/stripe-customer-portal-subscription-update-session",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+
+        assert response.status_code == 200
+        assert response.json()["data"]["url"] == "https://billing.stripe.com/update"
+        params = mock_client.billing_portal.sessions.create.call_args[1]["params"]
+        assert params["flow_data"]["type"] == "subscription_update"
+        assert params["flow_data"]["subscription_update"]["subscription"] == "sub_123"
+        assert _get_profile_snapshot("user@example.com") == before_snapshot
+
+    def test_cancel_session_nominal_200(self, clean_db):
+        token = _register_user_with_role("user@example.com", "user")
+        with SessionLocal() as db:
+            user = db.query(UserModel).filter_by(email="user@example.com").first()
+            profile = StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id="cus_123",
+                stripe_subscription_id="sub_123",
+            )
+            db.add(profile)
+            db.commit()
+
+        mock_session = MagicMock()
+        mock_session.url = "https://billing.stripe.com/cancel"
+        mock_client = MagicMock()
+        mock_client.billing_portal.sessions.create.return_value = mock_session
+        before_snapshot = _get_profile_snapshot("user@example.com")
+
+        with (
+            patch(
+                "app.services.stripe_customer_portal_service.get_stripe_client",
+                return_value=mock_client,
+            ),
+            patch.object(
+                EffectiveEntitlementResolverService,
+                "resolve_b2c_user_snapshot",
+                side_effect=AssertionError("portal endpoint must not recalculate entitlements"),
+            ),
+        ):
+            response = client.post(
+                "/v1/billing/stripe-customer-portal-subscription-cancel-session",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+
+        assert response.status_code == 200
+        assert response.json()["data"]["url"] == "https://billing.stripe.com/cancel"
+        params = mock_client.billing_portal.sessions.create.call_args[1]["params"]
+        assert params["flow_data"]["type"] == "subscription_cancel"
+        assert params["flow_data"]["subscription_cancel"]["subscription"] == "sub_123"
+        assert _get_profile_snapshot("user@example.com") == before_snapshot
+
+    def test_update_session_no_subscription_404(self, clean_db):
+        token = _register_user_with_role("user@example.com", "user")
+        with SessionLocal() as db:
+            user = db.query(UserModel).filter_by(email="user@example.com").first()
+            profile = StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id="cus_123",
+                stripe_subscription_id=None,
+            )
+            db.add(profile)
+            db.commit()
+
+        response = client.post(
+            "/v1/billing/stripe-customer-portal-subscription-update-session",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 404
+        assert response.json()["error"]["code"] == "stripe_subscription_not_found"
+
+    def test_update_session_no_jwt_401(self, clean_db):
+        response = client.post("/v1/billing/stripe-customer-portal-subscription-update-session")
+        assert response.status_code == 401
+

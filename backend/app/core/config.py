@@ -330,6 +330,9 @@ class Settings:
             "STRIPE_PORTAL_RETURN_URL",
             "http://localhost:5173/settings/subscription",
         ).strip()
+        self.stripe_portal_configuration_id = os.getenv(
+            "STRIPE_PORTAL_CONFIGURATION_ID", ""
+        ).strip() or None
 
         # LLM Engine Configuration
         self.openai_model_default = os.getenv("OPENAI_MODEL_DEFAULT", "gpt-4o-mini").strip()
