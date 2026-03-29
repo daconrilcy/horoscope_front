@@ -1,0 +1,158 @@
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass
+from datetime import datetime, timezone
+
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
+
+from app.core.config import settings
+from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt import (
+    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
+)
+from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+    CanonicalEntitlementMutationAlertEventModel,
+)
+from app.services.canonical_entitlement_alert_service import CanonicalEntitlementAlertService
+
+logger = logging.getLogger(__name__)
+
+
+class AlertEventNotFoundError(ValueError):
+    pass
+
+
+class AlertEventNotRetryableError(ValueError):
+    pass
+
+
+@dataclass
+class AlertRetryRunResult:
+    candidate_count: int
+    retried_count: int
+    sent_count: int
+    failed_count: int
+    dry_run: bool
+
+
+class CanonicalEntitlementAlertRetryService:
+    @staticmethod
+    def retry_failed_alerts(
+        db: Session,
+        *,
+        now_utc: datetime | None = None,
+        dry_run: bool = False,
+        request_id: str | None = None,
+        limit: int | None = None,
+        alert_event_id: int | None = None,
+    ) -> AlertRetryRunResult:
+        effective_now = now_utc or datetime.now(timezone.utc)
+        candidates = CanonicalEntitlementAlertRetryService._load_candidates(
+            db,
+            alert_event_id=alert_event_id,
+            limit=limit,
+        )
+
+        if dry_run:
+            return AlertRetryRunResult(
+                candidate_count=len(candidates),
+                retried_count=len(candidates),
+                sent_count=0,
+                failed_count=0,
+                dry_run=True,
+            )
+
+        retried_count = 0
+        sent_count = 0
+        failed_count = 0
+
+        for event in candidates:
+            attempt_number = CanonicalEntitlementAlertRetryService._next_attempt_number(
+                db, alert_event_id=event.id
+            )
+            delivery_channel = "log"
+            delivery_status = "sent"
+            delivery_error = None
+            delivered_at = effective_now
+
+            if settings.ops_review_queue_alert_webhook_url:
+                delivery_channel = "webhook"
+                success, error_message = CanonicalEntitlementAlertService._deliver_webhook(
+                    settings.ops_review_queue_alert_webhook_url,
+                    event.payload,
+                )
+                if success:
+                    sent_count += 1
+                else:
+                    delivery_status = "failed"
+                    delivery_error = error_message
+                    delivered_at = None
+                    failed_count += 1
+            else:
+                logger.info("ops_alert_retry_log_delivery payload=%s", event.payload)
+                sent_count += 1
+
+            db.add(
+                CanonicalEntitlementMutationAlertDeliveryAttemptModel(
+                    alert_event_id=event.id,
+                    attempt_number=attempt_number,
+                    delivery_channel=delivery_channel,
+                    delivery_status=delivery_status,
+                    delivery_error=delivery_error,
+                    request_id=request_id,
+                    payload=event.payload,
+                    delivered_at=delivered_at,
+                )
+            )
+
+            event.delivery_status = delivery_status
+            event.delivery_error = delivery_error
+            event.delivered_at = delivered_at
+            retried_count += 1
+
+        db.flush()
+        return AlertRetryRunResult(
+            candidate_count=len(candidates),
+            retried_count=retried_count,
+            sent_count=sent_count,
+            failed_count=failed_count,
+            dry_run=False,
+        )
+
+    @staticmethod
+    def _load_candidates(
+        db: Session,
+        *,
+        alert_event_id: int | None,
+        limit: int | None,
+    ) -> list[CanonicalEntitlementMutationAlertEventModel]:
+        if alert_event_id is not None:
+            event = db.get(CanonicalEntitlementMutationAlertEventModel, alert_event_id)
+            if event is None:
+                raise AlertEventNotFoundError(f"Alert event {alert_event_id} not found")
+            if event.delivery_status != "failed":
+                raise AlertEventNotRetryableError(
+                    f"Alert event {alert_event_id} is not retryable"
+                )
+            return [event]
+
+        query = (
+            select(CanonicalEntitlementMutationAlertEventModel)
+            .where(CanonicalEntitlementMutationAlertEventModel.delivery_status == "failed")
+            .order_by(CanonicalEntitlementMutationAlertEventModel.id.asc())
+        )
+        if limit is not None:
+            query = query.limit(limit)
+        return list(db.execute(query).scalars().all())
+
+    @staticmethod
+    def _next_attempt_number(db: Session, *, alert_event_id: int) -> int:
+        max_attempt = db.execute(
+            select(func.max(CanonicalEntitlementMutationAlertDeliveryAttemptModel.attempt_number))
+            .where(
+                CanonicalEntitlementMutationAlertDeliveryAttemptModel.alert_event_id
+                == alert_event_id
+            )
+        ).scalar_one()
+        return (max_attempt or 0) + 1

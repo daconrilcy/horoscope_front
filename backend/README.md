@@ -284,6 +284,16 @@ Configuration via variables d'environnement :
 - `OPS_REVIEW_QUEUE_ALERT_WEBHOOK_URL` (Optionnel : URL POST JSON)
 - `OPS_REVIEW_QUEUE_ALERT_BASE_URL` (Optionnel : Liens cliquables dans les alertes)
 
+Retry batch des alertes échouées :
+
+```powershell
+# Exemple de job périodique
+python scripts/retry_ops_review_queue_alerts.py --limit 50
+
+# Vérification sans effet de bord
+python scripts/retry_ops_review_queue_alerts.py --dry-run
+```
+
 Secrets minimum requis hors environnements locaux/test (staging, production):
 - `JWT_SECRET_KEY`
 - `API_CREDENTIALS_SECRET_KEY`

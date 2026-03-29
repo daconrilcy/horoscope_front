@@ -6,12 +6,18 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
+from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt import (
+    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
+)
+from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+    CanonicalEntitlementMutationAlertEventModel,
+)
 from app.infra.db.models.canonical_entitlement_mutation_audit_review import (
     CanonicalEntitlementMutationAuditReviewModel,
 )
@@ -188,6 +194,45 @@ class ReviewQueueSummaryData(BaseModel):
 
 class ReviewQueueSummaryApiResponse(BaseModel):
     data: ReviewQueueSummaryData
+    meta: ResponseMeta
+
+
+class AlertAttemptItem(BaseModel):
+    id: int
+    alert_event_id: int
+    attempt_number: int
+    delivery_channel: str
+    delivery_status: str
+    delivery_error: str | None = None
+    request_id: str | None = None
+    created_at: datetime
+    delivered_at: datetime | None = None
+
+
+class AlertAttemptsListData(BaseModel):
+    items: list[AlertAttemptItem]
+    total_count: int
+
+
+class AlertAttemptsApiResponse(BaseModel):
+    data: AlertAttemptsListData
+    meta: ResponseMeta
+
+
+class AlertRetryRequestBody(BaseModel):
+    dry_run: bool = False
+
+
+class AlertRetryResponseData(BaseModel):
+    alert_event_id: int
+    attempted: bool
+    delivery_status: str | None = None
+    attempt_number: int | None = None
+    request_id: str | None = None
+
+
+class AlertRetryApiResponse(BaseModel):
+    data: AlertRetryResponseData
     meta: ResponseMeta
 
 
@@ -735,6 +780,162 @@ def get_review_queue(
             "total_count": total_count,
             "page": page,
             "page_size": page_size,
+        },
+        "meta": {"request_id": request_id},
+    }
+
+
+@router.get(
+    "/mutation-audits/alerts/{alert_event_id}/attempts",
+    response_model=AlertAttemptsApiResponse,
+    response_model_exclude_none=True,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def get_alert_attempts(
+    alert_event_id: int,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        return err
+    if (
+        err := _enforce_limits(user=current_user, request_id=request_id, operation="get_attempts")
+    ) is not None:
+        return err
+
+    event = db.get(CanonicalEntitlementMutationAlertEventModel, alert_event_id)
+    if event is None:
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="alert_event_not_found",
+            message=f"Alert event {alert_event_id} not found",
+            details={"alert_event_id": alert_event_id},
+        )
+
+    attempts = (
+        db.execute(
+            select(CanonicalEntitlementMutationAlertDeliveryAttemptModel)
+            .where(
+                CanonicalEntitlementMutationAlertDeliveryAttemptModel.alert_event_id
+                == alert_event_id
+            )
+            .order_by(
+                CanonicalEntitlementMutationAlertDeliveryAttemptModel.attempt_number.asc(),
+                CanonicalEntitlementMutationAlertDeliveryAttemptModel.id.asc(),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return {
+        "data": {
+            "items": [
+                {
+                    "id": attempt.id,
+                    "alert_event_id": attempt.alert_event_id,
+                    "attempt_number": attempt.attempt_number,
+                    "delivery_channel": attempt.delivery_channel,
+                    "delivery_status": attempt.delivery_status,
+                    "delivery_error": attempt.delivery_error,
+                    "request_id": attempt.request_id,
+                    "created_at": attempt.created_at,
+                    "delivered_at": attempt.delivered_at,
+                }
+                for attempt in attempts
+            ],
+            "total_count": len(attempts),
+        },
+        "meta": {"request_id": request_id},
+    }
+
+
+@router.post(
+    "/mutation-audits/alerts/{alert_event_id}/retry",
+    response_model=AlertRetryApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        409: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def retry_alert(
+    alert_event_id: int,
+    body: AlertRetryRequestBody,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    from app.services.canonical_entitlement_alert_retry_service import (
+        AlertEventNotFoundError,
+        AlertEventNotRetryableError,
+        CanonicalEntitlementAlertRetryService,
+    )
+
+    request_id = resolve_request_id(request)
+
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        return err
+    if (
+        err := _enforce_limits(user=current_user, request_id=request_id, operation="retry")
+    ) is not None:
+        return err
+
+    try:
+        result = CanonicalEntitlementAlertRetryService.retry_failed_alerts(
+            db,
+            dry_run=body.dry_run,
+            request_id=request_id,
+            alert_event_id=alert_event_id,
+        )
+    except AlertEventNotFoundError:
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="alert_event_not_found",
+            message=f"Alert event {alert_event_id} not found",
+            details={"alert_event_id": alert_event_id},
+        )
+    except AlertEventNotRetryableError:
+        return _error_response(
+            status_code=409,
+            request_id=request_id,
+            code="alert_event_not_retryable",
+            message=f"Alert event {alert_event_id} is not in failed state",
+            details={"alert_event_id": alert_event_id},
+        )
+
+    if not body.dry_run:
+        db.commit()
+
+    event = db.get(CanonicalEntitlementMutationAlertEventModel, alert_event_id)
+    latest_attempt_number = None
+    if not body.dry_run:
+        latest_attempt_number = db.execute(
+            select(func.max(CanonicalEntitlementMutationAlertDeliveryAttemptModel.attempt_number))
+            .where(
+                CanonicalEntitlementMutationAlertDeliveryAttemptModel.alert_event_id
+                == alert_event_id
+            )
+        ).scalar_one()
+
+    return {
+        "data": {
+            "alert_event_id": alert_event_id,
+            "attempted": result.retried_count > 0,
+            "delivery_status": event.delivery_status if event is not None else None,
+            "attempt_number": latest_attempt_number,
+            "request_id": request_id,
         },
         "meta": {"request_id": request_id},
     }

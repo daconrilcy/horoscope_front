@@ -662,3 +662,71 @@ L'alerting est piloté par les variables d'environnement suivantes :
 
 Le payload envoyé par POST JSON contient toutes les métadonnées de la mutation, du SLA et de l'acteur, ainsi que des liens vers la work queue si `BASE_URL` est configuré.
 
+---
+
+## Story 61.40 — Retry/replay des alertes échouées
+
+La story 61.40 ajoute un mécanisme ops de retry contrôlé sans casser l'idempotence métier introduite en 61.39.
+
+### Principe
+
+- `canonical_entitlement_mutation_alert_events` reste la vérité métier: une alerte existe pour un état donné.
+- `dedupe_key` garde exactement la même sémantique et continue d'empêcher la recréation d'un nouvel event métier identique.
+- Les retries ne recréent jamais de nouvel alert event métier.
+- Chaque relance écrit une tentative append-only dans `canonical_entitlement_mutation_alert_delivery_attempts`.
+
+### Table `canonical_entitlement_mutation_alert_delivery_attempts`
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `id` | int PK | Identifiant interne |
+| `alert_event_id` | int FK INDEX | Référence vers `canonical_entitlement_mutation_alert_events.id` |
+| `attempt_number` | int | Numéro de tentative pour l'event |
+| `delivery_channel` | str(32) | `webhook` ou `log` |
+| `delivery_status` | str(32) | `sent` ou `failed` |
+| `delivery_error` | text nullable | Dernière erreur technique |
+| `request_id` | str(64) nullable | Corrélation ops |
+| `payload` | JSON | Payload rejoué tel quel |
+| `created_at` | timestamptz INDEX | Date de création de la tentative |
+| `delivered_at` | timestamptz nullable | Date de livraison effective |
+
+Contraintes :
+- `UNIQUE(alert_event_id, attempt_number)`
+- append-only, aucune mise à jour rétroactive des tentatives
+
+### Endpoints ops
+
+```text
+GET  /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/attempts
+POST /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/retry
+```
+
+Règles :
+- accès réservé aux rôles `ops` et `admin`
+- rate limiting ops standard appliqué
+- `GET .../attempts` est strictement read-only et retourne l'historique ordonné par `attempt_number ASC`, puis `id ASC`
+- `POST .../retry` retourne `404 alert_event_not_found` si l'event n'existe pas
+- `POST .../retry` retourne `409 alert_event_not_retryable` si l'event n'est plus en état `failed`
+- `dry_run=true` ne persiste rien et ne déclenche aucun webhook
+
+### Script CLI batch
+
+```powershell
+# Rejouer toutes les alertes échouées
+python backend/scripts/retry_ops_review_queue_alerts.py
+
+# Dry-run: aucun webhook, aucune écriture
+python backend/scripts/retry_ops_review_queue_alerts.py --dry-run
+
+# Limiter le batch
+python backend/scripts/retry_ops_review_queue_alerts.py --limit 25
+
+# Rejouer un event précis
+python backend/scripts/retry_ops_review_queue_alerts.py --alert-event-id 123
+```
+
+Codes de sortie :
+- `0` : succès complet ou simulation
+- `1` : au moins une tentative a encore échoué
+- `2` : erreur inattendue ou event ciblé invalide
+
