@@ -180,3 +180,39 @@ async def test_webhook_subscription_paused():
                     assert response.status_code == 200
                     assert response.json() == {"status": "processed"}
                     mock_update.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_webhook_subscription_resumed():
+    payload = b'{"id": "evt_resumed", "type": "customer.subscription.resumed"}'
+    secret = "whsec_test"
+    headers = {"stripe-signature": _sign_payload(payload, secret)}
+
+    with patch("app.core.config.settings.stripe_webhook_secret", secret):
+        mock_event = MagicMock()
+        mock_event.id = "evt_resumed"
+        mock_event.type = "customer.subscription.resumed"
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.customer = "cus_123"
+
+        with patch(
+            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            return_value=mock_event,
+        ):
+            with patch(
+                "app.services.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
+            ) as mock_get_profile:
+                mock_profile = MagicMock()
+                mock_profile.user_id = 42
+                mock_get_profile.return_value = mock_profile
+
+                with patch(
+                    "app.services.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload"
+                ) as mock_update:
+                    response = client.post(
+                        "/v1/billing/stripe-webhook", content=payload, headers=headers
+                    )
+
+                    assert response.status_code == 200
+                    assert response.json() == {"status": "processed"}
+                    mock_update.assert_called_once()

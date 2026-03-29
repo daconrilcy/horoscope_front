@@ -294,7 +294,7 @@ def test_stripe_checkout_with_trial_enabled(clean_db):
         params["subscription_data"]["trial_settings"]["end_behavior"]["missing_payment_method"]
         == "pause"
     )
-    assert "is_trial=true" in params["success_url"]
+    assert params["success_url"] == "http://s"
 
     # Verify audit details
     success_call = [

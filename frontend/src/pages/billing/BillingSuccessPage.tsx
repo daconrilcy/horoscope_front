@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { LayoutDashboard, Settings, Info, CheckCircle, Clock } from "lucide-react"
 import { useTranslation } from "../../i18n"
@@ -6,22 +6,15 @@ import { Button } from "../../components/ui/Button"
 import { useBillingSubscription } from "../../api/billing"
 import "./billing-return.css"
 
-const BillingSuccessPage: React.FC = () => {
+export const BillingSuccessPage: React.FC = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { success: t } = useTranslation("billing")
 
-  // Story 61.55 - Real-time subscription status
-  const { data: subscription, isLoading, refetch } = useBillingSubscription()
-  const isTrial = searchParams.get("is_trial") === "true"
-  
+  const { data: subscription, isLoading } = useBillingSubscription()
+
   // Lecture du session_id pour conformité AC11 (même si purement informatif)
   const sessionId = searchParams.get("session_id")
-
-  // On rafraîchit au montage pour être sûr d'avoir le dernier état webhook
-  useEffect(() => {
-    refetch()
-  }, [refetch])
 
   const status = subscription?.subscription_status
 
@@ -30,15 +23,15 @@ const BillingSuccessPage: React.FC = () => {
       return {
         icon: <Clock size={40} className="animate-pulse" />,
         title: t.waitingForWebhook,
-        message: t.message,
+        message: t.waitingForWebhookMessage,
       }
     }
 
-    if (status === "trialing" || isTrial) {
+    if (status === "trialing") {
       return {
         icon: <CheckCircle size={40} className="text-success" />,
-        title: t.trialTitle,
-        message: t.trialMessage,
+        title: t.trialStarted,
+        message: t.trialStartedMessage,
       }
     }
 
@@ -46,7 +39,7 @@ const BillingSuccessPage: React.FC = () => {
       return {
         icon: <CheckCircle size={40} className="text-success" />,
         title: t.subscriptionActive,
-        message: t.message,
+        message: t.subscriptionActiveMessage,
       }
     }
 
@@ -54,14 +47,14 @@ const BillingSuccessPage: React.FC = () => {
       return {
         icon: <Clock size={40} className="text-warning" />,
         title: t.activationPending,
-        message: t.message,
+        message: t.activationPendingMessage,
       }
     }
 
     return {
       icon: <Info size={40} />,
       title: t.waitingForWebhook,
-      message: t.message,
+      message: t.waitingForWebhookMessage,
     }
   }
 

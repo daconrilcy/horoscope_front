@@ -96,9 +96,6 @@ class StripeCheckoutService:
         # Story 61.55 - Trial Configuration
         if trial_enabled and trial_period_days and trial_period_days > 0:
             params["subscription_data"]["trial_period_days"] = trial_period_days
-            # On informe le frontend pour adapter le message de succès
-            connector = "&" if "?" in success_url else "?"
-            params["success_url"] = f"{success_url}{connector}is_trial=true"
 
         if payment_method_collection == "if_required":
             params["payment_method_collection"] = "if_required"

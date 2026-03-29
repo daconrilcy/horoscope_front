@@ -19,6 +19,7 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureQuotaModel,
     ResetMode,
 )
+from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.infra.observability.metrics import get_metrics_snapshot, reset_metrics
@@ -41,6 +42,7 @@ def _cleanup_tables() -> None:
             UserDailyQuotaUsageModel,
             UserSubscriptionModel,
             BillingPlanModel,
+            StripeBillingProfileModel,
             UserModel,
         ):
             db.execute(delete(model))
@@ -209,6 +211,28 @@ def test_billing_checkout_success_and_subscription_visibility() -> None:
         and "|plan_code=basic-entry" in name
         for name in counters
     )
+
+
+def test_billing_subscription_exposes_raw_stripe_subscription_status() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    with SessionLocal() as db:
+        user = db.query(UserModel).filter_by(email="billing-api-user@example.com").one()
+        db.add(
+            StripeBillingProfileModel(
+                user_id=user.id,
+                subscription_status="incomplete",
+                entitlement_plan="free",
+            )
+        )
+        db.commit()
+
+    status = client.get("/v1/billing/subscription", headers=headers)
+
+    assert status.status_code == 200
+    assert status.json()["data"]["subscription_status"] == "incomplete"
 
 
 def test_billing_checkout_failure_then_retry_success() -> None:

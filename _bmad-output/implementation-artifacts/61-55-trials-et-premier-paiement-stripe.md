@@ -454,13 +454,20 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Code review menée sur le commit d'implémentation initial.
+- Correction d'un écart critique : `GET /v1/billing/subscription` n'exposait pas `subscription_status`, ce qui empêchait l'UX de distinguer `trialing`, `incomplete` et `active`.
+- Suppression du contournement `is_trial=true` injecté dans `success_url` Stripe ; la page succès dépend maintenant uniquement du statut API.
+- Couverture de test complétée pour `customer.subscription.resumed` et pour le contrat API `subscription_status`.
+
 ### File List
 
 - `backend/app/core/config.py`
 - `backend/.env.example`
 - `backend/app/services/stripe_checkout_service.py`
+- `backend/app/services/billing_service.py`
 - `backend/app/api/v1/routers/billing.py`
 - `backend/app/services/stripe_webhook_service.py`
+- `backend/app/tests/unit/test_billing_service.py`
 - `frontend/src/i18n/billing.ts`
 - `frontend/src/i18n/settings.ts`
 - `frontend/src/pages/billing/BillingSuccessPage.tsx`
@@ -468,6 +475,7 @@ claude-sonnet-4-6
 - `backend/app/tests/unit/test_stripe_trial_config.py` (new)
 - `backend/app/tests/unit/test_stripe_checkout_service.py`
 - `backend/app/tests/unit/test_stripe_webhook_service.py`
+- `backend/app/tests/integration/test_billing_api.py`
 - `backend/app/tests/integration/test_stripe_checkout_api.py`
 - `backend/app/tests/integration/test_stripe_webhook_api.py`
 - `frontend/src/tests/BillingSuccessPage.test.tsx` (new)
@@ -475,10 +483,11 @@ claude-sonnet-4-6
 ### Change Log
 
 - Added trial configuration to `Settings` and `.env.example`.
-- Extended `StripeCheckoutService.create_checkout_session` to handle trial parameters and append `is_trial=true` to `success_url`.
+- Extended `StripeCheckoutService.create_checkout_session` to handle trial parameters without mutating the configured `success_url`.
 - Updated `POST /v1/billing/stripe-checkout-session` to pass trial settings and enrich audit logs.
 - Added `customer.subscription.paused/resumed/trial_will_end` to `StripeWebhookService`.
+- Exposed raw `subscription_status` in `GET /v1/billing/subscription` for billing return UX.
 - Added trial and paused status translations to `billing.ts` and `settings.ts`.
-- Updated `BillingSuccessPage.tsx` to handle trial success messaging.
+- Updated `BillingSuccessPage.tsx` to rely on API status only, with neutral messaging for `trialing`, `incomplete`, and `active`.
 - Created `docs/billing-trials-and-first-payment.md` with status mapping and policy.
-- Added comprehensive unit and integration tests for both backend and frontend.
+- Added review follow-up tests for the API contract and resumed webhook coverage.

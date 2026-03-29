@@ -24,6 +24,7 @@ from app.infra.db.models.billing import (
     SubscriptionPlanChangeModel,
     UserSubscriptionModel,
 )
+from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.observability.metrics import increment_counter, observe_duration
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,7 @@ class SubscriptionStatusData(BaseModel):
     """Modèle représentant le statut d'un abonnement utilisateur."""
 
     status: str
+    subscription_status: str | None
     plan: BillingPlanData | None
     failure_reason: str | None
     updated_at: datetime | None
@@ -217,6 +219,7 @@ class BillingService:
         *,
         subscription: UserSubscriptionModel | None,
         plan: BillingPlanModel | None,
+        stripe_subscription_status: str | None,
     ) -> SubscriptionStatusData:
         """
         Convertit les modèles d'abonnement et de plan en DTO de statut.
@@ -231,6 +234,7 @@ class BillingService:
         if subscription is None:
             return SubscriptionStatusData(
                 status="inactive",
+                subscription_status=stripe_subscription_status,
                 plan=None,
                 failure_reason=None,
                 updated_at=None,
@@ -238,9 +242,18 @@ class BillingService:
         exposed_status = "active" if subscription.status == "active" else "inactive"
         return SubscriptionStatusData(
             status=exposed_status,
+            subscription_status=stripe_subscription_status,
             plan=BillingService._to_plan_data(plan) if plan is not None else None,
             failure_reason=subscription.failure_reason,
             updated_at=subscription.updated_at,
+        )
+
+    @staticmethod
+    def _get_stripe_subscription_status(db: Session, *, user_id: int) -> str | None:
+        return db.scalar(
+            select(StripeBillingProfileModel.subscription_status)
+            .where(StripeBillingProfileModel.user_id == user_id)
+            .limit(1)
         )
 
     @staticmethod
@@ -356,13 +369,24 @@ class BillingService:
         if cached is not None:
             return cached
         BillingService.ensure_default_plans(db)
+        stripe_subscription_status = BillingService._get_stripe_subscription_status(
+            db, user_id=user_id
+        )
         latest = BillingService._get_latest_subscription(db, user_id=user_id)
         if latest is None:
-            payload = BillingService._to_subscription_data(subscription=None, plan=None)
+            payload = BillingService._to_subscription_data(
+                subscription=None,
+                plan=None,
+                stripe_subscription_status=stripe_subscription_status,
+            )
             BillingService._set_cached_subscription_status(user_id, payload)
             return payload
         plan = db.get(BillingPlanModel, latest.plan_id)
-        payload = BillingService._to_subscription_data(subscription=latest, plan=plan)
+        payload = BillingService._to_subscription_data(
+            subscription=latest,
+            plan=plan,
+            stripe_subscription_status=stripe_subscription_status,
+        )
         BillingService._set_cached_subscription_status(user_id, payload)
         return payload
 
@@ -381,13 +405,24 @@ class BillingService:
         cached = BillingService._get_cached_subscription_status(user_id)
         if cached is not None:
             return cached
+        stripe_subscription_status = BillingService._get_stripe_subscription_status(
+            db, user_id=user_id
+        )
         latest = BillingService._get_latest_subscription(db, user_id=user_id)
         if latest is None:
-            payload = BillingService._to_subscription_data(subscription=None, plan=None)
+            payload = BillingService._to_subscription_data(
+                subscription=None,
+                plan=None,
+                stripe_subscription_status=stripe_subscription_status,
+            )
             BillingService._set_cached_subscription_status(user_id, payload)
             return payload
         plan = db.get(BillingPlanModel, latest.plan_id)
-        payload = BillingService._to_subscription_data(subscription=latest, plan=plan)
+        payload = BillingService._to_subscription_data(
+            subscription=latest,
+            plan=plan,
+            stripe_subscription_status=stripe_subscription_status,
+        )
         BillingService._set_cached_subscription_status(user_id, payload)
         return payload
 
@@ -426,6 +461,9 @@ class BillingService:
             subscription=BillingService._to_subscription_data(
                 subscription=latest,
                 plan=current_plan,
+                stripe_subscription_status=BillingService._get_stripe_subscription_status(
+                    db, user_id=user_id
+                ),
             ),
             previous_plan_code=previous_plan.code if previous_plan is not None else "unknown",
             target_plan_code=target_plan.code if target_plan is not None else "unknown",
@@ -517,6 +555,9 @@ class BillingService:
                 subscription=BillingService._to_subscription_data(
                     subscription=latest,
                     plan=latest_plan,
+                    stripe_subscription_status=BillingService._get_stripe_subscription_status(
+                        db, user_id=user_id
+                    ),
                 ),
                 payment_status=existing_attempt.status,
                 payment_attempt_id=existing_attempt.id,
@@ -590,7 +631,13 @@ class BillingService:
                 payment_attempt.id,
             )
         return CheckoutData(
-            subscription=BillingService._to_subscription_data(subscription=subscription, plan=plan),
+            subscription=BillingService._to_subscription_data(
+                subscription=subscription,
+                plan=plan,
+                stripe_subscription_status=BillingService._get_stripe_subscription_status(
+                    db, user_id=user_id
+                ),
+            ),
             payment_status=payment_attempt.status,
             payment_attempt_id=payment_attempt.id,
             idempotency_key=payment_attempt.idempotency_key,
@@ -792,6 +839,9 @@ class BillingService:
             subscription=BillingService._to_subscription_data(
                 subscription=subscription,
                 plan=target_plan,
+                stripe_subscription_status=BillingService._get_stripe_subscription_status(
+                    db, user_id=user_id
+                ),
             ),
             previous_plan_code=current_plan.code,
             target_plan_code=target_plan.code,

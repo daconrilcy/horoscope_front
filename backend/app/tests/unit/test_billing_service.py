@@ -7,6 +7,7 @@ from app.infra.db.models.billing import (
     SubscriptionPlanChangeModel,
     UserSubscriptionModel,
 )
+from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
@@ -27,6 +28,7 @@ def _cleanup_tables() -> None:
         db.execute(delete(PaymentAttemptModel))
         db.execute(delete(UserSubscriptionModel))
         db.execute(delete(BillingPlanModel))
+        db.execute(delete(StripeBillingProfileModel))
         db.execute(delete(UserModel))
         db.commit()
 
@@ -87,6 +89,26 @@ def test_checkout_failure_keeps_inactive_with_reason() -> None:
     assert result.subscription.failure_reason is not None
     assert "declined" in result.subscription.failure_reason
     assert result.payment_status == "failed"
+
+
+def test_get_subscription_status_exposes_stripe_subscription_status() -> None:
+    _cleanup_tables()
+    user_id = _create_user_id()
+    with SessionLocal() as db:
+        BillingService.ensure_entry_plan(db)
+        db.add(
+            StripeBillingProfileModel(
+                user_id=user_id,
+                subscription_status="trialing",
+                entitlement_plan="basic",
+            )
+        )
+        db.commit()
+
+        status = BillingService.get_subscription_status(db, user_id=user_id)
+
+    assert status.status == "inactive"
+    assert status.subscription_status == "trialing"
 
 
 def test_checkout_is_idempotent_with_same_idempotency_key() -> None:

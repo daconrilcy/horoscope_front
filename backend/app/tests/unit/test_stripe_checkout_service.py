@@ -304,7 +304,7 @@ def test_create_checkout_session_with_trial(
     args, kwargs = mock_stripe_client.checkout.sessions.create.call_args
     params = kwargs["params"]
     assert params["subscription_data"]["trial_period_days"] == 14
-    assert "is_trial=true" in params["success_url"]
+    assert params["success_url"] == "h"
 
 
 def test_create_checkout_session_without_trial(

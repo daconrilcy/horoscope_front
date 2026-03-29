@@ -2,16 +2,16 @@ import type { AstrologyLang } from "./astrology"
 
 export type BillingTranslation = {
   success: {
-    title: string
-    message: string
-    trialTitle: string
-    trialMessage: string
     trialStarted: string
+    trialStartedMessage: string
     activationPending: string
+    activationPendingMessage: string
     subscriptionActive: string
+    subscriptionActiveMessage: string
     backToDashboard: string
     viewSubscription: string
     waitingForWebhook: string
+    waitingForWebhookMessage: string
   }
   cancel: {
     title: string
@@ -23,16 +23,16 @@ export type BillingTranslation = {
 
 export const billingTranslations = (lang: AstrologyLang): BillingTranslation => ({
   success: {
-    title: billingData.success[lang].title,
-    message: billingData.success[lang].message,
-    trialTitle: billingData.success[lang].trialTitle,
-    trialMessage: billingData.success[lang].trialMessage,
     trialStarted: billingData.success[lang].trialStarted,
+    trialStartedMessage: billingData.success[lang].trialStartedMessage,
     activationPending: billingData.success[lang].activationPending,
+    activationPendingMessage: billingData.success[lang].activationPendingMessage,
     subscriptionActive: billingData.success[lang].subscriptionActive,
+    subscriptionActiveMessage: billingData.success[lang].subscriptionActiveMessage,
     backToDashboard: billingData.success[lang].backToDashboard,
     viewSubscription: billingData.success[lang].viewSubscription,
     waitingForWebhook: billingData.success[lang].waitingForWebhook,
+    waitingForWebhookMessage: billingData.success[lang].waitingForWebhookMessage,
   },
   cancel: {
     title: billingData.cancel[lang].title,
@@ -45,54 +45,66 @@ export const billingTranslations = (lang: AstrologyLang): BillingTranslation => 
 const billingData = {
   success: {
     fr: {
-      title: "Paiement réussi !",
-      message: "Votre paiement est en cours de traitement. Votre abonnement sera activé automatiquement dans quelques instants. Vous pouvez retourner au tableau de bord.",
-      trialTitle: "Essai gratuit activé !",
-      trialMessage: "Votre période d'essai vient de commencer. Vous pouvez commencer à utiliser toutes les fonctionnalités premium dès maintenant.",
       trialStarted: "Essai gratuit démarré",
+      trialStartedMessage:
+        "Votre essai gratuit a bien démarré. L'accès produit suit désormais le statut Stripe réel.",
       activationPending: "Activation en cours de confirmation",
+      activationPendingMessage:
+        "Votre souscription est en attente de confirmation. Le premier paiement doit encore être validé par Stripe.",
       subscriptionActive: "Abonnement activé",
+      subscriptionActiveMessage:
+        "Votre abonnement est maintenant actif. Vous pouvez utiliser les fonctionnalités correspondant à votre plan.",
       backToDashboard: "Retour au tableau de bord",
       viewSubscription: "Voir mon abonnement",
       waitingForWebhook: "Paiement en cours de confirmation...",
+      waitingForWebhookMessage:
+        "Nous attendons encore la réconciliation Stripe. Rechargez cette page dans quelques instants si le statut n'a pas évolué.",
     },
     en: {
-      title: "Payment Successful!",
-      message: "Your payment is being processed. Your subscription will be activated automatically in a few moments. You can return to the dashboard.",
-      trialTitle: "Free Trial Activated!",
-      trialMessage: "Your trial period has just begun. You can start using all premium features right now.",
       trialStarted: "Free trial started",
+      trialStartedMessage:
+        "Your free trial has started. Product access now follows the real Stripe subscription status.",
       activationPending: "Activation pending confirmation",
+      activationPendingMessage:
+        "Your subscription is still awaiting confirmation. Stripe must finish validating the first payment.",
       subscriptionActive: "Subscription activated",
+      subscriptionActiveMessage:
+        "Your subscription is now active. You can use the features included in your plan.",
       backToDashboard: "Back to Dashboard",
       viewSubscription: "View my subscription",
       waitingForWebhook: "Payment confirmation in progress...",
+      waitingForWebhookMessage:
+        "Stripe reconciliation is still in progress. Reload this page in a moment if the status has not changed yet.",
     },
     es: {
-      title: "¡Pago exitoso!",
-      message: "Su pago está siendo procesado. Su suscripción se activará automatiquement en unos momentos. Puede volver al panel de control.",
-      trialTitle: "¡Prueba gratuita activada!",
-      trialMessage: "Su período de prueba acaba de comenzar. Puede comenzar a usar todas las funciones premium ahora mismo.",
       trialStarted: "Prueba gratuita iniciada",
+      trialStartedMessage:
+        "Su prueba gratuita ha comenzado. El acceso al producto ahora sigue el estado real de suscripción en Stripe.",
       activationPending: "Activación pendiente de confirmación",
+      activationPendingMessage:
+        "Su suscripción sigue pendiente de confirmación. Stripe debe validar primero el pago inicial.",
       subscriptionActive: "Suscripción activada",
+      subscriptionActiveMessage:
+        "Su suscripción ya está activa. Puede usar las funciones incluidas en su plan.",
       backToDashboard: "Volver al panel",
       viewSubscription: "Ver mi suscripción",
-      waitingForWebhook: "Confirmación de pago en cours...",
+      waitingForWebhook: "Confirmación de pago en curso...",
+      waitingForWebhookMessage:
+        "La reconciliación de Stripe sigue en curso. Recargue esta página en unos instantes si el estado no cambia todavía.",
     },
   } as Record<
     AstrologyLang,
     {
-      title: string
-      message: string
-      trialTitle: string
-      trialMessage: string
       trialStarted: string
+      trialStartedMessage: string
       activationPending: string
+      activationPendingMessage: string
       subscriptionActive: string
+      subscriptionActiveMessage: string
       backToDashboard: string
       viewSubscription: string
       waitingForWebhook: string
+      waitingForWebhookMessage: string
     }
   >,
   cancel: {
