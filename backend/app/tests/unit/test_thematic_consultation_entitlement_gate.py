@@ -2,7 +2,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.services.entitlement_types import FeatureEntitlement, QuotaDefinition, UsageState
+from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.entitlement_types import (
+    EffectiveEntitlementsSnapshot,
+    EffectiveFeatureAccess,
+    UsageState,
+)
 from app.services.quota_usage_service import QuotaExhaustedError
 from app.services.thematic_consultation_entitlement_gate import (
     ConsultationAccessDeniedError,
@@ -16,24 +21,18 @@ def mock_user():
     return MagicMock(id=42, email="user@example.com")
 
 
-def make_entitlement(**kwargs) -> FeatureEntitlement:
-    defaults = dict(
-        plan_code="basic",
-        billing_status="active",
-        is_enabled_by_plan=True,
+def make_snapshot(**kwargs) -> EffectiveEntitlementsSnapshot:
+    access_defaults = dict(
+        granted=True,
+        reason_code="granted",
         access_mode="quota",
         variant_code=None,
-        quotas=[
-            QuotaDefinition(
-                quota_key="consultations",
-                quota_limit=1,
-                period_unit="week",
-                period_value=1,
-                reset_mode="calendar",
-            )
-        ],
-        final_access=True,
-        reason="canonical_binding",
+        quota_limit=1,
+        quota_used=0,
+        quota_remaining=1,
+        period_unit="week",
+        period_value=1,
+        reset_mode="calendar",
         usage_states=[
             UsageState(
                 feature_code="thematic_consultation",
@@ -49,19 +48,29 @@ def make_entitlement(**kwargs) -> FeatureEntitlement:
                 window_end=None,
             )
         ],
-        quota_exhausted=False,
     )
-    return FeatureEntitlement(**{**defaults, **kwargs})
+    access_data = {**access_defaults, **kwargs.pop("access", {})}
+    access = EffectiveFeatureAccess(**access_data)
+
+    defaults = dict(
+        subject_type="b2c_user",
+        subject_id=42,
+        plan_code="basic",
+        billing_status="active",
+        entitlements={"thematic_consultation": access},
+    )
+    return EffectiveEntitlementsSnapshot(**{**defaults, **kwargs})
 
 
 def test_canonical_quota_path_consumes(db_session):
-    entitlement = make_entitlement()
+    snapshot = make_snapshot()
     mock_state = MagicMock(used=1, remaining=0)
 
     with (
-        patch(
-            "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
-            return_value=entitlement,
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            return_value=snapshot,
         ),
         patch(
             "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume",
@@ -76,12 +85,13 @@ def test_canonical_quota_path_consumes(db_session):
 
 
 def test_canonical_unlimited_path_no_consume(db_session):
-    entitlement = make_entitlement(access_mode="unlimited", quotas=[])
+    snapshot = make_snapshot(access=dict(access_mode="unlimited", usage_states=[]))
 
     with (
-        patch(
-            "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
-            return_value=entitlement,
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            return_value=snapshot,
         ),
         patch(
             "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume"
@@ -94,12 +104,16 @@ def test_canonical_unlimited_path_no_consume(db_session):
 
 
 def test_access_denied_no_plan(db_session):
-    entitlement = make_entitlement(
-        final_access=False, reason="no_plan", plan_code="", billing_status="none"
+    snapshot = make_snapshot(
+        plan_code="none",
+        billing_status="none",
+        access=dict(granted=False, reason_code="feature_not_in_plan"),
     )
-    with patch(
-        "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
-        return_value=entitlement,
+
+    with patch.object(
+        EffectiveEntitlementResolverService,
+        "resolve_b2c_user_snapshot",
+        return_value=snapshot,
     ):
         with pytest.raises(ConsultationAccessDeniedError) as exc_info:
             ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=42)
@@ -107,12 +121,15 @@ def test_access_denied_no_plan(db_session):
 
 
 def test_access_denied_billing_inactive(db_session):
-    entitlement = make_entitlement(
-        final_access=False, reason="billing_inactive", billing_status="past_due"
+    snapshot = make_snapshot(
+        billing_status="past_due",
+        access=dict(granted=False, reason_code="billing_inactive"),
     )
-    with patch(
-        "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
-        return_value=entitlement,
+
+    with patch.object(
+        EffectiveEntitlementResolverService,
+        "resolve_b2c_user_snapshot",
+        return_value=snapshot,
     ):
         with pytest.raises(ConsultationAccessDeniedError) as exc_info:
             ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=42)
@@ -120,10 +137,12 @@ def test_access_denied_billing_inactive(db_session):
 
 
 def test_canonical_disabled_binding_rejected_403(db_session):
-    entitlement = make_entitlement(final_access=False, reason="disabled_by_plan")
-    with patch(
-        "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
-        return_value=entitlement,
+    snapshot = make_snapshot(access=dict(granted=False, reason_code="binding_disabled"))
+
+    with patch.object(
+        EffectiveEntitlementResolverService,
+        "resolve_b2c_user_snapshot",
+        return_value=snapshot,
     ):
         with pytest.raises(ConsultationAccessDeniedError) as exc_info:
             ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=42)
@@ -131,16 +150,20 @@ def test_canonical_disabled_binding_rejected_403(db_session):
 
 
 def test_quota_exceeded_raises_consultation_error(db_session):
-    entitlement = make_entitlement()
+    snapshot = make_snapshot()
     with (
-        patch(
-            "app.services.thematic_consultation_entitlement_gate.EntitlementService.get_feature_entitlement",
-            return_value=entitlement,
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            return_value=snapshot,
         ),
         patch(
             "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume",
             side_effect=QuotaExhaustedError(
-                quota_key="consultations", used=1, limit=1, feature_code="thematic_consultation"
+                quota_key="consultations",
+                used=1,
+                limit=1,
+                feature_code="thematic_consultation",
             ),
         ),
     ):

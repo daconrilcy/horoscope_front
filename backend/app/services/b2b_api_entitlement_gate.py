@@ -4,17 +4,10 @@ import logging
 from dataclasses import dataclass, field
 from typing import Literal
 
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.enterprise_account import EnterpriseAccountModel
-from app.infra.db.models.product_entitlements import (
-    AccessMode,
-    FeatureCatalogModel,
-    PlanFeatureBindingModel,
-    PlanFeatureQuotaModel,
-)
-from app.services.b2b_canonical_plan_resolver import resolve_b2b_canonical_plan
+from app.services.effective_entitlement_gate_helpers import select_quota_usage_state
+from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
 from app.services.enterprise_quota_usage_service import EnterpriseQuotaUsageService
 from app.services.entitlement_types import QuotaDefinition, UsageState
 from app.services.quota_usage_service import QuotaExhaustedError
@@ -60,108 +53,83 @@ class B2BApiEntitlementGate:
 
     @staticmethod
     def check_and_consume(db: Session, *, account_id: int) -> B2BApiEntitlementResult:
-        # 1. Charger l'EnterpriseAccountModel (vérifier existence)
-        account = db.scalar(
-            select(EnterpriseAccountModel).where(EnterpriseAccountModel.id == account_id)
+        snapshot = EffectiveEntitlementResolverService.resolve_b2b_account_snapshot(
+            db, enterprise_account_id=account_id
         )
-        if not account:
-            logger.warning(
-                "b2b_gate_blocked account_id=%s code=%s",
-                account_id,
-                "b2b_account_not_found",
-            )
+        access = snapshot.entitlements.get(B2BApiEntitlementGate.FEATURE_CODE)
+
+        if not access or not access.granted:
+            reason_code = access.reason_code if access else "subject_not_eligible"
+            if reason_code == "quota_exhausted":
+                exhausted_state = select_quota_usage_state(access)
+                raise B2BApiQuotaExceededError(
+                    code="b2b_api_quota_exceeded",
+                    details={
+                        "quota_key": exhausted_state.quota_key
+                        if exhausted_state
+                        else B2BApiEntitlementGate.FEATURE_CODE,
+                        "used": str(exhausted_state.used)
+                        if exhausted_state
+                        else str(access.quota_used)
+                        if access
+                        else "0",
+                        "limit": str(exhausted_state.quota_limit)
+                        if exhausted_state
+                        else str(access.quota_limit)
+                        if access
+                        else "0",
+                        "reason_code": "quota_exhausted",
+                    },
+                )
+
+            error_code = "b2b_api_access_denied"
+            details: dict[str, str | int] = {"account_id": account_id, "reason_code": reason_code}
+            if snapshot.plan_code == "none":
+                error_code = "b2b_no_canonical_plan"
+            elif reason_code == "feature_not_in_plan":
+                error_code = "b2b_no_binding"
+            elif reason_code == "binding_disabled":
+                details["reason"] = "disabled_by_plan"
+            elif reason_code == "billing_inactive":
+                details["reason"] = "billing_inactive"
+            else:
+                details["reason"] = reason_code
+
             raise B2BApiAccessDeniedError(
-                code="b2b_account_not_configured",
-                details={"reason": "account_not_found"},
+                code=error_code,
+                details=details,
             )
 
-        # 2. Résoudre le plan canonique B2B
-        canonical_plan = resolve_b2b_canonical_plan(db, account_id)
-        if not canonical_plan:
-            logger.warning(
-                "b2b_gate_blocked account_id=%s code=%s", account_id, "b2b_no_canonical_plan"
-            )
-            raise B2BApiAccessDeniedError(
-                code="b2b_no_canonical_plan", details={"account_id": account_id}
-            )
-
-        # 3. Lire le binding b2b_api_access
-        binding_stmt = (
-            select(PlanFeatureBindingModel)
-            .join(FeatureCatalogModel, PlanFeatureBindingModel.feature_id == FeatureCatalogModel.id)
-            .where(
-                PlanFeatureBindingModel.plan_id == canonical_plan.id,
-                FeatureCatalogModel.feature_code == B2BApiEntitlementGate.FEATURE_CODE,
-            )
-        )
-        binding = db.scalar(binding_stmt)
-        if not binding:
-            logger.warning("b2b_gate_blocked account_id=%s code=%s", account_id, "b2b_no_binding")
-            raise B2BApiAccessDeniedError(code="b2b_no_binding", details={"account_id": account_id})
-
-        # 4. Selon l'access_mode
-        if not binding.is_enabled or binding.access_mode == AccessMode.DISABLED:
-            raise B2BApiAccessDeniedError(
-                code="b2b_api_access_denied",
-                details={"reason": "disabled_by_plan"},
-            )
-
-        if binding.access_mode == AccessMode.UNLIMITED:
+        if access.access_mode == "unlimited":
             return B2BApiEntitlementResult(path="canonical_unlimited")
 
-        if binding.access_mode == AccessMode.QUOTA:
-            # Charger les quotas
-            quotas_models = db.scalars(
-                select(PlanFeatureQuotaModel).where(
-                    PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
+        # access_mode == "quota" — consommer
+        consumed_states: list[UsageState] = []
+        for state in access.usage_states:
+            quota_def = QuotaDefinition(
+                quota_key=state.quota_key,
+                quota_limit=state.quota_limit,
+                period_unit=state.period_unit,
+                period_value=state.period_value,
+                reset_mode=state.reset_mode,
+            )
+            try:
+                new_state = EnterpriseQuotaUsageService.consume(
+                    db,
+                    account_id=account_id,
+                    feature_code=B2BApiEntitlementGate.FEATURE_CODE,
+                    quota=quota_def,
+                    amount=1,
                 )
-            ).all()
+                consumed_states.append(new_state)
+            except QuotaExhaustedError as exc:
+                raise B2BApiQuotaExceededError(
+                    code="b2b_api_quota_exceeded",
+                    details={
+                        "quota_key": exc.quota_key,
+                        "used": str(exc.used),
+                        "limit": str(exc.limit),
+                    },
+                ) from exc
 
-            if not quotas_models:
-                logger.warning(
-                    "b2b_gate_blocked account_id=%s code=%s", account_id, "b2b_no_quota_defined"
-                )
-                raise B2BApiAccessDeniedError(
-                    code="b2b_no_quota_defined", details={"account_id": account_id}
-                )
-
-            # Consommer (AC: 2)
-            consumed_states: list[UsageState] = []
-            for q_model in quotas_models:
-                quota_def = QuotaDefinition(
-                    quota_key=q_model.quota_key,
-                    quota_limit=q_model.quota_limit,
-                    period_unit=q_model.period_unit.value,
-                    period_value=q_model.period_value,
-                    reset_mode=q_model.reset_mode.value,
-                )
-                try:
-                    state = EnterpriseQuotaUsageService.consume(
-                        db,
-                        account_id=account_id,
-                        feature_code=B2BApiEntitlementGate.FEATURE_CODE,
-                        quota=quota_def,
-                        amount=1,
-                    )
-                    consumed_states.append(state)
-                except QuotaExhaustedError as exc:
-                    raise B2BApiQuotaExceededError(
-                        code="b2b_api_quota_exceeded",
-                        details={
-                            "quota_key": exc.quota_key,
-                            "used": str(exc.used),
-                            "limit": str(exc.limit),
-                        },
-                    ) from exc
-
-            return B2BApiEntitlementResult(path="canonical_quota", usage_states=consumed_states)
-
-        logger.warning(
-            "b2b_gate_blocked account_id=%s code=%s",
-            account_id,
-            "b2b_unknown_access_mode",
-        )
-        raise B2BApiAccessDeniedError(
-            code="b2b_unknown_access_mode",
-            details={"access_mode": str(binding.access_mode)},
-        )
+        return B2BApiEntitlementResult(path="canonical_quota", usage_states=consumed_states)

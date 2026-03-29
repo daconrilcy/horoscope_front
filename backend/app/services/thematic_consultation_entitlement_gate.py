@@ -5,14 +5,25 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from app.services.entitlement_service import EntitlementService
-from app.services.entitlement_types import UsageState
+from app.services.effective_entitlement_gate_helpers import (
+    map_b2c_reason_to_legacy,
+    select_quota_usage_state,
+)
+from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.entitlement_types import QuotaDefinition, UsageState
 from app.services.quota_usage_service import QuotaExhaustedError, QuotaUsageService
 
 
 class ConsultationAccessDeniedError(Exception):
-    def __init__(self, reason: str, billing_status: str, plan_code: str) -> None:
+    def __init__(
+        self,
+        reason: str,
+        billing_status: str,
+        plan_code: str,
+        reason_code: str | None = None,
+    ) -> None:
         self.reason = reason
+        self.reason_code = reason_code or reason
         self.billing_status = billing_status
         self.plan_code = plan_code
         super().__init__(f"Consultation access denied: {reason}")
@@ -38,58 +49,72 @@ class ThematicConsultationEntitlementGate:
 
     @staticmethod
     def check_and_consume(db: Session, *, user_id: int) -> ConsultationEntitlementResult:
-        entitlement = EntitlementService.get_feature_entitlement(
-            db, user_id=user_id, feature_code=ThematicConsultationEntitlementGate.FEATURE_CODE
+        snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
+            db, app_user_id=user_id
         )
+        access = snapshot.entitlements.get(ThematicConsultationEntitlementGate.FEATURE_CODE)
 
-        if not entitlement.final_access:
-            if entitlement.quota_exhausted and entitlement.usage_states:
-                exhausted_state = next((s for s in entitlement.usage_states if s.exhausted), None)
+        if not access or not access.granted:
+            reason_code = access.reason_code if access else "subject_not_eligible"
+            if reason_code == "quota_exhausted":
+                exhausted_state = select_quota_usage_state(access)
+                quota_key = ThematicConsultationEntitlementGate.FEATURE_CODE
                 if exhausted_state:
-                    raise ConsultationQuotaExceededError(
-                        quota_key=exhausted_state.quota_key,
-                        used=exhausted_state.used,
-                        limit=exhausted_state.quota_limit,
-                        window_end=exhausted_state.window_end,
-                    )
+                    quota_key = exhausted_state.quota_key
+                used = (
+                    exhausted_state.used
+                    if exhausted_state
+                    else (access.quota_used if access else 0)
+                )
+                limit = (
+                    exhausted_state.quota_limit
+                    if exhausted_state
+                    else (access.quota_limit if access else 0)
+                )
+                raise ConsultationQuotaExceededError(
+                    quota_key=quota_key,
+                    used=used,
+                    limit=limit,
+                    window_end=exhausted_state.window_end if exhausted_state else None,
+                )
             raise ConsultationAccessDeniedError(
-                reason=entitlement.reason,
-                billing_status=entitlement.billing_status,
-                plan_code=entitlement.plan_code,
+                reason=map_b2c_reason_to_legacy(snapshot, access),
+                reason_code=reason_code,
+                billing_status=snapshot.billing_status,
+                plan_code=snapshot.plan_code,
             )
 
-        if entitlement.access_mode == "unlimited":
+        if access.access_mode == "unlimited":
             return ConsultationEntitlementResult(
                 path="canonical_unlimited",
-                usage_states=entitlement.usage_states,
+                usage_states=access.usage_states,
             )
 
         # access_mode == "quota" — consommer
         consumed_states: list[UsageState] = []
-        for quota in entitlement.quotas:
+        for state in access.usage_states:
+            q_def = QuotaDefinition(
+                quota_key=state.quota_key,
+                quota_limit=state.quota_limit,
+                period_unit=state.period_unit,
+                period_value=state.period_value,
+                reset_mode=state.reset_mode,
+            )
             try:
-                state = QuotaUsageService.consume(
+                new_state = QuotaUsageService.consume(
                     db,
                     user_id=user_id,
                     feature_code=ThematicConsultationEntitlementGate.FEATURE_CODE,
-                    quota=quota,
+                    quota=q_def,
                     amount=1,
                 )
-                consumed_states.append(state)
+                consumed_states.append(new_state)
             except QuotaExhaustedError as exc:
-                window_end = next(
-                    (
-                        s.window_end
-                        for s in entitlement.usage_states
-                        if s.quota_key == exc.quota_key
-                    ),
-                    None,
-                )
                 raise ConsultationQuotaExceededError(
                     quota_key=exc.quota_key,
                     used=exc.used,
                     limit=exc.limit,
-                    window_end=window_end,
+                    window_end=state.window_end,
                 ) from exc
 
         return ConsultationEntitlementResult(path="canonical_quota", usage_states=consumed_states)

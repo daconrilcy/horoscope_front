@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
+from sqlalchemy.orm import Session
 
 import app.infra.db.models  # noqa: F401
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
@@ -30,7 +31,12 @@ from app.infra.db.session import SessionLocal, engine, get_db_session
 from app.llm_orchestration.schemas import AstroResponseV3
 from app.main import app
 from app.services.billing_service import BillingPlanData, BillingService, SubscriptionStatusData
-from app.services.entitlement_types import UsageState
+from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.entitlement_types import (
+    EffectiveEntitlementsSnapshot,
+    EffectiveFeatureAccess,
+    UsageState,
+)
 from app.services.natal_chart_long_entitlement_gate import (
     NatalChartLongAccessDeniedError,
     NatalChartLongEntitlementResult,
@@ -42,6 +48,121 @@ client = TestClient(app)
 COMPLETE_PAYLOAD = {"use_case_level": "complete", "locale": "fr-FR"}
 SHORT_PAYLOAD = {"use_case_level": "short", "locale": "fr-FR"}
 FEATURE_CODE = "natal_chart_long"
+
+
+def _mock_resolver_snapshot(
+    user_id: int,
+    plan_code: str,
+    granted: bool = True,
+    reason_code: str = "granted",
+    access_mode: AccessMode = AccessMode.QUOTA,
+    variant_code: str | None = None,
+    quota_limit: int | None = None,
+    used: int = 0,
+    period_unit: PeriodUnit | None = None,
+    period_value: int = 1,
+    reset_mode: ResetMode | None = None,
+    window_end: datetime | None = None,
+) -> EffectiveEntitlementsSnapshot:
+    usage_states = []
+    if access_mode == AccessMode.QUOTA and quota_limit is not None:
+        usage_states = [
+            UsageState(
+                feature_code=FEATURE_CODE,
+                quota_key="interpretations",
+                quota_limit=quota_limit,
+                used=used,
+                remaining=max(0, quota_limit - used),
+                exhausted=used >= quota_limit,
+                period_unit=period_unit.value if period_unit else None,
+                period_value=period_value,
+                reset_mode=reset_mode.value if reset_mode else None,
+                window_start=None,
+                window_end=window_end,
+            )
+        ]
+
+    access = EffectiveFeatureAccess(
+        granted=granted,
+        reason_code=reason_code,
+        access_mode=access_mode.value if access_mode else None,
+        variant_code=variant_code,
+        quota_limit=quota_limit,
+        quota_used=used,
+        quota_remaining=max(0, quota_limit - used) if quota_limit is not None else None,
+        period_unit=period_unit.value if period_unit else None,
+        period_value=period_value,
+        reset_mode=reset_mode.value if reset_mode else None,
+        usage_states=usage_states,
+    )
+    return EffectiveEntitlementsSnapshot(
+        subject_type="b2c_user",
+        subject_id=user_id,
+        plan_code=plan_code,
+        billing_status="active",
+        entitlements={FEATURE_CODE: access},
+    )
+
+
+def _dynamic_snapshot(db: Session, *, app_user_id: int) -> EffectiveEntitlementsSnapshot:
+    from app.infra.db.models.product_entitlements import (
+        FeatureUsageCounterModel,
+        PlanCatalogModel,
+        PlanFeatureBindingModel,
+        PlanFeatureQuotaModel,
+    )
+    from sqlalchemy import select
+
+    binding_stmt = (
+        select(PlanFeatureBindingModel, PlanCatalogModel)
+        .join(PlanCatalogModel, PlanFeatureBindingModel.plan_id == PlanCatalogModel.id)
+        .limit(1)
+    )
+    row = db.execute(binding_stmt).first()
+    if not row:
+        return _mock_resolver_snapshot(
+            user_id=app_user_id, plan_code="none", granted=False, reason_code="feature_not_in_plan"
+        )
+
+    binding, plan = row
+    quota = db.scalar(
+        select(PlanFeatureQuotaModel).where(
+            PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
+        )
+    )
+
+    counter = db.scalar(
+        select(FeatureUsageCounterModel).where(
+            FeatureUsageCounterModel.user_id == app_user_id,
+            FeatureUsageCounterModel.feature_code == FEATURE_CODE,
+        )
+    )
+    used = counter.used_count if counter else 0
+    window_end = counter.window_end if counter else None
+    if window_end and window_end.tzinfo is None:
+        window_end = window_end.replace(tzinfo=timezone.utc)
+
+    granted = binding.is_enabled and binding.access_mode != AccessMode.DISABLED
+    reason_code = "granted" if granted else "binding_disabled"
+
+    if granted and binding.access_mode == AccessMode.QUOTA and quota:
+        if used >= quota.quota_limit:
+            granted = False
+            reason_code = "quota_exhausted"
+
+    return _mock_resolver_snapshot(
+        user_id=app_user_id,
+        plan_code=plan.plan_code,
+        granted=granted,
+        reason_code=reason_code,
+        access_mode=binding.access_mode,
+        variant_code=binding.variant_code,
+        quota_limit=quota.quota_limit if quota else None,
+        used=used,
+        period_unit=quota.period_unit if quota else None,
+        reset_mode=quota.reset_mode if quota else None,
+        window_end=window_end,
+    )
 
 
 def _override_auth() -> AuthenticatedUser:
@@ -408,10 +529,12 @@ def test_trial_quota_1_per_lifetime() -> None:
 
     chart_patch, profile_patch, interpret_patch = _patch_interpretation_dependencies()
     with (
-        patch(
-            "app.services.entitlement_service.BillingService.get_subscription_status",
-            return_value=_subscription_status("trial"),
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            side_effect=_dynamic_snapshot,
         ),
+
         chart_patch,
         profile_patch,
         interpret_patch,
@@ -446,10 +569,12 @@ def test_premium_quota_5_per_lifetime() -> None:
 
     chart_patch, profile_patch, interpret_patch = _patch_interpretation_dependencies()
     with (
-        patch(
-            "app.services.entitlement_service.BillingService.get_subscription_status",
-            return_value=_subscription_status("premium"),
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            side_effect=_dynamic_snapshot,
         ),
+
         chart_patch,
         profile_patch,
         interpret_patch,
@@ -487,10 +612,12 @@ def test_variant_code_in_response(plan_code: str, variant_code: str) -> None:
 
     chart_patch, profile_patch, interpret_patch = _patch_interpretation_dependencies()
     with (
-        patch(
-            "app.services.entitlement_service.BillingService.get_subscription_status",
-            return_value=_subscription_status(plan_code),
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            side_effect=_dynamic_snapshot,
         ),
+
         chart_patch,
         profile_patch,
         interpret_patch,
@@ -531,10 +658,12 @@ def test_complete_consumes_before_cached_response() -> None:
         side_effect=_assert_counter_before_interpret
     )
     with (
-        patch(
-            "app.services.entitlement_service.BillingService.get_subscription_status",
-            return_value=_subscription_status("basic"),
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            side_effect=_dynamic_snapshot,
         ),
+
         chart_patch,
         profile_patch,
         interpret_patch,

@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
+from sqlalchemy.orm import Session
 
 import app.infra.db.models  # noqa: F401
 from app.api.v1.schemas.consultation import (
@@ -32,11 +33,140 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine, get_db_session
 from app.main import app
 from app.services.billing_service import BillingPlanData, BillingService, SubscriptionStatusData
+from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.entitlement_types import (
+    EffectiveEntitlementsSnapshot,
+    EffectiveFeatureAccess,
+    UsageState,
+)
 from app.services.thematic_consultation_entitlement_gate import ConsultationQuotaExceededError
 
 UTC = timezone.utc
 FEATURE_CODE = "thematic_consultation"
 CLIENT = TestClient(app)
+
+
+def _mock_resolver_snapshot(
+    user_id: int,
+    plan_code: str,
+    granted: bool = True,
+    reason_code: str = "granted",
+    access_mode: AccessMode = AccessMode.QUOTA,
+    quota_limit: int | None = None,
+    used: int = 0,
+    period_unit: PeriodUnit | None = None,
+    period_value: int = 1,
+    reset_mode: ResetMode | None = None,
+    window_end: datetime | None = None,
+) -> EffectiveEntitlementsSnapshot:
+    usage_states = []
+    if access_mode == AccessMode.QUOTA and quota_limit is not None:
+        usage_states = [
+            UsageState(
+                feature_code=FEATURE_CODE,
+                quota_key="consultations",
+                quota_limit=quota_limit,
+                used=used,
+                remaining=max(0, quota_limit - used),
+                exhausted=used >= quota_limit,
+                period_unit=period_unit.value if period_unit else None,
+                period_value=period_value,
+                reset_mode=reset_mode.value if reset_mode else None,
+                window_start=None,
+                window_end=window_end,
+            )
+        ]
+
+    access = EffectiveFeatureAccess(
+        granted=granted,
+        reason_code=reason_code,
+        access_mode=access_mode.value if access_mode else None,
+        variant_code=None,
+        quota_limit=quota_limit,
+        quota_used=used,
+        quota_remaining=max(0, quota_limit - used) if quota_limit is not None else None,
+        period_unit=period_unit.value if period_unit else None,
+        period_value=period_value,
+        reset_mode=reset_mode.value if reset_mode else None,
+        usage_states=usage_states,
+    )
+    return EffectiveEntitlementsSnapshot(
+        subject_type="b2c_user",
+        subject_id=user_id,
+        plan_code=plan_code,
+        billing_status="active",
+        entitlements={FEATURE_CODE: access},
+    )
+
+
+def _get_user_id(email: str) -> int:
+    with SessionLocal() as db:
+        user = db.query(UserModel).filter_by(email=email).one()
+        return user.id
+
+
+def _dynamic_snapshot(db: Session, *, app_user_id: int) -> EffectiveEntitlementsSnapshot:
+    # Simuler ce que le vrai resolver ferait mais en se basant sur ce qu'on a seedé
+    from sqlalchemy import select
+
+    from app.infra.db.models.product_entitlements import (
+        FeatureUsageCounterModel,
+        PlanCatalogModel,
+        PlanFeatureBindingModel,
+        PlanFeatureQuotaModel,
+    )
+
+    # On cherche le binding seedé (on suppose un seul plan pour le test)
+    # On fait un join manuel car la relation n'est peut-être pas chargée
+    binding_stmt = (
+        select(PlanFeatureBindingModel, PlanCatalogModel)
+        .join(PlanCatalogModel, PlanFeatureBindingModel.plan_id == PlanCatalogModel.id)
+        .limit(1)
+    )
+    row = db.execute(binding_stmt).first()
+    if not row:
+        return _mock_resolver_snapshot(
+            user_id=app_user_id, plan_code="none", granted=False, reason_code="feature_not_in_plan"
+        )
+
+    binding, plan = row
+    quota = db.scalar(
+        select(PlanFeatureQuotaModel).where(
+            PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
+        )
+    )
+
+    counter = db.scalar(
+        select(FeatureUsageCounterModel).where(
+            FeatureUsageCounterModel.user_id == app_user_id,
+            FeatureUsageCounterModel.feature_code == FEATURE_CODE,
+        )
+    )
+    used = counter.used_count if counter else 0
+    window_end = counter.window_end if counter else None
+    if window_end and window_end.tzinfo is None:
+        window_end = window_end.replace(tzinfo=timezone.utc)
+
+    granted = binding.is_enabled and binding.access_mode != AccessMode.DISABLED
+    reason_code = "granted" if granted else "binding_disabled"
+
+    if granted and binding.access_mode == AccessMode.QUOTA and quota:
+        if used >= quota.quota_limit:
+            granted = False
+            reason_code = "quota_exhausted"
+
+    return _mock_resolver_snapshot(
+        user_id=app_user_id,
+        plan_code=plan.plan_code,
+        granted=granted,
+        reason_code=reason_code,
+        access_mode=binding.access_mode,
+        quota_limit=quota.quota_limit if quota else None,
+        used=used,
+        period_unit=quota.period_unit if quota else None,
+        reset_mode=quota.reset_mode if quota else None,
+        window_end=window_end,
+    )
 
 
 def _reset_database() -> None:
@@ -187,9 +317,10 @@ def test_generate_canonical_quota_ok() -> None:
     )
 
     with (
-        patch(
-            "app.services.entitlement_service.BillingService.get_subscription_status",
-            return_value=_subscription_status(plan_code="basic"),
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            side_effect=_dynamic_snapshot,
         ),
         patch(
             "app.services.consultation_generation_service.ConsultationGenerationService.generate",
@@ -238,9 +369,10 @@ def test_generate_canonical_quota_consumes_before_generation() -> None:
         return _generate_payload()
 
     with (
-        patch(
-            "app.services.entitlement_service.BillingService.get_subscription_status",
-            return_value=_subscription_status(plan_code="basic"),
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            side_effect=_dynamic_snapshot,
         ),
         patch(
             "app.services.consultation_generation_service.ConsultationGenerationService.generate",
@@ -261,9 +393,10 @@ def test_generate_canonical_unlimited_ok() -> None:
     )
 
     with (
-        patch(
-            "app.services.entitlement_service.BillingService.get_subscription_status",
-            return_value=_subscription_status(plan_code="premium"),
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            side_effect=_dynamic_snapshot,
         ),
         patch(
             "app.services.consultation_generation_service.ConsultationGenerationService.generate",
@@ -286,9 +419,10 @@ def test_generate_no_plan_rejected() -> None:
     _reset_database()
     headers = _auth_headers("no-plan@example.com")
 
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=_subscription_status(plan_code=None, status="none"),
+    with patch.object(
+        EffectiveEntitlementResolverService,
+        "resolve_b2c_user_snapshot",
+        side_effect=_dynamic_snapshot,
     ):
         response = _post_generate(headers)
 
@@ -296,6 +430,7 @@ def test_generate_no_plan_rejected() -> None:
     data = response.json()
     assert data["error"]["code"] == "consultation_access_denied"
     assert data["error"]["details"]["reason"] == "no_plan"
+    assert data["error"]["details"]["reason_code"] == "feature_not_in_plan"
 
 
 def test_generate_quota_exhausted_rejected() -> None:
@@ -331,9 +466,10 @@ def test_generate_quota_exhausted_rejected() -> None:
         db.commit()
 
     with (
-        patch(
-            "app.services.entitlement_service.BillingService.get_subscription_status",
-            return_value=_subscription_status(plan_code="basic"),
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            side_effect=_dynamic_snapshot,
         ),
         patch("app.services.entitlement_service.datetime", frozen_datetime),
     ):
@@ -353,15 +489,18 @@ def test_generate_disabled_binding_returns_disabled_by_plan() -> None:
         access_mode=AccessMode.DISABLED,
         is_enabled=False,
     )
-
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=_subscription_status(plan_code="free"),
+    with (
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            side_effect=_dynamic_snapshot,
+        ),
     ):
         response = _post_generate(headers)
 
     assert response.status_code == 403
     assert response.json()["error"]["details"]["reason"] == "disabled_by_plan"
+    assert response.json()["error"]["details"]["reason_code"] == "binding_disabled"
 
 
 def test_generate_no_canonical_binding_returns_no_binding() -> None:
@@ -385,15 +524,18 @@ def test_generate_no_canonical_binding_returns_no_binding() -> None:
             )
         )
         db.commit()
-
-    with patch(
-        "app.services.entitlement_service.BillingService.get_subscription_status",
-        return_value=_subscription_status(plan_code="basic"),
+    with (
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            side_effect=_dynamic_snapshot,
+        ),
     ):
         response = _post_generate(headers)
 
     assert response.status_code == 403
-    assert response.json()["error"]["details"]["reason"] == "canonical_no_binding"
+    assert response.json()["error"]["details"]["reason"] == "no_plan"
+    assert response.json()["error"]["details"]["reason_code"] == "feature_not_in_plan"
 
 
 def test_generate_rolls_back_partial_canonical_consumption() -> None:
@@ -457,9 +599,10 @@ def test_generate_access_denied_rolls_back() -> None:
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     with (
-        patch(
-            "app.services.entitlement_service.BillingService.get_subscription_status",
-            return_value=_subscription_status(plan_code=None, status="none"),
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            side_effect=_dynamic_snapshot,
         ),
         patch.object(db_session, "rollback") as mock_rollback,
     ):
@@ -506,9 +649,10 @@ def test_generate_quota_exceeded_rolls_back() -> None:
     db_session.commit()
 
     with (
-        patch(
-            "app.services.entitlement_service.BillingService.get_subscription_status",
-            return_value=_subscription_status(plan_code="basic"),
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            side_effect=_dynamic_snapshot,
         ),
         patch("app.services.entitlement_service.datetime", frozen_datetime),
         patch.object(db_session, "rollback") as mock_rollback,
@@ -538,9 +682,10 @@ def test_premium_quota_2_per_day() -> None:
     frozen_datetime.now.return_value = fixed_now
 
     with (
-        patch(
-            "app.services.entitlement_service.BillingService.get_subscription_status",
-            return_value=_subscription_status(plan_code="premium"),
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            side_effect=_dynamic_snapshot,
         ),
         patch("app.services.entitlement_service.datetime", frozen_datetime),
         patch("app.services.quota_usage_service.datetime", frozen_datetime),
@@ -575,9 +720,10 @@ def test_basic_quota_1_per_week() -> None:
     frozen_datetime.now.return_value = fixed_now
 
     with (
-        patch(
-            "app.services.entitlement_service.BillingService.get_subscription_status",
-            return_value=_subscription_status(plan_code="basic"),
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            side_effect=_dynamic_snapshot,
         ),
         patch("app.services.entitlement_service.datetime", frozen_datetime),
         patch("app.services.quota_usage_service.datetime", frozen_datetime),

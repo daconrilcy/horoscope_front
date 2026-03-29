@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
+from sqlalchemy.orm import Session
 
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
@@ -31,10 +33,151 @@ from app.main import app
 from app.services.auth_service import AuthService
 from app.services.b2b_api_entitlement_gate import B2BApiEntitlementGate
 from app.services.b2b_astrology_service import B2BAstrologyServiceError
+from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
 from app.services.enterprise_credentials_service import EnterpriseCredentialsService
+from app.services.entitlement_types import (
+    EffectiveEntitlementsSnapshot,
+    EffectiveFeatureAccess,
+    UsageState,
+)
 from app.services.reference_data_service import ReferenceDataService
 
 client = TestClient(app)
+
+
+def _mock_b2b_snapshot(
+    account_id: int,
+    plan_code: str,
+    granted: bool = True,
+    reason_code: str = "granted",
+    access_mode: AccessMode | None = AccessMode.QUOTA,
+    quota_limit: int | None = None,
+    used: int = 0,
+    period_unit: PeriodUnit | None = None,
+    reset_mode: ResetMode | None = None,
+) -> EffectiveEntitlementsSnapshot:
+    usage_states = []
+    feature_code = B2BApiEntitlementGate.FEATURE_CODE
+    if access_mode == AccessMode.QUOTA and quota_limit is not None:
+        usage_states = [
+            UsageState(
+                feature_code=feature_code,
+                quota_key=feature_code,
+                quota_limit=quota_limit,
+                used=used,
+                remaining=max(0, quota_limit - used),
+                exhausted=used >= quota_limit,
+                period_unit=period_unit.value if period_unit else None,
+                period_value=1,
+                reset_mode=reset_mode.value if reset_mode else None,
+                window_start=None,
+                window_end=None,
+            )
+        ]
+
+    access = EffectiveFeatureAccess(
+        granted=granted,
+        reason_code=reason_code,
+        access_mode=access_mode.value if access_mode else None,
+        variant_code=None,
+        quota_limit=quota_limit,
+        quota_used=used,
+        quota_remaining=max(0, quota_limit - used) if quota_limit is not None else None,
+        period_unit=period_unit.value if period_unit else None,
+        period_value=1,
+        reset_mode=reset_mode.value if reset_mode else None,
+        usage_states=usage_states,
+    )
+    return EffectiveEntitlementsSnapshot(
+        subject_type="b2b_account",
+        subject_id=account_id,
+        plan_code=plan_code,
+        billing_status="active",
+        entitlements={feature_code: access},
+    )
+
+
+def _dynamic_b2b_snapshot(
+    db: Session, *, enterprise_account_id: int
+) -> EffectiveEntitlementsSnapshot:
+    from app.services.b2b_canonical_plan_resolver import resolve_b2b_canonical_plan
+
+    feature_code = B2BApiEntitlementGate.FEATURE_CODE
+    canonical_plan = resolve_b2b_canonical_plan(db, enterprise_account_id)
+    if not canonical_plan:
+        return _mock_b2b_snapshot(
+            account_id=enterprise_account_id,
+            plan_code="none",
+            granted=False,
+            reason_code="b2b_no_canonical_plan",
+        )
+
+    binding_stmt = (
+        select(PlanFeatureBindingModel)
+        .join(FeatureCatalogModel, PlanFeatureBindingModel.feature_id == FeatureCatalogModel.id)
+        .where(
+            PlanFeatureBindingModel.plan_id == canonical_plan.id,
+            FeatureCatalogModel.feature_code == feature_code,
+        )
+    )
+    binding = db.scalar(binding_stmt)
+    if not binding:
+        return _mock_b2b_snapshot(
+            account_id=enterprise_account_id,
+            plan_code=canonical_plan.plan_code,
+            granted=False,
+            reason_code="b2b_no_binding",
+        )
+
+    granted = binding.is_enabled and binding.access_mode != AccessMode.DISABLED
+    reason_code = "granted" if granted else "binding_disabled"
+
+    quota = db.scalar(
+        select(PlanFeatureQuotaModel).where(
+            PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
+        )
+    )
+
+    from app.infra.db.models.enterprise_feature_usage_counters import (
+        EnterpriseFeatureUsageCounterModel,
+    )
+
+    counter = db.scalar(
+        select(EnterpriseFeatureUsageCounterModel).where(
+            EnterpriseFeatureUsageCounterModel.enterprise_account_id == enterprise_account_id,
+            EnterpriseFeatureUsageCounterModel.feature_code == feature_code,
+        )
+    )
+    used = counter.used_count if counter else 0
+
+    if granted and binding.access_mode == AccessMode.QUOTA and quota:
+        if used >= quota.quota_limit:
+            granted = False
+            reason_code = "quota_exhausted"
+
+    return _mock_b2b_snapshot(
+        account_id=enterprise_account_id,
+        plan_code=canonical_plan.plan_code,
+        granted=granted,
+        reason_code=reason_code,
+        access_mode=binding.access_mode,
+        quota_limit=quota.quota_limit if quota else None,
+        used=used,
+        period_unit=quota.period_unit if quota else None,
+        reset_mode=quota.reset_mode if quota else None,
+    )
+
+
+@pytest.fixture(autouse=True)
+def patch_b2b_resolver():
+    from unittest.mock import patch
+
+    with patch.object(
+        EffectiveEntitlementResolverService,
+        "resolve_b2b_account_snapshot",
+        side_effect=_dynamic_b2b_snapshot,
+    ):
+        yield
 
 
 def _cleanup_tables() -> None:
@@ -208,6 +351,8 @@ def test_b2b_astrology_canonical_disabled():
     )
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "b2b_api_access_denied"
+    assert response.json()["error"]["details"]["reason"] == "disabled_by_plan"
+    assert response.json()["error"]["details"]["reason_code"] == "binding_disabled"
 
 
 def test_b2b_astrology_disabled_binding_not_enabled_skips_settings_fallback():
@@ -228,6 +373,8 @@ def test_b2b_astrology_disabled_binding_not_enabled_skips_settings_fallback():
 
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "b2b_api_access_denied"
+    assert response.json()["error"]["details"]["reason"] == "disabled_by_plan"
+    assert response.json()["error"]["details"]["reason_code"] == "binding_disabled"
 
 
 def test_b2b_astrology_fallback_settings():

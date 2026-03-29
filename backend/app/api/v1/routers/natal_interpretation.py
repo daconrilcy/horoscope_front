@@ -131,6 +131,7 @@ async def interpret_natal_chart(
                     "quota_key": error.quota_key,
                     "used": error.used,
                     "limit": error.limit,
+                    "reason_code": "quota_exhausted",
                     "window_end": error.window_end.isoformat() if error.window_end else None,
                 },
             )
@@ -141,7 +142,11 @@ async def interpret_natal_chart(
                 code="natal_chart_long_access_denied",
                 message="accès à l'interprétation complète du thème natal refusé",
                 request_id=request_id,
-                details={"reason": error.reason, "billing_status": error.billing_status},
+                details={
+                    "reason": error.reason,
+                    "reason_code": error.reason_code,
+                    "billing_status": error.billing_status,
+                },
             )
 
     try:

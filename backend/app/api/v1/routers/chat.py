@@ -173,6 +173,7 @@ def send_chat_message(
                         "quota_key": error.quota_key,
                         "used": error.used,
                         "limit": error.limit,
+                        "reason_code": "quota_exhausted",
                         "window_end": error.window_end.isoformat() if error.window_end else None,
                     },
                     "request_id": request_id,
@@ -187,7 +188,11 @@ def send_chat_message(
                 "error": {
                     "code": "chat_access_denied",
                     "message": "accès au chat refusé",
-                    "details": {"reason": error.reason, "billing_status": error.billing_status},
+                    "details": {
+                        "reason": error.reason,
+                        "reason_code": error.reason_code,
+                        "billing_status": error.billing_status,
+                    },
                     "request_id": request_id,
                 }
             },

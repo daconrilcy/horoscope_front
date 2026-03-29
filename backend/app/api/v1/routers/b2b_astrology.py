@@ -194,16 +194,22 @@ def get_weekly_by_sign(
         db.rollback()
         if isinstance(error, B2BApiAccessDeniedError):
             status_code = 403
+            details = getattr(error, "details", {})
+            if "reason_code" not in details:
+                details["reason_code"] = error.code
         else:
             # B2BApiQuotaExceededError
             status_code = 429
+            details = getattr(error, "details", {})
+            if "reason_code" not in details:
+                details["reason_code"] = "quota_exhausted"
 
         return _error_response(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
             message=error.message,
-            details=getattr(error, "details", {}),
+            details=details,
         )
     except B2BAstrologyServiceError as error:
         db.rollback()

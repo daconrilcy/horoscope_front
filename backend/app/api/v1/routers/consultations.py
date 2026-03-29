@@ -130,6 +130,7 @@ async def generate_consultation(
                         "quota_key": error.quota_key,
                         "used": error.used,
                         "limit": error.limit,
+                        "reason_code": "quota_exhausted",
                         "window_end": error.window_end.isoformat() if error.window_end else None,
                     },
                     "request_id": request_id,
@@ -144,7 +145,11 @@ async def generate_consultation(
                 "error": {
                     "code": "consultation_access_denied",
                     "message": "accès aux consultations thématiques refusé",
-                    "details": {"reason": error.reason, "billing_status": error.billing_status},
+                    "details": {
+                        "reason": error.reason,
+                        "reason_code": error.reason_code,
+                        "billing_status": error.billing_status,
+                    },
                     "request_id": request_id,
                 }
             },
