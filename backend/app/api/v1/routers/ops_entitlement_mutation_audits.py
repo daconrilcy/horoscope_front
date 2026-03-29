@@ -5,7 +5,7 @@ from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -223,6 +223,21 @@ class AlertRetryRequestBody(BaseModel):
     dry_run: bool = False
 
 
+class BatchRetryRequestBody(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    limit: int = Field(..., ge=1, le=100)
+    dry_run: bool = False
+    alert_kind: str | None = None
+    audit_id: int | None = None
+    feature_code: str | None = None
+    plan_code: str | None = None
+    actor_type: str | None = None
+    request_id_filter: str | None = Field(default=None, alias="request_id")
+    date_from: datetime | None = None
+    date_to: datetime | None = None
+
+
 class AlertRetryResponseData(BaseModel):
     alert_event_id: int
     attempted: bool
@@ -233,6 +248,21 @@ class AlertRetryResponseData(BaseModel):
 
 class AlertRetryApiResponse(BaseModel):
     data: AlertRetryResponseData
+    meta: ResponseMeta
+
+
+class BatchRetryResultData(BaseModel):
+    candidate_count: int
+    retried_count: int
+    sent_count: int
+    failed_count: int
+    skipped_count: int
+    dry_run: bool
+    alert_event_ids: list[int]
+
+
+class BatchRetryApiResponse(BaseModel):
+    data: BatchRetryResultData
     meta: ResponseMeta
 
 
@@ -993,6 +1023,71 @@ def list_alert_events(
             "total_count": total_count,
             "page": page,
             "page_size": page_size,
+        },
+        "meta": {"request_id": request_id},
+    }
+
+
+@router.post(
+    "/mutation-audits/alerts/retry-batch",
+    response_model=BatchRetryApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        422: {"description": "Validation error"},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def batch_retry_alerts(
+    body: BatchRetryRequestBody,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    from app.services.canonical_entitlement_alert_batch_retry_service import (
+        CanonicalEntitlementAlertBatchRetryService,
+    )
+
+    request_id = resolve_request_id(request)
+
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        return err
+    if (
+        err := _enforce_limits(
+            user=current_user,
+            request_id=request_id,
+            operation="batch_retry_alerts",
+        )
+    ) is not None:
+        return err
+
+    result = CanonicalEntitlementAlertBatchRetryService.batch_retry(
+        db,
+        limit=body.limit,
+        dry_run=body.dry_run,
+        request_id=request_id,
+        alert_kind=body.alert_kind,
+        audit_id=body.audit_id,
+        feature_code=body.feature_code,
+        plan_code=body.plan_code,
+        actor_type=body.actor_type,
+        request_id_filter=body.request_id_filter,
+        date_from=body.date_from,
+        date_to=body.date_to,
+    )
+
+    if not body.dry_run:
+        db.commit()
+
+    return {
+        "data": {
+            "candidate_count": result.candidate_count,
+            "retried_count": result.retried_count,
+            "sent_count": result.sent_count,
+            "failed_count": result.failed_count,
+            "skipped_count": result.skipped_count,
+            "dry_run": result.dry_run,
+            "alert_event_ids": result.alert_event_ids,
         },
         "meta": {"request_id": request_id},
     }

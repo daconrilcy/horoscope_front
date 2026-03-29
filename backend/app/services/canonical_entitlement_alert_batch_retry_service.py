@@ -1,0 +1,171 @@
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.core.config import settings
+from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt import (
+    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
+)
+from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+    CanonicalEntitlementMutationAlertEventModel,
+)
+from app.services.canonical_entitlement_alert_retry_service import (
+    CanonicalEntitlementAlertRetryService,
+)
+from app.services.canonical_entitlement_alert_service import CanonicalEntitlementAlertService
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class BatchRetryResult:
+    candidate_count: int
+    retried_count: int
+    sent_count: int
+    failed_count: int
+    skipped_count: int
+    dry_run: bool
+    alert_event_ids: list[int] = field(default_factory=list)
+
+
+class CanonicalEntitlementAlertBatchRetryService:
+    @staticmethod
+    def batch_retry(
+        db: Session,
+        *,
+        limit: int,
+        dry_run: bool = False,
+        request_id: str | None = None,
+        alert_kind: str | None = None,
+        audit_id: int | None = None,
+        feature_code: str | None = None,
+        plan_code: str | None = None,
+        actor_type: str | None = None,
+        request_id_filter: str | None = None,
+        date_from: datetime | None = None,
+        date_to: datetime | None = None,
+    ) -> BatchRetryResult:
+        effective_now = datetime.now(timezone.utc)
+        candidates = CanonicalEntitlementAlertBatchRetryService._load_batch_candidates(
+            db,
+            limit=limit,
+            alert_kind=alert_kind,
+            audit_id=audit_id,
+            feature_code=feature_code,
+            plan_code=plan_code,
+            actor_type=actor_type,
+            request_id_filter=request_id_filter,
+            date_from=date_from,
+            date_to=date_to,
+        )
+        alert_event_ids = [event.id for event in candidates]
+        candidate_count = len(candidates)
+
+        if dry_run:
+            return BatchRetryResult(
+                candidate_count=candidate_count,
+                retried_count=candidate_count,
+                sent_count=0,
+                failed_count=0,
+                skipped_count=0,
+                dry_run=True,
+                alert_event_ids=alert_event_ids,
+            )
+
+        retried_count = 0
+        sent_count = 0
+        failed_count = 0
+
+        for event in candidates:
+            attempt_number = CanonicalEntitlementAlertRetryService._next_attempt_number(
+                db, alert_event_id=event.id
+            )
+            delivery_channel = "log"
+            delivery_status = "sent"
+            delivery_error = None
+            delivered_at = effective_now
+
+            if settings.ops_review_queue_alert_webhook_url:
+                delivery_channel = "webhook"
+                success, error_message = CanonicalEntitlementAlertService._deliver_webhook(
+                    settings.ops_review_queue_alert_webhook_url,
+                    event.payload,
+                )
+                if success:
+                    sent_count += 1
+                else:
+                    delivery_status = "failed"
+                    delivery_error = error_message
+                    delivered_at = None
+                    failed_count += 1
+            else:
+                logger.info("ops_alert_batch_retry_log_delivery payload=%s", event.payload)
+                sent_count += 1
+
+            db.add(
+                CanonicalEntitlementMutationAlertDeliveryAttemptModel(
+                    alert_event_id=event.id,
+                    attempt_number=attempt_number,
+                    delivery_channel=delivery_channel,
+                    delivery_status=delivery_status,
+                    delivery_error=delivery_error,
+                    request_id=request_id,
+                    payload=event.payload,
+                    delivered_at=delivered_at,
+                )
+            )
+            event.delivery_status = delivery_status
+            event.delivery_error = delivery_error
+            event.delivered_at = delivered_at
+            retried_count += 1
+
+        db.flush()
+        return BatchRetryResult(
+            candidate_count=candidate_count,
+            retried_count=retried_count,
+            sent_count=sent_count,
+            failed_count=failed_count,
+            skipped_count=candidate_count - retried_count,
+            dry_run=False,
+            alert_event_ids=alert_event_ids,
+        )
+
+    @staticmethod
+    def _load_batch_candidates(
+        db: Session,
+        *,
+        limit: int,
+        alert_kind: str | None,
+        audit_id: int | None,
+        feature_code: str | None,
+        plan_code: str | None,
+        actor_type: str | None,
+        request_id_filter: str | None,
+        date_from: datetime | None,
+        date_to: datetime | None,
+    ) -> list[CanonicalEntitlementMutationAlertEventModel]:
+        model = CanonicalEntitlementMutationAlertEventModel
+        query = select(model).where(model.delivery_status == "failed")
+        if alert_kind is not None:
+            query = query.where(model.alert_kind == alert_kind)
+        if audit_id is not None:
+            query = query.where(model.audit_id == audit_id)
+        if feature_code is not None:
+            query = query.where(model.feature_code_snapshot == feature_code)
+        if plan_code is not None:
+            query = query.where(model.plan_code_snapshot == plan_code)
+        if actor_type is not None:
+            query = query.where(model.actor_type_snapshot == actor_type)
+        if request_id_filter is not None:
+            query = query.where(model.request_id == request_id_filter)
+        if date_from is not None:
+            query = query.where(model.created_at >= date_from)
+        if date_to is not None:
+            query = query.where(model.created_at <= date_to)
+        query = query.order_by(model.id.asc()).limit(limit)
+        return list(db.scalars(query).all())

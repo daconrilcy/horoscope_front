@@ -741,6 +741,7 @@ Depuis la story 61.41, les alertes canoniques sont consultables sans SQL via deu
 ```text
 GET /v1/ops/entitlements/mutation-audits/alerts/summary
 GET /v1/ops/entitlements/mutation-audits/alerts
+POST /v1/ops/entitlements/mutation-audits/alerts/retry-batch
 GET /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/attempts
 POST /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/retry
 ```
@@ -748,7 +749,8 @@ POST /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/retry
 Ordre de déclaration critique dans le router :
 1. `GET /alerts/summary`
 2. `GET /alerts`
-3. Puis seulement les endpoints 61.40 avec `/{alert_event_id}/...`
+3. `POST /alerts/retry-batch`
+4. Puis seulement les endpoints 61.40 avec `/{alert_event_id}/...`
 
 ### Liste des alertes
 
@@ -829,4 +831,67 @@ Utilise les mêmes filtres SQL que la liste, sans pagination, et calcule les com
 - rate limiting ops standard appliqué
 - endpoints strictement read-only
 - aucune mutation des services 61.39 / 61.40 ni des modèles SQLAlchemy existants
+
+---
+
+## Story 61.42 — Retry batch piloté des alertes ops
+
+Depuis la story 61.42, les alertes ops échouées peuvent être relancées en masse depuis l'API interne sans passer par le script CLI.
+
+### Endpoint
+
+```text
+POST /v1/ops/entitlements/mutation-audits/alerts/retry-batch
+```
+
+Ordre de déclaration critique dans le router :
+1. `GET /alerts/summary`
+2. `GET /alerts`
+3. `POST /alerts/retry-batch`
+4. `GET /alerts/{alert_event_id}/attempts`
+5. `POST /alerts/{alert_event_id}/retry`
+
+### Body JSON
+
+`limit` est obligatoire et borné entre `1` et `100`. Si `limit` est absent ou hors bornes, FastAPI retourne `422`.
+
+```json
+{
+  "limit": 25,
+  "dry_run": false,
+  "alert_kind": "sla_overdue",
+  "audit_id": 42,
+  "feature_code": "chat_daily",
+  "plan_code": "premium",
+  "actor_type": "user",
+  "request_id": "req-123",
+  "date_from": "2026-03-29T08:00:00Z",
+  "date_to": "2026-03-29T10:00:00Z"
+}
+```
+
+Règles métier :
+- le filtre `delivery_status == "failed"` est toujours forcé côté service
+- les candidats sont extraits en FIFO via `ORDER BY id ASC`
+- `dry_run=true` ne crée aucune tentative et ne modifie aucun event
+- `db.commit()` est effectué uniquement dans le router quand `dry_run=false`
+
+### Réponse
+
+```json
+{
+  "data": {
+    "candidate_count": 2,
+    "retried_count": 2,
+    "sent_count": 2,
+    "failed_count": 0,
+    "skipped_count": 0,
+    "dry_run": false,
+    "alert_event_ids": [12, 13]
+  },
+  "meta": { "request_id": "rid-batch-real" }
+}
+```
+
+`alert_event_ids` contient uniquement les IDs effectivement tentés, ou les IDs qui seraient tentés en `dry_run`.
 
