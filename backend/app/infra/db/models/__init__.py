@@ -105,6 +105,7 @@ from app.infra.db.models.reference import (
     SignModel,
 )
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
+from app.infra.db.models.stripe_webhook_event import StripeWebhookEventModel
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
@@ -188,6 +189,7 @@ __all__ = [
     "ReferenceVersionModel",
     "SignModel",
     "StripeBillingProfileModel",
+    "StripeWebhookEventModel",
     "PredictionRulesetModel",
     "RulesetEventTypeModel",
     "RulesetParameterModel",

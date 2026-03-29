@@ -7,6 +7,9 @@ import stripe
 from sqlalchemy.orm import Session
 
 from app.services.stripe_billing_profile_service import StripeBillingProfileService
+from app.services.stripe_webhook_idempotency_service import (
+    StripeWebhookIdempotencyService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +54,7 @@ class StripeWebhookService:
     def handle_event(db: Session, event: stripe.Event) -> str:
         """
         Traite un événement Stripe validé.
-        Retourne un statut logique (processed, event_ignored, user_not_resolved).
+        Retourne un statut logique (processed, event_ignored, user_not_resolved, duplicate_ignored).
         """
         event_type = event.type
         event_id = event.id
@@ -66,50 +69,77 @@ class StripeWebhookService:
             customer_id,
         )
 
-        user_id = StripeWebhookService._resolve_user_id(db, event)
+        # --- GARDE D'IDEMPOTENCE ---
+        claim_status = StripeWebhookIdempotencyService.claim_event(db, event)
+        if claim_status == "duplicate_ignored":
+            return "duplicate_ignored"
 
-        # Dispatching vers la couche service si l'événement est supporté
-        if event_type in (
-            "checkout.session.completed",
-            "customer.subscription.created",
-            "customer.subscription.updated",
-            "customer.subscription.deleted",
-            "customer.subscription.paused",
-            "customer.subscription.resumed",
-            "customer.subscription.trial_will_end",
-            "customer.updated",
-            "invoice.paid",
-            "invoice.payment_failed",
-            "invoice.payment_action_required",
-        ):
-            if user_id is None:
-                logger.warning(
-                    "stripe_webhook: user not resolved for event_id=%s type=%s "
-                    "customer_id=%s outcome=user_not_resolved",
+        try:
+            # On utilise un SAVEPOINT (begin_nested) pour la logique métier
+            # afin de pouvoir rollback la logique métier mais committer le statut 'failed'
+            # de l'événement idempotency en cas d'erreur.
+            with db.begin_nested():
+                user_id = StripeWebhookService._resolve_user_id(db, event)
+
+                # Dispatching vers la couche service si l'événement est supporté
+                if event_type in (
+                    "checkout.session.completed",
+                    "customer.subscription.created",
+                    "customer.subscription.updated",
+                    "customer.subscription.deleted",
+                    "customer.subscription.paused",
+                    "customer.subscription.resumed",
+                    "customer.subscription.trial_will_end",
+                    "customer.updated",
+                    "invoice.paid",
+                    "invoice.payment_failed",
+                    "invoice.payment_action_required",
+                ):
+                    if user_id is None:
+                        logger.warning(
+                            "stripe_webhook: user not resolved for event_id=%s type=%s "
+                            "customer_id=%s outcome=user_not_resolved",
+                            event_id,
+                            event_type,
+                            customer_id,
+                        )
+                        StripeWebhookIdempotencyService.mark_processed(db, event_id)
+                        return "user_not_resolved"
+
+                    StripeBillingProfileService.update_from_event_payload(db, user_id, event.to_dict())
+                    logger.info(
+                        "stripe_webhook: processed event_id=%s type=%s customer_id=%s "
+                        "user_id=%s outcome=processed",
+                        event_id,
+                        event_type,
+                        customer_id,
+                        user_id,
+                    )
+                    StripeWebhookIdempotencyService.mark_processed(db, event_id)
+                    return "processed"
+
+                logger.info(
+                    "stripe_webhook: ignored event_id=%s type=%s customer_id=%s outcome=event_ignored",
                     event_id,
                     event_type,
                     customer_id,
                 )
-                return "user_not_resolved"
+                StripeWebhookIdempotencyService.mark_processed(db, event_id)
+                return "event_ignored"
 
-            StripeBillingProfileService.update_from_event_payload(db, user_id, event.to_dict())
-            logger.info(
-                "stripe_webhook: processed event_id=%s type=%s customer_id=%s "
-                "user_id=%s outcome=processed",
+        except Exception as exc:
+            # Le savepoint a été rollbacké automatiquement par SQLAlchemy.
+            # On enregistre l'échec pour le suivi idempotency.
+            logger.error(
+                "stripe_webhook: error processing event_id=%s type=%s: %s",
                 event_id,
                 event_type,
-                customer_id,
-                user_id,
+                str(exc),
             )
-            return "processed"
-
-        logger.info(
-            "stripe_webhook: ignored event_id=%s type=%s customer_id=%s outcome=event_ignored",
-            event_id,
-            event_type,
-            customer_id,
-        )
-        return "event_ignored"
+            StripeWebhookIdempotencyService.mark_failed(db, event_id, str(exc))
+            # On retourne "failed_internal" pour que le router billing.py
+            # puisse committer la marque de failure sans rollback global.
+            return "failed_internal"
 
     @staticmethod
     def _extract_customer_id(event: stripe.Event) -> str | None:

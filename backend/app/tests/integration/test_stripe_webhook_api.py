@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import time
+import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -24,9 +25,13 @@ def _sign_payload(payload: bytes, secret: str) -> str:
     return f"t={timestamp},v1={signature}"
 
 
+def _unique_id(prefix: str) -> str:
+    return f"{prefix}_{uuid.uuid4().hex[:8]}"
+
+
 @pytest.mark.asyncio
 async def test_webhook_invalid_signature():
-    payload = b'{"id": "evt_123", "type": "checkout.session.completed"}'
+    payload = b'{"id": "evt_invalid", "type": "checkout.session.completed"}'
     headers = {"stripe-signature": "invalid"}
 
     with patch("app.core.config.settings.stripe_webhook_secret", "whsec_test"):
@@ -38,7 +43,7 @@ async def test_webhook_invalid_signature():
 
 @pytest.mark.asyncio
 async def test_webhook_no_secret_configured():
-    payload = b'{"id": "evt_123"}'
+    payload = b'{"id": "evt_nosecret"}'
     headers = {"stripe-signature": "any"}
 
     with patch("app.core.config.settings.stripe_webhook_secret", None):
@@ -50,18 +55,22 @@ async def test_webhook_no_secret_configured():
 
 @pytest.mark.asyncio
 async def test_webhook_success_flow():
+    event_id = _unique_id("evt_success")
     payload = (
-        b'{"id": "evt_123", "type": "checkout.session.completed", '
-        b'"data": {"object": {"client_reference_id": "42"}}}'
-    )
+        f'{{"id": "{event_id}", "type": "checkout.session.completed", '
+        f'"data": {{"object": {{"client_reference_id": "42", "id": "cs_123"}}}}}}'
+    ).encode()
     secret = "whsec_test"
     headers = {"stripe-signature": _sign_payload(payload, secret)}
 
     with patch("app.core.config.settings.stripe_webhook_secret", secret):
         # On mock l'événement retourné par verify_and_parse
         mock_event = MagicMock()
-        mock_event.id = "evt_123"
+        mock_event.id = event_id
         mock_event.type = "checkout.session.completed"
+        mock_event.livemode = False
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.id = "cs_123"
 
         with patch(
             "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
@@ -84,14 +93,18 @@ async def test_webhook_success_flow():
 @pytest.mark.asyncio
 async def test_webhook_app_error_returns_200():
     """AC3: Erreur applicative interne après signature valide -> 200"""
-    payload = b'{"id": "evt_123", "type": "checkout.session.completed"}'
+    event_id = _unique_id("evt_error")
+    payload = f'{{"id": "{event_id}", "type": "checkout.session.completed"}}'.encode()
     secret = "whsec_test"
     headers = {"stripe-signature": _sign_payload(payload, secret)}
 
     with patch("app.core.config.settings.stripe_webhook_secret", secret):
         mock_event = MagicMock()
-        mock_event.id = "evt_123"
+        mock_event.id = event_id
         mock_event.type = "checkout.session.completed"
+        mock_event.livemode = False
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.id = "cs_123"
 
         with patch(
             "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
@@ -112,15 +125,18 @@ async def test_webhook_app_error_returns_200():
 
 @pytest.mark.asyncio
 async def test_webhook_subscription_trial_will_end():
-    payload = b'{"id": "evt_trial", "type": "customer.subscription.trial_will_end"}'
+    event_id = _unique_id("evt_trial")
+    payload = f'{{"id": "{event_id}", "type": "customer.subscription.trial_will_end"}}'.encode()
     secret = "whsec_test"
     headers = {"stripe-signature": _sign_payload(payload, secret)}
 
     with patch("app.core.config.settings.stripe_webhook_secret", secret):
         mock_event = MagicMock()
-        mock_event.id = "evt_trial"
+        mock_event.id = event_id
         mock_event.type = "customer.subscription.trial_will_end"
+        mock_event.livemode = False
         mock_event.data.object = MagicMock()
+        mock_event.data.object.id = "sub_123"
         mock_event.data.object.customer = "cus_123"
 
         with patch(
@@ -147,16 +163,67 @@ async def test_webhook_subscription_trial_will_end():
 
 
 @pytest.mark.asyncio
-async def test_webhook_subscription_paused():
-    payload = b'{"id": "evt_paused", "type": "customer.subscription.paused"}'
+async def test_webhook_duplicate_ignored():
+    """Vérifie que le second envoi du même event_id retourne duplicate_ignored"""
+    event_id = _unique_id("evt_dup")
+    payload = f'{{"id": "{event_id}", "type": "invoice.paid"}}'.encode()
     secret = "whsec_test"
     headers = {"stripe-signature": _sign_payload(payload, secret)}
 
     with patch("app.core.config.settings.stripe_webhook_secret", secret):
         mock_event = MagicMock()
-        mock_event.id = "evt_paused"
-        mock_event.type = "customer.subscription.paused"
+        mock_event.id = event_id
+        mock_event.type = "invoice.paid"
+        mock_event.livemode = False
         mock_event.data.object = MagicMock()
+        mock_event.data.object.id = "in_123"
+        mock_event.data.object.customer = "cus_123"
+
+        with patch(
+            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            return_value=mock_event,
+        ):
+            with patch(
+                "app.services.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
+            ) as mock_get_profile:
+                mock_profile = MagicMock()
+                mock_profile.user_id = 42
+                mock_get_profile.return_value = mock_profile
+
+                with patch(
+                    "app.services.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload"
+                ) as mock_update:
+                    # Premier passage -> processed
+                    response = client.post(
+                        "/v1/billing/stripe-webhook", content=payload, headers=headers
+                    )
+                    assert response.status_code == 200
+                    assert response.json() == {"status": "processed"}
+                    assert mock_update.call_count == 1
+
+                    # Second passage -> duplicate_ignored
+                    response = client.post(
+                        "/v1/billing/stripe-webhook", content=payload, headers=headers
+                    )
+                    assert response.status_code == 200
+                    assert response.json() == {"status": "duplicate_ignored"}
+                    assert mock_update.call_count == 1  # Pas d'appel supplémentaire
+
+
+@pytest.mark.asyncio
+async def test_webhook_subscription_paused():
+    event_id = _unique_id("evt_paused")
+    payload = f'{{"id": "{event_id}", "type": "customer.subscription.paused"}}'.encode()
+    secret = "whsec_test"
+    headers = {"stripe-signature": _sign_payload(payload, secret)}
+
+    with patch("app.core.config.settings.stripe_webhook_secret", secret):
+        mock_event = MagicMock()
+        mock_event.id = event_id
+        mock_event.type = "customer.subscription.paused"
+        mock_event.livemode = False
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.id = "sub_123"
         mock_event.data.object.customer = "cus_123"
 
         with patch(
@@ -184,15 +251,18 @@ async def test_webhook_subscription_paused():
 
 @pytest.mark.asyncio
 async def test_webhook_subscription_resumed():
-    payload = b'{"id": "evt_resumed", "type": "customer.subscription.resumed"}'
+    event_id = _unique_id("evt_resumed")
+    payload = f'{{"id": "{event_id}", "type": "customer.subscription.resumed"}}'.encode()
     secret = "whsec_test"
     headers = {"stripe-signature": _sign_payload(payload, secret)}
 
     with patch("app.core.config.settings.stripe_webhook_secret", secret):
         mock_event = MagicMock()
-        mock_event.id = "evt_resumed"
+        mock_event.id = event_id
         mock_event.type = "customer.subscription.resumed"
+        mock_event.livemode = False
         mock_event.data.object = MagicMock()
+        mock_event.data.object.id = "sub_123"
         mock_event.data.object.customer = "cus_123"
 
         with patch(
