@@ -1,25 +1,23 @@
+from datetime import datetime, timezone
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from datetime import datetime, timezone
 
-from app.main import app
-from app.infra.db.models.user import UserModel
+from app.core.security import create_access_token
+from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
 from app.infra.db.models.product_entitlements import (
     AccessMode,
-    PlanCatalogModel,
-    PlanFeatureBindingModel,
+    Audience,
     FeatureCatalogModel,
     FeatureUsageCounterModel,
-    Audience,
     PeriodUnit,
-    ResetMode
+    PlanCatalogModel,
+    PlanFeatureBindingModel,
+    ResetMode,
 )
-from app.infra.db.models.billing import (
-    BillingPlanModel,
-    UserSubscriptionModel
-)
-from app.core.security import create_access_token
+from app.infra.db.models.user import UserModel
+from app.main import app
 from app.services.billing_service import BillingService
 from app.services.quota_window_resolver import QuotaWindowResolver
 
@@ -45,12 +43,16 @@ def _create_user(db: Session, email: str = "test@example.com") -> UserModel:
 
 
 def _get_or_create_feature(db: Session, feature_code: str) -> FeatureCatalogModel:
-    feature = db.query(FeatureCatalogModel).filter(FeatureCatalogModel.feature_code == feature_code).first()
+    feature = (
+        db.query(FeatureCatalogModel)
+        .filter(FeatureCatalogModel.feature_code == feature_code)
+        .first()
+    )
     if not feature:
         feature = FeatureCatalogModel(
             feature_code=feature_code,
             feature_name=f"Feature {feature_code}",
-            is_active=True
+            is_active=True,
         )
         db.add(feature)
         db.commit()
@@ -66,16 +68,16 @@ def _create_plan_and_catalog(db: Session, code: str) -> PlanCatalogModel:
         monthly_price_cents=1000,
         currency="EUR",
         daily_message_limit=10,
-        is_active=True
+        is_active=True,
     )
     db.add(billing_plan)
-    
+
     # 2. Canonical Plan
     catalog_plan = PlanCatalogModel(
         plan_code=code,
         plan_name=f"Plan {code} Canonical",
         audience=Audience.B2C,
-        is_active=True
+        is_active=True,
     )
     db.add(catalog_plan)
     db.commit()
@@ -84,7 +86,11 @@ def _create_plan_and_catalog(db: Session, code: str) -> PlanCatalogModel:
 
 
 def _create_binding(
-    db: Session, plan: PlanCatalogModel, feature_code: str, mode: AccessMode, quota_limit: int | None = None
+    db: Session,
+    plan: PlanCatalogModel,
+    feature_code: str,
+    mode: AccessMode,
+    quota_limit: int | None = None,
 ) -> PlanFeatureBindingModel:
     feature = _get_or_create_feature(db, feature_code)
     binding = PlanFeatureBindingModel(
@@ -94,25 +100,28 @@ def _create_binding(
     )
     db.add(binding)
     db.commit()
-    
+
     if mode == AccessMode.QUOTA and quota_limit is not None:
         from app.infra.db.models.product_entitlements import PlanFeatureQuotaModel
+
         quota = PlanFeatureQuotaModel(
             plan_feature_binding_id=binding.id,
             quota_key=f"quota:{feature_code}",
             quota_limit=quota_limit,
             period_unit=PeriodUnit.DAY,
             period_value=1,
-            reset_mode=ResetMode.CALENDAR
+            reset_mode=ResetMode.CALENDAR,
         )
         db.add(quota)
         db.commit()
-        
+
     db.refresh(binding)
     return binding
 
 
-def _create_usage(db: Session, user_id: int, feature_code: str, used: int) -> FeatureUsageCounterModel:
+def _create_usage(
+    db: Session, user_id: int, feature_code: str, used: int
+) -> FeatureUsageCounterModel:
     # We need to match what QuotaUsageService expects
     window = QuotaWindowResolver.compute_window(
         PeriodUnit.DAY, 1, ResetMode.CALENDAR, datetime.now(timezone.utc)
@@ -155,8 +164,9 @@ def client():
 def test_entitlements_me_no_plan(client, db_session):
     """Cas sans plan actif : utilisateur sans abonnement."""
     from app.infra.db.session import get_db_session
+
     app.dependency_overrides[get_db_session] = lambda: db_session
-    
+
     # Ensure priority features exist
     for fc in ["astrologer_chat", "thematic_consultation", "natal_chart_long", "natal_chart_short"]:
         _get_or_create_feature(db_session, fc)
@@ -184,6 +194,7 @@ def test_entitlements_me_no_plan(client, db_session):
 def test_entitlements_me_quota_available(client, db_session):
     """Cas feature quota disponible : binding QUOTA + usage partiel."""
     from app.infra.db.session import get_db_session
+
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     # Ensure priority features exist
@@ -215,6 +226,7 @@ def test_entitlements_me_quota_available(client, db_session):
 def test_entitlements_me_quota_exhausted(client, db_session):
     """Cas feature quota épuisé : usage = limite."""
     from app.infra.db.session import get_db_session
+
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     # Ensure priority features exist
@@ -241,6 +253,7 @@ def test_entitlements_me_quota_exhausted(client, db_session):
 def test_entitlements_me_unlimited(client, db_session):
     """Cas feature unlimited : binding UNLIMITED."""
     from app.infra.db.session import get_db_session
+
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     # Ensure priority features exist

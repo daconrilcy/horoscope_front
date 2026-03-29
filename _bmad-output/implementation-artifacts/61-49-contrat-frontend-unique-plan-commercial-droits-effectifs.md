@@ -420,10 +420,17 @@ claude-sonnet-4-6
 - Documentation du contrat frontend via docstrings et commentaires de code.
 - Création de `backend/app/tests/integration/test_entitlements_me_contract.py` couvrant les 4 cas structurels (no plan, quota available, quota exhausted, unlimited).
 - Correction des tests existants dans `backend/app/tests/integration/test_entitlements_me.py` impactés par le changement de schéma.
+- Review post-implémentation : durcissement du routeur pour retourner défensivement les 4 features prioritaires même si le snapshot du resolver est incomplet.
+- Ajout d'un test unitaire dédié pour verrouiller cette invariance de contrat.
+- Alignement final Ruff et mise à jour de la documentation d'artefacts.
 
 ### File List
 - `backend/app/api/v1/routers/entitlements.py`
 - `backend/app/api/v1/schemas/entitlements.py`
 - `backend/app/tests/integration/test_entitlements_me_contract.py`
 - `backend/app/tests/integration/test_entitlements_me.py`
+- `backend/app/tests/unit/test_entitlements_me_endpoint.py`
 - `docs/api-contracts-backend.md`
+- `_bmad-output/implementation-artifacts/61-49-code-review-findings.md`
+- `_bmad-output/implementation-artifacts/61-49-contrat-frontend-unique-plan-commercial-droits-effectifs.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`

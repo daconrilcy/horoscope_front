@@ -63,9 +63,14 @@ def test_role_guard_b2b_user():
     app.dependency_overrides.clear()
 
 
-@patch("app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot")
+@patch(
+    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
+)
 def test_no_plan_user(mock_resolve):
-    """Vérifie que pour un utilisateur sans plan, toutes les features sont en reason_code='feature_not_in_plan'."""
+    """
+    Vérifie que pour un utilisateur sans plan, toutes les features sont en
+    reason_code='feature_not_in_plan'.
+    """
     app.dependency_overrides[require_authenticated_user] = _override_auth()
 
     # Mock retourne un snapshot 'none'
@@ -103,7 +108,9 @@ def test_no_plan_user(mock_resolve):
     app.dependency_overrides.clear()
 
 
-@patch("app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot")
+@patch(
+    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
+)
 def test_billing_inactive(mock_resolve):
     """Vérifie le retour quand le billing est inactif (ex: past_due)."""
     app.dependency_overrides[require_authenticated_user] = _override_auth()
@@ -137,7 +144,9 @@ def test_billing_inactive(mock_resolve):
 
 
 @patch("app.services.quota_usage_service.QuotaUsageService.consume")
-@patch("app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot")
+@patch(
+    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
+)
 def test_quota_path_no_consume(mock_resolve, mock_consume):
     """Vérifie que l'endpoint n'appelle JAMAIS consume (lecture seule)."""
     app.dependency_overrides[require_authenticated_user] = _override_auth()
@@ -184,7 +193,9 @@ def test_quota_path_no_consume(mock_resolve, mock_consume):
     app.dependency_overrides.clear()
 
 
-@patch("app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot")
+@patch(
+    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
+)
 def test_unknown_feature_ignored_gracefully(mock_resolve):
     """Vérifie qu'une feature présente dans le snapshot mais hors FEATURES_TO_QUERY est ignorée."""
     app.dependency_overrides[require_authenticated_user] = _override_auth()
@@ -215,4 +226,36 @@ def test_unknown_feature_ignored_gracefully(mock_resolve):
     assert len(features) == 4
     feature_codes = [f["feature_code"] for f in features]
     assert "unknown_feature" not in feature_codes
+    app.dependency_overrides.clear()
+
+
+@patch(
+    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
+)
+def test_missing_priority_feature_is_returned_as_denied(mock_resolve):
+    """Vérifie qu'une feature prioritaire absente du snapshot reste présente dans la réponse."""
+    app.dependency_overrides[require_authenticated_user] = _override_auth()
+
+    mock_resolve.return_value = EffectiveEntitlementsSnapshot(
+        subject_type="b2c_user",
+        subject_id=42,
+        plan_code="basic",
+        billing_status="active",
+        entitlements={
+            "astrologer_chat": _make_access(granted=True, reason_code="granted"),
+            "thematic_consultation": _make_access(granted=True, reason_code="granted"),
+            "natal_chart_short": _make_access(granted=True, reason_code="granted"),
+        },
+    )
+
+    response = client.get("/v1/entitlements/me")
+    assert response.status_code == 200
+
+    features = response.json()["data"]["features"]
+    assert len(features) == 4
+    missing_feature = next(f for f in features if f["feature_code"] == "natal_chart_long")
+    assert missing_feature["granted"] is False
+    assert missing_feature["reason_code"] == "feature_not_in_plan"
+    assert missing_feature["access_mode"] is None
+    assert missing_feature["usage_states"] == []
     app.dependency_overrides.clear()

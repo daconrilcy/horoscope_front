@@ -58,6 +58,20 @@ def _to_feature_response(
     )
 
 
+def _missing_feature_response(feature_code: str) -> FeatureEntitlementResponse:
+    # Preserve the frontend contract even if a future resolver regression omits a priority feature.
+    return FeatureEntitlementResponse(
+        feature_code=feature_code,
+        granted=False,
+        reason_code="feature_not_in_plan",
+        access_mode=None,
+        quota_remaining=None,
+        quota_limit=None,
+        variant_code=None,
+        usage_states=[],
+    )
+
+
 @router.get(
     "/me",
     response_model=EntitlementsMeResponse,
@@ -70,7 +84,7 @@ def get_my_entitlements(
 ) -> Any:
     """
     Expose l'état d'accès complet pour l'utilisateur courant (B2C).
-    
+
     AC4 - Mapping reason_code -> action UX recommandé :
     - granted (true)          -> CTA actif, afficher quota restant
     - feature_not_in_plan (false) -> Désactiver CTA, afficher badge "upgrade"
@@ -98,12 +112,13 @@ def get_my_entitlements(
         db, app_user_id=current_user.id
     )
 
-    # AC2 - Construire les features depuis le snapshot — toujours dans l'ordre FEATURES_TO_QUERY
-    # Le resolver garantit la présence de toutes les features B2C.
-    features: list[FeatureEntitlementResponse] = []
-    for fc in FEATURES_TO_QUERY:
-        if fc in snapshot.entitlements:
-            features.append(_to_feature_response(fc, snapshot.entitlements[fc]))
+    # AC2 - Toujours exposer les 4 features prioritaires dans l'ordre attendu par le frontend.
+    features = [
+        _to_feature_response(fc, snapshot.entitlements[fc])
+        if fc in snapshot.entitlements
+        else _missing_feature_response(fc)
+        for fc in FEATURES_TO_QUERY
+    ]
 
     # AC1 - plan_code et billing_status au top-level
     return {

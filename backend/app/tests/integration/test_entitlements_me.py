@@ -42,7 +42,10 @@ def test_unauthenticated_returns_401():
 
 
 def test_no_plan_user_all_features_denied(db_session: Session):
-    """Vérifie qu'un utilisateur sans plan a toutes ses features refusées avec reason_code=feature_not_in_plan."""
+    """
+    Vérifie qu'un utilisateur sans plan a toutes ses features refusées avec
+    reason_code=feature_not_in_plan.
+    """
     user = UserModel(
         email="no_plan@example.com",
         password_hash="fake_hash",
