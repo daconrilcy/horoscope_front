@@ -471,7 +471,7 @@ def test_generate_quota_exhausted_rejected() -> None:
             "resolve_b2c_user_snapshot",
             side_effect=_dynamic_snapshot,
         ),
-        patch("app.services.entitlement_service.datetime", frozen_datetime),
+        patch("app.services.effective_entitlement_resolver_service.datetime", frozen_datetime),
     ):
         response = _post_generate(headers)
 
@@ -654,7 +654,7 @@ def test_generate_quota_exceeded_rolls_back() -> None:
             "resolve_b2c_user_snapshot",
             side_effect=_dynamic_snapshot,
         ),
-        patch("app.services.entitlement_service.datetime", frozen_datetime),
+        patch("app.services.effective_entitlement_resolver_service.datetime", frozen_datetime),
         patch.object(db_session, "rollback") as mock_rollback,
     ):
         response = _post_generate(headers)
@@ -687,7 +687,7 @@ def test_premium_quota_2_per_day() -> None:
             "resolve_b2c_user_snapshot",
             side_effect=_dynamic_snapshot,
         ),
-        patch("app.services.entitlement_service.datetime", frozen_datetime),
+        patch("app.services.effective_entitlement_resolver_service.datetime", frozen_datetime),
         patch("app.services.quota_usage_service.datetime", frozen_datetime),
         patch(
             "app.services.consultation_generation_service.ConsultationGenerationService.generate",
@@ -725,7 +725,7 @@ def test_basic_quota_1_per_week() -> None:
             "resolve_b2c_user_snapshot",
             side_effect=_dynamic_snapshot,
         ),
-        patch("app.services.entitlement_service.datetime", frozen_datetime),
+        patch("app.services.effective_entitlement_resolver_service.datetime", frozen_datetime),
         patch("app.services.quota_usage_service.datetime", frozen_datetime),
         patch(
             "app.services.consultation_generation_service.ConsultationGenerationService.generate",

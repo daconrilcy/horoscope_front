@@ -30,22 +30,6 @@ class UsageState:
     window_end: datetime | None  # None uniquement si reset_mode="lifetime"
 
 
-@dataclass
-class FeatureEntitlement:
-    """Droit d'accès calculé pour une feature."""
-
-    plan_code: str
-    billing_status: str
-    is_enabled_by_plan: bool
-    access_mode: str
-    variant_code: str | None
-    quotas: list[QuotaDefinition]  # quotas théoriques du plan
-    final_access: bool
-    reason: str
-    usage_states: list[UsageState] = field(default_factory=list)  # état réel de consommation
-    quota_exhausted: bool = False  # True si au moins un quota est épuisé
-
-
 @dataclass(frozen=True)
 class EffectiveFeatureAccess:
     """Accès effectif maintenant pour une feature."""
