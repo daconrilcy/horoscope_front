@@ -105,13 +105,14 @@ def _mock_resolver_snapshot(
 
 
 def _dynamic_snapshot(db: Session, *, app_user_id: int) -> EffectiveEntitlementsSnapshot:
+    from sqlalchemy import select
+
     from app.infra.db.models.product_entitlements import (
         FeatureUsageCounterModel,
         PlanCatalogModel,
         PlanFeatureBindingModel,
         PlanFeatureQuotaModel,
     )
-    from sqlalchemy import select
 
     binding_stmt = (
         select(PlanFeatureBindingModel, PlanCatalogModel)

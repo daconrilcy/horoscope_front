@@ -430,6 +430,10 @@ claude-sonnet-4-6
 - Lecture du `sprint-status.yaml` — epic-61 in-progress
 
 ### Completion Notes List
+- Revue post-implémentation effectuée sur le delta 61.50.
+- Correctif appliqué sur `test_entitlements_e2e_matrix.py` pour isoler chaque scénario dans sa propre DB SQLite in-memory.
+- Le test e2e verrouille désormais explicitement les champs frontend `quota_limit`, `quota_remaining`, `reason_code` et `variant_code` en plus de `usage_states`.
+- La documentation métier et opérationnelle a été réalignée avec les AC: matrice complète, comportement API explicite, commandes PowerShell avec activation du venv et inventaire legacy traçable.
 
 ### File List
 - `docs/entitlements-validation-matrix.md` (NOUVEAU)
@@ -440,4 +444,5 @@ claude-sonnet-4-6
 - `backend/app/tests/unit/test_entitlement_service.py` (SUPPRIMÉ)
 - `backend/app/services/entitlement_types.py` (MODIFIÉ)
 - `backend/app/tests/integration/test_thematic_consultation_entitlement.py` (MODIFIÉ)
+- `_bmad-output/implementation-artifacts/61-50-validation-metier-end-to-end-plan-commercial-corrected.md` (NOUVEAU)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (MODIFIÉ)

@@ -1,79 +1,80 @@
-# Matrice de validation métier des droits produit (Entitlements)
+# Matrice de validation métier des droits produit
 
-Ce document définit la source de vérité pour la validation end-to-end des offres commerciales. Il est synchronisé avec le script `backend/scripts/seed_product_entitlements.py`.
+Cette matrice documente les offres commerciales B2C à partir de
+`backend/scripts/seed_product_entitlements.py`, puis les traduit dans le contrat
+exposé par `GET /v1/entitlements/me`.
 
-## Légende des colonnes
-- **granted** : Accès accordé au runtime.
-- **access_mode** : Mode d'accès (`unlimited`, `quota`, `disabled`).
-- **quota_limit** : Valeur limite du quota (si applicable).
-- **reason_code** : Code de justification retourné par l'API.
-- **variant_code** : Code de variante métier (ex: `single_astrologer`).
+## Colonnes
 
----
+- `granted`: accès effectif attendu.
+- `access_mode`: `unlimited`, `quota`, `disabled` ou `null`.
+- `quota_limit`: limite exposée au top-level du payload, sinon `null`.
+- `quota_key` / `period_unit` / `period_value` / `reset_mode`: détails exacts du seed si quota.
+- `reason_code`: vocabulaire frontend normalisé.
+- `variant_code`: variante métier exposée si pertinente.
+- `Comportement API`: lecture attendue du payload `GET /v1/entitlements/me`.
 
-## 1. Cas : Utilisateur sans abonnement (`plan_code="none"`)
+## Utilisateur sans abonnement (`plan_code="none"`, `billing_status="none"`)
 
-Dans ce cas, `BillingService` ne retourne aucun plan actif. Le resolver considère que l'utilisateur n'est rattaché à aucun plan canonique.
+| Feature | granted | access_mode | quota_limit | quota_key | period_unit | period_value | reset_mode | reason_code | variant_code | Comportement API |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `natal_chart_short` | false | null | null | null | null | null | null | `feature_not_in_plan` | null | Feature présente, `quota_remaining=null`, `usage_states=[]` |
+| `natal_chart_long` | false | null | null | null | null | null | null | `feature_not_in_plan` | null | Feature présente, `quota_remaining=null`, `usage_states=[]` |
+| `astrologer_chat` | false | null | null | null | null | null | null | `feature_not_in_plan` | null | Feature présente, `quota_remaining=null`, `usage_states=[]` |
+| `thematic_consultation` | false | null | null | null | null | null | null | `feature_not_in_plan` | null | Feature présente, `quota_remaining=null`, `usage_states=[]` |
 
-| Feature | granted | access_mode | quota_limit | variant_code | reason_code |
-|---|---|---|---|---|---|
-| `natal_chart_short` | false | null | null | null | `feature_not_in_plan` |
-| `natal_chart_long` | false | null | null | null | `feature_not_in_plan` |
-| `astrologer_chat` | false | null | null | null | `feature_not_in_plan` |
-| `thematic_consultation` | false | null | null | null | `feature_not_in_plan` |
+## Plan `free` actif (`plan_code="free"`, `billing_status="active"`)
 
----
+| Feature | granted | access_mode | quota_limit | quota_key | period_unit | period_value | reset_mode | reason_code | variant_code | Comportement API |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `natal_chart_short` | true | `unlimited` | null | null | null | null | null | `granted` | null | `quota_remaining=null`, `usage_states=[]` |
+| `natal_chart_long` | false | `disabled` | null | null | null | null | null | `binding_disabled` | null | `quota_remaining=null`, `usage_states=[]` |
+| `astrologer_chat` | false | `disabled` | null | null | null | null | null | `binding_disabled` | null | `quota_remaining=null`, `usage_states=[]` |
+| `thematic_consultation` | false | `disabled` | null | null | null | null | null | `binding_disabled` | null | `quota_remaining=null`, `usage_states=[]` |
 
-## 2. Plan : `free` (Abonnement actif au plan "free")
+## Plan `trial` actif (`plan_code="trial"`, `billing_status="trialing"`)
 
-| Feature | granted | access_mode | quota_limit | variant_code | reason_code |
-|---|---|---|---|---|---|
-| `natal_chart_short` | **true** | `unlimited` | null | null | `granted` |
-| `natal_chart_long` | false | `disabled` | null | null | `binding_disabled` |
-| `astrologer_chat` | false | `disabled` | null | null | `binding_disabled` |
-| `thematic_consultation` | false | `disabled` | null | null | `binding_disabled` |
+| Feature | granted | access_mode | quota_limit | quota_key | period_unit | period_value | reset_mode | reason_code | variant_code | Comportement API |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `natal_chart_short` | true | `unlimited` | null | null | null | null | null | `granted` | null | `quota_remaining=null`, `usage_states=[]` |
+| `natal_chart_long` | true* | `quota` | 1 | `interpretations` | `lifetime` | 1 | `lifetime` | `granted` | `single_astrologer` | `quota_remaining=1` hors consommation, `usage_states[0]` aligné |
+| `astrologer_chat` | false | `disabled` | null | null | null | null | null | `binding_disabled` | null | `quota_remaining=null`, `usage_states=[]` |
+| `thematic_consultation` | true* | `quota` | 1 | `consultations` | `week` | 1 | `calendar` | `granted` | null | `quota_remaining=1` hors consommation, `usage_states[0]` aligné |
 
----
+## Plan `basic` actif (`plan_code="basic"`, `billing_status="active"`)
 
-## 3. Plan : `trial` (Statut de facturation : `trialing`)
+| Feature | granted | access_mode | quota_limit | quota_key | period_unit | period_value | reset_mode | reason_code | variant_code | Comportement API |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `natal_chart_short` | true | `unlimited` | null | null | null | null | null | `granted` | null | `quota_remaining=null`, `usage_states=[]` |
+| `natal_chart_long` | true* | `quota` | 1 | `interpretations` | `lifetime` | 1 | `lifetime` | `granted` | `single_astrologer` | `quota_remaining=1` hors consommation, `usage_states[0]` aligné |
+| `astrologer_chat` | true* | `quota` | 5 | `messages` | `day` | 1 | `calendar` | `granted` | null | `quota_remaining=5` hors consommation, `usage_states[0]` aligné |
+| `thematic_consultation` | true* | `quota` | 1 | `consultations` | `week` | 1 | `calendar` | `granted` | null | `quota_remaining=1` hors consommation, `usage_states[0]` aligné |
 
-| Feature | granted | access_mode | quota_limit | variant_code | Période / Reset |
-|---|---|---|---|---|---|
-| `natal_chart_short` | **true** | `unlimited` | null | null | - |
-| `natal_chart_long` | **true*** | `quota` | 1 | `single_astrologer` | Lifetime |
-| `astrologer_chat` | false | `disabled` | null | null | - |
-| `thematic_consultation` | **true*** | `quota` | 1 | null | 1 semaine (CALENDAR) |
+## Plan `premium` actif (`plan_code="premium"`, `billing_status="active"`)
 
-*\* Accès accordé si le quota n'est pas épuisé.*
+| Feature | granted | access_mode | quota_limit | quota_key | period_unit | period_value | reset_mode | reason_code | variant_code | Comportement API |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `natal_chart_short` | true | `unlimited` | null | null | null | null | null | `granted` | null | `quota_remaining=null`, `usage_states=[]` |
+| `natal_chart_long` | true* | `quota` | 5 | `interpretations` | `lifetime` | 1 | `lifetime` | `granted` | `multi_astrologer` | `quota_remaining=5` hors consommation, `usage_states[0]` aligné |
+| `astrologer_chat` | true* | `quota` | 2000 | `messages` | `month` | 1 | `calendar` | `granted` | null | `quota_remaining=2000` hors consommation, `usage_states[0]` aligné |
+| `thematic_consultation` | true* | `quota` | 2 | `consultations` | `day` | 1 | `calendar` | `granted` | null | `quota_remaining=2` hors consommation, `usage_states[0]` aligné |
 
----
+## Cas transverse: billing inactif
 
-## 4. Plan : `basic` (Statut de facturation : `active`)
+Quand le plan existe mais que `billing_status` sort de `active` / `trialing`
+par exemple `past_due`, toute feature activée par le plan reste exposée avec:
 
-| Feature | granted | access_mode | quota_limit | variant_code | Période / Reset |
-|---|---|---|---|---|---|
-| `natal_chart_short` | **true** | `unlimited` | null | null | - |
-| `natal_chart_long` | **true*** | `quota` | 1 | `single_astrologer` | Lifetime |
-| `astrologer_chat` | **true*** | `quota` | 5 | null | 1 jour (CALENDAR) |
-| `thematic_consultation` | **true*** | `quota` | 1 | null | 1 semaine (CALENDAR) |
+- `granted=false`
+- `reason_code="billing_inactive"`
+- `access_mode` inchangé
+- `quota_limit` et `usage_states` toujours renseignés pour les features à quota
 
----
+## Invariants frontend à vérifier
 
-## 5. Plan : `premium` (Statut de facturation : `active`)
+- `granted=false` implique toujours un `reason_code` dans
+  `binding_disabled`, `feature_not_in_plan`, `billing_inactive`, `quota_exhausted`.
+- `access_mode="unlimited"` implique `quota_limit=null` et `quota_remaining=null`.
+- `access_mode="quota"` implique `quota_limit` et `quota_remaining` non nuls.
+- `variant_code` n'est exposé que pour `natal_chart_long` en `trial`, `basic` et `premium`.
 
-| Feature | granted | access_mode | quota_limit | variant_code | Période / Reset |
-|---|---|---|---|---|---|
-| `natal_chart_short` | **true** | `unlimited` | null | null | - |
-| `natal_chart_long` | **true*** | `quota` | 5 | `multi_astrologer` | Lifetime |
-| `astrologer_chat` | **true*** | `quota` | 2000 | null | 1 mois (CALENDAR) |
-| `thematic_consultation` | **true*** | `quota` | 2 | null | 1 jour (CALENDAR) |
-
----
-
-## Invariants de cohérence (Contrat Frontend)
-
-L'API `GET /v1/entitlements/me` doit respecter les invariants suivants :
-1. Si `granted == false`, un `reason_code` doit être présent.
-2. Si `access_mode == "unlimited"`, `quota_limit` et `quota_remaining` doivent être `null`.
-3. Si `access_mode == "quota"`, `quota_limit` et `quota_remaining` doivent être des entiers (>= 0).
-4. `variant_code` n'est exposé que s'il apporte une distinction métier (ex: type d'astrologue).
+\* Hors quota épuisé.
