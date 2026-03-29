@@ -61,6 +61,18 @@ class StripeBillingProfileService:
     """
 
     @staticmethod
+    def get_by_user_id(db: Session, user_id: int) -> StripeBillingProfileModel | None:
+        """
+        Récupère le profil de facturation pour un utilisateur donné.
+        Ne crée PAS le profil s'il n'existe pas (lecture seule).
+        """
+        return db.scalar(
+            select(StripeBillingProfileModel)
+            .where(StripeBillingProfileModel.user_id == user_id)
+            .limit(1)
+        )
+
+    @staticmethod
     def get_or_create_profile(db: Session, user_id: int) -> StripeBillingProfileModel:
         """
         Récupère ou crée un profil de facturation Stripe pour un utilisateur.

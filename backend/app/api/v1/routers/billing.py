@@ -32,6 +32,10 @@ from app.services.stripe_checkout_service import (
     StripeCheckoutService,
     StripeCheckoutServiceError,
 )
+from app.services.stripe_customer_portal_service import (
+    StripeCustomerPortalService,
+    StripeCustomerPortalServiceError,
+)
 from app.services.stripe_webhook_service import (
     StripeWebhookService,
     StripeWebhookServiceError,
@@ -89,6 +93,15 @@ class StripeCheckoutResponse(BaseModel):
 
 class StripeCheckoutApiResponse(BaseModel):
     data: StripeCheckoutResponse
+    meta: ResponseMeta
+
+
+class StripePortalResponse(BaseModel):
+    url: str
+
+
+class StripePortalApiResponse(BaseModel):
+    data: StripePortalResponse
     meta: ResponseMeta
 
 
@@ -895,6 +908,99 @@ def create_stripe_checkout_session(
             )
         except AuditWriteError:
             db.rollback()
+            return _audit_unavailable_response(request_id=request_id)
+
+        db.commit()
+        return _error_response(
+            status_code=status_code,
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
+        )
+    except AuditWriteError:
+        db.rollback()
+        return _audit_unavailable_response(request_id=request_id)
+
+
+@router.post(
+    "/stripe-customer-portal-session",
+    response_model=StripePortalApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        503: {"model": ErrorEnvelope},
+        502: {"model": ErrorEnvelope},
+    },
+)
+def create_stripe_customer_portal_session(
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    role_error = _ensure_user_role(current_user, request_id)
+    if role_error is not None:
+        return role_error
+
+    try:
+        rate_error = _enforce_billing_limits(
+            user_id=current_user.id,
+            plan_code=None,
+            operation="stripe_portal_session",
+            request_id=request_id,
+        )
+        if rate_error is not None:
+            return rate_error
+
+        portal_url = StripeCustomerPortalService.create_portal_session(
+            db,
+            user_id=current_user.id,
+            return_url=settings.stripe_portal_return_url,
+        )
+
+        _record_audit_event(
+            db,
+            request_id=request_id,
+            actor_user_id=current_user.id,
+            actor_role=current_user.role,
+            action="stripe_portal_session_created",
+            target_type="user",
+            target_id=str(current_user.id),
+            status="success",
+        )
+        db.commit()
+        return {
+            "data": {"url": portal_url},
+            "meta": {"request_id": request_id},
+        }
+
+    except StripeCustomerPortalServiceError as error:
+        db.rollback()
+        status_code = 500
+        if error.code == "stripe_billing_profile_not_found":
+            status_code = 404
+        elif error.code == "stripe_unavailable":
+            status_code = 503
+        elif error.code == "stripe_api_error":
+            status_code = 502
+
+        try:
+            _record_audit_event(
+                db,
+                request_id=request_id,
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="stripe_portal_session_failed",
+                target_type="user",
+                target_id=str(current_user.id),
+                status="failed",
+                details={"error_code": error.code},
+            )
+        except AuditWriteError:
+            db.rollback()
+            return _audit_unavailable_response(request_id=request_id)
 
         db.commit()
         return _error_response(

@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-03-29T19:00:00.000+02:00'
+last_updated: '2026-03-29T21:00:00.000+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -502,3 +502,4 @@ development_status:
   61-49-contrat-frontend-unique-plan-commercial-droits-effectifs: done
   61-50-validation-metier-end-to-end-plan-commercial: done
   61-51-cloture-epic-61-objectif-initial-atteint: done
+  61-52-endpoint-stripe-customer-portal-session: done

@@ -326,6 +326,10 @@ class Settings:
             "STRIPE_CHECKOUT_CANCEL_URL",
             "http://localhost:5173/billing/cancel",
         ).strip()
+        self.stripe_portal_return_url = os.getenv(
+            "STRIPE_PORTAL_RETURN_URL",
+            "http://localhost:5173/settings/subscription",
+        ).strip()
 
         # LLM Engine Configuration
         self.openai_model_default = os.getenv("OPENAI_MODEL_DEFAULT", "gpt-4o-mini").strip()
