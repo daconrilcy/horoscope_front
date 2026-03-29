@@ -11,6 +11,7 @@ from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
+from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
 
 client = TestClient(app)
 
@@ -30,6 +31,28 @@ def _register_user_with_role(email: str, role: str) -> str:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
+
+
+def _get_profile_snapshot(email: str) -> dict[str, object]:
+    with SessionLocal() as db:
+        user = db.query(UserModel).filter_by(email=email).first()
+        assert user is not None
+        profile = db.query(StripeBillingProfileModel).filter_by(user_id=user.id).first()
+        assert profile is not None
+        return {
+            "stripe_customer_id": profile.stripe_customer_id,
+            "stripe_subscription_id": profile.stripe_subscription_id,
+            "stripe_price_id": profile.stripe_price_id,
+            "subscription_status": profile.subscription_status,
+            "current_period_end": profile.current_period_end,
+            "cancel_at_period_end": profile.cancel_at_period_end,
+            "entitlement_plan": profile.entitlement_plan,
+            "billing_email": profile.billing_email,
+            "last_stripe_event_id": profile.last_stripe_event_id,
+            "last_stripe_event_created": profile.last_stripe_event_created,
+            "last_stripe_event_type": profile.last_stripe_event_type,
+            "synced_at": profile.synced_at,
+        }
 
 
 @pytest.fixture
@@ -55,7 +78,10 @@ class TestStripeCustomerPortalApi:
     def test_portal_session_profile_not_found(self, clean_db):
         token = _register_user_with_role("user@example.com", "user")
         # No profile created yet
-        with patch("app.services.stripe_customer_portal_service.get_stripe_client", return_value=MagicMock()):
+        with patch(
+            "app.services.stripe_customer_portal_service.get_stripe_client",
+            return_value=MagicMock(),
+        ):
             response = client.post(
                 "/v1/billing/stripe-customer-portal-session",
                 headers={"Authorization": f"Bearer {token}"},
@@ -71,7 +97,10 @@ class TestStripeCustomerPortalApi:
             db.add(profile)
             db.commit()
 
-        with patch("app.services.stripe_customer_portal_service.get_stripe_client", return_value=MagicMock()):
+        with patch(
+            "app.services.stripe_customer_portal_service.get_stripe_client",
+            return_value=MagicMock(),
+        ):
             response = client.post(
                 "/v1/billing/stripe-customer-portal-session",
                 headers={"Authorization": f"Bearer {token}"},
@@ -87,7 +116,9 @@ class TestStripeCustomerPortalApi:
             db.add(profile)
             db.commit()
 
-        with patch("app.services.stripe_customer_portal_service.get_stripe_client", return_value=None):
+        with patch(
+            "app.services.stripe_customer_portal_service.get_stripe_client", return_value=None
+        ):
             response = client.post(
                 "/v1/billing/stripe-customer-portal-session",
                 headers={"Authorization": f"Bearer {token}"},
@@ -99,7 +130,17 @@ class TestStripeCustomerPortalApi:
         token = _register_user_with_role("user@example.com", "user")
         with SessionLocal() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
-            profile = StripeBillingProfileModel(user_id=user.id, stripe_customer_id="cus_123")
+            profile = StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id="cus_123",
+                stripe_subscription_id="sub_123",
+                stripe_price_id="price_basic",
+                subscription_status="active",
+                entitlement_plan="basic",
+                billing_email="user@example.com",
+                last_stripe_event_id="evt_existing",
+                last_stripe_event_type="customer.subscription.updated",
+            )
             db.add(profile)
             db.commit()
 
@@ -107,8 +148,19 @@ class TestStripeCustomerPortalApi:
         mock_session.url = "https://billing.stripe.com/p/session/test_123"
         mock_client = MagicMock()
         mock_client.billing_portal.sessions.create.return_value = mock_session
+        before_snapshot = _get_profile_snapshot("user@example.com")
 
-        with patch("app.services.stripe_customer_portal_service.get_stripe_client", return_value=mock_client):
+        with (
+            patch(
+                "app.services.stripe_customer_portal_service.get_stripe_client",
+                return_value=mock_client,
+            ),
+            patch.object(
+                EffectiveEntitlementResolverService,
+                "resolve_b2c_user_snapshot",
+                side_effect=AssertionError("portal endpoint must not recalculate entitlements"),
+            ),
+        ):
             response = client.post(
                 "/v1/billing/stripe-customer-portal-session",
                 headers={"Authorization": f"Bearer {token}"},
@@ -117,9 +169,39 @@ class TestStripeCustomerPortalApi:
         assert response.status_code == 200
         assert response.json()["data"]["url"] == "https://billing.stripe.com/p/session/test_123"
         assert "request_id" in response.json()["meta"]
-        
-        # Verify call parameters
+
         mock_client.billing_portal.sessions.create.assert_called_once()
         args, kwargs = mock_client.billing_portal.sessions.create.call_args
         assert kwargs["params"]["customer"] == "cus_123"
         assert "return_url" in kwargs["params"]
+        after_snapshot = _get_profile_snapshot("user@example.com")
+        assert after_snapshot == before_snapshot
+
+    def test_portal_session_stripe_sdk_error_returns_502(self, clean_db):
+        import stripe
+
+        token = _register_user_with_role("user@example.com", "user")
+        with SessionLocal() as db:
+            user = db.query(UserModel).filter_by(email="user@example.com").first()
+            profile = StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id="cus_123",
+                entitlement_plan="basic",
+            )
+            db.add(profile)
+            db.commit()
+
+        mock_client = MagicMock()
+        mock_client.billing_portal.sessions.create.side_effect = stripe.StripeError("API down")
+
+        with patch(
+            "app.services.stripe_customer_portal_service.get_stripe_client",
+            return_value=mock_client,
+        ):
+            response = client.post(
+                "/v1/billing/stripe-customer-portal-session",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+
+        assert response.status_code == 502
+        assert response.json()["error"]["code"] == "stripe_api_error"

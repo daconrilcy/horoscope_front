@@ -23,6 +23,7 @@ L'application délègue la gestion avancée des abonnements (upgrade, downgrade,
 
 ### Configuration
 - `STRIPE_PORTAL_RETURN_URL` : URL de retour après la fermeture du portail par l'utilisateur (défaut: `/settings/subscription`).
+- La valeur par défaut `http://localhost:5173/settings/subscription` est acceptable uniquement en local. En staging/production, `STRIPE_PORTAL_RETURN_URL` doit être définie explicitement.
 
 ## Flux Utilisateur
 
@@ -39,3 +40,4 @@ L'application délègue la gestion avancée des abonnements (upgrade, downgrade,
 
 - Pas de gestion des proratas en temps réel côté backend (géré par l'UI Stripe).
 - Pas de polling au retour du portail : il peut y avoir un léger délai (quelques secondes) avant que le webhook ne soit traité et que l'interface ne soit à jour.
+- Pas de mutation synchrone du snapshot billing ni de recalcul d'entitlements dans l'endpoint portail. Le webhook Stripe reste l'unique source de vérité pour les changements effectifs.

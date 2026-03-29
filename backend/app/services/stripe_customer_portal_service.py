@@ -30,19 +30,19 @@ class StripeCustomerPortalService:
         """
         Crée une session Stripe Customer Portal pour un utilisateur.
         """
-        client = get_stripe_client()
-        if client is None:
-            raise StripeCustomerPortalServiceError(
-                code="stripe_unavailable",
-                message="Stripe client is not configured",
-            )
-
         # Lecture seule — NE PAS utiliser get_or_create_profile ici
         profile = StripeBillingProfileService.get_by_user_id(db, user_id)
         if profile is None or not profile.stripe_customer_id:
             raise StripeCustomerPortalServiceError(
                 code="stripe_billing_profile_not_found",
                 message="No Stripe customer ID found for this user",
+            )
+
+        client = get_stripe_client()
+        if client is None:
+            raise StripeCustomerPortalServiceError(
+                code="stripe_unavailable",
+                message="Stripe client is not configured",
             )
 
         try:

@@ -322,6 +322,8 @@ claude-sonnet-4-6
 ### Debug Log References
 
 - Fixed 503 error in integration tests by mocking `get_stripe_client` in `test_portal_session_profile_not_found` and `test_portal_session_no_customer_id`. The 503 was caused by the endpoint correctly identifying that Stripe was not configured (due to missing environment variables in the test environment) before checking the profile existence.
+- Code review fix: reordered `StripeCustomerPortalService.create_portal_session` to validate Stripe billing profile eligibility before checking Stripe client availability, so AC2 now holds even when Stripe is not configured.
+- Code review fix: strengthened unit and integration tests to cover `502 stripe_api_error`, verify profile immutability, and assert that no synchronous entitlement recalculation is triggered by the portal endpoint.
 
 ### Completion Notes List
 
@@ -331,6 +333,8 @@ claude-sonnet-4-6
 - Added `POST /v1/billing/stripe-customer-portal-session` to `billing.py`.
 - Created unit and integration tests with full coverage.
 - Created documentation in `docs/billing-self-service-mvp.md`.
+- Post-review: fixed AC2 behavior for non-eligible users when Stripe is unavailable.
+- Post-review: completed missing regression coverage for Stripe SDK failure, non-mutation of `StripeBillingProfile`, and absence of synchronous entitlement recomputation.
 
 ### File List
 
