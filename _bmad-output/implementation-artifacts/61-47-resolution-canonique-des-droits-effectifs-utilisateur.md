@@ -341,6 +341,8 @@ gpt-5-codex
 - Relecture des stories 61.8, 61.9, 61.10 et de la synthèse 61.7 à 61.46.
 - Relecture du code réel : `entitlement_service`, `entitlement_types`, `enterprise_quota_usage_service`, `b2b_billing_service`, `b2b_api_entitlement_gate`, `feature_scope_registry`, modèles DB et tests unitaires existants.
 - Vérification de l'historique git récent : derniers commits centrés sur 61.46, sans dépendance directe sur le runtime entitlement.
+- Code review BMAD de la story 61.47 avec confrontation explicite story vs implémentation git (`feat(entitlements): implementation of EffectiveEntitlementResolverService (Story 61.47)`).
+- Vérification ciblée des chemins billing B2C (`active`, `trialing`, absence d'abonnement), des quotas mal configurés et de l'absence d'effet de bord sur les compteurs B2C/B2B.
 
 ### Completion Notes List
 
@@ -350,6 +352,10 @@ gpt-5-codex
 - Implémentation d'une règle de synthèse déterministe pour le multi-quota.
 - Ajout de tests unitaires complets couvrant les cas B2C et B2B.
 - Validation de la non-régression avec les tests existants.
+- Correctif review : le resolver considère désormais `trialing` comme un billing B2C actif, aligné avec `EntitlementService`.
+- Correctif review : l'absence réelle d'abonnement B2C est normalisée en `plan_code="none"` / `billing_status="none"` au lieu d'exposer `inactive`.
+- Correctif review : un binding `QUOTA` sans quotas ou avec quota `rolling` n'accorde plus l'accès par erreur et ne casse plus le snapshot.
+- Correctif review : tests supplémentaires ajoutés pour `trialing`, la normalisation "no plan" et la garantie read-only sans création de compteurs manquants.
 
 ### File List
 

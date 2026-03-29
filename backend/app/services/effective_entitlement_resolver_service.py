@@ -41,6 +41,7 @@ class EffectiveEntitlementResolverService:
     REASON_QUOTA_EXHAUSTED = "quota_exhausted"
     REASON_BINDING_DISABLED = "binding_disabled"
     REASON_SUBJECT_NOT_ELIGIBLE = "subject_not_eligible"
+    _ACTIVE_BILLING_STATUSES = frozenset({"active", "trialing"})
 
     @staticmethod
     def resolve_b2c_user_snapshot(
@@ -80,8 +81,12 @@ class EffectiveEntitlementResolverService:
 
         # 2. Résolution billing/plan
         sub = BillingService.get_subscription_status_readonly(db, user_id=app_user_id)
-        plan_code = sub.plan.code if sub.plan else "none"
-        billing_status = sub.status
+        if sub.plan is None:
+            plan_code = "none"
+            billing_status = "none"
+        else:
+            plan_code = sub.plan.code
+            billing_status = sub.status
 
         # 3. Chargement du plan canonique
         canonical_plan = None
@@ -98,9 +103,7 @@ class EffectiveEntitlementResolverService:
 
         # 4. Features du scope B2C
         features = [
-            f_code
-            for f_code, scope in FEATURE_SCOPE_REGISTRY.items()
-            if scope == FeatureScope.B2C
+            f_code for f_code, scope in FEATURE_SCOPE_REGISTRY.items() if scope == FeatureScope.B2C
         ]
 
         # 5. Résolution globale
@@ -158,9 +161,7 @@ class EffectiveEntitlementResolverService:
 
         # 3. Features du scope B2B
         features = [
-            f_code
-            for f_code, scope in FEATURE_SCOPE_REGISTRY.items()
-            if scope == FeatureScope.B2B
+            f_code for f_code, scope in FEATURE_SCOPE_REGISTRY.items() if scope == FeatureScope.B2B
         ]
 
         # 4. Résolution globale
@@ -240,7 +241,10 @@ class EffectiveEntitlementResolverService:
                 )
                 continue
 
-            if billing_status != "active":
+            if not EffectiveEntitlementResolverService._is_billing_active(
+                subject_type=subject_type,
+                billing_status=billing_status,
+            ):
                 entitlements[f_code] = EffectiveFeatureAccess(
                     granted=False,
                     reason_code=EffectiveEntitlementResolverService.REASON_BILLING_INACTIVE,
@@ -276,6 +280,21 @@ class EffectiveEntitlementResolverService:
                     PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
                 )
             ).all()
+
+            if not quotas or any(q.reset_mode.value == "rolling" for q in quotas):
+                entitlements[f_code] = EffectiveFeatureAccess(
+                    granted=False,
+                    reason_code=EffectiveEntitlementResolverService.REASON_BINDING_DISABLED,
+                    access_mode="quota",
+                    variant_code=binding.variant_code,
+                    quota_limit=None,
+                    quota_used=None,
+                    quota_remaining=None,
+                    period_unit=None,
+                    period_value=None,
+                    reset_mode=None,
+                )
+                continue
 
             usage_states: list[UsageState] = []
             for q in quotas:
@@ -334,6 +353,12 @@ class EffectiveEntitlementResolverService:
             billing_status=billing_status,
             entitlements=entitlements,
         )
+
+    @staticmethod
+    def _is_billing_active(*, subject_type: str, billing_status: str) -> bool:
+        if subject_type == "b2c_user":
+            return billing_status in EffectiveEntitlementResolverService._ACTIVE_BILLING_STATUSES
+        return billing_status == "active"
 
     @staticmethod
     def _summarize_usage(usage_states: list[UsageState]) -> dict[str, Any]:
