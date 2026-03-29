@@ -436,8 +436,25 @@ gpt-5
 
 ### Completion Notes List
 
-- Ultimate context engine analysis completed - comprehensive developer guide created
+- Implémentation revue et durcie après code review ciblée.
+- Contrat API des suppression rules réaligné sur la story: routes prévues uniquement, pagination du listing, messages métier retry explicites.
+- Unicité normalisée fiabilisée pour les critères nullable via index unique `coalesce(...)` et normalisation des champs optionnels.
+- Couverture de tests complétée sur listing, summary, retry unitaires/batch et effets métier des règles actives/inactives.
 
 ### File List
 
+- `backend/app/api/v1/routers/ops_entitlement_mutation_audits.py`
+- `backend/app/infra/db/models/canonical_entitlement_mutation_alert_suppression_rule.py`
+- `backend/app/services/canonical_entitlement_alert_batch_retry_service.py`
+- `backend/app/services/canonical_entitlement_alert_query_service.py`
+- `backend/app/services/canonical_entitlement_alert_suppression_rule_service.py`
+- `backend/app/tests/integration/test_ops_alert_suppression_rules_api.py`
+- `backend/app/tests/integration/test_ops_alert_suppression_rules_effects_api.py`
+- `backend/app/tests/unit/test_canonical_entitlement_alert_batch_retry_service.py`
+- `backend/app/tests/unit/test_canonical_entitlement_alert_query_service.py`
+- `backend/app/tests/unit/test_canonical_entitlement_alert_retry_service.py`
+- `backend/app/tests/unit/test_canonical_entitlement_alert_suppression_rule_service.py`
+- `backend/docs/entitlements-canonical-platform.md`
+- `backend/README.md`
+- `backend/migrations/versions/20260329_0063_add_alert_suppression_rules_table.py`
 - `_bmad-output/implementation-artifacts/61-46-regles-suppression-auto-triage-alertes-ops.md`

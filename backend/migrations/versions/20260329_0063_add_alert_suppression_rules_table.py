@@ -40,13 +40,6 @@ def upgrade() -> None:
             server_default=sa.text("CURRENT_TIMESTAMP"),
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "alert_kind",
-            "feature_code",
-            "plan_code",
-            "actor_type",
-            name="uq_cema_suppression_rules_criteria",
-        ),
     )
     op.create_index(
         "ix_cema_suppression_rules_is_active",
@@ -58,11 +51,26 @@ def upgrade() -> None:
         "canonical_entitlement_mutation_alert_suppression_rules",
         ["is_active", "alert_kind"],
     )
+    op.create_index(
+        "uq_cema_suppression_rules_criteria_normalized",
+        "canonical_entitlement_mutation_alert_suppression_rules",
+        [
+            "alert_kind",
+            sa.text("coalesce(feature_code, '')"),
+            sa.text("coalesce(plan_code, '')"),
+            sa.text("coalesce(actor_type, '')"),
+        ],
+        unique=True,
+    )
 
 
 def downgrade() -> None:
     op.drop_index(
         "ix_cema_suppression_rules_is_active_kind",
+        table_name="canonical_entitlement_mutation_alert_suppression_rules",
+    )
+    op.drop_index(
+        "uq_cema_suppression_rules_criteria_normalized",
         table_name="canonical_entitlement_mutation_alert_suppression_rules",
     )
     op.drop_index(

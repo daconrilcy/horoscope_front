@@ -152,7 +152,6 @@ class CanonicalEntitlementAlertQueryService:
             CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
         )
 
-        model = CanonicalEntitlementMutationAlertEventModel
         base = CanonicalEntitlementAlertQueryService._build_filtered_query(
             alert_kind=alert_kind,
             delivery_status=delivery_status,
@@ -172,7 +171,7 @@ class CanonicalEntitlementAlertQueryService:
         ).subquery("h")
 
         rule_matches_expr = select(literal(1)).where(
-            RuleModel.is_active == True,
+            RuleModel.is_active.is_(True),
             RuleModel.alert_kind == base.c.alert_kind,
             (RuleModel.feature_code.is_(None))
             | (RuleModel.feature_code == base.c.feature_code_snapshot),
@@ -214,7 +213,13 @@ class CanonicalEntitlementAlertQueryService:
                     )
                 ).label("log_sent_count"),
                 func.count(
-                    case(((joined.c.hs == "suppressed") | (joined.c.hs.is_(None) & joined.c.rule_matches), 1))
+                    case(
+                        (
+                            (joined.c.hs == "suppressed")
+                            | (joined.c.hs.is_(None) & joined.c.rule_matches),
+                            1,
+                        )
+                    )
                 ).label("suppressed_count"),
                 func.count(case((joined.c.hs == "resolved", 1))).label("resolved_count"),
                 func.count(
@@ -264,9 +269,10 @@ class CanonicalEntitlementAlertQueryService:
         query = select(model)
 
         rule_matching_subquery = select(literal(1)).where(
-            RuleModel.is_active == True,
+            RuleModel.is_active.is_(True),
             RuleModel.alert_kind == model.alert_kind,
-            (RuleModel.feature_code.is_(None)) | (RuleModel.feature_code == model.feature_code_snapshot),
+            (RuleModel.feature_code.is_(None))
+            | (RuleModel.feature_code == model.feature_code_snapshot),
             (RuleModel.plan_code.is_(None)) | (RuleModel.plan_code == model.plan_code_snapshot),
             (RuleModel.actor_type.is_(None)) | (RuleModel.actor_type == model.actor_type_snapshot),
         )

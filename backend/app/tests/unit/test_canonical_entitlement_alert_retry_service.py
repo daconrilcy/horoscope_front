@@ -12,6 +12,9 @@ from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt i
 from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
+from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+    CanonicalEntitlementMutationAlertSuppressionRuleModel,
+)
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
 )
@@ -268,3 +271,26 @@ def test_retry_ignores_non_failed_events_in_batch_mode(db_session: Session) -> N
     assert result.retried_count == 1
     assert len(attempts) == 1
     assert attempts[0].alert_event_id == failed_event.id
+
+
+def test_retry_failed_alerts_raises_not_retryable_when_rule_matches(
+    db_session: Session,
+) -> None:
+    audit = _seed_audit(db_session)
+    event = _seed_alert_event(db_session, audit_id=audit.id)
+    db_session.add(
+        CanonicalEntitlementMutationAlertSuppressionRuleModel(
+            alert_kind=event.alert_kind,
+            feature_code=event.feature_code_snapshot,
+            plan_code=event.plan_code_snapshot,
+            actor_type=event.actor_type_snapshot,
+            is_active=True,
+        )
+    )
+    db_session.commit()
+
+    with pytest.raises(AlertEventNotRetryableError, match="suppression rule"):
+        CanonicalEntitlementAlertRetryService.retry_failed_alerts(
+            db_session,
+            alert_event_id=event.id,
+        )

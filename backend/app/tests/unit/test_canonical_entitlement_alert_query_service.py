@@ -10,6 +10,12 @@ from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt i
 from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
+from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
+    CanonicalEntitlementMutationAlertEventHandlingModel,
+)
+from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+    CanonicalEntitlementMutationAlertSuppressionRuleModel,
+)
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
 )
@@ -322,3 +328,108 @@ def test_get_summary_counts_correctly(db_session: Session) -> None:
     assert summary.retryable_count == 1
     assert summary.webhook_failed_count == 1
     assert summary.log_sent_count == 1
+
+
+def test_list_alert_events_includes_rule_suppressed_handling(db_session: Session) -> None:
+    audit = _seed_audit(db_session)
+    event = _seed_alert_event(
+        db_session,
+        audit_id=audit.id,
+        dedupe_suffix="rule-suppressed",
+        delivery_status="failed",
+    )
+    db_session.add(
+        CanonicalEntitlementMutationAlertSuppressionRuleModel(
+            alert_kind=event.alert_kind,
+            feature_code=event.feature_code_snapshot,
+            plan_code=event.plan_code_snapshot,
+            actor_type=event.actor_type_snapshot,
+            is_active=True,
+            suppression_key="known-noise",
+            ops_comment="ignore this alert family",
+        )
+    )
+    db_session.commit()
+
+    rows, total_count = CanonicalEntitlementAlertQueryService.list_alert_events(
+        db_session,
+        handling_status="suppressed",
+    )
+
+    assert total_count == 1
+    assert [row.event.id for row in rows] == [event.id]
+
+
+def test_summary_counts_rule_suppressed_alerts(db_session: Session) -> None:
+    audit = _seed_audit(db_session)
+    rule_suppressed_event = _seed_alert_event(
+        db_session,
+        audit_id=audit.id,
+        dedupe_suffix="rule-suppressed",
+        delivery_status="failed",
+    )
+    manual_resolved_event = _seed_alert_event(
+        db_session,
+        audit_id=audit.id,
+        dedupe_suffix="manual-resolved",
+        delivery_status="failed",
+        feature_code_snapshot="feature-other",
+    )
+    db_session.add(
+        CanonicalEntitlementMutationAlertSuppressionRuleModel(
+            alert_kind=rule_suppressed_event.alert_kind,
+            feature_code=rule_suppressed_event.feature_code_snapshot,
+            plan_code=rule_suppressed_event.plan_code_snapshot,
+            actor_type=rule_suppressed_event.actor_type_snapshot,
+            is_active=True,
+        )
+    )
+    db_session.add(
+        CanonicalEntitlementMutationAlertEventHandlingModel(
+            alert_event_id=manual_resolved_event.id,
+            handling_status="resolved",
+            handled_by_user_id=1,
+        )
+    )
+    db_session.commit()
+
+    summary = CanonicalEntitlementAlertQueryService.get_summary(db_session)
+
+    assert summary.suppressed_count == 1
+    assert summary.resolved_count == 1
+    assert summary.retryable_count == 0
+
+
+def test_pending_retry_excludes_rule_suppressed_alerts(db_session: Session) -> None:
+    audit = _seed_audit(db_session)
+    matching_event = _seed_alert_event(
+        db_session,
+        audit_id=audit.id,
+        dedupe_suffix="matching",
+        delivery_status="failed",
+    )
+    retryable_event = _seed_alert_event(
+        db_session,
+        audit_id=audit.id,
+        dedupe_suffix="retryable",
+        delivery_status="failed",
+        feature_code_snapshot="feature-retryable",
+    )
+    db_session.add(
+        CanonicalEntitlementMutationAlertSuppressionRuleModel(
+            alert_kind=matching_event.alert_kind,
+            feature_code=matching_event.feature_code_snapshot,
+            plan_code=matching_event.plan_code_snapshot,
+            actor_type=matching_event.actor_type_snapshot,
+            is_active=True,
+        )
+    )
+    db_session.commit()
+
+    rows, total_count = CanonicalEntitlementAlertQueryService.list_alert_events(
+        db_session,
+        handling_status="pending_retry",
+    )
+
+    assert total_count == 1
+    assert [row.event.id for row in rows] == [retryable_event.id]

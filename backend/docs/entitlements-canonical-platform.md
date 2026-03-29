@@ -1176,10 +1176,9 @@ Le matching s'effectue sur `alert_kind` (obligatoire) et compare les snapshots d
 ### Endpoints CRUD
 
 ```text
-GET    /v1/ops/entitlements/alerts/suppression-rules
-POST   /v1/ops/entitlements/alerts/suppression-rules
-PATCH  /v1/ops/entitlements/alerts/suppression-rules/{id}
-DELETE /v1/ops/entitlements/alerts/suppression-rules/{id}
+GET   /v1/ops/entitlements/mutation-audits/alerts/suppression-rules
+POST  /v1/ops/entitlements/mutation-audits/alerts/suppression-rules
+PATCH /v1/ops/entitlements/mutation-audits/alerts/suppression-rules/{rule_id}
 ```
 - Accès restreint aux rôles `ops` et `admin`.
 - `DELETE` effectue une suppression logique (`is_active = False`).

@@ -316,13 +316,15 @@ L'endpoint `handling-history` expose l'historique append-only des transitions de
 Règles de suppression réutilisables (Story 61.46) :
 
 ```text
-GET    /v1/ops/entitlements/alerts/suppression-rules
-POST   /v1/ops/entitlements/alerts/suppression-rules
-PATCH  /v1/ops/entitlements/alerts/suppression-rules/{id}
-DELETE /v1/ops/entitlements/alerts/suppression-rules/{id}
+GET   /v1/ops/entitlements/mutation-audits/alerts/suppression-rules
+POST  /v1/ops/entitlements/mutation-audits/alerts/suppression-rules
+PATCH /v1/ops/entitlements/mutation-audits/alerts/suppression-rules/{rule_id}
 ```
 
-Les opérateurs peuvent définir des règles durables pour ignorer automatiquement des alertes (ex: filtrage par `feature_code` ou `plan_code`). Les alertes matchées par une règle active sont marquées `suppressed` (source `rule`) et sont automatiquement exclues des retries batch et unitaires.
+Les opérateurs peuvent définir des règles durables pour ignorer automatiquement des alertes
+(ex: filtrage par `feature_code` ou `plan_code`). Les alertes matchées par une règle active
+sont marquées `suppressed` (source `rule`) et sont automatiquement exclues des retries batch
+et unitaires.
 
 Secrets minimum requis hors environnements locaux/test (staging, production):
 - `JWT_SECRET_KEY`

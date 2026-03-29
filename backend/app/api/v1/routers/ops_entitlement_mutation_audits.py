@@ -21,6 +21,9 @@ from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
 from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
     CanonicalEntitlementMutationAlertEventHandlingModel,
 )
+from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+    CanonicalEntitlementMutationAlertSuppressionRuleModel,
+)
 from app.infra.db.models.canonical_entitlement_mutation_audit_review import (
     CanonicalEntitlementMutationAuditReviewModel,
 )
@@ -148,13 +151,20 @@ class UpdateAlertSuppressionRuleRequestBody(BaseModel):
 
 
 class AlertSuppressionRuleListResponse(BaseModel):
-    data: list[AlertSuppressionRuleItem]
+    data: "AlertSuppressionRuleListData"
     meta: ResponseMeta
 
 
 class AlertSuppressionRuleApiResponse(BaseModel):
     data: AlertSuppressionRuleItem
     meta: ResponseMeta
+
+
+class AlertSuppressionRuleListData(BaseModel):
+    items: list[AlertSuppressionRuleItem]
+    total_count: int
+    page: int
+    page_size: int
 
 
 class MutationAuditListData(BaseModel):
@@ -581,6 +591,13 @@ def _load_handlings_by_event_ids(
         )
     )
     return {r.alert_event_id: r for r in result.scalars().all()}
+
+
+def _normalize_optional_rule_field(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = value.strip()
+    return normalized or None
 
 
 def _compute_alert_handling_state(
@@ -1277,10 +1294,6 @@ def list_alert_suppression_rules(
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
-    from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
-        CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
-    )
-
     request_id = resolve_request_id(request)
     if (err := _ensure_ops_role(current_user, request_id)) is not None:
         return err
@@ -1293,21 +1306,26 @@ def list_alert_suppression_rules(
     ) is not None:
         return err
 
-    stmt = select(RuleModel).where(RuleModel.is_active == is_active)
+    stmt = select(CanonicalEntitlementMutationAlertSuppressionRuleModel).where(
+        CanonicalEntitlementMutationAlertSuppressionRuleModel.is_active.is_(is_active)
+    )
     if alert_kind:
-        stmt = stmt.where(RuleModel.alert_kind == alert_kind)
+        stmt = stmt.where(
+            CanonicalEntitlementMutationAlertSuppressionRuleModel.alert_kind == alert_kind
+        )
 
-    stmt = stmt.order_by(RuleModel.id.desc())
-    
-    # Count
+    stmt = stmt.order_by(CanonicalEntitlementMutationAlertSuppressionRuleModel.id.desc())
     total_count = db.execute(select(func.count()).select_from(stmt.subquery())).scalar_one()
-    
-    # Paging
     stmt = stmt.limit(page_size).offset((page - 1) * page_size)
     rules = db.execute(stmt).scalars().all()
 
     return {
-        "data": [AlertSuppressionRuleItem.model_validate(r) for r in rules],
+        "data": {
+            "items": [AlertSuppressionRuleItem.model_validate(rule) for rule in rules],
+            "total_count": total_count,
+            "page": page,
+            "page_size": page_size,
+        },
         "meta": {"request_id": request_id},
     }
 
@@ -1330,10 +1348,6 @@ def create_alert_suppression_rule(
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
-    from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
-        CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
-    )
-
     request_id = resolve_request_id(request)
     if (err := _ensure_ops_role(current_user, request_id)) is not None:
         return err
@@ -1346,23 +1360,29 @@ def create_alert_suppression_rule(
     ) is not None:
         return err
 
-    # Check for duplicates (AC 1 unique constraint)
-    existing_stmt = select(RuleModel).where(
-        RuleModel.alert_kind == body.alert_kind,
-        RuleModel.feature_code == body.feature_code,
-        RuleModel.plan_code == body.plan_code,
-        RuleModel.actor_type == body.actor_type,
+    normalized_feature_code = _normalize_optional_rule_field(body.feature_code)
+    normalized_plan_code = _normalize_optional_rule_field(body.plan_code)
+    normalized_actor_type = _normalize_optional_rule_field(body.actor_type)
+    normalized_suppression_key = _normalize_optional_rule_field(body.suppression_key)
+    normalized_ops_comment = _normalize_optional_rule_field(body.ops_comment)
+
+    existing_stmt = select(CanonicalEntitlementMutationAlertSuppressionRuleModel).where(
+        CanonicalEntitlementMutationAlertSuppressionRuleModel.alert_kind
+        == body.alert_kind.strip(),
+        CanonicalEntitlementMutationAlertSuppressionRuleModel.feature_code
+        == normalized_feature_code,
+        CanonicalEntitlementMutationAlertSuppressionRuleModel.plan_code == normalized_plan_code,
+        CanonicalEntitlementMutationAlertSuppressionRuleModel.actor_type == normalized_actor_type,
     )
     existing = db.execute(existing_stmt).scalar_one_or_none()
     if existing:
-        # Idempotency check: if everything is same, return 200
         if (
-            existing.suppression_key == body.suppression_key
-            and existing.ops_comment == body.ops_comment
+            existing.suppression_key == normalized_suppression_key
+            and existing.ops_comment == normalized_ops_comment
             and existing.is_active == body.is_active
         ):
-            # Not status 201
             from fastapi.encoders import jsonable_encoder
+
             return JSONResponse(
                 status_code=200,
                 content={
@@ -1375,17 +1395,20 @@ def create_alert_suppression_rule(
             status_code=409,
             request_id=request_id,
             code="suppression_rule_conflict",
-            message="A suppression rule with these criteria already exists but with different values",
+            message=(
+                "A suppression rule with these criteria already exists "
+                "but with different values"
+            ),
             details={"rule_id": existing.id},
         )
 
-    new_rule = RuleModel(
-        alert_kind=body.alert_kind,
-        feature_code=body.feature_code,
-        plan_code=body.plan_code,
-        actor_type=body.actor_type,
-        suppression_key=body.suppression_key,
-        ops_comment=body.ops_comment,
+    new_rule = CanonicalEntitlementMutationAlertSuppressionRuleModel(
+        alert_kind=body.alert_kind.strip(),
+        feature_code=normalized_feature_code,
+        plan_code=normalized_plan_code,
+        actor_type=normalized_actor_type,
+        suppression_key=normalized_suppression_key,
+        ops_comment=normalized_ops_comment,
         is_active=body.is_active,
         created_by_user_id=current_user.id,
         updated_by_user_id=current_user.id,
@@ -1396,54 +1419,6 @@ def create_alert_suppression_rule(
 
     return {
         "data": AlertSuppressionRuleItem.model_validate(new_rule),
-        "meta": {"request_id": request_id},
-    }
-
-
-@router.get(
-    "/mutation-audits/alerts/suppression-rules/{rule_id}",
-    response_model=AlertSuppressionRuleApiResponse,
-    responses={
-        401: {"model": ErrorEnvelope},
-        403: {"model": ErrorEnvelope},
-        404: {"model": ErrorEnvelope},
-        429: {"model": ErrorEnvelope},
-    },
-)
-def get_alert_suppression_rule(
-    rule_id: int,
-    request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
-    db: Session = Depends(get_db_session),
-) -> Any:
-    from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
-        CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
-    )
-
-    request_id = resolve_request_id(request)
-    if (err := _ensure_ops_role(current_user, request_id)) is not None:
-        return err
-    if (
-        err := _enforce_limits(
-            user=current_user,
-            request_id=request_id,
-            operation="get_alert_suppression_rule",
-        )
-    ) is not None:
-        return err
-
-    rule = db.get(RuleModel, rule_id)
-    if not rule:
-        return _error_response(
-            status_code=404,
-            request_id=request_id,
-            code="rule_not_found",
-            message=f"Suppression rule {rule_id} not found",
-            details={"rule_id": rule_id},
-        )
-
-    return {
-        "data": AlertSuppressionRuleItem.model_validate(rule),
         "meta": {"request_id": request_id},
     }
 
@@ -1466,10 +1441,6 @@ def update_alert_suppression_rule(
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
-    from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
-        CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
-    )
-
     request_id = resolve_request_id(request)
     if (err := _ensure_ops_role(current_user, request_id)) is not None:
         return err
@@ -1482,7 +1453,7 @@ def update_alert_suppression_rule(
     ) is not None:
         return err
 
-    rule = db.get(RuleModel, rule_id)
+    rule = db.get(CanonicalEntitlementMutationAlertSuppressionRuleModel, rule_id)
     if not rule:
         return _error_response(
             status_code=404,
@@ -1499,9 +1470,16 @@ def update_alert_suppression_rule(
             "meta": {"request_id": request_id},
         }
 
+    if "suppression_key" in update_data:
+        update_data["suppression_key"] = _normalize_optional_rule_field(
+            update_data["suppression_key"]
+        )
+    if "ops_comment" in update_data:
+        update_data["ops_comment"] = _normalize_optional_rule_field(update_data["ops_comment"])
+
     for key, value in update_data.items():
         setattr(rule, key, value)
-    
+
     rule.updated_by_user_id = current_user.id
     db.commit()
     db.refresh(rule)
@@ -1510,64 +1488,6 @@ def update_alert_suppression_rule(
         "data": AlertSuppressionRuleItem.model_validate(rule),
         "meta": {"request_id": request_id},
     }
-
-
-@router.delete(
-    "/mutation-audits/alerts/suppression-rules/{rule_id}",
-    status_code=204,
-    responses={
-        401: {"model": ErrorEnvelope},
-        403: {"model": ErrorEnvelope},
-        404: {"model": ErrorEnvelope},
-        429: {"model": ErrorEnvelope},
-    },
-)
-def delete_alert_suppression_rule(
-    rule_id: int,
-    request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
-    db: Session = Depends(get_db_session),
-) -> None:
-    from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
-        CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
-    )
-
-    request_id = resolve_request_id(request)
-    if (err := _ensure_ops_role(current_user, request_id)) is not None:
-        # Since _ensure_ops_role returns JSONResponse, but status 204 forbids body,
-        # we MUST raise HTTPException here if we want to return an error.
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "error": {
-                    "code": "insufficient_role",
-                    "message": "role is not allowed",
-                    "details": {"required_roles": "ops, admin", "actual_role": current_user.role},
-                    "request_id": request_id,
-                }
-            },
-        )
-
-    rule = db.get(RuleModel, rule_id)
-    if not rule:
-        raise HTTPException(
-            status_code=404,
-            detail={
-                "error": {
-                    "code": "rule_not_found",
-                    "message": f"Suppression rule {rule_id} not found",
-                    "details": {"rule_id": rule_id},
-                    "request_id": request_id,
-                }
-            },
-        )
-
-    # logical delete
-    rule.is_active = False
-    rule.updated_by_user_id = current_user.id
-    db.commit()
-
-    return None
 
 
 @router.post(
@@ -1986,12 +1906,12 @@ def retry_alert(
             message=f"Alert event {alert_event_id} not found",
             details={"alert_event_id": alert_event_id},
         )
-    except AlertEventNotRetryableError:
+    except AlertEventNotRetryableError as exc:
         return _error_response(
             status_code=409,
             request_id=request_id,
             code="alert_event_not_retryable",
-            message=f"Alert event {alert_event_id} is not in failed state",
+            message=str(exc),
             details={"alert_event_id": alert_event_id},
         )
 
