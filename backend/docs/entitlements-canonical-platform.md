@@ -895,3 +895,79 @@ Règles métier :
 
 `alert_event_ids` contient uniquement les IDs effectivement tentés, ou les IDs qui seraient tentés en `dry_run`.
 
+---
+
+## Story 61.43 — Triage ops des alertes de delivery
+
+Depuis la story 61.43, les alertes de delivery disposent d’un état ops mutable séparé des events append-only, afin de sortir durablement du backlog les alertes non actionnables ou déjà traitées.
+
+### Table `canonical_entitlement_mutation_alert_event_handlings`
+
+Cette table contient l’état courant de handling par `alert_event_id`, avec une seule ligne par alerte.
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `id` | int PK | Identifiant interne |
+| `alert_event_id` | int FK UNIQUE | Référence vers `canonical_entitlement_mutation_alert_events.id` |
+| `handling_status` | str(32) | `suppressed` ou `resolved` |
+| `handled_by_user_id` | int nullable | Utilisateur ops/admin ayant appliqué le triage |
+| `handled_at` | timestamptz | Date du dernier upsert |
+| `ops_comment` | text nullable | Commentaire ops |
+| `suppression_key` | str(64) nullable | Catégorie/raison de suppression |
+
+### Endpoint de handling
+
+```text
+POST /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/handle
+```
+
+Règles :
+- rôles autorisés : `ops`, `admin`
+- rate limit ops standard avec l’opération `handle_alert_event`
+- body JSON :
+
+```json
+{
+  "handling_status": "suppressed",
+  "ops_comment": "Known provider incident",
+  "suppression_key": "provider-incident"
+}
+```
+
+- `handled_by_user_id` est déduit du token
+- retour HTTP `201`
+- `404` si `alert_event_id` inexistant
+
+### État virtuel `pending_retry`
+
+Le statut `pending_retry` n’est jamais stocké en base. Il est calculé côté application quand :
+- `delivery_status == "failed"`
+- aucun record de handling n’existe pour l’alert event
+
+Conséquences :
+- une alerte `failed` sans handling apparaît avec `handling.handling_status = "pending_retry"`
+- une alerte `sent` sans handling expose `handling = null`
+- `retryable` est vrai uniquement si l’état effectif vaut `pending_retry`
+
+### Enrichissement de `GET /alerts`
+
+`GET /v1/ops/entitlements/mutation-audits/alerts` expose désormais :
+- `handling` : état enrichi (`pending_retry`, `suppressed`, `resolved`)
+- le filtre `handling_status=pending_retry|suppressed|resolved`
+
+Le filtre est implémenté par sous-requêtes `IN` / `NOT IN`, sans `JOIN`, pour préserver le mapping actuel du query service.
+
+### Enrichissement de `GET /alerts/summary`
+
+Le summary expose deux nouveaux compteurs :
+- `suppressed_count`
+- `resolved_count`
+
+Les compteurs sont calculés via un `LEFT JOIN` entre le sous-ensemble filtré d’alertes et la table de handling.
+
+### Impact sur `retry-batch`
+
+`POST /v1/ops/entitlements/mutation-audits/alerts/retry-batch` conserve le filtre implicite `delivery_status=failed`, mais exclut désormais les alertes ayant un handling explicite `suppressed` ou `resolved`.
+
+Les alertes `pending_retry` restent candidates au batch retry.
+

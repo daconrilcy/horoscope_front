@@ -1,0 +1,32 @@
+from __future__ import annotations
+
+from datetime import datetime, timezone
+
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.infra.db.base import Base
+
+
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+class CanonicalEntitlementMutationAlertEventHandlingModel(Base):
+    __tablename__ = "canonical_entitlement_mutation_alert_event_handlings"
+    __table_args__ = (UniqueConstraint("alert_event_id", name="uq_cemae_handling_alert_event_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    alert_event_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("canonical_entitlement_mutation_alert_events.id"),
+        nullable=False,
+        index=True,
+    )
+    handling_status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    handled_by_user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    handled_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_utc_now
+    )
+    ops_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    suppression_key: Mapped[str | None] = mapped_column(String(64), nullable=True)

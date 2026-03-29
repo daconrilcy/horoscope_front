@@ -14,6 +14,9 @@ from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt i
 from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
+from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
+    CanonicalEntitlementMutationAlertEventHandlingModel,
+)
 
 AlertDeliveryStatus = Literal["sent", "failed"]
 
@@ -34,6 +37,8 @@ class AlertSummaryResult:
     retryable_count: int
     webhook_failed_count: int
     log_sent_count: int
+    suppressed_count: int
+    resolved_count: int
 
 
 class CanonicalEntitlementAlertQueryService:
@@ -49,6 +54,7 @@ class CanonicalEntitlementAlertQueryService:
         feature_code: str | None = None,
         plan_code: str | None = None,
         actor_type: str | None = None,
+        handling_status: str | None = None,
         request_id: str | None = None,
         date_from: datetime | None = None,
         date_to: datetime | None = None,
@@ -62,6 +68,7 @@ class CanonicalEntitlementAlertQueryService:
             feature_code=feature_code,
             plan_code=plan_code,
             actor_type=actor_type,
+            handling_status=handling_status,
             request_id=request_id,
             date_from=date_from,
             date_to=date_to,
@@ -73,28 +80,21 @@ class CanonicalEntitlementAlertQueryService:
             .limit(page_size)
             .subquery()
         )
-        total_count_subquery = (
-            select(func.count())
-            .select_from(base_subquery)
-            .scalar_subquery()
-        )
+        total_count_subquery = select(func.count()).select_from(base_subquery).scalar_subquery()
         has_page_items = select(literal(1)).select_from(paged_subquery).exists()
-        page_query = (
+        page_query = select(
+            *[paged_subquery.c[name].label(name) for name in column_names],
+            total_count_subquery.label("total_count"),
+            literal(False).label("is_empty"),
+        ).union_all(
             select(
-                *[paged_subquery.c[name].label(name) for name in column_names],
+                *[
+                    literal(None, type_=model.__table__.c[name].type).label(name)
+                    for name in column_names
+                ],
                 total_count_subquery.label("total_count"),
-                literal(False).label("is_empty"),
-            )
-            .union_all(
-                select(
-                    *[
-                        literal(None, type_=model.__table__.c[name].type).label(name)
-                        for name in column_names
-                    ],
-                    total_count_subquery.label("total_count"),
-                    literal(True).label("is_empty"),
-                ).where(~has_page_items)
-            )
+                literal(True).label("is_empty"),
+            ).where(~has_page_items)
         )
         page_rows = list(db.execute(page_query).mappings().all())
         if not page_rows:
@@ -102,10 +102,7 @@ class CanonicalEntitlementAlertQueryService:
         if page_rows[0]["is_empty"]:
             return [], page_rows[0]["total_count"] or 0
 
-        events = [
-            model(**{name: row[name] for name in column_names})
-            for row in page_rows
-        ]
+        events = [model(**{name: row[name] for name in column_names}) for row in page_rows]
         total_count = page_rows[0]["total_count"] or 0
 
         attempts_by_event = CanonicalEntitlementAlertQueryService._load_attempts_by_event(
@@ -146,6 +143,7 @@ class CanonicalEntitlementAlertQueryService:
         feature_code: str | None = None,
         plan_code: str | None = None,
         actor_type: str | None = None,
+        handling_status: str | None = None,
         request_id: str | None = None,
         date_from: datetime | None = None,
         date_to: datetime | None = None,
@@ -157,21 +155,32 @@ class CanonicalEntitlementAlertQueryService:
             feature_code=feature_code,
             plan_code=plan_code,
             actor_type=actor_type,
+            handling_status=handling_status,
             request_id=request_id,
             date_from=date_from,
             date_to=date_to,
         ).subquery()
+        handling_model = CanonicalEntitlementMutationAlertEventHandlingModel
+        handling_subquery = select(
+            handling_model.alert_event_id,
+            handling_model.handling_status.label("handling_status"),
+        ).subquery("h")
+        joined = (
+            select(base, handling_subquery.c.handling_status.label("hs"))
+            .outerjoin(handling_subquery, base.c.id == handling_subquery.c.alert_event_id)
+            .subquery()
+        )
 
         row = db.execute(
             select(
                 func.count().label("total_count"),
-                func.count(case((base.c.delivery_status == "failed", 1))).label("failed_count"),
-                func.count(case((base.c.delivery_status == "sent", 1))).label("sent_count"),
+                func.count(case((joined.c.delivery_status == "failed", 1))).label("failed_count"),
+                func.count(case((joined.c.delivery_status == "sent", 1))).label("sent_count"),
                 func.count(
                     case(
                         (
-                            (base.c.delivery_channel == "webhook")
-                            & (base.c.delivery_status == "failed"),
+                            (joined.c.delivery_channel == "webhook")
+                            & (joined.c.delivery_status == "failed"),
                             1,
                         )
                     )
@@ -179,23 +188,34 @@ class CanonicalEntitlementAlertQueryService:
                 func.count(
                     case(
                         (
-                            (base.c.delivery_channel == "log")
-                            & (base.c.delivery_status == "sent"),
+                            (joined.c.delivery_channel == "log")
+                            & (joined.c.delivery_status == "sent"),
                             1,
                         )
                     )
                 ).label("log_sent_count"),
-            ).select_from(base)
+                func.count(case((joined.c.hs == "suppressed", 1))).label("suppressed_count"),
+                func.count(case((joined.c.hs == "resolved", 1))).label("resolved_count"),
+                func.count(
+                    case(
+                        (
+                            (joined.c.delivery_status == "failed") & joined.c.hs.is_(None),
+                            1,
+                        )
+                    )
+                ).label("retryable_count"),
+            ).select_from(joined)
         ).one()
 
-        failed_count = row.failed_count or 0
         return AlertSummaryResult(
             total_count=row.total_count or 0,
-            failed_count=failed_count,
+            failed_count=row.failed_count or 0,
             sent_count=row.sent_count or 0,
-            retryable_count=failed_count,
+            retryable_count=row.retryable_count or 0,
             webhook_failed_count=row.webhook_failed_count or 0,
             log_sent_count=row.log_sent_count or 0,
+            suppressed_count=row.suppressed_count or 0,
+            resolved_count=row.resolved_count or 0,
         )
 
     @staticmethod
@@ -207,11 +227,13 @@ class CanonicalEntitlementAlertQueryService:
         feature_code: str | None = None,
         plan_code: str | None = None,
         actor_type: str | None = None,
+        handling_status: str | None = None,
         request_id: str | None = None,
         date_from: datetime | None = None,
         date_to: datetime | None = None,
     ):
         model = CanonicalEntitlementMutationAlertEventModel
+        handling_model = CanonicalEntitlementMutationAlertEventHandlingModel
         query = select(model)
         if alert_kind is not None:
             query = query.where(model.alert_kind == alert_kind)
@@ -225,6 +247,17 @@ class CanonicalEntitlementAlertQueryService:
             query = query.where(model.plan_code_snapshot == plan_code)
         if actor_type is not None:
             query = query.where(model.actor_type_snapshot == actor_type)
+        if handling_status in {"suppressed", "resolved"}:
+            handled_subquery = select(handling_model.alert_event_id).where(
+                handling_model.handling_status == handling_status
+            )
+            query = query.where(model.id.in_(handled_subquery))
+        elif handling_status == "pending_retry":
+            any_handled_subquery = select(handling_model.alert_event_id)
+            query = query.where(
+                model.delivery_status == "failed",
+                model.id.notin_(any_handled_subquery),
+            )
         if request_id is not None:
             query = query.where(model.request_id == request_id)
         if date_from is not None:

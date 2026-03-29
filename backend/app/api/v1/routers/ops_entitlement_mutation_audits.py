@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, select
@@ -18,10 +18,16 @@ from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt i
 from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
+from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
+    CanonicalEntitlementMutationAlertEventHandlingModel,
+)
 from app.infra.db.models.canonical_entitlement_mutation_audit_review import (
     CanonicalEntitlementMutationAuditReviewModel,
 )
 from app.infra.db.session import get_db_session
+from app.services.canonical_entitlement_alert_handling_service import (
+    CanonicalEntitlementAlertHandlingService,
+)
 from app.services.canonical_entitlement_mutation_audit_query_service import (
     CanonicalEntitlementMutationAuditQueryService,
 )
@@ -49,6 +55,7 @@ PersistedReviewStatusLiteral = WritableReviewStatusLiteral
 # ---------------------------------------------------------------------------
 # Schémas Pydantic (Rest)
 # ---------------------------------------------------------------------------
+
 
 class ReviewState(BaseModel):
     status: ReviewStatusLiteral
@@ -266,6 +273,14 @@ class BatchRetryApiResponse(BaseModel):
     meta: ResponseMeta
 
 
+class AlertHandlingState(BaseModel):
+    handling_status: str
+    handled_by_user_id: int | None = None
+    handled_at: datetime | None = None
+    ops_comment: str | None = None
+    suppression_key: str | None = None
+
+
 class AlertEventItem(BaseModel):
     id: int
     audit_id: int
@@ -290,6 +305,7 @@ class AlertEventItem(BaseModel):
     attempt_count: int
     last_attempt_number: int | None = None
     last_attempt_status: str | None = None
+    handling: AlertHandlingState | None = None
     retryable: bool
 
 
@@ -312,6 +328,28 @@ class AlertSummaryData(BaseModel):
     retryable_count: int
     webhook_failed_count: int
     log_sent_count: int
+    suppressed_count: int
+    resolved_count: int
+
+
+class HandleAlertRequestBody(BaseModel):
+    handling_status: Literal["suppressed", "resolved"]
+    ops_comment: str | None = None
+    suppression_key: str | None = None
+
+
+class HandleAlertResponseData(BaseModel):
+    alert_event_id: int
+    handling_status: str
+    handled_by_user_id: int | None = None
+    handled_at: datetime
+    ops_comment: str | None = None
+    suppression_key: str | None = None
+
+
+class HandleAlertApiResponse(BaseModel):
+    data: HandleAlertResponseData
+    meta: ResponseMeta
 
 
 class AlertSummaryApiResponse(BaseModel):
@@ -425,6 +463,36 @@ def _compute_review_state(
         )
     if risk_level == "high":
         return ReviewState(status="pending_review")
+    return None
+
+
+def _load_handlings_by_event_ids(
+    db: Session, event_ids: list[int]
+) -> dict[int, CanonicalEntitlementMutationAlertEventHandlingModel]:
+    if not event_ids:
+        return {}
+    result = db.execute(
+        select(CanonicalEntitlementMutationAlertEventHandlingModel).where(
+            CanonicalEntitlementMutationAlertEventHandlingModel.alert_event_id.in_(event_ids)
+        )
+    )
+    return {r.alert_event_id: r for r in result.scalars().all()}
+
+
+def _compute_alert_handling_state(
+    delivery_status: str,
+    handling_record: CanonicalEntitlementMutationAlertEventHandlingModel | None,
+) -> AlertHandlingState | None:
+    if handling_record is not None:
+        return AlertHandlingState(
+            handling_status=handling_record.handling_status,
+            handled_by_user_id=handling_record.handled_by_user_id,
+            handled_at=handling_record.handled_at,
+            ops_comment=handling_record.ops_comment,
+            suppression_key=handling_record.suppression_key,
+        )
+    if delivery_status == "failed":
+        return AlertHandlingState(handling_status="pending_retry")
     return None
 
 
@@ -868,8 +936,12 @@ def get_review_queue(
     }
 
 
-def _alert_event_to_item(row: Any) -> dict[str, Any]:
+def _alert_event_to_item(
+    row: Any,
+    handling_record: CanonicalEntitlementMutationAlertEventHandlingModel | None = None,
+) -> dict[str, Any]:
     event = row.event
+    handling_state = _compute_alert_handling_state(event.delivery_status, handling_record)
     return {
         "id": event.id,
         "audit_id": event.audit_id,
@@ -894,7 +966,10 @@ def _alert_event_to_item(row: Any) -> dict[str, Any]:
         "attempt_count": row.attempt_count,
         "last_attempt_number": row.last_attempt_number,
         "last_attempt_status": row.last_attempt_status,
-        "retryable": event.delivery_status == "failed",
+        "handling": handling_state,
+        "retryable": (
+            handling_state is not None and handling_state.handling_status == "pending_retry"
+        ),
     }
 
 
@@ -915,6 +990,9 @@ def get_alert_events_summary(
     feature_code: str | None = Query(default=None),
     plan_code: str | None = Query(default=None),
     actor_type: str | None = Query(default=None),
+    handling_status: Literal["pending_retry", "suppressed", "resolved"] | None = Query(
+        default=None
+    ),
     request_id_filter: str | None = Query(default=None, alias="request_id"),
     date_from: datetime | None = Query(default=None),
     date_to: datetime | None = Query(default=None),
@@ -945,6 +1023,7 @@ def get_alert_events_summary(
         feature_code=feature_code,
         plan_code=plan_code,
         actor_type=actor_type,
+        handling_status=handling_status,
         request_id=request_id_filter,
         date_from=date_from,
         date_to=date_to,
@@ -957,6 +1036,8 @@ def get_alert_events_summary(
             "retryable_count": summary.retryable_count,
             "webhook_failed_count": summary.webhook_failed_count,
             "log_sent_count": summary.log_sent_count,
+            "suppressed_count": summary.suppressed_count,
+            "resolved_count": summary.resolved_count,
         },
         "meta": {"request_id": request_id},
     }
@@ -981,6 +1062,9 @@ def list_alert_events(
     feature_code: str | None = Query(default=None),
     plan_code: str | None = Query(default=None),
     actor_type: str | None = Query(default=None),
+    handling_status: Literal["pending_retry", "suppressed", "resolved"] | None = Query(
+        default=None
+    ),
     request_id_filter: str | None = Query(default=None, alias="request_id"),
     date_from: datetime | None = Query(default=None),
     date_to: datetime | None = Query(default=None),
@@ -1013,13 +1097,19 @@ def list_alert_events(
         feature_code=feature_code,
         plan_code=plan_code,
         actor_type=actor_type,
+        handling_status=handling_status,
         request_id=request_id_filter,
         date_from=date_from,
         date_to=date_to,
     )
+    event_ids = [row.event.id for row in rows]
+    handlings = _load_handlings_by_event_ids(db, event_ids)
     return {
         "data": {
-            "items": [_alert_event_to_item(row) for row in rows],
+            "items": [
+                _alert_event_to_item(row, handling_record=handlings.get(row.event.id))
+                for row in rows
+            ],
             "total_count": total_count,
             "page": page,
             "page_size": page_size,
@@ -1088,6 +1178,73 @@ def batch_retry_alerts(
             "skipped_count": result.skipped_count,
             "dry_run": result.dry_run,
             "alert_event_ids": result.alert_event_ids,
+        },
+        "meta": {"request_id": request_id},
+    }
+
+
+@router.post(
+    "/mutation-audits/alerts/{alert_event_id}/handle",
+    response_model=HandleAlertApiResponse,
+    response_model_exclude_none=True,
+    status_code=201,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        422: {"description": "Validation error"},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def handle_alert_event(
+    alert_event_id: int,
+    body: HandleAlertRequestBody,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        return err
+    if (
+        err := _enforce_limits(
+            user=current_user,
+            request_id=request_id,
+            operation="handle_alert_event",
+        )
+    ) is not None:
+        return err
+
+    try:
+        handling = CanonicalEntitlementAlertHandlingService.upsert_handling(
+            db,
+            alert_event_id=alert_event_id,
+            handling_status=body.handling_status,
+            handled_by_user_id=current_user.id,
+            ops_comment=body.ops_comment,
+            suppression_key=body.suppression_key,
+        )
+        db.commit()
+    except HTTPException as exc:
+        if exc.status_code == 404 and exc.detail == "alert event not found":
+            return _error_response(
+                status_code=404,
+                request_id=request_id,
+                code="alert_event_not_found",
+                message=f"Alert event {alert_event_id} not found",
+                details={"alert_event_id": alert_event_id},
+            )
+        raise
+
+    return {
+        "data": {
+            "alert_event_id": handling.alert_event_id,
+            "handling_status": handling.handling_status,
+            "handled_by_user_id": handling.handled_by_user_id,
+            "handled_at": handling.handled_at,
+            "ops_comment": handling.ops_comment,
+            "suppression_key": handling.suppression_key,
         },
         "meta": {"request_id": request_id},
     }
@@ -1230,8 +1387,9 @@ def retry_alert(
     latest_attempt_number = None
     if not body.dry_run:
         latest_attempt_number = db.execute(
-            select(func.max(CanonicalEntitlementMutationAlertDeliveryAttemptModel.attempt_number))
-            .where(
+            select(
+                func.max(CanonicalEntitlementMutationAlertDeliveryAttemptModel.attempt_number)
+            ).where(
                 CanonicalEntitlementMutationAlertDeliveryAttemptModel.alert_event_id
                 == alert_event_id
             )

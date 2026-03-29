@@ -300,12 +300,14 @@ Consultation ops des alertes canoniques :
 GET /v1/ops/entitlements/mutation-audits/alerts/summary
 GET /v1/ops/entitlements/mutation-audits/alerts
 POST /v1/ops/entitlements/mutation-audits/alerts/retry-batch
+POST /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/handle
 GET /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/attempts
 POST /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/retry
 ```
 
 Les endpoints `summary` et `list` sont read-only, filtrables et réservés aux rôles `ops` et `admin`.
 L'endpoint `retry-batch` applique toujours le filtre implicite `delivery_status=failed`, impose un body JSON avec `limit` obligatoire (`1..100`) et doit être déclaré avant les routes `/{alert_event_id}/...`.
+L'endpoint `handle` permet de qualifier une alerte en `suppressed` ou `resolved` avec commentaire ops et clé de suppression; les alertes `suppressed` ou `resolved` sont exclues du retry batch et `GET /alerts` expose aussi un état virtuel `pending_retry` pour les alertes `failed` sans handling.
 
 Secrets minimum requis hors environnements locaux/test (staging, production):
 - `JWT_SECRET_KEY`

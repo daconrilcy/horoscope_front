@@ -267,6 +267,8 @@ def test_get_alerts_summary_empty() -> None:
         "retryable_count": 0,
         "webhook_failed_count": 0,
         "log_sent_count": 0,
+        "suppressed_count": 0,
+        "resolved_count": 0,
     }
 
 
@@ -299,6 +301,8 @@ def test_get_alerts_summary_counts_correctly() -> None:
         "retryable_count": 1,
         "webhook_failed_count": 1,
         "log_sent_count": 1,
+        "suppressed_count": 0,
+        "resolved_count": 0,
     }
 
 

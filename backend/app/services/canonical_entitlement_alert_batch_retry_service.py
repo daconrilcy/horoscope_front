@@ -14,6 +14,9 @@ from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt i
 from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
+from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
+    CanonicalEntitlementMutationAlertEventHandlingModel,
+)
 from app.services.canonical_entitlement_alert_retry_service import (
     CanonicalEntitlementAlertRetryService,
 )
@@ -150,7 +153,12 @@ class CanonicalEntitlementAlertBatchRetryService:
         date_to: datetime | None,
     ) -> list[CanonicalEntitlementMutationAlertEventModel]:
         model = CanonicalEntitlementMutationAlertEventModel
+        handling_model = CanonicalEntitlementMutationAlertEventHandlingModel
         query = select(model).where(model.delivery_status == "failed")
+        excluded_subquery = select(handling_model.alert_event_id).where(
+            handling_model.handling_status.in_(["suppressed", "resolved"])
+        )
+        query = query.where(model.id.notin_(excluded_subquery))
         if alert_kind is not None:
             query = query.where(model.alert_kind == alert_kind)
         if audit_id is not None:
