@@ -300,6 +300,7 @@ Consultation ops des alertes canoniques :
 GET /v1/ops/entitlements/mutation-audits/alerts/summary
 GET /v1/ops/entitlements/mutation-audits/alerts
 POST /v1/ops/entitlements/mutation-audits/alerts/retry-batch
+POST /v1/ops/entitlements/mutation-audits/alerts/handle-batch
 POST /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/handle
 GET /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/handling-history
 GET /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/attempts
@@ -308,6 +309,7 @@ POST /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/retry
 
 Les endpoints `summary` et `list` sont read-only, filtrables et réservés aux rôles `ops` et `admin`.
 L'endpoint `retry-batch` applique toujours le filtre implicite `delivery_status=failed`, impose un body JSON avec `limit` obligatoire (`1..100`) et doit être déclaré avant les routes `/{alert_event_id}/...`.
+L'endpoint `handle-batch` permet d'appliquer en masse un handling `suppressed` ou `resolved` sur des alertes filtrées, avec `limit` obligatoire (`1..200`), règle no-op sur l'état/commentaire/clé de suppression, et support `dry_run` fidèle sans écriture DB.
 L'endpoint `handle` permet de qualifier une alerte en `suppressed` ou `resolved` avec commentaire ops et clé de suppression; les alertes `suppressed` ou `resolved` sont exclues du retry batch et `GET /alerts` expose aussi un état virtuel `pending_retry` pour les alertes `failed` sans handling.
 L'endpoint `handling-history` expose l'historique append-only des transitions de handling, paginé via `limit` / `offset`, trié par `handled_at DESC, id DESC`, avec propagation du `request_id` et règle no-op sur les re-posts identiques.
 

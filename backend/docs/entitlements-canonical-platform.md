@@ -1063,3 +1063,80 @@ Exemple :
 }
 ```
 
+---
+
+## Story 61.45 — Triage batch des alertes
+
+Depuis la story 61.45, les équipes ops peuvent appliquer un handling en masse sur un sous-ensemble filtré d'alertes sans passer alerte par alerte, tout en conservant la traçabilité append-only introduite en 61.44.
+
+### Endpoint
+
+```text
+POST /v1/ops/entitlements/mutation-audits/alerts/handle-batch
+```
+
+Ordre de déclaration critique dans le router :
+1. `GET /alerts/summary`
+2. `GET /alerts`
+3. `POST /alerts/retry-batch`
+4. `POST /alerts/handle-batch`
+5. `POST /alerts/{alert_event_id}/handle`
+
+Le path statique `handle-batch` doit être déclaré avant `/{alert_event_id}/handle` pour éviter qu'il soit capturé comme un `alert_event_id` et rejeté en `422`.
+
+### Body JSON
+
+`limit` est obligatoire et borné entre `1` et `200`. `handling_status` accepte uniquement `suppressed` ou `resolved`.
+
+```json
+{
+  "limit": 50,
+  "handling_status": "suppressed",
+  "dry_run": false,
+  "ops_comment": "Known provider incident",
+  "suppression_key": "provider-incident",
+  "alert_kind": "sla_overdue",
+  "audit_id": 42,
+  "feature_code": "chat_daily",
+  "plan_code": "premium",
+  "actor_type": "user",
+  "request_id": "req-123",
+  "date_from": "2026-03-29T08:00:00Z",
+  "date_to": "2026-03-29T10:00:00Z"
+}
+```
+
+Règles métier :
+- contrairement à `retry-batch`, aucun filtre implicite sur `delivery_status` n'est appliqué
+- toutes les alertes sont candidates, y compris celles déjà `sent`
+- les candidats sont extraits en FIFO via `ORDER BY id ASC`
+- `db.commit()` est effectué uniquement dans le router quand `dry_run=false`
+
+### Règle no-op batch
+
+Avant d'appeler le service de handling unitaire, le batch précharge les handlings existants et compare :
+- `handling_status`
+- `ops_comment`
+- `suppression_key`
+
+Si les trois champs sont déjà identiques, l'alerte est comptée dans `skipped_count` et aucun nouvel event append-only n'est écrit.
+
+Cette même règle s'applique en `dry_run`, afin que les compteurs reflètent fidèlement ce que ferait une exécution réelle, sans persistance.
+
+### Réponse
+
+```json
+{
+  "data": {
+    "candidate_count": 3,
+    "handled_count": 2,
+    "skipped_count": 1,
+    "dry_run": false,
+    "alert_event_ids": [12, 13, 14]
+  },
+  "meta": { "request_id": "rid-batch-handle" }
+}
+```
+
+`alert_event_ids` contient tous les candidats chargés par le batch, y compris ceux finalement skipés par la règle no-op.
+

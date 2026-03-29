@@ -273,6 +273,37 @@ class BatchRetryApiResponse(BaseModel):
     meta: ResponseMeta
 
 
+class BatchHandleRequestBody(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    limit: int = Field(..., ge=1, le=200)
+    handling_status: Literal["suppressed", "resolved"]
+    dry_run: bool = False
+    ops_comment: str | None = None
+    suppression_key: str | None = None
+    alert_kind: str | None = None
+    audit_id: int | None = None
+    feature_code: str | None = None
+    plan_code: str | None = None
+    actor_type: str | None = None
+    request_id_filter: str | None = Field(default=None, alias="request_id")
+    date_from: datetime | None = None
+    date_to: datetime | None = None
+
+
+class BatchHandleResultData(BaseModel):
+    candidate_count: int
+    handled_count: int
+    skipped_count: int
+    dry_run: bool
+    alert_event_ids: list[int]
+
+
+class BatchHandleApiResponse(BaseModel):
+    data: BatchHandleResultData
+    meta: ResponseMeta
+
+
 class AlertHandlingState(BaseModel):
     handling_status: str
     handled_by_user_id: int | None = None
@@ -1198,6 +1229,73 @@ def batch_retry_alerts(
             "retried_count": result.retried_count,
             "sent_count": result.sent_count,
             "failed_count": result.failed_count,
+            "skipped_count": result.skipped_count,
+            "dry_run": result.dry_run,
+            "alert_event_ids": result.alert_event_ids,
+        },
+        "meta": {"request_id": request_id},
+    }
+
+
+@router.post(
+    "/mutation-audits/alerts/handle-batch",
+    response_model=BatchHandleApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        422: {"description": "Validation error"},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def batch_handle_alerts(
+    body: BatchHandleRequestBody,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    from app.services.canonical_entitlement_alert_batch_handling_service import (
+        CanonicalEntitlementAlertBatchHandlingService,
+    )
+
+    request_id = resolve_request_id(request)
+
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        return err
+    if (
+        err := _enforce_limits(
+            user=current_user,
+            request_id=request_id,
+            operation="batch_handle_alerts",
+        )
+    ) is not None:
+        return err
+
+    result = CanonicalEntitlementAlertBatchHandlingService.batch_handle(
+        db,
+        limit=body.limit,
+        handling_status=body.handling_status,
+        ops_comment=body.ops_comment,
+        suppression_key=body.suppression_key,
+        dry_run=body.dry_run,
+        request_id=request_id,
+        handled_by_user_id=current_user.id,
+        alert_kind=body.alert_kind,
+        audit_id=body.audit_id,
+        feature_code=body.feature_code,
+        plan_code=body.plan_code,
+        actor_type=body.actor_type,
+        request_id_filter=body.request_id_filter,
+        date_from=body.date_from,
+        date_to=body.date_to,
+    )
+
+    if not body.dry_run:
+        db.commit()
+
+    return {
+        "data": {
+            "candidate_count": result.candidate_count,
+            "handled_count": result.handled_count,
             "skipped_count": result.skipped_count,
             "dry_run": result.dry_run,
             "alert_event_ids": result.alert_event_ids,
