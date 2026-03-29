@@ -307,7 +307,82 @@ class TestStripeCustomerPortalApi:
         assert response.status_code == 404
         assert response.json()["error"]["code"] == "stripe_subscription_not_found"
 
+    def test_cancel_session_no_subscription_404(self, clean_db):
+        token = _register_user_with_role("user@example.com", "user")
+        with SessionLocal() as db:
+            user = db.query(UserModel).filter_by(email="user@example.com").first()
+            profile = StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id="cus_123",
+                stripe_subscription_id=None,
+            )
+            db.add(profile)
+            db.commit()
+
+        response = client.post(
+            "/v1/billing/stripe-customer-portal-subscription-cancel-session",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 404
+        assert response.json()["error"]["code"] == "stripe_subscription_not_found"
+
+    def test_update_session_stripe_unavailable(self, clean_db):
+        token = _register_user_with_role("user@example.com", "user")
+        with SessionLocal() as db:
+            user = db.query(UserModel).filter_by(email="user@example.com").first()
+            profile = StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id="cus_123",
+                stripe_subscription_id="sub_123",
+            )
+            db.add(profile)
+            db.commit()
+
+        with patch(
+            "app.services.stripe_customer_portal_service.get_stripe_client",
+            return_value=None,
+        ):
+            response = client.post(
+                "/v1/billing/stripe-customer-portal-subscription-update-session",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+
+        assert response.status_code == 503
+        assert response.json()["error"]["code"] == "stripe_unavailable"
+
+    def test_update_session_stripe_api_error(self, clean_db):
+        import stripe
+
+        token = _register_user_with_role("user@example.com", "user")
+        with SessionLocal() as db:
+            user = db.query(UserModel).filter_by(email="user@example.com").first()
+            profile = StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id="cus_123",
+                stripe_subscription_id="sub_123",
+            )
+            db.add(profile)
+            db.commit()
+
+        mock_client = MagicMock()
+        mock_client.billing_portal.sessions.create.side_effect = stripe.StripeError("API down")
+
+        with patch(
+            "app.services.stripe_customer_portal_service.get_stripe_client",
+            return_value=mock_client,
+        ):
+            response = client.post(
+                "/v1/billing/stripe-customer-portal-subscription-update-session",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+
+        assert response.status_code == 502
+        assert response.json()["error"]["code"] == "stripe_api_error"
+
     def test_update_session_no_jwt_401(self, clean_db):
         response = client.post("/v1/billing/stripe-customer-portal-subscription-update-session")
         assert response.status_code == 401
 
+    def test_cancel_session_no_jwt_401(self, clean_db):
+        response = client.post("/v1/billing/stripe-customer-portal-subscription-cancel-session")
+        assert response.status_code == 401

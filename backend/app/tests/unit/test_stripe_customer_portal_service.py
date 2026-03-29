@@ -149,9 +149,7 @@ class TestStripeCustomerPortalService:
         params = mock_client.billing_portal.sessions.create.call_args[1]["params"]
         assert params["customer"] == stripe_customer_id
         assert params["flow_data"]["type"] == "subscription_update"
-        assert (
-            params["flow_data"]["subscription_update"]["subscription"] == stripe_subscription_id
-        )
+        assert params["flow_data"]["subscription_update"]["subscription"] == stripe_subscription_id
 
     @patch("app.services.stripe_customer_portal_service.get_stripe_client")
     @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
@@ -185,9 +183,7 @@ class TestStripeCustomerPortalService:
         params = mock_client.billing_portal.sessions.create.call_args[1]["params"]
         assert params["customer"] == stripe_customer_id
         assert params["flow_data"]["type"] == "subscription_cancel"
-        assert (
-            params["flow_data"]["subscription_cancel"]["subscription"] == stripe_subscription_id
-        )
+        assert params["flow_data"]["subscription_cancel"]["subscription"] == stripe_subscription_id
 
     @patch("app.services.stripe_customer_portal_service.get_stripe_client")
     @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
@@ -208,6 +204,83 @@ class TestStripeCustomerPortalService:
 
         assert exc.value.code == "stripe_subscription_not_found"
         mock_get_client.assert_not_called()
+
+    @patch("app.services.stripe_customer_portal_service.get_stripe_client")
+    @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
+    def test_cancel_session_no_subscription_id(self, mock_get_profile, mock_get_client):
+        db = MagicMock()
+        mock_get_profile.return_value = StripeBillingProfileModel(
+            user_id=123,
+            stripe_customer_id="cus_123",
+            stripe_subscription_id=None,
+        )
+
+        with pytest.raises(StripeCustomerPortalServiceError) as exc:
+            StripeCustomerPortalService.create_subscription_cancel_session(
+                db,
+                user_id=123,
+                return_url="http://return",
+            )
+
+        assert exc.value.code == "stripe_subscription_not_found"
+        mock_get_client.assert_not_called()
+
+    @patch("app.services.stripe_customer_portal_service.get_stripe_client")
+    @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
+    def test_update_session_no_profile(self, mock_get_profile, mock_get_client):
+        db = MagicMock()
+        mock_get_profile.return_value = None
+
+        with pytest.raises(StripeCustomerPortalServiceError) as exc:
+            StripeCustomerPortalService.create_subscription_update_session(
+                db,
+                user_id=123,
+                return_url="http://return",
+            )
+
+        assert exc.value.code == "stripe_subscription_not_found"
+        mock_get_client.assert_not_called()
+
+    @patch("app.services.stripe_customer_portal_service.get_stripe_client")
+    @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
+    def test_update_session_stripe_unavailable(self, mock_get_profile, mock_get_client):
+        mock_get_profile.return_value = StripeBillingProfileModel(
+            user_id=123,
+            stripe_customer_id="cus_123",
+            stripe_subscription_id="sub_123",
+        )
+        mock_get_client.return_value = None
+
+        with pytest.raises(StripeCustomerPortalServiceError) as exc:
+            StripeCustomerPortalService.create_subscription_update_session(
+                MagicMock(),
+                user_id=123,
+                return_url="http://return",
+            )
+
+        assert exc.value.code == "stripe_unavailable"
+
+    @patch("app.services.stripe_customer_portal_service.get_stripe_client")
+    @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
+    def test_update_session_stripe_error(self, mock_get_profile, mock_get_client):
+        db = MagicMock()
+        mock_get_profile.return_value = StripeBillingProfileModel(
+            user_id=123,
+            stripe_customer_id="cus_123",
+            stripe_subscription_id="sub_123",
+        )
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+        mock_client.billing_portal.sessions.create.side_effect = stripe.StripeError("API Error")
+
+        with pytest.raises(StripeCustomerPortalServiceError) as exc:
+            StripeCustomerPortalService.create_subscription_update_session(
+                db,
+                user_id=123,
+                return_url="http://return",
+            )
+
+        assert exc.value.code == "stripe_api_error"
 
     @patch("app.services.stripe_customer_portal_service.get_stripe_client")
     @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
@@ -235,4 +308,3 @@ class TestStripeCustomerPortalService:
 
         params = mock_client.billing_portal.sessions.create.call_args[1]["params"]
         assert params["configuration"] == configuration_id
-
