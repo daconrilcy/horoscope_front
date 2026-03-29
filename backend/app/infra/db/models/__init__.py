@@ -24,6 +24,9 @@ from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling imp
 from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling_event import (
     CanonicalEntitlementMutationAlertEventHandlingEventModel,
 )
+from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+    CanonicalEntitlementMutationAlertSuppressionRuleModel,
+)
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
 )
@@ -129,6 +132,7 @@ __all__ = [
     "CanonicalEntitlementMutationAlertEventModel",
     "CanonicalEntitlementMutationAlertEventHandlingModel",
     "CanonicalEntitlementMutationAlertEventHandlingEventModel",
+    "CanonicalEntitlementMutationAlertSuppressionRuleModel",
     "ChartResultModel",
     "ChatConversationModel",
     "ChatMessageModel",

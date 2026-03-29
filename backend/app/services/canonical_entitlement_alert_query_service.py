@@ -148,6 +148,11 @@ class CanonicalEntitlementAlertQueryService:
         date_from: datetime | None = None,
         date_to: datetime | None = None,
     ) -> AlertSummaryResult:
+        from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+            CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
+        )
+
+        model = CanonicalEntitlementMutationAlertEventModel
         base = CanonicalEntitlementAlertQueryService._build_filtered_query(
             alert_kind=alert_kind,
             delivery_status=delivery_status,
@@ -165,8 +170,22 @@ class CanonicalEntitlementAlertQueryService:
             handling_model.alert_event_id,
             handling_model.handling_status.label("handling_status"),
         ).subquery("h")
+
+        rule_matches_expr = select(literal(1)).where(
+            RuleModel.is_active == True,
+            RuleModel.alert_kind == base.c.alert_kind,
+            (RuleModel.feature_code.is_(None))
+            | (RuleModel.feature_code == base.c.feature_code_snapshot),
+            (RuleModel.plan_code.is_(None)) | (RuleModel.plan_code == base.c.plan_code_snapshot),
+            (RuleModel.actor_type.is_(None)) | (RuleModel.actor_type == base.c.actor_type_snapshot),
+        ).exists()
+
         joined = (
-            select(base, handling_subquery.c.handling_status.label("hs"))
+            select(
+                base,
+                handling_subquery.c.handling_status.label("hs"),
+                rule_matches_expr.label("rule_matches"),
+            )
             .outerjoin(handling_subquery, base.c.id == handling_subquery.c.alert_event_id)
             .subquery()
         )
@@ -194,12 +213,16 @@ class CanonicalEntitlementAlertQueryService:
                         )
                     )
                 ).label("log_sent_count"),
-                func.count(case((joined.c.hs == "suppressed", 1))).label("suppressed_count"),
+                func.count(
+                    case(((joined.c.hs == "suppressed") | (joined.c.hs.is_(None) & joined.c.rule_matches), 1))
+                ).label("suppressed_count"),
                 func.count(case((joined.c.hs == "resolved", 1))).label("resolved_count"),
                 func.count(
                     case(
                         (
-                            (joined.c.delivery_status == "failed") & joined.c.hs.is_(None),
+                            (joined.c.delivery_status == "failed")
+                            & joined.c.hs.is_(None)
+                            & (~joined.c.rule_matches),
                             1,
                         )
                     )
@@ -232,9 +255,22 @@ class CanonicalEntitlementAlertQueryService:
         date_from: datetime | None = None,
         date_to: datetime | None = None,
     ):
+        from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+            CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
+        )
+
         model = CanonicalEntitlementMutationAlertEventModel
         handling_model = CanonicalEntitlementMutationAlertEventHandlingModel
         query = select(model)
+
+        rule_matching_subquery = select(literal(1)).where(
+            RuleModel.is_active == True,
+            RuleModel.alert_kind == model.alert_kind,
+            (RuleModel.feature_code.is_(None)) | (RuleModel.feature_code == model.feature_code_snapshot),
+            (RuleModel.plan_code.is_(None)) | (RuleModel.plan_code == model.plan_code_snapshot),
+            (RuleModel.actor_type.is_(None)) | (RuleModel.actor_type == model.actor_type_snapshot),
+        )
+
         if alert_kind is not None:
             query = query.where(model.alert_kind == alert_kind)
         if delivery_status is not None:
@@ -247,17 +283,29 @@ class CanonicalEntitlementAlertQueryService:
             query = query.where(model.plan_code_snapshot == plan_code)
         if actor_type is not None:
             query = query.where(model.actor_type_snapshot == actor_type)
-        if handling_status in {"suppressed", "resolved"}:
+
+        if handling_status == "resolved":
             handled_subquery = select(handling_model.alert_event_id).where(
-                handling_model.handling_status == handling_status
+                handling_model.handling_status == "resolved"
             )
             query = query.where(model.id.in_(handled_subquery))
+        elif handling_status == "suppressed":
+            manual_suppressed = select(handling_model.alert_event_id).where(
+                handling_model.handling_status == "suppressed"
+            )
+            any_manual = select(handling_model.alert_event_id)
+            query = query.where(
+                (model.id.in_(manual_suppressed))
+                | (model.id.notin_(any_manual) & rule_matching_subquery.exists())
+            )
         elif handling_status == "pending_retry":
-            any_handled_subquery = select(handling_model.alert_event_id)
+            any_manual = select(handling_model.alert_event_id)
             query = query.where(
                 model.delivery_status == "failed",
-                model.id.notin_(any_handled_subquery),
+                model.id.notin_(any_manual),
+                ~rule_matching_subquery.exists(),
             )
+
         if request_id is not None:
             query = query.where(model.request_id == request_id)
         if date_from is not None:

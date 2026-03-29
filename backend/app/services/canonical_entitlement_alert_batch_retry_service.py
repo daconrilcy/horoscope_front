@@ -152,6 +152,11 @@ class CanonicalEntitlementAlertBatchRetryService:
         date_from: datetime | None,
         date_to: datetime | None,
     ) -> list[CanonicalEntitlementMutationAlertEventModel]:
+        from sqlalchemy import literal
+        from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+            CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
+        )
+
         model = CanonicalEntitlementMutationAlertEventModel
         handling_model = CanonicalEntitlementMutationAlertEventHandlingModel
         query = select(model).where(model.delivery_status == "failed")
@@ -159,6 +164,16 @@ class CanonicalEntitlementAlertBatchRetryService:
             handling_model.handling_status.in_(["suppressed", "resolved"])
         )
         query = query.where(model.id.notin_(excluded_subquery))
+
+        rule_matching_subquery = select(literal(1)).where(
+            RuleModel.is_active == True,
+            RuleModel.alert_kind == model.alert_kind,
+            (RuleModel.feature_code.is_(None)) | (RuleModel.feature_code == model.feature_code_snapshot),
+            (RuleModel.plan_code.is_(None)) | (RuleModel.plan_code == model.plan_code_snapshot),
+            (RuleModel.actor_type.is_(None)) | (RuleModel.actor_type == model.actor_type_snapshot),
+        )
+        query = query.where(~rule_matching_subquery.exists())
+
         if alert_kind is not None:
             query = query.where(model.alert_kind == alert_kind)
         if audit_id is not None:

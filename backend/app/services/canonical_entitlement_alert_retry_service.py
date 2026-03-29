@@ -127,6 +127,15 @@ class CanonicalEntitlementAlertRetryService:
         alert_event_id: int | None,
         limit: int | None,
     ) -> list[CanonicalEntitlementMutationAlertEventModel]:
+        from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
+            CanonicalEntitlementMutationAlertEventHandlingModel as HandlingModel,
+        )
+        from app.services.canonical_entitlement_alert_suppression_rule_service import (
+            CanonicalEntitlementAlertSuppressionRuleService,
+        )
+
+        active_rules = CanonicalEntitlementAlertSuppressionRuleService.load_active_rules(db)
+
         if alert_event_id is not None:
             event = db.get(CanonicalEntitlementMutationAlertEventModel, alert_event_id)
             if event is None:
@@ -134,6 +143,26 @@ class CanonicalEntitlementAlertRetryService:
             if event.delivery_status != "failed":
                 raise AlertEventNotRetryableError(
                     f"Alert event {alert_event_id} is not retryable"
+                )
+            
+            # Check manual handling
+            handling = db.scalars(
+                select(HandlingModel).where(
+                    HandlingModel.alert_event_id == event.id,
+                    HandlingModel.handling_status.in_(["suppressed", "resolved"]),
+                )
+            ).first()
+            if handling:
+                raise AlertEventNotRetryableError(
+                    f"Alert event {alert_event_id} is suppressed or resolved"
+                )
+            # Check rules
+            match = CanonicalEntitlementAlertSuppressionRuleService.match_event(
+                event, active_rules=active_rules
+            )
+            if match:
+                raise AlertEventNotRetryableError(
+                    f"Alert event {alert_event_id} is matched by a suppression rule"
                 )
             return [event]
 
@@ -144,7 +173,37 @@ class CanonicalEntitlementAlertRetryService:
         )
         if limit is not None:
             query = query.limit(limit)
-        return list(db.execute(query).scalars().all())
+        
+        candidates = list(db.execute(query).scalars().all())
+        if not candidates:
+            return []
+
+        event_ids = [c.id for c in candidates]
+        
+        # Pre-load manual handlings for all candidates to avoid N+1
+        handlings = db.scalars(
+            select(HandlingModel).where(
+                HandlingModel.alert_event_id.in_(event_ids),
+                HandlingModel.handling_status.in_(["suppressed", "resolved"]),
+            )
+        ).all()
+        suppressed_event_ids = {h.alert_event_id for h in handlings}
+
+        # Filter out suppressed ones (manual or rule)
+        results = []
+        for ev in candidates:
+            if ev.id in suppressed_event_ids:
+                continue
+            
+            match = CanonicalEntitlementAlertSuppressionRuleService.match_event(
+                ev, active_rules=active_rules
+            )
+            if match:
+                continue
+            
+            results.append(ev)
+            
+        return results
 
     @staticmethod
     def _next_attempt_number(db: Session, *, alert_event_id: int) -> int:

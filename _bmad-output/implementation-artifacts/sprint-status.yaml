@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-03-29T14:30:00+02:00'
+last_updated: '2026-03-29T15:10:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -496,4 +496,5 @@ development_status:
   61-43-triage-ops-alertes-delivery-suppression-bruit: done
   61-44-historisation-append-only-transitions-handling-alertes-ops: done
   61-45-triage-batch-pilote-alertes-ops: done
+  61-46-regles-suppression-auto-triage-alertes-ops: ready-for-dev
 

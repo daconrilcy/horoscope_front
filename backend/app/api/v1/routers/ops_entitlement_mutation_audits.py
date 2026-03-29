@@ -28,6 +28,9 @@ from app.infra.db.session import get_db_session
 from app.services.canonical_entitlement_alert_handling_service import (
     CanonicalEntitlementAlertHandlingService,
 )
+from app.services.canonical_entitlement_alert_suppression_rule_service import (
+    MatchedAlertSuppressionRule,
+)
 from app.services.canonical_entitlement_mutation_audit_query_service import (
     CanonicalEntitlementMutationAuditQueryService,
 )
@@ -107,6 +110,51 @@ class MutationAuditItem(BaseModel):
     # Payloads bruts — conditionnels (include_payloads), omis par exclude_none
     before_payload: dict | None = None
     after_payload: dict | None = None
+
+
+# --- Suppression Rules Schemas ---
+
+class AlertSuppressionRuleItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    alert_kind: str
+    feature_code: str | None = None
+    plan_code: str | None = None
+    actor_type: str | None = None
+    suppression_key: str | None = None
+    ops_comment: str | None = None
+    is_active: bool
+    created_by_user_id: int | None = None
+    created_at: datetime
+    updated_by_user_id: int | None = None
+    updated_at: datetime
+
+
+class CreateAlertSuppressionRuleRequestBody(BaseModel):
+    alert_kind: str = Field(..., min_length=1, max_length=32)
+    feature_code: str | None = Field(None, max_length=64)
+    plan_code: str | None = Field(None, max_length=64)
+    actor_type: str | None = Field(None, max_length=32)
+    suppression_key: str | None = Field(None, max_length=64)
+    ops_comment: str | None = None
+    is_active: bool = True
+
+
+class UpdateAlertSuppressionRuleRequestBody(BaseModel):
+    is_active: bool | None = None
+    ops_comment: str | None = None
+    suppression_key: str | None = None
+
+
+class AlertSuppressionRuleListResponse(BaseModel):
+    data: list[AlertSuppressionRuleItem]
+    meta: ResponseMeta
+
+
+class AlertSuppressionRuleApiResponse(BaseModel):
+    data: AlertSuppressionRuleItem
+    meta: ResponseMeta
 
 
 class MutationAuditListData(BaseModel):
@@ -306,6 +354,8 @@ class BatchHandleApiResponse(BaseModel):
 
 class AlertHandlingState(BaseModel):
     handling_status: str
+    source: Literal["manual", "rule", "virtual"]
+    suppression_rule_id: int | None = None
     handled_by_user_id: int | None = None
     handled_at: datetime | None = None
     ops_comment: str | None = None
@@ -536,17 +586,30 @@ def _load_handlings_by_event_ids(
 def _compute_alert_handling_state(
     delivery_status: str,
     handling_record: CanonicalEntitlementMutationAlertEventHandlingModel | None,
+    rule_match: MatchedAlertSuppressionRule | None = None,
 ) -> AlertHandlingState | None:
     if handling_record is not None:
         return AlertHandlingState(
             handling_status=handling_record.handling_status,
+            source="manual",
             handled_by_user_id=handling_record.handled_by_user_id,
             handled_at=handling_record.handled_at,
             ops_comment=handling_record.ops_comment,
             suppression_key=handling_record.suppression_key,
         )
+    if rule_match is not None:
+        return AlertHandlingState(
+            handling_status="suppressed",
+            source="rule",
+            suppression_rule_id=rule_match.rule_id,
+            ops_comment=rule_match.ops_comment,
+            suppression_key=rule_match.suppression_key,
+        )
     if delivery_status == "failed":
-        return AlertHandlingState(handling_status="pending_retry")
+        return AlertHandlingState(
+            handling_status="pending_retry",
+            source="virtual",
+        )
     return None
 
 
@@ -993,9 +1056,22 @@ def get_review_queue(
 def _alert_event_to_item(
     row: Any,
     handling_record: CanonicalEntitlementMutationAlertEventHandlingModel | None = None,
+    active_rules: list[CanonicalEntitlementMutationAlertSuppressionRuleModel] | None = None,
 ) -> dict[str, Any]:
     event = row.event
-    handling_state = _compute_alert_handling_state(event.delivery_status, handling_record)
+    rule_match = None
+    if active_rules and handling_record is None:
+        from app.services.canonical_entitlement_alert_suppression_rule_service import (
+            CanonicalEntitlementAlertSuppressionRuleService,
+        )
+
+        rule_match = CanonicalEntitlementAlertSuppressionRuleService.match_event(
+            event, active_rules=active_rules
+        )
+
+    handling_state = _compute_alert_handling_state(
+        event.delivery_status, handling_record, rule_match
+    )
     return {
         "id": event.id,
         "audit_id": event.audit_id,
@@ -1158,10 +1234,21 @@ def list_alert_events(
     )
     event_ids = [row.event.id for row in rows]
     handlings = _load_handlings_by_event_ids(db, event_ids)
+
+    from app.services.canonical_entitlement_alert_suppression_rule_service import (
+        CanonicalEntitlementAlertSuppressionRuleService,
+    )
+
+    active_rules = CanonicalEntitlementAlertSuppressionRuleService.load_active_rules(db)
+
     return {
         "data": {
             "items": [
-                _alert_event_to_item(row, handling_record=handlings.get(row.event.id))
+                _alert_event_to_item(
+                    row,
+                    handling_record=handlings.get(row.event.id),
+                    active_rules=active_rules,
+                )
                 for row in rows
             ],
             "total_count": total_count,
@@ -1170,6 +1257,317 @@ def list_alert_events(
         },
         "meta": {"request_id": request_id},
     }
+
+
+@router.get(
+    "/mutation-audits/alerts/suppression-rules",
+    response_model=AlertSuppressionRuleListResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def list_alert_suppression_rules(
+    request: Request,
+    is_active: bool = Query(default=True),
+    alert_kind: str | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+        CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
+    )
+
+    request_id = resolve_request_id(request)
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        return err
+    if (
+        err := _enforce_limits(
+            user=current_user,
+            request_id=request_id,
+            operation="list_alert_suppression_rules",
+        )
+    ) is not None:
+        return err
+
+    stmt = select(RuleModel).where(RuleModel.is_active == is_active)
+    if alert_kind:
+        stmt = stmt.where(RuleModel.alert_kind == alert_kind)
+
+    stmt = stmt.order_by(RuleModel.id.desc())
+    
+    # Count
+    total_count = db.execute(select(func.count()).select_from(stmt.subquery())).scalar_one()
+    
+    # Paging
+    stmt = stmt.limit(page_size).offset((page - 1) * page_size)
+    rules = db.execute(stmt).scalars().all()
+
+    return {
+        "data": [AlertSuppressionRuleItem.model_validate(r) for r in rules],
+        "meta": {"request_id": request_id},
+    }
+
+
+@router.post(
+    "/mutation-audits/alerts/suppression-rules",
+    response_model=AlertSuppressionRuleApiResponse,
+    status_code=201,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        409: {"model": ErrorEnvelope},
+        422: {"description": "Validation error"},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def create_alert_suppression_rule(
+    body: CreateAlertSuppressionRuleRequestBody,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+        CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
+    )
+
+    request_id = resolve_request_id(request)
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        return err
+    if (
+        err := _enforce_limits(
+            user=current_user,
+            request_id=request_id,
+            operation="create_alert_suppression_rule",
+        )
+    ) is not None:
+        return err
+
+    # Check for duplicates (AC 1 unique constraint)
+    existing_stmt = select(RuleModel).where(
+        RuleModel.alert_kind == body.alert_kind,
+        RuleModel.feature_code == body.feature_code,
+        RuleModel.plan_code == body.plan_code,
+        RuleModel.actor_type == body.actor_type,
+    )
+    existing = db.execute(existing_stmt).scalar_one_or_none()
+    if existing:
+        # Idempotency check: if everything is same, return 200
+        if (
+            existing.suppression_key == body.suppression_key
+            and existing.ops_comment == body.ops_comment
+            and existing.is_active == body.is_active
+        ):
+            # Not status 201
+            from fastapi.encoders import jsonable_encoder
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "data": jsonable_encoder(AlertSuppressionRuleItem.model_validate(existing)),
+                    "meta": {"request_id": request_id},
+                },
+            )
+        
+        return _error_response(
+            status_code=409,
+            request_id=request_id,
+            code="suppression_rule_conflict",
+            message="A suppression rule with these criteria already exists but with different values",
+            details={"rule_id": existing.id},
+        )
+
+    new_rule = RuleModel(
+        alert_kind=body.alert_kind,
+        feature_code=body.feature_code,
+        plan_code=body.plan_code,
+        actor_type=body.actor_type,
+        suppression_key=body.suppression_key,
+        ops_comment=body.ops_comment,
+        is_active=body.is_active,
+        created_by_user_id=current_user.id,
+        updated_by_user_id=current_user.id,
+    )
+    db.add(new_rule)
+    db.commit()
+    db.refresh(new_rule)
+
+    return {
+        "data": AlertSuppressionRuleItem.model_validate(new_rule),
+        "meta": {"request_id": request_id},
+    }
+
+
+@router.get(
+    "/mutation-audits/alerts/suppression-rules/{rule_id}",
+    response_model=AlertSuppressionRuleApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def get_alert_suppression_rule(
+    rule_id: int,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+        CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
+    )
+
+    request_id = resolve_request_id(request)
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        return err
+    if (
+        err := _enforce_limits(
+            user=current_user,
+            request_id=request_id,
+            operation="get_alert_suppression_rule",
+        )
+    ) is not None:
+        return err
+
+    rule = db.get(RuleModel, rule_id)
+    if not rule:
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="rule_not_found",
+            message=f"Suppression rule {rule_id} not found",
+            details={"rule_id": rule_id},
+        )
+
+    return {
+        "data": AlertSuppressionRuleItem.model_validate(rule),
+        "meta": {"request_id": request_id},
+    }
+
+
+@router.patch(
+    "/mutation-audits/alerts/suppression-rules/{rule_id}",
+    response_model=AlertSuppressionRuleApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        422: {"description": "Validation error"},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def update_alert_suppression_rule(
+    rule_id: int,
+    body: UpdateAlertSuppressionRuleRequestBody,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+        CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
+    )
+
+    request_id = resolve_request_id(request)
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        return err
+    if (
+        err := _enforce_limits(
+            user=current_user,
+            request_id=request_id,
+            operation="update_alert_suppression_rule",
+        )
+    ) is not None:
+        return err
+
+    rule = db.get(RuleModel, rule_id)
+    if not rule:
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="rule_not_found",
+            message=f"Suppression rule {rule_id} not found",
+            details={"rule_id": rule_id},
+        )
+
+    update_data = body.model_dump(exclude_unset=True)
+    if not update_data:
+        return {
+            "data": AlertSuppressionRuleItem.model_validate(rule),
+            "meta": {"request_id": request_id},
+        }
+
+    for key, value in update_data.items():
+        setattr(rule, key, value)
+    
+    rule.updated_by_user_id = current_user.id
+    db.commit()
+    db.refresh(rule)
+
+    return {
+        "data": AlertSuppressionRuleItem.model_validate(rule),
+        "meta": {"request_id": request_id},
+    }
+
+
+@router.delete(
+    "/mutation-audits/alerts/suppression-rules/{rule_id}",
+    status_code=204,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+    },
+)
+def delete_alert_suppression_rule(
+    rule_id: int,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> None:
+    from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+        CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
+    )
+
+    request_id = resolve_request_id(request)
+    if (err := _ensure_ops_role(current_user, request_id)) is not None:
+        # Since _ensure_ops_role returns JSONResponse, but status 204 forbids body,
+        # we MUST raise HTTPException here if we want to return an error.
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": {
+                    "code": "insufficient_role",
+                    "message": "role is not allowed",
+                    "details": {"required_roles": "ops, admin", "actual_role": current_user.role},
+                    "request_id": request_id,
+                }
+            },
+        )
+
+    rule = db.get(RuleModel, rule_id)
+    if not rule:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": {
+                    "code": "rule_not_found",
+                    "message": f"Suppression rule {rule_id} not found",
+                    "details": {"rule_id": rule_id},
+                    "request_id": request_id,
+                }
+            },
+        )
+
+    # logical delete
+    rule.is_active = False
+    rule.updated_by_user_id = current_user.id
+    db.commit()
+
+    return None
 
 
 @router.post(

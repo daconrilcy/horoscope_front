@@ -1140,3 +1140,47 @@ Cette même règle s'applique en `dry_run`, afin que les compteurs reflètent fi
 
 `alert_event_ids` contient tous les candidats chargés par le batch, y compris ceux finalement skipés par la règle no-op.
 
+---
+
+## Story 61.46 — Règles de suppression réutilisables et auto-triage
+
+Depuis la story 61.46, les opérateurs peuvent définir des règles de suppression durables pour ignorer automatiquement certaines alertes récurrentes ou connues (ex: bruits sur une feature spécifique).
+
+### Table `canonical_entitlement_mutation_alert_suppression_rules`
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `id` | int PK | Identifiant interne |
+| `alert_kind` | str(32) | Type d'alerte (ex: `sla_overdue`) |
+| `feature_code` | str(64) | Feature concernée (optionnel) |
+| `plan_code` | str(64) | Plan concerné (optionnel) |
+| `actor_type` | str(32) | Type d'acteur (optionnel) |
+| `suppression_key` | str(64) | Clé de suppression appliquée au handling |
+| `ops_comment` | text | Commentaire permanent |
+| `is_active` | bool | État de la règle |
+
+### Algorithme de matching (Source de Vérité)
+
+Le matching s'effectue sur `alert_kind` (obligatoire) et compare les snapshots de l'alerte (`feature_code_snapshot`, etc.) avec les critères de la règle.
+
+1. **Score de spécificité** : Chaque critère non-nul (`feature`, `plan`, `actor`) apporte +1 au score.
+2. **Priorité** : La règle ayant le score le plus élevé est sélectionnée.
+3. **Tie-break** : En cas d'égalité de score, la règle avec le plus petit `id` gagne.
+
+### Impact sur le pilotage ops
+
+- **Handling Virtuel** : Une alerte matchée par une règle active apparaît avec `handling.source = "rule"` et `handling_status = "suppressed"`.
+- **Exclusion Automatique** : Les alertes matchées par une règle sont systématiquement **exclues** des retries batch et unitaires.
+- **Filtrage** : Le filtre `handling_status=suppressed` inclut à la fois les suppressions manuelles et les suppressions par règle.
+
+### Endpoints CRUD
+
+```text
+GET    /v1/ops/entitlements/alerts/suppression-rules
+POST   /v1/ops/entitlements/alerts/suppression-rules
+PATCH  /v1/ops/entitlements/alerts/suppression-rules/{id}
+DELETE /v1/ops/entitlements/alerts/suppression-rules/{id}
+```
+- Accès restreint aux rôles `ops` et `admin`.
+- `DELETE` effectue une suppression logique (`is_active = False`).
+

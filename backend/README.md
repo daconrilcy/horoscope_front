@@ -313,6 +313,17 @@ L'endpoint `handle-batch` permet d'appliquer en masse un handling `suppressed` o
 L'endpoint `handle` permet de qualifier une alerte en `suppressed` ou `resolved` avec commentaire ops et clé de suppression; les alertes `suppressed` ou `resolved` sont exclues du retry batch et `GET /alerts` expose aussi un état virtuel `pending_retry` pour les alertes `failed` sans handling.
 L'endpoint `handling-history` expose l'historique append-only des transitions de handling, paginé via `limit` / `offset`, trié par `handled_at DESC, id DESC`, avec propagation du `request_id` et règle no-op sur les re-posts identiques.
 
+Règles de suppression réutilisables (Story 61.46) :
+
+```text
+GET    /v1/ops/entitlements/alerts/suppression-rules
+POST   /v1/ops/entitlements/alerts/suppression-rules
+PATCH  /v1/ops/entitlements/alerts/suppression-rules/{id}
+DELETE /v1/ops/entitlements/alerts/suppression-rules/{id}
+```
+
+Les opérateurs peuvent définir des règles durables pour ignorer automatiquement des alertes (ex: filtrage par `feature_code` ou `plan_code`). Les alertes matchées par une règle active sont marquées `suppressed` (source `rule`) et sont automatiquement exclues des retries batch et unitaires.
+
 Secrets minimum requis hors environnements locaux/test (staging, production):
 - `JWT_SECRET_KEY`
 - `API_CREDENTIALS_SECRET_KEY`
