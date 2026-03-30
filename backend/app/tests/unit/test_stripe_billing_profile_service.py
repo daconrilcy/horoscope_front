@@ -135,6 +135,54 @@ def test_update_from_event_payload_hors_ordre(db: Session, user_id: int):
     assert profile.last_stripe_event_id == last_event_id
 
 
+def test_subscription_event_can_enrich_snapshot_after_newer_checkout_completed(
+    db: Session, user_id: int
+):
+    checkout_event = {
+        "id": "evt_checkout_newer",
+        "type": "checkout.session.completed",
+        "created": 2000,
+        "data": {
+            "object": {
+                "object": "checkout.session",
+                "customer": "cus_123",
+                "client_reference_id": str(user_id),
+            }
+        },
+    }
+    subscription_event = {
+        "id": "evt_subscription_older",
+        "type": "customer.subscription.updated",
+        "created": 1000,
+        "data": {
+            "object": {
+                "object": "subscription",
+                "id": "sub_123",
+                "status": "active",
+                "customer": "cus_123",
+                "items": {"data": [{"price": {"id": "price_basic"}}]},
+            }
+        },
+    }
+
+    with patch.dict(STRIPE_PRICE_ENTITLEMENT_MAP, {"price_basic": "basic"}):
+        StripeBillingProfileService.update_from_event_payload(db, user_id, checkout_event)
+        db.commit()
+
+        profile = StripeBillingProfileService.get_or_create_profile(db, user_id)
+        assert profile.stripe_customer_id == "cus_123"
+        assert profile.subscription_status is None
+
+        StripeBillingProfileService.update_from_event_payload(db, user_id, subscription_event)
+        db.commit()
+
+        db.refresh(profile)
+        assert profile.stripe_subscription_id == "sub_123"
+        assert profile.subscription_status == "active"
+        assert profile.stripe_price_id == "price_basic"
+        assert profile.entitlement_plan == "basic"
+
+
 def test_transition_entitlement_plan(db: Session, user_id: int):
     with patch.dict(STRIPE_PRICE_ENTITLEMENT_MAP, {"price_premium": "premium"}):
         # 1. Passage en Premium

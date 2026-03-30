@@ -70,25 +70,42 @@ def _create_enterprise_api_key(email: str) -> str:
             )
             db.add(canonical_plan)
             db.flush()
+        else:
+            canonical_plan.plan_name = "Rotation B2B"
+            canonical_plan.audience = Audience.B2B
+            canonical_plan.is_active = True
+            canonical_plan.source_type = SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value
+            canonical_plan.source_id = legacy_plan.id
 
-            # Binding
-            from app.infra.db.models.product_entitlements import FeatureCatalogModel
-            from app.services.b2b_api_entitlement_gate import B2BApiEntitlementGate
+        # Binding
+        from app.infra.db.models.product_entitlements import FeatureCatalogModel
+        from app.services.b2b_api_entitlement_gate import B2BApiEntitlementGate
 
-            feat = db.scalar(
-                select(FeatureCatalogModel).where(
-                    FeatureCatalogModel.feature_code == B2BApiEntitlementGate.FEATURE_CODE
-                )
+        feat = db.scalar(
+            select(FeatureCatalogModel).where(
+                FeatureCatalogModel.feature_code == B2BApiEntitlementGate.FEATURE_CODE
             )
-            db.add(
-                PlanFeatureBindingModel(
-                    plan_id=canonical_plan.id,
-                    feature_id=feat.id,
-                    access_mode=AccessMode.UNLIMITED,
-                    is_enabled=True,
-                    source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
-                )
+        )
+        binding = db.scalar(
+            select(PlanFeatureBindingModel).where(
+                PlanFeatureBindingModel.plan_id == canonical_plan.id,
+                PlanFeatureBindingModel.feature_id == feat.id,
             )
+        )
+        if not binding:
+            binding = PlanFeatureBindingModel(
+                plan_id=canonical_plan.id,
+                feature_id=feat.id,
+                access_mode=AccessMode.UNLIMITED,
+                is_enabled=True,
+                source_origin=SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value,
+            )
+            db.add(binding)
+            db.flush()
+
+        binding.access_mode = AccessMode.UNLIMITED
+        binding.is_enabled = True
+        binding.source_origin = SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value
 
         auth = AuthService.register(
             db,
@@ -117,6 +134,9 @@ def _create_enterprise_api_key(email: str) -> str:
 
 
 def _seed_reference_data() -> None:
+    from app.services.billing_service import BillingService
+
+    BillingService.reset_subscription_status_cache()
     with SessionLocal() as db:
         ReferenceDataService.seed_reference_version(db)
 
@@ -141,6 +161,8 @@ def _seed_reference_data() -> None:
                     is_active=True,
                 )
                 db.add(f)
+            else:
+                f.is_active = True
         db.flush()
 
         feature = db.scalar(
@@ -157,6 +179,10 @@ def _seed_reference_data() -> None:
             )
             db.add(p_basic)
             db.flush()
+        else:
+            p_basic.plan_name = "Basic"
+            p_basic.audience = Audience.B2C
+            p_basic.is_active = True
 
         b_basic = db.scalar(
             select(PlanFeatureBindingModel).where(
@@ -173,23 +199,30 @@ def _seed_reference_data() -> None:
             )
             db.add(b_basic)
             db.flush()
+        b_basic.access_mode = AccessMode.QUOTA
+        b_basic.is_enabled = True
 
         q_basic = db.scalar(
             select(PlanFeatureQuotaModel).where(
-                PlanFeatureQuotaModel.plan_feature_binding_id == b_basic.id
+                PlanFeatureQuotaModel.plan_feature_binding_id == b_basic.id,
+                PlanFeatureQuotaModel.quota_key == "daily",
+                PlanFeatureQuotaModel.period_unit == PeriodUnit.DAY,
+                PlanFeatureQuotaModel.period_value == 1,
+                PlanFeatureQuotaModel.reset_mode == ResetMode.CALENDAR,
             )
         )
         if not q_basic:
-            db.add(
-                PlanFeatureQuotaModel(
-                    plan_feature_binding_id=b_basic.id,
-                    quota_key="daily",
-                    quota_limit=5,
-                    period_unit=PeriodUnit.DAY,
-                    period_value=1,
-                    reset_mode=ResetMode.CALENDAR,
-                )
+            q_basic = PlanFeatureQuotaModel(
+                plan_feature_binding_id=b_basic.id,
+                quota_key="daily",
+                quota_limit=5,
+                period_unit=PeriodUnit.DAY,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
             )
+            db.add(q_basic)
+
+        q_basic.quota_limit = 5
 
         db.commit()
 
@@ -209,13 +242,13 @@ def _run_pre_rotation_journey(client: TestClient, run_id: str) -> tuple[dict[str
 
     # Inject active subscription directly
     with SessionLocal() as db:
-        from app.infra.db.models.billing import UserSubscriptionModel, BillingPlanModel
+        from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
         from app.infra.db.models.stripe_billing import StripeBillingProfileModel
         from app.infra.db.models.user import UserModel
         from app.services.billing_service import BillingService
-        
+
         BillingService.ensure_default_plans(db)
-        
+
         user = db.query(UserModel).filter_by(email=user_email).one()
         # 1. Stripe profile
         db.add(
@@ -237,6 +270,7 @@ def _run_pre_rotation_journey(client: TestClient, run_id: str) -> tuple[dict[str
             )
         )
         db.commit()
+        BillingService.reset_subscription_status_cache()
 
     chat_first = client.post(
         "/v1/chat/messages",

@@ -211,6 +211,8 @@ claude-sonnet-4-6
 - Documentation complétée pour l'AC5 avec `stripe events resend <event_id> --webhook-endpoint=we_123456`.
 - Clarification du périmètre entre le sous-ensemble standardisé de 7 événements du listener par défaut et les événements supplémentaires déjà gérés par le backend.
 - Ajout d'un test automatisé sur les artefacts de développement Stripe et suppression du BOM du script shell.
+- 2026-03-30 : validation locale sur vrai flow Checkout sandbox confirmée avec `stripe listen` et `STRIPE_WEBHOOK_SECRET` issu de la CLI ; les webhooks atteignent bien `POST /v1/billing/stripe-webhook` en local.
+- 2026-03-30 : incident local de réconciliation résolu côté runtime Stripe-first ; le runbook 61.57 reste valide, le problème résiduel venait d'un enrichissement hors ordre du snapshot applicatif et non du listener CLI.
 
 ### File List
 

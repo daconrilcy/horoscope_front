@@ -249,6 +249,8 @@ claude-sonnet-4-6
 - Nettoyage de `frontend/src/api/billing.ts` (types, fonctions API et hooks supprimés).
 - Mise à jour des scripts utilitaires (`load-test-critical.ps1`) pour supprimer les dépendances aux anciens endpoints.
 - [AI-Review] Fix build issues from parallel stories to satisfy AC5 by relaxing unused variables check and adding `@ts-nocheck` where necessary.
+- Stabilisation post-story : les helpers de tests restants ont été rendus déterministes vis-à-vis du cache `BillingService` et des fixtures canoniques Stripe/B2B pour éviter les faux négatifs en suite complète.
+- Correctif hors runtime legacy : le script `backend/scripts/backfill_plan_catalog_from_legacy.py` est désormais idempotent quand les features canoniques existent déjà, ce qui sécurise les remises en cohérence locales après exécution de la suite de tests.
 
 ### File List
 

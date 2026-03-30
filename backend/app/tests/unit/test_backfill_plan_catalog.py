@@ -22,6 +22,7 @@ from scripts.backfill_plan_catalog_from_legacy import (
     backfill_b2b_plans,
     backfill_b2c_plans,
     ensure_b2b_feature,
+    ensure_b2c_chat_feature,
 )
 
 
@@ -508,3 +509,24 @@ def test_backfill_idempotence_tracks_unchanged_counters(db_session: Session):
     assert report2.bindings_unchanged == 1
     assert report2.quotas_created == 0
     assert report2.quotas_unchanged == 1
+
+
+def test_ensure_b2c_chat_feature_reuses_seeded_feature_without_duplicate(db_session: Session):
+    seeded_feature = FeatureCatalogModel(
+        feature_code="astrologer_chat",
+        feature_name="Astrologer Chat",
+        description="Seeded canonical feature",
+        is_metered=True,
+        is_active=True,
+    )
+    db_session.add(seeded_feature)
+    db_session.commit()
+
+    feature = ensure_b2c_chat_feature(db_session)
+    db_session.commit()
+
+    assert feature.id == seeded_feature.id
+    features = db_session.execute(
+        select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == "astrologer_chat")
+    ).scalars().all()
+    assert len(features) == 1

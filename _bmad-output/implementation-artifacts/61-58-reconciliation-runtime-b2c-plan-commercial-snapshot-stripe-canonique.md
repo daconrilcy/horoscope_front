@@ -1,6 +1,6 @@
 # Story 61.58 : Réconcilier le runtime B2C et le plan commercial sur le snapshot Stripe canonique
 
-Status: review
+Status: done
 
 ## Story
 
@@ -53,64 +53,64 @@ Cette story corrige la cohérence métier réelle.
 
 **AC1 — Le runtime B2C devient Stripe-first quand un snapshot Stripe existe**
 
-- [ ] `EffectiveEntitlementResolverService.resolve_b2c_user_snapshot()` ne dérive plus `plan_code`
+- [x] `EffectiveEntitlementResolverService.resolve_b2c_user_snapshot()` ne dérive plus `plan_code`
   et `billing_status` depuis le seul `UserSubscriptionModel` quand un `StripeBillingProfileModel`
   existe pour l'utilisateur.
-- [ ] Le resolver utilise en priorité un snapshot canonique issu de `stripe_billing_profiles` :
+- [x] Le resolver utilise en priorité un snapshot canonique issu de `stripe_billing_profiles` :
   - `plan_code` dérivé de `entitlement_plan`
   - `billing_status` dérivé du vrai `subscription_status` Stripe
-- [ ] Le fallback legacy reste autorisé uniquement si aucun profil Stripe exploitable n'existe.
-- [ ] Aucun impact régressif sur le scope B2B.
+- [x] Le fallback legacy reste autorisé uniquement si aucun profil Stripe exploitable n'existe.
+- [x] Aucun impact régressif sur le scope B2B.
 
 **AC2 — `GET /v1/billing/subscription` reflète le vrai état billing canonique**
 
-- [ ] Un utilisateur avec un profil Stripe `subscription_status="active"` et
+- [x] Un utilisateur avec un profil Stripe `subscription_status="active"` et
   `entitlement_plan="basic"` est exposé avec :
   - `status="active"`
   - `subscription_status="active"`
   - `plan.code="basic"`
-- [ ] Un utilisateur `trialing` est exposé comme `status="active"` avec
+- [x] Un utilisateur `trialing` est exposé comme `status="active"` avec
   `subscription_status="trialing"`.
-- [ ] Un utilisateur `incomplete`, `paused`, `canceled` ou `unpaid` n'est jamais exposé comme
+- [x] Un utilisateur `incomplete`, `paused`, `canceled` ou `unpaid` n'est jamais exposé comme
   `status="active"`.
-- [ ] Si le snapshot Stripe est exploitable, le contrat ne retombe pas silencieusement sur
+- [x] Si le snapshot Stripe est exploitable, le contrat ne retombe pas silencieusement sur
   `plan=None` à cause de l'absence d'abonnement legacy local.
 
 **AC3 — Le mapping métier `subscription_status Stripe -> accès produit` est réellement branché**
 
-- [ ] Les entitlements B2C exposés par `GET /v1/entitlements/me` utilisent le plan et le statut
+- [x] Les entitlements B2C exposés par `GET /v1/entitlements/me` utilisent le plan et le statut
   réellement dérivés du snapshot Stripe canonique.
-- [ ] `trialing` ouvre l'accès selon le plan mappé.
-- [ ] `active` ouvre l'accès selon le plan mappé.
-- [ ] `incomplete`, `incomplete_expired`, `paused`, `canceled`, `unpaid` refusent l'accès payant.
-- [ ] `past_due` conserve l'accès selon la politique existante.
+- [x] `trialing` ouvre l'accès selon le plan mappé.
+- [x] `active` ouvre l'accès selon le plan mappé.
+- [x] `incomplete`, `incomplete_expired`, `paused`, `canceled`, `unpaid` refusent l'accès payant.
+- [x] `past_due` conserve l'accès selon la politique existante.
 
 **AC4 — L'invalidation de cache est cohérente avec les webhooks Stripe**
 
-- [ ] Toute mise à jour de `stripe_billing_profiles` via `update_from_event_payload()` invalide
+- [x] Toute mise à jour de `stripe_billing_profiles` via `update_from_event_payload()` invalide
   le cache utilisé par `BillingService` pour l'utilisateur concerné.
-- [ ] Après traitement d'un webhook Stripe pertinent, un appel suivant à
+- [x] Après traitement d'un webhook Stripe pertinent, un appel suivant à
   `GET /v1/billing/subscription` ou `GET /v1/entitlements/me` ne peut pas servir un statut
   périmé uniquement à cause de la TTL du cache.
 
 **AC5 — Les tests prouvent le branchement réel et ne mockent plus le point critique**
 
-- [ ] Ajouter un test d'intégration démontrant qu'un `StripeBillingProfileModel(active/basic)`
+- [x] Ajouter un test d'intégration démontrant qu'un `StripeBillingProfileModel(active/basic)`
   sans `UserSubscriptionModel` legacy donne bien un contrat billing cohérent.
-- [ ] Ajouter un test d'intégration démontrant qu'un profil Stripe `trialing` ouvre réellement
+- [x] Ajouter un test d'intégration démontrant qu'un profil Stripe `trialing` ouvre réellement
   l'accès produit via `GET /v1/entitlements/me`.
-- [ ] Ajouter un test d'intégration démontrant qu'un profil Stripe `incomplete` n'ouvre pas
+- [x] Ajouter un test d'intégration démontrant qu'un profil Stripe `incomplete` n'ouvre pas
   l'accès payant.
-- [ ] Ajouter un test d'intégration démontrant qu'un webhook mettant à jour le profil Stripe
+- [x] Ajouter un test d'intégration démontrant qu'un webhook mettant à jour le profil Stripe
   rend immédiatement visible le nouvel état malgré le cache.
-- [ ] Les tests d'entitlements ne se contentent plus uniquement de monkeypatcher
+- [x] Les tests d'entitlements ne se contentent plus uniquement de monkeypatcher
   `BillingService.get_subscription_status_readonly()` pour couvrir ce parcours.
 
 **AC6 — Documentation de référence réalignée**
 
-- [ ] `docs/billing-self-service-mvp.md` est mis à jour pour décrire correctement que
+- [x] `docs/billing-self-service-mvp.md` est mis à jour pour décrire correctement que
   le webhook Stripe met à jour le snapshot canonique effectivement utilisé par le runtime.
-- [ ] `docs/billing-trials-and-first-payment.md` est aligné avec le nouveau branchement runtime
+- [x] `docs/billing-trials-and-first-payment.md` est aligné avec le nouveau branchement runtime
   réel.
 
 ---
@@ -249,6 +249,8 @@ Codex GPT-5
 - Ajout d'un fallback DTO déterministe sur les plans par défaut pour éviter un `plan=None` en lecture seule si le `BillingPlanModel` n'est pas encore seedé.
 - Ajout de tests d'intégration prouvant le branchement réel billing, entitlements et webhook cache invalidation, plus alignement des tests de régression existants.
 - Documentation billing Stripe réalignée sur la lecture runtime réelle.
+- Correctif de stabilisation post-implémentation : un `checkout.session.completed` plus récent n'empêche plus les événements `customer.subscription.*` du même flow d'enrichir le snapshot Stripe local quand le profil n'a pas encore de `subscription_status`.
+- Validation locale réelle via Stripe Checkout + Stripe CLI confirmée : la réconciliation webhook alimente désormais correctement `stripe_subscription_id`, `stripe_price_id`, `subscription_status` et `entitlement_plan` après paiement sandbox.
 
 ### File List
 
@@ -270,3 +272,4 @@ Codex GPT-5
 ### Change Log
 
 - 2026-03-30 : Implémentation complète de la story 61.58 avec lecture Stripe-first du billing B2C, mapping runtime canonique des entitlements, invalidation de cache sur webhooks Stripe et couverture de tests de régression étendue.
+- 2026-03-30 : Stabilisation post-QA locale du flux Stripe réel pour tolérer l'ordre effectif des événements `checkout.session.completed` puis `customer.subscription.*` observé via Stripe CLI.

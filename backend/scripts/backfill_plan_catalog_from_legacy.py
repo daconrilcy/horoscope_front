@@ -17,6 +17,7 @@ import logging
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.billing import BillingPlanModel
@@ -102,39 +103,58 @@ class BackfillReport:
 
 
 def ensure_b2b_feature(db: Session) -> FeatureCatalogModel:
-    feature = db.execute(
-        select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == B2B_FEATURE_CODE)
-    ).scalar_one_or_none()
-    if feature is None:
-        logger.info("Creating feature '%s'...", B2B_FEATURE_CODE)
-        feature = FeatureCatalogModel(
-            feature_code=B2B_FEATURE_CODE,
-            feature_name="B2B API Access",
-            description="Accès volumétrique à l'API astrologique pour les comptes entreprise",
-            is_metered=True,
-            is_active=True,
-        )
-        db.add(feature)
-        db.flush()
-    return feature
+    return _ensure_feature(
+        db,
+        feature_code=B2B_FEATURE_CODE,
+        feature_name="B2B API Access",
+        description="Accès volumétrique à l'API astrologique pour les comptes entreprise",
+        is_metered=True,
+    )
 
 
 def ensure_b2c_chat_feature(db: Session) -> FeatureCatalogModel:
+    return _ensure_feature(
+        db,
+        feature_code=B2C_CHAT_FEATURE_CODE,
+        feature_name="Astrologer Chat",
+        description="Messagerie avec un astrologue",
+        is_metered=True,
+    )
+
+
+def _ensure_feature(
+    db: Session,
+    *,
+    feature_code: str,
+    feature_name: str,
+    description: str,
+    is_metered: bool,
+) -> FeatureCatalogModel:
     feature = db.execute(
-        select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == B2C_CHAT_FEATURE_CODE)
+        select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == feature_code)
     ).scalar_one_or_none()
-    if feature is None:
-        logger.info("Creating feature '%s'...", B2C_CHAT_FEATURE_CODE)
-        feature = FeatureCatalogModel(
-            feature_code=B2C_CHAT_FEATURE_CODE,
-            feature_name="Astrologer Chat",
-            description="Messagerie avec un astrologue",
-            is_metered=True,
-            is_active=True,
-        )
-        db.add(feature)
-        db.flush()
-    return feature
+    if feature is not None:
+        return feature
+
+    logger.info("Creating feature '%s'...", feature_code)
+    feature = FeatureCatalogModel(
+        feature_code=feature_code,
+        feature_name=feature_name,
+        description=description,
+        is_metered=is_metered,
+        is_active=True,
+    )
+
+    try:
+        with db.begin_nested():
+            db.add(feature)
+            db.flush()
+        return feature
+    except IntegrityError:
+        logger.info("Feature '%s' already exists, reusing existing row.", feature_code)
+        return db.execute(
+            select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == feature_code)
+        ).scalar_one()
 
 
 def _upsert_plan(

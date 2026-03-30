@@ -170,12 +170,25 @@ class StripeBillingProfileService:
         if event_id and profile.last_stripe_event_id == event_id:
             return profile
 
+        object_type = data_obj.get("object")
+
         # Garde 2 : event plus ancien (hors-ordre) -> on ignore
         last_created = profile.last_stripe_event_created
         if last_created and last_created.tzinfo is None:
             last_created = last_created.replace(tzinfo=timezone.utc)
 
-        if event_created is not None and last_created is not None and event_created < last_created:
+        can_enrich_checkout_only_snapshot = (
+            object_type == "subscription"
+            and profile.subscription_status is None
+            and profile.last_stripe_event_type == "checkout.session.completed"
+        )
+
+        if (
+            event_created is not None
+            and last_created is not None
+            and event_created < last_created
+            and not can_enrich_checkout_only_snapshot
+        ):
             return profile
 
         # Mise à jour des pivots et statuts depuis l'objet Stripe
@@ -187,7 +200,7 @@ class StripeBillingProfileService:
             # Dans un event customer.*, l'ID est 'id'
             profile.stripe_customer_id = data_obj["id"]
 
-        if data_obj.get("object") == "subscription":
+        if object_type == "subscription":
             profile.stripe_subscription_id = data_obj.get("id")
             profile.subscription_status = data_obj.get("status")
             # Stripe peut envoyer null → on force un bool pour respecter NOT NULL
