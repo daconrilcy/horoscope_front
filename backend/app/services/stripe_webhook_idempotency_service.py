@@ -47,7 +47,8 @@ class StripeWebhookIdempotencyService:
             # Le savepoint est déjà rollbacké par SQLAlchemy.
             pass
 
-        # L'événement existe déjà — lire son statut avec verrou row-level pour éviter race conditions
+        # L'événement existe déjà ; lire son statut avec verrou row-level
+        # pour éviter les race conditions.
         record = (
             db.query(StripeWebhookEventModel)
             .filter_by(stripe_event_id=stripe_event_id)

@@ -944,7 +944,9 @@ def create_stripe_checkout_session(
                 "trial_enabled": settings.stripe_trial_enabled,
                 "trial_period_days": settings.stripe_trial_period_days,
                 "payment_method_collection": settings.stripe_payment_method_collection,
-                "missing_payment_method_behavior": settings.stripe_trial_missing_payment_method_behavior,
+                "missing_payment_method_behavior": (
+                    settings.stripe_trial_missing_payment_method_behavior
+                ),
             },
         )
         db.commit()

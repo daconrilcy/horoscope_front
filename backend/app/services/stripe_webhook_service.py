@@ -106,7 +106,11 @@ class StripeWebhookService:
                         StripeWebhookIdempotencyService.mark_processed(db, event_id)
                         return "user_not_resolved"
 
-                    StripeBillingProfileService.update_from_event_payload(db, user_id, event.to_dict())
+                    StripeBillingProfileService.update_from_event_payload(
+                        db,
+                        user_id,
+                        event.to_dict(),
+                    )
                     logger.info(
                         "stripe_webhook: processed event_id=%s type=%s customer_id=%s "
                         "user_id=%s outcome=processed",
@@ -119,7 +123,8 @@ class StripeWebhookService:
                     return "processed"
 
                 logger.info(
-                    "stripe_webhook: ignored event_id=%s type=%s customer_id=%s outcome=event_ignored",
+                    "stripe_webhook: ignored event_id=%s type=%s "
+                    "customer_id=%s outcome=event_ignored",
                     event_id,
                     event_type,
                     customer_id,

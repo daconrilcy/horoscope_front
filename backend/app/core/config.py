@@ -106,7 +106,8 @@ class Settings:
         if value in {"pause", "cancel"}:
             return value
         raise ValueError(
-            f"STRIPE_TRIAL_MISSING_PAYMENT_METHOD_BEHAVIOR must be 'pause' or 'cancel', got '{value}'"
+            "STRIPE_TRIAL_MISSING_PAYMENT_METHOD_BEHAVIOR must be "
+            f"'pause' or 'cancel', got '{value}'"
         )
 
     @staticmethod

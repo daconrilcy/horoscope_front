@@ -5,8 +5,8 @@ Revises: 20260329_0063
 Create Date: 2026-03-29 12:00:00.000000
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "20260329_0064"
@@ -35,8 +35,16 @@ def upgrade() -> None:
         sa.Column("last_error", sa.Text(), nullable=True),
         sa.UniqueConstraint("stripe_event_id", name="uq_stripe_webhook_events_event_id"),
     )
-    op.create_index("ix_stripe_webhook_events_event_type", "stripe_webhook_events", ["event_type"])
-    op.create_index("ix_stripe_webhook_events_stripe_object_id", "stripe_webhook_events", ["stripe_object_id"])
+    op.create_index(
+        "ix_stripe_webhook_events_event_type",
+        "stripe_webhook_events",
+        ["event_type"],
+    )
+    op.create_index(
+        "ix_stripe_webhook_events_stripe_object_id",
+        "stripe_webhook_events",
+        ["stripe_object_id"],
+    )
     op.create_index("ix_stripe_webhook_events_status", "stripe_webhook_events", ["status"])
 
 
