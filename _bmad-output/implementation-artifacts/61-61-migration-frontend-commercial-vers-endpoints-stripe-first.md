@@ -59,79 +59,79 @@ Ces trois endpoints maintiennent **deux sources de vérité concurrentes** :
 
 **AC1 — Souscription initiale via Stripe Checkout Session**
 
-- [ ] Quand un utilisateur sans abonnement actif choisit un plan et confirme dans `SubscriptionSettings.tsx`,
+- [x] Quand un utilisateur sans abonnement actif choisit un plan et confirme dans `SubscriptionSettings.tsx`,
   le frontend appelle `POST /v1/billing/stripe-checkout-session` avec `{ plan: "basic" | "premium" }`.
-- [ ] Le frontend redirige immédiatement vers `checkout_url` reçu dans la réponse (`window.location.href = checkout_url`).
-- [ ] `postCheckout` legacy (`/v1/billing/checkout`) n'est plus appelé depuis `SubscriptionSettings.tsx`.
-- [ ] Aucune mutation locale de statut côté frontend avant le retour Stripe.
+- [x] Le frontend redirige immédiatement vers `checkout_url` reçu dans la réponse (`window.location.href = checkout_url`).
+- [x] `postCheckout` legacy (`/v1/billing/checkout`) n'est plus appelé depuis `SubscriptionSettings.tsx`.
+- [x] Aucune mutation locale de statut côté frontend avant le retour Stripe.
 
 **AC2 — Modification de plan et retry via Customer Portal**
 
-- [ ] Quand un utilisateur avec abonnement actif sélectionne un autre plan dans `SubscriptionSettings.tsx`,
+- [x] Quand un utilisateur avec abonnement actif sélectionne un autre plan dans `SubscriptionSettings.tsx`,
   le frontend appelle `POST /v1/billing/stripe-customer-portal-subscription-update-session` (sans corps de requête).
-- [ ] Le frontend redirige vers `url` reçu dans la réponse.
-- [ ] Quand un utilisateur a déjà un profil Stripe mais doit simplement gérer son moyen de paiement ou relancer une tentative,
+- [x] Le frontend redirige vers `url` reçu dans la réponse.
+- [x] Quand un utilisateur a déjà un profil Stripe mais doit simplement gérer son moyen de paiement ou relancer une tentative,
   le frontend appelle `POST /v1/billing/stripe-customer-portal-session`.
-- [ ] `postPlanChange` legacy (`/v1/billing/plan-change`) n'est plus appelé depuis `SubscriptionSettings.tsx`.
-- [ ] `postRetry` legacy (`/v1/billing/retry`) n'est plus appelé depuis `SubscriptionSettings.tsx`.
-- [ ] Le choix entre `subscription-update-session` et `portal-session` est explicite dans le code,
+- [x] `postPlanChange` legacy (`/v1/billing/plan-change`) n'est plus appelé depuis `SubscriptionSettings.tsx`.
+- [x] `postRetry` legacy (`/v1/billing/retry`) n'est plus appelé depuis `SubscriptionSettings.tsx`.
+- [x] Le choix entre `subscription-update-session` et `portal-session` est explicite dans le code,
   basé sur l'intention utilisateur et sur l'état renvoyé par `GET /v1/billing/subscription`.
 
 **AC3 — `BillingPanel.tsx` migré (panel admin/debug)**
 
-- [ ] `BillingPanel.tsx` n'appelle plus `useCheckoutEntryPlan`, `useRetryPayment`, `useChangePlan` pour ses actions principales.
-- [ ] Le panel affiche la souscription courante et un bouton "Ouvrir le portail Stripe" via `useStripePortalSession`.
-- [ ] Pour les tests de checkout (uniquement admin), un bouton "Créer session checkout" via `useStripeCheckoutSession` peut rester visible si jugé utile.
-- [ ] Les sélecteurs de `paymentToken` (`pm_card_ok`, `pm_fail`) peuvent être retirés car ils n'ont plus de sens avec Stripe réel.
+- [x] `BillingPanel.tsx` n'appelle plus `useCheckoutEntryPlan`, `useRetryPayment`, `useChangePlan` pour ses actions principales.
+- [x] Le panel affiche la souscription courante et un bouton "Ouvrir le portail Stripe" via `useStripePortalSession`.
+- [x] Pour les tests de checkout (uniquement admin), un bouton "Créer session checkout" via `useStripeCheckoutSession` peut rester visible si jugé utile.
+- [x] Les sélecteurs de `paymentToken` (`pm_card_ok`, `pm_fail`) peuvent être retirés car ils n'ont plus de sens avec Stripe réel.
 
 **AC4 — Nouveaux types et hooks dans `billing.ts`**
 
-- [ ] Ajouter le type :
+- [x] Ajouter le type :
   ```typescript
   export type StripeCheckoutSessionData = { checkout_url: string }
   export type StripePortalSessionData = { url: string }
   ```
-- [ ] Ajouter la fonction `postStripeCheckoutSession(plan: "basic" | "premium"): Promise<StripeCheckoutSessionData>` appelant `POST /v1/billing/stripe-checkout-session`.
-- [ ] Ajouter la fonction `postStripePortalSession(): Promise<StripePortalSessionData>` appelant `POST /v1/billing/stripe-customer-portal-session`.
-- [ ] Ajouter la fonction `postStripePortalSubscriptionUpdateSession(): Promise<StripePortalSessionData>` appelant `POST /v1/billing/stripe-customer-portal-subscription-update-session`.
-- [ ] Ajouter les hooks :
+- [x] Ajouter la fonction `postStripeCheckoutSession(plan: "basic" | "premium"): Promise<StripeCheckoutSessionData>` appelant `POST /v1/billing/stripe-checkout-session`.
+- [x] Ajouter la fonction `postStripePortalSession(): Promise<StripePortalSessionData>` appelant `POST /v1/billing/stripe-customer-portal-session`.
+- [x] Ajouter la fonction `postStripePortalSubscriptionUpdateSession(): Promise<StripePortalSessionData>` appelant `POST /v1/billing/stripe-customer-portal-subscription-update-session`.
+- [x] Ajouter les hooks :
   ```typescript
   export function useStripeCheckoutSession(): UseMutationResult<StripeCheckoutSessionData, BillingApiError, "basic" | "premium">
   export function useStripePortalSession(): UseMutationResult<StripePortalSessionData, BillingApiError, void>
   export function useStripePortalSubscriptionUpdateSession(): UseMutationResult<StripePortalSessionData, BillingApiError, void>
   ```
-- [ ] Les anciens hooks `useCheckoutEntryPlan`, `useRetryPayment`, `useChangePlan` peuvent rester exportés pour ne pas casser d'autres usages potentiels, mais ne doivent plus être le chemin actif dans les composants user-facing.
+- [x] Les anciens hooks `useCheckoutEntryPlan`, `useRetryPayment`, `useChangePlan` peuvent rester exportés pour ne pas casser d'autres usages potentiels, mais ne doivent plus être le chemin actif dans les composants user-facing.
 
 **AC4bis — Normalisation stricte des codes de plan côté frontend**
 
-- [ ] Le frontend introduit une fonction centrale de mapping du catalogue UI vers les codes canoniques Stripe:
+- [x] Le frontend introduit une fonction centrale de mapping du catalogue UI vers les codes canoniques Stripe:
   `basic-entry -> basic`, `premium-unlimited -> premium`, `null -> null`.
-- [ ] Aucun composant user-facing n'envoie `basic-entry` ou `premium-unlimited` à `POST /v1/billing/stripe-checkout-session`.
-- [ ] Les comparaisons d'état local peuvent continuer à supporter temporairement les deux familles de codes si nécessaire,
+- [x] Aucun composant user-facing n'envoie `basic-entry` ou `premium-unlimited` à `POST /v1/billing/stripe-checkout-session`.
+- [x] Les comparaisons d'état local peuvent continuer à supporter temporairement les deux familles de codes si nécessaire,
   mais le chemin Stripe-first émet uniquement des codes canoniques.
 
 **AC5 — UX de redirection claire**
 
-- [ ] Pendant le `isPending` de la mutation Stripe, les boutons sont désactivés avec un état de chargement visible.
-- [ ] En cas d'erreur de l'API Stripe (502, 503), un message d'erreur utilisateur est affiché (pas de redirection).
-- [ ] Le cas spécifique d'erreur `stripe_billing_profile_not_found` (404 sur le portal) est traité : l'utilisateur est invité à contacter le support ou à créer un abonnement d'abord.
-- [ ] Le cas spécifique d'erreur `stripe_subscription_not_found` (404 sur `subscription-update-session`) est traité :
+- [x] Pendant le `isPending` de la mutation Stripe, les boutons sont désactivés avec un état de chargement visible.
+- [x] En cas d'erreur de l'API Stripe (502, 503), un message d'erreur utilisateur est affiché (pas de redirection).
+- [x] Le cas spécifique d'erreur `stripe_billing_profile_not_found` (404 sur le portal) est traité : l'utilisateur est invité à contacter le support ou à créer un abonnement d'abord.
+- [x] Le cas spécifique d'erreur `stripe_subscription_not_found` (404 sur `subscription-update-session`) est traité :
   l'utilisateur est redirigé vers le portal générique ou reçoit un message l'invitant à rouvrir son espace billing.
 
 **AC6 — Tests mis à jour**
 
-- [ ] `frontend/src/tests/BillingPanel.test.tsx` : mocke les nouveaux hooks Stripe et non plus les hooks legacy.
-- [ ] Ajouter un test vérifiant que `SubscriptionSettings.tsx` appelle `useStripeCheckoutSession` pour un utilisateur sans plan.
-- [ ] Ajouter un test vérifiant que `SubscriptionSettings.tsx` appelle `useStripePortalSubscriptionUpdateSession` pour un utilisateur avec plan actif qui change de plan.
-- [ ] Ajouter un test vérifiant que `SubscriptionSettings.tsx` n'envoie jamais `basic-entry` ou `premium-unlimited` au hook checkout Stripe, mais bien `basic` ou `premium`.
-- [ ] Les tests ne doivent pas tester `window.location.href` directement (impossible dans jsdom) mais vérifier que la mutation est appelée avec les bons arguments.
+- [x] `frontend/src/tests/BillingPanel.test.tsx` : mocke les nouveaux hooks Stripe et non plus les hooks legacy.
+- [x] Ajouter un test vérifiant que `SubscriptionSettings.tsx` appelle `useStripeCheckoutSession` pour un utilisateur sans plan.
+- [x] Ajouter un test vérifiant que `SubscriptionSettings.tsx` appelle `useStripePortalSubscriptionUpdateSession` pour un utilisateur avec plan actif qui change de plan.
+- [x] Ajouter un test vérifiant que `SubscriptionSettings.tsx` n'envoie jamais `basic-entry` ou `premium-unlimited` au hook checkout Stripe, mais bien `basic` ou `premium`.
+- [x] Les tests ne doivent pas tester `window.location.href` directement (impossible dans jsdom) mais vérifier que la mutation est appelée avec les bons arguments.
 
 **AC7 — Aucune régression fonctionnelle**
 
-- [ ] `BillingSuccessPage.tsx` n'est pas modifié.
-- [ ] `GET /v1/billing/subscription` n'est pas modifié.
-- [ ] Aucun endpoint backend n'est modifié ou supprimé.
-- [ ] `useBillingSubscription` et `useChatEntitlementUsage` continuent de fonctionner.
+- [x] `BillingSuccessPage.tsx` n'est pas modifié.
+- [x] `GET /v1/billing/subscription` n'est pas modifié.
+- [x] Aucun endpoint backend n'est modifié ou supprimé.
+- [x] `useBillingSubscription` et `useChatEntitlementUsage` continuent de fonctionner.
 
 ---
 
