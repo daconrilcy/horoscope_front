@@ -404,14 +404,9 @@ if ($opsToken) {
   $opsMonitoring.skipped_reason = "no_ops_access_token"
 }
 
-$checkoutPayload = @{
-  plan_code             = "basic-entry"
-  payment_method_token  = "pm_card_ok"
-  idempotency_key       = "loadtest-checkout-$runId"
-}
-$checkout = Invoke-ApiCall -Method POST -Url "$BaseUrl/v1/billing/checkout" -Headers $authHeaders -Body $checkoutPayload
-if (-not $checkout.ok -or $checkout.status_code -ne 200) {
-  throw "Failed to checkout test subscription. status=$($checkout.status_code)"
+$subscription = Invoke-ApiCall -Method GET -Url "$BaseUrl/v1/billing/subscription" -Headers $authHeaders
+if (-not $subscription.ok -or $subscription.status_code -ne 200) {
+  Write-Warning "User for load test might not have an active subscription (status=$($subscription.status_code))"
 }
 
 # Prime privacy status endpoints.

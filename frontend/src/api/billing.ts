@@ -20,33 +20,6 @@ export type BillingSubscriptionStatus = {
   updated_at: string | null
 }
 
-export type BillingCheckoutPayload = {
-  plan_code?: string
-  payment_method_token?: string
-  idempotency_key?: string
-}
-
-export type BillingCheckoutData = {
-  subscription: BillingSubscriptionStatus
-  payment_status: "pending" | "succeeded" | "failed"
-  payment_attempt_id: number
-  idempotency_key: string
-}
-
-export type BillingPlanChangePayload = {
-  target_plan_code: string
-  idempotency_key?: string
-}
-
-export type BillingPlanChangeData = {
-  subscription: BillingSubscriptionStatus
-  previous_plan_code: string
-  target_plan_code: string
-  plan_change_status: "pending" | "succeeded" | "failed"
-  plan_change_id: number
-  idempotency_key: string
-}
-
 export type ChatEntitlementUsageStatus = {
   quota_date: string
   limit: number
@@ -149,38 +122,6 @@ async function fetchSubscriptionStatus(): Promise<BillingSubscriptionStatus> {
   return body.data
 }
 
-async function postCheckout(payload: BillingCheckoutPayload): Promise<BillingCheckoutData> {
-  const response = await fetch(`${API_BASE_URL}/v1/billing/checkout`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...getAccessTokenAuthHeader(),
-    },
-    body: JSON.stringify(payload),
-  })
-  if (!response.ok) {
-    return parseError(response)
-  }
-  const body = (await response.json()) as { data: BillingCheckoutData }
-  return body.data
-}
-
-async function postRetry(payload: BillingCheckoutPayload): Promise<BillingCheckoutData> {
-  const response = await fetch(`${API_BASE_URL}/v1/billing/retry`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...getAccessTokenAuthHeader(),
-    },
-    body: JSON.stringify(payload),
-  })
-  if (!response.ok) {
-    return parseError(response)
-  }
-  const body = (await response.json()) as { data: BillingCheckoutData }
-  return body.data
-}
-
 async function fetchChatEntitlementUsage(): Promise<ChatEntitlementUsageStatus | null> {
   const response = await fetch(`${API_BASE_URL}/v1/entitlements/me`, {
     method: "GET",
@@ -196,38 +137,10 @@ async function fetchChatEntitlementUsage(): Promise<ChatEntitlementUsageStatus |
   return toChatEntitlementUsage(chatEntitlement)
 }
 
-async function postPlanChange(payload: BillingPlanChangePayload): Promise<BillingPlanChangeData> {
-  const response = await fetch(`${API_BASE_URL}/v1/billing/plan-change`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...getAccessTokenAuthHeader(),
-    },
-    body: JSON.stringify(payload),
-  })
-  if (!response.ok) {
-    return parseError(response)
-  }
-  const body = (await response.json()) as { data: BillingPlanChangeData }
-  return body.data
-}
-
 export function useBillingSubscription() {
   return useQuery({
     queryKey: ["billing-subscription"],
     queryFn: fetchSubscriptionStatus,
-  })
-}
-
-export function useCheckoutEntryPlan() {
-  return useMutation({
-    mutationFn: postCheckout,
-  })
-}
-
-export function useRetryPayment() {
-  return useMutation({
-    mutationFn: postRetry,
   })
 }
 
@@ -239,12 +152,6 @@ export function useChatEntitlementUsage() {
       if (error instanceof BillingApiError && error.status === 403) return false
       return failureCount < 1
     },
-  })
-}
-
-export function useChangePlan() {
-  return useMutation({
-    mutationFn: postPlanChange,
   })
 }
 

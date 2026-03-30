@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 
 from app.infra.db.base import Base
 from app.infra.db.models.product_entitlements import (
@@ -37,9 +37,9 @@ def _cleanup_tables() -> None:
         db.add(feature)
         db.flush()
 
-        # Seed basic-entry plan
+        # Seed basic plan
         p_basic = PlanCatalogModel(
-            plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C
+            plan_code="basic", plan_name="Basic", audience=Audience.B2C
         )
         db.add(p_basic)
         db.flush()
@@ -74,17 +74,93 @@ def _register_user_with_role_and_token(email: str, role: str) -> str:
         return auth.tokens.access_token
 
 
-def _activate_entry_plan(access_token: str, idempotency_key: str) -> None:
-    response = client.post(
-        "/v1/billing/checkout",
-        headers={"Authorization": f"Bearer {access_token}"},
-        json={
-            "plan_code": "basic-entry",
-            "payment_method_token": "pm_card_ok",
-            "idempotency_key": idempotency_key,
-        },
-    )
-    assert response.status_code == 200
+def _set_active_subscription(access_token: str, plan_code: str) -> None:
+    from app.infra.db.models.billing import UserSubscriptionModel, BillingPlanModel
+    from app.infra.db.models.stripe_billing import StripeBillingProfileModel
+    from app.services.billing_service import BillingService
+
+    with SessionLocal() as db:
+        user = db.query(UserModel).order_by(UserModel.id.desc()).first()
+        if not user:
+            return
+            
+        # Ensure plans exist in billing_plans table
+        BillingService.ensure_default_plans(db)
+        
+        # 1. Stripe profile
+        db.add(
+            StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id=f"cus_{user.id}",
+                stripe_subscription_id=f"sub_{user.id}",
+                subscription_status="active",
+                entitlement_plan=plan_code,
+            )
+        )
+        # 2. Also ensure UserSubscriptionModel exists
+        from app.services.billing_service import STRIPE_ENTITLEMENT_TO_PLAN_CODE
+        legacy_code = STRIPE_ENTITLEMENT_TO_PLAN_CODE.get(plan_code, plan_code)
+        plan = db.scalar(select(BillingPlanModel).where(BillingPlanModel.code == legacy_code))
+        db.add(
+            UserSubscriptionModel(
+                user_id=user.id,
+                plan_id=plan.id if plan else 1,
+                status="active",
+            )
+        )
+        db.commit()
+
+
+def _record_manual_pricing_events(user_email: str) -> None:
+    from app.api.v1.routers.billing import _record_pricing_event_safely
+    with SessionLocal() as db:
+        user = db.query(UserModel).filter_by(email=user_email).one()
+        request_id = "manual-test-event"
+        # Exposure
+        _record_pricing_event_safely(
+            db=db,
+            request_id=request_id,
+            action="offer_exposure",
+            details={"user_id": user.id, "user_role": user.role, "plan_code": "basic-entry"},
+        )
+        # Conversion
+        _record_pricing_event_safely(
+            db=db,
+            request_id=request_id,
+            action="offer_conversion",
+            details={
+                "user_id": user.id,
+                "user_role": user.role,
+                "plan_code": "basic-entry",
+                "conversion_type": "checkout",
+                "conversion_status": "success",
+            },
+        )
+        # Revenue
+        _record_pricing_event_safely(
+            db=db,
+            request_id=request_id,
+            action="offer_revenue",
+            details={
+                "user_id": user.id,
+                "user_role": user.role,
+                "plan_code": "basic",
+                "revenue_cents": 500,
+            },
+        )
+        # Retention
+        _record_pricing_event_safely(
+            db=db,
+            request_id=request_id,
+            action="offer_retention",
+            details={
+                "user_id": user.id,
+                "user_role": user.role,
+                "plan_code": "basic",
+                "retention_event": "subscription_status_view",
+            },
+        )
+        db.commit()
 
 
 def _seed_birth_profile(access_token: str) -> None:
@@ -278,7 +354,7 @@ def test_ops_monitoring_persona_kpis_reflect_live_chat_and_guidance_flows() -> N
         "user",
     )
 
-    _activate_entry_plan(user_token, "monitoring-persona-live-checkout-1")
+    _set_active_subscription(user_token, "basic")
     _seed_birth_profile(user_token)
 
     chat_response = client.post(
@@ -320,24 +396,11 @@ def test_ops_monitoring_persona_kpis_reflect_live_chat_and_guidance_flows() -> N
 def test_ops_monitoring_pricing_experiment_kpis_returns_data_for_ops_role() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("monitoring-pricing@example.com", "ops")
-    user_token = _register_user_with_role_and_token("monitoring-pricing-user@example.com", "user")
+    user_email = "monitoring-pricing-user@example.com"
+    user_token = _register_user_with_role_and_token(user_email, "user")
 
-    checkout_response = client.post(
-        "/v1/billing/checkout",
-        headers={"Authorization": f"Bearer {user_token}"},
-        json={
-            "plan_code": "basic-entry",
-            "payment_method_token": "pm_card_ok",
-            "idempotency_key": "monitoring-pricing-checkout-1",
-        },
-    )
-    assert checkout_response.status_code == 200
-
-    subscription_response = client.get(
-        "/v1/billing/subscription",
-        headers={"Authorization": f"Bearer {user_token}"},
-    )
-    assert subscription_response.status_code == 200
+    _set_active_subscription(user_token, "basic")
+    _record_manual_pricing_events(user_email)
 
     response = client.get(
         "/v1/ops/monitoring/pricing-experiments-kpis",

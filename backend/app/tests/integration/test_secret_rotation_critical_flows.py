@@ -147,13 +147,13 @@ def _seed_reference_data() -> None:
             select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == "astrologer_chat")
         )
 
-        # Seed basic-entry plan
+        # Seed basic plan
         p_basic = db.scalar(
-            select(PlanCatalogModel).where(PlanCatalogModel.plan_code == "basic-entry")
+            select(PlanCatalogModel).where(PlanCatalogModel.plan_code == "basic")
         )
         if not p_basic:
             p_basic = PlanCatalogModel(
-                plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C
+                plan_code="basic", plan_name="Basic", audience=Audience.B2C
             )
             db.add(p_basic)
             db.flush()
@@ -207,16 +207,36 @@ def _run_pre_rotation_journey(client: TestClient, run_id: str) -> tuple[dict[str
     access_before = tokens_before["access_token"]
     user_headers = {"Authorization": f"Bearer {access_before}"}
 
-    checkout = client.post(
-        "/v1/billing/checkout",
-        headers=user_headers,
-        json={
-            "plan_code": "basic-entry",
-            "payment_method_token": "pm_card_ok",
-            "idempotency_key": f"rotation-checkout-{run_id}",
-        },
-    )
-    assert checkout.status_code == 200
+    # Inject active subscription directly
+    with SessionLocal() as db:
+        from app.infra.db.models.billing import UserSubscriptionModel, BillingPlanModel
+        from app.infra.db.models.stripe_billing import StripeBillingProfileModel
+        from app.infra.db.models.user import UserModel
+        from app.services.billing_service import BillingService
+        
+        BillingService.ensure_default_plans(db)
+        
+        user = db.query(UserModel).filter_by(email=user_email).one()
+        # 1. Stripe profile
+        db.add(
+            StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id=f"cus_{user.id}",
+                stripe_subscription_id=f"sub_{user.id}",
+                subscription_status="active",
+                entitlement_plan="basic",
+            )
+        )
+        # 2. Legacy sub record
+        p_basic = db.scalar(select(BillingPlanModel).where(BillingPlanModel.code == "basic"))
+        db.add(
+            UserSubscriptionModel(
+                user_id=user.id,
+                plan_id=p_basic.id if p_basic else 1,
+                status="active",
+            )
+        )
+        db.commit()
 
     chat_first = client.post(
         "/v1/chat/messages",

@@ -160,20 +160,6 @@ def _phase_2() -> int:
             f"phase2 old access token rejected: {subscription.status_code} {subscription.text}"
         )
 
-    checkout = client.post(
-        "/v1/billing/checkout",
-        headers={"Authorization": f"Bearer {old_access_token}"},
-        json={
-            "plan_code": "basic-entry",
-            "payment_method_token": "pm_card_ok",
-            "idempotency_key": f"rotation-restart-checkout-{run_id}",
-        },
-    )
-    if checkout.status_code != 200:
-        raise SystemExit(
-            f"phase2 billing checkout rejected: {checkout.status_code} {checkout.text}"
-        )
-
     refresh = client.post("/v1/auth/refresh", json={"refresh_token": old_refresh_token})
     if refresh.status_code != 200:
         raise SystemExit(f"phase2 old refresh token rejected: {refresh.status_code} {refresh.text}")

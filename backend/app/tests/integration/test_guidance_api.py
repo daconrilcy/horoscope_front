@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 
 from app.infra.db.base import Base
 from app.infra.db.models.billing import (
@@ -8,6 +8,7 @@ from app.infra.db.models.billing import (
     UserDailyQuotaUsageModel,
     UserSubscriptionModel,
 )
+from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
@@ -38,6 +39,7 @@ from app.services.ai_engine_adapter import (
     set_test_guidance_generator,
 )
 from app.services.auth_service import AuthService
+from app.services.billing_service import BillingService
 from app.services.guidance_service import GuidanceServiceError
 
 client = TestClient(app)
@@ -76,9 +78,9 @@ def _cleanup_tables() -> None:
         db.add(feature)
         db.flush()
 
-        # Seed basic-entry plan
+        # Seed basic plan
         p_basic = PlanCatalogModel(
-            plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C
+            plan_code="basic", plan_name="Basic", audience=Audience.B2C
         )
         db.add(p_basic)
         db.flush()
@@ -136,18 +138,47 @@ def _seed_birth_profile(access_token: str) -> None:
     assert response.status_code == 200
 
 
-def _activate_entry_plan(access_token: str, idempotency_key: str) -> None:
-    checkout = client.post(
-        "/v1/billing/checkout",
-        headers={"Authorization": f"Bearer {access_token}"},
-        json={
-            "plan_code": "basic-entry",
-            "payment_method_token": "pm_card_ok",
-            "idempotency_key": idempotency_key,
-        },
-    )
-    assert checkout.status_code == 200
+def _set_active_subscription(access_token: str, plan_code: str) -> None:
+    # Resolve user_id from token
+    # (In this test environment, we can just get the user from DB)
+    with SessionLocal() as db:
+        # 0. Ensure plans exist
+        BillingService.ensure_default_plans(db)
 
+        user = db.query(UserModel).order_by(UserModel.id.desc()).first()
+        if not user:
+            return
+
+        # 1. Ensure StripeBillingProfileModel exists and is active
+        profile = db.query(StripeBillingProfileModel).filter_by(user_id=user.id).first()
+        if not profile:
+            profile = StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id=f"cus_{user.id}",
+                stripe_subscription_id=f"sub_{user.id}",
+                subscription_status="active",
+                entitlement_plan=plan_code,
+            )
+            db.add(profile)
+        else:
+            profile.entitlement_plan = plan_code
+            profile.subscription_status = "active"
+
+        # 2. Also ensure UserSubscriptionModel exists
+        plan = db.scalar(select(BillingPlanModel).where(BillingPlanModel.code == plan_code))
+        if plan:
+            sub = db.query(UserSubscriptionModel).filter_by(user_id=user.id).first()
+            if not sub:
+                sub = UserSubscriptionModel(
+                    user_id=user.id,
+                    plan_id=plan.id,
+                    status="active",
+                )
+                db.add(sub)
+            else:
+                sub.plan_id = plan.id
+                sub.status = "active"
+        db.commit()
 
 def test_guidance_requires_token() -> None:
     _cleanup_tables()
@@ -258,7 +289,7 @@ def test_guidance_accepts_selected_conversation_id() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
     _seed_birth_profile(access_token)
-    _activate_entry_plan(access_token, "guidance-chat-context-1")
+    _set_active_subscription(access_token, "basic")
     created = client.post(
         "/v1/chat/messages",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -280,7 +311,7 @@ def test_guidance_rejects_foreign_or_unknown_conversation_id() -> None:
     _cleanup_tables()
     first_access_token = _register_and_get_access_token()
     _seed_birth_profile(first_access_token)
-    _activate_entry_plan(first_access_token, "guidance-chat-context-2")
+    _set_active_subscription(first_access_token, "basic")
     created = client.post(
         "/v1/chat/messages",
         headers={"Authorization": f"Bearer {first_access_token}"},
@@ -482,7 +513,7 @@ def test_contextual_guidance_accepts_selected_conversation_id() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
     _seed_birth_profile(access_token)
-    _activate_entry_plan(access_token, "guidance-chat-context-3")
+    _set_active_subscription(access_token, "basic")
     created = client.post(
         "/v1/chat/messages",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -508,7 +539,7 @@ def test_contextual_guidance_rejects_foreign_or_unknown_conversation_id() -> Non
     _cleanup_tables()
     first_access_token = _register_and_get_access_token()
     _seed_birth_profile(first_access_token)
-    _activate_entry_plan(first_access_token, "guidance-chat-context-4")
+    _set_active_subscription(first_access_token, "basic")
     created = client.post(
         "/v1/chat/messages",
         headers={"Authorization": f"Bearer {first_access_token}"},

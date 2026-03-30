@@ -17,6 +17,7 @@ from app.infra.db.models.billing import (
     UserDailyQuotaUsageModel,
     UserSubscriptionModel,
 )
+from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
@@ -101,9 +102,9 @@ def _cleanup_tables() -> None:
             features[feature_code] = f
         db.flush()
 
-        # Seed basic-entry plan
+        # Seed basic plan
         p_basic = PlanCatalogModel(
-            plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C
+            plan_code="basic", plan_name="Basic", audience=Audience.B2C
         )
         db.add(p_basic)
         db.flush()
@@ -294,16 +295,32 @@ def test_load_smoke_critical_flows() -> None:
     access_token = register.json()["data"]["tokens"]["access_token"]
     bearer_headers = {"Authorization": f"Bearer {access_token}"}
 
-    checkout = client.post(
-        "/v1/billing/checkout",
-        headers=bearer_headers,
-        json={
-            "plan_code": "basic-entry",
-            "payment_method_token": "pm_card_ok",
-            "idempotency_key": "load-smoke-checkout-1",
-        },
-    )
-    assert checkout.status_code == 200
+    # Inject active subscription directly
+    with SessionLocal() as db:
+        from app.services.billing_service import BillingService
+        BillingService.ensure_default_plans(db)
+        
+        user = db.query(UserModel).filter_by(email="load-smoke-user@example.com").one()
+        # 1. Stripe profile
+        db.add(
+            StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id=f"cus_{user.id}",
+                stripe_subscription_id=f"sub_{user.id}",
+                subscription_status="active",
+                entitlement_plan="basic",
+            )
+        )
+        # 2. Legacy sub record
+        p_basic = db.scalar(select(BillingPlanModel).where(BillingPlanModel.code == "basic"))
+        db.add(
+            UserSubscriptionModel(
+                user_id=user.id,
+                plan_id=p_basic.id if p_basic else 1,
+                status="active",
+            )
+        )
+        db.commit()
 
     privacy_export = client.post("/v1/privacy/export", headers=bearer_headers)
     assert privacy_export.status_code == 200

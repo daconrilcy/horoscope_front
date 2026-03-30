@@ -12,6 +12,7 @@ from app.infra.db.models.billing import (
     UserDailyQuotaUsageModel,
     UserSubscriptionModel,
 )
+from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
@@ -94,9 +95,9 @@ def _cleanup_tables() -> None:
         db.add(feature)
         db.flush()
 
-        # Seed basic-entry plan
+        # Seed basic plan
         p_basic = PlanCatalogModel(
-            plan_code="basic-entry", plan_name="Basic", audience=Audience.B2C
+            plan_code="basic", plan_name="Basic", audience=Audience.B2C
         )
         db.add(p_basic)
         db.flush()
@@ -121,9 +122,9 @@ def _cleanup_tables() -> None:
             )
         )
 
-        # Seed premium-unlimited plan
+        # Seed premium plan
         p_premium = PlanCatalogModel(
-            plan_code="premium-unlimited", plan_name="Premium", audience=Audience.B2C
+            plan_code="premium", plan_name="Premium", audience=Audience.B2C
         )
         db.add(p_premium)
         db.flush()
@@ -173,20 +174,51 @@ def _register_and_get_access_token() -> str:
     return register.json()["data"]["tokens"]["access_token"]
 
 
+def _set_active_subscription(user_id: int, plan_code: str) -> None:
+    with SessionLocal() as db:
+        # 0. Ensure plans exist
+        BillingService.ensure_default_plans(db)
+
+        # 1. Ensure StripeBillingProfileModel exists and is active
+        profile = db.query(StripeBillingProfileModel).filter_by(user_id=user_id).first()
+        if not profile:
+            profile = StripeBillingProfileModel(
+                user_id=user_id,
+                stripe_customer_id=f"cus_{user_id}",
+                stripe_subscription_id=f"sub_{user_id}",
+                subscription_status="active",
+                entitlement_plan=plan_code,
+            )
+            db.add(profile)
+        else:
+            profile.entitlement_plan = plan_code
+            profile.subscription_status = "active"
+
+        # 2. Also ensure UserSubscriptionModel exists
+        plan = db.scalar(select(BillingPlanModel).where(BillingPlanModel.code == plan_code))
+        if plan:
+            sub = db.query(UserSubscriptionModel).filter_by(user_id=user_id).first()
+            if not sub:
+                sub = UserSubscriptionModel(
+                    user_id=user_id,
+                    plan_id=plan.id,
+                    status="active",
+                    started_at=datetime.now(timezone.utc),
+                )
+                db.add(sub)
+            else:
+                sub.plan_id = plan.id
+                sub.status = "active"
+        db.commit()
+
+
 def _activate_entry_plan(access_token: str, idempotency_key: str) -> None:
-    checkout = client.post(
-        "/v1/billing/checkout",
-        headers={"Authorization": f"Bearer {access_token}"},
-        json={
-            "plan_code": "basic-entry",
-            "payment_method_token": "pm_card_ok",
-            "idempotency_key": idempotency_key,
-        },
-    )
-    assert checkout.status_code == 200
+    user_id = _get_chat_api_user_id()
+    _set_active_subscription(user_id, "basic")
+
     # Seed canonical binding so ChatEntitlementGate works
     _seed_canonical_chat_binding(
-        plan_code="basic-entry",
+        plan_code="basic",
         access_mode=AccessMode.QUOTA,
         is_enabled=True,
         quotas=[("daily", 5)],
@@ -383,16 +415,8 @@ def test_chat_enforcement_uses_updated_limit_after_plan_change() -> None:
     headers = {"Authorization": f"Bearer {access_token}"}
     _activate_entry_plan(access_token, "chat-checkout-plan-change-1")
 
-    plan_change = client.post(
-        "/v1/billing/plan-change",
-        headers=headers,
-        json={
-            "target_plan_code": "premium-unlimited",
-            "idempotency_key": "chat-plan-change-1",
-        },
-    )
-    assert plan_change.status_code == 200
-    assert plan_change.json()["data"]["subscription"]["plan"]["code"] == "premium-unlimited"
+    user_id = _get_chat_api_user_id()
+    _set_active_subscription(user_id, "premium")
 
     for attempt in range(6):
         response = client.post(
@@ -916,7 +940,7 @@ def test_send_chat_message_disabled_canonical_binding_returns_disabled_by_plan()
     access_token = _register_and_get_access_token()
     _activate_entry_plan(access_token, "chat-checkout-disabled-binding-1")
     _seed_canonical_chat_binding(
-        plan_code="basic-entry",
+        plan_code="basic",
         access_mode=AccessMode.DISABLED,
         is_enabled=True,
     )
@@ -938,7 +962,7 @@ def test_send_chat_message_rolls_back_partial_canonical_consumption() -> None:
     access_token = _register_and_get_access_token()
     _activate_entry_plan(access_token, "chat-checkout-rollback-1")
     _seed_canonical_chat_binding(
-        plan_code="basic-entry",
+        plan_code="basic",
         access_mode=AccessMode.QUOTA,
         is_enabled=True,
         quotas=[("daily", 5), ("burst", 2)],
