@@ -146,6 +146,9 @@ export interface AdminTranslation {
       errorRetry: (msg: string) => string
       errorChange: (msg: string) => string
       failedReason: (msg: string) => string
+      openPortal: string
+      openCheckout: string
+      errorPortal: (msg: string) => string
     }
     privacy: {
       title: string
@@ -372,6 +375,9 @@ export const adminTranslations = {
         errorRetry: (msg) => `Erreur retry paiement: ${msg}`,
         errorChange: (msg) => `Erreur changement de plan: ${msg}`,
         failedReason: (msg) => `Motif échec paiement: ${msg}`,
+        openPortal: "Ouvrir le portail Stripe",
+        openCheckout: "Créer session checkout",
+        errorPortal: (msg) => `Erreur portail Stripe: ${msg}`,
       },
       privacy: {
         title: "Confidentialité et données",
@@ -526,6 +532,9 @@ export const adminTranslations = {
         errorRetry: (msg) => `Payment retry error: ${msg}`,
         errorChange: (msg) => `Plan change error: ${msg}`,
         failedReason: (msg) => `Payment failure reason: ${msg}`,
+        openPortal: "Open Stripe portal",
+        openCheckout: "Create checkout session",
+        errorPortal: (msg) => `Stripe portal error: ${msg}`,
       },
       privacy: {
         title: "Privacy and Data",
@@ -680,6 +689,9 @@ export const adminTranslations = {
         errorRetry: (msg) => `Error de reintento de pago: ${msg}`,
         errorChange: (msg) => `Error de cambio de plan: ${msg}`,
         failedReason: (msg) => `Motivo del fallo de pago: ${msg}`,
+        openPortal: "Abrir el portal de Stripe",
+        openCheckout: "Crear sesión de checkout",
+        errorPortal: (msg) => `Error del portal Stripe: ${msg}`,
       },
       privacy: {
         title: "Privacidad et Datos",

@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react"
-import { useBillingSubscription, useChangePlan, useCheckoutEntryPlan } from "@api/billing"
-import { useQueryClient } from "@tanstack/react-query"
+import {
+  useBillingSubscription,
+  useStripeCheckoutSession,
+  useStripePortalSession,
+  useStripePortalSubscriptionUpdateSession,
+  toStripePlanCode,
+  fromStripePlanCode,
+  BillingApiError,
+} from "@api/billing"
 import { detectLang } from "@i18n/astrology"
 import { settingsTranslations } from "@i18n/settings"
 import { Check, CreditCard } from "lucide-react"
@@ -17,51 +24,98 @@ export function SubscriptionSettings() {
   const t = settingsTranslations.subscription[lang]
   const { data: subscription, isLoading } = useBillingSubscription()
 
-  const currentPlanCode = subscription?.plan?.code || null
+  // Fix HIGH-1 : l'API renvoie les codes canoniques Stripe ("basic", "premium").
+  // On les normalise vers les codes UI legacy pour les comparaisons et l'affichage.
+  const currentUIPlanCode = fromStripePlanCode(subscription?.plan?.code)
+
+  // Fix HIGH-2 : utiliser subscription_status (champ Stripe brut) plutôt que
+  // status (simplifié "inactive" même pour past_due) pour le routage checkout vs portal.
+  const stripeSubscriptionStatus = subscription?.subscription_status ?? null
+
   const [selectedPlanCode, setSelectedPlanCode] = useState<string | null | undefined>(undefined)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isLoading && selectedPlanCode === undefined) {
-      setSelectedPlanCode(currentPlanCode)
+      setSelectedPlanCode(currentUIPlanCode)
     }
-  }, [isLoading, currentPlanCode, selectedPlanCode])
+  }, [isLoading, currentUIPlanCode, selectedPlanCode])
 
-  const displaySelected = selectedPlanCode === undefined ? currentPlanCode : selectedPlanCode
+  const displaySelected = selectedPlanCode === undefined ? currentUIPlanCode : selectedPlanCode
 
-  const changePlan = useChangePlan()
-  const checkoutPlan = useCheckoutEntryPlan()
-  const qc = useQueryClient()
+  const checkoutSession = useStripeCheckoutSession()
+  const portalSession = useStripePortalSession()
+  const portalUpdateSession = useStripePortalSubscriptionUpdateSession()
 
   const handleValidate = () => {
-    if (selectedPlanCode === currentPlanCode) return
-    
-    if (!selectedPlanCode) {
-      alert(t.cancelSoon)
-      return
+    if (selectedPlanCode === currentUIPlanCode) return
+    if (!selectedPlanCode) return
+
+    setErrorMessage(null)
+
+    const onError = (err: unknown) => {
+      if (err instanceof BillingApiError) {
+        if (err.code === "stripe_billing_profile_not_found") {
+          setErrorMessage("Aucun profil de paiement Stripe trouvé. Veuillez contacter le support.")
+        } else if (err.code === "stripe_subscription_not_found") {
+          setErrorMessage("Abonnement Stripe introuvable. Veuillez réessayer depuis la page de souscription.")
+        } else {
+          setErrorMessage(err.message || "Erreur lors de l'opération")
+        }
+      } else {
+        setErrorMessage("Erreur lors de l'opération")
+      }
     }
 
-    const onSuccess = () => {
-      void qc.invalidateQueries({ queryKey: ["billing-subscription"] })
-      void qc.invalidateQueries({ queryKey: ["chat-entitlement-usage"] })
+    // Fix HIGH-2 : routage basé sur subscription_status (champ Stripe brut).
+    // - Pas de subscription Stripe (null) → Checkout Session (nouvel abonné)
+    // - "active" → Portal Subscription Update Session (changement de plan)
+    // - "past_due", "trialing", autre → Customer Portal générique (régulariser le paiement)
+    if (stripeSubscriptionStatus === null) {
+      // Pas de subscription Stripe existante
+      if (checkoutSession.isPending) return
+      checkoutSession.mutate(toStripePlanCode(selectedPlanCode), {
+        onSuccess: (data) => {
+          window.location.href = data.checkout_url
+        },
+        onError,
+      })
+    } else if (stripeSubscriptionStatus === "active") {
+      // Abonnement actif → changement de plan via portal update
+      if (portalUpdateSession.isPending) return
+      portalUpdateSession.mutate(undefined, {
+        onSuccess: (data) => {
+          window.location.href = data.url
+        },
+        onError: (err) => {
+          if (err instanceof BillingApiError && err.code === "stripe_subscription_not_found") {
+            // Fallback vers le portal générique
+            portalSession.mutate(undefined, {
+              onSuccess: (portalData) => {
+                window.location.href = portalData.url
+              },
+              onError,
+            })
+          } else {
+            onError(err)
+          }
+        },
+      })
+    } else {
+      // past_due, trialing, etc. → portal générique pour régulariser
+      if (portalSession.isPending) return
+      portalSession.mutate(undefined, {
+        onSuccess: (data) => {
+          window.location.href = data.url
+        },
+        onError,
+      })
     }
-    const onError = (err: any) => {
-      alert(err?.message || "Erreur lors de l'opération")
-    }
-
-    // Si l'utilisateur n'a pas de plan actif, il faut passer par le checkout
-    if (!currentPlanCode || subscription?.status !== "active") {
-      if (checkoutPlan.isPending) return
-      checkoutPlan.mutate({ plan_code: selectedPlanCode }, { onSuccess, onError })
-      return
-    }
-
-    // Sinon, c'est un changement de plan existant
-    if (changePlan.isPending) return
-    changePlan.mutate({ target_plan_code: selectedPlanCode }, { onSuccess, onError })
   }
 
-  const isAnyPending = changePlan.isPending || checkoutPlan.isPending
-  const hasChanges = displaySelected !== currentPlanCode
+  const isAnyPending = checkoutSession.isPending || portalSession.isPending || portalUpdateSession.isPending
+  // Fix HIGH-1 : comparer displaySelected contre les codes UI (pas les codes canoniques Stripe)
+  const hasChanges = displaySelected !== currentUIPlanCode
 
   return (
     <div className="subscription-settings">
@@ -79,7 +133,8 @@ export function SubscriptionSettings() {
             </h3>
             <div className="subscription-plans-grid">
               {PLANS.map((plan) => {
-                const isCurrent = currentPlanCode === plan.code
+                // Fix HIGH-1 : comparaison entre codes UI uniquement
+                const isCurrent = currentUIPlanCode === plan.code
                 const isSelected = displaySelected === plan.code
                 return (
                   <div
@@ -119,6 +174,10 @@ export function SubscriptionSettings() {
               })}
             </div>
 
+            {errorMessage && (
+              <p className="settings-save-feedback settings-save-feedback--error">{errorMessage}</p>
+            )}
+
             <div className="subscription-actions">
               {hasChanges && displaySelected === null && (
                 <span className="settings-text-muted">{t.cancelSoon}</span>
@@ -141,10 +200,10 @@ export function SubscriptionSettings() {
                 <div>
                   <h3 className="subscription-credits-section__title">{t.buyCredits}</h3>
                   <p className="subscription-credits-section__desc">{t.buyCreditsDesc}</p>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="settings-tab subscription-credits-section__button"
-                    disabled 
+                    disabled
                     title={t.soon}
                   >
                     {t.buyCredits} - {t.soon}

@@ -1,135 +1,118 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { BillingPanel } from "../components/BillingPanel"
 
 const mockUseBillingSubscription = vi.fn()
-const mockUseCheckoutEntryPlan = vi.fn()
-const mockUseRetryPayment = vi.fn()
-const mockUseChangePlan = vi.fn()
+const mockUseStripeCheckoutSession = vi.fn()
+const mockUseStripePortalSession = vi.fn()
 const mockUseChatEntitlementUsage = vi.fn()
 
 vi.mock("@api", () => ({
-  BillingApiError: class extends Error {},
+  BillingApiError: class extends Error {
+    code: string
+    status: number
+    details: Record<string, string>
+    constructor(code: string, message: string, status: number, details: Record<string, string> = {}) {
+      super(message)
+      this.code = code
+      this.status = status
+      this.details = details
+    }
+  },
   useBillingSubscription: () => mockUseBillingSubscription(),
-  useCheckoutEntryPlan: () => mockUseCheckoutEntryPlan(),
-  useRetryPayment: () => mockUseRetryPayment(),
-  useChangePlan: () => mockUseChangePlan(),
+  useStripeCheckoutSession: () => mockUseStripeCheckoutSession(),
+  useStripePortalSession: () => mockUseStripePortalSession(),
   useChatEntitlementUsage: () => mockUseChatEntitlementUsage(),
 }))
 
 afterEach(() => {
   cleanup()
   mockUseBillingSubscription.mockReset()
-  mockUseCheckoutEntryPlan.mockReset()
-  mockUseRetryPayment.mockReset()
-  mockUseChangePlan.mockReset()
+  mockUseStripeCheckoutSession.mockReset()
+  mockUseStripePortalSession.mockReset()
   mockUseChatEntitlementUsage.mockReset()
   vi.restoreAllMocks()
 })
 
 describe("BillingPanel", () => {
-  it("renders subscription status and triggers checkout", async () => {
-    const refetch = vi.fn()
-    const mutateAsync = vi.fn()
+  it("shows checkout button when subscription is inactive and triggers checkout session", () => {
+    const mutate = vi.fn()
 
     mockUseBillingSubscription.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: {
-        status: "inactive",
-        plan: null,
-        failure_reason: null,
-      },
-      refetch,
+      data: { status: "inactive", plan: null, failure_reason: null },
     })
-    mockUseCheckoutEntryPlan.mockReturnValue({
+    mockUseStripeCheckoutSession.mockReturnValue({
       isPending: false,
       data: null,
       error: null,
-      mutate: mutateAsync,
+      mutate,
     })
-    mockUseRetryPayment.mockReturnValue({
+    mockUseStripePortalSession.mockReturnValue({
       isPending: false,
       data: null,
       error: null,
       mutate: vi.fn(),
     })
-    mockUseChangePlan.mockReturnValue({
-      isPending: false,
-      data: null,
-      error: null,
-      mutate: vi.fn(),
-    })
-    mockUseChatEntitlementUsage.mockReturnValue({
-      refetch: vi.fn(),
-    })
+    mockUseChatEntitlementUsage.mockReturnValue({ data: null })
 
     render(<BillingPanel />)
-    
-    const subscribeButton = screen.getByRole("button", { name: /Subscribe Basic/i })
-    expect(subscribeButton).toBeInTheDocument()
 
-    fireEvent.click(subscribeButton)
+    const checkoutButton = screen.getByRole("button", { name: /créer session checkout/i })
+    expect(checkoutButton).toBeInTheDocument()
 
-    expect(mutateAsync).toHaveBeenCalledWith({
-      plan_code: "basic-entry",
-      payment_method_token: "pm_card_ok",
-    })
+    fireEvent.click(checkoutButton)
+
+    expect(mutate).toHaveBeenCalledWith("basic", expect.objectContaining({ onSuccess: expect.any(Function) }))
   })
 
-  it("shows failure reason and allows retry", async () => {
+  it("shows portal button and triggers portal session", () => {
+    const mutate = vi.fn()
+
     mockUseBillingSubscription.mockReturnValue({
       isLoading: false,
       isError: false,
-      data: {
-        status: "inactive",
-        plan: null,
-        failure_reason: null,
-      },
+      data: { status: "active", plan: { code: "basic" }, failure_reason: null },
     })
-    mockUseCheckoutEntryPlan.mockReturnValue({
-      isPending: false,
-      data: {
-        payment_status: "failed",
-        payment_attempt_id: 123,
-        idempotency_key: "billing-failed-1",
-        subscription: {
-          status: "inactive",
-          plan: null,
-          failure_reason: "card declined",
-          updated_at: null,
-        },
-      },
-      error: null,
-      mutate: vi.fn(),
-    })
-    const mutateRetry = vi.fn()
-    mockUseRetryPayment.mockReturnValue({
-      isPending: false,
-      data: null,
-      error: null,
-      mutate: mutateRetry,
-    })
-    mockUseChangePlan.mockReturnValue({
+    mockUseStripeCheckoutSession.mockReturnValue({
       isPending: false,
       data: null,
       error: null,
       mutate: vi.fn(),
     })
-    mockUseChatEntitlementUsage.mockReturnValue({
-      refetch: vi.fn(),
+    mockUseStripePortalSession.mockReturnValue({
+      isPending: false,
+      data: null,
+      error: null,
+      mutate,
     })
+    mockUseChatEntitlementUsage.mockReturnValue({ data: null })
 
     render(<BillingPanel />)
-    
-    expect(screen.getByText(/Motif échec paiement: card declined/i)).toBeInTheDocument()
-    const retryButton = screen.getByRole("button", { name: /Retry Payment/i })
-    
-    fireEvent.click(retryButton)
-    expect(mutateRetry).toHaveBeenCalledWith({
-      plan_code: "basic-entry",
-      payment_method_token: "pm_card_ok",
+
+    const portalButton = screen.getByRole("button", { name: /ouvrir le portail stripe/i })
+    expect(portalButton).toBeInTheDocument()
+
+    fireEvent.click(portalButton)
+
+    expect(mutate).toHaveBeenCalledWith(undefined, expect.objectContaining({ onSuccess: expect.any(Function) }))
+  })
+
+  it("does not show paymentToken selector", () => {
+    mockUseBillingSubscription.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { status: "inactive", plan: null, failure_reason: null },
     })
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, data: null, error: null, mutate: vi.fn() })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, data: null, error: null, mutate: vi.fn() })
+    mockUseChatEntitlementUsage.mockReturnValue({ data: null })
+
+    render(<BillingPanel />)
+
+    expect(screen.queryByLabelText(/simulation paiement/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/pm_card_ok/i)).not.toBeInTheDocument()
   })
 })
