@@ -17,13 +17,13 @@ def test_record_events_emit_metrics() -> None:
     PricingExperimentService.record_offer_exposure(
         user_id=101,
         user_role="user",
-        plan_code="basic-entry",
+        plan_code="basic",
         request_id="rid-expo",
     )
     PricingExperimentService.record_offer_conversion(
         user_id=101,
         user_role="user",
-        plan_code="basic-entry",
+        plan_code="basic",
         conversion_type="checkout",
         conversion_status="success",
         request_id="rid-conv",
@@ -31,14 +31,14 @@ def test_record_events_emit_metrics() -> None:
     PricingExperimentService.record_offer_revenue(
         user_id=101,
         user_role="user",
-        plan_code="basic-entry",
+        plan_code="basic",
         revenue_cents=500,
         request_id="rid-rev",
     )
     PricingExperimentService.record_retention_usage(
         user_id=101,
         user_role="user",
-        plan_code="basic-entry",
+        plan_code="basic",
         retention_event="quota_status_view",
         request_id="rid-ret",
     )

@@ -437,4 +437,4 @@ async def test_webhook_invalidates_billing_cache_for_next_read():
     assert after.status == "active"
     assert after.subscription_status == "active"
     assert after.plan is not None
-    assert after.plan.code == "basic-entry"
+    assert after.plan.code == "basic"

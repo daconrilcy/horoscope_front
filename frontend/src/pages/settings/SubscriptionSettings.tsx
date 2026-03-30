@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
   useBillingSubscription,
+  useBillingPlans,
   useStripeCheckoutSession,
   useStripePortalSession,
   useStripePortalSubscriptionUpdateSession,
-  toStripePlanCode,
-  fromStripePlanCode,
   BillingApiError,
 } from "@api/billing"
 import { detectLang } from "@i18n/astrology"
@@ -13,23 +12,49 @@ import { settingsTranslations } from "@i18n/settings"
 import { Check, CreditCard } from "lucide-react"
 import "./Settings.css"
 
-const PLANS = [
-  { code: null,                label: "Gratuit",        limit: "5 msg/jour",   price: "0 €" },
-  { code: "basic-entry",       label: "Basic",          limit: "50 msg/jour",  price: "9 €/mois" },
-  { code: "premium-unlimited", label: "Premium",        limit: "1000 msg/jour",price: "29 €/mois" },
-]
-
 export function SubscriptionSettings() {
   const lang = detectLang()
   const t = settingsTranslations.subscription[lang]
-  const { data: subscription, isLoading } = useBillingSubscription()
+  const { data: subscription, isLoading: subLoading } = useBillingSubscription()
+  const { data: catalog, isLoading: plansLoading } = useBillingPlans()
 
-  // Fix HIGH-1 : l'API renvoie les codes canoniques Stripe ("basic", "premium").
-  // On les normalise vers les codes UI legacy pour les comparaisons et l'affichage.
-  const currentUIPlanCode = fromStripePlanCode(subscription?.plan?.code)
+  const isLoading = subLoading || plansLoading
 
-  // Fix HIGH-2 : utiliser subscription_status (champ Stripe brut) plutôt que
-  // status (simplifié "inactive" même pour past_due) pour le routage checkout vs portal.
+  const PLANS = useMemo(() => {
+    const formatPrice = (priceCents: number, currency: string) => {
+      return new Intl.NumberFormat(lang === "fr" ? "fr-FR" : "en-US", {
+        style: "currency",
+        currency: currency,
+        maximumFractionDigits: 0,
+      }).format(priceCents / 100) + (lang === "fr" ? "/mois" : "/month")
+    }
+
+    const basicPlan = catalog?.find(p => p.code === "basic")
+    const premiumPlan = catalog?.find(p => p.code === "premium")
+
+    return [
+      { 
+        code: null, 
+        label: t.planFree || "Gratuit", 
+        limit: "5 msg/jour", 
+        price: "0 €" 
+      },
+      { 
+        code: "basic", 
+        label: "Basic", 
+        limit: "50 msg/jour", 
+        price: basicPlan ? formatPrice(basicPlan.monthly_price_cents, basicPlan.currency) : "9 €/mois" 
+      },
+      { 
+        code: "premium", 
+        label: "Premium", 
+        limit: "1000 msg/jour", 
+        price: premiumPlan ? formatPrice(premiumPlan.monthly_price_cents, premiumPlan.currency) : "29 €/mois" 
+      },
+    ]
+  }, [catalog, lang, t])
+
+  const currentPlanCode = subscription?.plan?.code ?? null
   const stripeSubscriptionStatus = subscription?.subscription_status ?? null
 
   const [selectedPlanCode, setSelectedPlanCode] = useState<string | null | undefined>(undefined)
@@ -37,18 +62,18 @@ export function SubscriptionSettings() {
 
   useEffect(() => {
     if (!isLoading && selectedPlanCode === undefined) {
-      setSelectedPlanCode(currentUIPlanCode)
+      setSelectedPlanCode(currentPlanCode)
     }
-  }, [isLoading, currentUIPlanCode, selectedPlanCode])
+  }, [isLoading, currentPlanCode, selectedPlanCode])
 
-  const displaySelected = selectedPlanCode === undefined ? currentUIPlanCode : selectedPlanCode
+  const displaySelected = selectedPlanCode === undefined ? currentPlanCode : selectedPlanCode
 
   const checkoutSession = useStripeCheckoutSession()
   const portalSession = useStripePortalSession()
   const portalUpdateSession = useStripePortalSubscriptionUpdateSession()
 
   const handleValidate = () => {
-    if (selectedPlanCode === currentUIPlanCode) return
+    if (selectedPlanCode === currentPlanCode) return
     if (!selectedPlanCode) return
 
     setErrorMessage(null)
@@ -67,21 +92,17 @@ export function SubscriptionSettings() {
       }
     }
 
-    // Fix HIGH-2 : routage basé sur subscription_status (champ Stripe brut).
-    // - Pas de subscription Stripe (null) → Checkout Session (nouvel abonné)
-    // - "active" → Portal Subscription Update Session (changement de plan)
-    // - "past_due", "trialing", autre → Customer Portal générique (régulariser le paiement)
     if (stripeSubscriptionStatus === null) {
-      // Pas de subscription Stripe existante
       if (checkoutSession.isPending) return
-      checkoutSession.mutate(toStripePlanCode(selectedPlanCode), {
+      // Use direct canonical code
+      const planToSub = selectedPlanCode as "basic" | "premium"
+      checkoutSession.mutate(planToSub, {
         onSuccess: (data) => {
           window.location.href = data.checkout_url
         },
         onError,
       })
     } else if (stripeSubscriptionStatus === "active") {
-      // Abonnement actif → changement de plan via portal update
       if (portalUpdateSession.isPending) return
       portalUpdateSession.mutate(undefined, {
         onSuccess: (data) => {
@@ -89,7 +110,6 @@ export function SubscriptionSettings() {
         },
         onError: (err) => {
           if (err instanceof BillingApiError && err.code === "stripe_subscription_not_found") {
-            // Fallback vers le portal générique
             portalSession.mutate(undefined, {
               onSuccess: (portalData) => {
                 window.location.href = portalData.url
@@ -102,7 +122,6 @@ export function SubscriptionSettings() {
         },
       })
     } else {
-      // past_due, trialing, etc. → portal générique pour régulariser
       if (portalSession.isPending) return
       portalSession.mutate(undefined, {
         onSuccess: (data) => {
@@ -114,8 +133,7 @@ export function SubscriptionSettings() {
   }
 
   const isAnyPending = checkoutSession.isPending || portalSession.isPending || portalUpdateSession.isPending
-  // Fix HIGH-1 : comparer displaySelected contre les codes UI (pas les codes canoniques Stripe)
-  const hasChanges = displaySelected !== currentUIPlanCode
+  const hasChanges = displaySelected !== currentPlanCode
 
   return (
     <div className="subscription-settings">
@@ -133,8 +151,7 @@ export function SubscriptionSettings() {
             </h3>
             <div className="subscription-plans-grid">
               {PLANS.map((plan) => {
-                // Fix HIGH-1 : comparaison entre codes UI uniquement
-                const isCurrent = currentUIPlanCode === plan.code
+                const isCurrent = currentPlanCode === plan.code
                 const isSelected = displaySelected === plan.code
                 return (
                   <div

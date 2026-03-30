@@ -122,6 +122,18 @@ async function fetchSubscriptionStatus(): Promise<BillingSubscriptionStatus> {
   return body.data
 }
 
+async function fetchBillingPlans(): Promise<BillingPlan[]> {
+  const response = await fetch(`${API_BASE_URL}/v1/billing/plans`, {
+    method: "GET",
+    headers: getAccessTokenAuthHeader(),
+  })
+  if (!response.ok) {
+    return parseError(response)
+  }
+  const body = (await response.json()) as { data: BillingPlan[] }
+  return body.data
+}
+
 async function fetchChatEntitlementUsage(): Promise<ChatEntitlementUsageStatus | null> {
   const response = await fetch(`${API_BASE_URL}/v1/entitlements/me`, {
     method: "GET",
@@ -144,6 +156,13 @@ export function useBillingSubscription() {
   })
 }
 
+export function useBillingPlans() {
+  return useQuery({
+    queryKey: ["billing-plans"],
+    queryFn: fetchBillingPlans,
+  })
+}
+
 export function useChatEntitlementUsage() {
   return useQuery({
     queryKey: ["chat-entitlement-usage"],
@@ -159,31 +178,6 @@ export function useChatEntitlementUsage() {
 
 export type StripeCheckoutSessionData = { checkout_url: string }
 export type StripePortalSessionData = { url: string }
-
-const UI_TO_STRIPE_PLAN: Record<string, "basic" | "premium"> = {
-  "basic-entry": "basic",
-  "premium-unlimited": "premium",
-}
-
-const STRIPE_TO_UI_PLAN: Record<string, string> = {
-  basic: "basic-entry",
-  premium: "premium-unlimited",
-}
-
-/** Mappe un code de plan UI legacy vers le code canonique Stripe. Lève une erreur si le code est inconnu. */
-export function toStripePlanCode(uiPlanCode: string): "basic" | "premium" {
-  const canonical = UI_TO_STRIPE_PLAN[uiPlanCode]
-  if (!canonical) {
-    throw new Error(`Code de plan UI inconnu : ${uiPlanCode}`)
-  }
-  return canonical
-}
-
-/** Mappe un code canonique Stripe vers le code de plan UI (pour l'affichage). Retourne null si absent. */
-export function fromStripePlanCode(canonicalCode: string | null | undefined): string | null {
-  if (!canonicalCode) return null
-  return STRIPE_TO_UI_PLAN[canonicalCode] ?? canonicalCode
-}
 
 async function postStripeCheckoutSession(plan: "basic" | "premium"): Promise<StripeCheckoutSessionData> {
   const response = await fetch(`${API_BASE_URL}/v1/billing/stripe-checkout-session`, {

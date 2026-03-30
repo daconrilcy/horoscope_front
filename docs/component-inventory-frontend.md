@@ -9,7 +9,6 @@
 - `AppShell.tsx`
 
 ## Product Feature Panels
-- `BillingPanel.tsx`
 - `PrivacyPanel.tsx`
 - `SupportOpsPanel.tsx`
 - `OpsMonitoringPanel.tsx`

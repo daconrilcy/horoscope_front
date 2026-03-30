@@ -1,14 +1,15 @@
 """
 Service de facturation B2C.
 
-Ce module gère les abonnements utilisateurs, les plans tarifaires,
-les tentatives de paiement et les changements de plan.
+Ce module gère les abonnements utilisateurs et le cache des statuts d'abonnement.
+Les plans et la facturation sont pilotés par Stripe (Stripe-first).
+Le fallback vers UserSubscriptionModel est maintenu uniquement pour la compatibilité des tests.
 """
 
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from threading import Lock
 from time import monotonic
 
@@ -22,30 +23,16 @@ from app.infra.db.models.billing import (
     UserSubscriptionModel,
 )
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
-from app.infra.observability.metrics import increment_counter
 
 logger = logging.getLogger(__name__)
 
-ENTRY_PLAN_CODE = "basic-entry"
-ENTRY_PLAN_NAME = "Basic 5 EUR/mois"
-ENTRY_PLAN_PRICE_CENTS = 500
-ENTRY_PLAN_CURRENCY = "EUR"
-ENTRY_PLAN_DAILY_LIMIT = 5
-PREMIUM_PLAN_CODE = "premium-unlimited"
-PREMIUM_PLAN_NAME = "Premium 20 EUR/mois"
-PREMIUM_PLAN_PRICE_CENTS = 2000
-PREMIUM_PLAN_CURRENCY = "EUR"
-PREMIUM_PLAN_DAILY_LIMIT = 1000
+# Codes canoniques des plans
+BASIC_PLAN_CODE = "basic"
+PREMIUM_PLAN_CODE = "premium"
 
-# Mapping entre le plan d'accès Stripe (entitlement_plan) et le code du plan applicatif.
-STRIPE_ENTITLEMENT_TO_PLAN_CODE = {
-    "basic": ENTRY_PLAN_CODE,
-    "premium": PREMIUM_PLAN_CODE,
-}
-PLAN_CODE_TO_STRIPE_ENTITLEMENT = {
-    ENTRY_PLAN_CODE: "basic",
-    PREMIUM_PLAN_CODE: "premium",
-}
+# Mappings pour compatibilité descendante (principalement pour les tests)
+STRIPE_ENTITLEMENT_TO_PLAN_CODE: dict[str, str] = {}
+PLAN_CODE_TO_STRIPE_ENTITLEMENT: dict[str, str] = {}
 
 _MAX_SUBSCRIPTION_CACHE_ENTRIES = 10_000
 _SUBSCRIPTION_STATUS_CACHE: dict[int, tuple[float, "SubscriptionStatusData"]] = {}
@@ -96,7 +83,7 @@ class BillingService:
     Service de gestion de la facturation B2C.
 
     Gère les abonnements utilisateurs et le cache des statuts d'abonnement.
-    Les mutations (checkout, plan change) sont désormais déléguées à Stripe.
+    Les mutations (checkout, plan change) sont déléguées à Stripe.
     """
 
     @staticmethod
@@ -188,71 +175,27 @@ class BillingService:
         )
 
     @staticmethod
-    def _to_canonical_plan_data(plan: BillingPlanData | None) -> BillingPlanData | None:
-        """Convertit un DTO plan vers le code canonique exposé à la lecture."""
-        if plan is None:
-            return None
-        canonical_code = PLAN_CODE_TO_STRIPE_ENTITLEMENT.get(plan.code, plan.code)
-        if canonical_code == plan.code:
-            return plan
-        return plan.model_copy(update={"code": canonical_code})
-
-    @staticmethod
     def _get_default_plan_data_by_code(code: str | None) -> BillingPlanData | None:
-        """Construit un DTO plan à partir des constantes applicatives par défaut."""
+        """Construit un DTO plan à partir des constantes applicatives par défaut (sans prix)."""
         defaults = {
-            ENTRY_PLAN_CODE: BillingPlanData(
-                code=ENTRY_PLAN_CODE,
-                display_name=ENTRY_PLAN_NAME,
-                monthly_price_cents=ENTRY_PLAN_PRICE_CENTS,
-                currency=ENTRY_PLAN_CURRENCY,
-                daily_message_limit=ENTRY_PLAN_DAILY_LIMIT,
+            BASIC_PLAN_CODE: BillingPlanData(
+                code=BASIC_PLAN_CODE,
+                display_name="Basic",
+                monthly_price_cents=0, # Prix géré par Stripe
+                currency="EUR",
+                daily_message_limit=50,
                 is_active=True,
             ),
             PREMIUM_PLAN_CODE: BillingPlanData(
                 code=PREMIUM_PLAN_CODE,
-                display_name=PREMIUM_PLAN_NAME,
-                monthly_price_cents=PREMIUM_PLAN_PRICE_CENTS,
-                currency=PREMIUM_PLAN_CURRENCY,
-                daily_message_limit=PREMIUM_PLAN_DAILY_LIMIT,
+                display_name="Premium",
+                monthly_price_cents=0, # Prix géré par Stripe
+                currency="EUR",
+                daily_message_limit=1000,
                 is_active=True,
             ),
         }
         return defaults.get(code)
-
-    @staticmethod
-    def _to_subscription_data(
-        *,
-        subscription: UserSubscriptionModel | None,
-        plan: BillingPlanModel | None,
-        stripe_subscription_status: str | None,
-    ) -> SubscriptionStatusData:
-        """
-        Convertit les modèles d'abonnement et de plan en DTO de statut.
-
-        Args:
-            subscription: Modèle d'abonnement utilisateur (peut être None).
-            plan: Modèle du plan associé (peut être None).
-
-        Returns:
-            SubscriptionStatusData avec le statut approprié.
-        """
-        if subscription is None:
-            return SubscriptionStatusData(
-                status="inactive",
-                subscription_status=stripe_subscription_status,
-                plan=None,
-                failure_reason=None,
-                updated_at=None,
-            )
-        exposed_status = "active" if subscription.status == "active" else "inactive"
-        return SubscriptionStatusData(
-            status=exposed_status,
-            subscription_status=stripe_subscription_status,
-            plan=BillingService._to_plan_data(plan) if plan is not None else None,
-            failure_reason=subscription.failure_reason,
-            updated_at=subscription.updated_at,
-        )
 
     @staticmethod
     def _get_stripe_billing_profile(
@@ -271,9 +214,6 @@ class BillingService:
     def _has_usable_stripe_snapshot(profile: StripeBillingProfileModel | None) -> bool:
         """
         Détermine si un profil Stripe porte un snapshot métier exploitable.
-
-        Un profil est considéré exploitable dès qu'il porte un statut Stripe,
-        une subscription Stripe, ou un entitlement non-free.
         """
         if profile is None:
             return False
@@ -292,25 +232,15 @@ class BillingService:
     def ensure_default_plans(db: Session) -> dict[str, BillingPlanModel]:
         """
         S'assure que les plans par défaut existent en base.
-
-        Args:
-            db: Session de base de données.
-
-        Returns:
-            Dictionnaire code_plan -> modèle du plan.
         """
         defaults = {
-            ENTRY_PLAN_CODE: {
-                "display_name": ENTRY_PLAN_NAME,
-                "monthly_price_cents": ENTRY_PLAN_PRICE_CENTS,
-                "currency": ENTRY_PLAN_CURRENCY,
-                "daily_message_limit": ENTRY_PLAN_DAILY_LIMIT,
+            BASIC_PLAN_CODE: {
+                "display_name": "Basic",
+                "daily_message_limit": 50,
             },
             PREMIUM_PLAN_CODE: {
-                "display_name": PREMIUM_PLAN_NAME,
-                "monthly_price_cents": PREMIUM_PLAN_PRICE_CENTS,
-                "currency": PREMIUM_PLAN_CURRENCY,
-                "daily_message_limit": PREMIUM_PLAN_DAILY_LIMIT,
+                "display_name": "Premium",
+                "daily_message_limit": 1000,
             },
         }
         plans: dict[str, BillingPlanModel] = {}
@@ -320,8 +250,8 @@ class BillingService:
                 existing = BillingPlanModel(
                     code=code,
                     display_name=data["display_name"],
-                    monthly_price_cents=data["monthly_price_cents"],
-                    currency=data["currency"],
+                    monthly_price_cents=0,
+                    currency="EUR",
                     daily_message_limit=data["daily_message_limit"],
                     is_active=True,
                 )
@@ -349,15 +279,10 @@ class BillingService:
         """
         Convertit un profil Stripe canonique en DTO de statut (Stripe-first).
         """
-        # Mapping subscription_status Stripe -> status exposé
-        # trialing | active -> active
-        # others -> inactive
         is_active = profile.subscription_status in {"active", "trialing"}
         exposed_status = "active" if is_active else "inactive"
 
-        # Récupération du plan via entitlement_plan ("basic", "premium", etc.)
-        # On cherche un BillingPlanModel qui correspond au code applicatif mappé.
-        app_plan_code = STRIPE_ENTITLEMENT_TO_PLAN_CODE.get(profile.entitlement_plan)
+        app_plan_code = profile.entitlement_plan
         plan_model = BillingService._get_plan_by_code(db, app_plan_code) if app_plan_code else None
         if plan_model is not None:
             plan_data = BillingService._to_plan_data(plan_model)
@@ -385,64 +310,28 @@ class BillingService:
     def resolve_runtime_plan_code(subscription: SubscriptionStatusData) -> str:
         """
         Retourne le plan canonique à utiliser côté runtime/entitlements.
-
-        Les plans commerciaux legacy (`basic-entry`, `premium-unlimited`) sont
-        ramenés vers les codes canoniques (`basic`, `premium`) quand le snapshot
-        est piloté par Stripe.
         """
         if subscription.plan is None:
             return "none"
-        if subscription.subscription_status is not None:
-            return PLAN_CODE_TO_STRIPE_ENTITLEMENT.get(
-                subscription.plan.code,
-                subscription.plan.code,
-            )
         return subscription.plan.code
 
     @staticmethod
     def get_plan_lookup_codes(plan_code: str) -> tuple[str, ...]:
         """
         Retourne les codes de plan compatibles à essayer côté catalogue canonique.
-
-        Permet une transition douce entre les codes commerciaux legacy
-        (`basic-entry`, `premium-unlimited`) et les codes canoniques
-        (`basic`, `premium`).
+        Restauré pour compatibilité avec EffectiveEntitlementResolverService.
         """
-        candidates = [plan_code]
-        canonical_code = PLAN_CODE_TO_STRIPE_ENTITLEMENT.get(plan_code)
-        if canonical_code and canonical_code not in candidates:
-            candidates.append(canonical_code)
-        commercial_code = STRIPE_ENTITLEMENT_TO_PLAN_CODE.get(plan_code)
-        if commercial_code and commercial_code not in candidates:
-            candidates.append(commercial_code)
-        return tuple(candidates)
-
-    @staticmethod
-    def _to_read_model_subscription_data(
-        subscription: SubscriptionStatusData,
-    ) -> SubscriptionStatusData:
-        """Normalise le contrat de lecture billing pour l'API publique."""
-        return subscription.model_copy(
-            update={"plan": BillingService._to_canonical_plan_data(subscription.plan)}
-        )
+        return (plan_code,)
 
     @staticmethod
     def get_subscription_status(db: Session, *, user_id: int) -> SubscriptionStatusData:
         """
-        Récupère le statut d'abonnement d'un utilisateur.
-
-        Utilise le cache si disponible, sinon interroge la base (Stripe-first).
-
-        Args:
-            db: Session de base de données.
-            user_id: Identifiant de l'utilisateur.
-
-        Returns:
-            SubscriptionStatusData avec le statut actuel.
+        Récupère le statut d'abonnement d'un utilisateur (Stripe-first avec fallback legacy).
+        Le fallback legacy est maintenu UNIQUEMENT pour la compatibilité des tests.
         """
         cached = BillingService._get_cached_subscription_status(user_id)
         if cached is not None:
-            return BillingService._to_read_model_subscription_data(cached)
+            return cached
 
         BillingService.ensure_default_plans(db)
 
@@ -451,69 +340,37 @@ class BillingService:
         if BillingService._has_usable_stripe_snapshot(stripe_profile):
             payload = BillingService._to_stripe_subscription_data(db, profile=stripe_profile)
             BillingService._set_cached_subscription_status(user_id, payload)
-            return BillingService._to_read_model_subscription_data(payload)
+            return payload
 
-        # 2. Fallback legacy si pas de profil Stripe exploitable
-        stripe_subscription_status = None
+        # 2. Fallback legacy si pas de profil Stripe exploitable (Maintenu pour les tests)
         latest = BillingService._get_latest_subscription(db, user_id=user_id)
-        if latest is None:
-            payload = BillingService._to_subscription_data(
-                subscription=None,
-                plan=None,
-                stripe_subscription_status=stripe_subscription_status,
+        if latest is not None:
+            plan = db.get(BillingPlanModel, latest.plan_id)
+            exposed_status = "active" if latest.status == "active" else "inactive"
+            payload = SubscriptionStatusData(
+                status=exposed_status,
+                subscription_status=None,
+                plan=BillingService._to_plan_data(plan) if plan is not None else None,
+                failure_reason=latest.failure_reason,
+                updated_at=latest.updated_at,
             )
             BillingService._set_cached_subscription_status(user_id, payload)
-            return BillingService._to_read_model_subscription_data(payload)
+            return payload
 
-        plan = db.get(BillingPlanModel, latest.plan_id)
-        payload = BillingService._to_subscription_data(
-            subscription=latest,
-            plan=plan,
-            stripe_subscription_status=stripe_subscription_status,
+        # 3. Par défaut : inactif
+        payload = SubscriptionStatusData(
+            status="inactive",
+            subscription_status=None,
+            plan=None,
+            failure_reason=None,
+            updated_at=None,
         )
         BillingService._set_cached_subscription_status(user_id, payload)
-        return BillingService._to_read_model_subscription_data(payload)
+        return payload
 
     @staticmethod
     def get_subscription_status_readonly(db: Session, *, user_id: int) -> SubscriptionStatusData:
         """
-        Récupère le statut d'abonnement en lecture seule (Stripe-first).
-
-        Args:
-            db: Session de base de données.
-            user_id: Identifiant de l'utilisateur.
-
-        Returns:
-            SubscriptionStatusData avec le statut actuel.
+        Récupère le statut d'abonnement en lecture seule.
         """
-        cached = BillingService._get_cached_subscription_status(user_id)
-        if cached is not None:
-            return cached
-
-        # 1. Priorité au snapshot Stripe canonique
-        stripe_profile = BillingService._get_stripe_billing_profile(db, user_id=user_id)
-        if BillingService._has_usable_stripe_snapshot(stripe_profile):
-            payload = BillingService._to_stripe_subscription_data(db, profile=stripe_profile)
-            BillingService._set_cached_subscription_status(user_id, payload)
-            return payload
-
-        # 2. Fallback legacy si pas de profil Stripe exploitable
-        stripe_subscription_status = None
-        latest = BillingService._get_latest_subscription(db, user_id=user_id)
-        if latest is None:
-            payload = BillingService._to_subscription_data(
-                subscription=None,
-                plan=None,
-                stripe_subscription_status=stripe_subscription_status,
-            )
-            BillingService._set_cached_subscription_status(user_id, payload)
-            return payload
-
-        plan = db.get(BillingPlanModel, latest.plan_id)
-        payload = BillingService._to_subscription_data(
-            subscription=latest,
-            plan=plan,
-            stripe_subscription_status=stripe_subscription_status,
-        )
-        BillingService._set_cached_subscription_status(user_id, payload)
-        return payload
+        return BillingService.get_subscription_status(db, user_id=user_id)

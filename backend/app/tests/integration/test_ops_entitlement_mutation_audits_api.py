@@ -54,7 +54,7 @@ def _seed_audit(
     occurred_at=None,
     operation="upsert_plan_feature_configuration",
     plan_id=1,
-    plan_code="basic-entry",
+    plan_code="basic",
     feature_code="astrologer_chat",
     actor_type="script",
     actor_identifier="test.py",

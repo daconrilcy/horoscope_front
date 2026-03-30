@@ -57,6 +57,11 @@ class SubscriptionApiResponse(BaseModel):
     meta: ResponseMeta
 
 
+class BillingPlansApiResponse(BaseModel):
+    data: list[BillingPlanData]
+    meta: ResponseMeta
+
+
 class StripeCheckoutRequest(BaseModel):
     plan: Literal["basic", "premium"]
 
@@ -338,6 +343,36 @@ def _enforce_billing_limits(
             details=error.details,
         )
     return None
+
+
+@router.get(
+    "/plans",
+    response_model=BillingPlansApiResponse,
+    responses={401: {"model": ErrorEnvelope}, 403: {"model": ErrorEnvelope}},
+)
+def list_billing_plans(
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    if current_user.role != "admin":
+        return _error_response(
+            status_code=403,
+            request_id=request_id,
+            code="insufficient_role",
+            message="role is not allowed to list billing plans",
+            details={"required_role": "admin", "actual_role": current_user.role},
+        )
+
+    plans = db.scalars(
+        select(BillingPlanModel).where(BillingPlanModel.is_active == True)
+    ).all()
+
+    return {
+        "data": [BillingService._to_plan_data(p) for p in plans],
+        "meta": {"request_id": request_id},
+    }
 
 
 @router.get(

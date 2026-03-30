@@ -68,7 +68,7 @@ def _phase_1() -> int:
         legacy_plan_id = legacy_b2b_plan.id
 
         p_b2c = PlanCatalogModel(
-            plan_code="basic-entry", plan_name="Basic B2C", audience=Audience.B2C, is_active=True
+            plan_code="basic", plan_name="Basic B2C", audience=Audience.B2C, is_active=True
         )
         p_b2b = PlanCatalogModel(
             plan_code="b2b-default",

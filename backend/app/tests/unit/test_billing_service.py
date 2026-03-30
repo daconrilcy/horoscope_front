@@ -65,7 +65,7 @@ def test_get_subscription_status_fallback_to_legacy_when_no_stripe_profile() -> 
     user_id = _create_user_id()
     with SessionLocal() as db:
         plans = BillingService.ensure_default_plans(db)
-        plan = plans["basic-entry"]
+        plan = plans["basic"]
         db.add(
             UserSubscriptionModel(
                 user_id=user_id,
@@ -80,7 +80,7 @@ def test_get_subscription_status_fallback_to_legacy_when_no_stripe_profile() -> 
     assert status.status == "active"
     assert status.subscription_status is None
     assert status.plan is not None
-    assert status.plan.code == "basic" # Canonical code for basic-entry
+    assert status.plan.code == "basic"
 
 
 def test_readonly_status_ignores_non_usable_stripe_profile_when_legacy_subscription_exists(
@@ -89,7 +89,7 @@ def test_readonly_status_ignores_non_usable_stripe_profile_when_legacy_subscript
     user_id = _create_user_id()
     with SessionLocal() as db:
         plans = BillingService.ensure_default_plans(db)
-        plan = plans["basic-entry"]
+        plan = plans["basic"]
         db.add(
             UserSubscriptionModel(
                 user_id=user_id,
@@ -113,6 +113,4 @@ def test_readonly_status_ignores_non_usable_stripe_profile_when_legacy_subscript
     assert status.status == "active"
     assert status.subscription_status is None
     assert status.plan is not None
-    assert status.plan.code == "basic-entry" # Readonly doesn't always canonicalize the same way or it does?
-    # Actually get_subscription_status_readonly does NOT call _to_read_model_subscription_data
-    # so it returns the raw code.
+    assert status.plan.code == "basic"

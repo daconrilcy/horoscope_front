@@ -4,17 +4,17 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { SubscriptionSettings } from "../pages/settings/SubscriptionSettings"
 
 const mockUseBillingSubscription = vi.fn()
+const mockUseBillingPlans = vi.fn()
 const mockUseStripeCheckoutSession = vi.fn()
 const mockUseStripePortalSession = vi.fn()
 const mockUseStripePortalSubscriptionUpdateSession = vi.fn()
 
-// On utilise importActual pour que toStripePlanCode et fromStripePlanCode
-// soient les vraies implémentations (non mockées), ce qui valide leur comportement réel.
 vi.mock("@api/billing", async (importActual) => {
   const actual = await importActual<typeof import("@api/billing")>()
   return {
     ...actual,
     useBillingSubscription: () => mockUseBillingSubscription(),
+    useBillingPlans: () => mockUseBillingPlans(),
     useStripeCheckoutSession: () => mockUseStripeCheckoutSession(),
     useStripePortalSession: () => mockUseStripePortalSession(),
     useStripePortalSubscriptionUpdateSession: () => mockUseStripePortalSubscriptionUpdateSession(),
@@ -24,6 +24,7 @@ vi.mock("@api/billing", async (importActual) => {
 afterEach(() => {
   cleanup()
   mockUseBillingSubscription.mockReset()
+  mockUseBillingPlans.mockReset()
   mockUseStripeCheckoutSession.mockReset()
   mockUseStripePortalSession.mockReset()
   mockUseStripePortalSubscriptionUpdateSession.mockReset()
@@ -31,7 +32,18 @@ afterEach(() => {
 })
 
 describe("SubscriptionSettings", () => {
+  const setupCatalogMock = () => {
+    mockUseBillingPlans.mockReturnValue({
+      isLoading: false,
+      data: [
+        { code: "basic", display_name: "Basic", monthly_price_cents: 900, currency: "EUR", daily_message_limit: 50, is_active: true },
+        { code: "premium", display_name: "Premium", monthly_price_cents: 2900, currency: "EUR", daily_message_limit: 1000, is_active: true },
+      ],
+    })
+  }
+
   it("appelle useStripeCheckoutSession avec le code canonique pour un utilisateur sans abonnement Stripe", () => {
+    setupCatalogMock()
     const mutate = vi.fn()
 
     mockUseBillingSubscription.mockReturnValue({
@@ -44,7 +56,7 @@ describe("SubscriptionSettings", () => {
 
     render(<SubscriptionSettings />)
 
-    // Sélectionner le plan "Basic" (UI code: basic-entry)
+    // Sélectionner le plan "Basic" (UI code: basic)
     const basicCard = screen.getByText("Basic").closest('[role="button"]')!
     fireEvent.click(basicCard)
 
@@ -52,12 +64,13 @@ describe("SubscriptionSettings", () => {
     fireEvent.click(validateButton)
 
     expect(mutate).toHaveBeenCalledWith(
-      "basic", // code canonique Stripe, jamais "basic-entry"
+      "basic", // code canonique Stripe
       expect.objectContaining({ onSuccess: expect.any(Function) }),
     )
   })
 
   it("n'envoie jamais basic-entry ou premium-unlimited à useStripeCheckoutSession — uniquement les codes canoniques", () => {
+    setupCatalogMock()
     const mutate = vi.fn()
 
     mockUseBillingSubscription.mockReturnValue({
@@ -83,6 +96,7 @@ describe("SubscriptionSettings", () => {
   })
 
   it("appelle useStripePortalSubscriptionUpdateSession quand l'abonnement Stripe est actif et qu'on change de plan", () => {
+    setupCatalogMock()
     const mutate = vi.fn()
 
     mockUseBillingSubscription.mockReturnValue({
@@ -112,8 +126,8 @@ describe("SubscriptionSettings", () => {
     )
   })
 
-  // Fix HIGH-1 : l'API renvoie plan.code = "basic" (canonique), la carte "Basic" doit afficher le badge "Plan actuel"
   it("affiche correctement la carte Basic comme plan courant quand l'API renvoie le code canonique 'basic'", () => {
+    setupCatalogMock()
     mockUseBillingSubscription.mockReturnValue({
       isLoading: false,
       data: {
@@ -138,16 +152,16 @@ describe("SubscriptionSettings", () => {
     expect(validateButton).toBeDisabled()
   })
 
-  // Fix HIGH-2 : un utilisateur past_due doit aller vers le Customer Portal (pas vers Checkout)
   it("appelle useStripePortalSession pour un utilisateur past_due (pas de nouveau Checkout)", () => {
+    setupCatalogMock()
     const portalMutate = vi.fn()
     const checkoutMutate = vi.fn()
 
     mockUseBillingSubscription.mockReturnValue({
       isLoading: false,
       data: {
-        status: "inactive", // DTO public simplifié — past_due = inactive
-        subscription_status: "past_due", // champ Stripe brut — décision réelle
+        status: "inactive",
+        subscription_status: "past_due",
         plan: { code: "basic", display_name: "Basic", monthly_price_cents: 900, currency: "EUR", daily_message_limit: 50, is_active: true },
         failure_reason: "card_declined",
       },

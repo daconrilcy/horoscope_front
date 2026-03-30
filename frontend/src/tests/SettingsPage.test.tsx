@@ -68,7 +68,7 @@ const BILLING_SUBSCRIPTION = {
     data: {
       status: "active",
       active_plan: {
-        code: "basic-entry",
+        code: "basic",
         display_name: "Basic",
         monthly_price_cents: 900,
         currency: "EUR",

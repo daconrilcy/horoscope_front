@@ -513,3 +513,4 @@ development_status:
   61-60-alignement-documentation-webhook-stripe-perimetre-reel: done
   61-61-migration-frontend-commercial-vers-endpoints-stripe-first: done
   61-62-decommission-endpoints-legacy-billing-checkout-retry-plan-change: done
+  61-63-suppression-legacy-commercial-billing-stripe: done

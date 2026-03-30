@@ -27,7 +27,6 @@ import { AccountSettings } from "../pages/settings/AccountSettings"
 import { SubscriptionSettings } from "../pages/settings/SubscriptionSettings"
 import { UsageSettings } from "../pages/settings/UsageSettings"
 import { ConsultationLayout } from "../features/consultations"
-import { BillingPanel } from "../components/BillingPanel"
 import { BillingSuccessPage } from "../pages/billing/BillingSuccessPage"
 import { BillingCancelPage } from "../pages/billing/BillingCancelPage"
 import { PrivacyPanel } from "../components/PrivacyPanel"
@@ -113,10 +112,6 @@ export const routes: RouteObject[] = [
       {
         path: "/profile",
         element: <BirthProfilePage />,
-      },
-      {
-        path: "/billing",
-        element: <BillingPanel />,
       },
       {
         path: "/billing/success",

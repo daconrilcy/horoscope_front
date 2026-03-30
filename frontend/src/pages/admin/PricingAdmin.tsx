@@ -1,35 +1,7 @@
-import { useQuery } from "@tanstack/react-query"
-
-import { API_BASE_URL, apiFetch } from "@api/client"
-import { getAccessTokenAuthHeader } from "@utils/authToken"
+import { useBillingPlans } from "@api/billing"
 import { detectLang } from "@i18n/astrology"
 import { adminTranslations } from "@i18n/admin"
 import { getLocale } from "@utils/locale"
-
-type BillingPlan = {
-  code: string
-  display_name: string
-  monthly_price_cents: number
-  currency: string
-  daily_message_limit: number
-  is_active: boolean
-}
-
-type PlansResponse = {
-  data: BillingPlan[]
-}
-
-async function fetchPlans(): Promise<BillingPlan[]> {
-  const response = await apiFetch(`${API_BASE_URL}/v1/billing/plans`, {
-    method: "GET",
-    headers: getAccessTokenAuthHeader(),
-  })
-  if (!response.ok) {
-    throw new Error(`Erreur ${response.status}: ${response.statusText}`)
-  }
-  const json = (await response.json()) as PlansResponse
-  return json.data
-}
 
 function formatPrice(cents: number, currency: string, locale: string): string {
   const amount = cents / 100
@@ -44,11 +16,7 @@ export function PricingAdmin() {
   const t = adminTranslations.pricing[lang]
   const locale = getLocale(lang)
 
-  const plansQuery = useQuery({
-    queryKey: ["admin", "billing-plans"],
-    queryFn: fetchPlans,
-    staleTime: 60_000,
-  })
+  const plansQuery = useBillingPlans()
 
   return (
     <section className="pricing-admin" aria-labelledby="pricing-admin-title">
@@ -69,7 +37,6 @@ export function PricingAdmin() {
               ? plansQuery.error.message
               : t.unknownError}
           </p>
-          <p className="info-note">{t.apiNote}</p>
         </div>
       )}
 

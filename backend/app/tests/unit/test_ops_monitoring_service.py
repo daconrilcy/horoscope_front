@@ -135,51 +135,51 @@ def test_get_persona_kpis_returns_grouped_metrics() -> None:
 def test_get_pricing_experiment_kpis_returns_variant_aggregates() -> None:
     reset_metrics()
     increment_counter(
-        "pricing_experiment_exposure_total|plan_code=basic-entry|user_segment=user|variant_id=control",
+        "pricing_experiment_exposure_total|plan_code=basic|user_segment=user|variant_id=control",
         40,
     )
     increment_counter(
-        "pricing_experiment_exposure_total|plan_code=basic-entry|user_segment=user|variant_id=value_plus",
+        "pricing_experiment_exposure_total|plan_code=basic|user_segment=user|variant_id=value_plus",
         20,
     )
     increment_counter(
         (
-            "pricing_experiment_conversion_total|conversion_type=checkout|plan_code=basic-entry|"
+            "pricing_experiment_conversion_total|conversion_type=checkout|plan_code=basic|"
             "status=success|user_segment=user|variant_id=control"
         ),
         8,
     )
     increment_counter(
         (
-            "pricing_experiment_conversion_total|conversion_type=checkout|plan_code=basic-entry|"
+            "pricing_experiment_conversion_total|conversion_type=checkout|plan_code=basic|"
             "status=failed|user_segment=user|variant_id=control"
         ),
         2,
     )
     increment_counter(
         (
-            "pricing_experiment_conversion_total|conversion_type=checkout|plan_code=basic-entry|"
+            "pricing_experiment_conversion_total|conversion_type=checkout|plan_code=basic|"
             "status=success|user_segment=user|variant_id=value_plus"
         ),
         3,
     )
     increment_counter(
         (
-            "pricing_experiment_revenue_cents_total|plan_code=basic-entry|user_segment=user|"
+            "pricing_experiment_revenue_cents_total|plan_code=basic|user_segment=user|"
             "variant_id=control"
         ),
         4000,
     )
     increment_counter(
         (
-            "pricing_experiment_revenue_cents_total|plan_code=basic-entry|user_segment=user|"
+            "pricing_experiment_revenue_cents_total|plan_code=basic|user_segment=user|"
             "variant_id=value_plus"
         ),
         1500,
     )
     increment_counter(
         (
-            "pricing_experiment_retention_usage_total|plan_code=basic-entry|"
+            "pricing_experiment_retention_usage_total|plan_code=basic|"
             "retention_event=quota_status_view|user_segment=user|variant_id=control"
         ),
         12,
@@ -206,12 +206,12 @@ def test_get_pricing_experiment_kpis_returns_variant_aggregates() -> None:
 def test_get_pricing_experiment_kpis_rounds_metric_values_before_aggregation() -> None:
     reset_metrics()
     increment_counter(
-        "pricing_experiment_exposure_total|plan_code=basic-entry|user_segment=user|variant_id=control",
+        "pricing_experiment_exposure_total|plan_code=basic|user_segment=user|variant_id=control",
         10.6,
     )
     increment_counter(
         (
-            "pricing_experiment_conversion_total|conversion_type=checkout|plan_code=basic-entry|"
+            "pricing_experiment_conversion_total|conversion_type=checkout|plan_code=basic|"
             "status=success|user_segment=user|variant_id=control"
         ),
         2.4,
@@ -293,7 +293,7 @@ def test_get_pricing_experiment_kpis_uses_database_persistent_events() -> None:
 def test_get_pricing_experiment_kpis_falls_back_when_db_has_no_events() -> None:
     reset_metrics()
     increment_counter(
-        "pricing_experiment_exposure_total|plan_code=basic-entry|user_segment=user|variant_id=control",
+        "pricing_experiment_exposure_total|plan_code=basic|user_segment=user|variant_id=control",
         3,
     )
     with SessionLocal() as db:

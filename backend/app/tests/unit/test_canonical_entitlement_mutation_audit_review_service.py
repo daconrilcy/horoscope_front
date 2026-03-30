@@ -33,7 +33,7 @@ def _seed_audit(db) -> CanonicalEntitlementMutationAuditModel:
         occurred_at=datetime.now(timezone.utc),
         operation="upsert_plan_feature_configuration",
         plan_id=1,
-        plan_code_snapshot="basic-entry",
+        plan_code_snapshot="basic",
         feature_code="astrologer_chat",
         actor_type="script",
         actor_identifier="test.py",

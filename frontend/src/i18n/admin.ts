@@ -133,24 +133,6 @@ export interface AdminTranslation {
       noPrivacyRequests: string
       recentAuditTitle: string
     }
-    billing_v2: {
-      title: string
-      description: string
-      error: (msg: string) => string
-      paymentSimLabel: string
-      paymentOptions: { ok: string; fail: string }
-      changePlanLabel: string
-      planOptions: { basic: string; premium: string }
-      impactQuota: (label: string) => string
-      statusActive: string
-      errorCheckout: (msg: string) => string
-      errorRetry: (msg: string) => string
-      errorChange: (msg: string) => string
-      failedReason: (msg: string) => string
-      openPortal: string
-      openCheckout: string
-      errorPortal: (msg: string) => string
-    }
     privacy: {
       title: string
       description: string
@@ -174,7 +156,6 @@ export interface PricingTranslations {
   loading: string
   errorLoading: string
   unknownError: string
-  apiNote: string
   emptyState: string
   tableLabel: string
   colCode: string
@@ -362,24 +343,6 @@ export const adminTranslations = {
         noPrivacyRequests: "Aucune demande RGPD.",
         recentAuditTitle: "Audit récent",
       },
-      billing_v2: {
-        title: "Abonnement",
-        description: "Souscrivez au plan Basic pour activer le service payant.",
-        error: (msg) => `Erreur abonnement: ${msg}`,
-        paymentSimLabel: "Simulation paiement",
-        paymentOptions: { ok: "Paiement valide", fail: "Paiement refusé" },
-        changePlanLabel: "Changer de plan",
-        planOptions: { basic: "Basic 5 EUR/mois", premium: "Premium 20 EUR/mois" },
-        impactQuota: (label) => `Impact quota cible: ${label}`,
-        statusActive: "Abonnement actif.",
-        errorCheckout: (msg) => `Erreur souscription: ${msg}`,
-        errorRetry: (msg) => `Erreur retry paiement: ${msg}`,
-        errorChange: (msg) => `Erreur changement de plan: ${msg}`,
-        failedReason: (msg) => `Motif échec paiement: ${msg}`,
-        openPortal: "Ouvrir le portail Stripe",
-        openCheckout: "Créer session checkout",
-        errorPortal: (msg) => `Erreur portail Stripe: ${msg}`,
-      },
       privacy: {
         title: "Confidentialité et données",
         description: "Demandez un export de vos données ou la suppression de votre compte.",
@@ -518,24 +481,6 @@ export const adminTranslations = {
         privacyRequests: (count) => `Privacy requests: ${count}`,
         noPrivacyRequests: "No privacy requests.",
         recentAuditTitle: "Recent audit",
-      },
-      billing_v2: {
-        title: "Subscription",
-        description: "Subscribe to the Basic plan to enable paid service.",
-        error: (msg) => `Subscription error: ${msg}`,
-        paymentSimLabel: "Payment simulation",
-        paymentOptions: { ok: "Valid payment", fail: "Payment declined" },
-        changePlanLabel: "Change plan",
-        planOptions: { basic: "Basic 5 EUR/month", premium: "Premium 20 EUR/month" },
-        impactQuota: (label) => `Target quota impact: ${label}`,
-        statusActive: "Active subscription.",
-        errorCheckout: (msg) => `Subscription error: ${msg}`,
-        errorRetry: (msg) => `Payment retry error: ${msg}`,
-        errorChange: (msg) => `Plan change error: ${msg}`,
-        failedReason: (msg) => `Payment failure reason: ${msg}`,
-        openPortal: "Open Stripe portal",
-        openCheckout: "Create checkout session",
-        errorPortal: (msg) => `Stripe portal error: ${msg}`,
       },
       privacy: {
         title: "Privacy and Data",
@@ -676,24 +621,6 @@ export const adminTranslations = {
         noPrivacyRequests: "Sin solicitudes RGPD.",
         recentAuditTitle: "Auditoría reciente",
       },
-      billing_v2: {
-        title: "Suscripción",
-        description: "Suscríbase al plan Basic para activar el servicio de pago.",
-        error: (msg) => `Error de suscripción: ${msg}`,
-        paymentSimLabel: "Simulación de pago",
-        paymentOptions: { ok: "Pago válido", fail: "Pago rechazado" },
-        changePlanLabel: "Cambiar de plan",
-        planOptions: { basic: "Basic 5 EUR/mes", premium: "Premium 20 EUR/mes" },
-        impactQuota: (label) => `Impacto en cuota objetivo: ${label}`,
-        statusActive: "Suscripción activa.",
-        errorCheckout: (msg) => `Error de suscripción: ${msg}`,
-        errorRetry: (msg) => `Error de reintento de pago: ${msg}`,
-        errorChange: (msg) => `Error de cambio de plan: ${msg}`,
-        failedReason: (msg) => `Motivo del fallo de pago: ${msg}`,
-        openPortal: "Abrir el portal de Stripe",
-        openCheckout: "Crear sesión de checkout",
-        errorPortal: (msg) => `Error del portal Stripe: ${msg}`,
-      },
       privacy: {
         title: "Privacidad et Datos",
         description: "Solicite una exportación de sus datos o la eliminación de su cuenta.",
@@ -718,8 +645,6 @@ export const adminTranslations = {
       loading: "Chargement des plans...",
       errorLoading: "Erreur lors du chargement des plans.",
       unknownError: "Erreur inconnue",
-      apiNote:
-        "Note : L'API GET /v1/billing/plans n'est pas encore implémentée côté backend. Cette fonctionnalité nécessite une story dédiée pour l'API admin.",
       emptyState: "Aucun plan tarifaire configuré.",
       tableLabel: "Plans tarifaires",
       colCode: "Code",
@@ -742,8 +667,6 @@ export const adminTranslations = {
       loading: "Loading plans...",
       errorLoading: "Error loading plans.",
       unknownError: "Unknown error",
-      apiNote:
-        "Note: The GET /v1/billing/plans API is not yet implemented on the backend. This feature requires a dedicated admin API story.",
       emptyState: "No pricing plans configured.",
       tableLabel: "Pricing plans",
       colCode: "Code",
@@ -766,8 +689,6 @@ export const adminTranslations = {
       loading: "Cargando planes...",
       errorLoading: "Error al cargar los planes.",
       unknownError: "Error desconocido",
-      apiNote:
-        "Nota: La API GET /v1/billing/plans aún no está implementada en el backend. Esta funcionalidad requiere una story dédiée pour l'API admin.",
       emptyState: "Ningún plan tarifario configurado.",
       tableLabel: "Planes tarifarios",
       colCode: "Código",
@@ -782,7 +703,7 @@ export const adminTranslations = {
       upcomingCreate: "Creación de nouveaux planes",
       upcomingActivate: "Activación/desactivación de planes",
       upcomingNote:
-        "Estas funcionalidades requieren la implementación de una API admin dedicada (fuera del alcance de la story 16.7).",
+        "Estas funcionalidades requieren la implementación de une API admin dedicada (fuera del alcance de la story 16.7).",
     },
   } as Record<AstrologyLang, PricingTranslations>,
 }

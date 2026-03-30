@@ -121,7 +121,7 @@ def _record_manual_pricing_events(user_email: str) -> None:
             db=db,
             request_id=request_id,
             action="offer_exposure",
-            details={"user_id": user.id, "user_role": user.role, "plan_code": "basic-entry"},
+            details={"user_id": user.id, "user_role": user.role, "plan_code": "basic"},
         )
         # Conversion
         _record_pricing_event_safely(
@@ -131,7 +131,7 @@ def _record_manual_pricing_events(user_email: str) -> None:
             details={
                 "user_id": user.id,
                 "user_role": user.role,
-                "plan_code": "basic-entry",
+                "plan_code": "basic",
                 "conversion_type": "checkout",
                 "conversion_status": "success",
             },

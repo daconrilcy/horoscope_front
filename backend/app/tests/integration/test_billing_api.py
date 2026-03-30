@@ -170,7 +170,7 @@ def test_billing_subscription_status_with_legacy_fallback() -> None:
     with SessionLocal() as db:
         user = db.query(UserModel).filter_by(email="billing-api-user@example.com").one()
         plans = BillingService.ensure_default_plans(db)
-        plan = plans["basic-entry"]
+        plan = plans["basic"]
         db.add(
             UserSubscriptionModel(
                 user_id=user.id,

@@ -123,7 +123,7 @@ const BILLING_SUBSCRIPTION = {
   json: async () => ({
     data: {
       status: "active",
-      plan: { code: "basic-entry", display_name: "Basic", monthly_price_cents: 500, currency: "EUR", daily_message_limit: 5, is_active: true },
+      plan: { code: "basic", display_name: "Basic", monthly_price_cents: 500, currency: "EUR", daily_message_limit: 5, is_active: true },
       failure_reason: null,
       updated_at: "2026-01-01T00:00:00Z",
     },
