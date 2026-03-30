@@ -424,3 +424,53 @@ class TestStripeCustomerPortalApi:
     def test_cancel_session_no_jwt_401(self, clean_db):
         response = client.post("/v1/billing/stripe-customer-portal-subscription-cancel-session")
         assert response.status_code == 401
+
+    def test_portal_session_missing_configuration_503(self, clean_db):
+        token = _register_user_with_role("user@example.com", "user")
+        with SessionLocal() as db:
+            user = db.query(UserModel).filter_by(email="user@example.com").first()
+            profile = StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id="cus_123",
+            )
+            db.add(profile)
+            db.commit()
+
+        # Mock settings.stripe_portal_configuration_id to None
+        with patch("app.api.v1.routers.billing.settings.stripe_portal_configuration_id", None):
+            response = client.post(
+                "/v1/billing/stripe-customer-portal-session",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+
+        assert response.status_code == 503
+        assert response.json()["error"]["code"] == "stripe_portal_configuration_missing"
+
+    def test_portal_session_invalid_configuration_502(self, clean_db):
+        import stripe
+        token = _register_user_with_role("user@example.com", "user")
+        with SessionLocal() as db:
+            user = db.query(UserModel).filter_by(email="user@example.com").first()
+            profile = StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id="cus_123",
+            )
+            db.add(profile)
+            db.commit()
+
+        mock_client = MagicMock()
+        mock_client.billing_portal.sessions.create.side_effect = stripe.InvalidRequestError(
+            message="No such configuration: 'bpc_invalid'",
+            param="configuration"
+        )
+        with patch(
+            "app.services.stripe_customer_portal_service.get_stripe_client",
+            return_value=mock_client,
+        ):
+            response = client.post(
+                "/v1/billing/stripe-customer-portal-session",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+
+        assert response.status_code == 502
+        assert response.json()["error"]["code"] == "stripe_api_error"

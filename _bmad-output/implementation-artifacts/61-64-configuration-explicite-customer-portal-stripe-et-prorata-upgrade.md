@@ -254,7 +254,11 @@ gpt-5
 - Story créée pour cadrer le durcissement de configuration Stripe Customer Portal après 61-63.
 - Le périmètre est volontairement limité au backend/config/docs/tests ; aucun flow custom de paiement n'est demandé ici.
 - Le comportement produit attendu reste webhook-first pour l'activation des droits.
+- [AI Review Fix] Added STRIPE_PORTAL_CONFIGURATION_ID to .env.example.
+- [AI Review Fix] Added missing integration tests for `missing configuration` and `invalid configuration` in `test_stripe_customer_portal_api.py`.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/61-64-configuration-explicite-customer-portal-stripe-et-prorata-upgrade.md`
+- `.env.example`
+- `backend/app/tests/integration/test_stripe_customer_portal_api.py`
