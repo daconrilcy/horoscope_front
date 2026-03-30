@@ -49,6 +49,30 @@
   border: 2px solid rgba(134, 108, 208, 0.2);
 }
 
+.billing-return-icon--loading {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  border: 2px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+
+.billing-return-icon--warning {
+  background: color-mix(in srgb, var(--color-primary-strong) 12%, transparent);
+  color: var(--color-primary-strong);
+  border: 2px solid color-mix(in srgb, var(--color-primary-strong) 26%, transparent);
+}
+
+.billing-return-icon--error {
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  color: var(--color-error);
+  border: 2px solid color-mix(in srgb, var(--color-error) 24%, transparent);
+}
+
+.billing-return-icon--pending {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  border: 2px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+
 .billing-return-title {
   color: var(--color-text-primary);
   font-size: var(--font-size-2xl);

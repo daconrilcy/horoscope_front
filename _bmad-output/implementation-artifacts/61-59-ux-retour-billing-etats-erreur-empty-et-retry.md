@@ -1,6 +1,6 @@
 # Story 61.59 : UX de retour billing — états erreur, empty et retry explicites
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -75,23 +75,23 @@ Cette story ne change pas la source de vérité. Elle corrige la robustesse UX d
 
 ## Tasks / Subtasks
 
-- [ ] **Étendre le composant `BillingSuccessPage`** (AC: 1, 2, 3, 4)
-  - [ ] Lire explicitement `error`, `isError` et `refetch` depuis `useBillingSubscription()`
-  - [ ] Introduire un état d'erreur explicite
-  - [ ] Introduire un état empty/pending explicite
-  - [ ] Préserver les cas `trialing`, `active`, `incomplete`
+- [x] **Étendre le composant `BillingSuccessPage`** (AC: 1, 2, 3, 4)
+  - [x] Lire explicitement `error`, `isError` et `refetch` depuis `useBillingSubscription()`
+  - [x] Introduire un état d'erreur explicite
+  - [x] Introduire un état empty/pending explicite
+  - [x] Préserver les cas `trialing`, `active`, `incomplete`
 
-- [ ] **Étendre les traductions billing** (AC: 1, 2, 3)
-  - [ ] Ajouter les clés nécessaires dans `frontend/src/i18n/billing.ts`
-  - [ ] Conserver un wording neutre et non trompeur
+- [x] **Étendre les traductions billing** (AC: 1, 2, 3)
+  - [x] Ajouter les clés nécessaires dans `frontend/src/i18n/billing.ts`
+  - [x] Conserver un wording neutre et non trompeur
 
-- [ ] **Ajuster le style CSS dédié** (AC: 4)
-  - [ ] Ajouter si nécessaire les classes de variation dans `frontend/src/pages/billing/billing-return.css`
-  - [ ] Réutiliser les variables CSS existantes
+- [x] **Ajuster le style CSS dédié** (AC: 4)
+  - [x] Ajouter si nécessaire les classes de variation dans `frontend/src/pages/billing/billing-return.css`
+  - [x] Réutiliser les variables CSS existantes
 
-- [ ] **Créer/mettre à jour les tests frontend** (AC: 5)
-  - [ ] Étendre `frontend/src/tests/BillingSuccessPage.test.tsx`
-  - [ ] Vérifier le retry manuel via le `refetch` mocké
+- [x] **Créer/mettre à jour les tests frontend** (AC: 5)
+  - [x] Étendre `frontend/src/tests/BillingSuccessPage.test.tsx`
+  - [x] Vérifier le retry manuel via le `refetch` mocké
 
 ---
 
@@ -153,12 +153,25 @@ Codex GPT-5
 ### Debug Log References
 
 - Story créée à partir de la review complète Epic 61 workspace actuel.
+- Implémentation `bmad-dev-story` réalisée sur `BillingSuccessPage`, traductions billing et tests Vitest.
+- Code review ciblée `bmad-code-review` exécutée sur le scope story 61-59 ; un écart CSS tokens (`--color-warning`, `--color-info`) a été détecté puis corrigé avant clôture.
 
 ### Completion Notes List
 
-- Ultimate context engine analysis completed - comprehensive developer guide created.
+- Ajout d'états UX distincts `loading`, `error`, `pending/empty`, `trialing`, `active` et `incomplete` sur la page de retour billing.
+- Ajout d'un retry manuel via `refetch()` sans dépendance à un flag URL ; `session_id` reste purement informatif.
+- Ajout des traductions FR/EN/ES pour l'erreur billing et l'état pending neutre.
+- Extension de la couverture frontend avec les scénarios erreur API, pending `null`, pending statut non mappé, retry manuel et non-régression des succès existants.
+- Validation effectuée avec `npm test -- --run src/tests/BillingSuccessPage.test.tsx` et `npm test` dans `frontend/`.
+- `npm run lint` reste en échec sur des erreurs TypeScript préexistantes hors périmètre de cette story.
 
 ### File List
 
-- `_bmad-output/implementation-artifacts/61-59-ux-retour-billing-etats-erreur-empty-et-retry.md`
+- `frontend/src/pages/billing/BillingSuccessPage.tsx`
+- `frontend/src/pages/billing/billing-return.css`
+- `frontend/src/i18n/billing.ts`
+- `frontend/src/tests/BillingSuccessPage.test.tsx`
 
+### Change Log
+
+- 2026-03-30: Implémentation complète de la story 61-59, review ciblée exécutée, correction des issues de rendu et fermeture en `done`.

@@ -12,6 +12,11 @@ export type BillingTranslation = {
     viewSubscription: string
     waitingForWebhook: string
     waitingForWebhookMessage: string
+    billingStateUnavailable: string
+    billingStateUnavailableMessage: string
+    retryStatusCheck: string
+    pendingStateTitle: string
+    pendingStateMessage: string
   }
   cancel: {
     title: string
@@ -33,6 +38,11 @@ export const billingTranslations = (lang: AstrologyLang): BillingTranslation => 
     viewSubscription: billingData.success[lang].viewSubscription,
     waitingForWebhook: billingData.success[lang].waitingForWebhook,
     waitingForWebhookMessage: billingData.success[lang].waitingForWebhookMessage,
+    billingStateUnavailable: billingData.success[lang].billingStateUnavailable,
+    billingStateUnavailableMessage: billingData.success[lang].billingStateUnavailableMessage,
+    retryStatusCheck: billingData.success[lang].retryStatusCheck,
+    pendingStateTitle: billingData.success[lang].pendingStateTitle,
+    pendingStateMessage: billingData.success[lang].pendingStateMessage,
   },
   cancel: {
     title: billingData.cancel[lang].title,
@@ -59,6 +69,13 @@ const billingData = {
       waitingForWebhook: "Paiement en cours de confirmation...",
       waitingForWebhookMessage:
         "Nous attendons encore la réconciliation Stripe. Rechargez cette page dans quelques instants si le statut n'a pas évolué.",
+      billingStateUnavailable: "Vérification de l'état billing impossible",
+      billingStateUnavailableMessage:
+        "Nous n'avons pas pu récupérer l'état de votre abonnement pour le moment. Vérifiez à nouveau dans quelques instants.",
+      retryStatusCheck: "Réessayer",
+      pendingStateTitle: "Statut billing en attente de synchronisation",
+      pendingStateMessage:
+        "Le backend n'a pas encore confirmé un état exploitable. Revenez dans quelques instants pour vérifier la réconciliation.",
     },
     en: {
       trialStarted: "Free trial started",
@@ -75,6 +92,13 @@ const billingData = {
       waitingForWebhook: "Payment confirmation in progress...",
       waitingForWebhookMessage:
         "Stripe reconciliation is still in progress. Reload this page in a moment if the status has not changed yet.",
+      billingStateUnavailable: "Unable to verify billing status",
+      billingStateUnavailableMessage:
+        "We could not retrieve your subscription state right now. Please try again in a moment.",
+      retryStatusCheck: "Try again",
+      pendingStateTitle: "Billing status pending synchronization",
+      pendingStateMessage:
+        "The backend has not confirmed a usable state yet. Check back in a moment for Stripe reconciliation.",
     },
     es: {
       trialStarted: "Prueba gratuita iniciada",
@@ -91,6 +115,13 @@ const billingData = {
       waitingForWebhook: "Confirmación de pago en curso...",
       waitingForWebhookMessage:
         "La reconciliación de Stripe sigue en curso. Recargue esta página en unos instantes si el estado no cambia todavía.",
+      billingStateUnavailable: "No se puede verificar el estado de facturación",
+      billingStateUnavailableMessage:
+        "No pudimos recuperar el estado de su suscripción por ahora. Inténtelo de nuevo en unos instantes.",
+      retryStatusCheck: "Reintentar",
+      pendingStateTitle: "Estado de facturación pendiente de sincronización",
+      pendingStateMessage:
+        "El backend todavía no ha confirmado un estado utilizable. Vuelva dentro de unos instantes para comprobar la reconciliación.",
     },
   } as Record<
     AstrologyLang,
@@ -105,6 +136,11 @@ const billingData = {
       viewSubscription: string
       waitingForWebhook: string
       waitingForWebhookMessage: string
+      billingStateUnavailable: string
+      billingStateUnavailableMessage: string
+      retryStatusCheck: string
+      pendingStateTitle: string
+      pendingStateMessage: string
     }
   >,
   cancel: {
