@@ -1,6 +1,6 @@
 # Story 61.60 : Aligner la documentation webhook Stripe sur le périmètre backend réellement supporté
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -62,19 +62,19 @@ Cette story est documentaire et de cohérence des artefacts de validation. Elle 
 
 ## Tasks / Subtasks
 
-- [ ] **Mettre à jour la documentation historique** (AC: 1, 2, 3)
-  - [ ] Corriger `docs/stripe-webhook-dev.md`
-  - [ ] Garder la distinction entre rationale historique et périmètre actuel
-  - [ ] Vérifier les renvois vers `docs/billing-webhook-local-testing.md`
+- [x] **Mettre à jour la documentation historique** (AC: 1, 2, 3)
+  - [x] Corriger `docs/stripe-webhook-dev.md`
+  - [x] Garder la distinction entre rationale historique et périmètre actuel
+  - [x] Vérifier les renvois vers `docs/billing-webhook-local-testing.md`
 
-- [ ] **Consolider le vocabulaire du périmètre supporté** (AC: 2)
-  - [ ] Lister explicitement le sous-ensemble standardisé
-  - [ ] Lister explicitement le périmètre backend élargi réellement supporté
+- [x] **Consolider le vocabulaire du périmètre supporté** (AC: 2)
+  - [x] Lister explicitement le sous-ensemble standardisé
+  - [x] Lister explicitement le périmètre backend élargi réellement supporté
 
-- [ ] **Ajouter un garde-fou de cohérence** (AC: 4)
-  - [ ] Étendre `backend/app/tests/unit/test_stripe_webhook_local_dev_assets.py`
-  - [ ] Vérifier la présence des événements additionnels dans les docs appropriées
-  - [ ] Vérifier que la doc historique ne marque pas à tort un événement géré comme non traité
+- [x] **Ajouter un garde-fou de cohérence** (AC: 4)
+  - [x] Étendre `backend/app/tests/unit/test_stripe_webhook_local_dev_assets.py`
+  - [x] Vérifier la présence des événements additionnels dans les docs appropriées
+  - [x] Vérifier que la doc historique ne marque pas à tort un événement géré comme non traité
 
 ---
 
@@ -135,12 +135,23 @@ Codex GPT-5
 ### Debug Log References
 
 - Story créée à partir de la review complète Epic 61 workspace actuel.
+- Implémentation `bmad-dev-story` limitée à la documentation Stripe et au test documentaire associé.
+- Revue `bmad-code-review` exécutée sur le périmètre story ; aucun changement runtime supplémentaire requis après correction des contradictions documentaires.
 
 ### Completion Notes List
 
-- Ultimate context engine analysis completed - comprehensive developer guide created.
+- `docs/stripe-webhook-dev.md` ne contredit plus le backend et distingue explicitement le sous-ensemble standardisé du listener par défaut du périmètre backend élargi réellement accepté.
+- `docs/billing-webhook-local-testing.md` réaffirme son rôle de runbook canonique local pour la validation Stripe CLI.
+- Le garde-fou `backend/app/tests/unit/test_stripe_webhook_local_dev_assets.py` vérifie maintenant l'alignement minimal entre le runbook canonique, la doc historique et les événements réellement supportés par `StripeWebhookService`.
+- Validation exécutée dans le venv avec `pytest -q app/tests/unit/test_stripe_webhook_local_dev_assets.py` et `ruff check app/tests/unit/test_stripe_webhook_local_dev_assets.py`.
+- Aucun fichier métier backend, endpoint ou migration n'a été modifié dans cette story.
 
 ### File List
 
-- `_bmad-output/implementation-artifacts/61-60-alignement-documentation-webhook-stripe-perimetre-reel.md`
+- `docs/stripe-webhook-dev.md`
+- `docs/billing-webhook-local-testing.md`
+- `backend/app/tests/unit/test_stripe_webhook_local_dev_assets.py`
 
+### Change Log
+
+- 2026-03-30: Alignement documentaire du webhook Stripe, ajout d'un garde-fou automatisé de cohérence et clôture de la story en `done`.

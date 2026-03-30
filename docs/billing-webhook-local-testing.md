@@ -1,6 +1,6 @@
 # Tests locaux du webhook Stripe avec Stripe CLI
 
-Ce runbook décrit la validation locale du webhook Stripe avec la Stripe CLI sur un environnement de développement Windows/PowerShell. Le script Bash reste disponible pour Git Bash ou WSL, mais la commande PowerShell est la variante de référence pour ce dépôt.
+Ce document est le runbook canonique local pour la validation du webhook Stripe avec la Stripe CLI sur un environnement de développement Windows/PowerShell. Le script Bash reste disponible pour Git Bash ou WSL, mais la commande PowerShell est la variante de référence pour ce dépôt.
 
 ## Prérequis
 

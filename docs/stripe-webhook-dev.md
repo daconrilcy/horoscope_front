@@ -1,6 +1,6 @@
 # Workflow de Développement - Webhooks Stripe
 
-Ce document conserve la rationale historique de sélection des événements Stripe. Pour la procédure locale opérationnelle à jour, utiliser d'abord [docs/billing-webhook-local-testing.md](./billing-webhook-local-testing.md), qui fait désormais office de runbook canonique pour les tests Stripe CLI en local.
+Ce document conserve la rationale historique de sélection des événements Stripe. Pour la procédure locale opérationnelle à jour, utiliser d'abord [docs/billing-webhook-local-testing.md](./billing-webhook-local-testing.md), qui fait désormais office de runbook canonique pour les tests Stripe CLI en local. Ce document ne remplace donc pas le runbook canonique ; il explique pourquoi le sous-ensemble standardisé du listener par défaut diffère du périmètre backend élargi réellement accepté aujourd'hui.
 
 ## 1. Prérequis
 
@@ -69,6 +69,29 @@ stripe trigger customer.updated
 > [!NOTE]
 > Le tableau ci-dessous documente principalement la décision initiale de la story 61-6. Le périmètre effectivement géré aujourd'hui par le backend et la procédure locale de validation courante sont décrits dans le runbook canonique `docs/billing-webhook-local-testing.md`.
 
+### Sous-ensemble standardisé du listener par défaut
+
+Le listener par défaut standardisé reste limité aux événements suivants pour réduire le bruit local :
+
+- `checkout.session.completed`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+- `invoice.paid`
+- `invoice.payment_failed`
+- `invoice.payment_action_required`
+
+### Périmètre backend élargi réellement accepté
+
+Le backend accepte actuellement le sous-ensemble standardisé ci-dessus, plus les événements additionnels suivants :
+
+- `customer.updated`
+- `customer.subscription.paused`
+- `customer.subscription.resumed`
+- `customer.subscription.trial_will_end`
+
+Ces événements additionnels appartiennent au périmètre backend élargi réellement supporté. Pour les reproduire localement, se référer au runbook canonique `docs/billing-webhook-local-testing.md`, qui documente la commande Stripe CLI complète.
+
 Le tableau suivant justifie la sélection des événements Stripe traités par le webhook pour une stratégie SaaS robuste.
 
 | Événement | Traité | Raison |
@@ -79,11 +102,13 @@ Le tableau suivant justifie la sélection des événements Stripe traités par l
 | `invoice.payment_action_required` | ✅ Oui | Identifie explicitement le cas "customer authentication required" (3DS/SCA). Permet de distinguer le cas "action client nécessaire" d'un simple échec, et de notifier l'utilisateur en conséquence. Note : ce n'est pas l'unique signal possible dans les scénarios SCA — `invoice.payment_failed` peut également survenir dans ces flux. |
 | `customer.subscription.updated` | ✅ Oui | Tout changement de plan, de statut ou de période. Source de vérité pour `subscription_status` et `cancel_at_period_end`. |
 | `customer.subscription.deleted` | ✅ Oui | Fin d'abonnement (résiliation ou non-renouvellement). Met à jour `subscription_status = "canceled"` et recalcule `entitlement_plan`. |
+| `customer.subscription.paused` | ✅ Oui | Fait partie du périmètre backend élargi accepté aujourd'hui. Permet d'aligner la documentation avec le statut Stripe réellement géré lors des validations locales. |
+| `customer.subscription.resumed` | ✅ Oui | Fait partie du périmètre backend élargi accepté aujourd'hui. Permet de documenter explicitement la reprise d'abonnement déjà supportée par le backend. |
 | `customer.updated` | ✅ Oui | Mise à jour des données client (email de facturation). Maintient `billing_email` cohérent. |
 | `customer.subscription.created` | ✅ Oui (passif) | Reçu lors de la création via checkout, mais `checkout.session.completed` est l'événement de réconciliation principal. Traité pour cohérence, mais ne porte pas d'information que `checkout.session.completed` n'a pas. |
+| `customer.subscription.trial_will_end` | ✅ Oui (périmètre étendu) | Événement actuellement accepté par le backend et documenté dans le runbook canonique local. Il reste principalement utile pour la cohérence de validation et les notifications autour de la fin d'essai. |
 | `invoice.payment_succeeded` | ❌ Remplacé | Remplacé par `invoice.paid` à partir de la story 61-6. `invoice.paid` couvre un ensemble de cas strictement plus large. Désormais traité comme `event_ignored`. |
 | `payment_intent.*` | ❌ Non traité | Granularité inférieure au niveau facturation. Pour un SaaS abonnement, les événements `invoice.*` et `subscription.*` sont suffisants. |
-| `customer.subscription.trial_will_end` | ❌ Non traité | Notification préventive utile pour les relances marketing mais sans impact sur `entitlement_plan`. Hors scope de la story. |
 | `invoice.upcoming` | ❌ Non traité | Pré-notification avant facturation. Utile pour alertes mais sans impact sur le profil de facturation. Hors scope. |
 
 ## 6. Troubleshooting
