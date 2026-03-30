@@ -6,15 +6,18 @@ from typing import Any, Literal
 from fastapi import APIRouter, Body, Depends, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ValidationError
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.core.config import settings
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
+from app.infra.db.models.billing import BillingPlanModel
 from app.infra.db.session import get_db_session
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 from app.services.billing_service import (
+    BillingPlanData,
     BillingService,
     BillingServiceError,
     SubscriptionStatusData,
@@ -245,6 +248,9 @@ def _resolve_portal_service_status_code(error_code: str) -> int:
         "stripe_billing_profile_not_found": 404,
         "stripe_subscription_not_found": 404,
         "stripe_unavailable": 503,
+        "stripe_portal_configuration_missing": 503,
+        "stripe_portal_subscription_update_disabled": 422,
+        "stripe_portal_subscription_cancel_disabled": 422,
         "stripe_api_error": 502,
     }.get(error_code, 500)
 
@@ -356,21 +362,16 @@ def list_billing_plans(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    if current_user.role != "admin":
-        return _error_response(
-            status_code=403,
-            request_id=request_id,
-            code="insufficient_role",
-            message="role is not allowed to list billing plans",
-            details={"required_role": "admin", "actual_role": current_user.role},
-        )
+    role_error = _ensure_user_role(current_user, request_id)
+    if role_error is not None:
+        return role_error
 
     plans = db.scalars(
         select(BillingPlanModel).where(BillingPlanModel.is_active == True)
     ).all()
 
     return {
-        "data": [BillingService._to_plan_data(p) for p in plans],
+        "data": [BillingService._to_plan_data(p).model_dump(mode="json") for p in plans],
         "meta": {"request_id": request_id},
     }
 
@@ -588,6 +589,7 @@ def create_stripe_customer_portal_session(
             db,
             user_id=current_user.id,
             return_url=settings.stripe_portal_return_url,
+            configuration_id=settings.stripe_portal_configuration_id,
         )
 
         _record_audit_event(
@@ -608,13 +610,7 @@ def create_stripe_customer_portal_session(
 
     except StripeCustomerPortalServiceError as error:
         db.rollback()
-        status_code = 500
-        if error.code == "stripe_billing_profile_not_found":
-            status_code = 404
-        elif error.code == "stripe_unavailable":
-            status_code = 503
-        elif error.code == "stripe_api_error":
-            status_code = 502
+        status_code = _resolve_portal_service_status_code(error.code)
 
         try:
             _record_audit_event(

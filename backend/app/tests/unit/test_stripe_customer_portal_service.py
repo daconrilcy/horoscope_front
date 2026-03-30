@@ -34,13 +34,14 @@ class TestStripeCustomerPortalService:
             db,
             user_id=user_id,
             return_url=return_url,
+            configuration_id="bpc_123",
         )
 
         assert result == portal_url
         mock_get_profile.assert_called_once_with(db, user_id)
         mock_get_client.assert_called_once_with()
         mock_client.billing_portal.sessions.create.assert_called_once_with(
-            params={"customer": stripe_customer_id, "return_url": return_url}
+            params={"customer": stripe_customer_id, "return_url": return_url, "configuration": "bpc_123"}
         )
 
     @patch("app.services.stripe_customer_portal_service.get_stripe_client")
@@ -54,6 +55,7 @@ class TestStripeCustomerPortalService:
                 db,
                 user_id=123,
                 return_url="http://return",
+                configuration_id="bpc_123",
             )
 
         assert exc.value.code == "stripe_billing_profile_not_found"
@@ -73,6 +75,7 @@ class TestStripeCustomerPortalService:
                 db,
                 user_id=123,
                 return_url="http://return",
+                configuration_id="bpc_123",
             )
 
         assert exc.value.code == "stripe_billing_profile_not_found"
@@ -92,6 +95,7 @@ class TestStripeCustomerPortalService:
                 MagicMock(),
                 user_id=123,
                 return_url="http://return",
+                configuration_id="bpc_123",
             )
 
         assert exc.value.code == "stripe_unavailable"
@@ -113,6 +117,7 @@ class TestStripeCustomerPortalService:
                 db,
                 user_id=123,
                 return_url="http://return",
+                configuration_id="bpc_123",
             )
 
         assert exc.value.code == "stripe_api_error"
@@ -142,6 +147,7 @@ class TestStripeCustomerPortalService:
             db,
             user_id=user_id,
             return_url=return_url,
+            configuration_id="bpc_123",
         )
 
         assert result == portal_url
@@ -176,6 +182,7 @@ class TestStripeCustomerPortalService:
             db,
             user_id=user_id,
             return_url=return_url,
+            configuration_id="bpc_123",
         )
 
         assert result == portal_url
@@ -200,6 +207,7 @@ class TestStripeCustomerPortalService:
                 db,
                 user_id=123,
                 return_url="http://return",
+                configuration_id="bpc_123",
             )
 
         assert exc.value.code == "stripe_subscription_not_found"
@@ -220,6 +228,7 @@ class TestStripeCustomerPortalService:
                 db,
                 user_id=123,
                 return_url="http://return",
+                configuration_id="bpc_123",
             )
 
         assert exc.value.code == "stripe_subscription_not_found"
@@ -236,6 +245,7 @@ class TestStripeCustomerPortalService:
                 db,
                 user_id=123,
                 return_url="http://return",
+                configuration_id="bpc_123",
             )
 
         assert exc.value.code == "stripe_subscription_not_found"
@@ -256,6 +266,7 @@ class TestStripeCustomerPortalService:
                 MagicMock(),
                 user_id=123,
                 return_url="http://return",
+                configuration_id="bpc_123",
             )
 
         assert exc.value.code == "stripe_unavailable"
@@ -278,6 +289,7 @@ class TestStripeCustomerPortalService:
                 db,
                 user_id=123,
                 return_url="http://return",
+                configuration_id="bpc_123",
             )
 
         assert exc.value.code == "stripe_api_error"
@@ -306,5 +318,52 @@ class TestStripeCustomerPortalService:
             configuration_id=configuration_id,
         )
 
+        params = mock_client.billing_portal.sessions.create.call_args[1]["params"]
+        assert params["configuration"] == configuration_id
+
+    @patch("app.services.stripe_customer_portal_service.get_stripe_client")
+    @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
+    def test_create_portal_session_requires_configuration_id(self, mock_get_profile, mock_get_client):
+        db = MagicMock()
+        user_id = 123
+        mock_get_profile.return_value = StripeBillingProfileModel(
+            user_id=user_id,
+            stripe_customer_id="cus_123",
+        )
+
+        # Should raise stripe_portal_configuration_missing if configuration_id is None
+        with pytest.raises(StripeCustomerPortalServiceError) as exc:
+            StripeCustomerPortalService.create_portal_session(
+                db,
+                user_id=user_id,
+                return_url="http://return",
+                configuration_id=None,
+            )
+        assert exc.value.code == "stripe_portal_configuration_missing"
+
+    @patch("app.services.stripe_customer_portal_service.get_stripe_client")
+    @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
+    def test_create_portal_session_uses_explicit_configuration_id(self, mock_get_profile, mock_get_client):
+        db = MagicMock()
+        user_id = 123
+        configuration_id = "bpc_123"
+        mock_get_profile.return_value = StripeBillingProfileModel(
+            user_id=user_id,
+            stripe_customer_id="cus_123",
+        )
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+        mock_session = MagicMock()
+        mock_session.url = "http://portal"
+        mock_client.billing_portal.sessions.create.return_value = mock_session
+
+        StripeCustomerPortalService.create_portal_session(
+            db,
+            user_id=user_id,
+            return_url="http://return",
+            configuration_id=configuration_id,
+        )
+
+        mock_client.billing_portal.sessions.create.assert_called_once()
         params = mock_client.billing_portal.sessions.create.call_args[1]["params"]
         assert params["configuration"] == configuration_id

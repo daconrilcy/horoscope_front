@@ -63,6 +63,7 @@ from app.llm_orchestration.models import InputValidationError
 from app.services.pricing_experiment_service import PricingExperimentService
 from app.startup.canonical_db_validation import run_canonical_db_startup_validation
 from app.startup.feature_scope_validation import run_feature_scope_startup_validation
+from app.startup.stripe_portal_validation import run_stripe_portal_startup_validation
 
 logger = logging.getLogger(__name__)
 
@@ -259,6 +260,9 @@ async def _app_lifespan(_: FastAPI):
 
     # Story 61.29: Enforcement du registre de scope au démarrage
     run_feature_scope_startup_validation(settings.feature_scope_validation_mode)
+
+    # Story 61.64: Safeguard for Stripe Customer Portal
+    run_stripe_portal_startup_validation(settings)
 
     # Story 59.2: Validate prompt catalog vs DB
     from app.infra.db.session import SessionLocal

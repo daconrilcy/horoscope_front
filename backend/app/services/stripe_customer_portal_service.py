@@ -22,6 +22,24 @@ class StripeCustomerPortalServiceError(Exception):
 
 class StripeCustomerPortalService:
     @staticmethod
+    def _map_stripe_portal_error_code(error: stripe.StripeError, *, flow_type: str) -> str:
+        if isinstance(error, stripe.InvalidRequestError):
+            message = (str(error) or "").lower()
+            if (
+                flow_type == "subscription_update"
+                and "subscription update feature" in message
+                and "disabled" in message
+            ):
+                return "stripe_portal_subscription_update_disabled"
+            if (
+                flow_type == "subscription_cancel"
+                and "subscription cancel feature" in message
+                and "disabled" in message
+            ):
+                return "stripe_portal_subscription_cancel_disabled"
+        return "stripe_api_error"
+
+    @staticmethod
     def _get_customer_subscription_profile(
         db: Session,
         *,
@@ -49,6 +67,12 @@ class StripeCustomerPortalService:
         flow_type: str,
         configuration_id: str | None = None,
     ) -> str:
+        if not configuration_id:
+            raise StripeCustomerPortalServiceError(
+                code="stripe_portal_configuration_missing",
+                message="Stripe Customer Portal configuration ID is missing",
+            )
+
         profile = StripeCustomerPortalService._get_customer_subscription_profile(
             db,
             user_id=user_id,
@@ -76,16 +100,23 @@ class StripeCustomerPortalService:
                         "redirect": {"return_url": return_url},
                     },
                 },
+                "configuration": configuration_id,
             }
-            if configuration_id:
-                params["configuration"] = configuration_id
 
             session = client.billing_portal.sessions.create(params=params)
+            logger.info(
+                "Stripe portal %s session created for user=%s configuration=%s",
+                flow_type,
+                user_id,
+                configuration_id,
+            )
             return session.url
         except stripe.StripeError as error:
             logger.exception("Stripe API error during portal %s session creation", flow_type)
             raise StripeCustomerPortalServiceError(
-                code="stripe_api_error",
+                code=StripeCustomerPortalService._map_stripe_portal_error_code(
+                    error, flow_type=flow_type
+                ),
                 message="Stripe API error",
                 details={"error_message": str(error)},
             ) from error
@@ -96,10 +127,17 @@ class StripeCustomerPortalService:
         *,
         user_id: int,
         return_url: str,
+        configuration_id: str | None = None,
     ) -> str:
         """
         Crée une session Stripe Customer Portal pour un utilisateur.
         """
+        if not configuration_id:
+            raise StripeCustomerPortalServiceError(
+                code="stripe_portal_configuration_missing",
+                message="Stripe Customer Portal configuration ID is missing",
+            )
+
         # Lecture seule — NE PAS utiliser get_or_create_profile ici
         profile = StripeBillingProfileService.get_by_user_id(db, user_id)
         if profile is None or not profile.stripe_customer_id:
@@ -121,7 +159,13 @@ class StripeCustomerPortalService:
                 params={
                     "customer": profile.stripe_customer_id,
                     "return_url": return_url,
+                    "configuration": configuration_id,
                 }
+            )
+            logger.info(
+                "Stripe portal session created for user=%s configuration=%s",
+                user_id,
+                configuration_id,
             )
             return session.url
         except stripe.StripeError as error:

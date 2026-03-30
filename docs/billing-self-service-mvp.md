@@ -24,7 +24,9 @@ Ce snapshot est désormais la source canonique de lecture pour le runtime B2C d�
 
 ### Configuration
 - `STRIPE_PORTAL_RETURN_URL` : URL de retour après la fermeture du portail par l'utilisateur (défaut: `/settings/subscription`).
-- `STRIPE_PORTAL_CONFIGURATION_ID` : (Optionnel) ID de configuration spécifique pour le portail créé dans le Dashboard Stripe. Si vide, la configuration par défaut est utilisée.
+- `STRIPE_PORTAL_CONFIGURATION_ID` : **Obligatoire**. ID de configuration spécifique pour le portail créé dans le Dashboard Stripe.
+  - *Note Story 61.64* : Cette configuration est désormais explicite pour garantir le comportement des upgrades avec prorata immédiat configuré dans Stripe.
+  - Le démarrage de l'application échoue si `STRIPE_SECRET_KEY` est présente mais que `STRIPE_PORTAL_CONFIGURATION_ID` est absente.
 
 ## Portal Flows dédiés (Upgrade, Downgrade, Cancel)
 
@@ -39,11 +41,22 @@ En plus du portail générique, l'application expose des endpoints pour initier 
    - Nécessite un `stripe_subscription_id` actif sur le profil utilisateur.
 
 ### Configuration Stripe Dashboard requise
-Pour que ces flux fonctionnent, la configuration du portail (par défaut ou via `STRIPE_PORTAL_CONFIGURATION_ID`) dans le Dashboard Stripe doit :
-- Activer l'option **Subscription Update**.
-- Activer l'option **Subscription Cancel**.
-- Définir le mode d'annulation sur **At period end** (recommandé pour le MVP).
-- Configurer les prix/plans autorisés qui seront présentés à l'utilisateur.
+Pour que ces flux fonctionnent, une configuration de portail dédiée doit être créée dans le Dashboard Stripe. Cette configuration (référencée par `STRIPE_PORTAL_CONFIGURATION_ID`) doit impérativement inclure :
+- **Subscription Update** activé.
+- **Subscription Cancel** activé.
+- Mode d'annulation sur **At period end** (recommandé pour le MVP).
+- Les **prix/plans SaaS autorisés** (Basic, Premium) explicitement listés.
+- **Proration behavior** : défini sur **Always invoice** pour les modifications d'abonnement.
+  - *Note technique* : `always_invoice` garantit que Stripe génère immédiatement une facture pour le prorata de l'upgrade (ex: Basic -> Premium) et tente le paiement. Cela évite d'attendre la fin de période pour facturer l'écart.
+  - *Note produit* : L'usage de `always_invoice` n'implique pas une interface de checkout personnalisée ; l'utilisateur reste dans l'interface standard du Stripe Customer Portal.
+
+### Règle d'or : Webhook-First
+Bien que `always_invoice` déclenche une facturation immédiate, l'application respecte strictement la règle **webhook-first** :
+1. L'utilisateur valide son changement dans le portail.
+2. Stripe encaisse (ou planifie) le changement et émet un webhook.
+3. Le backend reçoit le webhook et met à jour le profil billing local.
+4. Les droits (Premium) sont accordés à l'utilisateur lors de son prochain rafraîchissement d'état.
+Aucun droit n'est accordé de manière synchrone lors de la création de la session de portail ou au retour de l'utilisateur sur la `return_url`.
 
 ### Annulation et Réactivation
 - Le mode d'annulation **At period end** permet à l'utilisateur de conserver ses accès jusqu'à la fin de la période payée.

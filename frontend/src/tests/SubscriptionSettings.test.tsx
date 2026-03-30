@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { BillingApiError } from "../api/billing"
 import { SubscriptionSettings } from "../pages/settings/SubscriptionSettings"
 
 const mockUseBillingSubscription = vi.fn()
@@ -185,5 +186,47 @@ describe("SubscriptionSettings", () => {
       expect.objectContaining({ onSuccess: expect.any(Function) }),
     )
     expect(checkoutMutate).not.toHaveBeenCalled()
+  })
+
+  it("fallback vers le portal générique si subscription_update est désactivé dans Stripe Portal", () => {
+    setupCatalogMock()
+    const portalMutate = vi.fn()
+    const updateMutate = vi.fn((_payload, options) => {
+      options?.onError?.(
+        new BillingApiError(
+          "stripe_portal_subscription_update_disabled",
+          "subscription update disabled",
+          422,
+          {},
+        ),
+      )
+    })
+
+    mockUseBillingSubscription.mockReturnValue({
+      isLoading: false,
+      data: {
+        status: "active",
+        subscription_status: "active",
+        plan: { code: "basic", display_name: "Basic", monthly_price_cents: 900, currency: "EUR", daily_message_limit: 50, is_active: true },
+        failure_reason: null,
+      },
+    })
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: portalMutate })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: updateMutate })
+
+    render(<SubscriptionSettings />)
+
+    const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
+    fireEvent.click(premiumCard)
+
+    const validateButton = screen.getByRole("button", { name: /valider|validate/i })
+    fireEvent.click(validateButton)
+
+    expect(updateMutate).toHaveBeenCalled()
+    expect(portalMutate).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    )
   })
 })

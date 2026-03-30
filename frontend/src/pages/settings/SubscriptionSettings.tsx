@@ -109,7 +109,13 @@ export function SubscriptionSettings() {
           window.location.href = data.url
         },
         onError: (err) => {
-          if (err instanceof BillingApiError && err.code === "stripe_subscription_not_found") {
+          if (
+            err instanceof BillingApiError
+            && (
+              err.code === "stripe_subscription_not_found"
+              || err.code === "stripe_portal_subscription_update_disabled"
+            )
+          ) {
             portalSession.mutate(undefined, {
               onSuccess: (portalData) => {
                 window.location.href = portalData.url

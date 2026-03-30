@@ -58,7 +58,8 @@ def _get_profile_snapshot(email: str) -> dict[str, object]:
 @pytest.fixture
 def clean_db():
     _cleanup_tables()
-    yield
+    with patch("app.api.v1.routers.billing.settings.stripe_portal_configuration_id", "bpc_test_123"):
+        yield
 
 
 class TestStripeCustomerPortalApi:
@@ -378,6 +379,43 @@ class TestStripeCustomerPortalApi:
 
         assert response.status_code == 502
         assert response.json()["error"]["code"] == "stripe_api_error"
+
+    def test_update_session_returns_422_when_subscription_update_feature_is_disabled(
+        self, clean_db
+    ):
+        import stripe
+
+        token = _register_user_with_role("user@example.com", "user")
+        with SessionLocal() as db:
+            user = db.query(UserModel).filter_by(email="user@example.com").first()
+            profile = StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id="cus_123",
+                stripe_subscription_id="sub_123",
+            )
+            db.add(profile)
+            db.commit()
+
+        mock_client = MagicMock()
+        mock_client.billing_portal.sessions.create.side_effect = stripe.InvalidRequestError(
+            message=(
+                "This subscription cannot be updated because the subscription update "
+                "feature in the portal configuration is disabled."
+            ),
+            param=None,
+        )
+
+        with patch(
+            "app.services.stripe_customer_portal_service.get_stripe_client",
+            return_value=mock_client,
+        ):
+            response = client.post(
+                "/v1/billing/stripe-customer-portal-subscription-update-session",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+
+        assert response.status_code == 422
+        assert response.json()["error"]["code"] == "stripe_portal_subscription_update_disabled"
 
     def test_update_session_no_jwt_401(self, clean_db):
         response = client.post("/v1/billing/stripe-customer-portal-subscription-update-session")

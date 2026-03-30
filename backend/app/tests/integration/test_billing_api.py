@@ -129,6 +129,13 @@ def test_billing_subscription_requires_token() -> None:
     assert response.json()["error"]["code"] == "missing_access_token"
 
 
+def test_billing_plans_requires_token() -> None:
+    _cleanup_tables()
+    response = client.get("/v1/billing/plans")
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "missing_access_token"
+
+
 def test_decommissioned_endpoints_return_404() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
@@ -137,6 +144,22 @@ def test_decommissioned_endpoints_return_404() -> None:
     for path in ["/v1/billing/checkout", "/v1/billing/retry", "/v1/billing/plan-change"]:
         resp = client.post(path, headers=headers, json={})
         assert resp.status_code == 404
+
+
+def test_billing_plans_are_available_for_authenticated_user() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    with SessionLocal() as db:
+        BillingService.ensure_default_plans(db)
+        db.commit()
+
+    response = client.get("/v1/billing/plans", headers=headers)
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    codes = {plan["code"] for plan in payload}
+    assert {"basic", "premium"}.issubset(codes)
 
 
 def test_billing_subscription_status_with_stripe_profile() -> None:
