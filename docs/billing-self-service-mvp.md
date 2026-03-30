@@ -9,6 +9,7 @@ L'application délègue la gestion avancée des abonnements (upgrade, downgrade,
 ### Principes clés
 1. **Source de vérité : Stripe**. Tout changement effectué dans le portail est propagé au backend via le **Webhook Stripe** existant.
 2. **Snapshot local**. Le backend maintient un snapshot de l'état Stripe dans la table `stripe_billing_profiles`.
+Ce snapshot est désormais la source canonique de lecture pour le runtime B2C dès qu'il est exploitable.
 3. **Synchronisation asynchrone**. Le portail ne redirige pas vers un endpoint de "succès" qui synchronise l'état. C'est le webhook qui garantit la cohérence.
 4. **MVP strictly limited**. Le backend ne propose pas d'endpoints `change-plan` ou `cancel-subscription` maison.
 
@@ -56,7 +57,7 @@ Pour que ces flux fonctionnent, la configuration du portail (par défaut ou via 
 3. Le frontend redirige l'utilisateur vers l'URL retournée.
 4. L'utilisateur modifie son abonnement sur Stripe.
 5. Stripe envoie un webhook (`customer.subscription.updated`, etc.) au backend.
-6. Le backend met à jour le `StripeBillingProfile` et recalcule les entitlements.
+6. Le backend met à jour le `StripeBillingProfile`, invalide le cache billing utilisateur, puis le runtime B2C relit ce snapshot canonique pour exposer le plan commercial et les entitlements.
 7. L'utilisateur revient sur l'application via la `return_url`.
 8. L'interface reflète les changements grâce à l'état mis à jour via le webhook.
 
@@ -65,3 +66,4 @@ Pour que ces flux fonctionnent, la configuration du portail (par défaut ou via 
 - Pas de gestion des proratas en temps réel côté backend (géré par l'UI Stripe).
 - Pas de polling au retour du portail : il peut y avoir un léger délai (quelques secondes) avant que le webhook ne soit traité et que l'interface ne soit à jour.
 - Pas de mutation synchrone du snapshot billing ni de recalcul d'entitlements dans l'endpoint portail. Le webhook Stripe reste l'unique source de vérité pour les changements effectifs.
+- Le contrat `GET /v1/billing/subscription` et le resolver `GET /v1/entitlements/me` ne dépendent plus du seul `UserSubscriptionModel` legacy quand un snapshot Stripe exploitable existe.

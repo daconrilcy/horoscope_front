@@ -107,8 +107,10 @@ def test_get_subscription_status_exposes_stripe_subscription_status() -> None:
 
         status = BillingService.get_subscription_status(db, user_id=user_id)
 
-    assert status.status == "inactive"
+    assert status.status == "active"
     assert status.subscription_status == "trialing"
+    assert status.plan is not None
+    assert status.plan.code == "basic"
 
 
 def test_checkout_is_idempotent_with_same_idempotency_key() -> None:
@@ -395,3 +397,35 @@ def test_subscription_status_cache_is_refreshed_after_plan_change() -> None:
     assert changed.subscription.plan.code == "premium-unlimited"
     assert after.plan is not None
     assert after.plan.code == "premium-unlimited"
+
+
+def test_readonly_status_ignores_non_usable_stripe_profile_when_legacy_subscription_exists(
+) -> None:
+    _cleanup_tables()
+    user_id = _create_user_id()
+    with SessionLocal() as db:
+        plan = BillingService.ensure_entry_plan(db)
+        db.add(
+            UserSubscriptionModel(
+                user_id=user_id,
+                plan_id=plan.id,
+                status="active",
+                failure_reason=None,
+            )
+        )
+        db.add(
+            StripeBillingProfileModel(
+                user_id=user_id,
+                stripe_customer_id="cus_empty_profile",
+                subscription_status=None,
+                entitlement_plan="free",
+            )
+        )
+        db.commit()
+
+        status = BillingService.get_subscription_status_readonly(db, user_id=user_id)
+
+    assert status.status == "active"
+    assert status.subscription_status is None
+    assert status.plan is not None
+    assert status.plan.code == "basic-entry"

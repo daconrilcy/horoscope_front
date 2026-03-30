@@ -41,7 +41,7 @@ class EffectiveEntitlementResolverService:
     REASON_QUOTA_EXHAUSTED = "quota_exhausted"
     REASON_BINDING_DISABLED = "binding_disabled"
     REASON_SUBJECT_NOT_ELIGIBLE = "subject_not_eligible"
-    _ACTIVE_BILLING_STATUSES = frozenset({"active", "trialing"})
+    _ACTIVE_BILLING_STATUSES = frozenset({"active", "trialing", "past_due"})
 
     @staticmethod
     def resolve_b2c_user_snapshot(
@@ -81,25 +81,24 @@ class EffectiveEntitlementResolverService:
 
         # 2. Résolution billing/plan
         sub = BillingService.get_subscription_status_readonly(db, user_id=app_user_id)
-        if sub.plan is None:
-            plan_code = "none"
-            billing_status = "none"
-        else:
-            plan_code = sub.plan.code
-            billing_status = sub.status
+        plan_code = BillingService.resolve_runtime_plan_code(sub)
+        billing_status = BillingService.resolve_runtime_billing_status(sub)
 
         # 3. Chargement du plan canonique
         canonical_plan = None
         if plan_code != "none":
-            canonical_plan = db.scalar(
-                select(PlanCatalogModel)
-                .where(
-                    PlanCatalogModel.plan_code == plan_code,
-                    PlanCatalogModel.audience == Audience.B2C,
-                    PlanCatalogModel.is_active,
+            for candidate_plan_code in BillingService.get_plan_lookup_codes(plan_code):
+                canonical_plan = db.scalar(
+                    select(PlanCatalogModel)
+                    .where(
+                        PlanCatalogModel.plan_code == candidate_plan_code,
+                        PlanCatalogModel.audience == Audience.B2C,
+                        PlanCatalogModel.is_active,
+                    )
+                    .limit(1)
                 )
-                .limit(1)
-            )
+                if canonical_plan is not None:
+                    break
 
         # 4. Features du scope B2C
         features = [

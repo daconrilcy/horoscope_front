@@ -4,6 +4,11 @@
 
 Le produit ne décide jamais l'accès premium à partir d'un simple booléen `paid/unpaid`.
 La source de vérité reste Stripe, réconciliée par webhook puis exposée au runtime produit via `subscription_status` et `entitlement_plan`.
+Le backend dérive ensuite :
+
+- le contrat commercial `GET /v1/billing/subscription` depuis le snapshot Stripe canonique ;
+- le `plan_code` runtime B2C depuis `entitlement_plan` ;
+- le `billing_status` runtime B2C depuis le vrai `subscription_status` Stripe.
 
 ## Statuts Stripe reconnus
 
@@ -17,7 +22,7 @@ Le sens produit retenu est :
 | `active` | Abonnement réellement actif | autorisé selon le plan mappé |
 | `incomplete` | Premier paiement non confirmé | accès payant refusé |
 | `incomplete_expired` | Première tentative expirée côté Stripe | accès refusé |
-| `past_due` | Défaut temporaire après activation | conservation du plan courant |
+| `past_due` | Défaut temporaire après activation | conservation du plan courant et des accès produit selon la politique canonique |
 | `paused` | Fin d'essai sans moyen de paiement avec politique `pause` | accès suspendu |
 | `canceled` | Abonnement résilié | retour `free` |
 | `unpaid` | Factures impayées, accès révoqué | retour `free` |
@@ -84,4 +89,5 @@ Le frontend ne se base plus sur un drapeau `is_trial` dans l'URL de retour. Le s
 - l'audit `stripe_checkout_session_created` contient `trial_enabled`, `trial_period_days`, `payment_method_collection`, `missing_payment_method_behavior`
 - un abonnement `trialing` ouvre bien l'accès via `entitlement_plan`
 - un abonnement `incomplete` reste sans accès payant tant que `invoice.paid` n'a pas convergé vers `active`
+- un abonnement `past_due` conserve bien le plan courant et les accès produit attendus
 - un abonnement `paused` retombe sur `free`

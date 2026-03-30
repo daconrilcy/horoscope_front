@@ -223,5 +223,10 @@ class StripeBillingProfileService:
         profile.last_stripe_event_type = event_type
         profile.synced_at = datetime.now(timezone.utc)
 
+        # 5. Invalidation du cache de facturation (Story 61.58)
+        # Import retardé pour éviter les dépendances circulaires
+        from app.services.billing_service import BillingService
+        BillingService._invalidate_cached_subscription_status(user_id)
+
         db.flush()
         return profile

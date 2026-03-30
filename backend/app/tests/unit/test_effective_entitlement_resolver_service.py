@@ -214,7 +214,7 @@ def test_resolve_b2b_account_snapshot_active(db):
     assert access.access_mode == "unlimited"
 
 
-def test_resolve_b2c_user_snapshot_billing_inactive(db):
+def test_resolve_b2c_user_snapshot_past_due_preserves_access(db):
     user = UserModel(id=1, email="test@example.com", password_hash="hash", role="user")
     db.add(user)
     plan = PlanCatalogModel(plan_code="premium", plan_name="Premium", audience=Audience.B2C)
@@ -253,8 +253,8 @@ def test_resolve_b2c_user_snapshot_billing_inactive(db):
 
         assert snapshot.billing_status == "past_due"
         access = snapshot.entitlements["astrologer_chat"]
-        assert access.granted is False
-        assert access.reason_code == EffectiveEntitlementResolverService.REASON_BILLING_INACTIVE
+        assert access.granted is True
+        assert access.reason_code == EffectiveEntitlementResolverService.REASON_GRANTED
 
 
 def test_resolve_b2c_user_snapshot_trialing_is_treated_as_active(db):

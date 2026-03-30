@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
@@ -56,9 +57,9 @@ def _cleanup_tables() -> None:
         db.add(feature)
         db.flush()
 
-        # Seed basic-entry plan
+        # Seed basic plan
         p_basic = PlanCatalogModel(
-            plan_code="basic-entry",
+            plan_code="basic",
             plan_name="Basic",
             audience=Audience.B2C,
         )
@@ -85,9 +86,9 @@ def _cleanup_tables() -> None:
             )
         )
 
-        # Seed premium-unlimited plan
+        # Seed premium plan
         p_premium = PlanCatalogModel(
-            plan_code="premium-unlimited",
+            plan_code="premium",
             plan_name="Premium",
             audience=Audience.B2C,
         )
@@ -183,7 +184,7 @@ def test_billing_checkout_success_and_subscription_visibility() -> None:
     status = client.get("/v1/billing/subscription", headers=headers)
     assert status.status_code == 200
     assert status.json()["data"]["status"] == "active"
-    assert status.json()["data"]["plan"]["code"] == "basic-entry"
+    assert status.json()["data"]["plan"]["code"] == "basic"
 
     counters = get_metrics_snapshot()["counters"]
     assert any(
@@ -198,7 +199,7 @@ def test_billing_checkout_success_and_subscription_visibility() -> None:
         name.startswith("pricing_experiment_conversion_total|")
         and "|conversion_type=checkout" in name
         and "|status=success" in name
-        and "|plan_code=basic-entry" in name
+        and "|plan_code=basic" in name
         for name in counters
     )
     assert any(
@@ -208,7 +209,7 @@ def test_billing_checkout_success_and_subscription_visibility() -> None:
     assert any(
         name.startswith("pricing_experiment_retention_usage_total|")
         and "|retention_event=subscription_status_view" in name
-        and "|plan_code=basic-entry" in name
+        and "|plan_code=basic" in name
         for name in counters
     )
 
@@ -233,6 +234,51 @@ def test_billing_subscription_exposes_raw_stripe_subscription_status() -> None:
 
     assert status.status_code == 200
     assert status.json()["data"]["subscription_status"] == "incomplete"
+
+
+@pytest.mark.parametrize(
+    ("subscription_status", "entitlement_plan", "expected_status", "expected_plan_code"),
+    [
+        ("active", "basic", "active", "basic"),
+        ("trialing", "basic", "active", "basic"),
+        ("incomplete", "free", "inactive", None),
+        ("paused", "free", "inactive", None),
+        ("canceled", "free", "inactive", None),
+        ("unpaid", "free", "inactive", None),
+    ],
+)
+def test_billing_subscription_uses_canonical_stripe_snapshot_without_legacy_subscription(
+    subscription_status: str,
+    entitlement_plan: str,
+    expected_status: str,
+    expected_plan_code: str | None,
+) -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    with SessionLocal() as db:
+        user = db.query(UserModel).filter_by(email="billing-api-user@example.com").one()
+        db.add(
+            StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id=f"cus_{subscription_status}",
+                subscription_status=subscription_status,
+                entitlement_plan=entitlement_plan,
+            )
+        )
+        db.commit()
+
+    status = client.get("/v1/billing/subscription", headers=headers)
+
+    assert status.status_code == 200
+    payload = status.json()["data"]
+    assert payload["status"] == expected_status
+    assert payload["subscription_status"] == subscription_status
+    if expected_plan_code is None:
+        assert payload["plan"] is None
+    else:
+        assert payload["plan"]["code"] == expected_plan_code
 
 
 def test_billing_checkout_failure_then_retry_success() -> None:
@@ -444,7 +490,7 @@ def test_billing_plan_change_updates_subscription_and_quota_limit() -> None:
 
     status = client.get("/v1/billing/subscription", headers=headers)
     assert status.status_code == 200
-    assert status.json()["data"]["plan"]["code"] == "premium-unlimited"
+    assert status.json()["data"]["plan"]["code"] == "premium"
 
     ent_after = client.get("/v1/entitlements/me", headers=headers)
     assert ent_after.status_code == 200

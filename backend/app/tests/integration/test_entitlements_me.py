@@ -16,6 +16,7 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureQuotaModel,
     ResetMode,
 )
+from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.session import get_db_session
 from app.main import app
 from app.services.billing_service import BillingPlanData, BillingService, SubscriptionStatusData
@@ -538,3 +539,91 @@ def test_no_legacy_fallback_reason_in_response(db_session: Session):
             assert f["reason_code"] != "legacy_fallback", (
                 f"Plan {plan} feature {f['feature_code']} returned legacy_fallback"
             )
+
+
+def test_trialing_stripe_profile_opens_entitlements_without_legacy_subscription(
+    db_session: Session,
+):
+    BillingService.reset_subscription_status_cache()
+    seed_canonical_plans(db_session)
+    user = _create_user(db_session, "stripe-trialing@example.com")
+    db_session.add(
+        StripeBillingProfileModel(
+            user_id=user.id,
+            stripe_customer_id="cus_trialing",
+            subscription_status="trialing",
+            entitlement_plan="basic",
+        )
+    )
+    db_session.commit()
+
+    app.dependency_overrides[require_authenticated_user] = _override_auth(user_id=user.id)
+    app.dependency_overrides[get_db_session] = lambda: db_session
+    response = client.get("/v1/entitlements/me")
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    assert payload["plan_code"] == "basic"
+    assert payload["billing_status"] == "trialing"
+
+    chat = next(f for f in payload["features"] if f["feature_code"] == "astrologer_chat")
+    assert chat["granted"] is True
+    assert chat["access_mode"] == "quota"
+    assert chat["usage_states"][0]["quota_limit"] == 5
+
+
+def test_incomplete_stripe_profile_does_not_open_paid_entitlements(db_session: Session):
+    BillingService.reset_subscription_status_cache()
+    seed_canonical_plans(db_session)
+    user = _create_user(db_session, "stripe-incomplete@example.com")
+    db_session.add(
+        StripeBillingProfileModel(
+            user_id=user.id,
+            stripe_customer_id="cus_incomplete",
+            subscription_status="incomplete",
+            entitlement_plan="free",
+        )
+    )
+    db_session.commit()
+
+    app.dependency_overrides[require_authenticated_user] = _override_auth(user_id=user.id)
+    app.dependency_overrides[get_db_session] = lambda: db_session
+    response = client.get("/v1/entitlements/me")
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    assert payload["plan_code"] == "none"
+    assert payload["billing_status"] == "incomplete"
+
+    chat = next(f for f in payload["features"] if f["feature_code"] == "astrologer_chat")
+    assert chat["granted"] is False
+
+
+def test_past_due_stripe_profile_preserves_product_access(db_session: Session):
+    BillingService.reset_subscription_status_cache()
+    seed_canonical_plans(db_session)
+    user = _create_user(db_session, "stripe-past-due@example.com")
+    db_session.add(
+        StripeBillingProfileModel(
+            user_id=user.id,
+            stripe_customer_id="cus_past_due",
+            subscription_status="past_due",
+            entitlement_plan="basic",
+        )
+    )
+    db_session.commit()
+
+    app.dependency_overrides[require_authenticated_user] = _override_auth(user_id=user.id)
+    app.dependency_overrides[get_db_session] = lambda: db_session
+    response = client.get("/v1/entitlements/me")
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    assert payload["plan_code"] == "basic"
+    assert payload["billing_status"] == "past_due"
+
+    chat = next(f for f in payload["features"] if f["feature_code"] == "astrologer_chat")
+    assert chat["granted"] is True

@@ -589,7 +589,7 @@ class TestPremiumPlan:
 
 
 class TestBillingInactiveScenario:
-    def test_enabled_features_are_denied_when_billing_is_inactive(
+    def test_past_due_preserves_enabled_feature_access(
         self,
         db_session: Session,
     ) -> None:
@@ -610,8 +610,8 @@ class TestBillingInactiveScenario:
             feature = _get_feature(response, feature_code)
             if EXPECTED_MATRIX["premium"][feature_code].access_mode == "disabled":
                 continue
-            assert feature["granted"] is False
-            assert feature["reason_code"] == "billing_inactive"
+            assert feature["granted"] is True
+            assert feature["reason_code"] == "granted"
 
 
 class TestFrontendContract:

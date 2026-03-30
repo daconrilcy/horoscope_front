@@ -9,9 +9,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.stripe_webhook_event import StripeWebhookEventModel
 from app.infra.db.session import SessionLocal
 from app.main import app
+from app.services.auth_service import AuthService
+from app.services.billing_service import BillingService
 
 client = TestClient(app)
 
@@ -356,3 +359,82 @@ async def test_webhook_subscription_resumed():
                     assert response.status_code == 200
                     assert response.json() == {"status": "processed"}
                     mock_update.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_webhook_invalidates_billing_cache_for_next_read():
+    BillingService.reset_subscription_status_cache()
+    with SessionLocal() as db:
+        auth = AuthService.register(
+            db,
+            email=f"webhook-cache-{uuid.uuid4().hex[:8]}@example.com",
+            password="strong-pass-123",
+            role="user",
+        )
+        user_id = auth.user.id
+        db.add(
+            StripeBillingProfileModel(
+                user_id=user_id,
+                stripe_customer_id="cus_cache_test",
+                subscription_status="incomplete",
+                entitlement_plan="free",
+            )
+        )
+        db.commit()
+
+        before = BillingService.get_subscription_status_readonly(db, user_id=user_id)
+        assert before.status == "inactive"
+        assert before.subscription_status == "incomplete"
+        assert before.plan is None
+
+    event_id = _unique_id("evt_cache")
+    payload = f'{{"id": "{event_id}", "type": "invoice.paid"}}'.encode()
+    secret = "whsec_test"
+    headers = {"stripe-signature": _sign_payload(payload, secret)}
+
+    mock_event = MagicMock()
+    mock_event.id = event_id
+    mock_event.type = "invoice.paid"
+    mock_event.livemode = False
+    mock_event.data.object = MagicMock()
+    mock_event.data.object.id = "in_cache_123"
+    mock_event.data.object.customer = "cus_cache_test"
+    mock_event.to_dict.return_value = {
+        "id": event_id,
+        "type": "invoice.paid",
+        "created": int(time.time()),
+        "data": {
+            "object": {
+                "object": "subscription",
+                "id": "sub_cache_123",
+                "customer": "cus_cache_test",
+                "status": "active",
+                "items": {"data": [{"price": {"id": "price_basic"}}]},
+            }
+        },
+    }
+
+    with patch("app.core.config.settings.stripe_webhook_secret", secret):
+        with patch(
+            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            return_value=mock_event,
+        ):
+            with patch.dict(
+                "app.services.stripe_billing_profile_service.STRIPE_PRICE_ENTITLEMENT_MAP",
+                {"price_basic": "basic"},
+                clear=True,
+            ):
+                response = client.post(
+                    "/v1/billing/stripe-webhook", content=payload, headers=headers
+                )
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "processed"}
+
+    with SessionLocal() as db:
+        after = BillingService.get_subscription_status_readonly(db, user_id=user_id)
+
+    assert after.status == "active"
+    assert after.subscription_status == "active"
+    assert after.plan is not None
+    assert after.plan.code == "basic-entry"

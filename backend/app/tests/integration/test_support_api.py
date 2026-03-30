@@ -29,6 +29,7 @@ client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
+    BillingService.reset_subscription_status_cache()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
