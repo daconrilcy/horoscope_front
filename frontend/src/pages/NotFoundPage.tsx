@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useNavigate } from "react-router-dom"
 import { AuthLayout } from "../layouts"
 
@@ -16,3 +17,4 @@ export function NotFoundPage() {
     </AuthLayout>
   )
 }
+

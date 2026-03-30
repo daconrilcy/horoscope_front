@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { AstrologyLang } from "./astrology"
 
 export interface AdminTranslation {

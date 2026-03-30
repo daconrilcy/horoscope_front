@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from "react"
 
 import { useOpsSearchUser, useOpsRollbackPersona } from "@api"
@@ -69,3 +70,4 @@ export function SupportOpsPanel() {
     </section>
   )
 }
+

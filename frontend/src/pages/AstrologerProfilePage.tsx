@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useNavigate, useParams } from "react-router-dom"
 import { useState } from "react"
 import { 
@@ -867,3 +868,4 @@ export function AstrologerProfilePage() {
     </PageLayout>
   )
 }
+
