@@ -73,9 +73,9 @@ def _cleanup_tables() -> None:
         db.add(
             PlanFeatureQuotaModel(
                 plan_feature_binding_id=b_basic.id,
-                quota_key="daily",
-                quota_limit=5,
-                period_unit=PeriodUnit.DAY,
+                quota_key="messages",
+                quota_limit=50,
+                period_unit=PeriodUnit.MONTH,
                 period_value=1,
                 reset_mode=ResetMode.CALENDAR,
             )
@@ -102,9 +102,9 @@ def _cleanup_tables() -> None:
         db.add(
             PlanFeatureQuotaModel(
                 plan_feature_binding_id=b_premium.id,
-                quota_key="daily",
+                quota_key="messages",
                 quota_limit=1000,
-                period_unit=PeriodUnit.DAY,
+                period_unit=PeriodUnit.MONTH,
                 period_value=1,
                 reset_mode=ResetMode.CALENDAR,
             )

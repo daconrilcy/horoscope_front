@@ -29,30 +29,41 @@ export function SubscriptionSettings() {
       }).format(priceCents / 100) + (lang === "fr" ? "/mois" : "/month")
     }
 
+    const formatLimit = (planCode: string | null) => {
+      const isCurrent = (subscription?.plan?.code ?? null) === planCode
+      const quota = subscription?.current_quota
+
+      if (isCurrent && quota) {
+        return `${quota.quota_limit} ${t.quotaUnit}/${t.periodUnit[quota.period_unit] || quota.period_unit}`
+      }
+
+      return `— ${t.quotaUnit}`
+    }
+
     const basicPlan = catalog?.find(p => p.code === "basic")
     const premiumPlan = catalog?.find(p => p.code === "premium")
 
     return [
-      { 
-        code: null, 
-        label: t.planFree || "Gratuit", 
-        limit: "5 msg/jour", 
-        price: "0 €" 
+      {
+        code: null,
+        label: t.planFree || "Gratuit",
+        limit: formatLimit(null),
+        price: "0 €"
       },
-      { 
-        code: "basic", 
-        label: "Basic", 
-        limit: "50 msg/jour", 
-        price: basicPlan ? formatPrice(basicPlan.monthly_price_cents, basicPlan.currency) : "9 €/mois" 
+      {
+        code: "basic",
+        label: "Basic",
+        limit: formatLimit("basic"),
+        price: basicPlan ? formatPrice(basicPlan.monthly_price_cents, basicPlan.currency) : "9 €/mois"
       },
-      { 
-        code: "premium", 
-        label: "Premium", 
-        limit: "1000 msg/jour", 
-        price: premiumPlan ? formatPrice(premiumPlan.monthly_price_cents, premiumPlan.currency) : "29 €/mois" 
+      {
+        code: "premium",
+        label: "Premium",
+        limit: formatLimit("premium"),
+        price: premiumPlan ? formatPrice(premiumPlan.monthly_price_cents, premiumPlan.currency) : "29 €/mois"
       },
     ]
-  }, [catalog, lang, t])
+  }, [catalog, lang, t, subscription])
 
   const currentPlanCode = subscription?.plan?.code ?? null
   const stripeSubscriptionStatus = subscription?.subscription_status ?? null

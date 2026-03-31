@@ -82,6 +82,23 @@ class BillingPlanData(BaseModel):
     is_active: bool
 
 
+class CurrentQuotaData(BaseModel):
+    """
+    Modèle représentant l'usage courant d'un quota pour la feature principale.
+    Utilisé pour l'affichage dynamique dans le frontend.
+    """
+
+    feature_code: str
+    quota_limit: int
+    consumed: int
+    remaining: int
+    period_unit: str
+    period_value: int
+    reset_mode: str
+    window_start: datetime
+    window_end: datetime | None = None
+
+
 class SubscriptionStatusData(BaseModel):
     """Modèle représentant le statut d'un abonnement utilisateur."""
 
@@ -93,6 +110,7 @@ class SubscriptionStatusData(BaseModel):
     cancel_at_period_end: bool = False
     current_period_end: datetime | None = None
     failure_reason: str | None
+    current_quota: CurrentQuotaData | None = None
     updated_at: datetime | None
 
 
@@ -304,6 +322,104 @@ class BillingService:
             .limit(1)
         )
 
+    _BILLING_QUOTA_FEATURE = "astrologer_chat"  # feature principale exposée dans le résumé billing
+
+    @staticmethod
+    def _resolve_current_quota(
+        db: Session, *, user_id: int, plan_code: str
+    ) -> "CurrentQuotaData | None":
+        """
+        Résout le quota courant de la feature principale (astrologer_chat)
+        depuis le catalogue DB + le compteur utilisateur.
+        Retourne None si le plan n'a pas de binding actif ou si le quota est introuvable.
+        """
+        from sqlalchemy import asc
+
+        from app.infra.db.models.product_entitlements import (
+            AccessMode,
+            Audience,
+            FeatureCatalogModel,
+            PlanCatalogModel,
+            PlanFeatureBindingModel,
+            PlanFeatureQuotaModel,
+        )
+        from app.services.entitlement_types import QuotaDefinition
+        from app.services.quota_usage_service import QuotaUsageService
+
+        # 1. Plan canonique
+        plan = db.scalar(
+            select(PlanCatalogModel)
+            .where(
+                PlanCatalogModel.plan_code == plan_code,
+                PlanCatalogModel.audience == Audience.B2C,
+                PlanCatalogModel.is_active.is_(True),
+            )
+            .limit(1)
+        )
+        if plan is None:
+            return None
+
+        # 2. Feature
+        feature = db.scalar(
+            select(FeatureCatalogModel)
+            .where(FeatureCatalogModel.feature_code == BillingService._BILLING_QUOTA_FEATURE)
+            .limit(1)
+        )
+        if feature is None:
+            return None
+
+        # 3. Binding plan ↔ feature
+        binding = db.scalar(
+            select(PlanFeatureBindingModel)
+            .where(
+                PlanFeatureBindingModel.plan_id == plan.id,
+                PlanFeatureBindingModel.feature_id == feature.id,
+                PlanFeatureBindingModel.is_enabled.is_(True),
+                PlanFeatureBindingModel.access_mode == AccessMode.QUOTA,
+            )
+            .limit(1)
+        )
+        if binding is None:
+            return None
+
+        # 4. Quota principal du binding — ordre déterministe
+        quota_row = db.scalar(
+            select(PlanFeatureQuotaModel)
+            .where(PlanFeatureQuotaModel.plan_feature_binding_id == binding.id)
+            .order_by(asc(PlanFeatureQuotaModel.quota_key))
+            .limit(1)
+        )
+        if quota_row is None:
+            return None
+
+        q_def = QuotaDefinition(
+            quota_key=quota_row.quota_key,
+            quota_limit=quota_row.quota_limit,
+            period_unit=quota_row.period_unit.value,
+            period_value=quota_row.period_value,
+            reset_mode=quota_row.reset_mode.value,
+        )
+
+        # 5. Compteur courant (get_usage retourne used=0 si absent)
+        usage = QuotaUsageService.get_usage(
+            db,
+            user_id=user_id,
+            feature_code=BillingService._BILLING_QUOTA_FEATURE,
+            quota=q_def,
+        )
+
+        return CurrentQuotaData(
+            feature_code=BillingService._BILLING_QUOTA_FEATURE,
+            quota_limit=usage.quota_limit,
+            consumed=usage.used,
+            remaining=usage.remaining,
+            period_unit=usage.period_unit,
+            period_value=usage.period_value,
+            reset_mode=usage.reset_mode,
+            window_start=usage.window_start,
+            window_end=usage.window_end,
+        )
+
     @staticmethod
     def _to_stripe_subscription_data(
         db: Session,
@@ -329,7 +445,18 @@ class BillingService:
             if plan_model_sched is not None:
                 scheduled_plan_data = BillingService._to_plan_data(plan_model_sched)
             else:
-                scheduled_plan_data = BillingService._get_default_plan_data_by_code(profile.scheduled_plan_code)
+                scheduled_plan_data = BillingService._get_default_plan_data_by_code(
+                    profile.scheduled_plan_code
+                )
+
+        current_quota = None
+        if is_active and app_plan_code:
+            try:
+                current_quota = BillingService._resolve_current_quota(
+                    db, user_id=profile.user_id, plan_code=app_plan_code
+                )
+            except Exception:
+                logger.warning("Failed to resolve current_quota for user=%s", profile.user_id)
 
         return SubscriptionStatusData(
             status=exposed_status,
@@ -340,6 +467,7 @@ class BillingService:
             cancel_at_period_end=profile.cancel_at_period_end,
             current_period_end=profile.current_period_end,
             failure_reason=None,
+            current_quota=current_quota,
             updated_at=profile.updated_at,
         )
 

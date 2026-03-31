@@ -143,3 +143,16 @@ def test_all_datetimes_utc():
     window = QuotaWindowResolver.compute_window("day", 1, "calendar", ref_dt)
     assert window.window_start.tzinfo == UTC
     assert window.window_end.tzinfo == UTC
+
+
+def test_month_transition():
+    # Test que le window_start change bien au passage du mois
+    ref_dt_last_day = datetime(2026, 3, 31, 23, 59, 59, tzinfo=UTC)
+    ref_dt_next_day = datetime(2026, 4, 1, 0, 0, 0, tzinfo=UTC)
+
+    window_march = QuotaWindowResolver.compute_window("month", 1, "calendar", ref_dt_last_day)
+    window_april = QuotaWindowResolver.compute_window("month", 1, "calendar", ref_dt_next_day)
+
+    assert window_march.window_start == datetime(2026, 3, 1, 0, 0, tzinfo=UTC)
+    assert window_april.window_start == datetime(2026, 4, 1, 0, 0, tzinfo=UTC)
+    assert window_march.window_end == window_april.window_start

@@ -185,6 +185,14 @@ export const settingsTranslations = {
       buyCredits: "Acheter des crédits",
       buyCreditsDesc: "Besoin de plus de messages ? Achetez un pack de crédits supplémentaires.",
       soon: "Bientôt disponible",
+      quotaUnit: "msg",
+      periodUnit: {
+        day: "jour",
+        month: "mois",
+        week: "semaine",
+        year: "an",
+        lifetime: "vie",
+      },
     },
     en: {
       title: "My subscription",
@@ -206,6 +214,14 @@ export const settingsTranslations = {
       buyCredits: "Buy credits",
       buyCreditsDesc: "Need more messages? Buy an additional credit pack.",
       soon: "Soon available",
+      quotaUnit: "msg",
+      periodUnit: {
+        day: "day",
+        month: "month",
+        week: "week",
+        year: "year",
+        lifetime: "lifetime",
+      },
     },
     es: {
       title: "Mi suscripción",
@@ -223,10 +239,18 @@ export const settingsTranslations = {
       cancelConfirmTitle: "Cancelar suscripción",
       cancelConfirmDesc: "Tu acceso permanecerá activo hasta el {{date}}.",
       trialBasicNotice:
-        "Tu periodo de prueba sigue el plan Basic. El cambio a Premium estará disponible al finalizar la prueba.",
-      buyCredits: "Comprar créditos",
+        "Tu periodo de prueba sigue el plan Basic. El changement a Premium estará disponible al finalizar la prueba.",
+      buyCredits: "Comprar crédits",
       buyCreditsDesc: "¿Necesitas más mensajes? Compra un paquete de créditos adicionales.",
       soon: "Próximamente disponible",
+      quotaUnit: "msg",
+      periodUnit: {
+        day: "día",
+        month: "mes",
+        week: "semana",
+        year: "año",
+        lifetime: "vida",
+      },
     },
   } as Record<
     AstrologyLang,
@@ -249,6 +273,8 @@ export const settingsTranslations = {
       buyCredits: string
       buyCreditsDesc: string
       soon: string
+      quotaUnit: string
+      periodUnit: Record<string, string>
     }
   >,
 
