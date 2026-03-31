@@ -42,6 +42,16 @@ class StripeCustomerPortalService:
             )
 
     @staticmethod
+    def _ensure_subscription_reactivation_is_allowed(
+        profile: StripeBillingProfileModel,
+    ) -> None:
+        if not profile.cancel_at_period_end:
+            raise StripeCustomerPortalServiceError(
+                code="stripe_subscription_reactivation_not_needed",
+                message="Subscription is not scheduled for cancellation",
+            )
+
+    @staticmethod
     def _map_stripe_portal_error_code(error: stripe.StripeError, *, flow_type: str) -> str:
         if isinstance(error, stripe.InvalidRequestError):
             message = (str(error) or "").lower()
@@ -238,3 +248,53 @@ class StripeCustomerPortalService:
             flow_type="subscription_cancel",
             configuration_id=configuration_id,
         )
+
+    @staticmethod
+    def reactivate_subscription(
+        db: Session,
+        *,
+        user_id: int,
+    ) -> StripeBillingProfileModel:
+        profile = StripeCustomerPortalService._get_customer_subscription_profile(
+            db,
+            user_id=user_id,
+        )
+        StripeCustomerPortalService._ensure_subscription_reactivation_is_allowed(profile)
+
+        client = get_stripe_client()
+        if client is None:
+            raise StripeCustomerPortalServiceError(
+                code="stripe_unavailable",
+                message="Stripe client is not configured",
+            )
+
+        try:
+            subscription = client.subscriptions.update(
+                profile.stripe_subscription_id,
+                params={
+                    "cancel_at_period_end": False,
+                    "proration_behavior": "none",
+                },
+            )
+            updated_profile = StripeBillingProfileService.update_from_event_payload(
+                db,
+                user_id,
+                {
+                    "id": f"manual_subscription_reactivation_{profile.stripe_subscription_id}",
+                    "type": "customer.subscription.updated",
+                    "data": {"object": subscription.to_dict()},
+                },
+            )
+            logger.info(
+                "Stripe subscription reactivated for user=%s subscription=%s",
+                user_id,
+                profile.stripe_subscription_id,
+            )
+            return updated_profile
+        except stripe.StripeError as error:
+            logger.exception("Stripe API error during subscription reactivation")
+            raise StripeCustomerPortalServiceError(
+                code="stripe_api_error",
+                message="Stripe API error",
+                details={"error_message": str(error)},
+            ) from error

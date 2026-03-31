@@ -251,6 +251,18 @@ async function postStripePortalSubscriptionCancelSession(): Promise<StripePortal
   return body.data
 }
 
+async function postStripeSubscriptionReactivate(): Promise<BillingSubscriptionStatus> {
+  const response = await fetch(`${API_BASE_URL}/v1/billing/stripe-subscription-reactivate`, {
+    method: "POST",
+    headers: getAccessTokenAuthHeader(),
+  })
+  if (!response.ok) {
+    return parseError(response)
+  }
+  const body = (await response.json()) as { data: BillingSubscriptionStatus }
+  return body.data
+}
+
 export function useStripeCheckoutSession() {
   return useMutation({
     mutationFn: postStripeCheckoutSession,
@@ -272,5 +284,11 @@ export function useStripePortalSubscriptionUpdateSession() {
 export function useStripePortalSubscriptionCancelSession() {
   return useMutation({
     mutationFn: postStripePortalSubscriptionCancelSession,
+  })
+}
+
+export function useStripeSubscriptionReactivate() {
+  return useMutation({
+    mutationFn: postStripeSubscriptionReactivate,
   })
 }

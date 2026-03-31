@@ -6,6 +6,7 @@ import {
   useStripePortalSession,
   useStripePortalSubscriptionCancelSession,
   useStripePortalSubscriptionUpdateSession,
+  useStripeSubscriptionReactivate,
   BillingApiError,
 } from "@api/billing"
 import { detectLang } from "@i18n/astrology"
@@ -200,6 +201,7 @@ export function SubscriptionSettings() {
   const portalSession = useStripePortalSession()
   const portalCancelSession = useStripePortalSubscriptionCancelSession()
   const portalUpdateSession = useStripePortalSubscriptionUpdateSession()
+  const reactivateSubscription = useStripeSubscriptionReactivate()
 
   const handleValidate = () => {
     if (displaySelected === committedPlanCode) return
@@ -268,6 +270,20 @@ export function SubscriptionSettings() {
         return
       }
 
+      if (isCancellationAlreadyScheduled && displaySelected === currentPlanCode) {
+        if (reactivateSubscription.isPending) return
+        reactivateSubscription.mutate(undefined, {
+          onSuccess: () => {
+            clearPendingBillingPortalAction()
+            setPendingPortalAction(null)
+            setIsPortalSyncPending(false)
+            void refetchSubscription()
+          },
+          onError,
+        })
+        return
+      }
+
       // Sinon flow portal update pour changement de plan payant
       if (portalUpdateSession.isPending) return
       portalUpdateSession.mutate(undefined, {
@@ -309,6 +325,7 @@ export function SubscriptionSettings() {
     || portalSession.isPending
     || portalCancelSession.isPending
     || portalUpdateSession.isPending
+    || reactivateSubscription.isPending
   const hasChanges = displaySelected !== committedPlanCode
   const isCancelActionBlocked = displaySelected === null && isCancellationAlreadyScheduled
 

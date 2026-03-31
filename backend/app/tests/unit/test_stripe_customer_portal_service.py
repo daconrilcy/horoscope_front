@@ -421,3 +421,61 @@ class TestStripeCustomerPortalService:
         mock_client.billing_portal.sessions.create.assert_called_once()
         params = mock_client.billing_portal.sessions.create.call_args[1]["params"]
         assert params["configuration"] == configuration_id
+
+    @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.update_from_event_payload")
+    @patch("app.services.stripe_customer_portal_service.get_stripe_client")
+    @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
+    def test_reactivate_subscription_success(
+        self, mock_get_profile, mock_get_client, mock_update_from_event_payload
+    ):
+        db = MagicMock()
+        profile = StripeBillingProfileModel(
+            user_id=123,
+            stripe_customer_id="cus_123",
+            stripe_subscription_id="sub_123",
+            cancel_at_period_end=True,
+        )
+        updated_profile = StripeBillingProfileModel(
+            user_id=123,
+            stripe_customer_id="cus_123",
+            stripe_subscription_id="sub_123",
+            cancel_at_period_end=False,
+        )
+        mock_get_profile.return_value = profile
+        mock_update_from_event_payload.return_value = updated_profile
+        mock_subscription = MagicMock()
+        mock_subscription.to_dict.return_value = {"object": "subscription", "id": "sub_123"}
+        mock_client = MagicMock()
+        mock_client.subscriptions.update.return_value = mock_subscription
+        mock_get_client.return_value = mock_client
+
+        result = StripeCustomerPortalService.reactivate_subscription(db, user_id=123)
+
+        assert result is updated_profile
+        mock_client.subscriptions.update.assert_called_once_with(
+            "sub_123",
+            params={
+                "cancel_at_period_end": False,
+                "proration_behavior": "none",
+            },
+        )
+        mock_update_from_event_payload.assert_called_once()
+
+    @patch("app.services.stripe_customer_portal_service.get_stripe_client")
+    @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
+    def test_reactivate_subscription_rejects_when_not_scheduled(
+        self, mock_get_profile, mock_get_client
+    ):
+        db = MagicMock()
+        mock_get_profile.return_value = StripeBillingProfileModel(
+            user_id=123,
+            stripe_customer_id="cus_123",
+            stripe_subscription_id="sub_123",
+            cancel_at_period_end=False,
+        )
+
+        with pytest.raises(StripeCustomerPortalServiceError) as exc:
+            StripeCustomerPortalService.reactivate_subscription(db, user_id=123)
+
+        assert exc.value.code == "stripe_subscription_reactivation_not_needed"
+        mock_get_client.assert_not_called()

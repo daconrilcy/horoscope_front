@@ -10,6 +10,7 @@ const mockUseStripeCheckoutSession = vi.fn()
 const mockUseStripePortalSession = vi.fn()
 const mockUseStripePortalSubscriptionCancelSession = vi.fn()
 const mockUseStripePortalSubscriptionUpdateSession = vi.fn()
+const mockUseStripeSubscriptionReactivate = vi.fn()
 
 vi.mock("@api/billing", async (importActual) => {
   const actual = await importActual<typeof import("@api/billing")>()
@@ -21,6 +22,7 @@ vi.mock("@api/billing", async (importActual) => {
     useStripePortalSession: () => mockUseStripePortalSession(),
     useStripePortalSubscriptionCancelSession: () => mockUseStripePortalSubscriptionCancelSession(),
     useStripePortalSubscriptionUpdateSession: () => mockUseStripePortalSubscriptionUpdateSession(),
+    useStripeSubscriptionReactivate: () => mockUseStripeSubscriptionReactivate(),
   }
 })
 
@@ -32,6 +34,7 @@ afterEach(() => {
   mockUseStripePortalSession.mockReset()
   mockUseStripePortalSubscriptionCancelSession.mockReset()
   mockUseStripePortalSubscriptionUpdateSession.mockReset()
+  mockUseStripeSubscriptionReactivate.mockReset()
   localStorage.clear()
   vi.restoreAllMocks()
 })
@@ -62,6 +65,7 @@ describe("SubscriptionSettings", () => {
       mutate: vi.fn(),
     })
     mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     render(<SubscriptionSettings />)
 
@@ -93,6 +97,7 @@ describe("SubscriptionSettings", () => {
       mutate: vi.fn(),
     })
     mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     render(<SubscriptionSettings />)
 
@@ -128,6 +133,7 @@ describe("SubscriptionSettings", () => {
       mutate: vi.fn(),
     })
     mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     render(<SubscriptionSettings />)
 
@@ -161,6 +167,7 @@ describe("SubscriptionSettings", () => {
       mutate: vi.fn(),
     })
     mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     render(<SubscriptionSettings />)
 
@@ -194,6 +201,7 @@ describe("SubscriptionSettings", () => {
       mutate: vi.fn(),
     })
     mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     render(<SubscriptionSettings />)
 
@@ -242,6 +250,7 @@ describe("SubscriptionSettings", () => {
       mutate: vi.fn(),
     })
     mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: updateMutate })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     render(<SubscriptionSettings />)
 
@@ -281,6 +290,7 @@ describe("SubscriptionSettings", () => {
       mutate: cancelMutate,
     })
     mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: updateMutate })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     render(<SubscriptionSettings />)
 
@@ -333,6 +343,7 @@ describe("SubscriptionSettings", () => {
       isPending: false,
       mutate: vi.fn(),
     })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     render(<SubscriptionSettings />)
 
@@ -386,6 +397,7 @@ describe("SubscriptionSettings", () => {
       isPending: false,
       mutate: vi.fn(),
     })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     render(<SubscriptionSettings />)
 
@@ -437,6 +449,7 @@ describe("SubscriptionSettings", () => {
       isPending: false,
       mutate: vi.fn(),
     })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     render(<SubscriptionSettings />)
 
@@ -486,6 +499,7 @@ describe("SubscriptionSettings", () => {
       isPending: false,
       mutate: vi.fn(),
     })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     const { rerender } = render(<SubscriptionSettings />)
 
@@ -513,6 +527,7 @@ describe("SubscriptionSettings", () => {
     setupCatalogMock()
     const cancelMutate = vi.fn()
     const updateMutate = vi.fn()
+    const reactivateMutate = vi.fn()
 
     mockUseBillingSubscription.mockReturnValue({
       isLoading: false,
@@ -544,6 +559,10 @@ describe("SubscriptionSettings", () => {
       isPending: false,
       mutate: updateMutate,
     })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({
+      isPending: false,
+      mutate: reactivateMutate,
+    })
 
     render(<SubscriptionSettings />)
 
@@ -569,6 +588,16 @@ describe("SubscriptionSettings", () => {
 
     fireEvent.click(freeCard)
     expect(cancelMutate).not.toHaveBeenCalled()
+
+    fireEvent.click(basicCard)
+    expect(validateButton).toBeEnabled()
+    fireEvent.click(validateButton)
+
+    expect(reactivateMutate).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    )
+    expect(updateMutate).not.toHaveBeenCalled()
 
     const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
     fireEvent.click(premiumCard)

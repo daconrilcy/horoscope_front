@@ -86,6 +86,11 @@ class StripePortalApiResponse(BaseModel):
     meta: ResponseMeta
 
 
+class StripeSubscriptionStatusApiResponse(BaseModel):
+    data: SubscriptionStatusData
+    meta: ResponseMeta
+
+
 router = APIRouter(prefix="/v1/billing", tags=["billing"])
 logger = logging.getLogger(__name__)
 
@@ -252,6 +257,7 @@ def _resolve_portal_service_status_code(error_code: str) -> int:
         "stripe_portal_subscription_update_disabled": 422,
         "stripe_portal_subscription_cancel_disabled": 422,
         "stripe_portal_subscription_cancel_already_scheduled": 422,
+        "stripe_subscription_reactivation_not_needed": 422,
         "stripe_api_error": 502,
     }.get(error_code, 500)
 
@@ -704,6 +710,85 @@ def create_stripe_portal_subscription_cancel_session(
             configuration_id=settings.stripe_portal_configuration_id,
         ),
     )
+
+
+@router.post(
+    "/stripe-subscription-reactivate",
+    response_model=StripeSubscriptionStatusApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        422: {"model": ErrorEnvelope},
+        503: {"model": ErrorEnvelope},
+        502: {"model": ErrorEnvelope},
+    },
+)
+def reactivate_stripe_subscription(
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    role_error = _ensure_user_role(current_user, request_id)
+    if role_error is not None:
+        return role_error
+
+    rate_error = _enforce_billing_limits(
+        user_id=current_user.id,
+        plan_code=None,
+        operation="stripe_subscription_reactivate",
+        request_id=request_id,
+    )
+    if rate_error is not None:
+        return rate_error
+
+    try:
+        profile = StripeCustomerPortalService.reactivate_subscription(
+            db,
+            user_id=current_user.id,
+        )
+        subscription = BillingService._to_stripe_subscription_data(db, profile=profile)
+        _record_audit_event(
+            db,
+            request_id=request_id,
+            actor_user_id=current_user.id,
+            actor_role=current_user.role,
+            action="stripe_subscription_reactivated",
+            target_type="user",
+            target_id=str(current_user.id),
+            status="success",
+        )
+        db.commit()
+        return {"data": subscription.model_dump(mode="json"), "meta": {"request_id": request_id}}
+    except StripeCustomerPortalServiceError as error:
+        db.rollback()
+        try:
+            _record_audit_event(
+                db,
+                request_id=request_id,
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="stripe_subscription_reactivation_failed",
+                target_type="user",
+                target_id=str(current_user.id),
+                status="failed",
+                details={"error_code": error.code},
+            )
+        except AuditWriteError:
+            db.rollback()
+            return _audit_unavailable_response(request_id=request_id)
+        db.commit()
+        return _error_response(
+            status_code=_resolve_portal_service_status_code(error.code),
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
+        )
+    except AuditWriteError:
+        db.rollback()
+        return _audit_unavailable_response(request_id=request_id)
 
 
 @router.post(

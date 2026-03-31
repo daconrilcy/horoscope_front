@@ -366,6 +366,9 @@ claude-sonnet-4-6
 - [Post-validation fix 2026-03-31] Root cause backend confirmé sur environnement réel: Stripe test expose une résiliation planifiée via `cancel_at` avec `cancel_at_period_end=false`. Le mapping local ne lisait que `cancel_at_period_end`, ce qui empêchait `GET /v1/billing/subscription` de refléter la résiliation.
 - [Post-validation fix 2026-03-31] `StripeBillingProfileService.update_from_event_payload()` traite désormais `cancel_at` comme une résiliation programmée, aligne `pending_cancellation_effective_at` sur cette échéance, puis invalide le cache billing pour la prochaine lecture runtime.
 - [Post-validation fix 2026-03-31] Un test unitaire de non-régression couvre explicitement le cas `cancel_at != null && cancel_at_period_end == false`.
+- [Post-validation fix 2026-03-31] La réactivation du plan courant ne repasse plus par le portail Stripe `subscription_update`. Un endpoint backend dédié retire directement l’annulation programmée sur la subscription active; le portail Stripe est conservé uniquement si l’utilisateur réactive en changeant de plan.
+- [Post-validation fix 2026-03-31] Le bug backend observé en dev (`TypeError: SubscriptionService.update() got an unexpected keyword argument 'cancel_at_period_end'`) a été corrigé en utilisant la signature SDK compatible `client.subscriptions.update(subscription_id, params={...})`.
+- [Post-validation fix 2026-03-31] La couverture backend/frontend vérifie désormais explicitement que sélectionner le plan courant en mode réactivation appelle le endpoint direct de réactivation, tandis qu’un changement vers un autre plan conserve le flow portail Stripe.
 
 ### File List
 
@@ -375,6 +378,7 @@ claude-sonnet-4-6
 - `backend/app/tests/unit/test_stripe_billing_profile_service_61_65.py`
 - `backend/app/api/v1/routers/billing.py`
 - `backend/app/services/stripe_customer_portal_service.py`
+- `backend/app/tests/unit/test_stripe_customer_portal_service.py`
 - `frontend/src/api/billing.ts`
 - `frontend/src/i18n/settings.ts`
 - `frontend/src/pages/settings/Settings.css`
