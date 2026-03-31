@@ -16,6 +16,10 @@ export type BillingSubscriptionStatus = {
   status: "inactive" | "active"
   subscription_status: string | null
   plan: BillingPlan | null
+  scheduled_plan: BillingPlan | null
+  change_effective_at: string | null
+  cancel_at_period_end: boolean
+  current_period_end: string | null
   failure_reason: string | null
   updated_at: string | null
 }

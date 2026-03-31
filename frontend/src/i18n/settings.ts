@@ -174,7 +174,12 @@ export const settingsTranslations = {
       selected: "Sélectionné",
       validatePlan: "Valider ce plan",
       validating: "Validation en cours...",
+      planFree: "Gratuit",
       cancelSoon: "L'annulation vers le plan Gratuit sera bientôt disponible.",
+      cancelScheduled: "Résiliation prévue le {{date}}",
+      planChangeScheduled: "Passage à {{plan}} le {{date}}",
+      cancelConfirmTitle: "Résilier l'abonnement",
+      cancelConfirmDesc: "Votre accès restera actif jusqu'au {{date}}.",
       trialBasicNotice:
         "Votre essai correspond au plan Basic. Le passage Premium sera disponible à la fin de l'essai.",
       buyCredits: "Acheter des crédits",

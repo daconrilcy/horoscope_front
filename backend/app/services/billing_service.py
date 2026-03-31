@@ -88,6 +88,10 @@ class SubscriptionStatusData(BaseModel):
     status: str
     subscription_status: str | None = None
     plan: BillingPlanData | None
+    scheduled_plan: BillingPlanData | None = None
+    change_effective_at: datetime | None = None
+    cancel_at_period_end: bool = False
+    current_period_end: datetime | None = None
     failure_reason: str | None
     updated_at: datetime | None
 
@@ -319,10 +323,22 @@ class BillingService:
         else:
             plan_data = BillingService._get_default_plan_data_by_code(app_plan_code)
 
+        scheduled_plan_data = None
+        if profile.scheduled_plan_code:
+            plan_model_sched = BillingService._get_plan_by_code(db, profile.scheduled_plan_code)
+            if plan_model_sched is not None:
+                scheduled_plan_data = BillingService._to_plan_data(plan_model_sched)
+            else:
+                scheduled_plan_data = BillingService._get_default_plan_data_by_code(profile.scheduled_plan_code)
+
         return SubscriptionStatusData(
             status=exposed_status,
             subscription_status=profile.subscription_status,
             plan=plan_data,
+            scheduled_plan=scheduled_plan_data,
+            change_effective_at=profile.scheduled_change_effective_at,
+            cancel_at_period_end=profile.cancel_at_period_end,
+            current_period_end=profile.current_period_end,
             failure_reason=None,
             updated_at=profile.updated_at,
         )

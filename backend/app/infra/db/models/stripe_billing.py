@@ -45,10 +45,22 @@ class StripeBillingProfileModel(Base):
 
     # Statuts Stripe : trialing|active|past_due|canceled|unpaid|paused|incomplete|etc.
     subscription_status: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    current_period_start: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     current_period_end: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    # Nouveaux champs pour la cohérence plan effectif vs programmé (Story 61-65)
+    scheduled_plan_code: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    scheduled_change_effective_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    pending_cancellation_effective_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Source de vérité accès produit : "free" | "basic" | "premium"
     entitlement_plan: Mapped[str] = mapped_column(String(32), default="free", nullable=False)

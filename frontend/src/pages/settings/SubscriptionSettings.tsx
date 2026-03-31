@@ -76,7 +76,11 @@ export function SubscriptionSettings() {
 
   const handleValidate = () => {
     if (selectedPlanCode === currentPlanCode) return
-    if (!selectedPlanCode) return
+    
+    // Bloquer uniquement si pas de subscription active (interdit d'être "null" sans payer)
+    // Mais si subscription active, "null" veut dire résilier -> on laisse passer
+    if (!selectedPlanCode && stripeSubscriptionStatus === null) return
+
     if (isTrialUpgradeBlocked) {
       setErrorMessage(t.trialBasicNotice)
       return
@@ -111,6 +115,19 @@ export function SubscriptionSettings() {
         onError,
       })
     } else if (stripeSubscriptionStatus === "active") {
+      // Si on a sélectionné le plan Gratuit (null) -> flow portal cancel
+      if (selectedPlanCode === null) {
+        if (portalSession.isPending) return
+        portalSession.mutate(undefined, {
+          onSuccess: (data) => {
+            window.location.href = data.url
+          },
+          onError,
+        })
+        return
+      }
+
+      // Sinon flow portal update pour changement de plan payant
       if (portalUpdateSession.isPending) return
       portalUpdateSession.mutate(undefined, {
         onSuccess: (data) => {
@@ -148,6 +165,28 @@ export function SubscriptionSettings() {
 
   const isAnyPending = checkoutSession.isPending || portalSession.isPending || portalUpdateSession.isPending
   const hasChanges = displaySelected !== currentPlanCode
+
+  const scheduledMsg = useMemo(() => {
+    if (!subscription) return null
+    const formatDate = (dateStr: string) => {
+      const d = new Date(dateStr)
+      return d.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    }
+
+    if (subscription.cancel_at_period_end && subscription.current_period_end) {
+      return t.cancelScheduled.replace("{{date}}", formatDate(subscription.current_period_end))
+    }
+    if (subscription.scheduled_plan && subscription.change_effective_at) {
+      return t.planChangeScheduled
+        .replace("{{plan}}", subscription.scheduled_plan.display_name)
+        .replace("{{date}}", formatDate(subscription.change_effective_at))
+    }
+    return null
+  }, [subscription, t, lang])
 
   return (
     <div className="subscription-settings">
@@ -215,14 +254,17 @@ export function SubscriptionSettings() {
             )}
 
             <div className="subscription-actions">
-              {hasChanges && displaySelected === null && (
+              {scheduledMsg && (
+                <span className="subscription-actions__scheduled-msg">{scheduledMsg}</span>
+              )}
+              {!scheduledMsg && hasChanges && displaySelected === null && (
                 <span className="settings-text-muted">{t.cancelSoon}</span>
               )}
               <button
                 type="button"
                 className="settings-tab settings-tab--active subscription-actions__button"
                 onClick={handleValidate}
-                disabled={!hasChanges || displaySelected === null || isAnyPending || isTrialUpgradeBlocked}
+                disabled={!hasChanges || isAnyPending || isTrialUpgradeBlocked}
               >
                 {isAnyPending ? t.validating : t.validatePlan}
               </button>

@@ -206,9 +206,42 @@ class StripeBillingProfileService:
             # Stripe peut envoyer null → on force un bool pour respecter NOT NULL
             profile.cancel_at_period_end = bool(data_obj.get("cancel_at_period_end") or False)
 
+            period_start_ts = data_obj.get("current_period_start")
+            if period_start_ts:
+                profile.current_period_start = datetime.fromtimestamp(period_start_ts, tz=timezone.utc)
+
             period_end_ts = data_obj.get("current_period_end")
             if period_end_ts:
                 profile.current_period_end = datetime.fromtimestamp(period_end_ts, tz=timezone.utc)
+
+            # Gestion de l'annulation programmée (AC3)
+            if profile.cancel_at_period_end and profile.current_period_end:
+                profile.pending_cancellation_effective_at = profile.current_period_end
+            else:
+                profile.pending_cancellation_effective_at = None
+
+            # Détection du downgrade programmé via Subscription Schedule (AC2, T2)
+            schedule_id = data_obj.get("schedule")
+            if schedule_id and profile.subscription_status != "canceled":
+                try:
+                    # Import retardé pour éviter les dépendances circulaires
+                    from app.integrations.stripe_client import get_stripe_client
+                    client = get_stripe_client()
+                    if client:
+                        schedule = client.subscription_schedules.retrieve(schedule_id)
+                        StripeBillingProfileService._update_schedule_fields(profile, schedule)
+                except Exception as e:
+                    logger.warning("stripe_billing: failed to retrieve subscription schedule %s: %s", schedule_id, e)
+            else:
+                profile.scheduled_plan_code = None
+                profile.scheduled_change_effective_at = None
+
+            # Nettoyage complet si suppression effective (AC4, T3)
+            if profile.subscription_status == "canceled":
+                profile.scheduled_plan_code = None
+                profile.scheduled_change_effective_at = None
+                profile.pending_cancellation_effective_at = None
+                profile.cancel_at_period_end = False
 
             # Extraction du Price ID (premier item de la subscription)
             # Garder la valeur existante si l'event ne fournit pas de price.id valide
@@ -217,6 +250,10 @@ class StripeBillingProfileService:
                 price_id = items[0].get("price", {}).get("id")
                 if price_id:
                     profile.stripe_price_id = price_id
+
+        elif object_type == "subscription_schedule":
+            # Mise à jour directe depuis l'objet schedule (évite un retrieve si c'est l'event schedule lui-même)
+            StripeBillingProfileService._update_schedule_fields(profile, data_obj)
 
         # Mise à jour de l'email de facturation si présent
         email = data_obj.get("email") or data_obj.get("billing_details", {}).get("email")
@@ -243,3 +280,30 @@ class StripeBillingProfileService:
 
         db.flush()
         return profile
+
+    @staticmethod
+    def _update_schedule_fields(profile: StripeBillingProfileModel, schedule: dict) -> None:
+        """Helper pour extraire le plan programmé d'une Subscription Schedule."""
+        phases = schedule.get("phases", [])
+        if not phases:
+            profile.scheduled_plan_code = None
+            profile.scheduled_change_effective_at = None
+            return
+
+        now_ts = datetime.now(timezone.utc).timestamp()
+        # On cherche la prochaine phase dont le début est futur
+        next_phase = next(
+            (p for p in phases if p.get("start_date", 0) > now_ts),
+            None,
+        )
+        if next_phase:
+            next_price_items = next_phase.get("items", [])
+            if next_price_items:
+                next_price_id = next_price_items[0].get("price")
+                profile.scheduled_plan_code = STRIPE_PRICE_ENTITLEMENT_MAP.get(next_price_id)
+                profile.scheduled_change_effective_at = datetime.fromtimestamp(
+                    next_phase["start_date"], tz=timezone.utc
+                )
+        else:
+            profile.scheduled_plan_code = None
+            profile.scheduled_change_effective_at = None
