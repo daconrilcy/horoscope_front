@@ -360,8 +360,13 @@ claude-sonnet-4-6
 - [Review ajustements 2026-03-31] Nettoyage explicite de `cancel_at_period_end=false` sur `subscription.deleted` (AC4).
 - [Review ajustements 2026-03-31] Règle invariante `scheduled_plan` = informatif uniquement, jamais de droits runtime (AC5).
 - [Code Review 2026-03-31] Revue de code complète effectuée. L'implémentation correspond parfaitement aux ACs. Correction d'une erreur TypeScript liée à des clés i18n manquantes dans les traductions anglaises et espagnoles. Tous les tests backend et frontend sont au vert.
+- [Post-review fix 2026-03-31] `SubscriptionSettings` utilise désormais le flow Stripe dédié `subscription_cancel` lors de la sélection du plan Gratuit, au lieu du portail générique.
+- [Post-review fix 2026-03-31] La couverture frontend verrouille explicitement le parcours de résiliation dédié.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/61-65-coherence-plan-effectif-upgrade-immediat-downgrade-cancel-echeance.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `frontend/src/api/billing.ts`
+- `frontend/src/pages/settings/SubscriptionSettings.tsx`
+- `frontend/src/tests/SubscriptionSettings.test.tsx`

@@ -403,6 +403,7 @@ claude-sonnet-4-6
 - [Review 2026-03-31] AC6 + T3 : source frontend unique = `subscription.current_quota` — `GET /entitlements/me` exclu de l'affichage des limites.
 - [Review 2026-03-31] AC7 : `_PLAN_DEFAULTS.daily_message_limit` neutralisé dans les tests métier — aucun test ne s'appuie sur cette valeur comme référence de limite.
 - [Code Review 2026-03-31] Fixed outdated assertion in `test_product_entitlements_models.py` to match the new seed quotas.
+- [Post-review fix 2026-03-31] Le contrat TypeScript `BillingSubscriptionStatus` expose désormais `current_quota`, ce qui rétablit `npm run lint` et `npm run build` sur le frontend.
 
 ### File List
 
@@ -410,8 +411,10 @@ claude-sonnet-4-6
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
 - `backend/app/services/billing_service.py`
 - `backend/scripts/seed_product_entitlements.py`
+- `frontend/src/api/billing.ts`
 - `frontend/src/i18n/settings.ts`
 - `frontend/src/pages/settings/SubscriptionSettings.tsx`
+- `frontend/src/tests/SubscriptionSettings.test.tsx`
 - `backend/app/tests/unit/test_quota_window_resolver.py`
 - `backend/app/tests/unit/test_quota_usage_service.py`
 - `backend/app/tests/integration/test_billing_api.py`

@@ -12,6 +12,18 @@ export type BillingPlan = {
   is_active: boolean
 }
 
+export type CurrentQuota = {
+  feature_code: string
+  quota_limit: number
+  consumed: number
+  remaining: number
+  period_unit: string
+  period_value: number
+  reset_mode: string
+  window_start: string | null
+  window_end: string | null
+}
+
 export type BillingSubscriptionStatus = {
   status: "inactive" | "active"
   subscription_status: string | null
@@ -21,6 +33,7 @@ export type BillingSubscriptionStatus = {
   cancel_at_period_end: boolean
   current_period_end: string | null
   failure_reason: string | null
+  current_quota: CurrentQuota | null
   updated_at: string | null
 }
 
@@ -223,6 +236,21 @@ async function postStripePortalSubscriptionUpdateSession(): Promise<StripePortal
   return body.data
 }
 
+async function postStripePortalSubscriptionCancelSession(): Promise<StripePortalSessionData> {
+  const response = await fetch(
+    `${API_BASE_URL}/v1/billing/stripe-customer-portal-subscription-cancel-session`,
+    {
+      method: "POST",
+      headers: getAccessTokenAuthHeader(),
+    },
+  )
+  if (!response.ok) {
+    return parseError(response)
+  }
+  const body = (await response.json()) as { data: StripePortalSessionData }
+  return body.data
+}
+
 export function useStripeCheckoutSession() {
   return useMutation({
     mutationFn: postStripeCheckoutSession,
@@ -238,5 +266,11 @@ export function useStripePortalSession() {
 export function useStripePortalSubscriptionUpdateSession() {
   return useMutation({
     mutationFn: postStripePortalSubscriptionUpdateSession,
+  })
+}
+
+export function useStripePortalSubscriptionCancelSession() {
+  return useMutation({
+    mutationFn: postStripePortalSubscriptionCancelSession,
   })
 }

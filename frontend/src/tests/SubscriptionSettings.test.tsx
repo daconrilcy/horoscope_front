@@ -8,6 +8,7 @@ const mockUseBillingSubscription = vi.fn()
 const mockUseBillingPlans = vi.fn()
 const mockUseStripeCheckoutSession = vi.fn()
 const mockUseStripePortalSession = vi.fn()
+const mockUseStripePortalSubscriptionCancelSession = vi.fn()
 const mockUseStripePortalSubscriptionUpdateSession = vi.fn()
 
 vi.mock("@api/billing", async (importActual) => {
@@ -18,6 +19,7 @@ vi.mock("@api/billing", async (importActual) => {
     useBillingPlans: () => mockUseBillingPlans(),
     useStripeCheckoutSession: () => mockUseStripeCheckoutSession(),
     useStripePortalSession: () => mockUseStripePortalSession(),
+    useStripePortalSubscriptionCancelSession: () => mockUseStripePortalSubscriptionCancelSession(),
     useStripePortalSubscriptionUpdateSession: () => mockUseStripePortalSubscriptionUpdateSession(),
   }
 })
@@ -28,6 +30,7 @@ afterEach(() => {
   mockUseBillingPlans.mockReset()
   mockUseStripeCheckoutSession.mockReset()
   mockUseStripePortalSession.mockReset()
+  mockUseStripePortalSubscriptionCancelSession.mockReset()
   mockUseStripePortalSubscriptionUpdateSession.mockReset()
   vi.restoreAllMocks()
 })
@@ -53,6 +56,10 @@ describe("SubscriptionSettings", () => {
     })
     mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate })
     mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
     mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     render(<SubscriptionSettings />)
@@ -80,6 +87,10 @@ describe("SubscriptionSettings", () => {
     })
     mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate })
     mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
     mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     render(<SubscriptionSettings />)
@@ -111,6 +122,10 @@ describe("SubscriptionSettings", () => {
     })
     mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
     mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
     mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate })
 
     render(<SubscriptionSettings />)
@@ -140,6 +155,10 @@ describe("SubscriptionSettings", () => {
     })
     mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
     mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
     mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     render(<SubscriptionSettings />)
@@ -169,6 +188,10 @@ describe("SubscriptionSettings", () => {
     })
     mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: checkoutMutate })
     mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: portalMutate })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
     mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
 
     render(<SubscriptionSettings />)
@@ -213,6 +236,10 @@ describe("SubscriptionSettings", () => {
     })
     mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
     mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: portalMutate })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
     mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: updateMutate })
 
     render(<SubscriptionSettings />)
@@ -233,6 +260,7 @@ describe("SubscriptionSettings", () => {
   it("bloque l'upgrade Premium pendant un trial Basic et n'appelle aucun endpoint Stripe", () => {
     setupCatalogMock()
     const portalMutate = vi.fn()
+    const cancelMutate = vi.fn()
     const updateMutate = vi.fn()
     const checkoutMutate = vi.fn()
 
@@ -247,6 +275,10 @@ describe("SubscriptionSettings", () => {
     })
     mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: checkoutMutate })
     mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: portalMutate })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: cancelMutate,
+    })
     mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: updateMutate })
 
     render(<SubscriptionSettings />)
@@ -264,6 +296,53 @@ describe("SubscriptionSettings", () => {
 
     expect(updateMutate).not.toHaveBeenCalled()
     expect(portalMutate).not.toHaveBeenCalled()
+    expect(cancelMutate).not.toHaveBeenCalled()
     expect(checkoutMutate).not.toHaveBeenCalled()
+  })
+
+  it("appelle le flow de résiliation dédié quand un abonné actif sélectionne le plan Gratuit", () => {
+    setupCatalogMock()
+    const cancelMutate = vi.fn()
+
+    mockUseBillingSubscription.mockReturnValue({
+      isLoading: false,
+      data: {
+        status: "active",
+        subscription_status: "active",
+        plan: {
+          code: "basic",
+          display_name: "Basic",
+          monthly_price_cents: 900,
+          currency: "EUR",
+          daily_message_limit: 50,
+          is_active: true,
+        },
+        failure_reason: null,
+        current_quota: null,
+      },
+    })
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: cancelMutate,
+    })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+
+    render(<SubscriptionSettings />)
+
+    const freeCard = screen.getByText(/gratuit|free/i).closest('[role="button"]')!
+    fireEvent.click(freeCard)
+
+    const validateButton = screen.getByRole("button", { name: /valider|validate/i })
+    fireEvent.click(validateButton)
+
+    expect(cancelMutate).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    )
   })
 })

@@ -4,6 +4,7 @@ import {
   useBillingPlans,
   useStripeCheckoutSession,
   useStripePortalSession,
+  useStripePortalSubscriptionCancelSession,
   useStripePortalSubscriptionUpdateSession,
   BillingApiError,
 } from "@api/billing"
@@ -83,6 +84,7 @@ export function SubscriptionSettings() {
 
   const checkoutSession = useStripeCheckoutSession()
   const portalSession = useStripePortalSession()
+  const portalCancelSession = useStripePortalSubscriptionCancelSession()
   const portalUpdateSession = useStripePortalSubscriptionUpdateSession()
 
   const handleValidate = () => {
@@ -128,8 +130,8 @@ export function SubscriptionSettings() {
     } else if (stripeSubscriptionStatus === "active") {
       // Si on a sélectionné le plan Gratuit (null) -> flow portal cancel
       if (selectedPlanCode === null) {
-        if (portalSession.isPending) return
-        portalSession.mutate(undefined, {
+        if (portalCancelSession.isPending) return
+        portalCancelSession.mutate(undefined, {
           onSuccess: (data) => {
             window.location.href = data.url
           },
@@ -174,7 +176,11 @@ export function SubscriptionSettings() {
     }
   }
 
-  const isAnyPending = checkoutSession.isPending || portalSession.isPending || portalUpdateSession.isPending
+  const isAnyPending =
+    checkoutSession.isPending
+    || portalSession.isPending
+    || portalCancelSession.isPending
+    || portalUpdateSession.isPending
   const hasChanges = displaySelected !== currentPlanCode
 
   const scheduledMsg = useMemo(() => {
