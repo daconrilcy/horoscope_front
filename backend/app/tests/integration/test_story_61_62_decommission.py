@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser
 from app.infra.db.models.user import UserModel
+from app.main import app
 
 
 @pytest.fixture
@@ -14,16 +15,19 @@ def auth_user(db_session: Session) -> AuthenticatedUser:
         db_session.add(user)
         db_session.commit()
         db_session.refresh(user)
-    return AuthenticatedUser(id=user.id, email=user.email, role=user.role, created_at=user.created_at)
+    return AuthenticatedUser(
+        id=user.id, email=user.email, role=user.role, created_at=user.created_at
+    )
 
-
-from app.main import app
 
 @pytest.fixture
 def client() -> TestClient:
     return TestClient(app)
 
-def test_endpoints_are_404_after_decommission(client: TestClient, db_session: Session, auth_user: AuthenticatedUser):
+
+def test_endpoints_are_404_after_decommission(
+    client: TestClient, db_session: Session, auth_user: AuthenticatedUser
+):
     # This test is expected to PASS now that endpoints are removed.
     
     headers = {"Authorization": "Bearer dummy"} 

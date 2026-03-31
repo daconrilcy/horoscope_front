@@ -12,7 +12,6 @@ from app.infra.db.models.billing import (
     UserDailyQuotaUsageModel,
     UserSubscriptionModel,
 )
-from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
@@ -37,6 +36,7 @@ from app.infra.db.models.reference import (
     ReferenceVersionModel,
     SignModel,
 )
+from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository

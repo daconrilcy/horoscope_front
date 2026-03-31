@@ -149,7 +149,6 @@ def _phase_2() -> int:
     old_access_token = os.environ["ROTATION_OLD_ACCESS_TOKEN"]
     old_refresh_token = os.environ["ROTATION_OLD_REFRESH_TOKEN"]
     old_enterprise_credential = os.environ["ROTATION_OLD_ENTERPRISE_CREDENTIAL"]
-    run_id = os.environ["ROTATION_RUN_ID"]
 
     subscription = client.get(
         "/v1/billing/subscription",

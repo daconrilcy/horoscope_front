@@ -58,7 +58,8 @@ def _get_profile_snapshot(email: str) -> dict[str, object]:
 @pytest.fixture
 def clean_db():
     _cleanup_tables()
-    with patch("app.api.v1.routers.billing.settings.stripe_portal_configuration_id", "bpc_test_123"):
+    patch_path = "app.api.v1.routers.billing.settings.stripe_portal_configuration_id"
+    with patch(patch_path, "bpc_test_123"):
         yield
 
 

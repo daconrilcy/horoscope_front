@@ -69,8 +69,12 @@ def test_update_from_event_payload_period_fields(db: Session, user_id: int):
                 return
             assert dt1.replace(tzinfo=None) == dt2.replace(tzinfo=None)
 
-        assert_dt_equal(profile.current_period_start, datetime.fromtimestamp(period_start, tz=timezone.utc))
-        assert_dt_equal(profile.current_period_end, datetime.fromtimestamp(period_end, tz=timezone.utc))
+        assert_dt_equal(
+            profile.current_period_start, datetime.fromtimestamp(period_start, tz=timezone.utc)
+        )
+        assert_dt_equal(
+            profile.current_period_end, datetime.fromtimestamp(period_end, tz=timezone.utc)
+        )
         assert profile.cancel_at_period_end is True
         # AC3: pending_cancellation_effective_at = current_period_end
         assert_dt_equal(profile.pending_cancellation_effective_at, profile.current_period_end)
@@ -154,12 +158,15 @@ def test_update_from_event_payload_downgrade_schedule(mock_get_client, db: Sessi
         },
     }
 
-    with patch.dict(STRIPE_PRICE_ENTITLEMENT_MAP, {"price_basic": "basic", "price_premium": "premium"}):
+    with patch.dict(
+        STRIPE_PRICE_ENTITLEMENT_MAP, {"price_basic": "basic", "price_premium": "premium"}
+    ):
         profile = StripeBillingProfileService.update_from_event_payload(db, user_id, event_data)
         db.commit()
         db.refresh(profile)
 
-        # AC2: plan effectif conservé (on suppose qu'il était premium ou qu'on ne l'a pas encore mis à jour dans ce test simplifié)
+        # AC2: plan effectif conservé (on suppose qu'il était premium ou qu'on ne l'a pas encore
+        # mis à jour dans ce test simplifié)
         # On vérifie surtout le plan programmé
         assert profile.scheduled_plan_code == "basic"
         
@@ -227,7 +234,9 @@ def test_update_from_event_payload_direct_schedule_object(db: Session, user_id: 
     profile.stripe_customer_id = "cus_123"
     db.commit()
 
-    with patch.dict(STRIPE_PRICE_ENTITLEMENT_MAP, {"price_basic": "basic", "price_premium": "premium"}):
+    with patch.dict(
+        STRIPE_PRICE_ENTITLEMENT_MAP, {"price_basic": "basic", "price_premium": "premium"}
+    ):
         StripeBillingProfileService.update_from_event_payload(db, user_id, event_schedule)
         db.refresh(profile)
 

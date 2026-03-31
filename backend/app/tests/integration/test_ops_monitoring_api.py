@@ -75,7 +75,7 @@ def _register_user_with_role_and_token(email: str, role: str) -> str:
 
 
 def _set_active_subscription(access_token: str, plan_code: str) -> None:
-    from app.infra.db.models.billing import UserSubscriptionModel, BillingPlanModel
+    from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
     from app.infra.db.models.stripe_billing import StripeBillingProfileModel
     from app.services.billing_service import BillingService
 

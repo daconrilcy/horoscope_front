@@ -208,11 +208,15 @@ class StripeBillingProfileService:
 
             period_start_ts = data_obj.get("current_period_start")
             if period_start_ts:
-                profile.current_period_start = datetime.fromtimestamp(period_start_ts, tz=timezone.utc)
+                profile.current_period_start = datetime.fromtimestamp(
+                    period_start_ts, tz=timezone.utc
+                )
 
             period_end_ts = data_obj.get("current_period_end")
             if period_end_ts:
-                profile.current_period_end = datetime.fromtimestamp(period_end_ts, tz=timezone.utc)
+                profile.current_period_end = datetime.fromtimestamp(
+                    period_end_ts, tz=timezone.utc
+                )
 
             # Gestion de l'annulation programmée (AC3)
             if profile.cancel_at_period_end and profile.current_period_end:
@@ -226,12 +230,17 @@ class StripeBillingProfileService:
                 try:
                     # Import retardé pour éviter les dépendances circulaires
                     from app.integrations.stripe_client import get_stripe_client
+
                     client = get_stripe_client()
                     if client:
                         schedule = client.subscription_schedules.retrieve(schedule_id)
                         StripeBillingProfileService._update_schedule_fields(profile, schedule)
                 except Exception as e:
-                    logger.warning("stripe_billing: failed to retrieve subscription schedule %s: %s", schedule_id, e)
+                    logger.warning(
+                        "stripe_billing: failed to retrieve subscription schedule %s: %s",
+                        schedule_id,
+                        e,
+                    )
             else:
                 profile.scheduled_plan_code = None
                 profile.scheduled_change_effective_at = None
@@ -252,7 +261,8 @@ class StripeBillingProfileService:
                     profile.stripe_price_id = price_id
 
         elif object_type == "subscription_schedule":
-            # Mise à jour directe depuis l'objet schedule (évite un retrieve si c'est l'event schedule lui-même)
+            # Mise à jour directe depuis l'objet schedule
+            # (évite un retrieve si c'est l'event schedule lui-même)
             StripeBillingProfileService._update_schedule_fields(profile, data_obj)
 
         # Mise à jour de l'email de facturation si présent

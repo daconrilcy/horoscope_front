@@ -1,4 +1,5 @@
 import logging
+
 from app.core.config import Settings
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,8 @@ def run_stripe_portal_startup_validation(settings: Settings) -> None:
         return
 
     if not settings.stripe_portal_configuration_id:
-        # On n'échoue pas en test pour éviter de casser la CI qui n'a pas forcément de config Stripe complète
+        # On n'échoue pas en test pour éviter de casser la CI qui n'a pas forcément de config
+        # Stripe complète.
         if settings.app_env in {"test", "testing"}:
             logger.warning(
                 "stripe_portal_startup_validation_skipped env=%s "

@@ -1,13 +1,14 @@
-import pytest
+from datetime import datetime, timedelta, timezone
+
 from fastapi.testclient import TestClient
-from datetime import datetime, timezone, timedelta
+
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal
 from app.main import app
-from app.tests.integration.test_billing_api import _cleanup_tables, _register_and_get_access_token
-from app.services.quota_usage_service import QuotaUsageService
 from app.services.entitlement_types import QuotaDefinition
+from app.services.quota_usage_service import QuotaUsageService
+from app.tests.integration.test_billing_api import _cleanup_tables, _register_and_get_access_token
 
 client = TestClient(app)
 
@@ -37,7 +38,9 @@ def test_billing_subscription_current_quota() -> None:
             period_value=1,
             reset_mode="calendar",
         )
-        QuotaUsageService.consume(db, user_id=user.id, feature_code="astrologer_chat", quota=q_def, amount=42)
+        QuotaUsageService.consume(
+            db, user_id=user.id, feature_code="astrologer_chat", quota=q_def, amount=42
+        )
         db.commit()
 
     response = client.get("/v1/billing/subscription", headers=headers)

@@ -486,19 +486,32 @@ def test_consume_atomicity_with_for_update(db_session):
 def test_upgrade_behavior(db_session):
     # Setup initial quota (basic: 50/month)
     quota_basic = QuotaDefinition(
-        quota_key="messages", quota_limit=50, period_unit="month", period_value=1, reset_mode="calendar"
+        quota_key="messages",
+        quota_limit=50,
+        period_unit="month",
+        period_value=1,
+        reset_mode="calendar",
     )
     ref_dt = datetime(2026, 3, 15, 10, 0, tzinfo=UTC)
 
     # Consume 10 messages under basic
     QuotaUsageService.consume(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota_basic, amount=10, ref_dt=ref_dt
+        db_session,
+        user_id=1,
+        feature_code="astrologer_chat",
+        quota=quota_basic,
+        amount=10,
+        ref_dt=ref_dt,
     )
 
     # Simulate upgrade to premium (1000/month)
     # The key composite is the same (messages, month, 1, calendar, 2026-03-01)
     quota_premium = QuotaDefinition(
-        quota_key="messages", quota_limit=1000, period_unit="month", period_value=1, reset_mode="calendar"
+        quota_key="messages",
+        quota_limit=1000,
+        period_unit="month",
+        period_value=1,
+        reset_mode="calendar",
     )
 
     # Check usage under premium

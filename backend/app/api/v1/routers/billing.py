@@ -19,7 +19,6 @@ from app.services.audit_service import AuditEventCreatePayload, AuditService
 from app.services.billing_service import (
     BillingPlanData,
     BillingService,
-    BillingServiceError,
     SubscriptionStatusData,
 )
 from app.services.pricing_experiment_service import (
@@ -368,7 +367,7 @@ def list_billing_plans(
         return role_error
 
     plans = db.scalars(
-        select(BillingPlanModel).where(BillingPlanModel.is_active == True)
+        select(BillingPlanModel).where(BillingPlanModel.is_active)
     ).all()
 
     return {

@@ -41,7 +41,11 @@ class TestStripeCustomerPortalService:
         mock_get_profile.assert_called_once_with(db, user_id)
         mock_get_client.assert_called_once_with()
         mock_client.billing_portal.sessions.create.assert_called_once_with(
-            params={"customer": stripe_customer_id, "return_url": return_url, "configuration": "bpc_123"}
+            params={
+                "customer": stripe_customer_id,
+                "return_url": return_url,
+                "configuration": "bpc_123",
+            }
         )
 
     @patch("app.services.stripe_customer_portal_service.get_stripe_client")
@@ -345,7 +349,9 @@ class TestStripeCustomerPortalService:
 
     @patch("app.services.stripe_customer_portal_service.get_stripe_client")
     @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
-    def test_create_portal_session_requires_configuration_id(self, mock_get_profile, mock_get_client):
+    def test_create_portal_session_requires_configuration_id(
+        self, mock_get_profile, mock_get_client
+    ):
         db = MagicMock()
         user_id = 123
         mock_get_profile.return_value = StripeBillingProfileModel(
@@ -365,7 +371,9 @@ class TestStripeCustomerPortalService:
 
     @patch("app.services.stripe_customer_portal_service.get_stripe_client")
     @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
-    def test_create_portal_session_uses_explicit_configuration_id(self, mock_get_profile, mock_get_client):
+    def test_create_portal_session_uses_explicit_configuration_id(
+        self, mock_get_profile, mock_get_client
+    ):
         db = MagicMock()
         user_id = 123
         configuration_id = "bpc_123"
