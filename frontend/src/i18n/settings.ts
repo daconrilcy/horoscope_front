@@ -195,7 +195,12 @@ export const settingsTranslations = {
       selected: "Selected",
       validatePlan: "Validate this plan",
       validating: "Validating...",
+      planFree: "Free",
       cancelSoon: "Cancellation to the Free plan will be available soon.",
+      cancelScheduled: "Cancellation scheduled for {{date}}",
+      planChangeScheduled: "Change to {{plan}} on {{date}}",
+      cancelConfirmTitle: "Cancel subscription",
+      cancelConfirmDesc: "Your access will remain active until {{date}}.",
       trialBasicNotice:
         "Your trial currently follows the Basic plan. Premium upgrades will be available after the trial ends.",
       buyCredits: "Buy credits",
@@ -211,7 +216,12 @@ export const settingsTranslations = {
       selected: "Seleccionado",
       validatePlan: "Validar este plan",
       validating: "Validando...",
+      planFree: "Gratis",
       cancelSoon: "La cancelación al plan Gratuito estará disponible pronto.",
+      cancelScheduled: "Cancelación programada para el {{date}}",
+      planChangeScheduled: "Cambio a {{plan}} el {{date}}",
+      cancelConfirmTitle: "Cancelar suscripción",
+      cancelConfirmDesc: "Tu acceso permanecerá activo hasta el {{date}}.",
       trialBasicNotice:
         "Tu periodo de prueba sigue el plan Basic. El cambio a Premium estará disponible al finalizar la prueba.",
       buyCredits: "Comprar créditos",
@@ -229,7 +239,12 @@ export const settingsTranslations = {
       selected: string
       validatePlan: string
       validating: string
+      planFree: string
       cancelSoon: string
+      cancelScheduled: string
+      planChangeScheduled: string
+      cancelConfirmTitle: string
+      cancelConfirmDesc: string
       trialBasicNotice: string
       buyCredits: string
       buyCreditsDesc: string

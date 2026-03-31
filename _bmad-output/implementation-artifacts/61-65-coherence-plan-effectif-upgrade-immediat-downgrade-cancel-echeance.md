@@ -358,6 +358,7 @@ claude-sonnet-4-6
 - [Review ajustements 2026-03-31] Détection phase suivante par `start_date > now` au lieu de `phases[1]` pour plus de robustesse (T2).
 - [Review ajustements 2026-03-31] Nettoyage explicite de `cancel_at_period_end=false` sur `subscription.deleted` (AC4).
 - [Review ajustements 2026-03-31] Règle invariante `scheduled_plan` = informatif uniquement, jamais de droits runtime (AC5).
+- [Code Review 2026-03-31] Revue de code complète effectuée. L'implémentation correspond parfaitement aux ACs. Correction d'une erreur TypeScript liée à des clés i18n manquantes dans les traductions anglaises et espagnoles. Tous les tests backend et frontend sont au vert.
 
 ### File List
 
