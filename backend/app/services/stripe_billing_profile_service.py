@@ -203,8 +203,8 @@ class StripeBillingProfileService:
         if object_type == "subscription":
             profile.stripe_subscription_id = data_obj.get("id")
             profile.subscription_status = data_obj.get("status")
-            # Stripe peut envoyer null → on force un bool pour respecter NOT NULL
-            profile.cancel_at_period_end = bool(data_obj.get("cancel_at_period_end") or False)
+            cancel_at_ts = data_obj.get("cancel_at")
+            cancel_at_period_end_flag = bool(data_obj.get("cancel_at_period_end") or False)
 
             period_start_ts = data_obj.get("current_period_start")
             if period_start_ts:
@@ -218,8 +218,18 @@ class StripeBillingProfileService:
                     period_end_ts, tz=timezone.utc
                 )
 
+            # Stripe peut planifier une résiliation via cancel_at_period_end=true
+            # ou via un cancel_at explicite tout en gardant cancel_at_period_end=false.
+            # L'application doit exposer les deux cas comme une résiliation planifiée.
+            has_scheduled_cancellation = cancel_at_period_end_flag or bool(cancel_at_ts)
+            profile.cancel_at_period_end = has_scheduled_cancellation
+
             # Gestion de l'annulation programmée (AC3)
-            if profile.cancel_at_period_end and profile.current_period_end:
+            if cancel_at_ts:
+                profile.pending_cancellation_effective_at = datetime.fromtimestamp(
+                    cancel_at_ts, tz=timezone.utc
+                )
+            elif has_scheduled_cancellation and profile.current_period_end:
                 profile.pending_cancellation_effective_at = profile.current_period_end
             else:
                 profile.pending_cancellation_effective_at = None

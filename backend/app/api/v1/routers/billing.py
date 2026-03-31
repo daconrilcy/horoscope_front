@@ -251,6 +251,7 @@ def _resolve_portal_service_status_code(error_code: str) -> int:
         "stripe_portal_subscription_update_not_allowed_for_trial": 422,
         "stripe_portal_subscription_update_disabled": 422,
         "stripe_portal_subscription_cancel_disabled": 422,
+        "stripe_portal_subscription_cancel_already_scheduled": 422,
         "stripe_api_error": 502,
     }.get(error_code, 500)
 

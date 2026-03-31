@@ -32,6 +32,7 @@ afterEach(() => {
   mockUseStripePortalSession.mockReset()
   mockUseStripePortalSubscriptionCancelSession.mockReset()
   mockUseStripePortalSubscriptionUpdateSession.mockReset()
+  localStorage.clear()
   vi.restoreAllMocks()
 })
 
@@ -306,6 +307,7 @@ describe("SubscriptionSettings", () => {
 
     mockUseBillingSubscription.mockReturnValue({
       isLoading: false,
+      refetch: vi.fn(),
       data: {
         status: "active",
         subscription_status: "active",
@@ -344,5 +346,240 @@ describe("SubscriptionSettings", () => {
       undefined,
       expect.objectContaining({ onSuccess: expect.any(Function) }),
     )
+  })
+
+  it("déclenche une resynchronisation après retour portail tant que l'annulation n'est pas visible", () => {
+    setupCatalogMock()
+    const refetch = vi.fn()
+    localStorage.setItem(
+      "billing_portal_pending_action",
+      JSON.stringify({ action: "cancel", createdAt: Date.now() }),
+    )
+
+    mockUseBillingSubscription.mockReturnValue({
+      isLoading: false,
+      refetch,
+      data: {
+        status: "active",
+        subscription_status: "active",
+        plan: {
+          code: "basic",
+          display_name: "Basic",
+          monthly_price_cents: 900,
+          currency: "EUR",
+          daily_message_limit: 50,
+          is_active: true,
+        },
+        cancel_at_period_end: false,
+        current_period_end: null,
+        failure_reason: null,
+        current_quota: null,
+      },
+    })
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+
+    render(<SubscriptionSettings />)
+
+    expect(refetch).toHaveBeenCalled()
+    expect(
+      screen.getByText(/Synchronisation de l'abonnement en cours/i),
+    ).toBeInTheDocument()
+  })
+
+  it("affiche immédiatement la date de résiliation après retour portail quand l'échéance est connue", () => {
+    setupCatalogMock()
+    const refetch = vi.fn()
+    localStorage.setItem(
+      "billing_portal_pending_action",
+      JSON.stringify({
+        action: "cancel",
+        createdAt: Date.now(),
+        currentPeriodEnd: "2026-04-30T22:00:00Z",
+      }),
+    )
+
+    mockUseBillingSubscription.mockReturnValue({
+      isLoading: false,
+      refetch,
+      data: {
+        status: "active",
+        subscription_status: "active",
+        plan: {
+          code: "basic",
+          display_name: "Basic",
+          monthly_price_cents: 900,
+          currency: "EUR",
+          daily_message_limit: 50,
+          is_active: true,
+        },
+        cancel_at_period_end: false,
+        current_period_end: null,
+        failure_reason: null,
+        current_quota: null,
+      },
+    })
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+
+    render(<SubscriptionSettings />)
+
+    expect(screen.queryByText(/Synchronisation de l'abonnement en cours/i)).not.toBeInTheDocument()
+    expect(
+      screen.getAllByText(/Résiliation prévue le|Cancellation scheduled for/i),
+    ).toHaveLength(2)
+  })
+
+  it("bascule automatiquement en mode résiliation programmée quand le webhook met à jour l'abonnement", () => {
+    setupCatalogMock()
+    const refetch = vi.fn()
+    localStorage.setItem(
+      "billing_portal_pending_action",
+      JSON.stringify({ action: "cancel", createdAt: Date.now() }),
+    )
+
+    let subscriptionData = {
+      status: "active",
+      subscription_status: "active",
+      plan: {
+        code: "basic",
+        display_name: "Basic",
+        monthly_price_cents: 900,
+        currency: "EUR",
+        daily_message_limit: 50,
+        is_active: true,
+      },
+      cancel_at_period_end: false,
+      current_period_end: null,
+      failure_reason: null,
+      current_quota: null,
+    }
+
+    mockUseBillingSubscription.mockImplementation(() => ({
+      isLoading: false,
+      refetch,
+      data: subscriptionData,
+    }))
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+
+    const { rerender } = render(<SubscriptionSettings />)
+
+    expect(
+      screen.getByText(/Synchronisation de l'abonnement en cours/i),
+    ).toBeInTheDocument()
+
+    subscriptionData = {
+      ...subscriptionData,
+      cancel_at_period_end: true,
+      current_period_end: "2026-04-30T22:00:00Z",
+    }
+
+    rerender(<SubscriptionSettings />)
+
+    const freeCard = screen.getByText(/gratuit|free/i).closest('[role="button"]')!
+    const basicCard = screen.getByText("Basic").closest('[role="button"]')!
+
+    expect(screen.queryByText(/Synchronisation de l'abonnement en cours/i)).not.toBeInTheDocument()
+    expect(freeCard).toHaveAttribute("aria-pressed", "true")
+    expect(basicCard).toHaveTextContent(/Résiliation prévue le|Cancellation scheduled for/i)
+  })
+
+  it("passe en mode réactivation quand cancel_at_period_end est déjà vrai", () => {
+    setupCatalogMock()
+    const cancelMutate = vi.fn()
+    const updateMutate = vi.fn()
+
+    mockUseBillingSubscription.mockReturnValue({
+      isLoading: false,
+      refetch: vi.fn(),
+      data: {
+        status: "active",
+        subscription_status: "active",
+        plan: {
+          code: "basic",
+          display_name: "Basic",
+          monthly_price_cents: 900,
+          currency: "EUR",
+          daily_message_limit: 50,
+          is_active: true,
+        },
+        cancel_at_period_end: true,
+        current_period_end: "2026-04-30T22:00:00Z",
+        failure_reason: null,
+        current_quota: null,
+      },
+    })
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: cancelMutate,
+    })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({
+      isPending: false,
+      mutate: updateMutate,
+    })
+
+    render(<SubscriptionSettings />)
+
+    const freeCard = screen.getByText(/gratuit|free/i).closest('[role="button"]')!
+    expect(freeCard).toHaveAttribute("aria-pressed", "true")
+    expect(freeCard).toHaveAttribute("aria-disabled", "true")
+    expect(
+      screen.getByText(/Réactiver en prenant Basic|Reactivate with Basic/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Réactiver en prenant Premium|Reactivate with Premium/i),
+    ).toBeInTheDocument()
+
+    const validateButton = screen.getByRole("button", { name: /réactiver l'abonnement|reactivate subscription/i })
+    expect(validateButton).toBeDisabled()
+
+    expect(
+      screen.getAllByText(/Résiliation prévue le|Cancellation scheduled for/i),
+    ).toHaveLength(2)
+    const basicCard = screen.getByText("Basic").closest('[role="button"]')!
+    expect(basicCard).toHaveTextContent(/Résiliation prévue le|Cancellation scheduled for/i)
+    expect(cancelMutate).not.toHaveBeenCalled()
+
+    fireEvent.click(freeCard)
+    expect(cancelMutate).not.toHaveBeenCalled()
+
+    const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
+    fireEvent.click(premiumCard)
+
+    expect(validateButton).toBeEnabled()
+    fireEvent.click(validateButton)
+
+    expect(updateMutate).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    )
+    expect(cancelMutate).not.toHaveBeenCalled()
   })
 })

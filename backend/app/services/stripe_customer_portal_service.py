@@ -32,6 +32,16 @@ class StripeCustomerPortalService:
             )
 
     @staticmethod
+    def _ensure_subscription_cancel_is_allowed(
+        profile: StripeBillingProfileModel,
+    ) -> None:
+        if profile.cancel_at_period_end:
+            raise StripeCustomerPortalServiceError(
+                code="stripe_portal_subscription_cancel_already_scheduled",
+                message="Subscription is already set to cancel at period end",
+            )
+
+    @staticmethod
     def _map_stripe_portal_error_code(error: stripe.StripeError, *, flow_type: str) -> str:
         if isinstance(error, stripe.InvalidRequestError):
             message = (str(error) or "").lower()
@@ -47,6 +57,11 @@ class StripeCustomerPortalService:
                 and "disabled" in message
             ):
                 return "stripe_portal_subscription_cancel_disabled"
+            if (
+                flow_type == "subscription_cancel"
+                and "already set to be canceled at period end" in message
+            ):
+                return "stripe_portal_subscription_cancel_already_scheduled"
         return "stripe_api_error"
 
     @staticmethod
@@ -89,6 +104,8 @@ class StripeCustomerPortalService:
         )
         if flow_type == "subscription_update":
             StripeCustomerPortalService._ensure_subscription_update_is_allowed(profile)
+        if flow_type == "subscription_cancel":
+            StripeCustomerPortalService._ensure_subscription_cancel_is_allowed(profile)
 
         client = get_stripe_client()
         if client is None:

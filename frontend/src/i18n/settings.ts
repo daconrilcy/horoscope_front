@@ -173,9 +173,14 @@ export const settingsTranslations = {
       currentPlan: "Plan actuel",
       selected: "Sélectionné",
       validatePlan: "Valider ce plan",
+      reactivateSubscription: "Réactiver l'abonnement",
+      reactivateWithBasic: "Réactiver en prenant Basic",
+      reactivateWithPremium: "Réactiver en prenant Premium",
       validating: "Validation en cours...",
       planFree: "Gratuit",
       cancelSoon: "L'annulation vers le plan Gratuit sera bientôt disponible.",
+      portalSyncPending: "Synchronisation de l'abonnement en cours...",
+      cancelAlreadyScheduled: "La résiliation est déjà programmée pour votre prochaine échéance.",
       cancelScheduled: "Résiliation prévue le {{date}}",
       planChangeScheduled: "Passage à {{plan}} le {{date}}",
       cancelConfirmTitle: "Résilier l'abonnement",
@@ -202,9 +207,14 @@ export const settingsTranslations = {
       currentPlan: "Current plan",
       selected: "Selected",
       validatePlan: "Validate this plan",
+      reactivateSubscription: "Reactivate subscription",
+      reactivateWithBasic: "Reactivate with Basic",
+      reactivateWithPremium: "Reactivate with Premium",
       validating: "Validating...",
       planFree: "Free",
       cancelSoon: "Cancellation to the Free plan will be available soon.",
+      portalSyncPending: "Subscription update in progress...",
+      cancelAlreadyScheduled: "Cancellation is already scheduled for your next renewal date.",
       cancelScheduled: "Cancellation scheduled for {{date}}",
       planChangeScheduled: "Change to {{plan}} on {{date}}",
       cancelConfirmTitle: "Cancel subscription",
@@ -231,9 +241,14 @@ export const settingsTranslations = {
       currentPlan: "Plan actuel",
       selected: "Seleccionado",
       validatePlan: "Validar este plan",
+      reactivateSubscription: "Reactivar la suscripción",
+      reactivateWithBasic: "Reactivar con Basic",
+      reactivateWithPremium: "Reactivar con Premium",
       validating: "Validando...",
       planFree: "Gratis",
       cancelSoon: "La cancelación al plan Gratuito estará disponible pronto.",
+      portalSyncPending: "Sincronización de la suscripción en curso...",
+      cancelAlreadyScheduled: "La cancelación ya está programada para la próxima fecha de renovación.",
       cancelScheduled: "Cancelación programada para el {{date}}",
       planChangeScheduled: "Cambio a {{plan}} el {{date}}",
       cancelConfirmTitle: "Cancelar suscripción",
@@ -262,9 +277,14 @@ export const settingsTranslations = {
       currentPlan: string
       selected: string
       validatePlan: string
+      reactivateSubscription: string
+      reactivateWithBasic: string
+      reactivateWithPremium: string
       validating: string
       planFree: string
       cancelSoon: string
+      portalSyncPending: string
+      cancelAlreadyScheduled: string
       cancelScheduled: string
       planChangeScheduled: string
       cancelConfirmTitle: string

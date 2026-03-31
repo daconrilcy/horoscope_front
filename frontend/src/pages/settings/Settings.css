@@ -333,6 +333,11 @@
   opacity: 0.6;
 }
 
+.subscription-plan-card[data-frozen="true"] {
+  cursor: default;
+  opacity: 0.92;
+}
+
 .subscription-plan-card[data-current-unselected="true"] {
   border-color: rgba(255, 255, 255, 0.4);
 }
@@ -362,6 +367,19 @@
   color: var(--settings-text-heading);
   font-size: 22px;
   font-weight: 700;
+}
+
+.subscription-plan-card__action-hint {
+  color: var(--settings-purple);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.subscription-plan-card__status-note {
+  color: #79521a;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 /* Badge "Actif" — style = .step-number (cercle numéroté du profil), adapté en pill */

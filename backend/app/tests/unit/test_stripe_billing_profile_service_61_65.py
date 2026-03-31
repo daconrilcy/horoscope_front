@@ -80,6 +80,41 @@ def test_update_from_event_payload_period_fields(db: Session, user_id: int):
         assert_dt_equal(profile.pending_cancellation_effective_at, profile.current_period_end)
 
 
+def test_update_from_event_payload_cancel_at_marks_scheduled_cancellation(
+    db: Session, user_id: int
+):
+    period_end = 1713916800  # 2024-04-24
+
+    event_data = {
+        "id": "evt_cancel_at",
+        "type": "customer.subscription.updated",
+        "created": 1711238500,
+        "data": {
+            "object": {
+                "object": "subscription",
+                "id": "sub_123",
+                "status": "active",
+                "customer": "cus_123",
+                "current_period_end": period_end,
+                "cancel_at": period_end,
+                "cancel_at_period_end": False,
+            }
+        },
+    }
+
+    profile = StripeBillingProfileService.update_from_event_payload(db, user_id, event_data)
+    db.commit()
+    db.refresh(profile)
+
+    expected_end = datetime.fromtimestamp(period_end, tz=timezone.utc)
+    assert profile.cancel_at_period_end is True
+    assert profile.current_period_end.replace(tzinfo=None) == expected_end.replace(tzinfo=None)
+    assert (
+        profile.pending_cancellation_effective_at.replace(tzinfo=None)
+        == expected_end.replace(tzinfo=None)
+    )
+
+
 def test_update_from_event_payload_cancel_cleanup(db: Session, user_id: int):
     # D'abord on est en "active" avec une annulation programmée
     event_active = {

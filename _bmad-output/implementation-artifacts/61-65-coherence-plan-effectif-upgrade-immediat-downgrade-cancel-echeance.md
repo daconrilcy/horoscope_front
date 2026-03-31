@@ -362,11 +362,21 @@ claude-sonnet-4-6
 - [Code Review 2026-03-31] Revue de code complète effectuée. L'implémentation correspond parfaitement aux ACs. Correction d'une erreur TypeScript liée à des clés i18n manquantes dans les traductions anglaises et espagnoles. Tous les tests backend et frontend sont au vert.
 - [Post-review fix 2026-03-31] `SubscriptionSettings` utilise désormais le flow Stripe dédié `subscription_cancel` lors de la sélection du plan Gratuit, au lieu du portail générique.
 - [Post-review fix 2026-03-31] La couverture frontend verrouille explicitement le parcours de résiliation dédié.
+- [Post-validation fix 2026-03-31] Le retour portail + webhook ont été durcis côté frontend: message de synchronisation visible, bascule automatique en mode réactivation après convergence backend, carte `free` gelée, CTA de réactivation explicites, et mention de résiliation affichée sur le plan encore actif.
+- [Post-validation fix 2026-03-31] Root cause backend confirmé sur environnement réel: Stripe test expose une résiliation planifiée via `cancel_at` avec `cancel_at_period_end=false`. Le mapping local ne lisait que `cancel_at_period_end`, ce qui empêchait `GET /v1/billing/subscription` de refléter la résiliation.
+- [Post-validation fix 2026-03-31] `StripeBillingProfileService.update_from_event_payload()` traite désormais `cancel_at` comme une résiliation programmée, aligne `pending_cancellation_effective_at` sur cette échéance, puis invalide le cache billing pour la prochaine lecture runtime.
+- [Post-validation fix 2026-03-31] Un test unitaire de non-régression couvre explicitement le cas `cancel_at != null && cancel_at_period_end == false`.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/61-65-coherence-plan-effectif-upgrade-immediat-downgrade-cancel-echeance.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `backend/app/services/stripe_billing_profile_service.py`
+- `backend/app/tests/unit/test_stripe_billing_profile_service_61_65.py`
+- `backend/app/api/v1/routers/billing.py`
+- `backend/app/services/stripe_customer_portal_service.py`
 - `frontend/src/api/billing.ts`
+- `frontend/src/i18n/settings.ts`
+- `frontend/src/pages/settings/Settings.css`
 - `frontend/src/pages/settings/SubscriptionSettings.tsx`
 - `frontend/src/tests/SubscriptionSettings.test.tsx`

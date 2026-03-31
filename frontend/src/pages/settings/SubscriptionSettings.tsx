@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import {
   useBillingSubscription,
   useBillingPlans,
@@ -13,10 +13,56 @@ import { settingsTranslations } from "@i18n/settings"
 import { Check, CreditCard } from "lucide-react"
 import "./Settings.css"
 
+const BILLING_PORTAL_PENDING_ACTION_KEY = "billing_portal_pending_action"
+const BILLING_PORTAL_SYNC_WINDOW_MS = 60_000
+const BILLING_PORTAL_POLL_INTERVAL_MS = 3_000
+
+type PendingBillingPortalAction = {
+  action: "cancel"
+  createdAt: number
+  currentPeriodEnd?: string | null
+}
+
+function readPendingBillingPortalAction(): PendingBillingPortalAction | null {
+  if (typeof window === "undefined") return null
+  const raw = window.localStorage.getItem(BILLING_PORTAL_PENDING_ACTION_KEY)
+  if (!raw) return null
+
+  try {
+    const parsed = JSON.parse(raw) as PendingBillingPortalAction
+    if (parsed.action !== "cancel" || typeof parsed.createdAt !== "number") {
+      return null
+    }
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+function persistPendingBillingPortalAction(
+  action: PendingBillingPortalAction["action"],
+  metadata: { currentPeriodEnd?: string | null } = {},
+) {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(
+    BILLING_PORTAL_PENDING_ACTION_KEY,
+    JSON.stringify({ action, createdAt: Date.now(), ...metadata }),
+  )
+}
+
+function clearPendingBillingPortalAction() {
+  if (typeof window === "undefined") return
+  window.localStorage.removeItem(BILLING_PORTAL_PENDING_ACTION_KEY)
+}
+
 export function SubscriptionSettings() {
   const lang = detectLang()
   const t = settingsTranslations.subscription[lang]
-  const { data: subscription, isLoading: subLoading } = useBillingSubscription()
+  const {
+    data: subscription,
+    isLoading: subLoading,
+    refetch: refetchSubscription,
+  } = useBillingSubscription()
   const { data: catalog, isLoading: plansLoading } = useBillingPlans()
 
   const isLoading = subLoading || plansLoading
@@ -69,17 +115,85 @@ export function SubscriptionSettings() {
   const currentPlanCode = subscription?.plan?.code ?? null
   const stripeSubscriptionStatus = subscription?.subscription_status ?? null
   const isTrialingBasic = stripeSubscriptionStatus === "trialing" && currentPlanCode === "basic"
+  const [pendingPortalAction, setPendingPortalAction] = useState<PendingBillingPortalAction | null>(
+    () => readPendingBillingPortalAction(),
+  )
+  const optimisticCurrentPeriodEnd = pendingPortalAction?.currentPeriodEnd ?? null
+  const isCancellationAlreadyScheduled =
+    subscription?.cancel_at_period_end === true || pendingPortalAction?.action === "cancel"
+  const effectiveCurrentPeriodEnd = subscription?.current_period_end ?? optimisticCurrentPeriodEnd
+  const committedPlanCode = isCancellationAlreadyScheduled ? null : currentPlanCode
 
   const [selectedPlanCode, setSelectedPlanCode] = useState<string | null | undefined>(undefined)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isPortalSyncPending, setIsPortalSyncPending] = useState(() => readPendingBillingPortalAction() !== null)
+  const previousCommittedPlanCodeRef = useRef<string | null | undefined>(undefined)
 
   useEffect(() => {
     if (!isLoading && selectedPlanCode === undefined) {
-      setSelectedPlanCode(currentPlanCode)
+      setSelectedPlanCode(committedPlanCode)
     }
-  }, [isLoading, currentPlanCode, selectedPlanCode])
+  }, [committedPlanCode, isLoading, selectedPlanCode])
 
-  const displaySelected = selectedPlanCode === undefined ? currentPlanCode : selectedPlanCode
+  useEffect(() => {
+    if (isLoading) return
+
+    const previousCommittedPlanCode = previousCommittedPlanCodeRef.current
+    if (
+      previousCommittedPlanCode !== undefined
+      && previousCommittedPlanCode !== committedPlanCode
+      && selectedPlanCode === previousCommittedPlanCode
+    ) {
+      setSelectedPlanCode(committedPlanCode)
+    }
+
+    previousCommittedPlanCodeRef.current = committedPlanCode
+  }, [committedPlanCode, isLoading, selectedPlanCode])
+
+  useEffect(() => {
+    const pendingAction = readPendingBillingPortalAction()
+    setPendingPortalAction(pendingAction)
+    if (!pendingAction) {
+      setIsPortalSyncPending(false)
+      return
+    }
+
+    const expiresAt = pendingAction.createdAt + BILLING_PORTAL_SYNC_WINDOW_MS
+    if (Date.now() >= expiresAt) {
+      clearPendingBillingPortalAction()
+      setPendingPortalAction(null)
+      setIsPortalSyncPending(false)
+      return
+    }
+
+    if (pendingAction.action === "cancel" && subscription?.cancel_at_period_end) {
+      clearPendingBillingPortalAction()
+      setPendingPortalAction(null)
+      setIsPortalSyncPending(false)
+      return
+    }
+
+    setIsPortalSyncPending(true)
+    void refetchSubscription()
+
+    const intervalId = window.setInterval(() => {
+      void refetchSubscription()
+    }, BILLING_PORTAL_POLL_INTERVAL_MS)
+
+    const timeoutId = window.setTimeout(() => {
+      clearPendingBillingPortalAction()
+      setPendingPortalAction(null)
+      setIsPortalSyncPending(false)
+      window.clearInterval(intervalId)
+    }, Math.max(0, expiresAt - Date.now()))
+
+    return () => {
+      window.clearInterval(intervalId)
+      window.clearTimeout(timeoutId)
+    }
+  }, [refetchSubscription, subscription?.cancel_at_period_end])
+
+  const displaySelected = selectedPlanCode === undefined ? committedPlanCode : selectedPlanCode
   const isTrialUpgradeBlocked = isTrialingBasic && displaySelected === "premium"
 
   const checkoutSession = useStripeCheckoutSession()
@@ -88,14 +202,19 @@ export function SubscriptionSettings() {
   const portalUpdateSession = useStripePortalSubscriptionUpdateSession()
 
   const handleValidate = () => {
-    if (selectedPlanCode === currentPlanCode) return
+    if (displaySelected === committedPlanCode) return
     
     // Bloquer uniquement si pas de subscription active (interdit d'être "null" sans payer)
     // Mais si subscription active, "null" veut dire résilier -> on laisse passer
-    if (!selectedPlanCode && stripeSubscriptionStatus === null) return
+    if (!displaySelected && stripeSubscriptionStatus === null) return
 
     if (isTrialUpgradeBlocked) {
       setErrorMessage(t.trialBasicNotice)
+      return
+    }
+
+    if (displaySelected === null && isCancellationAlreadyScheduled) {
+      setErrorMessage(t.cancelAlreadyScheduled)
       return
     }
 
@@ -120,7 +239,7 @@ export function SubscriptionSettings() {
     if (stripeSubscriptionStatus === null) {
       if (checkoutSession.isPending) return
       // Use direct canonical code
-      const planToSub = selectedPlanCode as "basic" | "premium"
+      const planToSub = displaySelected as "basic" | "premium"
       checkoutSession.mutate(planToSub, {
         onSuccess: (data) => {
           window.location.href = data.checkout_url
@@ -129,10 +248,19 @@ export function SubscriptionSettings() {
       })
     } else if (stripeSubscriptionStatus === "active") {
       // Si on a sélectionné le plan Gratuit (null) -> flow portal cancel
-      if (selectedPlanCode === null) {
+      if (displaySelected === null) {
         if (portalCancelSession.isPending) return
         portalCancelSession.mutate(undefined, {
           onSuccess: (data) => {
+            const nextPendingAction: PendingBillingPortalAction = {
+              action: "cancel",
+              createdAt: Date.now(),
+              currentPeriodEnd: subscription?.current_period_end ?? null,
+            }
+            persistPendingBillingPortalAction("cancel", {
+              currentPeriodEnd: nextPendingAction.currentPeriodEnd,
+            })
+            setPendingPortalAction(nextPendingAction)
             window.location.href = data.url
           },
           onError,
@@ -181,7 +309,8 @@ export function SubscriptionSettings() {
     || portalSession.isPending
     || portalCancelSession.isPending
     || portalUpdateSession.isPending
-  const hasChanges = displaySelected !== currentPlanCode
+  const hasChanges = displaySelected !== committedPlanCode
+  const isCancelActionBlocked = displaySelected === null && isCancellationAlreadyScheduled
 
   const scheduledMsg = useMemo(() => {
     if (!subscription) return null
@@ -194,8 +323,8 @@ export function SubscriptionSettings() {
       })
     }
 
-    if (subscription.cancel_at_period_end && subscription.current_period_end) {
-      return t.cancelScheduled.replace("{{date}}", formatDate(subscription.current_period_end))
+    if (isCancellationAlreadyScheduled && effectiveCurrentPeriodEnd) {
+      return t.cancelScheduled.replace("{{date}}", formatDate(effectiveCurrentPeriodEnd))
     }
     if (subscription.scheduled_plan && subscription.change_effective_at) {
       return t.planChangeScheduled
@@ -203,7 +332,7 @@ export function SubscriptionSettings() {
         .replace("{{date}}", formatDate(subscription.change_effective_at))
     }
     return null
-  }, [subscription, t, lang])
+  }, [effectiveCurrentPeriodEnd, isCancellationAlreadyScheduled, subscription, t, lang])
 
   return (
     <div className="subscription-settings">
@@ -223,16 +352,32 @@ export function SubscriptionSettings() {
               {PLANS.map((plan) => {
                 const isCurrent = currentPlanCode === plan.code
                 const isSelected = displaySelected === plan.code
+                const isFrozen = isCancellationAlreadyScheduled && plan.code === null
+                const showCurrentCancellationNotice =
+                  isCancellationAlreadyScheduled
+                  && isCurrent
+                  && plan.code !== null
+                  && scheduledMsg !== null
+                const reactivateLabel =
+                  isCancellationAlreadyScheduled && plan.code
+                    ? plan.code === "basic"
+                      ? t.reactivateWithBasic
+                      : t.reactivateWithPremium
+                    : null
                 return (
                   <div
                     key={plan.code || "free"}
-                    className={`subscription-plan-card ${isSelected ? 'subscription-plan-card--active' : ''}`}
-                    onClick={() => setSelectedPlanCode(plan.code)}
+                    className={`subscription-plan-card ${isSelected ? 'subscription-plan-card--active' : ''} ${isFrozen ? 'subscription-plan-card--frozen' : ''}`}
+                    onClick={() => {
+                      if (isAnyPending || isFrozen) return
+                      setSelectedPlanCode(plan.code)
+                    }}
                     role="button"
-                    tabIndex={isAnyPending ? -1 : 0}
+                    tabIndex={isAnyPending || isFrozen ? -1 : 0}
                     aria-pressed={isSelected}
+                    aria-disabled={isAnyPending || isFrozen}
                     onKeyDown={(event) => {
-                      if (isAnyPending) return
+                      if (isAnyPending || isFrozen) return
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault()
                         setSelectedPlanCode(plan.code)
@@ -240,6 +385,7 @@ export function SubscriptionSettings() {
                     }}
                     data-current-unselected={isCurrent && !isSelected}
                     data-pending={isAnyPending}
+                    data-frozen={isFrozen}
                   >
                     {isCurrent && !isSelected && (
                       <div className="subscription-plan-card__badge subscription-plan-card__badge--muted">
@@ -256,6 +402,14 @@ export function SubscriptionSettings() {
                     </h4>
                     <div className="subscription-plan-card__limit">{plan.limit}</div>
                     <div className="subscription-plan-card__price">{plan.price}</div>
+                    {showCurrentCancellationNotice && (
+                      <div className="subscription-plan-card__status-note">
+                        {scheduledMsg}
+                      </div>
+                    )}
+                    {reactivateLabel && (
+                      <div className="subscription-plan-card__action-hint">{reactivateLabel}</div>
+                    )}
                   </div>
                 )
               })}
@@ -274,6 +428,9 @@ export function SubscriptionSettings() {
               {scheduledMsg && (
                 <span className="subscription-actions__scheduled-msg">{scheduledMsg}</span>
               )}
+              {!scheduledMsg && isPortalSyncPending && (
+                <span className="settings-text-muted">{t.portalSyncPending}</span>
+              )}
               {!scheduledMsg && hasChanges && displaySelected === null && (
                 <span className="settings-text-muted">{t.cancelSoon}</span>
               )}
@@ -281,9 +438,9 @@ export function SubscriptionSettings() {
                 type="button"
                 className="settings-tab settings-tab--active subscription-actions__button"
                 onClick={handleValidate}
-                disabled={!hasChanges || isAnyPending || isTrialUpgradeBlocked}
+                disabled={!hasChanges || isAnyPending || isTrialUpgradeBlocked || isCancelActionBlocked}
               >
-                {isAnyPending ? t.validating : t.validatePlan}
+                {isAnyPending ? t.validating : isCancellationAlreadyScheduled ? t.reactivateSubscription : t.validatePlan}
               </button>
             </div>
 

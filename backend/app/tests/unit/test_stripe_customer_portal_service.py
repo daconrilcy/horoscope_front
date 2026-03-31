@@ -198,6 +198,30 @@ class TestStripeCustomerPortalService:
 
     @patch("app.services.stripe_customer_portal_service.get_stripe_client")
     @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
+    def test_cancel_session_rejects_already_scheduled_cancellation(
+        self, mock_get_profile, mock_get_client
+    ):
+        db = MagicMock()
+        mock_get_profile.return_value = StripeBillingProfileModel(
+            user_id=123,
+            stripe_customer_id="cus_123",
+            stripe_subscription_id="sub_123",
+            cancel_at_period_end=True,
+        )
+
+        with pytest.raises(StripeCustomerPortalServiceError) as exc:
+            StripeCustomerPortalService.create_subscription_cancel_session(
+                db,
+                user_id=123,
+                return_url="http://return",
+                configuration_id="bpc_123",
+            )
+
+        assert exc.value.code == "stripe_portal_subscription_cancel_already_scheduled"
+        mock_get_client.assert_not_called()
+
+    @patch("app.services.stripe_customer_portal_service.get_stripe_client")
+    @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
     def test_update_session_no_subscription_id(self, mock_get_profile, mock_get_client):
         db = MagicMock()
         mock_get_profile.return_value = StripeBillingProfileModel(
