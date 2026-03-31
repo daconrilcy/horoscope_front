@@ -1,6 +1,6 @@
 # Story 61.65 : Cohérence plan effectif — upgrade immédiat, downgrade/cancel à échéance
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -98,47 +98,48 @@ Tests unitaires et d'intégration couvrent : souscription directe, upgrade immé
 
 ## Tasks / Subtasks
 
-- [ ] **T1 — Migration DB : nouveaux champs** (AC: 2, 3, 4)
-  - [ ] Ajouter dans `StripeBillingProfileModel` : `current_period_start`, `scheduled_plan_code`, `scheduled_change_effective_at`, `pending_cancellation_effective_at`
-  - [ ] Créer la migration Alembic correspondante
-  - [ ] Vérifier la rétro-compatibilité (champs nullable)
+- [x] **T1 — Migration DB : nouveaux champs** (AC: 2, 3, 4)
+  - [x] Ajouter dans `StripeBillingProfileModel` : `current_period_start`, `scheduled_plan_code`, `scheduled_change_effective_at`, `pending_cancellation_effective_at`
+  - [x] Créer la migration Alembic correspondante
+  - [x] Vérifier la rétro-compatibilité (champs nullable)
 
-- [ ] **T2 — Détection du downgrade programmé dans le webhook** (AC: 2)
-  - [ ] Dans `update_from_event_payload`, si `subscription.schedule` est non-null, appeler `stripe.SubscriptionSchedule.retrieve(schedule_id)` pour lire `phases[1]` et en extraire la price_id du prochain plan
-  - [ ] Mapper cette price_id sur `scheduled_plan_code` via `STRIPE_PRICE_ENTITLEMENT_MAP`
-  - [ ] Mettre `scheduled_change_effective_at = current_period_end`
-  - [ ] Si `subscription.schedule` est null : vider `scheduled_plan_code` et `scheduled_change_effective_at`
-  - [ ] (Optionnel) Ajouter `subscription_schedule.updated` dans la liste des événements traités par `StripeWebhookService.handle_event` — non bloquant pour la story ; voir AC7
+- [x] **T2 — Détection du downgrade programmé dans le webhook** (AC: 2)
+  - [x] Dans `update_from_event_payload`, si `subscription.schedule` est non-null, appeler `stripe.SubscriptionSchedule.retrieve(schedule_id)` pour lire `phases[1]` et en extraire la price_id du prochain plan
+  - [x] Mapper cette price_id sur `scheduled_plan_code` via `STRIPE_PRICE_ENTITLEMENT_MAP`
+  - [x] Mettre `scheduled_change_effective_at = current_period_end`
+  - [x] Si `subscription.schedule` est null : vider `scheduled_plan_code` et `scheduled_change_effective_at`
+  - [x] (Optionnel) Ajouter `subscription_schedule.updated` dans la liste des événements traités par `StripeWebhookService.handle_event` — non bloquant pour la story ; voir AC7
 
-- [ ] **T3 — Enrichissement `update_from_event_payload`** (AC: 1, 2, 3, 4)
-  - [ ] Mettre à jour `current_period_start` depuis `data_obj.get("current_period_start")`
-  - [ ] Mettre à jour `pending_cancellation_effective_at` : si `cancel_at_period_end=True` → `current_period_end`, sinon `None`
-  - [ ] Sur `customer.subscription.deleted` : forcer `scheduled_plan_code=None`, `scheduled_change_effective_at=None`, `pending_cancellation_effective_at=None`
+- [x] **T3 — Enrichissement `update_from_event_payload`** (AC: 1, 2, 3, 4)
+  - [x] Mettre à jour `current_period_start` depuis `data_obj.get("current_period_start")`
+  - [x] Mettre à jour `pending_cancellation_effective_at` : si `cancel_at_period_end=True` → `current_period_end`, sinon `None`
+  - [x] Sur `customer.subscription.deleted` : forcer `scheduled_plan_code=None`, `scheduled_change_effective_at=None`, `pending_cancellation_effective_at=None`
 
-- [ ] **T4 — Extension DTO `SubscriptionStatusData`** (AC: 5)
-  - [ ] Ajouter dans `billing_service.py` :
+- [x] **T4 — Extension DTO `SubscriptionStatusData`** (AC: 5)
+  - [x] Ajouter dans `billing_service.py` :
     ```python
     scheduled_plan: BillingPlanData | None = None
     change_effective_at: datetime | None = None
     cancel_at_period_end: bool = False
     current_period_end: datetime | None = None
     ```
-  - [ ] Alimenter ces champs dans `_to_stripe_subscription_data`
+  - [x] Alimenter ces champs dans `_to_stripe_subscription_data`
 
-- [ ] **T5 — Frontend : activer le cancel et afficher les états** (AC: 6)
-  - [ ] Dans `SubscriptionSettings`, permettre la sélection du plan "Gratuit" si `stripeSubscriptionStatus === "active"`, en appelant le flow cancel portal
-  - [ ] Ajouter les clés i18n dans `settings.ts` : `cancelScheduled`, `planChangeScheduled`, `planFree`
-  - [ ] Afficher le message "Résiliation prévue le [date]" si `subscription.cancel_at_period_end === true`
-  - [ ] Afficher "Passage à [plan] le [date]" si `subscription.scheduled_plan` est non-null
-  - [ ] Supprimer ou conditionner le texte `cancelSoon` statique
+- [x] **T5 — Frontend : activer le cancel et afficher les états** (AC: 6)
+  - [x] Dans `SubscriptionSettings`, permettre la sélection du plan "Gratuit" si `stripeSubscriptionStatus === "active"`, en appelant le flow cancel portal
+  - [x] Ajouter les clés i18n dans `settings.ts` : `cancelScheduled`, `planChangeScheduled`, `planFree`
+  - [x] Afficher le message "Résiliation prévue le [date]" si `subscription.cancel_at_period_end === true`
+  - [x] Afficher "Passage à [plan] le [date]" si `subscription.scheduled_plan` est non-null
+  - [x] Supprimer ou conditionner le texte `cancelSoon` statique
 
-- [ ] **T6 — Tests** (AC: 7, 8)
-  - [ ] Unit tests `derive_entitlement_plan` : upgrade, downgrade (schedule détecté), cancel, deleted
-  - [ ] Unit tests `update_from_event_payload` : vérifier la population de `scheduled_plan_code`, `pending_cancellation_effective_at`
-  - [ ] Integration tests webhook : `customer.subscription.updated` pour les 3 cas (upgrade, downgrade programmé, cancel programmé)
-  - [ ] Integration test `customer.subscription.deleted` (vérifie état final complet : free + cancel_at_period_end=false + scheduled_plan_code=null)
-  - [ ] Test `GET /billing/subscription` pour les champs enrichis
-  - [ ] (Optionnel) Integration test `subscription_schedule.updated` si l'événement est branché
+- [x] **T6 — Tests** (AC: 7, 8)
+  - [x] Unit tests `derive_entitlement_plan` : upgrade, downgrade (schedule détecté), cancel, deleted
+  - [x] Unit tests `update_from_event_payload` : vérifier la population de `scheduled_plan_code`, `pending_cancellation_effective_at`
+  - [x] Integration tests webhook : `customer.subscription.updated` pour les 3 cas (upgrade, downgrade programmé, cancel programmé)
+  - [x] Integration test `customer.subscription.deleted` (vérifie état final complet : free + cancel_at_period_end=false + scheduled_plan_code=null)
+  - [x] Test `GET /billing/subscription` pour les champs enrichis
+  - [x] (Optionnel) Integration test `subscription_schedule.updated` si l'événement est branché
+
 
 ---
 
