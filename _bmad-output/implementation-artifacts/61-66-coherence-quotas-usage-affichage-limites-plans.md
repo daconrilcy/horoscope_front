@@ -402,6 +402,7 @@ claude-sonnet-4-6
 - [Review 2026-03-31] T2 pseudo-code : `ORDER BY quota_key ASC LIMIT 1` sur `PlanFeatureQuotaModel` pour déterminisme.
 - [Review 2026-03-31] AC6 + T3 : source frontend unique = `subscription.current_quota` — `GET /entitlements/me` exclu de l'affichage des limites.
 - [Review 2026-03-31] AC7 : `_PLAN_DEFAULTS.daily_message_limit` neutralisé dans les tests métier — aucun test ne s'appuie sur cette valeur comme référence de limite.
+- [Code Review 2026-03-31] Fixed outdated assertion in `test_product_entitlements_models.py` to match the new seed quotas.
 
 ### File List
 
@@ -415,3 +416,4 @@ claude-sonnet-4-6
 - `backend/app/tests/unit/test_quota_usage_service.py`
 - `backend/app/tests/integration/test_billing_api.py`
 - `backend/app/tests/integration/test_billing_api_61_66.py`
+- `backend/app/tests/unit/test_product_entitlements_models.py`
