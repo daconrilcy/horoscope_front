@@ -56,6 +56,7 @@ export function SubscriptionSettings() {
 
   const currentPlanCode = subscription?.plan?.code ?? null
   const stripeSubscriptionStatus = subscription?.subscription_status ?? null
+  const isTrialingBasic = stripeSubscriptionStatus === "trialing" && currentPlanCode === "basic"
 
   const [selectedPlanCode, setSelectedPlanCode] = useState<string | null | undefined>(undefined)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -67,6 +68,7 @@ export function SubscriptionSettings() {
   }, [isLoading, currentPlanCode, selectedPlanCode])
 
   const displaySelected = selectedPlanCode === undefined ? currentPlanCode : selectedPlanCode
+  const isTrialUpgradeBlocked = isTrialingBasic && displaySelected === "premium"
 
   const checkoutSession = useStripeCheckoutSession()
   const portalSession = useStripePortalSession()
@@ -75,6 +77,10 @@ export function SubscriptionSettings() {
   const handleValidate = () => {
     if (selectedPlanCode === currentPlanCode) return
     if (!selectedPlanCode) return
+    if (isTrialUpgradeBlocked) {
+      setErrorMessage(t.trialBasicNotice)
+      return
+    }
 
     setErrorMessage(null)
 
@@ -84,6 +90,8 @@ export function SubscriptionSettings() {
           setErrorMessage("Aucun profil de paiement Stripe trouvé. Veuillez contacter le support.")
         } else if (err.code === "stripe_subscription_not_found") {
           setErrorMessage("Abonnement Stripe introuvable. Veuillez réessayer depuis la page de souscription.")
+        } else if (err.code === "stripe_portal_subscription_update_not_allowed_for_trial") {
+          setErrorMessage(t.trialBasicNotice)
         } else {
           setErrorMessage(err.message || "Erreur lors de l'opération")
         }
@@ -200,6 +208,11 @@ export function SubscriptionSettings() {
             {errorMessage && (
               <p className="settings-save-feedback settings-save-feedback--error">{errorMessage}</p>
             )}
+            {!errorMessage && isTrialingBasic && (
+              <p className="settings-save-feedback settings-save-feedback--saving">
+                {t.trialBasicNotice}
+              </p>
+            )}
 
             <div className="subscription-actions">
               {hasChanges && displaySelected === null && (
@@ -209,7 +222,7 @@ export function SubscriptionSettings() {
                 type="button"
                 className="settings-tab settings-tab--active subscription-actions__button"
                 onClick={handleValidate}
-                disabled={!hasChanges || displaySelected === null || isAnyPending}
+                disabled={!hasChanges || displaySelected === null || isAnyPending || isTrialUpgradeBlocked}
               >
                 {isAnyPending ? t.validating : t.validatePlan}
               </button>

@@ -13,6 +13,10 @@ All acceptance criteria for Story 61.64 have been implemented and verified:
 - Enhanced logging for portal sessions.
 - Documentation and `.env.example` updated.
 - Unit and integration tests cover the new requirements.
+- Startup validation now has dedicated unit coverage.
+- Post-implementation hardening blocks `subscription_update` during `trialing`.
+- Backend billing catalog now normalizes canonical plan prices when legacy local data still contains `0`.
+- Backend pytest runs are isolated from `backend/horoscope.db`.
 
 ## Story
 
@@ -256,9 +260,27 @@ gpt-5
 - Le comportement produit attendu reste webhook-first pour l'activation des droits.
 - [AI Review Fix] Added STRIPE_PORTAL_CONFIGURATION_ID to .env.example.
 - [AI Review Fix] Added missing integration tests for `missing configuration` and `invalid configuration` in `test_stripe_customer_portal_api.py`.
+- [AI Review Fix] Added dedicated startup validation tests for the Stripe Portal configuration guard.
+- [Post-implementation Hardening] Added an explicit `stripe_portal_endpoints_enabled` runtime guard for startup validation.
+- [Post-implementation Hardening] Blocked `basic -> premium` upgrade attempts during `trialing`; a trial is treated as deferred `basic`, not as an upgradeable active subscription.
+- [Post-implementation Hardening] Normalized canonical `basic` / `premium` prices when local `billing_plans` rows still contain legacy `0` values.
+- [Post-implementation Hardening] Added a global pytest backend DB redirection to prevent tests from mutating `backend/horoscope.db`.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/61-64-configuration-explicite-customer-portal-stripe-et-prorata-upgrade.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
 - `.env.example`
+- `backend/.env.example`
+- `backend/app/api/v1/routers/billing.py`
+- `backend/app/main.py`
+- `backend/app/services/stripe_customer_portal_service.py`
+- `backend/app/startup/stripe_portal_validation.py`
+- `backend/app/tests/integration/test_billing_api.py`
+- `backend/app/tests/conftest.py`
 - `backend/app/tests/integration/test_stripe_customer_portal_api.py`
+- `backend/app/tests/unit/test_stripe_customer_portal_service.py`
+- `backend/app/tests/unit/test_stripe_portal_startup_validation.py`
+- `docs/billing-self-service-mvp.md`
+- `frontend/src/pages/settings/SubscriptionSettings.tsx`
+- `frontend/src/tests/SubscriptionSettings.test.tsx`

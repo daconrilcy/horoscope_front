@@ -29,6 +29,20 @@ logger = logging.getLogger(__name__)
 # Codes canoniques des plans
 BASIC_PLAN_CODE = "basic"
 PREMIUM_PLAN_CODE = "premium"
+_PLAN_DEFAULTS: dict[str, dict[str, object]] = {
+    BASIC_PLAN_CODE: {
+        "display_name": "Basic",
+        "monthly_price_cents": 900,
+        "currency": "EUR",
+        "daily_message_limit": 50,
+    },
+    PREMIUM_PLAN_CODE: {
+        "display_name": "Premium",
+        "monthly_price_cents": 2900,
+        "currency": "EUR",
+        "daily_message_limit": 1000,
+    },
+}
 
 # Mappings pour compatibilité descendante (principalement pour les tests)
 STRIPE_ENTITLEMENT_TO_PLAN_CODE: dict[str, str] = {}
@@ -165,37 +179,47 @@ class BillingService:
     @staticmethod
     def _to_plan_data(model: BillingPlanModel) -> BillingPlanData:
         """Convertit un modèle de plan en DTO."""
+        defaults = _PLAN_DEFAULTS.get(model.code)
+        monthly_price_cents = model.monthly_price_cents
+        currency = model.currency
+        daily_message_limit = model.daily_message_limit
+        display_name = model.display_name
+
+        # Durcissement local/runtime: certains jeux de données legacy gardent 0 en DB.
+        # Le frontend ne doit pas exposer "0 €" pour les plans Stripe canoniques.
+        if defaults is not None:
+            if monthly_price_cents <= 0:
+                monthly_price_cents = int(defaults["monthly_price_cents"])
+            if not currency:
+                currency = str(defaults["currency"])
+            if daily_message_limit <= 0:
+                daily_message_limit = int(defaults["daily_message_limit"])
+            if not display_name:
+                display_name = str(defaults["display_name"])
+
         return BillingPlanData(
             code=model.code,
-            display_name=model.display_name,
-            monthly_price_cents=model.monthly_price_cents,
-            currency=model.currency,
-            daily_message_limit=model.daily_message_limit,
+            display_name=display_name,
+            monthly_price_cents=monthly_price_cents,
+            currency=currency,
+            daily_message_limit=daily_message_limit,
             is_active=model.is_active,
         )
 
     @staticmethod
     def _get_default_plan_data_by_code(code: str | None) -> BillingPlanData | None:
         """Construit un DTO plan à partir des constantes applicatives par défaut (sans prix)."""
-        defaults = {
-            BASIC_PLAN_CODE: BillingPlanData(
-                code=BASIC_PLAN_CODE,
-                display_name="Basic",
-                monthly_price_cents=0, # Prix géré par Stripe
-                currency="EUR",
-                daily_message_limit=50,
-                is_active=True,
-            ),
-            PREMIUM_PLAN_CODE: BillingPlanData(
-                code=PREMIUM_PLAN_CODE,
-                display_name="Premium",
-                monthly_price_cents=0, # Prix géré par Stripe
-                currency="EUR",
-                daily_message_limit=1000,
-                is_active=True,
-            ),
-        }
-        return defaults.get(code)
+        defaults = _PLAN_DEFAULTS.get(code or "")
+        if defaults is None:
+            return None
+        return BillingPlanData(
+            code=code or "",
+            display_name=str(defaults["display_name"]),
+            monthly_price_cents=int(defaults["monthly_price_cents"]),
+            currency=str(defaults["currency"]),
+            daily_message_limit=int(defaults["daily_message_limit"]),
+            is_active=True,
+        )
 
     @staticmethod
     def _get_stripe_billing_profile(
@@ -233,30 +257,36 @@ class BillingService:
         """
         S'assure que les plans par défaut existent en base.
         """
-        defaults = {
-            BASIC_PLAN_CODE: {
-                "display_name": "Basic",
-                "daily_message_limit": 50,
-            },
-            PREMIUM_PLAN_CODE: {
-                "display_name": "Premium",
-                "daily_message_limit": 1000,
-            },
-        }
         plans: dict[str, BillingPlanModel] = {}
-        for code, data in defaults.items():
+        for code, data in _PLAN_DEFAULTS.items():
             existing = BillingService._get_plan_by_code(db, code)
             if existing is None:
                 existing = BillingPlanModel(
                     code=code,
-                    display_name=data["display_name"],
-                    monthly_price_cents=0,
-                    currency="EUR",
-                    daily_message_limit=data["daily_message_limit"],
+                    display_name=str(data["display_name"]),
+                    monthly_price_cents=int(data["monthly_price_cents"]),
+                    currency=str(data["currency"]),
+                    daily_message_limit=int(data["daily_message_limit"]),
                     is_active=True,
                 )
                 db.add(existing)
                 db.flush()
+            else:
+                changed = False
+                if existing.monthly_price_cents <= 0:
+                    existing.monthly_price_cents = int(data["monthly_price_cents"])
+                    changed = True
+                if not existing.currency:
+                    existing.currency = str(data["currency"])
+                    changed = True
+                if existing.daily_message_limit <= 0:
+                    existing.daily_message_limit = int(data["daily_message_limit"])
+                    changed = True
+                if not existing.display_name:
+                    existing.display_name = str(data["display_name"])
+                    changed = True
+                if changed:
+                    db.flush()
             plans[code] = existing
         return plans
 

@@ -417,6 +417,31 @@ class TestStripeCustomerPortalApi:
         assert response.status_code == 422
         assert response.json()["error"]["code"] == "stripe_portal_subscription_update_disabled"
 
+    def test_update_session_returns_422_for_trialing_subscription(self, clean_db):
+        token = _register_user_with_role("user@example.com", "user")
+        with SessionLocal() as db:
+            user = db.query(UserModel).filter_by(email="user@example.com").first()
+            profile = StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id="cus_123",
+                stripe_subscription_id="sub_123",
+                subscription_status="trialing",
+                entitlement_plan="basic",
+            )
+            db.add(profile)
+            db.commit()
+
+        response = client.post(
+            "/v1/billing/stripe-customer-portal-subscription-update-session",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+        assert response.status_code == 422
+        assert (
+            response.json()["error"]["code"]
+            == "stripe_portal_subscription_update_not_allowed_for_trial"
+        )
+
     def test_update_session_no_jwt_401(self, clean_db):
         response = client.post("/v1/billing/stripe-customer-portal-subscription-update-session")
         assert response.status_code == 401

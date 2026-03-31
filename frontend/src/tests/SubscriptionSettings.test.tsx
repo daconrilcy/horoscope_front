@@ -229,4 +229,41 @@ describe("SubscriptionSettings", () => {
       expect.objectContaining({ onSuccess: expect.any(Function) }),
     )
   })
+
+  it("bloque l'upgrade Premium pendant un trial Basic et n'appelle aucun endpoint Stripe", () => {
+    setupCatalogMock()
+    const portalMutate = vi.fn()
+    const updateMutate = vi.fn()
+    const checkoutMutate = vi.fn()
+
+    mockUseBillingSubscription.mockReturnValue({
+      isLoading: false,
+      data: {
+        status: "active",
+        subscription_status: "trialing",
+        plan: { code: "basic", display_name: "Basic", monthly_price_cents: 900, currency: "EUR", daily_message_limit: 50, is_active: true },
+        failure_reason: null,
+      },
+    })
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: checkoutMutate })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: portalMutate })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: updateMutate })
+
+    render(<SubscriptionSettings />)
+
+    expect(
+      screen.getByText(/Votre essai correspond au plan Basic/i),
+    ).toBeInTheDocument()
+
+    const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
+    fireEvent.click(premiumCard)
+
+    const validateButton = screen.getByRole("button", { name: /valider|validate/i })
+    expect(validateButton).toBeDisabled()
+    fireEvent.click(validateButton)
+
+    expect(updateMutate).not.toHaveBeenCalled()
+    expect(portalMutate).not.toHaveBeenCalled()
+    expect(checkoutMutate).not.toHaveBeenCalled()
+  })
 })

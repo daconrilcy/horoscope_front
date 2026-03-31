@@ -363,6 +363,10 @@ class Settings:
         self.stripe_portal_configuration_id = os.getenv(
             "STRIPE_PORTAL_CONFIGURATION_ID", ""
         ).strip() or None
+        self.stripe_portal_endpoints_enabled = self._parse_bool_env(
+            "STRIPE_PORTAL_ENDPOINTS_ENABLED",
+            default=bool(self.stripe_secret_key),
+        )
 
         # Story 61.54 - MVP Tax Configuration
         self.stripe_tax_enabled = os.getenv("STRIPE_TAX_ENABLED", "false").strip().lower() == "true"

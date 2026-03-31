@@ -22,6 +22,16 @@ class StripeCustomerPortalServiceError(Exception):
 
 class StripeCustomerPortalService:
     @staticmethod
+    def _ensure_subscription_update_is_allowed(
+        profile: StripeBillingProfileModel,
+    ) -> None:
+        if profile.subscription_status == "trialing":
+            raise StripeCustomerPortalServiceError(
+                code="stripe_portal_subscription_update_not_allowed_for_trial",
+                message="Subscription updates are not allowed during the Stripe trial period",
+            )
+
+    @staticmethod
     def _map_stripe_portal_error_code(error: stripe.StripeError, *, flow_type: str) -> str:
         if isinstance(error, stripe.InvalidRequestError):
             message = (str(error) or "").lower()
@@ -77,6 +87,8 @@ class StripeCustomerPortalService:
             db,
             user_id=user_id,
         )
+        if flow_type == "subscription_update":
+            StripeCustomerPortalService._ensure_subscription_update_is_allowed(profile)
 
         client = get_stripe_client()
         if client is None:

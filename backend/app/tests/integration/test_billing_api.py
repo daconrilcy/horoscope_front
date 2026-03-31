@@ -162,6 +162,41 @@ def test_billing_plans_are_available_for_authenticated_user() -> None:
     assert {"basic", "premium"}.issubset(codes)
 
 
+def test_billing_plans_normalize_zero_prices_for_canonical_plans() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    with SessionLocal() as db:
+        db.add_all(
+            [
+                BillingPlanModel(
+                    code="basic",
+                    display_name="Basic",
+                    monthly_price_cents=0,
+                    currency="EUR",
+                    daily_message_limit=50,
+                    is_active=True,
+                ),
+                BillingPlanModel(
+                    code="premium",
+                    display_name="Premium",
+                    monthly_price_cents=0,
+                    currency="EUR",
+                    daily_message_limit=1000,
+                    is_active=True,
+                ),
+            ]
+        )
+        db.commit()
+
+    response = client.get("/v1/billing/plans", headers=headers)
+    assert response.status_code == 200
+    payload = {plan["code"]: plan for plan in response.json()["data"]}
+    assert payload["basic"]["monthly_price_cents"] == 900
+    assert payload["premium"]["monthly_price_cents"] == 2900
+
+
 def test_billing_subscription_status_with_stripe_profile() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()

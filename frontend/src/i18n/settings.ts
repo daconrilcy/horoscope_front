@@ -175,6 +175,8 @@ export const settingsTranslations = {
       validatePlan: "Valider ce plan",
       validating: "Validation en cours...",
       cancelSoon: "L'annulation vers le plan Gratuit sera bientôt disponible.",
+      trialBasicNotice:
+        "Votre essai correspond au plan Basic. Le passage Premium sera disponible à la fin de l'essai.",
       buyCredits: "Acheter des crédits",
       buyCreditsDesc: "Besoin de plus de messages ? Achetez un pack de crédits supplémentaires.",
       soon: "Bientôt disponible",
@@ -189,6 +191,8 @@ export const settingsTranslations = {
       validatePlan: "Validate this plan",
       validating: "Validating...",
       cancelSoon: "Cancellation to the Free plan will be available soon.",
+      trialBasicNotice:
+        "Your trial currently follows the Basic plan. Premium upgrades will be available after the trial ends.",
       buyCredits: "Buy credits",
       buyCreditsDesc: "Need more messages? Buy an additional credit pack.",
       soon: "Soon available",
@@ -203,6 +207,8 @@ export const settingsTranslations = {
       validatePlan: "Validar este plan",
       validating: "Validando...",
       cancelSoon: "La cancelación al plan Gratuito estará disponible pronto.",
+      trialBasicNotice:
+        "Tu periodo de prueba sigue el plan Basic. El cambio a Premium estará disponible al finalizar la prueba.",
       buyCredits: "Comprar créditos",
       buyCreditsDesc: "¿Necesitas más mensajes? Compra un paquete de créditos adicionales.",
       soon: "Próximamente disponible",
@@ -219,6 +225,7 @@ export const settingsTranslations = {
       validatePlan: string
       validating: string
       cancelSoon: string
+      trialBasicNotice: string
       buyCredits: string
       buyCreditsDesc: string
       soon: string
