@@ -53,8 +53,9 @@ def test_seed_idempotence():
         assert len(db.execute(select(PlanCatalogModel)).scalars().all()) == 4
         assert len(db.execute(select(FeatureCatalogModel)).scalars().all()) == 4
         assert len(db.execute(select(PlanFeatureBindingModel)).scalars().all()) == 16
-        # 2 trial + 3 basic + 3 premium = 8 quotas
-        assert len(db.execute(select(PlanFeatureQuotaModel)).scalars().all()) == 8
+        quotas = db.execute(select(PlanFeatureQuotaModel)).scalars().all()
+        # trial: 2 quotas, basic: 5 quotas, premium: 5 quotas = 12 quotas
+        assert len(quotas) == 12
 
 
 def test_plan_code_uniqueness():
@@ -345,4 +346,3 @@ def test_seeded_quota_shapes():
             1,
             ResetMode.CALENDAR,
         ) in rows
-

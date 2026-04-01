@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 
 from app.infra.db.base import Base
 from app.infra.db.models.support_incident import SupportIncidentModel
@@ -26,6 +26,13 @@ def _register_and_get_access_token(email: str = "user@example.com") -> str:
     )
     assert register.status_code == 200
     return register.json()["data"]["tokens"]["access_token"]
+
+
+def _set_user_role(email: str, role: str) -> None:
+    with SessionLocal() as db:
+        user = db.execute(select(UserModel).where(UserModel.email == email)).scalar_one()
+        user.role = role
+        db.commit()
 
 def _seed_categories():
     with SessionLocal() as db:
@@ -120,3 +127,41 @@ def test_list_help_tickets_only_own_tickets() -> None:
     response = client.get("/v1/help/tickets", headers={"Authorization": f"Bearer {token2}"})
     assert response.status_code == 200
     assert len(response.json()["data"]["tickets"]) == 0
+
+
+def test_list_help_tickets_includes_support_response_and_status() -> None:
+    _cleanup_tables()
+    _seed_categories()
+    user_email = "user-support@example.com"
+    support_email = "support@example.com"
+    user_token = _register_and_get_access_token(user_email)
+    support_token = _register_and_get_access_token(support_email)
+    _set_user_role(support_email, "support")
+
+    create_response = client.post(
+        "/v1/help/tickets",
+        headers={"Authorization": f"Bearer {user_token}"},
+        json={
+            "category_code": "bug",
+            "subject": "Chat bloqué",
+            "description": "Le chat ne répond plus depuis ce matin.",
+        },
+    )
+    assert create_response.status_code == 201
+    ticket_id = create_response.json()["data"]["ticket_id"]
+
+    update_response = client.patch(
+        f"/v1/support/incidents/{ticket_id}",
+        headers={"Authorization": f"Bearer {support_token}"},
+        json={
+            "status": "solved",
+            "support_response": "Le problème a été corrigé, merci de réessayer.",
+        },
+    )
+    assert update_response.status_code == 200
+
+    response = client.get("/v1/help/tickets", headers={"Authorization": f"Bearer {user_token}"})
+    assert response.status_code == 200
+    ticket = response.json()["data"]["tickets"][0]
+    assert ticket["status"] == "solved"
+    assert ticket["support_response"] == "Le problème a été corrigé, merci de réessayer."

@@ -44,8 +44,11 @@ const TICKETS_OK = {
           ticket_id: 1,
           category_code: "bug",
           subject: "Test Ticket",
+          description: "Mon problème détaillé",
+          support_response: "Nous avons bien pris en charge votre demande.",
           status: "pending",
           created_at: "2026-04-01T10:00:00Z",
+          updated_at: "2026-04-01T10:15:00Z",
           resolved_at: null
         }
       ],
@@ -63,9 +66,12 @@ const CREATE_TICKET_OK = {
     data: {
       ticket_id: 2,
       category_code: "bug",
-      subject: "New Ticket",
+      subject: "Bug / dysfonctionnement",
+      description: "Ceci est une description de test assez longue.",
+      support_response: null,
       status: "pending",
       created_at: "2026-04-01T11:00:00Z",
+      updated_at: "2026-04-01T11:00:00Z",
       resolved_at: null
     }
   })
@@ -102,8 +108,11 @@ describe("HelpPage", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Comment fonctionne l'application")).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Faire une demande de support" })).toBeInTheDocument()
       expect(screen.getByText("Bug / dysfonctionnement")).toBeInTheDocument()
       expect(screen.getByText("Test Ticket")).toBeInTheDocument()
+      expect(screen.getByText("Mon problème détaillé")).toBeInTheDocument()
+      expect(screen.getByText("Nous avons bien pris en charge votre demande.")).toBeInTheDocument()
     })
   })
 
@@ -126,10 +135,8 @@ describe("HelpPage", () => {
 
     expect(screen.getByText(/Catégorie : Bug \/ dysfonctionnement/i)).toBeInTheDocument()
 
-    const subjectInput = screen.getByLabelText(/Objet de votre demande/i)
     const descInput = screen.getByLabelText(/Description détaillée/i)
 
-    await user.type(subjectInput, "Problème test")
     await user.type(descInput, "Ceci est une description de test assez longue.")
 
     const submitBtn = screen.getByRole("button", { name: /Envoyer ma demande/i })
@@ -138,6 +145,25 @@ describe("HelpPage", () => {
     await waitFor(() => {
       expect(screen.queryByText(/Catégorie : Bug/i)).not.toBeInTheDocument()
     })
+  })
+
+  it("demande un objet dédié quand la catégorie autre est choisie", async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith("/v1/auth/me")) return AUTH_ME_USER
+      if (url.includes("/v1/help/categories")) return CATEGORIES_OK
+      if (url.includes("/v1/help/tickets")) return TICKETS_OK
+      return NOT_FOUND
+    }))
+
+    renderHelpPage()
+
+    const otherCategory = await screen.findByText("Autre demande")
+    await user.click(otherCategory)
+
+    expect(screen.getByLabelText(/Objet de votre demande/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Description détaillée/i)).toBeInTheDocument()
   })
 })
 

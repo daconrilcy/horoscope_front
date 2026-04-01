@@ -7,7 +7,7 @@ Status: done
 ## Story
 
 En tant qu'utilisateur authentifié,
-je veux accéder à une page de support qui m'explique le fonctionnement du site (tokens, abonnements, fonctionnalités), me permet de choisir une catégorie de demande parmi une liste maintenue en base de données, puis de soumettre un ticket horodaté tracé en base avec un statut `pending` / `solved` / `canceled`,
+je veux accéder à une page de support qui m'explique le fonctionnement du site (tokens, abonnements, fonctionnalités), me permet de choisir une catégorie de demande parmi une liste maintenue en base de données, puis de soumettre un ticket horodaté tracé en base avec un statut `pending` / `solved` / `canceled`, une éventuelle réponse du support et un suivi visible côté utilisateur,
 afin d'obtenir de l'aide de manière structurée et de pouvoir suivre l'avancement de mes demandes.
 
 ---
@@ -16,7 +16,7 @@ afin d'obtenir de l'aide de manière structurée et de pouvoir suivre l'avanceme
 
 ### Ce qui existe déjà (à réutiliser sans casser)
 
-- `SupportIncidentModel` (`backend/app/infra/db/models/support_incident.py`) : table `support_incidents` avec `id`, `user_id`, `created_by_user_id`, `category` (String 32), `title`, `description`, `status` (String 16), `priority` (String 16), `resolved_at`, `created_at`, `updated_at`.
+- `SupportIncidentModel` (`backend/app/infra/db/models/support_incident.py`) : table `support_incidents` avec `id`, `user_id`, `created_by_user_id`, `category` (String 32), `title`, `description`, `status` (String 16), `priority` (String 16), `support_response`, `resolved_at`, `created_at`, `updated_at`.
 - `IncidentService` (`backend/app/services/incident_service.py`) : service complet CRUD incidents. Valide `VALID_INCIDENT_STATUS = {"open", "in_progress", "resolved", "closed"}` et `VALID_INCIDENT_CATEGORY = {"account", "subscription", "content"}`.
 - `backend/app/api/v1/routers/support.py` : router `/v1/support/*` **réservé aux rôles `support`, `ops`, `admin`**. Ne pas toucher.
 - `frontend/src/api/support.ts` : hooks TanStack Query pour l'usage ops. Ne pas modifier.
@@ -38,7 +38,9 @@ afin d'obtenir de l'aide de manière structurée et de pouvoir suivre l'avanceme
 - **Statuts utilisateurs** : `pending` (ticket créé, en attente), `solved` (résolu), `canceled` (annulé / clôturé). Ces trois valeurs sont ajoutées aux statuts valides de l'`IncidentService` et à `ALLOWED_STATUS_TRANSITIONS`.
 - **Priorité** : les tickets soumis par l'utilisateur ont toujours `priority="low"` (fixé côté API, non exposé à l'utilisateur).
 - **Catégories** : `SupportIncidentModel.category` reste un `String(32)`. Le code de la catégorie (ex. `"billing_issue"`) y est stocké. Pas de FK hard en base — relation soft via le code.
-- **Catégories validées en base** : le nouvel endpoint de création charge les codes actifs depuis `SupportTicketCategoryModel` pour valider la catégorie soumise. `VALID_INCIDENT_CATEGORY` dans `incident_service.py` continue de couvrir les catégories ops historiques — il n'est pas modifié.
+- **Catégories validées en base** : le nouvel endpoint de création charge les codes actifs depuis `SupportTicketCategoryModel` pour valider la catégorie soumise. `VALID_INCIDENT_CATEGORY` dans `incident_service.py` continue de couvrir les catégories ops historiques.
+- **Seed support catégories** : les catégories utilisateur sont auto-seedées au démarrage backend via `backend/scripts/seed_support_categories.py` si la table est vide.
+- **Réponse support** : la réponse textuelle du support est persistée dans `SupportIncidentModel.support_response`, exposée dans `/v1/help/tickets` et visible dans la page `/help`.
 - **Pas de Tailwind** : styles dans des fichiers `.css` dédiés, variables CSS du projet.
 - **i18n** : nouveau fichier `frontend/src/i18n/support.ts` avec fr/en/es.
 - **Standards UI support / help center** : la page `/help` doit s'aligner visuellement et structurellement avec le reste de l'application, en réutilisant au maximum les composants, layouts, tokens CSS et patterns déjà créés. Ne pas introduire un nouveau sous-système visuel si les primitives existantes couvrent le besoin.
@@ -68,13 +70,13 @@ Le seed initial (`backend/scripts/seed_support_categories.py`) insère ou met à
 
 | code | label_fr | label_en | display_order |
 |------|----------|----------|---------------|
-| `subscription_problem` | Problème avec mon abonnement | Subscription issue | 1 |
-| `billing_issue` | Problème de facturation | Billing issue | 2 |
-| `bug` | Bug / dysfonctionnement | Bug / technical issue | 3 |
-| `account_access` | Problème d'accès à mon compte | Account access issue | 4 |
+| `account_access` | Accès ou connexion au compte | Account access issue | 1 |
+| `billing_issue` | Facturation ou paiement | Billing or payment issue | 2 |
+| `subscription_problem` | Abonnement ou formule | Subscription or plan issue | 3 |
+| `bug` | Bug ou problème technique | Bug or technical issue | 4 |
 | `feature_question` | Question sur une fonctionnalité | Feature question | 5 |
-| `data_privacy` | Demande relative à mes données | Data & privacy request | 6 |
-| `other` | Autre demande | Other request | 7 |
+| `data_privacy` | Données personnelles et confidentialité | Personal data and privacy | 6 |
+| `other` | Autre | Other | 7 |
 
 Le seed est idempotent (aucune erreur en cas de réexécution).
 
@@ -125,6 +127,8 @@ Le seed est idempotent (aucune erreur en cas de réexécution).
 - `subject` → stocké dans `SupportIncidentModel.title` (max 160 caractères, non vide).
 - `description` → stocké dans `SupportIncidentModel.description` (non vide).
 - `category_code` → stocké dans `SupportIncidentModel.category`.
+- Pour les catégories standards, le frontend remplit automatiquement `subject` avec le libellé de la catégorie.
+- Pour la catégorie `other`, l'utilisateur doit saisir un objet dédié.
 - Réponse 201 avec le ticket créé :
 
 ```json
@@ -164,8 +168,11 @@ Le seed est idempotent (aucune erreur en cas de réexécution).
         "ticket_id": 42,
         "category_code": "bug",
         "subject": "...",
+        "description": "...",
         "status": "pending",
+        "support_response": null,
         "created_at": "...",
+        "updated_at": "...",
         "resolved_at": null
       }
     ],
@@ -266,8 +273,9 @@ Mapping icônes suggéré (non bloquant) :
 Le composant `SupportTicketForm` (`frontend/src/pages/support/SupportTicketForm.tsx`) s'affiche après sélection d'une catégorie.
 
 - Affiche la catégorie sélectionnée avec un bouton "Modifier" (retour étape 1).
-- Champ **Objet** : `<input type="text">` — max 160 caractères, requis.
-- Champ **Description** : `<textarea>` — min 20 caractères, requis.
+- Si la catégorie sélectionnée est `other`, afficher un champ **Objet** : `<input type="text">` — max 160 caractères, requis.
+- Sinon, l'objet est prérempli côté frontend avec le label de la catégorie sélectionnée et n'est pas saisi par l'utilisateur.
+- Champ **Description** : `<textarea>` — min 20 caractères, requis dans tous les cas.
 - Bouton **Envoyer** : déclenche `POST /v1/help/tickets`.
 - Validation via React Hook Form + Zod (aligné avec les patterns du projet).
 - État d'envoi : bouton désactivé pendant la mutation, indicateur de chargement.
@@ -286,6 +294,8 @@ En bas de la page `/help`, un composant `SupportTicketList` (`frontend/src/pages
 - Pour chaque ticket :
   - Catégorie (label traduit)
   - Objet (subject / title)
+  - Description initiale
+  - Réponse du support si présente
   - Date de création (format localisé)
   - Badge statut : `pending` (couleur neutre), `solved` (couleur succès `var(--success)`), `canceled` (couleur danger `var(--danger)`)
   - Date de résolution si disponible
@@ -378,6 +388,7 @@ Langues : `fr`, `en`, `es`.
 - Integration : `POST /v1/help/tickets` retourne 422 si `category_code` inconnu.
 - Integration : `POST /v1/help/tickets` retourne 422 si `subject` vide.
 - Integration : `GET /v1/help/tickets` retourne uniquement les tickets de l'utilisateur connecté.
+- Integration : `GET /v1/help/tickets` remonte bien `support_response` et le statut mis à jour après traitement support.
 - Non-régression : les tests ops existants sur `GET /v1/support/incidents` ne sont pas impactés.
 
 **Frontend :**
@@ -426,7 +437,7 @@ Langues : `fr`, `en`, `es`.
 - [x] **T6 — Composant `SupportTicketForm`** (AC: 8)
   - [x] Créer `frontend/src/pages/support/SupportTicketForm.tsx`
   - [x] Hook mutation `useCreateHelpTicket` dans `frontend/src/api/help.ts`
-  - [x] React Hook Form + Zod : validation subject (requis, max 160) + description (requis, min 20)
+  - [x] React Hook Form + Zod : validation conditionnelle subject (`other`) + description (requis, min 20)
   - [x] Gestion succès / erreur avec messages i18n
 
 - [x] **T7 — Composant `SupportTicketList`** (AC: 9)
@@ -476,6 +487,8 @@ Langues : `fr`, `en`, `es`.
 7. **Accessibilité navigation** : l'entrée `/help` du `user-menu` doit conserver les conventions d'accessibilité déjà présentes dans `UserMenu.tsx` (rôles ARIA, navigation bouton, focus visible, fermeture du menu après action).
 
 8. **Réutilisation frontend** : avant de créer un style ou composant spécifique au help center, vérifier les éléments déjà disponibles dans `frontend/src/components/ui`, `layouts`, `pages/settings/*` et les patterns de cartes/états de chargement du produit.
+
+9. **Support response** : toute réponse saisie via les flux support ops doit rester visible côté utilisateur dans `/v1/help/tickets`, avec `status` et `resolved_at` cohérents.
 
 ### Structure des fichiers à créer
 
@@ -557,6 +570,10 @@ claude-sonnet-4-6
 - **[Review Fix]** Suppression de la régression introduite dans la navigation globale: l’entrée `/help` n’est plus injectée comme item parasite dans `nav.ts`.
 - **[Deprecation Fix]** Remplacement de `status.HTTP_422_UNPROCESSABLE_ENTITY` par `status.HTTP_422_UNPROCESSABLE_CONTENT` dans le router help pour supprimer le warning FastAPI.
 - **[Validation]** Vérifications exécutées après implémentation et review: `ruff check` backend ciblé, `pytest` backend ciblé, `npm run lint`, `vitest` ciblé sur `HelpPage`, `UserMenu` et `ui-nav`.
+- **[Support Categories Update]** Les catégories utilisateur finales ont été réalignées sur des demandes de support habituelles, avec ajout explicite de `other` et auto-seed au démarrage backend.
+- **[Conditional Subject]** Le formulaire support n'affiche un champ objet que pour la catégorie `other`; sinon l'objet est dérivé du label de catégorie et la description reste toujours obligatoire.
+- **[Support Response Persistence]** Les tickets utilisateur exposent désormais `support_response` et `updated_at`; le support peut enrichir un ticket et l'utilisateur voit la réponse et le statut mis à jour dans `/help`.
+- **[Final Validation]** Vérifications finales exécutées: `pytest tests/integration/test_help_api.py app/tests/integration/test_support_api.py tests/unit/test_incident_service_user_statuses.py -q`, `npm test -- --run src/tests/HelpPage.test.tsx src/tests/UserMenu.test.tsx src/tests/ui-nav.test.ts`, `npm run lint`.
 
 ### File List
 
@@ -564,12 +581,16 @@ claude-sonnet-4-6
 - `backend/app/api/v1/routers/help.py`
 - `backend/app/infra/db/models/__init__.py`
 - `backend/app/infra/db/models/support_ticket_category.py`
+- `backend/app/infra/db/models/support_incident.py`
 - `backend/app/main.py`
+- `backend/app/api/v1/routers/support.py`
 - `backend/app/services/incident_service.py`
 - `backend/migrations/versions/d5db148d2557_add_support_ticket_categories_table.py`
 - `backend/migrations/versions/707ad78f51ac_add_description_en_and_description_es_.py`
+- `backend/migrations/versions/20260401_0065_add_support_response_to_incidents.py`
 - `backend/scripts/seed_support_categories.py`
 - `backend/tests/integration/test_help_api.py`
+- `backend/app/tests/integration/test_support_api.py`
 - `backend/tests/unit/test_incident_service_user_statuses.py`
 - `frontend/src/api/help.ts`
 - `frontend/src/app/routes.tsx`

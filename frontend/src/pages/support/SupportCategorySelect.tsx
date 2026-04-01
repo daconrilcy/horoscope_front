@@ -1,6 +1,7 @@
 import React from "react"
 import { useTranslation, useAstrologyLabels } from "@i18n"
 import { useHelpCategories } from "@api/help"
+import { EmptyState } from "@ui/EmptyState/EmptyState"
 import { ErrorState } from "@ui/ErrorState/ErrorState"
 import { Skeleton } from "@ui/Skeleton/Skeleton"
 import { 
@@ -47,6 +48,16 @@ export function SupportCategorySelect({ onSelect }: SupportCategorySelectProps) 
 
   if (isError) {
     return <ErrorState message={help.categories.error} />
+  }
+
+  if (!categories || categories.length === 0) {
+    return (
+      <EmptyState
+        icon={<HelpCircle size={40} />}
+        title={help.categories.emptyTitle}
+        description={help.categories.emptyDescription}
+      />
+    )
   }
 
   return (

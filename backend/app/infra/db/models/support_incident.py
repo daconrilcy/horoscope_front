@@ -30,6 +30,7 @@ class SupportIncidentModel(Base):
     category: Mapped[str] = mapped_column(String(32), index=True)
     title: Mapped[str] = mapped_column(String(160))
     description: Mapped[str] = mapped_column(Text)
+    support_response: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(16), index=True)
     priority: Mapped[str] = mapped_column(String(16), index=True)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

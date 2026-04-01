@@ -479,6 +479,7 @@ def get_support_incident(
         category=incident.category,
         title=incident.title,
         description=incident.description,
+        support_response=incident.support_response,
         status=incident.status,
         priority=incident.priority,
         resolved_at=incident.resolved_at,

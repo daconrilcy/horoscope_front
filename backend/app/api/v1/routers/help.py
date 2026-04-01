@@ -56,8 +56,10 @@ class TicketResponseData(BaseModel):
     category_code: str
     subject: str
     description: str
+    support_response: str | None
     status: str
     created_at: datetime
+    updated_at: datetime
     resolved_at: datetime | None
 
 
@@ -229,8 +231,10 @@ async def create_help_ticket(
                 category_code=incident.category,
                 subject=incident.title,
                 description=incident.description,
+                support_response=incident.support_response,
                 status=incident.status,
                 created_at=incident.created_at,
+                updated_at=incident.updated_at,
                 resolved_at=incident.resolved_at,
             ),
             "meta": {"request_id": request_id},
@@ -294,8 +298,10 @@ async def list_help_tickets(
             category_code=t.category,
             subject=t.title,
             description=t.description,
+            support_response=t.support_response,
             status=t.status,
             created_at=t.created_at,
+            updated_at=t.updated_at,
             resolved_at=t.resolved_at,
         )
         for t in tickets

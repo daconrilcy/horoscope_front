@@ -20,7 +20,15 @@ from app.infra.observability.metrics import increment_counter, observe_duration
 
 logger = logging.getLogger(__name__)
 
-VALID_INCIDENT_STATUS = {"open", "in_progress", "resolved", "closed", "pending", "canceled", "solved"}
+VALID_INCIDENT_STATUS = {
+    "open",
+    "in_progress",
+    "resolved",
+    "closed",
+    "pending",
+    "canceled",
+    "solved",
+}
 VALID_INCIDENT_PRIORITY = {"low", "medium", "high"}
 VALID_INCIDENT_CATEGORY = {
     "account", "subscription", "content",  # Ops legacy
@@ -67,6 +75,7 @@ class SupportIncidentData(BaseModel):
     category: str
     title: str
     description: str
+    support_response: str | None
     status: str
     priority: str
     resolved_at: datetime | None
@@ -91,6 +100,7 @@ class SupportIncidentUpdatePayload(BaseModel):
     status: str | None = None
     priority: str | None = None
     description: str | None = None
+    support_response: str | None = None
     assigned_to_user_id: int | None = None
 
 
@@ -139,6 +149,7 @@ class IncidentService:
             category=model.category,
             title=model.title,
             description=model.description,
+            support_response=model.support_response,
             status=model.status,
             priority=model.priority,
             resolved_at=model.resolved_at,
@@ -245,6 +256,7 @@ class IncidentService:
             category=payload.category,
             title=title,
             description=description,
+            support_response=None,
             status=initial_status,
             priority=payload.priority,
             resolved_at=None,
@@ -397,6 +409,11 @@ class IncidentService:
             model.description = description
             has_changes = True
 
+        if payload.support_response is not None:
+            support_response = payload.support_response.strip()
+            model.support_response = support_response or None
+            has_changes = True
+
         if payload.assigned_to_user_id is not None:
             IncidentService._require_user_exists(
                 db,
@@ -433,7 +450,10 @@ class IncidentService:
                 details={"field": "payload"},
             )
 
-        if model.status in {"resolved", "closed", "solved", "canceled"} and model.resolved_at is None:
+        if (
+            model.status in {"resolved", "closed", "solved", "canceled"}
+            and model.resolved_at is None
+        ):
             model.resolved_at = datetime.now(timezone.utc)
         if model.status in {"open", "in_progress", "pending"}:
             model.resolved_at = None

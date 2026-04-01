@@ -13,8 +13,10 @@ export type HelpTicket = {
   category_code: string
   subject: string
   description: string
+  support_response: string | null
   status: string
   created_at: string
+  updated_at: string
   resolved_at: string | null
 }
 

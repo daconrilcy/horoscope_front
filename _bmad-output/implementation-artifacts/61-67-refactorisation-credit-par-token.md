@@ -88,6 +88,10 @@ Valeurs initiales attendues dans le seed pour cette story:
 
 - Ces limites sont configurées **en base via le seed canonique**, pas dans le code applicatif.
 - `CanonicalEntitlementMutationService.upsert_plan_feature_configuration()` doit bien supprimer les anciens quotas `messages` / `consultations` devenus obsolètes sur les bindings concernés.
+- En état final du seed canonique, le total des quotas persistés est de `12` lignes:
+  - `trial`: `2` quotas
+  - `basic`: `5` quotas
+  - `premium`: `5` quotas
 
 ### AC3 - Les entitlement gates ne consomment plus avant l'appel LLM
 
@@ -399,6 +403,7 @@ Corrections apportées à la story d'origine:
 - `astrologer_chat` expose désormais trois quotas `tokens` (`day`, `week`, `month`) dans le catalogue canonique
 - les fenêtres journalières et hebdomadaires de `astrologer_chat` sont ancrées sur la période d'abonnement Stripe, pas sur le calendrier UTC brut
 - la page `/settings/usage` consomme maintenant les `usage_states` réels et affiche une réinitialisation par période
+- le test d'idempotence du seed canonique a été réaligné sur le contrat actuel: `12` quotas persistés et non plus `8`
 
 ## Dev Agent Record
 
@@ -421,6 +426,7 @@ Corrections apportées à la story d'origine:
 - **[Quota Model Fix]** `astrologer_chat` possède maintenant des quotas `tokens` distincts `jour / semaine / mois`, tous débités lors de chaque appel LLM.
 - **[Windowing Fix]** Les fenêtres `day` et `week` de `astrologer_chat` sont recalculées à partir de la date anniversaire de la période d'abonnement (`StripeBillingProfile.current_period_start/current_period_end`).
 - **[Usage UI Fix]** La page `/settings/usage` a été refondue pour s'appuyer sur les `usage_states` backend réels, avec une date de `Réinitialisation` propre à chaque période et suppression des éléments de résumé redondants.
+- **[Seed Test Fix]** Le test `test_seed_idempotence` a été mis à jour pour refléter le seed canonique actuel: `12` quotas au total (`trial=2`, `basic=5`, `premium=5`) après double exécution idempotente.
 
 ### File List
 

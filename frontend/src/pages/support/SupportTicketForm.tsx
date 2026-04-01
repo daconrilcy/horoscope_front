@@ -15,18 +15,21 @@ interface SupportTicketFormProps {
 }
 
 type FormValues = {
-  subject: string
+  subject: string | undefined
   description: string
 }
 
 export function SupportTicketForm({ category, onCancel, onSuccess }: SupportTicketFormProps) {
   const { help } = useTranslation("support")
   const createTicket = useCreateHelpTicket()
+  const isOtherCategory = category.code === "other"
   
   const schema = z.object({
-    subject: z.string()
-      .min(1, help.form.subject.errorRequired)
-      .max(160, help.form.subject.errorMaxLen),
+    subject: isOtherCategory
+      ? z.string()
+          .min(1, help.form.subject.errorRequired)
+          .max(160, help.form.subject.errorMaxLen)
+      : z.string().max(160).optional(),
     description: z.string()
       .min(20, help.form.description.errorMinLen),
   })
@@ -36,14 +39,18 @@ export function SupportTicketForm({ category, onCancel, onSuccess }: SupportTick
     handleSubmit, 
     formState: { errors, isSubmitting } 
   } = useForm<FormValues>({
-    resolver: zodResolver(schema)
+    resolver: zodResolver(schema),
+    defaultValues: {
+      subject: "",
+      description: "",
+    },
   })
 
   const onSubmit = async (values: FormValues) => {
     try {
       await createTicket.mutateAsync({
         category_code: category.code,
-        subject: values.subject,
+        subject: isOtherCategory ? (values.subject ?? "") : category.label,
         description: values.description,
       })
       onSuccess()
@@ -64,12 +71,14 @@ export function SupportTicketForm({ category, onCancel, onSuccess }: SupportTick
       </div>
 
       <form className="ticket-form" onSubmit={handleSubmit(onSubmit)}>
-        <Field
-          label={help.form.subject.label}
-          placeholder={help.form.subject.placeholder}
-          {...register("subject")}
-          error={errors.subject?.message}
-        />
+        {isOtherCategory ? (
+          <Field
+            label={help.form.subject.label}
+            placeholder={help.form.subject.placeholder}
+            {...register("subject")}
+            error={errors.subject?.message}
+          />
+        ) : null}
 
         <div className="field">
           <label className="field__label" htmlFor="ticket-description">

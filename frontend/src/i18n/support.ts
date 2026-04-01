@@ -38,10 +38,17 @@ export const supportTranslations = {
           cta: "Gérer mon abonnement",
         },
       },
+      supportEntry: {
+        title: "Besoin d'aide personnalisée ?",
+        description: "Choisissez une catégorie puis envoyez votre demande à notre équipe support. Vous pourrez ensuite suivre vos demandes directement depuis cette page.",
+        cta: "Faire une demande de support",
+      },
       categories: {
         title: "Comment pouvons-nous vous aider ?",
         loading: "Chargement des catégories...",
         error: "Erreur lors du chargement des catégories.",
+        emptyTitle: "Aucune catégorie disponible",
+        emptyDescription: "Le formulaire de support n'est pas disponible pour le moment. Veuillez réessayer plus tard.",
       },
       form: {
         title: "Nouvelle demande de support",
@@ -68,6 +75,7 @@ export const supportTranslations = {
       tickets: {
         title: "Mes demandes récentes",
         empty: "Vous n'avez pas encore soumis de demande de support.",
+        supportResponseLabel: "Réponse du support",
         statuses: {
           pending: "En attente",
           solved: "Résolu",
@@ -121,10 +129,17 @@ export const supportTranslations = {
           cta: "Manage my subscription",
         },
       },
+      supportEntry: {
+        title: "Need personalized help?",
+        description: "Choose a category and send your request to our support team. You will then be able to track your requests directly from this page.",
+        cta: "Create a support request",
+      },
       categories: {
         title: "How can we help you?",
         loading: "Loading categories...",
         error: "Error loading categories.",
+        emptyTitle: "No categories available",
+        emptyDescription: "The support form is not available at the moment. Please try again later.",
       },
       form: {
         title: "New support request",
@@ -151,6 +166,7 @@ export const supportTranslations = {
       tickets: {
         title: "My recent requests",
         empty: "You haven't submitted any support requests yet.",
+        supportResponseLabel: "Support response",
         statuses: {
           pending: "Pending",
           solved: "Solved",
@@ -204,10 +220,17 @@ export const supportTranslations = {
           cta: "Gestionar mi suscripción",
         },
       },
+      supportEntry: {
+        title: "¿Necesita ayuda personalizada?",
+        description: "Elija una categoría y envíe su solicitud a nuestro equipo de soporte. Luego podrá seguir sus solicitudes directamente desde esta página.",
+        cta: "Crear una solicitud de soporte",
+      },
       categories: {
         title: "¿Cómo podemos ayudarte?",
         loading: "Cargando categorías...",
         error: "Error al cargar las categorías.",
+        emptyTitle: "No hay categorías disponibles",
+        emptyDescription: "El formulario de soporte no está disponible por el momento. Por favor, inténtelo de nuevo más tarde.",
       },
       form: {
         title: "Nueva solicitud de soporte",
@@ -234,6 +257,7 @@ export const supportTranslations = {
       tickets: {
         title: "Mis solicitudes recientes",
         empty: "Aún no ha enviado ninguna solicitud de soporte.",
+        supportResponseLabel: "Respuesta del soporte",
         statuses: {
           pending: "Pendiente",
           solved: "Resuelto",

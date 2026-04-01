@@ -98,6 +98,13 @@ export function SupportTicketList({ refreshTrigger }: SupportTicketListProps) {
               </span>
             )}
           </div>
+          <p className="ticket-item__description">{ticket.description}</p>
+          {ticket.support_response ? (
+            <div className="ticket-response">
+              <span className="ticket-response__label">{help.tickets.supportResponseLabel}</span>
+              <p className="ticket-response__content">{ticket.support_response}</p>
+            </div>
+          ) : null}
         </div>
       ))}
       

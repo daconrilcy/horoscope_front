@@ -233,6 +233,26 @@ def _ensure_consultation_templates_seeded() -> None:
         logger.error("consultation_templates_auto_seed_failed error=%s", e)
 
 
+def _ensure_support_categories_seeded() -> None:
+    """Auto-seed support categories locally when the table is empty."""
+    if settings.app_env in {"production", "prod"}:
+        return
+
+    from app.infra.db.models.support_ticket_category import SupportTicketCategoryModel
+    from app.infra.db.session import SessionLocal
+    from scripts.seed_support_categories import seed_support_categories
+
+    try:
+        with SessionLocal() as db:
+            count = db.query(SupportTicketCategoryModel).count()
+            if count > 0:
+                return
+        logger.warning("support_categories_auto_seed table is empty, seeding...")
+        seed_support_categories()
+    except Exception as e:
+        logger.error("support_categories_auto_seed_failed error=%s", e)
+
+
 def _ensure_canonical_entitlements_seeded() -> None:
     """Auto-heal canonical entitlements locally before strict startup validation."""
     if settings.app_env in {"production", "prod"}:
@@ -322,6 +342,7 @@ async def _app_lifespan(_: FastAPI):
     _ensure_canonical_entitlements_seeded()
     _ensure_llm_registry_seeded()
     _ensure_consultation_templates_seeded()
+    _ensure_support_categories_seeded()
 
     # Story 61.29: Enforcement du registre de scope au démarrage
     run_feature_scope_startup_validation(settings.feature_scope_validation_mode)

@@ -13,6 +13,17 @@
   gap: 20px;
 }
 
+.help-section__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.help-section__icon {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
 .help-section__title {
   margin: 0;
   color: var(--text-1);
@@ -42,6 +53,10 @@
 .help-card:hover {
   transform: translateY(-2px);
   border-color: var(--primary-soft);
+}
+
+.help-card--wide {
+  width: 100%;
 }
 
 .help-card__icon {
@@ -87,6 +102,15 @@
   display: flex;
   justify-content: center;
   margin-top: 8px;
+}
+
+.help-support-entry {
+  gap: 16px;
+}
+
+.help-support-entry__actions {
+  display: flex;
+  justify-content: flex-start;
 }
 
 .category-grid {
@@ -187,6 +211,35 @@
   gap: 12px;
   font-size: 0.85rem;
   color: var(--text-3);
+}
+
+.ticket-item__description {
+  margin: 0;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+
+.ticket-response {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+}
+
+.ticket-response__label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ticket-response__content {
+  margin: 0;
+  color: var(--text-1);
+  line-height: 1.6;
 }
 
 .ticket-badge {

@@ -12,45 +12,45 @@ def utc_now() -> datetime:
 
 CATEGORIES = [
     {
-        "code": "subscription_problem",
-        "label_fr": "Problème avec mon abonnement",
-        "label_en": "Subscription issue",
-        "label_es": "Problema con mi suscripción",
+        "code": "account_access",
+        "label_fr": "Accès ou connexion au compte",
+        "label_en": "Account access or login issue",
+        "label_es": "Acceso o conexión a la cuenta",
         "display_order": 1,
     },
     {
         "code": "billing_issue",
-        "label_fr": "Problème de facturation",
-        "label_en": "Billing issue",
-        "label_es": "Problema de facturación",
+        "label_fr": "Facturation ou paiement",
+        "label_en": "Billing or payment issue",
+        "label_es": "Facturación o pago",
         "display_order": 2,
     },
     {
-        "code": "bug",
-        "label_fr": "Bug / dysfonctionnement",
-        "label_en": "Bug / technical issue",
-        "label_es": "Error / problema técnico",
+        "code": "subscription_problem",
+        "label_fr": "Abonnement ou formule",
+        "label_en": "Subscription or plan issue",
+        "label_es": "Suscripción o plan",
         "display_order": 3,
     },
     {
-        "code": "account_access",
-        "label_fr": "Problème d'accès à mon compte",
-        "label_en": "Account access issue",
-        "label_es": "Problema de acceso a la cuenta",
+        "code": "bug",
+        "label_fr": "Bug ou problème technique",
+        "label_en": "Bug or technical issue",
+        "label_es": "Error o problema técnico",
         "display_order": 4,
     },
     {
         "code": "feature_question",
         "label_fr": "Question sur une fonctionnalité",
         "label_en": "Feature question",
-        "label_es": "Pregunta sobre una fonctionnalité",
+        "label_es": "Pregunta sobre una función",
         "display_order": 5,
     },
     {
         "code": "data_privacy",
-        "label_fr": "Demande relative à mes données",
-        "label_en": "Data & privacy request",
-        "label_es": "Solicitud de datos y privacidad",
+        "label_fr": "Données personnelles et confidentialité",
+        "label_en": "Personal data and privacy",
+        "label_es": "Datos personales y privacidad",
         "display_order": 6,
     },
     {
@@ -66,7 +66,9 @@ CATEGORIES = [
 def seed_support_categories():
     with SessionLocal() as session:
         for cat_data in CATEGORIES:
-            stmt = select(SupportTicketCategoryModel).where(SupportTicketCategoryModel.code == cat_data["code"])
+            stmt = select(SupportTicketCategoryModel).where(
+                SupportTicketCategoryModel.code == cat_data["code"]
+            )
             result = session.execute(stmt)
             existing = result.scalar_one_or_none()
 

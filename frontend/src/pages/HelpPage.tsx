@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "@i18n"
 import { PageLayout } from "@layouts/PageLayout"
@@ -23,6 +23,7 @@ export default function HelpPage() {
   const navigate = useNavigate()
   const [selectedCategory, setSelectedCategory] = useState<{ code: string; label: string } | null>(null)
   const [ticketCreatedCount, setTicketCreatedCount] = useState(0)
+  const supportRequestRef = useRef<HTMLElement | null>(null)
 
   const handleCategorySelect = (code: string, label: string) => {
     setSelectedCategory({ code, label })
@@ -31,6 +32,10 @@ export default function HelpPage() {
   const handleTicketSuccess = () => {
     setSelectedCategory(null)
     setTicketCreatedCount(prev => prev + 1)
+  }
+
+  const handleStartSupportRequest = () => {
+    supportRequestRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
   }
 
   return (
@@ -98,10 +103,25 @@ export default function HelpPage() {
           </div>
         </section>
 
+        <section className="help-section">
+          <div className="help-card help-card--wide help-support-entry">
+            <div className="help-section__header">
+              <Info className="help-section__icon" size={24} />
+              <h2 className="help-section__title">{help.supportEntry.title}</h2>
+            </div>
+            <p className="help-card__desc">{help.supportEntry.description}</p>
+            <div className="help-support-entry__actions">
+              <Button variant="primary" onClick={handleStartSupportRequest}>
+                {help.supportEntry.cta}
+              </Button>
+            </div>
+          </div>
+        </section>
+
         <hr className="settings-divider" />
 
         {/* Support Ticketing */}
-        <section className="help-section">
+        <section ref={supportRequestRef} className="help-section">
           <h2 className="help-section__title">{help.categories.title}</h2>
           {!selectedCategory ? (
             <SupportCategorySelect onSelect={handleCategorySelect} />
