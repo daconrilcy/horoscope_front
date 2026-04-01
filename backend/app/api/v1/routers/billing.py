@@ -466,6 +466,14 @@ def get_token_usage(
     role_error = _ensure_user_role(current_user, request_id)
     if role_error is not None:
         return role_error
+    rate_error = _enforce_billing_limits(
+        user_id=current_user.id,
+        plan_code=None,
+        operation="get_token_usage",
+        request_id=request_id,
+    )
+    if rate_error is not None:
+        return rate_error
 
     usage = BillingService.get_token_usage(db, user_id=current_user.id, period=period)
     return {"data": usage.model_dump(mode="json"), "meta": {"request_id": request_id}}

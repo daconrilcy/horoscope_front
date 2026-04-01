@@ -218,8 +218,8 @@ Pour un plan tokenisé, `current_quota` retourne par exemple:
 
 Important:
 
-- aujourd'hui `CurrentQuotaData` n'expose pas `quota_key`;
-- cette story doit donc **ajouter** ce champ au contrat, pas seulement "mettre à jour" un champ existant.
+- le contrat backend doit exposer explicitement `quota_key`;
+- l'implémentation finale doit conserver ce champ dans `CurrentQuotaData` et dans la réponse `/v1/billing/subscription`.
 
 ### AC8 - Frontend: affichage en tokens avec delta minimal
 
@@ -271,44 +271,44 @@ Tests minimum à couvrir:
 
 ## Tasks / Subtasks
 
-- [ ] **T1 - Créer `UserTokenUsageLogModel` et sa migration** (AC: 1)
-  - [ ] Ajouter `backend/app/infra/db/models/token_usage_log.py`
-  - [ ] Exporter le modèle dans `backend/app/infra/db/models/__init__.py`
-  - [ ] Créer la migration Alembic dédiée
+- [x] **T1 - Créer `UserTokenUsageLogModel` et sa migration** (AC: 1)
+  - [x] Ajouter `backend/app/infra/db/models/token_usage_log.py`
+  - [x] Exporter le modèle dans `backend/app/infra/db/models/__init__.py`
+  - [x] Créer la migration Alembic dédiée
 
-- [ ] **T2 - Mettre à jour le catalogue canonique** (AC: 2)
-  - [ ] Remplacer les quotas `messages` / `consultations` par `tokens` dans `backend/scripts/seed_product_entitlements.py`
-  - [ ] Mettre à jour les tests du mutation service et des seeds
+- [x] **T2 - Mettre à jour le catalogue canonique** (AC: 2)
+  - [x] Remplacer les quotas `messages` / `consultations` par `tokens` dans `backend/scripts/seed_product_entitlements.py`
+  - [x] Mettre à jour les tests du mutation service et des seeds
 
-- [ ] **T3 - Refactorer le flux d'entitlement B2C pour les features tokenisées** (AC: 3)
-  - [ ] Introduire un pré-check sans consommation pour `astrologer_chat`
-  - [ ] Introduire un pré-check sans consommation pour `thematic_consultation`
-  - [ ] Mettre à jour les routeurs `chat.py` et `consultations.py`
+- [x] **T3 - Refactorer le flux d'entitlement B2C pour les features tokenisées** (AC: 3)
+  - [x] Introduire un pré-check sans consommation pour `astrologer_chat`
+  - [x] Introduire un pré-check sans consommation pour `thematic_consultation`
+  - [x] Mettre à jour les routeurs `chat.py` et `consultations.py`
 
-- [ ] **T4 - Propager les usages tokens depuis le runtime LLM** (AC: 4)
-  - [ ] Chat: faire remonter texte + modèle + tokens normalisés jusqu'au routeur
-  - [ ] Consultation: conserver et exploiter `GatewayResult.usage`
-  - [ ] Ajouter le fallback d'estimation si l'usage est absent
+- [x] **T4 - Propager les usages tokens depuis le runtime LLM** (AC: 4)
+  - [x] Chat: faire remonter texte + modèle + tokens normalisés jusqu'au routeur
+  - [x] Consultation: conserver et exploiter `GatewayResult.usage`
+  - [x] Ajouter le fallback d'estimation si l'usage est absent
 
-- [ ] **T5 - Implémenter le service de débit tokenisé** (AC: 5)
-  - [ ] Créer `backend/app/services/llm_token_usage_service.py`
-  - [ ] Garantir atomicité compteur + log utilisateur
+- [x] **T5 - Implémenter le service de débit tokenisé** (AC: 5)
+  - [x] Créer `backend/app/services/llm_token_usage_service.py`
+  - [x] Garantir atomicité compteur + log utilisateur
 
-- [ ] **T6 - Ajouter l'API `GET /v1/billing/token-usage`** (AC: 6)
-  - [ ] Ajouter le routeur / schéma de réponse
-  - [ ] Agréger `user_token_usage_logs` par période et par feature
+- [x] **T6 - Ajouter l'API `GET /v1/billing/token-usage`** (AC: 6)
+  - [x] Ajouter le routeur / schéma de réponse
+  - [x] Agréger `user_token_usage_logs` par période et par feature
 
-- [ ] **T7 - Enrichir `CurrentQuotaData`** (AC: 7)
-  - [ ] Ajouter `quota_key` au DTO backend
-  - [ ] Vérifier `_resolve_current_quota()` et les tests associés
+- [x] **T7 - Enrichir `CurrentQuotaData`** (AC: 7)
+  - [x] Ajouter `quota_key` au DTO backend
+  - [x] Vérifier `_resolve_current_quota()` et les tests associés
 
-- [ ] **T8 - Mettre à jour le frontend** (AC: 8)
-  - [ ] Ajuster les labels i18n existants
-  - [ ] Mettre à jour `SubscriptionSettings.tsx`
+- [x] **T8 - Mettre à jour le frontend** (AC: 8)
+  - [x] Ajuster les labels i18n existants
+  - [x] Mettre à jour `SubscriptionSettings.tsx`
 
-- [ ] **T9 - Compléter la couverture de tests** (AC: 10)
-  - [ ] Backend unit + integration
-  - [ ] Frontend si l'affichage change
+- [x] **T9 - Compléter la couverture de tests** (AC: 10)
+  - [x] Backend unit + integration
+  - [x] Frontend si l'affichage change
 
 ---
 
@@ -370,3 +370,55 @@ Corrections apportées à la story d'origine:
 - correction du contrat `current_quota`: `quota_key` n'existe pas aujourd'hui et doit être ajouté explicitement
 - correction du modèle de logging: journal utilisateur facturable atomique, pas best-effort
 - clarification du vrai point d'intégration: propagation des tokens depuis le Gateway jusqu'aux routeurs métier
+
+### Corrections post-review
+
+- les appels de recovery de `thematic_consultation` sont désormais eux aussi comptabilisés en tokens
+- l'endpoint `GET /v1/billing/token-usage` applique le même rate limiting backend que les endpoints billing principaux
+- les tests d'intégration billing couvrent maintenant `/v1/billing/token-usage` et `current_quota.quota_key == "tokens"`
+
+## Dev Agent Record
+
+### Completion Notes List
+
+- Revue codex appliquée: correction du billing des retries de guidance.
+- Revue codex appliquée: ajout du rate limiting sur `GET /v1/billing/token-usage`.
+- Revue codex appliquée: réalignement de la story avec l'état réel de l'implémentation.
+- **[Code Review Fix]** `current_datetime` manquant dans le contexte passé au LLM Gateway dans `chat_guidance_service.py` — champ requis par le template de prompt, provoquait une erreur `prompt_render_error` renvoyant HTTP 422 dans 2 tests d'intégration critiques (`test_secret_rotation_*`).
+- **[Code Review Fix]** Compteurs de monitoring persona (`conversation_messages_total|persona_profile=xxx`) manquants dans `chat_guidance_service.py` — le chat n'émettait pas de metric tagué par persona, rendant la métrique `persona-kpis.messages_total` toujours à 1 alors que chat + guidance avaient eu lieu. Aligné sur le pattern de `guidance_service.py` avec `PersonaConfigService.get_active()`.
+
+### File List
+
+- `_bmad-output/implementation-artifacts/61-67-refactorisation-credit-par-token.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `backend/app/api/v1/routers/billing.py`
+- `backend/app/api/v1/routers/chat.py`
+- `backend/app/api/v1/routers/consultations.py`
+- `backend/app/infra/db/models/__init__.py`
+- `backend/app/infra/db/models/token_usage_log.py`
+- `backend/app/services/ai_engine_adapter.py`
+- `backend/app/services/billing_service.py`
+- `backend/app/services/chat_entitlement_gate.py`
+- `backend/app/services/chat_guidance_service.py`
+- `backend/app/services/consultation_generation_service.py`
+- `backend/app/services/guidance_service.py`
+- `backend/app/services/llm_token_usage_service.py`
+- `backend/app/services/natal_chart_long_entitlement_gate.py`
+- `backend/app/services/thematic_consultation_entitlement_gate.py`
+- `backend/app/tests/integration/test_chat_api.py`
+- `backend/app/tests/integration/test_chat_entitlement.py`
+- `backend/app/tests/integration/test_consultation_catalogue.py`
+- `backend/app/tests/integration/test_consultation_third_party.py`
+- `backend/app/tests/integration/test_consultations_router.py`
+- `backend/app/tests/integration/test_thematic_consultation_entitlement.py`
+- `backend/app/tests/unit/test_ai_engine_adapter.py`
+- `backend/app/tests/unit/test_chat_entitlement_gate.py`
+- `backend/app/tests/unit/test_chat_entitlement_gate_v2.py`
+- `backend/app/tests/unit/test_natal_chart_long_entitlement_gate_v2.py`
+- `backend/app/tests/unit/test_product_entitlements_models.py`
+- `backend/app/tests/unit/test_thematic_consultation_entitlement_gate.py`
+- `backend/app/tests/unit/test_thematic_consultation_entitlement_gate_v2.py`
+- `backend/migrations/versions/d86bb999566a_add_user_token_usage_logs.py`
+- `backend/scripts/seed_product_entitlements.py`
+- `frontend/src/api/billing.ts`
+- `frontend/src/pages/settings/UsageSettings.tsx`

@@ -373,6 +373,7 @@ class GuidanceService:
         trace_id: str,
         assistant_content: str,
         persona_profile_code: str,
+        entitlement_result: Any = None,
     ) -> tuple[str, bool, GuidanceRecoveryMetadata]:
         """Applique les stratégies de récupération si la guidance est hors-scope (async)."""
         off_scope_detected, off_scope_score, off_scope_reason = GuidanceService._assess_off_scope(
@@ -414,6 +415,13 @@ class GuidanceService:
                 trace_id=trace_id,
                 db=db,
             )
+            GuidanceService._record_tokens(
+                db,
+                user_id=user_id,
+                feature_code="thematic_consultation",
+                gateway_result=result,
+                entitlement_result=entitlement_result,
+            )
             reformulated = result.raw_output
             reformulate_off_scope, _, _ = GuidanceService._assess_off_scope(reformulated)
             if not reformulate_off_scope:
@@ -449,6 +457,13 @@ class GuidanceService:
                 request_id=f"{request_id}-recovery-2",
                 trace_id=trace_id,
                 db=db,
+            )
+            GuidanceService._record_tokens(
+                db,
+                user_id=user_id,
+                feature_code="thematic_consultation",
+                gateway_result=result,
+                entitlement_result=entitlement_result,
             )
             retried = result.raw_output
             retry_off_scope, _, _ = GuidanceService._assess_off_scope(retried)

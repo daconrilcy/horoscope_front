@@ -758,7 +758,12 @@ class ChatGuidanceService:
 
         persona = ChatGuidanceService._load_persona_sync(db, conversation.persona_id)
         persona_profile_code = persona.name.lower().replace(" ", "-")
-
+        from app.services.persona_config_service import PersonaConfigService
+        monitoring_persona_code = PersonaConfigService.get_active(db).profile_code
+        increment_counter(
+            f"conversation_messages_total|persona_profile={monitoring_persona_code}",
+            1.0,
+        )
         window_messages, max_characters = ChatGuidanceService._validate_context_config()
         recent_messages = repo.get_recent_messages(conversation_id=conversation.id, limit=window_messages)
 
@@ -832,6 +837,7 @@ class ChatGuidanceService:
             "conversation_id": str(conversation.id),
             "chat_turn_stage": "opening" if is_first_user_turn else "follow_up",
             "today_date": ChatGuidanceService._format_today_label(current_datetime_str),
+            "current_datetime": current_datetime_str,
             "user_profile_brief": opening_user_profile if is_first_user_turn else None,
             "natal_chart_summary": natal_summary,
         }
@@ -895,7 +901,7 @@ class ChatGuidanceService:
                         request_id=request_id,
                         trace_id=trace_id,
                         gateway_result=gateway_result,
-                        persona_profile_code=persona_profile_code,
+                        persona_profile_code=monitoring_persona_code,
                         entitlement_result=entitlement_result,
                     )
 

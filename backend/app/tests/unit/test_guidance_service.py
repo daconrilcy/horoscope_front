@@ -1,5 +1,6 @@
 import uuid
-from datetime import date
+from datetime import date, datetime, timezone
+from types import SimpleNamespace
 
 import pytest
 from sqlalchemy import select
@@ -10,6 +11,7 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
+from app.services.entitlement_types import UsageState
 from app.services.guidance_service import GuidanceService, GuidanceServiceError
 from app.services.persona_config_service import PersonaConfigService, PersonaConfigUpdatePayload
 
@@ -680,3 +682,76 @@ def test_request_contextual_guidance_rejects_unknown_or_foreign_conversation_id(
                 conversation_id=owner_conversation_id,
             )
     assert forbidden_error.value.code == "conversation_forbidden"
+
+
+@pytest.mark.asyncio
+async def test_guidance_recovery_records_tokens_for_each_recovery_attempt(monkeypatch) -> None:
+    _cleanup_tables()
+    recorded_request_ids: list[str] = []
+
+    async def fake_generate_guidance(*args, **kwargs):
+        request_id = kwargs["request_id"]
+        if request_id.endswith("-recovery-1"):
+            return SimpleNamespace(
+                raw_output="[off_scope] encore rate",
+                request_id=request_id,
+                meta=SimpleNamespace(model="gpt-4o-mini"),
+                usage=SimpleNamespace(input_tokens=11, output_tokens=7),
+            )
+        return SimpleNamespace(
+            raw_output="Reponse de recovery exploitable.",
+            request_id=request_id,
+            meta=SimpleNamespace(model="gpt-4o-mini"),
+            usage=SimpleNamespace(input_tokens=13, output_tokens=5),
+        )
+
+    def fake_record_usage(*args, **kwargs):
+        recorded_request_ids.append(kwargs["request_id"])
+        return None
+
+    entitlement_result = SimpleNamespace(
+        usage_states=[
+            UsageState(
+                feature_code="thematic_consultation",
+                quota_key="tokens",
+                quota_limit=200_000,
+                used=0,
+                remaining=200_000,
+                exhausted=False,
+                period_unit="month",
+                period_value=1,
+                reset_mode="calendar",
+                window_start=datetime(2026, 4, 1, tzinfo=timezone.utc),
+                window_end=datetime(2026, 5, 1, tzinfo=timezone.utc),
+            )
+        ]
+    )
+
+    monkeypatch.setattr(
+        "app.services.guidance_service.AIEngineAdapter.generate_guidance",
+        fake_generate_guidance,
+    )
+    monkeypatch.setattr(
+        "app.services.guidance_service.LlmTokenUsageService.record_usage",
+        fake_record_usage,
+    )
+
+    with SessionLocal() as db:
+        recovered_text, fallback_used, metadata = (
+            await GuidanceService._apply_off_scope_recovery_async(
+                db=db,
+                use_case="guidance_contextual",
+                context={"objective": "Tester la facturation"},
+                user_id=1,
+                request_id="rid-guidance",
+                trace_id="trace-guidance",
+                assistant_content="[off_scope] reponse initiale",
+                persona_profile_code="legacy-default",
+                entitlement_result=entitlement_result,
+            )
+        )
+
+    assert recovered_text == "Reponse de recovery exploitable."
+    assert fallback_used is False
+    assert metadata.recovery_strategy == "retry_once"
+    assert recorded_request_ids == ["rid-guidance-recovery-1", "rid-guidance-recovery-2"]

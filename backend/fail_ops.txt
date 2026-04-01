@@ -1,0 +1,116 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\dev\horoscope_front\backend
+configfile: pyproject.toml
+plugins: anyio-4.12.1, asyncio-1.3.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\integration\test_ops_monitoring_api.py F                       [100%]
+
+================================== FAILURES ===================================
+____ test_ops_monitoring_persona_kpis_reflect_live_chat_and_guidance_flows ____
+
+    def test_ops_monitoring_persona_kpis_reflect_live_chat_and_guidance_flows() -> None:
+        _cleanup_tables()
+        ops_token = _register_user_with_role_and_token("monitoring-persona-live-ops@example.com", "ops")
+        user_token = _register_user_with_role_and_token(
+            "monitoring-persona-live-user@example.com",
+            "user",
+        )
+    
+        _set_active_subscription(user_token, "basic")
+        _seed_birth_profile(user_token)
+    
+        chat_response = client.post(
+            "/v1/chat/messages",
+            headers={"Authorization": f"Bearer {user_token}"},
+            json={"message": "Bonjour, quelle tendance du jour ?"},
+        )
+        assert chat_response.status_code == 200
+    
+        guidance_response = client.post(
+            "/v1/guidance",
+            headers={"Authorization": f"Bearer {user_token}"},
+            json={"period": "daily"},
+        )
+        assert guidance_response.status_code == 200
+    
+        monitoring_response = client.get(
+            "/v1/ops/monitoring/persona-kpis",
+            params={"window": "24h"},
+            headers={
+                "Authorization": f"Bearer {ops_token}",
+                "X-Request-Id": "rid-monitoring-persona-live",
+            },
+        )
+        assert monitoring_response.status_code == 200
+        payload = monitoring_response.json()
+        assert payload["meta"]["request_id"] == "rid-monitoring-persona-live"
+    
+        by_code = {item["persona_profile_code"]: item for item in payload["data"]["personas"]}
+        assert "legacy-default" in by_code
+        persona = by_code["legacy-default"]
+>       assert persona["messages_total"] >= 2
+E       assert 1 >= 2
+
+app\tests\integration\test_ops_monitoring_api.py:389: AssertionError
+---------------------------- Captured stderr call -----------------------------
+2026-04-01 16:34:54,617 [INFO] HTTP Request: PUT http://testserver/v1/users/me/birth-data "HTTP/1.1 200 OK"
+2026-04-01 16:34:54,620 [INFO] TOP OF send_chat_message request_id=cc5cfd0771d5411b8baf07b5fa51dd3d user_id=2
+2026-04-01 16:34:54,620 [INFO] Validating payload...
+2026-04-01 16:34:54,621 [INFO] Checking access...
+2026-04-01 16:34:54,629 [INFO] Sending message...
+2026-04-01 16:34:54,634 [INFO] chat_reply_path request_id=cc5cfd0771d5411b8baf07b5fa51dd3d history_count=1 has_natal=False conversation_id=1
+2026-04-01 16:34:54,636 [WARNING] gateway_fallback_to_stub use_case=chat_astrologer
+2026-04-01 16:34:54,641 [WARNING] common_context_no_natal_data user_id=2
+2026-04-01 16:34:54,642 [WARNING] gateway_common_context_failed use_case=chat_astrologer error=1 validation error for PromptCommonContext
+  Value error, Either natal_interpretation or natal_data must be provided [type=value_error, input_value={'natal_interpretation': ...key': 'chat_astrologer'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/value_error
+2026-04-01 16:34:54,642 [INFO] llm_gateway_start {'use_case': 'chat_astrologer', 'user_id': 'unknown', 'request_id': 'cc5cfd0771d5411b8baf07b5fa51dd3d', 'trace_id': 'cc5cfd0771d5411b8baf07b5fa51dd3d', 'input': {'message': '[REDACTED]', 'last_user_msg': 'Bonjour, quelle tendance du jour ?', 'use_case': 'chat_astrologer', 'locale': 'fr-FR', 'conversation_id': '1'}, 'context': {'persona_name': 'Astrologue Standard', 'persona_tone': 'direct', 'persona_verbosity': 'medium', 'persona_style_markers': 'precis; empathique', 'persona_boundaries': 'Aucun conseil medical, legal ou financier ferme.', 'conversation_id': '1', 'chat_turn_stage': 'opening', 'today_date': '01 avril 2026', 'current_datetime': '01 avril 2026 Ó 16h34 (Europe/Paris)', 'user_profile_brief': 'Nom: Monitoring Persona Live User | Email: monitoring-persona-live-user@example.com | ┬ge: 35 ans', 'natal_chart_summary': None, 'history': [], 'user_data_block': 'Premier message utilisateur : Bonjour, quelle tendance du jour ?\n\nContexte initial minimal pour ce p... [truncated, 871 chars total]'}}
+2026-04-01 16:34:58,663 [INFO] HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2026-04-01 16:34:58,694 [INFO] Chat reply generated, recording tokens...
+2026-04-01 16:34:58,697 [INFO] Recorded 423 tokens for user 2 (feature: astrologer_chat, request_id: cc5cfd0771d5411b8baf07b5fa51dd3d, quota_applied: False)
+2026-04-01 16:34:58,698 [INFO] Message sent, preparing final dict...
+2026-04-01 16:34:58,699 [INFO] HTTP Request: POST http://testserver/v1/chat/messages "HTTP/1.1 200 OK"
+2026-04-01 16:34:58,707 [WARNING] astro_context_build_failed user_id=2 error=[location_missing] Localisation introuvable
+2026-04-01 16:34:58,707 [WARNING] gateway_fallback_to_stub use_case=guidance_daily
+2026-04-01 16:34:58,708 [WARNING] common_context_no_natal_data user_id=2
+2026-04-01 16:34:58,708 [WARNING] gateway_common_context_failed use_case=guidance_daily error=1 validation error for PromptCommonContext
+  Value error, Either natal_interpretation or natal_data must be provided [type=value_error, input_value={'natal_interpretation': ..._key': 'guidance_daily'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/value_error
+2026-04-01 16:34:58,709 [INFO] llm_gateway_start {'use_case': 'guidance_daily', 'user_id': 'unknown', 'request_id': 'af99cd0a3f8a4aa6a07010cc7588f10e', 'trace_id': 'af99cd0a3f8a4aa6a07010cc7588f10e', 'input': {'use_case': 'guidance_daily', 'locale': 'fr-FR', 'question': 'Quelle guidance astrologique ressort pour aujourd hui ?', 'situation': 'Lecture astrologique quotidienne basee sur le profil natal du jour.'}, 'context': {'birth_date': '[REDACTED]', 'birth_time': '[REDACTED]', 'birth_timezone': 'Europe/Paris', 'persona_line': 'Persona policy: profile=legacy-default; tone=calm; prudence=high; scope=strict; style=concise; fallback=safe_fallback', 'context_lines': "user: Bonjour, quelle tendance du jour ?\nassistant: Aujourd'hui, les Únergies sont marquÚes par une ... [truncated, 522 chars total]", 'natal_chart_summary': None, 'current_datetime': '01 avril 2026 Ó 16h34 (Europe/Paris)', 'current_timezone': 'Europe/Paris', 'current_location': 'Paris', 'astro_context': None, 'situation': 'Lecture astrologique quotidienne basee sur le profil natal du jour.'}}
+2026-04-01 16:35:06,108 [INFO] HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2026-04-01 16:35:06,112 [INFO] HTTP Request: POST http://testserver/v1/guidance "HTTP/1.1 200 OK"
+2026-04-01 16:35:06,116 [INFO] HTTP Request: GET http://testserver/v1/ops/monitoring/persona-kpis?window=24h "HTTP/1.1 200 OK"
+------------------------------ Captured log call ------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: PUT http://testserver/v1/users/me/birth-data "HTTP/1.1 200 OK"
+INFO     app.api.v1.routers.chat:chat.py:118 TOP OF send_chat_message request_id=cc5cfd0771d5411b8baf07b5fa51dd3d user_id=2
+INFO     app.api.v1.routers.chat:chat.py:133 Validating payload...
+INFO     app.api.v1.routers.chat:chat.py:136 Checking access...
+INFO     app.api.v1.routers.chat:chat.py:141 Sending message...
+INFO     app.services.ai_engine_adapter:ai_engine_adapter.py:483 chat_reply_path request_id=cc5cfd0771d5411b8baf07b5fa51dd3d history_count=1 has_natal=False conversation_id=1
+WARNING  app.llm_orchestration.gateway:gateway.py:359 gateway_fallback_to_stub use_case=chat_astrologer
+WARNING  app.prompts.common_context:common_context.py:132 common_context_no_natal_data user_id=2
+WARNING  app.llm_orchestration.gateway:gateway.py:682 gateway_common_context_failed use_case=chat_astrologer error=1 validation error for PromptCommonContext
+  Value error, Either natal_interpretation or natal_data must be provided [type=value_error, input_value={'natal_interpretation': ...key': 'chat_astrologer'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/value_error
+INFO     app.llm_orchestration.gateway:gateway.py:696 llm_gateway_start {'use_case': 'chat_astrologer', 'user_id': 'unknown', 'request_id': 'cc5cfd0771d5411b8baf07b5fa51dd3d', 'trace_id': 'cc5cfd0771d5411b8baf07b5fa51dd3d', 'input': {'message': '[REDACTED]', 'last_user_msg': 'Bonjour, quelle tendance du jour ?', 'use_case': 'chat_astrologer', 'locale': 'fr-FR', 'conversation_id': '1'}, 'context': {'persona_name': 'Astrologue Standard', 'persona_tone': 'direct', 'persona_verbosity': 'medium', 'persona_style_markers': 'precis; empathique', 'persona_boundaries': 'Aucun conseil medical, legal ou financier ferme.', 'conversation_id': '1', 'chat_turn_stage': 'opening', 'today_date': '01 avril 2026', 'current_datetime': '01 avril 2026 Ó 16h34 (Europe/Paris)', 'user_profile_brief': 'Nom: Monitoring Persona Live User | Email: monitoring-persona-live-user@example.com | ┬ge: 35 ans', 'natal_chart_summary': None, 'history': [], 'user_data_block': 'Premier message utilisateur : Bonjour, quelle tendance du jour ?\n\nContexte initial minimal pour ce p... [truncated, 871 chars total]'}}
+INFO     httpx:_client.py:1740 HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+INFO     app.services.chat_guidance_service:chat_guidance_service.py:856 Chat reply generated, recording tokens...
+INFO     app.services.llm_token_usage_service:llm_token_usage_service.py:69 Recorded 423 tokens for user 2 (feature: astrologer_chat, request_id: cc5cfd0771d5411b8baf07b5fa51dd3d, quota_applied: False)
+INFO     app.api.v1.routers.chat:chat.py:152 Message sent, preparing final dict...
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/v1/chat/messages "HTTP/1.1 200 OK"
+WARNING  app.services.astro_context_builder:astro_context_builder.py:211 astro_context_build_failed user_id=2 error=[location_missing] Localisation introuvable
+WARNING  app.llm_orchestration.gateway:gateway.py:359 gateway_fallback_to_stub use_case=guidance_daily
+WARNING  app.prompts.common_context:common_context.py:132 common_context_no_natal_data user_id=2
+WARNING  app.llm_orchestration.gateway:gateway.py:682 gateway_common_context_failed use_case=guidance_daily error=1 validation error for PromptCommonContext
+  Value error, Either natal_interpretation or natal_data must be provided [type=value_error, input_value={'natal_interpretation': ..._key': 'guidance_daily'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/value_error
+INFO     app.llm_orchestration.gateway:gateway.py:696 llm_gateway_start {'use_case': 'guidance_daily', 'user_id': 'unknown', 'request_id': 'af99cd0a3f8a4aa6a07010cc7588f10e', 'trace_id': 'af99cd0a3f8a4aa6a07010cc7588f10e', 'input': {'use_case': 'guidance_daily', 'locale': 'fr-FR', 'question': 'Quelle guidance astrologique ressort pour aujourd hui ?', 'situation': 'Lecture astrologique quotidienne basee sur le profil natal du jour.'}, 'context': {'birth_date': '[REDACTED]', 'birth_time': '[REDACTED]', 'birth_timezone': 'Europe/Paris', 'persona_line': 'Persona policy: profile=legacy-default; tone=calm; prudence=high; scope=strict; style=concise; fallback=safe_fallback', 'context_lines': "user: Bonjour, quelle tendance du jour ?\nassistant: Aujourd'hui, les Únergies sont marquÚes par une ... [truncated, 522 chars total]", 'natal_chart_summary': None, 'current_datetime': '01 avril 2026 Ó 16h34 (Europe/Paris)', 'current_timezone': 'Europe/Paris', 'current_location': 'Paris', 'astro_context': None, 'situation': 'Lecture astrologique quotidienne basee sur le profil natal du jour.'}}
+INFO     httpx:_client.py:1740 HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/v1/guidance "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ops/monitoring/persona-kpis?window=24h "HTTP/1.1 200 OK"
+=========================== short test summary info ===========================
+FAILED app/tests/integration/test_ops_monitoring_api.py::test_ops_monitoring_persona_kpis_reflect_live_chat_and_guidance_flows
+============================= 1 failed in 11.95s ==============================

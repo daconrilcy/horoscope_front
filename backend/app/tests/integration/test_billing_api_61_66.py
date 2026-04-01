@@ -30,10 +30,10 @@ def test_billing_subscription_current_quota() -> None:
         db.commit()
         
         # Simulate some usage
-        # Premium astrologer_chat is 1000/month (messages)
+        # Premium astrologer_chat is 1_500_000/month (tokens)
         q_def = QuotaDefinition(
-            quota_key="messages",
-            quota_limit=1000,
+            quota_key="tokens",
+            quota_limit=1_500_000,
             period_unit="month",
             period_value=1,
             reset_mode="calendar",
@@ -51,9 +51,10 @@ def test_billing_subscription_current_quota() -> None:
     quota = payload["current_quota"]
     assert quota is not None
     assert quota["feature_code"] == "astrologer_chat"
-    assert quota["quota_limit"] == 1000
+    assert quota["quota_key"] == "tokens"
+    assert quota["quota_limit"] == 1_500_000
     assert quota["consumed"] == 42
-    assert quota["remaining"] == 958
+    assert quota["remaining"] == 1_499_958
     assert quota["period_unit"] == "month"
 
 def test_downgrade_non_regression_quota() -> None:
@@ -83,5 +84,6 @@ def test_downgrade_non_regression_quota() -> None:
     
     # Effective plan is still premium
     assert payload["plan"]["code"] == "premium"
-    # Quota should still be premium (1000)
-    assert payload["current_quota"]["quota_limit"] == 1000
+    # Quota should still be premium token quota
+    assert payload["current_quota"]["quota_key"] == "tokens"
+    assert payload["current_quota"]["quota_limit"] == 1_500_000

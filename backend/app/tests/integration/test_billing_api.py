@@ -19,6 +19,7 @@ from app.infra.db.models.product_entitlements import (
     ResetMode,
 )
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
+from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.infra.observability.metrics import reset_metrics
@@ -73,8 +74,8 @@ def _cleanup_tables() -> None:
         db.add(
             PlanFeatureQuotaModel(
                 plan_feature_binding_id=b_basic.id,
-                quota_key="messages",
-                quota_limit=50,
+                quota_key="tokens",
+                quota_limit=50_000,
                 period_unit=PeriodUnit.MONTH,
                 period_value=1,
                 reset_mode=ResetMode.CALENDAR,
@@ -102,8 +103,8 @@ def _cleanup_tables() -> None:
         db.add(
             PlanFeatureQuotaModel(
                 plan_feature_binding_id=b_premium.id,
-                quota_key="messages",
-                quota_limit=1000,
+                quota_key="tokens",
+                quota_limit=1_500_000,
                 period_unit=PeriodUnit.MONTH,
                 period_value=1,
                 reset_mode=ResetMode.CALENDAR,
@@ -282,3 +283,60 @@ def test_billing_subscription_matrix(
         assert payload["plan"]["code"] == expected_plan_code
     else:
         assert payload["plan"] is None
+
+
+def test_billing_token_usage_returns_aggregated_usage() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    with SessionLocal() as db:
+        user = db.query(UserModel).filter_by(email="billing-api-user@example.com").one()
+        db.add_all(
+            [
+                UserTokenUsageLogModel(
+                    user_id=user.id,
+                    feature_code="astrologer_chat",
+                    provider_model="gpt-4o-mini",
+                    tokens_in=100,
+                    tokens_out=40,
+                    tokens_total=140,
+                    request_id="rid-chat-1",
+                ),
+                UserTokenUsageLogModel(
+                    user_id=user.id,
+                    feature_code="thematic_consultation",
+                    provider_model="gpt-4o",
+                    tokens_in=250,
+                    tokens_out=90,
+                    tokens_total=340,
+                    request_id="rid-consult-1",
+                ),
+            ]
+        )
+        db.commit()
+
+    response = client.get("/v1/billing/token-usage?period=all", headers=headers)
+    assert response.status_code == 200
+    payload = response.json()["data"]
+
+    assert payload["period"]["unit"] == "all"
+    assert payload["summary"] == {
+        "tokens_total": 480,
+        "tokens_in": 350,
+        "tokens_out": 130,
+    }
+
+    by_feature = {entry["feature_code"]: entry for entry in payload["by_feature"]}
+    assert by_feature["astrologer_chat"] == {
+        "feature_code": "astrologer_chat",
+        "tokens_total": 140,
+        "tokens_in": 100,
+        "tokens_out": 40,
+    }
+    assert by_feature["thematic_consultation"] == {
+        "feature_code": "thematic_consultation",
+        "tokens_total": 340,
+        "tokens_in": 250,
+        "tokens_out": 90,
+    }
