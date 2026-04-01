@@ -174,17 +174,32 @@ export const settingsTranslations = {
       selected: "Sélectionné",
       validatePlan: "Valider ce plan",
       reactivateSubscription: "Réactiver l'abonnement",
+      cancelSubscription: "Résilier l'abonnement",
       reactivateWithBasic: "Réactiver en prenant Basic",
       reactivateWithPremium: "Réactiver en prenant Premium",
       validating: "Validation en cours...",
       planFree: "Gratuit",
+      noActivePlan: "Aucun abonnement actif pour le moment.",
+      freePlanLimitedAccess: "Vous êtes actuellement en mode gratuit avec des fonctionnalités limitées.",
       cancelSoon: "L'annulation vers le plan Gratuit sera bientôt disponible.",
       portalSyncPending: "Synchronisation de l'abonnement en cours...",
       cancelAlreadyScheduled: "La résiliation est déjà programmée pour votre prochaine échéance.",
       cancelScheduled: "Résiliation prévue le {{date}}",
       planChangeScheduled: "Passage à {{plan}} le {{date}}",
+      currentPlanEndsOn: "Abonnement actif jusqu'au {{date}}",
       upgradeSyncPending: "Paiement accepté. Activation du plan {{plan}} en cours...",
       upgradeApplied: "Le plan {{plan}} est maintenant actif.",
+      upgradeModalTitle: "Confirmer l'upgrade",
+      upgradeModalLead:
+        "Vous allez passer du plan {{currentPlan}} au plan {{targetPlan}} avec une facturation intermédiaire.",
+      upgradeModalProration:
+        "Stripe recalculera le prix du plan supérieur au prorata du temps restant sur la période en cours.",
+      upgradeModalCredit:
+        "Le montant déjà payé sur votre abonnement actuel sera déduit du paiement additionnel demandé.",
+      upgradeModalRenewal:
+        "Vos prochaines échéances seront ensuite facturées normalement sur le plan {{targetPlan}}.",
+      upgradeModalCancel: "Plus tard",
+      upgradeModalProceed: "Continuer vers Stripe",
       cancelConfirmTitle: "Résilier l'abonnement",
       cancelConfirmDesc: "Votre accès restera actif jusqu'au {{date}}.",
       trialBasicNotice:
@@ -210,17 +225,32 @@ export const settingsTranslations = {
       selected: "Selected",
       validatePlan: "Validate this plan",
       reactivateSubscription: "Reactivate subscription",
+      cancelSubscription: "Cancel subscription",
       reactivateWithBasic: "Reactivate with Basic",
       reactivateWithPremium: "Reactivate with Premium",
       validating: "Validating...",
       planFree: "Free",
+      noActivePlan: "You do not have an active subscription at the moment.",
+      freePlanLimitedAccess: "You are currently on the free tier with limited features.",
       cancelSoon: "Cancellation to the Free plan will be available soon.",
       portalSyncPending: "Subscription update in progress...",
       cancelAlreadyScheduled: "Cancellation is already scheduled for your next renewal date.",
       cancelScheduled: "Cancellation scheduled for {{date}}",
       planChangeScheduled: "Change to {{plan}} on {{date}}",
+      currentPlanEndsOn: "Current subscription remains active until {{date}}",
       upgradeSyncPending: "Payment accepted. Activating the {{plan}} plan...",
       upgradeApplied: "The {{plan}} plan is now active.",
+      upgradeModalTitle: "Confirm upgrade",
+      upgradeModalLead:
+        "You are about to switch from the {{currentPlan}} plan to the {{targetPlan}} plan with an intermediate charge.",
+      upgradeModalProration:
+        "Stripe will recalculate the higher plan using the prorated time remaining in your current billing period.",
+      upgradeModalCredit:
+        "The amount already paid on your current subscription will be deducted from the additional payment requested.",
+      upgradeModalRenewal:
+        "Your next renewals will then be billed normally on the {{targetPlan}} plan.",
+      upgradeModalCancel: "Maybe later",
+      upgradeModalProceed: "Continue to Stripe",
       cancelConfirmTitle: "Cancel subscription",
       cancelConfirmDesc: "Your access will remain active until {{date}}.",
       trialBasicNotice:
@@ -246,17 +276,32 @@ export const settingsTranslations = {
       selected: "Seleccionado",
       validatePlan: "Validar este plan",
       reactivateSubscription: "Reactivar la suscripción",
+      cancelSubscription: "Cancelar la suscripción",
       reactivateWithBasic: "Reactivar con Basic",
       reactivateWithPremium: "Reactivar con Premium",
       validating: "Validando...",
       planFree: "Gratis",
+      noActivePlan: "No tienes ninguna suscripción activa por ahora.",
+      freePlanLimitedAccess: "Actualmente estás en el modo gratuito con funciones limitadas.",
       cancelSoon: "La cancelación al plan Gratuito estará disponible pronto.",
       portalSyncPending: "Sincronización de la suscripción en curso...",
       cancelAlreadyScheduled: "La cancelación ya está programada para la próxima fecha de renovación.",
       cancelScheduled: "Cancelación programada para el {{date}}",
       planChangeScheduled: "Cambio a {{plan}} el {{date}}",
+      currentPlanEndsOn: "Suscripción activa hasta el {{date}}",
       upgradeSyncPending: "Pago aceptado. Activación del plan {{plan}} en curso...",
       upgradeApplied: "El plan {{plan}} ya está activo.",
+      upgradeModalTitle: "Confirmar mejora",
+      upgradeModalLead:
+        "Vas a pasar del plan {{currentPlan}} al plan {{targetPlan}} con una facturación intermedia.",
+      upgradeModalProration:
+        "Stripe recalculará el plan superior según el prorrateo del tiempo restante en el período actual.",
+      upgradeModalCredit:
+        "El importe ya pagado en tu suscripción actual se descontará del pago adicional solicitado.",
+      upgradeModalRenewal:
+        "Tus próximas renovaciones se facturarán normalmente en el plan {{targetPlan}}.",
+      upgradeModalCancel: "Más tarde",
+      upgradeModalProceed: "Continuar con Stripe",
       cancelConfirmTitle: "Cancelar suscripción",
       cancelConfirmDesc: "Tu acceso permanecerá activo hasta el {{date}}.",
       trialBasicNotice:
@@ -284,17 +329,28 @@ export const settingsTranslations = {
       selected: string
       validatePlan: string
       reactivateSubscription: string
+      cancelSubscription: string
       reactivateWithBasic: string
       reactivateWithPremium: string
       validating: string
       planFree: string
+      noActivePlan: string
+      freePlanLimitedAccess: string
       cancelSoon: string
       portalSyncPending: string
       cancelAlreadyScheduled: string
       cancelScheduled: string
       planChangeScheduled: string
+      currentPlanEndsOn: string
       upgradeSyncPending: string
       upgradeApplied: string
+      upgradeModalTitle: string
+      upgradeModalLead: string
+      upgradeModalProration: string
+      upgradeModalCredit: string
+      upgradeModalRenewal: string
+      upgradeModalCancel: string
+      upgradeModalProceed: string
       cancelConfirmTitle: string
       cancelConfirmDesc: string
       trialBasicNotice: string

@@ -772,8 +772,8 @@ class StripeCustomerPortalService:
                 params={
                     "mode": "payment",
                     "customer": profile.stripe_customer_id,
-                    "success_url": settings.stripe_checkout_success_url,
-                    "cancel_url": settings.stripe_checkout_cancel_url,
+                    "success_url": settings.stripe_portal_return_url,
+                    "cancel_url": settings.stripe_portal_return_url,
                     "client_reference_id": str(user_id),
                     "line_items": [
                         {

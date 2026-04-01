@@ -125,6 +125,20 @@
   /* La barre est violette (settings) au lieu de dorée (profil astrologue) */
 }
 
+.subscription-settings__subtitle {
+  margin: -4px 0 18px;
+  color: var(--settings-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.subscription-settings__plans-subtitle {
+  margin: -6px 0 18px;
+  color: var(--settings-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 .settings-tabs {
   display: flex;
   gap: 10px;
@@ -382,6 +396,10 @@
   line-height: 1.5;
 }
 
+.subscription-plan-card__status-note--scheduled {
+  color: var(--settings-purple);
+}
+
 /* Badge "Actif" — style = .step-number (cercle numéroté du profil), adapté en pill */
 .subscription-plan-card__badge {
   display: inline-flex;
@@ -415,6 +433,40 @@
 .subscription-actions__button {
   justify-content: center;
   min-width: 160px;
+}
+
+.settings-card__footer {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(195, 206, 225, 0.72);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.subscription-management-button {
+  min-width: 220px;
+  justify-content: center;
+}
+
+.subscription-upgrade-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.subscription-upgrade-modal__lead {
+  margin: 0;
+  color: var(--settings-text-body);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.subscription-upgrade-modal__list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--settings-text-body);
+  font-size: 14px;
+  line-height: 1.7;
 }
 
 .subscription-actions__button:disabled,

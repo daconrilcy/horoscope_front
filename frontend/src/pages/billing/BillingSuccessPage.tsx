@@ -1,5 +1,5 @@
 import React from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { LayoutDashboard, Settings, Info, CheckCircle, Clock, AlertCircle, RefreshCw } from "lucide-react"
 import { useTranslation } from "../../i18n"
 import { Button } from "../../components/ui/Button"
@@ -8,13 +8,9 @@ import "./billing-return.css"
 
 export const BillingSuccessPage: React.FC = () => {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
   const { success: t } = useTranslation("billing")
 
   const { data: subscription, isLoading, isError, error, refetch } = useBillingSubscription()
-
-  // Lecture du session_id pour conformité AC11 (même si purement informatif)
-  const sessionId = searchParams.get("session_id")
 
   const status = subscription?.subscription_status
   const hasBillingError = isError || error != null
@@ -102,13 +98,6 @@ export const BillingSuccessPage: React.FC = () => {
           {display.message}
         </p>
 
-
-        {sessionId && (
-          <p className="billing-return-session">
-            Session: {sessionId}
-          </p>
-        )}
-
         <div className="billing-return-actions">
           {display.showRetry && (
             <Button
@@ -130,7 +119,7 @@ export const BillingSuccessPage: React.FC = () => {
           </Button>
           <Button 
             variant="secondary" 
-            onClick={() => navigate("/settings?tab=subscription")}
+            onClick={() => navigate("/settings/subscription")}
             leftIcon={<Settings size={18} />}
           >
             {t.viewSubscription}

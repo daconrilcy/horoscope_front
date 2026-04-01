@@ -5,7 +5,6 @@ import BillingSuccessPage from "../pages/billing/BillingSuccessPage"
 import { BrowserRouter } from "react-router-dom"
 
 const mockNavigate = vi.fn()
-const mockSearchParams = new URLSearchParams()
 const mockRefetch = vi.fn()
 const mockUseBillingSubscription = vi.fn()
 
@@ -14,7 +13,6 @@ vi.mock("react-router-dom", async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    useSearchParams: () => [mockSearchParams],
   }
 })
 
@@ -48,8 +46,6 @@ vi.mock("../api/billing", () => ({
 
 describe("BillingSuccessPage", () => {
   beforeEach(() => {
-    mockSearchParams.delete("is_trial")
-    mockSearchParams.delete("session_id")
     mockNavigate.mockReset()
     mockRefetch.mockReset()
     mockUseBillingSubscription.mockReset()
@@ -199,8 +195,7 @@ describe("BillingSuccessPage", () => {
     expect(screen.getByText("Votre souscription est en attente de confirmation.")).toBeInTheDocument()
   })
 
-  it("ignores the URL flag and trusts the API status", () => {
-    mockSearchParams.set("is_trial", "true")
+  it("trusts the API status", () => {
     mockUseBillingSubscription.mockReturnValue({
       data: { status: "inactive", subscription_status: "incomplete" },
       isLoading: false,
@@ -217,5 +212,26 @@ describe("BillingSuccessPage", () => {
 
     expect(screen.getByText("Activation en cours de confirmation")).toBeInTheDocument()
     expect(screen.queryByText("Essai gratuit demarre")).not.toBeInTheDocument()
+  })
+
+  it("redirects the subscription CTA to /settings/subscription", async () => {
+    const user = userEvent.setup()
+    mockUseBillingSubscription.mockReturnValue({
+      data: { status: "active", subscription_status: "active" },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: mockRefetch,
+    })
+
+    render(
+      <BrowserRouter>
+        <BillingSuccessPage />
+      </BrowserRouter>,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Voir mon abonnement" }))
+
+    expect(mockNavigate).toHaveBeenCalledWith("/settings/subscription")
   })
 })

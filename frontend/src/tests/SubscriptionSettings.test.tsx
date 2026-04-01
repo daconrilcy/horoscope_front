@@ -117,6 +117,47 @@ describe("SubscriptionSettings", () => {
     expect(["basic", "premium"]).toContain(calledWith)
   })
 
+  it("repasse par un nouveau Checkout quand l'ancien abonnement Stripe est canceled et qu'aucun plan n'est actif", () => {
+    setupCatalogMock()
+    const checkoutMutate = vi.fn()
+    const portalMutate = vi.fn()
+
+    mockUseBillingSubscription.mockReturnValue({
+      isLoading: false,
+      data: {
+        status: "inactive",
+        subscription_status: "canceled",
+        plan: null,
+        failure_reason: null,
+      },
+    })
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: checkoutMutate })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: portalMutate })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
+
+    render(<SubscriptionSettings />)
+
+    const basicCard = screen.getByText("Basic").closest('[role="button"]')!
+    fireEvent.click(basicCard)
+
+    const validateButton = screen.getByRole("button", { name: /valider|validate/i })
+    fireEvent.click(validateButton)
+
+    expect(checkoutMutate).toHaveBeenCalledWith(
+      "basic",
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    )
+    expect(portalMutate).not.toHaveBeenCalled()
+  })
+
   it("utilise le flow d'upgrade immédiat quand l'abonnement actif passe de basic à premium", () => {
     setupCatalogMock()
     const mutate = vi.fn()
@@ -147,6 +188,7 @@ describe("SubscriptionSettings", () => {
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })
     fireEvent.click(validateButton)
+    fireEvent.click(screen.getByRole("button", { name: /continuer vers stripe|continue to stripe/i }))
 
     expect(mutate).toHaveBeenCalledWith(
       "premium",
@@ -196,6 +238,10 @@ describe("SubscriptionSettings", () => {
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })
     fireEvent.click(validateButton)
+    expect(
+      screen.getByText(/facturation intermédiaire|intermediate charge/i),
+    ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: /continuer vers stripe|continue to stripe/i }))
 
     expect(mutate).toHaveBeenCalledTimes(1)
     expect(refetch).toHaveBeenCalled()
@@ -256,6 +302,7 @@ describe("SubscriptionSettings", () => {
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })
     fireEvent.click(validateButton)
+    fireEvent.click(screen.getByRole("button", { name: /continuer vers stripe|continue to stripe/i }))
 
     expect(mutate).toHaveBeenCalledTimes(1)
     expect(sessionStorage.getItem("billing_upgrade_pending_payment")).toBeNull()
@@ -459,7 +506,7 @@ describe("SubscriptionSettings", () => {
     expect(checkoutMutate).not.toHaveBeenCalled()
   })
 
-  it("appelle le flow de résiliation dédié quand un abonné actif sélectionne le plan Gratuit", () => {
+  it("affiche un bouton dédié de résiliation quand un abonné a un plan actif", () => {
     setupCatalogMock()
     const cancelMutate = vi.fn()
 
@@ -495,11 +542,8 @@ describe("SubscriptionSettings", () => {
 
     render(<SubscriptionSettings />)
 
-    const freeCard = screen.getByText(/gratuit|free/i).closest('[role="button"]')!
-    fireEvent.click(freeCard)
-
-    const validateButton = screen.getByRole("button", { name: /valider|validate/i })
-    fireEvent.click(validateButton)
+    const cancelButton = screen.getByRole("button", { name: /résilier l'abonnement|cancel subscription/i })
+    fireEvent.click(cancelButton)
 
     expect(cancelMutate).toHaveBeenCalledWith(
       undefined,
@@ -603,8 +647,8 @@ describe("SubscriptionSettings", () => {
 
     expect(screen.queryByText(/Synchronisation de l'abonnement en cours/i)).not.toBeInTheDocument()
     expect(
-      screen.getAllByText(/Résiliation prévue le|Cancellation scheduled for/i),
-    ).toHaveLength(2)
+      screen.getByText(/Abonnement actif jusqu'au|Current subscription remains active until/i),
+    ).toBeInTheDocument()
   })
 
   it("bascule automatiquement en mode résiliation programmée quand le webhook met à jour l'abonnement", () => {
@@ -663,12 +707,11 @@ describe("SubscriptionSettings", () => {
 
     rerender(<SubscriptionSettings />)
 
-    const freeCard = screen.getByText(/gratuit|free/i).closest('[role="button"]')!
     const basicCard = screen.getByText("Basic").closest('[role="button"]')!
 
     expect(screen.queryByText(/Synchronisation de l'abonnement en cours/i)).not.toBeInTheDocument()
-    expect(freeCard).toHaveAttribute("aria-pressed", "true")
-    expect(basicCard).toHaveTextContent(/Résiliation prévue le|Cancellation scheduled for/i)
+    expect(basicCard).toHaveAttribute("aria-pressed", "true")
+    expect(basicCard).toHaveTextContent(/Abonnement actif jusqu'au|Current subscription remains active until/i)
   })
 
   it("passe en mode réactivation quand cancel_at_period_end est déjà vrai", () => {
@@ -714,9 +757,6 @@ describe("SubscriptionSettings", () => {
 
     render(<SubscriptionSettings />)
 
-    const freeCard = screen.getByText(/gratuit|free/i).closest('[role="button"]')!
-    expect(freeCard).toHaveAttribute("aria-pressed", "true")
-    expect(freeCard).toHaveAttribute("aria-disabled", "true")
     expect(
       screen.getByText(/Réactiver en prenant Basic|Reactivate with Basic/i),
     ).toBeInTheDocument()
@@ -724,22 +764,17 @@ describe("SubscriptionSettings", () => {
       screen.getByText(/Réactiver en prenant Premium|Reactivate with Premium/i),
     ).toBeInTheDocument()
 
-    const validateButton = screen.getByRole("button", { name: /réactiver l'abonnement|reactivate subscription/i })
-    expect(validateButton).toBeDisabled()
+    const reactivateButton = screen.getByRole("button", { name: /réactiver l'abonnement|reactivate subscription/i })
+    expect(reactivateButton).toBeEnabled()
 
     expect(
-      screen.getAllByText(/Résiliation prévue le|Cancellation scheduled for/i),
-    ).toHaveLength(2)
+      screen.getByText(/Abonnement actif jusqu'au|Current subscription remains active until/i),
+    ).toBeInTheDocument()
     const basicCard = screen.getByText("Basic").closest('[role="button"]')!
-    expect(basicCard).toHaveTextContent(/Résiliation prévue le|Cancellation scheduled for/i)
+    expect(basicCard).toHaveTextContent(/Abonnement actif jusqu'au|Current subscription remains active until/i)
     expect(cancelMutate).not.toHaveBeenCalled()
 
-    fireEvent.click(freeCard)
-    expect(cancelMutate).not.toHaveBeenCalled()
-
-    fireEvent.click(basicCard)
-    expect(validateButton).toBeEnabled()
-    fireEvent.click(validateButton)
+    fireEvent.click(reactivateButton)
 
     expect(reactivateMutate).toHaveBeenCalledWith(
       undefined,
@@ -750,6 +785,7 @@ describe("SubscriptionSettings", () => {
     const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
     fireEvent.click(premiumCard)
 
+    const validateButton = screen.getByRole("button", { name: /valider|validate/i })
     expect(validateButton).toBeEnabled()
     fireEvent.click(validateButton)
 
@@ -758,5 +794,31 @@ describe("SubscriptionSettings", () => {
       expect.objectContaining({ onSuccess: expect.any(Function) }),
     )
     expect(cancelMutate).not.toHaveBeenCalled()
+  })
+
+  it("masque la carte Gratuit et affiche un sous-titre quand aucun abonnement n'est actif", () => {
+    setupCatalogMock()
+    mockUseBillingSubscription.mockReturnValue({
+      isLoading: false,
+      data: { status: "inactive", subscription_status: null, plan: null, failure_reason: null },
+    })
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
+
+    render(<SubscriptionSettings />)
+
+    expect(screen.queryByRole("button", { name: /^gratuit$|^free$/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/Aucun abonnement actif pour le moment|You do not have an active subscription/i),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByText(/mode gratuit avec des fonctionnalités limitées|free tier with limited features/i),
+    ).toBeInTheDocument()
   })
 })

@@ -376,6 +376,11 @@ claude-sonnet-4-6
 - [Upgrade redesign 2026-04-01] Le flux `basic -> premium` a été sorti du Customer Portal et rebâti autour d’un `invoice preview` Stripe, puis d’un Checkout hébergé pour un paiement additionnel intermédiaire. L’abonnement n’est mis à jour vers `premium` qu’après succès du paiement Checkout via webhook.
 - [Upgrade redesign 2026-04-01] Le montant demandé au moment de l’upgrade correspond désormais uniquement au delta de prorata net du mois en cours: `prorata premium restant - crédit basic déjà payé`. Le calcul ne réutilise plus le `amount_due` global de la preview quand celui-ci inclut aussi la prochaine échéance `premium`.
 - [Upgrade redesign 2026-04-01] Le comportement cible validé est maintenant: facture historique `basic` conservée, paiement intermédiaire d’upgrade séparé dans Stripe, puis échéances futures en `premium`.
+- [UX polish 2026-04-01] `SubscriptionSettings` n’affiche plus de carte `free`. Quand aucun abonnement n’est actif, la section `Plans disponibles` affiche désormais une mention dédiée indiquant que l’utilisateur est en mode gratuit avec des fonctionnalités limitées.
+- [UX polish 2026-04-01] Les états d’annulation et de changement programmé sont affichés directement dans les `subscription-plan-card`, et le bouton de gestion d’abonnement est isolé en pied de `settings-card`.
+- [UX polish 2026-04-01] Avant un upgrade payant, une modal explicite maintenant la facturation intermédiaire avant redirection vers Stripe.
+- [Resubscribe fix 2026-04-01] Un utilisateur sans plan actif mais avec snapshot Stripe `subscription_status="canceled"` repart désormais vers un nouveau Checkout Stripe au lieu du Customer Portal générique. Ce cas couvre le réabonnement après suppression effective de la subscription côté Stripe.
+- [Billing return UX 2026-04-01] La page `/billing/success` n’affiche plus l’identifiant de session Checkout, et son CTA "Voir mon abonnement" pointe explicitement vers `/settings/subscription`.
 
 ### File List
 
@@ -395,6 +400,9 @@ claude-sonnet-4-6
 - `frontend/src/app/routes.tsx`
 - `frontend/src/i18n/billing.ts`
 - `frontend/src/i18n/settings.ts`
+- `frontend/src/pages/billing/BillingSuccessPage.tsx`
+- `frontend/src/pages/billing/billing-return.css`
 - `frontend/src/pages/settings/Settings.css`
 - `frontend/src/pages/settings/SubscriptionSettings.tsx`
+- `frontend/src/tests/BillingSuccessPage.test.tsx`
 - `frontend/src/tests/SubscriptionSettings.test.tsx`

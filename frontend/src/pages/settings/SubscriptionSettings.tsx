@@ -12,6 +12,7 @@ import {
 } from "@api/billing"
 import { detectLang } from "@i18n/astrology"
 import { settingsTranslations } from "@i18n/settings"
+import { Modal } from "@components/ui"
 import { Check, CreditCard } from "lucide-react"
 import "./Settings.css"
 
@@ -94,12 +95,6 @@ export function SubscriptionSettings() {
 
     return [
       {
-        code: null,
-        label: t.planFree || "Gratuit",
-        limit: formatLimit(null),
-        price: "0 €"
-      },
-      {
         code: "basic",
         label: "Basic",
         limit: formatLimit("basic"),
@@ -124,13 +119,14 @@ export function SubscriptionSettings() {
   const isCancellationAlreadyScheduled =
     subscription?.cancel_at_period_end === true || pendingPortalAction?.action === "cancel"
   const effectiveCurrentPeriodEnd = subscription?.current_period_end ?? optimisticCurrentPeriodEnd
-  const committedPlanCode = isCancellationAlreadyScheduled ? null : currentPlanCode
+  const committedPlanCode = currentPlanCode
 
   const [selectedPlanCode, setSelectedPlanCode] = useState<string | null | undefined>(undefined)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isPortalSyncPending, setIsPortalSyncPending] = useState(() => readPendingBillingPortalAction() !== null)
   const [upgradeSyncTargetPlanCode, setUpgradeSyncTargetPlanCode] = useState<string | null>(null)
+  const [isUpgradeInfoModalOpen, setIsUpgradeInfoModalOpen] = useState(false)
   const previousCommittedPlanCodeRef = useRef<string | null | undefined>(undefined)
 
   useEffect(() => {
@@ -249,6 +245,9 @@ export function SubscriptionSettings() {
   const currentPlanPriceCents = getPlanPriceCents(currentPlanCode)
   const selectedPlanPriceCents = getPlanPriceCents(displaySelected)
   const isUpgradeSyncPending = upgradeSyncTargetPlanCode !== null
+  const hasActivePaidSubscription = stripeSubscriptionStatus === "active" && currentPlanCode !== null
+  const requiresNewCheckout = currentPlanCode === null && subscription?.status !== "active"
+  const isFreeWithoutSubscription = currentPlanCode === null && stripeSubscriptionStatus === null
   const isImmediatePaidUpgrade =
     stripeSubscriptionStatus === "active"
     && !isCancellationAlreadyScheduled
@@ -256,12 +255,18 @@ export function SubscriptionSettings() {
     && currentPlanCode !== null
     && selectedPlanPriceCents > currentPlanPriceCents
 
-  const handleValidate = () => {
+  const formatDisplayDate = (dateStr: string) => {
+    const d = new Date(dateStr)
+    return d.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })
+  }
+
+  const handleValidate = (skipUpgradeInfoModal = false) => {
     if (displaySelected === committedPlanCode) return
-    
-    // Bloquer uniquement si pas de subscription active (interdit d'être "null" sans payer)
-    // Mais si subscription active, "null" veut dire résilier -> on laisse passer
-    if (!displaySelected && stripeSubscriptionStatus === null) return
+    if (!displaySelected) return
 
     if (isTrialUpgradeBlocked) {
       setSuccessMessage(null)
@@ -269,9 +274,8 @@ export function SubscriptionSettings() {
       return
     }
 
-    if (displaySelected === null && isCancellationAlreadyScheduled) {
-      setSuccessMessage(null)
-      setErrorMessage(t.cancelAlreadyScheduled)
+    if (isImmediatePaidUpgrade && !skipUpgradeInfoModal) {
+      setIsUpgradeInfoModalOpen(true)
       return
     }
 
@@ -298,7 +302,7 @@ export function SubscriptionSettings() {
       }
     }
 
-    if (stripeSubscriptionStatus === null) {
+    if (requiresNewCheckout) {
       if (checkoutSession.isPending) return
       // Use direct canonical code
       const planToSub = displaySelected as "basic" | "premium"
@@ -309,41 +313,6 @@ export function SubscriptionSettings() {
         onError,
       })
     } else if (stripeSubscriptionStatus === "active") {
-      // Si on a sélectionné le plan Gratuit (null) -> flow portal cancel
-      if (displaySelected === null) {
-        if (portalCancelSession.isPending) return
-        portalCancelSession.mutate(undefined, {
-          onSuccess: (data) => {
-            const nextPendingAction: PendingBillingPortalAction = {
-              action: "cancel",
-              createdAt: Date.now(),
-              currentPeriodEnd: subscription?.current_period_end ?? null,
-            }
-            persistPendingBillingPortalAction("cancel", {
-              currentPeriodEnd: nextPendingAction.currentPeriodEnd,
-            })
-            setPendingPortalAction(nextPendingAction)
-            window.location.href = data.url
-          },
-          onError,
-        })
-        return
-      }
-
-      if (isCancellationAlreadyScheduled && displaySelected === currentPlanCode) {
-        if (reactivateSubscription.isPending) return
-        reactivateSubscription.mutate(undefined, {
-          onSuccess: () => {
-            clearPendingBillingPortalAction()
-            setPendingPortalAction(null)
-            setIsPortalSyncPending(false)
-            void refetchSubscription()
-          },
-          onError,
-        })
-        return
-      }
-
       if (isImmediatePaidUpgrade) {
         if (upgradeSubscription.isPending) return
         upgradeSubscription.mutate(displaySelected as "basic" | "premium", {
@@ -396,6 +365,50 @@ export function SubscriptionSettings() {
     }
   }
 
+  const handleSubscriptionStatusAction = () => {
+    setErrorMessage(null)
+    setSuccessMessage(null)
+
+    const onError = (err: unknown) => {
+      if (err instanceof BillingApiError) {
+        setErrorMessage(err.message || "Erreur lors de l'opération")
+        return
+      }
+      setErrorMessage("Erreur lors de l'opération")
+    }
+
+    if (isCancellationAlreadyScheduled) {
+      if (reactivateSubscription.isPending) return
+      reactivateSubscription.mutate(undefined, {
+        onSuccess: () => {
+          clearPendingBillingPortalAction()
+          setPendingPortalAction(null)
+          setIsPortalSyncPending(false)
+          void refetchSubscription()
+        },
+        onError,
+      })
+      return
+    }
+
+    if (portalCancelSession.isPending) return
+    portalCancelSession.mutate(undefined, {
+      onSuccess: (data) => {
+        const nextPendingAction: PendingBillingPortalAction = {
+          action: "cancel",
+          createdAt: Date.now(),
+          currentPeriodEnd: subscription?.current_period_end ?? null,
+        }
+        persistPendingBillingPortalAction("cancel", {
+          currentPeriodEnd: nextPendingAction.currentPeriodEnd,
+        })
+        setPendingPortalAction(nextPendingAction)
+        window.location.href = data.url
+      },
+      onError,
+    })
+  }
+
   const isAnyPending =
     checkoutSession.isPending
     || portalSession.isPending
@@ -405,29 +418,24 @@ export function SubscriptionSettings() {
     || upgradeSubscription.isPending
   const isUiLocked = isAnyPending || isUpgradeSyncPending
   const hasChanges = displaySelected !== committedPlanCode
-  const isCancelActionBlocked = displaySelected === null && isCancellationAlreadyScheduled
-
-  const scheduledMsg = useMemo(() => {
-    if (!subscription) return null
-    const formatDate = (dateStr: string) => {
-      const d = new Date(dateStr)
-      return d.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    }
-
-    if (isCancellationAlreadyScheduled && effectiveCurrentPeriodEnd) {
-      return t.cancelScheduled.replace("{{date}}", formatDate(effectiveCurrentPeriodEnd))
-    }
-    if (subscription.scheduled_plan && subscription.change_effective_at) {
-      return t.planChangeScheduled
-        .replace("{{plan}}", subscription.scheduled_plan.display_name)
-        .replace("{{date}}", formatDate(subscription.change_effective_at))
+  const selectedPlanLabel =
+    PLANS.find((plan) => plan.code === displaySelected)?.label ?? displaySelected ?? ""
+  const currentPlanLabel =
+    PLANS.find((plan) => plan.code === currentPlanCode)?.label ?? currentPlanCode ?? ""
+  const currentPlanStatusMessage = useMemo(() => {
+    if (!effectiveCurrentPeriodEnd || !currentPlanCode) return null
+    if (isCancellationAlreadyScheduled || subscription?.scheduled_plan) {
+      return t.currentPlanEndsOn.replace("{{date}}", formatDisplayDate(effectiveCurrentPeriodEnd))
     }
     return null
-  }, [effectiveCurrentPeriodEnd, isCancellationAlreadyScheduled, subscription, t, lang])
+  }, [
+    currentPlanCode,
+    effectiveCurrentPeriodEnd,
+    formatDisplayDate,
+    isCancellationAlreadyScheduled,
+    subscription?.scheduled_plan,
+    t.currentPlanEndsOn,
+  ])
 
   return (
     <div className="subscription-settings">
@@ -443,16 +451,20 @@ export function SubscriptionSettings() {
             <h3 className="settings-section-title settings-section-title--usage">
               {t.availablePlans}
             </h3>
+            {isFreeWithoutSubscription && (
+              <p className="subscription-settings__plans-subtitle">{t.freePlanLimitedAccess}</p>
+            )}
             <div className="subscription-plans-grid">
               {PLANS.map((plan) => {
                 const isCurrent = currentPlanCode === plan.code
                 const isSelected = displaySelected === plan.code
-                const isFrozen = isCancellationAlreadyScheduled && plan.code === null
-                const showCurrentCancellationNotice =
-                  isCancellationAlreadyScheduled
-                  && isCurrent
-                  && plan.code !== null
-                  && scheduledMsg !== null
+                const currentPlanNote = isCurrent ? currentPlanStatusMessage : null
+                const scheduledPlanNote =
+                  subscription?.scheduled_plan?.code === plan.code && subscription.change_effective_at
+                    ? t.planChangeScheduled
+                        .replace("{{plan}}", subscription.scheduled_plan.display_name)
+                        .replace("{{date}}", formatDisplayDate(subscription.change_effective_at))
+                    : null
                 const reactivateLabel =
                   isCancellationAlreadyScheduled && plan.code
                     ? plan.code === "basic"
@@ -462,17 +474,17 @@ export function SubscriptionSettings() {
                 return (
                   <div
                     key={plan.code || "free"}
-                    className={`subscription-plan-card ${isSelected ? 'subscription-plan-card--active' : ''} ${isFrozen ? 'subscription-plan-card--frozen' : ''}`}
+                    className={`subscription-plan-card ${isSelected ? 'subscription-plan-card--active' : ''}`}
                     onClick={() => {
-                      if (isUiLocked || isFrozen) return
+                      if (isUiLocked) return
                       setSelectedPlanCode(plan.code)
                     }}
                     role="button"
-                    tabIndex={isUiLocked || isFrozen ? -1 : 0}
+                    tabIndex={isUiLocked ? -1 : 0}
                     aria-pressed={isSelected}
-                    aria-disabled={isUiLocked || isFrozen}
+                    aria-disabled={isUiLocked}
                     onKeyDown={(event) => {
-                      if (isUiLocked || isFrozen) return
+                      if (isUiLocked) return
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault()
                         setSelectedPlanCode(plan.code)
@@ -480,7 +492,6 @@ export function SubscriptionSettings() {
                     }}
                     data-current-unselected={isCurrent && !isSelected}
                     data-pending={isUiLocked}
-                    data-frozen={isFrozen}
                   >
                     {isCurrent && !isSelected && (
                       <div className="subscription-plan-card__badge subscription-plan-card__badge--muted">
@@ -497,9 +508,14 @@ export function SubscriptionSettings() {
                     </h4>
                     <div className="subscription-plan-card__limit">{plan.limit}</div>
                     <div className="subscription-plan-card__price">{plan.price}</div>
-                    {showCurrentCancellationNotice && (
+                    {currentPlanNote && (
                       <div className="subscription-plan-card__status-note">
-                        {scheduledMsg}
+                        {currentPlanNote}
+                      </div>
+                    )}
+                    {scheduledPlanNote && (
+                      <div className="subscription-plan-card__status-note subscription-plan-card__status-note--scheduled">
+                        {scheduledPlanNote}
                       </div>
                     )}
                     {reactivateLabel && (
@@ -523,24 +539,31 @@ export function SubscriptionSettings() {
             )}
 
             <div className="subscription-actions">
-              {scheduledMsg && (
-                <span className="subscription-actions__scheduled-msg">{scheduledMsg}</span>
-              )}
-              {!scheduledMsg && isPortalSyncPending && (
+              {isPortalSyncPending && !currentPlanStatusMessage && (
                 <span className="settings-text-muted">{t.portalSyncPending}</span>
-              )}
-              {!scheduledMsg && hasChanges && displaySelected === null && (
-                <span className="settings-text-muted">{t.cancelSoon}</span>
               )}
               <button
                 type="button"
                 className="settings-tab settings-tab--active subscription-actions__button"
-                onClick={handleValidate}
-                disabled={!hasChanges || isUiLocked || isTrialUpgradeBlocked || isCancelActionBlocked}
+                onClick={() => handleValidate()}
+                disabled={!hasChanges || isUiLocked || isTrialUpgradeBlocked}
               >
-                {isAnyPending ? t.validating : isCancellationAlreadyScheduled ? t.reactivateSubscription : t.validatePlan}
+                {isAnyPending ? t.validating : t.validatePlan}
               </button>
             </div>
+
+            {hasActivePaidSubscription && (
+              <div className="settings-card__footer">
+                <button
+                  type="button"
+                  className="settings-tab subscription-management-button"
+                  onClick={handleSubscriptionStatusAction}
+                  disabled={isUiLocked}
+                >
+                  {isCancellationAlreadyScheduled ? t.reactivateSubscription : t.cancelSubscription}
+                </button>
+              </div>
+            )}
 
             <div className="subscription-credits-section">
               <div className="subscription-credits-section__content">
@@ -564,6 +587,47 @@ export function SubscriptionSettings() {
           </>
         )}
       </section>
+
+      <Modal
+        isOpen={isUpgradeInfoModalOpen}
+        onClose={() => setIsUpgradeInfoModalOpen(false)}
+        title={t.upgradeModalTitle}
+        size="sm"
+        footer={
+          <>
+            <button
+              type="button"
+              className="settings-tab"
+              onClick={() => setIsUpgradeInfoModalOpen(false)}
+            >
+              {t.upgradeModalCancel}
+            </button>
+            <button
+              type="button"
+              className="settings-tab settings-tab--active"
+              onClick={() => {
+                setIsUpgradeInfoModalOpen(false)
+                handleValidate(true)
+              }}
+            >
+              {t.upgradeModalProceed}
+            </button>
+          </>
+        }
+      >
+        <div className="subscription-upgrade-modal">
+          <p className="subscription-upgrade-modal__lead">
+            {t.upgradeModalLead
+              .replace("{{currentPlan}}", currentPlanLabel)
+              .replace("{{targetPlan}}", selectedPlanLabel)}
+          </p>
+          <ul className="subscription-upgrade-modal__list">
+            <li>{t.upgradeModalProration}</li>
+            <li>{t.upgradeModalCredit}</li>
+            <li>{t.upgradeModalRenewal.replace("{{targetPlan}}", selectedPlanLabel)}</li>
+          </ul>
+        </div>
+      </Modal>
     </div>
   )
 }

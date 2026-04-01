@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import stripe
 
+from app.core.config import settings
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.services.stripe_customer_portal_service import (
     StripeCustomerPortalService,
@@ -591,6 +592,8 @@ class TestStripeCustomerPortalService:
         checkout_params = mock_client.checkout.sessions.create.call_args[1]["params"]
         assert checkout_params["mode"] == "payment"
         assert checkout_params["customer"] == "cus_123"
+        assert checkout_params["success_url"] == settings.stripe_portal_return_url
+        assert checkout_params["cancel_url"] == settings.stripe_portal_return_url
         assert checkout_params["line_items"][0]["price_data"]["unit_amount"] == 2000
         assert checkout_params["metadata"]["billing_operation"] == "subscription_upgrade"
         assert checkout_params["metadata"]["stripe_subscription_item_id"] == "si_123"
