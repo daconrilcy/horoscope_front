@@ -1,6 +1,7 @@
 import React from "react"
 import { useTranslation, useAstrologyLabels } from "@i18n"
 import { useHelpCategories } from "@api/help"
+import { ErrorState } from "@ui/ErrorState/ErrorState"
 import { Skeleton } from "@ui/Skeleton/Skeleton"
 import { 
   CreditCard, 
@@ -45,7 +46,7 @@ export function SupportCategorySelect({ onSelect }: SupportCategorySelectProps) 
   }
 
   if (isError) {
-    return <div className="category-error">{help.categories.error}</div>
+    return <ErrorState message={help.categories.error} />
   }
 
   return (
@@ -53,7 +54,8 @@ export function SupportCategorySelect({ onSelect }: SupportCategorySelectProps) 
       {categories?.map((cat) => {
         const Icon = CATEGORY_ICONS[cat.code] || HelpCircle
         return (
-          <div 
+          <button
+            type="button"
             key={cat.code} 
             className="category-card"
             onClick={() => onSelect(cat.code, cat.label)}
@@ -62,7 +64,7 @@ export function SupportCategorySelect({ onSelect }: SupportCategorySelectProps) 
               <Icon size={32} />
             </div>
             <span className="category-card__label">{cat.label}</span>
-          </div>
+          </button>
         )
       })}
     </div>

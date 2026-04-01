@@ -1,10 +1,10 @@
 from fastapi.testclient import TestClient
-from sqlalchemy import delete, select
+from sqlalchemy import delete
 
 from app.infra.db.base import Base
-from app.infra.db.models.user import UserModel
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.support_ticket_category import SupportTicketCategoryModel
+from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, Query, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import desc, select, func
+from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
@@ -19,7 +19,6 @@ from app.infra.db.session import get_db_session
 from app.services.incident_service import (
     IncidentService,
     SupportIncidentCreatePayload,
-    SupportIncidentData,
 )
 
 logger = logging.getLogger(__name__)
@@ -104,7 +103,7 @@ async def get_help_categories(
 
     stmt = (
         select(SupportTicketCategoryModel)
-        .where(SupportTicketCategoryModel.is_active == True)
+        .where(SupportTicketCategoryModel.is_active)
         .order_by(SupportTicketCategoryModel.display_order)
     )
     categories = db.scalars(stmt).all()
@@ -164,12 +163,12 @@ async def create_help_ticket(
     # Validate category
     cat_stmt = select(SupportTicketCategoryModel).where(
         SupportTicketCategoryModel.code == payload.category_code,
-        SupportTicketCategoryModel.is_active == True,
+        SupportTicketCategoryModel.is_active,
     )
     category = db.scalar(cat_stmt)
     if not category:
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             content={
                 "error": {
                     "code": "ticket_invalid_category",
@@ -182,7 +181,7 @@ async def create_help_ticket(
 
     if not payload.subject.strip():
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             content={
                 "error": {
                     "code": "ticket_invalid_subject",
@@ -195,7 +194,7 @@ async def create_help_ticket(
 
     if not payload.description.strip():
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             content={
                 "error": {
                     "code": "ticket_invalid_description",

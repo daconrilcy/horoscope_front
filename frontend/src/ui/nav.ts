@@ -10,7 +10,6 @@ import {
   Layers, 
   User, 
   Users,
-  HelpCircle,
   Shield, 
   FileText
 } from './icons.tsx'
@@ -32,7 +31,6 @@ export const navItems: NavItem[] = [
   { key: 'natal', label: 'Thème', icon: Star, path: '/natal', showOnMobile: true },
   { key: 'consultations', label: 'Consultations', icon: Layers, path: '/consultations', showOnMobile: true },
   { key: 'astrologers', label: 'Astrologues', icon: Users, path: '/astrologers', showOnMobile: false },
-  { key: 'help', label: '', icon: HelpCircle, path: '/help', showOnMobile: false },
   
   // Support / Ops
   { key: 'support', label: 'Support', icon: MessageCircle, path: '/support', roles: ['support', 'ops'], showOnMobile: false },

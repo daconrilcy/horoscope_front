@@ -391,59 +391,59 @@ Langues : `fr`, `en`, `es`.
 
 ## Tasks / Subtasks
 
-- [ ] **T1 — Modèle `SupportTicketCategoryModel` + migration + seed** (AC: 1)
-  - [ ] Créer `backend/app/infra/db/models/support_ticket_category.py`
-  - [ ] Exporter dans `backend/app/infra/db/models/__init__.py`
-  - [ ] Créer la migration Alembic dédiée
-  - [ ] Créer `backend/scripts/seed_support_categories.py` (idempotent, 7 catégories)
+- [x] **T1 — Modèle `SupportTicketCategoryModel` + migration + seed** (AC: 1)
+  - [x] Créer `backend/app/infra/db/models/support_ticket_category.py`
+  - [x] Exporter dans `backend/app/infra/db/models/__init__.py`
+  - [x] Créer la migration Alembic dédiée
+  - [x] Créer `backend/scripts/seed_support_categories.py` (idempotent, 7 catégories)
 
-- [ ] **T2 — Extension des statuts `IncidentService`** (AC: 5)
-  - [ ] Ajouter `"pending"`, `"solved"`, `"canceled"` à `VALID_INCIDENT_STATUS`
-  - [ ] Mettre à jour `ALLOWED_STATUS_TRANSITIONS`
-  - [ ] Mettre à jour la logique `resolved_at` pour couvrir `"solved"` et `"canceled"`
-  - [ ] Vérifier que les tests existants passent toujours
+- [x] **T2 — Extension des statuts `IncidentService`** (AC: 5)
+  - [x] Ajouter `"pending"`, `"solved"`, `"canceled"` à `VALID_INCIDENT_STATUS`
+  - [x] Mettre à jour `ALLOWED_STATUS_TRANSITIONS`
+  - [x] Mettre à jour la logique `resolved_at` pour couvrir `"solved"` et `"canceled"`
+  - [x] Vérifier que les tests existants passent toujours
 
-- [ ] **T3 — Router `/v1/help`** (AC: 2, 3, 4)
-  - [ ] Créer `backend/app/api/v1/routers/help.py`
-  - [ ] `GET /v1/help/categories` : lire `SupportTicketCategoryModel` actives
-  - [ ] `POST /v1/help/tickets` : valider `category_code` vs DB, créer `SupportIncidentModel` `status=pending`
-  - [ ] `GET /v1/help/tickets` : lister les tickets `user_id=current_user.id`
-  - [ ] Brancher le router dans `backend/app/main.py`
+- [x] **T3 — Router `/v1/help`** (AC: 2, 3, 4)
+  - [x] Créer `backend/app/api/v1/routers/help.py`
+  - [x] `GET /v1/help/categories` : lire `SupportTicketCategoryModel` actives
+  - [x] `POST /v1/help/tickets` : valider `category_code` vs DB, créer `SupportIncidentModel` `status=pending`
+  - [x] `GET /v1/help/tickets` : lister les tickets `user_id=current_user.id`
+  - [x] Brancher le router dans `backend/app/main.py`
 
-- [ ] **T4 — Page `HelpPage.tsx` avec sections d'aide statiques** (AC: 6)
-  - [ ] Créer `frontend/src/pages/HelpPage.tsx`
-  - [ ] Créer `frontend/src/pages/HelpPage.css`
-  - [ ] Section 1 : fonctionnement de l'app (4 rubriques avec icônes Lucide)
-  - [ ] Section 2 : tokens / quotas (tableau plans)
-  - [ ] Section 3 : abonnements + CTA vers `/settings/subscription`
-  - [ ] Réutiliser `PageLayout` et les patterns visuels existants au lieu d'introduire de nouvelles surfaces ad hoc
+- [x] **T4 — Page `HelpPage.tsx` avec sections d'aide statiques** (AC: 6)
+  - [x] Créer `frontend/src/pages/HelpPage.tsx`
+  - [x] Créer `frontend/src/pages/HelpPage.css`
+  - [x] Section 1 : fonctionnement de l'app (4 rubriques avec icônes Lucide)
+  - [x] Section 2 : tokens / quotas (tableau plans)
+  - [x] Section 3 : abonnements + CTA vers `/settings/subscription`
+  - [x] Réutiliser `PageLayout` et les patterns visuels existants au lieu d'introduire de nouvelles surfaces ad hoc
 
-- [ ] **T5 — Composant `SupportCategorySelect`** (AC: 7)
-  - [ ] Créer `frontend/src/pages/support/SupportCategorySelect.tsx`
-  - [ ] Hook API `useHelpCategories` dans `frontend/src/api/help.ts`
-  - [ ] Loading skeleton, error state, grille de cartes cliquables
+- [x] **T5 — Composant `SupportCategorySelect`** (AC: 7)
+  - [x] Créer `frontend/src/pages/support/SupportCategorySelect.tsx`
+  - [x] Hook API `useHelpCategories` dans `frontend/src/api/help.ts`
+  - [x] Loading skeleton, error state, grille de cartes cliquables
 
-- [ ] **T6 — Composant `SupportTicketForm`** (AC: 8)
-  - [ ] Créer `frontend/src/pages/support/SupportTicketForm.tsx`
-  - [ ] Hook mutation `useCreateHelpTicket` dans `frontend/src/api/help.ts`
-  - [ ] React Hook Form + Zod : validation subject (requis, max 160) + description (requis, min 20)
-  - [ ] Gestion succès / erreur avec messages i18n
+- [x] **T6 — Composant `SupportTicketForm`** (AC: 8)
+  - [x] Créer `frontend/src/pages/support/SupportTicketForm.tsx`
+  - [x] Hook mutation `useCreateHelpTicket` dans `frontend/src/api/help.ts`
+  - [x] React Hook Form + Zod : validation subject (requis, max 160) + description (requis, min 20)
+  - [x] Gestion succès / erreur avec messages i18n
 
-- [ ] **T7 — Composant `SupportTicketList`** (AC: 9)
-  - [ ] Créer `frontend/src/pages/support/SupportTicketList.tsx`
-  - [ ] Hook query `useHelpTickets` dans `frontend/src/api/help.ts`
-  - [ ] Badges statut colorés, date, pagination "Voir plus"
+- [x] **T7 — Composant `SupportTicketList`** (AC: 9)
+  - [x] Créer `frontend/src/pages/support/SupportTicketList.tsx`
+  - [x] Hook query `useHelpTickets` dans `frontend/src/api/help.ts`
+  - [x] Badges statut colorés, date, pagination "Voir plus"
 
-- [ ] **T8 — Routing, navigation, i18n** (AC: 10, 11)
-  - [ ] Ajouter `/help` dans `frontend/src/app/routes.tsx`
-  - [ ] Vérifier entrée navigation dans sidebar/AppShell vers `/help`
-  - [ ] Ajouter une entrée `/help` accessible depuis `frontend/src/components/ui/UserMenu/UserMenu.tsx`
-  - [ ] Créer `frontend/src/i18n/support.ts` (fr/en/es)
-  - [ ] Exporter depuis `frontend/src/i18n/index.ts`
+- [x] **T8 — Routing, navigation, i18n** (AC: 10, 11)
+  - [x] Ajouter `/help` dans `frontend/src/app/routes.tsx`
+  - [x] Vérifier entrée navigation dans sidebar/AppShell vers `/help`
+  - [x] Ajouter une entrée `/help` accessible depuis `frontend/src/components/ui/UserMenu/UserMenu.tsx`
+  - [x] Créer `frontend/src/i18n/support.ts` (fr/en/es)
+  - [x] Exporter depuis `frontend/src/i18n/index.ts`
 
-- [ ] **T9 — Tests** (AC: 12)
-  - [ ] Tests backend unit + integration (fichiers dédiés dans `test_help_api.py`, `test_incident_service_user_statuses.py`)
-  - [ ] Tests frontend (SupportCategorySelect, SupportTicketForm, SupportTicketList)
+- [x] **T9 — Tests** (AC: 12)
+  - [x] Tests backend unit + integration (fichiers dédiés dans `test_help_api.py`, `test_incident_service_user_statuses.py`)
+  - [x] Tests frontend (SupportCategorySelect, SupportTicketForm, SupportTicketList)
 
 ---
 
@@ -547,4 +547,44 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- **[Help API]** Ajout du router utilisateur `backend/app/api/v1/routers/help.py` avec `GET /v1/help/categories`, `POST /v1/help/tickets` et `GET /v1/help/tickets`, protégés par authentification et rate limiting.
+- **[Support Categories]** Ajout du modèle `SupportTicketCategoryModel`, des migrations Alembic associées et du seed idempotent `backend/scripts/seed_support_categories.py`.
+- **[Incident Statuses]** Extension de `IncidentService` pour supporter les statuts utilisateur `pending`, `solved` et `canceled`, avec transitions et gestion `resolved_at` adaptées.
+- **[Help Page]** Création de la page `/help` avec sections d'aide statiques, CTA abonnement, sélection de catégorie, formulaire de ticket et historique des tickets.
+- **[User Menu Access]** Ajout de l’entrée `Aide & Support` dans `UserMenu`, sans régression sur les autres entrées du menu utilisateur.
+- **[Accessibility Fix]** Les cartes de catégories support sont désormais de vrais boutons focusables et activables au clavier; l’état erreur réutilise `ErrorState`.
+- **[Frontend Reuse Fix]** Réalignement des composants support sur les primitives frontend existantes (`PageLayout`, `Button`, `Skeleton`, `EmptyState`, `ErrorState`) avec correction des props `Button`.
+- **[Review Fix]** Suppression de la régression introduite dans la navigation globale: l’entrée `/help` n’est plus injectée comme item parasite dans `nav.ts`.
+- **[Deprecation Fix]** Remplacement de `status.HTTP_422_UNPROCESSABLE_ENTITY` par `status.HTTP_422_UNPROCESSABLE_CONTENT` dans le router help pour supprimer le warning FastAPI.
+- **[Validation]** Vérifications exécutées après implémentation et review: `ruff check` backend ciblé, `pytest` backend ciblé, `npm run lint`, `vitest` ciblé sur `HelpPage`, `UserMenu` et `ui-nav`.
+
 ### File List
+
+- `_bmad-output/implementation-artifacts/62-1-page-support-et-help-center-utilisateur.md`
+- `backend/app/api/v1/routers/help.py`
+- `backend/app/infra/db/models/__init__.py`
+- `backend/app/infra/db/models/support_ticket_category.py`
+- `backend/app/main.py`
+- `backend/app/services/incident_service.py`
+- `backend/migrations/versions/d5db148d2557_add_support_ticket_categories_table.py`
+- `backend/migrations/versions/707ad78f51ac_add_description_en_and_description_es_.py`
+- `backend/scripts/seed_support_categories.py`
+- `backend/tests/integration/test_help_api.py`
+- `backend/tests/unit/test_incident_service_user_statuses.py`
+- `frontend/src/api/help.ts`
+- `frontend/src/app/routes.tsx`
+- `frontend/src/components/ui/UserMenu/UserMenu.tsx`
+- `frontend/src/i18n/common.ts`
+- `frontend/src/i18n/index.ts`
+- `frontend/src/i18n/navigation.ts`
+- `frontend/src/i18n/support.ts`
+- `frontend/src/pages/HelpPage.css`
+- `frontend/src/pages/HelpPage.tsx`
+- `frontend/src/pages/support/SupportCategorySelect.tsx`
+- `frontend/src/pages/support/SupportTicketForm.tsx`
+- `frontend/src/pages/support/SupportTicketList.tsx`
+- `frontend/src/tests/HelpPage.test.tsx`
+- `frontend/src/tests/UserMenu.test.tsx`
+- `frontend/src/tests/ui-nav.test.ts`
+- `frontend/src/ui/icons.tsx`
+- `frontend/src/ui/nav.ts`

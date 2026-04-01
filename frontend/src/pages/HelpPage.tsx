@@ -90,7 +90,7 @@ export default function HelpPage() {
           <div className="subscriptions-cta">
             <Button 
               variant="primary" 
-              icon={<ExternalLink size={18} />}
+              rightIcon={<ExternalLink size={18} />}
               onClick={() => navigate("/settings/subscription")}
             >
               {help.sections.subscriptions.cta}

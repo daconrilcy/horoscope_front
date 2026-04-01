@@ -106,7 +106,7 @@ export function SupportTicketList({ refreshTrigger }: SupportTicketListProps) {
           <Button 
             variant="ghost" 
             onClick={handleLoadMore}
-            isLoading={isFetching}
+            loading={isFetching}
             disabled={isFetching}
           >
             {help.tickets.loadMore}

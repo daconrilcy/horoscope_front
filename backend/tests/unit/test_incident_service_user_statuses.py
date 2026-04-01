@@ -1,6 +1,6 @@
-import pytest
-from sqlalchemy import delete
 from datetime import datetime, timezone
+
+from sqlalchemy import delete
 
 from app.infra.db.base import Base
 from app.infra.db.models.support_incident import SupportIncidentModel
@@ -8,11 +8,11 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.incident_service import (
-    IncidentService,
-    IncidentServiceError,
-    SupportIncidentUpdatePayload,
     ALLOWED_STATUS_TRANSITIONS,
+    IncidentService,
+    SupportIncidentUpdatePayload,
 )
+
 
 def _cleanup_tables() -> None:
     Base.metadata.drop_all(bind=engine)

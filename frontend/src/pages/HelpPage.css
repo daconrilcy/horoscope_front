@@ -96,6 +96,7 @@
 }
 
 .category-card {
+  width: 100%;
   padding: 24px 16px;
   border-radius: 16px;
   background: var(--glass);
@@ -107,6 +108,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
+  appearance: none;
+  font: inherit;
 }
 
 .category-card:hover {

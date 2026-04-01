@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -98,6 +97,14 @@ export function UserMenu({ email, role, avatarUrl, isOpen, onClose }: UserMenuPr
         onClick={() => handleNavigate("/settings")}
       >
         {t.userMenu.editAccount}
+      </button>
+      <button
+        type="button"
+        role="menuitem"
+        className="user-menu__item"
+        onClick={() => handleNavigate("/astrologers")}
+      >
+        {t.userMenu.astrologers}
       </button>
       <button
         type="button"
