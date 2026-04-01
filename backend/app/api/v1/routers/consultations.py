@@ -115,7 +115,7 @@ async def generate_consultation(
     )
 
     try:
-        entitlement_result = ThematicConsultationEntitlementGate.check_and_consume(
+        entitlement_result = ThematicConsultationEntitlementGate.check_access(
             db, user_id=current_user.id
         )
     except ConsultationQuotaExceededError as error:
@@ -157,7 +157,9 @@ async def generate_consultation(
 
     quota_info = _build_consultation_quota_info(entitlement_result)
 
-    data = await ConsultationGenerationService.generate(db, current_user.id, payload, request_id)
+    data = await ConsultationGenerationService.generate(
+        db, current_user.id, payload, request_id, entitlement_result=entitlement_result
+    )
     db.commit()
 
     return ConsultationGenerateResponse(

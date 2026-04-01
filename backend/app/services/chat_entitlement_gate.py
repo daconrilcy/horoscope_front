@@ -48,7 +48,10 @@ class ChatEntitlementGate:
     FEATURE_CODE = "astrologer_chat"
 
     @staticmethod
-    def check_and_consume(db: Session, *, user_id: int) -> ChatEntitlementResult:
+    def check_access(db: Session, *, user_id: int) -> ChatEntitlementResult:
+        """
+        Only checks if the user has access and enough quota, WITHOUT consuming.
+        """
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
             db, app_user_id=user_id
         )
@@ -84,16 +87,30 @@ class ChatEntitlementGate:
                 plan_code=snapshot.plan_code,
             )
 
-        if access.access_mode == "unlimited":
-            return ChatEntitlementResult(
-                path="canonical_unlimited",
-                usage_states=access.usage_states,
-            )
+        path = "canonical_unlimited" if access.access_mode == "unlimited" else "canonical_quota"
+        return ChatEntitlementResult(
+            path=path,
+            usage_states=access.usage_states,
+        )
+
+    @staticmethod
+    def check_and_consume(db: Session, *, user_id: int) -> ChatEntitlementResult:
+        """
+        Legacy/Simple flow: check access and consume 1 unit immediately.
+        NOTE: For tokenized features, use check_access() then post-call consumption instead.
+        """
+        result = ChatEntitlementGate.check_access(db, user_id=user_id)
+
+        if result.path == "canonical_unlimited":
+            return result
 
         # access_mode == "quota" — consommer
-        # Le resolver décide l'accès; QuotaUsageService garde la consommation atomique.
         consumed_states: list[UsageState] = []
-        for state in access.usage_states:
+        for state in result.usage_states:
+            # Skip auto-consumption for 'tokens' as they MUST be consumed post-call with exact amount
+            if state.quota_key == "tokens":
+                continue
+
             q_def = QuotaDefinition(
                 quota_key=state.quota_key,
                 quota_limit=state.quota_limit,

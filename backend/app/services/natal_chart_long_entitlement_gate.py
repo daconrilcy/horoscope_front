@@ -49,7 +49,10 @@ class NatalChartLongEntitlementGate:
     FEATURE_CODE = "natal_chart_long"
 
     @staticmethod
-    def check_and_consume(db: Session, *, user_id: int) -> NatalChartLongEntitlementResult:
+    def check_access(db: Session, *, user_id: int) -> NatalChartLongEntitlementResult:
+        """
+        Only checks if the user has access and enough quota, WITHOUT consuming.
+        """
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
             db, app_user_id=user_id
         )
@@ -85,16 +88,27 @@ class NatalChartLongEntitlementGate:
                 plan_code=snapshot.plan_code,
             )
 
-        if access.access_mode == "unlimited":
-            return NatalChartLongEntitlementResult(
-                path="canonical_unlimited",
-                variant_code=access.variant_code,
-                usage_states=access.usage_states,
-            )
+        path = "canonical_unlimited" if access.access_mode == "unlimited" else "canonical_quota"
+        return NatalChartLongEntitlementResult(
+            path=path,
+            variant_code=access.variant_code,
+            usage_states=access.usage_states,
+        )
+
+    @staticmethod
+    def check_and_consume(db: Session, *, user_id: int) -> NatalChartLongEntitlementResult:
+        """
+        Simple flow: check access and consume 1 unit immediately.
+        """
+        result = NatalChartLongEntitlementGate.check_access(db, user_id=user_id)
+
+        if result.path == "canonical_unlimited":
+            return result
 
         # access_mode == "quota" — consommer
         consumed_states: list[UsageState] = []
-        for state in access.usage_states:
+        for state in result.usage_states:
+            # Note: natal_chart_long is not tokenized yet, so we always consume 1 unit
             q_def = QuotaDefinition(
                 quota_key=state.quota_key,
                 quota_limit=state.quota_limit,
@@ -121,6 +135,6 @@ class NatalChartLongEntitlementGate:
 
         return NatalChartLongEntitlementResult(
             path="canonical_quota",
-            variant_code=access.variant_code,
+            variant_code=result.variant_code,
             usage_states=consumed_states,
         )

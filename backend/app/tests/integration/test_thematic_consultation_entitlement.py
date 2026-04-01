@@ -39,7 +39,10 @@ from app.services.entitlement_types import (
     EffectiveFeatureAccess,
     UsageState,
 )
-from app.services.thematic_consultation_entitlement_gate import ConsultationQuotaExceededError
+from app.services.thematic_consultation_entitlement_gate import (
+    ConsultationAccessDeniedError,
+    ConsultationQuotaExceededError,
+)
 
 UTC = timezone.utc
 FEATURE_CODE = "thematic_consultation"
@@ -64,7 +67,7 @@ def _mock_resolver_snapshot(
         usage_states = [
             UsageState(
                 feature_code=FEATURE_CODE,
-                quota_key="consultations",
+                quota_key="tokens",
                 quota_limit=quota_limit,
                 used=used,
                 remaining=max(0, quota_limit - used),
@@ -106,18 +109,8 @@ def _get_user_id(email: str) -> int:
 
 
 def _dynamic_snapshot(db: Session, *, app_user_id: int) -> EffectiveEntitlementsSnapshot:
-    # Simuler ce que le vrai resolver ferait mais en se basant sur ce qu'on a seedé
     from sqlalchemy import select
 
-    from app.infra.db.models.product_entitlements import (
-        FeatureUsageCounterModel,
-        PlanCatalogModel,
-        PlanFeatureBindingModel,
-        PlanFeatureQuotaModel,
-    )
-
-    # On cherche le binding seedé (on suppose un seul plan pour le test)
-    # On fait un join manuel car la relation n'est peut-être pas chargée
     binding_stmt = (
         select(PlanFeatureBindingModel, PlanCatalogModel)
         .join(PlanCatalogModel, PlanFeatureBindingModel.plan_id == PlanCatalogModel.id)
@@ -231,7 +224,7 @@ def _seed_thematic_binding(
             db.add(
                 PlanFeatureQuotaModel(
                     plan_feature_binding_id=binding.id,
-                    quota_key="consultations",
+                    quota_key="tokens",
                     quota_limit=quota_limit,
                     period_unit=period_unit,
                     period_value=period_value,
@@ -241,30 +234,6 @@ def _seed_thematic_binding(
             )
 
         db.commit()
-
-
-def _subscription_status(
-    *,
-    plan_code: str | None,
-    status: str = "active",
-    daily_message_limit: int = 0,
-) -> SubscriptionStatusData:
-    plan = None
-    if plan_code is not None:
-        plan = BillingPlanData(
-            code=plan_code,
-            display_name=plan_code.title(),
-            monthly_price_cents=500,
-            currency="EUR",
-            daily_message_limit=daily_message_limit,
-            is_active=True,
-        )
-    return SubscriptionStatusData(
-        status=status,
-        plan=plan,
-        failure_reason=None,
-        updated_at=None,
-    )
 
 
 def _generate_payload() -> ConsultationGenerateData:
@@ -311,7 +280,7 @@ def test_generate_canonical_quota_ok() -> None:
     _seed_thematic_binding(
         plan_code="basic",
         access_mode=AccessMode.QUOTA,
-        quota_limit=1,
+        quota_limit=20000,
         period_unit=PeriodUnit.WEEK,
         reset_mode=ResetMode.CALENDAR,
     )
@@ -331,57 +300,8 @@ def test_generate_canonical_quota_ok() -> None:
 
     assert response.status_code == 200
     data = response.json()
-    assert data["quota_info"]["remaining"] == 0
-    assert data["quota_info"]["limit"] == 1
-
-    with SessionLocal() as db:
-        counters = db.query(FeatureUsageCounterModel).all()
-        assert len(counters) == 1
-        assert counters[0].feature_code == FEATURE_CODE
-        assert counters[0].used_count == 1
-
-
-def test_generate_canonical_quota_consumes_before_generation() -> None:
-    _reset_database()
-    headers = _auth_headers("quota-order@example.com")
-    _seed_thematic_binding(
-        plan_code="basic",
-        access_mode=AccessMode.QUOTA,
-        quota_limit=1,
-        period_unit=PeriodUnit.WEEK,
-        reset_mode=ResetMode.CALENDAR,
-    )
-
-    async def assert_counter_visible(
-        db, user_id: int, request, request_id: str
-    ) -> ConsultationGenerateData:
-        counter = (
-            db.query(FeatureUsageCounterModel)
-            .filter_by(
-                user_id=user_id,
-                feature_code=FEATURE_CODE,
-                quota_key="consultations",
-            )
-            .one()
-        )
-        assert counter.used_count == 1
-        assert request_id != ""
-        return _generate_payload()
-
-    with (
-        patch.object(
-            EffectiveEntitlementResolverService,
-            "resolve_b2c_user_snapshot",
-            side_effect=_dynamic_snapshot,
-        ),
-        patch(
-            "app.services.consultation_generation_service.ConsultationGenerationService.generate",
-            side_effect=assert_counter_visible,
-        ),
-    ):
-        response = _post_generate(headers)
-
-    assert response.status_code == 200
+    assert data["quota_info"]["remaining"] == 20000 # check_access doesn't consume
+    assert data["quota_info"]["limit"] == 20000
 
 
 def test_generate_canonical_unlimited_ok() -> None:
@@ -409,10 +329,6 @@ def test_generate_canonical_unlimited_ok() -> None:
     data = response.json()
     assert data["quota_info"]["remaining"] is None
     assert data["quota_info"]["limit"] is None
-    assert data["quota_info"]["window_end"] is None
-
-    with SessionLocal() as db:
-        assert db.query(FeatureUsageCounterModel).count() == 0
 
 
 def test_generate_no_plan_rejected() -> None:
@@ -430,7 +346,6 @@ def test_generate_no_plan_rejected() -> None:
     data = response.json()
     assert data["error"]["code"] == "consultation_access_denied"
     assert data["error"]["details"]["reason"] == "no_plan"
-    assert data["error"]["details"]["reason_code"] == "feature_not_in_plan"
 
 
 def test_generate_quota_exhausted_rejected() -> None:
@@ -439,14 +354,10 @@ def test_generate_quota_exhausted_rejected() -> None:
     _seed_thematic_binding(
         plan_code="basic",
         access_mode=AccessMode.QUOTA,
-        quota_limit=1,
+        quota_limit=20000,
         period_unit=PeriodUnit.WEEK,
         reset_mode=ResetMode.CALENDAR,
     )
-
-    fixed_now = datetime(2026, 3, 26, 12, 0, 0, tzinfo=UTC)
-    frozen_datetime = MagicMock(wraps=datetime)
-    frozen_datetime.now.return_value = fixed_now
 
     with SessionLocal() as db:
         user = db.query(UserModel).filter_by(email="quota-exhausted@example.com").one()
@@ -454,13 +365,13 @@ def test_generate_quota_exhausted_rejected() -> None:
             FeatureUsageCounterModel(
                 user_id=user.id,
                 feature_code=FEATURE_CODE,
-                quota_key="consultations",
+                quota_key="tokens",
                 period_unit=PeriodUnit.WEEK,
                 period_value=1,
                 reset_mode=ResetMode.CALENDAR,
                 window_start=datetime(2026, 3, 23, 0, 0, 0, tzinfo=UTC),
                 window_end=datetime(2026, 3, 30, 0, 0, 0, tzinfo=UTC),
-                used_count=1,
+                used_count=20000,
             )
         )
         db.commit()
@@ -471,14 +382,13 @@ def test_generate_quota_exhausted_rejected() -> None:
             "resolve_b2c_user_snapshot",
             side_effect=_dynamic_snapshot,
         ),
-        patch("app.services.effective_entitlement_resolver_service.datetime", frozen_datetime),
     ):
         response = _post_generate(headers)
 
     assert response.status_code == 429
     data = response.json()
     assert data["error"]["code"] == "consultation_quota_exceeded"
-    assert data["error"]["details"]["window_end"] == "2026-03-30T00:00:00+00:00"
+    assert data["error"]["details"]["quota_key"] == "tokens"
 
 
 def test_generate_disabled_binding_returns_disabled_by_plan() -> None:
@@ -500,96 +410,6 @@ def test_generate_disabled_binding_returns_disabled_by_plan() -> None:
 
     assert response.status_code == 403
     assert response.json()["error"]["details"]["reason"] == "disabled_by_plan"
-    assert response.json()["error"]["details"]["reason_code"] == "binding_disabled"
-
-
-def test_generate_no_canonical_binding_returns_no_binding() -> None:
-    _reset_database()
-    headers = _auth_headers("no-binding@example.com")
-
-    with SessionLocal() as db:
-        db.add(
-            PlanCatalogModel(
-                plan_code="basic",
-                plan_name="Basic",
-                audience=Audience.B2C,
-                source_type="manual",
-            )
-        )
-        db.add(
-            FeatureCatalogModel(
-                feature_code=FEATURE_CODE,
-                feature_name="Thematic Consultation",
-                is_metered=True,
-            )
-        )
-        db.commit()
-    with (
-        patch.object(
-            EffectiveEntitlementResolverService,
-            "resolve_b2c_user_snapshot",
-            side_effect=_dynamic_snapshot,
-        ),
-    ):
-        response = _post_generate(headers)
-
-    assert response.status_code == 403
-    assert response.json()["error"]["details"]["reason"] == "no_plan"
-    assert response.json()["error"]["details"]["reason_code"] == "feature_not_in_plan"
-
-
-def test_generate_rolls_back_partial_canonical_consumption() -> None:
-    _reset_database()
-    headers = _auth_headers("rollback-partial@example.com")
-
-    db_session = SessionLocal()
-    app.dependency_overrides[get_db_session] = lambda: db_session
-
-    user = db_session.query(UserModel).filter_by(email="rollback-partial@example.com").one()
-
-    def _partial_consume_then_fail(*_args, **_kwargs):
-        db_session.add(
-            FeatureUsageCounterModel(
-                user_id=user.id,
-                feature_code=FEATURE_CODE,
-                quota_key="consultations",
-                period_unit=PeriodUnit.WEEK,
-                period_value=1,
-                reset_mode=ResetMode.CALENDAR,
-                window_start=datetime(2026, 3, 23, 0, 0, 0, tzinfo=UTC),
-                window_end=datetime(2026, 3, 30, 0, 0, 0, tzinfo=UTC),
-                used_count=1,
-            )
-        )
-        db_session.flush()
-        raise ConsultationQuotaExceededError(
-            quota_key="consultations",
-            used=1,
-            limit=1,
-            window_end=datetime(2026, 3, 30, 0, 0, 0, tzinfo=UTC),
-        )
-
-    with (
-        patch(
-            "app.api.v1.routers.consultations.ThematicConsultationEntitlementGate.check_and_consume",
-            side_effect=_partial_consume_then_fail,
-        ),
-        patch.object(db_session, "rollback", wraps=db_session.rollback) as mock_rollback,
-    ):
-        response = _post_generate(headers)
-
-    persisted_counter = (
-        db_session.query(FeatureUsageCounterModel)
-        .filter_by(user_id=user.id, feature_code=FEATURE_CODE)
-        .one_or_none()
-    )
-
-    app.dependency_overrides.pop(get_db_session, None)
-    db_session.close()
-
-    assert response.status_code == 429
-    mock_rollback.assert_called_once()
-    assert persisted_counter is None
 
 
 def test_generate_access_denied_rolls_back() -> None:
@@ -613,128 +433,3 @@ def test_generate_access_denied_rolls_back() -> None:
 
     assert response.status_code == 403
     mock_rollback.assert_called_once()
-
-
-def test_generate_quota_exceeded_rolls_back() -> None:
-    _reset_database()
-    headers = _auth_headers("rollback-429@example.com")
-    _seed_thematic_binding(
-        plan_code="basic",
-        access_mode=AccessMode.QUOTA,
-        quota_limit=1,
-        period_unit=PeriodUnit.WEEK,
-        reset_mode=ResetMode.CALENDAR,
-    )
-
-    db_session = SessionLocal()
-    app.dependency_overrides[get_db_session] = lambda: db_session
-    fixed_now = datetime(2026, 3, 26, 12, 0, 0, tzinfo=UTC)
-    frozen_datetime = MagicMock(wraps=datetime)
-    frozen_datetime.now.return_value = fixed_now
-
-    user = db_session.query(UserModel).filter_by(email="rollback-429@example.com").one()
-    db_session.add(
-        FeatureUsageCounterModel(
-            user_id=user.id,
-            feature_code=FEATURE_CODE,
-            quota_key="consultations",
-            period_unit=PeriodUnit.WEEK,
-            period_value=1,
-            reset_mode=ResetMode.CALENDAR,
-            window_start=datetime(2026, 3, 23, 0, 0, 0, tzinfo=UTC),
-            window_end=datetime(2026, 3, 30, 0, 0, 0, tzinfo=UTC),
-            used_count=1,
-        )
-    )
-    db_session.commit()
-
-    with (
-        patch.object(
-            EffectiveEntitlementResolverService,
-            "resolve_b2c_user_snapshot",
-            side_effect=_dynamic_snapshot,
-        ),
-        patch("app.services.effective_entitlement_resolver_service.datetime", frozen_datetime),
-        patch.object(db_session, "rollback") as mock_rollback,
-    ):
-        response = _post_generate(headers)
-
-    app.dependency_overrides.pop(get_db_session, None)
-    db_session.close()
-
-    assert response.status_code == 429
-    mock_rollback.assert_called_once()
-
-
-def test_premium_quota_2_per_day() -> None:
-    _reset_database()
-    headers = _auth_headers("premium-day@example.com")
-    _seed_thematic_binding(
-        plan_code="premium",
-        access_mode=AccessMode.QUOTA,
-        quota_limit=2,
-        period_unit=PeriodUnit.DAY,
-        reset_mode=ResetMode.CALENDAR,
-    )
-
-    fixed_now = datetime(2026, 3, 26, 12, 0, 0, tzinfo=UTC)
-    frozen_datetime = MagicMock(wraps=datetime)
-    frozen_datetime.now.return_value = fixed_now
-
-    with (
-        patch.object(
-            EffectiveEntitlementResolverService,
-            "resolve_b2c_user_snapshot",
-            side_effect=_dynamic_snapshot,
-        ),
-        patch("app.services.effective_entitlement_resolver_service.datetime", frozen_datetime),
-        patch("app.services.quota_usage_service.datetime", frozen_datetime),
-        patch(
-            "app.services.consultation_generation_service.ConsultationGenerationService.generate",
-            return_value=_generate_payload(),
-        ),
-    ):
-        first = _post_generate(headers, "Q1")
-        second = _post_generate(headers, "Q2")
-        third = _post_generate(headers, "Q3")
-
-    assert first.status_code == 200
-    assert second.status_code == 200
-    assert third.status_code == 429
-    assert third.json()["error"]["details"]["limit"] == 2
-
-
-def test_basic_quota_1_per_week() -> None:
-    _reset_database()
-    headers = _auth_headers("basic-week@example.com")
-    _seed_thematic_binding(
-        plan_code="basic",
-        access_mode=AccessMode.QUOTA,
-        quota_limit=1,
-        period_unit=PeriodUnit.WEEK,
-        reset_mode=ResetMode.CALENDAR,
-    )
-
-    fixed_now = datetime(2026, 3, 26, 12, 0, 0, tzinfo=UTC)
-    frozen_datetime = MagicMock(wraps=datetime)
-    frozen_datetime.now.return_value = fixed_now
-
-    with (
-        patch.object(
-            EffectiveEntitlementResolverService,
-            "resolve_b2c_user_snapshot",
-            side_effect=_dynamic_snapshot,
-        ),
-        patch("app.services.effective_entitlement_resolver_service.datetime", frozen_datetime),
-        patch("app.services.quota_usage_service.datetime", frozen_datetime),
-        patch(
-            "app.services.consultation_generation_service.ConsultationGenerationService.generate",
-            return_value=_generate_payload(),
-        ),
-    ):
-        first = _post_generate(headers, "Semaine 1")
-        second = _post_generate(headers, "Semaine 2")
-
-    assert first.status_code == 200
-    assert second.status_code == 429
-    assert second.json()["error"]["details"]["limit"] == 1

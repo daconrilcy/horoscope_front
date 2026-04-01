@@ -41,7 +41,7 @@ def test_thematic_gate_uses_resolver_success(db_session):
         EffectiveEntitlementResolverService, "resolve_b2c_user_snapshot", return_value=snapshot
     ) as mock_resolver:
         # WHEN
-        result = ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=user_id)
+        result = ThematicConsultationEntitlementGate.check_access(db_session, user_id=user_id)
 
     # THEN
     assert result.path == "canonical_unlimited"
@@ -76,7 +76,7 @@ def test_thematic_gate_uses_resolver_quota_exceeded(db_session):
     ):
         # WHEN / THEN
         with pytest.raises(ConsultationQuotaExceededError) as exc:
-            ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=user_id)
+            ThematicConsultationEntitlementGate.check_access(db_session, user_id=user_id)
 
         assert exc.value.quota_key == "thematic_consultation"
         assert exc.value.used == 1
@@ -111,7 +111,7 @@ def test_thematic_gate_uses_resolver_access_denied(db_session):
     ):
         # WHEN / THEN
         with pytest.raises(ConsultationAccessDeniedError) as exc:
-            ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=user_id)
+            ThematicConsultationEntitlementGate.check_access(db_session, user_id=user_id)
 
         assert exc.value.reason == "billing_inactive"
         assert exc.value.billing_status == "past_due"

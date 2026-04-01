@@ -29,6 +29,8 @@ from app.services.ai_engine_adapter import (
     map_adapter_error_to_codes,
 )
 from app.services.current_context import build_current_prompt_context
+from app.services.entitlement_types import QuotaDefinition
+from app.services.llm_token_usage_service import LlmTokenUsageService
 from app.services.natal_interpretation_service import build_natal_chart_summary
 from app.services.persona_config_service import PersonaConfigService
 from app.services.user_birth_profile_service import (
@@ -489,6 +491,49 @@ class GuidanceService:
         )
 
     @staticmethod
+    def _record_tokens(
+        db: Session,
+        *,
+        user_id: int,
+        feature_code: str,
+        gateway_result: Any,
+        entitlement_result: Any = None,
+    ) -> None:
+        """
+        Enregistre l'usage des tokens de manière atomique.
+        L'exception est propagée pour annuler la transaction en cas d'échec.
+        """
+        quota_def = None
+        if (
+            entitlement_result
+            and hasattr(entitlement_result, "usage_states")
+            and entitlement_result.usage_states
+        ):
+            # Find the token quota if it exists
+            token_state = next(
+                (s for s in entitlement_result.usage_states if s.quota_key == "tokens"), None
+            )
+            if token_state:
+                quota_def = QuotaDefinition(
+                    quota_key=token_state.quota_key,
+                    quota_limit=token_state.quota_limit,
+                    period_unit=token_state.period_unit,
+                    period_value=token_state.period_value,
+                    reset_mode=token_state.reset_mode,
+                )
+
+        LlmTokenUsageService.record_usage(
+            db,
+            user_id=user_id,
+            feature_code=feature_code,
+            quota=quota_def,
+            provider_model=gateway_result.meta.model,
+            tokens_in=gateway_result.usage.input_tokens,
+            tokens_out=gateway_result.usage.output_tokens,
+            request_id=gateway_result.request_id,
+        )
+
+    @staticmethod
     def request_guidance(
         db: Session,
         *,
@@ -782,6 +827,7 @@ class GuidanceService:
         natal_chart_summary_override: str | None = None,
         conversation_id: int | None = None,
         request_id: str = "n/a",
+        entitlement_result: Any = None,
     ) -> ContextualGuidanceData:
         """
         Génère une guidance contextuelle basée sur une situation spécifique.
@@ -796,8 +842,10 @@ class GuidanceService:
             situation: Description de la situation actuelle.
             objective: Objectif visé par l'utilisateur.
             time_horizon: Horizon temporel (optionnel).
+            natal_chart_summary_override: Résumé natal forcé (optionnel).
             conversation_id: ID de conversation pour le contexte (optionnel).
             request_id: Identifiant de requête pour le logging.
+            entitlement_result: Résultat d'entitlement pour le débit de tokens (optionnel).
 
         Returns:
             Guidance contextuelle générée.
@@ -815,6 +863,7 @@ class GuidanceService:
                 natal_chart_summary_override=natal_chart_summary_override,
                 conversation_id=conversation_id,
                 request_id=request_id,
+                entitlement_result=entitlement_result,
             )
         )
 
@@ -830,6 +879,7 @@ class GuidanceService:
         conversation_id: int | None = None,
         request_id: str = "n/a",
         trace_id: str | None = None,
+        entitlement_result: Any = None,
     ) -> ContextualGuidanceData:
         """
         Génère une guidance contextuelle basée sur une situation spécifique (async).
@@ -840,9 +890,11 @@ class GuidanceService:
             situation: Description de la situation actuelle.
             objective: Objectif visé par l'utilisateur.
             time_horizon: Horizon temporel (optionnel).
+            natal_chart_summary_override: Résumé natal forcé (optionnel).
             conversation_id: ID de conversation pour le contexte (optionnel).
             request_id: Identifiant de requête pour le logging.
             trace_id: Identifiant de trace pour le tracing distribué.
+            entitlement_result: Résultat d'entitlement pour le débit de tokens (optionnel).
 
         Returns:
             Guidance contextuelle générée.
@@ -941,6 +993,16 @@ class GuidanceService:
                     trace_id=trace_id,
                     db=db,
                 )
+
+                # Record tokens for the call
+                GuidanceService._record_tokens(
+                    db,
+                    user_id=user_id,
+                    feature_code="thematic_consultation",
+                    gateway_result=result,
+                    entitlement_result=entitlement_result,
+                )
+
                 (
                     recovered_text,
                     fallback_used,

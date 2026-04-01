@@ -1,9 +1,11 @@
 """Tests for the AI Engine Adapter."""
 
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 
+from app.llm_orchestration.models import GatewayResult, UsageInfo, GatewayMeta
 from app.services.ai_engine_adapter import (
     AIEngineAdapter,
     AIEngineAdapterError,
@@ -86,7 +88,8 @@ async def test_generate_chat_reply_uses_test_generator() -> None:
         trace_id="trace-1",
     )
 
-    assert result == "mocked response"
+    assert isinstance(result, GatewayResult)
+    assert result.raw_output == "mocked response"
     assert len(call_args) == 1
     assert call_args[0][2] == 123
     assert call_args[0][3] == "req-1"
@@ -282,7 +285,7 @@ async def test_reset_test_generators_clears_generators() -> None:
         request_id="r",
         trace_id="t",
     )
-    assert result_chat == "mock chat"
+    assert result_chat.raw_output == "mock chat"
 
     result_guidance = await AIEngineAdapter.generate_guidance(
         use_case="guidance_daily",
@@ -365,9 +368,13 @@ async def test_generate_chat_reply_v2_omits_none_conversation_id(
     class FakeGateway:
         async def execute(self, **kwargs):  # type: ignore[no-untyped-def]
             captured.update(kwargs)
-            return SimpleNamespace(
-                structured_output={"message": "ok"},
+            return GatewayResult(
+                use_case="chat_astrologer",
+                request_id="req-1",
+                trace_id="trace-1",
                 raw_output="ok",
+                usage=UsageInfo(input_tokens=10, output_tokens=10),
+                meta=GatewayMeta(latency_ms=100, model="test-model"),
             )
 
     monkeypatch.setattr("app.llm_orchestration.gateway.LLMGateway", FakeGateway)
@@ -380,7 +387,7 @@ async def test_generate_chat_reply_v2_omits_none_conversation_id(
         trace_id="trace-chat-none",
     )
 
-    assert result == "ok"
+    assert result.raw_output == "ok"
     user_input = captured["user_input"]
     assert isinstance(user_input, dict)
     assert "conversation_id" not in user_input
@@ -395,9 +402,13 @@ async def test_generate_chat_reply_v2_converts_conversation_id_to_string(
     class FakeGateway:
         async def execute(self, **kwargs):  # type: ignore[no-untyped-def]
             captured.update(kwargs)
-            return SimpleNamespace(
-                structured_output={"message": "ok"},
+            return GatewayResult(
+                use_case="chat_astrologer",
+                request_id="req-1",
+                trace_id="trace-1",
                 raw_output="ok",
+                usage=UsageInfo(input_tokens=10, output_tokens=10),
+                meta=GatewayMeta(latency_ms=100, model="test-model"),
             )
 
     monkeypatch.setattr("app.llm_orchestration.gateway.LLMGateway", FakeGateway)
@@ -410,7 +421,7 @@ async def test_generate_chat_reply_v2_converts_conversation_id_to_string(
         trace_id="trace-chat-id",
     )
 
-    assert result == "ok"
+    assert result.raw_output == "ok"
     user_input = captured["user_input"]
     assert isinstance(user_input, dict)
     assert user_input.get("conversation_id") == "42"
@@ -425,9 +436,13 @@ async def test_generate_chat_reply_opening_turn_builds_minimal_user_data_block(
     class FakeGateway:
         async def execute(self, **kwargs):  # type: ignore[no-untyped-def]
             captured.update(kwargs)
-            return SimpleNamespace(
-                structured_output={"message": "ok"},
+            return GatewayResult(
+                use_case="chat_astrologer",
+                request_id="req-1",
+                trace_id="trace-1",
                 raw_output="ok",
+                usage=UsageInfo(input_tokens=10, output_tokens=10),
+                meta=GatewayMeta(latency_ms=100, model="test-model"),
             )
 
     monkeypatch.setattr("app.llm_orchestration.gateway.LLMGateway", FakeGateway)
@@ -447,7 +462,7 @@ async def test_generate_chat_reply_opening_turn_builds_minimal_user_data_block(
         trace_id="trace-chat-opening",
     )
 
-    assert result == "ok"
+    assert result.raw_output == "ok"
     context = captured["context"]
     assert isinstance(context, dict)
     user_data_block = context.get("user_data_block")

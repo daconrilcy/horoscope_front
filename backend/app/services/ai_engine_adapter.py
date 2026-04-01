@@ -360,11 +360,11 @@ def map_adapter_error_to_codes(
 
 ChatGeneratorFunc = Callable[
     [list[dict[str, str]], dict[str, str | None], int, str, str, str],
-    Awaitable[str],
+    Awaitable[Any],  # Returns GatewayResult (Any to avoid circular import if needed, but it's imported now)
 ]
 GuidanceGeneratorFunc = Callable[
     [str, dict[str, str | None], int, str, str, str],
-    Awaitable[str],
+    Awaitable[Any],  # Returns GatewayResult
 ]
 
 _test_chat_generator: ChatGeneratorFunc | None = None
@@ -420,6 +420,13 @@ class AIEngineAdapter:
     """
 
     @staticmethod
+    def estimate_tokens(text: str) -> int:
+        """Estimate token count for a given text as per AC4."""
+        if not text:
+            return 0
+        return max(1, len(text) // 4)
+
+    @staticmethod
     async def generate_chat_reply(
         messages: list[dict[str, str]],
         context: dict[str, str | None],
@@ -428,7 +435,7 @@ class AIEngineAdapter:
         trace_id: str,
         locale: str = "fr-FR",
         db: Optional[Session] = None,
-    ) -> str:
+    ) -> Any:  # Returns GatewayResult
         """
         Generate a chat reply via the AI Engine.
 
@@ -442,7 +449,7 @@ class AIEngineAdapter:
             db: Database session for orchestration v2.
 
         Returns:
-            Generated response text.
+            GatewayResult from the LLMGateway.
 
         Raises:
             AIEngineAdapterError: On generation error.
@@ -450,8 +457,27 @@ class AIEngineAdapter:
             ConnectionError: If the provider is unavailable.
         """
         if _test_chat_generator is not None:
-            return await _test_chat_generator(
+            # For testing, we mock a result object if the generator returns a string
+            result_raw = await _test_chat_generator(
                 messages, context, user_id, request_id, trace_id, locale
+            )
+            from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+
+            if isinstance(result_raw, GatewayResult):
+                return result_raw
+
+            raw_text = str(result_raw)
+            return GatewayResult(
+                use_case="chat_astrologer",
+                request_id=request_id,
+                trace_id=trace_id,
+                raw_output=raw_text,
+                usage=UsageInfo(
+                    input_tokens=AIEngineAdapter.estimate_tokens(" ".join([m["content"] for m in messages])),
+                    output_tokens=AIEngineAdapter.estimate_tokens(raw_text),
+                    total_tokens=0, # total will be calculated later or we can set it
+                ),
+                meta=GatewayMeta(latency_ms=0, model="test-model"),
             )
 
         logger.info(
@@ -504,35 +530,32 @@ class AIEngineAdapter:
                 db=db,
             )
 
-            # If structured output is available (canonical ChatResponse_v1), return the message
-            if result.structured_output and "message" in result.structured_output:
-                validation_status = getattr(
-                    getattr(result, "meta", None), "validation_status", "unknown"
-                )
-                logger.info(
-                    "chat_reply_v2_output request_id=%s output=structured validation=%s",
+            # Fallback estimation if usage is zero but output exists
+            if result.usage.output_tokens == 0 and result.raw_output:
+                result.usage.output_tokens = AIEngineAdapter.estimate_tokens(result.raw_output)
+                logger.warning(
+                    "chat_reply_token_fallback request_id=%s estimated_output=%d",
                     request_id,
-                    validation_status,
+                    result.usage.output_tokens,
                 )
-                return result.structured_output["message"]
 
-            meta = getattr(result, "meta", None)
-            validation_status = getattr(meta, "validation_status", "unknown")
-            validation_errors = getattr(meta, "validation_errors", None) or []
-            raw_snippet = (result.raw_output or "")[:120].replace("\n", " ")
-            logger.warning(
-                "chat_reply_v2_output request_id=%s output=raw_fallback "
-                "validation=%s errors=%s raw_snippet=%r",
-                request_id,
-                validation_status,
-                validation_errors,
-                raw_snippet,
-            )
-            return result.raw_output
+            return result
         except Exception as err:
             if _can_use_test_fallback(err):
-                return _build_test_chat_fallback(messages)
-            # Preserve typed upstream errors so callers get correct HTTP codes (429/504/502).
+                from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+
+                fallback_text = _build_test_chat_fallback(messages)
+                return GatewayResult(
+                    use_case="chat_astrologer",
+                    request_id=request_id,
+                    trace_id=trace_id,
+                    raw_output=fallback_text,
+                    usage=UsageInfo(
+                        input_tokens=AIEngineAdapter.estimate_tokens(" ".join([m["content"] for m in messages])),
+                        output_tokens=AIEngineAdapter.estimate_tokens(fallback_text),
+                    ),
+                    meta=GatewayMeta(latency_ms=0, model="test-model"),
+                )
             if isinstance(err, UpstreamRateLimitError):
                 raise AIEngineAdapterError(
                     code="rate_limit_exceeded",

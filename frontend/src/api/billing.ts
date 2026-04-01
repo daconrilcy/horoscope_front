@@ -39,6 +39,7 @@ export type BillingSubscriptionStatus = {
 
 export type ChatEntitlementUsageStatus = {
   quota_date: string
+  quota_key: string
   limit: number
   consumed: number
   remaining: number
@@ -119,6 +120,7 @@ function toChatEntitlementUsage(feature: FeatureEntitlementResponse | undefined)
 
   return {
     quota_date: usage.window_start ?? "",
+    quota_key: usage.quota_key,
     limit: usage.quota_limit,
     consumed: usage.used,
     remaining: usage.remaining,

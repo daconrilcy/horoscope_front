@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime
 from typing import Any
@@ -25,6 +26,8 @@ from app.services.chat_guidance_service import (
     ChatGuidanceServiceError,
     ChatReplyData,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ResponseMeta(BaseModel):
@@ -96,7 +99,6 @@ def _build_quota_info(result: ChatEntitlementResult) -> QuotaInfo:
 
 @router.post(
     "/messages",
-    response_model=ChatMessageApiResponse,
     responses={
         401: {"model": ErrorEnvelope},
         403: {"model": ErrorEnvelope},
@@ -113,6 +115,7 @@ def send_chat_message(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
+    logger.info("TOP OF send_chat_message request_id=%s user_id=%s", request_id, current_user.id)
     if current_user.role not in {"user", "admin"}:
         return JSONResponse(
             status_code=403,
@@ -127,12 +130,15 @@ def send_chat_message(
         )
 
     try:
+        logger.info("Validating payload...")
         parsed_payload = ChatMessageRequest.model_validate(payload)
 
-        entitlement_result = ChatEntitlementGate.check_and_consume(db, user_id=current_user.id)
+        logger.info("Checking access...")
+        entitlement_result = ChatEntitlementGate.check_access(db, user_id=current_user.id)
 
         quota_info = _build_quota_info(entitlement_result)
 
+        logger.info("Sending message...")
         response = ChatGuidanceService.send_message(
             db=db,
             user_id=current_user.id,
@@ -141,14 +147,29 @@ def send_chat_message(
             request_id=request_id,
             persona_id=parsed_payload.persona_id,
             client_message_id=parsed_payload.client_message_id,
+            entitlement_result=entitlement_result,
         )
-        db.commit()
-        return {
-            "data": response.model_dump(mode="json"),
+        logger.info("Message sent, preparing final dict...")
+        
+        # Plain dict to bypass any return validation
+        res = {
+            "data": {
+                "conversation_id": response.conversation_id,
+                "attempts": response.attempts,
+                "user_message": response.user_message.model_dump(mode="json"),
+                "assistant_message": response.assistant_message.model_dump(mode="json"),
+                "fallback_used": response.fallback_used,
+                "context": response.context.model_dump(mode="json"),
+                "recovery": response.recovery.model_dump(mode="json"),
+            },
             "meta": {"request_id": request_id},
             "quota_info": quota_info.model_dump(mode="json"),
         }
+        db.commit()
+        return res
     except ValidationError as error:
+        logger.error("Chat API validation error: %s", error.json())
+        logger.error("Failed payload: %s", str(payload))
         db.rollback()
         return JSONResponse(
             status_code=422,
@@ -214,6 +235,19 @@ def send_chat_message(
                     "code": error.code,
                     "message": error.message,
                     "details": error.details,
+                    "request_id": request_id,
+                }
+            },
+        )
+    except Exception as error:
+        logger.exception("Unexpected error in send_chat_message: %s", str(error))
+        db.rollback()
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": {
+                    "code": "internal_error",
+                    "message": str(error),
                     "request_id": request_id,
                 }
             },

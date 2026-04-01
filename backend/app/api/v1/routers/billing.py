@@ -20,6 +20,7 @@ from app.services.billing_service import (
     BillingPlanData,
     BillingService,
     SubscriptionStatusData,
+    TokenUsageData,
 )
 from app.services.pricing_experiment_service import (
     PricingExperimentService,
@@ -104,6 +105,11 @@ class StripeSubscriptionUpgradeResponse(BaseModel):
 
 class StripeSubscriptionUpgradeApiResponse(BaseModel):
     data: StripeSubscriptionUpgradeResponse
+    meta: ResponseMeta
+
+
+class TokenUsageApiResponse(BaseModel):
+    data: TokenUsageData
     meta: ResponseMeta
 
 
@@ -443,6 +449,26 @@ def get_subscription_status(
         )
         db.commit()
     return {"data": subscription.model_dump(mode="json"), "meta": {"request_id": request_id}}
+
+
+@router.get(
+    "/token-usage",
+    response_model=TokenUsageApiResponse,
+    responses={401: {"model": ErrorEnvelope}, 403: {"model": ErrorEnvelope}},
+)
+def get_token_usage(
+    request: Request,
+    period: str = "current_month",
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    role_error = _ensure_user_role(current_user, request_id)
+    if role_error is not None:
+        return role_error
+
+    usage = BillingService.get_token_usage(db, user_id=current_user.id, period=period)
+    return {"data": usage.model_dump(mode="json"), "meta": {"request_id": request_id}}
 
 
 @router.post(
@@ -883,8 +909,8 @@ def create_stripe_subscription_upgrade_payment(
             _record_audit_event(
                 db,
                 request_id=request_id,
-                actor_user_id=current_user.id,
-                actor_role=current_user.role,
+                actor_user_id=int(current_user.id),
+                actor_role=str(current_user.role),
                 action="stripe_subscription_upgrade_payment_failed",
                 target_type="user",
                 target_id=str(current_user.id),

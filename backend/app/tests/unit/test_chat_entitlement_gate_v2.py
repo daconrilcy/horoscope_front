@@ -16,7 +16,7 @@ from app.services.entitlement_types import (
 
 def test_chat_gate_uses_resolver_success(db_session):
     # GIVEN
-    user_id = 123
+    user_id = 42
     access = EffectiveFeatureAccess(
         granted=True,
         reason_code="granted",
@@ -41,7 +41,7 @@ def test_chat_gate_uses_resolver_success(db_session):
         EffectiveEntitlementResolverService, "resolve_b2c_user_snapshot", return_value=snapshot
     ) as mock_resolver:
         # WHEN
-        result = ChatEntitlementGate.check_and_consume(db_session, user_id=user_id)
+        result = ChatEntitlementGate.check_access(db_session, user_id=user_id)
 
     # THEN
     assert result.path == "canonical_unlimited"
@@ -50,7 +50,7 @@ def test_chat_gate_uses_resolver_success(db_session):
 
 def test_chat_gate_uses_resolver_quota_exceeded(db_session):
     # GIVEN
-    user_id = 123
+    user_id = 42
     access = EffectiveFeatureAccess(
         granted=False,
         reason_code="quota_exhausted",
@@ -76,9 +76,8 @@ def test_chat_gate_uses_resolver_quota_exceeded(db_session):
     ):
         # WHEN / THEN
         with pytest.raises(ChatQuotaExceededError) as exc:
-            ChatEntitlementGate.check_and_consume(db_session, user_id=user_id)
+            ChatEntitlementGate.check_access(db_session, user_id=user_id)
 
-        # Sans usage_states détaillés, la gate retombe sur le code feature.
         assert exc.value.quota_key == "astrologer_chat"
         assert exc.value.used == 5
         assert exc.value.limit == 5
@@ -86,7 +85,7 @@ def test_chat_gate_uses_resolver_quota_exceeded(db_session):
 
 def test_chat_gate_uses_resolver_access_denied(db_session):
     # GIVEN
-    user_id = 123
+    user_id = 42
     access = EffectiveFeatureAccess(
         granted=False,
         reason_code="billing_inactive",
@@ -112,7 +111,7 @@ def test_chat_gate_uses_resolver_access_denied(db_session):
     ):
         # WHEN / THEN
         with pytest.raises(ChatAccessDeniedError) as exc:
-            ChatEntitlementGate.check_and_consume(db_session, user_id=user_id)
+            ChatEntitlementGate.check_access(db_session, user_id=user_id)
 
         assert exc.value.reason == "billing_inactive"
         assert exc.value.billing_status == "past_due"

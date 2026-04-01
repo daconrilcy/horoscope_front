@@ -1,5 +1,6 @@
 import logging
 import re
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -407,6 +408,7 @@ class ConsultationGenerationService:
         user_id: int,
         request: ConsultationGenerateRequest,
         request_id: str,
+        entitlement_result: Any = None,
     ) -> ConsultationGenerateData:
         precheck = ConsultationPrecheckService.precheck(db, user_id, request)
 
@@ -501,6 +503,7 @@ class ConsultationGenerationService:
             time_horizon=request.horizon,
             natal_chart_summary_override=natal_chart_summary_override,
             request_id=request_id,
+            entitlement_result=entitlement_result,
         )
 
         consultation_id = f"consult_{request_id}"

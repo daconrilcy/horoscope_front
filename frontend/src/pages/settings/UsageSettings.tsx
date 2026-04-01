@@ -65,7 +65,9 @@ export function UsageSettings() {
 
             <div className="usage-stats-premium">
               <div className="usage-stat-item">
-                <span className="usage-stat-label">{t.messagesUsed}</span>
+                <span className="usage-stat-label">
+                  {quota.data.quota_key === "tokens" ? "Tokens utilisés" : t.messagesUsed}
+                </span>
                 <span className="usage-stat-value">{quota.data.consumed}</span>
               </div>
               <div className="usage-stat-item">
@@ -106,7 +108,7 @@ export function UsageSettings() {
                 <div className="usage-progress-fill" />
               </div>
               <p className="default-astrologer-option__style usage-progress-label">
-                {Math.round(Math.min((quota.data.consumed / quota.data.limit) * 100, 100))}% de votre quota quotidien utilisé
+                {Math.round(Math.min((quota.data.consumed / quota.data.limit) * 100, 100))}% de votre quota {quota.data.quota_key === "tokens" ? "mensuel" : "quotidien"} utilisé
               </p>
             </div>
           </>

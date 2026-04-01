@@ -311,17 +311,18 @@ def test_seeded_quota_shapes():
         assert (
             "trial",
             "thematic_consultation",
-            "consultations",
-            1,
+            "tokens",
+            5000,
             PeriodUnit.WEEK,
             1,
             ResetMode.CALENDAR,
         ) in rows
+
         assert (
             "basic",
             "astrologer_chat",
-            "messages",
-            50,
+            "tokens",
+            50000,
             PeriodUnit.MONTH,
             1,
             ResetMode.CALENDAR,
@@ -329,18 +330,19 @@ def test_seeded_quota_shapes():
         assert (
             "premium",
             "astrologer_chat",
-            "messages",
-            1000,
+            "tokens",
+            1500000,
             PeriodUnit.MONTH,
             1,
             ResetMode.CALENDAR,
         ) in rows
         assert (
             "premium",
-            "natal_chart_long",
-            "interpretations",
-            5,
-            PeriodUnit.LIFETIME,
+            "thematic_consultation",
+            "tokens",
+            200000,
+            PeriodUnit.MONTH,
             1,
-            ResetMode.LIFETIME,
+            ResetMode.CALENDAR,
         ) in rows
+

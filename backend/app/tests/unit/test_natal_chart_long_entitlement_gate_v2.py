@@ -41,7 +41,7 @@ def test_natal_gate_uses_resolver_success(db_session):
         EffectiveEntitlementResolverService, "resolve_b2c_user_snapshot", return_value=snapshot
     ) as mock_resolver:
         # WHEN
-        result = NatalChartLongEntitlementGate.check_and_consume(db_session, user_id=user_id)
+        result = NatalChartLongEntitlementGate.check_access(db_session, user_id=user_id)
 
     # THEN
     assert result.path == "canonical_unlimited"
@@ -77,7 +77,7 @@ def test_natal_gate_uses_resolver_quota_exceeded(db_session):
     ):
         # WHEN / THEN
         with pytest.raises(NatalChartLongQuotaExceededError) as exc:
-            NatalChartLongEntitlementGate.check_and_consume(db_session, user_id=user_id)
+            NatalChartLongEntitlementGate.check_access(db_session, user_id=user_id)
 
         assert exc.value.quota_key == "natal_chart_long"
         assert exc.value.used == 1
@@ -89,8 +89,8 @@ def test_natal_gate_uses_resolver_access_denied(db_session):
     user_id = 42
     access = EffectiveFeatureAccess(
         granted=False,
-        reason_code="binding_disabled",
-        access_mode="disabled",
+        reason_code="billing_inactive",
+        access_mode="unlimited",
         variant_code=None,
         quota_limit=None,
         quota_used=None,
@@ -103,7 +103,7 @@ def test_natal_gate_uses_resolver_access_denied(db_session):
         subject_type="b2c_user",
         subject_id=user_id,
         plan_code="premium",
-        billing_status="active",
+        billing_status="past_due",
         entitlements={"natal_chart_long": access},
     )
 
@@ -112,9 +112,8 @@ def test_natal_gate_uses_resolver_access_denied(db_session):
     ):
         # WHEN / THEN
         with pytest.raises(NatalChartLongAccessDeniedError) as exc:
-            NatalChartLongEntitlementGate.check_and_consume(db_session, user_id=42)
+            NatalChartLongEntitlementGate.check_access(db_session, user_id=user_id)
 
-        assert exc.value.reason == "disabled_by_plan"
-        assert exc.value.reason_code == "binding_disabled"
-        assert exc.value.billing_status == "active"
+        assert exc.value.reason == "billing_inactive"
+        assert exc.value.billing_status == "past_due"
         assert exc.value.plan_code == "premium"

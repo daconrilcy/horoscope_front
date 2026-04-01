@@ -11,8 +11,9 @@ import asyncio
 import logging
 import urllib.parse
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from time import monotonic
+from typing import Any, Awaitable, Callable, Optional
 
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -30,7 +31,10 @@ from app.services.ai_engine_adapter import (
     assess_off_scope,
     map_adapter_error_to_codes,
 )
+from app.services.chat_entitlement_gate import ChatEntitlementResult
 from app.services.current_context import build_current_prompt_context
+from app.services.entitlement_types import QuotaDefinition
+from app.services.llm_token_usage_service import LlmTokenUsageService
 from app.services.natal_interpretation_service import _detect_degraded_mode, build_chat_natal_hint
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
@@ -42,7 +46,7 @@ logger = logging.getLogger(__name__)
 
 
 class ChatGuidanceServiceError(Exception):
-    """Exception raised by the chat guidance service."""
+    """Exception levée par le service de chat."""
 
     def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
         """
@@ -60,7 +64,7 @@ class ChatGuidanceServiceError(Exception):
 
 
 class ChatMessageData(BaseModel):
-    """Data for a conversation message."""
+    """Représentation d'un message dans une conversation."""
 
     message_id: int
     role: str
@@ -71,19 +75,19 @@ class ChatMessageData(BaseModel):
 
 
 class ChatReplyData(BaseModel):
-    """Complete response to a user message with metadata."""
+    """Données de réponse du service de chat."""
 
     conversation_id: int
     attempts: int
     user_message: ChatMessageData
     assistant_message: ChatMessageData
     fallback_used: bool
-    context: "ChatContextMetadata"
-    recovery: "ChatRecoveryMetadata"
+    context: ChatContextMetadata
+    recovery: ChatRecoveryMetadata
 
 
 class ChatContextMetadata(BaseModel):
-    """Metadata about the context used to generate the response."""
+    """Métadonnées sur le contexte utilisé pour générer la réponse."""
 
     message_ids: list[int]
     message_count: int
@@ -92,7 +96,7 @@ class ChatContextMetadata(BaseModel):
 
 
 class ChatRecoveryMetadata(BaseModel):
-    """Metadata about off-scope recovery attempts."""
+    """Métadonnées sur la récupération hors-scope."""
 
     off_scope_detected: bool
     off_scope_score: float
@@ -103,7 +107,7 @@ class ChatRecoveryMetadata(BaseModel):
 
 
 class ChatConversationSummaryData(BaseModel):
-    """Summary of a conversation for list display."""
+    """Résumé d'une conversation pour la liste."""
 
     conversation_id: int
     persona_id: uuid.UUID
@@ -116,7 +120,7 @@ class ChatConversationSummaryData(BaseModel):
 
 
 class ChatConversationListData(BaseModel):
-    """Paginated list of conversations."""
+    """Liste paginée des conversations."""
 
     conversations: list[ChatConversationSummaryData]
     total: int
@@ -125,7 +129,7 @@ class ChatConversationListData(BaseModel):
 
 
 class ChatConversationHistoryData(BaseModel):
-    """Complete history of a conversation."""
+    """Historique complet d'une conversation."""
 
     conversation_id: int
     persona_id: uuid.UUID
@@ -136,14 +140,8 @@ class ChatConversationHistoryData(BaseModel):
 
 class ChatGuidanceService:
     """
-    Service de conversation avec l'assistant astrologique.
-
-    Gère l'envoi de messages, la construction du contexte, l'appel au LLM,
-    et les stratégies de récupération en cas de réponse hors-scope.
+    Service de gestion des conversations avec l'assistant astrologique.
     """
-
-    _off_scope_events = 0
-    _recovery_success_events = 0
 
     SAFE_FALLBACK_MESSAGE = (
         "Je prefere reformuler prudemment votre demande. "
@@ -165,6 +163,9 @@ class ChatGuidanceService:
         "décembre",
     )
 
+    _off_scope_events = 0
+    _recovery_success_events = 0
+
     @classmethod
     def reset_quality_kpis(cls) -> None:
         """Réinitialise les compteurs de KPI qualité."""
@@ -173,7 +174,7 @@ class ChatGuidanceService:
 
     @classmethod
     def get_quality_kpis(cls) -> dict[str, float]:
-        """Retourne les KPI de qualité des conversations."""
+        """Retourne les indicateurs de qualité du chat."""
         recovery_success_rate = (
             cls._recovery_success_events / cls._off_scope_events if cls._off_scope_events else 0.0
         )
@@ -184,7 +185,7 @@ class ChatGuidanceService:
 
     @staticmethod
     def _validate_user_message(message: str) -> str:
-        """Valide et normalise le message utilisateur."""
+        """Valide et nettoie le message utilisateur."""
         normalized = message.strip()
         if not normalized:
             raise ChatGuidanceServiceError(
@@ -196,7 +197,7 @@ class ChatGuidanceService:
 
     @staticmethod
     def _validate_context_config() -> tuple[int, int]:
-        """Valide la configuration de contexte de chat."""
+        """Retourne et valide la configuration de contexte."""
         window_messages = settings.chat_context_window_messages
         max_characters = settings.chat_context_max_characters
         if window_messages <= 0 or max_characters <= 0:
@@ -226,7 +227,7 @@ class ChatGuidanceService:
 
     @staticmethod
     def _assess_off_scope(content: str) -> tuple[bool, float, str | None]:
-        """Assess if a response is off-scope with a confidence score."""
+        """Analyse si une réponse LLM est hors-scope."""
         return assess_off_scope(content)
 
     @staticmethod
@@ -299,14 +300,16 @@ class ChatGuidanceService:
         user_id: int,
         request_id: str,
         trace_id: str,
-        assistant_content: str,
+        gateway_result: Any,
         persona_profile_code: str,
+        entitlement_result: ChatEntitlementResult | None = None,
     ) -> tuple[str, bool, ChatRecoveryMetadata]:
         """
         Applique les stratégies de récupération si la réponse est hors-scope (async).
 
         Tente successivement reformulation, retry, puis fallback sécurisé.
         """
+        assistant_content = gateway_result.raw_output
         off_scope_detected, off_scope_score, off_scope_reason = (
             ChatGuidanceService._assess_off_scope(assistant_content)
         )
@@ -353,7 +356,7 @@ class ChatGuidanceService:
                     ),
                 },
             ]
-            reformulated = await AIEngineAdapter.generate_chat_reply(
+            recovery_result = await AIEngineAdapter.generate_chat_reply(
                 messages=recovery_messages,
                 context=context,
                 user_id=user_id,
@@ -361,6 +364,16 @@ class ChatGuidanceService:
                 trace_id=trace_id,
                 db=db,
             )
+
+            # Record tokens for recovery attempt 1
+            ChatGuidanceService._record_tokens(
+                db,
+                user_id=user_id,
+                gateway_result=recovery_result,
+                entitlement_result=entitlement_result,
+            )
+
+            reformulated = recovery_result.raw_output
             reformulate_off_scope, _, _ = ChatGuidanceService._assess_off_scope(reformulated)
             if not reformulate_off_scope:
                 ChatGuidanceService._recovery_success_events += 1
@@ -402,7 +415,7 @@ class ChatGuidanceService:
                     ),
                 },
             ]
-            retried = await AIEngineAdapter.generate_chat_reply(
+            recovery_result = await AIEngineAdapter.generate_chat_reply(
                 messages=retry_messages,
                 context=context,
                 user_id=user_id,
@@ -410,6 +423,16 @@ class ChatGuidanceService:
                 trace_id=trace_id,
                 db=db,
             )
+
+            # Record tokens for recovery attempt 2
+            ChatGuidanceService._record_tokens(
+                db,
+                user_id=user_id,
+                gateway_result=recovery_result,
+                entitlement_result=entitlement_result,
+            )
+
+            retried = recovery_result.raw_output
             retry_off_scope, _, _ = ChatGuidanceService._assess_off_scope(retried)
             if not retry_off_scope:
                 ChatGuidanceService._recovery_success_events += 1
@@ -455,6 +478,43 @@ class ChatGuidanceService:
         )
 
     @staticmethod
+    def _record_tokens(
+        db: Session,
+        *,
+        user_id: int,
+        gateway_result: Any,
+        entitlement_result: ChatEntitlementResult | None = None,
+    ) -> None:
+        """
+        Enregistre l'usage des tokens de manière atomique (AC9).
+        Si l'enregistrement échoue, l'exception est propagée pour annuler la transaction.
+        """
+        quota_def = None
+        if entitlement_result and entitlement_result.usage_states:
+            token_state = next(
+                (s for s in entitlement_result.usage_states if s.quota_key == "tokens"), None
+            )
+            if token_state:
+                quota_def = QuotaDefinition(
+                    quota_key=token_state.quota_key,
+                    quota_limit=token_state.quota_limit,
+                    period_unit=token_state.period_unit,
+                    period_value=token_state.period_value,
+                    reset_mode=token_state.reset_mode,
+                )
+
+        LlmTokenUsageService.record_usage(
+            db,
+            user_id=user_id,
+            feature_code="astrologer_chat",
+            quota=quota_def,
+            provider_model=gateway_result.meta.model,
+            tokens_in=gateway_result.usage.input_tokens,
+            tokens_out=gateway_result.usage.output_tokens,
+            request_id=gateway_result.request_id,
+        )
+
+    @staticmethod
     def send_message(
         db: Session,
         *,
@@ -464,64 +524,41 @@ class ChatGuidanceService:
         request_id: str = "n/a",
         persona_id: str | None = None,
         client_message_id: str | None = None,
+        entitlement_result: ChatEntitlementResult | None = None,
     ) -> ChatReplyData:
-        """
-        Envoie un message et obtient une réponse de l'assistant.
-
-        Cette méthode synchrone est un wrapper autour de send_message_async.
-
-        Args:
-            db: Session de base de données.
-            user_id: Identifiant de l'utilisateur.
-            message: Contenu du message.
-            conversation_id: ID de conversation existante (optionnel).
-            request_id: Identifiant de requête pour le logging.
-            persona_id: ID de persona spécifique (optionnel).
-            client_message_id: UUID d'idempotence généré côté client (optionnel).
-
-        Returns:
-            Réponse complète avec métadonnées de contexte et récupération.
-
-        Raises:
-            ChatGuidanceServiceError: Si la conversation n'existe pas ou en cas d'erreur LLM.
-        """
-        return asyncio.run(
-            ChatGuidanceService.send_message_async(
-                db,
-                user_id=user_id,
-                message=message,
-                conversation_id=conversation_id,
-                request_id=request_id,
-                persona_id=persona_id,
-                client_message_id=client_message_id,
+        """ wrapper synchrone """
+        try:
+            return asyncio.run(
+                ChatGuidanceService.send_message_async(
+                    db,
+                    user_id=user_id,
+                    message=message,
+                    conversation_id=conversation_id,
+                    request_id=request_id,
+                    persona_id=persona_id,
+                    client_message_id=client_message_id,
+                    entitlement_result=entitlement_result,
+                )
             )
-        )
+        except Exception as e:
+            logger.exception("Exception in send_message (asyncio.run wrapper): %s", str(e))
+            raise e
 
     @staticmethod
     async def _get_default_persona_id(db: Session) -> uuid.UUID:
         """Récupère l'ID du persona par défaut (Astrologue Standard)."""
         from app.infra.db.models.llm_persona import LlmPersonaModel
 
-        # Tenter de trouver "Astrologue Standard"
-        stmt = (
-            select(LlmPersonaModel.id).where(LlmPersonaModel.name == "Astrologue Standard").limit(1)
-        )
+        stmt = select(LlmPersonaModel.id).where(LlmPersonaModel.name == "Astrologue Standard").limit(1)
         persona_id = db.scalar(stmt)
         if persona_id:
             return persona_id
 
-        # Fallback: premier persona activé
-        stmt = (
-            select(LlmPersonaModel.id)
-            .where(LlmPersonaModel.enabled)
-            .order_by(LlmPersonaModel.created_at)
-            .limit(1)
-        )
+        stmt = select(LlmPersonaModel.id).where(LlmPersonaModel.enabled).order_by(LlmPersonaModel.created_at).limit(1)
         persona_id = db.scalar(stmt)
         if persona_id:
             return persona_id
 
-        # Hard fallback: n'importe quel persona
         stmt = select(LlmPersonaModel.id).limit(1)
         persona_id = db.scalar(stmt)
         if persona_id:
@@ -552,12 +589,7 @@ class ChatGuidanceService:
 
     @staticmethod
     def _load_persona_sync(db: Session, persona_id: uuid.UUID | None) -> object:
-        """
-        Charge le LlmPersonaModel correspondant au persona_id de la conversation.
-
-        Si persona_id est None (conversation legacy), log un warning et retourne le persona
-        par défaut pour permettre un backfill ultérieur (AC4).
-        """
+        """Charge le LlmPersonaModel correspondant au persona_id."""
         from app.infra.db.models.llm_persona import LlmPersonaModel
 
         if persona_id is not None:
@@ -567,22 +599,14 @@ class ChatGuidanceService:
                 return persona
             logger.warning("chat_persona_not_found persona_id=%s fallback=default", persona_id)
         else:
-            logger.warning(
-                "chat_persona_missing persona_id=None fallback=default (backfill required)"
-            )
+            logger.warning("chat_persona_missing persona_id=None fallback=default")
 
-        # Fallback: Astrologue Standard ou premier persona activé
         stmt = select(LlmPersonaModel).where(LlmPersonaModel.name == "Astrologue Standard").limit(1)
         persona = db.scalar(stmt)
         if persona:
             return persona
 
-        stmt = (
-            select(LlmPersonaModel)
-            .where(LlmPersonaModel.enabled)
-            .order_by(LlmPersonaModel.created_at)
-            .limit(1)
-        )
+        stmt = select(LlmPersonaModel).where(LlmPersonaModel.enabled).order_by(LlmPersonaModel.created_at).limit(1)
         persona = db.scalar(stmt)
         if persona:
             return persona
@@ -608,45 +632,30 @@ class ChatGuidanceService:
         trace_id: str | None = None,
         persona_id: str | uuid.UUID | None = None,
         client_message_id: str | None = None,
+        entitlement_result: ChatEntitlementResult | None = None,
     ) -> ChatReplyData:
         """
         Envoie un message et obtient une réponse de l'assistant (async).
-
-        Args:
-            db: Session de base de données.
-            user_id: Identifiant de l'utilisateur.
-            message: Contenu du message.
-            conversation_id: ID de conversation existante (optionnel).
-            request_id: Identifiant de requête pour le logging.
-            trace_id: Identifiant de trace pour le tracing distribué.
-            persona_id: ID de persona spécifique (optionnel).
-
-        Returns:
-            Réponse complète avec métadonnées de contexte et récupération.
-
-        Raises:
-            ChatGuidanceServiceError: Si la conversation n'existe pas ou en cas d'erreur LLM.
         """
         import uuid as uuid_module
 
         start = monotonic()
         trace_id = trace_id or request_id
-        normalized_message = ChatGuidanceService._validate_user_message(message)
+        raw_user_message = ChatGuidanceService._validate_user_message(message)
+        normalized_message = ChatGuidanceService._anonymize_or_raise(raw_user_message)
+        
         increment_counter("conversation_messages_total", 1.0)
         increment_counter("conversation_chat_messages_total", 1.0)
         repo = ChatRepository(db)
 
-        # Resolve persona_id if not provided
         try:
             if persona_id is None and conversation_id is None:
                 resolved_persona_id = await ChatGuidanceService._get_default_persona_id(db)
             elif persona_id is not None:
-                if isinstance(persona_id, str):
-                    resolved_persona_id = uuid_module.UUID(persona_id)
-                else:
-                    resolved_persona_id = persona_id
+                resolved_persona_id = (
+                    uuid_module.UUID(persona_id) if isinstance(persona_id, str) else persona_id
+                )
             else:
-                # Will be taken from conversation if conversation_id is set
                 resolved_persona_id = None
         except ValueError:
             raise ChatGuidanceServiceError(
@@ -669,7 +678,6 @@ class ChatGuidanceService:
                     message="conversation does not belong to user",
                     details={"conversation_id": str(conversation_id)},
                 )
-            # Ensure persona_id matches if provided
             if resolved_persona_id and conversation.persona_id != resolved_persona_id:
                 raise ChatGuidanceServiceError(
                     code="conversation_persona_mismatch",
@@ -680,7 +688,6 @@ class ChatGuidanceService:
                     },
                 )
         else:
-            # Multi-persona routing: find or create active conversation for this user + persona
             conversation = repo.get_or_create_active_conversation(
                 user_id=user_id, persona_id=resolved_persona_id
             )
@@ -739,208 +746,94 @@ class ChatGuidanceService:
                             recovery_reason=None,
                         ),
                     )
-                # User message exists but no assistant yet (race condition):
-                # skip creating a duplicate user message, proceed to run LLM.
-                user_message = existing_user_msg
+                # User message exists but no assistant yet: pick up its ID and proceed
+                user_message_id = existing_user_msg.id
+                user_message_created_at = existing_user_msg.created_at
             else:
-                # Use a savepoint to handle the race where two concurrent requests
-                # carry the same client_message_id and both see no existing message.
-                try:
-                    with db.begin_nested():
-                        user_message = repo.create_message(
-                            conversation_id=conversation.id,
-                            role="user",
-                            content=normalized_message,
-                            client_message_id=client_message_id,
-                        )
-                except IntegrityError:
-                    # Another request just won the race and created this user message.
-                    # Re-fetch and reuse it; the winner will create the assistant message.
-                    existing_user_msg = repo.get_message_by_client_id(
-                        conversation.id, client_message_id
-                    )
-                    if existing_user_msg:
-                        existing_assistant_msg = repo.get_next_assistant_message(
-                            conversation.id, existing_user_msg.id
-                        )
-                        if existing_assistant_msg:
-                            logger.info(
-                                "chat_idempotent_hit_race request_id=%s client_message_id=%s",
-                                request_id,
-                                client_message_id,
-                            )
-                            stored_meta = existing_assistant_msg.metadata_payload
-                            stored_context = stored_meta.get("context") or {}
-                            stored_recovery = stored_meta.get("recovery") or {}
-                            return ChatReplyData(
-                                conversation_id=conversation.id,
-                                attempts=int(stored_meta.get("attempts", 1)),
-                                user_message=ChatMessageData(
-                                    message_id=existing_user_msg.id,
-                                    role=existing_user_msg.role,
-                                    content=existing_user_msg.content,
-                                    created_at=existing_user_msg.created_at,
-                                    client_message_id=existing_user_msg.client_message_id,
-                                ),
-                                assistant_message=ChatMessageData(
-                                    message_id=existing_assistant_msg.id,
-                                    role=existing_assistant_msg.role,
-                                    content=existing_assistant_msg.content,
-                                    created_at=existing_assistant_msg.created_at,
-                                    reply_to_client_message_id=existing_assistant_msg.reply_to_client_message_id,
-                                ),
-                                fallback_used=bool(stored_meta.get("fallback_used", False)),
-                                context=ChatContextMetadata(**stored_context)
-                                if stored_context
-                                else ChatContextMetadata(
-                                    message_ids=[],
-                                    message_count=0,
-                                    context_characters=0,
-                                    prompt_version=settings.chat_prompt_version,
-                                ),
-                                recovery=ChatRecoveryMetadata(**stored_recovery)
-                                if stored_recovery
-                                else ChatRecoveryMetadata(
-                                    off_scope_detected=False,
-                                    off_scope_score=0.0,
-                                    recovery_strategy="none",
-                                    recovery_applied=False,
-                                    recovery_attempts=0,
-                                    recovery_reason=None,
-                                ),
-                            )
-                        # User message exists but no assistant yet; reuse it.
-                        user_message = existing_user_msg
-                    else:
-                        raise
+                user_message_id = None
+                user_message_created_at = None
         else:
-            user_message = repo.create_message(
-                conversation_id=conversation.id,
-                role="user",
-                content=normalized_message,
-            )
+            user_message_id = None
+            user_message_created_at = None
 
         persona = ChatGuidanceService._load_persona_sync(db, conversation.persona_id)
-        persona_profile_code = (
-            "legacy-default"
-            if persona.name == "Astrologue Standard"
-            else persona.name.lower().replace(" ", "-")
-        )
-        increment_counter(
-            f"conversation_messages_total|persona_profile={persona_profile_code}",
-            1.0,
-        )
-        increment_counter(
-            f"conversation_chat_messages_total|persona_profile={persona_profile_code}",
-            1.0,
-        )
+        persona_profile_code = persona.name.lower().replace(" ", "-")
 
         window_messages, max_characters = ChatGuidanceService._validate_context_config()
-        recent_messages = repo.get_recent_messages(
-            conversation_id=conversation.id,
-            limit=window_messages,
-        )
+        recent_messages = repo.get_recent_messages(conversation_id=conversation.id, limit=window_messages)
 
-        selected: list[tuple[int, str, str]] = []  # (id, role, content)
+        selected: list[tuple[int, str, str]] = []
         total_chars = 0
-        for msg in reversed(recent_messages):
-            try:
-                normalized_content = anonymize_text(msg.content.strip())
-            except LLMAnonymizationError as error:
-                raise ChatGuidanceServiceError(
-                    code="llm_anonymization_failed",
-                    message="llm payload anonymization failed",
-                    details={},
-                ) from error
+        # If user_message_id is NOT None, the message is already in DB and might be in recent_messages
+        # If user_message_id IS None, it's not in DB yet.
+        in_db = any(m.id == user_message_id for m in recent_messages) if user_message_id else False
+
+        # If not in DB, we will add 1 message (the current one), so we only take window_messages - 1 from history
+        history_limit = window_messages if in_db else window_messages - 1
+        
+        # Take the LATEST messages from the history
+        history_to_process = recent_messages[-history_limit:] if history_limit > 0 else []
+
+        for msg in reversed(history_to_process):
+            normalized_content = ChatGuidanceService._anonymize_or_raise(msg.content.strip())
             message_chars = len(normalized_content)
             if selected and total_chars + message_chars > max_characters:
                 break
-            if not selected and message_chars > max_characters:
-                normalized_content = normalized_content[:max_characters]
-                message_chars = len(normalized_content)
             selected.append((msg.id, msg.role, normalized_content))
             total_chars += message_chars
 
-        if not selected:
-            raise ChatGuidanceServiceError(
-                code="chat_context_unavailable",
-                message="chat context could not be built",
-                details={"conversation_id": str(conversation.id)},
-            )
+        chat_messages = [{"role": role, "content": content} for _, role, content in selected]
+        chat_messages.reverse()
+        
+        if not in_db:
+            chat_messages.append({"role": "user", "content": normalized_message})
+            msg_count = len(selected) + 1
+            char_count = total_chars + len(normalized_message)
+        else:
+            msg_count = len(selected)
+            char_count = total_chars
 
-        selected.reverse()
-        chat_messages: list[dict[str, str]] = [
-            {"role": role, "content": content} for _, role, content in selected
-        ]
         context_metadata = ChatContextMetadata(
-            message_ids=[item[0] for item in selected],
-            message_count=len(selected),
-            context_characters=total_chars,
+            message_ids=[item[0] for item in selected] if in_db else [item[0] for item in selected] + [0], # dummy ID for now
+            message_count=msg_count,
+            context_characters=char_count,
             prompt_version=settings.chat_prompt_version,
         )
 
-        # Construit le contexte avec les champs dynamiques du persona (AC1, AC2, AC3)
-        style_markers_str = "; ".join(persona.style_markers) if persona.style_markers else ""
-        boundaries_str = "; ".join(persona.boundaries) if persona.boundaries else ""
-
-        # Récupération du résumé du thème natal de l'utilisateur (si disponible)
         natal_summary = None
         current_datetime_str = None
-        current_timezone_str = None
-        current_location_str = None
-        today_date_str = None
         opening_user_profile = None
         user_model = UserRepository(db).get_by_id(user_id)
-        if user_model is None:
-            raise ChatGuidanceServiceError(
-                code="user_not_found",
-                message="user not found",
-                details={"user_id": str(user_id)},
-            )
-        is_first_user_turn = (
-            len(recent_messages) == 1 and recent_messages[0].role == "user"
-        ) or not any(msg.role == "assistant" for msg in recent_messages)
+        is_first_user_turn = (msg_count <= 1)
+        
         try:
             birth_profile = UserBirthProfileService.get_for_user(db, user_id=user_id)
             current_context = build_current_prompt_context(birth_profile)
             current_datetime_str = current_context.current_datetime
-            current_timezone_str = current_context.current_timezone
-            current_location_str = current_context.current_location
-            today_date_str = ChatGuidanceService._format_today_label(current_datetime_str)
             opening_user_profile = ChatGuidanceService._build_opening_user_profile(
-                email=user_model.email,
-                birth_date_iso=birth_profile.birth_date,
+                email=user_model.email, birth_date_iso=birth_profile.birth_date
             )
             if not is_first_user_turn:
                 natal_chart = UserNatalChartService.get_latest_for_user(db, user_id=user_id)
-                degraded_mode = _detect_degraded_mode(birth_profile)
-                natal_summary = build_chat_natal_hint(
-                    natal_result=natal_chart.result,
-                    degraded_mode=degraded_mode,
-                )
-        except (UserBirthProfileServiceError, UserNatalChartServiceError):
-            # Optionnel : le chat fonctionne même sans thème natal
-            logger.debug("chat_natal_summary_not_available user_id=%d", user_id)
-            today_date_str = ChatGuidanceService._format_today_label(current_datetime_str)
-            opening_user_profile = ChatGuidanceService._build_opening_user_profile(
-                email=user_model.email,
-                birth_date_iso=None,
-            )
+                natal_summary = build_chat_natal_hint(natal_chart.result, _detect_degraded_mode(birth_profile))
+        except Exception:
+            pass
+
+        # Construit le contexte avec les champs dynamiques du persona
+        style_markers_str = "; ".join(persona.style_markers) if persona.style_markers else ""
+        boundaries_str = "; ".join(persona.boundaries) if persona.boundaries else ""
 
         context: dict[str, str | None] = {
             "persona_name": persona.name,
-            "persona_tone": str(persona.tone),
-            "persona_verbosity": str(persona.verbosity),
+            "persona_tone": str(persona.tone.value) if hasattr(persona.tone, "value") else str(persona.tone),
+            "persona_verbosity": str(persona.verbosity.value) if hasattr(persona.verbosity, "value") else str(persona.verbosity),
             "persona_style_markers": style_markers_str or None,
             "persona_boundaries": boundaries_str or None,
-            "natal_chart_summary": natal_summary,
             "conversation_id": str(conversation.id),
-            "current_datetime": current_datetime_str,
-            "current_timezone": current_timezone_str,
-            "current_location": current_location_str,
-            "today_date": today_date_str,
             "chat_turn_stage": "opening" if is_first_user_turn else "follow_up",
+            "today_date": ChatGuidanceService._format_today_label(current_datetime_str),
             "user_profile_brief": opening_user_profile if is_first_user_turn else None,
+            "natal_chart_summary": natal_summary,
         }
 
         attempts = 0
@@ -948,12 +841,10 @@ class ChatGuidanceService:
         last_error_code = "llm_unavailable"
         last_error_message = "llm provider is unavailable"
 
-        # No backoff between retries: chat UX prioritizes responsiveness over throttling.
-        # For guidance endpoints (less interactive), see GuidanceService._sleep_before_retry().
         for _ in range(max_attempts):
             attempts += 1
             try:
-                assistant_content = await AIEngineAdapter.generate_chat_reply(
+                gateway_result = await AIEngineAdapter.generate_chat_reply(
                     messages=chat_messages,
                     context=context,
                     user_id=user_id,
@@ -961,59 +852,70 @@ class ChatGuidanceService:
                     trace_id=trace_id,
                     db=db,
                 )
-                (
-                    assistant_content,
-                    fallback_used,
-                    recovery_metadata,
-                ) = await ChatGuidanceService._apply_off_scope_recovery_async(
-                    db=db,
-                    messages=chat_messages,
-                    context=context,
-                    user_id=user_id,
-                    request_id=request_id,
-                    trace_id=trace_id,
-                    assistant_content=assistant_content,
-                    persona_profile_code=persona_profile_code,
-                )
-                # Use a savepoint so concurrent workers carrying the same
-                # client_message_id cannot each insert a separate assistant message.
-                try:
-                    with db.begin_nested():
-                        assistant_message = repo.create_message(
+                logger.info("Chat reply generated, recording tokens...")
+                # Atomic transaction for the whole turn recording (AC9)
+                # If anything here fails, BOTH user_message and assistant_message are rolled back
+                with db.begin_nested():
+                    # 1. Create User Message inside nested transaction if not exists
+                    if not user_message_id:
+                        user_message = repo.create_message(
                             conversation_id=conversation.id,
-                            role="assistant",
-                            content=assistant_content,
-                            metadata_payload={
-                                "attempts": attempts,
-                                "fallback_used": fallback_used,
-                                "persona_profile_code": persona_profile_code,
-                                "context": context_metadata.model_dump(mode="json"),
-                                "recovery": recovery_metadata.model_dump(mode="json"),
-                            },
-                            reply_to_client_message_id=client_message_id,
+                            role="user",
+                            content=normalized_message,
+                            client_message_id=client_message_id,
                         )
-                except IntegrityError:
-                    # Another concurrent worker already created the assistant message.
-                    cached = (
-                        repo.get_assistant_by_reply_client_id(conversation.id, client_message_id)
-                        if client_message_id
-                        else None
-                    )
-                    if cached:
-                        logger.info(
-                            "chat_assistant_idempotent_hit request_id=%s client_message_id=%s",
-                            request_id,
-                            client_message_id,
-                        )
-                        assistant_message = cached
                     else:
-                        raise
+                        # Re-fetch or use existing metadata (dummy object for compatibility)
+                        from types import SimpleNamespace
+                        user_message = SimpleNamespace()
+                        user_message.id = user_message_id
+                        user_message.role = "user"
+                        user_message.content = normalized_message
+                        user_message.created_at = user_message_created_at
+                        user_message.client_message_id = client_message_id
+
+                    # 2. Record Tokens
+                    ChatGuidanceService._record_tokens(
+                        db,
+                        user_id=user_id,
+                        gateway_result=gateway_result,
+                        entitlement_result=entitlement_result,
+                    )
+
+                    # 3. Off-scope recovery
+                    (
+                        assistant_content,
+                        fallback_used,
+                        recovery_metadata,
+                    ) = await ChatGuidanceService._apply_off_scope_recovery_async(
+                        db=db,
+                        messages=chat_messages,
+                        context=context,
+                        user_id=user_id,
+                        request_id=request_id,
+                        trace_id=trace_id,
+                        gateway_result=gateway_result,
+                        persona_profile_code=persona_profile_code,
+                        entitlement_result=entitlement_result,
+                    )
+
+                    # 4. Create Assistant Message
+                    assistant_message = repo.create_message(
+                        conversation_id=conversation.id,
+                        role="assistant",
+                        content=assistant_content,
+                        metadata_payload={
+                            "attempts": attempts,
+                            "fallback_used": fallback_used,
+                            "persona_profile_code": persona_profile_code,
+                            "context": context_metadata.model_dump(mode="json"),
+                            "recovery": recovery_metadata.model_dump(mode="json"),
+                        },
+                        reply_to_client_message_id=client_message_id,
+                    )
+
                 elapsed_seconds = monotonic() - start
                 observe_duration("conversation_latency_seconds", elapsed_seconds)
-                observe_duration(
-                    f"conversation_latency_seconds|persona_profile={persona_profile_code}",
-                    elapsed_seconds,
-                )
                 return ChatReplyData(
                     conversation_id=conversation.id,
                     attempts=attempts,
@@ -1027,7 +929,7 @@ class ChatGuidanceService:
                     assistant_message=ChatMessageData(
                         message_id=assistant_message.id,
                         role=assistant_message.role,
-                        content=assistant_message.content,
+                        content=assistant_content,
                         created_at=assistant_message.created_at,
                         reply_to_client_message_id=assistant_message.reply_to_client_message_id,
                     ),
@@ -1037,18 +939,8 @@ class ChatGuidanceService:
                 )
             except (AIEngineAdapterError, TimeoutError, ConnectionError) as err:
                 last_error_code, last_error_message = map_adapter_error_to_codes(err)
-                increment_counter("conversation_llm_errors_total", 1.0)
-                increment_counter(
-                    f"conversation_llm_errors_total|persona_profile={persona_profile_code}",
-                    1.0,
-                )
-                logger.warning(
-                    "chat_generation_error request_id=%s code=%s",
-                    request_id,
-                    last_error_code,
-                )
+                logger.warning("chat_generation_error request_id=%s code=%s", request_id, last_error_code)
 
-        observe_duration("conversation_latency_seconds", monotonic() - start)
         raise ChatGuidanceServiceError(
             code=last_error_code,
             message=last_error_message,
@@ -1060,9 +952,6 @@ class ChatGuidanceService:
                     "Le service est indisponible temporairement. Reessayez dans un instant."
                 ),
                 "conversation_id": str(conversation.id),
-                "context_message_count": str(context_metadata.message_count),
-                "context_characters": str(context_metadata.context_characters),
-                "prompt_version": context_metadata.prompt_version,
             },
         )
 
@@ -1074,18 +963,6 @@ class ChatGuidanceService:
         limit: int = 20,
         offset: int = 0,
     ) -> ChatConversationListData:
-        """
-        Liste les conversations d'un utilisateur avec pagination.
-
-        Args:
-            db: Session de base de données.
-            user_id: Identifiant de l'utilisateur.
-            limit: Nombre maximum de résultats.
-            offset: Décalage pour la pagination.
-
-        Returns:
-            Liste paginée des conversations avec aperçu.
-        """
         validated_limit, validated_offset = ChatGuidanceService._validate_pagination(limit, offset)
         repo = ChatRepository(db)
         conversations = repo.list_conversations_with_last_preview_by_user_id(
@@ -1094,25 +971,19 @@ class ChatGuidanceService:
             offset=validated_offset,
         )
         total = repo.count_conversations_by_user_id(user_id)
-        items: list[ChatConversationSummaryData] = []
-        for conversation, preview, persona_name, last_message_at in conversations:
-            # URL encode persona_name for safety in Dicebear URL
-            encoded_name = urllib.parse.quote(persona_name) if persona_name else "default"
-            avatar_url = f"https://api.dicebear.com/7.x/bottts/svg?seed={encoded_name}"
-
-            items.append(
-                ChatConversationSummaryData(
-                    conversation_id=conversation.id,
-                    persona_id=conversation.persona_id,
-                    persona_name=persona_name,
-                    avatar_url=avatar_url,
-                    status=conversation.status,
-                    updated_at=conversation.updated_at,
-                    last_message_at=last_message_at,
-                    # preview is already truncated to 120 in SQL, but we ensure string type
-                    last_message_preview=preview or "",
-                )
+        items = [
+            ChatConversationSummaryData(
+                conversation_id=c.id,
+                persona_id=c.persona_id,
+                persona_name=p_name,
+                avatar_url=f"https://api.dicebear.com/7.x/bottts/svg?seed={urllib.parse.quote(p_name or 'default')}",
+                status=c.status,
+                updated_at=c.updated_at,
+                last_message_at=last_message_at,
+                last_message_preview=preview or "",
             )
+            for c, preview, p_name, last_message_at in conversations
+        ]
         return ChatConversationListData(
             conversations=items,
             total=total,
@@ -1127,21 +998,8 @@ class ChatGuidanceService:
         user_id: int,
         persona_id: uuid.UUID,
     ) -> int:
-        """
-        Retourne l'ID de la conversation active pour (user, persona), ou en crée une nouvelle.
-
-        Args:
-            db: Session de base de données.
-            user_id: Identifiant de l'utilisateur.
-            persona_id: Identifiant du persona.
-
-        Returns:
-            L'ID de la conversation (existante ou nouvellement créée).
-        """
         repo = ChatRepository(db)
-        conversation = repo.get_or_create_conversation_by_persona(
-            user_id=user_id, persona_id=persona_id
-        )
+        conversation = repo.get_or_create_active_conversation(user_id=user_id, persona_id=persona_id)
         return conversation.id
 
     @staticmethod
@@ -1151,21 +1009,6 @@ class ChatGuidanceService:
         user_id: int,
         conversation_id: int,
     ) -> ChatConversationHistoryData:
-        """
-        Récupère l'historique complet d'une conversation.
-
-        Args:
-            db: Session de base de données.
-            user_id: Identifiant de l'utilisateur (pour vérification d'accès).
-            conversation_id: Identifiant de la conversation.
-
-        Returns:
-            Historique avec tous les messages.
-
-        Raises:
-            ChatGuidanceServiceError: Si la conversation n'existe pas ou
-                n'appartient pas à l'utilisateur.
-        """
         repo = ChatRepository(db)
         conversation = repo.get_conversation_by_id(conversation_id)
         if conversation is None:

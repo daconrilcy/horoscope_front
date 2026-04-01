@@ -101,8 +101,8 @@ def seed() -> None:
                 "variant_code": None,
                 "quotas": [
                     {
-                        "quota_key": "consultations",
-                        "quota_limit": 1,
+                        "quota_key": "tokens",
+                        "quota_limit": 5000,
                         "period_unit": PeriodUnit.WEEK,
                         "period_value": 1,
                         "reset_mode": ResetMode.CALENDAR,
@@ -137,8 +137,8 @@ def seed() -> None:
                 "variant_code": None,
                 "quotas": [
                     {
-                        "quota_key": "messages",
-                        "quota_limit": 50,
+                        "quota_key": "tokens",
+                        "quota_limit": 50000,
                         "period_unit": PeriodUnit.MONTH,
                         "period_value": 1,
                         "reset_mode": ResetMode.CALENDAR,
@@ -151,8 +151,8 @@ def seed() -> None:
                 "variant_code": None,
                 "quotas": [
                     {
-                        "quota_key": "consultations",
-                        "quota_limit": 4,
+                        "quota_key": "tokens",
+                        "quota_limit": 20000,
                         "period_unit": PeriodUnit.WEEK,
                         "period_value": 1,
                         "reset_mode": ResetMode.CALENDAR,
@@ -187,8 +187,8 @@ def seed() -> None:
                 "variant_code": None,
                 "quotas": [
                     {
-                        "quota_key": "messages",
-                        "quota_limit": 1000,
+                        "quota_key": "tokens",
+                        "quota_limit": 1500000,
                         "period_unit": PeriodUnit.MONTH,
                         "period_value": 1,
                         "reset_mode": ResetMode.CALENDAR,
@@ -201,9 +201,9 @@ def seed() -> None:
                 "variant_code": None,
                 "quotas": [
                     {
-                        "quota_key": "consultations",
-                        "quota_limit": 2,
-                        "period_unit": PeriodUnit.DAY,
+                        "quota_key": "tokens",
+                        "quota_limit": 200000,
+                        "period_unit": PeriodUnit.MONTH,
                         "period_value": 1,
                         "reset_mode": ResetMode.CALENDAR,
                     }

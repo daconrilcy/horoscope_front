@@ -89,6 +89,7 @@ class CurrentQuotaData(BaseModel):
     """
 
     feature_code: str
+    quota_key: str
     quota_limit: int
     consumed: int
     remaining: int
@@ -114,7 +115,126 @@ class SubscriptionStatusData(BaseModel):
     updated_at: datetime | None
 
 
+class TokenUsagePeriod(BaseModel):
+    unit: str
+    window_start: datetime
+    window_end: datetime | None = None
+
+
+class TokenUsageSummary(BaseModel):
+    tokens_total: int
+    tokens_in: int
+    tokens_out: int
+
+
+class TokenUsageFeatureSummary(BaseModel):
+    feature_code: str
+    tokens_total: int
+    tokens_in: int
+    tokens_out: int
+
+
+class TokenUsageData(BaseModel):
+    period: TokenUsagePeriod
+    summary: TokenUsageSummary
+    by_feature: list[TokenUsageFeatureSummary]
+
+
 class BillingService:
+    _BILLING_QUOTA_FEATURE = "astrologer_chat"
+    @staticmethod
+    def get_token_usage(
+        db: Session, *, user_id: int, period: str = "current_month"
+    ) -> TokenUsageData:
+        """
+        Calcule l'usage des tokens pour un utilisateur sur une période donnée.
+        Agrége les données depuis user_token_usage_logs.
+        """
+        from datetime import timedelta, timezone
+
+        from sqlalchemy import func
+
+        from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
+
+        now = datetime.now(timezone.utc)
+        window_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        window_end = window_start + timedelta(days=1)
+        unit = "day"
+
+        if period == "current_month":
+            window_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            # End of month is hard to compute with replace, use next month day 1
+            if now.month == 12:
+                window_end = now.replace(year=now.year + 1, month=1, day=1)
+            else:
+                window_end = now.replace(month=now.month + 1, day=1)
+            unit = "month"
+        elif period == "current_week":
+            # Monday of current week
+            window_start = (now - timedelta(days=now.weekday())).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+            window_end = window_start + timedelta(days=7)
+            unit = "week"
+        elif period == "all":
+            # Find earliest log
+            first_log_dt = db.scalar(
+                select(func.min(UserTokenUsageLogModel.created_at)).where(
+                    UserTokenUsageLogModel.user_id == user_id
+                )
+            )
+            window_start = first_log_dt or now
+            window_end = now
+            unit = "all"
+
+        # Query totals
+        totals = db.execute(
+            select(
+                func.sum(UserTokenUsageLogModel.tokens_total).label("total_sum"),
+                func.sum(UserTokenUsageLogModel.tokens_in).label("in_sum"),
+                func.sum(UserTokenUsageLogModel.tokens_out).label("out_sum"),
+            ).where(
+                UserTokenUsageLogModel.user_id == user_id,
+                UserTokenUsageLogModel.created_at >= window_start,
+                UserTokenUsageLogModel.created_at < window_end,
+            )
+        ).first()
+
+        # Query by feature
+        feature_totals = db.execute(
+            select(
+                UserTokenUsageLogModel.feature_code,
+                func.sum(UserTokenUsageLogModel.tokens_total).label("total_sum"),
+                func.sum(UserTokenUsageLogModel.tokens_in).label("in_sum"),
+                func.sum(UserTokenUsageLogModel.tokens_out).label("out_sum"),
+            )
+            .where(
+                UserTokenUsageLogModel.user_id == user_id,
+                UserTokenUsageLogModel.created_at >= window_start,
+                UserTokenUsageLogModel.created_at < window_end,
+            )
+            .group_by(UserTokenUsageLogModel.feature_code)
+        ).all()
+
+        return TokenUsageData(
+            period=TokenUsagePeriod(
+                unit=unit, window_start=window_start, window_end=window_end
+            ),
+            summary=TokenUsageSummary(
+                tokens_total=int(totals.total_sum or 0),
+                tokens_in=int(totals.in_sum or 0),
+                tokens_out=int(totals.out_sum or 0),
+            ),
+            by_feature=[
+                TokenUsageFeatureSummary(
+                    feature_code=row.feature_code,
+                    tokens_total=int(row.total_sum or 0),
+                    tokens_in=int(row.in_sum or 0),
+                    tokens_out=int(row.out_sum or 0),
+                )
+                for row in feature_totals
+            ],
+        )
     """
     Service de gestion de la facturation B2C.
 
@@ -410,6 +530,7 @@ class BillingService:
 
         return CurrentQuotaData(
             feature_code=BillingService._BILLING_QUOTA_FEATURE,
+            quota_key=usage.quota_key,
             quota_limit=usage.quota_limit,
             consumed=usage.used,
             remaining=usage.remaining,

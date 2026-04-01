@@ -18,7 +18,7 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def mock_entitlement_gate():
     with patch(
-        "app.api.v1.routers.consultations.ThematicConsultationEntitlementGate.check_and_consume"
+        "app.api.v1.routers.consultations.ThematicConsultationEntitlementGate.check_access"
     ) as mock:
         mock.return_value = ConsultationEntitlementResult(
             path="canonical_unlimited", usage_states=[]
