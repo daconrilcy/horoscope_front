@@ -12,6 +12,7 @@ import { TONE_LABELS, CATEGORY_LABELS, PREDICTION_UI_MESSAGES, type Lang as Pred
 import { tConsultations, type ConsultationsTranslation } from "./consultations"
 import { tAstrologers, type AstrologersTranslation } from "./astrologers"
 import { translateInsight, translateInsightSection, type InsightsTranslation, type InsightId } from "./insights"
+import { supportTranslations } from "./support"
 import type { AppLocale } from "./types"
 
 export * from "./types"
@@ -29,6 +30,7 @@ export * from "./consultations"
 export * from "./astrologers"
 export * from "./admin"
 export * from "./insights"
+export * from "./support"
 
 export type TranslationMap = {
   auth: AuthTranslation
@@ -48,6 +50,7 @@ export type TranslationMap = {
   consultations: ConsultationsTranslation
   astrologers: AstrologersTranslation
   insights: InsightsTranslation
+  support: any
 }
 
 export type TranslationNamespace = keyof TranslationMap
@@ -78,6 +81,7 @@ const translationFunctions: {
     translate: (id: InsightId) => translateInsight(id, lang),
     section: () => translateInsightSection(lang)
   }),
+  support: (lang) => supportTranslations[lang] as any,
 }
 
 /**

@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-01T12:00:00+02:00'
+last_updated: '2026-04-01T15:00:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -518,3 +518,5 @@ development_status:
   61-65-coherence-plan-effectif-upgrade-immediat-downgrade-cancel-echeance: done
   61-66-coherence-quotas-usage-affichage-limites-plans: done
   61-67-refactorisation-credit-par-token: done
+  epic-62: in-progress
+  62-1-page-support-et-help-center-utilisateur: done

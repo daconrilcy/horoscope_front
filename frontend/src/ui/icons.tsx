@@ -16,6 +16,7 @@ export {
 
   // Hero card
   ChevronRight,
+  HelpCircle,
 
   // Mini cards
   Heart,

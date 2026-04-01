@@ -20,14 +20,22 @@ from app.infra.observability.metrics import increment_counter, observe_duration
 
 logger = logging.getLogger(__name__)
 
-VALID_INCIDENT_STATUS = {"open", "in_progress", "resolved", "closed"}
+VALID_INCIDENT_STATUS = {"open", "in_progress", "resolved", "closed", "pending", "canceled", "solved"}
 VALID_INCIDENT_PRIORITY = {"low", "medium", "high"}
-VALID_INCIDENT_CATEGORY = {"account", "subscription", "content"}
+VALID_INCIDENT_CATEGORY = {
+    "account", "subscription", "content",  # Ops legacy
+    "subscription_problem", "billing_issue", "bug", "account_access", 
+    "feature_question", "data_privacy", "other"  # Help center
+}
 ALLOWED_STATUS_TRANSITIONS: dict[str, set[str]] = {
     "open": {"in_progress", "resolved", "closed"},
     "in_progress": {"resolved", "closed"},
     "resolved": {"closed"},
     "closed": set(),
+    # Statuts utilisateurs
+    "pending": {"solved", "canceled", "in_progress"},
+    "solved": {"canceled"},
+    "canceled": set(),
 }
 
 
@@ -172,6 +180,7 @@ class IncidentService:
         payload: SupportIncidentCreatePayload,
         actor_user_id: int | None,
         request_id: str,
+        initial_status: str = "open",
     ) -> SupportIncidentData:
         """
         Crée un nouvel incident support.
@@ -181,6 +190,7 @@ class IncidentService:
             payload: Données de l'incident à créer.
             actor_user_id: Identifiant de l'utilisateur créant l'incident.
             request_id: Identifiant de requête pour le logging.
+            initial_status: Statut initial de l'incident (défaut "open").
 
         Returns:
             Incident créé.
@@ -199,6 +209,12 @@ class IncidentService:
                 code="incident_validation_error",
                 message="incident priority is invalid",
                 details={"field": "priority"},
+            )
+        if initial_status not in VALID_INCIDENT_STATUS:
+            raise IncidentServiceError(
+                code="incident_validation_error",
+                message="incident status is invalid",
+                details={"field": "initial_status"},
             )
         title = payload.title.strip()
         description = payload.description.strip()
@@ -229,14 +245,15 @@ class IncidentService:
             category=payload.category,
             title=title,
             description=description,
-            status="open",
+            status=initial_status,
             priority=payload.priority,
             resolved_at=None,
         )
         db.add(model)
         db.flush()
         increment_counter("support_incidents_total", 1.0)
-        increment_counter("support_incidents_open", 1.0)
+        if initial_status in {"open", "in_progress", "pending"}:
+            increment_counter("support_incidents_open", 1.0)
         logger.info(
             (
                 "support_incident_created request_id=%s incident_id=%s "
@@ -416,9 +433,9 @@ class IncidentService:
                 details={"field": "payload"},
             )
 
-        if model.status in {"resolved", "closed"} and model.resolved_at is None:
+        if model.status in {"resolved", "closed", "solved", "canceled"} and model.resolved_at is None:
             model.resolved_at = datetime.now(timezone.utc)
-        if model.status in {"open", "in_progress"}:
+        if model.status in {"open", "in_progress", "pending"}:
             model.resolved_at = None
 
         db.flush()

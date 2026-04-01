@@ -1,0 +1,118 @@
+import React, { useEffect, useState } from "react"
+import { useTranslation, useAstrologyLabels } from "@i18n"
+import { useHelpTickets, type HelpTicket } from "@api/help"
+import { formatDate } from "@utils/formatDate"
+import { Clock, CheckCircle, XCircle, MessageSquare } from "lucide-react"
+import { Button } from "@ui/Button"
+import { SkeletonGroup } from "@ui/Skeleton/Skeleton"
+import { EmptyState } from "@ui/EmptyState/EmptyState"
+
+interface SupportTicketListProps {
+  refreshTrigger?: number
+}
+
+const LIMIT = 5
+
+export function SupportTicketList({ refreshTrigger }: SupportTicketListProps) {
+  const { lang } = useAstrologyLabels()
+  const { help } = useTranslation("support")
+  const [tickets, setTickets] = useState<HelpTicket[]>([])
+  const [offset, setOffset] = useState(0)
+  const [total, setTotal] = useState(0)
+
+  const { data, isLoading, isFetching, refetch } = useHelpTickets(LIMIT, offset)
+
+  useEffect(() => {
+    if (data) {
+      if (offset === 0) {
+        setTickets(data.tickets)
+      } else {
+        setTickets(prev => [...prev, ...data.tickets])
+      }
+      setTotal(data.total)
+    }
+  }, [data, offset])
+
+  useEffect(() => {
+    if (refreshTrigger) {
+      setOffset(0)
+      refetch()
+    }
+  }, [refreshTrigger, refetch])
+
+  if (isLoading && offset === 0) {
+    return (
+      <div className="ticket-list-loading">
+        <SkeletonGroup count={3} height="80px" gap="16px" />
+      </div>
+    )
+  }
+
+  if (tickets.length === 0 && !isLoading) {
+    return (
+      <EmptyState
+        icon={<MessageSquare size={48} />}
+        title={help.tickets.title}
+        description={help.tickets.empty}
+      />
+    )
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "solved":
+      case "resolved":
+      case "closed":
+        return <CheckCircle size={16} className="status-icon--success" />
+      case "canceled":
+        return <XCircle size={16} className="status-icon--error" />
+      default:
+        return <Clock size={16} className="status-icon--pending" />
+    }
+  }
+
+  const getStatusLabel = (status: string) => {
+    return (help.tickets.statuses as any)[status] || status
+  }
+
+  const handleLoadMore = () => {
+    setOffset(prev => prev + LIMIT)
+  }
+
+  return (
+    <div className="ticket-list">
+      {tickets.map((ticket) => (
+        <div key={`${ticket.ticket_id}-${ticket.created_at}`} className="ticket-item">
+          <div className="ticket-item__header">
+            <span className="ticket-item__subject">{ticket.subject}</span>
+            <div className={`ticket-badge ticket-badge--${ticket.status}`}>
+              {getStatusIcon(ticket.status)}
+              <span>{getStatusLabel(ticket.status)}</span>
+            </div>
+          </div>
+          <div className="ticket-item__meta">
+            <span>{formatDate(ticket.created_at, lang)}</span>
+            {ticket.resolved_at && (
+              <span className="ticket-item__resolved">
+                • {help.tickets.resolvedAt.replace("{date}", formatDate(ticket.resolved_at, lang))}
+              </span>
+            )}
+          </div>
+        </div>
+      ))}
+      
+      {total > tickets.length && (
+        <div className="load-more-container">
+          <Button 
+            variant="ghost" 
+            onClick={handleLoadMore}
+            isLoading={isFetching}
+            disabled={isFetching}
+          >
+            {help.tickets.loadMore}
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}

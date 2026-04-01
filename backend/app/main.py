@@ -36,6 +36,7 @@ from app.api.v1.routers.entitlements import router as entitlements_router
 from app.api.v1.routers.ephemeris import router as ephemeris_router
 from app.api.v1.routers.geocoding import router as geocoding_router
 from app.api.v1.routers.guidance import router as guidance_router
+from app.api.v1.routers.help import router as help_router
 from app.api.v1.routers.natal_interpretation import router as natal_interpretation_router
 from app.api.v1.routers.ops_entitlement_mutation_audits import (
     router as ops_entitlement_mutation_audits_router,
@@ -622,3 +623,4 @@ app.include_router(reference_data_router)
 app.include_router(users_router)
 app.include_router(support_router)
 app.include_router(ai_engine_router)
+app.include_router(help_router)

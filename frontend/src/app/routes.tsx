@@ -15,6 +15,7 @@ import { ChatPage } from "../pages/ChatPage"
 import { BirthProfilePage } from "../pages/BirthProfilePage"
 import { NotFoundPage } from "../pages/NotFoundPage"
 import DailyHoroscopePage from "../pages/DailyHoroscopePage"
+import HelpPage from "../pages/HelpPage"
 
 import { DashboardPage } from "../pages/DashboardPage"
 import { ConsultationsPage } from "../pages/ConsultationsPage"
@@ -124,6 +125,10 @@ export const routes: RouteObject[] = [
       {
         path: "/privacy",
         element: <PrivacyPanel />,
+      },
+      {
+        path: "/help",
+        element: <HelpPage />,
       },
       {
         path: "/consultations",

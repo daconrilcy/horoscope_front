@@ -7,6 +7,7 @@ export interface NavigationTranslation {
     natal: string
     consultations: string
     astrologers: string
+    help: string
     profile: string
     privacy: string
     support: string
@@ -29,6 +30,7 @@ const translations: Record<AstrologyLang, NavigationTranslation> = {
       natal: "Thème",
       consultations: "Consultations",
       astrologers: "Astrologues",
+      help: "Support",
       profile: "Profil",
       privacy: "Confidentialité",
       support: "Support",
@@ -49,6 +51,7 @@ const translations: Record<AstrologyLang, NavigationTranslation> = {
       natal: "Chart",
       consultations: "Consultations",
       astrologers: "Astrologers",
+      help: "Support",
       profile: "Profile",
       privacy: "Privacy",
       support: "Support",
@@ -69,6 +72,7 @@ const translations: Record<AstrologyLang, NavigationTranslation> = {
       natal: "Carta",
       consultations: "Consultaciones",
       astrologers: "Astrólogos",
+      help: "Soporte",
       profile: "Perfil",
       privacy: "Privacidad",
       support: "Soporte",
