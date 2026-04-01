@@ -11,7 +11,10 @@ from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
-from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.effective_entitlement_resolver_service import (
+    EffectiveEntitlementResolverService,
+)
+from app.services.stripe_customer_portal_service import StripeCustomerPortalService
 
 client = TestClient(app)
 
@@ -309,6 +312,34 @@ class TestStripeCustomerPortalApi:
         assert response.status_code == 404
         assert response.json()["error"]["code"] == "stripe_subscription_not_found"
 
+    def test_upgrade_payment_nominal_200(self, clean_db):
+        token = _register_user_with_role("user@example.com", "user")
+
+        with patch.object(
+            StripeCustomerPortalService,
+            "create_subscription_upgrade_payment",
+            return_value=type(
+                "UpgradeResult",
+                (),
+                {
+                    "checkout_url": "https://checkout.stripe.com/pay/cs_123",
+                    "invoice_status": "open",
+                    "amount_due_cents": 2000,
+                    "currency": "eur",
+                },
+            )(),
+        ) as mock_upgrade:
+            response = client.post(
+                "/v1/billing/stripe-subscription-upgrade",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"plan": "premium"},
+            )
+
+        assert response.status_code == 200
+        assert response.json()["data"]["checkout_url"] == "https://checkout.stripe.com/pay/cs_123"
+        assert response.json()["data"]["amount_due_cents"] == 2000
+        mock_upgrade.assert_called_once()
+
     def test_cancel_session_no_subscription_404(self, clean_db):
         token = _register_user_with_role("user@example.com", "user")
         with SessionLocal() as db:
@@ -417,6 +448,46 @@ class TestStripeCustomerPortalApi:
 
         assert response.status_code == 422
         assert response.json()["error"]["code"] == "stripe_portal_subscription_update_disabled"
+
+    def test_update_session_returns_422_when_no_change_options_are_configured(
+        self, clean_db
+    ):
+        import stripe
+
+        token = _register_user_with_role("user@example.com", "user")
+        with SessionLocal() as db:
+            user = db.query(UserModel).filter_by(email="user@example.com").first()
+            profile = StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id="cus_123",
+                stripe_subscription_id="sub_123",
+            )
+            db.add(profile)
+            db.commit()
+
+        mock_client = MagicMock()
+        mock_client.billing_portal.sessions.create.side_effect = stripe.InvalidRequestError(
+            message=(
+                "The subscription cannot be updated because there is no price in the "
+                "portal configuration available to change to and the quantity cannot be changed."
+            ),
+            param=None,
+        )
+
+        with patch(
+            "app.services.stripe_customer_portal_service.get_stripe_client",
+            return_value=mock_client,
+        ):
+            response = client.post(
+                "/v1/billing/stripe-customer-portal-subscription-update-session",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+
+        assert response.status_code == 422
+        assert (
+            response.json()["error"]["code"]
+            == "stripe_portal_subscription_update_no_change_options"
+        )
 
     def test_update_session_returns_422_for_trialing_subscription(self, clean_db):
         token = _register_user_with_role("user@example.com", "user")

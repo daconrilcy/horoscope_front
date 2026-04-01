@@ -68,6 +68,10 @@ class StripeCheckoutRequest(BaseModel):
     plan: Literal["basic", "premium"]
 
 
+class StripeSubscriptionUpgradeRequest(BaseModel):
+    plan: Literal["basic", "premium"]
+
+
 class StripeCheckoutResponse(BaseModel):
     checkout_url: str
 
@@ -88,6 +92,18 @@ class StripePortalApiResponse(BaseModel):
 
 class StripeSubscriptionStatusApiResponse(BaseModel):
     data: SubscriptionStatusData
+    meta: ResponseMeta
+
+
+class StripeSubscriptionUpgradeResponse(BaseModel):
+    checkout_url: str | None
+    invoice_status: str | None
+    amount_due_cents: int
+    currency: str | None
+
+
+class StripeSubscriptionUpgradeApiResponse(BaseModel):
+    data: StripeSubscriptionUpgradeResponse
     meta: ResponseMeta
 
 
@@ -255,9 +271,16 @@ def _resolve_portal_service_status_code(error_code: str) -> int:
         "stripe_portal_configuration_missing": 503,
         "stripe_portal_subscription_update_not_allowed_for_trial": 422,
         "stripe_portal_subscription_update_disabled": 422,
+        "stripe_portal_subscription_update_no_change_options": 422,
         "stripe_portal_subscription_cancel_disabled": 422,
         "stripe_portal_subscription_cancel_already_scheduled": 422,
         "stripe_subscription_reactivation_not_needed": 422,
+        "stripe_subscription_upgrade_not_allowed": 422,
+        "stripe_subscription_upgrade_invalid_proration_preview": 502,
+        "stripe_subscription_upgrade_payment_not_completed": 422,
+        "stripe_subscription_upgrade_checkout_metadata_missing": 502,
+        "stripe_subscription_upgrade_checkout_customer_mismatch": 502,
+        "plan_price_not_configured": 503,
         "stripe_api_error": 502,
     }.get(error_code, 500)
 
@@ -774,6 +797,99 @@ def reactivate_stripe_subscription(
                 target_id=str(current_user.id),
                 status="failed",
                 details={"error_code": error.code},
+            )
+        except AuditWriteError:
+            db.rollback()
+            return _audit_unavailable_response(request_id=request_id)
+        db.commit()
+        return _error_response(
+            status_code=_resolve_portal_service_status_code(error.code),
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
+        )
+    except AuditWriteError:
+        db.rollback()
+        return _audit_unavailable_response(request_id=request_id)
+
+
+@router.post(
+    "/stripe-subscription-upgrade",
+    response_model=StripeSubscriptionUpgradeApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        404: {"model": ErrorEnvelope},
+        422: {"model": ErrorEnvelope},
+        503: {"model": ErrorEnvelope},
+        502: {"model": ErrorEnvelope},
+    },
+)
+def create_stripe_subscription_upgrade_payment(
+    request: Request,
+    payload: StripeSubscriptionUpgradeRequest = Body(...),
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    role_error = _ensure_user_role(current_user, request_id)
+    if role_error is not None:
+        return role_error
+
+    rate_error = _enforce_billing_limits(
+        user_id=current_user.id,
+        plan_code=payload.plan,
+        operation="stripe_subscription_upgrade",
+        request_id=request_id,
+    )
+    if rate_error is not None:
+        return rate_error
+
+    try:
+        upgrade_result = StripeCustomerPortalService.create_subscription_upgrade_payment(
+            db,
+            user_id=current_user.id,
+            target_plan=payload.plan,
+        )
+        _record_audit_event(
+            db,
+            request_id=request_id,
+            actor_user_id=current_user.id,
+            actor_role=current_user.role,
+            action="stripe_subscription_upgrade_payment_created",
+            target_type="user",
+            target_id=str(current_user.id),
+            status="success",
+            details={
+                "target_plan": payload.plan,
+                "amount_due_cents": upgrade_result.amount_due_cents,
+                "invoice_status": upgrade_result.invoice_status,
+            },
+        )
+        db.commit()
+        return {
+            "data": {
+                "checkout_url": upgrade_result.checkout_url,
+                "invoice_status": upgrade_result.invoice_status,
+                "amount_due_cents": upgrade_result.amount_due_cents,
+                "currency": upgrade_result.currency,
+            },
+            "meta": {"request_id": request_id},
+        }
+    except StripeCustomerPortalServiceError as error:
+        db.rollback()
+        try:
+            _record_audit_event(
+                db,
+                request_id=request_id,
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="stripe_subscription_upgrade_payment_failed",
+                target_type="user",
+                target_id=str(current_user.id),
+                status="failed",
+                details={"error_code": error.code, "target_plan": payload.plan},
             )
         except AuditWriteError:
             db.rollback()

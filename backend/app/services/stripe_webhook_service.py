@@ -7,6 +7,7 @@ import stripe
 from sqlalchemy.orm import Session
 
 from app.services.stripe_billing_profile_service import StripeBillingProfileService
+from app.services.stripe_customer_portal_service import StripeCustomerPortalService
 from app.services.stripe_webhook_idempotency_service import (
     StripeWebhookIdempotencyService,
 )
@@ -79,11 +80,13 @@ class StripeWebhookService:
             # afin de pouvoir rollback la logique métier mais committer le statut 'failed'
             # de l'événement idempotency en cas d'erreur.
             with db.begin_nested():
+                data_obj = event.data.object
                 user_id = StripeWebhookService._resolve_user_id(db, event)
 
                 # Dispatching vers la couche service si l'événement est supporté
                 if event_type in (
                     "checkout.session.completed",
+                    "checkout.session.async_payment_succeeded",
                     "customer.subscription.created",
                     "customer.subscription.updated",
                     "customer.subscription.deleted",
@@ -99,6 +102,26 @@ class StripeWebhookService:
                     "invoice.payment_failed",
                     "invoice.payment_action_required",
                 ):
+                    if event_type in {
+                        "checkout.session.completed",
+                        "checkout.session.async_payment_succeeded",
+                    } and StripeCustomerPortalService.is_subscription_upgrade_checkout_session(
+                        data_obj
+                    ):
+                        StripeCustomerPortalService.apply_paid_subscription_upgrade_checkout_session(
+                            db,
+                            session=data_obj,
+                        )
+                        logger.info(
+                            "stripe_webhook: processed upgrade checkout event_id=%s type=%s "
+                            "customer_id=%s outcome=processed",
+                            event_id,
+                            event_type,
+                            customer_id,
+                        )
+                        StripeWebhookIdempotencyService.mark_processed(db, event_id)
+                        return "processed"
+
                     if user_id is None:
                         logger.warning(
                             "stripe_webhook: user not resolved for event_id=%s type=%s "
@@ -156,6 +179,12 @@ class StripeWebhookService:
         Extrait l'ID client Stripe de l'événement si présent.
         """
         data_obj = event.data.object
+        if isinstance(data_obj, dict):
+            if event.type == "customer.updated":
+                customer_id = data_obj.get("id")
+                return customer_id if isinstance(customer_id, str) else None
+            customer_id = data_obj.get("customer")
+            return customer_id if isinstance(customer_id, str) else None
         if event.type == "customer.updated":
             return getattr(data_obj, "id", None)
         return getattr(data_obj, "customer", None)
@@ -169,7 +198,11 @@ class StripeWebhookService:
         data_obj = event.data.object
 
         if event_type == "checkout.session.completed":
-            client_ref = getattr(data_obj, "client_reference_id", None)
+            client_ref = (
+                data_obj.get("client_reference_id")
+                if isinstance(data_obj, dict)
+                else getattr(data_obj, "client_reference_id", None)
+            )
             if client_ref:
                 try:
                     return int(client_ref)
@@ -192,8 +225,13 @@ class StripeWebhookService:
             "invoice.paid",
             "invoice.payment_failed",
             "invoice.payment_action_required",
+            "checkout.session.async_payment_succeeded",
         ):
-            customer_id = getattr(data_obj, "customer", None)
+            customer_id = (
+                data_obj.get("customer")
+                if isinstance(data_obj, dict)
+                else getattr(data_obj, "customer", None)
+            )
             if customer_id:
                 profile = StripeBillingProfileService.get_by_stripe_customer_id(db, customer_id)
                 if profile:

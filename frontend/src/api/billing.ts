@@ -195,6 +195,12 @@ export function useChatEntitlementUsage() {
 
 export type StripeCheckoutSessionData = { checkout_url: string }
 export type StripePortalSessionData = { url: string }
+export type StripeSubscriptionUpgradeData = {
+  checkout_url: string | null
+  invoice_status: string | null
+  amount_due_cents: number
+  currency: string | null
+}
 
 async function postStripeCheckoutSession(plan: "basic" | "premium"): Promise<StripeCheckoutSessionData> {
   const response = await fetch(`${API_BASE_URL}/v1/billing/stripe-checkout-session`, {
@@ -263,6 +269,24 @@ async function postStripeSubscriptionReactivate(): Promise<BillingSubscriptionSt
   return body.data
 }
 
+async function postStripeSubscriptionUpgrade(
+  plan: "basic" | "premium",
+): Promise<StripeSubscriptionUpgradeData> {
+  const response = await fetch(`${API_BASE_URL}/v1/billing/stripe-subscription-upgrade`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAccessTokenAuthHeader(),
+    },
+    body: JSON.stringify({ plan }),
+  })
+  if (!response.ok) {
+    return parseError(response)
+  }
+  const body = (await response.json()) as { data: StripeSubscriptionUpgradeData }
+  return body.data
+}
+
 export function useStripeCheckoutSession() {
   return useMutation({
     mutationFn: postStripeCheckoutSession,
@@ -290,5 +314,11 @@ export function useStripePortalSubscriptionCancelSession() {
 export function useStripeSubscriptionReactivate() {
   return useMutation({
     mutationFn: postStripeSubscriptionReactivate,
+  })
+}
+
+export function useStripeSubscriptionUpgrade() {
+  return useMutation({
+    mutationFn: postStripeSubscriptionUpgrade,
   })
 }

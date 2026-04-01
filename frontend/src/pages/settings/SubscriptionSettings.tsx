@@ -7,6 +7,7 @@ import {
   useStripePortalSubscriptionCancelSession,
   useStripePortalSubscriptionUpdateSession,
   useStripeSubscriptionReactivate,
+  useStripeSubscriptionUpgrade,
   BillingApiError,
 } from "@api/billing"
 import { detectLang } from "@i18n/astrology"
@@ -127,7 +128,9 @@ export function SubscriptionSettings() {
 
   const [selectedPlanCode, setSelectedPlanCode] = useState<string | null | undefined>(undefined)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isPortalSyncPending, setIsPortalSyncPending] = useState(() => readPendingBillingPortalAction() !== null)
+  const [upgradeSyncTargetPlanCode, setUpgradeSyncTargetPlanCode] = useState<string | null>(null)
   const previousCommittedPlanCodeRef = useRef<string | null | undefined>(undefined)
 
   useEffect(() => {
@@ -194,6 +197,39 @@ export function SubscriptionSettings() {
     }
   }, [refetchSubscription, subscription?.cancel_at_period_end])
 
+  useEffect(() => {
+    if (!upgradeSyncTargetPlanCode) return
+
+    const targetPlanLabel =
+      PLANS.find((plan) => plan.code === upgradeSyncTargetPlanCode)?.label ?? upgradeSyncTargetPlanCode
+
+    if (currentPlanCode === upgradeSyncTargetPlanCode && stripeSubscriptionStatus === "active") {
+      setSuccessMessage(
+        t.upgradeApplied.replace("{{plan}}", targetPlanLabel),
+      )
+      setUpgradeSyncTargetPlanCode(null)
+      return
+    }
+
+    setSuccessMessage(
+      t.upgradeSyncPending.replace("{{plan}}", targetPlanLabel),
+    )
+    void refetchSubscription()
+
+    const intervalId = window.setInterval(() => {
+      void refetchSubscription()
+    }, BILLING_PORTAL_POLL_INTERVAL_MS)
+
+    const timeoutId = window.setTimeout(() => {
+      setUpgradeSyncTargetPlanCode(null)
+    }, BILLING_PORTAL_SYNC_WINDOW_MS)
+
+    return () => {
+      window.clearInterval(intervalId)
+      window.clearTimeout(timeoutId)
+    }
+  }, [PLANS, currentPlanCode, refetchSubscription, stripeSubscriptionStatus, t, upgradeSyncTargetPlanCode])
+
   const displaySelected = selectedPlanCode === undefined ? committedPlanCode : selectedPlanCode
   const isTrialUpgradeBlocked = isTrialingBasic && displaySelected === "premium"
 
@@ -202,6 +238,23 @@ export function SubscriptionSettings() {
   const portalCancelSession = useStripePortalSubscriptionCancelSession()
   const portalUpdateSession = useStripePortalSubscriptionUpdateSession()
   const reactivateSubscription = useStripeSubscriptionReactivate()
+  const upgradeSubscription = useStripeSubscriptionUpgrade()
+
+  const getPlanPriceCents = (planCode: string | null) => {
+    if (planCode === null) return 0
+    const plan = catalog?.find((entry) => entry.code === planCode)
+    return plan?.monthly_price_cents ?? 0
+  }
+
+  const currentPlanPriceCents = getPlanPriceCents(currentPlanCode)
+  const selectedPlanPriceCents = getPlanPriceCents(displaySelected)
+  const isUpgradeSyncPending = upgradeSyncTargetPlanCode !== null
+  const isImmediatePaidUpgrade =
+    stripeSubscriptionStatus === "active"
+    && !isCancellationAlreadyScheduled
+    && displaySelected !== null
+    && currentPlanCode !== null
+    && selectedPlanPriceCents > currentPlanPriceCents
 
   const handleValidate = () => {
     if (displaySelected === committedPlanCode) return
@@ -211,16 +264,19 @@ export function SubscriptionSettings() {
     if (!displaySelected && stripeSubscriptionStatus === null) return
 
     if (isTrialUpgradeBlocked) {
+      setSuccessMessage(null)
       setErrorMessage(t.trialBasicNotice)
       return
     }
 
     if (displaySelected === null && isCancellationAlreadyScheduled) {
+      setSuccessMessage(null)
       setErrorMessage(t.cancelAlreadyScheduled)
       return
     }
 
     setErrorMessage(null)
+    setSuccessMessage(null)
 
     const onError = (err: unknown) => {
       if (err instanceof BillingApiError) {
@@ -230,6 +286,10 @@ export function SubscriptionSettings() {
           setErrorMessage("Abonnement Stripe introuvable. Veuillez réessayer depuis la page de souscription.")
         } else if (err.code === "stripe_portal_subscription_update_not_allowed_for_trial") {
           setErrorMessage(t.trialBasicNotice)
+        } else if (err.code === "stripe_portal_subscription_update_no_change_options") {
+          setErrorMessage(
+            "La configuration Stripe ne permet pas encore de changer vers cet abonnement. Ajoutez les prix Basic et Premium dans la configuration du Customer Portal."
+          )
         } else {
           setErrorMessage(err.message || "Erreur lors de l'opération")
         }
@@ -284,6 +344,22 @@ export function SubscriptionSettings() {
         return
       }
 
+      if (isImmediatePaidUpgrade) {
+        if (upgradeSubscription.isPending) return
+        upgradeSubscription.mutate(displaySelected as "basic" | "premium", {
+          onSuccess: (data) => {
+            if (data.checkout_url) {
+              window.location.href = data.checkout_url
+              return
+            }
+            setUpgradeSyncTargetPlanCode(displaySelected)
+            void refetchSubscription()
+          },
+          onError,
+        })
+        return
+      }
+
       // Sinon flow portal update pour changement de plan payant
       if (portalUpdateSession.isPending) return
       portalUpdateSession.mutate(undefined, {
@@ -326,6 +402,8 @@ export function SubscriptionSettings() {
     || portalCancelSession.isPending
     || portalUpdateSession.isPending
     || reactivateSubscription.isPending
+    || upgradeSubscription.isPending
+  const isUiLocked = isAnyPending || isUpgradeSyncPending
   const hasChanges = displaySelected !== committedPlanCode
   const isCancelActionBlocked = displaySelected === null && isCancellationAlreadyScheduled
 
@@ -386,22 +464,22 @@ export function SubscriptionSettings() {
                     key={plan.code || "free"}
                     className={`subscription-plan-card ${isSelected ? 'subscription-plan-card--active' : ''} ${isFrozen ? 'subscription-plan-card--frozen' : ''}`}
                     onClick={() => {
-                      if (isAnyPending || isFrozen) return
+                      if (isUiLocked || isFrozen) return
                       setSelectedPlanCode(plan.code)
                     }}
                     role="button"
-                    tabIndex={isAnyPending || isFrozen ? -1 : 0}
+                    tabIndex={isUiLocked || isFrozen ? -1 : 0}
                     aria-pressed={isSelected}
-                    aria-disabled={isAnyPending || isFrozen}
+                    aria-disabled={isUiLocked || isFrozen}
                     onKeyDown={(event) => {
-                      if (isAnyPending || isFrozen) return
+                      if (isUiLocked || isFrozen) return
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault()
                         setSelectedPlanCode(plan.code)
                       }
                     }}
                     data-current-unselected={isCurrent && !isSelected}
-                    data-pending={isAnyPending}
+                    data-pending={isUiLocked}
                     data-frozen={isFrozen}
                   >
                     {isCurrent && !isSelected && (
@@ -435,6 +513,9 @@ export function SubscriptionSettings() {
             {errorMessage && (
               <p className="settings-save-feedback settings-save-feedback--error">{errorMessage}</p>
             )}
+            {!errorMessage && successMessage && (
+              <p className="settings-save-feedback settings-save-feedback--success">{successMessage}</p>
+            )}
             {!errorMessage && isTrialingBasic && (
               <p className="settings-save-feedback settings-save-feedback--saving">
                 {t.trialBasicNotice}
@@ -455,7 +536,7 @@ export function SubscriptionSettings() {
                 type="button"
                 className="settings-tab settings-tab--active subscription-actions__button"
                 onClick={handleValidate}
-                disabled={!hasChanges || isAnyPending || isTrialUpgradeBlocked || isCancelActionBlocked}
+                disabled={!hasChanges || isUiLocked || isTrialUpgradeBlocked || isCancelActionBlocked}
               >
                 {isAnyPending ? t.validating : isCancellationAlreadyScheduled ? t.reactivateSubscription : t.validatePlan}
               </button>

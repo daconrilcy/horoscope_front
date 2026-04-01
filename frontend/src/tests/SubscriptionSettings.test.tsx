@@ -11,6 +11,7 @@ const mockUseStripePortalSession = vi.fn()
 const mockUseStripePortalSubscriptionCancelSession = vi.fn()
 const mockUseStripePortalSubscriptionUpdateSession = vi.fn()
 const mockUseStripeSubscriptionReactivate = vi.fn()
+const mockUseStripeSubscriptionUpgrade = vi.fn()
 
 vi.mock("@api/billing", async (importActual) => {
   const actual = await importActual<typeof import("@api/billing")>()
@@ -23,6 +24,8 @@ vi.mock("@api/billing", async (importActual) => {
     useStripePortalSubscriptionCancelSession: () => mockUseStripePortalSubscriptionCancelSession(),
     useStripePortalSubscriptionUpdateSession: () => mockUseStripePortalSubscriptionUpdateSession(),
     useStripeSubscriptionReactivate: () => mockUseStripeSubscriptionReactivate(),
+    useStripeSubscriptionUpgrade: () =>
+      mockUseStripeSubscriptionUpgrade() ?? { isPending: false, mutate: vi.fn() },
   }
 })
 
@@ -35,6 +38,7 @@ afterEach(() => {
   mockUseStripePortalSubscriptionCancelSession.mockReset()
   mockUseStripePortalSubscriptionUpdateSession.mockReset()
   mockUseStripeSubscriptionReactivate.mockReset()
+  mockUseStripeSubscriptionUpgrade.mockReset()
   localStorage.clear()
   vi.restoreAllMocks()
 })
@@ -113,7 +117,7 @@ describe("SubscriptionSettings", () => {
     expect(["basic", "premium"]).toContain(calledWith)
   })
 
-  it("appelle useStripePortalSubscriptionUpdateSession quand l'abonnement Stripe est actif et qu'on change de plan", () => {
+  it("utilise le flow d'upgrade immédiat quand l'abonnement actif passe de basic à premium", () => {
     setupCatalogMock()
     const mutate = vi.fn()
 
@@ -132,8 +136,9 @@ describe("SubscriptionSettings", () => {
       isPending: false,
       mutate: vi.fn(),
     })
-    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
     mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripeSubscriptionUpgrade.mockReturnValue({ isPending: false, mutate })
 
     render(<SubscriptionSettings />)
 
@@ -144,6 +149,149 @@ describe("SubscriptionSettings", () => {
     fireEvent.click(validateButton)
 
     expect(mutate).toHaveBeenCalledWith(
+      "premium",
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    )
+  })
+
+  it("affiche un retour visible et bloque la double soumission quand l'upgrade est payé automatiquement", () => {
+    setupCatalogMock()
+    const refetch = vi.fn()
+    const mutate = vi.fn((_plan, options) => {
+      options?.onSuccess?.({
+        checkout_url: null,
+        invoice_status: "paid",
+        amount_due_cents: 2000,
+        currency: "eur",
+      })
+    })
+
+    let subscriptionData = {
+      status: "active",
+      subscription_status: "active",
+      plan: { code: "basic", display_name: "Basic", monthly_price_cents: 900, currency: "EUR", daily_message_limit: 50, is_active: true },
+      failure_reason: null,
+      current_quota: null,
+    }
+
+    mockUseBillingSubscription.mockImplementation(() => ({
+      isLoading: false,
+      data: subscriptionData,
+      refetch,
+    }))
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripeSubscriptionUpgrade.mockReturnValue({ isPending: false, mutate })
+
+    const { rerender } = render(<SubscriptionSettings />)
+
+    const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
+    fireEvent.click(premiumCard)
+
+    const validateButton = screen.getByRole("button", { name: /valider|validate/i })
+    fireEvent.click(validateButton)
+
+    expect(mutate).toHaveBeenCalledTimes(1)
+    expect(refetch).toHaveBeenCalled()
+    expect(
+      screen.getByText(/Paiement accepté\. Activation du plan Premium en cours|Payment accepted\. Activating the Premium plan/i),
+    ).toBeInTheDocument()
+    expect(validateButton).toBeDisabled()
+
+    fireEvent.click(validateButton)
+    expect(mutate).toHaveBeenCalledTimes(1)
+
+    subscriptionData = {
+      ...subscriptionData,
+      plan: { code: "premium", display_name: "Premium", monthly_price_cents: 2900, currency: "EUR", daily_message_limit: 1000, is_active: true },
+    }
+
+    rerender(<SubscriptionSettings />)
+
+    expect(
+      screen.getByText(/Le plan Premium est maintenant actif|The Premium plan is now active/i),
+    ).toBeInTheDocument()
+  })
+
+  it("redirige vers Checkout Stripe hébergé quand un paiement additionnel est requis", () => {
+    setupCatalogMock()
+    const mutate = vi.fn((_plan, options) => {
+      options?.onSuccess?.({
+        checkout_url: "https://checkout.stripe.com/pay/cs_123",
+        invoice_status: "open",
+        amount_due_cents: 1934,
+        currency: "eur",
+      })
+    })
+
+    mockUseBillingSubscription.mockReturnValue({
+      isLoading: false,
+      data: {
+        status: "active",
+        subscription_status: "active",
+        plan: { code: "basic", display_name: "Basic", monthly_price_cents: 900, currency: "EUR", daily_message_limit: 50, is_active: true },
+        failure_reason: null,
+      },
+    })
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripeSubscriptionUpgrade.mockReturnValue({ isPending: false, mutate })
+
+    render(<SubscriptionSettings />)
+
+    const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
+    fireEvent.click(premiumCard)
+
+    const validateButton = screen.getByRole("button", { name: /valider|validate/i })
+    fireEvent.click(validateButton)
+
+    expect(mutate).toHaveBeenCalledTimes(1)
+    expect(sessionStorage.getItem("billing_upgrade_pending_payment")).toBeNull()
+  })
+
+  it("conserve le portail subscription_update pour un downgrade actif premium vers basic", () => {
+    setupCatalogMock()
+    const updateMutate = vi.fn()
+
+    mockUseBillingSubscription.mockReturnValue({
+      isLoading: false,
+      data: {
+        status: "active",
+        subscription_status: "active",
+        plan: { code: "premium", display_name: "Premium", monthly_price_cents: 2900, currency: "EUR", daily_message_limit: 1000, is_active: true },
+        failure_reason: null,
+      },
+    })
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: updateMutate })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
+
+    render(<SubscriptionSettings />)
+
+    const basicCard = screen.getByText("Basic").closest('[role="button"]')!
+    fireEvent.click(basicCard)
+
+    const validateButton = screen.getByRole("button", { name: /valider|validate/i })
+    fireEvent.click(validateButton)
+
+    expect(updateMutate).toHaveBeenCalledWith(
       undefined,
       expect.objectContaining({ onSuccess: expect.any(Function) }),
     )
@@ -239,7 +387,7 @@ describe("SubscriptionSettings", () => {
       data: {
         status: "active",
         subscription_status: "active",
-        plan: { code: "basic", display_name: "Basic", monthly_price_cents: 900, currency: "EUR", daily_message_limit: 50, is_active: true },
+        plan: { code: "premium", display_name: "Premium", monthly_price_cents: 2900, currency: "EUR", daily_message_limit: 1000, is_active: true },
         failure_reason: null,
       },
     })
@@ -254,8 +402,8 @@ describe("SubscriptionSettings", () => {
 
     render(<SubscriptionSettings />)
 
-    const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
-    fireEvent.click(premiumCard)
+    const basicCard = screen.getByText("Basic").closest('[role="button"]')!
+    fireEvent.click(basicCard)
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })
     fireEvent.click(validateButton)

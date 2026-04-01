@@ -90,6 +90,17 @@ class Settings:
         return "strict"
 
     @staticmethod
+    def _parse_stripe_portal_validation_mode() -> str:
+        raw_mode = os.getenv("STRIPE_PORTAL_VALIDATION_MODE", "strict").strip().lower()
+        if raw_mode in {"strict", "warn", "off"}:
+            return raw_mode
+        logger.warning(
+            "stripe_portal_startup_validation_invalid_mode mode=%s fallback=strict",
+            raw_mode,
+        )
+        return "strict"
+
+    @staticmethod
     def _parse_stripe_payment_method_collection() -> str:
         value = os.getenv("STRIPE_PAYMENT_METHOD_COLLECTION", "always").strip().lower()
         if value in {"always", "if_required"}:
@@ -337,6 +348,7 @@ class Settings:
 
         # Feature Scope Validation Mode (Story 61.29)
         self.feature_scope_validation_mode = self._parse_feature_scope_validation_mode()
+        self.stripe_portal_validation_mode = self._parse_stripe_portal_validation_mode()
 
         # Story 61.30
         self.canonical_db_validation_mode = self._parse_canonical_db_validation_mode()

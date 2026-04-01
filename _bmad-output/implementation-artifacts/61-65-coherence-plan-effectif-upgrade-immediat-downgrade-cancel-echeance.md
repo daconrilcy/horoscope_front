@@ -369,6 +369,13 @@ claude-sonnet-4-6
 - [Post-validation fix 2026-03-31] La réactivation du plan courant ne repasse plus par le portail Stripe `subscription_update`. Un endpoint backend dédié retire directement l’annulation programmée sur la subscription active; le portail Stripe est conservé uniquement si l’utilisateur réactive en changeant de plan.
 - [Post-validation fix 2026-03-31] Le bug backend observé en dev (`TypeError: SubscriptionService.update() got an unexpected keyword argument 'cancel_at_period_end'`) a été corrigé en utilisant la signature SDK compatible `client.subscriptions.update(subscription_id, params={...})`.
 - [Post-validation fix 2026-03-31] La couverture backend/frontend vérifie désormais explicitement que sélectionner le plan courant en mode réactivation appelle le endpoint direct de réactivation, tandis qu’un changement vers un autre plan conserve le flow portail Stripe.
+- [Configuration fix 2026-03-31] Le Customer Portal Stripe a été conservé pour les downgrades, la résiliation et les changements administratifs, mais retiré du flux `basic -> premium` car il ne permet pas de garantir le comportement métier attendu de prorata immédiat avec confirmation de paiement cohérente sur un upgrade mensuel vers mensuel.
+- [Configuration fix 2026-03-31] Le backend expose désormais un flux d’upgrade immédiat dédié (`/v1/billing/stripe-subscription-upgrade`) basé sur l’API Stripe Subscription avec `billing_cycle_anchor=unchanged`, `proration_behavior=always_invoice` et `payment_behavior=pending_if_incomplete`. Les droits applicatifs restent webhook-first: aucun entitlement n’est muté de façon optimiste au clic.
+- [Configuration fix 2026-03-31] La validation de configuration du Customer Portal Stripe a été rendue configurable via `STRIPE_PORTAL_VALIDATION_MODE`. En local, le mode `warn` permet de démarrer l’application même si la configuration portail est incomplète, tout en journalisant clairement l’écart.
+- [UX fix 2026-03-31] Quand Stripe encaisse automatiquement le prorata sans redirection vers une page de paiement, `SubscriptionSettings` affiche maintenant un retour visible ("Paiement accepté..."), verrouille la double soumission pendant la synchronisation, puis confirme l’activation du nouveau plan dès que le webhook a convergé.
+- [Upgrade redesign 2026-04-01] Le flux `basic -> premium` a été sorti du Customer Portal et rebâti autour d’un `invoice preview` Stripe, puis d’un Checkout hébergé pour un paiement additionnel intermédiaire. L’abonnement n’est mis à jour vers `premium` qu’après succès du paiement Checkout via webhook.
+- [Upgrade redesign 2026-04-01] Le montant demandé au moment de l’upgrade correspond désormais uniquement au delta de prorata net du mois en cours: `prorata premium restant - crédit basic déjà payé`. Le calcul ne réutilise plus le `amount_due` global de la preview quand celui-ci inclut aussi la prochaine échéance `premium`.
+- [Upgrade redesign 2026-04-01] Le comportement cible validé est maintenant: facture historique `basic` conservée, paiement intermédiaire d’upgrade séparé dans Stripe, puis échéances futures en `premium`.
 
 ### File List
 
@@ -377,9 +384,16 @@ claude-sonnet-4-6
 - `backend/app/services/stripe_billing_profile_service.py`
 - `backend/app/tests/unit/test_stripe_billing_profile_service_61_65.py`
 - `backend/app/api/v1/routers/billing.py`
+- `backend/app/core/config.py`
 - `backend/app/services/stripe_customer_portal_service.py`
+- `backend/app/startup/stripe_portal_validation.py`
 - `backend/app/tests/unit/test_stripe_customer_portal_service.py`
+- `backend/app/tests/unit/test_stripe_portal_startup_validation.py`
+- `backend/app/tests/unit/test_stripe_webhook_service.py`
+- `backend/app/tests/integration/test_stripe_customer_portal_api.py`
 - `frontend/src/api/billing.ts`
+- `frontend/src/app/routes.tsx`
+- `frontend/src/i18n/billing.ts`
 - `frontend/src/i18n/settings.ts`
 - `frontend/src/pages/settings/Settings.css`
 - `frontend/src/pages/settings/SubscriptionSettings.tsx`

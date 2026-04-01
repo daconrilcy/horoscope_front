@@ -183,6 +183,8 @@ export const settingsTranslations = {
       cancelAlreadyScheduled: "La résiliation est déjà programmée pour votre prochaine échéance.",
       cancelScheduled: "Résiliation prévue le {{date}}",
       planChangeScheduled: "Passage à {{plan}} le {{date}}",
+      upgradeSyncPending: "Paiement accepté. Activation du plan {{plan}} en cours...",
+      upgradeApplied: "Le plan {{plan}} est maintenant actif.",
       cancelConfirmTitle: "Résilier l'abonnement",
       cancelConfirmDesc: "Votre accès restera actif jusqu'au {{date}}.",
       trialBasicNotice:
@@ -217,6 +219,8 @@ export const settingsTranslations = {
       cancelAlreadyScheduled: "Cancellation is already scheduled for your next renewal date.",
       cancelScheduled: "Cancellation scheduled for {{date}}",
       planChangeScheduled: "Change to {{plan}} on {{date}}",
+      upgradeSyncPending: "Payment accepted. Activating the {{plan}} plan...",
+      upgradeApplied: "The {{plan}} plan is now active.",
       cancelConfirmTitle: "Cancel subscription",
       cancelConfirmDesc: "Your access will remain active until {{date}}.",
       trialBasicNotice:
@@ -251,6 +255,8 @@ export const settingsTranslations = {
       cancelAlreadyScheduled: "La cancelación ya está programada para la próxima fecha de renovación.",
       cancelScheduled: "Cancelación programada para el {{date}}",
       planChangeScheduled: "Cambio a {{plan}} el {{date}}",
+      upgradeSyncPending: "Pago aceptado. Activación del plan {{plan}} en curso...",
+      upgradeApplied: "El plan {{plan}} ya está activo.",
       cancelConfirmTitle: "Cancelar suscripción",
       cancelConfirmDesc: "Tu acceso permanecerá activo hasta el {{date}}.",
       trialBasicNotice:
@@ -287,6 +293,8 @@ export const settingsTranslations = {
       cancelAlreadyScheduled: string
       cancelScheduled: string
       planChangeScheduled: string
+      upgradeSyncPending: string
+      upgradeApplied: string
       cancelConfirmTitle: string
       cancelConfirmDesc: string
       trialBasicNotice: string
