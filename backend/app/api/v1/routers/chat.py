@@ -29,6 +29,10 @@ from app.services.chat_guidance_service import (
 
 logger = logging.getLogger(__name__)
 
+CHAT_TEMPORARY_UNAVAILABLE_MESSAGE = (
+    "Je suis desole, je ne peux pas vous repondre pour l'instant. Revenez un peu plus tard."
+)
+
 
 class ResponseMeta(BaseModel):
     request_id: str
@@ -222,18 +226,22 @@ def send_chat_message(
         db.rollback()
         if error.code in {"llm_timeout", "llm_unavailable"}:
             status_code = 503
+            message = CHAT_TEMPORARY_UNAVAILABLE_MESSAGE
         elif error.code == "conversation_not_found":
             status_code = 404
+            message = error.message
         elif error.code == "conversation_forbidden":
             status_code = 403
+            message = error.message
         else:
             status_code = 422
+            message = error.message
         return JSONResponse(
             status_code=status_code,
             content={
                 "error": {
                     "code": error.code,
-                    "message": error.message,
+                    "message": message,
                     "details": error.details,
                     "request_id": request_id,
                 }

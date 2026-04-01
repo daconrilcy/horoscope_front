@@ -573,8 +573,8 @@ describe("ChatPage", () => {
         ...baseSendMessageState,
         isError: true,
         error: {
-          code: "server_error",
-          message: "Erreur serveur",
+          code: "llm_unavailable",
+          message: "llm provider is unavailable",
           details: {},
         },
       })
@@ -593,7 +593,11 @@ describe("ChatPage", () => {
 
       renderWithRouter("/chat/42")
 
-      expect(screen.getByText("Erreur: Erreur serveur")).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          "Je suis désolé, je ne peux pas vous répondre pour l'instant. Revenez un peu plus tard."
+        )
+      ).toBeInTheDocument()
     })
 
     it("shows quota blocked message", () => {

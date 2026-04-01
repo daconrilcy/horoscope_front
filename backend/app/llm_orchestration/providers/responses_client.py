@@ -57,7 +57,9 @@ class ResponsesClient:
     def _to_typed_content_blocks(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Convert simple role/content messages to typed content blocks required by GPT-5.
-        Format: {"role": "...", "content": [{"type": "input_text", "text": "..."}]}
+        Format:
+        - user/system/developer -> {"type": "input_text", "text": "..."}
+        - assistant -> {"type": "output_text", "text": "..."}
 
         Idempotent: if content is already a list (typed blocks), returns as-is.
         Preserves all extra fields present on the message dict.
@@ -66,7 +68,8 @@ class ResponsesClient:
         for msg in messages:
             content = msg.get("content", "")
             if isinstance(content, str):
-                result.append({**msg, "content": [{"type": "input_text", "text": content}]})
+                block_type = "output_text" if msg.get("role") == "assistant" else "input_text"
+                result.append({**msg, "content": [{"type": block_type, "text": content}]})
             else:
                 result.append(msg)
         return result

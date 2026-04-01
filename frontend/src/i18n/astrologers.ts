@@ -209,6 +209,11 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Retry",
     es: "Reintentar",
   },
+  chat_service_unavailable: {
+    fr: "Je suis désolé, je ne peux pas vous répondre pour l'instant. Revenez un peu plus tard.",
+    en: "I am sorry, I cannot answer right now. Please come back a little later.",
+    es: "Lo siento, no puedo responderle por ahora. Vuelva un poco más tarde.",
+  },
   chat_quota_exhausted: {
     fr: "Votre quota quotidien est épuisé. Revenez demain ou changez de plan.",
     en: "Your daily quota is exhausted. Come back tomorrow or change your plan.",

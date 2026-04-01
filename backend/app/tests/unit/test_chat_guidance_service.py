@@ -1,4 +1,5 @@
 from datetime import date
+from types import SimpleNamespace
 
 import pytest
 from sqlalchemy import delete
@@ -153,6 +154,27 @@ class OffScopeThenRetryOnceRecoveredGenerator:
         return "Reponse retry_once pertinente"
 
 
+def test_extract_assistant_text_prefers_structured_output_message() -> None:
+    gateway_result = SimpleNamespace(
+        structured_output={"message": "Réponse astrologue propre", "confidence": 0.8},
+        raw_output='{"message":"Réponse fallback"}',
+    )
+
+    assert (
+        ChatGuidanceService._extract_assistant_text(gateway_result)
+        == "Réponse astrologue propre"
+    )
+
+
+def test_extract_assistant_text_reads_json_message_from_raw_output() -> None:
+    gateway_result = SimpleNamespace(
+        structured_output=None,
+        raw_output='{"message":"Réponse parsée","suggestedreplies":["A","B"]}',
+    )
+
+    assert ChatGuidanceService._extract_assistant_text(gateway_result) == "Réponse parsée"
+
+
 def test_send_message_success_creates_user_and_assistant_messages() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
@@ -179,6 +201,60 @@ def test_send_message_success_creates_user_and_assistant_messages() -> None:
     assert len(reply.context.message_ids) == 1
     assert len(generator.messages_list) == 1
     assert any("climat" in m["content"].lower() for m in generator.messages_list[0])
+
+
+def test_send_message_normalizes_structured_chat_json_before_persisting(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _cleanup_tables()
+    user_id = _create_user_id()
+
+    async def _structured_chat_reply(*args, **kwargs):
+        return SimpleNamespace(
+            raw_output=(
+                '{"message":"Réponse astrologue formatée",'
+                '"suggested_replies":["Suite 1"],"intent":"offer_event_guidance",'
+                '"confidence":0.66,"safety_notes":[]}'
+            ),
+            structured_output={
+                "message": "Réponse astrologue formatée",
+                "suggested_replies": ["Suite 1"],
+                "intent": "offer_event_guidance",
+                "confidence": 0.66,
+                "safety_notes": [],
+            },
+            usage=SimpleNamespace(input_tokens=10, output_tokens=20),
+            meta=SimpleNamespace(model="gpt-5-nano"),
+            request_id="req-structured-chat",
+        )
+
+    monkeypatch.setattr(
+        "app.services.chat_guidance_service.AIEngineAdapter.generate_chat_reply",
+        _structured_chat_reply,
+    )
+    monkeypatch.setattr(
+        "app.services.chat_guidance_service.ChatGuidanceService._record_tokens",
+        lambda *args, **kwargs: None,
+    )
+
+    with SessionLocal() as db:
+        reply = ChatGuidanceService.send_message(
+            db=db,
+            user_id=user_id,
+            message="Est-ce que ma soirée va bien se passer ?",
+        )
+        db.commit()
+
+    assert reply.assistant_message.content == "Réponse astrologue formatée"
+    with SessionLocal() as db:
+        stored_assistant = (
+            db.query(ChatMessageModel)
+            .filter(ChatMessageModel.role == "assistant")
+            .order_by(ChatMessageModel.id.desc())
+            .first()
+        )
+        assert stored_assistant is not None
+        assert stored_assistant.content == "Réponse astrologue formatée"
 
 
 def test_send_message_first_turn_uses_minimal_opening_context() -> None:

@@ -14,23 +14,26 @@ def test_to_typed_content_blocks_converts_strings():
     messages = [
         {"role": "system", "content": "Instruction"},
         {"role": "user", "content": "Question"},
+        {"role": "assistant", "content": "Reponse precedente"},
     ]
     typed = ResponsesClient._to_typed_content_blocks(messages)
 
-    assert len(typed) == 2
+    assert len(typed) == 3
     assert typed[0]["role"] == "system"
     assert typed[0]["content"] == [{"type": "input_text", "text": "Instruction"}]
     assert typed[1]["role"] == "user"
     assert typed[1]["content"] == [{"type": "input_text", "text": "Question"}]
+    assert typed[2]["role"] == "assistant"
+    assert typed[2]["content"] == [{"type": "output_text", "text": "Reponse precedente"}]
 
 
 def test_to_typed_content_blocks_idempotent():
     """Si content est déjà une liste de typed blocks, il n'est pas re-converti."""
     already_typed = [
-        {"role": "developer", "content": [{"type": "input_text", "text": "Already typed"}]}
+        {"role": "assistant", "content": [{"type": "output_text", "text": "Already typed"}]}
     ]
     result = ResponsesClient._to_typed_content_blocks(already_typed)
-    assert result[0]["content"] == [{"type": "input_text", "text": "Already typed"}]
+    assert result[0]["content"] == [{"type": "output_text", "text": "Already typed"}]
 
 
 def test_to_typed_content_blocks_preserves_extra_fields():

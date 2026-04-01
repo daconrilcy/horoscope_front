@@ -50,7 +50,6 @@ from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
 from app.services.chat_guidance_service import ChatGuidanceServiceError
 from app.services.llm_token_usage_service import LlmTokenUsageService
-from app.services.quota_usage_service import QuotaExhaustedError
 
 client = TestClient(app)
 
@@ -494,7 +493,9 @@ def test_chat_enforcement_uses_updated_limit_after_plan_change() -> None:
     chat_ent = next(
         f for f in ent.json()["data"]["features"] if f["feature_code"] == "astrologer_chat"
     )
-    month_state = next(state for state in chat_ent["usage_states"] if state["period_unit"] == "month")
+    month_state = next(
+        state for state in chat_ent["usage_states"] if state["period_unit"] == "month"
+    )
     assert month_state["quota_limit"] == 1000000
     assert month_state["used"] > 0
 
@@ -609,6 +610,10 @@ def test_send_chat_message_unavailable_returns_503(monkeypatch: object) -> None:
     )
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "llm_unavailable"
+    assert (
+        response.json()["error"]["message"]
+        == "Je suis desole, je ne peux pas vous repondre pour l'instant. Revenez un peu plus tard."
+    )
 
 
 def test_send_chat_message_invalid_context_config_returns_422(
@@ -1060,5 +1065,7 @@ def test_send_chat_message_rolls_back_partial_canonical_consumption() -> None:
 
     # Verify that the message was NOT saved due to transaction rollback
     with SessionLocal() as db:
-        msg = db.scalar(select(ChatMessageModel).where(ChatMessageModel.content == "Question rollback"))
+        msg = db.scalar(
+            select(ChatMessageModel).where(ChatMessageModel.content == "Question rollback")
+        )
         assert msg is None

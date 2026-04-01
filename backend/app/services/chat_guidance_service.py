@@ -8,12 +8,13 @@ context building, AI Engine calls, and off-scope recovery.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import urllib.parse
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from time import monotonic
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any
 
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -38,9 +39,8 @@ from app.services.llm_token_usage_service import LlmTokenUsageService
 from app.services.natal_interpretation_service import _detect_degraded_mode, build_chat_natal_hint
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
-    UserBirthProfileServiceError,
 )
-from app.services.user_natal_chart_service import UserNatalChartService, UserNatalChartServiceError
+from app.services.user_natal_chart_service import UserNatalChartService
 
 logger = logging.getLogger(__name__)
 
@@ -165,6 +165,35 @@ class ChatGuidanceService:
 
     _off_scope_events = 0
     _recovery_success_events = 0
+
+    @staticmethod
+    def _extract_assistant_text(gateway_result: Any) -> str:
+        """Normalize chat output so the UI never receives raw structured JSON."""
+        structured_output = getattr(gateway_result, "structured_output", None)
+        if isinstance(structured_output, dict):
+            message = structured_output.get("message")
+            if isinstance(message, str) and message.strip():
+                return message.strip()
+
+        raw_output = getattr(gateway_result, "raw_output", "")
+        if not isinstance(raw_output, str):
+            return str(raw_output)
+
+        raw_output = raw_output.strip()
+        if not raw_output:
+            return raw_output
+
+        try:
+            parsed = json.loads(raw_output)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return raw_output
+
+        if isinstance(parsed, dict):
+            message = parsed.get("message")
+            if isinstance(message, str) and message.strip():
+                return message.strip()
+
+        return raw_output
 
     @classmethod
     def reset_quality_kpis(cls) -> None:
@@ -309,7 +338,7 @@ class ChatGuidanceService:
 
         Tente successivement reformulation, retry, puis fallback sécurisé.
         """
-        assistant_content = gateway_result.raw_output
+        assistant_content = ChatGuidanceService._extract_assistant_text(gateway_result)
         off_scope_detected, off_scope_score, off_scope_reason = (
             ChatGuidanceService._assess_off_scope(assistant_content)
         )
@@ -373,7 +402,7 @@ class ChatGuidanceService:
                 entitlement_result=entitlement_result,
             )
 
-            reformulated = recovery_result.raw_output
+            reformulated = ChatGuidanceService._extract_assistant_text(recovery_result)
             reformulate_off_scope, _, _ = ChatGuidanceService._assess_off_scope(reformulated)
             if not reformulate_off_scope:
                 ChatGuidanceService._recovery_success_events += 1
@@ -432,7 +461,7 @@ class ChatGuidanceService:
                 entitlement_result=entitlement_result,
             )
 
-            retried = recovery_result.raw_output
+            retried = ChatGuidanceService._extract_assistant_text(recovery_result)
             retry_off_scope, _, _ = ChatGuidanceService._assess_off_scope(retried)
             if not retry_off_scope:
                 ChatGuidanceService._recovery_success_events += 1
@@ -552,12 +581,21 @@ class ChatGuidanceService:
         """Récupère l'ID du persona par défaut (Astrologue Standard)."""
         from app.infra.db.models.llm_persona import LlmPersonaModel
 
-        stmt = select(LlmPersonaModel.id).where(LlmPersonaModel.name == "Astrologue Standard").limit(1)
+        stmt = (
+            select(LlmPersonaModel.id)
+            .where(LlmPersonaModel.name == "Astrologue Standard")
+            .limit(1)
+        )
         persona_id = db.scalar(stmt)
         if persona_id:
             return persona_id
 
-        stmt = select(LlmPersonaModel.id).where(LlmPersonaModel.enabled).order_by(LlmPersonaModel.created_at).limit(1)
+        stmt = (
+            select(LlmPersonaModel.id)
+            .where(LlmPersonaModel.enabled)
+            .order_by(LlmPersonaModel.created_at)
+            .limit(1)
+        )
         persona_id = db.scalar(stmt)
         if persona_id:
             return persona_id
@@ -609,7 +647,12 @@ class ChatGuidanceService:
         if persona:
             return persona
 
-        stmt = select(LlmPersonaModel).where(LlmPersonaModel.enabled).order_by(LlmPersonaModel.created_at).limit(1)
+        stmt = (
+            select(LlmPersonaModel)
+            .where(LlmPersonaModel.enabled)
+            .order_by(LlmPersonaModel.created_at)
+            .limit(1)
+        )
         persona = db.scalar(stmt)
         if persona:
             return persona
@@ -768,15 +811,20 @@ class ChatGuidanceService:
             1.0,
         )
         window_messages, max_characters = ChatGuidanceService._validate_context_config()
-        recent_messages = repo.get_recent_messages(conversation_id=conversation.id, limit=window_messages)
+        recent_messages = repo.get_recent_messages(
+            conversation_id=conversation.id,
+            limit=window_messages,
+        )
 
         selected: list[tuple[int, str, str]] = []
         total_chars = 0
-        # If user_message_id is NOT None, the message is already in DB and might be in recent_messages
+        # If user_message_id is NOT None, the message is already in DB and might
+        # be in recent_messages.
         # If user_message_id IS None, it's not in DB yet.
         in_db = any(m.id == user_message_id for m in recent_messages) if user_message_id else False
 
-        # If not in DB, we will add 1 message (the current one), so we only take window_messages - 1 from history
+        # If not in DB, we will add 1 message (the current one), so we only take
+        # window_messages - 1 from history.
         history_limit = window_messages if in_db else window_messages - 1
         
         # Take the LATEST messages from the history
@@ -801,8 +849,12 @@ class ChatGuidanceService:
             msg_count = len(selected)
             char_count = total_chars
 
+        message_ids = [item[0] for item in selected]
+        if not in_db:
+            message_ids = [*message_ids, 0]
+
         context_metadata = ChatContextMetadata(
-            message_ids=[item[0] for item in selected] if in_db else [item[0] for item in selected] + [0], # dummy ID for now
+            message_ids=message_ids,  # dummy current-turn ID until the user message exists
             message_count=msg_count,
             context_characters=char_count,
             prompt_version=settings.chat_prompt_version,
@@ -823,7 +875,10 @@ class ChatGuidanceService:
             )
             if not is_first_user_turn:
                 natal_chart = UserNatalChartService.get_latest_for_user(db, user_id=user_id)
-                natal_summary = build_chat_natal_hint(natal_chart.result, _detect_degraded_mode(birth_profile))
+                natal_summary = build_chat_natal_hint(
+                    natal_chart.result,
+                    _detect_degraded_mode(birth_profile),
+                )
         except Exception:
             pass
 
@@ -833,8 +888,14 @@ class ChatGuidanceService:
 
         context: dict[str, str | None] = {
             "persona_name": persona.name,
-            "persona_tone": str(persona.tone.value) if hasattr(persona.tone, "value") else str(persona.tone),
-            "persona_verbosity": str(persona.verbosity.value) if hasattr(persona.verbosity, "value") else str(persona.verbosity),
+            "persona_tone": (
+                str(persona.tone.value) if hasattr(persona.tone, "value") else str(persona.tone)
+            ),
+            "persona_verbosity": (
+                str(persona.verbosity.value)
+                if hasattr(persona.verbosity, "value")
+                else str(persona.verbosity)
+            ),
             "persona_style_markers": style_markers_str or None,
             "persona_boundaries": boundaries_str or None,
             "conversation_id": str(conversation.id),
@@ -948,7 +1009,11 @@ class ChatGuidanceService:
                 )
             except (AIEngineAdapterError, TimeoutError, ConnectionError) as err:
                 last_error_code, last_error_message = map_adapter_error_to_codes(err)
-                logger.warning("chat_generation_error request_id=%s code=%s", request_id, last_error_code)
+                logger.warning(
+                    "chat_generation_error request_id=%s code=%s",
+                    request_id,
+                    last_error_code,
+                )
 
         raise ChatGuidanceServiceError(
             code=last_error_code,
@@ -985,7 +1050,10 @@ class ChatGuidanceService:
                 conversation_id=c.id,
                 persona_id=c.persona_id,
                 persona_name=p_name,
-                avatar_url=f"https://api.dicebear.com/7.x/bottts/svg?seed={urllib.parse.quote(p_name or 'default')}",
+                avatar_url=(
+                    "https://api.dicebear.com/7.x/bottts/svg"
+                    f"?seed={urllib.parse.quote(p_name or 'default')}"
+                ),
                 status=c.status,
                 updated_at=c.updated_at,
                 last_message_at=last_message_at,
@@ -1008,7 +1076,10 @@ class ChatGuidanceService:
         persona_id: uuid.UUID,
     ) -> int:
         repo = ChatRepository(db)
-        conversation = repo.get_or_create_active_conversation(user_id=user_id, persona_id=persona_id)
+        conversation = repo.get_or_create_active_conversation(
+            user_id=user_id,
+            persona_id=persona_id,
+        )
         return conversation.id
 
     @staticmethod

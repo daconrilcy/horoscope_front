@@ -32,6 +32,17 @@ type ChatWindowProps = {
   onBack?: () => void
 }
 
+function resolveDisplayedErrorMessage(error: Error, lang: "fr" | "en" | "es"): string {
+  const chatErrorCode =
+    "code" in error && typeof error.code === "string" ? error.code : null
+
+  if (chatErrorCode === "llm_unavailable" || chatErrorCode === "llm_timeout") {
+    return t("chat_service_unavailable", lang)
+  }
+
+  return `${t("chat_error_prefix", lang)}: ${error.message}`
+}
+
 export function ChatWindow({
   messages,
   onSendMessage,
@@ -147,7 +158,7 @@ export function ChatWindow({
 
       {error && (
         <div className="chat-window-error" role="alert">
-          <p>{t("chat_error_prefix", lang)}: {error.message}</p>
+          <p>{resolveDisplayedErrorMessage(error, lang)}</p>
           {onRetry && (
             <button type="button" onClick={onRetry}>
               {t("chat_retry", lang)}

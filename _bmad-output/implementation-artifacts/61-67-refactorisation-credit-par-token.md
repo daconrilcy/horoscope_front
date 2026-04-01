@@ -407,6 +407,9 @@ Corrections apportées à la story d'origine:
 - Revue codex appliquée: correction du billing des retries de guidance.
 - Revue codex appliquée: ajout du rate limiting sur `GET /v1/billing/token-usage`.
 - Revue codex appliquée: réalignement de la story avec l'état réel de l'implémentation.
+- **[Chat GPT-5 Fix]** Le provider `Responses` sérialise désormais l'historique assistant avec des blocs `output_text` au lieu de `input_text`, ce qui corrige les `400 invalid_value` sur les tours suivants de `chat_astrologer`.
+- **[Chat UX Fix]** Les erreurs temporaires du provider LLM sont maintenant remappées vers un message métier astrologue côté backend et frontend, au lieu d'exposer `llm provider is unavailable` dans l'interface.
+- **[Chat Output Fix]** `chat_guidance_service.py` normalise désormais les réponses structurées du chat en extrayant `structured_output.message` ou `raw_output.message` avant persistance, ce qui évite l'affichage de blobs JSON dans la conversation.
 - **[Code Review Fix]** `current_datetime` manquant dans le contexte passé au LLM Gateway dans `chat_guidance_service.py` — champ requis par le template de prompt, provoquait une erreur `prompt_render_error` renvoyant HTTP 422 dans 2 tests d'intégration critiques (`test_secret_rotation_*`).
 - **[Code Review Fix]** Compteurs de monitoring persona (`conversation_messages_total|persona_profile=xxx`) manquants dans `chat_guidance_service.py` — le chat n'émettait pas de metric tagué par persona, rendant la métrique `persona-kpis.messages_total` toujours à 1 alors que chat + guidance avaient eu lieu. Aligné sur le pattern de `guidance_service.py` avec `PersonaConfigService.get_active()`.
 - **[Stability Fix]** L'écriture observability `llm_call_logs` est maintenant isolée dans une transaction imbriquée dans `observability_service.py` pour éviter qu'un rollback best-effort n'annule la transaction métier principale du chat/guidance.
@@ -428,6 +431,7 @@ Corrections apportées à la story d'origine:
 - `backend/app/api/v1/routers/consultations.py`
 - `backend/app/api/v1/routers/support.py`
 - `backend/app/main.py`
+- `backend/app/llm_orchestration/providers/responses_client.py`
 - `backend/app/infra/db/models/__init__.py`
 - `backend/app/infra/db/models/token_usage_log.py`
 - `backend/app/services/ai_engine_adapter.py`
@@ -454,9 +458,11 @@ Corrections apportées à la story d'origine:
 - `backend/app/llm_orchestration/tests/test_observability.py`
 - `backend/app/tests/unit/test_ai_engine_adapter.py`
 - `backend/app/tests/unit/test_chat_entitlement_gate.py`
+- `backend/app/tests/unit/test_chat_guidance_service.py`
 - `backend/app/tests/unit/test_ops_monitoring_service.py`
 - `backend/app/tests/unit/test_quota_usage_service.py`
 - `backend/app/tests/unit/test_quota_window_resolver.py`
+- `backend/app/tests/unit/test_responses_client_gpt5.py`
 - `backend/app/tests/unit/test_chat_entitlement_gate_v2.py`
 - `backend/app/tests/unit/test_natal_chart_long_entitlement_gate_v2.py`
 - `backend/app/tests/unit/test_product_entitlements_models.py`
@@ -465,7 +471,11 @@ Corrections apportées à la story d'origine:
 - `backend/migrations/versions/d86bb999566a_add_user_token_usage_logs.py`
 - `backend/scripts/seed_product_entitlements.py`
 - `frontend/src/api/billing.ts`
+- `frontend/src/features/chat/components/ChatWindow.tsx`
+- `frontend/src/i18n/astrologers.ts`
 - `frontend/src/i18n/settings.ts`
 - `frontend/src/pages/settings/Settings.css`
 - `frontend/src/pages/settings/UsageSettings.tsx`
+- `frontend/src/tests/ChatPage.test.tsx`
+- `frontend/src/tests/chat/ChatComponents.test.tsx`
 - `frontend/src/tests/UsageSettings.test.tsx`

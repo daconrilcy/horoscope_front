@@ -539,6 +539,29 @@ describe("ChatWindow", () => {
     expect(onRetry).toHaveBeenCalledTimes(1)
   })
 
+  it("renders a user-friendly astrologer message for temporary provider outages", () => {
+    const onSendMessage = vi.fn()
+    const providerError = new Error("llm provider is unavailable") as Error & {
+      code: string
+    }
+    providerError.code = "llm_unavailable"
+
+    render(
+      <ChatWindow
+        messages={baseMessages}
+        onSendMessage={onSendMessage}
+        error={providerError}
+      />
+    )
+
+    expect(
+      screen.getByText(
+        "Je suis désolé, je ne peux pas vous répondre pour l'instant. Revenez un peu plus tard."
+      )
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/Erreur:/)).not.toBeInTheDocument()
+  })
+
   it("renders quota blocked message", () => {
     const onSendMessage = vi.fn()
     render(
