@@ -1,17 +1,39 @@
 from __future__ import annotations
 
+from collections.abc import Generator
+
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
+from sqlalchemy import create_engine, delete
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
+from app.infra.db.session import get_db_session
 from app.main import app
 from app.services.auth_service import AuthService
 
+engine = create_engine(
+    "sqlite:///:memory:",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+    future=True,
+)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
 client = TestClient(app)
+
+
+def _override_db_session() -> Generator[Session, None, None]:
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+app.dependency_overrides[get_db_session] = _override_db_session
 
 
 def _cleanup_tables():

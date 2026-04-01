@@ -232,6 +232,69 @@ def _ensure_consultation_templates_seeded() -> None:
         logger.error("consultation_templates_auto_seed_failed error=%s", e)
 
 
+def _ensure_canonical_entitlements_seeded() -> None:
+    """Auto-heal canonical entitlements locally before strict startup validation."""
+    if settings.app_env in {"production", "prod"}:
+        return
+
+    from sqlalchemy.exc import OperationalError
+
+    from app.infra.db.models.product_entitlements import FeatureCatalogModel
+    from app.infra.db.session import SessionLocal
+    from app.services.feature_scope_registry import FEATURE_SCOPE_REGISTRY
+    from scripts.seed_product_entitlements import seed as seed_product_entitlements
+
+    def _missing_feature_codes() -> set[str]:
+        with SessionLocal() as db:
+            existing = {row.feature_code for row in db.query(FeatureCatalogModel).all()}
+        return set(FEATURE_SCOPE_REGISTRY) - existing
+
+    try:
+        missing_codes = _missing_feature_codes()
+    except OperationalError as error:
+        is_local_dev = settings.app_env in {"development", "dev", "local"}
+        if not is_local_dev or not settings._is_local_sqlite_database_url(settings.database_url):
+            raise
+        logger.warning("canonical_entitlements_local_sqlite_repair error=%s", error)
+        ensure_local_sqlite_schema_ready()
+        missing_codes = _missing_feature_codes()
+
+    if not missing_codes:
+        return
+
+    logger.warning(
+        "canonical_entitlements_auto_heal missing_features=%s",
+        ",".join(sorted(missing_codes)),
+    )
+    seed_product_entitlements()
+
+    with SessionLocal() as db:
+        for feature_code in sorted(missing_codes):
+            if feature_code != "b2b_api_access":
+                continue
+            feature = (
+                db.query(FeatureCatalogModel)
+                .filter(FeatureCatalogModel.feature_code == feature_code)
+                .one_or_none()
+            )
+            if feature is None:
+                db.add(
+                    FeatureCatalogModel(
+                        feature_code=feature_code,
+                        feature_name="B2B API Access",
+                        description="Acces volumetrique a l API astrologique entreprise",
+                        is_metered=True,
+                        is_active=True,
+                    )
+                )
+            else:
+                feature.feature_name = "B2B API Access"
+                feature.description = "Acces volumetrique a l API astrologique entreprise"
+                feature.is_metered = True
+                feature.is_active = True
+        db.commit()
+
+
 @asynccontextmanager
 async def _app_lifespan(_: FastAPI):
     ensure_local_sqlite_schema_ready()
@@ -255,6 +318,7 @@ async def _app_lifespan(_: FastAPI):
         except (EphemerisDataMissingError, SwissEphInitError):
             # Error stored in ephemeris module state; accurate endpoints return 5xx.
             pass
+    _ensure_canonical_entitlements_seeded()
     _ensure_llm_registry_seeded()
     _ensure_consultation_templates_seeded()
 

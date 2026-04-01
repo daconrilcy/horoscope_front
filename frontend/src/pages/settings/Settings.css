@@ -1,23 +1,25 @@
 .settings-container {
   /* Palette — miroir du profil astrologue, accent violet au lieu du bleu */
-  --settings-purple:        #866cd0;          /* = var(--primary) de l'app */
-  --settings-purple-soft:   rgba(134, 108, 208, 0.12);
+  --settings-purple: #866cd0;
+  /* = var(--primary) de l'app */
+  --settings-purple-soft: rgba(134, 108, 208, 0.12);
   --settings-purple-border: rgba(134, 108, 208, 0.28);
-  --settings-gold:          #d59a39;          /* = --profile-gold */
-  --settings-gold-soft:     rgba(213, 154, 57, 0.16);
-  --settings-gold-border:   rgba(213, 154, 57, 0.28);
+  --settings-gold: #d59a39;
+  /* = --profile-gold */
+  --settings-gold-soft: rgba(213, 154, 57, 0.16);
+  --settings-gold-border: rgba(213, 154, 57, 0.28);
 
   /* Cards — copié de AstrologerProfilePage.css */
-  --settings-card-surface:        rgba(255, 255, 255, 0.62);
+  --settings-card-surface: rgba(255, 255, 255, 0.62);
   --settings-card-surface-strong: rgba(255, 255, 255, 0.76);
-  --settings-card-border:         rgba(205, 217, 240, 0.72);
-  --settings-card-shadow:         0 22px 60px rgba(132, 150, 190, 0.16);
-  --settings-card-shadow-soft:    0 16px 42px rgba(132, 150, 190, 0.12);
+  --settings-card-border: rgba(205, 217, 240, 0.72);
+  --settings-card-shadow: 0 22px 60px rgba(132, 150, 190, 0.16);
+  --settings-card-shadow-soft: 0 16px 42px rgba(132, 150, 190, 0.12);
 
   /* Texte — copié de AstrologerProfilePage.css */
   --settings-text-heading: #24334d;
-  --settings-text-body:    #4f5f78;
-  --settings-text-muted:   #7f8da4;
+  --settings-text-body: #4f5f78;
+  --settings-text-muted: #7f8da4;
 
   /* Layout */
   position: relative;
@@ -56,7 +58,8 @@
 }
 
 .settings-noise {
-  opacity: 0.028;                /* = même opacité que profile-noise */
+  opacity: 0.028;
+  /* = même opacité que profile-noise */
   mix-blend-mode: soft-light;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.58' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 }
@@ -64,15 +67,17 @@
 .settings-card {
   background: var(--settings-card-surface-strong);
   border: 1px solid var(--settings-card-border);
-  border-radius: 26px;                           /* = profile cards */
+  border-radius: 26px;
+  /* = profile cards */
   box-shadow: var(--settings-card-shadow);
-  backdrop-filter: blur(16px);                   /* = profile blur */
+  backdrop-filter: blur(16px);
+  /* = profile blur */
   padding: 28px 32px;
   position: relative;
   z-index: 1;
 }
 
-.settings-card + .settings-card {
+.settings-card+.settings-card {
   margin-top: 20px;
 }
 
@@ -94,7 +99,8 @@
   margin: 0 0 18px;
   color: var(--settings-text-heading);
   font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
-  font-size: clamp(1.6rem, 2.2vw, 2rem);         /* légèrement plus petit que profil */
+  font-size: clamp(1.6rem, 2.2vw, 2rem);
+  /* légèrement plus petit que profil */
   line-height: 1.05;
   font-weight: 600;
   display: flex;
@@ -118,7 +124,8 @@
   position: absolute;
   left: 0;
   bottom: 0;
-  width: 46px;                                   /* = profile-section-title--underlined */
+  width: 46px;
+  /* = profile-section-title--underlined */
   height: 3px;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--settings-purple) 0%, rgba(134, 108, 208, 0.4) 100%);
@@ -151,10 +158,14 @@
   align-items: center;
   min-height: 42px;
   padding: 0 20px;
-  border-radius: 999px;                          /* = profile-back-btn */
-  border: 1px solid rgba(197, 211, 233, 0.86);   /* = profile-back-btn */
-  background: rgba(255, 255, 255, 0.68);         /* = profile-back-btn */
-  box-shadow: 0 10px 24px rgba(132, 150, 190, 0.10); /* = profile */
+  border-radius: 999px;
+  /* = profile-back-btn */
+  border: 1px solid rgba(197, 211, 233, 0.86);
+  /* = profile-back-btn */
+  background: rgba(255, 255, 255, 0.68);
+  /* = profile-back-btn */
+  box-shadow: 0 10px 24px rgba(132, 150, 190, 0.10);
+  /* = profile */
   color: var(--settings-text-body);
   font-size: 14px;
   font-weight: 600;
@@ -189,7 +200,8 @@
 
 .settings-divider {
   height: 1px;
-  background: rgba(195, 206, 225, 0.72);         /* = metric-card separator */
+  background: rgba(195, 206, 225, 0.72);
+  /* = metric-card separator */
   margin: 24px 0;
   border: none;
 }
@@ -512,6 +524,10 @@
   margin-bottom: 20px;
 }
 
+.usage-stats-premium--summary {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
 .usage-stat-item {
   position: relative;
   display: flex;
@@ -521,7 +537,7 @@
 }
 
 /* Séparateur vertical interne — = .metric-card + .metric-card::before */
-.usage-stat-item + .usage-stat-item::before {
+.usage-stat-item+.usage-stat-item::before {
   content: "";
   position: absolute;
   left: 0;
@@ -539,12 +555,6 @@
   letter-spacing: 0.06em;
 }
 
-.usage-stat-value {
-  color: var(--settings-text-heading);
-  font-size: 24px;                               /* = .metric-value */
-  font-weight: 700;
-  line-height: 1;
-}
 
 .subscription-credits-section__content {
   align-items: flex-start;
@@ -558,7 +568,8 @@
 }
 
 .usage-stat-value--time {
-  font-size: 1.2rem;
+  font-size: 1rem;
+  line-height: 1.45;
 }
 
 /* Barre de progression — même variable custom property que l'existant, meilleur style */
@@ -583,6 +594,87 @@
   text-align: center;
 }
 
+.usage-waterline-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.usage-waterline-panel__hint {
+  margin: 0;
+}
+
+.usage-waterline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.usage-waterline-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.usage-waterline-row + .usage-waterline-row {
+  padding-top: 18px;
+  border-top: 1px solid rgba(195, 206, 225, 0.72);
+}
+
+.usage-waterline-row__header {
+  align-items: baseline;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.usage-waterline-row__title {
+  margin: 0;
+  color: var(--settings-text-heading);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.usage-waterline-row__value {
+  color: var(--settings-purple);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.usage-waterline-row__detail {
+  margin: 0;
+  color: var(--settings-text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.usage-waterline-row__meter {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 12px;
+  border: none;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(195, 206, 225, 0.45);
+}
+
+.usage-waterline-row__meter::-webkit-progress-bar {
+  background: rgba(195, 206, 225, 0.45);
+  border-radius: 999px;
+}
+
+.usage-waterline-row__meter::-webkit-progress-value {
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(134, 108, 208, 0.92) 0%, rgba(213, 154, 57, 0.72) 100%);
+}
+
+.usage-waterline-row__meter::-moz-progress-bar {
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(134, 108, 208, 0.92) 0%, rgba(213, 154, 57, 0.72) 100%);
+}
+
 /* Texte de feedback inline (saving / saved / error) */
 .settings-save-feedback {
   min-height: 20px;
@@ -595,11 +687,13 @@
 }
 
 .settings-save-feedback--success {
-  color: #3a8f5e;                              /* vert succès cohérent avec var(--success) */
+  color: #3a8f5e;
+  /* vert succès cohérent avec var(--success) */
 }
 
 .settings-save-feedback--error {
-  color: #c0392b;                              /* rouge erreur cohérent avec var(--danger) */
+  color: #c0392b;
+  /* rouge erreur cohérent avec var(--danger) */
 }
 
 @media (max-width: 640px) {
@@ -619,8 +713,18 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .usage-stat-item + .usage-stat-item::before {
+  .usage-stats-premium--summary {
+    grid-template-columns: 1fr;
+  }
+
+  .usage-stat-item+.usage-stat-item::before {
     display: none;
+  }
+
+  .usage-waterline-row__header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .settings-tabs {

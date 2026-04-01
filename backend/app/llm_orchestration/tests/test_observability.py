@@ -2,8 +2,10 @@ import uuid
 
 import pytest
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
+from app.infra.db.models.user import UserModel
 from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 from app.llm_orchestration.services.observability_service import (
     compute_input_hash,
@@ -83,3 +85,60 @@ async def test_log_call_on_error(db):
     log = db.execute(stmt).scalar_one()
 
     assert log.validation_status == LlmValidationStatus.ERROR
+
+
+@pytest.mark.asyncio
+async def test_log_call_failure_does_not_rollback_outer_transaction(db):
+    request_id = f"req-fk-{uuid.uuid4()}"
+    user = UserModel(
+        email=f"observability-{uuid.uuid4()}@example.com",
+        password_hash="test-hash",
+        role="user",
+    )
+    db.add(user)
+    db.flush()
+
+    result = GatewayResult(
+        use_case="chat_astrologer",
+        request_id=request_id,
+        trace_id="trace-fk",
+        raw_output="raw",
+        structured_output={"message": "hi"},
+        usage=UsageInfo(
+            input_tokens=10, output_tokens=5, total_tokens=15, estimated_cost_usd=0.001
+        ),
+        meta=GatewayMeta(
+            latency_ms=100,
+            model="gpt-test",
+            validation_status="valid",
+            prompt_version_id=str(uuid.uuid4()),
+        ),
+    )
+
+    original_flush = db.flush
+
+    def failing_flush(*args, **kwargs):
+        raise IntegrityError("insert into llm_call_logs", {}, Exception("fk failure"))
+
+    db.flush = failing_flush  # type: ignore[method-assign]
+    try:
+        await log_call(
+            db,
+            "chat_astrologer",
+            request_id,
+            "trace-fk",
+            {"message": "hello"},
+            result=result,
+        )
+    finally:
+        db.flush = original_flush  # type: ignore[method-assign]
+
+    persisted_user = db.execute(
+        select(UserModel).where(UserModel.id == user.id)
+    ).scalar_one_or_none()
+    persisted_log = db.execute(
+        select(LlmCallLogModel).where(LlmCallLogModel.request_id == request_id)
+    ).scalar_one_or_none()
+
+    assert persisted_user is not None
+    assert persisted_log is None

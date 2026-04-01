@@ -14,7 +14,13 @@ class QuotaWindowResolver:
 
     @staticmethod
     def compute_window(
-        period_unit: str, period_value: int, reset_mode: str, ref_dt: datetime
+        period_unit: str,
+        period_value: int,
+        reset_mode: str,
+        ref_dt: datetime,
+        *,
+        anchor_start: datetime | None = None,
+        anchor_end: datetime | None = None,
     ) -> QuotaWindow:
         if ref_dt.tzinfo is None:
             raise ValueError("ref_dt must be timezone-aware")
@@ -27,7 +33,23 @@ class QuotaWindowResolver:
         if reset_mode == "lifetime" or period_unit == "lifetime":
             return QuotaWindow(window_start=QuotaWindowResolver.UNIX_EPOCH, window_end=None)
 
+        if anchor_start is not None and anchor_start.tzinfo is None:
+            raise ValueError("anchor_start must be timezone-aware")
+        if anchor_end is not None and anchor_end.tzinfo is None:
+            raise ValueError("anchor_end must be timezone-aware")
+
         if period_unit == "day":
+            if anchor_start is not None and ref_dt_utc >= anchor_start.astimezone(timezone.utc):
+                anchor_start_utc = anchor_start.astimezone(timezone.utc)
+                slot_seconds = timedelta(days=period_value).total_seconds()
+                elapsed_seconds = (ref_dt_utc - anchor_start_utc).total_seconds()
+                slot = int(elapsed_seconds // slot_seconds)
+                window_start = anchor_start_utc + timedelta(days=slot * period_value)
+                window_end = window_start + timedelta(days=period_value)
+                if anchor_end is not None:
+                    window_end = min(window_end, anchor_end.astimezone(timezone.utc))
+                return QuotaWindow(window_start=window_start, window_end=window_end)
+
             days_since_epoch = (ref_dt_utc.date() - QuotaWindowResolver.UNIX_EPOCH.date()).days
             slot = days_since_epoch // period_value
             window_start = QuotaWindowResolver.UNIX_EPOCH + timedelta(days=slot * period_value)
@@ -35,6 +57,17 @@ class QuotaWindowResolver:
             return QuotaWindow(window_start=window_start, window_end=window_end)
 
         if period_unit == "week":
+            if anchor_start is not None and ref_dt_utc >= anchor_start.astimezone(timezone.utc):
+                anchor_start_utc = anchor_start.astimezone(timezone.utc)
+                slot_seconds = timedelta(weeks=period_value).total_seconds()
+                elapsed_seconds = (ref_dt_utc - anchor_start_utc).total_seconds()
+                slot = int(elapsed_seconds // slot_seconds)
+                window_start = anchor_start_utc + timedelta(weeks=slot * period_value)
+                window_end = window_start + timedelta(weeks=period_value)
+                if anchor_end is not None:
+                    window_end = min(window_end, anchor_end.astimezone(timezone.utc))
+                return QuotaWindow(window_start=window_start, window_end=window_end)
+
             # (ref_dt_utc.date() - WEEK_ANCHOR.date()).days // 7 gives weeks since anchor
             weeks_since_anchor = (
                 ref_dt_utc.date() - QuotaWindowResolver.WEEK_ANCHOR.date()
@@ -45,6 +78,18 @@ class QuotaWindowResolver:
             return QuotaWindow(window_start=window_start, window_end=window_end)
 
         if period_unit == "month":
+            if (
+                anchor_start is not None
+                and anchor_end is not None
+                and anchor_start.astimezone(timezone.utc)
+                <= ref_dt_utc
+                < anchor_end.astimezone(timezone.utc)
+            ):
+                return QuotaWindow(
+                    window_start=anchor_start.astimezone(timezone.utc),
+                    window_end=anchor_end.astimezone(timezone.utc),
+                )
+
             total_months = ref_dt_utc.year * 12 + (ref_dt_utc.month - 1)
             slot = total_months // period_value
             start_month_total = slot * period_value

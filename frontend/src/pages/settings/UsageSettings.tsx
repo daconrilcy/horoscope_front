@@ -1,8 +1,71 @@
-import { useChatEntitlementUsage, type BillingApiError } from "@api/billing"
+import {
+  useChatEntitlementFeature,
+  type BillingApiError,
+  type ChatEntitlementUsageState,
+} from "@api/billing"
 import { detectLang, type AstrologyLang } from "@i18n/astrology"
 import { settingsTranslations } from "@i18n/settings"
 import { getLocale } from "@utils/locale"
 import "./Settings.css"
+
+function formatUsageNumber(value: number): string {
+  return value.toLocaleString("fr-FR").replace(/[\u202f\u00a0]/g, " ")
+}
+
+function formatResetDate(value: string, lang: AstrologyLang): string {
+  return new Intl.DateTimeFormat(getLocale(lang), {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value))
+}
+
+function formatUsageRatio(consumed: number, total: number, totalLabel: string): string {
+  return `${formatUsageNumber(consumed)} tokens / ${formatUsageNumber(total)} tokens ${totalLabel}`
+}
+
+type UsageRowProps = {
+  label: string
+  consumed: number
+  total: number
+  totalLabel: string
+  resetAtLabel: string
+  resetAt: string | null
+  lang: AstrologyLang
+}
+
+function UsageWaterlineRow({
+  label,
+  consumed,
+  total,
+  totalLabel,
+  resetAtLabel,
+  resetAt,
+  lang,
+}: UsageRowProps) {
+  const safeMax = Math.max(total, 1)
+
+  return (
+    <article className="usage-waterline-row">
+      <div className="usage-waterline-row__header">
+        <h3 className="usage-waterline-row__title">{label}</h3>
+      </div>
+      <progress className="usage-waterline-row__meter" value={Math.min(consumed, safeMax)} max={safeMax}>
+        {consumed}
+      </progress>
+      <div className="usage-waterline-row__meta">
+        <p className="usage-waterline-row__detail">{formatUsageRatio(consumed, total, totalLabel)}</p>
+        {resetAt && (
+          <p className="usage-waterline-row__detail">
+            {resetAtLabel} : {formatResetDate(resetAt, lang)}
+          </p>
+        )}
+      </div>
+    </article>
+  )
+}
 
 function getErrorMessage(error: BillingApiError | null, lang: AstrologyLang): string {
   const errorMessages = settingsTranslations.usageErrors
@@ -29,10 +92,29 @@ function getErrorMessage(error: BillingApiError | null, lang: AstrologyLang): st
 export function UsageSettings() {
   const lang = detectLang()
   const t = settingsTranslations.usage[lang]
-  const quota = useChatEntitlementUsage()
+  const chatFeature = useChatEntitlementFeature()
 
-  const quotaError = quota.error as BillingApiError | null
+  const pageError = chatFeature.error as BillingApiError | null
+  const isLoading = chatFeature.isLoading
+  const isError = chatFeature.isError
 
+  const usageRows: Array<{ key: string; label: string; data: ChatEntitlementUsageState }> =
+    chatFeature.data == null
+      ? []
+      : chatFeature.data.usage_states
+          .filter((state) => state.quota_key === "tokens")
+          .map((state) => ({
+            key: `${state.period_unit}:${state.period_value}`,
+            label:
+              state.period_unit === "day"
+                ? t.day
+                : state.period_unit === "week"
+                  ? t.week
+                  : state.period_unit === "month"
+                    ? t.month
+                    : state.period_unit,
+            data: state,
+          }))
   return (
     <div className="usage-settings">
       <section className="settings-card">
@@ -40,81 +122,56 @@ export function UsageSettings() {
           {t.title}
         </h2>
 
-        {quota.isLoading && (
+        {isLoading && (
           <p aria-busy="true" className="settings-save-feedback settings-save-feedback--saving">
             {t.loading}
           </p>
         )}
 
-        {quota.isError && (
+        {isError && (
           <div role="alert" className="settings-save-feedback settings-save-feedback--error">
             <p>
-              {t.error}: {getErrorMessage(quotaError, lang)}
+              {t.error}: {getErrorMessage(pageError, lang)}
             </p>
-            <button type="button" className="settings-tab" onClick={() => void quota.refetch()}>
+            <button
+              type="button"
+              className="settings-tab"
+              onClick={() => {
+                void chatFeature.refetch()
+              }}
+            >
               {t.retry}
             </button>
           </div>
         )}
 
-        {quota.data && (
+        {chatFeature.data && (
           <>
             <h3 className="settings-section-title settings-section-title--usage">
               {t.dailyUsage}
             </h3>
 
-            <div className="usage-stats-premium">
-              <div className="usage-stat-item">
-                <span className="usage-stat-label">
-                  {quota.data.quota_key === "tokens" ? "Tokens utilisés" : t.messagesUsed}
-                </span>
-                <span className="usage-stat-value">{quota.data.consumed}</span>
+            <div className="settings-card--soft usage-waterline-panel">
+              <p className="default-astrologer-option__style usage-waterline-panel__hint">{t.resetHint}</p>
+              <div className="usage-waterline-list">
+                {usageRows.map((row) => (
+                  <UsageWaterlineRow
+                    key={row.key}
+                    label={row.label}
+                    consumed={row.data.used}
+                    total={row.data.quota_limit}
+                    totalLabel={t.totalLabel}
+                    resetAtLabel={t.resetAt}
+                    resetAt={row.data.window_end}
+                    lang={lang}
+                  />
+                ))}
               </div>
-              <div className="usage-stat-item">
-                <span className="usage-stat-label">{t.limit}</span>
-                <span className="usage-stat-value">{quota.data.limit}</span>
-              </div>
-              <div className="usage-stat-item">
-                <span className="usage-stat-label">{t.remaining}</span>
-                <span className="usage-stat-value">{quota.data.remaining}</span>
-              </div>
-              {quota.data.reset_at && (
-                <div className="usage-stat-item">
-                  <span className="usage-stat-label">{t.resetAt}</span>
-                  <span className="usage-stat-value usage-stat-value--time">
-                    {new Date(quota.data.reset_at).toLocaleTimeString(getLocale(lang), { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="settings-card--soft">
-              <div
-                className="usage-progress-bar"
-                role="progressbar"
-                aria-label={t.dailyUsage}
-                aria-valuenow={quota.data.consumed}
-                aria-valuemin={0}
-                aria-valuemax={quota.data.limit}
-                style={
-                  {
-                    "--usage-progress":
-                      quota.data.limit > 0
-                        ? Math.min((quota.data.consumed / quota.data.limit) * 100, 100)
-                        : 0,
-                  } as React.CSSProperties
-                }
-              >
-                <div className="usage-progress-fill" />
-              </div>
-              <p className="default-astrologer-option__style usage-progress-label">
-                {Math.round(Math.min((quota.data.consumed / quota.data.limit) * 100, 100))}% de votre quota {quota.data.quota_key === "tokens" ? "mensuel" : "quotidien"} utilisé
-              </p>
             </div>
           </>
         )}
 
-        {!quota.isLoading && !quota.isError && !quota.data && (
+        {!isLoading && !isError && !chatFeature.data && (
           <p className="state-line state-empty">{t.noData}</p>
         )}
       </section>

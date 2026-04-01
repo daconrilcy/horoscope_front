@@ -1,8 +1,9 @@
 from sqlalchemy import delete
 
+from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal
+from app.infra.db.session import SessionLocal, engine
 from app.infra.observability.metrics import increment_counter, observe_duration, reset_metrics
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 from app.services.ops_monitoring_service import OpsMonitoringService, OpsMonitoringServiceError
@@ -225,25 +226,23 @@ def test_get_pricing_experiment_kpis_rounds_metric_values_before_aggregation() -
 
 def test_get_pricing_experiment_kpis_uses_database_persistent_events() -> None:
     reset_metrics()
+    Base.metadata.create_all(bind=engine, checkfirst=True)
     with SessionLocal() as db:
         db.execute(
             delete(AuditEventModel).where(AuditEventModel.action == "pricing_experiment_event")
         )
-        db.execute(delete(UserModel).where(UserModel.id == 1))
-        db.add(
-            UserModel(
-                id=1,
-                email="pricing-monitoring@example.com",
-                password_hash="test-hash",
-                role="user",
-            )
+        user = UserModel(
+            email="pricing-monitoring@example.com",
+            password_hash="test-hash",
+            role="user",
         )
+        db.add(user)
         db.flush()
         AuditService.record_event(
             db,
             payload=AuditEventCreatePayload(
                 request_id="rid-pricing-1",
-                actor_user_id=1,
+                actor_user_id=user.id,
                 actor_role="user",
                 action="pricing_experiment_event",
                 target_type="pricing_experiment",
@@ -262,7 +261,7 @@ def test_get_pricing_experiment_kpis_uses_database_persistent_events() -> None:
             db,
             payload=AuditEventCreatePayload(
                 request_id="rid-pricing-2",
-                actor_user_id=1,
+                actor_user_id=user.id,
                 actor_role="user",
                 action="pricing_experiment_event",
                 target_type="pricing_experiment",
@@ -296,6 +295,7 @@ def test_get_pricing_experiment_kpis_falls_back_when_db_has_no_events() -> None:
         "pricing_experiment_exposure_total|plan_code=basic|user_segment=user|variant_id=control",
         3,
     )
+    Base.metadata.create_all(bind=engine, checkfirst=True)
     with SessionLocal() as db:
         db.execute(
             delete(AuditEventModel).where(AuditEventModel.action == "pricing_experiment_event")

@@ -20,7 +20,7 @@ class LlmTokenUsageService:
         *,
         user_id: int,
         feature_code: str,
-        quota: QuotaDefinition | None,
+        quotas: list[QuotaDefinition] | None,
         provider_model: str,
         tokens_in: int,
         tokens_out: int,
@@ -36,17 +36,19 @@ class LlmTokenUsageService:
             ref_dt = datetime.now(timezone.utc)
 
         tokens_total = tokens_in + tokens_out
-        usage_state = None
+        usage_states: list[UsageState] = []
 
-        # 1. Increment the usage counter (within transaction) if quota is provided
-        if quota:
-            usage_state = QuotaUsageService.consume(
-                db,
-                user_id=user_id,
-                feature_code=feature_code,
-                quota=quota,
-                amount=tokens_total,
-                ref_dt=ref_dt,
+        # 1. Increment all matching usage counters (within the same transaction)
+        for quota in quotas or []:
+            usage_states.append(
+                QuotaUsageService.consume(
+                    db,
+                    user_id=user_id,
+                    feature_code=feature_code,
+                    quota=quota,
+                    amount=tokens_total,
+                    ref_dt=ref_dt,
+                )
             )
 
         # 2. Create the usage log (within transaction)
@@ -72,7 +74,7 @@ class LlmTokenUsageService:
             user_id,
             feature_code,
             request_id,
-            bool(quota),
+            bool(quotas),
         )
 
-        return usage_state
+        return usage_states[0] if usage_states else None

@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.product_entitlements import FeatureUsageCounterModel
+from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.services.entitlement_types import QuotaDefinition, UsageState
 from app.services.feature_scope_registry import (
     FeatureScope,
@@ -25,6 +26,45 @@ class QuotaExhaustedError(Exception):
 
 
 class QuotaUsageService:
+    _ANNIVERSARY_ANCHORED_FEATURES = frozenset({"astrologer_chat"})
+
+    @staticmethod
+    def _resolve_billing_cycle_anchor(
+        db: Session,
+        *,
+        user_id: int,
+        feature_code: str,
+        quota: QuotaDefinition,
+        ref_dt: datetime,
+    ) -> tuple[datetime | None, datetime | None]:
+        if (
+            feature_code not in QuotaUsageService._ANNIVERSARY_ANCHORED_FEATURES
+            or quota.quota_key != "tokens"
+            or quota.period_unit not in {"day", "week", "month"}
+        ):
+            return None, None
+
+        profile = db.scalar(
+            select(StripeBillingProfileModel)
+            .where(StripeBillingProfileModel.user_id == user_id)
+            .limit(1)
+        )
+        if profile is None or profile.current_period_start is None or profile.current_period_end is None:
+            return None, None
+
+        period_start = profile.current_period_start
+        period_end = profile.current_period_end
+        if period_start.tzinfo is None:
+            period_start = period_start.replace(tzinfo=timezone.utc)
+        if period_end.tzinfo is None:
+            period_end = period_end.replace(tzinfo=timezone.utc)
+
+        ref_dt_utc = ref_dt.astimezone(timezone.utc)
+        if not (period_start <= ref_dt_utc < period_end):
+            return None, None
+
+        return period_start, period_end
+
     @staticmethod
     def get_usage(
         db: Session,
@@ -39,8 +79,20 @@ class QuotaUsageService:
         if ref_dt is None:
             ref_dt = datetime.now(timezone.utc)
 
+        anchor_start, anchor_end = QuotaUsageService._resolve_billing_cycle_anchor(
+            db,
+            user_id=user_id,
+            feature_code=feature_code,
+            quota=quota,
+            ref_dt=ref_dt,
+        )
         window = QuotaWindowResolver.compute_window(
-            quota.period_unit, quota.period_value, quota.reset_mode, ref_dt
+            quota.period_unit,
+            quota.period_value,
+            quota.reset_mode,
+            ref_dt,
+            anchor_start=anchor_start,
+            anchor_end=anchor_end,
         )
 
         counter = db.scalar(
@@ -93,8 +145,20 @@ class QuotaUsageService:
         if ref_dt is None:
             ref_dt = datetime.now(timezone.utc)
 
+        anchor_start, anchor_end = QuotaUsageService._resolve_billing_cycle_anchor(
+            db,
+            user_id=user_id,
+            feature_code=feature_code,
+            quota=quota,
+            ref_dt=ref_dt,
+        )
         window = QuotaWindowResolver.compute_window(
-            quota.period_unit, quota.period_value, quota.reset_mode, ref_dt
+            quota.period_unit,
+            quota.period_value,
+            quota.reset_mode,
+            ref_dt,
+            anchor_start=anchor_start,
+            anchor_end=anchor_end,
         )
 
         counter = QuotaUsageService._find_or_create_counter(

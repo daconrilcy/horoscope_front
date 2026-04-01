@@ -2224,7 +2224,9 @@ textarea:focus-visible {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 768px) {
@@ -2234,16 +2236,16 @@ textarea:focus-visible {
     text-align: center;
     padding: 1.5rem;
   }
-  
+
   .consultation-card-premium-action {
     width: 100%;
   }
-  
+
   .premium-cta-inline {
     display: block;
     width: 100%;
   }
-  
+
   .premium-hero-title {
     font-size: 2.5rem;
   }
@@ -3554,7 +3556,7 @@ textarea.validation-context-input {
 }
 
 .usage-stat-value {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: var(--primary);
 }
@@ -3813,10 +3815,12 @@ textarea.validation-context-input {
 }
 
 @keyframes astrologer-orbit-drift {
+
   0%,
   100% {
     transform: translate3d(0, 0, 0) scale(1);
   }
+
   50% {
     transform: translate3d(4px, -8px, 0) scale(1.06);
   }

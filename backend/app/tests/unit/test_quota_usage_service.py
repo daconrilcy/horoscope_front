@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.infra.db.base import Base
 from app.infra.db.models.product_entitlements import FeatureUsageCounterModel
+from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.services.entitlement_types import QuotaDefinition
 from app.services.feature_scope_registry import (
@@ -522,3 +523,58 @@ def test_upgrade_behavior(db_session):
     assert usage.used == 10
     assert usage.quota_limit == 1000
     assert usage.remaining == 990
+
+
+def test_get_usage_tokens_can_use_subscription_anniversary_windows(db_session):
+    db_session.add(
+        StripeBillingProfileModel(
+            user_id=1,
+            stripe_customer_id="cus_test",
+            stripe_subscription_id="sub_test",
+            subscription_status="active",
+            current_period_start=datetime(2026, 4, 17, 10, 0, tzinfo=UTC),
+            current_period_end=datetime(2026, 5, 17, 10, 0, tzinfo=UTC),
+            entitlement_plan="basic",
+        )
+    )
+    db_session.commit()
+
+    quota_day = QuotaDefinition(
+        quota_key="tokens",
+        quota_limit=1667,
+        period_unit="day",
+        period_value=1,
+        reset_mode="calendar",
+    )
+    quota_week = QuotaDefinition(
+        quota_key="tokens",
+        quota_limit=12500,
+        period_unit="week",
+        period_value=1,
+        reset_mode="calendar",
+    )
+    quota_month = QuotaDefinition(
+        quota_key="tokens",
+        quota_limit=50000,
+        period_unit="month",
+        period_value=1,
+        reset_mode="calendar",
+    )
+    ref_dt = datetime(2026, 4, 26, 9, 0, tzinfo=UTC)
+
+    usage_day = QuotaUsageService.get_usage(
+        db_session, user_id=1, feature_code="astrologer_chat", quota=quota_day, ref_dt=ref_dt
+    )
+    usage_week = QuotaUsageService.get_usage(
+        db_session, user_id=1, feature_code="astrologer_chat", quota=quota_week, ref_dt=ref_dt
+    )
+    usage_month = QuotaUsageService.get_usage(
+        db_session, user_id=1, feature_code="astrologer_chat", quota=quota_month, ref_dt=ref_dt
+    )
+
+    assert usage_day.window_start == datetime(2026, 4, 25, 10, 0, tzinfo=UTC)
+    assert usage_day.window_end == datetime(2026, 4, 26, 10, 0, tzinfo=UTC)
+    assert usage_week.window_start == datetime(2026, 4, 24, 10, 0, tzinfo=UTC)
+    assert usage_week.window_end == datetime(2026, 5, 1, 10, 0, tzinfo=UTC)
+    assert usage_month.window_start == datetime(2026, 4, 17, 10, 0, tzinfo=UTC)
+    assert usage_month.window_end == datetime(2026, 5, 17, 10, 0, tzinfo=UTC)

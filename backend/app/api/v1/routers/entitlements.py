@@ -46,6 +46,15 @@ def _to_usage_state_response(state: UsageState) -> UsageStateResponse:
 def _to_feature_response(
     feature_code: str, access: EffectiveFeatureAccess
 ) -> FeatureEntitlementResponse:
+    period_order = {"day": 0, "week": 1, "month": 2, "year": 3, "lifetime": 4}
+    ordered_usage_states = sorted(
+        access.usage_states,
+        key=lambda state: (
+            period_order.get(state.period_unit, 99),
+            state.period_value,
+            state.quota_key,
+        ),
+    )
     return FeatureEntitlementResponse(
         feature_code=feature_code,
         granted=access.granted,
@@ -54,7 +63,7 @@ def _to_feature_response(
         quota_remaining=access.quota_remaining,
         quota_limit=access.quota_limit,
         variant_code=access.variant_code,
-        usage_states=[_to_usage_state_response(s) for s in access.usage_states],
+        usage_states=[_to_usage_state_response(s) for s in ordered_usage_states],
     )
 
 

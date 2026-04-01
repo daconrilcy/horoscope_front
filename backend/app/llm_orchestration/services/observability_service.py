@@ -118,45 +118,40 @@ async def log_call(
             fallback_triggered = result.meta.fallback_triggered
             evidence_warnings = count_evidence_warnings(result.structured_output)
 
-        log_entry = LlmCallLogModel(
-            use_case=use_case,
-            prompt_version_id=prompt_version_id,
-            persona_id=persona_id,
-            model=model,
-            latency_ms=latency_ms,
-            tokens_in=tokens_in,
-            tokens_out=tokens_out,
-            cost_usd_estimated=cost_usd,
-            validation_status=status,
-            repair_attempted=repair_attempted,
-            fallback_triggered=fallback_triggered,
-            request_id=request_id,
-            trace_id=trace_id,
-            input_hash=input_hash,
-            environment=settings.app_env,
-            evidence_warnings_count=evidence_warnings,
-        )
-
-        db.add(log_entry)
-        db.flush()  # Generate log_entry.id
-
-        # Task 4: Store encrypted input snapshot for replay (TTL 7 days)
-        if user_input:
-            snapshot = LlmReplaySnapshotModel(
-                call_log_id=log_entry.id,
-                input_enc=encrypt_input(user_input),
+        transaction = db.begin_nested() if db.in_transaction() else db.begin()
+        with transaction:
+            log_entry = LlmCallLogModel(
+                use_case=use_case,
+                prompt_version_id=prompt_version_id,
+                persona_id=persona_id,
+                model=model,
+                latency_ms=latency_ms,
+                tokens_in=tokens_in,
+                tokens_out=tokens_out,
+                cost_usd_estimated=cost_usd,
+                validation_status=status,
+                repair_attempted=repair_attempted,
+                fallback_triggered=fallback_triggered,
+                request_id=request_id,
+                trace_id=trace_id,
+                input_hash=input_hash,
+                environment=settings.app_env,
+                evidence_warnings_count=evidence_warnings,
             )
-            db.add(snapshot)
 
-        db.commit()
+            db.add(log_entry)
+            db.flush()  # Generate log_entry.id inside an isolated transaction scope.
+
+            if user_input:
+                snapshot = LlmReplaySnapshotModel(
+                    call_log_id=log_entry.id,
+                    input_enc=encrypt_input(user_input),
+                )
+                db.add(snapshot)
 
     except Exception as e:
         # Observability should not break the main flow
         logger.error("observability_log_call_failed request_id=%s error=%s", request_id, str(e))
-        try:
-            db.rollback()
-        except Exception:
-            pass
 
 
 async def purge_expired_logs(db: Session) -> int:

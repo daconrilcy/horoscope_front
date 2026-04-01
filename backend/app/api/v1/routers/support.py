@@ -17,7 +17,7 @@ from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.privacy import UserPrivacyRequestModel
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, get_db_session
+from app.infra.db.session import get_db_session
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 from app.services.billing_service import BillingService, SubscriptionStatusData
 from app.services.incident_service import (
@@ -155,6 +155,7 @@ def _enforce_support_limits(
 
 
 def _record_audit_event(
+    db: Session,
     *,
     request_id: str,
     actor_user_id: int,
@@ -165,10 +166,11 @@ def _record_audit_event(
     status: str,
     details: dict[str, object],
 ) -> None:
-    with SessionLocal() as audit_db:
-        try:
+    try:
+        transaction = db.begin_nested() if db.in_transaction() else db.begin()
+        with transaction:
             AuditService.record_event(
-                audit_db,
+                db,
                 payload=AuditEventCreatePayload(
                     request_id=request_id,
                     actor_user_id=actor_user_id,
@@ -180,16 +182,14 @@ def _record_audit_event(
                     details=details,
                 ),
             )
-            audit_db.commit()
-        except Exception:
-            audit_db.rollback()
-            logger.exception(
-                "audit_event_write_failed action=%s request_id=%s target_type=%s target_id=%s",
-                action,
-                request_id,
-                target_type,
-                target_id or "",
-            )
+    except Exception:
+        logger.exception(
+            "audit_event_write_failed action=%s request_id=%s target_type=%s target_id=%s",
+            action,
+            request_id,
+            target_type,
+            target_id or "",
+        )
 
 
 def _recent_audit_events_for_user(
@@ -527,6 +527,7 @@ def create_support_incident(
         )
         db.commit()
         _record_audit_event(
+            db,
             request_id=request_id,
             actor_user_id=current_user.id,
             actor_role=current_user.role,
@@ -552,6 +553,7 @@ def create_support_incident(
             404 if error.code in {"incident_not_found", "incident_user_not_found"} else 422
         )
         _record_audit_event(
+            db,
             request_id=request_id,
             actor_user_id=current_user.id,
             actor_role=current_user.role,
@@ -615,6 +617,7 @@ def update_support_incident(
             else "support_incident_update"
         )
         _record_audit_event(
+            db,
             request_id=request_id,
             actor_user_id=current_user.id,
             actor_role=current_user.role,
@@ -638,6 +641,7 @@ def update_support_incident(
         db.rollback()
         status_code = 404 if error.code == "incident_not_found" else 422
         _record_audit_event(
+            db,
             request_id=request_id,
             actor_user_id=current_user.id,
             actor_role=current_user.role,

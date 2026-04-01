@@ -156,3 +156,39 @@ def test_month_transition():
     assert window_march.window_start == datetime(2026, 3, 1, 0, 0, tzinfo=UTC)
     assert window_april.window_start == datetime(2026, 4, 1, 0, 0, tzinfo=UTC)
     assert window_march.window_end == window_april.window_start
+
+
+def test_month_window_can_follow_anniversary_anchor():
+    ref_dt = datetime(2026, 4, 22, 9, 0, tzinfo=UTC)
+    anchor_start = datetime(2026, 4, 17, 10, 0, tzinfo=UTC)
+    anchor_end = datetime(2026, 5, 17, 10, 0, tzinfo=UTC)
+
+    window = QuotaWindowResolver.compute_window(
+        "month",
+        1,
+        "calendar",
+        ref_dt,
+        anchor_start=anchor_start,
+        anchor_end=anchor_end,
+    )
+
+    assert window.window_start == anchor_start
+    assert window.window_end == anchor_end
+
+
+def test_week_window_can_follow_anniversary_anchor():
+    ref_dt = datetime(2026, 4, 26, 9, 0, tzinfo=UTC)
+    anchor_start = datetime(2026, 4, 17, 10, 0, tzinfo=UTC)
+    anchor_end = datetime(2026, 5, 17, 10, 0, tzinfo=UTC)
+
+    window = QuotaWindowResolver.compute_window(
+        "week",
+        1,
+        "calendar",
+        ref_dt,
+        anchor_start=anchor_start,
+        anchor_end=anchor_end,
+    )
+
+    assert window.window_start == datetime(2026, 4, 24, 10, 0, tzinfo=UTC)
+    assert window.window_end == datetime(2026, 5, 1, 10, 0, tzinfo=UTC)

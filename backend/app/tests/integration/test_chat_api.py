@@ -115,6 +115,26 @@ def _cleanup_tables() -> None:
             PlanFeatureQuotaModel(
                 plan_feature_binding_id=b_basic.id,
                 quota_key="tokens",
+                quota_limit=1667,
+                period_unit=PeriodUnit.DAY,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+            )
+        )
+        db.add(
+            PlanFeatureQuotaModel(
+                plan_feature_binding_id=b_basic.id,
+                quota_key="tokens",
+                quota_limit=12500,
+                period_unit=PeriodUnit.WEEK,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+            )
+        )
+        db.add(
+            PlanFeatureQuotaModel(
+                plan_feature_binding_id=b_basic.id,
+                quota_key="tokens",
                 quota_limit=5000,
                 period_unit=PeriodUnit.MONTH,
                 period_value=1,
@@ -138,6 +158,26 @@ def _cleanup_tables() -> None:
         db.add(b_premium)
         db.flush()
 
+        db.add(
+            PlanFeatureQuotaModel(
+                plan_feature_binding_id=b_premium.id,
+                quota_key="tokens",
+                quota_limit=50000,
+                period_unit=PeriodUnit.DAY,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+            )
+        )
+        db.add(
+            PlanFeatureQuotaModel(
+                plan_feature_binding_id=b_premium.id,
+                quota_key="tokens",
+                quota_limit=375000,
+                period_unit=PeriodUnit.WEEK,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+            )
+        )
         db.add(
             PlanFeatureQuotaModel(
                 plan_feature_binding_id=b_premium.id,
@@ -176,6 +216,9 @@ def _register_and_get_access_token() -> str:
 
 def _set_active_subscription(user_id: int, plan_code: str) -> None:
     with SessionLocal() as db:
+        period_start = datetime(2026, 4, 17, 10, 0, tzinfo=timezone.utc)
+        period_end = datetime(2026, 5, 17, 10, 0, tzinfo=timezone.utc)
+
         # 0. Ensure plans exist
         BillingService.ensure_default_plans(db)
 
@@ -188,11 +231,15 @@ def _set_active_subscription(user_id: int, plan_code: str) -> None:
                 stripe_subscription_id=f"sub_{user_id}",
                 subscription_status="active",
                 entitlement_plan=plan_code,
+                current_period_start=period_start,
+                current_period_end=period_end,
             )
             db.add(profile)
         else:
             profile.entitlement_plan = plan_code
             profile.subscription_status = "active"
+            profile.current_period_start = period_start
+            profile.current_period_end = period_end
 
         # 2. Also ensure UserSubscriptionModel exists
         plan = db.scalar(select(BillingPlanModel).where(BillingPlanModel.code == plan_code))
@@ -264,7 +311,7 @@ def _seed_canonical_chat_binding(
     plan_code: str,
     access_mode: AccessMode,
     is_enabled: bool = True,
-    quotas: list[tuple[str, int]] | None = None,
+    quotas: list[tuple[str, int] | tuple[str, int, PeriodUnit]] | None = None,
 ) -> None:
     with SessionLocal() as db:
         plan = db.scalar(select(PlanCatalogModel).where(PlanCatalogModel.plan_code == plan_code))
@@ -309,13 +356,18 @@ def _seed_canonical_chat_binding(
             db.query(PlanFeatureQuotaModel).filter(
                 PlanFeatureQuotaModel.plan_feature_binding_id == binding.id
             ).delete()
-            for quota_key, quota_limit in quotas:
+            for quota_item in quotas:
+                if len(quota_item) == 2:
+                    quota_key, quota_limit = quota_item
+                    period_unit = PeriodUnit.MONTH
+                else:
+                    quota_key, quota_limit, period_unit = quota_item
                 db.add(
                     PlanFeatureQuotaModel(
                         plan_feature_binding_id=binding.id,
                         quota_key=quota_key,
                         quota_limit=quota_limit,
-                        period_unit=PeriodUnit.MONTH,
+                        period_unit=period_unit,
                         period_value=1,
                         reset_mode=ResetMode.CALENDAR,
                     )
@@ -442,8 +494,9 @@ def test_chat_enforcement_uses_updated_limit_after_plan_change() -> None:
     chat_ent = next(
         f for f in ent.json()["data"]["features"] if f["feature_code"] == "astrologer_chat"
     )
-    assert chat_ent["usage_states"][0]["quota_limit"] == 1000000
-    assert chat_ent["usage_states"][0]["used"] > 0
+    month_state = next(state for state in chat_ent["usage_states"] if state["period_unit"] == "month")
+    assert month_state["quota_limit"] == 1000000
+    assert month_state["used"] > 0
 
 
 def test_send_chat_message_second_turn_uses_first_turn_context() -> None:

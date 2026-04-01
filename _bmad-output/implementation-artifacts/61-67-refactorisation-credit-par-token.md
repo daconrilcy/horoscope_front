@@ -77,8 +77,12 @@ Valeurs initiales attendues dans le seed pour cette story:
 
 | Plan | Feature | quota_key | quota_limit | period_unit | reset_mode |
 |------|---------|-----------|-------------|-------------|------------|
+| basic | astrologer_chat | `tokens` | `1_667` | `day` | `calendar` |
+| basic | astrologer_chat | `tokens` | `12_500` | `week` | `calendar` |
 | basic | astrologer_chat | `tokens` | `50_000` | `month` | `calendar` |
 | basic | thematic_consultation | `tokens` | `20_000` | `week` | `calendar` |
+| premium | astrologer_chat | `tokens` | `50_000` | `day` | `calendar` |
+| premium | astrologer_chat | `tokens` | `375_000` | `week` | `calendar` |
 | premium | astrologer_chat | `tokens` | `1_500_000` | `month` | `calendar` |
 | premium | thematic_consultation | `tokens` | `200_000` | `month` | `calendar` |
 
@@ -230,8 +234,9 @@ Changements attendus:
 - `SubscriptionSettings.tsx` affiche l'unité `tokens` au lieu de `msg`
 - les libellés i18n existants sont mis à jour avec le plus petit delta cohérent
 - pas de style inline
-
-Cette story n'impose pas la refonte du tab "usage" si celui-ci n'est pas encore branché sur l'API de billing token.
+- le tab `settings/usage` affiche les périodes `jour / semaine / mois` à partir des `usage_states` réels de `astrologer_chat`
+- chaque ligne affiche son quota propre, sa consommation propre et sa date de réinitialisation propre
+- le rendu réutilise les surfaces et tokens visuels déjà présents dans les pages settings
 
 ### AC9 - Préservation du comportement upgrade basic -> premium pour `astrologer_chat`
 
@@ -343,6 +348,21 @@ Conséquences acceptées:
 - ils ne doivent plus être utilisés pour l'enforcement des features migrées;
 - aucune suppression destructive n'est requise.
 
+### Fenêtres jour / semaine / mois pour `astrologer_chat`
+
+Pour `astrologer_chat`, les quotas `tokens` journaliers et hebdomadaires ne sont pas calculés sur minuit/lundi UTC.
+
+Règle retenue dans l'implémentation:
+
+- le quota mensuel suit la période d'abonnement Stripe (`current_period_start` -> `current_period_end`)
+- la **date anniversaire** de cette période sert d'ancre
+- les fenêtres `day` et `week` sont recalculées relativement à cette ancre
+
+Conséquence UX:
+
+- la date de `Réinitialisation` affichée sur `/settings/usage` est spécifique à chaque ligne (`jour`, `semaine`, `mois`)
+- les trois lignes n'affichent plus artificiellement la même limite
+
 ### Fichiers probablement impactés
 
 - `backend/scripts/seed_product_entitlements.py`
@@ -376,6 +396,9 @@ Corrections apportées à la story d'origine:
 - les appels de recovery de `thematic_consultation` sont désormais eux aussi comptabilisés en tokens
 - l'endpoint `GET /v1/billing/token-usage` applique le même rate limiting backend que les endpoints billing principaux
 - les tests d'intégration billing couvrent maintenant `/v1/billing/token-usage` et `current_quota.quota_key == "tokens"`
+- `astrologer_chat` expose désormais trois quotas `tokens` (`day`, `week`, `month`) dans le catalogue canonique
+- les fenêtres journalières et hebdomadaires de `astrologer_chat` sont ancrées sur la période d'abonnement Stripe, pas sur le calendrier UTC brut
+- la page `/settings/usage` consomme maintenant les `usage_states` réels et affiche une réinitialisation par période
 
 ## Dev Agent Record
 
@@ -386,6 +409,15 @@ Corrections apportées à la story d'origine:
 - Revue codex appliquée: réalignement de la story avec l'état réel de l'implémentation.
 - **[Code Review Fix]** `current_datetime` manquant dans le contexte passé au LLM Gateway dans `chat_guidance_service.py` — champ requis par le template de prompt, provoquait une erreur `prompt_render_error` renvoyant HTTP 422 dans 2 tests d'intégration critiques (`test_secret_rotation_*`).
 - **[Code Review Fix]** Compteurs de monitoring persona (`conversation_messages_total|persona_profile=xxx`) manquants dans `chat_guidance_service.py` — le chat n'émettait pas de metric tagué par persona, rendant la métrique `persona-kpis.messages_total` toujours à 1 alors que chat + guidance avaient eu lieu. Aligné sur le pattern de `guidance_service.py` avec `PersonaConfigService.get_active()`.
+- **[Stability Fix]** L'écriture observability `llm_call_logs` est maintenant isolée dans une transaction imbriquée dans `observability_service.py` pour éviter qu'un rollback best-effort n'annule la transaction métier principale du chat/guidance.
+- **[Test Fix]** Les tests de monitoring pricing n'utilisent plus la suppression forcée de `users.id=1`, incompatible avec les nouvelles dépendances FK introduites par les logs et compteurs persistés.
+- **[Stability Fix]** Les audit events du module support sont désormais écrits dans la session requête avec transaction isolée, ce qui supprime les erreurs FK observées en suite complète sous SQLite.
+- **[Test Fix]** Les tests `admin_llm_api` sont désormais auto-contenus avec une DB `StaticPool` et un override explicite de `get_db_session`, ce qui élimine les dérives liées au moteur global de la suite.
+- **[Test Fix]** Le test `test_llm_gateway_routing` est réaligné sur le contrat actuel de `AIEngineAdapter.generate_chat_reply()`, qui renvoie un `GatewayResult` et non plus une simple chaîne.
+- **[Startup Fix]** Le startup local auto-répare désormais le catalogue canonique d'entitlements avant validation stricte: seed B2C idempotent via `seed_product_entitlements()` puis création/upsert de `b2b_api_access` dans `feature_catalog` pour alignement avec `FEATURE_SCOPE_REGISTRY`.
+- **[Quota Model Fix]** `astrologer_chat` possède maintenant des quotas `tokens` distincts `jour / semaine / mois`, tous débités lors de chaque appel LLM.
+- **[Windowing Fix]** Les fenêtres `day` et `week` de `astrologer_chat` sont recalculées à partir de la date anniversaire de la période d'abonnement (`StripeBillingProfile.current_period_start/current_period_end`).
+- **[Usage UI Fix]** La page `/settings/usage` a été refondue pour s'appuyer sur les `usage_states` backend réels, avec une date de `Réinitialisation` propre à chaque période et suppression des éléments de résumé redondants.
 
 ### File List
 
@@ -394,6 +426,8 @@ Corrections apportées à la story d'origine:
 - `backend/app/api/v1/routers/billing.py`
 - `backend/app/api/v1/routers/chat.py`
 - `backend/app/api/v1/routers/consultations.py`
+- `backend/app/api/v1/routers/support.py`
+- `backend/app/main.py`
 - `backend/app/infra/db/models/__init__.py`
 - `backend/app/infra/db/models/token_usage_log.py`
 - `backend/app/services/ai_engine_adapter.py`
@@ -403,16 +437,26 @@ Corrections apportées à la story d'origine:
 - `backend/app/services/consultation_generation_service.py`
 - `backend/app/services/guidance_service.py`
 - `backend/app/services/llm_token_usage_service.py`
+- `backend/app/services/quota_usage_service.py`
+- `backend/app/services/quota_window_resolver.py`
 - `backend/app/services/natal_chart_long_entitlement_gate.py`
 - `backend/app/services/thematic_consultation_entitlement_gate.py`
+- `backend/app/api/v1/routers/entitlements.py`
 - `backend/app/tests/integration/test_chat_api.py`
 - `backend/app/tests/integration/test_chat_entitlement.py`
 - `backend/app/tests/integration/test_consultation_catalogue.py`
 - `backend/app/tests/integration/test_consultation_third_party.py`
 - `backend/app/tests/integration/test_consultations_router.py`
+- `backend/app/tests/integration/test_support_api.py`
 - `backend/app/tests/integration/test_thematic_consultation_entitlement.py`
+- `backend/app/llm_orchestration/tests/test_admin_llm_api.py`
+- `backend/app/llm_orchestration/tests/test_llm_gateway_routing.py`
+- `backend/app/llm_orchestration/tests/test_observability.py`
 - `backend/app/tests/unit/test_ai_engine_adapter.py`
 - `backend/app/tests/unit/test_chat_entitlement_gate.py`
+- `backend/app/tests/unit/test_ops_monitoring_service.py`
+- `backend/app/tests/unit/test_quota_usage_service.py`
+- `backend/app/tests/unit/test_quota_window_resolver.py`
 - `backend/app/tests/unit/test_chat_entitlement_gate_v2.py`
 - `backend/app/tests/unit/test_natal_chart_long_entitlement_gate_v2.py`
 - `backend/app/tests/unit/test_product_entitlements_models.py`
@@ -421,4 +465,7 @@ Corrections apportées à la story d'origine:
 - `backend/migrations/versions/d86bb999566a_add_user_token_usage_logs.py`
 - `backend/scripts/seed_product_entitlements.py`
 - `frontend/src/api/billing.ts`
+- `frontend/src/i18n/settings.ts`
+- `frontend/src/pages/settings/Settings.css`
 - `frontend/src/pages/settings/UsageSettings.tsx`
+- `frontend/src/tests/UsageSettings.test.tsx`

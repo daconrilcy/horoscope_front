@@ -14,7 +14,7 @@ from threading import Lock
 from time import monotonic
 
 from pydantic import BaseModel
-from sqlalchemy import desc, select
+from sqlalchemy import case, desc, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -506,7 +506,16 @@ class BillingService:
         quota_row = db.scalar(
             select(PlanFeatureQuotaModel)
             .where(PlanFeatureQuotaModel.plan_feature_binding_id == binding.id)
-            .order_by(asc(PlanFeatureQuotaModel.quota_key))
+            .order_by(
+                asc(PlanFeatureQuotaModel.quota_key),
+                desc(
+                    case(
+                        (PlanFeatureQuotaModel.period_unit == "month", 1),
+                        else_=0,
+                    )
+                ),
+                asc(PlanFeatureQuotaModel.period_value),
+            )
             .limit(1)
         )
         if quota_row is None:

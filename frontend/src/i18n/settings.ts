@@ -207,7 +207,7 @@ export const settingsTranslations = {
       buyCredits: "Acheter des crédits",
       buyCreditsDesc: "Besoin de plus de messages ? Achetez un pack de crédits supplémentaires.",
       soon: "Bientôt disponible",
-      quotaUnit: "msg",
+      quotaUnit: "tokens",
       periodUnit: {
         day: "jour",
         month: "mois",
@@ -258,7 +258,7 @@ export const settingsTranslations = {
       buyCredits: "Buy credits",
       buyCreditsDesc: "Need more messages? Buy an additional credit pack.",
       soon: "Soon available",
-      quotaUnit: "msg",
+      quotaUnit: "tokens",
       periodUnit: {
         day: "day",
         month: "month",
@@ -309,7 +309,7 @@ export const settingsTranslations = {
       buyCredits: "Comprar crédits",
       buyCreditsDesc: "¿Necesitas más mensajes? Compra un paquete de créditos adicionales.",
       soon: "Próximamente disponible",
-      quotaUnit: "msg",
+      quotaUnit: "tokens",
       periodUnit: {
         day: "día",
         month: "mes",
@@ -365,11 +365,16 @@ export const settingsTranslations = {
   usage: {
     fr: {
       title: "Statistiques d'usage",
-      dailyUsage: "Usage quotidien",
+      dailyUsage: "Usage des tokens",
       messagesUsed: "Messages envoyés",
       limit: "Limite",
       remaining: "Restants",
-      resetAt: "Réinitialisation à",
+      resetAt: "Réinitialisation",
+      resetHint: "Les tokens globaux sont comptabilisés sur le mois en cours.",
+      day: "Usage du jour",
+      week: "Usage de la semaine",
+      month: "Usage du mois",
+      totalLabel: "au total",
       loading: "Chargement des statistiques...",
       error: "Erreur de chargement",
       noData: "Aucune donnée disponible",
@@ -377,11 +382,16 @@ export const settingsTranslations = {
     },
     en: {
       title: "Usage Statistics",
-      dailyUsage: "Daily usage",
+      dailyUsage: "Token usage",
       messagesUsed: "Messages sent",
       limit: "Limit",
       remaining: "Remaining",
-      resetAt: "Resets at",
+      resetAt: "Reset",
+      resetHint: "Global tokens are measured over the current month.",
+      day: "Today",
+      week: "This week",
+      month: "This month",
+      totalLabel: "total",
       loading: "Loading statistics...",
       error: "Loading error",
       noData: "No data available",
@@ -389,11 +399,16 @@ export const settingsTranslations = {
     },
     es: {
       title: "Estadísticas de uso",
-      dailyUsage: "Uso diario",
+      dailyUsage: "Uso de tokens",
       messagesUsed: "Mensajes enviados",
       limit: "Límite",
       remaining: "Restantes",
-      resetAt: "Se reinicia a las",
+      resetAt: "Reinicio",
+      resetHint: "Los tokens globales se cuentan sobre el mes actual.",
+      day: "Uso del día",
+      week: "Uso de la semana",
+      month: "Uso del mes",
+      totalLabel: "en total",
       loading: "Cargando estadísticas...",
       error: "Error de carga",
       noData: "Sin datos disponibles",
@@ -408,6 +423,11 @@ export const settingsTranslations = {
       limit: string
       remaining: string
       resetAt: string
+      resetHint: string
+      day: string
+      week: string
+      month: string
+      totalLabel: string
       loading: string
       error: string
       noData: string

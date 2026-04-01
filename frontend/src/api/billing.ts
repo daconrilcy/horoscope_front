@@ -47,6 +47,53 @@ export type ChatEntitlementUsageStatus = {
   blocked: boolean
 }
 
+export type ChatEntitlementUsageState = {
+  quota_key: string
+  quota_limit: number
+  used: number
+  remaining: number
+  exhausted: boolean
+  period_unit: string
+  period_value: number
+  reset_mode: string
+  window_start: string | null
+  window_end: string | null
+}
+
+export type ChatEntitlementFeatureStatus = {
+  feature_code: string
+  granted: boolean
+  reason_code: string
+  access_mode: string | null
+  quota_limit: number | null
+  quota_remaining: number | null
+  variant_code: string | null
+  usage_states: ChatEntitlementUsageState[]
+}
+
+export type TokenUsagePeriod = {
+  unit: string
+  window_start: string
+  window_end: string | null
+}
+
+export type TokenUsageSummary = {
+  tokens_total: number
+  tokens_in: number
+  tokens_out: number
+}
+
+export type TokenUsageStatus = {
+  period: TokenUsagePeriod
+  summary: TokenUsageSummary
+}
+
+export type TokenUsageBreakdown = {
+  current_day: TokenUsageStatus
+  current_week: TokenUsageStatus
+  current_month: TokenUsageStatus
+}
+
 export class BillingApiError extends Error {
   readonly code: string
   readonly status: number
@@ -110,6 +157,10 @@ type EntitlementsMeResponse = {
   }
 }
 
+type TokenUsageApiResponse = {
+  data: TokenUsageStatus
+}
+
 const CHAT_QUOTA_FEATURE_CODE = "astrologer_chat"
 
 function toChatEntitlementUsage(feature: FeatureEntitlementResponse | undefined): ChatEntitlementUsageStatus | null {
@@ -126,6 +177,34 @@ function toChatEntitlementUsage(feature: FeatureEntitlementResponse | undefined)
     remaining: usage.remaining,
     reset_at: usage.window_end ?? "",
     blocked: usage.exhausted || feature?.final_access === false,
+  }
+}
+
+function toChatEntitlementFeature(feature: FeatureEntitlementResponse | undefined): ChatEntitlementFeatureStatus | null {
+  if (!feature) {
+    return null
+  }
+
+  return {
+    feature_code: feature.feature_code,
+    granted: feature.final_access,
+    reason_code: feature.reason,
+    access_mode: feature.final_access ? "quota" : null,
+    quota_limit: feature.usage_states[0]?.quota_limit ?? null,
+    quota_remaining: feature.usage_states[0]?.remaining ?? null,
+    variant_code: null,
+    usage_states: feature.usage_states.map((state) => ({
+      quota_key: state.quota_key,
+      quota_limit: state.quota_limit,
+      used: state.used,
+      remaining: state.remaining,
+      exhausted: state.exhausted,
+      period_unit: state.period_unit,
+      period_value: state.period_value,
+      reset_mode: state.reset_mode,
+      window_start: state.window_start,
+      window_end: state.window_end,
+    })),
   }
 }
 
@@ -168,6 +247,43 @@ async function fetchChatEntitlementUsage(): Promise<ChatEntitlementUsageStatus |
   return toChatEntitlementUsage(chatEntitlement)
 }
 
+async function fetchChatEntitlementFeature(): Promise<ChatEntitlementFeatureStatus | null> {
+  const response = await fetch(`${API_BASE_URL}/v1/entitlements/me`, {
+    method: "GET",
+    headers: getAccessTokenAuthHeader(),
+  })
+  if (!response.ok) {
+    return parseError(response)
+  }
+  const body = (await response.json()) as EntitlementsMeResponse
+  const chatEntitlement = body.data.features.find(
+    (feature) => feature.feature_code === CHAT_QUOTA_FEATURE_CODE,
+  )
+  return toChatEntitlementFeature(chatEntitlement)
+}
+
+async function fetchTokenUsagePeriod(period: "current_day" | "current_week" | "current_month"): Promise<TokenUsageStatus> {
+  const response = await fetch(`${API_BASE_URL}/v1/billing/token-usage?period=${period}`, {
+    method: "GET",
+    headers: getAccessTokenAuthHeader(),
+  })
+  if (!response.ok) {
+    return parseError(response)
+  }
+  const body = (await response.json()) as TokenUsageApiResponse
+  return body.data
+}
+
+async function fetchTokenUsageBreakdown(): Promise<TokenUsageBreakdown> {
+  const [current_day, current_week, current_month] = await Promise.all([
+    fetchTokenUsagePeriod("current_day"),
+    fetchTokenUsagePeriod("current_week"),
+    fetchTokenUsagePeriod("current_month"),
+  ])
+
+  return { current_day, current_week, current_month }
+}
+
 export function useBillingSubscription() {
   return useQuery({
     queryKey: ["billing-subscription"],
@@ -186,6 +302,28 @@ export function useChatEntitlementUsage() {
   return useQuery({
     queryKey: ["chat-entitlement-usage"],
     queryFn: fetchChatEntitlementUsage,
+    retry: (failureCount, error) => {
+      if (error instanceof BillingApiError && error.status === 403) return false
+      return failureCount < 1
+    },
+  })
+}
+
+export function useTokenUsageBreakdown() {
+  return useQuery({
+    queryKey: ["token-usage-breakdown"],
+    queryFn: fetchTokenUsageBreakdown,
+    retry: (failureCount, error) => {
+      if (error instanceof BillingApiError && error.status === 403) return false
+      return failureCount < 1
+    },
+  })
+}
+
+export function useChatEntitlementFeature() {
+  return useQuery({
+    queryKey: ["chat-entitlement-feature"],
+    queryFn: fetchChatEntitlementFeature,
     retry: (failureCount, error) => {
       if (error instanceof BillingApiError && error.status === 403) return false
       return failureCount < 1

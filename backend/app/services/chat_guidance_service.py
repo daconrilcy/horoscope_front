@@ -489,25 +489,28 @@ class ChatGuidanceService:
         Enregistre l'usage des tokens de manière atomique (AC9).
         Si l'enregistrement échoue, l'exception est propagée pour annuler la transaction.
         """
-        quota_def = None
+        quota_defs: list[QuotaDefinition] = []
         if entitlement_result and entitlement_result.usage_states:
-            token_state = next(
-                (s for s in entitlement_result.usage_states if s.quota_key == "tokens"), None
+            token_states = sorted(
+                (state for state in entitlement_result.usage_states if state.quota_key == "tokens"),
+                key=lambda state: (state.period_unit, state.period_value, state.quota_limit),
             )
-            if token_state:
-                quota_def = QuotaDefinition(
+            quota_defs = [
+                QuotaDefinition(
                     quota_key=token_state.quota_key,
                     quota_limit=token_state.quota_limit,
                     period_unit=token_state.period_unit,
                     period_value=token_state.period_value,
                     reset_mode=token_state.reset_mode,
                 )
+                for token_state in token_states
+            ]
 
         LlmTokenUsageService.record_usage(
             db,
             user_id=user_id,
             feature_code="astrologer_chat",
-            quota=quota_def,
+            quotas=quota_defs,
             provider_model=gateway_result.meta.model,
             tokens_in=gateway_result.usage.input_tokens,
             tokens_out=gateway_result.usage.output_tokens,

@@ -138,6 +138,20 @@ def seed() -> None:
                 "quotas": [
                     {
                         "quota_key": "tokens",
+                        "quota_limit": 1667,
+                        "period_unit": PeriodUnit.DAY,
+                        "period_value": 1,
+                        "reset_mode": ResetMode.CALENDAR,
+                    },
+                    {
+                        "quota_key": "tokens",
+                        "quota_limit": 12500,
+                        "period_unit": PeriodUnit.WEEK,
+                        "period_value": 1,
+                        "reset_mode": ResetMode.CALENDAR,
+                    },
+                    {
+                        "quota_key": "tokens",
                         "quota_limit": 50000,
                         "period_unit": PeriodUnit.MONTH,
                         "period_value": 1,
@@ -186,6 +200,20 @@ def seed() -> None:
                 "access_mode": AccessMode.QUOTA,
                 "variant_code": None,
                 "quotas": [
+                    {
+                        "quota_key": "tokens",
+                        "quota_limit": 50000,
+                        "period_unit": PeriodUnit.DAY,
+                        "period_value": 1,
+                        "reset_mode": ResetMode.CALENDAR,
+                    },
+                    {
+                        "quota_key": "tokens",
+                        "quota_limit": 375000,
+                        "period_unit": PeriodUnit.WEEK,
+                        "period_value": 1,
+                        "reset_mode": ResetMode.CALENDAR,
+                    },
                     {
                         "quota_key": "tokens",
                         "quota_limit": 1500000,
