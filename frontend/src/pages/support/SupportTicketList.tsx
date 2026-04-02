@@ -61,15 +61,18 @@ export function SupportTicketList({ refreshTrigger }: SupportTicketListProps) {
         icon={<MessageSquare size={48} />}
         title={help.tickets.title}
         description={help.tickets.emptyDescription}
-      >
-        <Button 
-          variant="ghost" 
-          onClick={scrollToSupport}
-          rightIcon={<ArrowRight size={18} />}
-        >
-          {help.hero.primaryCta}
-        </Button>
-      </EmptyState>
+        action={
+          <Button 
+            variant="primary"
+            size="lg"
+            className="help-hero__primary-btn"
+            onClick={scrollToSupport}
+            rightIcon={<ArrowRight size={18} />}
+          >
+            {help.hero.primaryCta}
+          </Button>
+        }
+      />
     )
   }
 
@@ -109,7 +112,7 @@ export function SupportTicketList({ refreshTrigger }: SupportTicketListProps) {
             <span>{formatDate(ticket.created_at, lang)}</span>
             {ticket.category_code && (
               <span className="ticket-item__category">
-                • {(help.categoryDescriptions as any)[ticket.category_code]?.split('.')[0] || ticket.category_code}
+                • {(help.categoryLabels as Record<string, string | undefined>)[ticket.category_code] || ticket.category_code}
               </span>
             )}
             {ticket.resolved_at && (
@@ -131,7 +134,9 @@ export function SupportTicketList({ refreshTrigger }: SupportTicketListProps) {
       {total > tickets.length && (
         <div className="load-more-container">
           <Button 
-            variant="ghost" 
+            variant="primary"
+            size="lg"
+            className="help-hero__primary-btn"
             onClick={handleLoadMore}
             loading={isFetching}
             disabled={isFetching}

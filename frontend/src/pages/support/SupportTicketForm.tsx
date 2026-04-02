@@ -66,7 +66,13 @@ export function SupportTicketForm({ category, onCancel, onSuccess }: SupportTick
           <Hash size={14} />
           {category.label}
         </div>
-        <Button variant="ghost" onClick={onCancel} leftIcon={<ArrowLeft size={18} />}>
+        <Button
+          variant="primary"
+          size="lg"
+          className="help-hero__primary-btn"
+          onClick={onCancel}
+          leftIcon={<ArrowLeft size={18} />}
+        >
           {help.form.changeCategory}
         </Button>
       </div>
@@ -108,6 +114,8 @@ export function SupportTicketForm({ category, onCancel, onSuccess }: SupportTick
           <Button 
             type="submit" 
             variant="primary" 
+            size="lg"
+            className="help-hero__primary-btn"
             disabled={isSubmitting}
             loading={isSubmitting}
             leftIcon={<Send size={18} />}

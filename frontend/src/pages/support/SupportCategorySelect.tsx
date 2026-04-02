@@ -32,7 +32,7 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 export function SupportCategorySelect({ onSelect, selectedCode }: SupportCategorySelectProps) {
   const { lang } = useAstrologyLabels()
   const { help } = useTranslation("support")
-  const { data: categories, isLoading, isError } = useHelpCategories(lang)
+  const { data: categories, isLoading, isError, refetch } = useHelpCategories(lang)
 
   if (isLoading) {
     return (
@@ -49,7 +49,7 @@ export function SupportCategorySelect({ onSelect, selectedCode }: SupportCategor
   }
 
   if (isError) {
-    return <ErrorState message={help.categories.error} />
+    return <ErrorState message={help.categories.error} onRetry={() => void refetch()} />
   }
 
   if (!categories || categories.length === 0) {

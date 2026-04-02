@@ -2,16 +2,50 @@ export const supportTranslations = {
   fr: {
     help: {
       pageTitle: "Centre d'aide & Support",
+      shortcutsKicker: "Navigation rapide",
+      shortcutsSectionTitle: "Explorer les sections du site",
+      shortcutsSectionDescription:
+        "Accédez rapidement aux espaces les plus utiles sans repasser par la navigation principale.",
       hero: {
+        kicker: "Aide & support",
         title: "Comment pouvons-nous vous aider aujourd’hui ?",
-        subtitle: "Trouvez des réponses rapides ou contactez notre équipe d’experts.",
+        subtitle: "Retrouvez les réponses essentielles, comprenez votre abonnement et contactez le support depuis un seul endroit.",
         primaryCta: "Ouvrir un ticket support",
         secondaryCta: "Gérer mon abonnement",
+        asideBadge: "Support utilisateur",
+        asideTitle: "Un point d’entrée clair",
+        asideDescription:
+          "La page regroupe les raccourcis utiles, les informations d’abonnement et la création de ticket pour éviter les allers-retours inutiles.",
+        metrics: [
+          {
+            label: "Temps de réponse",
+            value: "< 24 h",
+            description: "Repère visible dès l’arrivée sur la page.",
+          },
+          {
+            label: "Parcours guidé",
+            value: "3 étapes",
+            description: "Choisir une catégorie, décrire, puis suivre.",
+          },
+          {
+            label: "Suivi utilisateur",
+            value: "Historique centralisé",
+            description: "Les demandes restent visibles au même endroit.",
+          },
+        ],
+        supportSummary: {
+          defaultCategory: "À sélectionner",
+          categoryLabel: "Catégorie",
+          statusLabel: "Statut",
+          statusValue: "En attente",
+          channelLabel: "Canal",
+          channelValue: "Support expert",
+        },
         steps: [
           "Choisissez une catégorie",
           "Décrivez votre besoin",
-          "Suivez la résolution"
-        ]
+          "Suivez la résolution",
+        ],
       },
       shortcuts: {
         dashboard: {
@@ -36,8 +70,20 @@ export const supportTranslations = {
         },
       },
       tokens: {
-        title: "Comprendre vos crédits",
-        intro: "Chaque interaction avec l’IA consomme des tokens. Votre quota se renouvelle selon votre abonnement.",
+        kicker: "Abonnements",
+        title: "Fonctionnement des abonnements",
+        headingDescription:
+          "Comprenez rapidement ce que débloque chaque formule et comment les tokens sont utilisés dans l’application.",
+        subscriptionTitle: "Que comprend mon abonnement",
+        intro: "Chaque abonnement donne accès à un ensemble de fonctionnalités adapté à votre formule.",
+        structure:
+          "Selon l’abonnement choisi, la quantité de tokens inclus, les fonctionnalités accessibles et le niveau de priorité peuvent varier. Les formules supérieures ouvrent généralement plus d’usages et un traitement plus rapide sur certaines expériences.",
+        tokenTitle: "Qu’est-ce qu’un token ?",
+        tokenExample:
+          "Un token est une unité de consommation utilisée lorsque vous lancez un usage IA dans l’application. Il sert à mesurer l’utilisation, pas à représenter une action unique.",
+        tokenCounting:
+          "En pratique, une demande courte dans le chat consomme moins de tokens qu’une consultation plus longue ou plus détaillée. Votre solde diminue au fil des usages éligibles, selon la longueur et la complexité de la demande.",
+        cta: "Voir le détail des abonnements",
         plans: {
           free: {
             name: "Free",
@@ -60,26 +106,32 @@ export const supportTranslations = {
         },
       },
       billing: {
+        kicker: "Facturation",
         title: "Abonnement & Facturation",
+        intro:
+          "Retrouvez ici tout ce qui concerne votre formule actuelle, votre facturation et la gestion de vos droits d’accès.",
         features: [
           "Gérez vos moyens de paiement",
           "Téléchargez vos factures",
           "Changez de plan à tout moment",
-          "Consultez vos droits effectifs"
+          "Consultez vos droits effectifs",
         ],
         cta: "Accéder à mon espace facturation",
       },
       supportEntry: {
         title: "Besoin d'aide personnalisée ?",
-        description: "Choisissez une catégorie puis envoyez votre demande à notre équipe support. Vous pourrez ensuite suivre vos demandes directement depuis cette page.",
+        description:
+          "Choisissez une catégorie puis envoyez votre demande à notre équipe support. Vous pourrez ensuite suivre vos demandes directement depuis cette page.",
         cta: "Faire une demande de support",
       },
       categories: {
+        kicker: "Support",
         title: "Comment pouvons-nous vous aider ?",
         loading: "Chargement des catégories…",
         error: "Erreur lors du chargement des catégories.",
         emptyTitle: "Aucune catégorie disponible",
-        emptyDescription: "Le formulaire de support n’est pas disponible pour le moment. Veuillez réessayer plus tard.",
+        emptyDescription:
+          "Le formulaire de support n’est pas disponible pour le moment. Veuillez réessayer plus tard.",
       },
       categoryDescriptions: {
         subscription_problem: "Problèmes liés à votre paiement ou accès premium.",
@@ -89,6 +141,15 @@ export const supportTranslations = {
         feature_question: "Comment utiliser une fonctionnalité spécifique.",
         data_privacy: "Exercer vos droits RGPD ou gérer vos données.",
         other: "Toute autre demande non listée ci-dessus.",
+      },
+      categoryLabels: {
+        subscription_problem: "Abonnement",
+        billing_issue: "Facturation",
+        bug: "Bug",
+        account_access: "Compte",
+        feature_question: "Fonctionnalité",
+        data_privacy: "Confidentialité",
+        other: "Autre",
       },
       form: {
         title: "Nouvelle demande de support",
@@ -114,7 +175,8 @@ export const supportTranslations = {
         errorGeneric: "Une erreur est survenue lors de l’envoi. Veuillez réessayer.",
       },
       tickets: {
-        title: "Mes demandes récentes",
+        kicker: "Suivi",
+        title: "Mes demandes",
         empty: "Vous n’avez pas encore soumis de demande de support.",
         emptyDescription: "Une question ? Un problème ? Nos experts sont là pour vous aider.",
         supportResponseLabel: "Réponse du support",
@@ -135,16 +197,46 @@ export const supportTranslations = {
   en: {
     help: {
       pageTitle: "Help Center & Support",
+      shortcutsKicker: "Quick navigation",
+      shortcutsSectionTitle: "Explore site sections",
+      shortcutsSectionDescription:
+        "Open the most useful areas quickly without going back through the main navigation.",
       hero: {
+        kicker: "Help & support",
         title: "How can we help you today?",
-        subtitle: "Find quick answers or contact our team of experts.",
+        subtitle: "Find the essential answers, understand your subscription, and contact support from one place.",
         primaryCta: "Open a support ticket",
         secondaryCta: "Manage my subscription",
-        steps: [
-          "Choose a category",
-          "Describe your need",
-          "Follow the resolution"
-        ]
+        asideBadge: "User support",
+        asideTitle: "A clearer entry point",
+        asideDescription:
+          "This page brings together shortcuts, subscription information, and ticket creation to reduce unnecessary back-and-forth.",
+        metrics: [
+          {
+            label: "Response time",
+            value: "< 24 h",
+            description: "A visible reference as soon as the page opens.",
+          },
+          {
+            label: "Guided flow",
+            value: "3 steps",
+            description: "Choose a category, describe, then follow up.",
+          },
+          {
+            label: "User tracking",
+            value: "Centralized history",
+            description: "Requests stay visible in one place.",
+          },
+        ],
+        supportSummary: {
+          defaultCategory: "To select",
+          categoryLabel: "Category",
+          statusLabel: "Status",
+          statusValue: "Pending",
+          channelLabel: "Channel",
+          channelValue: "Expert support",
+        },
+        steps: ["Choose a category", "Describe your need", "Follow the resolution"],
       },
       shortcuts: {
         dashboard: {
@@ -169,8 +261,20 @@ export const supportTranslations = {
         },
       },
       tokens: {
-        title: "Understanding your credits",
-        intro: "Each interaction with the AI consumes tokens. Your quota renews according to your subscription.",
+        kicker: "Subscriptions",
+        title: "How subscriptions work",
+        headingDescription:
+          "Quickly understand what each plan unlocks and how tokens are used throughout the app.",
+        subscriptionTitle: "What does my subscription include",
+        intro: "Each subscription gives access to a set of features tailored to your plan.",
+        structure:
+          "Depending on the subscription you choose, the number of included tokens, the available features, and the priority level may vary. Higher tiers generally unlock more usage and faster handling on some experiences.",
+        tokenTitle: "What is a token?",
+        tokenExample:
+          "A token is a unit of usage consumed when you start an AI-powered action in the app. It measures usage, rather than representing a single fixed action.",
+        tokenCounting:
+          "In practice, a short chat prompt uses fewer tokens than a longer or more detailed consultation. Your balance goes down across eligible usages depending on the length and complexity of the request.",
+        cta: "See subscription details",
         plans: {
           free: {
             name: "Free",
@@ -193,21 +297,25 @@ export const supportTranslations = {
         },
       },
       billing: {
+        kicker: "Billing",
         title: "Subscription & Billing",
+        intro: "Find everything related to your current plan, your billing, and the management of your access rights here.",
         features: [
           "Manage your payment methods",
           "Download your invoices",
           "Change plan at any time",
-          "Consult your actual rights"
+          "Consult your actual rights",
         ],
         cta: "Access my billing space",
       },
       supportEntry: {
         title: "Need personalized help?",
-        description: "Choose a category and send your request to our support team. You will then be able to track your requests directly from this page.",
+        description:
+          "Choose a category and send your request to our support team. You will then be able to track your requests directly from this page.",
         cta: "Create a support request",
       },
       categories: {
+        kicker: "Support",
         title: "How can we help you?",
         loading: "Loading categories…",
         error: "Error loading categories.",
@@ -222,6 +330,15 @@ export const supportTranslations = {
         feature_question: "How to use a specific feature.",
         data_privacy: "Exercise your GDPR rights or manage your data.",
         other: "Any other request not listed above.",
+      },
+      categoryLabels: {
+        subscription_problem: "Subscription",
+        billing_issue: "Billing",
+        bug: "Bug",
+        account_access: "Account",
+        feature_question: "Feature",
+        data_privacy: "Privacy",
+        other: "Other",
       },
       form: {
         title: "New support request",
@@ -247,7 +364,8 @@ export const supportTranslations = {
         errorGeneric: "An error occurred during sending. Please try again.",
       },
       tickets: {
-        title: "My recent requests",
+        kicker: "Tracking",
+        title: "My requests",
         empty: "You haven't submitted any support requests yet.",
         emptyDescription: "A question? A problem? Our experts are here to help.",
         supportResponseLabel: "Support response",
@@ -268,16 +386,46 @@ export const supportTranslations = {
   es: {
     help: {
       pageTitle: "Centro de Ayuda y Soporte",
+      shortcutsKicker: "Navegación rápida",
+      shortcutsSectionTitle: "Explorar las secciones del sitio",
+      shortcutsSectionDescription:
+        "Abra rápidamente las áreas más útiles sin volver a la navegación principal.",
       hero: {
+        kicker: "Ayuda y soporte",
         title: "¿Cómo podemos ayudarte hoy?",
-        subtitle: "Encuentra respuestas rápidas o contacta a nuestro equipo de expertos.",
+        subtitle: "Encuentra las respuestas esenciales, comprende tu suscripción y contacta al soporte desde un solo lugar.",
         primaryCta: "Abrir un ticket de soporte",
         secondaryCta: "Gestionar mi suscripción",
-        steps: [
-          "Elija una categoría",
-          "Describa su necesidad",
-          "Siga la resolución"
-        ]
+        asideBadge: "Soporte de usuario",
+        asideTitle: "Un punto de entrada más claro",
+        asideDescription:
+          "Esta página reúne accesos rápidos, información de suscripción y creación de tickets para evitar idas y vueltas innecesarias.",
+        metrics: [
+          {
+            label: "Tiempo de respuesta",
+            value: "< 24 h",
+            description: "Referencia visible desde la llegada a la página.",
+          },
+          {
+            label: "Recorrido guiado",
+            value: "3 pasos",
+            description: "Elegir categoría, describir y hacer seguimiento.",
+          },
+          {
+            label: "Seguimiento usuario",
+            value: "Historial centralizado",
+            description: "Las solicitudes siguen visibles en un solo lugar.",
+          },
+        ],
+        supportSummary: {
+          defaultCategory: "Por seleccionar",
+          categoryLabel: "Categoría",
+          statusLabel: "Estado",
+          statusValue: "Pendiente",
+          channelLabel: "Canal",
+          channelValue: "Soporte experto",
+        },
+        steps: ["Elija una categoría", "Describa su necesidad", "Siga la resolución"],
       },
       shortcuts: {
         dashboard: {
@@ -302,8 +450,20 @@ export const supportTranslations = {
         },
       },
       tokens: {
-        title: "Comprender sus créditos",
-        intro: "Cada interacción con la IA consume tokens. Su cupo se renueva según su suscripción.",
+        kicker: "Suscripciones",
+        title: "Funcionamiento de las suscripciones",
+        headingDescription:
+          "Comprende rápidamente lo que desbloquea cada plan y cómo se usan los tokens en la aplicación.",
+        subscriptionTitle: "Qué incluye mi suscripción",
+        intro: "Cada suscripción da acceso a un conjunto de funciones adaptado a su plan.",
+        structure:
+          "Según la suscripción elegida, la cantidad de tokens incluidos, las funciones accesibles y el nivel de prioridad pueden variar. Los planes superiores suelen desbloquear más usos y una gestión más rápida en algunas experiencias.",
+        tokenTitle: "¿Qué es un token?",
+        tokenExample:
+          "Un token es una unidad de consumo utilizada cuando inicia un uso con IA en la aplicación. Sirve para medir el uso, no para representar una acción fija única.",
+        tokenCounting:
+          "En la práctica, una solicitud corta en el chat consume menos tokens que una consulta más larga o más detallada. Su saldo baja según los usos elegibles y según la longitud y complejidad de la solicitud.",
+        cta: "Ver el detalle de las suscripciones",
         plans: {
           free: {
             name: "Free",
@@ -326,21 +486,26 @@ export const supportTranslations = {
         },
       },
       billing: {
+        kicker: "Facturación",
         title: "Suscripción y Facturación",
+        intro:
+          "Encuentre aquí todo lo relacionado con su plan actual, su facturación y la gestión de sus derechos de acceso.",
         features: [
           "Gestione sus métodos de pago",
           "Descargue sus facturas",
           "Cambie de plan en cualquier momento",
-          "Consulte sus derechos efectivos"
+          "Consulte sus derechos efectivos",
         ],
         cta: "Acceder a mi espacio de facturación",
       },
       supportEntry: {
         title: "¿Necesita ayuda personalizada?",
-        description: "Elija una categoría y envíe su solicitud a nuestro equipo de soporte. Luego podrá seguir sus solicitudes directamente desde esta página.",
+        description:
+          "Elija una categoría y envíe su solicitud a nuestro equipo de soporte. Luego podrá seguir sus solicitudes directamente desde esta página.",
         cta: "Crear una solicitud de soporte",
       },
       categories: {
+        kicker: "Soporte",
         title: "¿Cómo podemos ayudarte?",
         loading: "Cargando categorías…",
         error: "Error al cargar las categorías.",
@@ -355,6 +520,15 @@ export const supportTranslations = {
         feature_question: "Cómo usar una función específica.",
         data_privacy: "Ejercer sus derechos RGPD o gestionar sus datos.",
         other: "Cualquier otra solicitud no enumerada anteriormente.",
+      },
+      categoryLabels: {
+        subscription_problem: "Suscripción",
+        billing_issue: "Facturación",
+        bug: "Bug",
+        account_access: "Cuenta",
+        feature_question: "Funcionalidad",
+        data_privacy: "Privacidad",
+        other: "Otro",
       },
       form: {
         title: "Nueva solicitud de soporte",
@@ -380,7 +554,8 @@ export const supportTranslations = {
         errorGeneric: "Ocurrió un error al enviar. Por favor, inténtelo de nuevo.",
       },
       tickets: {
-        title: "Mis solicitudes recientes",
+        kicker: "Seguimiento",
+        title: "Mis solicitudes",
         empty: "Aún no ha enviado ninguna solicitud de soporte.",
         emptyDescription: "¿Una pregunta? ¿Un problema? Nuestros expertos están aquí para ayudar.",
         supportResponseLabel: "Respuesta del soporte",
@@ -398,4 +573,4 @@ export const supportTranslations = {
       },
     },
   },
-};
+}

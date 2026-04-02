@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createMemoryRouter, RouterProvider } from "react-router-dom"
@@ -29,9 +29,9 @@ const CATEGORIES_OK = {
       categories: [
         { code: "bug", label: "Bug / dysfonctionnement", description: "Signalement d'un bug" },
         { code: "other", label: "Autre demande", description: null },
-      ]
-    }
-  })
+      ],
+    },
+  }),
 }
 
 const TICKETS_OK = {
@@ -49,14 +49,14 @@ const TICKETS_OK = {
           status: "pending",
           created_at: "2026-04-01T10:00:00Z",
           updated_at: "2026-04-01T10:15:00Z",
-          resolved_at: null
-        }
+          resolved_at: null,
+        },
       ],
       total: 1,
       limit: 20,
-      offset: 0
-    }
-  })
+      offset: 0,
+    },
+  }),
 }
 
 const CREATE_TICKET_OK = {
@@ -72,9 +72,9 @@ const CREATE_TICKET_OK = {
       status: "pending",
       created_at: "2026-04-01T11:00:00Z",
       updated_at: "2026-04-01T11:00:00Z",
-      resolved_at: null
-    }
-  })
+      resolved_at: null,
+    },
+  }),
 }
 
 const NOT_FOUND = {
@@ -107,27 +107,32 @@ describe("HelpPage", () => {
     renderHelpPage()
 
     await waitFor(() => {
-      // Hero
       expect(screen.getByText("Comment pouvons-nous vous aider aujourd’hui ?")).toBeInTheDocument()
       expect(screen.getByRole("button", { name: "Ouvrir un ticket support" })).toBeInTheDocument()
-      
-      // Shortcuts
+
+      expect(screen.getByText("Explorer les sections du site")).toBeInTheDocument()
       expect(screen.getByText("Horoscope")).toBeInTheDocument()
       expect(screen.getByText("Suivez votre météo astrale")).toBeInTheDocument()
-      
-      // Tokens
-      expect(screen.getByText("Comprendre vos crédits")).toBeInTheDocument()
-      expect(screen.getByText("Basic")).toBeInTheDocument()
-      expect(screen.getByText("10 tokens / jour")).toBeInTheDocument()
-      
-      // Billing
+
+      expect(screen.getByText("Fonctionnement des abonnements")).toBeInTheDocument()
+      expect(screen.getByText("Que comprend mon abonnement")).toBeInTheDocument()
+      expect(screen.getByText("Qu’est-ce qu’un token ?")).toBeInTheDocument()
+      expect(screen.getByText("Chaque abonnement donne accès à un ensemble de fonctionnalités adapté à votre formule.")).toBeInTheDocument()
+      expect(screen.getByRole("link", { name: /Voir le détail des abonnements/i })).toHaveAttribute(
+        "href",
+        "/help/subscriptions",
+      )
+
       expect(screen.getByText("Abonnement & Facturation")).toBeInTheDocument()
-      
-      // Categories
+      expect(screen.getByRole("link", { name: /Accéder à mon espace facturation/i })).toHaveAttribute(
+        "href",
+        "/settings/subscription",
+      )
+
       expect(screen.getByText("Bug / dysfonctionnement")).toBeInTheDocument()
       expect(screen.getByText("Signalement d'un bug")).toBeInTheDocument()
-      
-      // Tickets
+
+      expect(screen.getByText("Mes demandes")).toBeInTheDocument()
       expect(screen.getByText("Test Ticket")).toBeInTheDocument()
       expect(screen.getByText("Nous avons bien pris en charge votre demande.")).toBeInTheDocument()
     })
@@ -139,7 +144,9 @@ describe("HelpPage", () => {
       const url = String(input)
       if (url.endsWith("/v1/auth/me")) return AUTH_ME_USER
       if (url.includes("/v1/help/categories")) return CATEGORIES_OK
-      if (url.includes("/v1/help/tickets") && input instanceof Request && input.method === "POST") return CREATE_TICKET_OK
+      if (url.includes("/v1/help/tickets") && input instanceof Request && input.method === "POST") {
+        return CREATE_TICKET_OK
+      }
       if (url.includes("/v1/help/tickets")) return TICKETS_OK
       return NOT_FOUND
     })
@@ -150,23 +157,21 @@ describe("HelpPage", () => {
     const categoryCard = await screen.findByRole("button", { name: /Bug \/ dysfonctionnement/i })
     await user.click(categoryCard)
 
-    // Vérifier le chip catégorie
-    expect(screen.getByText("Bug / dysfonctionnement")).toBeInTheDocument()
+    expect(screen.getAllByText("Bug / dysfonctionnement").length).toBeGreaterThan(0)
 
     const descInput = screen.getByLabelText(/Description détaillée/i)
     await user.type(descInput, "Ceci est une description de test assez longue.")
-    
-    // Vérifier le hint
+
     expect(screen.getByText("Plus vous donnez de détails, plus vite nous pourrons vous aider.")).toBeInTheDocument()
 
     const submitBtn = screen.getByRole("button", { name: /Envoyer ma demande/i })
     await user.click(submitBtn)
 
     await waitFor(() => {
-      // Formulaire fermé
       expect(screen.queryByLabelText(/Description détaillée/i)).not.toBeInTheDocument()
-      // Message de succès affiché
-      expect(screen.getByText("Votre demande a été envoyée avec succès. Notre équipe reviendra vers vous prochainement.")).toBeInTheDocument()
+      expect(
+        screen.getByText("Votre demande a été envoyée avec succès. Notre équipe reviendra vers vous prochainement."),
+      ).toBeInTheDocument()
     })
   })
 
@@ -181,11 +186,49 @@ describe("HelpPage", () => {
 
     renderHelpPage()
 
-    // "Autre demande" a description: null dans CATEGORIES_OK
-    // Le fallback i18n pour "other" est "Toute autre demande non listée ci-dessus."
     await waitFor(() => {
       expect(screen.getByText("Toute autre demande non listée ci-dessus.")).toBeInTheDocument()
     })
+  })
+
+  it("affiche un CTA dans l'état vide des tickets", async () => {
+    const scrollIntoViewMock = vi.fn()
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith("/v1/auth/me")) return AUTH_ME_USER
+      if (url.includes("/v1/help/categories")) return CATEGORIES_OK
+      if (url.includes("/v1/help/tickets")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: {
+              tickets: [],
+              total: 0,
+              limit: 20,
+              offset: 0,
+            },
+          }),
+        }
+      }
+      return NOT_FOUND
+    }))
+
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoViewMock,
+    })
+
+    renderHelpPage()
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("button", { name: "Ouvrir un ticket support" })).toHaveLength(2)
+    })
+
+    const emptyCta = screen.getAllByRole("button", { name: "Ouvrir un ticket support" })[1]
+    fireEvent.click(emptyCta)
+
+    expect(scrollIntoViewMock).toHaveBeenCalled()
   })
 })
 
@@ -198,7 +241,7 @@ function renderHelpPage() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
-  
+
   const router = createMemoryRouter(routes, {
     initialEntries: ["/help"],
   })
@@ -209,9 +252,9 @@ function renderHelpPage() {
         <ThemeProvider>
           <RouterProvider router={router} />
         </ThemeProvider>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     ),
     router,
-    queryClient
+    queryClient,
   }
 }

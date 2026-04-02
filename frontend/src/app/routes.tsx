@@ -16,6 +16,7 @@ import { BirthProfilePage } from "../pages/BirthProfilePage"
 import { NotFoundPage } from "../pages/NotFoundPage"
 import DailyHoroscopePage from "../pages/DailyHoroscopePage"
 import HelpPage from "../pages/HelpPage"
+import { SubscriptionGuidePage } from "../pages/SubscriptionGuidePage"
 
 import { DashboardPage } from "../pages/DashboardPage"
 import { ConsultationsPage } from "../pages/ConsultationsPage"
@@ -129,6 +130,10 @@ export const routes: RouteObject[] = [
       {
         path: "/help",
         element: <HelpPage />,
+      },
+      {
+        path: "/help/subscriptions",
+        element: <SubscriptionGuidePage />,
       },
       {
         path: "/consultations",

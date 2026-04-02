@@ -1,6 +1,6 @@
 # Story 62.2 : Amélioration UX/UI de la page `/help`
 
-Status: ready-for-dev
+Status: done
 
 ---
 
@@ -346,38 +346,51 @@ gpt-5
 
 ### Implementation Notes
 
-L'amélioration UX/UI de la page `/help` a été réalisée conformément aux spécifications.
-- **Hero Premium** : Intégration d'un hero avec halo et texture, CTA vers le support et l'abonnement, et micro-étapes d'orientation.
-- **Raccourcis** : Grille de 4 raccourcis vers les fonctionnalités clés (`/today`, `/chat`, `/natal-chart`, `/consultations`) avec icônes et bénéfices.
-- **Comparaison de Tokens** : Remplacement du tableau par une grille comparative de 3 plans (Free, Basic, Premium) avec caractéristiques détaillées.
-- **Carte Facturation** : Ajout d'une carte dédiée au style `Settings.css` pour la gestion de l'abonnement.
+L'amélioration UX/UI de la page `/help` a été livrée avec plusieurs ajustements de réalisation pour coller au rendu final validé.
+
+- **Hero simplifié** : hero premium conservé, mais sans panneau latéral redondant. Le hero se concentre sur le titre, le sous-titre, les CTA et trois métriques.
+- **Raccourcis** : grille de 4 raccourcis vers les sections clés (`/today`, `/chat`, `/natal-chart`, `/consultations`) avec styles isolés pour éviter les collisions CSS avec d'autres composants globaux.
+- **Abonnements** : la section "Fonctionnement des abonnements" a finalement été refondue en **deux cartes explicatives** :
+  - "Que comprend mon abonnement"
+  - "Qu’est-ce qu’un token ?"
+- **Page dédiée abonnements** : ajout d'une route placeholder `/help/subscriptions` et d'une page vide dédiée pour un futur détail complet des offres.
+- **Carte Facturation** : bloc abonnement/facturation dédié avec CTA harmonisé sur le style primaire principal.
 - **Support UI** :
   - Sélection de catégorie enrichie avec descriptions et état actif.
-  - Formulaire avec chip de rappel de catégorie et texte d'aide.
-  - Message de succès inline visible.
-  - Liste de tickets restructurée (header sur deux lignes) et état vide avec CTA.
-- **Tests** : Mise à jour exhaustive de `HelpPage.test.tsx` pour couvrir toutes les nouvelles AC.
+  - Formulaire avec chip catégorie, texte d'aide et CTA harmonisés.
+  - Message de succès inline visible après création.
+  - Bloc "Mes demandes" déplacé en dernier panneau pleine largeur.
+  - Tickets restylés avec un rendu plus glassmorph et un header plus scannable.
+- **Robustesse CSS** :
+  - suppression de plusieurs collisions de classes génériques (`metric-card`, `shortcut-card`)
+  - correction des problèmes de débordement et de contenu cassé dans les cartes
+  - responsive ajusté pour conserver une lecture propre en mobile
+- **Tests** : `HelpPage.test.tsx` mis à jour pour refléter la structure réellement livrée.
 
 ### File List
 
+- `_bmad-output/implementation-artifacts/62-2-amelioration-ux-ui-page-help.md`
+- `frontend/src/app/routes.tsx`
 - `frontend/src/pages/HelpPage.tsx`
 - `frontend/src/pages/HelpPage.css`
 - `frontend/src/i18n/support.ts`
+- `frontend/src/pages/SubscriptionGuidePage.tsx`
 - `frontend/src/pages/support/SupportCategorySelect.tsx`
 - `frontend/src/pages/support/SupportTicketForm.tsx`
 - `frontend/src/pages/support/SupportTicketList.tsx`
 - `frontend/src/tests/HelpPage.test.tsx`
-- `frontend/src/components/ui/Button/Button.tsx`
 
 ### Review Notes
 
-- Story relue et réalignée sur l'implémentation réelle de `/help`.
-- Références de scope et de fichiers corrigées.
-- ACs clarifiés pour éviter les contradictions pendant le dev.
+- Story relue puis réalignée sur l'implémentation réelle de `/help`.
+- Les références de scope et de fichiers ont été corrigées avant réalisation.
+- L'implémentation finale diffère volontairement de certaines idées intermédiaires :
+  - suppression du panneau hero latéral
+  - suppression de la pile comparative Free/Basic/Premium
+  - simplification du bloc abonnements vers deux cartes explicatives plus pédagogiques
 
 ---
 
 ## Status
 
 Status: done
-
