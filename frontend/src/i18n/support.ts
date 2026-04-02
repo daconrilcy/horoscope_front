@@ -2,41 +2,72 @@ export const supportTranslations = {
   fr: {
     help: {
       pageTitle: "Centre d'aide & Support",
-      sections: {
-        howItWorks: {
-          title: "Comment fonctionne l'application",
-          items: {
-            dashboard: {
-              title: "Tableau de bord",
-              desc: "Retrouvez votre horoscope du jour personnalisé et l'ambiance astrale du moment.",
-            },
-            chat: {
-              title: "Chat Astrologue",
-              desc: "Posez vos questions en direct à notre intelligence artificielle spécialisée en astrologie.",
-            },
-            natal: {
-              title: "Thème Natal",
-              desc: "Explorez la carte du ciel au moment de votre naissance pour mieux vous connaître.",
-            },
-            consultations: {
-              title: "Consultations",
-              desc: "Accédez à des analyses approfondies sur des thématiques précises de votre vie.",
-            },
+      hero: {
+        title: "Comment pouvons-nous vous aider aujourd’hui ?",
+        subtitle: "Trouvez des réponses rapides ou contactez notre équipe d’experts.",
+        primaryCta: "Ouvrir un ticket support",
+        secondaryCta: "Gérer mon abonnement",
+        steps: [
+          "Choisissez une catégorie",
+          "Décrivez votre besoin",
+          "Suivez la résolution"
+        ]
+      },
+      shortcuts: {
+        dashboard: {
+          title: "Horoscope",
+          benefit: "Suivez votre météo astrale",
+          action: "Y aller",
+        },
+        chat: {
+          title: "Chat",
+          benefit: "Parlez à votre astrologue",
+          action: "Discuter",
+        },
+        natal: {
+          title: "Thème Natal",
+          benefit: "Comprenez votre nature",
+          action: "Explorer",
+        },
+        consultations: {
+          title: "Consultations",
+          benefit: "Analyses thématiques",
+          action: "Découvrir",
+        },
+      },
+      tokens: {
+        title: "Comprendre vos crédits",
+        intro: "Chaque interaction avec l’IA consomme des tokens. Votre quota se renouvelle selon votre abonnement.",
+        plans: {
+          free: {
+            name: "Free",
+            quota: "Limité",
+            features: ["Horoscope quotidien", "Lecture thème natal"],
+            tagline: "Pour découvrir l’essentiel",
+          },
+          basic: {
+            name: "Basic",
+            quota: "10 tokens / jour",
+            features: ["Chat prioritaire", "Bonus hebdomadaires", "Historique étendu"],
+            tagline: "Idéal pour un suivi régulier",
+          },
+          premium: {
+            name: "Premium",
+            quota: "Usage étendu",
+            features: ["Accès illimité", "Consultations offertes", "Support VIP"],
+            tagline: "L’expérience astrologique ultime",
           },
         },
-        tokens: {
-          title: "Les tokens — comment ça marche",
-          intro: "Chaque interaction avec l'IA (chat, consultations) consomme des tokens. Votre quota dépend de votre abonnement.",
-          plans: {
-            free: "Plan Free : Accès limité aux fonctionnalités de base.",
-            basic: "Plan Basic : 10 tokens / jour + bonus hebdo.",
-            premium: "Plan Premium : Usage étendu et tokens prioritaires.",
-          },
-        },
-        subscriptions: {
-          title: "Les abonnements disponibles",
-          cta: "Gérer mon abonnement",
-        },
+      },
+      billing: {
+        title: "Abonnement & Facturation",
+        features: [
+          "Gérez vos moyens de paiement",
+          "Téléchargez vos factures",
+          "Changez de plan à tout moment",
+          "Consultez vos droits effectifs"
+        ],
+        cta: "Accéder à mon espace facturation",
       },
       supportEntry: {
         title: "Besoin d'aide personnalisée ?",
@@ -45,10 +76,19 @@ export const supportTranslations = {
       },
       categories: {
         title: "Comment pouvons-nous vous aider ?",
-        loading: "Chargement des catégories...",
+        loading: "Chargement des catégories…",
         error: "Erreur lors du chargement des catégories.",
         emptyTitle: "Aucune catégorie disponible",
-        emptyDescription: "Le formulaire de support n'est pas disponible pour le moment. Veuillez réessayer plus tard.",
+        emptyDescription: "Le formulaire de support n’est pas disponible pour le moment. Veuillez réessayer plus tard.",
+      },
+      categoryDescriptions: {
+        subscription_problem: "Problèmes liés à votre paiement ou accès premium.",
+        billing_issue: "Questions sur vos factures ou prélèvements.",
+        bug: "Signalement d’un comportement anormal de l’application.",
+        account_access: "Difficultés de connexion ou gestion de profil.",
+        feature_question: "Comment utiliser une fonctionnalité spécifique.",
+        data_privacy: "Exercer vos droits RGPD ou gérer vos données.",
+        other: "Toute autre demande non listée ci-dessus.",
       },
       form: {
         title: "Nouvelle demande de support",
@@ -56,25 +96,27 @@ export const supportTranslations = {
         changeCategory: "Modifier",
         subject: {
           label: "Objet de votre demande",
-          placeholder: "Ex: Problème de connexion",
-          errorRequired: "L'objet est requis",
-          errorMaxLen: "L'objet ne doit pas dépasser 160 caractères",
+          placeholder: "Ex : Problème de connexion",
+          errorRequired: "L’objet est requis",
+          errorMaxLen: "L’objet ne doit pas dépasser 160 caractères",
         },
         description: {
           label: "Description détaillée",
-          placeholder: "Décrivez votre problème avec le plus de précisions possible...",
+          placeholder: "Décrivez votre problème avec le plus de précisions possible…",
+          hint: "Plus vous donnez de détails, plus vite nous pourrons vous aider.",
           errorRequired: "La description est requise",
           errorMinLen: "La description doit faire au moins 20 caractères",
         },
         submit: "Envoyer ma demande",
-        submitting: "Envoi en cours...",
-        success: "Votre demande a été envoyée avec succès. Notre équipe reviendra vers vous prochainement.",
+        submitting: "Envoi en cours…",
+        successMessage: "Votre demande a été envoyée avec succès. Notre équipe reviendra vers vous prochainement.",
         errorInvalidCategory: "Catégorie invalide.",
-        errorGeneric: "Une erreur est survenue lors de l'envoi. Veuillez réessayer.",
+        errorGeneric: "Une erreur est survenue lors de l’envoi. Veuillez réessayer.",
       },
       tickets: {
         title: "Mes demandes récentes",
-        empty: "Vous n'avez pas encore soumis de demande de support.",
+        empty: "Vous n’avez pas encore soumis de demande de support.",
+        emptyDescription: "Une question ? Un problème ? Nos experts sont là pour vous aider.",
         supportResponseLabel: "Réponse du support",
         statuses: {
           pending: "En attente",
@@ -93,41 +135,72 @@ export const supportTranslations = {
   en: {
     help: {
       pageTitle: "Help Center & Support",
-      sections: {
-        howItWorks: {
-          title: "How the application works",
-          items: {
-            dashboard: {
-              title: "Dashboard",
-              desc: "Find your personalized daily horoscope and the current astral mood.",
-            },
-            chat: {
-              title: "Astrologer Chat",
-              desc: "Ask your questions live to our AI specialized in astrology.",
-            },
-            natal: {
-              title: "Natal Chart",
-              desc: "Explore the sky map at the moment of your birth to know yourself better.",
-            },
-            consultations: {
-              title: "Consultations",
-              desc: "Access in-depth analyses on specific themes of your life.",
-            },
+      hero: {
+        title: "How can we help you today?",
+        subtitle: "Find quick answers or contact our team of experts.",
+        primaryCta: "Open a support ticket",
+        secondaryCta: "Manage my subscription",
+        steps: [
+          "Choose a category",
+          "Describe your need",
+          "Follow the resolution"
+        ]
+      },
+      shortcuts: {
+        dashboard: {
+          title: "Horoscope",
+          benefit: "Follow your astral weather",
+          action: "Go there",
+        },
+        chat: {
+          title: "Chat",
+          benefit: "Talk to your astrologer",
+          action: "Chat",
+        },
+        natal: {
+          title: "Natal Chart",
+          benefit: "Understand your nature",
+          action: "Explore",
+        },
+        consultations: {
+          title: "Consultations",
+          benefit: "Thematic analyses",
+          action: "Discover",
+        },
+      },
+      tokens: {
+        title: "Understanding your credits",
+        intro: "Each interaction with the AI consumes tokens. Your quota renews according to your subscription.",
+        plans: {
+          free: {
+            name: "Free",
+            quota: "Limited",
+            features: ["Daily horoscope", "Natal chart reading"],
+            tagline: "To discover the essentials",
+          },
+          basic: {
+            name: "Basic",
+            quota: "10 tokens / day",
+            features: ["Priority chat", "Weekly bonuses", "Extended history"],
+            tagline: "Ideal for regular follow-up",
+          },
+          premium: {
+            name: "Premium",
+            quota: "Extended usage",
+            features: ["Unlimited access", "Free consultations", "VIP support"],
+            tagline: "The ultimate astrological experience",
           },
         },
-        tokens: {
-          title: "Tokens — how it works",
-          intro: "Each interaction with the AI (chat, consultations) consumes tokens. Your quota depends on your subscription.",
-          plans: {
-            free: "Free Plan: Limited access to basic features.",
-            basic: "Basic Plan: 10 tokens / day + weekly bonus.",
-            premium: "Premium Plan: Extended usage and priority tokens.",
-          },
-        },
-        subscriptions: {
-          title: "Available subscriptions",
-          cta: "Manage my subscription",
-        },
+      },
+      billing: {
+        title: "Subscription & Billing",
+        features: [
+          "Manage your payment methods",
+          "Download your invoices",
+          "Change plan at any time",
+          "Consult your actual rights"
+        ],
+        cta: "Access my billing space",
       },
       supportEntry: {
         title: "Need personalized help?",
@@ -136,10 +209,19 @@ export const supportTranslations = {
       },
       categories: {
         title: "How can we help you?",
-        loading: "Loading categories...",
+        loading: "Loading categories…",
         error: "Error loading categories.",
         emptyTitle: "No categories available",
         emptyDescription: "The support form is not available at the moment. Please try again later.",
+      },
+      categoryDescriptions: {
+        subscription_problem: "Issues related to your payment or premium access.",
+        billing_issue: "Questions about your invoices or charges.",
+        bug: "Reporting abnormal application behavior.",
+        account_access: "Login difficulties or profile management.",
+        feature_question: "How to use a specific feature.",
+        data_privacy: "Exercise your GDPR rights or manage your data.",
+        other: "Any other request not listed above.",
       },
       form: {
         title: "New support request",
@@ -153,19 +235,21 @@ export const supportTranslations = {
         },
         description: {
           label: "Detailed description",
-          placeholder: "Describe your problem with as much detail as possible...",
+          placeholder: "Describe your problem with as much detail as possible…",
+          hint: "The more details you provide, the faster we can help you.",
           errorRequired: "Description is required",
           errorMinLen: "Description must be at least 20 characters",
         },
         submit: "Send my request",
-        submitting: "Sending...",
-        success: "Your request has been successfully sent. Our team will get back to you soon.",
+        submitting: "Sending…",
+        successMessage: "Your request has been successfully sent. Our team will get back to you soon.",
         errorInvalidCategory: "Invalid category.",
         errorGeneric: "An error occurred during sending. Please try again.",
       },
       tickets: {
         title: "My recent requests",
         empty: "You haven't submitted any support requests yet.",
+        emptyDescription: "A question? A problem? Our experts are here to help.",
         supportResponseLabel: "Support response",
         statuses: {
           pending: "Pending",
@@ -184,41 +268,72 @@ export const supportTranslations = {
   es: {
     help: {
       pageTitle: "Centro de Ayuda y Soporte",
-      sections: {
-        howItWorks: {
-          title: "Cómo funciona la aplicación",
-          items: {
-            dashboard: {
-              title: "Panel de control",
-              desc: "Encuentra tu horóscopo diario personalizado y el clima astral actual.",
-            },
-            chat: {
-              title: "Chat Astrólogo",
-              desc: "Haz tus preguntas en vivo a nuestra IA especializada en astrología.",
-            },
-            natal: {
-              title: "Carta Natal",
-              desc: "Explora el mapa del cielo en el momento de tu nacimiento para conocerte mejor.",
-            },
-            consultations: {
-              title: "Consultas",
-              desc: "Accede a análisis profundos sobre temas específicos de tu vida.",
-            },
+      hero: {
+        title: "¿Cómo podemos ayudarte hoy?",
+        subtitle: "Encuentra respuestas rápidas o contacta a nuestro equipo de expertos.",
+        primaryCta: "Abrir un ticket de soporte",
+        secondaryCta: "Gestionar mi suscripción",
+        steps: [
+          "Elija una categoría",
+          "Describa su necesidad",
+          "Siga la resolución"
+        ]
+      },
+      shortcuts: {
+        dashboard: {
+          title: "Horóscopo",
+          benefit: "Sigue tu clima astral",
+          action: "Ir allí",
+        },
+        chat: {
+          title: "Chat",
+          benefit: "Habla con tu astrólogo",
+          action: "Chatear",
+        },
+        natal: {
+          title: "Carta Natal",
+          benefit: "Comprende tu naturaleza",
+          action: "Explorar",
+        },
+        consultations: {
+          title: "Consultas",
+          benefit: "Análisis temáticos",
+          action: "Descubrir",
+        },
+      },
+      tokens: {
+        title: "Comprender sus créditos",
+        intro: "Cada interacción con la IA consume tokens. Su cupo se renueva según su suscripción.",
+        plans: {
+          free: {
+            name: "Free",
+            quota: "Limitado",
+            features: ["Horóscopo diario", "Lectura de carta natal"],
+            tagline: "Para descubrir lo esencial",
+          },
+          basic: {
+            name: "Basic",
+            quota: "10 tokens / día",
+            features: ["Chat prioritario", "Bonos semanales", "Historial extendido"],
+            tagline: "Ideal para un seguimiento regular",
+          },
+          premium: {
+            name: "Premium",
+            quota: "Uso extendido",
+            features: ["Acceso ilimitado", "Consultas gratuitas", "Soporte VIP"],
+            tagline: "La experiencia astrológica definitiva",
           },
         },
-        tokens: {
-          title: "Tokens — cómo funciona",
-          intro: "Cada interacción con la IA (chat, consultas) consume tokens. Tu cupo depende de tu suscripción.",
-          plans: {
-            free: "Plan Free: Acceso limitado a funciones básicas.",
-            basic: "Plan Basic: 10 tokens / día + bono semanal.",
-            premium: "Plan Premium: Uso extendido y tokens prioritarios.",
-          },
-        },
-        subscriptions: {
-          title: "Suscripciones disponibles",
-          cta: "Gestionar mi suscripción",
-        },
+      },
+      billing: {
+        title: "Suscripción y Facturación",
+        features: [
+          "Gestione sus métodos de pago",
+          "Descargue sus facturas",
+          "Cambie de plan en cualquier momento",
+          "Consulte sus derechos efectivos"
+        ],
+        cta: "Acceder a mi espacio de facturación",
       },
       supportEntry: {
         title: "¿Necesita ayuda personalizada?",
@@ -227,10 +342,19 @@ export const supportTranslations = {
       },
       categories: {
         title: "¿Cómo podemos ayudarte?",
-        loading: "Cargando categorías...",
+        loading: "Cargando categorías…",
         error: "Error al cargar las categorías.",
         emptyTitle: "No hay categorías disponibles",
         emptyDescription: "El formulario de soporte no está disponible por el momento. Por favor, inténtelo de nuevo más tarde.",
+      },
+      categoryDescriptions: {
+        subscription_problem: "Problemas relacionados con su pago o acceso premium.",
+        billing_issue: "Preguntas sobre sus facturas o cargos.",
+        bug: "Informar un comportamiento anormal de la aplicación.",
+        account_access: "Dificultades de inicio de sesión o gestión de perfil.",
+        feature_question: "Cómo usar una función específica.",
+        data_privacy: "Ejercer sus derechos RGPD o gestionar sus datos.",
+        other: "Cualquier otra solicitud no enumerada anteriormente.",
       },
       form: {
         title: "Nueva solicitud de soporte",
@@ -244,19 +368,21 @@ export const supportTranslations = {
         },
         description: {
           label: "Descripción detallada",
-          placeholder: "Describa su problema con el mayor detalle posible...",
+          placeholder: "Describa su problema con el mayor detalle posible…",
+          hint: "Cuantos más detalles proporcione, más rápido podremos ayudarle.",
           errorRequired: "La descripción es obligatoria",
           errorMinLen: "La descripción debe tener al menos 20 caracteres",
         },
         submit: "Enviar mi solicitud",
-        submitting: "Enviando...",
-        success: "Su solicitud ha sido enviada con éxito. Nuestro equipo se pondrá en contacto con usted pronto.",
+        submitting: "Enviando…",
+        successMessage: "Su solicitud ha sido enviada con éxito. Nuestro equipo se pondrá en contacto con usted pronto.",
         errorInvalidCategory: "Categoría inválida.",
         errorGeneric: "Ocurrió un error al enviar. Por favor, inténtelo de nuevo.",
       },
       tickets: {
         title: "Mis solicitudes recientes",
         empty: "Aún no ha enviado ninguna solicitud de soporte.",
+        emptyDescription: "¿Una pregunta? ¿Un problema? Nuestros expertos están aquí para ayudar.",
         supportResponseLabel: "Respuesta del soporte",
         statuses: {
           pending: "Pendiente",

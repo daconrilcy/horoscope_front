@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 import { useTranslation, useAstrologyLabels } from "@i18n"
 import { useHelpTickets, type HelpTicket } from "@api/help"
 import { formatDate } from "@utils/formatDate"
-import { Clock, CheckCircle, XCircle, MessageSquare } from "lucide-react"
+import { Clock, CheckCircle, XCircle, MessageSquare, ArrowRight } from "lucide-react"
 import { Button } from "@ui/Button"
 import { SkeletonGroup } from "@ui/Skeleton/Skeleton"
 import { EmptyState } from "@ui/EmptyState/EmptyState"
@@ -40,10 +40,17 @@ export function SupportTicketList({ refreshTrigger }: SupportTicketListProps) {
     }
   }, [refreshTrigger, refetch])
 
+  const scrollToSupport = () => {
+    const element = document.getElementById("help-support-section")
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" })
+    }
+  }
+
   if (isLoading && offset === 0) {
     return (
       <div className="ticket-list-loading">
-        <SkeletonGroup count={3} height="80px" gap="16px" />
+        <SkeletonGroup count={3} height="120px" gap="16px" />
       </div>
     )
   }
@@ -53,8 +60,16 @@ export function SupportTicketList({ refreshTrigger }: SupportTicketListProps) {
       <EmptyState
         icon={<MessageSquare size={48} />}
         title={help.tickets.title}
-        description={help.tickets.empty}
-      />
+        description={help.tickets.emptyDescription}
+      >
+        <Button 
+          variant="ghost" 
+          onClick={scrollToSupport}
+          rightIcon={<ArrowRight size={18} />}
+        >
+          {help.hero.primaryCta}
+        </Button>
+      </EmptyState>
     )
   }
 
@@ -63,11 +78,11 @@ export function SupportTicketList({ refreshTrigger }: SupportTicketListProps) {
       case "solved":
       case "resolved":
       case "closed":
-        return <CheckCircle size={16} className="status-icon--success" />
+        return <CheckCircle size={14} />
       case "canceled":
-        return <XCircle size={16} className="status-icon--error" />
+        return <XCircle size={14} />
       default:
-        return <Clock size={16} className="status-icon--pending" />
+        return <Clock size={14} />
     }
   }
 
@@ -92,6 +107,11 @@ export function SupportTicketList({ refreshTrigger }: SupportTicketListProps) {
           </div>
           <div className="ticket-item__meta">
             <span>{formatDate(ticket.created_at, lang)}</span>
+            {ticket.category_code && (
+              <span className="ticket-item__category">
+                • {(help.categoryDescriptions as any)[ticket.category_code]?.split('.')[0] || ticket.category_code}
+              </span>
+            )}
             {ticket.resolved_at && (
               <span className="ticket-item__resolved">
                 • {help.tickets.resolvedAt.replace("{date}", formatDate(ticket.resolved_at, lang))}

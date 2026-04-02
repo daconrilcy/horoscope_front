@@ -9,9 +9,11 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   fullWidth?: boolean;
+  as?: React.ElementType;
+  to?: string; // For Link support
 }
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+export const Button = React.forwardRef<any, ButtonProps>(
   (
     {
       variant = 'primary',
@@ -24,17 +26,19 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       disabled,
       type = 'button',
+      as: Component = 'button',
       ...props
     },
     ref
   ) => {
     const isInteractivityDisabled = disabled || loading;
+    const isButton = Component === 'button';
 
     return (
-      <button
+      <Component
         ref={ref}
-        type={type}
-        disabled={isInteractivityDisabled}
+        type={isButton ? type : undefined}
+        disabled={isButton ? isInteractivityDisabled : undefined}
         aria-busy={loading ? 'true' : undefined}
         aria-disabled={disabled ? 'true' : undefined}
         className={classNames(
@@ -55,10 +59,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {!loading && leftIcon && <span className="btn__icon btn__icon--left">{leftIcon}</span>}
         <span className="btn__content">{children}</span>
         {!loading && rightIcon && <span className="btn__icon btn__icon--right">{rightIcon}</span>}
-      </button>
+      </Component>
     );
   }
 );
 
 Button.displayName = 'Button';
-

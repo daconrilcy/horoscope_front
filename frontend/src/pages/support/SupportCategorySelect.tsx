@@ -16,6 +16,7 @@ import {
 
 interface SupportCategorySelectProps {
   onSelect: (code: string, label: string) => void
+  selectedCode?: string
 }
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
@@ -28,7 +29,7 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   other: MessageCircle,
 }
 
-export function SupportCategorySelect({ onSelect }: SupportCategorySelectProps) {
+export function SupportCategorySelect({ onSelect, selectedCode }: SupportCategorySelectProps) {
   const { lang } = useAstrologyLabels()
   const { help } = useTranslation("support")
   const { data: categories, isLoading, isError } = useHelpCategories(lang)
@@ -40,6 +41,7 @@ export function SupportCategorySelect({ onSelect }: SupportCategorySelectProps) 
           <div key={i} className="category-card category-card--skeleton">
             <Skeleton variant="rect" height={32} width={32} className="mb-2" />
             <Skeleton variant="text" width="60%" height={20} />
+            <Skeleton variant="text" width="80%" height={14} />
           </div>
         ))}
       </div>
@@ -64,17 +66,24 @@ export function SupportCategorySelect({ onSelect }: SupportCategorySelectProps) 
     <div className="category-grid">
       {categories?.map((cat) => {
         const Icon = CATEGORY_ICONS[cat.code] || HelpCircle
+        const description = cat.description || (help.categoryDescriptions as any)[cat.code]
+        const isActive = selectedCode === cat.code
+
         return (
           <button
             type="button"
             key={cat.code} 
-            className="category-card"
+            className={`category-card ${isActive ? 'category-card--active' : ''}`}
             onClick={() => onSelect(cat.code, cat.label)}
+            aria-pressed={isActive}
           >
             <div className="category-card__icon">
               <Icon size={32} />
             </div>
             <span className="category-card__label">{cat.label}</span>
+            {description && (
+              <span className="category-card__desc">{description}</span>
+            )}
           </button>
         )
       })}

@@ -6,7 +6,7 @@ import { useTranslation } from "@i18n"
 import { useCreateHelpTicket } from "@api/help"
 import { Button } from "@ui/Button"
 import { Field } from "@ui/Field/Field"
-import { ArrowLeft, Send } from "lucide-react"
+import { ArrowLeft, Send, Hash } from "lucide-react"
 
 interface SupportTicketFormProps {
   category: { code: string; label: string }
@@ -62,12 +62,13 @@ export function SupportTicketForm({ category, onCancel, onSuccess }: SupportTick
   return (
     <div className="ticket-form-container">
       <div className="ticket-form__header">
+        <div className="category-chip">
+          <Hash size={14} />
+          {category.label}
+        </div>
         <Button variant="ghost" onClick={onCancel} leftIcon={<ArrowLeft size={18} />}>
           {help.form.changeCategory}
         </Button>
-        <div className="ticket-form__category-info">
-          {help.form.selectedCategory.replace("{category}", category.label)}
-        </div>
       </div>
 
       <form className="ticket-form" onSubmit={handleSubmit(onSubmit)}>
@@ -91,6 +92,7 @@ export function SupportTicketForm({ category, onCancel, onSuccess }: SupportTick
             rows={5}
             {...register("description")}
           />
+          <span className="form-field-hint">{help.form.description.hint}</span>
           {errors.description && (
             <span className="field__error" role="alert">{errors.description.message}</span>
           )}

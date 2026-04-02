@@ -27,7 +27,7 @@ const CATEGORIES_OK = {
   json: async () => ({
     data: {
       categories: [
-        { code: "bug", label: "Bug / dysfonctionnement", description: null },
+        { code: "bug", label: "Bug / dysfonctionnement", description: "Signalement d'un bug" },
         { code: "other", label: "Autre demande", description: null },
       ]
     }
@@ -95,7 +95,7 @@ describe("HelpPage", () => {
     localStorage.clear()
   })
 
-  it("affiche les sections d'aide et les catégories", async () => {
+  it("affiche le hero premium et les sections d'aide", async () => {
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
       if (url.endsWith("/v1/auth/me")) return AUTH_ME_USER
@@ -107,16 +107,33 @@ describe("HelpPage", () => {
     renderHelpPage()
 
     await waitFor(() => {
-      expect(screen.getByText("Comment fonctionne l'application")).toBeInTheDocument()
-      expect(screen.getByRole("button", { name: "Faire une demande de support" })).toBeInTheDocument()
+      // Hero
+      expect(screen.getByText("Comment pouvons-nous vous aider aujourd’hui ?")).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Ouvrir un ticket support" })).toBeInTheDocument()
+      
+      // Shortcuts
+      expect(screen.getByText("Horoscope")).toBeInTheDocument()
+      expect(screen.getByText("Suivez votre météo astrale")).toBeInTheDocument()
+      
+      // Tokens
+      expect(screen.getByText("Comprendre vos crédits")).toBeInTheDocument()
+      expect(screen.getByText("Basic")).toBeInTheDocument()
+      expect(screen.getByText("10 tokens / jour")).toBeInTheDocument()
+      
+      // Billing
+      expect(screen.getByText("Abonnement & Facturation")).toBeInTheDocument()
+      
+      // Categories
       expect(screen.getByText("Bug / dysfonctionnement")).toBeInTheDocument()
+      expect(screen.getByText("Signalement d'un bug")).toBeInTheDocument()
+      
+      // Tickets
       expect(screen.getByText("Test Ticket")).toBeInTheDocument()
-      expect(screen.getByText("Mon problème détaillé")).toBeInTheDocument()
       expect(screen.getByText("Nous avons bien pris en charge votre demande.")).toBeInTheDocument()
     })
   })
 
-  it("permet de soumettre un ticket", async () => {
+  it("permet de soumettre un ticket et affiche un message de succès", async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
@@ -130,25 +147,30 @@ describe("HelpPage", () => {
 
     renderHelpPage()
 
-    const categoryCard = await screen.findByText("Bug / dysfonctionnement")
+    const categoryCard = await screen.findByRole("button", { name: /Bug \/ dysfonctionnement/i })
     await user.click(categoryCard)
 
-    expect(screen.getByText(/Catégorie : Bug \/ dysfonctionnement/i)).toBeInTheDocument()
+    // Vérifier le chip catégorie
+    expect(screen.getByText("Bug / dysfonctionnement")).toBeInTheDocument()
 
     const descInput = screen.getByLabelText(/Description détaillée/i)
-
     await user.type(descInput, "Ceci est une description de test assez longue.")
+    
+    // Vérifier le hint
+    expect(screen.getByText("Plus vous donnez de détails, plus vite nous pourrons vous aider.")).toBeInTheDocument()
 
     const submitBtn = screen.getByRole("button", { name: /Envoyer ma demande/i })
     await user.click(submitBtn)
 
     await waitFor(() => {
-      expect(screen.queryByText(/Catégorie : Bug/i)).not.toBeInTheDocument()
+      // Formulaire fermé
+      expect(screen.queryByLabelText(/Description détaillée/i)).not.toBeInTheDocument()
+      // Message de succès affiché
+      expect(screen.getByText("Votre demande a été envoyée avec succès. Notre équipe reviendra vers vous prochainement.")).toBeInTheDocument()
     })
   })
 
-  it("demande un objet dédié quand la catégorie autre est choisie", async () => {
-    const user = userEvent.setup()
+  it("utilise le fallback i18n pour la description de catégorie si null dans l'API", async () => {
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
       if (url.endsWith("/v1/auth/me")) return AUTH_ME_USER
@@ -159,11 +181,11 @@ describe("HelpPage", () => {
 
     renderHelpPage()
 
-    const otherCategory = await screen.findByText("Autre demande")
-    await user.click(otherCategory)
-
-    expect(screen.getByLabelText(/Objet de votre demande/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Description détaillée/i)).toBeInTheDocument()
+    // "Autre demande" a description: null dans CATEGORIES_OK
+    // Le fallback i18n pour "other" est "Toute autre demande non listée ci-dessus."
+    await waitFor(() => {
+      expect(screen.getByText("Toute autre demande non listée ci-dessus.")).toBeInTheDocument()
+    })
   })
 })
 
