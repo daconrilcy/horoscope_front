@@ -57,3 +57,36 @@ class EntitlementsMeResponse(BaseModel):
 
     data: EntitlementsMeData
     meta: ResponseMeta
+
+
+# --- Schémas pour le catalogue de plans (AC2) ---
+
+
+class PlanFeatureQuotaData(BaseModel):
+    quota_key: str
+    quota_limit: int
+    period_unit: str
+    period_value: int
+    reset_mode: str
+
+
+class PlanFeatureData(BaseModel):
+    feature_code: str
+    feature_name: str
+    is_enabled: bool
+    access_mode: str
+    quotas: list[PlanFeatureQuotaData] = Field(default_factory=list)
+
+
+class PlanCatalogData(BaseModel):
+    plan_code: str
+    plan_name: str
+    monthly_price_cents: int
+    currency: str
+    is_active: bool
+    features: list[PlanFeatureData] = Field(default_factory=list)
+
+
+class PlansCatalogResponse(BaseModel):
+    data: list[PlanCatalogData]
+    meta: ResponseMeta

@@ -37,6 +37,31 @@ export type BillingSubscriptionStatus = {
   updated_at: string | null
 }
 
+export type PlanFeatureQuota = {
+  quota_key: string
+  quota_limit: number
+  period_unit: string
+  period_value: number
+  reset_mode: string
+}
+
+export type PlanFeature = {
+  feature_code: string
+  feature_name: string
+  is_enabled: boolean
+  access_mode: string
+  quotas: PlanFeatureQuota[]
+}
+
+export type PlanCatalog = {
+  plan_code: string
+  plan_name: string
+  monthly_price_cents: number
+  currency: string
+  is_active: boolean
+  features: PlanFeature[]
+}
+
 export type ChatEntitlementUsageStatus = {
   quota_date: string
   quota_key: string
@@ -232,6 +257,18 @@ async function fetchBillingPlans(): Promise<BillingPlan[]> {
   return body.data
 }
 
+async function fetchEntitlementsPlans(): Promise<PlanCatalog[]> {
+  const response = await fetch(`${API_BASE_URL}/v1/entitlements/plans`, {
+    method: "GET",
+    headers: getAccessTokenAuthHeader(),
+  })
+  if (!response.ok) {
+    return parseError(response)
+  }
+  const body = (await response.json()) as { data: PlanCatalog[] }
+  return body.data
+}
+
 async function fetchChatEntitlementUsage(): Promise<ChatEntitlementUsageStatus | null> {
   const response = await fetch(`${API_BASE_URL}/v1/entitlements/me`, {
     method: "GET",
@@ -295,6 +332,13 @@ export function useBillingPlans() {
   return useQuery({
     queryKey: ["billing-plans"],
     queryFn: fetchBillingPlans,
+  })
+}
+
+export function useEntitlementsPlans() {
+  return useQuery({
+    queryKey: ["entitlements-plans"],
+    queryFn: fetchEntitlementsPlans,
   })
 }
 

@@ -4,15 +4,27 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session, selectinload
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.v1.schemas.entitlements import (
     EntitlementsMeResponse,
     FeatureEntitlementResponse,
+    PlanCatalogData,
+    PlanFeatureData,
+    PlanFeatureQuotaData,
+    PlansCatalogResponse,
     UsageStateResponse,
 )
 from app.core.request_id import resolve_request_id
+from app.infra.db.models.billing import BillingPlanModel
+from app.infra.db.models.product_entitlements import (
+    Audience,
+    FeatureCatalogModel,
+    PlanCatalogModel,
+    PlanFeatureBindingModel,
+)
 from app.infra.db.session import get_db_session
 from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
 from app.services.entitlement_types import EffectiveFeatureAccess, UsageState
@@ -136,5 +148,125 @@ def get_my_entitlements(
             "billing_status": snapshot.billing_status,
             "features": features,
         },
+        "meta": {"request_id": request_id},
+    }
+
+
+@router.get(
+    "/plans",
+    response_model=PlansCatalogResponse,
+    responses={401: {}},
+)
+def get_plans_catalog(
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    """
+    Expose le catalogue des plans B2C (AC1).
+    Utilisé par la page /help/subscriptions.
+    """
+    request_id = resolve_request_id(request)
+
+    # 1. Charger les plans B2C actifs avec leurs bindings, features et quotas (anti N+1)
+    stmt = (
+        select(PlanCatalogModel)
+        .where(
+            PlanCatalogModel.audience == Audience.B2C,
+            PlanCatalogModel.is_active,
+        )
+        .options(
+            selectinload(PlanCatalogModel.bindings)
+            .selectinload(PlanFeatureBindingModel.feature),
+            selectinload(PlanCatalogModel.bindings)
+            .selectinload(PlanFeatureBindingModel.quotas),
+        )
+    )
+    plans = db.scalars(stmt).all()
+
+    # 2. Charger les prix depuis billing_plans
+    billing_plans = db.scalars(select(BillingPlanModel).where(BillingPlanModel.is_active)).all()
+    price_map = {bp.code: bp for bp in billing_plans}
+
+    # 3. Ordonner les plans : free, basic, premium
+    plan_order = {"free": 0, "basic": 1, "premium": 2}
+    sorted_plans = sorted(plans, key=lambda p: plan_order.get(p.plan_code, 99))
+
+    # 4. Charger toutes les features du catalogue pour garantir l'exhaustivité (AC1)
+    feature_order = {
+        "natal_chart_short": 0,
+        "natal_chart_long": 1,
+        "astrologer_chat": 2,
+        "thematic_consultation": 3,
+    }
+    all_features = db.scalars(
+        select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code.in_(feature_order.keys()))
+    ).all()
+    feature_map = {f.feature_code: f for f in all_features}
+
+    data = []
+    for plan in sorted_plans:
+        bp = price_map.get(plan.plan_code)
+        monthly_price_cents = bp.monthly_price_cents if bp else 0
+        currency = bp.currency if bp else "EUR"
+
+        # Map des bindings existants pour ce plan
+        plan_bindings = {b.feature.feature_code: b for b in plan.bindings}
+
+        features_data = []
+        # On itère sur l'ordre imposé des features
+        for f_code in sorted(feature_order.keys(), key=lambda k: feature_order[k]):
+            b = plan_bindings.get(f_code)
+            feature_ref = feature_map.get(f_code)
+            
+            if not feature_ref:
+                # Si la feature n'existe pas en base, on skip (cas rare si seeds OK)
+                continue
+
+            if b:
+                quotas_data = [
+                    PlanFeatureQuotaData(
+                        quota_key=q.quota_key,
+                        quota_limit=q.quota_limit,
+                        period_unit=q.period_unit.value,
+                        period_value=q.period_value,
+                        reset_mode=q.reset_mode.value,
+                    )
+                    for q in b.quotas
+                ]
+                features_data.append(
+                    PlanFeatureData(
+                        feature_code=b.feature.feature_code,
+                        feature_name=b.feature.feature_name,
+                        is_enabled=b.is_enabled,
+                        access_mode=b.access_mode.value,
+                        quotas=quotas_data,
+                    )
+                )
+            else:
+                # Pas de binding = feature non incluse / désactivée pour ce plan
+                features_data.append(
+                    PlanFeatureData(
+                        feature_code=f_code,
+                        feature_name=feature_ref.feature_name,
+                        is_enabled=False,
+                        access_mode="disabled",
+                        quotas=[],
+                    )
+                )
+
+        data.append(
+            PlanCatalogData(
+                plan_code=plan.plan_code,
+                plan_name=plan.plan_name,
+                monthly_price_cents=monthly_price_cents,
+                currency=currency,
+                is_active=plan.is_active,
+                features=features_data,
+            )
+        )
+
+    return {
+        "data": data,
         "meta": {"request_id": request_id},
     }

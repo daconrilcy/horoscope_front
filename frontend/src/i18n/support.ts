@@ -193,6 +193,39 @@ export const supportTranslations = {
         loadMore: "Voir plus",
       },
     },
+    subscriptions: {
+      hero: {
+        title: "Choisissez la formule qui vous ressemble",
+        subtitle: "Comparez nos abonnements pour débloquer tout le potentiel de votre thème natal et de vos échanges avec les astrologues.",
+        cta: "Gérer mon abonnement",
+      },
+      plans: {
+        free: { name: "Free", tagline: "Pour découvrir l'essentiel" },
+        basic: { name: "Basic", tagline: "Idéal pour un suivi régulier" },
+        premium: { name: "Premium", tagline: "L'expérience astrologique ultime" },
+      },
+      features: {
+        natal_chart_short: "Thème natal (court)",
+        natal_chart_long: "Thème natal (détaillé)",
+        astrologer_chat: "Chat astrologue",
+        thematic_consultation: "Consultations thématiques",
+      },
+      quota: {
+        tokens_per_day: "{{n}} tokens / jour",
+        tokens_per_week: "{{n}} tokens / semaine",
+        tokens_per_month: "{{n}} tokens / mois",
+        interpretations_lifetime: "{{n}} interprétations incluses",
+        unlimited: "Illimité",
+        disabled: "Non inclus",
+      },
+      tokensExplainer: {
+        title: "Comment fonctionnent les tokens ?",
+        body: "Les tokens mesurent la complexité des réponses générées par l'IA. Une question simple consomme peu, tandis qu'une analyse approfondie en requiert davantage. Votre quota se recharge automatiquement selon votre période d'abonnement.",
+      },
+      currentPlan: "Votre plan actuel",
+      upgradeCta: "Passer à ce plan",
+      manageCta: "Gérer",
+    },
   },
   en: {
     help: {
@@ -381,6 +414,39 @@ export const supportTranslations = {
         resolvedAt: "Resolved on {date}",
         loadMore: "See more",
       },
+    },
+    subscriptions: {
+      hero: {
+        title: "Choose the plan that suits you",
+        subtitle: "Compare our subscriptions to unlock the full potential of your natal chart and your interactions with astrologers.",
+        cta: "Manage my subscription",
+      },
+      plans: {
+        free: { name: "Free", tagline: "To discover the essentials" },
+        basic: { name: "Basic", tagline: "Ideal for regular follow-up" },
+        premium: { name: "Premium", tagline: "The ultimate astrological experience" },
+      },
+      features: {
+        natal_chart_short: "Natal chart (short)",
+        natal_chart_long: "Natal chart (detailed)",
+        astrologer_chat: "Astrologer chat",
+        thematic_consultation: "Thematic consultations",
+      },
+      quota: {
+        tokens_per_day: "{{n}} tokens / day",
+        tokens_per_week: "{{n}} tokens / week",
+        tokens_per_month: "{{n}} tokens / month",
+        interpretations_lifetime: "{{n}} interpretations included",
+        unlimited: "Unlimited",
+        disabled: "Not included",
+      },
+      tokensExplainer: {
+        title: "How do tokens work?",
+        body: "Tokens measure the complexity of AI-generated responses. A simple question consumes little, while an in-depth analysis requires more. Your quota automatically recharges according to your subscription period.",
+      },
+      currentPlan: "Your current plan",
+      upgradeCta: "Switch to this plan",
+      manageCta: "Manage",
     },
   },
   es: {
@@ -571,6 +637,39 @@ export const supportTranslations = {
         resolvedAt: "Resuelto el {date}",
         loadMore: "Ver más",
       },
+    },
+    subscriptions: {
+      hero: {
+        title: "Elige el plan que mejor se adapte a ti",
+        subtitle: "Compara nuestras suscripciones para desbloquear todo el potencial de tu carta natal y de tus interacciones con los astrólogos.",
+        cta: "Gestionar mi suscripción",
+      },
+      plans: {
+        free: { name: "Free", tagline: "Para descubrir lo esencial" },
+        basic: { name: "Basic", tagline: "Ideal para un seguimiento regular" },
+        premium: { name: "Premium", tagline: "La experiencia astrológica definitiva" },
+      },
+      features: {
+        natal_chart_short: "Carta natal (corta)",
+        natal_chart_long: "Carta natal (detallada)",
+        astrologer_chat: "Chat con astrólogo",
+        thematic_consultation: "Consultas temáticas",
+      },
+      quota: {
+        tokens_per_day: "{{n}} tokens / día",
+        tokens_per_week: "{{n}} tokens / semana",
+        tokens_per_month: "{{n}} tokens / mes",
+        interpretations_lifetime: "{{n}} interpretaciones incluidas",
+        unlimited: "Ilimitado",
+        disabled: "No incluido",
+      },
+      tokensExplainer: {
+        title: "¿Cómo funcionan los tokens?",
+        body: "Los tokens miden la complejidad de las respuestas generadas por la IA. Una pregunta simple consume poco, mientras que un análisis profundo requiere más. Tu cuota se recarga automáticamente según tu periodo de suscripción.",
+      },
+      currentPlan: "Tu plan actual",
+      upgradeCta: "Cambiar a este plan",
+      manageCta: "Gestionar",
     },
   },
 }

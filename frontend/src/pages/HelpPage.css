@@ -762,3 +762,174 @@
   }
 
 }
+
+/* --- Help Subscriptions Page (AC7, AC9) --- */
+
+.help-subscriptions-hero {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 48px;
+  padding-top: 40px;
+}
+
+.help-subscriptions-hero h1 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  color: var(--text-1);
+  margin-bottom: 16px;
+  line-height: 1.1;
+}
+
+.help-subscriptions-hero p {
+  font-size: 1.1rem;
+  color: var(--text-2);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.help-subscriptions-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+@media (min-width: 768px) {
+  .help-subscriptions-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.help-subscriptions-tokens {
+  width: 100%;
+  margin-bottom: 48px;
+}
+
+.help-subscriptions-card {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease;
+  height: 100%;
+}
+
+.help-subscriptions-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Plan Card Specifics */
+.subscription-plan-card {
+  padding: 32px;
+  border-radius: 32px;
+  display: flex;
+  flex-direction: column;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+
+.subscription-plan-card--active {
+  border: 2px solid var(--primary);
+  background: rgba(134, 108, 208, 0.05); /* --primary-rgb fallback */
+}
+
+.subscription-plan-card__badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--primary);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.help-subscriptions-plan-name {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2rem;
+  margin-bottom: 8px;
+  color: var(--text-headline);
+}
+
+.help-subscriptions-plan-tagline {
+  font-size: 0.9rem;
+  color: var(--text-2);
+  margin-bottom: 24px;
+}
+
+.help-subscriptions-price {
+  margin-bottom: 32px;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.help-subscriptions-price-amount {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.help-subscriptions-price-currency {
+  font-size: 1.2rem;
+  color: var(--text-2);
+  margin-left: 4px;
+}
+
+.help-subscriptions-price-period {
+  font-size: 0.9rem;
+  color: var(--text-2);
+  margin-left: 4px;
+}
+
+.help-subscriptions-features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px;
+  flex-grow: 1;
+}
+
+.help-subscriptions-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  color: var(--text-1);
+}
+
+.help-subscriptions-feature-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.help-subscriptions-feature-icon--check {
+  color: var(--success);
+}
+
+.help-subscriptions-feature-icon--x {
+  color: var(--error);
+  opacity: 0.5;
+}
+
+.help-subscriptions-feature-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.help-subscriptions-feature-name {
+  font-weight: 600;
+}
+
+.help-subscriptions-feature-quota {
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+.help-subscriptions-cta {
+  margin-top: auto;
+  width: 100%;
+}

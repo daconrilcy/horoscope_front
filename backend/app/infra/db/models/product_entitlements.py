@@ -16,7 +16,7 @@ from sqlalchemy import (
 from sqlalchemy import (
     Enum as SAEnum,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infra.db.base import Base
 
@@ -86,6 +86,11 @@ class PlanCatalogModel(Base):
         nullable=False,
     )
 
+    # Relationships
+    bindings: Mapped[list[PlanFeatureBindingModel]] = relationship(
+        "PlanFeatureBindingModel", back_populates="plan"
+    )
+
 
 class FeatureCatalogModel(Base):
     __tablename__ = "feature_catalog"
@@ -152,6 +157,13 @@ class PlanFeatureBindingModel(Base):
         nullable=False,
     )
 
+    # Relationships
+    plan: Mapped[PlanCatalogModel] = relationship("PlanCatalogModel", back_populates="bindings")
+    feature: Mapped[FeatureCatalogModel] = relationship("FeatureCatalogModel")
+    quotas: Mapped[list[PlanFeatureQuotaModel]] = relationship(
+        "PlanFeatureQuotaModel", back_populates="binding"
+    )
+
 
 class PlanFeatureQuotaModel(Base):
     __tablename__ = "plan_feature_quotas"
@@ -211,6 +223,11 @@ class PlanFeatureQuotaModel(Base):
         default=utc_now,
         onupdate=utc_now,
         nullable=False,
+    )
+
+    # Relationships
+    binding: Mapped[PlanFeatureBindingModel] = relationship(
+        "PlanFeatureBindingModel", back_populates="quotas"
     )
 
 
