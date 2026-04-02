@@ -104,15 +104,6 @@
   margin-top: 8px;
 }
 
-.help-support-entry {
-  gap: 16px;
-}
-
-.help-support-entry__actions {
-  display: flex;
-  justify-content: flex-start;
-}
-
 .category-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));

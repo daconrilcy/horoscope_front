@@ -44,6 +44,7 @@ afin d'obtenir de l'aide de manière structurée et de pouvoir suivre l'avanceme
 - **Pas de Tailwind** : styles dans des fichiers `.css` dédiés, variables CSS du projet.
 - **i18n** : nouveau fichier `frontend/src/i18n/support.ts` avec fr/en/es.
 - **Standards UI support / help center** : la page `/help` doit s'aligner visuellement et structurellement avec le reste de l'application, en réutilisant au maximum les composants, layouts, tokens CSS et patterns déjà créés. Ne pas introduire un nouveau sous-système visuel si les primitives existantes couvrent le besoin.
+- **Structure finale `/help`** : après les trois sections d'aide statiques, la page enchaîne directement sur la sélection de catégorie puis la liste des tickets. Aucun bloc d'entrée support intermédiaire ne doit dupliquer l'appel à l'action du formulaire.
 
 ---
 
@@ -574,6 +575,7 @@ claude-sonnet-4-6
 - **[Conditional Subject]** Le formulaire support n'affiche un champ objet que pour la catégorie `other`; sinon l'objet est dérivé du label de catégorie et la description reste toujours obligatoire.
 - **[Support Response Persistence]** Les tickets utilisateur exposent désormais `support_response` et `updated_at`; le support peut enrichir un ticket et l'utilisateur voit la réponse et le statut mis à jour dans `/help`.
 - **[Final Validation]** Vérifications finales exécutées: `pytest tests/integration/test_help_api.py app/tests/integration/test_support_api.py tests/unit/test_incident_service_user_statuses.py -q`, `npm test -- --run src/tests/HelpPage.test.tsx src/tests/UserMenu.test.tsx src/tests/ui-nav.test.ts`, `npm run lint`.
+- **[UX Cleanup]** Suppression de la carte intermédiaire "Besoin d'aide personnalisée ?" dans `/help` car elle faisait doublon avec la section de sélection de catégorie placée juste après.
 
 ### File List
 
