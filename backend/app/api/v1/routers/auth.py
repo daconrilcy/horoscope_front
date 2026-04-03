@@ -194,6 +194,15 @@ def register(
             email=auth_response.user.email
         )
 
+        # Story 63.15 (V2): Trigger onboarding sequence
+        # Use a separate background task or keep it here if desired for prod
+        background_tasks.add_task(
+            EmailService.schedule_onboarding_sequence,
+            db=db,
+            user_id=auth_response.user.id,
+            email=auth_response.user.email
+        )
+
         return {"data": auth_response.model_dump(), "meta": {"request_id": request_id}}
     except IntegrityError:
         db.rollback()

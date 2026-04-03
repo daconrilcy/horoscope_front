@@ -54,10 +54,8 @@ class EmailService:
         """
         Sends a welcome email to a new user with idempotence check.
         """
-        # AC1 (63.15): Planifier la séquence J1-J7
-        EmailService.schedule_onboarding_sequence(db, user_id, email, firstname)
-
         return await EmailService._send_email(
+
             db=db,
             user_id=user_id,
             email=email,

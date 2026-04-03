@@ -47,6 +47,9 @@
   .pricing-card {
     transition: none;
   }
+  .pricing-card:hover {
+    transform: none;
+  }
 }
 
 .pricing-card:hover {

@@ -20,7 +20,10 @@ const hasConsent = () => {
   // AC1: Privacy-first - if provider is noop, we always "have consent" for debug logging
   if (ANALYTICS_CONFIG.provider === 'noop') return true
   
-  // AC1.1: For Plausible/Matomo, check if user has accepted tracking.
+  // Plausible is a cookie-less, privacy-first provider that can run without explicit consent
+  if (ANALYTICS_CONFIG.provider === 'plausible') return true
+
+  // AC1.1: For other providers (Matomo, etc.), check if user has accepted tracking.
   // Must be explicit to respect the GDPR scope of the epic.
   const consent = localStorage.getItem('cookie_consent')
   return consent === 'granted'
