@@ -88,7 +88,7 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
 
   const handleGoogleSignIn = () => {
     // AC3.10: Graceful degradation
-    alert("Disponible prochainement")
+    alert(tAuth.signUp.googleComingSoon)
   }
 
   return (
@@ -97,7 +97,7 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
 
       {selectedPlan && (
         <div className="auth-plan-badge">
-          Plan sélectionné : {(tLanding.pricing.plans as any)[selectedPlan.planCode]?.name || selectedPlan.planCode}
+          {tAuth.signUp.selectedPlanLabel} {(tLanding.pricing.plans as any)[selectedPlan.planCode]?.name || selectedPlan.planCode}
         </div>
       )}
 
@@ -114,7 +114,7 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
               <path d="M4.39796 11.7758C4.19388 11.1727 4.08163 10.5303 4.08163 9.86364C4.08163 9.19697 4.19388 8.55455 4.39796 7.95152V5.3697H1.06633C0.387755 6.72121 0 8.25152 0 9.86364C0 11.4758 0.387755 13.0061 1.06633 14.3576L4.39796 11.7758Z" fill="#FBBC05"/>
               <path d="M10 3.95758C11.4694 3.95758 12.7857 4.46061 13.8214 5.43939L16.7143 2.5C14.9592 0.951515 12.6939 0 10 0C6.09184 0 2.71429 2.3697 1.06633 5.3697L4.39796 7.95152C5.18367 5.58485 7.39286 3.95758 10 3.95758Z" fill="#EA4335"/>
             </svg>
-            Continuer avec Google
+            {tAuth.signUp.googleButton}
           </button>
           <div className="auth-divider">
             <span>ou</span>
@@ -154,16 +154,16 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
           size="lg"
           className="auth-submit-btn"
         >
-          {isSubmitting ? tAuth.signUp.submitLoading : "Créer mon compte"}
+          {isSubmitting ? tAuth.signUp.submitLoading : tAuth.signUp.submitButton}
         </Button>
       </form>
 
       <div className="auth-reassurance">
-        <span>Sans carte bancaire</span>
+        <span>{tAuth.signUp.reassurance.noCard}</span>
         <span className="auth-reassurance-dot"></span>
-        <span>Annulation à tout moment</span>
+        <span>{tAuth.signUp.reassurance.cancelAnytime}</span>
         <span className="auth-reassurance-dot"></span>
-        <span>Données protégées RGPD</span>
+        <span>{tAuth.signUp.reassurance.gdpr}</span>
       </div>
 
       <p className="auth-switch-link">

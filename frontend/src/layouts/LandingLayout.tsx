@@ -12,8 +12,11 @@ import { LandingFooter } from "../pages/landing/sections/LandingFooter"
 export const LandingLayout = () => {
   return (
     <div className="landing-layout">
+      <a href="#main-content" className="skip-link">
+        Aller au contenu principal
+      </a>
       <LandingNavbar />
-      <main className="landing-layout__main">
+      <main id="main-content" className="landing-layout__main">
         <Outlet />
       </main>
       <LandingFooter />

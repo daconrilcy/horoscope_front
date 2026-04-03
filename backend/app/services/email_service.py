@@ -131,7 +131,7 @@ class EmailService:
                 db=db,
                 user_id=user_id,
                 email=email,
-                email_type="marketing",
+                email_type="onboarding_j1_education",
                 template_name="education.html",
                 subject="Comment lire votre horoscope personnalisé 🔭",
                 template_vars={"firstname": firstname, "unsubscribe_url": EmailService.get_unsubscribe_link(user_id)}
@@ -145,7 +145,7 @@ class EmailService:
                 db=db,
                 user_id=user_id,
                 email=email,
-                email_type="marketing",
+                email_type="onboarding_j3_social_proof",
                 template_name="social_proof.html",
                 subject="Ils ont trouvé leur voie avec Astrorizon ✨",
                 template_vars={"firstname": firstname, "unsubscribe_url": EmailService.get_unsubscribe_link(user_id)}
@@ -159,7 +159,7 @@ class EmailService:
                 db=db,
                 user_id=user_id,
                 email=email,
-                email_type="marketing",
+                email_type="onboarding_j5_objections",
                 template_name="objections.html",
                 subject="Vos questions sur Astrorizon 🤔",
                 template_vars={"firstname": firstname, "unsubscribe_url": EmailService.get_unsubscribe_link(user_id)}
@@ -194,7 +194,7 @@ class EmailService:
                 db=db,
                 user_id=user_id,
                 email=email,
-                email_type="marketing",
+                email_type="onboarding_j7_upgrade",
                 template_name="upgrade.html",
                 subject="Débloquez vos insights premium 🌟",
                 template_vars={
@@ -225,7 +225,14 @@ class EmailService:
             ).first()
             
             # AC4: Skip marketing if unsubscribed
-            if user_data and user_data[0] and email_type == "marketing":
+            marketing_types = {
+                "marketing", 
+                "onboarding_j1_education", 
+                "onboarding_j3_social_proof", 
+                "onboarding_j5_objections", 
+                "onboarding_j7_upgrade"
+            }
+            if user_data and user_data[0] and email_type in marketing_types:
                 logger.info(f"Skipping marketing email for unsubscribed user {user_id}")
                 return True
 

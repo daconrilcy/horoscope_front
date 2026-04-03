@@ -23,6 +23,14 @@ export interface AuthTranslation {
     errorGeneric: string
     alreadyHaveAccount: string
     signInLink: string
+    selectedPlanLabel: string
+    googleButton: string
+    googleComingSoon: string
+    reassurance: {
+      noCard: string
+      cancelAnytime: string
+      gdpr: string
+    }
   }
   validation: {
     emailInvalid: string
@@ -56,6 +64,14 @@ const translations: Record<AstrologyLang, AuthTranslation> = {
       errorGeneric: "Une erreur est survenue. Veuillez réessayer.",
       alreadyHaveAccount: "Déjà un compte ?",
       signInLink: "Se connecter",
+      selectedPlanLabel: "Plan sélectionné :",
+      googleButton: "Continuer avec Google",
+      googleComingSoon: "Disponible prochainement",
+      reassurance: {
+        noCard: "Sans carte bancaire",
+        cancelAnytime: "Annulation à tout moment",
+        gdpr: "Données protégées RGPD",
+      },
     },
     validation: {
       emailInvalid: "Adresse e-mail invalide.",
@@ -87,6 +103,14 @@ const translations: Record<AstrologyLang, AuthTranslation> = {
       errorGeneric: "An error occurred. Please try again.",
       alreadyHaveAccount: "Already have an account?",
       signInLink: "Sign In",
+      selectedPlanLabel: "Selected plan:",
+      googleButton: "Continue with Google",
+      googleComingSoon: "Coming soon",
+      reassurance: {
+        noCard: "No credit card required",
+        cancelAnytime: "Cancel anytime",
+        gdpr: "GDPR protected data",
+      },
     },
     validation: {
       emailInvalid: "Invalid email address.",
@@ -118,8 +142,17 @@ const translations: Record<AstrologyLang, AuthTranslation> = {
       errorGeneric: "Ha ocurrido un error. Por favor, inténtelo de nuevo.",
       alreadyHaveAccount: "¿Ya tienes una cuenta?",
       signInLink: "Iniciar sesión",
-    },
-    validation: {
+      selectedPlanLabel: "Plan seleccionado:",
+      googleButton: "Continuar con Google",
+      googleComingSoon: "Disponible próximamente",
+      reassurance: {
+        noCard: "Sin tarjeta de crédito",
+        cancelAnytime: "Cancela en cualquier momento",
+        gdpr: "Datos protegidos por RGPD",
+      },
+      },
+      validation: {
+
       emailInvalid: "Dirección de correo electrónico no válida.",
       emailRequired: "El correo electrónico es obligatorio.",
       passwordRequired: "La contraseña es obligatoria.",

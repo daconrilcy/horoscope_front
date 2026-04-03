@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
+from app.core.config import settings
 
 router = APIRouter(prefix="/email", tags=["email"])
 logger = logging.getLogger(__name__)
@@ -53,14 +54,20 @@ def unsubscribe(token: str = Query(...), db: Session = Depends(get_db_session)) 
     """
     AC2: Endpoint to unsubscribe a user via a token.
     """
-    secret_key = os.getenv("JWT_SECRET_KEY", "change-me-in-production")
-
     try:
-        payload = jwt.decode(token, secret_key, algorithms=["HS256"])
+        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=["HS256"])
         user_id = payload.get("user_id")
         email_type = payload.get("email_type")
 
-        if not user_id or email_type != "marketing":
+        marketing_types = {
+            "marketing", 
+            "onboarding_j1_education", 
+            "onboarding_j3_social_proof", 
+            "onboarding_j5_objections", 
+            "onboarding_j7_upgrade"
+        }
+
+        if not user_id or email_type not in marketing_types:
             raise HTTPException(status_code=400, detail="Lien de désabonnement non valide")
 
         # AC2: Check if user exists and update

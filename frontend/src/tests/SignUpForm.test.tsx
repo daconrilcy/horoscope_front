@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi, beforeEach } from "vitest"
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react"
 
 import { SignUpForm } from "../components/SignUpForm"
@@ -36,29 +36,75 @@ const GENERIC_ERROR_RESPONSE = {
 
 const onSignInMock = vi.fn()
 
+// Mock analytics
+const trackMock = vi.fn()
+vi.mock("../hooks/useAnalytics", () => ({
+  useAnalytics: () => ({
+    track: trackMock
+  }),
+  getUtmParams: () => ({ utm_source: 'test' })
+}))
+
+beforeEach(() => {
+  trackMock.mockClear()
+})
+
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
   localStorage.clear()
+  sessionStorage.clear()
   onSignInMock.mockClear()
 })
 
 describe("SignUpForm", () => {
-  it("renders email input, password input, submit button, and back-to-signin link", () => {
+  it("renders inputs, submit button, and back-to-signin link", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
     renderWithRouter(<SignUpForm onSignIn={onSignInMock} />)
 
-    expect(screen.getByLabelText("Adresse e-mail")).toBeInTheDocument()
-    expect(screen.getByLabelText("Mot de passe")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Créer mon compte" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Se connecter" })).toBeInTheDocument()
+    expect(screen.getByLabelText(/Adresse e-mail/i, { selector: 'input' })).toBeInTheDocument()
+    expect(screen.getByLabelText(/Mot de passe/i, { selector: 'input' })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Créer mon compte/i })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Se connecter/i })).toBeInTheDocument()
+  })
+
+  it("stores intended plan in sessionStorage and displays badge", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
+    renderWithRouter(<SignUpForm onSignIn={onSignInMock} />, { initialEntries: ["/register?plan=premium"] })
+
+    await waitFor(() => {
+      expect(sessionStorage.getItem("intended_plan")).toBe("premium")
+      expect(screen.getByText(/Plan sélectionné : Premium/i)).toBeInTheDocument()
+    })
+  })
+
+  it("tracks register_view on mount", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
+    renderWithRouter(<SignUpForm onSignIn={onSignInMock} />, { initialEntries: ["/register?plan=basic"] })
+
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith('register_view', expect.objectContaining({ from_plan: 'basic' }))
+    })
+  })
+
+  it("tracks register_success on successful submission", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
+    renderWithRouter(<SignUpForm onSignIn={onSignInMock} />, { initialEntries: ["/register?plan=free"] })
+
+    fireEvent.change(screen.getByLabelText(/Adresse e-mail/i, { selector: 'input' }), { target: { value: "new@example.com" } })
+    fireEvent.change(screen.getByLabelText(/Mot de passe/i, { selector: 'input' }), { target: { value: "password123" } })
+    fireEvent.click(screen.getByRole("button", { name: /Créer mon compte/i }))
+
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith('register_success', { method: 'email', plan: 'free' })
+    })
   })
 
   it("submit button has type=submit for Enter key activation", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
     renderWithRouter(<SignUpForm onSignIn={onSignInMock} />)
 
-    expect(screen.getByRole("button", { name: "Créer mon compte" })).toHaveAttribute("type", "submit")
+    expect(screen.getByRole("button", { name: /Créer mon compte/i })).toHaveAttribute("type", "submit")
   })
 
   it("shows validation error when email is invalid", async () => {

@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Link } from "react-router-dom"
 import { ChevronDown } from "lucide-react"
 import { Button } from "../../../components/ui/Button/Button"
@@ -6,6 +7,7 @@ import "./FaqSection.css"
 
 export const FaqSection = () => {
   const t = useTranslation("landing")
+  const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   return (
     <section id="faq" className="faq-section" aria-labelledby="faq-title">
@@ -13,10 +15,22 @@ export const FaqSection = () => {
 
       <div className="faq-accordion">
         {t.faq.items.map((item, index) => (
-          <details key={index} className="faq-item" name="landing-faq">
+          <details 
+            key={index} 
+            className="faq-item" 
+            name="landing-faq"
+            open={openIndex === index}
+            onToggle={(e) => {
+              if ((e.target as HTMLDetailsElement).open) {
+                setOpenIndex(index)
+              } else if (openIndex === index) {
+                setOpenIndex(null)
+              }
+            }}
+          >
             <summary 
               className="faq-summary"
-              aria-expanded="false" // details handles this but AC asks for it
+              aria-expanded={openIndex === index}
               aria-controls={`faq-content-${index}`}
               id={`faq-summary-${index}`}
             >

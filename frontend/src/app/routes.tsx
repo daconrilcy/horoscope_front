@@ -75,10 +75,6 @@ export const routes: RouteObject[] = [
             element: <LandingRedirect />,
           },
           {
-            path: "/landing",
-            element: <Navigate to="/" replace />,
-          },
-          {
             path: "/privacy",
             element: <PrivacyPolicyPage />,
           },
