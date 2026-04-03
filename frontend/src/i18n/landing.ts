@@ -71,6 +71,37 @@ export interface LandingTranslation {
       benefit: string
     }
   }
+  testimonials: {
+    title: string
+    subtitle: string
+    items: Array<{
+      quote: string
+      author: string
+      context: string
+      rating?: number
+    }>
+    caseStudy: {
+      title: string
+      badge: string
+      before: {
+        label: string
+        text: string
+      }
+      after: {
+        label: string
+        text: string
+      }
+      action: {
+        label: string
+        text: string
+      }
+    }
+    reassurance: {
+      data: string
+      swiss: string
+      cancel: string
+    }
+  }
 }
 
 const translations: Record<AstrologyLang, LandingTranslation> = {
@@ -128,21 +159,66 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
     },
     solution: {
-      title: "En 3 étapes simples",
+      title: "Comment ça marche ?",
       step1: {
-        title: "Partagez vos données de naissance",
-        desc: "Indiquez votre date, heure et lieu de naissance avec précision pour un calcul rigoureux.",
-        benefit: "Votre thème natal est calculé",
+        title: "Créez votre profil natal",
+        desc: "Partagez votre date, heure et lieu de naissance avec précision.",
+        benefit: "Thème natal calculé instantanément",
       },
       step2: {
-        title: "Choisissez votre astrologue IA",
-        desc: "Entamez une conversation guidée et personnalisée avec l'expert de votre choix.",
-        benefit: "Conversation personnalisée",
+        title: "Échangez avec votre IA",
+        desc: "Posez toutes vos questions à votre astrologue personnel.",
+        benefit: "Réponses sur-mesure 24h/24",
       },
       step3: {
-        title: "Recevez vos insights au quotidien",
-        desc: "Bénéficiez d'une guidance actionnable et de prédictions basées sur le ciel du jour.",
-        benefit: "Guidance et prédictions",
+        title: "Suivez votre guidance",
+        desc: "Recevez chaque matin des conseils actionnables pour votre journée.",
+        benefit: "Saisissez les opportunités célestes",
+      },
+    },
+    testimonials: {
+      title: "Ils éclairent leur chemin avec Astrorizon",
+      subtitle: "Témoignages basés sur nos premiers utilisateurs bêta.",
+      items: [
+        {
+          quote: "Enfin un outil qui prend en compte l'heure exacte de ma naissance. Les conseils quotidiens tombent toujours juste.",
+          author: "Sophie L.",
+          context: "Utilisatrice, Balance",
+          rating: 5,
+        },
+        {
+          quote: "Le chat avec l'IA est impressionnant de bienveillance. C'est comme avoir un astrologue dans sa poche à toute heure.",
+          author: "Marc A.",
+          context: "Utilisateur, Capricorne",
+          rating: 5,
+        },
+        {
+          quote: "L'interprétation de mon thème natal m'a aidé à comprendre des blocages que je traînais depuis des années.",
+          author: "Elena R.",
+          context: "Utilisatrice, Poissons",
+          rating: 5,
+        },
+      ],
+      caseStudy: {
+        title: "Cas d'usage : Sophie et son changement de carrière",
+        badge: "Cas inspiré d'utilisateurs réels",
+        before: {
+          label: "Avant",
+          text: "Sophie se sentait perdue dans son travail actuel, sans savoir si c'était le bon moment pour lancer son projet.",
+        },
+        after: {
+          label: "Après",
+          text: "Grâce à sa guidance personnalisée, elle a identifié une période favorable pour l'action et a lancé son entreprise avec confiance.",
+        },
+        action: {
+          label: "Action",
+          text: "Utilisation quotidienne du chat pour valider ses ressentis lors des phases lunaires clés.",
+        },
+      },
+      reassurance: {
+        data: "Données chiffrées et protégées",
+        swiss: "Calculs basés sur Swiss Ephemeris",
+        cancel: "Annulation sans conditions",
       },
     },
   },
@@ -200,21 +276,66 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
     },
     solution: {
-      title: "In 3 simple steps",
+      title: "How it works?",
       step1: {
-        title: "Share your birth data",
-        desc: "Provide your date, time and place of birth for a precise calculation.",
-        benefit: "Your birth chart is calculated",
+        title: "Create your birth profile",
+        desc: "Share your date, time and place of birth with precision.",
+        benefit: "Birth chart calculated instantly",
       },
       step2: {
-        title: "Choose your AI astrologer",
-        desc: "Start a guided and personalized conversation with the expert of your choice.",
-        benefit: "Personalized conversation",
+        title: "Chat with your AI",
+        desc: "Ask all your questions to your personal astrologer.",
+        benefit: "Tailor-made answers 24/7",
       },
       step3: {
-        title: "Receive daily insights",
-        desc: "Get actionable guidance and predictions based on today's sky.",
-        benefit: "Guidance and predictions",
+        title: "Follow your guidance",
+        desc: "Receive actionable advice for your day every morning.",
+        benefit: "Seize celestial opportunities",
+      },
+    },
+    testimonials: {
+      title: "They light their path with Astrorizon",
+      subtitle: "Testimonials based on our first beta users.",
+      items: [
+        {
+          quote: "Finally a tool that takes into account the exact time of my birth. Daily advice is always spot on.",
+          author: "Sophie L.",
+          context: "User, Libra",
+          rating: 5,
+        },
+        {
+          quote: "Chatting with the AI is impressively caring. It's like having an astrologer in your pocket at any time.",
+          author: "Marc A.",
+          context: "User, Capricorn",
+          rating: 5,
+        },
+        {
+          quote: "Interpreting my birth chart helped me understand blockages I've been carrying for years.",
+          author: "Elena R.",
+          context: "User, Pisces",
+          rating: 5,
+        },
+      ],
+      caseStudy: {
+        title: "Use Case: Sophie and her career change",
+        badge: "Inspiration based on real users",
+        before: {
+          label: "Before",
+          text: "Sophie felt lost in her current job, not knowing if it was the right time to launch her project.",
+        },
+        after: {
+          label: "After",
+          text: "Thanks to her personalized guidance, she identified a favorable period for action and launched her company with confidence.",
+        },
+        action: {
+          label: "Action",
+          text: "Daily use of the chat to validate her feelings during key lunar phases.",
+        },
+      },
+      reassurance: {
+        data: "Encrypted and protected data",
+        swiss: "Calculations based on Swiss Ephemeris",
+        cancel: "Unconditional cancellation",
       },
     },
   },
@@ -272,21 +393,66 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
     },
     solution: {
-      title: "En 3 pasos sencillos",
+      title: "¿Cómo funciona?",
       step1: {
-        title: "Comparte tus datos de nacimiento",
-        desc: "Indica tu fecha, hora y lugar de nacimiento con precisión para un cálculo riguroso.",
-        benefit: "Tu carta natal es calculada",
+        title: "Crea tu perfil natal",
+        desc: "Comparte tu fecha, hora y lugar de nacimiento con precisión.",
+        benefit: "Carta natal calculada al instante",
       },
       step2: {
-        title: "Elige tu astrólogo IA",
-        desc: "Inicia una conversación guiada y personalizada con el experto de tu elección.",
-        benefit: "Conversación personalizada",
+        title: "Chatea con tu IA",
+        desc: "Haz todas tus preguntas a tu astrólogo personal.",
+        benefit: "Respuestas a medida 24/7",
       },
       step3: {
-        title: "Recibe tus insights diarios",
-        desc: "Recibe consejos prácticos y predicciones basadas en el cielo de hoy.",
-        benefit: "Guía y predicciones",
+        title: "Sigue tu guía",
+        desc: "Recibe consejos prácticos para tu día cada mañana.",
+        benefit: "Aprovecha las oportunidades celestiales",
+      },
+    },
+    testimonials: {
+      title: "Ellos iluminan su camino con Astrorizon",
+      subtitle: "Testimonios basados en nuestros primeros usuarios beta.",
+      items: [
+        {
+          quote: "Finalmente una herramienta que tiene en cuenta la hora exacta de mi nacimiento. Los consejos diarios siempre son acertados.",
+          author: "Sophie L.",
+          context: "Usuaria, Libra",
+          rating: 5,
+        },
+        {
+          quote: "Chatear con la IA es impresionantemente empático. Es como tener un astrólogo en el bolsillo en cualquier momento.",
+          author: "Marc A.",
+          context: "Usuario, Capricornio",
+          rating: 5,
+        },
+        {
+          quote: "Interpretar mi carta natal me ayudó a entender bloqueos que llevaba arrastrando años.",
+          author: "Elena R.",
+          context: "Usuaria, Piscis",
+          rating: 5,
+        },
+      ],
+      caseStudy: {
+        title: "Caso de uso: Sophie y su cambio de carrera",
+        badge: "Inspirado en usuarios reales",
+        before: {
+          label: "Antes",
+          text: "Sophie se sentía perdida en su trabajo actual, sin saber si era el momento adecuado para lanzar su proyecto.",
+        },
+        after: {
+          label: "Después",
+          text: "Gracias a su guía personalizada, identificó un período favorable para la acción y lanzó su empresa con confianza.",
+        },
+        action: {
+          label: "Acción",
+          text: "Uso diario del chat para validar sus sentimientos durante las fases lunares clave.",
+        },
+      },
+      reassurance: {
+        data: "Datos cifrados y protegidos",
+        swiss: "Cálculos basados en Swiss Ephemeris",
+        cancel: "Cancelación sin condiciones",
       },
     },
   },

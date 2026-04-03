@@ -1,6 +1,6 @@
 # Story 63.6: Section Preuves — Témoignages et Cas clients
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

@@ -1,0 +1,199 @@
+.testimonials-section {
+  padding: 100px var(--premium-layout-padding-inline);
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .testimonials-section * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.testimonials-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.testimonials-header h2 {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 2.5rem;
+  color: var(--premium-text-strong);
+  margin: 0;
+}
+
+.testimonials-header p {
+  color: var(--premium-text-meta);
+  font-size: 1.125rem;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+@media (min-width: 1024px) {
+  .testimonials-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.testimonial-card {
+  background: var(--premium-glass-surface-1);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--premium-glass-border);
+  border-radius: var(--premium-radius-card);
+  box-shadow: var(--premium-shadow-card);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.testimonial-quote {
+  font-style: italic;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--premium-text-strong);
+  flex-grow: 1;
+}
+
+.testimonial-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.testimonial-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--premium-accent-purple-soft);
+  color: var(--premium-accent-purple-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.testimonial-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.testimonial-author {
+  font-weight: 700;
+  color: var(--premium-text-strong);
+}
+
+.testimonial-context {
+  font-size: 0.8125rem;
+  color: var(--premium-text-meta);
+}
+
+/* Case Study */
+.case-study {
+  background: var(--premium-glass-surface-1);
+  border: 1px solid var(--premium-glass-border-strong);
+  border-radius: var(--premium-radius-hero);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.case-study-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.case-study-badge {
+  align-self: flex-start;
+  padding: 4px 12px;
+  background: var(--premium-glass-surface-2);
+  border: 1px solid var(--premium-glass-border);
+  color: var(--premium-text-meta);
+  border-radius: var(--premium-radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.case-study-header h3 {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 2rem;
+  color: var(--premium-text-strong);
+  margin: 0;
+}
+
+.case-study-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+@media (min-width: 768px) {
+  .case-study-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.case-study-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.case-study-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.case-study-column--before .case-study-label { color: var(--premium-text-meta); }
+.case-study-column--after .case-study-label { color: var(--success, #2ecc71); }
+.case-study-column--action .case-study-label { color: var(--premium-accent-purple); }
+
+.case-study-text {
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  color: var(--premium-text-main);
+}
+
+.case-study-action {
+  grid-column: 1 / -1;
+  padding-top: 24px;
+  border-top: 1px solid var(--premium-glass-border);
+}
+
+/* Reassurance Badges */
+.reassurance-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px;
+  padding-top: 40px;
+}
+
+.reassurance-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--premium-text-main);
+}
+
+.reassurance-badge-icon {
+  color: var(--premium-accent-purple);
+}
