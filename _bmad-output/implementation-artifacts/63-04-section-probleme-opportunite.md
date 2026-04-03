@@ -1,6 +1,6 @@
 # Story 63.4: Section Problème → Opportunité
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

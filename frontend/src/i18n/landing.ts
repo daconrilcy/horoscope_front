@@ -38,6 +38,21 @@ export interface LandingTranslation {
       consultationsValue: string
     }
   }
+  problem: {
+    title: string
+    before: {
+      title: string
+      item1: string
+      item2: string
+      item3: string
+    }
+    after: {
+      title: string
+      item1: string
+      item2: string
+      item3: string
+    }
+  }
 }
 
 const translations: Record<AstrologyLang, LandingTranslation> = {
@@ -79,6 +94,21 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         consultationsValue: "50k+",
       },
     },
+    problem: {
+      title: "L'astrologie devrait éclairer votre chemin, pas vous perdre",
+      before: {
+        title: "Aujourd'hui",
+        item1: "Horoscopes génériques qui ne vous parlent jamais vraiment.",
+        item2: "Impossible de poser une question précise à un expert sans attendre des jours.",
+        item3: "Interpréter son thème natal seul est complexe et intimidant.",
+      },
+      after: {
+        title: "Avec Astrorizon",
+        item1: "Des prévisions basées sur votre thème unique, calculées à la minute près.",
+        item2: "Un chat en direct disponible 24h/24 pour toutes vos interrogations.",
+        item3: "Une pédagogie bienveillante pour comprendre votre mission de vie.",
+      },
+    },
   },
   en: {
     hero: {
@@ -118,6 +148,21 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         consultationsValue: "50k+",
       },
     },
+    problem: {
+      title: "Astrology should light your path, not confuse you",
+      before: {
+        title: "Today",
+        item1: "Generic horoscopes that never really speak to you.",
+        item2: "Impossible to ask an expert a specific question without waiting days.",
+        item3: "Interpreting your birth chart alone is complex and intimidating.",
+      },
+      after: {
+        title: "With Astrorizon",
+        item1: "Forecasts based on your unique chart, calculated to the minute.",
+        item2: "Live chat available 24/7 for all your questions.",
+        item3: "Empathetic guidance to understand your life's mission.",
+      },
+    },
   },
   es: {
     hero: {
@@ -155,6 +200,21 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         ratingValue: "4.9/5",
         consultations: "Consultas realizadas",
         consultationsValue: "50k+",
+      },
+    },
+    problem: {
+      title: "La astrología debería iluminar tu camino, no confundirte",
+      before: {
+        title: "Hoy",
+        item1: "Horóscopos genéricos que nunca te hablan realmente.",
+        item2: "Imposible hacer una pregunta específica a un experto sin esperar días.",
+        item3: "Interpretar tu carta natal solo es complejo e intimidante.",
+      },
+      after: {
+        title: "Con Astrorizon",
+        item1: "Pronósticos basados en tu carta única, calculados al minuto.",
+        item2: "Chat en vivo disponible 24/7 para todas tus dudas.",
+        item3: "Guía empática para entender tu misión de vida.",
       },
     },
   },

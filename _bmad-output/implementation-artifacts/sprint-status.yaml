@@ -527,7 +527,7 @@ development_status:
   # LOT 1 — MVP conversion (priorité haute)
   63-1-hero-section-landing-page: done
   63-2-navbar-landing-page: done
-  63-4-section-probleme-opportunite: ready-for-dev
+  63-4-section-probleme-opportunite: done
   63-5-section-solution-comment-ca-marche: ready-for-dev
   63-7-section-offre-tarifs: ready-for-dev
   63-8-section-faq-cta-final: ready-for-dev
